@@ -14,38 +14,38 @@
 namespace AL {
   namespace Serialization {
 
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field)
     {
       std::cout << "Serialize(int)" << std::endl;
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const float &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const float &t, int field)
     {
       std::cout << "Serialize(float)" << std::endl;
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const double &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const double &t, int field)
     {
       std::cout << "Serialize(double)" << std::endl;
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const bool &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const bool &t, int field)
     {
       std::cout << "Serialize(bool)" << std::endl;
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const std::string &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const std::string &t, int field)
     {
       std::cout << "Serialize(std::string)" << std::endl;
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field)
     {
       std::cout << "Serialize(ResultDefinition)" << std::endl;
       //protocol->readWriteMessage();
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol,const AL::Messaging::VariableValue &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol,const AL::Messaging::VariableValue &t, int field)
     {
       std::cout << "Serialize(VariablesValue)" << std::endl;
       protocol->writeStructBegin("VariableValue");
@@ -54,16 +54,16 @@ namespace AL {
       t.value().apply_visitor(visitor);
       protocol->writeFieldEnd();
       protocol->writeStructEnd();
-      //serializeItem(protocol, dynamic_cast<std::list< AL::Messaging::VariableValue >(t));
+      //thriftSerialize(protocol, dynamic_cast<std::list< AL::Messaging::VariableValue >(t));
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
     {
       std::cout << "Serialize(VariablesList)" << std::endl;
-      serializeItem(protocol, dynamic_cast<const std::list< AL::Messaging::VariableValue > &>(t));
+      thriftSerialize(protocol, dynamic_cast<const std::list< AL::Messaging::VariableValue > &>(t));
     }
 
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)
     {
       std::cout << "Serialize(CallDefinition)" << std::endl;
 
@@ -82,7 +82,7 @@ namespace AL {
       protocol->writeFieldEnd();
 
       protocol->writeFieldBegin("Params", ::apache::thrift::protocol::T_STRUCT, 4);
-      serializeItem(protocol, t.getParameters());
+      thriftSerialize(protocol, t.getParameters());
       protocol->writeFieldEnd();
 
       protocol->writeFieldBegin("HasRes", ::apache::thrift::protocol::T_BOOL, 5);

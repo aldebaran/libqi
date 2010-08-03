@@ -32,23 +32,23 @@ namespace AL {
   namespace Serialization {
 
     //POD Types
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const float &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const double &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const bool &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const float &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const double &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const bool &t, int field = 0);
 
     //STL Types
-    void serializeItem(::apache::thrift::protocol::TProtocol* protocol, const std::string &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const std::string &t, int field = 0);
     template <typename U>
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const std::vector<U> &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::vector<U> &t, int field = 0);
     template <typename U>
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field = 0);
 
     //AL::Messaging Types
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariableValue &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field = 0);
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariableValue &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field = 0);
 
     struct VariableValueSerializeVisitor : boost::static_visitor<> {
       VariableValueSerializeVisitor(::apache::thrift::protocol::TProtocol *protocol)

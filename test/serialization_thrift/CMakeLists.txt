@@ -7,5 +7,5 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 
 create_bin(test-serialization-thrift main.cpp NO_INSTALL)
 
-use_lib(test-serialization-thrift LIBIPPC THRIFT)
+use_lib(test-serialization-thrift ALCOMMON-NG THRIFT)
 

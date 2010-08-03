@@ -12,7 +12,7 @@ namespace AL {
   namespace Serialization {
 
     template <typename U>
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const std::vector<U> &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::vector<U> &t, int field)
     {
       std::cout << "Serialize(std::vector)" << std::endl;
       typename std::vector<U>::const_iterator it;
@@ -20,7 +20,7 @@ namespace AL {
       for (it = t.begin(); it != t.end(); ++it)
       {
         protocol->writeStructBegin("NoName");
-        serializeItem(protocol, *it);
+        thriftSerialize(protocol, *it);
         protocol->writeStructEnd();
       }
       protocol->writeListEnd();
@@ -29,11 +29,11 @@ namespace AL {
     template<class T>
     void VariableValueSerializeVisitor::operator()(T const & value) const
     {
-      serializeItem(_protocol, value);
+      thriftSerialize(_protocol, value);
     }
 
     template <typename U>
-    void serializeItem(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field)
     {
       std::cout << "Serialize(std::list)" << std::endl;
       typename std::list<U>::const_iterator it;
@@ -41,7 +41,7 @@ namespace AL {
       for (it = t.begin(); it != t.end(); ++it)
       {
         protocol->writeStructBegin("NoName");
-        serializeItem(protocol, *it);
+        thriftSerialize(protocol, *it);
         protocol->writeStructEnd();
       }
       protocol->writeListEnd();
