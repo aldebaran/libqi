@@ -1,5 +1,5 @@
 
-create_gtest(alippc_serialization_tests
+create_gtest(test-serialization-perf
  SRC serialization_tests.cpp
  DEPENDENCIES LIBIPPC GTEST
  TIMEOUT 120)

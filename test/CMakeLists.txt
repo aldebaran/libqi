@@ -1,4 +1,5 @@
 #add_subdirectory(test_alippc)
+
 add_subdirectory(alippc_simple)
-add_subdirectory(alippc_serialization_tests)
-add_subdirectory(test_thrift)
+add_subdirectory(serialization_perfs)
+cond_subdirectory(serialization_thrift WITH_THRIFT)
