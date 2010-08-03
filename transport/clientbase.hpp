@@ -10,7 +10,7 @@
 
 # include <string>
 # include <alcore/alptr.h>
-# include <alippc/serialization/result_definition.hpp>
+# include <alcommon-ng/serialization/result_definition.hpp>
 
 
 namespace AL {

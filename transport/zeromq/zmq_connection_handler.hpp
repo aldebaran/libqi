@@ -8,10 +8,10 @@
 #ifndef LIBIPPC_CONNECTIONHANDLER_HPP_
 #define LIBIPPC_CONNECTIONHANDLER_HPP_
 
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/transport/common/runnable.hpp>
-#include <alippc/transport/common/server_response_delegate.hpp>
-#include <alippc/transport/common/server_command_delegate.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/transport/common/runnable.hpp>
+#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/server_command_delegate.hpp>
 #include <string>
 
 namespace AL {

@@ -12,7 +12,7 @@
 #include <list>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <alippc/transport/common/runnable.hpp>
+#include <alcommon-ng/transport/common/runnable.hpp>
 #include <althread/althreadpool.h>
 
 namespace AL {

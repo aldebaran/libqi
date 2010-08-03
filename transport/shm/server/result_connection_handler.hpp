@@ -9,10 +9,10 @@
 #ifndef LIBIPPC_RESULTCONNECTIONHANDLER_HPP_
 #define LIBIPPC_RESULTCONNECTIONHANDLER_HPP_
 
-#include <alippc/serialization/result_definition.hpp>
-#include <alippc/transport/common/runnable.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/transport/common/runnable.hpp>
 
-#include <alippc/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 namespace AL {
   namespace Messaging {

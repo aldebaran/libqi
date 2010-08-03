@@ -6,8 +6,8 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/exceptions/exceptions.hpp>
-#include <alippc/transport/shm/memory/mapped_segment_selector.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_segment_selector.hpp>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 

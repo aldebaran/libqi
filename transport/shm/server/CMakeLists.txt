@@ -7,5 +7,5 @@ set(headers
   server_shared_segment_connector.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/shm/server ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/shm/server ${headers})
 

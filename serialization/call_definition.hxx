@@ -6,7 +6,7 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/serialization/call_definition.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
 
 namespace AL {
   namespace Messaging {

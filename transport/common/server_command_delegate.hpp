@@ -9,8 +9,8 @@
 #ifndef LIBIPP_CALLBACKCOMMAND_HPP_
 #define LIBIPP_CALLBACKCOMMAND_HPP_
 
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/serialization/result_definition.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
 
 namespace AL {
   namespace Messaging {

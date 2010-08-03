@@ -9,11 +9,11 @@
 #ifndef LIBIPPC_CONNECTION_HPP_
 #define LIBIPPC_CONNECTION_HPP_
 
-#include <alippc/transport/shm/client/boost_process_shared_segment_connector.hpp>
-#include <alippc/transport/shm/transport_config.hpp>
-#include <alippc/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/client/boost_process_shared_segment_connector.hpp>
+#include <alcommon-ng/transport/shm/transport_config.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
 
-#include <alippc/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 #include <string>
 

@@ -6,7 +6,7 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/common/handlers_pool.hpp>
+#include <alcommon-ng/transport/common/handlers_pool.hpp>
 
 #include <cassert>
 #include <boost/bind.hpp>

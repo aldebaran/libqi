@@ -7,5 +7,5 @@ set(headers
   process_shared_segment.hxx
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/shm/memory ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/shm/memory ${headers})
 

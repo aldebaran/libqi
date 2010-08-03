@@ -9,9 +9,9 @@
 #ifndef LIBIPPC_BOOSTSERVERSHAREDSEGMENTCONNECTOR_HPP_
 #define LIBIPPC_BOOSTSERVERSHAREDSEGMENTCONNECTOR_HPP_
 
-#include <alippc/serialization/definition_type.hpp>
-#include <alippc/transport/shm/memory/process_shared_segment.hpp>
-#include <alippc/transport/shm/server/server_shared_segment_connector.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
+#include <alcommon-ng/transport/shm/server/server_shared_segment_connector.hpp>
 
 #include <boost/interprocess/mapped_region.hpp>
 
@@ -96,6 +96,6 @@ private:
 }
 }
 
-#include <alippc/transport/shm/server/boost_server_shared_segment_connector.hxx>
+#include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hxx>
 
 #endif /* !LIBIPPC_BOOSTSERVERSHAREDSEGMENTCONNECTOR_HPP_ */

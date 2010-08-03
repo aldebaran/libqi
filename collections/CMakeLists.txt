@@ -6,4 +6,4 @@ set(headers
   variables_list.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/collections/ ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/collections/ ${headers})

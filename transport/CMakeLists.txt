@@ -11,7 +11,7 @@ set(headers
   transport.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/ ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/ ${headers})
 
 add_subdirectory("common")
 add_subdirectory("shm")

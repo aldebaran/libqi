@@ -15,12 +15,12 @@
 namespace boi = boost::interprocess;
 
 #ifndef MAX_DATA_SIZE
-# include <alippc/transport/shm/transport_config.hpp>
+# include <alcommon-ng/transport/shm/transport_config.hpp>
 # define MAX_DATA_SIZE (int) (SHARED_SEGMENT_SIZE - (2 * SYNC_LAYER_SIZE) - (2 * sizeof(std::streamsize)) - sizeof(uint32_t))
 #endif
 
 #ifdef WIN32
-# include <alippc/win_stdint.hpp>
+# include <alcommon-ng/win_stdint.hpp>
 #endif
 
 typedef unsigned char byte;

@@ -12,7 +12,7 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <alippc/ippc.hpp>
+#include <alcommon-ng/ippc.hpp>
 #include <alcore/alptr.h>
 
 #ifdef _WIN32

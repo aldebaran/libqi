@@ -9,10 +9,10 @@
 #define LIBIPPC_ZEROMQ_SERVER_HPP_
 
 #include <zmq.hpp>
-#include <alippc/transport/serverbase.hpp>
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/transport/common/handlers_pool.hpp>
-#include <alippc/transport/zeromq/zmqserver.hpp>
+#include <alcommon-ng/transport/serverbase.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/transport/common/handlers_pool.hpp>
+#include <alcommon-ng/transport/zeromq/zmqserver.hpp>
 #include <alcore/alptr.h>
 #include <althread/althread.h>
 #include <string>

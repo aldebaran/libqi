@@ -9,10 +9,10 @@
 #ifndef LIBIPPC_RESULTDEFINITION_HPP_
 #define LIBIPPC_RESULTDEFINITION_HPP_
 
-#include <alippc/collections/variables_list.hpp>
-#include <alippc/serialization/call_definition.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
 #ifdef WIN32
-# include <alippc/win_stdint.hpp>
+# include <alcommon-ng/win_stdint.hpp>
 #else
 # include <stdint.h>
 #endif
@@ -75,6 +75,6 @@ private:
 }
 }
 
-#include <alippc/serialization/result_definition.hxx>
+#include <alcommon-ng/serialization/result_definition.hxx>
 
 #endif /* !LIBIPPC_RESULTDEFINITION_HPP_ */

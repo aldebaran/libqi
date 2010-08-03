@@ -18,7 +18,7 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#include <alippc/ippc.hpp>
+#include <alcommon-ng/ippc.hpp>
 #include <Thrift.h>
 #include <protocol/TProtocol.h>
 #include <transport/TTransportUtils.h>

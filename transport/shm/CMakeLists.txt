@@ -9,5 +9,5 @@ set(headers
   shm.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/shm ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/shm ${headers})
 

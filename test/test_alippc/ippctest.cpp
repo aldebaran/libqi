@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 
-#include <alippc/ippc.hpp>
+#include <alcommon-ng/ippc.hpp>
 #include <stdlib.h> // For rand.
 #include <alcore/alptr.h>
 #include <boost/thread.hpp>

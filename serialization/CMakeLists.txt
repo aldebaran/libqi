@@ -12,5 +12,5 @@ set(headers
   definition_type.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/serialization ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/serialization ${headers})
 

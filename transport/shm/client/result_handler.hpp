@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_RESULTHANDLER_HPP_
 #define LIBIPPC_RESULTHANDLER_HPP_
 
-#include <alippc/transport/shm/client/result_info.hpp>
+#include <alcommon-ng/transport/shm/client/result_info.hpp>
 
 #include <shmpool/pool.hpp>
 

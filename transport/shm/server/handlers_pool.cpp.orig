@@ -7,7 +7,7 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/server/handlers_pool.hpp>
+#include <alcommon-ng/transport/server/handlers_pool.hpp>
 
 #include <cassert>
 #include <boost/bind.hpp>
@@ -31,7 +31,7 @@ HandlersPool::HandlersPool () {
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/server/handlers_pool.hpp>
+#include <alcommon-ng/transport/shm/server/handlers_pool.hpp>
 
 #include <cassert>
 #include <boost/bind.hpp>

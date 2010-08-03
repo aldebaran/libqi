@@ -6,25 +6,25 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/client/shmconnection.hpp>
-#include <alippc/serialization/definition_type.hpp>
-#include <alippc/serialization/oarchive.hpp>
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/serialization/result_definition.hpp>
+#include <alcommon-ng/transport/shm/client/shmconnection.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/serialization/oarchive.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
 
-#include <alippc/transport/shm/memory/mapped_device.hpp>
-#include <alippc/transport/shm/memory/mapped_segment_selector.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_segment_selector.hpp>
 
-#include <alippc/transport/shm/util/invite_generator.hpp>
+#include <alcommon-ng/transport/shm/util/invite_generator.hpp>
 
-#include <alippc/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 #include <iostream>
 #include <exception>
 #include <boost/thread/mutex.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 
-#include <alippc/exceptions/exceptions.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
 
 #include <alcore/alerror.h>
 

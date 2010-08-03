@@ -6,14 +6,14 @@
  * 			Mail  : delay.jc@gmail.com
  */
 
-#include <alippc/transport/shm/server/result_connection_handler.hpp>
+#include <alcommon-ng/transport/shm/server/result_connection_handler.hpp>
 
-#include <alippc/serialization/iarchive.hpp>
-#include <alippc/transport/shm/memory/mapped_device.hpp>
-#include <alippc/transport/shm/memory/mapped_segment_selector.hpp>
+#include <alcommon-ng/serialization/iarchive.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_segment_selector.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 
-#include <alippc/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 #include <boost/bind.hpp>
 

@@ -6,8 +6,8 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/collections/variables_list.hpp>
-#include <alippc/collections/alvalue_convertor.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
+#include <alcommon-ng/collections/alvalue_convertor.hpp>
 
 #ifndef foreach
 # include <boost/foreach.hpp>

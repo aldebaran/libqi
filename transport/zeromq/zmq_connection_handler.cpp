@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <alippc/transport/zeromq/zmq_connection_handler.hpp>
+#include <alcommon-ng/transport/zeromq/zmq_connection_handler.hpp>
 
 namespace AL {
   namespace Messaging {

@@ -9,9 +9,9 @@
 #ifndef LIBIPPC_VARIABLESLIST_HPP_
 #define LIBIPPC_VARIABLESLIST_HPP_
 
-#include <alippc/collections/print_visitor.hpp>
-#include <alippc/collections/alvalue_convertor.hpp>
-#include <alippc/exceptions/exceptions.hpp>
+#include <alcommon-ng/collections/print_visitor.hpp>
+#include <alcommon-ng/collections/alvalue_convertor.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
 
 #include <list>
 #include <vector>

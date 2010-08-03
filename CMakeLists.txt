@@ -6,41 +6,45 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
+
 project (ALCommon-NG)
 
-FILE(GLOB COLLECTIONS_SRC collections/*.cpp collections/*.h*)
-FILE(GLOB SERIALIZATION_SRC serialization/*.cpp serialization/*.h*)
-FILE(GLOB UTIL_SRC util/*.cpp util/*.h*)
-FILE(GLOB EXCEPTIONS_SRC exceptions/*.cpp exceptions/*.h*)
+cmake_minimum_required(VERSION 2.6.4)
+include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 
-FILE(GLOB TRANSPORT_SRC transport/*.cpp transport/*.h*)
-FILE(GLOB TRANSPORT_COMMON_SRC transport/common/*.cpp transport/common/*.h*)
-FILE(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC transport/shm/util/*.cpp transport/shm/util/*.h*)
-FILE(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
-FILE(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
-FILE(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
+file(GLOB COLLECTIONS_SRC collections/*.cpp collections/*.h*)
+file(GLOB SERIALIZATION_SRC serialization/*.cpp serialization/*.h*)
+file(GLOB UTIL_SRC util/*.cpp util/*.h*)
+file(GLOB EXCEPTIONS_SRC exceptions/*.cpp exceptions/*.h*)
+
+file(GLOB TRANSPORT_SRC transport/*.cpp transport/*.h*)
+file(GLOB TRANSPORT_COMMON_SRC transport/common/*.cpp transport/common/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC transport/shm/util/*.cpp transport/shm/util/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC transport/zeromq/*.cpp transport/zeromq/*.h*)
 
-SOURCE_GROUP( Collections   FILES ${COLLECTIONS_SRC})
-SOURCE_GROUP( Serialization FILES ${SERIALIZATION_SRC})
-SOURCE_GROUP( Utils         FILES ${UTIL_SRC})
-SOURCE_GROUP( Exceptions    FILES ${EXCEPTIONS_SRC})
+source_group( Collections   FILES ${COLLECTIONS_SRC})
+source_group( Serialization FILES ${SERIALIZATION_SRC})
+source_group( Utils         FILES ${UTIL_SRC})
+source_group( Exceptions    FILES ${EXCEPTIONS_SRC})
 
-SOURCE_GROUP( Transport              FILES ${TRANSPORT_SRC})
-SOURCE_GROUP( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
-SOURCE_GROUP( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
-SOURCE_GROUP( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
-SOURCE_GROUP( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
-SOURCE_GROUP( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
-SOURCE_GROUP( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
+source_group( Transport              FILES ${TRANSPORT_SRC})
+source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
+source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
+source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
+source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
+source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
+source_group( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
 
 set(HEADERS
   ippc.hpp
   win_stdint.hpp
 )
-SOURCE_GROUP( Headers FILES ${HEADERS})
+source_group( Headers FILES ${HEADERS})
 
-SET( SRC
+set( SRC
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
     ${UTIL_SRC}
@@ -60,16 +64,16 @@ if (UNIX)
 endif (UNIX)
 
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
-create_static_and_shared_libs(alippc  "${SRC}" "${HEADERS}")
-use_lib (alippc REQUIRED ALL BOOST)
-use_lib (alippc BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)
+create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
+use_lib (alcommon-ng REQUIRED ALL BOOST)
+use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)
 
 add_subdirectory(collections)
 add_subdirectory(exceptions)
 add_subdirectory(serialization)
 add_subdirectory(transport)
 
-install_header(LIBIPPC SUBFOLDER alippc ${HEADERS})
+install_header(ALCOMMON-NG SUBFOLDER alippc ${HEADERS})
 
-stage_lib (alippc LIBIPPC  ${CMAKE_CURRENT_SOURCE_DIR}/..)
+stage_lib (alcommon-ng ALCOMMON-NG  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 cond_subdirectory(test BUILD_TESTS)

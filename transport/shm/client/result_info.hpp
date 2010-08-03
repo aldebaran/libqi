@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_RESULTINFO_HPP_
 #define LIBIPPC_RESULTINFO_HPP_
 
-#include <alippc/serialization/result_definition.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -51,6 +51,6 @@ private:
 }
 }
 
-#include <alippc/transport/shm/client/result_info.hxx>
+#include <alcommon-ng/transport/shm/client/result_info.hxx>
 
 #endif /* !LIBIPPC_RESULTINFO_HPP_ */

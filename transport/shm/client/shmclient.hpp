@@ -8,10 +8,10 @@
 #ifndef   	ALIPPC_TRANSPORT_SHM_CLIENT_HPP_
 # define   	ALIPPC_TRANSPORT_SHM_CLIENT_HPP_
 
-# include <alippc/transport/clientbase.hpp>
-# include <alippc/transport/shm/server/shmserver.hpp>
-# include <alippc/transport/shm/client/result_handler.hpp>
-# include <alippc/transport/shm/client/shmconnection.hpp>
+# include <alcommon-ng/transport/clientbase.hpp>
+# include <alcommon-ng/transport/shm/server/shmserver.hpp>
+# include <alcommon-ng/transport/shm/client/result_handler.hpp>
+# include <alcommon-ng/transport/shm/client/shmconnection.hpp>
 
 namespace AL {
   namespace Messaging {

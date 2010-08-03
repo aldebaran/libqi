@@ -6,8 +6,8 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/collections/print_visitor.hpp>
-#include <alippc/collections/variables_list.hpp>
+#include <alcommon-ng/collections/print_visitor.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
 
 #ifndef foreach
 # include <boost/foreach.hpp>

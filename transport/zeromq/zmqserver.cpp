@@ -5,17 +5,17 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <alippc/transport/zeromq/zmqserver.hpp>
-#include <alippc/transport/zeromq/zmq_connection_handler.hpp>
+#include <alcommon-ng/transport/zeromq/zmqserver.hpp>
+#include <alcommon-ng/transport/zeromq/zmq_connection_handler.hpp>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
-#include <alippc/serialization/definition_type.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
 
 #include <zmq.hpp>
 
-#include <alippc/serialization/iarchive.hpp>
-#include <alippc/serialization/oarchive.hpp>
+#include <alcommon-ng/serialization/iarchive.hpp>
+#include <alcommon-ng/serialization/oarchive.hpp>
 
 #include <pthread.h>
 #include <allog/allog.h>

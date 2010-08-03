@@ -8,5 +8,5 @@ set(headers
   runnable.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/common ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/common ${headers})
 

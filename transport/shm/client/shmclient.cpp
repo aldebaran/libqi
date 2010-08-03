@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <alippc/transport/shm/client/shmclient.hpp>
+#include <alcommon-ng/transport/shm/client/shmclient.hpp>
 
 namespace AL {
   namespace Messaging {

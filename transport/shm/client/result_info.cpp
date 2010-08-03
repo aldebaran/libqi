@@ -6,7 +6,7 @@
  * 			Mail  : delay.jc@gmail.com
  */
 
-#include <alippc/transport/shm/client/result_info.hpp>
+#include <alcommon-ng/transport/shm/client/result_info.hpp>
 
 namespace AL {
   namespace Messaging {

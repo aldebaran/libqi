@@ -9,8 +9,8 @@
 #ifndef LIBIPPC_MAPPEDDEVICE_HPP_
 #define LIBIPPC_MAPPEDDEVICE_HPP_
 
-#include <alippc/transport/shm/memory/mapped_shared_segment.hpp>
-#include <alippc/transport/shm/client/process_shared_segment_connector.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_shared_segment.hpp>
+#include <alcommon-ng/transport/shm/client/process_shared_segment_connector.hpp>
 
 #include <boost/iostreams/categories.hpp>
 #include <boost/interprocess/mapped_region.hpp>

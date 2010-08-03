@@ -6,15 +6,15 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <alippc/transport/shm/server/shmserver.hpp>
-#include <alippc/transport/shm/server/connection_handler.hpp>
-#include <alippc/transport/shm/server/result_connection_handler.hpp>
-#include <alippc/transport/shm/client/shmconnection.hpp>
+#include <alcommon-ng/transport/shm/server/shmserver.hpp>
+#include <alcommon-ng/transport/shm/server/connection_handler.hpp>
+#include <alcommon-ng/transport/shm/server/result_connection_handler.hpp>
+#include <alcommon-ng/transport/shm/client/shmconnection.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 
-#include <alippc/serialization/definition_type.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
 
 namespace AL {
   namespace Messaging {

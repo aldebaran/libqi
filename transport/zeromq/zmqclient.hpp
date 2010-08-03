@@ -8,8 +8,8 @@
 #ifndef   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
 # define   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
 
-# include <alippc/transport/clientbase.hpp>
-# include <alippc/serialization/call_definition.hpp>
+# include <alcommon-ng/transport/clientbase.hpp>
+# include <alcommon-ng/serialization/call_definition.hpp>
 # include <zmq.hpp>
 
 namespace AL {

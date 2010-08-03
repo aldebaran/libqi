@@ -9,9 +9,9 @@
 # define   	_ALIPPC_TRANSPORT_SERVERBASE_HPP_
 
 # include <althread/altask.h>
-# include <alippc/transport/common/threadable.hpp>
-# include <alippc/transport/common/server_response_delegate.hpp>
-# include <alippc/transport/common/server_command_delegate.hpp>
+# include <alcommon-ng/transport/common/threadable.hpp>
+# include <alcommon-ng/transport/common/server_response_delegate.hpp>
+# include <alcommon-ng/transport/common/server_command_delegate.hpp>
 
 namespace AL {
   namespace Messaging {

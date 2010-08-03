@@ -6,8 +6,8 @@
  * 			Mail  : delay.jc@gmail.com
  */
 
-#include <alippc/transport/shm/client/result_handler.hpp>
-#include <alippc/transport/shm/transport_config.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/shm/transport_config.hpp>
 #include <althread/alcriticalsection.h>
 
 namespace AL {

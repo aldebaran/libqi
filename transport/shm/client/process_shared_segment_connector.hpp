@@ -9,8 +9,8 @@
 #ifndef LIBIPPC_PROCESSSHAREDSEGMENTCONNECTOR_HPP_
 #define LIBIPPC_PROCESSSHAREDSEGMENTCONNECTOR_HPP_
 
-#include <alippc/transport/shm/transport_config.hpp>
-#include <alippc/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/transport_config.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
 
 namespace AL {
   namespace Messaging {

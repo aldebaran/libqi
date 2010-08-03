@@ -9,9 +9,9 @@
 #ifndef LIBIPPC_BOOSTPROCESSSHAREDSEGMENTCONNECTOR_HPP_
 #define LIBIPPC_BOOSTPROCESSSHAREDSEGMENTCONNECTOR_HPP_
 
-#include <alippc/serialization/definition_type.hpp>
-#include <alippc/transport/shm/memory/process_shared_segment.hpp>
-#include <alippc/transport/shm/client/process_shared_segment_connector.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
+#include <alcommon-ng/transport/shm/client/process_shared_segment_connector.hpp>
 
 #include <string>
 #include <boost/interprocess/mapped_region.hpp>

@@ -6,20 +6,20 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/server/connection_handler.hpp>
-#include <alippc/serialization/serialization.hpp>
+#include <alcommon-ng/transport/shm/server/connection_handler.hpp>
+#include <alcommon-ng/serialization/serialization.hpp>
 
-#include <alippc/transport/common/handlers_pool.hpp>
+#include <alcommon-ng/transport/common/handlers_pool.hpp>
 
-#include <alippc/transport/shm/memory/mapped_device.hpp>
-#include <alippc/transport/shm/memory/mapped_segment_selector.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_segment_selector.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 
 #include <boost/bind.hpp>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 
-#include <alippc/collections/variables_list.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
 
 namespace AL {
   namespace Messaging {

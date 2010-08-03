@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_MAPPEDSEGMENTSELECTOR_HPP_
 #define LIBIPPC_MAPPEDSEGMENTSELECTOR_HPP_
 
-#include <alippc/transport/shm/memory/mapped_shared_segment.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_shared_segment.hpp>
 
 #include <map>
 #include <string>

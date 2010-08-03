@@ -8,8 +8,8 @@
 #ifndef LIBIPPC_ZEROMQ_TRANSPORT_HPP_
 #define LIBIPPC_ZEROMQ_TRANSPORT_HPP_
 
-#include <alippc/transport/zeromq/zmqclient.hpp>
-#include <alippc/transport/zeromq/zmq_connection_handler.hpp>
-#include <alippc/transport/zeromq/zmqserver.hpp>
+#include <alcommon-ng/transport/zeromq/zmqclient.hpp>
+#include <alcommon-ng/transport/zeromq/zmq_connection_handler.hpp>
+#include <alcommon-ng/transport/zeromq/zmqserver.hpp>
 
 #endif /* !LIBIPPC_TRANSPORT_HPP_ */

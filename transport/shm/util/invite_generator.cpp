@@ -6,7 +6,7 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/util/invite_generator.hpp>
+#include <alcommon-ng/transport/shm/util/invite_generator.hpp>
 
 #include <ctime>
 #include <cstdlib>

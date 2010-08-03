@@ -1,6 +1,6 @@
 
 #include "gtest/gtest.h"
-#include <alippc/serialization/serialization.h>
+#include <alcommon-ng/serialization/serialization.h>
 #include <boost/timer.hpp>
 #include <string>
 

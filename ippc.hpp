@@ -9,9 +9,9 @@
 #ifndef LIBIPPC_IPPC_HPP_
 #define LIBIPPC_IPPC_HPP_
 
-#include <alippc/collections/variables_list.hpp>
-#include <alippc/exceptions/exceptions.hpp>
-#include <alippc/serialization/serialization.hpp>
-#include <alippc/transport/transport.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
+#include <alcommon-ng/serialization/serialization.hpp>
+#include <alcommon-ng/transport/transport.hpp>
 
 #endif /* !LIBIPPC_IPPC_HPP_ */

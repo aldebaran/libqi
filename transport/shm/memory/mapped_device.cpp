@@ -6,15 +6,15 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/memory/mapped_device.hpp>
-#include <alippc/exceptions/exceptions.hpp>
+#include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
 
 #include <cstring>
 #include <cassert>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 
-#include <alippc/transport/shm/client/boost_process_shared_segment_connector.hpp>
+#include <alcommon-ng/transport/shm/client/boost_process_shared_segment_connector.hpp>
 
 #ifdef IPPC_DEBUG_HARD
 # include <string>

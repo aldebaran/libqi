@@ -12,5 +12,5 @@ set(headers
   zmqserver.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/zeromq ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/zeromq ${headers})
 

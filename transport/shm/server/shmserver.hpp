@@ -9,16 +9,16 @@
 #ifndef LIBIPPC_SERVER_HPP_
 #define LIBIPPC_SERVER_HPP_
 
-#include <alippc/transport/serverbase.hpp>
-#include <alippc/transport/common/handlers_pool.hpp>
-#include <alippc/transport/common/threadable.hpp>
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/transport/shm/server/boost_server_shared_segment_connector.hpp>
+#include <alcommon-ng/transport/serverbase.hpp>
+#include <alcommon-ng/transport/common/handlers_pool.hpp>
+#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hpp>
 
-#include <alippc/transport/common/server_command_delegate.hpp>
-#include <alippc/transport/common/server_response_delegate.hpp>
-#include <alippc/transport/shm/client/result_handler.hpp>
-#include <alippc/transport/common/handlers_pool.hpp>
+#include <alcommon-ng/transport/common/server_command_delegate.hpp>
+#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/shm/client/result_handler.hpp>
+#include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcore/alptr.h>
 #include <althread/althread.h>
 #include <string>

@@ -6,8 +6,8 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/exceptions/exceptions.hpp>
-#include <alippc/transport/shm/server/boost_server_shared_segment_connector.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
+#include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hpp>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 

@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_SERIALIZABLEVISITOR_HPP_
 #define LIBIPPC_SERIALIZABLEVISITOR_HPP_
 
-#include <alippc/collections/variables_list.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
 
 #include <list>
 #include <vector>

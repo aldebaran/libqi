@@ -6,7 +6,7 @@
  * 			Mail  : jdelay@aldebaran-robotics.com
  */
 
-#include <alippc/transport/shm/memory/process_shared_segment.hpp>
+#include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
 
 namespace AL {
   namespace Messaging {

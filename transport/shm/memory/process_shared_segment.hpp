@@ -9,8 +9,8 @@
 #ifndef LIBIPPC_PROCESSSHAREDSEGMENT_HPP_
 #define LIBIPPC_PROCESSSHAREDSEGMENT_HPP_
 
-#include <alippc/transport/shm/transport_config.hpp>
-#include <alippc/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/transport_config.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
 
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>

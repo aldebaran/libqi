@@ -9,5 +9,5 @@ set(headers
   boost_process_shared_segment_connector.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER alippc/transport/shm/client ${headers})
+install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/shm/client ${headers})
 

@@ -9,9 +9,9 @@
 # define   	_IPPC_ROOT_TRANSPORT_HPP_
 
 
-#include <alippc/transport/common/common.hpp>
-#include <alippc/transport/shm/shm.hpp>
-#include <alippc/transport/zeromq/zeromq.hpp>
+#include <alcommon-ng/transport/common/common.hpp>
+#include <alcommon-ng/transport/shm/shm.hpp>
+#include <alcommon-ng/transport/zeromq/zeromq.hpp>
 
 //force Server to be a ShmServer for the moment
 namespace AL {

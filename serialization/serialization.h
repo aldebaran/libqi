@@ -42,7 +42,7 @@ namespace AL {
     /// Serializes from a Shared Pointer to a string containing
     /// a binary, text or xml representation.
     /// Any boost serializable types are accepted.
-    /// </summary>    
+    /// </summary>
     /// <param name="item"> The Item you wish to serialize </param>
     /// <param name="type"> OPTIONAL: The type of serialization. Default BINARY</param>
     /// <param name="hint"> OPTIONAL: The hint used when serializing to XML</param>
@@ -51,16 +51,16 @@ namespace AL {
     std::string serialize(
       boost::shared_ptr<T> item,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
-      return serialize(*item, type, hint);
+      return serialize(*item, type, xml_serialization_hint);
     }
-    
+
     /// <summary>
     /// Serializes a type to a string containing
     /// a binary, text or xml representation.
     /// Any boost serializable types are accepted.
-    /// </summary>    
+    /// </summary>
     /// <param name="item"> The Item you wish to serialize </param>
     /// <param name="type"> OPTIONAL: The type of serialization. Default BINARY</param>
     /// <param name="hint"> OPTIONAL: The hint used when serializing to XML</param>
@@ -69,7 +69,7 @@ namespace AL {
     std::string serialize(
       const T& item,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
         std::stringstream stream;
         if (type == BINARY) {
@@ -89,7 +89,7 @@ namespace AL {
     T deserialize(
       const std::string & buffer,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
       return deserialize<T>( (char*)buffer.c_str(), buffer.size(), type, xml_serialization_hint);
     }
@@ -99,7 +99,7 @@ namespace AL {
       char* chars,
       const int size,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
         boost::interprocess::bufferstream buff(chars,size);
         T ret;
@@ -122,7 +122,7 @@ namespace AL {
     boost::shared_ptr<T> deserializeToPtr(
       const std::string & buffer,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
       return deserializeToPtr<T>( (char*)buffer.c_str(), buffer.size(), type, xml_serialization_hint);
     }
@@ -132,7 +132,7 @@ namespace AL {
       char* chars,
       const int size,
       SERIALIZATION_TYPE type = BINARY,
-      char* xml_serialization_hint = "type") 
+      char* xml_serialization_hint = "type")
     {
         boost::interprocess::bufferstream buff(chars,size);
         boost::shared_ptr<T> ret = boost::shared_ptr<T> (new T());

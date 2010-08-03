@@ -9,11 +9,11 @@
 #ifndef LIBIPPC_SERIALIZATION_HPP_
 #define LIBIPPC_SERIALIZATION_HPP_
 
-#include <alippc/serialization/iarchive.hpp>
-#include <alippc/serialization/oarchive.hpp>
-#include <alippc/serialization/definition_type.hpp>
-#include <alippc/serialization/call_definition.hpp>
-#include <alippc/serialization/result_definition.hpp>
+#include <alcommon-ng/serialization/iarchive.hpp>
+#include <alcommon-ng/serialization/oarchive.hpp>
+#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -27,6 +27,6 @@ void serialize (Archive & ar, int value, const unsigned int version);
 } // namespace serialization
 } // namespace boost
 
-#include <alippc/serialization/serialization.hxx>
+#include <alcommon-ng/serialization/serialization.hxx>
 
 #endif /* !LIBIPPC_SERIALIZATION_HPP_ */

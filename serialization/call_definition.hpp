@@ -9,13 +9,13 @@
 #ifndef LIBIPPC_CALLDEFINITION_HPP_
 #define LIBIPPC_CALLDEFINITION_HPP_
 
-#include <alippc/collections/variables_list.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
 
 #include <string>
 #include <boost/serialization/access.hpp>
 
 #ifdef WIN32
-# include <alippc/win_stdint.hpp>
+# include <alcommon-ng/win_stdint.hpp>
 #endif
 
 namespace AL {
@@ -102,6 +102,6 @@ private:
 }
 }
 
-#include <alippc/serialization/call_definition.hxx>
+#include <alcommon-ng/serialization/call_definition.hxx>
 
 #endif /* !LIBIPPC_CALLDEFINITION_HPP_ */
