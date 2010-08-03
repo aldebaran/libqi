@@ -12,18 +12,21 @@ project (ALCommon-NG)
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 
-file(GLOB COLLECTIONS_SRC collections/*.cpp collections/*.h*)
-file(GLOB SERIALIZATION_SRC serialization/*.cpp serialization/*.h*)
-file(GLOB UTIL_SRC util/*.cpp util/*.h*)
-file(GLOB EXCEPTIONS_SRC exceptions/*.cpp exceptions/*.h*)
+file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
+file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
+file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
 
-file(GLOB TRANSPORT_SRC transport/*.cpp transport/*.h*)
-file(GLOB TRANSPORT_COMMON_SRC transport/common/*.cpp transport/common/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC transport/shm/util/*.cpp transport/shm/util/*.h*)
+file(GLOB UTIL_SRC          util/*.cpp util/*.h*)
+file(GLOB EXCEPTIONS_SRC    exceptions/*.cpp exceptions/*.h*)
+
+file(GLOB TRANSPORT_SRC                   transport/*.cpp transport/*.h*)
+file(GLOB TRANSPORT_COMMON_SRC            transport/common/*.cpp transport/common/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   transport/shm/util/*.cpp transport/shm/util/*.h*)
 file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
 file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
 file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
-file(GLOB TRANSPORT_ZMQ_SRC transport/zeromq/*.cpp transport/zeromq/*.h*)
+file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
+
 
 source_group( Collections   FILES ${COLLECTIONS_SRC})
 source_group( Serialization FILES ${SERIALIZATION_SRC})
@@ -47,6 +50,7 @@ source_group( Headers FILES ${HEADERS})
 set( SRC
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
+    ${SERIALIZATION_THRIFT_SRC}
     ${UTIL_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
@@ -66,7 +70,7 @@ endif (UNIX)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
 use_lib (alcommon-ng REQUIRED ALL BOOST)
-use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)
+use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ THRIFT)
 
 add_subdirectory(collections)
 add_subdirectory(exceptions)
