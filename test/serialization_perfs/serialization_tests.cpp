@@ -25,6 +25,14 @@ TEST(SerializationTest, TextSerializationSimpleTypes)
   str = serialize(text, TEXT);
   std::string str_str = deserialize<std::string>(str, TEXT);
   EXPECT_EQ(text, str_str);
+
+  std::vector<float> floats;
+  floats.assign(26,1.1028284f);
+  str = serialize(floats, TEXT);
+  std::vector<float>  rep = deserialize<std::vector<float> >(str, TEXT);
+  for (unsigned int i = 0; i < floats.size(); ++i) {
+    EXPECT_EQ(floats[i], rep[i]);
+  }
 }
 
 TEST(SerializationTest, XmlSerializationSimpleTypes)
@@ -44,6 +52,14 @@ TEST(SerializationTest, XmlSerializationSimpleTypes)
   str = serialize(text, XML);
   std::string xml_str = deserialize<std::string>(str, XML);
   EXPECT_EQ(text, xml_str);
+
+  std::vector<float> floats;
+  floats.assign(26,1.1028284f);
+  str = serialize(floats, XML);
+  std::vector<float>  rep = deserialize<std::vector<float> >(str, XML);
+  for (unsigned int i = 0; i < floats.size(); ++i) {
+    EXPECT_EQ(floats[i], rep[i]);
+  }
 }
 
 
@@ -64,6 +80,14 @@ TEST(SerializationTest, BinarySerializationSimpleTypes)
   str = serialize(text, BINARY);
   std::string bin_str = deserialize<std::string>(str, BINARY);
   EXPECT_EQ(text, bin_str);
+
+  std::vector<float> floats;
+  floats.assign(26,1.1028284f);
+  str = serialize(floats, BINARY);
+  std::vector<float>  rep = deserialize<std::vector<float> >(str, BINARY);
+  for (unsigned int i = 0; i < floats.size(); ++i) {
+    EXPECT_EQ(floats[i], rep[i]);
+  }
 
 }
 
@@ -115,7 +139,7 @@ void testSerialization_StringBufferSizes(AL::Serialization::SERIALIZATION_TYPE t
 
   std::cout << "Bytes, msg/s, MB/s" << std::endl;
   // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < 15; i++) {
+  for (unsigned int i=1; i < 21; i++) {
 
     char character = 'A';
     unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
@@ -141,7 +165,7 @@ void testDeSerialization_StringBufferSizes(AL::Serialization::SERIALIZATION_TYPE
 
   std::cout << "Bytes, msg/s, MB/s" << std::endl;
   // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < 15; i++) {
+  for (unsigned int i=1; i < 21; i++) {
 
     char character = 'A';
     unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
@@ -165,7 +189,7 @@ void testDeSerialization_StringBufferSizes(AL::Serialization::SERIALIZATION_TYPE
   }
 }
 
-TEST(SerializationPerformance, binary) {
+TEST(SerializationPerformance, DISABLED_binary) {
   //int numMessages = 10000;
   std::cout << " BINARY Serialization " << numMessages << std::endl; 
   testSerialization_StringBufferSizes(BINARY, numMessages);
@@ -173,7 +197,7 @@ TEST(SerializationPerformance, binary) {
   testDeSerialization_StringBufferSizes(BINARY, numMessages);
 }
 
-TEST(SerializationPerformance, text) {
+TEST(SerializationPerformance, DISABLED_text) {
   //int numMessages = 10000;
 
   std::cout << " TEXT Serialization " << numMessages << std::endl;
@@ -182,7 +206,7 @@ TEST(SerializationPerformance, text) {
   testDeSerialization_StringBufferSizes(TEXT, numMessages);
 }
 
-TEST(SerializationPerformance, xml) {
+TEST(SerializationPerformance, DISABLED_xml) {
   //int numMessages = 10000;
 
   std::cout << " XML Serialization " << numMessages << std::endl; 
@@ -190,4 +214,41 @@ TEST(SerializationPerformance, xml) {
   std::cout << " XML DeSerialization " << numMessages << std::endl; 
   testDeSerialization_StringBufferSizes(XML, numMessages);
 
+}
+void testSerialization_vectorfloat(AL::Serialization::SERIALIZATION_TYPE type, int numMessages) {
+  std::string str;
+  std::vector<float> floats;
+  floats.assign(26,1.1028284f);
+
+  int numBytes = sizeof(float) * 26;
+  
+  //std::cout << "Vector<float> binary: " << numMessages << std::endl;
+  //std::cout << "Bytes, msg/s, MB/s" << std::endl;
+  boost::timer t;
+
+  for( int i=0; i< numMessages; i++) {
+    
+    str = serialize(floats, type);
+    std::vector<float>  rep = deserialize<std::vector<float> >(str, type);
+  }
+
+  double elapsed = t.elapsed();
+  float msgPs = 1.0f / ((float)elapsed / (1.0f * numMessages) );
+  float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
+  //std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
+}
+
+TEST(SerializationPerformance, vectorfloatBinary) {
+  int numMessages = 1000;
+  testSerialization_vectorfloat(BINARY,numMessages);
+}
+
+TEST(SerializationPerformance, vectorfloatText) {
+  int numMessages = 1000;
+  testSerialization_vectorfloat(TEXT,numMessages);
+}
+
+TEST(SerializationPerformance, vectorfloatXML) {
+  int numMessages = 1000;
+  testSerialization_vectorfloat(XML,numMessages);
 }
