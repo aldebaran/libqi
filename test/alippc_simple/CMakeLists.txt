@@ -7,5 +7,5 @@
 
 create_gtest(alippc_simple_tests
              SRC          alippc_simple_tests.cpp
-             DEPENDENCIES LIBIPPC
+             DEPENDENCIES ALCOMMON-NG
              TIMEOUT      120)
