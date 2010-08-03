@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef LIBIPPC_ZEROMQ_SERVER_HPP_
-#define LIBIPPC_ZEROMQ_SERVER_HPP_
+#ifndef AL_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
+#define AL_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
 
 #include <zmq.hpp>
 #include <alcommon-ng/transport/serverbase.hpp>
@@ -27,18 +27,18 @@ namespace AL {
  * This class need to be instantiated and run at the beginning of the process.
  */
   class ResultHandler;
-  class ZMQServer : public ServerBase {
+  class ZMQServerQueue : public ServerBase {
   public:
     /**
      * @brief The Server class constructor.
      * @param server_name The name given to the server, id for clients to connect.
      */
-    ZMQServer(const std::string & server_name);
+    ZMQServerQueue(const std::string & server_name);
 
     /**
      * @brief The Server class destructor.
      */
-    virtual ~ZMQServer();
+    virtual ~ZMQServerQueue();
 
     /**
      * @brief Run the server thread.
@@ -50,14 +50,10 @@ namespace AL {
      */
     void wait();
 
-    zmq::message_t *recv(zmq::message_t &msg);
-
     /**
      * @brief Force the server to stop and wait for complete stop.
      */
     void stop();
-
-    void poll();
 
     void sendResponse(const CallDefinition &response, AL::ALPtr<ResultDefinition> result, void *data);
 
@@ -78,4 +74,4 @@ namespace AL {
 }
 }
 
-#endif /* !LIBIPPC_SERVER_HPP_ */
+#endif /* !AL_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_ */

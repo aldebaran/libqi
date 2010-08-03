@@ -5,9 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	_IPPC_ROOT_TRANSPORT_HPP_
-# define   	_IPPC_ROOT_TRANSPORT_HPP_
-
+#ifndef   	_AL_MESSAGING_TRANSPORT_HPP_
+# define   	_AL_MESSAGING_TRANSPORT_HPP_
 
 #include <alcommon-ng/transport/common/common.hpp>
 #include <alcommon-ng/transport/shm/shm.hpp>
@@ -16,11 +15,11 @@
 //force Server to be a ShmServer for the moment
 namespace AL {
   namespace Messaging {
-//    typedef ShmServer Server;
-//    typedef ShmClient Client;
+    //typedef ShmServer Server;
+    //typedef ShmClient Client;
 
-    typedef ZMQServer Server;
-    typedef ZMQClient Client;
+    //typedef ZMQServer Server;
+    //typedef ZMQClient Client;
   }
 }
 

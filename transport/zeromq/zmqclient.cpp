@@ -14,7 +14,7 @@
 #include <alfile/alfilesystem.h>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
     //static const std::string gAddress = "ipc:///tmp/naoqi/";
     //static const std::string gAddress = "tcp://127.0.0.1:5555";
@@ -26,6 +26,8 @@ namespace AL {
   {
     connect();
   }
+
+
 
   //TODO: useless constructor for compat with shm ATM (should be removed)
   ZMQClient::ZMQClient(const std::string &servername, ResultHandler *resultHandler)
@@ -42,37 +44,23 @@ namespace AL {
     mypath /= server_name;
     std::string address;
 #ifdef WIN32
-  // ck horrid hack so that naoqi excecutes
-  address = "tcp://127.0.0.1:5555";
+    // ck horrid hack so that naoqi excecutes
+    address = "tcp://127.0.0.1:5555";
 #else
-  address = "ipc://" + mypath.string();
+    address = "ipc://" + mypath.string();
 #endif
-    
     socket.connect(address.c_str());
   }
 
-  AL::ALPtr<ResultDefinition> ZMQClient::send(CallDefinition &def)
+  void ZMQClient::send(const std::string &tosend, std::string &result)
   {
-    AL::ALPtr<ResultDefinition> ret(new ResultDefinition());
-
-    //boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
-    std::stringstream           strstream;
-    OArchive                    oarchive(strstream);
-    oarchive << def;
-
-    zmq::message_t                    request(strstream.str().size());
-    memcpy(request.data(), strstream.str().data(), strstream.str().size());
-    socket.send(request);
-    std::cout << "ZMQClient::send" << std::endl;
-
-    //  Get the reply.
-    zmq::message_t reply;
-    socket.recv(&reply);
-    std::cout << "ZMQClient::recv" << std::endl;
-    boost::interprocess::bufferstream bstream((char *)reply.data(), reply.size());
-    IArchive archive(bstream);
-    archive >> (*ret);
-    return ret;
+    //TODO: could we avoid more copy?
+    zmq::message_t msg(tosend.data(), tosend.size());
+    //TODO?
+    //memcpy(request.data(), strstream.str().data(), strstream.str().size());
+    socket.send(msg);
+    socket.recv(&msg);
+    result.copy(msg.data(), msg.size());
   }
 
 }

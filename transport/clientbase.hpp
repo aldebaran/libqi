@@ -5,13 +5,10 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	_ALIPPC_TRANSPORT_CLIENTBASE_HPP_
-# define   	_ALIPPC_TRANSPORT_CLIENTBASE_HPP_
+#ifndef   	_AL_MESSAGING_TRANSPORT_CLIENTBASE_HPP_
+# define   	_AL_MESSAGING_TRANSPORT_CLIENTBASE_HPP_
 
 # include <string>
-# include <alcore/alptr.h>
-# include <alcommon-ng/serialization/result_definition.hpp>
-
 
 namespace AL {
   namespace Messaging {
@@ -22,7 +19,7 @@ namespace AL {
       : server_name(servername)
     {}
 
-    virtual AL::ALPtr<ResultDefinition> send(CallDefinition &def) = 0;
+    virtual void send(const std::string &tosend, std::string &result);
 
   protected:
     std::string         server_name;
@@ -30,4 +27,4 @@ namespace AL {
 }
 }
 
-#endif	    /* !_ALIPPC_TRANSPORT_CLIENT_HPP_ */
+#endif	    /* !_AL_MESSAGING_TRANSPORT_CLIENTBASE_HPP_ */

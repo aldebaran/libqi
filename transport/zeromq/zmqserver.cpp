@@ -26,54 +26,10 @@
 
 
 namespace AL {
-  namespace Messaging {
-
-
-
-    //If you want to use a zmqqueue device and a fixed number of workers threads define ZMQ_WORKERS_THREADS
-    //else you get custom XREP code (that could be used with a thread pool)
-    //#define ZMQ_WORKERS_THREADS
-    static const char *gWorkersAddress      = "inproc://workers";
-    static const int   gWorkersThreadsCount = 10;
+  namespace Transport {
 
     //if you use the custom XREP code, activate the full async experience to use the thread pool
     #define ZMQ_FULL_ASYNC
-
-
-    void marshallResult(AL::ALPtr<ResultDefinition> result, zmq::message_t &msg)
-    {
-      std::stringstream  outstream;
-      OArchive           oarchive(outstream);
-
-      oarchive << (*result);
-
-      //copy the message content
-      msg.rebuild(outstream.str().size());
-      memcpy(msg.data(), outstream.str().data(), outstream.str().size());
-    }
-
-    void marshallCall(AL::ALPtr<CallDefinition> def, zmq::message_t &msg)
-    {
-      std::stringstream  outstream;
-      OArchive           oarchive(outstream);
-
-      oarchive << (*def);
-
-      //copy the message content
-      msg.rebuild(outstream.str().size());
-      memcpy(msg.data(), outstream.str().data(), outstream.str().size());
-    }
-
-    AL::ALPtr<CallDefinition> unmarshallCall(zmq::message_t &msg)
-    {
-      AL::ALPtr<CallDefinition>         def(new CallDefinition());
-      boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
-      IArchive                          archive(bstream);
-
-      archive >> *def;
-      return def;
-    }
-
 
     ZMQServer::ZMQServer (const std::string &server_name)
       : ServerBase(server_name),
@@ -150,59 +106,6 @@ namespace AL {
     }
 
 
-
-
-#ifdef ZMQ_WORKERS_THREADS
-
-    void *worker_routine(void *arg)
-    {
-      int              rc = 0;
-      ZMQServer       *zserv = (ZMQServer *)(arg);
-      zmq::message_t   msg;
-      zmq::socket_t    s(zserv->zctx, ZMQ_REP);
-
-      s.connect(gWorkersAddress);
-      alsdebug << "ZMQ:entering worker loop";
-      while (true) {
-        rc = s.recv(&msg);
-        assert(rc > 0);
-        AL::ALPtr<CallDefinition> def = unmarshallCall(msg);
-        ZMQConnectionHandler(def, zserv->getCommandDelegate(), zserv, &s).run();
-      }
-    }
-
-    void ZMQServer::run() {
-      alsdebug << "Start ZMQServer on: " << server_path;
-      zsocket.bind(server_path.c_str());
-
-      //zmq::socket_t workers (zctx, ZMQ_XREQ);
-      zsocketworkers.bind(gWorkersAddress);
-
-      alsdebug << "ZMQ workers binded";
-
-      pthread_t worker[gWorkersThreadsCount];
-      for (int i = 0; i < gWorkersThreadsCount; ++i)
-        pthread_create(&worker[i], NULL, worker_routine, (void*) this);
-      //sleep(2);
-      alsdebug << "ZMQ: start queue_device";
-      //zmq::device(ZMQ_QUEUE, workers, zsocket);
-      zmq::device(ZMQ_QUEUE, zsocket, zsocketworkers);
-      std::cout << "quit server" << std::endl;
-    }
-
-    void ZMQServer::sendResponse(const CallDefinition &def, AL::ALPtr<ResultDefinition> result, void *data) {
-      int                rc = 0;
-      zmq::message_t     msg;
-      zmq::socket_t     *sock = static_cast<zmq::socket_t *>(data);
-
-      assert(data && result);
-      alsdebug << "ZMQ: send response";
-      marshallResult(result, msg);
-      rc = sock->send(msg);
-      assert(rc > 0);
-    }
-
-#else
     //use only the number of thread we need
      void ZMQServer::run() {
        alsdebug << "Start ZMQServer on: " << server_path;
@@ -259,42 +162,4 @@ namespace AL {
 
   }
 }
-
-
-
-//PLAYGROUND
-namespace AL {
-  namespace Messaging {
-
-
-    /*
-     //use ZMQ_REP
-     //single threaded version (just for test)
-      void ZMQServer::run-single-thread() {
-        std::cout << "enterring DA LOOZ" << std::endl;
-        while (true) {
-
-          rc = zsocket.recv(&msg);
-          std::cout << "Receive(size=" << msg.size() << ")" << std::endl;
-
-          for (int i = 0; i < msg.size(); ++i)
-            printf("0x%.2x\n", ((char *)msg.data())[i]);
-          AL::ALPtr<ippc::CallDefinition>   def(new ippc::CallDefinition());
-          boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
-          ippc::IArchive                    archive(bstream);
-
-          //unmarshall the message
-          archive >> *def;
-          //handlersPool.pushTask(AL::ALPtr<ippc::ZMQConnectionHandler>(new ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this)));
-          ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this).run();
-        }
-      }
-    */
-
-
-  }
-}
-
-
-
 

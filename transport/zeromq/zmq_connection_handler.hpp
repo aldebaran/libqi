@@ -15,26 +15,26 @@
 #include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A connection handler created for each new incoming connection and pushed to
  * the thread pool.
  */
-class ZMQConnectionHandler : public Runnable {
-public:
-  ZMQConnectionHandler(AL::ALPtr<CallDefinition> def, ServerCommandDelegate *sdelegate, internal::ServerResponseDelegate* rdelegate, void *data);
-  virtual ~ZMQConnectionHandler ();
-  virtual void run ();
+    class ZMQConnectionHandler : public Runnable {
+    public:
+      ZMQConnectionHandler(AL::ALPtr<CallDefinition> def, ServerCommandDelegate *sdelegate, internal::ServerResponseDelegate* rdelegate, void *data);
+      virtual ~ZMQConnectionHandler ();
+      virtual void run ();
 
-private:
-  void                              *data;
-  AL::ALPtr<CallDefinition>         def;
-  ServerCommandDelegate             *callbackdelegate;
-  internal::ServerResponseDelegate  *responsedelegate;
-};
+    private:
+      void                              *data;
+      AL::ALPtr<CallDefinition>         def;
+      ServerCommandDelegate             *callbackdelegate;
+      internal::ServerResponseDelegate  *responsedelegate;
+    };
 
-}
+  }
 }
 
 #endif /* !LIBIPPC_CONNECTIONHANDLER_HPP_ */

@@ -8,7 +8,7 @@
 #include <alcommon-ng/transport/zeromq/zmq_connection_handler.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
     ZMQConnectionHandler::ZMQConnectionHandler(AL::ALPtr<CallDefinition> def, ServerCommandDelegate *callbackdelegate, internal::ServerResponseDelegate *responsedelegate, void *data)
     : def(def),
