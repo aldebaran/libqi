@@ -14,5 +14,5 @@ set(headers
 install_header(LIBIPPC SUBFOLDER alcommon-ng/transport/ ${headers})
 
 add_subdirectory("common")
-add_subdirectory("shm")
-add_subdirectory("zeromq")
+cond_subdirectory("shm"     WITH_SHM)
+cond_subdirectory("zeromq"  WITH_ZMQ)
