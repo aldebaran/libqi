@@ -11,13 +11,15 @@ project (ALCommon-NG)
 
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
+
 
 file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
 file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
 
-file(GLOB UTIL_SRC          util/*.cpp util/*.h*)
-file(GLOB EXCEPTIONS_SRC    exceptions/*.cpp exceptions/*.h*)
+file(GLOB UTIL_SRC                 util/*.cpp util/*.h*)
+file(GLOB EXCEPTIONS_SRC           exceptions/*.cpp exceptions/*.h*)
 
 file(GLOB TRANSPORT_SRC                   transport/*.cpp transport/*.h*)
 file(GLOB TRANSPORT_COMMON_SRC            transport/common/*.cpp transport/common/*.h*)
@@ -28,10 +30,11 @@ file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/s
 file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
 
 
-source_group( Collections   FILES ${COLLECTIONS_SRC})
-source_group( Serialization FILES ${SERIALIZATION_SRC})
-source_group( Utils         FILES ${UTIL_SRC})
-source_group( Exceptions    FILES ${EXCEPTIONS_SRC})
+source_group( Collections            FILES ${COLLECTIONS_SRC})
+source_group( Serialization          FILES ${SERIALIZATION_SRC})
+source_group( Serialization\\Thrift  FILES ${SERIALIZATION_THRIFT_SRC})
+source_group( Utils                  FILES ${UTIL_SRC})
+source_group( Exceptions             FILES ${EXCEPTIONS_SRC})
 
 source_group( Transport              FILES ${TRANSPORT_SRC})
 source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
@@ -50,7 +53,6 @@ source_group( Headers FILES ${HEADERS})
 set( SRC
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
-    ${SERIALIZATION_THRIFT_SRC}
     ${UTIL_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
@@ -61,6 +63,10 @@ set( SRC
     ${TRANSPORT_ZMQ_SRC}
 )
 
+if (WITH_THRIFT)
+  set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC})
+endif()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 if (UNIX)
@@ -70,7 +76,11 @@ endif (UNIX)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
 use_lib (alcommon-ng REQUIRED ALL BOOST)
-use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ THRIFT)
+use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)
+
+if (WITH_THRIFT)
+  use_lib(alcommon-ng THRIFT)
+endif()
 
 add_subdirectory(collections)
 add_subdirectory(exceptions)
