@@ -1,0 +1,258 @@
+== ALIppc ToDo ==
+
+General:
+- more test
+- clarify the situation with threadable/runnable => should be merged
+- cleanup source code: do not use tab, respect the norm, etc... do not mix CRLF with LF
+- client: standard way to create a client depending on a server. (I would prefer client do not depend at all on the server).
+  solution include:
+    - server.getClient("modulename")
+    - Client client("modulename", server)
+
+General later:
+- clean SOAP backend
+- binded function visitor that return the complete type of a function.
+- create generic Client and Server classes that support multiple protocol.
+- support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
+- better stl serialization support (map, pair). Be recursive.
+- abstract the serialisation backend (or use the boost::archive abstraction to implement more serialization backend)
+
+ZMQ:
+- implement Client
+- package zmq
+- *TEST*
+
+SHM:
+- implement Client
+
+
+=============================
+= LIBS                      =
+=============================
+
+== General ==
+ - remplacer ALModule::innerTest par des testauto en gtest (supprimer innerTest par la suite)
+
+== ALCore ==
+Status: mostly clean
+ - altypes.h: ne garder que les types sInt32, suInt16, ...
+ - altypes.h: supprimer l'inutile
+ - altypes.h: mettre toutes les suppressions de warning windows dans un autres fichiers appropri�s (alxplatform?)
+
+== ALFactory ==
+Status: Clean
+ - peut on supprimer complement tout ca? (c'est un singleton qui permet de creer des objets)
+
+== ALFile ==
+Status: Clean
+
+== ALFindIppc ==
+Status: Clean
+Should be merged with a part of alcommon and splitted out of alcommon
+
+== ALIppc ==
+Status: Clean
+Serialization and transport should be abstracted to support
+We could support :
+- serialization: xml, json, binary, ..
+- transport: shm (the current one), local socket, tcp socket, zeromq, udp socket, ..
+
+== ALLauncher ==
+Status: very weird, should be rewritten
+ - alsharedlibrary.h: only keep stuff that load a library (this class should be generic, and usable outside naoqi). (easy)
+ - launcher.h/.cpp: empilage de hack et de trucs crasseux (reecrire, dur�e: 1 journ�e)
+
+== ALLog ==
+Status: clean
+
+== ALMath ==
+Status: I don't know
+
+== ALMemoryFastAccess ==
+Status: clean
+ - remove a comment from amazel
+
+== ALProject ==
+Status: mostly clean
+ - alproject.cpp: ALProject::xLoad : plus de 500 lignes
+
+== ALPythonTools ==
+Status: bof bof
+
+== ALRemoteCall ==
+Status: moyen plus
+Si nous generalisons la libippc, elle devrait etre utilis� ici aussi? (juste la partie remote)
+
+== ALSerial ==
+Status: clean (je n'ai pas regard� en detail)
+
+== ALShm ==
+Status: clean
+
+== ALSoap ==
+Status: beurk (c'est du code g�n�r� je crois (j'espere fortement))
+ - we use old generated code from gsoap
+ - ce n'est pas la methode normal pour faire du soap
+ - alvaluetosoap.cpp : le blog de alex, entete du fichier: // Un "pliage" pour sortir de la belle classe ALValue, les fonctions un peu moche de conversion xml et ...
+
+supprimer complement cette lib serait pas mal du tout.
+
+== ALThread ==
+Status: moyen plus plus. (la plus part est bien)
+ - alcriticalsection, alcriticalsectionread, alcriticalsectionwrite, alcriticaltrueiflocked: propre, mais boost::thread fait deja tout ca en plus fexible meme
+ - althread: use boost::thread?
+ - althreadpool: use boost::threadpool?
+
+== ALTools ==
+Status: bof bof
+ - altime/altimeval: use boost::date_time
+ - tools.*: supprimer ce fichier hideux
+ - tools.*: CharToDec: use chr
+ - tools.*: etc...
+ - rtcount: mauvais nom, il n'y a rien de temps reel la dedans
+
+== ALValue ==
+Status: no comment (mal fait, melange le support de soap au coeur des alvalue, fonctionnalit� similaire a boost::variant qui fait la meme chose de la bonne maniere)
+
+== ALCommon ==
+Status: weird
+  - alfilemanager: un module dans une lib?? (le mettre dans albase?)
+  - alnetwork: notre utilisation de soap, lui dire au revoir, ne me ferais vraiment pas mal au coeur.
+  - enqueue_request: supprimer de alcommon? (le code est tout comment�)
+  - alenqueue_request: supprimer de alcommon? (le code est tout comment�)
+  - alcallqueue: supprimer de alcommon? (inutilis�)
+  - alcallqueuemanager: supprimer de alcommon? (inutilis�)
+  - asynctask*: faire une lib asynctask
+  - alfunctor: replace with boost::function or boost::signal and remove
+  - reste alproxy/albroker/almodule/almodulecore que l'on va voir plus tard (il's ont besoin d'un bon gros netoyage)
+
+=========================
+=========================
+Netoyage de ALCommon objectif:
+
+- Supprimer soap et toutes traces de transport/serialization de ces classes (avoir une lib qui ne s'occupe que de ca (alippc))
+- Garder le strict minimum et n'avoir des classes qui ne font qu'une seule chose
+- rester au maximum compatible avec l'existant
+- supporter tous les types de la STL (voir plus)
+
+Actuellement:
+=============
+ - il faut etre un module naoqi connect� a un broker pour communiquer et surtout recevoir des notifications
+ - chaque client (processus) est un broker (qui a une liste de module), des brokers peuvent se connecter entre eux. (pas des modules, ils doivent avoir un broker)
+ - pour recevoir des notifications (ou de l'audio) il faut avoir un broker et demander que almemory ou le module audio nous contacte quand il a des donn�es
+
+ALBroker:
+ - annuaire de module locaux
+ - annuaire d'autres brokers distants
+ - server soap
+
+ALProxy:
+ - client vers un broker
+
+ALBrokerProxy:
+ - proxy vers un autre broker
+
+ALModule/ALModuleCore:
+ - expose des fonctions pouvant etre appell� (doit s'enregistrer sur un broker pour etre utile)
+
+Exemple:
+On lance naoqi sur le robot:
+  nous lancons un broker et une liste de module (almemory, almotion, ...)
+
+On lance choregraphe sur un PC:
+  nous lancons un broker sur le PC qui se connecte au broker sur le robot. Ce broker PC permet de recevoir les notifications de ALMemory
+
+
+Proposition:
+============
+(S'inspire beaucoup de ROS, qui s'est beaucoups inspir� de nous)
+avoir des notions et des notations simples et logiques:
+
+node/service:
+  - processus capable d'etre appell� par des clients
+  - enregistre des methodes que l'on peut appeller par la suite
+  - s'enregistre sur un master
+
+node/topic:
+  - processus capable de notifier des clients et/ou de streamer des donn�es
+  - s'enregistre sur un master
+
+master:
+  - annuaire des diff�rentes nodes (services et topics)
+  - utilise un seul protocole de communication simple
+  - il permet de localiser les diff�rentes nodes
+
+client:
+ - se connecte a une node pour appeller une fonction
+ - s'enregistre a un topic et recoit des donn�es (par une callback)
+
+
+Suppression de SOAP:
+===================
+Nous avons au final beaucoup de choses qui dependent de SOAP. (a tort a mon avis):
+ - transfert de fichier (soluce: faire un module naoqi qui remplace l'utilisation de soap)
+ - page web affichant la doc (soluce: utiliser la doc bleu, avoir sur la page web de nao la liste des module, method, tache qui tourne)
+ - execution de methode directement depuis une url (soluce: suppression de hack/faille de secu)
+
+todo:
+  - diagramme des dependances
+  - diagramme de classe pour une communication avec naoqi
+
+
+Planning:
+ - netoyer tout ce qui est possible sans rien casser
+ - implementer alippc au maximum:
+   - abstraire la serialisation
+   - mecanisme de negociation des protocoles?
+   - mecanisme d'authentification?
+   - creer une classe client, une classe server (qui gere tous les protocoles dispo)
+   - supporter les call
+   - ajouter un server dispatcher, pour enregistrer des methodes et les appeller quand on recoit un message
+ - ajouter pub/sub et le faire marcher pour audio/almemory en gardant la compatibilit� avec l'existant
+ - convertir choregraphe/telepathe, etc... au nouveau systeme de pub/sub
+ - supprimer les differentes utilisations de SOAP
+ - netoyer ALBroker/ALProxy/ALModule/ALModuleCore et les renommer
+
+__________________________________
+CK TODO
+
+ippc -> AL::Messaging DONE
+CallDefinition -> Request NO ... the call definition is not the request
+ResultDefinition -> Response NO ... the call definition is not the request
+All ippc/Shm to al::messaging::shm
+VariablesList should be exposed as a list, called args?
+
+Request and Response could become structs
+Add Message ... (could be a notification, or async call) ?
+They should have no ostream or serializaion inside them.
+
+Hmmm IArchive and OArchive ~= boost::archive
+Add NVP description for XML serialization
+
+Broker should translate module name to envelope for messaging.
+Messaging level just deals with envelopes. Envelopes are deserialized for a broker.
+What is the endpoint? broker? module? service?
+Envelopes could have timestamps, message-id, from, reply-to, relates-to
+
+enum MessageType {
+    RPC-REQ,
+    RPC-REP,
+    ASYNC
+}
+
+template <class T>
+struct Envelope {
+ std::string from
+ std::string to
+ std::string reply-to;
+ int message-id;
+ int relates-to;
+ MessageType message-type;
+ T body;
+}
+ 
+RpcCall {
+    std::string module;
+    std::string method;
+    T args;
+}
