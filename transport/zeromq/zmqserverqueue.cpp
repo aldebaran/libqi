@@ -29,7 +29,7 @@ namespace AL {
     static const int   gWorkersThreadsCount = 10;
 
     ZMQServerQueue::ZMQServerQueue (const std::string &server_name)
-      : ServerBase(server_name),
+      : Server(server_name),
         zctx(1),
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)

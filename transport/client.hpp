@@ -13,13 +13,13 @@
 namespace AL {
   namespace Transport {
 
-  class ClientBase {
+  class Client {
   public:
-    ClientBase(const std::string &serverAddress)
+    Client(const std::string &serverAddress)
       : _serverAddress(serverAddress)
     {}
 
-    virtual void send(const std::string &tosend, std::string &result);
+    virtual void send(const std::string &tosend, std::string &result) = 0;
 
   protected:
     std::string         _serverAddress;

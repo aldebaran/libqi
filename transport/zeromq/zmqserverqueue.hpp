@@ -9,7 +9,7 @@
 #define AL_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
 
 #include <zmq.hpp>
-#include <alcommon-ng/transport/serverbase.hpp>
+#include <alcommon-ng/transport/server.hpp>
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcommon-ng/transport/zeromq/zmqserver.hpp>
@@ -27,7 +27,7 @@ namespace AL {
  * This class need to be instantiated and run at the beginning of the process.
  */
   class ResultHandler;
-  class ZMQServerQueue : public ServerBase {
+  class ZMQServerQueue : public Server {
   public:
     /**
      * @brief The Server class constructor.

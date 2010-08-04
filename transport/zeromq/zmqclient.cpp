@@ -22,16 +22,7 @@ namespace AL {
      */
 
   ZMQClient::ZMQClient(const std::string &servername)
-    : ClientBase(servername),
-      context(1),
-      socket(context, ZMQ_REQ)
-  {
-    connect();
-  }
-
-  //TODO: useless constructor for compat with shm ATM (should be removed)
-  ZMQClient::ZMQClient(const std::string &servername, ResultHandler *resultHandler)
-    : ClientBase(servername),
+    : Client(servername),
       context(1),
       socket(context, ZMQ_REQ)
   {

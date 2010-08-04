@@ -11,7 +11,7 @@
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
-#include <alcommon-ng/transport/common/server_command_delegate.hpp>
+#include <alcommon-ng/transport/common/ondatadelegate.hpp>
 #include <string>
 
 namespace AL {

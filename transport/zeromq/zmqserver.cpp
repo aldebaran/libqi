@@ -32,7 +32,7 @@ namespace AL {
     #define ZMQ_FULL_ASYNC
 
     ZMQServer::ZMQServer (const std::string &server_name)
-      : ServerBase(server_name),
+      : Server(server_name),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
     {

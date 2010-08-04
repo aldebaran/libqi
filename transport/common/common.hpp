@@ -10,6 +10,6 @@
 
 # include <alcommon-ng/transport/common/handlers_pool.hpp>
 # include <alcommon-ng/transport/common/server_response_delegate.hpp>
-# include <alcommon-ng/transport/common/server_command_delegate.hpp>
+# include <alcommon-ng/transport/common/ondatadelegate.hpp>
 
 #endif	    /* !_ALIPPC_TRANSPORT_COMMON_PP_ */

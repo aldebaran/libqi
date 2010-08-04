@@ -8,14 +8,14 @@
 #ifndef   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
 # define   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
 
-# include <alcommon-ng/transport/clientbase.hpp>
+# include <alcommon-ng/transport/client.hpp>
 # include <zmq.hpp>
 
 namespace AL {
   namespace Transport {
 
   class ResultHandler;
-  class ZMQClient : public ClientBase {
+  class ZMQClient : public Client {
   public:
     ZMQClient(const std::string &servername, ResultHandler *resultHandler);
     ZMQClient(const std::string &servername);
