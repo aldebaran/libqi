@@ -7,133 +7,215 @@
 using namespace AL::Serialization;
 int numMessages = 1000;
 
-TEST(SerializationTest, TextSerializationSimpleTypes)
+// test three serializations for type T (not a list)
+template<typename T> 
+void testSerializationDeserialization(const T& arg)
 {
-  //    float three = 3.0f;
-  std::string text = "three";
-  std::string str;
+  std::string buf;
+  buf = serialize(arg, BINARY);
+  T res1 = deserialize<T>(buf, BINARY);
+  EXPECT_EQ(arg, res1);
 
-  // text
-  str = serialize(3, TEXT);
-  int str_int = deserialize<int>(str, TEXT);
-  EXPECT_EQ(3, str_int);
+  buf = serialize(arg, TEXT);
+  T res2 = deserialize<T>(buf, TEXT);
+  EXPECT_EQ(arg, res2);
 
-  str = serialize(3.0f, TEXT);
-  float str_float = deserialize<float>(str, TEXT);
-  EXPECT_EQ(3.0f, str_float);
+  buf = serialize(arg, XML);
+  T res3 = deserialize<T>(buf, XML);
+  EXPECT_EQ(arg, res3);
 
-  str = serialize(text, TEXT);
-  std::string str_str = deserialize<std::string>(str, TEXT);
-  EXPECT_EQ(text, str_str);
+  buf = serialize(arg, BINARY);
+  boost::shared_ptr<T> res4 = deserializeToPtr<T>(buf);
+  EXPECT_EQ(arg, *res4.get());
+}
 
-  std::vector<float> floats;
-  floats.assign(26,1.1028284f);
-  str = serialize(floats, TEXT);
-  std::vector<float>  rep = deserialize<std::vector<float> >(str, TEXT);
-  for (unsigned int i = 0; i < floats.size(); ++i) {
-    EXPECT_EQ(floats[i], rep[i]);
+
+// test three serializations for type T (a list)
+template<typename T> 
+void testSerializationDeserializationList(const T& arg)
+{
+  std::string buf;
+  buf = serialize(arg, BINARY);
+  T res1 = deserialize<T>(buf, BINARY);
+  for (unsigned int i = 0; i < arg.size(); i++) {
+    EXPECT_EQ(arg[i], res1[i]);
+  }
+
+  buf = serialize(arg, TEXT);
+  T res2 = deserialize<T>(buf, TEXT);
+  for (unsigned int i = 0; i < arg.size(); i++) {
+    EXPECT_EQ(arg[i], res2[i]);
+  }
+
+  buf = serialize(arg, XML);
+  T res3 = deserialize<T>(buf, XML);
+  for (unsigned int i = 0; i < arg.size(); i++) {
+    EXPECT_EQ(arg[i], res3[i]);
+  }
+
+  buf = serialize(arg, BINARY);
+  boost::shared_ptr<T> res4 = deserializeToPtr<T>(buf);
+  T res5 = *res4.get();
+  for (unsigned int i = 0; i < arg.size(); i++) {
+    EXPECT_EQ(arg[i], res5[i]);
   }
 }
 
-TEST(SerializationTest, XmlSerializationSimpleTypes)
+// -- basic types
+
+TEST(SerializationTest, Bool)
 {
-  std::string text = "three";
-  std::string str;
+  bool arg = true;
+  testSerializationDeserialization(arg);
+}
 
-  // xml
-  str = serialize(3, XML);
-  int xml_int = deserialize<int>(str, XML);
-  EXPECT_EQ(3, xml_int);
+TEST(SerializationTest, Int)
+{
+  int arg = 1;
+  testSerializationDeserialization(arg);
+}
 
-  str = serialize(3.0f, XML);
-  float xml_float = deserialize<float>(str, XML);
-  EXPECT_EQ(3.0f, xml_float);
+TEST(SerializationTest, NegativeInt)
+{
+  int arg = -1;
+  testSerializationDeserialization(arg);
+}
 
-  str = serialize(text, XML);
-  std::string xml_str = deserialize<std::string>(str, XML);
-  EXPECT_EQ(text, xml_str);
+TEST(SerializationTest, Float)
+{
+  float arg = 34.4598495f;
+  testSerializationDeserialization(arg);
+}
 
-  std::vector<float> floats;
-  floats.assign(26,1.1028284f);
-  str = serialize(floats, XML);
-  std::vector<float>  rep = deserialize<std::vector<float> >(str, XML);
-  for (unsigned int i = 0; i < floats.size(); ++i) {
-    EXPECT_EQ(floats[i], rep[i]);
-  }
+TEST(SerializationTest, NegativeFloat)
+{
+  float arg = -34.4598495f;
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, Double)
+{
+  double arg = 34.4598495;
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, NegativeDouble)
+{
+  double arg = -34.4598495;
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, Short)
+{
+  short arg = 12;
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, Long)
+{
+  long arg = (long)12234234234234;
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, String)
+{
+  std::string arg = "Hello World.";
+  testSerializationDeserialization(arg);
+}
+
+// ---- exotic types
+//
+TEST(SerializationTest, StdPair)
+{
+  std::pair<int, std::string> arg = std::make_pair<int, std::string>(1, "hello");
+  testSerializationDeserialization(arg);
+}
+
+TEST(SerializationTest, StdMap)
+{
+  std::map<int, std::string> arg;
+  arg.insert(std::make_pair<int, std::string>(1, "hello"));
+  arg.insert(std::make_pair<int, std::string>(2, "hello2"));
+  testSerializationDeserialization(arg);
 }
 
 
-TEST(SerializationTest, BinarySerializationSimpleTypes)
+// ---- vectors
+
+TEST(SerializationTest, VectorBool)
 {
-  std::string text = "three";
-  std::string str;
-
-  // bin
-  str = serialize(3, BINARY);
-  int bin_int = deserialize<int>(str, BINARY);
-  EXPECT_EQ(3, bin_int);
-
-  str = serialize(3.0f, BINARY);
-  float bin_float = deserialize<float>(str, BINARY);
-  EXPECT_EQ(3.0f, bin_float);
-
-  str = serialize(text, BINARY);
-  std::string bin_str = deserialize<std::string>(str, BINARY);
-  EXPECT_EQ(text, bin_str);
-
-  std::vector<float> floats;
-  floats.assign(26,1.1028284f);
-  str = serialize(floats, BINARY);
-  std::vector<float>  rep = deserialize<std::vector<float> >(str, BINARY);
-  for (unsigned int i = 0; i < floats.size(); ++i) {
-    EXPECT_EQ(floats[i], rep[i]);
-  }
-
+  std::vector<bool> arg;
+  arg.assign(26, true);
+  testSerializationDeserializationList(arg);
 }
 
-
-TEST(SerializationTest, DefaultSerializationSimpleTypes)
+TEST(SerializationTest, VectorFloat)
 {
-  std::string text = "three";
-  std::string str;
-
-  // auto binary
-  str = serialize(3);
-  int aut_int = deserialize<int>(str);
-  EXPECT_EQ(3, aut_int);
-
-  str = serialize(3.0f);
-  float aut_float = deserialize<float>(str);
-  EXPECT_EQ(3.0f, aut_float);
-
-  str = serialize(text);
-  std::string aut_str = deserialize<std::string>(str);
-  EXPECT_EQ(text, aut_str);
-
+  std::vector<float> arg;
+  arg.assign(26, 0.653f);
+  testSerializationDeserializationList(arg);
 }
 
-
-TEST(SerializationTest, BinaryToPtrSerializationSimpleTypes)
+TEST(SerializationTest, VectorInt)
 {
-  std::string text = "three";
-  std::string str;
-
-  // to ptr
-  str = serialize(3);
-  boost::shared_ptr<int> ptr_int = deserializeToPtr<int>(str);
-  EXPECT_EQ(3, *ptr_int.get());
-
-  str = serialize(3.0f);
-  boost::shared_ptr<float> ptr_float = deserializeToPtr<float>(str);
-  EXPECT_EQ(3.0f, *ptr_float.get());
-
-  str = serialize(text);
-  boost::shared_ptr<std::string> ptr_str = deserializeToPtr<std::string>(str);
-  EXPECT_EQ(text, *ptr_str.get());
-
-  // from ptr
+  std::vector<int> arg;
+  arg.assign(26, 42);
+  testSerializationDeserializationList(arg);
 }
 
+TEST(SerializationTest, VectorString)
+{
+  std::string val = "Hello World.";
+  std::vector<std::string> arg;
+  arg.assign(26, val);
+  testSerializationDeserializationList(arg);
+}
+
+// -- lists
+//
+//TEST(SerializationTest, ListBool)
+//{
+//  std::list<bool> arg;
+//  arg.assign(26, true);
+//  
+//  testSerializationDeserialization(arg);
+//}
+//
+//TEST(SerializationTest, ListFloat)
+//{
+//  std::list<float> arg;
+//  arg.assign(26, 0.653f);
+//  testSerializationDeserialization(arg);
+//}
+//
+//TEST(SerializationTest, ListInt)
+//{
+//  std::list<int> arg;
+//  arg.assign(26, 42);
+//  testSerializationDeserialization(arg);
+//}
+//
+//TEST(SerializationTest, ListString)
+//{
+//  std::string val = "Hello World.";
+//  std::list<std::string> arg;
+//  arg.assign(26, val);
+//  testSerializationDeserialization(arg);
+//}
+
+#include <alcommon-ng/serialization/call_definition.hpp>
+TEST(SerializationTest, CallDefinition)
+{
+  AL::Messaging::CallDefinition arg;
+  testSerializationDeserialization(arg);
+}
+
+#include <alcommon-ng/serialization/result_definition.hpp>
+TEST(SerializationTest, ResultDefinition)
+{
+  AL::Messaging::ResultDefinition arg;
+  testSerializationDeserialization(arg);
+}
 
 void testSerialization_StringBufferSizes(AL::Serialization::SERIALIZATION_TYPE type, int numMessages) {
 
@@ -190,7 +272,6 @@ void testDeSerialization_StringBufferSizes(AL::Serialization::SERIALIZATION_TYPE
 }
 
 TEST(SerializationPerformance, DISABLED_binary) {
-  //int numMessages = 10000;
   std::cout << " BINARY Serialization " << numMessages << std::endl; 
   testSerialization_StringBufferSizes(BINARY, numMessages);
   std::cout << " BINARY DeSerialization " << numMessages << std::endl; 
@@ -198,8 +279,6 @@ TEST(SerializationPerformance, DISABLED_binary) {
 }
 
 TEST(SerializationPerformance, DISABLED_text) {
-  //int numMessages = 10000;
-
   std::cout << " TEXT Serialization " << numMessages << std::endl;
   testSerialization_StringBufferSizes(TEXT, numMessages);
   std::cout << " TEXT DeSerialization " << numMessages << std::endl;
@@ -207,8 +286,6 @@ TEST(SerializationPerformance, DISABLED_text) {
 }
 
 TEST(SerializationPerformance, DISABLED_xml) {
-  //int numMessages = 10000;
-
   std::cout << " XML Serialization " << numMessages << std::endl; 
   testSerialization_StringBufferSizes(XML, numMessages);
   std::cout << " XML DeSerialization " << numMessages << std::endl; 
@@ -238,17 +315,29 @@ void testSerialization_vectorfloat(AL::Serialization::SERIALIZATION_TYPE type, i
   //std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
 }
 
-TEST(SerializationPerformance, vectorfloatBinary) {
-  int numMessages = 1000;
-  testSerialization_vectorfloat(BINARY,numMessages);
+
+// to keep gtest happy
+template<typename T, typename U>
+inline std::ostream & operator << (std::ostream & ostr, const std::pair<T,U> & value) {
+  ostr << "pair";
+	return ostr;
 }
 
-TEST(SerializationPerformance, vectorfloatText) {
-  int numMessages = 1000;
-  testSerialization_vectorfloat(TEXT,numMessages);
+// to keep gtest happy
+template<typename T, typename U>
+inline std::ostream & operator << (std::ostream & ostr, const std::map<T,U> & value) {
+  ostr << "map";
+	return ostr;
 }
 
-TEST(SerializationPerformance, vectorfloatXML) {
-  int numMessages = 1000;
-  testSerialization_vectorfloat(XML,numMessages);
+// to keep gtest happy
+inline std::ostream & operator << (std::ostream & ostr, const AL::Messaging::CallDefinition & value) {
+  ostr << "CallDefinition";
+	return ostr;
+}
+
+// to keep gtest happy
+inline std::ostream & operator << (std::ostream & ostr, const AL::Messaging::ResultDefinition & value) {
+  ostr << "ResultDefinition";
+	return ostr;
 }
