@@ -42,7 +42,7 @@ namespace AL {
     memcpy(msg.data(), tosend.data(), tosend.size());
     socket.send(msg);
     socket.recv(&msg);
-    result.copy((char *)msg.data(), msg.size());
+    result.assign((char *)msg.data(), msg.size());
   }
 
 }

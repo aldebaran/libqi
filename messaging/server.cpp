@@ -26,10 +26,12 @@ namespace AL {
 
       oarchive << result;
       msg = outstream.str();
+      std::cout << "marshallResult(" << msg.size() << ")" << std::endl;
     }
 
-    AL::ALPtr<CallDefinition> unmarshallCall(const std::string &msg, CallDefinition &def)
+    void unmarshallCall(const std::string &msg, CallDefinition &def)
     {
+      std::cout << "unmarshallCall(" << msg.size() << ")" << std::endl;
       boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
       IArchive                          archive(bstream);
 

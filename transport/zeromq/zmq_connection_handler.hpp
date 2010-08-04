@@ -28,10 +28,10 @@ namespace AL {
       virtual void run ();
 
     private:
-      void                             *data;
-      std::string                       msg;
-      OnDataDelegate                   *callbackdelegate;
-      internal::ServerResponseDelegate *responsedelegate;
+      void                             *_data;
+      std::string                       _msg;
+      OnDataDelegate                   *_callbackdelegate;
+      internal::ServerResponseDelegate *_responsedelegate;
     };
 
   }

@@ -65,7 +65,8 @@ namespace AL {
       while (true) {
         rc = s.recv(&msg);
         assert(rc > 0);
-        std::string data((char *)msg.data(), msg.size());
+        std::string data;
+        data.assign((char *)msg.data(), msg.size());
         ZMQConnectionHandler(data, zserv->getOnDataDelegate(), zserv, &s).run();
       }
     }

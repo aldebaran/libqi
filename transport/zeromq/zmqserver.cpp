@@ -111,13 +111,14 @@ namespace AL {
          zmq::message_t  msg;
          zmq::message_t *identity;
          identity = recv(msg);
-         std::string data((char *)msg.data(), msg.size());
+         std::string data;
+         data.assign((char *)msg.data(), msg.size());
 
          //AL::ALPtr<CallDefinition>          def = unmarshallCall(msg);
 #ifdef ZMQ_FULL_ASYNC
          handlersPool.pushTask(AL::ALPtr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getOnDataDelegate(), this, (void *)identity)));
 #else
-         ZMQConnectionHandler(data, this->getCommandDelegate(), this, (void *)identity).run();
+         ZMQConnectionHandler(data, this->getOnDataDelegate(), this, (void *)identity).run();
 #endif
        }
      }

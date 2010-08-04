@@ -19,6 +19,7 @@ namespace AL {
 
     void marshallCall(const CallDefinition &def, std::string &msg)
     {
+
       std::stringstream  outstream;
       OArchive           oarchive(outstream);
 
@@ -26,10 +27,13 @@ namespace AL {
 
       //copy the message content
       msg = outstream.str();
+      std::cout << "marshallCall(" << msg.size() << ")" << std::endl;
     }
 
     void unmarshallResult(ResultDefinition &res, const std::string &result)
     {
+      std::cout << "unmarshallResult(" << result.size() << ")" << std::endl;
+
       boost::interprocess::bufferstream bstream((char *)result.data(), result.size());
       IArchive                          archive(bstream);
       archive >> res;
