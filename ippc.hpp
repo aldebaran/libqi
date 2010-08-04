@@ -11,6 +11,7 @@
 
 #include <alcommon-ng/collections/variables_list.hpp>
 #include <alcommon-ng/exceptions/exceptions.hpp>
+#include <alcommon-ng/messaging/messaging.hpp>
 #include <alcommon-ng/serialization/serialization.hpp>
 #include <alcommon-ng/transport/transport.hpp>
 
