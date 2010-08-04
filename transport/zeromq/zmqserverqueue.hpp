@@ -55,7 +55,7 @@ namespace AL {
      */
     void stop();
 
-    void sendResponse(const CallDefinition &response, AL::ALPtr<ResultDefinition> result, void *data);
+    void sendResponse(const std::string &result, void *data = 0);
 
     ResultHandler *getResultHandler() { return 0; }
 

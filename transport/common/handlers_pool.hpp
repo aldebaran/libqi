@@ -16,7 +16,7 @@
 #include <althread/althreadpool.h>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 class ConnectionHandler;
 

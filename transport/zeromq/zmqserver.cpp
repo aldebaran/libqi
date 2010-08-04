@@ -34,17 +34,8 @@ namespace AL {
     ZMQServer::ZMQServer (const std::string &server_name)
       : ServerBase(server_name),
         zctx(1),
-        zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)
     {
-      ALPath mypath = ALFileSystem::getTmpPath();
-      mypath /= server_name;
-#ifdef WIN32
-      // ck horrid hack so that naoqi excecutes
-      server_path = "tcp://127.0.0.1:5555";
-#else
-      server_path = "ipc://" + mypath.string();
-#endif
     }
 
     ZMQServer::~ZMQServer () {
@@ -108,8 +99,8 @@ namespace AL {
 
     //use only the number of thread we need
      void ZMQServer::run() {
-       alsdebug << "Start ZMQServer on: " << server_path;
-       zsocket.bind(server_path.c_str());
+       alsdebug << "Start ZMQServer on: " << _serverAddress;
+       zsocket.bind(_serverAddress.c_str());
 
        #ifdef ZMQ_FULL_ASYNC
        alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
@@ -119,46 +110,46 @@ namespace AL {
        while (true) {
          zmq::message_t  msg;
          zmq::message_t *identity;
-
          identity = recv(msg);
+         std::string data((char *)msg.data(), msg.size());
 
-         AL::ALPtr<CallDefinition>          def = unmarshallCall(msg);
+         //AL::ALPtr<CallDefinition>          def = unmarshallCall(msg);
 #ifdef ZMQ_FULL_ASYNC
-         handlersPool.pushTask(AL::ALPtr<ZMQConnectionHandler>(new ZMQConnectionHandler(def, this->getCommandDelegate(), this, (void *)identity)));
+         handlersPool.pushTask(AL::ALPtr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getOnDataDelegate(), this, (void *)identity)));
 #else
-         ZMQConnectionHandler(def, this->getCommandDelegate(), this, (void *)identity).run();
+         ZMQConnectionHandler(data, this->getCommandDelegate(), this, (void *)identity).run();
 #endif
        }
      }
 
-    void ZMQServer::sendResponse(const CallDefinition &def, AL::ALPtr<ResultDefinition> result, void *data) {
-      int                rc = 0;
-      zmq::message_t     msg;
-      zmq::message_t     emptymsg(0);
-      zmq::message_t    *identity = static_cast<zmq::message_t *>(data);
+     void ZMQServer::sendResponse(const std::string &result, void *data)
+     {
+       int                rc = 0;
+       zmq::message_t     msg(result.size());
+       zmq::message_t     emptymsg(0);
+       zmq::message_t    *identity = static_cast<zmq::message_t *>(data);
 
-      assert(identity);
-      assert(result);
+       memcpy(msg.data(), result.data(), result.size());
 
-      alsdebug << "ZMQ: send response";
-      marshallResult(result, msg);
+       assert(identity);
 
-      boost::mutex::scoped_lock lock(socketMutex);
-      {
-        //send identity (and an empty msg for xrep to be happy)
-        rc = zsocket.send(*identity, ZMQ_SNDMORE);
-        assert(rc > 0);
-        //delete identity;
-        rc = zsocket.send(emptymsg, ZMQ_SNDMORE);
-        assert(rc > 0);
+       alsdebug << "ZMQ: send response";
 
-        //send the message
-        alsdebug << "ZMQ: response size: " << msg.size();
-        rc = zsocket.send(msg);
-        assert(rc > 0);
-      }
-    }
-#endif
+       boost::mutex::scoped_lock lock(socketMutex);
+       {
+         //send identity (and an empty msg for xrep to be happy)
+         rc = zsocket.send(*identity, ZMQ_SNDMORE);
+         assert(rc > 0);
+         //delete identity;
+         rc = zsocket.send(emptymsg, ZMQ_SNDMORE);
+         assert(rc > 0);
+
+         //send the message
+         alsdebug << "ZMQ: response size: " << msg.size();
+         rc = zsocket.send(msg);
+         assert(rc > 0);
+       }
+     }
 
   }
 }

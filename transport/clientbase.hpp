@@ -11,18 +11,18 @@
 # include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
   class ClientBase {
   public:
-    ClientBase(const std::string &servername)
-      : server_name(servername)
+    ClientBase(const std::string &serverAddress)
+      : _serverAddress(serverAddress)
     {}
 
     virtual void send(const std::string &tosend, std::string &result);
 
   protected:
-    std::string         server_name;
+    std::string         _serverAddress;
   };
 }
 }

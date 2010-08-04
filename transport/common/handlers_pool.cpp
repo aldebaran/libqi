@@ -18,7 +18,7 @@
 #endif
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 HandlersPool::HandlersPool () {
   //pool.size_controller().resize(20);

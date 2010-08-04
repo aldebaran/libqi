@@ -65,16 +65,14 @@ namespace AL {
       while (true) {
         rc = s.recv(&msg);
         assert(rc > 0);
-        AL::ALPtr<CallDefinition> def = unmarshallCall(msg);
-        ZMQConnectionHandler(def, zserv->getCommandDelegate(), zserv, &s).run();
+        std::string data((char *)msg.data(), msg.size());
+        ZMQConnectionHandler(data, zserv->getOnDataDelegate(), zserv, &s).run();
       }
     }
 
     void ZMQServerQueue::run() {
-      alsdebug << "Start ZMQServer on: " << server_path;
-      zsocket.bind(server_path.c_str());
-
-      //zmq::socket_t workers (zctx, ZMQ_XREQ);
+      alsdebug << "Start ZMQServer on: " << _serverAddress;
+      zsocket.bind(_serverAddress.c_str());
       zsocketworkers.bind(gWorkersAddress);
 
       alsdebug << "ZMQ workers binded";
@@ -89,14 +87,16 @@ namespace AL {
       std::cout << "quit server" << std::endl;
     }
 
-    void ZMQServerQueue::sendResponse(const CallDefinition &def, AL::ALPtr<ResultDefinition> result, void *data) {
+    void ZMQServerQueue::sendResponse(const std::string &result, void *data)
+    {
       int                rc = 0;
-      zmq::message_t     msg;
+      zmq::message_t     msg(result.size());
+
+      memcpy(msg.data(), result.data(), result.size());
       zmq::socket_t     *sock = static_cast<zmq::socket_t *>(data);
 
-      assert(data && result);
+      assert(data);
       alsdebug << "ZMQ: send response";
-      marshallResult(result, msg);
       rc = sock->send(msg);
       assert(rc > 0);
     }

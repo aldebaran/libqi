@@ -58,8 +58,7 @@ namespace AL {
     void stop();
 
     void poll();
-
-    void sendResponse(const CallDefinition &response, AL::ALPtr<ResultDefinition> result, void *data);
+    void sendResponse(const std::string &result, void *data = 0);
 
     ResultHandler *getResultHandler() { return 0; }
 
@@ -67,9 +66,7 @@ namespace AL {
 
   private:
     bool                server_running;
-    std::string         server_path;
     zmq::context_t      zctx;
-    zmq::socket_t       zsocketworkers;
     zmq::socket_t       zsocket;
     boost::mutex        socketMutex;
     HandlersPool        handlersPool;

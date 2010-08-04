@@ -14,7 +14,7 @@
   * this is mostly internal
   */
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
   class ConnectionHandler;
   class ResultDefinition;
@@ -25,7 +25,7 @@ namespace AL {
     class ServerResponseDelegate
     {
     public:
-      virtual void sendResponse(const CallDefinition &def, AL::ALPtr<ResultDefinition> result, void *data = 0) = 0;
+      virtual void sendResponse(const std::string &result, void *data = 0) = 0;
     };
   }
 

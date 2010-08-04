@@ -10,8 +10,8 @@
 namespace AL {
   namespace Transport {
 
-    ZMQConnectionHandler::ZMQConnectionHandler(AL::ALPtr<CallDefinition> def, ServerCommandDelegate *callbackdelegate, internal::ServerResponseDelegate *responsedelegate, void *data)
-    : def(def),
+    ZMQConnectionHandler::ZMQConnectionHandler(const std::string &msg, OnDataDelegate *callbackdelegate, internal::ServerResponseDelegate *responsedelegate, void *data)
+    : msg(msg),
       callbackdelegate(callbackdelegate),
       data(data),
       responsedelegate(responsedelegate)
@@ -24,9 +24,10 @@ namespace AL {
 
   void ZMQConnectionHandler::run() {
     assert(callbackdelegate);
-    AL::ALPtr<ResultDefinition> result = callbackdelegate->ippcCallback(*def);
-    if (result && responsedelegate)
-      responsedelegate->sendResponse(*def, result, data);
+    std::string result;
+    callbackdelegate->onData(msg, result);
+    if (responsedelegate)
+      responsedelegate->sendResponse(result, data);
   }
 }
 }

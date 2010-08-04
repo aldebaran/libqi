@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef LIBIPPC_CONNECTIONHANDLER_HPP_
-#define LIBIPPC_CONNECTIONHANDLER_HPP_
+#ifndef AL_MESSAGING_CONNECTION_HANDLER_HPP_
+#define AL_MESSAGING_CONNECTION_HANDLER_HPP_
 
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
@@ -23,18 +23,18 @@ namespace AL {
  */
     class ZMQConnectionHandler : public Runnable {
     public:
-      ZMQConnectionHandler(AL::ALPtr<CallDefinition> def, ServerCommandDelegate *sdelegate, internal::ServerResponseDelegate* rdelegate, void *data);
+      ZMQConnectionHandler(const std::string &msg, OnDataDelegate *sdelegate, internal::ServerResponseDelegate* rdelegate, void *data);
       virtual ~ZMQConnectionHandler ();
       virtual void run ();
 
     private:
-      void                              *data;
-      AL::ALPtr<CallDefinition>         def;
-      ServerCommandDelegate             *callbackdelegate;
-      internal::ServerResponseDelegate  *responsedelegate;
+      void                             *data;
+      std::string                       msg;
+      OnDataDelegate                   *callbackdelegate;
+      internal::ServerResponseDelegate *responsedelegate;
     };
 
   }
 }
 
-#endif /* !LIBIPPC_CONNECTIONHANDLER_HPP_ */
+#endif /* !AL_MESSAGING_CONNECTION_HANDLER_HPP_ */

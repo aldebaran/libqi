@@ -6,25 +6,24 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef LIBIPP_CALLBACKCOMMAND_HPP_
-#define LIBIPP_CALLBACKCOMMAND_HPP_
+#ifndef AL_MESSAGING_TRANSPORT_SERVER_CALLBACK_DELEGATE_HPP_
+#define AL_MESSAGING_TRANSPORT_SERVER_CALLBACK_DELEGATE_HPP_
 
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/serialization/result_definition.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
-/** Delegate a program should implement to receive call from ippc client
-  */
+    /** Interface used by transport's server to delegate the data handling
+      */
+    class OnDataDelegate {
+    public:
+      //return 0 if no result is expected
+      virtual void onData(const std::string &data, std::string &result) = 0;
+    };
 
-class ServerCommandDelegate {
-public:
-  //return 0 if no result is expected
-  virtual AL::ALPtr<ResultDefinition> ippcCallback (const CallDefinition &) = 0;
-};
-
+  }
 }
-}
 
-#endif /* !LIBIPPC_CALLBACKCOMMAND_HPP_ */
+#endif /* !AL_MESSAGING_TRANSPORT_SERVER_CALLBACK_DELEGATE_HPP_ */

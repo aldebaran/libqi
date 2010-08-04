@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	_ALIPPC_TRANSPORT_SERVERBASE_HPP_
-# define   	_ALIPPC_TRANSPORT_SERVERBASE_HPP_
+#ifndef   	_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_
+# define   	_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_
 
 # include <althread/altask.h>
 # include <alcommon-ng/transport/common/threadable.hpp>
@@ -14,27 +14,24 @@
 # include <alcommon-ng/transport/common/server_command_delegate.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
-      class ServerBase : public Threadable, public AL::ALTask, public internal::ServerResponseDelegate {
-  public:
-    ServerBase(const std::string &servername)
-      : server_name(servername),
-        command_delegate(0)
-    {};
-    virtual ~ServerBase() {}
+    class ServerBase : public Threadable, public AL::ALTask, public internal::ServerResponseDelegate {
+    public:
+      ServerBase(const std::string &_serverAddress)
+        : _serverAddress(_serverAddress),
+          _onDataDelegate(0)
+      {};
+      virtual ~ServerBase() {}
 
-    virtual void setCommandDelegate(ServerCommandDelegate* callback) { command_delegate = callback; }
+      virtual void            setOnDataDelegate(OnDataDelegate* callback) { _onDataDelegate = callback; }
+      virtual OnDataDelegate *getOnDataDelegate() { return _onDataDelegate; }
 
-    virtual ServerCommandDelegate *getCommandDelegate() { return command_delegate; }
-
-  protected:
-    std::string                     server_name;
-    ServerCommandDelegate    *command_delegate;
-  };
-
-}
+    protected:
+      std::string        _serverAddress;
+      OnDataDelegate    *_onDataDelegate;
+    };
+  }
 }
 
-
-#endif	    /* !_ALIPPC_TRANSPORT_ROOT_SERVER_HPP_ */
+#endif	    /* !_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_ */

@@ -10,7 +10,7 @@
 #define LIBIPPC_THREADABLE_HPP_
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief The threadable interface to ensure that the run () method is available.

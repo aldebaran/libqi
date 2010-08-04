@@ -8,9 +8,17 @@
 #ifndef   	_AL_MESSAGING_TRANSPORT_HPP_
 # define   	_AL_MESSAGING_TRANSPORT_HPP_
 
+#include <alcommon-ng/config.hpp>
+
 #include <alcommon-ng/transport/common/common.hpp>
-#include <alcommon-ng/transport/shm/shm.hpp>
-#include <alcommon-ng/transport/zeromq/zeromq.hpp>
+
+#ifdef WITH_SHM
+# include <alcommon-ng/transport/shm/shm.hpp>
+#endif
+
+#ifdef WITH_ZMQ
+# include <alcommon-ng/transport/zeromq/zeromq.hpp>
+#endif
 
 //force Server to be a ShmServer for the moment
 namespace AL {

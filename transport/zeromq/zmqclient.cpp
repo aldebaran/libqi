@@ -16,8 +16,10 @@
 namespace AL {
   namespace Transport {
 
-    //static const std::string gAddress = "ipc:///tmp/naoqi/";
-    //static const std::string gAddress = "tcp://127.0.0.1:5555";
+    /** Accepted address:
+     *   - ipc:///tmp/naoqi/paf
+     *   - tcp://127.0.0.1:5555
+     */
 
   ZMQClient::ZMQClient(const std::string &servername)
     : ClientBase(servername),
@@ -26,8 +28,6 @@ namespace AL {
   {
     connect();
   }
-
-
 
   //TODO: useless constructor for compat with shm ATM (should be removed)
   ZMQClient::ZMQClient(const std::string &servername, ResultHandler *resultHandler)
@@ -40,27 +40,18 @@ namespace AL {
 
   void ZMQClient::connect()
   {
-    ALPath mypath = ALFileSystem::getTmpPath();
-    mypath /= server_name;
-    std::string address;
-#ifdef WIN32
-    // ck horrid hack so that naoqi excecutes
-    address = "tcp://127.0.0.1:5555";
-#else
-    address = "ipc://" + mypath.string();
-#endif
-    socket.connect(address.c_str());
+    socket.connect(_serverAddress.c_str());
   }
 
   void ZMQClient::send(const std::string &tosend, std::string &result)
   {
     //TODO: could we avoid more copy?
-    zmq::message_t msg(tosend.data(), tosend.size());
+    zmq::message_t msg(tosend.size());
     //TODO?
-    //memcpy(request.data(), strstream.str().data(), strstream.str().size());
+    memcpy(msg.data(), tosend.data(), tosend.size());
     socket.send(msg);
     socket.recv(&msg);
-    result.copy(msg.data(), msg.size());
+    result.copy((char *)msg.data(), msg.size());
   }
 
 }
