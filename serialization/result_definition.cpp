@@ -26,6 +26,14 @@ ResultDefinition::ResultDefinition (uint32_t request_id, const VariableValue & v
 ResultDefinition::~ResultDefinition () {
 }
 
+bool ResultDefinition::operator==(const ResultDefinition& rhs) const {
+  return (
+    /*(this->v.as<std::string>() == rhs.exceptionMessage()) && */
+    (this->request_id == rhs.getRequestId()) 
+    /* FIXME(ckilner) ambiguous && (this->v == rhs.value()) */
+    );
+}
+
 bool ResultDefinition::exceptionCaught () const {
   return is_exception;
 }

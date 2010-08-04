@@ -31,6 +31,7 @@ class CallDefinition {
 public:
   CallDefinition ();
   CallDefinition (uint32_t request_id);
+  bool operator==(const CallDefinition& rhs) const;
   virtual ~CallDefinition ();
 
   void setMethodName (const std::string & methodName);

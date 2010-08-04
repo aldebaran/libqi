@@ -33,6 +33,7 @@ public:
   ResultDefinition ();
   ResultDefinition (const CallDefinition &def);
   ResultDefinition (uint32_t request_id, const VariableValue & val);
+  bool operator==(const ResultDefinition& rhs) const;
   virtual ~ResultDefinition ();
 
   uint32_t getRequestId () const;

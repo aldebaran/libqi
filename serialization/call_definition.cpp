@@ -26,6 +26,16 @@ CallDefinition::CallDefinition (uint32_t request_id) :
 CallDefinition::~CallDefinition () {
 }
 
+bool CallDefinition::operator==(const CallDefinition& rhs) const {
+  return (
+    (methodName == rhs.getMethodName()) &&
+    (moduleName == rhs.getModuleName()) &&
+    (request_id == rhs.getRequestId()) &&
+    (sender == rhs.getSender()) &&
+    (is_pc == rhs.isPCall()) /* FIXME(ckilner) ambiguous && (list == rhs.getParameters()) */
+    );
+}
+
 int32_t CallDefinition::getRequestId () const {
   return request_id;
 }
