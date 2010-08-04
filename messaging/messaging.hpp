@@ -10,6 +10,6 @@
 
 # include <alcommon-ng/messaging/client.hpp>
 # include <alcommon-ng/messaging/server.hpp>
-# include <alcommon-ng/messaging/onmessagedelegate.hpp>
+# include <alcommon-ng/messaging/messagehandler.hpp>
 
 #endif // AL_MESSAGING_MESSAGING_HPP

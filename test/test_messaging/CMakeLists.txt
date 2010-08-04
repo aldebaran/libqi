@@ -5,7 +5,7 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-create_gtest(alippc_simple_tests
-             SRC          alippc_simple_tests.cpp
+create_gtest(test_messaging
+             SRC          test_messaging.cpp
              DEPENDENCIES ALCOMMON-NG
              TIMEOUT      120)
