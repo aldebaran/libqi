@@ -1,4 +1,3 @@
-#add_subdirectory(test_alippc)
 
 add_subdirectory(test_messaging)
 add_subdirectory(test_boost_serializer)
