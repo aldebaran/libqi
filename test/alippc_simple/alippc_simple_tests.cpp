@@ -36,7 +36,7 @@ int test1(const std::string &color)
   return 0;
 }
 
-class Module1CallBack :  public AL::Messaging::ServerCommandDelegate
+class Module1CallBack :  public AL::Messaging::OnMessageDelegate
 {
 public:
 
@@ -46,7 +46,7 @@ public:
   }
 
   // to call function on current process
-  AL::ALPtr<AL::Messaging::ResultDefinition> ippcCallback(const AL::Messaging::CallDefinition &def)
+  AL::ALPtr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def)
   {
     AL::ALPtr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
 
@@ -72,7 +72,7 @@ int test2(int cowCount)
   return 42;
 }
 
-class Module2CallBack :  public AL::Messaging::ServerCommandDelegate
+class Module2CallBack :  public AL::Messaging::OnMessageDelegate
 {
 public:
   void setServer(ALPtr<AL::Messaging::Server> server)
@@ -80,7 +80,7 @@ public:
     fIppcServer = server;
   }
   // to call function on current process
-  AL::ALPtr<AL::Messaging::ResultDefinition> ippcCallback(const AL::Messaging::CallDefinition & def)
+  AL::ALPtr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition & def)
   {
     AL::ALPtr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
 
@@ -107,11 +107,16 @@ protected:
   ALPtr<AL::Messaging::Server> fIppcServer;
 };
 
+
+static const std::string gServerAddress = "tcp://127.0.0.1:5555";
+static const std::string gClientAddress = "tcp://127.0.0.1:5555";
+
+
 int main_server()
 {
   Module2CallBack           module2Callback;
-  ALPtr<AL::Messaging::Server>       fIppcServer  = ALPtr<AL::Messaging::Server>(new AL::Messaging::Server("test-module1"));
-  fIppcServer->setCommandDelegate(&module2Callback);
+  ALPtr<AL::Messaging::Server>       fIppcServer  = ALPtr<AL::Messaging::Server>(new AL::Messaging::Server(gServerAddress));
+  fIppcServer->setOnMessageDelegate(&module2Callback);
   boost::thread             threadServer(boost::bind(&AL::Messaging::Server::run, fIppcServer.get()));
   module2Callback.setServer(fIppcServer);
   while(1)
@@ -123,23 +128,11 @@ int main_client(int clientId)
 {
   std::stringstream sstream;
 
-  sstream << "test-module-client-" << clientId;
-  std::string clientname = sstream.str();
-
-#if 1
-  Module1CallBack                module1Callback;
-  ALPtr<AL::Messaging::Server>   fIppcServer  = ALPtr<AL::Messaging::Server>(new AL::Messaging::Server(clientname));
-  fIppcServer->setCommandDelegate(&module1Callback);
-  boost::thread                  threadServer(boost::bind(&AL::Messaging::Server::run, fIppcServer.get()));
-  module1Callback.setServer(fIppcServer);
-  AL::Messaging::Client              client("test-module1", fIppcServer->getResultHandler());
-#else
-  AL::Messaging::Client              client("test-module1");
-#endif
+  AL::Messaging::Client              client(gClientAddress);
   AL::Messaging::CallDefinition      def;
 
   def.setMethodName("test2");
-  def.setSender(clientname);
+  def.setSender("toto");
   def.push(41);
   AL::ALPtr<AL::Messaging::ResultDefinition> res;
 
