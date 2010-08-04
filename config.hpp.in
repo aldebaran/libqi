@@ -1,0 +1,32 @@
+// -*- C++ -*-
+// vim:syntax=c
+
+/**
+ * Aldebaran Robotics (c) 2010 All Rights Reserved
+ */
+
+#ifndef AL_MESSAGING_CONFIG_HPP_
+#define AL_MESSAGING_CONFIG_HPP_
+
+#define AL_MESSAGING_ON  1
+#define AL_MESSAGING_OFF 0
+
+
+#define _INTERNAL_WITH_ZMQ    AL_MESSAGING_@WITH_ZMQ@
+#define _INTERNAL_WITH_SHM    AL_MESSAGING_@WITH_SHM@
+#define _INTERNAL_WITH_THRIFT AL_MESSAGING_@WITH_THRIFT@
+
+#if _INTERNAL_WITH_ZMQ
+# define WITH_ZMQ
+#endif
+
+#if _INTERNAL_WITH_SHM
+# define WITH_SHM
+#endif
+
+#if _INTERNAL_WITH_THRIFT
+# define WITH_THRIFT
+#endif
+
+#endif // !AL_MESSAGING_CONFIG_HPP_
+

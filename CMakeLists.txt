@@ -12,8 +12,8 @@ project (ALCommon-NG)
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
-add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
+create_config_h("config.hpp.in" "alcommon-ng/config.hpp")
 
 file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
 file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
