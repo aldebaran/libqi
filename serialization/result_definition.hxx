@@ -18,9 +18,9 @@ void ResultDefinition::value (const T & val) {
 template<class Archive>
 void ResultDefinition::serialize(Archive & ar, const unsigned int version) {
   (void) version;
-  ar & request_id;
-  ar & is_exception;
-  ar & v;
+  ar & boost::serialization::make_nvp("request_id", request_id);
+  ar & boost::serialization::make_nvp("is_exception", is_exception);
+  ar & boost::serialization::make_nvp("v", v);
 }
 
 }

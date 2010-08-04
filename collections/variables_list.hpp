@@ -225,8 +225,8 @@ private:
   template <class Archive>
   void serialize (Archive & ar, unsigned int version) {
     (void) version;
-    ar & val;
-    ar & empty;
+    ar & boost::serialization::make_nvp("val", val);
+    ar & boost::serialization::make_nvp("empty", empty);
   }
 };
 
@@ -256,7 +256,7 @@ private:
   void serialize (Archive & ar, unsigned int version) {
     (void) version;
     std::list<VariableValue> * l = this;
-    ar & *l;
+    ar & boost::serialization::make_nvp("list", *l);
   }
 };
 

@@ -19,13 +19,13 @@ void CallDefinition::push (const T & value) {
 template<class Archive>
 void CallDefinition::serialize(Archive & ar, const unsigned int version) {
   (void) version;
-  ar & request_id;
-  ar & methodName;
-  ar & moduleName;
-  ar & list;
-  ar & as_res;
-  ar & is_pc;
-  ar & sender;
+  ar & boost::serialization::make_nvp("request_id", request_id);
+  ar & boost::serialization::make_nvp("methodName", methodName);
+  ar & boost::serialization::make_nvp("moduleName", moduleName);
+  ar & boost::serialization::make_nvp("list", list);
+  ar & boost::serialization::make_nvp("as_res", as_res);
+  ar & boost::serialization::make_nvp("is_pc", is_pc);
+  ar & boost::serialization::make_nvp("sender", sender);
 }
 
 }
