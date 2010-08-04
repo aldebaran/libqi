@@ -9,7 +9,7 @@
 #ifndef SERIALIZATION_SERIALIZATION_H_
 #define SERIALIZATION_SERIALIZATION_H_
 
-#include "boost_serialization.h"
+#include "boost_serializer.h"
 
 namespace AL {
   namespace Serialization {
