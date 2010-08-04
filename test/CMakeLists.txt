@@ -2,4 +2,4 @@
 
 add_subdirectory(test_messaging)
 add_subdirectory(test_boost_serializer)
-cond_subdirectory(serialization_thrift WITH_THRIFT)
+cond_subdirectory(test_serialization_thrift WITH_THRIFT)
