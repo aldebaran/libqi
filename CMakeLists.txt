@@ -12,7 +12,7 @@ project (ALCommon-NG)
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
-
+add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
 file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
 file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
@@ -21,13 +21,13 @@ file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thri
 file(GLOB UTIL_SRC                 util/*.cpp util/*.h*)
 file(GLOB EXCEPTIONS_SRC           exceptions/*.cpp exceptions/*.h*)
 
-file(GLOB TRANSPORT_SRC                   transport/*.cpp transport/*.h*)
-file(GLOB TRANSPORT_COMMON_SRC            transport/common/*.cpp transport/common/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   transport/shm/util/*.cpp transport/shm/util/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
-file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
+file(GLOB TRANSPORT_SRC                    transport/*.cpp transport/*.h*)
+file(GLOB TRANSPORT_COMMON_SRC             transport/common/*.cpp transport/common/*.h*)
+#file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   transport/shm/util/*.cpp transport/shm/util/*.h*)
+#file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
+#file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
+#file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
+file(GLOB TRANSPORT_ZMQ_SRC                transport/zeromq/*.cpp transport/zeromq/*.h*)
 
 
 source_group( Collections            FILES ${COLLECTIONS_SRC})
@@ -38,10 +38,10 @@ source_group( Exceptions             FILES ${EXCEPTIONS_SRC})
 
 source_group( Transport              FILES ${TRANSPORT_SRC})
 source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
-source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
-source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
-source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
-source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
+#source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
+#source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
+#source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
+#source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
 source_group( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
 
 set(HEADERS
@@ -56,10 +56,10 @@ set( SRC
     ${UTIL_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
-    ${TRANSPORT_COMMON_SHM_UTIL_SRC}
-    ${TRANSPORT_COMMON_SHM_CLIENT_SRC}
-    ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
-    ${TRANSPORT_COMMON_SHM_SERVER_SRC}
+#    ${TRANSPORT_COMMON_SHM_UTIL_SRC}
+#    ${TRANSPORT_COMMON_SHM_CLIENT_SRC}
+#    ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
+#    ${TRANSPORT_COMMON_SHM_SERVER_SRC}
     ${TRANSPORT_ZMQ_SRC}
 )
 
