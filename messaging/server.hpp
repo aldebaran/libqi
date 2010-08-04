@@ -9,17 +9,36 @@
 # define   	AL_MESSAGING_SERVER_HPP_
 
 # include <string>
+# include <alcommon-ng/messaging/onmessagedelegate.hpp>
+# include <alcommon-ng/transport/common/ondatadelegate.hpp>
+# include <alcommon-ng/transport/common/threadable.hpp>
 
 namespace AL {
+  namespace Transport {
+    class Server;
+  }
+
   namespace Messaging {
 
-    class Server {
+    class ResultHandler;
+
+    class Server : public AL::Transport::Threadable, public AL::Transport::OnDataDelegate
+    {
     public:
       Server(const std::string &address);
+      virtual void run();
 
     public:
-      //void bind(boost::function fct);
+      virtual void               setOnMessageDelegate(OnMessageDelegate* callback) { _onMessageDelegate = callback; }
+      virtual OnMessageDelegate *getOnMessageDelegate() { return _onMessageDelegate; }
 
+    protected:
+      virtual void onData(const std::string &data, std::string &result);
+
+    protected:
+      std::string            _serverAddress;
+      OnMessageDelegate     *_onMessageDelegate;
+      AL::Transport::Server *_server;
     };
 
   }

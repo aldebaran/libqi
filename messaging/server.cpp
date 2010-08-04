@@ -14,38 +14,49 @@
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/serialization/result_definition.hpp>
 
+#include <alcommon-ng/transport/transport.hpp>
+
 namespace AL {
   namespace Messaging {
-    void marshallResult(AL::ALPtr<ResultDefinition> result, std::string &msg)
+
+    void marshallResult(const ResultDefinition &result, std::string &msg)
     {
       std::stringstream  outstream;
       OArchive           oarchive(outstream);
 
-      oarchive << (*result);
+      oarchive << result;
       msg = outstream.str();
     }
 
-    void marshallCall(AL::ALPtr<CallDefinition> def, std::string &msg)
+    AL::ALPtr<CallDefinition> unmarshallCall(const std::string &msg, CallDefinition &def)
     {
-      std::stringstream  outstream;
-      OArchive           oarchive(outstream);
-
-      oarchive << (*def);
-
-      //copy the message content
-      msg = outstream.str();
-    }
-
-    AL::ALPtr<CallDefinition> unmarshallCall(std::string &msg)
-    {
-      AL::ALPtr<CallDefinition>         def(new CallDefinition());
       boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
       IArchive                          archive(bstream);
 
-      archive >> *def;
-      return def;
+      archive >> def;
     }
 
+    Server::Server(const std::string &address)
+    {
+      _server = new AL::Transport::ZMQServer(address);
+      _server->setOnDataDelegate(this);
+    }
+
+    void Server::onData(const std::string &data, std::string &result)
+    {
+      CallDefinition              def;
+      AL::ALPtr<ResultDefinition> res;
+
+      unmarshallCall(data, def);
+      res = _onMessageDelegate->onMessage(def);
+      assert(res);
+      marshallResult(*res, result);
+    }
+
+    void Server::run()
+    {
+      _server->run();
+    }
 
   }
 }

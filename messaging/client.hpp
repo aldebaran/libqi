@@ -10,6 +10,7 @@
 
 # include <string>
 # include <alcore/alptr.h>
+# include <alcommon-ng/transport/client.hpp>
 
 namespace AL {
   namespace Messaging {
@@ -30,9 +31,12 @@ namespace AL {
 
       //TODO: ...
 
-    protected:
+    //protected:
+    public:
       AL::ALPtr<ResultDefinition> send(CallDefinition &def);
 
+    protected:
+      AL::Transport::Client *_client;
     };
   }
 }
