@@ -67,7 +67,7 @@ namespace AL {
         assert(rc > 0);
         std::string data;
         data.assign((char *)msg.data(), msg.size());
-        ZMQConnectionHandler(data, zserv->getOnDataDelegate(), zserv, &s).run();
+        ZMQConnectionHandler(data, zserv->getDataHandler(), zserv, &s).run();
       }
     }
 
@@ -119,13 +119,13 @@ namespace AL {
 
           for (int i = 0; i < msg.size(); ++i)
             printf("0x%.2x\n", ((char *)msg.data())[i]);
-          AL::ALPtr<ippc::CallDefinition>   def(new ippc::CallDefinition());
+          boost::shared_ptr<ippc::CallDefinition>   def(new ippc::CallDefinition());
           boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
           ippc::IArchive                    archive(bstream);
 
           //unmarshall the message
           archive >> *def;
-          //handlersPool.pushTask(AL::ALPtr<ippc::ZMQConnectionHandler>(new ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this)));
+          //handlersPool.pushTask(boost::shared_ptr<ippc::ZMQConnectionHandler>(new ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this)));
           ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this).run();
         }
       }

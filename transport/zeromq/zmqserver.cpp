@@ -114,11 +114,11 @@ namespace AL {
          std::string data;
          data.assign((char *)msg.data(), msg.size());
 
-         //AL::ALPtr<CallDefinition>          def = unmarshallCall(msg);
+         //boost::shared_ptr<CallDefinition>          def = unmarshallCall(msg);
 #ifdef ZMQ_FULL_ASYNC
-         handlersPool.pushTask(AL::ALPtr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getOnDataDelegate(), this, (void *)identity)));
+         handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
 #else
-         ZMQConnectionHandler(data, this->getOnDataDelegate(), this, (void *)identity).run();
+         ZMQConnectionHandler(data, this->getDataDelegate(), this, (void *)identity).run();
 #endif
        }
      }

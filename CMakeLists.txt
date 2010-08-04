@@ -12,6 +12,7 @@ project (ALCommon-NG)
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
+add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
 create_config_h("config.hpp.in" "alcommon-ng/config.hpp")
 
@@ -32,7 +33,7 @@ file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/s
 file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
 
-
+source_group( Messaging              FILES ${MESSAGING_SRC})
 source_group( Collections            FILES ${COLLECTIONS_SRC})
 source_group( Serialization          FILES ${SERIALIZATION_SRC})
 source_group( Serialization\\Thrift  FILES ${SERIALIZATION_THRIFT_SRC})
@@ -41,11 +42,7 @@ source_group( Exceptions             FILES ${EXCEPTIONS_SRC})
 
 source_group( Transport              FILES ${TRANSPORT_SRC})
 source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
-#source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
-#source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
-#source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
-#source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
-source_group( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
+
 
 set(HEADERS
   ippc.hpp
@@ -65,6 +62,7 @@ set(SRC
 
 if(WITH_ZMQ)
   set(SRC ${SRC} ${TRANSPORT_ZMQ_SRC})
+  source_group( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
 endif()
 
 if(WITH_SHM)
@@ -72,6 +70,11 @@ if(WITH_SHM)
                  ${TRANSPORT_COMMON_SHM_CLIENT_SRC}
                  ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
                  ${TRANSPORT_COMMON_SHM_SERVER_SRC})
+                 
+  source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
+  source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
+  source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
+  source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
 endif()
 
 
@@ -85,7 +88,6 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif (UNIX)
 
-add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
 use_lib (alcommon-ng REQUIRED ALL BOOST)
 use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)

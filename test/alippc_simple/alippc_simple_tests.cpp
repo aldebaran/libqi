@@ -13,7 +13,8 @@
 #include <boost/bind.hpp>
 
 #include <alcommon-ng/ippc.hpp>
-#include <alcore/alptr.h>
+//#include <alcore/alptr.h>
+#include <boost/shared_ptr.hpp>
 
 #ifdef _WIN32
     // CK 28/7/2010 dodgy hack so it compiles
@@ -22,7 +23,7 @@
     #include <unistd.h>
 #endif
 
-using AL::ALPtr;
+//using AL::ALPtr;
 
 static const int threadCount = 10;
 static const int loopCount   = 10000;
@@ -36,19 +37,19 @@ int test1(const std::string &color)
   return 0;
 }
 
-class Module1CallBack :  public AL::Messaging::OnMessageDelegate
+class Module1CallBack :  public AL::Messaging::MessageHandler
 {
 public:
 
-  void setServer(ALPtr<AL::Messaging::Server> server)
+  void setServer(boost::shared_ptr<AL::Messaging::Server> server)
   {
     fIppcServer = server;
   }
 
   // to call function on current process
-  AL::ALPtr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def)
+  boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def)
   {
-    AL::ALPtr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
+    boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
 
     printf("Module1 CallBack\n");
     // receive fonctionQuiPoutre
@@ -62,7 +63,7 @@ public:
   }
 
 protected:
-  ALPtr<AL::Messaging::Server> fIppcServer;
+  boost::shared_ptr<AL::Messaging::Server> fIppcServer;
 };
 
 int test2(int cowCount)
@@ -72,17 +73,17 @@ int test2(int cowCount)
   return 42;
 }
 
-class Module2CallBack :  public AL::Messaging::OnMessageDelegate
+class Module2CallBack :  public AL::Messaging::MessageHandler
 {
 public:
-  void setServer(ALPtr<AL::Messaging::Server> server)
+  void setServer(boost::shared_ptr<AL::Messaging::Server> server)
   {
     fIppcServer = server;
   }
   // to call function on current process
-  AL::ALPtr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition & def)
+  boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition & def)
   {
-    AL::ALPtr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
+    boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
 
     //printf("Module2 CallBack\n");
     // receive fonctionQuiPoutre
@@ -104,7 +105,7 @@ public:
     return res;
   }
 protected:
-  ALPtr<AL::Messaging::Server> fIppcServer;
+  boost::shared_ptr<AL::Messaging::Server> fIppcServer;
 };
 
 
@@ -115,8 +116,8 @@ static const std::string gClientAddress = "tcp://127.0.0.1:5555";
 int main_server()
 {
   Module2CallBack           module2Callback;
-  ALPtr<AL::Messaging::Server>       fIppcServer  = ALPtr<AL::Messaging::Server>(new AL::Messaging::Server(gServerAddress));
-  fIppcServer->setOnMessageDelegate(&module2Callback);
+  boost::shared_ptr<AL::Messaging::Server>       fIppcServer  = boost::shared_ptr<AL::Messaging::Server>(new AL::Messaging::Server(gServerAddress));
+  fIppcServer->setMessageHandler(&module2Callback);
   boost::thread             threadServer(boost::bind(&AL::Messaging::Server::run, fIppcServer.get()));
   module2Callback.setServer(fIppcServer);
   while(1)
@@ -134,7 +135,7 @@ int main_client(int clientId)
   def.setMethodName("test2");
   def.setSender("toto");
   def.push(41);
-  AL::ALPtr<AL::Messaging::ResultDefinition> res;
+  boost::shared_ptr<AL::Messaging::ResultDefinition> res;
 
   for (int i = 0; i< loopCount; ++i)
   {

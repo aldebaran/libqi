@@ -11,25 +11,30 @@
 # include <althread/altask.h>
 # include <alcommon-ng/transport/common/threadable.hpp>
 # include <alcommon-ng/transport/common/server_response_delegate.hpp>
-# include <alcommon-ng/transport/common/ondatadelegate.hpp>
+# include <alcommon-ng/transport/common/datahandler.hpp>
 
 namespace AL {
   namespace Transport {
 
-    class Server : public Threadable, public internal::ServerResponseDelegate {
+    class Server : public Threadable,
+      public internal::ServerResponseDelegate {
     public:
       Server(const std::string &_serverAddress)
         : _serverAddress(_serverAddress),
-          _onDataDelegate(0)
+          _dataHandler(0)
       {};
       virtual ~Server() {}
 
-      virtual void            setOnDataDelegate(OnDataDelegate* callback) { _onDataDelegate = callback; }
-      virtual OnDataDelegate *getOnDataDelegate() { return _onDataDelegate; }
+      virtual void setDataHandler(DataHandler* callback) {
+        _dataHandler = callback;
+      }
+      virtual DataHandler *getDataHandler() {
+        return _dataHandler;
+      }
 
     protected:
       std::string        _serverAddress;
-      OnDataDelegate    *_onDataDelegate;
+      DataHandler        *_dataHandler;
     };
   }
 }

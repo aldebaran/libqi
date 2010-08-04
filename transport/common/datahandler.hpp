@@ -17,7 +17,7 @@ namespace AL {
 
     /** Interface used by transport's server to delegate the data handling
       */
-    class OnDataDelegate {
+    class DataHandler {
     public:
       //return 0 if no result is expected
       virtual void onData(const std::string &data, std::string &result) = 0;

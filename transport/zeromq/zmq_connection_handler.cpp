@@ -10,9 +10,13 @@
 namespace AL {
   namespace Transport {
 
-    ZMQConnectionHandler::ZMQConnectionHandler(const std::string &msg, OnDataDelegate *callbackdelegate, internal::ServerResponseDelegate *responsedelegate, void *data)
+    ZMQConnectionHandler::ZMQConnectionHandler(
+      const std::string &msg,
+      DataHandler *callbackdelegate,
+      internal::ServerResponseDelegate *responsedelegate,
+      void *data)
     : _msg(msg),
-      _callbackdelegate(callbackdelegate),
+      _dataHandler(callbackdelegate),
       _data(data),
       _responsedelegate(responsedelegate)
   {
@@ -23,10 +27,10 @@ namespace AL {
   }
 
   void ZMQConnectionHandler::run() {
-    assert(_callbackdelegate);
+    assert(_dataHandler);
     std::string result;
 
-    _callbackdelegate->onData(_msg, result);
+    _dataHandler->onData(_msg, result);
     if (_responsedelegate)
       _responsedelegate->sendResponse(result, _data);
   }

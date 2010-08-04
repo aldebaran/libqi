@@ -33,7 +33,7 @@ namespace AL {
 
     //protected:
     public:
-      AL::ALPtr<ResultDefinition> send(CallDefinition &def);
+      boost::shared_ptr<ResultDefinition> send(CallDefinition &def);
 
     protected:
       AL::Transport::Client *_client;

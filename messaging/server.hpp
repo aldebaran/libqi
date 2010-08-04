@@ -9,8 +9,8 @@
 # define   	AL_MESSAGING_SERVER_HPP_
 
 # include <string>
-# include <alcommon-ng/messaging/onmessagedelegate.hpp>
-# include <alcommon-ng/transport/common/ondatadelegate.hpp>
+# include <alcommon-ng/messaging/messagehandler.hpp>
+# include <alcommon-ng/transport/common/datahandler.hpp>
 # include <alcommon-ng/transport/common/threadable.hpp>
 
 namespace AL {
@@ -22,22 +22,28 @@ namespace AL {
 
     class ResultHandler;
 
-    class Server : public AL::Transport::Threadable, public AL::Transport::OnDataDelegate
+    class Server : public AL::Transport::Threadable,
+      public AL::Transport::DataHandler
     {
     public:
       Server(const std::string &address);
       virtual void run();
 
     public:
-      virtual void               setOnMessageDelegate(OnMessageDelegate* callback) { _onMessageDelegate = callback; }
-      virtual OnMessageDelegate *getOnMessageDelegate() { return _onMessageDelegate; }
+      virtual void setMessageHandler(MessageHandler* callback) {
+        _onMessageDelegate = callback;
+      }
+      
+      virtual MessageHandler* getMessageHandler() {
+        return _onMessageDelegate;
+      }
 
     protected:
       virtual void onData(const std::string &data, std::string &result);
 
     protected:
       std::string            _serverAddress;
-      OnMessageDelegate     *_onMessageDelegate;
+      MessageHandler        *_onMessageDelegate;
       AL::Transport::Server *_server;
     };
 

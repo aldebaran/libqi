@@ -19,10 +19,10 @@ namespace AL {
 
     /** Use this interface to allow your class receiving message
       */
-    class OnMessageDelegate {
+    class MessageHandler {
     public:
       //return 0 if no result is expected
-      virtual AL::ALPtr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def) = 0;
+      virtual boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def) = 0;
     };
 
   }

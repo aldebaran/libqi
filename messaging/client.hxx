@@ -11,10 +11,6 @@
 namespace AL {
   namespace Messaging {
 
-
-
-
-
     template<typename R, typename T1>
     R Client::call(const P1 &p1)
     {

@@ -41,13 +41,13 @@ public:
    * @brief Push a handler into the pool and schedule it.
    * @param handler
    */
-  void pushTask (AL::ALPtr<Runnable> handler);
+  void pushTask (boost::shared_ptr<Runnable> handler);
 
 private:
   /**
    * @brief The Boost implementation of the thread pool.
    */
-  AL::ALPtr<AL::ALThreadPool> fPool;
+  boost::shared_ptr<AL::ALThreadPool> fPool;
 };
 
 }

@@ -22,7 +22,7 @@ namespace AL {
 
 HandlersPool::HandlersPool () {
   //pool.size_controller().resize(20);
-  fPool = AL::ALPtr<AL::ALThreadPool>(new  AL::ALThreadPool(2,  200, 50, 100,  2 ));// Update offset
+  fPool = boost::shared_ptr<AL::ALThreadPool>(new  AL::ALThreadPool(2,  200, 50, 100,  2 ));// Update offset
   fPool->init( 2,  200, 50, 100,  5 );
 }
 
@@ -30,7 +30,7 @@ HandlersPool::~HandlersPool () {
   //fPool.wait();
 }
 
-void HandlersPool::pushTask (AL::ALPtr<Runnable> handler)
+void HandlersPool::pushTask (boost::shared_ptr<Runnable> handler)
 {
   boost::shared_ptr<Runnable> job(handler);
   fPool->enqueue(handler);

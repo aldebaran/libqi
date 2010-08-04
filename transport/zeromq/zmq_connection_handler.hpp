@@ -11,7 +11,7 @@
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
-#include <alcommon-ng/transport/common/ondatadelegate.hpp>
+#include <alcommon-ng/transport/common/datahandler.hpp>
 #include <string>
 
 namespace AL {
@@ -23,14 +23,19 @@ namespace AL {
  */
     class ZMQConnectionHandler : public Runnable {
     public:
-      ZMQConnectionHandler(const std::string &msg, OnDataDelegate *sdelegate, internal::ServerResponseDelegate* rdelegate, void *data);
+      ZMQConnectionHandler(
+        const std::string &msg,
+        DataHandler *sdelegate,
+        internal::ServerResponseDelegate* rdelegate,
+        void *data);
+
       virtual ~ZMQConnectionHandler ();
       virtual void run ();
 
     private:
       void                             *_data;
       std::string                       _msg;
-      OnDataDelegate                   *_callbackdelegate;
+      DataHandler                      *_dataHandler;
       internal::ServerResponseDelegate *_responsedelegate;
     };
 
