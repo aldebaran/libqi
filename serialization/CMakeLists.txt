@@ -1,14 +1,12 @@
 
 set(headers
   serialization.h
+  serialization_type.h
+  boost_serializer.h
   call_definition.hpp
   call_definition.hxx
   result_definition.hpp
   result_definition.hxx
-  iarchive.hpp
-  oarchive.hpp
-  serialization.hpp
-  serialization.hxx
   definition_type.hpp
 )
 

@@ -5,10 +5,6 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <sstream>
-#include <alcommon-ng/serialization/iarchive.hpp>
-#include <alcommon-ng/serialization/oarchive.hpp>
-#include <boost/interprocess/streams/bufferstream.hpp>
 #include <alcommon-ng/messaging/client.hpp>
 #include <alcommon-ng/transport/zeromq/zmqclient.hpp>
 #include <alcommon-ng/serialization/call_definition.hpp>

@@ -5,11 +5,6 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-
-#include <sstream>
-#include <boost/interprocess/streams/bufferstream.hpp>
-#include <alcommon-ng/serialization/oarchive.hpp>
-#include <alcommon-ng/serialization/iarchive.hpp>
 #include <alcommon-ng/messaging/server.hpp>
 #include <alcommon-ng/serialization/call_definition.hpp>
 #include <alcommon-ng/serialization/result_definition.hpp>
@@ -32,11 +27,9 @@ namespace AL {
       CallDefinition def = Serializer::deserialize<CallDefinition>(data);
       boost::shared_ptr<ResultDefinition> res;
 
-      //unmarshallCall(data, def);
       res = _onMessageDelegate->onMessage(def);
       assert(res);
       result = Serializer::serialize(*res);
-      //marshallResult(*res, result); // huh?
     }
 
     void Server::run()

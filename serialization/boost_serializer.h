@@ -10,6 +10,7 @@
 
 // internal type (fixed size buffer)
 #include <boost/interprocess/streams/bufferstream.hpp>
+#include <sstream>
 
 // xml archive
 #include <boost/archive/xml_oarchive.hpp>

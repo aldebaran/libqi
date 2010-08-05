@@ -22,17 +22,12 @@ namespace AL {
     public:
       Client(const std::string &address);
 
-    public:
       template<typename R, typename T1>
       R call(const T1 &p1);
 
       template<typename R, typename T1, typename T2>
       R call(const T1 &p1, const T2 &p2);
 
-      //TODO: ...
-
-    //protected:
-    public:
       boost::shared_ptr<ResultDefinition> send(CallDefinition &def);
 
     protected:
