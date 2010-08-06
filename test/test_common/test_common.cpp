@@ -1,7 +1,6 @@
 
 #include "gtest/gtest.h"
 #include <alcommon-ng/common/node.h>
-#include <alcommon-ng/messaging/client.hpp>
 #include <boost/timer.hpp>
 #include <string>
 
@@ -20,7 +19,7 @@ TEST(NodeTest, test)
   EXPECT_EQ("master", s.moduleName);
   EXPECT_EQ("addNode", s.methodName);
 
-  Client client(gAddress);
+  DefaultClient client(gAddress);
   CallDefinition def;
   def.setMethodName("addNode");
   def.setModuleName("master");

@@ -97,7 +97,7 @@ namespace AL {
     // ---- private
 
     void Node::xCreateNodeClient(const NodeInfo& node) {
-      boost::shared_ptr<Client> client = boost::shared_ptr<Client>(new Client(node.address));
+      boost::shared_ptr<DefaultClient> client = boost::shared_ptr<DefaultClient>(new DefaultClient(node.address));
       fNodeClients.insert(make_pair(node.name, client));
     }
   }

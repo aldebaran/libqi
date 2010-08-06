@@ -12,19 +12,15 @@
 #include "namelookup.h"
 #include "nodeinfo.h"
 #include "serviceinfo.h"
-#include <alcommon-ng/messaging/messagehandler.hpp>
-#include <alcommon-ng/messaging/server.hpp>
+#include <alcommon-ng/messaging/messaging.hpp>
 
 
 namespace AL {
-
-  namespace Messaging {
-    class Client;
-  }
-
   namespace Common {
 
-    class Node : AL::Messaging::MessageHandler, public AL::Messaging::Server {
+    class Node :
+      AL::Messaging::DefaultMessageHandler,
+      public AL::Messaging::DefaultServer {
     public:
       Node(const std::string& name, const std::string &address);
 
@@ -42,7 +38,7 @@ namespace AL {
       NodeInfo fNodeInfo;
       NameLookup<NodeInfo> fNodeList;
       NameLookup<ServiceInfo> fServiceList;
-      NameLookup<boost::shared_ptr<AL::Messaging::Client> > fNodeClients;
+      NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fNodeClients;
 
       void xCreateNodeClient(const NodeInfo& node);
 

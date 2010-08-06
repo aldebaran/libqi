@@ -14,6 +14,8 @@
 #include <alcommon-ng/ippc.hpp>
 #include <boost/shared_ptr.hpp>
 
+using namespace AL::Messaging;
+
 #ifdef _WIN32
     // CK 28/7/2010 dodgy hack so it compiles
     #define sleep(x) Sleep(x)
@@ -35,11 +37,11 @@ int test1(const std::string &color)
   return 0;
 }
 
-class Module1CallBack : public AL::Messaging::MessageHandler
+class Module1CallBack : public DefaultMessageHandler
 {
 public:
 
-  void setServer(boost::shared_ptr<AL::Messaging::Server> server)
+  void setServer(boost::shared_ptr<DefaultServer> server)
   {
     fIppcServer = server;
   }
@@ -61,7 +63,7 @@ public:
   }
 
 protected:
-  boost::shared_ptr<AL::Messaging::Server> fIppcServer;
+  boost::shared_ptr<DefaultServer > fIppcServer;
 };
 
 int test2(int cowCount)
@@ -71,10 +73,10 @@ int test2(int cowCount)
   return 42;
 }
 
-class Module2CallBack :  public AL::Messaging::MessageHandler
+class Module2CallBack :  public DefaultMessageHandler
 {
 public:
-  void setServer(boost::shared_ptr<AL::Messaging::Server> server)
+  void setServer(boost::shared_ptr<DefaultServer > server)
   {
     fIppcServer = server;
   }
@@ -100,7 +102,7 @@ public:
     return res;
   }
 protected:
-  boost::shared_ptr<AL::Messaging::Server> fIppcServer;
+  boost::shared_ptr<DefaultServer > fIppcServer;
 };
 
 
@@ -111,9 +113,9 @@ static const std::string gClientAddress = "tcp://127.0.0.1:5555";
 int main_server()
 {
   Module2CallBack           module2Callback;
-  boost::shared_ptr<AL::Messaging::Server>       fIppcServer  = boost::shared_ptr<AL::Messaging::Server>(new AL::Messaging::Server(gServerAddress));
+  boost::shared_ptr<DefaultServer >       fIppcServer  = boost::shared_ptr<DefaultServer >(new DefaultServer(gServerAddress));
   fIppcServer->setMessageHandler(&module2Callback);
-  boost::thread             threadServer(boost::bind(&AL::Messaging::Server::run, fIppcServer.get()));
+  boost::thread             threadServer(boost::bind(&DefaultServer::run, fIppcServer.get()));
   module2Callback.setServer(fIppcServer);
   while(1)
     sleep(5);
@@ -124,7 +126,7 @@ int main_client(int clientId)
 {
   std::stringstream sstream;
 
-  AL::Messaging::Client              client(gClientAddress);
+  AL::Messaging::DefaultClient       client(gClientAddress);
   AL::Messaging::CallDefinition      def;
 
   def.setMethodName("test2");

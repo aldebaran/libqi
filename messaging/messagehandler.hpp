@@ -9,8 +9,10 @@
 #define AL_MESSAGING_ON_MESSAGE_DELEGATE_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+//#include <alcommon-ng/serialization/call_definition.hpp>
+//#include <alcommon-ng/serialization/result_definition.hpp>
+//#include <alcommon-ng/serialization/call_request.h>
+//#include <alcommon-ng/serialization/call_response.h>
 
 namespace AL {
   namespace Messaging {
@@ -20,10 +22,11 @@ namespace AL {
 
     /** Use this interface to allow your class receiving message
       */
+    template<typename T, typename R>
     class MessageHandler {
     public:
       //return 0 if no result is expected
-      virtual boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition &def) = 0;
+      virtual boost::shared_ptr<R> onMessage(const T &def) = 0;
     };
 
   }
