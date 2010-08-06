@@ -6,10 +6,10 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef SERIALIZATION_CALLREQUEST_SERIALIZATION_H_
-#define SERIALIZATION_CALLREQUEST_SERIALIZATION_H_
+#ifndef SERIALIZATION_CALL_REQUEST_SERIALIZATION_H_
+#define SERIALIZATION_CALL_REQUEST_SERIALIZATION_H_
 
-#include "call_request.h"
+#include <alcommon-ng/serialization/call_request.h>
 #include <boost/serialization/nvp.hpp>
 
 namespace boost {
@@ -20,7 +20,7 @@ namespace boost {
     /// <param name="item">    [in,out] the CallRequest item. </param>
     /// <param name="version"> The version. </param>
     template<class Archive>
-    void serialize(Archive & ar, CallRequest& item,
+    void serialize(Archive & ar, const AL::Messaging::CallRequest& item,
       const unsigned int version) {
           ar & make_nvp("module", item.module);
           ar & make_nvp("method", item.method);
@@ -29,4 +29,4 @@ namespace boost {
   }
 }
 
-#endif  // SERIALIZATION_CALLREQUEST_SERIALIZATION_H_
+#endif  // SERIALIZATION_CALL_REQUEST_SERIALIZATION_H_

@@ -6,14 +6,19 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef SERIALIZATION_CALLREQUEST_H_
-#define SERIALIZATION_CALLREQUEST_H_
+#ifndef SERIALIZATION_CALL_REQUEST_H_
+#define SERIALIZATION_CALL_REQUEST_H_
 
-template<typename T>
-struct CallRequest {
-  std::string module;
-  std::string method;
-  T args;
-};
+#include <string>
 
-#endif  // SERIALIZATION_CALLREQUEST_H_
+namespace AL {
+  namespace Messaging {
+    template<typename T>
+    struct CallRequest {
+      std::string module;
+      std::string method;
+      T args;
+    };
+  }
+}
+#endif  // SERIALIZATION_CALL_REQUEST_H_
