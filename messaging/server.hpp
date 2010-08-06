@@ -20,7 +20,7 @@ namespace AL {
 
   namespace Messaging {
 
-    class ResultHandler;
+    //class ResultHandler;
 
     class Server : public AL::Transport::Threadable,
       public AL::Transport::DataHandler

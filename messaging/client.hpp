@@ -22,11 +22,11 @@ namespace AL {
     public:
       Client(const std::string &address);
 
-      template<typename R, typename T1>
-      R call(const T1 &p1);
+      //template<typename R, typename T1>
+      //R call(const T1 &p1);
 
-      template<typename R, typename T1, typename T2>
-      R call(const T1 &p1, const T2 &p2);
+      //template<typename R, typename T1, typename T2>
+      //R call(const T1 &p1, const T2 &p2);
 
       boost::shared_ptr<ResultDefinition> send(CallDefinition &def);
 

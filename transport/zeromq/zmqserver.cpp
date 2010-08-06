@@ -14,9 +14,6 @@
 
 #include <zmq.hpp>
 
-#include <alcommon-ng/serialization/iarchive.hpp>
-#include <alcommon-ng/serialization/oarchive.hpp>
-
 #include <pthread.h>
 #include <allog/allog.h>
 #include <boost/thread/mutex.hpp>

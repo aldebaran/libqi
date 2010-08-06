@@ -8,12 +8,10 @@
 #include <vector>
 #include <iostream>
 
-//#include <boost/program_options.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
 #include <alcommon-ng/ippc.hpp>
-//#include <alcore/alptr.h>
 #include <boost/shared_ptr.hpp>
 
 #ifdef _WIN32
@@ -25,8 +23,8 @@
 
 //using AL::ALPtr;
 
-static const int threadCount = 10;
-static const int loopCount   = 10000;
+static const int gThreadCount = 10;
+static const int gLoopCount   = 10000;
 
 int test1(const std::string &color)
 {
@@ -37,7 +35,7 @@ int test1(const std::string &color)
   return 0;
 }
 
-class Module1CallBack :  public AL::Messaging::MessageHandler
+class Module1CallBack : public AL::Messaging::MessageHandler
 {
 public:
 
@@ -85,15 +83,12 @@ public:
   {
     boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
 
-    //printf("Module2 CallBack\n");
-    // receive fonctionQuiPoutre
     if (def.getMethodName() == "test2")
     {
         printf("Method: test2\n");
         AL::Messaging::VariablesList    params = def.getParameters();
         int cowCount = params.front().as<int>();
         res->value(test2(cowCount));
-        //sleep(1);
     }
 
     if (def.getMethodName() == "echo")
@@ -137,7 +132,7 @@ int main_client(int clientId)
   def.push(41);
   boost::shared_ptr<AL::Messaging::ResultDefinition> res;
 
-  for (int i = 0; i< loopCount; ++i)
+  for (int i = 0; i< gLoopCount; ++i)
   {
     res = client.send(def);
     printf("result is: %d\n", res->value().as<int>());
@@ -193,15 +188,15 @@ int main(int argc, char **argv)
 
   if (argc > 1 && !strcmp(argv[1], "--client"))
   {
-    boost::thread thd[threadCount];
+    boost::thread thd[gThreadCount];
 
-    for (int i = 0; i < threadCount; ++i)
+    for (int i = 0; i < gThreadCount; ++i)
     {
       std::cout << "starting thread: " << i << std::endl;
       thd[i] = boost::thread(boost::bind(&main_client, i));
     }
 
-    for (int i = 0; i < threadCount; ++i)
+    for (int i = 0; i < gThreadCount; ++i)
       thd[i].join();
   }
   else if (argc > 1 && !strcmp(argv[1], "--server"))
