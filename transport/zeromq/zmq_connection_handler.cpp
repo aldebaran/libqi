@@ -15,9 +15,9 @@ namespace AL {
       DataHandler *callbackdelegate,
       internal::ServerResponseDelegate *responsedelegate,
       void *data)
-    : _msg(msg),
+    : _data(data),
+      _msg(msg),
       _dataHandler(callbackdelegate),
-      _data(data),
       _responsedelegate(responsedelegate)
   {
     this->setTaskName("ZMQConnectionHandler");

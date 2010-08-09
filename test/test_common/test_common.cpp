@@ -1,6 +1,6 @@
 
-#include "gtest/gtest.h"
-#include <alcommon-ng/common/node.h>
+#include <gtest/gtest.h>
+#include <alcommon-ng/common/node.hpp>
 #include <boost/timer.hpp>
 #include <string>
 

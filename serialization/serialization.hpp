@@ -6,10 +6,10 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef SERIALIZATION_SERIALIZATION_H_
-#define SERIALIZATION_SERIALIZATION_H_
+#ifndef AL_MESSAGING_SERIALIZATION_SERIALIZATION_HPP_
+#define AL_MESSAGING_SERIALIZATION_SERIALIZATION_HPP_
 
-#include "boost_serializer.h"
+#include <alcommon-ng/serialization/boost_serializer.hpp>
 
 namespace AL {
   namespace Serialization {
@@ -17,4 +17,4 @@ namespace AL {
   }
 }
 
-#endif  // SERIALIZATION_SERIALIZATION_H_
+#endif  // AL_MESSAGING_SERIALIZATION_SERIALIZATION_HPP_

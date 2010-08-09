@@ -9,9 +9,9 @@
 #define COMMON_NODE_H_
 
 #include <string>
-#include "namelookup.h"
-#include "nodeinfo.h"
-#include "serviceinfo.h"
+#include <alcommon-ng/common/namelookup.hpp>
+#include <alcommon-ng/common/nodeinfo.hpp>
+#include <alcommon-ng/common/serviceinfo.hpp>
 #include <alcommon-ng/messaging/messaging.hpp>
 
 

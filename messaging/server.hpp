@@ -13,7 +13,7 @@
 # include <alcommon-ng/transport/common/datahandler.hpp>
 # include <alcommon-ng/transport/common/threadable.hpp>
 # include <alcommon-ng/transport/transport.hpp>
-# include <alcommon-ng/serialization/serialization.h>
+# include <alcommon-ng/serialization/serialization.hpp>
 
 namespace AL {
   //namespace Transport {

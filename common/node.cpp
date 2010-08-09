@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include "node.h"
+#include "node.hpp"
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <alcommon-ng/messaging/client.hpp>
@@ -35,7 +35,7 @@ namespace AL {
       return fNodeInfo;
     }
 
-    // shame about this definition of a handler.... 
+    // shame about this definition of a handler....
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> Node::onMessage(const AL::Messaging::CallDefinition &def) {
       // handle message
@@ -46,7 +46,7 @@ namespace AL {
       if (si.nodeName == fNodeInfo.name) {
         std::cout << " Method is for this node " << std::endl;
       } else {
-        
+
         std::cout << " Method is for node: " << si.nodeName << std::endl;
 
         const NodeInfo& ni = getNode(si.nodeName);
@@ -56,7 +56,7 @@ namespace AL {
       }
       // TODO find the local or remote functor
      // boost::bind<NodeInfo>(&Node::getNode, _1);
-     
+
       boost::shared_ptr<AL::Messaging::ResultDefinition> res =
         boost::shared_ptr<AL::Messaging::ResultDefinition>(new ResultDefinition());
       return res;
