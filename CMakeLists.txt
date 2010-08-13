@@ -33,6 +33,7 @@ file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/s
 file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
 file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
+file(GLOB TRANSPORT_THRIFT_SRC            transport/thrift/*.cpp transport/thrift/*.h*)
 
 source_group( Common                 FILES ${COMMON_SRC})
 source_group( Messaging              FILES ${MESSAGING_SRC})
@@ -73,7 +74,7 @@ if(WITH_SHM)
                  ${TRANSPORT_COMMON_SHM_CLIENT_SRC}
                  ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
                  ${TRANSPORT_COMMON_SHM_SERVER_SRC})
-                 
+
   source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
   source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
   source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
@@ -82,7 +83,7 @@ endif()
 
 
 if (WITH_THRIFT)
-  set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC})
+  set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC} ${TRANSPORT_THRIFT_SRC})
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
