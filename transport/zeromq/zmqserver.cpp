@@ -115,7 +115,7 @@ namespace AL {
 #ifdef ZMQ_FULL_ASYNC
          handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
 #else
-         ZMQConnectionHandler(data, this->getDataDelegate(), this, (void *)identity).run();
+         ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();
 #endif
        }
      }

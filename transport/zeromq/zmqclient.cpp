@@ -12,6 +12,7 @@
 #include <sstream>
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <alfile/alfilesystem.h>
+#include <allog.h>
 
 namespace AL {
   namespace Transport {
@@ -31,6 +32,7 @@ namespace AL {
 
   void ZMQClient::connect()
   {
+    alsdebug << "ZMQClient::connect " << _serverAddress;
     socket.connect(_serverAddress.c_str());
   }
 

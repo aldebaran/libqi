@@ -14,8 +14,8 @@
 
 namespace AL {
   namespace Messaging {
-    typedef Client<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition> DefaultClient;
-    typedef Server<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition> DefaultServer;
+    typedef Client<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition>         DefaultClient;
+    typedef Server<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition>         DefaultServer;
     typedef MessageHandler<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition> DefaultMessageHandler;
   }
 }

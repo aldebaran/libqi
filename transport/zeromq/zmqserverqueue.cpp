@@ -31,14 +31,6 @@ namespace AL {
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)
     {
-      ALPath mypath = ALFileSystem::getTmpPath();
-      mypath /= server_name;
-#ifdef WIN32
-      // ck horrid hack so that naoqi excecutes
-      server_path = "tcp://127.0.0.1:5555";
-#else
-      server_path = "ipc://" + mypath.string();
-#endif
     }
 
     ZMQServerQueue::~ZMQServerQueue () {
@@ -101,34 +93,6 @@ namespace AL {
   }
 }
 
-//PLAYGROUND
-namespace AL {
-  namespace Messaging {
-    /*
-     //use ZMQ_REP
-     //single threaded version (just for test)
-      void ZMQServer::run-single-thread() {
-        std::cout << "enterring DA LOOZ" << std::endl;
-        while (true) {
-
-          rc = zsocket.recv(&msg);
-          std::cout << "Receive(size=" << msg.size() << ")" << std::endl;
-
-          for (int i = 0; i < msg.size(); ++i)
-            printf("0x%.2x\n", ((char *)msg.data())[i]);
-          boost::shared_ptr<ippc::CallDefinition>   def(new ippc::CallDefinition());
-          boost::interprocess::bufferstream bstream((char *)msg.data(), msg.size());
-          ippc::IArchive                    archive(bstream);
-
-          //unmarshall the message
-          archive >> *def;
-          //handlersPool.pushTask(boost::shared_ptr<ippc::ZMQConnectionHandler>(new ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this)));
-          ippc::ZMQConnectionHandler(*def, this->getCommandDelegate(), this).run();
-        }
-      }
-    */
-  }
-}
 
 
 
