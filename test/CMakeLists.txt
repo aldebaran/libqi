@@ -2,4 +2,5 @@
 add_subdirectory(test_common)
 add_subdirectory(test_messaging)
 add_subdirectory(test_boost_serializer)
+add_subdirectory(test_transport)
 cond_subdirectory(test_thrift_serialization WITH_THRIFT)
