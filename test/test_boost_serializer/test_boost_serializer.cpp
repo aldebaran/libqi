@@ -6,7 +6,7 @@
 
 using namespace AL::Serialization;
 
-int numMessages = 1000;
+int numMessages = 100000;
 
 // test three serializations for type T (not a list)
 template<typename T>
@@ -222,7 +222,7 @@ void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessage
 
   std::cout << "Bytes, msg/s, MB/s" << std::endl;
   // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < 21; i++) {
+  for (unsigned int i=1; i < 12; i++) {
 
     char character = 'A';
     unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
@@ -248,7 +248,7 @@ void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessa
 
   std::cout << "Bytes, msg/s, MB/s" << std::endl;
   // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < 21; i++) {
+  for (unsigned int i=1; i < 12; i++) {
 
     char character = 'A';
     unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
@@ -272,7 +272,7 @@ void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessa
   }
 }
 
-TEST(SerializationPerformance, DISABLED_binary) {
+TEST(SerializationPerformance, binary) {
   std::cout << " BINARY Serialization " << numMessages << std::endl;
   testSerialization_StringBufferSizes(BOOST_BINARY, numMessages);
   std::cout << " BINARY DeSerialization " << numMessages << std::endl;
