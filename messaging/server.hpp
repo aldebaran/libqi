@@ -12,6 +12,7 @@
 # include <alcommon-ng/messaging/messagehandler.hpp>
 # include <alcommon-ng/transport/common/datahandler.hpp>
 # include <alcommon-ng/transport/common/threadable.hpp>
+# include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 # include <alcommon-ng/transport/transport.hpp>
 # include <alcommon-ng/serialization/serialization.hpp>
 
@@ -30,7 +31,7 @@ namespace AL {
     public:
       Server(const std::string &address)
       {
-        _server = new AL::Transport::ZMQServer(address);
+        _server = new AL::Transport::ZMQSimpleServer(address);
         _server->setDataHandler(this);
       }
 
