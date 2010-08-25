@@ -15,7 +15,7 @@
 #include <alcommon-ng/transport/transport.hpp>
 #include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/timer.hpp>
+#include <alcommon-ng/tools/dataperftimer.hpp>
 
 #ifdef _WIN32
     // CK 28/7/2010 dodgy hack so it compiles
@@ -24,6 +24,7 @@
     #include <unistd.h>
 #endif
 
+using AL::test::DataPerfTimer;
 //using AL::ALPtr;
 
 static const int gThreadCount = 1;
@@ -88,28 +89,20 @@ int main_client(int clientId)
   std::string            tosend = "bim";
   std::string            torecv;
 
-  std::cout << "Bytes, msg/s, MB/s" << std::endl;
-
   for (int i = 0; i < 12; ++i)
   {
-    unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string  request = std::string(numBytes, 'B');
-    boost::timer t;
-    double       elapsed;
+    unsigned int  numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string   request = std::string(numBytes, 'B');
+    DataPerfTimer dt(gLoopCount, numBytes);
 
-    t.restart();
+    dt.start();
     for (int j = 0; j< gLoopCount; ++j)
     {
       torecv = "";
       client->send(request, torecv);
       //assert(tosend == torecv);
     }
-
-    //
-    elapsed = t.elapsed();
-    float msgPs = 1.0f / ((float)elapsed / (1.0f * gLoopCount) );
-    float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
-    std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
+    dt.stop();
   }
   //
   return 0;

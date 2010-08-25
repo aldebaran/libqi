@@ -13,10 +13,10 @@
 
 #include <alcommon-ng/ippc.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/timer.hpp>
+#include <alcommon-ng/tools/dataperftimer.hpp>
 
 using namespace AL::Messaging;
-
+using AL::test::DataPerfTimer;
 #ifdef _WIN32
     // CK 28/7/2010 dodgy hack so it compiles
     #define sleep(x) Sleep(x)
@@ -66,9 +66,6 @@ int main_server()
   boost::shared_ptr<DefaultServer >       fIppcServer  = boost::shared_ptr<DefaultServer >(new DefaultServer(gServerAddress));
   fIppcServer->setMessageHandler(&module2Callback);
   fIppcServer->run();
-  //boost::thread             threadServer(boost::bind(&DefaultServer::run, fIppcServer.get()));
-  //while(1)
-  //  sleep(5);
   return 0;
 }
 
@@ -79,81 +76,27 @@ int main_client(int clientId)
   AL::Messaging::DefaultClient       client(gClientAddress);
   boost::shared_ptr<AL::Messaging::ResultDefinition> res;
 
-  //for (int i = 0; i< gLoopCount; ++i)
-  //{
-  //  res = client.send(def);
-  //  printf("result is: %d\n", res->value().as<int>());
-  //}
 
-
-  std::cout << "Bytes, msg/s, MB/s" << std::endl;
   for (int i = 0; i < 12; ++i)
   {
-    unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string  request = std::string(numBytes, 'B');
-    boost::timer t;
-    double       elapsed;
-    AL::Messaging::CallDefinition      def;
+    unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string                   request = std::string(numBytes, 'B');
+    DataPerfTimer                 dt(gLoopCount, numBytes);
+    AL::Messaging::CallDefinition def;
 
     def.setMethodName("test2");
     def.setSender("toto");
     def.push(request);
 
-    t.restart();
+    dt.start();
     for (int j = 0; j< gLoopCount; ++j)
     {
       res = client.send(def);
       //assert(tosend == torecv);
     }
-
-    //
-    elapsed = t.elapsed();
-    float msgPs = 1.0f / ((float)elapsed / (1.0f * gLoopCount) );
-    float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
-    std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
+    dt.stop();
   }
 
-
-
-
-  /* Couldn't get echo to work ... VariableValue and VariableList beurk
-  // test types
-  // can't clear the underlying list, shame
-  def = AL::Messaging::CallDefinition();
-  def.setSender("test-module2");
-  def.setMethodName("echo");
-
-  // string
-  def = AL::Messaging::CallDefinition();
-  def.setSender("test-module2");
-  def.push("Text:"); def.push("some text");
-  res = client.send(def);
-  std::cout << "Result is " << res->value() << std::endl;
-
-  // int
-  def = AL::Messaging::CallDefinition();
-  def.setSender("test-module2");
-  def.push("Int:"); def.push(1);
-  res = client.send(def);
-  std::cout << "Result is " << res->value() << std::endl;
-
-
-  // bool
-  def = AL::Messaging::CallDefinition();
-  def.setSender("test-module2");
-  def.push("bool:"); def.push(true);
-  res = client.send(def);
-  std::cout << "Result is " << res->value() << std::endl;
-
-  // float
-  def = AL::Messaging::CallDefinition();
-  def.setSender("test-module2");
-  def.push("float:"); def.push(0.42f);
-  res = client.send(def);
-  std::cout << "Result is " << res->value() << std::endl;
- */
-
-  //sleep(1);
 
   return 0;
 }
