@@ -136,6 +136,44 @@ namespace AL {
         return ret;
       }
 
+      // with reference
+      template<class T>
+      static void deserialize(
+        const std::string & buffer,
+        T& ret,
+        SERIALIZATION_TYPE type = BOOST_BINARY,
+        const char* xml_serialization_hint = "type")
+      {
+        deserialize(
+          (char*)buffer.c_str(),
+          buffer.size(),
+          ret,
+          type,
+          xml_serialization_hint);
+      }
+
+      template<class T>
+      static void deserialize(
+        char* chars,
+        const int size,
+        T& ret,
+        SERIALIZATION_TYPE type = BOOST_BINARY,
+        const char* xml_serialization_hint = "type")
+      {
+        boost::interprocess::bufferstream buff(chars, size);
+
+        if (type == BOOST_BINARY) {
+          boost::archive::binary_iarchive ia(buff, boost_serialization_flags);
+          ia >> ret;
+        } else if (type == BOOST_XML) {
+          boost::archive::xml_iarchive ia(buff, boost_serialization_flags);
+          ia >> boost::serialization::make_nvp(xml_serialization_hint, ret);
+        } else {
+          boost::archive::text_iarchive ia(buff, boost_serialization_flags);
+          ia >> ret;
+        }
+      }
+
 
       template<class T>
       static boost::shared_ptr<T> deserializeToPtr(

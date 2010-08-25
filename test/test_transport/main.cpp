@@ -71,7 +71,7 @@ int main_server()
 //  boost::thread             threadServer(boost::bind(&TestServer::run, &server));
 //  while(1)
 //    sleep(5);
-//  return 0;
+  return 0;
 }
 
 int main_client(int clientId)
