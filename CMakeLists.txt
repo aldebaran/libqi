@@ -21,7 +21,7 @@ file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
 file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
 
-file(GLOB UTIL_SRC                 util/*.cpp util/*.h*)
+file(GLOB TOOLS_SRC                 tools/*.cpp tools/*.h*)
 file(GLOB EXCEPTIONS_SRC           exceptions/*.cpp exceptions/*.h*)
 
 file(GLOB MESSAGING_SRC            messaging/*.cpp messaging/*.h*)
@@ -59,7 +59,7 @@ set(SRC
     ${MESSAGING_SRC}
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
-    ${UTIL_SRC}
+    ${TOOLS_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
 )
