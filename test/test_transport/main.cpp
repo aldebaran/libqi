@@ -41,9 +41,9 @@ static const int gLoopCount   = 100000;
 //./sdk/bin/test_transport  1.73s user 3.96s system 106% cpu 4.316 total
 
 
-//static const std::string gServerAddress = "tcp://127.0.0.1:5555";
+static const std::string gServerAddress = "tcp://127.0.0.1:5555";
 //static const std::string gServerAddress = "ipc:///tmp/test";
-static const std::string gServerAddress = "inproc://workers";
+//static const std::string gServerAddress = "inproc://workers";
 static const std::string gClientAddress = gServerAddress;
 
 
