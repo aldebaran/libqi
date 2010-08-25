@@ -1,42 +1,49 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris Kilner <ckilner@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <iostream>
-#include <boost/timer.hpp>
-
 #include "dataperftimer.hpp"
+#include <boost/timer.hpp>
+#include <iostream>
 
 namespace AL {
-  namespace test {
+  namespace Test {
 
-    DataPerfTimer::DataPerfTimer(const unsigned long loopCount, const unsigned long msgSize)
-      : loopCount(loopCount),
-        msgSize(msgSize)
-    {}
-
-    void DataPerfTimer::start() {
+    DataPerfTimer::DataPerfTimer()
+      : fLoopCount(10000),
+        fMsgSize(2),
+        fMgbPs(0.0f),
+        fMsgPs(0.0f),
+        fElapsed(0.0)
+    {
       std::cout << "Bytes, msg/s, MB/s" << std::endl;
-      timer.restart();
     }
 
-    void DataPerfTimer::stop(char shouldPrint) {
-      elapsed = timer.elapsed();
+    void DataPerfTimer::start(
+      const unsigned long loopCount,
+      const unsigned long msgSize) {
+      fLoopCount = loopCount;
+      fMsgSize = msgSize;
+      fTimer.restart();
+    }
 
-      msgPs = 1.0f / ((float)elapsed / (1.0f * loopCount) );
-      mgbPs = (msgPs * msgSize) / (1024 * 1024.0f);
+    void DataPerfTimer::stop(bool shouldPrint) {
+      fElapsed = fTimer.elapsed();
+
+      fMsgPs = 1.0f / ((float)fElapsed / (1.0f * fLoopCount) );
+      fMgbPs = (fMsgPs * fMsgSize) / (1024 * 1024.0f);
       if (shouldPrint)
         print();
     }
 
     void DataPerfTimer::print()
     {
-      std::cout << msgSize << ", " << msgPs << ", " << mgbPs << std::endl;
+      std::cout << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
     }
-
   }
 }
 

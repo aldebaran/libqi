@@ -16,7 +16,8 @@
 #include <alcommon-ng/tools/dataperftimer.hpp>
 
 using namespace AL::Messaging;
-using AL::test::DataPerfTimer;
+using AL::Test::DataPerfTimer;
+
 #ifdef _WIN32
     // CK 28/7/2010 dodgy hack so it compiles
     #define sleep(x) Sleep(x)
@@ -76,19 +77,19 @@ int main_client(int clientId)
   AL::Messaging::DefaultClient       client(gClientAddress);
   boost::shared_ptr<AL::Messaging::ResultDefinition> res;
 
+  DataPerfTimer dt;
 
   for (int i = 0; i < 12; ++i)
   {
     unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string                   request = std::string(numBytes, 'B');
-    DataPerfTimer                 dt(gLoopCount, numBytes);
     AL::Messaging::CallDefinition def;
 
     def.setMethodName("test2");
     def.setSender("toto");
     def.push(request);
 
-    dt.start();
+    dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
     {
       res = client.send(def);

@@ -24,7 +24,7 @@
     #include <unistd.h>
 #endif
 
-using AL::test::DataPerfTimer;
+using AL::Test::DataPerfTimer;
 //using AL::ALPtr;
 
 static const int gThreadCount = 1;
@@ -88,14 +88,15 @@ int main_client(int clientId)
   AL::Transport::Client *client = new AL::Transport::ZMQClient(gClientAddress);
   std::string            tosend = "bim";
   std::string            torecv;
+  DataPerfTimer dt;
 
   for (int i = 0; i < 12; ++i)
   {
     unsigned int  numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string   request = std::string(numBytes, 'B');
-    DataPerfTimer dt(gLoopCount, numBytes);
+    
 
-    dt.start();
+    dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
     {
       torecv = "";
