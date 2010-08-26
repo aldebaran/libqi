@@ -65,7 +65,7 @@ namespace AL {
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
     {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesList)" << std::endl);
-      thriftSerialize(protocol, dynamic_cast<const std::list< AL::Messaging::VariableValue > &>(t));
+      thriftSerialize(protocol, dynamic_cast<const std::vector< AL::Messaging::VariableValue > &>(t));
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)

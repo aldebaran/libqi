@@ -243,7 +243,7 @@ private:
  * A list which can contain any type of VariableValue enum.
  * Used to transmit parameters for calls.
  */
-class VariablesList : public std::list<VariableValue> {
+class VariablesList : public std::vector<VariableValue> {
 public:
   VariablesList () {}
 
@@ -264,7 +264,7 @@ private:
   template <class Archive>
   void serialize (Archive & ar, unsigned int version) {
     (void) version;
-    std::list<VariableValue> * l = this;
+    std::vector<VariableValue> * l = this;
     ar & boost::serialization::make_nvp("list", *l);
   }
 };
