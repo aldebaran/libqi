@@ -160,6 +160,12 @@ TEST(SerializationTest, ResultDefinition)
 }
 
 
+TEST(SerializationPerformance, callDef_BINARY) {
+  std::cout << "BINARY " << numMessages << std::endl;
+  testSerialization_CallDefBufferSizes(BOOST_BINARY, numMessages);
+  testDeSerialization_CallDefBufferSizes(BOOST_BINARY, numMessages);
+}
+
 TEST(SerializationPerformance, stringBuffers_BINARY) {
   std::cout << "BINARY " << numMessages << std::endl;
   testSerialization_StringBufferSizes(BOOST_BINARY, numMessages);

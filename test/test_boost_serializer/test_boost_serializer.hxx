@@ -3,6 +3,7 @@
 #include <alcommon-ng/tools/dataperftimer.hpp>
 #include <gtest/gtest.h>
 #include <string>
+#include <alcommon-ng/serialization/call_definition.hpp>
 
 using namespace AL::Serialization;
 using AL::Test::DataPerfTimer;
@@ -102,6 +103,7 @@ void testSerializationDeserializationList(const T& arg)
     EXPECT_EQ(arg[i], res5[i]);
   }
 }
+
 void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
   DataPerfTimer dt("Serialization");
   char character = 'A';
@@ -121,6 +123,55 @@ void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessage
 }
 
 void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+  DataPerfTimer dt("Deserialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::CallDefinition def;
+    def.setMethodName("test2");
+    def.setSender("toto");
+    def.push(request);
+
+    std::string buffer = BoostSerializer::serialize(def, type);
+
+
+    dt.start(numMessages, numBytes);
+
+    for (int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
+    }
+
+    dt.stop();
+  }
+}
+
+void testSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+  DataPerfTimer dt("Serialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::CallDefinition def;
+    def.setMethodName("test2");
+    def.setSender("toto");
+    def.push(request);
+
+    dt.start(numMessages, numBytes);
+    for (int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      std::string reply = BoostSerializer::serialize(def, type);
+    }
+    dt.stop();
+  }
+}
+
+void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
   DataPerfTimer dt("Deserialization");
   char character = 'A';
 
