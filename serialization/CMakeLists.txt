@@ -1,8 +1,6 @@
 
 set(headers
   serialization.h
-  serialization_type.h
-  boost_serializer.h
   call_definition.hpp
   call_definition.hxx
   result_definition.hpp
@@ -11,4 +9,4 @@ set(headers
 )
 
 install_header(LIBIPPC SUBFOLDER alcommon-ng/serialization ${headers})
-
+subdirs(boost)

@@ -9,11 +9,11 @@
 #ifndef AL_MESSAGING_SERIALIZATION_SERIALIZATION_HPP_
 #define AL_MESSAGING_SERIALIZATION_SERIALIZATION_HPP_
 
-#include <alcommon-ng/serialization/boost_serializer.hpp>
+#include <alcommon-ng/serialization/boost/boost_binary_serializer.hpp>
 
 namespace AL {
   namespace Serialization {
-    typedef BoostSerializer Serializer;
+    typedef BoostBinarySerializer Serializer;
   }
 }
 

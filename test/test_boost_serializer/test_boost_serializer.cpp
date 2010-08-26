@@ -161,93 +161,82 @@ TEST(SerializationTest, ResultDefinition)
 
 // ---- increasing string buffer sizes
 
-TEST(SerializationPerformance, CallDefinitionBuffers_BINARY) {
+TEST(SerializationPerformance, CallDefinitionBuffers) {
   std::cout << "BINARY " << numMessages << std::endl;
-  testSerialization_CallDefBufferSizes(BOOST_BINARY, numMessages);
-  testDeSerialization_CallDefBufferSizes(BOOST_BINARY, numMessages);
+  testSerialization_CallDefBufferSizes(numMessages);
+  testDeSerialization_CallDefBufferSizes(numMessages);
 }
 
-TEST(SerializationPerformance, VariableValueBuffers_BINARY) {
+TEST(SerializationPerformance, VariableValueBuffers) {
   std::cout << "BINARY " << numMessages << std::endl;
-  testSerialization_VariableValueBufferSizes(BOOST_BINARY, numMessages);
-  testDeSerialization_VariableValueBufferSizes(BOOST_BINARY, numMessages);
+  testSerialization_VariableValueBufferSizes(numMessages);
+  testDeSerialization_VariableValueBufferSizes(numMessages);
 }
 
-TEST(SerializationPerformance, ValueTypeBuffers_BINARY) {
+TEST(SerializationPerformance, ValueTypeBuffers) {
   std::cout << "BINARY " << numMessages << std::endl;
-  testSerialization_ValueTypeBufferSizes(BOOST_BINARY, numMessages);
-  testDeSerialization_ValueTypeBufferSizes(BOOST_BINARY, numMessages);
+  testSerialization_ValueTypeBufferSizes(numMessages);
+  testDeSerialization_ValueTypeBufferSizes(numMessages);
 }
 
-TEST(SerializationPerformance, StringBuffers_BINARY) {
+TEST(SerializationPerformance, StringBuffers) {
   std::cout << "BINARY " << numMessages << std::endl;
-  testSerialization_StringBufferSizes(BOOST_BINARY, numMessages);
-  testDeSerialization_StringBufferSizes(BOOST_BINARY, numMessages);
+  testSerialization_StringBufferSizes(numMessages);
+  testDeSerialization_StringBufferSizes(numMessages);
 }
 
-TEST(SerializationPerformance, DISABLED_StringBuffers_TEXT) {
-  std::cout << "TEXT " << numMessages << std::endl;
-  testSerialization_StringBufferSizes(BOOST_TEXT, numMessages);
-  testDeSerialization_StringBufferSizes(BOOST_TEXT, numMessages);
-}
 
-TEST(SerializationPerformance, DISABLED_StringBuffers_XML) {
-  std::cout << "XML " << numMessages << std::endl;
-  testSerialization_StringBufferSizes(BOOST_XML, numMessages);
-  testDeSerialization_StringBufferSizes(BOOST_XML, numMessages);
-}
-
-TEST(SerializationPerformance, CallDefinition_BINARY) {
+TEST(SerializationPerformance, CallDefinition) {
   AL::Messaging::CallDefinition calldef;
   calldef.push(1.0f);
   calldef.push(std::string("hello1"));
-  testSerializationDeserializationPerf(calldef, BOOST_BINARY);
+  testSerializationDeserializationPerf(calldef);
 }
 
-TEST(SerializationPerformance, ResultDefinition_BINARY) {
+TEST(SerializationPerformance, ResultDefinition) {
   AL::Messaging::VariableValue v("result");
   AL::Messaging::ResultDefinition resultdef(1,v);
-  testSerializationDeserializationPerf(resultdef, BOOST_BINARY);
+  testSerializationDeserializationPerf(resultdef);
 }
 
 
 // Simple types test one by one
 
-TEST(SerializationPerformance, float_BINARY) {
+TEST(SerializationPerformance, float_) {
   float f = 1.06788f;
-  testSerializationDeserializationPerf(f, BOOST_BINARY);
+  testSerializationDeserializationPerf(f);
 }
 
-TEST(SerializationPerformance, double_BINARY) {
+TEST(SerializationPerformance, double_) {
   double d = 34.4598495;
-  testSerializationDeserializationPerf(d, BOOST_BINARY);
+  testSerializationDeserializationPerf(d);
 }
 
-TEST(SerializationPerformance, short_BINARY) {
+TEST(SerializationPerformance, short_) {
   short s = 12;
-  testSerializationDeserializationPerf(s, BOOST_BINARY);
+  testSerializationDeserializationPerf(s);
 }
 
-TEST(SerializationPerformance, int_BINARY) {
+TEST(SerializationPerformance, int_) {
   int i = 198032;
-  testSerializationDeserializationPerf(i, BOOST_BINARY);
+  testSerializationDeserializationPerf(i);
 }
 
-TEST(SerializationPerformance, string_BINARY) {
+TEST(SerializationPerformance, string_) {
   std::string str = "Hello World.";
-  testSerializationDeserializationPerf(str, BOOST_BINARY);
+  testSerializationDeserializationPerf(str);
 }
 
-TEST(SerializationPerformance, pair_BINARY) {
+TEST(SerializationPerformance, pair_) {
   std::pair<int, std::string> pair = std::make_pair<int, std::string>(1, "hello");
-  testSerializationDeserializationPerf(pair, BOOST_BINARY);
+  testSerializationDeserializationPerf(pair);
 }
 
-TEST(SerializationPerformance, map_BINARY) {
+TEST(SerializationPerformance, map_) {
   std::map<int, std::string> map;
   map.insert(std::make_pair<int, std::string>(1, "hello"));
   map.insert(std::make_pair<int, std::string>(2, "hello2"));
-  testSerializationDeserializationPerf(map, BOOST_BINARY);
+  testSerializationDeserializationPerf(map);
 }
 
 

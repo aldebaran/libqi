@@ -75,7 +75,7 @@ int main_client(int clientId)
   std::stringstream sstream;
 
   AL::Messaging::DefaultClient       client(gClientAddress);
-  boost::shared_ptr<AL::Messaging::ResultDefinition> res;
+  AL::Messaging::ResultDefinition res;
 
   DataPerfTimer dt;
 

@@ -24,6 +24,6 @@ TEST(NodeTest, test)
   def.setMethodName("addNode");
   def.setModuleName("master");
   def.setRequestId(1);
-  boost::shared_ptr<ResultDefinition> ret = client.send(def);
+  ResultDefinition ret = client.send(def);
 
 }

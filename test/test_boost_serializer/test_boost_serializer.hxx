@@ -1,6 +1,6 @@
 
 #include <gtest/gtest.h>  // gtest must be included first...!
-#include <alcommon-ng/serialization/boost_serializer.hpp>
+#include <alcommon-ng/serialization/boost/boost_serializers.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
 #include <string>
 #include <alcommon-ng/serialization/call_definition.hpp>
@@ -12,7 +12,7 @@ unsigned int numPowers = 12;
 unsigned int numMessages = 10000;
 
 template<typename T>
-void testSerializationDeserializationPerf(const T& arg, SERIALIZATION_TYPE type)
+void testSerializationDeserializationPerf(const T& arg)
 {
   DataPerfTimer dt("", false);
   std::string buf;
@@ -22,16 +22,16 @@ void testSerializationDeserializationPerf(const T& arg, SERIALIZATION_TYPE type)
   dt.start(numMessages);
   // serialize
   for (unsigned int i = 0; i < numMessages; ++i) {
-    buf = BoostSerializer::serialize(arg, type);
+    buf = BoostBinarySerializer::serialize(arg);
   }
   dt.stop();
 
-  buf = BoostSerializer::serialize(arg, type);
+  buf = BoostBinarySerializer::serialize(arg);
 
   std::cout << "DeSerialize" << std::endl;
   dt.start(numMessages);
   for (unsigned int i = 0; i < numMessages; ++i) {
-    res1 = BoostSerializer::deserialize<T>(buf, type);
+    res1 = BoostBinarySerializer::deserialize<T>(buf);
   }
   dt.stop();
 
@@ -39,7 +39,7 @@ void testSerializationDeserializationPerf(const T& arg, SERIALIZATION_TYPE type)
   std::cout << "DeSerializeToRef" << std::endl;
   dt.start(numMessages);
   for (unsigned int i = 0; i < numMessages; ++i) {
-    BoostSerializer::deserialize(buf, res1, type);
+    BoostBinarySerializer::deserialize(buf, res1);
   }
   dt.stop();
 }
@@ -50,27 +50,22 @@ template<typename T>
 void testSerializationDeserialization(const T& arg)
 {
   std::string buf;
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  T res1 = BoostSerializer::deserialize<T>(buf, BOOST_BINARY);
+  buf = BoostBinarySerializer::serialize(arg);
+  T res1 = BoostBinarySerializer::deserialize<T>(buf);
   EXPECT_EQ(arg, res1);
 
-  buf = BoostSerializer::serialize(arg, BOOST_TEXT);
-  T res2 = BoostSerializer::deserialize<T>(buf, BOOST_TEXT);
+  buf = BoostTextSerializer::serialize(arg);
+  T res2 = BoostTextSerializer::deserialize<T>(buf);
   EXPECT_EQ(arg, res2);
 
-  buf = BoostSerializer::serialize(arg, BOOST_XML);
-  T res3 = BoostSerializer::deserialize<T>(buf, BOOST_XML);
+  buf = BoostXmlSerializer::serialize(arg);
+  T res3 = BoostXmlSerializer::deserialize<T>(buf);
   EXPECT_EQ(arg, res3);
 
-  // to ptr
-  buf = BoostSerializer::serialize(arg);
-  boost::shared_ptr<T> res4 = BoostSerializer::deserializeToPtr<T>(buf);
-  EXPECT_EQ(arg, *res4.get());
-
   // to ref
-  buf = BoostSerializer::serialize(arg);
-  BoostSerializer::deserialize(buf, res3);
-  EXPECT_EQ(arg, *res4.get());
+  buf = BoostBinarySerializer::serialize(arg);
+  BoostBinarySerializer::deserialize(buf, res3);
+  EXPECT_EQ(arg, res3);
 }
 
 
@@ -78,33 +73,26 @@ template<typename T>
 void testSerializationDeserializationList(const T& arg)
 {
   std::string buf;
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  T res1 = BoostSerializer::deserialize<T>(buf, BOOST_BINARY);
+  buf = BoostBinarySerializer::serialize(arg);
+  T res1 = BoostBinarySerializer::deserialize<T>(buf);
   for (unsigned int i = 0; i < arg.size(); i++) {
     EXPECT_EQ(arg[i], res1[i]);
   }
 
-  buf = BoostSerializer::serialize(arg, BOOST_TEXT);
-  T res2 = BoostSerializer::deserialize<T>(buf, BOOST_TEXT);
+  buf = BoostTextSerializer::serialize(arg);
+  T res2 = BoostTextSerializer::deserialize<T>(buf);
   for (unsigned int i = 0; i < arg.size(); i++) {
     EXPECT_EQ(arg[i], res2[i]);
   }
 
-  buf = BoostSerializer::serialize(arg, BOOST_XML);
-  T res3 = BoostSerializer::deserialize<T>(buf, BOOST_XML);
+  buf = BoostXmlSerializer::serialize(arg);
+  T res3 = BoostXmlSerializer::deserialize<T>(buf);
   for (unsigned int i = 0; i < arg.size(); i++) {
     EXPECT_EQ(arg[i], res3[i]);
   }
-
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  boost::shared_ptr<T> res4 = BoostSerializer::deserializeToPtr<T>(buf);
-  T res5 = *res4.get();
-  for (unsigned int i = 0; i < arg.size(); i++) {
-    EXPECT_EQ(arg[i], res5[i]);
-  }
 }
 
-void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testSerialization_StringBufferSizes(int numMessages) {
   DataPerfTimer dt("Serialization");
   char character = 'A';
 
@@ -116,13 +104,13 @@ void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessage
     dt.start(numMessages, numBytes);
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      std::string reply = BoostSerializer::serialize(request, type);
+      std::string reply = BoostBinarySerializer::serialize(request);
     }
     dt.stop();
   }
 }
 
-void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testDeSerialization_StringBufferSizes(int numMessages) {
   DataPerfTimer dt("Deserialization");
   char character = 'A';
 
@@ -135,21 +123,21 @@ void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessa
     def.setSender("toto");
     def.push(request);
 
-    std::string buffer = BoostSerializer::serialize(def, type);
+    std::string buffer = BoostBinarySerializer::serialize(def);
 
 
     dt.start(numMessages, numBytes);
 
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
+      AL::Messaging::CallDefinition reply = BoostBinarySerializer::deserialize<AL::Messaging::CallDefinition>(buffer);
     }
 
     dt.stop();
   }
 }
 
-void testSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testSerialization_CallDefBufferSizes(int numMessages) {
   DataPerfTimer dt("Serialization");
   char character = 'A';
 
@@ -165,13 +153,13 @@ void testSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessag
     dt.start(numMessages, numBytes);
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      std::string reply = BoostSerializer::serialize(def, type);
+      std::string reply = BoostBinarySerializer::serialize(def);
     }
     dt.stop();
   }
 }
 
-void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testDeSerialization_CallDefBufferSizes(int numMessages) {
  DataPerfTimer dt("Deserialization");
   char character = 'A';
 
@@ -183,13 +171,13 @@ void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMess
     def.setMethodName("test2");
     def.setSender("toto");
     def.push(request);
-    std::string buffer = BoostSerializer::serialize(def, type);
+    std::string buffer = BoostBinarySerializer::serialize(def);
 
     dt.start(numMessages, numBytes);
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
+      AL::Messaging::CallDefinition reply = BoostBinarySerializer::deserialize<AL::Messaging::CallDefinition>(buffer);
     }
 
     dt.stop();
@@ -197,7 +185,7 @@ void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMess
 }
 
 
-void testSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testSerialization_VariableValueBufferSizes(int numMessages) {
   DataPerfTimer dt("Serialization");
   char character = 'A';
 
@@ -211,13 +199,13 @@ void testSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int num
     dt.start(numMessages, numBytes);
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      std::string reply = BoostSerializer::serialize(def, type);
+      std::string reply = BoostBinarySerializer::serialize(def);
     }
     dt.stop();
   }
 }
 
-void testDeSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testDeSerialization_VariableValueBufferSizes(int numMessages) {
   DataPerfTimer dt("Deserialization");
   char character = 'A';
 
@@ -227,20 +215,20 @@ void testDeSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int n
     std::string request = std::string(numBytes, character);
     AL::Messaging::VariableValue def;
     def = request;
-    std::string buffer = BoostSerializer::serialize(def, type);
+    std::string buffer = BoostBinarySerializer::serialize(def);
 
     dt.start(numMessages, numBytes);
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      AL::Messaging::VariableValue reply = BoostSerializer::deserialize<AL::Messaging::VariableValue>(buffer, type);
+      AL::Messaging::VariableValue reply = BoostBinarySerializer::deserialize<AL::Messaging::VariableValue>(buffer);
     }
 
     dt.stop();
   }
 }
 
-void testSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testSerialization_ValueTypeBufferSizes(int numMessages) {
   DataPerfTimer dt("Serialization");
   char character = 'A';
 
@@ -254,13 +242,13 @@ void testSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMess
     dt.start(numMessages, numBytes);
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      std::string reply = BoostSerializer::serialize(def, type);
+      std::string reply = BoostBinarySerializer::serialize(def);
     }
     dt.stop();
   }
 }
 
-void testDeSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+void testDeSerialization_ValueTypeBufferSizes(int numMessages) {
   DataPerfTimer dt("Deserialization");
   char character = 'A';
 
@@ -270,13 +258,13 @@ void testDeSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMe
     std::string request = std::string(numBytes, character);
     AL::Messaging::ValueType def;
     def = request;
-    std::string buffer = BoostSerializer::serialize(def, type);
+    std::string buffer = BoostBinarySerializer::serialize(def);
 
     dt.start(numMessages, numBytes);
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      AL::Messaging::ValueType reply = BoostSerializer::deserialize<AL::Messaging::ValueType>(buffer, type);
+      AL::Messaging::ValueType reply = BoostBinarySerializer::deserialize<AL::Messaging::ValueType>(buffer);
     }
 
     dt.stop();
@@ -284,7 +272,7 @@ void testDeSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMe
 }
 
 // not used
-void testSerialization_vectorfloat(SERIALIZATION_TYPE type, int numMessages) {
+void testSerialization_vectorfloat(int numMessages) {
   std::string str;
   std::vector<float> floats;
   floats.assign(26, 1.1028284f);
@@ -296,8 +284,8 @@ void testSerialization_vectorfloat(SERIALIZATION_TYPE type, int numMessages) {
   boost::timer t;
 
   for (int i = 0; i < numMessages; i++) {
-    str = BoostSerializer::serialize(floats, type);
-    std::vector<float>  rep = BoostSerializer::deserialize<std::vector<float> >(str, type);
+    str = BoostBinarySerializer::serialize(floats);
+    std::vector<float>  rep = BoostBinarySerializer::deserialize<std::vector<float> >(str);
   }
 
   double elapsed = t.elapsed();

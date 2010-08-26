@@ -9,7 +9,6 @@
 # define   	AL_MESSAGING_CLIENT_HPP_
 
 # include <string>
-# include <alcore/alptr.h>
 # include <alcommon-ng/transport/client.hpp>
 # include <alcommon-ng/transport/zeromq/zmqclient.hpp>
 # include <alcommon-ng/serialization/serialization.hpp>
@@ -25,13 +24,13 @@ namespace AL {
         _client = new AL::Transport::ZMQClient(address);
       }
 
-      boost::shared_ptr<R> send(const T &def)
+      R send(const T &def)
       {
         std::string tosend = AL::Serialization::Serializer::serialize(def);
         std::string torecv;
 
         _client->send(tosend, torecv);
-        return AL::Serialization::Serializer::deserializeToPtr<R>(torecv);
+        return AL::Serialization::Serializer::deserialize<R>(torecv);
       }
 
     protected:
