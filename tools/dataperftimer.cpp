@@ -13,14 +13,23 @@
 namespace AL {
   namespace Test {
 
-    DataPerfTimer::DataPerfTimer()
+    DataPerfTimer::DataPerfTimer(const std::string& testDescription, bool showHeader)
       : fLoopCount(10000),
         fMsgSize(2),
         fMgbPs(0.0f),
         fMsgPs(0.0f),
         fElapsed(0.0)
     {
-      std::cout << "Bytes, msg/s, MB/s" << std::endl;
+      if (showHeader) {
+        printHeader(testDescription);
+      }
+    }
+
+    void DataPerfTimer::printHeader(const std::string& testDescription) {
+      if (! testDescription.empty()) {
+        std::cout << testDescription << std::endl;
+      }
+      std::cout << "bytes, msg/s, Mb/s" << std::endl;
     }
 
     void DataPerfTimer::start(
@@ -35,14 +44,20 @@ namespace AL {
       fElapsed = fTimer.elapsed();
 
       fMsgPs = 1.0f / ((float)fElapsed / (1.0f * fLoopCount) );
-      fMgbPs = (fMsgPs * fMsgSize) / (1024 * 1024.0f);
+      if (fMsgSize > 0) {
+        fMgbPs = (fMsgPs * fMsgSize) / (1024 * 1024.0f);
+      }
       if (shouldPrint)
         print();
     }
 
     void DataPerfTimer::print()
     {
-      std::cout << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
+      if (fMsgSize > 0) {
+        std::cout << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
+      } else {
+        std::cout << fMsgPs  << " msg/s" << std::endl;
+      }
     }
   }
 }

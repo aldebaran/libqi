@@ -9,6 +9,7 @@
 # define    AL_TEST_DATAPERFTIMER_HPP_
 
 #include <boost/timer.hpp>
+#include <string>
 
 namespace AL {
   namespace Test {
@@ -30,9 +31,10 @@ namespace AL {
     class DataPerfTimer
     {
     public:
-      DataPerfTimer();
+      DataPerfTimer(const std::string& testDescription = "", bool showHeader = true);
 
-      void start(const unsigned long loopCount = 10000, const unsigned long msgSize = 2);
+      void printHeader(const std::string& testDescription = "");
+      void start(const unsigned long loopCount = 10000, const unsigned long msgSize = 0);
       void stop(bool shouldPrint = true);
       void print();
 
