@@ -172,6 +172,52 @@ void testSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessag
 }
 
 void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+ DataPerfTimer dt("Deserialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::CallDefinition def;
+    def.setMethodName("test2");
+    def.setSender("toto");
+    def.push(request);
+    std::string buffer = BoostSerializer::serialize(def, type);
+
+    dt.start(numMessages, numBytes);
+
+    for (int loop = 0; loop < numMessages; loop++) {
+      // DeSerialize
+      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
+    }
+
+    dt.stop();
+  }
+}
+
+
+void testSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+  DataPerfTimer dt("Serialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::VariableValue def;
+    def = request;
+
+    dt.start(numMessages, numBytes);
+    for (int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      std::string reply = BoostSerializer::serialize(def, type);
+    }
+    dt.stop();
+  }
+}
+
+void testDeSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
   DataPerfTimer dt("Deserialization");
   char character = 'A';
 
@@ -179,13 +225,15 @@ void testDeSerialization_CallDefBufferSizes(SERIALIZATION_TYPE type, int numMess
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    std::string buffer = BoostSerializer::serialize(request, type);
+    AL::Messaging::VariableValue def;
+    def = request;
+    std::string buffer = BoostSerializer::serialize(def, type);
 
     dt.start(numMessages, numBytes);
 
     for (int loop = 0; loop < numMessages; loop++) {
-      // Serialize
-      std::string reply = BoostSerializer::deserialize<std::string>(buffer, type);
+      // DeSerialize
+      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
     }
 
     dt.stop();
