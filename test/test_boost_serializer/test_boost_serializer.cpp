@@ -1,107 +1,7 @@
 
-#include <gtest/gtest.h>
-#include <alcommon-ng/serialization/boost_serializer.hpp>
-#include <boost/timer.hpp>
-#include <string>
+#include "test_boost_serializer.hxx"
 
 using namespace AL::Serialization;
-
-unsigned int numPowers = 12;
-unsigned int numMessages = 10000;
-
-template<typename T>
-void testSerializationDeserializationPerf( const std::string& description, const T& arg, SERIALIZATION_TYPE type)
-{
-  std::string buf;
-  T res1;
-  double elapsed;
-  boost::timer t;
- 
-  // serialize
-  for (unsigned int i = 0; i < numMessages; ++i) {
-    buf = BoostSerializer::serialize(arg, type);
-  }
-  elapsed = t.elapsed();
-  float msgPsS = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-  buf = BoostSerializer::serialize(arg, type);
-
-  // deserialize
-  t.restart();
-  for (unsigned int i = 0; i < numMessages; ++i) {
-    res1 = BoostSerializer::deserialize<T>(buf, type);
-  }
-  elapsed = t.elapsed();
-  float msgPsD = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-
-  // deserialize to ref
-  t.restart();
-  for (unsigned int i = 0; i < numMessages; ++i) {
-    BoostSerializer::deserialize(buf, res1, type);
-  }
-
-  elapsed = t.elapsed();
-  float msgPsDR = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-
-  // show result
-  std::cout << description << " , Ser: " << msgPsS <<
-    " msg/s, Des: " << msgPsD <<
-    " msg/s, DesToRef: " << msgPsDR << " msg/s" << std::endl;
-}
-
-
-// test three serializations for type T (not a list)
-template<typename T>
-void testSerializationDeserialization(const T& arg)
-{
-  std::string buf;
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  T res1 = BoostSerializer::deserialize<T>(buf, BOOST_BINARY);
-  EXPECT_EQ(arg, res1);
-
-  buf = BoostSerializer::serialize(arg, BOOST_TEXT);
-  T res2 = BoostSerializer::deserialize<T>(buf, BOOST_TEXT);
-  EXPECT_EQ(arg, res2);
-
-  buf = BoostSerializer::serialize(arg, BOOST_XML);
-  T res3 = BoostSerializer::deserialize<T>(buf, BOOST_XML);
-  EXPECT_EQ(arg, res3);
-
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  boost::shared_ptr<T> res4 = BoostSerializer::deserializeToPtr<T>(buf);
-  EXPECT_EQ(arg, *res4.get());
-}
-
-
-// test three serializations for type T (a list)
-template<typename T>
-void testSerializationDeserializationList(const T& arg)
-{
-  std::string buf;
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  T res1 = BoostSerializer::deserialize<T>(buf, BOOST_BINARY);
-  for (unsigned int i = 0; i < arg.size(); i++) {
-    EXPECT_EQ(arg[i], res1[i]);
-  }
-
-  buf = BoostSerializer::serialize(arg, BOOST_TEXT);
-  T res2 = BoostSerializer::deserialize<T>(buf, BOOST_TEXT);
-  for (unsigned int i = 0; i < arg.size(); i++) {
-    EXPECT_EQ(arg[i], res2[i]);
-  }
-
-  buf = BoostSerializer::serialize(arg, BOOST_XML);
-  T res3 = BoostSerializer::deserialize<T>(buf, BOOST_XML);
-  for (unsigned int i = 0; i < arg.size(); i++) {
-    EXPECT_EQ(arg[i], res3[i]);
-  }
-
-  buf = BoostSerializer::serialize(arg, BOOST_BINARY);
-  boost::shared_ptr<T> res4 = BoostSerializer::deserializeToPtr<T>(buf);
-  T res5 = *res4.get();
-  for (unsigned int i = 0; i < arg.size(); i++) {
-    EXPECT_EQ(arg[i], res5[i]);
-  }
-}
 
 // -- basic types
 
@@ -259,152 +159,88 @@ TEST(SerializationTest, ResultDefinition)
   testSerializationDeserialization(arg);
 }
 
-void testSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
 
-  std::cout << "Bytes, msg/s, MB/s" << std::endl;
-  // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < numPowers; i++) {
-
-    char character = 'A';
-    unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string request = std::string(numBytes, character);
-
-    boost::timer t;
-    double elapsed;
-    t.restart();
-
-    for (int loop = 0; loop < numMessages; loop++) {
-      // Serialize
-      std::string reply = BoostSerializer::serialize(request, type);
-    }
-
-    elapsed = t.elapsed();
-    float msgPs = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-    float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
-    std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
-  }
-}
-
-TEST(SerializationPerformance, performanceByType) {
-  float f = 1.06788f;
-  testSerializationDeserializationPerf("BINARY float", f, BOOST_BINARY);
-
-  double d = 34.4598495;
-  testSerializationDeserializationPerf("BINARY double", d, BOOST_BINARY);
-
-  short s = 12;
-  testSerializationDeserializationPerf("BINARY short", s, BOOST_BINARY);
-
-  int i = 198032;
-  testSerializationDeserializationPerf("BINARY int", i, BOOST_BINARY);
-
-  std::string str = "Hello World.";
-  testSerializationDeserializationPerf("BINARY std::string", str, BOOST_BINARY);
-
-  std::pair<int, std::string> pair = std::make_pair<int, std::string>(1, "hello");
-  testSerializationDeserializationPerf("BINARY std::pair", pair, BOOST_BINARY);
-
-  std::map<int, std::string> map;
-  map.insert(std::make_pair<int, std::string>(1, "hello"));
-  map.insert(std::make_pair<int, std::string>(2, "hello2"));
-  testSerializationDeserializationPerf("BINARY std::map", map, BOOST_BINARY);
-
-  AL::Messaging::CallDefinition calldef;
-  calldef.push(1.0f);
-  calldef.push(std::string("hello1"));
-  testSerializationDeserializationPerf("BINARY CallDef", calldef, BOOST_BINARY);
-
-  AL::Messaging::VariableValue v("result");
-  AL::Messaging::ResultDefinition resultdef(1,v);
-  testSerializationDeserializationPerf("BINARY ResultDef", resultdef, BOOST_BINARY);
-
-}
-
-
-
-void testDeSerialization_StringBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
-
-  std::cout << "Bytes, msg/s, MB/s" << std::endl;
-  // loop message sizes 2^i bytes
-  for (unsigned int i=1; i < numPowers; i++) {
-
-    char character = 'A';
-    unsigned int numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string request = std::string(numBytes, character);
-
-    boost::timer t;
-    double elapsed;
-    std::string buffer = BoostSerializer::serialize(request, type);
-
-    t.restart();
-
-    for (int loop = 0; loop < numMessages; loop++) {
-      // Serialize
-      std::string reply = BoostSerializer::deserialize<std::string>(buffer, type);
-    }
-
-    elapsed = t.elapsed();
-    float msgPs = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-    float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
-    std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
-  }
-}
-
-TEST(SerializationPerformance, binary) {
-  std::cout << " BINARY Serialization " << numMessages << std::endl;
+TEST(SerializationPerformance, stringBuffers_BINARY) {
+  std::cout << "BINARY " << numMessages << std::endl;
   testSerialization_StringBufferSizes(BOOST_BINARY, numMessages);
-  std::cout << " BINARY DeSerialization " << numMessages << std::endl;
   testDeSerialization_StringBufferSizes(BOOST_BINARY, numMessages);
 }
 
-TEST(SerializationPerformance, DISABLED_text) {
-  std::cout << " TEXT Serialization " << numMessages << std::endl;
+TEST(SerializationPerformance, DISABLED_stringBuffers_TEXT) {
+  std::cout << "TEXT " << numMessages << std::endl;
   testSerialization_StringBufferSizes(BOOST_TEXT, numMessages);
-  std::cout << " TEXT DeSerialization " << numMessages << std::endl;
   testDeSerialization_StringBufferSizes(BOOST_TEXT, numMessages);
 }
 
-TEST(SerializationPerformance, DISABLED_xml) {
-  std::cout << " XML Serialization " << numMessages << std::endl;
+TEST(SerializationPerformance, DISABLED_stringBuffers_XML) {
+  std::cout << "XML " << numMessages << std::endl;
   testSerialization_StringBufferSizes(BOOST_XML, numMessages);
-  std::cout << " XML DeSerialization " << numMessages << std::endl;
   testDeSerialization_StringBufferSizes(BOOST_XML, numMessages);
 }
 
-void testSerialization_vectorfloat(SERIALIZATION_TYPE type, int numMessages) {
-  std::string str;
-  std::vector<float> floats;
-  floats.assign(26,1.1028284f);
-
-  int numBytes = sizeof(float) * 26;
-
-  std::cout << "Vector<float> binary: " << numMessages << std::endl;
-  std::cout << "Bytes, msg/s, MB/s" << std::endl;
-  boost::timer t;
-
-  for( int i=0; i< numMessages; i++) {
-
-    str = BoostSerializer::serialize(floats, type);
-    std::vector<float>  rep = BoostSerializer::deserialize<std::vector<float> >(str, type);
-  }
-
-  double elapsed = t.elapsed();
-  float msgPs = 1.0f / ((float)elapsed / (1.0f * numMessages) );
-  float mgbPs = (msgPs * numBytes) / (1024 * 1024.0f);
-  std::cout << numBytes << ", " << msgPs << ", " << mgbPs << std::endl;
+TEST(SerializationPerformance, float_BINARY) {
+  float f = 1.06788f;
+  testSerializationDeserializationPerf(f, BOOST_BINARY);
 }
+
+TEST(SerializationPerformance, double_BINARY) {
+  double d = 34.4598495;
+  testSerializationDeserializationPerf(d, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, short_BINARY) {
+  short s = 12;
+  testSerializationDeserializationPerf(s, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, int_BINARY) {
+  int i = 198032;
+  testSerializationDeserializationPerf(i, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, string_BINARY) {
+  std::string str = "Hello World.";
+  testSerializationDeserializationPerf(str, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, pair_BINARY) {
+  std::pair<int, std::string> pair = std::make_pair<int, std::string>(1, "hello");
+  testSerializationDeserializationPerf(pair, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, map_BINARY) {
+  std::map<int, std::string> map;
+  map.insert(std::make_pair<int, std::string>(1, "hello"));
+  map.insert(std::make_pair<int, std::string>(2, "hello2"));
+  testSerializationDeserializationPerf(map, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, CallDefinition_BINARY) {
+  AL::Messaging::CallDefinition calldef;
+  calldef.push(1.0f);
+  calldef.push(std::string("hello1"));
+  testSerializationDeserializationPerf(calldef, BOOST_BINARY);
+}
+
+TEST(SerializationPerformance, ResultDefinition_BINARY) {
+  AL::Messaging::VariableValue v("result");
+  AL::Messaging::ResultDefinition resultdef(1,v);
+  testSerializationDeserializationPerf(resultdef, BOOST_BINARY);
+}
+
+
 
 
 // to keep gtest happy
 template<typename T, typename U>
-inline std::ostream & operator << (std::ostream & ostr, const std::pair<T,U> & value) {
+inline std::ostream & operator << (std::ostream & ostr, const std::pair<T, U> & value) {
   ostr << "pair";
         return ostr;
 }
 
 // to keep gtest happy
 template<typename T, typename U>
-inline std::ostream & operator << (std::ostream & ostr, const std::map<T,U> & value) {
+inline std::ostream & operator << (std::ostream & ostr, const std::map<T, U> & value) {
   ostr << "map";
         return ostr;
 }
