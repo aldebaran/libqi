@@ -14,7 +14,7 @@
 # include <alcommon-ng/transport/common/threadable.hpp>
 # include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 # include <alcommon-ng/transport/transport.hpp>
-# include <alcommon-ng/serialization/serialization.hpp>
+# include <alcommon-ng/serialization/serializer.hpp>
 
 namespace AL {
   //namespace Transport {

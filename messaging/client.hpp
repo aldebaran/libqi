@@ -11,7 +11,7 @@
 # include <string>
 # include <alcommon-ng/transport/client.hpp>
 # include <alcommon-ng/transport/zeromq/zmqclient.hpp>
-# include <alcommon-ng/serialization/serialization.hpp>
+# include <alcommon-ng/serialization/serializer.hpp>
 
 namespace AL {
   namespace Messaging {
