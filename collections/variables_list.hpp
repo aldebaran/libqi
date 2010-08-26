@@ -213,9 +213,8 @@ public:
   const ValueType & value () const { return val; }
 
   AL::ALValue convertToALValue () const {
-    AL::ALValue v;
     if (empty) {
-      return v;
+      return AL::ALValue();
     }
     ALValueConvertor convertor;
 		return boost::apply_visitor(convertor, val);
