@@ -1,5 +1,6 @@
 
 add_subdirectory(test_common)
+add_subdirectory(test_collections)
 add_subdirectory(test_messaging)
 add_subdirectory(test_boost_serializer)
 add_subdirectory(test_transport)
