@@ -9,10 +9,6 @@
 #define AL_MESSAGING_ON_MESSAGE_DELEGATE_HPP_
 
 #include <boost/shared_ptr.hpp>
-//#include <alcommon-ng/serialization/call_definition.hpp>
-//#include <alcommon-ng/serialization/result_definition.hpp>
-//#include <alcommon-ng/serialization/call_request.h>
-//#include <alcommon-ng/serialization/call_response.h>
 
 namespace AL {
   namespace Messaging {
