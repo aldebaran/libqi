@@ -26,9 +26,9 @@
 
 namespace AL {
   namespace Serialization {
-   
+
     template<class T>
-    static std::string BoostBinarySerializer::serialize(const T& item)
+    std::string BoostBinarySerializer::serialize(const T& item)
     {
       std::stringstream stream;
       boost::archive::binary_oarchive oa(stream, boost::archive::no_header);
@@ -37,7 +37,7 @@ namespace AL {
     }
 
     template<class T>
-    static T BoostBinarySerializer::deserialize(const std::string & buffer)
+    T BoostBinarySerializer::deserialize(const std::string & buffer)
     {
       T ret;
       deserialize<T>((char*)buffer.c_str(), buffer.size(), ret);
@@ -45,27 +45,27 @@ namespace AL {
     }
 
     template<class T>
-    static T BoostBinarySerializer::deserialize(char* chars, const int size)
+    T BoostBinarySerializer::deserialize(char* chars, const int size)
     {
       T ret;
-      deserialize<T>(chars, size, ret)
+      deserialize<T>(chars, size, ret);
       return ret;
     }
 
     template<class T>
-    static void BoostBinarySerializer::deserialize(const std::string& buffer, T& ret)
+    void BoostBinarySerializer::deserialize(const std::string& buffer, T& ret)
     {
       deserialize<T>((char*)buffer.c_str(), buffer.size(), ret);
     }
 
     template<class T>
-    static void BoostBinarySerializer::deserialize(char* chars, const int size, T& ret)
+    void BoostBinarySerializer::deserialize(char* chars, const int size, T& ret)
     {
       boost::interprocess::bufferstream buff(chars, size);
       boost::archive::binary_iarchive ia(buff, boost::archive::no_header);
       ia >> ret;
     }
-    // =========================================
+
   }
 }
 
