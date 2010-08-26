@@ -192,6 +192,10 @@ public:
   operator bool () const {
 		return as<bool>();
 	}
+  // ck added string convertion
+  operator std::string () const {
+    return as<std::string>();
+	}
   /** Implicit conversion operator for binary data */
   operator std::vector<unsigned char> () const { return as<std::vector<unsigned char> >(); }
 
