@@ -1,6 +1,7 @@
 
 set(headers
   print_visitor.hpp
+  equality_visitor.hpp
   alvalue_convertor.hpp
   serializable_visitor.hpp
   variables_list.hpp

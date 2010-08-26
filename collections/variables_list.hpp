@@ -9,6 +9,7 @@
 #ifndef LIBIPPC_VARIABLESLIST_HPP_
 #define LIBIPPC_VARIABLESLIST_HPP_
 
+#include <alcommon-ng/collections/equality_visitor.hpp>
 #include <alcommon-ng/collections/print_visitor.hpp>
 #include <alcommon-ng/collections/alvalue_convertor.hpp>
 #include <alcommon-ng/exceptions/exceptions.hpp>
@@ -129,6 +130,11 @@ public:
     this->empty = false;
     this->val = b;
     return *this;
+  }
+
+  bool operator == (const VariableValue& rhs) const {
+    EqualityVisitor visitor;
+    return boost::apply_visitor(visitor, this->val, rhs.val);
   }
 
   /** VariableValue ctor from an alvalue */
