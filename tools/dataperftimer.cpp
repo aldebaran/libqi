@@ -7,8 +7,8 @@
 */
 
 #include "dataperftimer.hpp"
-#include <boost/timer.hpp>
 #include <iostream>
+#include <rttools/rttime.h>
 
 namespace AL {
   namespace Test {
@@ -16,9 +16,9 @@ namespace AL {
     DataPerfTimer::DataPerfTimer(const std::string& testDescription, bool showHeader)
       : fLoopCount(10000),
         fMsgSize(2),
-        fMgbPs(0.0f),
-        fMsgPs(0.0f),
-        fElapsed(0.0)
+        fElapsed(0.0),
+        fMsgPs(0.0),
+        fMgbPs(0.0)
     {
       if (showHeader) {
         printHeader(testDescription);
@@ -37,15 +37,15 @@ namespace AL {
       const unsigned long msgSize) {
       fLoopCount = loopCount;
       fMsgSize = msgSize;
-      fTimer.restart();
+      rt.start();
     }
 
     void DataPerfTimer::stop(bool shouldPrint) {
-      fElapsed = fTimer.elapsed();
-
-      fMsgPs = 1.0f / ((float)fElapsed / (1.0f * fLoopCount) );
+      rt.stop();
+      fElapsed = rt.diffUs() / 1000.0 / 1000.0;
+      fMsgPs = 1.0 / (fElapsed / (1.0 * fLoopCount) );
       if (fMsgSize > 0) {
-        fMgbPs = (fMsgPs * fMsgSize) / (1024 * 1024.0f);
+        fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
       }
       if (shouldPrint)
         print();

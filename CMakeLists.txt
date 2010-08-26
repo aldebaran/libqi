@@ -94,7 +94,7 @@ endif (UNIX)
 
 create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
 use_lib (alcommon-ng REQUIRED ALL BOOST)
-use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ)
+use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ RTTOOLS)
 
 if (WITH_THRIFT)
   use_lib(alcommon-ng THRIFT)
