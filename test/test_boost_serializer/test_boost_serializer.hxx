@@ -1,7 +1,7 @@
 
+#include <gtest/gtest.h>  // gtest must be included first...!
 #include <alcommon-ng/serialization/boost_serializer.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
-#include <gtest/gtest.h>
 #include <string>
 #include <alcommon-ng/serialization/call_definition.hpp>
 
@@ -233,7 +233,50 @@ void testDeSerialization_VariableValueBufferSizes(SERIALIZATION_TYPE type, int n
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      AL::Messaging::CallDefinition reply = BoostSerializer::deserialize<AL::Messaging::CallDefinition>(buffer, type);
+      AL::Messaging::VariableValue reply = BoostSerializer::deserialize<AL::Messaging::VariableValue>(buffer, type);
+    }
+
+    dt.stop();
+  }
+}
+
+void testSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+  DataPerfTimer dt("Serialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::ValueType def;
+    def = request;
+
+    dt.start(numMessages, numBytes);
+    for (int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      std::string reply = BoostSerializer::serialize(def, type);
+    }
+    dt.stop();
+  }
+}
+
+void testDeSerialization_ValueTypeBufferSizes(SERIALIZATION_TYPE type, int numMessages) {
+  DataPerfTimer dt("Deserialization");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    AL::Messaging::ValueType def;
+    def = request;
+    std::string buffer = BoostSerializer::serialize(def, type);
+
+    dt.start(numMessages, numBytes);
+
+    for (int loop = 0; loop < numMessages; loop++) {
+      // DeSerialize
+      AL::Messaging::ValueType reply = BoostSerializer::deserialize<AL::Messaging::ValueType>(buffer, type);
     }
 
     dt.stop();
