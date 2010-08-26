@@ -24,6 +24,11 @@ public:
     _map[name] = functor;
   }
 
+  AL::Functor *get(const std::string &name)
+  {
+    return _map[name];
+  }
+
 protected:
   std::map<std::string, AL::Functor *> _map;
 };
@@ -53,6 +58,7 @@ TEST(TestBind, Simple) {
   cd.push(40);
   AL::makeFunctor(&chiche, &Chiche::lover)->call(cd, res);
 
+  nl.get("lover")->call(cd, res);
   //AL::createFunctor(&chiche, &Chiche::tartine)->as<void>();
   //nl.call("toto", 42);
 }

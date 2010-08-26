@@ -76,7 +76,7 @@ namespace AL
 
     void call(const AL::Messaging::CallDefinition &pParams, AL::Messaging::ResultDefinition &pResult) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 2);
-      pResult.value((fObject->*fFunction)(pParams.getParameters()[0].as<P1>(), pParams.getParameters()[0].as<P2>()));
+      pResult.value((fObject->*fFunction)(pParams.getParameters()[0].as<P1>(), pParams.getParameters()[1].as<P2>()));
     };
 
   private:
