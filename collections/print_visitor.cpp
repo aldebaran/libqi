@@ -55,12 +55,13 @@ std::ostream & PrintVisitor::operator () (const std::vector<float> & bin) {
   return ostr << "}";
 }*/
 
-//std::ostream & PrintVisitor::operator () (const std::vector<VariableValue> & v) {
-//  ostr << "{ ";
-//  foreach (VariableValue value, v)
-//    ostr << value << " ";
-//  return ostr << "}";
-//}
+std::ostream & PrintVisitor::operator () (const std::vector<VariableValue> & v) {
+  return ostr << "FIXME";
+  //ostr << "{ ";
+  //foreach (VariableValue value, v)
+  //  ostr << value << " ";
+  //return ostr << "}";
+}
 
 }
 }
