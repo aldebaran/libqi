@@ -11,10 +11,11 @@
 namespace AL {
   namespace Serialization {
 
+
     template <typename U>
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::vector<U> &t, int field)
     {
-      std::cout << "Serialize(std::vector)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(std::vector)" << std::endl);
       typename std::vector<U>::const_iterator it;
       protocol->writeListBegin(::apache::thrift::protocol::T_STRUCT, t.size());
       for (it = t.begin(); it != t.end(); ++it)
@@ -35,7 +36,7 @@ namespace AL {
     template <typename U>
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field)
     {
-      std::cout << "Serialize(std::list)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(std::list)" << std::endl);
       typename std::list<U>::const_iterator it;
       protocol->writeListBegin(::apache::thrift::protocol::T_STRUCT, t.size());
       for (it = t.begin(); it != t.end(); ++it)

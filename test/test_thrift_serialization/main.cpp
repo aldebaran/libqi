@@ -23,6 +23,14 @@
 
 #include <transport/TTransportUtils.h>
 #include <protocol/TJSONProtocol.h>
+#include <protocol/TBinaryProtocol.h>
+
+#include <alcommon-ng/tools/dataperftimer.hpp>
+
+using AL::Test::DataPerfTimer;
+
+static const int gLoopCount   = 100000;
+
 
 template <typename T>
 std::string serializeJsonThrift(T &t)
@@ -41,16 +49,72 @@ std::string serializeJsonThrift(T &t)
   return std::string((char*)buf, (unsigned int)size);
 }
 
+template <typename T>
+std::string serializeBinaryThrift(T &t)
+{
+  using namespace apache::thrift::transport;
+  using namespace apache::thrift::protocol;
+  TMemoryBuffer* buffer = new TMemoryBuffer;
+  boost::shared_ptr<TTransport> trans(buffer);
+  TBinaryProtocol protocol(trans);
+
+  AL::Serialization::thriftSerialize(&protocol, t);
+
+  uint8_t* buf;
+  uint32_t size;
+  buffer->getBuffer(&buf, &size);
+  return std::string((char*)buf, (unsigned int)size);
+}
+
 int main(int argc, char *argv[])
 {
   AL::Messaging::CallDefinition      def;
 
-  def.setMethodName("test2");
-  def.setSender("titi caca");
-  def.push(41);
+  DataPerfTimer dt;
+
+  std::cout << "binary" << std::endl;
+  for (int i = 0; i < 12; ++i)
+  {
+    unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string                   request = std::string(numBytes, 'B');
+    AL::Messaging::CallDefinition def;
+
+    def.setMethodName("test2");
+    def.setSender("toto");
+    def.push(request);
+
+    dt.start(gLoopCount, numBytes);
+    for (int j = 0; j< gLoopCount; ++j)
+    {
+      std::string json = serializeBinaryThrift(def);
+    }
+    dt.stop();
+  }
+
+  std::cout << "json" << std::endl;
+  for (int i = 0; i < 12; ++i)
+  {
+    unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string                   request = std::string(numBytes, 'B');
+    AL::Messaging::CallDefinition def;
+
+    def.setMethodName("test2");
+    def.setSender("toto");
+    def.push(request);
+
+
+    dt.start(gLoopCount, numBytes);
+    for (int j = 0; j< gLoopCount; ++j)
+    {
+      std::string json = serializeJsonThrift(def);
+    }
+    dt.stop();
+  }
+
   //AL::ALPtr<AL::Messaging::ResultDefinition> res;
-  std::cout << "Start Serialization" << std::endl;
-  std::string json = serializeJsonThrift(def);
-  std::cout << json << std::endl;
+  //std::cout << "Start Serialization" << std::endl;
+  //std::string json = serializeJsonThrift(def);
+  //std::cout << json << std::endl;
   return 0;
 }
+

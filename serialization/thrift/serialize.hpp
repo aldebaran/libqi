@@ -11,6 +11,10 @@
 #include <protocol/TProtocol.h>
 #include <boost/variant/static_visitor.hpp>
 
+//#define DEBUGOUT_THRIFT_SER(a) {a;}
+#define DEBUGOUT_THRIFT_SER(a)
+
+
 namespace apache {
   namespace thrift {
     namespace protocol {

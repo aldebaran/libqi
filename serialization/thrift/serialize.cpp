@@ -11,43 +11,48 @@
 #include <alcommon-ng/serialization/result_definition.hpp>
 #include <alcommon-ng/serialization/thrift/serialize.hpp>
 
+
 namespace AL {
   namespace Serialization {
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field)
     {
-      std::cout << "Serialize(int)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(int)" << std::endl);
+      protocol->writeI32(t);
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const float &t, int field)
     {
-      std::cout << "Serialize(float)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(float)" << std::endl);
+      //protocol->writeDouble(t);
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const double &t, int field)
     {
-      std::cout << "Serialize(double)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(double)" << std::endl);
+      protocol->writeDouble(t);
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const bool &t, int field)
     {
-      std::cout << "Serialize(bool)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(bool)" << std::endl);
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const std::string &t, int field)
     {
-      std::cout << "Serialize(std::string)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(std::string)" << std::endl);
+      protocol->writeString(t);
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field)
     {
-      std::cout << "Serialize(ResultDefinition)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(ResultDefinition)" << std::endl);
       //protocol->readWriteMessage();
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol,const AL::Messaging::VariableValue &t, int field)
     {
-      std::cout << "Serialize(VariablesValue)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesValue)" << std::endl);
       protocol->writeStructBegin("VariableValue");
       protocol->writeFieldBegin("which", ::apache::thrift::protocol::T_I32, 1);
       VariableValueSerializeVisitor visitor(protocol);
@@ -59,13 +64,13 @@ namespace AL {
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
     {
-      std::cout << "Serialize(VariablesList)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesList)" << std::endl);
       thriftSerialize(protocol, dynamic_cast<const std::list< AL::Messaging::VariableValue > &>(t));
     }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)
     {
-      std::cout << "Serialize(CallDefinition)" << std::endl;
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(CallDefinition)" << std::endl);
 
       protocol->writeStructBegin("CallDefinition");
 
