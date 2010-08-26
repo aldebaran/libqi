@@ -17,6 +17,12 @@ General later:
 - abstract the serialisation backend (or use the boost::archive abstraction to implement more serialization backend)
 
 
+Functor:
+  - use boost::ref ?
+  - support function pointer
+  - split out CallDefinition/ResultDefinition handling in a separate file
+
+
 ippc -> AL::Messaging DONE
 CallDefinition -> Request NO ... the call definition is not the request
 ResultDefinition -> Response NO ... the call definition is not the request
