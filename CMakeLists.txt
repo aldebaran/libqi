@@ -35,6 +35,7 @@ file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/s
 file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
 file(GLOB TRANSPORT_THRIFT_SRC            transport/thrift/*.cpp transport/thrift/*.h*)
+file(GLOB FUNCTOR_SRC                     functor/*.cpp functor/*.h*)
 
 source_group( Common                 FILES ${COMMON_SRC})
 source_group( Messaging              FILES ${MESSAGING_SRC})
@@ -65,6 +66,7 @@ set(SRC
     ${TOOLS_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
+    ${FUNCTOR_SRC}
 )
 
 if(WITH_ZMQ)
