@@ -9,11 +9,10 @@
 #include <map>
 #include <alcommon-ng/functor/functor.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/tools/dataperftimer.hpp>
 
-#define BIND_METHOD( x )  do { completeAndCheck(&x, fMethodDesc); bindMethod(createFunctor(this, &x)); } while (0);
-#define BIND_METHOD_ASYNCHRONOUS( x )  do { completeAndCheck(&x, fMethodDesc); bindMethodAsynchronous(createFunctor(this, &x)); } while (0);
+
+static const int gLoopCount   = 1000000;
 
 using AL::Messaging::CallDefinition;
 using AL::Messaging::ResultDefinition;
@@ -40,6 +39,8 @@ int toto(int bim)
 }
 
 struct Chiche {
+  void voidCall() { return; }
+  int intStringCall(const std::string &plouf) { return plouf.size(); }
   void tartine() { std::cout << "poutre la tartine" << std::endl; }
   void lover(const int &poteau) { std::cout << "poutre du poteau" << poteau << std::endl; }
 };
@@ -59,7 +60,70 @@ TEST(TestBind, Simple) {
   AL::makeFunctor(&chiche, &Chiche::lover)->call(cd, res);
 
   nl.get("lover")->call(cd, res);
-  //AL::createFunctor(&chiche, &Chiche::tartine)->as<void>();
-  //nl.call("toto", 42);
 }
 
+TEST(TestBind, VoidCallPerf) {
+  Chiche           chiche;
+  Chiche          *p = &chiche;
+  NameLookup       nl;
+  ResultDefinition res;
+  CallDefinition   cd;
+
+  AL::Test::DataPerfTimer dp;
+  AL::Functor    *functor = AL::makeFunctor(&chiche, &Chiche::voidCall);
+  std::cout << "AL::Functor call" << std::endl;
+  dp.start(gLoopCount);
+  for (int i = 0; i < gLoopCount; ++i)
+  {
+    functor->call(cd, res);
+  }
+  dp.stop();
+
+  std::cout << "pointer call" << std::endl;
+  dp.start(gLoopCount);
+  for (int i = 0; i < gLoopCount; ++i)
+  {
+    p->voidCall();
+  }
+  dp.stop();
+}
+
+TEST(TestBind, IntStringCallPerf) {
+  Chiche           chiche;
+  Chiche          *p = &chiche;
+  NameLookup       nl;
+  ResultDefinition res;
+
+  AL::Test::DataPerfTimer dp;
+
+  std::cout << "AL::Functor call (string with a growing size)" << std::endl;
+
+  for (int i = 0; i < 12; ++i)
+  {
+    unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string     request = std::string(numBytes, 'B');
+    CallDefinition  cd;
+    AL::Functor    *functor = AL::makeFunctor(&chiche, &Chiche::intStringCall);
+
+    cd.push(request);
+    dp.start(gLoopCount, numBytes);
+    for (int j = 0; j < gLoopCount; ++j) {
+      functor->call(cd, res);
+    }
+    dp.stop();
+  }
+
+  std::cout << "pointer call (string with a growing size)" << std::endl;
+  for (int i = 0; i < 12; ++i)
+  {
+    unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
+    std::string     request = std::string(numBytes, 'B');
+
+    dp.start(gLoopCount, numBytes);
+    for (int j = 0; j < gLoopCount; ++j) {
+      p->intStringCall(request);
+    }
+    dp.stop();
+  }
+
+}
