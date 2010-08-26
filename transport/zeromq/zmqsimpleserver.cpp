@@ -10,7 +10,7 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
-#include <alcommon-ng/serialization/definition_type.hpp>
+//#include <alcommon-ng/serialization/definition_type.hpp>
 
 #include <zmq.hpp>
 
