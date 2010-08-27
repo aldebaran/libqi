@@ -7,6 +7,8 @@
 
 #include <alcommon-ng/serialization/rpc_serializer.hpp>
 #include <alcommon-ng/serialization/serializer.hpp>
+
+// specific boost serializers for these messages
 #include <alcommon-ng/messaging/call_definition_serialization.hxx>
 #include <alcommon-ng/messaging/result_definition_serialization.hxx>
 
