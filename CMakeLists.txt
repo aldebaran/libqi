@@ -22,7 +22,7 @@ file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  serialization/boost/*.cpp serialization/boost/*.h*)
 
-file(GLOB TOOLS_SRC                 tools/*.cpp tools/*.h*)
+file(GLOB TOOLS_SRC                tools/*.cpp tools/*.h*)
 file(GLOB EXCEPTIONS_SRC           exceptions/*.cpp exceptions/*.h*)
 
 file(GLOB MESSAGING_SRC            messaging/*.cpp messaging/*.h*)
@@ -45,7 +45,7 @@ source_group( Serialization\\Thrift  FILES ${SERIALIZATION_THRIFT_SRC})
 source_group( Serialization\\Boost   FILES ${SERIALIZATION_BOOST_SRC})
 source_group( Utils                  FILES ${UTIL_SRC})
 source_group( Exceptions             FILES ${EXCEPTIONS_SRC})
-
+source_group( Tools                  FILES ${TOOLS_SRC})
 source_group( Transport              FILES ${TRANSPORT_SRC})
 source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
 
@@ -63,6 +63,7 @@ set(SRC
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
     ${SERIALIZATION_BOOST_SRC}
+    ${EXCEPTIONS_SRC}
     ${TOOLS_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
