@@ -65,7 +65,7 @@ def generate_list(tpl, count, sep = ", ", begin = False, end = False):
     return result
 
 def generate_callparam_list(count):
-    t = "pParams.getParameters()[%(count)d].as<P%(count)d>()"
+    t = "params.args()[%(count)d].as<P%(count)d>()"
     return generate_list(t, count)
 
 def generate_typename_list(count):
@@ -74,7 +74,7 @@ def generate_typename_list(count):
 
 def generate_type_list(count):
     t = "P%(count)d"
-    return generate_list(t, count)
+    return generate_list(t, count, end = True)
 
 def generate_param_list(count):
     t = "const P%(count)d &p%(count)d"
@@ -98,11 +98,12 @@ def generate_code(head, tpl, foot, count):
     return result
 
 def generate_file(src, dst):
-    (head, tpl, foot) = read_file("memberfunctor.hxx.in")
+    (head, tpl, foot) = read_file(src)
     code = generate_code(head, tpl, foot, 6)
     with open(dst, "w") as f:
         f.write(code)
 
 if __name__ == "__main__":
-    generate_file("memberfunctor.hxx.in", "memberfunctor.hxx")
+    generate_file("memberfunctor.hxx.in"    , "memberfunctor.hxx")
     generate_file("voidmemberfunctor.hxx.in", "voidmemberfunctor.hxx")
+    generate_file("makefunctor.hpp.in"      , "makefunctor.hpp")
