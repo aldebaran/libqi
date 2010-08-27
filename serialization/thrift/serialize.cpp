@@ -7,8 +7,8 @@
 
 #include <iostream>
 #include <alcommon-ng/collections/variables_list.hpp>
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 #include <alcommon-ng/serialization/thrift/serialize.hpp>
 
 
@@ -62,11 +62,11 @@ namespace AL {
       //thriftSerialize(protocol, dynamic_cast<std::list< AL::Messaging::VariableValue >(t));
     }
 
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
-    {
-      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesList)" << std::endl);
-      thriftSerialize(protocol, dynamic_cast<const std::vector< AL::Messaging::VariableValue > &>(t));
-    }
+//    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field)
+//    {
+//      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesList)" << std::endl);
+//      thriftSerialize(protocol, dynamic_cast<const std::vector< AL::Messaging::VariableValue > &>(t));
+//    }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)
     {
@@ -74,32 +74,16 @@ namespace AL {
 
       protocol->writeStructBegin("CallDefinition");
 
-      protocol->writeFieldBegin("RequestId", ::apache::thrift::protocol::T_I32, 1);
-      protocol->writeI32(t.getRequestId());
-      protocol->writeFieldEnd();
-
       protocol->writeFieldBegin("MethodName", ::apache::thrift::protocol::T_STRING, 2);
-      protocol->writeString(t.getMethodName());
+      protocol->writeString(t.methodName());
       protocol->writeFieldEnd();
 
       protocol->writeFieldBegin("ModuleName", ::apache::thrift::protocol::T_STRING, 3);
-      protocol->writeString(t.getModuleName());
+      protocol->writeString(t.moduleName());
       protocol->writeFieldEnd();
 
       protocol->writeFieldBegin("Params", ::apache::thrift::protocol::T_STRUCT, 4);
-      thriftSerialize(protocol, t.getParameters());
-      protocol->writeFieldEnd();
-
-      protocol->writeFieldBegin("HasRes", ::apache::thrift::protocol::T_BOOL, 5);
-      protocol->writeBool(t.getRequestId());
-      protocol->writeFieldEnd();
-
-      protocol->writeFieldBegin("isPC", ::apache::thrift::protocol::T_BOOL, 6);
-      protocol->writeBool(t.isPCall());
-      protocol->writeFieldEnd();
-
-      protocol->writeFieldBegin("Sender", ::apache::thrift::protocol::T_STRING, 7);
-      protocol->writeString(t.getSender());
+      thriftSerialize(protocol, t.args());
       protocol->writeFieldEnd();
 
       protocol->writeStructEnd();

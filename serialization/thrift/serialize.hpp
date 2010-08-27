@@ -51,7 +51,7 @@ namespace AL {
     //AL::Messaging Types
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field = 0);
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariableValue &t, int field = 0);
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field = 0);
+    //void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariablesList &t, int field = 0);
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field = 0);
 
     struct VariableValueSerializeVisitor : boost::static_visitor<> {

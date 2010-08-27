@@ -79,9 +79,7 @@ int main(int argc, char *argv[])
     std::string                   request = std::string(numBytes, 'B');
     AL::Messaging::CallDefinition def;
 
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
+    def.args()[0] = request;
 
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
@@ -98,11 +96,7 @@ int main(int argc, char *argv[])
     std::string                   request = std::string(numBytes, 'B');
     AL::Messaging::CallDefinition def;
 
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
-
-
+    def.args()[0] = request;
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
     {
