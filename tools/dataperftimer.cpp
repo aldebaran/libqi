@@ -14,7 +14,7 @@ namespace AL {
   namespace Test {
 
     DataPerfTimer::DataPerfTimer(const std::string& testDescription, bool showHeader)
-      : fLoopCount(10000),
+      : fLoopCount(1),
         fMsgSize(2),
         fElapsed(0.0),
         fMsgPs(0.0),
