@@ -56,7 +56,7 @@ TEST(TestBind, Simple) {
   CallDefinition   cd;
   AL::makeFunctor(&chiche, &Chiche::tartine)->call(CallDefinition(), res);
 
-  cd.push(40);
+  cd.args().push_back(40);
   AL::makeFunctor(&chiche, &Chiche::lover)->call(cd, res);
 
   nl.get("lover")->call(cd, res);
@@ -105,7 +105,7 @@ TEST(TestBind, IntStringCallPerf) {
     CallDefinition  cd;
     AL::Functor    *functor = AL::makeFunctor(&chiche, &Chiche::intStringCall);
 
-    cd.push(request);
+    cd.args().push_back(request);
     dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j) {
       functor->call(cd, res);

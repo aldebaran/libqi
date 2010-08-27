@@ -4,6 +4,7 @@
 #include <alcommon-ng/tools/dataperftimer.hpp>
 #include <string>
 #include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/serialization/result_definition.hpp>
 
 using namespace AL::Serialization;
 using AL::Test::DataPerfTimer;
@@ -119,9 +120,8 @@ void testDeSerialization_StringBufferSizes(int numMessages) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
     AL::Messaging::CallDefinition def;
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
+    def.methodName() = "test2";
+    def.args().push_back(request);
 
     std::string buffer = BoostBinarySerializer::serialize(def);
 
@@ -146,9 +146,8 @@ void testSerialization_CallDefBufferSizes(int numMessages) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
     AL::Messaging::CallDefinition def;
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
+    def.methodName() = "test2";
+    def.args().push_back(request);
 
     dt.start(numMessages, numBytes);
     for (int loop = 0; loop < numMessages; loop++) {
@@ -168,9 +167,8 @@ void testDeSerialization_CallDefBufferSizes(int numMessages) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
     AL::Messaging::CallDefinition def;
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
+    def.methodName() = "test2";
+    def.args().push_back(request);
     std::string buffer = BoostBinarySerializer::serialize(def);
 
     dt.start(numMessages, numBytes);

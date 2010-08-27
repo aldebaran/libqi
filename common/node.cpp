@@ -39,9 +39,9 @@ namespace AL {
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> Node::onMessage(const AL::Messaging::CallDefinition &def) {
       // handle message
-      std::cout << fNodeInfo.name << " received message: " << def.getModuleName() << "." << def.getMethodName() << std::endl;
+      std::cout << fNodeInfo.name << " received message: " << def.moduleName() << "." << def.methodName() << std::endl;
 
-      std::string key = def.getModuleName() + std::string(".") + def.getMethodName();
+      std::string key = def.moduleName() + std::string(".") + def.methodName();
       const ServiceInfo& si = getService(key);
       if (si.nodeName == fNodeInfo.name) {
         std::cout << " Method is for this node " << std::endl;

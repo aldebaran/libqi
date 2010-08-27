@@ -37,20 +37,20 @@ public:
   // to call function on current process
   boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition & def)
   {
-    boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition(def));
+    boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition());
 
-    if (def.getMethodName() == "test2")
+    if (def.methodName() == "test2")
     {
       //printf("Method: test2\n");
-      AL::Messaging::VariablesList    params = def.getParameters();
+      std::vector<AL::Messaging::VariableValue>    params = def.args();
       res->value((int)params.front().as<std::string>().size());
     }
 
-    else if (def.getMethodName() == "echo")
+    else if (def.methodName() == "echo")
     {
         printf("Method: Echo\n");
-        AL::Messaging::VariablesList    params = def.getParameters();
-        res->value(params.convertToALValue());
+        std::vector<AL::Messaging::VariableValue>    params = def.args();
+        res->value(params.front());
     }
     return res;
   }
@@ -85,9 +85,8 @@ int main_client(int clientId)
     std::string                   request = std::string(numBytes, 'B');
     AL::Messaging::CallDefinition def;
 
-    def.setMethodName("test2");
-    def.setSender("toto");
-    def.push(request);
+    def.methodName() = "test2";
+    def.args().push_back(request);
 
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)

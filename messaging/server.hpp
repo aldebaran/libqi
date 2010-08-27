@@ -8,22 +8,22 @@
 #ifndef   	AL_MESSAGING_SERVER_HPP_
 # define   	AL_MESSAGING_SERVER_HPP_
 
-# include <string>
-# include <alcommon-ng/messaging/messagehandler.hpp>
-# include <alcommon-ng/transport/common/datahandler.hpp>
-# include <alcommon-ng/transport/common/threadable.hpp>
-# include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
-# include <alcommon-ng/transport/transport.hpp>
-# include <alcommon-ng/serialization/serializer.hpp>
+#include <string>
+#include <alcommon-ng/messaging/messagehandler.hpp>
+#include <alcommon-ng/transport/common/datahandler.hpp>
+#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
+#include <alcommon-ng/transport/transport.hpp>
+#include <alcommon-ng/serialization/serializer.hpp>
+
+// temporary
+#include <alcommon-ng/serialization/call_definition_serialization.hxx>
+#include <alcommon-ng/serialization/result_definition_serialization.hxx>
 
 namespace AL {
-  //namespace Transport {
-  //  class Server;
-  //}
 
   namespace Messaging {
 
-    //class ResultHandler;
     template<typename T, typename R>
     class Server : public AL::Transport::Threadable,
       public AL::Transport::DataHandler

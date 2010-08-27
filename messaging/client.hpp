@@ -8,10 +8,14 @@
 #ifndef   	AL_MESSAGING_CLIENT_HPP_
 # define   	AL_MESSAGING_CLIENT_HPP_
 
-# include <string>
-# include <alcommon-ng/transport/client.hpp>
-# include <alcommon-ng/transport/zeromq/zmqclient.hpp>
-# include <alcommon-ng/serialization/serializer.hpp>
+#include <string>
+#include <alcommon-ng/transport/client.hpp>
+#include <alcommon-ng/transport/zeromq/zmqclient.hpp>
+#include <alcommon-ng/serialization/serializer.hpp>
+
+// temporary
+#include <alcommon-ng/serialization/call_definition_serialization.hxx>
+#include <alcommon-ng/serialization/result_definition_serialization.hxx>
 
 namespace AL {
   namespace Messaging {

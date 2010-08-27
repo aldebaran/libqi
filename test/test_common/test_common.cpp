@@ -21,9 +21,8 @@ TEST(NodeTest, test)
 
   DefaultClient client(gAddress);
   CallDefinition def;
-  def.setMethodName("addNode");
-  def.setModuleName("master");
-  def.setRequestId(1);
+  def.methodName() = "addNode";
+  def.moduleName() = "master";
   ResultDefinition ret = client.send(def);
 
 }

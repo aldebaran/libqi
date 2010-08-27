@@ -239,39 +239,51 @@ private:
   }
 };
 
-/**
- * A list which can contain any type of VariableValue enum.
- * Used to transmit parameters for calls.
- */
-class VariablesList : public std::vector<VariableValue> {
-public:
-  VariablesList () {}
-
-  AL::ALValue convertToALValue () const {
-    AL::ALValue alvalue;
-    alvalue.arraySetSize(this->size());
-    unsigned int i = 0;
-    foreach (VariableValue v, *this) {
-      alvalue[i++] = v.convertToALValue();
-    }
-
-    return alvalue;
-  }
-
-private:
-  friend class boost::serialization::access;
-
-  template <class Archive>
-  void serialize (Archive & ar, unsigned int version) {
-    (void) version;
-    std::vector<VariableValue> * l = this;
-    ar & boost::serialization::make_nvp("list", *l);
-  }
-};
+//typedef std::vector<AL::Messaging::VariableValue> VariableList;
+//
+///**
+// * A list which can contain any type of VariableValue enum.
+// * Used to transmit parameters for calls.
+// */
+//class VariablesList : public std::vector<VariableValue> {
+//public:
+//  VariablesList () {}
+//
+//  AL::ALValue convertToALValue () const {
+//    AL::ALValue alvalue;
+//    alvalue.arraySetSize(this->size());
+//    unsigned int i = 0;
+//    foreach (VariableValue v, *this) {
+//      alvalue[i++] = v.convertToALValue();
+//    }
+//
+//    return alvalue;
+//  }
+//
+//private:
+//  //friend class boost::serialization::access;
+//
+//  //template <class Archive>
+//  //void serialize (Archive & ar, unsigned int version) {
+//  //  (void) version;
+//  //  std::vector<VariableValue> * l = this;
+//  //  ar & boost::serialization::make_nvp("list", *l);
+//  //}
+//};
 
 }
 }
-
+//
+//namespace boost {
+//  namespace serialization {
+//
+//    template <class Archive>
+//    void serialize (Archive & ar, const AL::Messaging::VariablesList& list, const unsigned int version) {
+//      std::vector<VariableValue> * l = this;
+//      ar & boost::serialization::make_nvp("list", *l);
+//    } 
+//  }
+//}
 /**
  * Print the value in ostr stream.
  * @param ostr The stream to send the printed value in.

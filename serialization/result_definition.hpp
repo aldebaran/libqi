@@ -1,81 +1,65 @@
 /*
- * result_defintion.hpp
- *
- *  Created on: Oct 5, 2009 at 5:34:02 PM
- *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
- */
+* result_defintion.hpp
+*
+*  Created on: Oct 5, 2009 at 5:34:02 PM
+*      Author: Jean-Charles DELAY
+* 			Mail  : jdelay@aldebaran-robotics.com
+*/
 
-#ifndef LIBIPPC_RESULTDEFINITION_HPP_
-#define LIBIPPC_RESULTDEFINITION_HPP_
+#ifndef MESSAGING_RESULT_DEFINITION_HPP_
+#define MESSAGING_RESULT_DEFINITION_HPP_
 
 #include <alcommon-ng/collections/variables_list.hpp>
-#include <alcommon-ng/serialization/call_definition.hpp>
-#ifdef WIN32
-# include <alcommon-ng/win_stdint.hpp>
-#else
-# include <stdint.h>
-#endif
-
-#include <boost/serialization/access.hpp>
 
 namespace AL {
   namespace Messaging {
 
-/**
- * @brief A exception class definition used to define a result returned by a
- * remote procedure call.
- * This class and its attributes must be serializable in order to be sent to
- * the server.
- */
-class ResultDefinition {
-public:
-  ResultDefinition ();
-  ResultDefinition (const CallDefinition &def);
-  ResultDefinition (uint32_t request_id, const VariableValue & val);
-  bool operator==(const ResultDefinition& rhs) const;
-  virtual ~ResultDefinition ();
+    /**
+    * @brief A exception class definition used to define a result returned by a
+    * remote procedure call.
+    * This class and its attributes must be serializable in order to be sent to
+    * the server.
+    */
+    class ResultDefinition {
+    public:
+      ResultDefinition ();
 
-  uint32_t getRequestId () const;
-  void setRequestId (uint32_t id);
+      ResultDefinition (const VariableValue & val);
+      bool operator==(const ResultDefinition& rhs) const;
+      virtual ~ResultDefinition();
 
-  void exception (const std::string & message);
+      void setException(const std::string & message);
 
-  template <typename T>
-  void value (const T & val);
+      template <typename T>
+      void value (const T & val);
 
-  bool exceptionCaught () const;
-  std::string exceptionMessage () const;
-  const VariableValue & value () const;
+      const bool& isException() const;
+      bool& isException();
 
-private:
-  friend class boost::serialization::access;
+      std::string exceptionMessage() const;
 
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version);
+      const VariableValue & value() const;
+      VariableValue& value();
 
-private:
-  /**
-  * request_id same ID than call def
-  */
-  uint32_t request_id;
+    private:
 
-  /**
-  * is exception during call
-  */
-  bool is_exception;
 
-  /**
-  * pcall -> ID
-  * callVoid -> int 42 ?
-  * call -> exception.what() or result
-  */
-  VariableValue v;
-};
+      /**
+      * is exception during call
+      */
+      bool fIsException;
 
-}
+      /**
+      * pcall -> ID
+      * callVoid -> int 42 ?
+      * call -> exception.what() or result
+      */
+      VariableValue fValue;
+    };
+
+  }
 }
 
 #include <alcommon-ng/serialization/result_definition.hxx>
 
-#endif /* !LIBIPPC_RESULTDEFINITION_HPP_ */
+#endif  // MESSAGING_RESULT_DEFINITION_HPP_

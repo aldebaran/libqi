@@ -55,7 +55,7 @@ namespace AL
     void call(const AL::Messaging::CallDefinition &pParams, AL::Messaging::ResultDefinition &) {
       //TODO: use assert?
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 1);
-      (fObject->*fFunction)(pParams.getParameters()[0].as<P1>());
+      (fObject->*fFunction)(pParams.args()[0].as<P1>());
     };
 
   private:
@@ -82,7 +82,7 @@ namespace AL
 
     void call(const ::AL::Messaging::CallDefinition &pParams, ::AL::Messaging::ResultDefinition &) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 2);
-      (fObject->*fFunction)(pParams.getParameters()[0].as<P1>(), pParams.getParameters()[1].as<P2>());
+      (fObject->*fFunction)(pParams.args()[0].as<P1>(), pParams.getParameters()[1].as<P2>());
     };
 
   private:

@@ -14,7 +14,6 @@
 #include <alcommon-ng/common/serviceinfo.hpp>
 #include <alcommon-ng/messaging/messaging.hpp>
 
-
 namespace AL {
   namespace Common {
 

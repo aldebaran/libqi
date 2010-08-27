@@ -1,5 +1,7 @@
 
 #include "test_boost_serializer.hxx"
+#include <alcommon-ng/serialization/call_definition_serialization.hxx>
+#include <alcommon-ng/serialization/result_definition_serialization.hxx>
 
 using namespace AL::Serialization;
 
@@ -145,14 +147,13 @@ TEST(SerializationTest, VectorString)
 //  testSerializationDeserialization(arg);
 //}
 
-#include <alcommon-ng/serialization/call_definition.hpp>
+
 TEST(SerializationTest, CallDefinition)
 {
   AL::Messaging::CallDefinition arg;
   testSerializationDeserialization(arg);
 }
 
-#include <alcommon-ng/serialization/result_definition.hpp>
 TEST(SerializationTest, ResultDefinition)
 {
   AL::Messaging::ResultDefinition arg;
@@ -188,14 +189,14 @@ TEST(SerializationPerformance, StringBuffers) {
 
 TEST(SerializationPerformance, CallDefinition) {
   AL::Messaging::CallDefinition calldef;
-  calldef.push(1.0f);
-  calldef.push(std::string("hello1"));
+  calldef.args().push_back(1.0f);
+  calldef.args().push_back(std::string("hello1"));
   testSerializationDeserializationPerf(calldef);
 }
 
 TEST(SerializationPerformance, ResultDefinition) {
   AL::Messaging::VariableValue v("result");
-  AL::Messaging::ResultDefinition resultdef(1,v);
+  AL::Messaging::ResultDefinition resultdef(v);
   testSerializationDeserializationPerf(resultdef);
 }
 

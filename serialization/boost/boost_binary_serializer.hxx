@@ -24,6 +24,9 @@
 // argument types
 #include <string>
 
+// temporary
+# include <alcommon-ng/serialization/call_definition_serialization.hxx>
+
 namespace AL {
   namespace Serialization {
 
