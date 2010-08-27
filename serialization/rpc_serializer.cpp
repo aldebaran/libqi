@@ -6,9 +6,10 @@
 */
 
 #include <alcommon-ng/serialization/rpc_serializer.hpp>
-#include <alcommon-ng/serialization/call_definition_serialization.hxx>
-#include <alcommon-ng/serialization/result_definition_serialization.hxx>
 #include <alcommon-ng/serialization/serializer.hpp>
+#include <alcommon-ng/messaging/call_definition_serialization.hxx>
+#include <alcommon-ng/messaging/result_definition_serialization.hxx>
+
 
 namespace AL {
   using Serialization::Serializer;

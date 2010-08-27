@@ -12,8 +12,8 @@
 // #define AL_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
 #define AL_FUNCTOR_DEBUG(...)
 
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 namespace AL
 {

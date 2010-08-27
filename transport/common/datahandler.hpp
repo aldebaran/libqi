@@ -9,8 +9,8 @@
 #ifndef AL_MESSAGING_TRANSPORT_SERVER_CALLBACK_DELEGATE_HPP_
 #define AL_MESSAGING_TRANSPORT_SERVER_CALLBACK_DELEGATE_HPP_
 
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 namespace AL {
   namespace Transport {

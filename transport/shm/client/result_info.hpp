@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_RESULTINFO_HPP_
 #define LIBIPPC_RESULTINFO_HPP_
 
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>

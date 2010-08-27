@@ -3,8 +3,8 @@
 #include <alcommon-ng/serialization/boost/boost_serializers.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
 #include <string>
-#include <alcommon-ng/serialization/call_definition.hpp>
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 using namespace AL::Serialization;
 using AL::Test::DataPerfTimer;

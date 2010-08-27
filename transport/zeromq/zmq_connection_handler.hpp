@@ -8,7 +8,7 @@
 #ifndef AL_MESSAGING_CONNECTION_HANDLER_HPP_
 #define AL_MESSAGING_CONNECTION_HANDLER_HPP_
 
-#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
 #include <alcommon-ng/transport/common/datahandler.hpp>

@@ -60,6 +60,6 @@ namespace AL {
   }
 }
 
-#include <alcommon-ng/serialization/result_definition.hxx>
+#include <alcommon-ng/messaging/result_definition.hxx>
 
 #endif  // MESSAGING_RESULT_DEFINITION_HPP_

@@ -1,7 +1,7 @@
 
 #include "test_boost_serializer.hxx"
-#include <alcommon-ng/serialization/call_definition_serialization.hxx>
-#include <alcommon-ng/serialization/result_definition_serialization.hxx>
+#include <alcommon-ng/messaging/call_definition_serialization.hxx>
+#include <alcommon-ng/messaging/result_definition_serialization.hxx>
 
 using namespace AL::Serialization;
 

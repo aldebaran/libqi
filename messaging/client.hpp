@@ -14,8 +14,8 @@
 #include <alcommon-ng/serialization/serializer.hpp>
 
 // temporary
-#include <alcommon-ng/serialization/call_definition_serialization.hxx>
-#include <alcommon-ng/serialization/result_definition_serialization.hxx>
+#include <alcommon-ng/messaging/call_definition_serialization.hxx>
+#include <alcommon-ng/messaging/result_definition_serialization.hxx>
 
 namespace AL {
   namespace Messaging {

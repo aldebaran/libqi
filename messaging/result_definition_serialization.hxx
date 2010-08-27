@@ -11,7 +11,7 @@
 #ifndef MESSAGING_RESULT_DEFINITION_SERIALIZATION_HXX_
 #define MESSAGING_RESULT_DEFINITION_SERIALIZATION_HXX_
 
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 namespace boost {
   namespace serialization {

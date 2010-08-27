@@ -10,7 +10,7 @@
 #ifndef MESSAGING_CALL_DEFINITION_SERIALIZATION_HXX_
 #define MESSAGING_CALL_DEFINITION_SERIALIZATION_HXX_
 
-#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
 
 namespace boost {
   namespace serialization {
