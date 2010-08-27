@@ -52,7 +52,7 @@ namespace AL
     // remote case (only understand ALValue)
     virtual void call(const ::AL::Messaging::CallDefinition& pParams, ::AL::Messaging::ResultDefinition& pResult) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 1);
-      pResult.value((fObject->*fFunction)(pParams.args()[0].as<P1>()));
+      pResult.value((fObject->*fFunction)(pParams.getParameters()[0].as<P1>()));
     };
 
   private:
