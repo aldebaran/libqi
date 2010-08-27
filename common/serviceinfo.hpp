@@ -5,28 +5,32 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef COMMON_SERVICEINFO_H_
-#define COMMON_SERVICEINFO_H_
+#ifndef COMMON_SERVICEINFO_HPP_
+#define COMMON_SERVICEINFO_HPP_
 
 #include <string>
 
 namespace AL {
   namespace Common {
     struct ServiceInfo {
+
       std::string nodeName;  // or ID?
       std::string moduleName;
       std::string methodName;
-      // TODO functor / args / ret
+      // TODO functor / args / ret / hash
 
       ServiceInfo() {}
 
-      ServiceInfo(const std::string& name,
+      ServiceInfo(
+        const std::string& nodeName,
         const std::string& module,
         const std::string& method) :
-          nodeName(name), moduleName(module), methodName(method) {}
+          nodeName(nodeName),
+            moduleName(module),
+            methodName(method) {}
     };
-  }  // namespace Common
-}  // namespace AL
+  }
+}
 
-#endif  // COMMON_NODE_H_
+#endif  // COMMON_SERVICEINFO_HPP_
 

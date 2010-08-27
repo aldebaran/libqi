@@ -5,14 +5,15 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef COMMON_NODEINFO_H_
-#define COMMON_NODEINFO_H_
+#ifndef COMMON_NODEINFO_HPP_
+#define COMMON_NODEINFO_HPP_
 
 #include <string>
 
 namespace AL {
   namespace Common {
     struct NodeInfo {
+
       std::string name;
       std::string address;
 
@@ -22,8 +23,8 @@ namespace AL {
         const std::string & pAddress) :
           name(pName), address(pAddress) {}
     };
-  }  // namespace Common
-}  // namespace AL
+  }
+}
 
-#endif  // COMMON_NODE_H_
+#endif  // COMMON_NODEINFO_HPP_
 
