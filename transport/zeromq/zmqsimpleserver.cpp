@@ -46,8 +46,14 @@ namespace AL {
 
     //use only the number of thread we need
     void ZMQSimpleServer::run() {
-      alsdebug << "Start ZMQServer on: " << _serverAddress;
-      zsocket.bind(_serverAddress.c_str());
+      try {
+        std::cout << "Start ZMQServer on: " << _serverAddress << std::endl;
+        zsocket.bind(_serverAddress.c_str());
+      } catch(const std::exception& e) {
+        std::cout << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
+        //Sleep(1);
+        return;
+      }
 
 #ifdef ZMQ_FULL_ASYNC
       alsdebug << "ZMQ: entering the loop (REP + growing thread mode)";
@@ -66,6 +72,7 @@ namespace AL {
         ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)0).run();
 #endif
       }
+     
     }
 
     void ZMQSimpleServer::sendResponse(const std::string &result, void *data)
