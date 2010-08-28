@@ -8,7 +8,7 @@
 #include <alcommon-ng/common/server_node.hpp>
 #include <alcommon-ng/messaging/messaging.hpp>
 #include <boost/thread.hpp>
-//#include <boost/bind.hpp>
+#include <boost/bind.hpp>
 
 namespace AL {
   using namespace Messaging;
@@ -24,14 +24,14 @@ namespace AL {
       const std::string& masterAddress) :
         AL::Common::ClientNode(serverName, masterAddress),
         AL::Messaging::DefaultServer(serverAddress)
-         {
+     {
       fInfo.name = serverName;
       fInfo.address = serverAddress;
 
       setMessageHandler(this);
 
       // just testing
-      addService(ServiceInfo(serverName, serverName, "listServices"));
+      //addService(ServiceInfo(serverName, serverName, "listServices"));
 
       boost::thread serverThread( boost::bind(&Server::run, this));
     }
@@ -61,6 +61,10 @@ namespace AL {
       boost::shared_ptr<ResultDefinition> res =
         boost::shared_ptr<ResultDefinition>(new ResultDefinition());
       return res;
+    }
+
+    const NodeInfo& ServerNode::getNodeInfo() const {
+      return fInfo;
     }
 
     void ServerNode::addService(const ServiceInfo& service) {

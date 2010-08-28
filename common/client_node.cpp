@@ -12,8 +12,9 @@ namespace AL {
   using namespace Messaging;
   namespace Common {
 
-    ClientNode::ClientNode(const std::string& clientName,
-        const std::string &masterAddress) {
+    ClientNode::ClientNode(
+      const std::string& clientName,
+      const std::string& masterAddress) {
       fName = clientName;
       fMasterAddress = masterAddress;
       xInit();
