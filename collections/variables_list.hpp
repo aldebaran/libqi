@@ -10,8 +10,6 @@
 #define LIBIPPC_VARIABLESLIST_HPP_
 
 #include <alcommon-ng/collections/equality_visitor.hpp>
-
-#include <alcommon-ng/collections/alvalue_convertor.hpp>
 #include <alcommon-ng/exceptions/exceptions.hpp>
 
 #include <list>
