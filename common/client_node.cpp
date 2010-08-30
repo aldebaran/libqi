@@ -38,7 +38,7 @@ namespace AL {
         
         // todo make a hash from the calldef
         std::string hash = callDef.moduleName() + "." + callDef.methodName();
-        std::string nodeName = fServiceCache.get(hash).nodeName;
+        std::string nodeName = xLocateService(hash);
         
         // get the relevant messaging client for the node that host the service
         NameLookup<boost::shared_ptr<DefaultClient> >::iterator it;
