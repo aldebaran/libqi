@@ -23,7 +23,7 @@ namespace AL {
       ClientNode(const std::string& clientName,
         const std::string& masterAddress);
       virtual ~ClientNode();
-      
+
       // TODO use templated real calls ...
       AL::Messaging::ResultDefinition call(
         const AL::Messaging::CallDefinition& callDef);
@@ -42,7 +42,7 @@ namespace AL {
       void xUpdateServicesFromMaster();
       void xCreateServerClient(const NodeInfo& serverNodeInfo);
 
-      const ServiceInfo& ClientNode::xGetService(const std::string& methodHash);
+      const ServiceInfo& xGetService(const std::string& methodHash);
 
     protected:
       ServiceInfo fInvalidService;
