@@ -163,5 +163,29 @@ namespace AL
     FunctionType  fFunction;
   };
 
+
+  template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename R>
+  class Functor_6 : public Functor
+  {
+  public:
+    typedef R(*FunctionType) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
+
+    Functor_6(FunctionType pFunction)
+      : fFunction(pFunction)
+    {}
+
+    R operator()(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
+      return (R)(*fFunction)(p0, p1, p2, p3, p4, p5);
+    }
+
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue& result) {
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 6);
+      result.value((*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>(), params[5].as<P5>()));
+    };
+
+  private:
+    FunctionType  fFunction;
+  };
+
 }
 #endif

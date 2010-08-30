@@ -79,5 +79,16 @@ namespace AL
     return new Functor_5<P0, P1, P2, P3, P4, R>(f);
   }
 
+
+  template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename C, typename R>
+  Functor *makeFunctor(C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
+    return new MemberFunctor_6<P0, P1, P2, P3, P4, P5, C, R>(obj, f);
+  }
+
+  template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename R>
+  Functor *makeFunctor(R (*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
+    return new Functor_6<P0, P1, P2, P3, P4, P5, R>(f);
+  }
+
 }
 #endif
