@@ -17,60 +17,45 @@ static const int gLoopCount   = 1000000;
 using AL::Messaging::CallDefinition;
 using AL::Messaging::ResultDefinition;
 
-class NameLookup {
-public:
-  void bind(const std::string &name, AL::Functor *functor) {
-    _map[name] = functor;
-  }
 
-  AL::Functor *get(const std::string &name)
-  {
-    return _map[name];
-  }
+int fun0()                                               { return 0; }
+int fun1(int p0)                                         { return p0; }
+int fun2(int p0, int p1)                                 { return p0 + p1; }
+int fun3(int p0, int p1, int p2)                         { return p0 + p1 + p2; }
+int fun4(int p0, int p1, int p2, int p3)                 { return p0 + p1 + p2 + p3; }
+int fun5(int p0, int p1, int p2, int p3, int p4)         { return p0 + p1 + p2 + p3 + p4; }
+int fun6(int p0, int p1, int p2, int p3, int p4, int p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
 
-protected:
-  std::map<std::string, AL::Functor *> _map;
+struct Foo {
+  void voidCall()                                          { return; }
+  int intStringCall(const std::string &plouf)              { return plouf.size(); }
+
+  int fun0()                                               { return 0; }
+  int fun1(int p0)                                         { return p0; }
+  int fun2(int p0, int p1)                                 { return p0 + p1; }
+  int fun3(int p0, int p1, int p2)                         { return p0 + p1 + p2; }
+  int fun4(int p0, int p1, int p2, int p3)                 { return p0 + p1 + p2 + p3; }
+  int fun5(int p0, int p1, int p2, int p3, int p4)         { return p0 + p1 + p2 + p3 + p4; }
+  int fun6(int p0, int p1, int p2, int p3, int p4, int p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
 };
 
-int toto(int bim)
-{
-  std::cout << "poutre:" << bim << std::endl;
-  return bim + 1;
-}
 
-struct Chiche {
-  void voidCall() { return; }
-  int intStringCall(const std::string &plouf) { return plouf.size(); }
-  void tartine() { std::cout << "poutre la tartine" << std::endl; }
-  void lover(const int &poteau) { std::cout << "poutre du poteau" << poteau << std::endl; }
-};
+TEST(TestBind, ArgumentNumber) {
+  Foo     chiche;
 
-TEST(TestBind, Simple) {
-  Chiche     chiche;
-  NameLookup nl;
+  //AL::Functor *functor = AL::makeFunctor(&Foo, &Foo::fun0);
+  //EXPECT_EQ(0, functor->call());
 
-  nl.bind("tartine", AL::makeFunctor(&chiche, &Chiche::tartine));
-  nl.bind("lover",   AL::makeFunctor(&chiche, &Chiche::lover));
-
-  ResultDefinition res;
-  CallDefinition   cd;
-  AL::makeFunctor(&chiche, &Chiche::tartine)->call(CallDefinition(), res);
-
-  cd.args().push_back(40);
-  AL::makeFunctor(&chiche, &Chiche::lover)->call(cd, res);
-
-  nl.get("lover")->call(cd, res);
 }
 
 TEST(TestBind, VoidCallPerf) {
-  Chiche           chiche;
-  Chiche          *p = &chiche;
-  NameLookup       nl;
+  Foo           chiche;
+  Foo          *p = &chiche;
   ResultDefinition res;
   CallDefinition   cd;
 
   AL::Test::DataPerfTimer dp;
-  AL::Functor    *functor = AL::makeFunctor(&chiche, &Chiche::voidCall);
+  AL::Functor    *functor = AL::makeFunctor(&chiche, &Foo::voidCall);
   std::cout << "AL::Functor call" << std::endl;
   dp.start(gLoopCount);
   for (int i = 0; i < gLoopCount; ++i)
@@ -89,9 +74,8 @@ TEST(TestBind, VoidCallPerf) {
 }
 
 TEST(TestBind, IntStringCallPerf) {
-  Chiche           chiche;
-  Chiche          *p = &chiche;
-  NameLookup       nl;
+  Foo           chiche;
+  Foo          *p = &chiche;
   ResultDefinition res;
 
   AL::Test::DataPerfTimer dp;
@@ -103,7 +87,7 @@ TEST(TestBind, IntStringCallPerf) {
     unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string     request = std::string(numBytes, 'B');
     CallDefinition  cd;
-    AL::Functor    *functor = AL::makeFunctor(&chiche, &Chiche::intStringCall);
+    AL::Functor    *functor = AL::makeFunctor(&chiche, &Foo::intStringCall);
 
     cd.args().push_back(request);
     dp.start(gLoopCount, numBytes);
