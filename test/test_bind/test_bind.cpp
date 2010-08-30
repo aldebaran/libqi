@@ -10,7 +10,7 @@
 #include <alcommon-ng/functor/functor.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
-
+#include <cmath>
 
 static const int gLoopCount   = 1000000;
 
@@ -41,11 +41,9 @@ struct Foo {
 
 
 TEST(TestBind, ArgumentNumber) {
-  Foo     chiche;
-
-  //AL::Functor *functor = AL::makeFunctor(&Foo, &Foo::fun0);
+  Foo          foo;
+  AL::Functor *functor = AL::makeFunctor(&foo, &Foo::fun0);
   //EXPECT_EQ(0, functor->call());
-
 }
 
 TEST(TestBind, VoidCallPerf) {
