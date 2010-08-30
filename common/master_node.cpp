@@ -17,9 +17,9 @@ namespace AL {
         ServerNode(masterName, masterAddress, masterAddress) {
 
       // just testing ... should be a bind
-      addLocalService(ServiceInfo(masterName, masterName, "listServices"));
-      addLocalService(ServiceInfo(masterName, masterName, "addService"));
-      addLocalService(ServiceInfo(masterName, masterName, "getService"));
+      //addLocalService(ServiceInfo(masterName, masterName, "listServices"));
+     // addLocalService(ServiceInfo(masterName, masterName, "addService"));
+     // addLocalService(ServiceInfo(masterName, masterName, "getService"));
 
     }
   }

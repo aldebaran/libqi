@@ -9,10 +9,15 @@
 #include <alcommon-ng/messaging/messaging.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <alcommon-ng/functor/makefunctor.hpp>
 
 namespace AL {
   using namespace Messaging;
   namespace Common {
+
+    void ping() {
+      std::cout << "Ping Baby" << std::endl;
+    }
 
     ServerNode::ServerNode(
       const std::string& serverName,
@@ -30,7 +35,7 @@ namespace AL {
 
       // =========================================================
       // just testing
-      addLocalService(ServiceInfo(serverName, serverName, "ping"));
+      addLocalService(ServiceInfo(serverName, serverName, "ping", makeFunctor(&ping)));
 
       // use the base class client, to send to master
       // todo add serialization of local service.
@@ -55,8 +60,8 @@ namespace AL {
         std::cout << "  Method is for node: " << si.nodeName << std::endl;
       }
 
-      boost::shared_ptr<ResultDefinition> res =
-        boost::shared_ptr<ResultDefinition>(new ResultDefinition());
+      boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(new ResultDefinition());
+      si.functor->call(def.args(), res->value());
       return res;
     }
 
@@ -65,7 +70,7 @@ namespace AL {
     }
 
     void ServerNode::addLocalService(const ServiceInfo& service) {
-      
+
       std::string key = service.moduleName +
         std::string(".") + service.methodName;
 

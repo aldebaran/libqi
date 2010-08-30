@@ -4,6 +4,7 @@
 #include <boost/timer.hpp>
 #include <string>
 #include <alcommon-ng/tools/sleep.hpp>
+#include <alcommon-ng/functor/makefunctor.hpp>
 
 using namespace AL::Common;
 using namespace AL::Messaging;
@@ -85,12 +86,16 @@ TEST(ServerNodeTest, nodeInfo)
   EXPECT_EQ(gServerName, ni.name);
   EXPECT_EQ(gServerAddress, ni.address);
 }
+int test(const int &t)
+{
+  return t + 42;
+}
 
 TEST(ServerNodeTest, serviceInfo)
 {
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
   sleep(1);
-  ServiceInfo si("n", "mod", "meth");
+  ServiceInfo si("n", "mod", "meth", AL::makeFunctor(&test));
   server.addLocalService(si);
   ServiceInfo res = server.getLocalService("mod.meth");
   EXPECT_EQ(si.nodeName, res.nodeName);
@@ -117,7 +122,7 @@ TEST(MasterNodeTest, serviceInfo)
 {
   MasterNode master(gMasterName, gMasterAddress);
   sleep(1);
-  ServiceInfo si("n", "mod", "meth");
+  ServiceInfo si("n", "mod", "meth", AL::makeFunctor(&test));
   master.addLocalService(si);
   ServiceInfo res = master.getLocalService("mod.meth");
   EXPECT_EQ(si.nodeName, res.nodeName);
