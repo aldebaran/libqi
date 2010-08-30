@@ -14,6 +14,9 @@
 # define foreach  BOOST_FOREACH
 #endif
 
+//todo: we dont want ALValue atm
+#if 0
+
 namespace AL {
   namespace Messaging {
 
@@ -64,3 +67,4 @@ AL::ALValue ALValueConvertor::operator () (const std::vector<VariableValue> & v)
 
 }
 }
+#endif
