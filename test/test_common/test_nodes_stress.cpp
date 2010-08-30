@@ -54,7 +54,7 @@ TEST(ServerNodeTest, multipleCreationNewPorts)
     ServerNode server(gServerName, serverAddress, gMasterAddress);
     // after about 12 services ... crash
     // not enough storage space is available ../src/thread.cpp
-    // sometime a pthread create error.
+    // sometimes a pthread create error.
     Sleep(1000);
     std::cout << "Created Server " << serverAddress << std::endl;
   }
@@ -90,8 +90,8 @@ TEST(ServerNodeTest, serviceInfo)
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
   Sleep(1000);
   ServiceInfo si("n", "mod", "meth");
-  server.addService(si);
-  ServiceInfo res = server.getService("mod.meth"); 
+  server.addLocalService(si);
+  ServiceInfo res = server.getLocalService("mod.meth"); 
   EXPECT_EQ(si.nodeName, res.nodeName);
   EXPECT_EQ(si.moduleName, res.moduleName);
   EXPECT_EQ(si.methodName, res.methodName);
@@ -117,8 +117,8 @@ TEST(MasterNodeTest, serviceInfo)
   MasterNode master(gMasterName, gMasterAddress);
   Sleep(1000);
   ServiceInfo si("n", "mod", "meth");
-  master.addService(si);
-  ServiceInfo res = master.getService("mod.meth"); 
+  master.addLocalService(si);
+  ServiceInfo res = master.getLocalService("mod.meth"); 
   EXPECT_EQ(si.nodeName, res.nodeName);
   EXPECT_EQ(si.moduleName, res.moduleName);
   EXPECT_EQ(si.methodName, res.methodName);
