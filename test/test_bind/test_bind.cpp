@@ -18,6 +18,15 @@ static const int gLoopCount   = 1000000;
 using AL::Messaging::ReturnValue;
 using AL::Messaging::ArgumentList;
 
+static int gGlobalResult = 0;
+
+void vfun0()                                                                                      { gGlobalResult = 0; }
+void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
+void vfun2(const int &p0,const int &p1)                                                           { gGlobalResult = p0 + p1; }
+void vfun3(const int &p0,const int &p1,const int &p2)                                             { gGlobalResult = p0 + p1 + p2; }
+void vfun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { gGlobalResult = p0 + p1 + p2 + p3; }
+void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
+void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 
 int fun0()                                                                                      { return 0; }
 int fun1(const int &p0)                                                                         { return p0; }
@@ -26,6 +35,7 @@ int fun3(const int &p0,const int &p1,const int &p2)                             
 int fun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { return p0 + p1 + p2 + p3; }
 int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { return p0 + p1 + p2 + p3 + p4; }
 int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
+
 
 struct Foo {
   void voidCall()                                          { return; }
@@ -38,6 +48,14 @@ struct Foo {
   int fun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { return p0 + p1 + p2 + p3; }
   int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { return p0 + p1 + p2 + p3 + p4; }
   int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
+
+  void vfun0()                                                                                      { gGlobalResult = 0; }
+  void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
+  void vfun2(const int &p0,const int &p1)                                                           { gGlobalResult = p0 + p1; }
+  void vfun3(const int &p0,const int &p1,const int &p2)                                             { gGlobalResult = p0 + p1 + p2; }
+  void vfun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { gGlobalResult = p0 + p1 + p2 + p3; }
+  void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
+  void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 };
 
 
@@ -61,6 +79,40 @@ TEST(TestBind, MultiArgMember) {
   EXPECT_EQ(21, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5, 6));
 }
 
+TEST(TestBind, MultiArgVoidMember) {
+  Foo          foo;
+  AL::Functor *functor;
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun0);
+  AL::callVoidFunctor(functor);
+  EXPECT_EQ(0, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun1);
+  AL::callVoidFunctor(functor, 1);
+  EXPECT_EQ(1, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun2);
+  AL::callVoidFunctor(functor, 1, 2);
+  EXPECT_EQ(3, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun3);
+  AL::callVoidFunctor(functor, 1, 2, 3);
+  EXPECT_EQ(6, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun4);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4);
+  EXPECT_EQ(10, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun5);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4, 5);
+  EXPECT_EQ(15, gGlobalResult);
+
+  functor = AL::makeFunctor(&foo, &Foo::vfun6);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4, 5, 6);
+  EXPECT_EQ(21, gGlobalResult);
+}
+
+
 TEST(TestBind, MultiArgFun) {
   AL::Functor *functor;
 
@@ -80,6 +132,38 @@ TEST(TestBind, MultiArgFun) {
   EXPECT_EQ(21, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5, 6));
 }
 
+TEST(TestBind, MultiArgVoidFun) {
+  Foo          foo;
+  AL::Functor *functor;
+
+  functor = AL::makeFunctor(&vfun0);
+  AL::callVoidFunctor(functor);
+  EXPECT_EQ(0, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun1);
+  AL::callVoidFunctor(functor, 1);
+  EXPECT_EQ(1, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun2);
+  AL::callVoidFunctor(functor, 1, 2);
+  EXPECT_EQ(3, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun3);
+  AL::callVoidFunctor(functor, 1, 2, 3);
+  EXPECT_EQ(6, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun4);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4);
+  EXPECT_EQ(10, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun5);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4, 5);
+  EXPECT_EQ(15, gGlobalResult);
+
+  functor = AL::makeFunctor(&vfun6);
+  AL::callVoidFunctor(functor, 1, 2, 3, 4, 5, 6);
+  EXPECT_EQ(21, gGlobalResult);
+}
 
 TEST(TestBind, VoidCallPerf) {
   Foo           chiche;
