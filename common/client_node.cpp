@@ -35,9 +35,10 @@ namespace AL {
     ResultDefinition ClientNode::call(const CallDefinition& callDef) {
         
         // todo lookup in services
-
+        
         // todo make a hash from the calldef
-        std::string hash = callDef.moduleName();
+        std::string hash = callDef.moduleName() + "." + callDef.methodName();
+        std::string nodeName = fServiceCache.get(hash).nodeName;
         
         // get the relevant messaging client for the node that host the service
         NameLookup<boost::shared_ptr<DefaultClient> >::iterator it;
@@ -67,15 +68,22 @@ namespace AL {
       boost::shared_ptr<DefaultClient> client = 
         boost::shared_ptr<DefaultClient>(new DefaultClient(serverNodeInfo.address));
 
+      // TODO find existing server and update if it exists
+
+      // add server client
+      // TODO mutex on service cache
       fServerClients.insert(make_pair(serverNodeInfo.name, client));
       fServerList.insert(make_pair(serverNodeInfo.name, serverNodeInfo)); // why not!
     }
 
-    const ServiceInfo& ClientNode::xGetService(const std::string& methodHash) {
-      // lookup service in cache
-      NameLookup<ServiceInfo>::const_iterator it = fServiceCache.find(methodHash);
-      if (it != fServiceCache.end()) {
-        return it->second;
+
+    const std::string ClientNode::xLocateService(const std::string& methodHash) {
+      // TODO mutex on service cache
+      std::string nodeName = fServiceCache.get(methodHash).nodeName;
+
+      // empty means not found
+      if (!nodeName.empty()) {
+        return nodeName;
       }
 
       if (fClientName != "master") {
@@ -86,7 +94,7 @@ namespace AL {
         // return it
       }
 
-      return fInvalidService;
+      return nodeName;
     }
 
   }

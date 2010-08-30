@@ -65,20 +65,16 @@ namespace AL {
     }
 
     void ServerNode::addLocalService(const ServiceInfo& service) {
+      
       std::string key = service.moduleName +
         std::string(".") + service.methodName;
 
-      fLocalServiceList.insert(
-        std::make_pair<std::string, ServiceInfo>(key, service));
+      fLocalServiceList.insert(key, service);
     }
 
-    const ServiceInfo& ServerNode::getLocalService(const std::string& methodHash) const {
+    const ServiceInfo& ServerNode::getLocalService(const std::string& methodHash) {
       // functors ... should be found here
-      NameLookup<ServiceInfo>::const_iterator it = fLocalServiceList.find(methodHash);
-      if (it != fLocalServiceList.end()) {
-        return it->second;
-      }
-      return fInvalidService;
+      return fLocalServiceList.get(methodHash);
     }
   }
 }

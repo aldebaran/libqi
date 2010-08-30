@@ -30,12 +30,13 @@ namespace AL {
 
       // todo should become bind, though addLocalService is a very clear name
       void addLocalService(const ServiceInfo& service);
-      const ServiceInfo& getLocalService(const std::string& name) const;
+      const ServiceInfo& getLocalService(const std::string& name);
 
     private:
       // TODO Hide implementation
       NodeInfo fInfo;
-      NameLookup<ServiceInfo> fLocalServiceList;
+      // should become functors
+      MutexedNameLookup<ServiceInfo> fLocalServiceList;
     };
   }
 }

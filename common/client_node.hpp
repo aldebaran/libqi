@@ -10,6 +10,8 @@
 
 #include <string>
 #include <alcommon-ng/messaging/messaging.hpp>
+#include <alcommon-ng/common/service_cache.hpp>
+#include <alcommon-ng/common/mutexednamelookup.hpp>
 #include <alcommon-ng/common/namelookup.hpp>
 #include <alcommon-ng/common/nodeinfo.hpp>
 #include <alcommon-ng/common/serviceinfo.hpp>
@@ -35,17 +37,16 @@ namespace AL {
       std::string fMasterAddress;
 
       NameLookup<NodeInfo> fServerList;
-      NameLookup<ServiceInfo> fServiceCache;
+      MutexedNameLookup<ServiceInfo> fServiceCache;
       NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
 
       void xInit();
       void xUpdateServicesFromMaster();
       void xCreateServerClient(const NodeInfo& serverNodeInfo);
 
-      const ServiceInfo& xGetService(const std::string& methodHash);
+      const std::string xLocateService(const std::string& methodHash);
 
-    protected:
-      ServiceInfo fInvalidService;
+      
 
     };
   }
