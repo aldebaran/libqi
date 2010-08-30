@@ -14,16 +14,11 @@
 #include <alcommon-ng/ippc.hpp>
 #include <boost/shared_ptr.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
+#include <alcommon-ng/tools/sleep.hpp>
 
 using namespace AL::Messaging;
 using AL::Test::DataPerfTimer;
 
-#ifdef _WIN32
-    // CK 28/7/2010 dodgy hack so it compiles
-    #define sleep(x) Sleep(x)
-#else
-    #include <unistd.h>
-#endif
 
 //using AL::ALPtr;
 

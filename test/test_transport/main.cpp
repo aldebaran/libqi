@@ -12,17 +12,13 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
+#include <alcommon-ng/tools/sleep.hpp>
 #include <alcommon-ng/transport/transport.hpp>
 #include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 #include <boost/shared_ptr.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
 
-#ifdef _WIN32
-    // CK 28/7/2010 dodgy hack so it compiles
-    #define sleep(x) Sleep(x)
-#else
-    #include <unistd.h>
-#endif
+
 
 using AL::Test::DataPerfTimer;
 //using AL::ALPtr;
@@ -94,7 +90,7 @@ int main_client(int clientId)
   {
     unsigned int  numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string   request = std::string(numBytes, 'B');
-    
+
 
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)

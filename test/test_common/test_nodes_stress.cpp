@@ -3,6 +3,7 @@
 #include <alcommon-ng/common/common.hpp>
 #include <boost/timer.hpp>
 #include <string>
+#include <alcommon-ng/tools/sleep.hpp>
 
 using namespace AL::Common;
 using namespace AL::Messaging;
@@ -45,7 +46,7 @@ TEST(ServerNodeTest, multipleCreationNewPorts)
 
   int numServers = 5; // at 12 it crashes
   for (int i = 5560; i< 5560 + numServers; i++) {
-    
+
     std::stringstream ss;
     ss << "tcp://127.0.0.1:";
     ss << i;
@@ -55,7 +56,7 @@ TEST(ServerNodeTest, multipleCreationNewPorts)
     // after about 12 services ... crash
     // not enough storage space is available ../src/thread.cpp
     // sometimes a pthread create error.
-    Sleep(1000);
+    sleep(1);
     std::cout << "Created Server " << serverAddress << std::endl;
   }
 }
@@ -68,7 +69,7 @@ TEST(ServerNodeTest, multipleCreationSamePort)
     std::cout << "Creating Server " << i << std::endl;
     ServerNode server(gServerName, gServerAddress, gMasterAddress);
     // without this sleep, bad things happen!!!
-    Sleep(1000);
+    sleep(1);
     std::cout << "Created Server " << i << std::endl;
   }
 }
@@ -79,8 +80,8 @@ TEST(ServerNodeTest, multipleCreationSamePort)
 TEST(ServerNodeTest, nodeInfo)
 {
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  Sleep(1000);
-  NodeInfo ni = server.getNodeInfo(); 
+  sleep(1);
+  NodeInfo ni = server.getNodeInfo();
   EXPECT_EQ(gServerName, ni.name);
   EXPECT_EQ(gServerAddress, ni.address);
 }
@@ -88,10 +89,10 @@ TEST(ServerNodeTest, nodeInfo)
 TEST(ServerNodeTest, serviceInfo)
 {
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  Sleep(1000);
+  sleep(1);
   ServiceInfo si("n", "mod", "meth");
   server.addLocalService(si);
-  ServiceInfo res = server.getLocalService("mod.meth"); 
+  ServiceInfo res = server.getLocalService("mod.meth");
   EXPECT_EQ(si.nodeName, res.nodeName);
   EXPECT_EQ(si.moduleName, res.moduleName);
   EXPECT_EQ(si.methodName, res.methodName);
@@ -100,14 +101,14 @@ TEST(ServerNodeTest, serviceInfo)
 TEST(MasterNodeTest, creation)
 {
   MasterNode master(gMasterName, gMasterAddress);
-  Sleep(1000);
+  sleep(1);
 }
 
 TEST(MasterNodeTest, nodeInfo)
 {
   MasterNode master(gMasterName, gMasterAddress);
-  Sleep(1000);
-  NodeInfo ni = master.getNodeInfo(); 
+  sleep(1);
+  NodeInfo ni = master.getNodeInfo();
   EXPECT_EQ(gMasterName, ni.name);
   EXPECT_EQ(gMasterAddress, ni.address);
 }
@@ -115,10 +116,10 @@ TEST(MasterNodeTest, nodeInfo)
 TEST(MasterNodeTest, serviceInfo)
 {
   MasterNode master(gMasterName, gMasterAddress);
-  Sleep(1000);
+  sleep(1);
   ServiceInfo si("n", "mod", "meth");
   master.addLocalService(si);
-  ServiceInfo res = master.getLocalService("mod.meth"); 
+  ServiceInfo res = master.getLocalService("mod.meth");
   EXPECT_EQ(si.nodeName, res.nodeName);
   EXPECT_EQ(si.moduleName, res.moduleName);
   EXPECT_EQ(si.methodName, res.methodName);
