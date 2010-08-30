@@ -33,7 +33,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 0);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
       (*fFunction)();
     };
 
@@ -57,7 +57,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 1);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       (*fFunction)(params[0].as<P0>());
     };
 
@@ -81,7 +81,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 2);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       (*fFunction)(params[0].as<P0>(), params[1].as<P1>());
     };
 
@@ -105,7 +105,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 3);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>());
     };
 
@@ -129,7 +129,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 4);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>());
     };
 
@@ -153,7 +153,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 5);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>());
     };
 
@@ -177,7 +177,7 @@ namespace AL
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 6);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>(), params[5].as<P5>());
     };
 

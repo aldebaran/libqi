@@ -30,11 +30,13 @@ namespace AL
 
 
 #ifdef DEBUG
-# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)         \
-  if(params.getSize() != nbrparamsrequired)                             \
-  {                                                                     \
-    throw ALERROR("ALFunctor", "call", std::string( "Wrong number of parameters for this call requiring: " #nbrparamsrequired " and received: " ) + DecToString( params.getSize() ) + " (total params is: " + params.toString( VerbosityMini ) );                                    \
-  }
+//TODO
+# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
+//# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)         \
+//  if(params.size() != nbrparamsrequired)                             \
+//  {                                                                     \
+//                                                                        throw ALERROR("ALFunctor", "call", std::string( "Wrong number of parameters for this call requiring: " #nbrparamsrequired " and received: " ) + std::string(atoi( params.size())) + " (total params is: " + params.toString( VerbosityMini ) );                                    \
+//  }
 #else
 # define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
 #endif
