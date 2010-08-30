@@ -17,14 +17,13 @@
 
 namespace AL
 {
-  //TODO: rename
-  typedef void ALVoid;
 
   /**
   * Generic functor class
   */
   class Functor {
   public:
+
     virtual void call(const ::AL::Messaging::CallDefinition& pParams, ::AL::Messaging::ResultDefinition& pResult) = 0;
     virtual ~Functor() {}
   };
