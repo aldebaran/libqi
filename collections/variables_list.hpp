@@ -10,7 +10,7 @@
 #define LIBIPPC_VARIABLESLIST_HPP_
 
 #include <alcommon-ng/collections/equality_visitor.hpp>
-#include <alcommon-ng/collections/print_visitor.hpp>
+
 #include <alcommon-ng/collections/alvalue_convertor.hpp>
 #include <alcommon-ng/exceptions/exceptions.hpp>
 
@@ -31,259 +31,109 @@
 
 #include <alvalue/alvalue.h>
 #include <alcore/alptr.h>
+#include <boost/type_traits.hpp>
 
 namespace AL {
   namespace Messaging {
 
-class VariableValue;
+    class VariableValue;
 
-/** Boost.Variant which represent aldebaran's ALValue enum. */
-typedef boost::variant<int,
-                       float,
-                       double,
-                       bool,
-                       std::string,
-                       std::vector<unsigned char>,
-                       //std::vector<float>,
-                       std::vector<VariableValue>
-                      > ValueType;
+    typedef boost::variant<bool,
+                           int,
+                           float,
+                           double,
+                           std::string,
+                           std::vector<unsigned char>,
+                           std::vector<VariableValue>
+                           > ValueType;
 
 
-template <typename T>
-class convert {
-public:
-	T as (const ValueType & value, bool empty) const {
-	  (void) empty;
-	    return boost::get<T,
-	                      int,
-										    float,
-										    double,
-										    bool,
-										    std::string,
-										    std::vector<unsigned char>,
-                        //std::vector<float>,  // 6
-										    std::vector<VariableValue>
-										   > (value);
-	}
-};
-
-template <>
-class convert<AL::ALValue> {
-public:
-	AL::ALValue as (const ValueType & value, bool empty) const {
-	    AL::ALValue v;
-	    if (empty) {
-	      return v;
-	    }
-	    ALValueConvertor convertor;
-			return boost::apply_visitor(convertor, value);
-	}
-};
-
-/** The generic serializable type to use to transmit parameters. */
-class VariableValue {
-public:
-  VariableValue () : empty(true) {
-  };
-
-public:
-  /** VariableValue ctor from an int */
-  VariableValue(int i) : empty(false) { val = i; }
-  /** VariableValue ctor from a float */
-  VariableValue(float f) : empty(false) { val = f; }
-  /** VariableValue ctor from a double */
-  VariableValue(double d) : empty(false) { val = d; }
-  /** VariableValue ctor from a bool */
-  VariableValue(bool b) : empty(false) {
-		val = b;
-	}
-  /** VariableValue ctor from a string */
-  VariableValue(const std::string & s) : empty(false) { val = s; }
-  /** VariableValue ctor from binary data */
-  VariableValue(const std::vector<unsigned char> & bin) : empty(false) { val = bin; }
-
-    // dhoussin
-  //VariableValue(const std::vector<float> & bin) : empty(false) { val = bin; }
+    template <typename T>
+    struct convert {
+      T as (const ValueType& value, bool _empty) const {
+        (void) _empty;
+        return boost::get<T, bool, int, float, double, std::string, std::vector<unsigned char>, std::vector<VariableValue> > (value);
+      }
+    };
 
 
-  /** VariableValue ctor from a vector of VariableValue */
-  VariableValue(const std::vector<VariableValue> & v) : empty(false) { val = v; }
-  /** VariableValue dtor */
-  ~VariableValue() {}
+    /** The generic serializable type to use to transmit parameters. */
+    class VariableValue {
+    public:
+      VariableValue ()        : _empty(true)  {};
+      VariableValue(bool b)   : _empty(false) { val = b; }
+      VariableValue(int i)    : _empty(false) { val = i; }
+      VariableValue(float f)  : _empty(false) { val = f; }
+      VariableValue(double d) : _empty(false) { val = d; }
+      VariableValue(const std::string & s)                  : _empty(false) { val = s; }
+      VariableValue(const std::vector<unsigned char> & bin) : _empty(false) { val = bin; }
+      VariableValue(const std::vector<VariableValue> & v)   : _empty(false) { val = v; }
 
-  /** VariableValue ctor from a vector of R */
-  template <typename R>
-  VariableValue(const std::vector<R> & v) : empty(false) {
-    std::vector<VariableValue> vec;
-    foreach (VariableValue var, v)
-      vec.push_back(var);
-    val = vec;
-	}
+      ~VariableValue() {}
 
-  VariableValue & operator = (const VariableValue & v) {
-    this->val = v.val;
-    this->empty = v.empty;
-    return *this;
+      VariableValue & operator= (const VariableValue & v) {
+        this->val    = v.val;
+        this->_empty = v._empty;
+        return *this;
+      }
+
+      bool operator== (const VariableValue& rhs) const {
+        return boost::apply_visitor(EqualityVisitor(), this->val, rhs.val);
+      }
+
+      //todo: optimise: we want const ref
+      template <typename T>
+      T as () const {
+        return convert<T>().as(val, _empty);
+      }
+
+      operator bool                       () const { return as<bool>(); }
+      operator int                        () const { return as<int>(); }
+      operator float                      () const { return as<float>(); }
+      operator double                     () const { return as<double>(); }
+      operator std::string                () const { return as<std::string>(); }
+      operator std::vector<unsigned char> () const { return as<std::vector<unsigned char> >(); }
+      operator std::vector<VariableValue> () const { return as<std::vector<VariableValue> >(); }
+
+      /** Return the value as an VariableValue */
+      const ValueType & value() const    {  return val; }
+      void value(const ValueType & pval) { val = pval; }
+
+      const bool &empty ()const          { return _empty; }
+      void empty(const bool &isempty)    { _empty = isempty; }
+
+    private:
+      ValueType val;
+      bool      _empty;
+
+    private:
+      friend class boost::serialization::access;
+
+      template <class Archive>
+          void serialize (Archive & ar, unsigned int version) {
+        (void) version;
+        ar & boost::serialization::make_nvp("val", val);
+        ar & boost::serialization::make_nvp("empty", _empty);
+      }
+    };
+
+    typedef std::vector<VariableValue> ArgumentList;
   }
-
-  VariableValue & operator = (bool b) {
-    this->empty = false;
-    this->val = b;
-    return *this;
-  }
-
-  bool operator == (const VariableValue& rhs) const {
-    EqualityVisitor visitor;
-    return boost::apply_visitor(visitor, this->val, rhs.val);
-  }
-
-  /** VariableValue ctor from an alvalue */
-  template <typename T>
-  VariableValue(const AL::ALPtr<T> & ptr) : empty(false) {
-    val = (void *) ptr.get();
-  }
-
-  /** VariableValue ctor from an alvalue */
-  VariableValue(const AL::ALValue & value) : empty(false) {
-    switch (value.getType()) {
-    case (AL::ALValue::TypeArray):
-		  {
-	      std::vector<VariableValue> vec;
-	      for (unsigned int i = 0; i < value.getSize(); ++i)
-	        vec.push_back(value[i]);
-	      val = vec;
-	      break;
-		  }
-    case (AL::ALValue::TypeBool):
-      val = value.Convert<bool>();
-	    break;
-    case (AL::ALValue::TypeInt):
-      val = value.Convert<int>();
-	    break;
-    case (AL::ALValue::TypeFloat):
-      val = value.Convert<float>();
-	    break;
-    case (AL::ALValue::TypeString):
-      val = value.Convert<std::string>();
-	    break;
-    case (AL::ALValue::TypeBinary):
-      val = value.Convert<std::vector<unsigned char> >();
-	    break;
-    case (AL::ALValue::TypeInvalid):
-      empty = true;
-	    break;
-    default:
-      break;
-      throw Exception(std::string("Unsuported ALValue format "));
-    }
-	}
-
-  /** Return the value under its original type. i.e. explicit conversion */
-  template <typename T>
-  T as () const {
-    std::string name = typeid(T).name();
-    convert<T> c;
-    return c.as(val, empty);
-  }
-
-  /** Implicit conversion operator for void ptr */
-//  operator void * () const { return as<int *>(); }
-  /** Implicit conversion operator for int */
-  operator int () const { return as<int>(); }
-  /** Implicit conversion operator for float */
-  operator float () const { return as<float>(); }
-  /** Implicit conversion operator for double */
-  operator double () const { return as<double>(); }
-  /** Implicit conversion operator for bool */
-  operator bool () const {
-		return as<bool>();
-	}
-  // ck added string convertion
-  operator std::string () const {
-    return as<std::string>();
-	}
-  /** Implicit conversion operator for binary data */
-  operator std::vector<unsigned char> () const { return as<std::vector<unsigned char> >(); }
-
-  //operator std::vector<float> () const { return as<std::vector<float> >(); }
-  /** Implicit conversion operator for array */
-  operator std::vector<VariableValue> () const { return as<std::vector<VariableValue> >(); }
-
-  /** Return the value as an VariableValue */
-  const ValueType & value () const { return val; }
-
-  AL::ALValue convertToALValue () const {
-    if (empty) {
-      return AL::ALValue();
-    }
-    ALValueConvertor convertor;
-		return boost::apply_visitor(convertor, val);
-  }
-
-  bool isEmpty () {
-    return empty;
-  }
-
-private:
-  ValueType val;
-  bool empty;
-
-private:
-  friend class boost::serialization::access;
-
-  template <class Archive>
-  void serialize (Archive & ar, unsigned int version) {
-    (void) version;
-    ar & boost::serialization::make_nvp("val", val);
-    ar & boost::serialization::make_nvp("empty", empty);
-  }
-};
-
-//typedef std::vector<AL::Messaging::VariableValue> VariableList;
-//
-///**
-// * A list which can contain any type of VariableValue enum.
-// * Used to transmit parameters for calls.
-// */
-//class VariablesList : public std::vector<VariableValue> {
-//public:
-//  VariablesList () {}
-//
-//  AL::ALValue convertToALValue () const {
-//    AL::ALValue alvalue;
-//    alvalue.arraySetSize(this->size());
-//    unsigned int i = 0;
-//    foreach (VariableValue v, *this) {
-//      alvalue[i++] = v.convertToALValue();
-//    }
-//
-//    return alvalue;
-//  }
-//
-//private:
-//  //friend class boost::serialization::access;
-//
-//  //template <class Archive>
-//  //void serialize (Archive & ar, unsigned int version) {
-//  //  (void) version;
-//  //  std::vector<VariableValue> * l = this;
-//  //  ar & boost::serialization::make_nvp("list", *l);
-//  //}
-//};
-
 }
-}
-//
+
+//TODO:
 //namespace boost {
 //  namespace serialization {
-//
-//    template <class Archive>
-//    void serialize (Archive & ar, const AL::Messaging::VariablesList& list, const unsigned int version) {
-//      std::vector<VariableValue> * l = this;
-//      ar & boost::serialization::make_nvp("list", *l);
-//    } 
+//    template<class Archive>
+//    void serialize(Archive &ar, AL::Messaging::VariableValue &varval, const unsigned int version) {
+//        ar & boost::serialization::make_nvp("empty", varval.empty());
+//        //ar & boost::serialization::make_nvp("list",  varval.value());
+//      return;
+//    }
 //  }
 //}
+
+#include <alcommon-ng/collections/print_visitor.hpp>
 /**
  * Print the value in ostr stream.
  * @param ostr The stream to send the printed value in.
@@ -291,8 +141,8 @@ private:
  * @return ostr.
  */
 inline std::ostream & operator << (std::ostream & ostr, const AL::Messaging::VariableValue & value) {
-	AL::Messaging::PrintVisitor visitor(ostr);
-	return boost::apply_visitor(visitor, value.value());
+        AL::Messaging::PrintVisitor visitor(ostr);
+        return boost::apply_visitor(visitor, value.value());
 }
 
 #endif /* !LIBIPPC_VARIABLESLIST_HPP_ */
