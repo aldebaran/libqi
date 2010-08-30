@@ -32,7 +32,7 @@ namespace AL
       (*fFunction)();
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 0);
       (*fFunction)();
     };
@@ -56,9 +56,9 @@ namespace AL
       (*fFunction)(p0);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 1);
-      (*fFunction)(params.args()[0].as<P0>());
+      (*fFunction)(params[0].as<P0>());
     };
 
   private:
@@ -80,9 +80,9 @@ namespace AL
       (*fFunction)(p0, p1);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 2);
-      (*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>());
+      (*fFunction)(params[0].as<P0>(), params[1].as<P1>());
     };
 
   private:
@@ -104,9 +104,9 @@ namespace AL
       (*fFunction)(p0, p1, p2);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 3);
-      (*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>());
+      (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>());
     };
 
   private:
@@ -128,9 +128,9 @@ namespace AL
       (*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 4);
-      (*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>(), params.args()[3].as<P3>());
+      (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>());
     };
 
   private:
@@ -152,9 +152,9 @@ namespace AL
       (*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 5);
-      (*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>(), params.args()[3].as<P3>(), params.args()[4].as<P4>());
+      (*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>());
     };
 
   private:

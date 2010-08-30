@@ -24,7 +24,7 @@ namespace AL
   class Functor {
   public:
 
-    virtual void call(const ::AL::Messaging::CallDefinition& pParams, ::AL::Messaging::ResultDefinition& pResult) = 0;
+    virtual void call(const ::AL::Messaging::ArgumentList& pParams, ::AL::Messaging::ReturnValue& pResult) = 0;
     virtual ~Functor() {}
   };
 

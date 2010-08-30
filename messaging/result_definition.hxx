@@ -16,7 +16,7 @@ namespace AL {
     template <typename T>
     void ResultDefinition::value(const T & val) {
       fIsException = false;
-      fValue = VariableValue(val);
+      fValue = ReturnValue(val);
     }
 
   }

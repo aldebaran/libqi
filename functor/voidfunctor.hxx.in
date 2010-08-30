@@ -32,7 +32,7 @@ namespace AL
       (*fFunction)(%(ArgList)s);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, %(count)d);
       (*fFunction)(%(CallParamList)s);
     };

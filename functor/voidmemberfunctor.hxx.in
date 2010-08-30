@@ -26,14 +26,14 @@ namespace AL
 
     MemberFunctor_%(count)s(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(%(ParamList)s) {
       (fObject->*fFunction)(%(ArgList)s);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, %(count)d);
       (fObject->*fFunction)(%(CallParamList)s);
     };

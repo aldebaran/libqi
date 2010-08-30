@@ -65,7 +65,7 @@ def generate_list(tpl, count, sep = ", ", begin = False, end = False):
     return result
 
 def generate_callparam_list(count):
-    t = "params.args()[%(count)d].as<P%(count)d>()"
+    t = "params[%(count)d].as<P%(count)d>()"
     return generate_list(t, count)
 
 def generate_typename_list(count):

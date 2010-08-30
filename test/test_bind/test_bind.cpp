@@ -14,8 +14,8 @@
 
 static const int gLoopCount   = 1000000;
 
-using AL::Messaging::CallDefinition;
-using AL::Messaging::ResultDefinition;
+using AL::Messaging::ReturnValue;
+using AL::Messaging::ArgumentList;
 
 
 int fun0()                                               { return 0; }
@@ -51,8 +51,8 @@ TEST(TestBind, ArgumentNumber) {
 TEST(TestBind, VoidCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  ResultDefinition res;
-  CallDefinition   cd;
+  ReturnValue   res;
+  ArgumentList  cd;
 
   AL::Test::DataPerfTimer dp;
   AL::Functor    *functor = AL::makeFunctor(&chiche, &Foo::voidCall);
@@ -76,7 +76,7 @@ TEST(TestBind, VoidCallPerf) {
 TEST(TestBind, IntStringCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  ResultDefinition res;
+  ReturnValue res;
 
   AL::Test::DataPerfTimer dp;
 
@@ -86,10 +86,10 @@ TEST(TestBind, IntStringCallPerf) {
   {
     unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string     request = std::string(numBytes, 'B');
-    CallDefinition  cd;
+    ArgumentList  cd;
     AL::Functor    *functor = AL::makeFunctor(&chiche, &Foo::intStringCall);
 
-    cd.args().push_back(request);
+    cd.push_back(request);
     dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j) {
       functor->call(cd, res);

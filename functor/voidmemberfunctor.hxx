@@ -26,14 +26,14 @@ namespace AL
 
     MemberFunctor_0(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()() {
       (fObject->*fFunction)();
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 0);
       (fObject->*fFunction)();
     };
@@ -52,16 +52,16 @@ namespace AL
 
     MemberFunctor_1(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(const P0 &p0) {
       (fObject->*fFunction)(p0);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 1);
-      (fObject->*fFunction)(params.args()[0].as<P0>());
+      (fObject->*fFunction)(params[0].as<P0>());
     };
 
   private:
@@ -78,16 +78,16 @@ namespace AL
 
     MemberFunctor_2(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(const P0 &p0, const P1 &p1) {
       (fObject->*fFunction)(p0, p1);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 2);
-      (fObject->*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>());
+      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>());
     };
 
   private:
@@ -104,16 +104,16 @@ namespace AL
 
     MemberFunctor_3(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(const P0 &p0, const P1 &p1, const P2 &p2) {
       (fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 3);
-      (fObject->*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>());
+      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>());
     };
 
   private:
@@ -130,16 +130,16 @@ namespace AL
 
     MemberFunctor_4(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
       (fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 4);
-      (fObject->*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>(), params.args()[3].as<P3>());
+      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>());
     };
 
   private:
@@ -156,16 +156,16 @@ namespace AL
 
     MemberFunctor_5(C *pObject, FunctionType pFunction)
       : fObject(pObject),
-        fFunction(pFunction)
-    {}
+        fFunction(pFunction) {
+    }
 
     void operator()(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
       (fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(const AL::Messaging::CallDefinition &params, AL::Messaging::ResultDefinition&) {
+    void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
       AL_FUNCTOR_ASSUME_NBR_PARAMS(pParams, 5);
-      (fObject->*fFunction)(params.args()[0].as<P0>(), params.args()[1].as<P1>(), params.args()[2].as<P2>(), params.args()[3].as<P3>(), params.args()[4].as<P4>());
+      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>());
     };
 
   private:

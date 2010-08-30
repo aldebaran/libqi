@@ -118,6 +118,7 @@ namespace AL {
     };
 
     typedef std::vector<VariableValue> ArgumentList;
+    typedef VariableValue              ReturnValue;
   }
 }
 

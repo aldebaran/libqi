@@ -24,7 +24,7 @@ namespace AL {
     public:
       ResultDefinition ();
 
-      ResultDefinition (const VariableValue & val);
+      ResultDefinition (const ReturnValue & val);
       bool operator==(const ResultDefinition& rhs) const;
       virtual ~ResultDefinition();
 
@@ -38,8 +38,8 @@ namespace AL {
 
       std::string exceptionMessage() const;
 
-      const VariableValue & value() const;
-      VariableValue& value();
+      const ReturnValue & value() const;
+      ReturnValue& value();
 
     private:
 
@@ -54,7 +54,7 @@ namespace AL {
       * callVoid -> int 42 ?
       * call -> exception.what() or result
       */
-      VariableValue fValue;
+      ReturnValue fValue;
     };
 
   }
