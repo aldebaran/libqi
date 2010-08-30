@@ -25,6 +25,22 @@ namespace AL {
     class CallDefinition {
     public:
       CallDefinition ();
+
+      CallDefinition(const std::string& moduleName,
+        const std::string& methodName) {
+        fModuleName = moduleName;
+        fMethodName = methodName;
+      }
+
+      template<typename T>
+      CallDefinition(const std::string& moduleName,
+        const std::string& methodName, const T& arg0) {
+        fModuleName = moduleName;
+        fMethodName = methodName;
+          fArgs.push_back(arg0);
+      }
+      // ... more templates ...
+
       ~CallDefinition() {}
       bool operator==(const CallDefinition& rhs) const;
 
