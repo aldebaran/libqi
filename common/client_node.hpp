@@ -10,7 +10,6 @@
 
 #include <string>
 #include <alcommon-ng/messaging/messaging.hpp>
-#include <alcommon-ng/common/service_cache.hpp>
 #include <alcommon-ng/common/mutexednamelookup.hpp>
 #include <alcommon-ng/common/namelookup.hpp>
 #include <alcommon-ng/common/nodeinfo.hpp>
