@@ -28,6 +28,7 @@ namespace AL {
 
       const NodeInfo& getNodeInfo() const;
 
+      // todo should become bind, though addLocalService is a very clear name
       void addLocalService(const ServiceInfo& service);
       const ServiceInfo& getLocalService(const std::string& name) const;
 

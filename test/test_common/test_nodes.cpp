@@ -18,5 +18,5 @@ TEST(Nodes, NormalUsage)
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
   ClientNode client("client", gMasterAddress);
 
-  client.call(CallDefinition("master", "listServices"));
+  ResultDefinition result = client.call(CallDefinition("master", "listServices"));
 }

@@ -31,7 +31,7 @@ namespace AL {
 
     private:
       // TODO Hide implementation
-      std::string fName;
+      std::string fClientName;
       std::string fMasterAddress;
 
       NameLookup<NodeInfo> fServerList;

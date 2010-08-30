@@ -18,9 +18,9 @@ namespace AL {
 
     ClientNode::ClientNode(
       const std::string& clientName,
-      const std::string& masterAddress) {
-      fName = clientName;
-      fMasterAddress = masterAddress;
+      const std::string& masterAddress) : 
+        fClientName(clientName),
+        fMasterAddress(masterAddress) {
       xInit();
     }
 
@@ -39,21 +39,21 @@ namespace AL {
         // todo make a hash from the calldef
         std::string hash = callDef.moduleName();
         
-        // get the relevant messaging client for the node that host the servivce
+        // get the relevant messaging client for the node that host the service
         NameLookup<boost::shared_ptr<DefaultClient> >::iterator it;
         it = fServerClients.find(hash);
         if (it == fServerClients.end()) {
            // create messaging client if needed ???
-          std::cout << "Client: " << fName << ", could not find Server for message " << hash << std::endl;
+          std::cout << "Client: " << fClientName << ", could not find Server for message " << hash << std::endl;
           // throw?
           ResultDefinition r;
           return r;
         }
 
         // call
-        std::cout << "Client: " << fName << ", found server for message " << hash << "." << callDef.methodName() <<  std::endl;
+        std::cout << "Client: " << fClientName << ", found server for message " << hash << "." << callDef.methodName() <<  std::endl;
         ResultDefinition result = (it->second)->send(callDef);
-        std::cout << "  Client: " << fName << ", received result" << std::endl;
+        std::cout << "  Client: " << fClientName << ", received result" << std::endl;
         return result;  
     }
 
@@ -78,7 +78,7 @@ namespace AL {
         return it->second;
       }
 
-      if (fName != "master") {
+      if (fClientName != "master") {
         // cache lookup failed ... time to ask master
 
         // add service to cache
