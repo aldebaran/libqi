@@ -28,19 +28,25 @@ namespace AL {
       AL::Messaging::ResultDefinition call(
         const AL::Messaging::CallDefinition& callDef);
 
-    private:
 
+    private:
       // TODO Hide implementation
       std::string fName;
       std::string fMasterAddress;
 
       NameLookup<NodeInfo> fServerList;
-      NameLookup<ServiceInfo> fServiceList;
+      NameLookup<ServiceInfo> fServiceCache;
       NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
 
       void xInit();
       void xUpdateServicesFromMaster();
       void xCreateServerClient(const NodeInfo& serverNodeInfo);
+
+      const ServiceInfo& ClientNode::xGetService(const std::string& methodHash);
+
+    protected:
+      ServiceInfo fInvalidService;
+
     };
   }
 }

@@ -17,39 +17,10 @@ namespace AL {
         ServerNode(masterName, masterAddress, masterAddress) {
 
       // just testing
-      //addService(ServiceInfo(name,name,"addNode"));
+      addLocalService(ServiceInfo(masterName, masterName, "listServices"));
+      addLocalService(ServiceInfo(masterName, masterName, "addService"));
+      addLocalService(ServiceInfo(masterName, masterName, "getService"));
+
     }
-
-    //void Node::addNode(const NodeInfo& node) {
-    //  // TODO verify validity
-    //  fNodeList.insert(
-    //    std::make_pair<std::string, NodeInfo>(node.name, node));
-    //}
-
-    //const NodeInfo& Node::getNode(const std::string& name) const {
-    //  NameLookup<NodeInfo>::const_iterator it = fNodeList.find(name);
-    //  if (it != fNodeList.end()) {
-    //    return it->second;
-    //  }
-    //  return fInvalidNode;
-    //}
-
-    //void Node::addService(const ServiceInfo& service) {
-    //  std::string key = service.moduleName +
-    //    std::string(".") +
-    //    service.methodName;
-
-    //  fServiceList.insert(
-    //    std::make_pair<std::string, ServiceInfo>(key, service));
-    //}
-
-    //const ServiceInfo& Node::getService(const std::string& name) const {
-    //  NameLookup<ServiceInfo>::const_iterator it = fServiceList.find(name);
-    //  if (it != fServiceList.end()) {
-    //    return it->second;
-    //  }
-    //  return fInvalidService;
-    //}
-
   }
 }

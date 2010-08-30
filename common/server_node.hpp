@@ -28,8 +28,8 @@ namespace AL {
 
       const NodeInfo& getNodeInfo() const;
 
-      void addService(const ServiceInfo& service);
-      const ServiceInfo& getService(const std::string& name) const;
+      void addLocalService(const ServiceInfo& service);
+      const ServiceInfo& getLocalService(const std::string& name) const;
 
     private:
       // TODO Hide implementation
