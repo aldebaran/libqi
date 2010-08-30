@@ -6,12 +6,6 @@
 
 using namespace AL::Messaging;
 
-template<>
-void GTestStreamToHelper<AL::ALValue>(std::basic_ostream<char, std::char_traits<char> >* os, AL::ALValue const& val)
-{
-  *os << val.toString();
-}
-
 TEST(VariableValueTest, ToAndFrom_int)
 {
   int s = 1;
@@ -69,6 +63,12 @@ TEST(VariableValueTest, ToAndFrom_vector_of_VariableValue)
   std::vector<VariableValue> res = v;
   EXPECT_EQ(s, res);
 }
+
+//template<>
+//void GTestStreamToHelper<AL::ALValue>(std::basic_ostream<char, std::char_traits<char> >* os, AL::ALValue const& val)
+//{
+//  *os << val.toString();
+//}
 
 //TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_int)
 //{

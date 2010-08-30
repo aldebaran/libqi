@@ -43,9 +43,9 @@ public:
 
     else if (def.methodName() == "echo")
     {
-        printf("Method: Echo\n");
-        std::vector<AL::Messaging::VariableValue>    params = def.args();
-        res->value(params.front());
+      std::cout << "Method: Echo" << std::endl;
+      std::vector<AL::Messaging::VariableValue>    params = def.args();
+      res->value(params.front());
     }
     return res;
   }
