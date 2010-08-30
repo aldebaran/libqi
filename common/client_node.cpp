@@ -71,14 +71,12 @@ namespace AL {
       // TODO find existing server and update if it exists
 
       // add server client
-      // TODO mutex on service cache
       fServerClients.insert(make_pair(serverNodeInfo.name, client));
       fServerList.insert(make_pair(serverNodeInfo.name, serverNodeInfo)); // why not!
     }
 
 
     const std::string ClientNode::xLocateService(const std::string& methodHash) {
-      // TODO mutex on service cache
       std::string nodeName = fServiceCache.get(methodHash).nodeName;
 
       // empty means not found
@@ -86,6 +84,7 @@ namespace AL {
         return nodeName;
       }
 
+      // TODO ... force master name to "master" ?
       if (fClientName != "master") {
         // cache lookup failed ... time to ask master
 
