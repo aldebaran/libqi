@@ -52,20 +52,9 @@ namespace AL {
       std::vector<VariableValue>& args();
 
     private:
-      /**
-      * moduleName
-      */
-      std::string fModuleName;
-
-      /**
-      * methodName
-      */
-      std::string fMethodName;
-
-      /**
-      * list parameter
-      */
-      std::vector<VariableValue> fArgs;
+      std::string  fModuleName;
+      std::string  fMethodName;
+      ArgumentList fArgs;
     };
   }
 }
