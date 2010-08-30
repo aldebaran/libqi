@@ -43,6 +43,8 @@ namespace AL
 }
 
 #define I_WANT_HXX
+#include <alcommon-ng/functor/functor.hxx>
+#include <alcommon-ng/functor/voidfunctor.hxx>
 #include <alcommon-ng/functor/memberfunctor.hxx>
 #include <alcommon-ng/functor/voidmemberfunctor.hxx>
 #undef I_WANT_HXX
