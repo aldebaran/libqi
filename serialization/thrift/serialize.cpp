@@ -43,6 +43,10 @@ namespace AL {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(std::string)" << std::endl);
       protocol->writeString(t);
     }
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::EmptyValue &t, int field)
+    {
+      DEBUGOUT_THRIFT_SER(std::cout << "Serialize(EmptyValue)" << std::endl);
+    }
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field)
     {

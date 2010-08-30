@@ -19,6 +19,7 @@ namespace AL {
   namespace Messaging {
 
     class VariableValue;
+    struct EmptyValue;
 
     class PrintVisitor : public boost::static_visitor<std::ostream &> {
     public:
@@ -29,9 +30,10 @@ namespace AL {
       std::ostream & operator () (float f);
       std::ostream & operator () (double d);
       std::ostream & operator () (bool b);
-      std::ostream & operator () (const std::string & s);
-      std::ostream & operator () (const std::vector<unsigned char> & bin);
-      std::ostream & operator () (const std::vector<VariableValue> & v);
+      std::ostream & operator () (const std::string &s);
+      std::ostream & operator () (const EmptyValue &s);
+      std::ostream & operator () (const std::vector<unsigned char> &bin);
+      std::ostream & operator () (const std::vector<VariableValue> &v);
 
     private:
       std::ostream & ostr;

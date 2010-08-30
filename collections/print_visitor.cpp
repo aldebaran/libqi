@@ -41,6 +41,10 @@ std::ostream & PrintVisitor::operator () (const std::string & s) {
    return ostr << s;
 }
 
+std::ostream & PrintVisitor::operator () (const EmptyValue &s) {
+   return ostr << "empty";
+}
+
 std::ostream & PrintVisitor::operator () (const std::vector<unsigned char> & bin) {
   ostr << "{ ";
   foreach (unsigned char c, bin)
