@@ -37,7 +37,7 @@ def read_file(fname):
 
 def generate_list(tpl, count, sep = ", ", begin = False, end = False):
     result = ""
-    if begin:
+    if begin and count:
         result += sep
     for i in range(count):
         result += tpl % { 'count' : i }
@@ -57,6 +57,10 @@ def generate_typename_sep_list(count):
     t = "typename P%(count)d"
     return generate_list(t, count, end = True)
 
+def generate_sep_typename_list(count):
+    t = "typename P%(count)d"
+    return generate_list(t, count, begin = True)
+
 def generate_type_list(count):
     t = "P%(count)d"
     return generate_list(t, count)
@@ -68,6 +72,11 @@ def generate_type_sep_list(count):
 def generate_param_list(count):
     t = "const P%(count)d &p%(count)d"
     return generate_list(t, count)
+
+def generate_sep_param_list(count):
+    t = "const P%(count)d &p%(count)d"
+    print "BIM:", generate_list(t, count, begin = True)
+    return generate_list(t, count, begin = True)
 
 def generate_arg_list(count):
     t = "p%(count)d"
@@ -84,9 +93,11 @@ def generate_code(head, tpl, foot, count):
         result += tpl % { 'count'           : i,
                           'TypeNameList'    : generate_typename_list(i),
                           'TypeList'        : generate_type_list(i),
+                          'SepTypeNameList' : generate_sep_typename_list(i),
                           'TypeNameListSep' : generate_typename_sep_list(i),
                           'TypeListSep'     : generate_type_sep_list(i),
                           'ParamList'       : generate_param_list(i),
+                          'SepParamList'    : generate_sep_param_list(i),
                           'ArgList'         : generate_arg_list(i),
                           'ArgsPushList'    : generate_argpush_list(i),
                           'CallParamList'   : generate_callparam_list(i),

@@ -15,14 +15,23 @@ namespace AL
 {
 //HEADER
 
-  template <typename R, %(TypeNameList)s>
-  R callFunctor(Functor *f, %(ParamList)s) {
+  template <typename R%(SepTypeNameList)s>
+  R callFunctor(Functor *f%(SepParamList)s) {
     AL::Messaging::ArgumentList  args;
     AL::Messaging::VariableValue ret;
 
     %(ArgsPushList)s
     f->call(args, ret);
     return ret.as<R>();
+  }
+
+  template <%(TypeNameList)s>
+  void callVoidFunctor(Functor *f%(SepParamList)s) {
+    AL::Messaging::ArgumentList  args;
+    AL::Messaging::VariableValue ret;
+
+    %(ArgsPushList)s
+    f->call(args, ret);
   }
 
 //FOOTER
