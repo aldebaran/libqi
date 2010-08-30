@@ -70,77 +70,77 @@ TEST(VariableValueTest, ToAndFrom_vector_of_VariableValue)
   EXPECT_EQ(s, res);
 }
 
-TEST(VariableValueConvertALValue, ToAndFrom_int)
-{
-  AL::ALValue s = 1;
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_int)
+//{
+//  AL::ALValue s = 1;
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_float)
-{
-  AL::ALValue s = 0.2f;
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_float)
+//{
+//  AL::ALValue s = 0.2f;
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_double)
-{
-  AL::ALValue s = 39709080.97987979;
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_double)
+//{
+//  AL::ALValue s = 39709080.97987979;
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_bool)
-{
-  AL::ALValue s = true;
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_bool)
+//{
+//  AL::ALValue s = true;
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_string)
-{
-  AL::ALValue s("hello world");
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_string)
+//{
+//  AL::ALValue s("hello world");
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_vector_of_unsigned_char)
-{
-  AL::ALValue s;
-  std::vector<unsigned char> s1;
-  s1.push_back((unsigned char)1);
-  s.SetBinary(&s1,s1.size());
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_vector_of_unsigned_char)
+//{
+//  AL::ALValue s;
+//  std::vector<unsigned char> s1;
+//  s1.push_back((unsigned char)1);
+//  s.SetBinary(&s1,s1.size());
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_mixedArray)
-{
-  AL::ALValue s;
-  s.arrayPush((int)1);
-  s.arrayPush(std::string("Hello"));
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  EXPECT_EQ(s, res);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_mixedArray)
+//{
+//  AL::ALValue s;
+//  s.arrayPush((int)1);
+//  s.arrayPush(std::string("Hello"));
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  EXPECT_EQ(s, res);
+//}
 
-TEST(VariableValueConvertALValue, ToAndFrom_vector_float)
-{
-  std::vector<float> f;
-  f.push_back(1.0f);
-  f.push_back(2.1f);
-  AL::ALValue s = f;
-  VariableValue v = s;
-  AL::ALValue res = v.convertToALValue();
-  std::vector<float> ff = res;
-  EXPECT_EQ(f, ff);
-}
+//TEST(VariableValueConvertALValue, DISABLE_ToAndFrom_vector_float)
+//{
+//  std::vector<float> f;
+//  f.push_back(1.0f);
+//  f.push_back(2.1f);
+//  AL::ALValue s = f;
+//  VariableValue v = s;
+//  AL::ALValue res = v.convertToALValue();
+//  std::vector<float> ff = res;
+//  EXPECT_EQ(f, ff);
+//}
 
 
