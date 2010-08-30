@@ -133,7 +133,6 @@ TEST(TestBind, MultiArgFun) {
 }
 
 TEST(TestBind, MultiArgVoidFun) {
-  Foo          foo;
   AL::Functor *functor;
 
   functor = AL::makeFunctor(&vfun0);
