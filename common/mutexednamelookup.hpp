@@ -36,18 +36,18 @@ namespace AL {
 
       const T& get(std::string key) {
         boost::mutex::scoped_lock lock(fMutex);
-        std::map<std::string, T>::const_iterator it = fMap.find(key);
+        typename std::map<std::string, T>::const_iterator it = fMap.find(key);
         if (it != fMap.end()) {
           return it->second;
         }
         return fInvalidValue;
       }
-      
+
       void insert(const std::string key, const T& val) {
         if (get(key).nodeName == "") {
           remove(key);
         }
-        
+
         {
           boost::mutex::scoped_lock lock(fMutex);
           fMap.insert(make_pair(key, val));
