@@ -9,6 +9,7 @@
 #define AL_COMMON_MASTER_NODE_H_
 
 #include <string>
+#include <alcommon-ng/common/nodeinfo.hpp>
 #include <alcommon-ng/common/server_node.hpp>
 #include <alcommon-ng/common/mutexednamelookup.hpp>
 
@@ -24,7 +25,10 @@ namespace AL {
       const std::map<std::string, std::string>& listServices();
 
     private:
+      NodeInfo fNodeInfo;
       ServerNode fServerNode;
+
+      void xInit();
 
       // map from methodHash to nodeAddress
       MutexedNameLookup<std::string> fServiceCache;

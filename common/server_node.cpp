@@ -10,6 +10,7 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
+#include <allog/allog.h>
 
 namespace AL {
   using namespace Messaging;
@@ -50,20 +51,20 @@ namespace AL {
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> ServerNode::onMessage(const AL::Messaging::CallDefinition &def) {
       // handle message
-      std::cout << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName() << std::endl;
+      alsdebug << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName();
 
       std::string hash = def.moduleName() + std::string(".") + def.methodName();
       const ServiceInfo& si = getLocalService(hash);
       if (si.nodeName.empty()) {
         // method not found
-        std::cout << "  Error: Method not found " << hash << std::endl;
+        alsdebug << "  Error: Method not found " << hash;
       }
 
       if (si.nodeName == fInfo.name) {
-        std::cout << "  Good: Method is for this node " << std::endl;
+        alsdebug << "  Good: Method is for this node";
       } else {
 
-        std::cout << "  Error: Method is for node: " << si.nodeName << std::endl;
+        alsdebug << "  Error: Method is for node: " << si.nodeName;
       }
 
       boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(new ResultDefinition());

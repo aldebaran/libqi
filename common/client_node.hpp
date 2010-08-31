@@ -44,13 +44,8 @@ namespace AL {
       NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
 
       void xInit();
-      void xUpdateServicesFromMaster();
       void xCreateServerClient(const std::string& address);
-
       const std::string xLocateService(const std::string& methodHash);
-
-      
-
     };
   }
 }

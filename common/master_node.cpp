@@ -7,6 +7,7 @@
 
 #include <alcommon-ng/common/master_node.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
+#include <allog/allog.h>
 
 namespace AL {
   namespace Common {
@@ -14,14 +15,18 @@ namespace AL {
     MasterNode::MasterNode(
       const std::string& masterName,
       const std::string& masterAddress) :
-      fServerNode(masterName, masterAddress, masterAddress) {
+    fNodeInfo(masterName, masterAddress),
+    fServerNode(masterName, masterAddress, masterAddress) {
+      xInit();
+    }
 
-      fServerNode.addLocalService(ServiceInfo(masterName, masterName, "registerService", makeFunctor(this, &MasterNode::registerService)));
-      registerService(masterAddress, "master.registerService");
-      fServerNode.addLocalService(ServiceInfo(masterName, masterName, "locateService", makeFunctor(this, &MasterNode::locateService)));
-      registerService(masterAddress, "master.locateService");
-      fServerNode.addLocalService(ServiceInfo(masterName, masterName, "listServices", makeFunctor(this, &MasterNode::listServices)));
-      registerService(masterAddress, "master.listServices");
+    void MasterNode::xInit() {
+      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "registerService", makeFunctor(this, &MasterNode::registerService)));
+      registerService(fNodeInfo.address, "master.registerService");
+      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "locateService", makeFunctor(this, &MasterNode::locateService)));
+      registerService(fNodeInfo.address, "master.locateService");
+      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "listServices", makeFunctor(this, &MasterNode::listServices)));
+      registerService(fNodeInfo.address, "master.listServices");
     }
 
     void MasterNode::registerService(const std::string& nodeAddress, const std::string& methodHash) {
@@ -35,8 +40,5 @@ namespace AL {
     const std::map<std::string, std::string>& MasterNode::listServices() {
       return fServiceCache.getMap();
     }
-
-
-
   }
 }

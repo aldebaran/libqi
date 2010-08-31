@@ -7,6 +7,7 @@
 
 #include <alcommon-ng/common/client_node.hpp>
 #include <alcommon-ng/messaging/client.hpp>
+#include <allog/allog.h>
 
 // would not be needed if we had a specific client
 #include <alcommon-ng/messaging/call_definition.hpp>
@@ -30,7 +31,8 @@ namespace AL {
 
     void ClientNode::xInit() {
       xCreateServerClient(fMasterAddress);
-      xUpdateServicesFromMaster();
+      // we assert that we think the master can locate services
+      fServiceCache.insert("master.locateService", fMasterAddress);
     }
 
     ResultDefinition ClientNode::call(const CallDefinition& callDef) {        
@@ -43,7 +45,7 @@ namespace AL {
       if (nodeAddress.empty()) {
         // problem the master doesn't know about this message
         // throw?
-        std::cout << "Error Client: " << fClientName << " could not find Server for message " << hash << std::endl;
+        alserror << "Error Client: " << fClientName << " could not find Server for message " << hash;
         return result;
       }
 
@@ -56,32 +58,26 @@ namespace AL {
         it = fServerClients.find(nodeAddress);
 
         if (it == fServerClients.end()) {
-          std::cout << "Client: " << fClientName << ", could not find Server for message " << hash << std::endl;
+          alserror << "Client: " << fClientName << ", could not find Server for message " << hash;
           // throw?
           return result;
         }
       }
 
       // call
-      std::cout << "Client: " << fClientName << ", found server for message " << hash <<  std::endl;
+      alsdebug << "Client: " << fClientName << ", found server for message " << hash;
       result = (it->second)->send(callDef);
-      std::cout << "  Client: " << fClientName << ", received result" << std::endl;
+      alsdebug << "  Client: " << fClientName << ", received result";
       return result;  
     }
 
-    void ClientNode::xUpdateServicesFromMaster() {
-      //CallDefinition callDef;
-      fServiceCache.insert("master.locateService", fMasterAddress); //!
-      // if master is alive
-      // get list of services
-    }
 
     void ClientNode::xCreateServerClient(const std::string& serverAddress) {
       // TODO error handling
       boost::shared_ptr<DefaultClient> client = 
         boost::shared_ptr<DefaultClient>(new DefaultClient(serverAddress));
 
-      std::cout << "Client " << fClientName << " creating client for server " << serverAddress << std::endl;
+      alsdebug << "Client " << fClientName << " creating client for server " << serverAddress << std::endl;
 
       // add server client
       fServerClients.insert(make_pair(serverAddress, client));
@@ -96,14 +92,14 @@ namespace AL {
         return nodeAddress;
       }
 
-      std::cout << "Client " << fClientName << " asking master to locate service " << methodHash << std::endl;
+      alsdebug << "Client " << fClientName << " asking master to locate service " << methodHash;
       CallDefinition callDef;
       callDef.moduleName() = "master";
       callDef.methodName() = "locateService";
       callDef.args().push_back(methodHash);
 
       ResultDefinition res = call(callDef);
-      nodeAddress = res.value().as<std::string>();
+      nodeAddress = res.value();
 
       return nodeAddress;
     }
