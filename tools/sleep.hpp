@@ -9,6 +9,7 @@
 # define   AL_MESSAGING_SLEEP_HXX_
 
 #ifdef _WIN32
+#  include <winsock2.h>
 #  define sleep(x) Sleep(x * 1000)
 #else
 #  include <unistd.h>
