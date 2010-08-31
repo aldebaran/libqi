@@ -57,9 +57,6 @@ struct Foo {
 };
 
 TEST(TestSignature, BasicTypeSignature) {
-  Foo          foo;
-
-  std::string s;
   EXPECT_EQ("b",    AL::typeSignatureWithCopy<bool>::value());
   EXPECT_EQ("i",    AL::typeSignatureWithCopy<int>::value());
   EXPECT_EQ("f",    AL::typeSignatureWithCopy<float>::value());
@@ -93,11 +90,21 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("[i]#&",  AL::typeSignatureWithCopy<const std::vector< int >& >::value());
   EXPECT_EQ("{ii}#&", AL::typeSignatureWithCopy<const MapInt& >::value());
 
-
   //ERROR
   EXPECT_EQ("UNKNOWN", AL::typeSignatureWithCopy<short>::value());
 }
+TEST(TestSignature, ComplexTypeSignature) {
+  typedef std::map<int,int> MapInt;
+  //{ii}
+  typedef std::map<MapInt,MapInt> MapInt2;
+  //{{ii}{ii}}
+  typedef std::map<std::vector<MapInt2>, std::vector<const std::vector<MapInt2&> > > FuckinMap;
+  //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
+  //and obama said: Yes We Can!
 
+  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}&]#]}"      , AL::typeSignatureWithCopy<FuckinMap>::value());
+
+}
 
 TEST(TestSignature, BasicVoidFunctionSignature) {
   EXPECT_EQ("v:"      , AL::functionSignature(&vfun0));
