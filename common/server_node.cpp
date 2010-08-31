@@ -25,11 +25,5 @@ namespace AL {
     void ServerNode::addLocalService(const ServiceInfo& service) {
       fImp->addLocalService(service);
     }
-
-    const ServiceInfo& ServerNode::getLocalService(
-      const std::string& methodHash) {
-      // might become an implementation detail ???
-      return fImp->getLocalService(methodHash);
-    }
   }
 }

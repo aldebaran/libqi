@@ -26,7 +26,6 @@ namespace AL {
         const std::string& masterAddress);
 
       void addLocalService(const ServiceInfo& service);
-      const ServiceInfo& getLocalService(const std::string& name);
 
     private:
       boost::shared_ptr<ServerNodeImp> fImp;

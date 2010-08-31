@@ -83,18 +83,6 @@ int test(const int &t)
   return t + 42;
 }
 
-TEST(ServerNodeTest, serviceInfo)
-{
-  ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  sleep(1);
-  ServiceInfo si("n", "mod", "meth", AL::makeFunctor(&test));
-  server.addLocalService(si);
-  ServiceInfo res = server.getLocalService("mod.meth");
-  EXPECT_EQ(si.nodeName, res.nodeName);
-  EXPECT_EQ(si.moduleName, res.moduleName);
-  EXPECT_EQ(si.methodName, res.methodName);
-}
-
 TEST(MasterNodeTest, creation)
 {
   MasterNode master(gMasterAddress);

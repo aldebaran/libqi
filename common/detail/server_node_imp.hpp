@@ -36,9 +36,10 @@ namespace AL {
 
       const NodeInfo& getNodeInfo() const;
 
+      // best if we didn't use a ServiceInfo here ...
+      // should hide some of bind
       void addLocalService(const ServiceInfo& service);
-      const ServiceInfo& getLocalService(const std::string& name);
-
+      
     private:
       NodeInfo fInfo;
 
@@ -53,6 +54,7 @@ namespace AL {
       // if would be good if we were capable of describing a mehtod
       MutexedNameLookup<ServiceInfo> fLocalServiceList;
 
+      const ServiceInfo& xGetLocalService(const std::string& name);
       void xRegisterServiceWithMaster(const std::string& methodHash);
     };
   }

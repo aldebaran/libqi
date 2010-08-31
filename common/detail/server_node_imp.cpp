@@ -41,7 +41,7 @@ namespace AL {
       alsdebug << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName();
 
       std::string hash = def.moduleName() + std::string(".") + def.methodName();
-      const ServiceInfo& si = getLocalService(hash);
+      const ServiceInfo& si = xGetLocalService(hash);
       if (si.nodeName.empty()) {
         // method not found
         alsdebug << "  Error: Method not found " << hash;
@@ -76,7 +76,7 @@ namespace AL {
       xRegisterServiceWithMaster(hash);
     }
 
-    const ServiceInfo& ServerNodeImp::getLocalService(
+    const ServiceInfo& ServerNodeImp::xGetLocalService(
       const std::string& methodHash) {
       // functors ... should be found here
       return fLocalServiceList.get(methodHash);
