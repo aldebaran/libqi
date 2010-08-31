@@ -44,14 +44,12 @@ namespace AL {
       }
 
       void insert(const std::string key, const T& val) {
-        if (get(key).nodeName == "") {
-          remove(key);
+        boost::mutex::scoped_lock lock(fMutex);
+        typename std::map<std::string, T>::const_iterator it = fMap.find(key);
+        if (it != fMap.end()) {
+          fMap.erase(key);
         }
-
-        {
-          boost::mutex::scoped_lock lock(fMutex);
-          fMap.insert(make_pair(key, val));
-        }
+        fMap.insert(make_pair(key, val));
       }
 
       void remove(const std::string key) {
