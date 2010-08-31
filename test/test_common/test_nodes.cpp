@@ -7,24 +7,27 @@
 using namespace AL::Common;
 using namespace AL::Messaging;
 
-std::string gMasterName = "master"; // avoid this?
 std::string gMasterAddress = "tcp://127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "tcp://127.0.0.1:5556";
 
+MasterNode gMaster(gMasterAddress);
+ServerNode gServer(gServerName, gServerAddress, gMasterAddress);
+ClientNode gClient("client", gMasterAddress);
+
 TEST(Nodes, NormalUsage)
 {
-  MasterNode master(gMasterName, gMasterAddress);
-  ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  ClientNode client("client", gMasterAddress);
+  std::cout << "TEST: Initialized " << std::endl;
+  std::cout << "TEST: Calling master.listServices " << std::endl;
+  ResultDefinition result1 = gClient.call(CallDefinition("master", "listServices"));
 
-  std::cout << " Initialized " << std::endl;
-  std::cout << " Calling master.listServices " << std::endl;
-  ResultDefinition result1 = client.call(CallDefinition("master", "listServices"));
+  std::cout << "TEST: Calling server.ping " << std::endl;
+  ResultDefinition result2 = gClient.call(CallDefinition("server", "ping"));
 
-  std::cout << " Calling server.ping " << std::endl;
-  ResultDefinition result2 = client.call(CallDefinition("server", "ping"));
+  std::cout << "TEST: Calling master.gobledigook " << std::endl;
+  ResultDefinition result3 = gClient.call(CallDefinition("master", "gobledigook"));
 
-  std::cout << " Calling master.gobledigook " << std::endl;
-  ResultDefinition result3 = client.call(CallDefinition("master", "gobledigook"));
+  for(int i=0; i<100; i++) {
+    ResultDefinition result4 = gClient.call(CallDefinition("master", "listServices"));
+  }
 }

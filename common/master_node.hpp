@@ -18,7 +18,7 @@ namespace AL {
 
     class MasterNode {
     public:
-      MasterNode(const std::string& masterName, const std::string& masterAddress);
+      MasterNode(const std::string& masterAddress);
 
       void registerService(const std::string& nodeAddress, const std::string& methodHash);
       const std::string& locateService(const std::string& methodHash);

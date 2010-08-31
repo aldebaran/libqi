@@ -13,10 +13,9 @@ namespace AL {
   namespace Common {
 
     MasterNode::MasterNode(
-      const std::string& masterName,
       const std::string& masterAddress) :
-    fNodeInfo(masterName, masterAddress),
-    fServerNode(masterName, masterAddress, masterAddress) {
+    fNodeInfo("master", masterAddress),
+    fServerNode("master", masterAddress, masterAddress) {
       xInit();
     }
 
