@@ -5,6 +5,7 @@
 #include <string>
 #include <alcommon-ng/tools/sleep.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
+#include <alcommon-ng/tools/sleep.hpp>
 
 using namespace AL::Common;
 using namespace AL::Messaging;
@@ -77,14 +78,6 @@ TEST(ServerNodeTest, multipleCreationSamePort)
 
 
 
-TEST(ServerNodeTest, nodeInfo)
-{
-  ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  sleep(1);
-  NodeInfo ni = server.getNodeInfo();
-  EXPECT_EQ(gServerName, ni.name);
-  EXPECT_EQ(gServerAddress, ni.address);
-}
 int test(const int &t)
 {
   return t + 42;
