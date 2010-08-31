@@ -19,8 +19,8 @@ namespace AL {
   namespace Common {
 
     class ServerNodeImp :
-      AL::Messaging::DefaultMessageHandler,
-      public AL::Messaging::DefaultServer {
+      AL::Messaging::MessageHandler,
+      public AL::Messaging::Server {
     public:
       ServerNodeImp();
       ServerNodeImp(const std::string& nodeName,

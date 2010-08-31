@@ -9,7 +9,7 @@
 #define COMMON_CLIENT_NODE_IMP_HPP_
 
 #include <string>
-#include <alcommon-ng/messaging/messaging.hpp> // TODO ... remove this
+#include <alcommon-ng/messaging/client.hpp>
 #include <alcommon-ng/common/detail/mutexednamelookup.hpp>
 #include <alcommon-ng/common/detail/namelookup.hpp>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
@@ -37,7 +37,7 @@ namespace AL {
       MutexedNameLookup<std::string> fServiceCache;
 
       // map from address to Client
-      NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
+      NameLookup<boost::shared_ptr<AL::Messaging::Client> > fServerClients;
 
       void xInit();
       void xCreateServerClient(const std::string& address);

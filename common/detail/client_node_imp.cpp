@@ -50,7 +50,7 @@ namespace AL {
       }
 
       // get the relevant messaging client for the node that host the service
-      NameLookup<boost::shared_ptr<DefaultClient> >::iterator it;
+      NameLookup<boost::shared_ptr<Client> >::iterator it;
       it = fServerClients.find(nodeAddress);
       if (it == fServerClients.end()) {
         // create messaging client if needed ...
@@ -74,8 +74,8 @@ namespace AL {
 
     void ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
       // TODO error handling
-      boost::shared_ptr<DefaultClient> client = 
-        boost::shared_ptr<DefaultClient>(new DefaultClient(serverAddress));
+      boost::shared_ptr<Client> client = 
+        boost::shared_ptr<Client>(new Client(serverAddress));
 
       alsdebug << "Client " << fClientName << " creating client for server " << serverAddress << std::endl;
 

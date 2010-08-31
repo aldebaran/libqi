@@ -26,7 +26,7 @@ static const int gThreadCount = 10;
 static const int gLoopCount   = 10000;
 
 
-class ServiceHandler :  public DefaultMessageHandler
+class ServiceHandler :  public MessageHandler
 {
 public:
   // to call function on current process
@@ -59,7 +59,7 @@ static const std::string gClientAddress = "tcp://127.0.0.1:5555";
 int main_server()
 {
   ServiceHandler           module2Callback;
-  boost::shared_ptr<DefaultServer >       fIppcServer  = boost::shared_ptr<DefaultServer >(new DefaultServer(gServerAddress));
+  boost::shared_ptr<Server>       fIppcServer  = boost::shared_ptr<Server>(new Server(gServerAddress));
   fIppcServer->setMessageHandler(&module2Callback);
   fIppcServer->run();
   return 0;
@@ -69,7 +69,7 @@ int main_client(int clientId)
 {
   std::stringstream sstream;
 
-  AL::Messaging::DefaultClient       client(gClientAddress);
+  AL::Messaging::Client client(gClientAddress);
   AL::Messaging::ResultDefinition res;
 
   DataPerfTimer dt;

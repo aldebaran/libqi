@@ -1,31 +1,21 @@
 /*
 ** Author(s):
-**  - Cedric GESTES      <gestes@aldebaran-robotics.com>
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_MESSAGING_ON_MESSAGE_DELEGATE_HPP_
-#define AL_MESSAGING_ON_MESSAGE_DELEGATE_HPP_
+#ifndef AL_MESSAGING_MESSAGEHANDLER_HPP
+#define AL_MESSAGING_MESSAGEHANDLER_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <alcommon-ng/messaging/generic_messagehandler.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 
 namespace AL {
   namespace Messaging {
-
-    // TODO: should we expose this interface? (maybe for very advanced use).
-    // But there may be a simpler way to works.
-
-    /** Use this interface to allow your class receiving message
-      */
-    template<typename T, typename R>
-    class MessageHandler {
-    public:
-      //return 0 if no result is expected
-      virtual boost::shared_ptr<R> onMessage(const T &def) = 0;
-    };
-
+    typedef GenericMessageHandler<AL::Messaging::CallDefinition, AL::Messaging::ResultDefinition> MessageHandler;
   }
 }
 
-#endif /* !AL_MESSAGING_ON_MESSAGE_DELEGATE_HPP_ */
+#endif  // AL_MESSAGING_MESSAGEHANDLER_HPP

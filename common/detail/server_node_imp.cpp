@@ -6,7 +6,7 @@
 */
 
 #include <alcommon-ng/common/detail/server_node_imp.hpp>
-#include <alcommon-ng/messaging/messaging.hpp> // todo avoid this
+#include <alcommon-ng/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <alcommon-ng/functor/makefunctor.hpp>
@@ -23,7 +23,7 @@ namespace AL {
       const std::string& serverAddress,
       const std::string& masterAddress) :
         fClientNode(serverName, masterAddress),
-        AL::Messaging::DefaultServer(serverAddress)
+        AL::Messaging::Server(serverAddress)
      {
       fInfo.name = serverName;
       fInfo.address = serverAddress;
