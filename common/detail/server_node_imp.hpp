@@ -9,7 +9,11 @@
 #define COMMON_SERVER_NODE_IMP_HPP_
 
 #include <string>
-#include <alcommon-ng/common/client_node.hpp>  // TODO(chris) just a client
+
+// TODO(chris) should be just a client, not a node
+#include <alcommon-ng/common/client_node.hpp>
+
+#include <alcommon-ng/messaging/messagehandler.hpp>
 #include <alcommon-ng/messaging/server.hpp>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
 #include <alcommon-ng/common/serviceinfo.hpp>
@@ -32,7 +36,6 @@ namespace AL {
 
       const NodeInfo& getNodeInfo() const;
 
-      // todo should become bind, though addLocalService is a very clear name
       void addLocalService(const ServiceInfo& service);
       const ServiceInfo& getLocalService(const std::string& name);
 
