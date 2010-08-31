@@ -99,7 +99,7 @@ namespace AL {
       callDef.args().push_back(methodHash);
 
       ResultDefinition res = call(callDef);
-      nodeAddress = res.value();
+      nodeAddress = res.value().as<std::string>();
 
       return nodeAddress;
     }
