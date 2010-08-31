@@ -11,16 +11,12 @@
 namespace AL {
   namespace Messaging {
 
-    ResultDefinition::ResultDefinition() :
-  fIsException(false), fValue(0) {
-  }
+    ResultDefinition::ResultDefinition() : fIsException(false), fValue(0) {}
 
   ResultDefinition::ResultDefinition(const VariableValue & val) :
-  fIsException(false), fValue(val) {
-  }
+  fIsException(false), fValue(val) {}
 
-  ResultDefinition::~ResultDefinition() {
-  }
+  ResultDefinition::~ResultDefinition() {}
 
   bool ResultDefinition::operator==(const ResultDefinition& rhs) const {
     return true; // FIXME
