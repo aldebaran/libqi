@@ -82,13 +82,26 @@ namespace AL {
       
       std::string hash = service.moduleName +
         std::string(".") + service.methodName;
-
+      
       fLocalServiceList.insert(hash, service);
+      xRegisterServiceWithMaster(hash);
     }
 
     const ServiceInfo& ServerNode::getLocalService(const std::string& methodHash) {
       // functors ... should be found here
       return fLocalServiceList.get(methodHash);
+    }
+
+    void ServerNode::xRegisterServiceWithMaster(const std::string& methodHash) {
+      if (fInfo.name != "master") { // ehem
+        CallDefinition callDef;
+        callDef.moduleName() = "master";
+        callDef.methodName() = "registerService";
+        callDef.args().push_back(fInfo.address);
+        callDef.args().push_back(methodHash);
+
+        fClientNode.call(callDef);
+      }
     }
   }
 }

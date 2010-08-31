@@ -41,6 +41,8 @@ namespace AL {
       // and ...
       // if would be good if we were capable of describing a mehtod
       MutexedNameLookup<ServiceInfo> fLocalServiceList;
+
+      void xRegisterServiceWithMaster(const std::string& methodHash);
     };
   }
 }

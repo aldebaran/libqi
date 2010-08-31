@@ -10,7 +10,7 @@
 
 #include <string>
 #include <alcommon-ng/common/server_node.hpp>
-#include <alcommon-ng/common/client_node.hpp>
+#include <alcommon-ng/common/mutexednamelookup.hpp>
 
 namespace AL {
   namespace Common {
@@ -18,8 +18,18 @@ namespace AL {
     class MasterNode {
     public:
       MasterNode(const std::string& masterName, const std::string& masterAddress);
+
+      void registerService(const std::string& nodeAddress, const std::string& methodHash);
+      const std::string& locateService(const std::string& methodHash);
+      const std::map<std::string, std::string>& listServices();
+
     private:
       ServerNode fServerNode;
+
+      // map from methodHash to nodeAddress
+      MutexedNameLookup<std::string> fServiceCache;
+
+
     };
   }
 }
