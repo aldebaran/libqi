@@ -51,20 +51,17 @@ std::ostream & PrintVisitor::operator () (const std::vector<unsigned char> & bin
     ostr << c << " ";
   return ostr << "}";
 }
-/*
-std::ostream & PrintVisitor::operator () (const std::vector<float> & bin) {
-  ostr << "{ ";
-  foreach (float c, bin)
-    ostr << c << " ";
-  return ostr << "}";
-}*/
 
 std::ostream & PrintVisitor::operator () (const std::vector<VariableValue> & v) {
-  return ostr << "FIXME";
+  return ostr << "FIXME vector VariableValue";
   //ostr << "{ ";
   //foreach (VariableValue value, v)
   //  ostr << value << " ";
   //return ostr << "}";
+}
+
+std::ostream & PrintVisitor::operator () (const std::map<std::string, std::string> & v) {
+  return ostr << "FIXME map std::string";
 }
 
 }

@@ -11,6 +11,7 @@
 
 #include <list>
 #include <vector>
+#include <map>
 #include <string>
 #include <iostream>
 #include <boost/variant.hpp>
@@ -34,7 +35,7 @@ namespace AL {
       std::ostream & operator () (const EmptyValue &s);
       std::ostream & operator () (const std::vector<unsigned char> &bin);
       std::ostream & operator () (const std::vector<VariableValue> &v);
-
+      std::ostream & operator () (const std::map<std::string, std::string> &v);
     private:
       std::ostream & ostr;
     };

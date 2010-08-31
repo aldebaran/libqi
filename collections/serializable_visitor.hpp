@@ -10,12 +10,6 @@
 #define LIBIPPC_SERIALIZABLEVISITOR_HPP_
 
 #include <alcommon-ng/collections/variables_list.hpp>
-
-#include <list>
-#include <vector>
-#include <string>
-
-#include <boost/variant.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/variant.hpp>
@@ -36,8 +30,8 @@ public:
   void operator() (bool b) { ar & b; }
   void operator() (std::string & s) { ar & s; }
   void operator() (std::vector<unsigned char> & bin) { ar & bin; }
-  //void operator() (std::vector<float> & bin) { ar & bin; }
   void operator() (std::vector<VariableValue> & v) { ar & v; }
+  void operator() (std::map<std::string, std::string> & v) { ar & v; }
 
 private:
   Archive & ar;

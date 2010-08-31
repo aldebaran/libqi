@@ -14,6 +14,7 @@
 
 #include <list>
 #include <vector>
+#include <map>
 #include <string>
 #include <typeinfo>
 
@@ -41,6 +42,7 @@ namespace AL {
                            std::string,
                            std::vector<unsigned char>,
                            std::vector<VariableValue>,
+                           std::map<std::string, std::string>,
                            EmptyValue
                            > ValueType;
 
@@ -52,10 +54,10 @@ namespace AL {
       VariableValue(int i)    { _value = i; }
       VariableValue(float f)  { _value = f; }
       VariableValue(double d) { _value = d; }
-      VariableValue(const std::string & s)                  { _value = s; }
-      VariableValue(const std::vector<unsigned char> & bin) { _value = bin; }
-      VariableValue(const std::vector<VariableValue> & v)   { _value = v; }
-
+      VariableValue(const std::string & s)                        { _value = s; }
+      VariableValue(const std::vector<unsigned char> & bin)       { _value = bin; }
+      VariableValue(const std::vector<VariableValue> & v)         { _value = v; }
+      VariableValue(const std::map<std::string, std::string> & v) { _value = v; }
       ~VariableValue() {}
 
       VariableValue &operator=(const VariableValue & v) {
@@ -86,6 +88,7 @@ namespace AL {
       operator std::string                () const { return as<std::string>(); }
       operator std::vector<unsigned char> () const { return as<std::vector<unsigned char> >(); }
       operator std::vector<VariableValue> () const { return as<std::vector<VariableValue> >(); }
+      operator std::map<std::string, std::string> () const { return as<std::map<std::string, std::string> >(); }
 
       /** Return the value as an VariableValue */
       const ValueType &value() const      { return _value; }
