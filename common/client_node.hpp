@@ -21,6 +21,8 @@ namespace AL {
     // can handle calls to any service known by master
     class ClientNode {
     public:
+      ClientNode();
+
       ClientNode(const std::string& clientName,
         const std::string& masterAddress);
       virtual ~ClientNode();
@@ -35,18 +37,15 @@ namespace AL {
       std::string fClientName;
       std::string fMasterAddress;
 
-      // not really needed, except when we need the node address to make a client
-      NameLookup<NodeInfo> fServerList;
+      // should be map from hash to address
+      MutexedNameLookup<std::string> fServiceCache;
 
-      // should be map from hash to nodeName
-      MutexedNameLookup<ServiceInfo> fServiceCache;
-
-      // map from nodeName to Client
+      // map from address to Client
       NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
 
       void xInit();
       void xUpdateServicesFromMaster();
-      void xCreateServerClient(const NodeInfo& serverNodeInfo);
+      void xCreateServerClient(const std::string& address);
 
       const std::string xLocateService(const std::string& methodHash);
 

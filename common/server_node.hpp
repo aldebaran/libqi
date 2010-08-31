@@ -16,10 +16,10 @@ namespace AL {
   namespace Common {
 
     class ServerNode :
-      AL::Common::ClientNode,
       AL::Messaging::DefaultMessageHandler,
       public AL::Messaging::DefaultServer {
     public:
+      ServerNode();
       ServerNode(const std::string& nodeName,
         const std::string& nodeAddress,
         const std::string& masterAddress);
@@ -35,8 +35,11 @@ namespace AL {
     private:
       // TODO Hide implementation
       NodeInfo fInfo;
-      
-      // should be map from hash to functor
+      ClientNode fClientNode;
+      // should be map from hash to functor,
+      // but we also need to be able to push these hashes to master
+      // and ...
+      // if would be good if we were capable of describing a mehtod
       MutexedNameLookup<ServiceInfo> fLocalServiceList;
     };
   }

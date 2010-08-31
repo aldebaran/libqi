@@ -16,6 +16,8 @@ namespace AL {
   using namespace Messaging;
   namespace Common {
 
+    ClientNode::ClientNode() {}
+
     ClientNode::ClientNode(
       const std::string& clientName,
       const std::string& masterAddress) : 
@@ -27,8 +29,7 @@ namespace AL {
     ClientNode::~ClientNode() {}
 
     void ClientNode::xInit() {
-      NodeInfo master("master", fMasterAddress);
-      xCreateServerClient(master);
+      xCreateServerClient(fMasterAddress);
       xUpdateServicesFromMaster();
     }
 
@@ -60,25 +61,24 @@ namespace AL {
       // get list of services
     }
 
-    void ClientNode::xCreateServerClient(const NodeInfo& serverNodeInfo) {
+    void ClientNode::xCreateServerClient(const std::string& serverAddress) {
       // TODO error handling
       boost::shared_ptr<DefaultClient> client = 
-        boost::shared_ptr<DefaultClient>(new DefaultClient(serverNodeInfo.address));
+        boost::shared_ptr<DefaultClient>(new DefaultClient(serverAddress));
 
       // TODO find existing server and update if it exists
 
       // add server client
-      fServerClients.insert(make_pair(serverNodeInfo.name, client));
-      fServerList.insert(make_pair(serverNodeInfo.name, serverNodeInfo)); // why not!
+      fServerClients.insert(make_pair(serverAddress, client));
     }
 
 
     const std::string ClientNode::xLocateService(const std::string& methodHash) {
-      std::string nodeName = fServiceCache.get(methodHash).nodeName;
+      std::string nodeAddress = fServiceCache.get(methodHash);
 
       // empty means not found
-      if (!nodeName.empty()) {
-        return nodeName;
+      if (!nodeAddress.empty()) {
+        return nodeAddress;
       }
 
       // TODO ... force master name to "master" ?
@@ -90,7 +90,7 @@ namespace AL {
         // return it
       }
 
-      return nodeName;
+      return nodeAddress;
     }
 
   }

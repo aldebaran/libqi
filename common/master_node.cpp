@@ -13,7 +13,7 @@ namespace AL {
     MasterNode::MasterNode(
       const std::string& masterName,
       const std::string& masterAddress) :
-    ServerNode(masterName, masterAddress, masterAddress) {
+          fServerNode(masterName, masterAddress, masterAddress) {
 
       // just testing ... should be a bind
       //addLocalService(ServiceInfo(masterName, masterName, "listServices"));

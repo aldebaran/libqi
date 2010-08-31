@@ -29,6 +29,8 @@ namespace AL {
       public AL::Transport::DataHandler
     {
     public:
+      Server() {}
+
       Server(const std::string &address)
       {
         _server = new AL::Transport::ZMQSimpleServer(address);

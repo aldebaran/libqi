@@ -19,16 +19,17 @@ namespace AL {
       std::cout << "Ping Baby" << std::endl;
     }
 
+    ServerNode::ServerNode() {}
+
     ServerNode::ServerNode(
       const std::string& serverName,
       const std::string& serverAddress,
       const std::string& masterAddress) :
-        AL::Common::ClientNode(serverName, masterAddress),
+        fClientNode(serverName, masterAddress),
         AL::Messaging::DefaultServer(serverAddress)
      {
       fInfo.name = serverName;
       fInfo.address = serverAddress;
-
       setMessageHandler(this);
 
       // TODO contact the master

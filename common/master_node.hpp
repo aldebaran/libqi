@@ -15,10 +15,11 @@
 namespace AL {
   namespace Common {
 
-    class MasterNode :
-      public AL::Common::ServerNode {
+    class MasterNode {
     public:
       MasterNode(const std::string& masterName, const std::string& masterAddress);
+    private:
+      ServerNode fServerNode;
     };
   }
 }
