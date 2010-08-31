@@ -1,10 +1,14 @@
+#from codegenerator import *
 /*
+** $autogen
+**
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#raw
 #ifndef I_WANT_HXX
 #error "do not include hxx in your code"
 #endif
@@ -16,26 +20,27 @@
 
 namespace AL
 {
-//HEADER
+#end raw
+#for $i in $count
 
-  template <%(TypeNameListSep)stypename C>
-  class MemberFunctor_%(count)d<%(TypeListSep)sC, void> : public Functor
+  template <$generate_typename_list($i, end = True) typename C>
+  class MemberFunctor_${i}<$generate_type_list($i, end = True) C, void> : public Functor
   {
   public:
-    typedef void(C::*FunctionType) (%(ParamList)s);
+    typedef void(C::*FunctionType) ($generate_param_list($i));
 
-    MemberFunctor_%(count)s(C *pObject, FunctionType pFunction)
+    MemberFunctor_${i}(C *pObject, FunctionType pFunction)
       : fObject(pObject),
         fFunction(pFunction) {
     }
 
-    void operator()(%(ParamList)s) {
-      (fObject->*fFunction)(%(ArgList)s);
+    void operator()($generate_param_list($i)) {
+      (fObject->*fFunction)($generate_arg_list($i));
     }
 
     void call(const AL::Messaging::ArgumentList &params, AL::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, %(count)d);
-      (fObject->*fFunction)(%(CallParamList)s);
+      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, $i);
+      (fObject->*fFunction)($generate_callparam_list($i));
     };
 
   private:
@@ -43,6 +48,8 @@ namespace AL
     FunctionType  fFunction;
   };
 
-//FOOTER
+#end for
+#raw
 }
 #endif
+#end raw

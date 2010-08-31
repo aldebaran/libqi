@@ -1,10 +1,14 @@
+#from codegenerator import *
 /*
+** $autogen
+**
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#raw
 #ifndef  AL_MESSAGING_MAKE_FUNCTOR_HPP_
 # define AL_MESSAGING_MAKE_FUNCTOR_HPP_
 
@@ -12,18 +16,21 @@
 
 namespace AL
 {
-//HEADER
+#end raw
+#for $i in $count
 
-  template <%(TypeNameListSep)stypename C, typename R>
-  Functor *makeFunctor(C *obj, R (C::*f) (%(ParamList)s)) {
-    return new MemberFunctor_%(count)d<%(TypeListSep)sC, R>(obj, f);
+  template <${generate_typename_list($i, end = True)}typename C, typename R>
+  Functor *makeFunctor(C *obj, R (C::*f) ($generate_param_list($i))) {
+    return new MemberFunctor_$i<${generate_type_list($i, end = True)}C, R>(obj, f);
   }
 
-  template <%(TypeNameListSep)stypename R>
-  Functor *makeFunctor(R (*f) (%(ParamList)s)) {
-    return new Functor_%(count)d<%(TypeListSep)sR>(f);
+  template <${generate_typename_list($i, end = True)}typename R>
+  Functor *makeFunctor(R (*f) ($generate_param_list($i))) {
+    return new Functor_$i<${generate_type_list($i, end = True)}R>(f);
   }
 
-//FOOTER
+#end for
+#raw
 }
 #endif
+#end raw
