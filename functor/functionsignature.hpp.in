@@ -1,0 +1,51 @@
+#from codegenerator import *
+/*
+** $autogen
+**
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2010 Aldebaran Robotics
+*/
+
+#raw
+#ifndef  AL_MESSAGING_FUNCTION_SIGNATURE_HPP_
+# define AL_MESSAGING_FUNCTION_SIGNATURE_HPP_
+
+#include <alcommon-ng/functor/typesignature.hpp>
+
+namespace AL
+{
+#end raw
+
+#for $i in $count
+
+  template < $generate_typename_list($i, end = True) typename C, typename R >
+  std::string functionSignature(C *obj, R (C::*f) ($generate_param_list($i))) {
+    std::string result;
+    AL::typeSignature<R>::value(result);
+    result += ":";
+    #for $j in $range($i)
+    AL::typeSignature<P$j>::value(result);
+    #end for
+    return result;
+  }
+
+  template < ${generate_typename_list($i, end = True)}typename R >
+  std::string functionSignature(R (*f) ($generate_param_list($i))) {
+    std::string result;
+    AL::typeSignature<R>::value(result);
+    result += ":";
+    #for $j in $range($i)
+    AL::typeSignature<P$j>::value(result);
+    #end for
+    return result;
+  }
+
+#end for
+
+}
+
+#raw
+#endif
+#end raw

@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-//#include <alcommon-ng/functor/functionsignature.hpp>
+#include <alcommon-ng/functor/functionsignature.hpp>
 #include <alcommon-ng/functor/typesignature.hpp>
 //#include <alcommon-ng/tools/dataperftimer.hpp>
 
@@ -56,7 +56,7 @@ struct Foo {
   void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 };
 
-TEST(TestSignature, BasicType) {
+TEST(TestSignature, BasicTypeSignature) {
   Foo          foo;
 
   std::string s;
@@ -69,70 +69,74 @@ TEST(TestSignature, BasicType) {
   typedef std::map<int,int> MapInt;
   EXPECT_EQ("{ii}", AL::typeSignatureWithCopy< MapInt >::value() );
 
-  EXPECT_EQ("b",    AL::typeSignatureWithCopy<const bool>::value());
-  EXPECT_EQ("i",    AL::typeSignatureWithCopy<const int>::value());
-  EXPECT_EQ("f",    AL::typeSignatureWithCopy<const float>::value());
-  EXPECT_EQ("d",    AL::typeSignatureWithCopy<const double>::value());
-  EXPECT_EQ("s",    AL::typeSignatureWithCopy<const std::string>::value());
-  EXPECT_EQ("[i]",  AL::typeSignatureWithCopy<const std::vector< int > >::value());
-  EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const MapInt >::value());
+  EXPECT_EQ("b#",    AL::typeSignatureWithCopy<const bool>::value());
+  EXPECT_EQ("i#",    AL::typeSignatureWithCopy<const int>::value());
+  EXPECT_EQ("f#",    AL::typeSignatureWithCopy<const float>::value());
+  EXPECT_EQ("d#",    AL::typeSignatureWithCopy<const double>::value());
+  EXPECT_EQ("s#",    AL::typeSignatureWithCopy<const std::string>::value());
+  EXPECT_EQ("[i]#",  AL::typeSignatureWithCopy<const std::vector< int > >::value());
+  EXPECT_EQ("{ii}#", AL::typeSignatureWithCopy<const MapInt >::value());
 
-  EXPECT_EQ("*b",   AL::typeSignatureWithCopy<const bool*>::value());
-  EXPECT_EQ("*i",   AL::typeSignatureWithCopy<const int*>::value());
-  EXPECT_EQ("*f",   AL::typeSignatureWithCopy<const float*>::value());
-  EXPECT_EQ("*d",   AL::typeSignatureWithCopy<const double*>::value());
-  EXPECT_EQ("*s",   AL::typeSignatureWithCopy<const std::string*>::value());
-  EXPECT_EQ("*[i]", AL::typeSignatureWithCopy<const std::vector< int >* >::value());
-  EXPECT_EQ("*{ii}",AL::typeSignatureWithCopy<const MapInt* >::value());
+  EXPECT_EQ("b#*",   AL::typeSignatureWithCopy<const bool*>::value());
+  EXPECT_EQ("i#*",   AL::typeSignatureWithCopy<const int*>::value());
+  EXPECT_EQ("f#*",   AL::typeSignatureWithCopy<const float*>::value());
+  EXPECT_EQ("d#*",   AL::typeSignatureWithCopy<const double*>::value());
+  EXPECT_EQ("s#*",   AL::typeSignatureWithCopy<const std::string*>::value());
+  EXPECT_EQ("[i]#*", AL::typeSignatureWithCopy<const std::vector< int >* >::value());
+  EXPECT_EQ("{ii}#*",AL::typeSignatureWithCopy<const MapInt* >::value());
 
-  EXPECT_EQ("b",    AL::typeSignatureWithCopy<const bool&>::value());
-  EXPECT_EQ("i",    AL::typeSignatureWithCopy<const int&>::value());
-  EXPECT_EQ("f",    AL::typeSignatureWithCopy<const float&>::value());
-  EXPECT_EQ("d",    AL::typeSignatureWithCopy<const double&>::value());
-  EXPECT_EQ("s",    AL::typeSignatureWithCopy<const std::string&>::value());
-  EXPECT_EQ("(i)",  AL::typeSignatureWithCopy<const std::vector< int >& >::value());
-  EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const MapInt& >::value());
+  EXPECT_EQ("b#&",    AL::typeSignatureWithCopy<const bool&>::value());
+  EXPECT_EQ("i#&",    AL::typeSignatureWithCopy<const int&>::value());
+  EXPECT_EQ("f#&",    AL::typeSignatureWithCopy<const float&>::value());
+  EXPECT_EQ("d#&",    AL::typeSignatureWithCopy<const double&>::value());
+  EXPECT_EQ("s#&",    AL::typeSignatureWithCopy<const std::string&>::value());
+  EXPECT_EQ("[i]#&",  AL::typeSignatureWithCopy<const std::vector< int >& >::value());
+  EXPECT_EQ("{ii}#&", AL::typeSignatureWithCopy<const MapInt& >::value());
 
 
   //ERROR
   EXPECT_EQ("UNKNOWN", AL::typeSignatureWithCopy<short>::value());
-  //  functor = AL::makeFunctor(&foo, &Foo::fun1);
-  //  EXPECT_EQ(1 , AL::callFunctor<int>(functor, 1));
-  //  functor = AL::makeFunctor(&foo, &Foo::fun2);
-  //  EXPECT_EQ(3 , AL::callFunctor<int>(functor, 1, 2));
-  //  functor = AL::makeFunctor(&foo, &Foo::fun3);
-  //  EXPECT_EQ(6 , AL::callFunctor<int>(functor, 1, 2, 3));
-  //  functor = AL::makeFunctor(&foo, &Foo::fun4);
-  //  EXPECT_EQ(10, AL::callFunctor<int>(functor, 1, 2, 3, 4));
-  //  functor = AL::makeFunctor(&foo, &Foo::fun5);
-  //  EXPECT_EQ(15, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5));
-  //  functor = AL::makeFunctor(&foo, &Foo::fun6);
-  //  EXPECT_EQ(21, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5, 6));
 }
 
 
+TEST(TestSignature, BasicVoidFunctionSignature) {
+  EXPECT_EQ("v:"      , AL::functionSignature(&vfun0));
+  EXPECT_EQ("v:i"     , AL::functionSignature(&vfun1));
+  EXPECT_EQ("v:ii"    , AL::functionSignature(&vfun2));
+  EXPECT_EQ("v:iii"   , AL::functionSignature(&vfun3));
+  EXPECT_EQ("v:iiii"  , AL::functionSignature(&vfun4));
+  EXPECT_EQ("v:iiiii" , AL::functionSignature(&vfun5));
+  EXPECT_EQ("v:iiiiii", AL::functionSignature(&vfun6));
+}
 
+TEST(TestSignature, BasicFunctionSignature) {
+  EXPECT_EQ("i:"      , AL::functionSignature(&fun0));
+  EXPECT_EQ("i:i"     , AL::functionSignature(&fun1));
+  EXPECT_EQ("i:ii"    , AL::functionSignature(&fun2));
+  EXPECT_EQ("i:iii"   , AL::functionSignature(&fun3));
+  EXPECT_EQ("i:iiii"  , AL::functionSignature(&fun4));
+  EXPECT_EQ("i:iiiii" , AL::functionSignature(&fun5));
+  EXPECT_EQ("i:iiiiii", AL::functionSignature(&fun6));
+}
 
-TEST(TestSignature, BasicSignature) {
-  Foo          foo;
+TEST(TestSignature, BasicVoidMemberSignature) {
+  Foo foo;
+  EXPECT_EQ("v:"      , AL::functionSignature(&foo, &Foo::vfun0));
+  EXPECT_EQ("v:i"     , AL::functionSignature(&foo, &Foo::vfun1));
+  EXPECT_EQ("v:ii"    , AL::functionSignature(&foo, &Foo::vfun2));
+  EXPECT_EQ("v:iii"   , AL::functionSignature(&foo, &Foo::vfun3));
+  EXPECT_EQ("v:iiii"  , AL::functionSignature(&foo, &Foo::vfun4));
+  EXPECT_EQ("v:iiiii" , AL::functionSignature(&foo, &Foo::vfun5));
+  EXPECT_EQ("v:iiiiii", AL::functionSignature(&foo, &Foo::vfun6));
+}
 
-  std::string val;
-  //std::cout << AL::typeSignatureWithCopy<int>::value(val) << std::endl;
-
-//  std::plus<int> add;
-//  assert(invoke(add,make_vector(1,1)) == 2);
-
-//  EXPECT_EQ("v:p0", AL::functionSignature(&vfun1));
-//  functor = AL::makeFunctor(&foo, &Foo::fun1);
-//  EXPECT_EQ(1 , AL::callFunctor<int>(functor, 1));
-//  functor = AL::makeFunctor(&foo, &Foo::fun2);
-//  EXPECT_EQ(3 , AL::callFunctor<int>(functor, 1, 2));
-//  functor = AL::makeFunctor(&foo, &Foo::fun3);
-//  EXPECT_EQ(6 , AL::callFunctor<int>(functor, 1, 2, 3));
-//  functor = AL::makeFunctor(&foo, &Foo::fun4);
-//  EXPECT_EQ(10, AL::callFunctor<int>(functor, 1, 2, 3, 4));
-//  functor = AL::makeFunctor(&foo, &Foo::fun5);
-//  EXPECT_EQ(15, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5));
-//  functor = AL::makeFunctor(&foo, &Foo::fun6);
-//  EXPECT_EQ(21, AL::callFunctor<int>(functor, 1, 2, 3, 4, 5, 6));
+TEST(TestSignature, BasicMemberSignature) {
+  Foo foo;
+  EXPECT_EQ("i:"      , AL::functionSignature(&foo, &Foo::fun0));
+  EXPECT_EQ("i:i"     , AL::functionSignature(&foo, &Foo::fun1));
+  EXPECT_EQ("i:ii"    , AL::functionSignature(&foo, &Foo::fun2));
+  EXPECT_EQ("i:iii"   , AL::functionSignature(&foo, &Foo::fun3));
+  EXPECT_EQ("i:iiii"  , AL::functionSignature(&foo, &Foo::fun4));
+  EXPECT_EQ("i:iiiii" , AL::functionSignature(&foo, &Foo::fun5));
+  EXPECT_EQ("i:iiiiii", AL::functionSignature(&foo, &Foo::fun6));
 }
