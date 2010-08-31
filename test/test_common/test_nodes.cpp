@@ -18,5 +18,13 @@ TEST(Nodes, NormalUsage)
   ServerNode server(gServerName, gServerAddress, gMasterAddress);
   ClientNode client("client", gMasterAddress);
 
-  ResultDefinition result = client.call(CallDefinition("master", "listServices"));
+  std::cout << " Initialized " << std::endl;
+  std::cout << " Calling master.listServices " << std::endl;
+  ResultDefinition result1 = client.call(CallDefinition("master", "listServices"));
+
+  std::cout << " Calling server.ping " << std::endl;
+  ResultDefinition result2 = client.call(CallDefinition("server", "ping"));
+
+  std::cout << " Calling master.gobledigook " << std::endl;
+  ResultDefinition result3 = client.call(CallDefinition("master", "gobledigook"));
 }
