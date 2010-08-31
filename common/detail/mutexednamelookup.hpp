@@ -9,6 +9,7 @@
 #define COMMON_MUTEXEDNAMELOOKUP_HPP_
 
 #include <map>
+#include <string>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -22,9 +23,9 @@ namespace AL {
       T fInvalidValue;
       boost::mutex fMutex;
     public:
-      MutexedNameLookup() {};
+      MutexedNameLookup() {}
 
-      void replace(std::map<std::string, T>& other) {
+      void replace(const std::map<std::string, T>& other) {
         boost::mutex::scoped_lock lock(fMutex);
         fMap = other;
       }
@@ -56,8 +57,6 @@ namespace AL {
         boost::mutex::scoped_lock lock(fMutex);
         fMap.erase(key);
       }
-
-
     };
   }
 }

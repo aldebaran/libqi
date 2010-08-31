@@ -19,7 +19,7 @@ namespace AL {
 
     class MasterNode {
     public:
-      MasterNode(const std::string& masterAddress);
+      explicit MasterNode(const std::string& masterAddress);
 
     private:
       boost::shared_ptr<MasterNodeImp> fImp;

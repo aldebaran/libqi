@@ -9,15 +9,16 @@
 #define COMMON_NAMELOOKUP_H_
 
 #include <map>
+#include <string>
 
 namespace AL {
   namespace Common {
 
     // Use std::map for the moment. Future: HashMap or dense_hash_map
     template<typename T>
-    class NameLookup : public std::map<std::string, T> { 
+    class NameLookup : public std::map<std::string, T> {
     public:
-      NameLookup() : std::map<std::string, T>() {};
+      NameLookup() : std::map<std::string, T>() {}
     };
   }  // namespace Common
 }  // namespace AL

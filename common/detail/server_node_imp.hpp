@@ -9,8 +9,8 @@
 #define COMMON_SERVER_NODE_IMP_HPP_
 
 #include <string>
-#include <alcommon-ng/common/client_node.hpp> // TODO just a client
-#include <alcommon-ng/messaging/messaging.hpp> // TODO avoid this
+#include <alcommon-ng/common/client_node.hpp>  // TODO(chris) just a client
+#include <alcommon-ng/messaging/server.hpp>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
 #include <alcommon-ng/common/serviceinfo.hpp>
 #include <alcommon-ng/common/detail/mutexednamelookup.hpp>
@@ -27,7 +27,8 @@ namespace AL {
         const std::string& nodeAddress,
         const std::string& masterAddress);
 
-      boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition& def);
+      boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(
+        const AL::Messaging::CallDefinition& def);
 
       const NodeInfo& getNodeInfo() const;
 
@@ -38,8 +39,9 @@ namespace AL {
     private:
       NodeInfo fInfo;
 
-      // in fact we only need a single messaging client for talking with the master
-      // TODO replace with messaging client.
+      // in fact we only need a single messaging client for talking
+      // with the master
+      // TODO(chris) replace with messaging client.
       ClientNode fClientNode;
 
       // should be map from hash to functor,

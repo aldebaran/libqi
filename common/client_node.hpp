@@ -32,7 +32,6 @@ namespace AL {
         const AL::Messaging::CallDefinition& callDef);
 
     private:
-      
       boost::shared_ptr<ClientNodeImp> fImp;
     };
   }

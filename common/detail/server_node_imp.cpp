@@ -6,6 +6,7 @@
 */
 
 #include <alcommon-ng/common/detail/server_node_imp.hpp>
+#include <string>
 #include <alcommon-ng/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -49,11 +50,12 @@ namespace AL {
       if (si.nodeName == fInfo.name) {
         alsdebug << "  Good: Method is for this node";
       } else {
-
         alsdebug << "  Error: Method is for node: " << si.nodeName;
       }
 
-      boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(new ResultDefinition());
+      boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(
+        new ResultDefinition());
+
       si.functor->call(def.args(), res->value());
       return res;
     }
@@ -66,21 +68,22 @@ namespace AL {
 
       // We should be making a hash here, related to
       // "modulename.methodname" + typeid(arg0).name() ... typeid(argN).name()
-      
+
       std::string hash = service.moduleName +
         std::string(".") + service.methodName;
-      
+
       fLocalServiceList.insert(hash, service);
       xRegisterServiceWithMaster(hash);
     }
 
-    const ServiceInfo& ServerNodeImp::getLocalService(const std::string& methodHash) {
+    const ServiceInfo& ServerNodeImp::getLocalService(
+      const std::string& methodHash) {
       // functors ... should be found here
       return fLocalServiceList.get(methodHash);
     }
 
     void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodHash) {
-      if (fInfo.name != "master") { // ehem
+      if (fInfo.name != "master") {  // ehem
         CallDefinition callDef;
         callDef.moduleName() = "master";
         callDef.methodName() = "registerService";

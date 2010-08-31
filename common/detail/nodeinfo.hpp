@@ -13,7 +13,6 @@
 namespace AL {
   namespace Common {
     struct NodeInfo {
-
       std::string name;
       std::string address;
 

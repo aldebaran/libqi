@@ -5,13 +5,14 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_
-# define   	_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_
+#ifndef _AL_MESSAGING_TRANSPORT_SERVER_HPP_
+# define _AL_MESSAGING_TRANSPORT_SERVER_HPP_
 
-# include <althread/altask.h>
-# include <alcommon-ng/transport/common/threadable.hpp>
-# include <alcommon-ng/transport/common/server_response_delegate.hpp>
-# include <alcommon-ng/transport/common/datahandler.hpp>
+#include <althread/altask.h>
+#include <string>
+#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/datahandler.hpp>
 
 namespace AL {
   namespace Transport {
@@ -19,10 +20,9 @@ namespace AL {
     class Server : public Threadable,
       public internal::ServerResponseDelegate {
     public:
-      Server(const std::string &_serverAddress)
+      explicit Server(const std::string &_serverAddress)
         : _serverAddress(_serverAddress),
-          _dataHandler(0)
-      {};
+          _dataHandler(0) {}
       virtual ~Server() {}
 
       virtual void setDataHandler(DataHandler* callback) {
@@ -39,4 +39,4 @@ namespace AL {
   }
 }
 
-#endif	    /* !_AL_MESSAGING_TRANSPORT_SERVERBASE_HPP_ */
+#endif  // _AL_MESSAGING_TRANSPORT_SERVER_HPP_

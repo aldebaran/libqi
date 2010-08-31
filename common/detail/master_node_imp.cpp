@@ -6,6 +6,8 @@
 */
 
 #include <alcommon-ng/common/detail/master_node_imp.hpp>
+#include <map>
+#include <string>
 #include <alcommon-ng/functor/makefunctor.hpp>
 #include <allog/allog.h>
 
@@ -28,7 +30,8 @@ namespace AL {
       registerService(fNodeInfo.address, "master.listServices");
     }
 
-    void MasterNodeImp::registerService(const std::string& nodeAddress, const std::string& methodHash) {
+    void MasterNodeImp::registerService(
+      const std::string& nodeAddress, const std::string& methodHash) {
       fServiceCache.insert(methodHash, nodeAddress);
     }
 

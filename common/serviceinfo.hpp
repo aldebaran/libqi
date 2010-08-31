@@ -14,12 +14,11 @@
 namespace AL {
   namespace Common {
     struct ServiceInfo {
-
       std::string  nodeName;  // or ID?
       std::string  moduleName;
       std::string  methodName;
       Functor     *functor;
-      // TODO functor / args / ret / hash
+      // TODO(cedric) args? / ret / hash
 
       ServiceInfo() {}
 

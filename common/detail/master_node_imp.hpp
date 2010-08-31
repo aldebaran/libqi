@@ -9,8 +9,9 @@
 #define AL_COMMON_MASTER_NODE_IMP_HPP_
 
 #include <string>
+#include <map>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
-#include <alcommon-ng/common/server_node.hpp> // could use imp
+#include <alcommon-ng/common/server_node.hpp>  // could use imp
 #include <alcommon-ng/common/detail/mutexednamelookup.hpp>
 
 namespace AL {
@@ -18,10 +19,13 @@ namespace AL {
 
     class MasterNodeImp {
     public:
-      MasterNodeImp(const std::string& masterAddress);
+      explicit MasterNodeImp(const std::string& masterAddress);
 
-      void registerService(const std::string& nodeAddress, const std::string& methodHash);
+      void registerService(const std::string& nodeAddress,
+        const std::string& methodHash);
+
       const std::string& locateService(const std::string& methodHash);
+
       const std::map<std::string, std::string>& listServices();
 
     private:

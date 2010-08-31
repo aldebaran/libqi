@@ -49,7 +49,7 @@ namespace AL {
     /** The generic serializable type to use to transmit parameters. */
     class VariableValue {
     public:
-      VariableValue ()        { _value = EmptyValue(); }
+      VariableValue()         { _value = EmptyValue(); }
       VariableValue(bool b)   { _value = b; }
       VariableValue(int i)    { _value = i; }
       VariableValue(float f)  { _value = f; }
@@ -70,13 +70,13 @@ namespace AL {
       }
 
       template <typename T>
-      T &as () {
+      T &as() {
         T &ret = boost::get<T> (_value);
         return ret;
       }
 
       template <typename T>
-      const T &as () const {
+      const T &as() const {
         const T &ret = boost::get<T> (_value);
         return ret;
       }

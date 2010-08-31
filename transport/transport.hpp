@@ -5,11 +5,13 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+
+// THIS FILE LOOKS LIKE A DYING RELIC ..... DESTROY ?
+
 #ifndef   	_AL_MESSAGING_TRANSPORT_HPP_
 # define   	_AL_MESSAGING_TRANSPORT_HPP_
 
 #include <alcommon-ng/config.hpp>
-
 #include <alcommon-ng/transport/common/common.hpp>
 
 #ifdef WITH_SHM
