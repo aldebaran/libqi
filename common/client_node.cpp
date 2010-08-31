@@ -32,10 +32,7 @@ namespace AL {
       xUpdateServicesFromMaster();
     }
 
-    ResultDefinition ClientNode::call(const CallDefinition& callDef) {
-        
-        // todo lookup in services
-        
+    ResultDefinition ClientNode::call(const CallDefinition& callDef) {        
         // todo make a hash from the calldef
         std::string hash = callDef.moduleName() + "." + callDef.methodName();
         std::string nodeName = xLocateService(hash);

@@ -51,13 +51,18 @@ namespace AL {
       // handle message
       std::cout << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName() << std::endl;
 
-      std::string key = def.moduleName() + std::string(".") + def.methodName();
-      const ServiceInfo& si = getLocalService(key);
+      std::string hash = def.moduleName() + std::string(".") + def.methodName();
+      const ServiceInfo& si = getLocalService(hash);
+      if (si.nodeName.empty()) {
+        // method not found
+        std::cout << "  Error: Method not found " << hash << std::endl;
+      }
+
       if (si.nodeName == fInfo.name) {
-        std::cout << "  Method is for this node " << std::endl;
+        std::cout << "  Good: Method is for this node " << std::endl;
       } else {
 
-        std::cout << "  Method is for node: " << si.nodeName << std::endl;
+        std::cout << "  Error: Method is for node: " << si.nodeName << std::endl;
       }
 
       boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(new ResultDefinition());
@@ -71,10 +76,13 @@ namespace AL {
 
     void ServerNode::addLocalService(const ServiceInfo& service) {
 
-      std::string key = service.moduleName +
+      // We should be making a hash here, related to
+      // "modulename.methodname" + typeid(arg0).name() ... typeid(argN).name()
+      
+      std::string hash = service.moduleName +
         std::string(".") + service.methodName;
 
-      fLocalServiceList.insert(key, service);
+      fLocalServiceList.insert(hash, service);
     }
 
     const ServiceInfo& ServerNode::getLocalService(const std::string& methodHash) {

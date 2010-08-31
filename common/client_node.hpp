@@ -35,8 +35,13 @@ namespace AL {
       std::string fClientName;
       std::string fMasterAddress;
 
+      // not really needed, except when we need the node address to make a client
       NameLookup<NodeInfo> fServerList;
+
+      // should be map from hash to nodeName
       MutexedNameLookup<ServiceInfo> fServiceCache;
+
+      // map from nodeName to Client
       NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
 
       void xInit();

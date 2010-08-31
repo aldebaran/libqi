@@ -35,7 +35,8 @@ namespace AL {
     private:
       // TODO Hide implementation
       NodeInfo fInfo;
-      // should become functors
+      
+      // should be map from hash to functor
       MutexedNameLookup<ServiceInfo> fLocalServiceList;
     };
   }
