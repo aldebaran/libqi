@@ -17,6 +17,7 @@ add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 create_config_h("config.hpp.in" "alcommon-ng/config.hpp")
 
 file(GLOB COMMON_SRC               common/*.cpp common/*.h*)
+file(GLOB COMMON_DETAIL_SRC        common/detail/*.cpp common/detail/*.h*)
 file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
 file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
@@ -38,6 +39,7 @@ file(GLOB TRANSPORT_THRIFT_SRC            transport/thrift/*.cpp transport/thrif
 file(GLOB FUNCTOR_SRC                     functor/*.cpp functor/*.h*)
 
 source_group( Common                 FILES ${COMMON_SRC})
+source_group( Common\\Detail         FILES ${COMMON_DETAIL_SRC})
 source_group( Messaging              FILES ${MESSAGING_SRC})
 source_group( Collections            FILES ${COLLECTIONS_SRC})
 source_group( Functor                FILES ${FUNCTOR_SRC})
@@ -60,6 +62,7 @@ source_group( Headers FILES ${HEADERS})
 
 set(SRC
     ${COMMON_SRC}
+    ${COMMON_DETAIL_SRC}
     ${MESSAGING_SRC}
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}

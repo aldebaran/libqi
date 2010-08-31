@@ -9,43 +9,31 @@
 #define COMMON_CLIENT_NODE_HPP_
 
 #include <string>
-#include <alcommon-ng/messaging/messaging.hpp>
-#include <alcommon-ng/common/mutexednamelookup.hpp>
-#include <alcommon-ng/common/namelookup.hpp>
-#include <alcommon-ng/common/nodeinfo.hpp>
-#include <alcommon-ng/common/serviceinfo.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace AL {
   namespace Common {
 
-    // can handle calls to any service known by master
+    // forward declared implementation
+    class ClientNodeImp;
+
     class ClientNode {
     public:
       ClientNode();
 
       ClientNode(const std::string& clientName,
         const std::string& masterAddress);
+
       virtual ~ClientNode();
 
-      // TODO use templated real calls ...
       AL::Messaging::ResultDefinition call(
         const AL::Messaging::CallDefinition& callDef);
 
-
     private:
-      // TODO Hide implementation
-      std::string fClientName;
-      std::string fMasterAddress;
-
-      // should be map from hash to address
-      MutexedNameLookup<std::string> fServiceCache;
-
-      // map from address to Client
-      NameLookup<boost::shared_ptr<AL::Messaging::DefaultClient> > fServerClients;
-
-      void xInit();
-      void xCreateServerClient(const std::string& address);
-      const std::string xLocateService(const std::string& methodHash);
+      
+      boost::shared_ptr<ClientNodeImp> fImp;
     };
   }
 }
