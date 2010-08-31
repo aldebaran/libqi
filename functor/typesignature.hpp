@@ -117,7 +117,7 @@ namespace AL {
     static std::string &value(std::string &valueRef) {
       typeSignature<T>::value(valueRef);
       valueRef += "&";
-      return valueRef
+      return valueRef;
     }
   };
 

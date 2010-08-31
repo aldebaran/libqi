@@ -66,7 +66,8 @@ TEST(TestSignature, BasicType) {
   EXPECT_EQ("d",    AL::typeSignatureWithCopy<double>::value());
   EXPECT_EQ("s",    AL::typeSignatureWithCopy<std::string>::value());
   EXPECT_EQ("[i]",  AL::typeSignatureWithCopy< std::vector<int> >::value());
-  //EXPECT_EQ("{ii}", AL::typeSignatureWithCopy< std::map<int, int> >::value());
+  typedef std::map<int,int> MapInt;
+  EXPECT_EQ("{ii}", AL::typeSignatureWithCopy< MapInt >::value() );
 
   EXPECT_EQ("b",    AL::typeSignatureWithCopy<const bool>::value());
   EXPECT_EQ("i",    AL::typeSignatureWithCopy<const int>::value());
@@ -74,7 +75,7 @@ TEST(TestSignature, BasicType) {
   EXPECT_EQ("d",    AL::typeSignatureWithCopy<const double>::value());
   EXPECT_EQ("s",    AL::typeSignatureWithCopy<const std::string>::value());
   EXPECT_EQ("[i]",  AL::typeSignatureWithCopy<const std::vector< int > >::value());
-  //EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const std::map< int, int > >::value());
+  EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const MapInt >::value());
 
   EXPECT_EQ("*b",   AL::typeSignatureWithCopy<const bool*>::value());
   EXPECT_EQ("*i",   AL::typeSignatureWithCopy<const int*>::value());
@@ -82,7 +83,7 @@ TEST(TestSignature, BasicType) {
   EXPECT_EQ("*d",   AL::typeSignatureWithCopy<const double*>::value());
   EXPECT_EQ("*s",   AL::typeSignatureWithCopy<const std::string*>::value());
   EXPECT_EQ("*[i]", AL::typeSignatureWithCopy<const std::vector< int >* >::value());
-  //EXPECT_EQ("*{ii}",AL::typeSignatureWithCopy<const std::map< int, int >* >::value());
+  EXPECT_EQ("*{ii}",AL::typeSignatureWithCopy<const MapInt* >::value());
 
   EXPECT_EQ("b",    AL::typeSignatureWithCopy<const bool&>::value());
   EXPECT_EQ("i",    AL::typeSignatureWithCopy<const int&>::value());
@@ -90,7 +91,7 @@ TEST(TestSignature, BasicType) {
   EXPECT_EQ("d",    AL::typeSignatureWithCopy<const double&>::value());
   EXPECT_EQ("s",    AL::typeSignatureWithCopy<const std::string&>::value());
   EXPECT_EQ("(i)",  AL::typeSignatureWithCopy<const std::vector< int >& >::value());
-  //EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const std::map< int, int >& >::value());
+  EXPECT_EQ("{ii}", AL::typeSignatureWithCopy<const MapInt& >::value());
 
 
   //ERROR
