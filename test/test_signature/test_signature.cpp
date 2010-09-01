@@ -127,7 +127,6 @@ TEST(TestSignature, BasicFunctionSignature) {
 }
 
 TEST(TestSignature, BasicVoidMemberSignature) {
-  Foo foo;
   EXPECT_EQ("v:"      , AL::functionSignature(&Foo::vfun0));
   EXPECT_EQ("v:i"     , AL::functionSignature(&Foo::vfun1));
   EXPECT_EQ("v:ii"    , AL::functionSignature(&Foo::vfun2));
@@ -138,7 +137,6 @@ TEST(TestSignature, BasicVoidMemberSignature) {
 }
 
 TEST(TestSignature, BasicMemberSignature) {
-  Foo foo;
   EXPECT_EQ("i:"      , AL::functionSignature(&Foo::fun0));
   EXPECT_EQ("i:i"     , AL::functionSignature(&Foo::fun1));
   EXPECT_EQ("i:ii"    , AL::functionSignature(&Foo::fun2));
