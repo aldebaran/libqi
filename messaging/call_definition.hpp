@@ -26,33 +26,25 @@ namespace AL {
     public:
       CallDefinition ();
 
-      CallDefinition(const std::string& moduleName,
-        const std::string& methodName) {
-        fModuleName = moduleName;
+      CallDefinition(const std::string& methodName) {
         fMethodName = methodName;
       }
 
       template<typename T>
-      CallDefinition(const std::string& moduleName,
-        const std::string& methodName, const T& arg0) {
-        fModuleName = moduleName;
-        fMethodName = methodName;
-          fArgs.push_back(arg0);
+      CallDefinition(const std::string& methodName, const T& arg0) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
       }
       // ... more templates ...
 
       ~CallDefinition() {}
       bool operator==(const CallDefinition& rhs) const;
 
-      const std::string & methodName () const;
-      const std::string & moduleName () const;
+      const std::string & methodName() const;
       std::string & methodName();
-      std::string & moduleName();
-      const std::vector<VariableValue>& args() const;
-      std::vector<VariableValue>& args();
+      const ArgumentList& args() const;
+      ArgumentList& args();
 
     private:
-      std::string  fModuleName;
       std::string  fMethodName;
       ArgumentList fArgs;
     };

@@ -20,7 +20,6 @@ namespace boost {
     void serialize(Archive & ar,
       AL::Messaging::CallDefinition & callDef,
       const unsigned int version) {
-        ar & boost::serialization::make_nvp("module", callDef.moduleName());
         ar & boost::serialization::make_nvp("method", callDef.methodName());
         ar & boost::serialization::make_nvp("list",   callDef.args());
     }

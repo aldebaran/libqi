@@ -15,8 +15,7 @@ namespace AL {
 
     bool CallDefinition::operator==(const CallDefinition& rhs) const {
       return (
-        (fMethodName == rhs.methodName()) &&
-        (fModuleName == rhs.moduleName())
+        (fMethodName == rhs.methodName())
         /* FIXME(ckilner) ambiguous && (list == rhs.getParameters()) */
         );
     }
@@ -25,20 +24,12 @@ namespace AL {
       return fMethodName;
     }
 
-    const std::string & CallDefinition::moduleName() const {
-      return fModuleName;
-    }
-
     const std::vector<VariableValue> & CallDefinition::args() const {
       return fArgs;
     }
 
     std::string & CallDefinition::methodName() {
       return fMethodName;
-    }
-
-    std::string & CallDefinition::moduleName() {
-      return fModuleName;
     }
 
     std::vector<VariableValue> & CallDefinition::args() {
