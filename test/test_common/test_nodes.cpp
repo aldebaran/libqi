@@ -19,15 +19,15 @@ TEST(Nodes, NormalUsage)
 {
   std::cout << "TEST: Initialized " << std::endl;
   std::cout << "TEST: Calling master.listServices " << std::endl;
-  ResultDefinition result1 = gClient.call(CallDefinition("master", "listServices"));
+  ReturnValue result1 = gClient.call("master.listServices");
 
   std::cout << "TEST: Calling server.ping " << std::endl;
-  ResultDefinition result2 = gClient.call(CallDefinition("server", "ping"));
+  ReturnValue result2 = gClient.call("server.ping");
 
   std::cout << "TEST: Calling master.gobledigook " << std::endl;
-  ResultDefinition result3 = gClient.call(CallDefinition("master", "gobledigook"));
+  ReturnValue result3 = gClient.call("master.gobledigook");
 
   for(int i=0; i<100; i++) {
-    ResultDefinition result4 = gClient.call(CallDefinition("master", "listServices"));
+    ReturnValue result4 = gClient.call("master.listServices");
   }
 }

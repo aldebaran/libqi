@@ -32,12 +32,31 @@ namespace AL {
       fServiceCache.insert("master.locateService", fMasterAddress);
     }
 
-    ResultDefinition ClientNodeImp::call(
+    void ClientNodeImp::call(const std::string& methodName,
+      AL::Messaging::ReturnValue& result) {
+      CallDefinition def;
+      def.methodName() = methodName;
+      ResultDefinition res = xCall(def);
+      result = res.value(); // copy crazy
+    }
+
+    void ClientNodeImp::call(const std::string& methodName,
+        const AL::Messaging::ArgumentList& params,
+        AL::Messaging::ReturnValue& result) {
+      CallDefinition def;
+      def.methodName() = methodName;
+      def.args() = params;
+
+      ResultDefinition res = xCall(def);
+      result = res.value(); // copy crazy
+    }
+
+    ResultDefinition ClientNodeImp::xCall(
       const CallDefinition& callDef) {
       // todo make a hash from the calldef
       ResultDefinition result;
 
-      std::string hash = callDef.moduleName() + "." + callDef.methodName();
+      std::string hash = callDef.methodName();
       std::string nodeAddress = xLocateService(hash);
 
       if (nodeAddress.empty()) {
@@ -97,13 +116,11 @@ namespace AL {
 
       alsdebug << "Client " << fClientName <<
         " asking master to locate service " << methodHash;
-      CallDefinition callDef;
-      callDef.moduleName() = "master";
-      callDef.methodName() = "locateService";
-      callDef.args().push_back(methodHash);
-
-      ResultDefinition res = call(callDef);
-      nodeAddress = res.value().as<std::string>();
+      ArgumentList args;
+      args.push_back(methodHash);
+      ReturnValue ret;
+      call("master.locateService", args, ret);
+      nodeAddress = ret.as<std::string>();
 
       return nodeAddress;
     }

@@ -25,8 +25,13 @@ namespace AL {
       ClientNodeImp(const std::string& clientName,
         const std::string& masterAddress);
 
-      AL::Messaging::ResultDefinition call(
-        const AL::Messaging::CallDefinition& callDef);
+      // hmmm should become templated
+      void call(const std::string& methodName,
+        AL::Messaging::ReturnValue& result);
+
+      void call(const std::string& methodName,
+        const AL::Messaging::ArgumentList& params,
+        AL::Messaging::ReturnValue& result);
 
       virtual ~ClientNodeImp();
 
@@ -42,6 +47,8 @@ namespace AL {
       void xInit();
       void xCreateServerClient(const std::string& address);
       const std::string xLocateService(const std::string& methodHash);
+      AL::Messaging::ResultDefinition xCall(
+        const AL::Messaging::CallDefinition& callDef);
     };
   }
 }

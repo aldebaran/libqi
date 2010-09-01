@@ -9,8 +9,7 @@
 #define COMMON_CLIENT_NODE_HPP_
 
 #include <string>
-#include <alcommon-ng/messaging/call_definition.hpp>
-#include <alcommon-ng/messaging/result_definition.hpp>
+#include <alcommon-ng/collections/variables_list.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace AL {
@@ -28,8 +27,17 @@ namespace AL {
 
       virtual ~ClientNode();
 
-      AL::Messaging::ResultDefinition call(
-        const AL::Messaging::CallDefinition& callDef);
+      void call(const std::string& methodName,
+        const AL::Messaging::ArgumentList& params,
+        AL::Messaging::ReturnValue& result);
+
+      void call(const std::string& methodName,
+        AL::Messaging::ReturnValue& result);
+
+      AL::Messaging::ReturnValue call(const std::string& methodName,
+        const AL::Messaging::ArgumentList& params);
+
+      AL::Messaging::ReturnValue call(const std::string& methodName);
 
     private:
       boost::shared_ptr<ClientNodeImp> fImp;

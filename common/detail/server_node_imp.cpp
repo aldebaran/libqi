@@ -36,9 +36,9 @@ namespace AL {
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> ServerNodeImp::onMessage(const AL::Messaging::CallDefinition &def) {
       // handle message
-      alsdebug << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName();
+      alsdebug << "  Server: " << fInfo.name << ", received message: " << def.methodName();
 
-      std::string hash = def.moduleName() + std::string(".") + def.methodName();
+      std::string hash = def.methodName();
       const ServiceInfo& si = xGetService(hash);
       if (si.methodName.empty()) {
         // method not found
@@ -76,8 +76,7 @@ namespace AL {
     void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodHash) {
       if (fInfo.name != "master") {  // ehem
         CallDefinition callDef;
-        callDef.moduleName() = "master";
-        callDef.methodName() = "registerService";
+        callDef.methodName() = "master.registerService";
         callDef.args().push_back(fInfo.address);
         callDef.args().push_back(methodHash);
 
