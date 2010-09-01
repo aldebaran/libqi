@@ -60,9 +60,10 @@ namespace AL {
     ResultDefinition ClientNodeImp::xCall(
       const CallDefinition& callDef) {
       // todo make a hash from the calldef
-      ResultDefinition result;
+      
       if (! initOK) {
         // should we have killed the client?
+        ResultDefinition result;
         return result;
       }
 
@@ -74,6 +75,7 @@ namespace AL {
         // throw?
         alserror << "Error Client: " << fClientName <<
           " could not find Server for message " << hash;
+        ResultDefinition result;
         return result;
       }
 
@@ -89,16 +91,11 @@ namespace AL {
           alserror << "Client: " << fClientName <<
             ", could not find Server for message " << hash;
           // throw?
+          ResultDefinition result;
           return result;
         }
       }
-
-      // call
-      alsdebug << "Client: " << fClientName <<
-        ", found server for message " << hash;
-      result = (it->second)->send(callDef);
-      alsdebug << "  Client: " << fClientName << ", received result";
-      return result;
+      return (it->second)->send(callDef);
     }
 
     bool ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
@@ -128,8 +125,6 @@ namespace AL {
         return nodeAddress;
       }
 
-      alsdebug << "Client " << fClientName <<
-        " asking master to locate service " << methodHash;
       ArgumentList args;
       args.push_back(methodHash);
       ReturnValue ret;

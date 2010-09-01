@@ -60,7 +60,7 @@ namespace AL {
       size_t          moresz   = sizeof(more);
       zmq::message_t *identity = new zmq::message_t();
 
-      alsdebug << "ZMQ: waiting for a message";
+      // alsdebug << "ZMQ: waiting for a message";
       poll();
       boost::mutex::scoped_lock lock(socketMutex);
       {
@@ -69,7 +69,7 @@ namespace AL {
         zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
         //first msg we want an identity
         assert(more);
-        alsdebug << "ZMQ: identity received";
+        // alsdebug << "ZMQ: identity received";
 
         //TODO mettre une condition de sortie
         while (true)
@@ -79,10 +79,10 @@ namespace AL {
           zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
           if (!more)
           {
-            alsdebug << "ZMQ: Receive complete, msg size:" << msg.size();
+            // alsdebug << "ZMQ: Receive complete, msg size:" << msg.size();
             break;
           }
-          alsdebug << "ZMQ: Receive(need more): " << msg.size();
+          // alsdebug << "ZMQ: Receive(need more): " << msg.size();
         }
       }
       return identity;
@@ -91,11 +91,11 @@ namespace AL {
 
     //use only the number of thread we need
      void ZMQServer::run() {
-       alsdebug << "Start ZMQServer on: " << _serverAddress;
+       // alsdebug << "Start ZMQServer on: " << _serverAddress;
        zsocket.bind(_serverAddress.c_str());
 
        #ifdef ZMQ_FULL_ASYNC
-       alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
+       // alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
        #else
        alsdebug << "ZMQ: entering the loop (XREP)";
        #endif
@@ -126,7 +126,7 @@ namespace AL {
 
        assert(identity);
 
-       alsdebug << "ZMQ: send response";
+       // alsdebug << "ZMQ: send response";
 
        boost::mutex::scoped_lock lock(socketMutex);
        {
@@ -138,7 +138,7 @@ namespace AL {
          assert(rc > 0);
 
          //send the message
-         alsdebug << "ZMQ: response size: " << msg.size();
+         // alsdebug << "ZMQ: response size: " << msg.size();
          rc = zsocket.send(msg);
          assert(rc > 0);
        }

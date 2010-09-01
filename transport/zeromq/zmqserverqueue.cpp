@@ -50,7 +50,7 @@ namespace AL {
       zmq::socket_t    s(zserv->zctx, ZMQ_REP);
 
       s.connect(gWorkersAddress);
-      alsdebug << "ZMQ:entering worker loop";
+      // alsdebug << "ZMQ:entering worker loop";
       while (true) {
         rc = s.recv(&msg);
         assert(rc > 0);
@@ -61,17 +61,17 @@ namespace AL {
     }
 
     void ZMQServerQueue::run() {
-      alsdebug << "Start ZMQServer on: " << _serverAddress;
+      // alsdebug << "Start ZMQServer on: " << _serverAddress;
       zsocket.bind(_serverAddress.c_str());
       zsocketworkers.bind(gWorkersAddress);
 
-      alsdebug << "ZMQ workers binded";
+      // alsdebug << "ZMQ workers binded";
 
       pthread_t worker[gWorkersThreadsCount];
       for (int i = 0; i < gWorkersThreadsCount; ++i)
         pthread_create(&worker[i], NULL, worker_routine, (void*) this);
       //sleep(2);
-      alsdebug << "ZMQ: start queue_device";
+      // alsdebug << "ZMQ: start queue_device";
       //zmq::device(ZMQ_QUEUE, workers, zsocket);
       zmq::device(ZMQ_QUEUE, zsocket, zsocketworkers);
       std::cout << "quit server" << std::endl;
@@ -86,7 +86,7 @@ namespace AL {
       zmq::socket_t     *sock = static_cast<zmq::socket_t *>(data);
 
       assert(data);
-      alsdebug << "ZMQ: send response";
+      // alsdebug << "ZMQ: send response";
       rc = sock->send(msg);
       assert(rc > 0);
     }

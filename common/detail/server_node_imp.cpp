@@ -43,13 +43,11 @@ namespace AL {
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> ServerNodeImp::onMessage(const AL::Messaging::CallDefinition &def) {
       // handle message
-      alsdebug << "  Server: " << fInfo.name << ", received message: " << def.methodName();
-
       std::string hash = def.methodName();
       const ServiceInfo& si = xGetService(hash);
       if (si.methodName.empty()) {
         // method not found
-        alsdebug << "  Error: Method not found " << hash;
+        alserror << "  Error: Method not found " << hash;
       }
 
       boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(
