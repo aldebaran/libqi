@@ -26,6 +26,11 @@ namespace AL {
         const std::string& masterAddress);
 
       void addLocalService(const ServiceInfo& service);
+      template <typename P0, typename C, typename R>
+      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0)) {
+        addService(ServiceInfo(name, makeFunctor(C *obj, R (C::*f) (const P0 &p0))));
+      }
+
 
     private:
       boost::shared_ptr<ServerNodeImp> fImp;

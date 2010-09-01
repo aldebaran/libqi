@@ -29,8 +29,6 @@ namespace AL {
       fInfo.name = serverName;
       fInfo.address = serverAddress;
       setMessageHandler(this);
-      // just testing
-      //addLocalService(ServiceInfo(serverName, serverName, "ping", makeFunctor(&ping)));
       boost::thread serverThread( boost::bind(&Server::run, this));
     }
 
@@ -41,7 +39,7 @@ namespace AL {
       alsdebug << "  Server: " << fInfo.name << ", received message: " << def.moduleName() << "." << def.methodName();
 
       std::string hash = def.moduleName() + std::string(".") + def.methodName();
-      const ServiceInfo& si = xGetLocalService(hash);
+      const ServiceInfo& si = xGetService(hash);
       if (si.nodeName.empty()) {
         // method not found
         alsdebug << "  Error: Method not found " << hash;
@@ -64,19 +62,17 @@ namespace AL {
       return fInfo;
     }
 
-    void ServerNodeImp::addLocalService(const ServiceInfo& service) {
+    void ServerNodeImp::addService(const ServiceInfo& service) {
 
       // We should be making a hash here, related to
       // "modulename.methodname" + typeid(arg0).name() ... typeid(argN).name()
-
-      std::string hash = service.moduleName +
-        std::string(".") + service.methodName;
+      std::string hash = service.methodName;
 
       fLocalServiceList.insert(hash, service);
       xRegisterServiceWithMaster(hash);
     }
 
-    const ServiceInfo& ServerNodeImp::xGetLocalService(
+    const ServiceInfo& ServerNodeImp::xGetService(
       const std::string& methodHash) {
       // functors ... should be found here
       return fLocalServiceList.get(methodHash);

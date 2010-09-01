@@ -22,11 +22,11 @@ namespace AL {
     }
 
     void MasterNodeImp::xInit() {
-      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "registerService", makeFunctor(this, &MasterNodeImp::registerService)));
+      fServerNode.addService(ServiceInfo("master.registerService", makeFunctor(this, &MasterNodeImp::registerService)));
       registerService(fNodeInfo.address, "master.registerService");
-      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "locateService", makeFunctor(this, &MasterNodeImp::locateService)));
+      fServerNode.addService(ServiceInfo("master.locateService", makeFunctor(this, &MasterNodeImp::locateService)));
       registerService(fNodeInfo.address, "master.locateService");
-      fServerNode.addLocalService(ServiceInfo(fNodeInfo.name, fNodeInfo.name, "listServices", makeFunctor(this, &MasterNodeImp::listServices)));
+      fServerNode.addService(ServiceInfo("master.listServices", makeFunctor(this, &MasterNodeImp::listServices)));
       registerService(fNodeInfo.address, "master.listServices");
     }
 

@@ -22,8 +22,9 @@ namespace AL {
       new ServerNodeImp(serverName, serverAddress, masterAddress)))
       {}
 
-    void ServerNode::addLocalService(const ServiceInfo& service) {
-      fImp->addLocalService(service);
+
+    void ServerNode::addService(const ServiceInfo& service) {
+      fImp->addService(service);
     }
   }
 }
