@@ -49,11 +49,11 @@ namespace AL {
     /** The generic serializable type to use to transmit parameters. */
     class VariableValue {
     public:
-      VariableValue()         { _value = EmptyValue(); }
-      VariableValue(bool b)   { _value = b; }
-      VariableValue(int i)    { _value = i; }
-      VariableValue(float f)  { _value = f; }
-      VariableValue(double d) { _value = d; }
+      VariableValue()                                             { _value = EmptyValue(); }
+      VariableValue(bool b)                                       { _value = b; }
+      VariableValue(int i)                                        { _value = i; }
+      VariableValue(float f)                                      { _value = f; }
+      VariableValue(double d)                                     { _value = d; }
       VariableValue(const std::string & s)                        { _value = s; }
       VariableValue(const std::vector<unsigned char> & bin)       { _value = bin; }
       VariableValue(const std::vector<VariableValue> & v)         { _value = v; }
