@@ -35,7 +35,6 @@ namespace AL {
         xAddService(name, makeFunctor(f));
       }
 
-
       template <typename P0, typename C, typename R>
       void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0)) {
         xAddService(name, makeFunctor(obj, f));
@@ -45,7 +44,6 @@ namespace AL {
       void addService(const std::string& name, R (*f) (const P0 &p0)) {
         xAddService(name, makeFunctor(f));
       }
-
 
       template <typename P0, typename P1, typename C, typename R>
       void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1)) {
