@@ -128,22 +128,22 @@ TEST(TestSignature, BasicFunctionSignature) {
 
 TEST(TestSignature, BasicVoidMemberSignature) {
   Foo foo;
-  EXPECT_EQ("v:"      , AL::functionSignature(&foo, &Foo::vfun0));
-  EXPECT_EQ("v:i"     , AL::functionSignature(&foo, &Foo::vfun1));
-  EXPECT_EQ("v:ii"    , AL::functionSignature(&foo, &Foo::vfun2));
-  EXPECT_EQ("v:iii"   , AL::functionSignature(&foo, &Foo::vfun3));
-  EXPECT_EQ("v:iiii"  , AL::functionSignature(&foo, &Foo::vfun4));
-  EXPECT_EQ("v:iiiii" , AL::functionSignature(&foo, &Foo::vfun5));
-  EXPECT_EQ("v:iiiiii", AL::functionSignature(&foo, &Foo::vfun6));
+  EXPECT_EQ("v:"      , AL::functionSignature(&Foo::vfun0));
+  EXPECT_EQ("v:i"     , AL::functionSignature(&Foo::vfun1));
+  EXPECT_EQ("v:ii"    , AL::functionSignature(&Foo::vfun2));
+  EXPECT_EQ("v:iii"   , AL::functionSignature(&Foo::vfun3));
+  EXPECT_EQ("v:iiii"  , AL::functionSignature(&Foo::vfun4));
+  EXPECT_EQ("v:iiiii" , AL::functionSignature(&Foo::vfun5));
+  EXPECT_EQ("v:iiiiii", AL::functionSignature(&Foo::vfun6));
 }
 
 TEST(TestSignature, BasicMemberSignature) {
   Foo foo;
-  EXPECT_EQ("i:"      , AL::functionSignature(&foo, &Foo::fun0));
-  EXPECT_EQ("i:i"     , AL::functionSignature(&foo, &Foo::fun1));
-  EXPECT_EQ("i:ii"    , AL::functionSignature(&foo, &Foo::fun2));
-  EXPECT_EQ("i:iii"   , AL::functionSignature(&foo, &Foo::fun3));
-  EXPECT_EQ("i:iiii"  , AL::functionSignature(&foo, &Foo::fun4));
-  EXPECT_EQ("i:iiiii" , AL::functionSignature(&foo, &Foo::fun5));
-  EXPECT_EQ("i:iiiiii", AL::functionSignature(&foo, &Foo::fun6));
+  EXPECT_EQ("i:"      , AL::functionSignature(&Foo::fun0));
+  EXPECT_EQ("i:i"     , AL::functionSignature(&Foo::fun1));
+  EXPECT_EQ("i:ii"    , AL::functionSignature(&Foo::fun2));
+  EXPECT_EQ("i:iii"   , AL::functionSignature(&Foo::fun3));
+  EXPECT_EQ("i:iiii"  , AL::functionSignature(&Foo::fun4));
+  EXPECT_EQ("i:iiiii" , AL::functionSignature(&Foo::fun5));
+  EXPECT_EQ("i:iiiiii", AL::functionSignature(&Foo::fun6));
 }

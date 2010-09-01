@@ -17,7 +17,7 @@ namespace AL
 
 
   template <  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) ()) {
+  std::string functionSignature(R (C::*f) ()) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -34,7 +34,7 @@ namespace AL
 
 
   template < typename P0,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -53,7 +53,7 @@ namespace AL
 
 
   template < typename P0, typename P1,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0, const P1 &p1)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0, const P1 &p1)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -74,7 +74,7 @@ namespace AL
 
 
   template < typename P0, typename P1, typename P2,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -97,7 +97,7 @@ namespace AL
 
 
   template < typename P0, typename P1, typename P2, typename P3,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -122,7 +122,7 @@ namespace AL
 
 
   template < typename P0, typename P1, typename P2, typename P3, typename P4,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
@@ -149,7 +149,7 @@ namespace AL
 
 
   template < typename P0, typename P1, typename P2, typename P3, typename P4, typename P5,  typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
+  std::string functionSignature(R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";

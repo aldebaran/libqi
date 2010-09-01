@@ -21,7 +21,7 @@ namespace AL
 #for $i in $count
 
   template < $generate_typename_list($i, end = True) typename C, typename R >
-  std::string functionSignature(C *obj, R (C::*f) ($generate_param_list($i))) {
+  std::string functionSignature(R (C::*f) ($generate_param_list($i))) {
     std::string result;
     AL::typeSignature<R>::value(result);
     result += ":";
