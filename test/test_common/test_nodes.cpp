@@ -34,12 +34,12 @@ TEST(ServerNode, createWithStupidServerPort)
   ServerNode server("server", "blabla", "127.0.0.1:6666");
 }
 
-
-
 MasterNode gMaster(gMasterAddress);
 ServerNode gServer(gServerName, gServerAddress, gMasterAddress);
 ClientNode gClient("client", gMasterAddress);
 
+void ping() {
+}
 
 std::string echo(const std::string& in) {
   return in;
@@ -55,7 +55,12 @@ TEST(Nodes, NormalUsage)
 
   std::cout << "TEST: Binding wibble.echo " << std::endl;
   gServer.addService("wibble.echo", &echo);
-  std::cout << "TEST: Calling wibble.echo " << std::endl;
+  //std::cout << "TEST: Calling wibble.echo " << std::endl;
+
+  std::cout << "TEST: Binding wibble.ping " << std::endl;
+  gServer.addService("wibble.ping", &ping);
+  gClient.call("wibble.ping");
+  //std::cout << "TEST: Calling wibble.ping " << std::endl;
 
   std::cout << "TEST: Calling master.gobledigook " << std::endl;
   ReturnValue result4 = gClient.call("master.gobledigook");
@@ -65,9 +70,24 @@ TEST(Nodes, NormalUsage)
   //}
 }
 
-TEST(Nodes, Performance)
+
+TEST(Nodes, PerformancePing)
 {
-  unsigned int numMessages = 1000;
+  unsigned int numMessages = 10000;
+
+  AL::Test::DataPerfTimer dt("NodeCalls");
+
+  dt.start(numMessages);
+  for (unsigned int loop = 0; loop < numMessages; loop++) {
+    // Serialize
+    gClient.call("wibble.ping");
+  }
+  dt.stop();
+}
+
+TEST(Nodes, PerformanceEcho)
+{
+  unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
   AL::Test::DataPerfTimer dt("NodeCalls");
   char character = 'A';
