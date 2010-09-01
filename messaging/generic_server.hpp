@@ -15,6 +15,7 @@
 #include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 #include <alcommon-ng/transport/transport.hpp>
 #include <alcommon-ng/serialization/serializer.hpp>
+#include <allog/allog.h>
 
 namespace AL {
 
@@ -25,17 +26,27 @@ namespace AL {
       public AL::Transport::DataHandler
     {
     public:
-      GenericServer() {}
+      bool initOK;
 
-      GenericServer(const std::string &address)
+      GenericServer(): initOK(false) {} 
+
+      void serve(const std::string &address)
       {
-        _server = new AL::Transport::ZMQSimpleServer(address);
-        _server->setDataHandler(this);
+        try {
+          _server = new AL::Transport::ZMQSimpleServer(address);
+          _server->setDataHandler(this);
+          initOK = true;
+        } catch(const std::exception& e) {
+          alserror << "Failed to create transport server for address: " << address << " Reason:" << e.what();
+          throw(e);
+        }
       }
 
       virtual void run()
       {
-        _server->run();
+        if (initOK) {
+          _server->run();
+        }
       }
 
       virtual void setMessageHandler(GenericMessageHandler<T, R>* callback) {
@@ -46,9 +57,13 @@ namespace AL {
         return _onMessageDelegate;
       }
 
+
     protected:
       virtual void onData(const std::string &data, std::string &result)
       {
+        if (! initOK ) {
+          alserror << "Attempt to use an uninitialized server";
+        }
         T def = AL::Serialization::Serializer::deserialize<T>(data);
         boost::shared_ptr<R> res;
 

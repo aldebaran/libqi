@@ -47,11 +47,10 @@ namespace AL {
     //use only the number of thread we need
     void ZMQSimpleServer::run() {
       try {
-        std::cout << "Start ZMQServer on: " << _serverAddress << std::endl;
+        alsdebug << "Start ZMQServer on: " << _serverAddress;
         zsocket.bind(_serverAddress.c_str());
       } catch(const std::exception& e) {
-        std::cout << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
-        //Sleep(1);
+        alserror << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
         return;
       }
 

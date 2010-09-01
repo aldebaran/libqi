@@ -7,6 +7,7 @@
 
 #include <alcommon-ng/common/detail/client_node_imp.hpp>
 #include <string>
+#include <alcommon-ng/common/detail/get_protocol.hpp>
 #include <alcommon-ng/messaging/client.hpp>
 #include <allog/allog.h>
 
@@ -14,11 +15,12 @@ namespace AL {
   using namespace Messaging;
   namespace Common {
 
-    ClientNodeImp::ClientNodeImp() {}
+    ClientNodeImp::ClientNodeImp() : initOK(false) {}
 
     ClientNodeImp::ClientNodeImp(
       const std::string& clientName,
       const std::string& masterAddress) :
+      initOK(false),
       fClientName(clientName),
       fMasterAddress(masterAddress) {
         xInit();
@@ -27,9 +29,13 @@ namespace AL {
     ClientNodeImp::~ClientNodeImp() {}
 
     void ClientNodeImp::xInit() {
-      xCreateServerClient(fMasterAddress);
-      // we assert that we think the master can locate services
-      fServiceCache.insert("master.locateService", fMasterAddress);
+      initOK = xCreateServerClient(fMasterAddress);
+      if (initOK) {
+        // we assert that we think the master can locate services
+        fServiceCache.insert("master.locateService", fMasterAddress);
+      } else {
+        alserror << "\"" << fClientName << "\" Failed to connect to master at address \"" << fMasterAddress << "\"";
+      }
     }
 
     void ClientNodeImp::call(const std::string& methodName,
@@ -55,6 +61,10 @@ namespace AL {
       const CallDefinition& callDef) {
       // todo make a hash from the calldef
       ResultDefinition result;
+      if (! initOK) {
+        // should we have killed the client?
+        return result;
+      }
 
       std::string hash = callDef.methodName();
       std::string nodeAddress = xLocateService(hash);
@@ -91,19 +101,23 @@ namespace AL {
       return result;
     }
 
-
-    void ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
+    bool ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
       // TODO(chris) error handling
+      // we don't yet know our current IP address, so we fake
+      std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
+
       boost::shared_ptr<Client> client =
-        boost::shared_ptr<Client>(new Client(serverAddress));
-
-      alsdebug << "Client " << fClientName <<
-        " creating client for server " << serverAddress << std::endl;
-
-      // add server client
-      fServerClients.insert(make_pair(serverAddress, client));
+        boost::shared_ptr<Client>(new AL::Messaging::Client());
+      bool ok = client->connect(serverFullAddress);
+      if (ok) {
+        fServerClients.insert(make_pair(serverAddress, client));
+        alsdebug << "Client " << fClientName <<
+          " creating client for server " << serverFullAddress << std::endl;
+      } else {
+        alsdebug << "Failed to create client for address " << serverAddress << " Reason: connect fail";
+      }
+      return ok;
     }
-
 
     const std::string ClientNodeImp::xLocateService(
       const std::string& methodHash) {
@@ -119,7 +133,12 @@ namespace AL {
       ArgumentList args;
       args.push_back(methodHash);
       ReturnValue ret;
-      call("master.locateService", args, ret);
+      try {
+        call("master.locateService", args, ret);
+      } catch(const std::exception& e) {
+        alserror << "Could not connect to master Reason: " << e.what();
+        return "";
+      }
       nodeAddress = ret.as<std::string>();
 
       return nodeAddress;

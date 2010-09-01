@@ -12,7 +12,6 @@
 #include <alcommon-ng/messaging/client.hpp>
 #include <alcommon-ng/common/detail/mutexednamelookup.hpp>
 #include <alcommon-ng/common/detail/namelookup.hpp>
-#include <alcommon-ng/common/detail/nodeinfo.hpp>
 #include <alcommon-ng/common/serviceinfo.hpp>
 
 namespace AL {
@@ -34,6 +33,7 @@ namespace AL {
         AL::Messaging::ReturnValue& result);
 
       virtual ~ClientNodeImp();
+      bool initOK;
 
     private:
       std::string fClientName;
@@ -45,10 +45,11 @@ namespace AL {
       NameLookup<boost::shared_ptr<AL::Messaging::Client> > fServerClients;
 
       void xInit();
-      void xCreateServerClient(const std::string& address);
+      bool xCreateServerClient(const std::string& address);
       const std::string xLocateService(const std::string& methodHash);
       AL::Messaging::ResultDefinition xCall(
         const AL::Messaging::CallDefinition& callDef);
+
     };
   }
 }

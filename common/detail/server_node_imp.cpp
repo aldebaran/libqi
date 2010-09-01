@@ -7,6 +7,7 @@
 
 #include <alcommon-ng/common/detail/server_node_imp.hpp>
 #include <string>
+#include <alcommon-ng/common/detail/get_protocol.hpp>
 #include <alcommon-ng/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -17,19 +18,25 @@ namespace AL {
   using namespace Messaging;
   namespace Common {
 
-    ServerNodeImp::ServerNodeImp() {}
+    ServerNodeImp::ServerNodeImp() : initOK(false) {}
 
     ServerNodeImp::ServerNodeImp(
       const std::string& serverName,
       const std::string& serverAddress,
-      const std::string& masterAddress) :
-        fClient(masterAddress),
-        AL::Messaging::Server(serverAddress)
-     {
+      const std::string& masterAddress) : initOK(false)
+    {
       fInfo.name = serverName;
       fInfo.address = serverAddress;
-      setMessageHandler(this);
-      boost::thread serverThread( boost::bind(&Server::run, this));
+
+      bool initOK = fClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
+      if (! initOK ) {
+        alserror << "\"" << serverName << "\" could not connect to master at address \"" << masterAddress << "\"";
+        return;
+      }
+      fServer.serve("tcp://" + serverAddress);
+
+      fServer.setMessageHandler(this);
+      boost::thread serverThread( boost::bind(&Server::run, fServer));
     }
 
     // shame about this definition of a handler....

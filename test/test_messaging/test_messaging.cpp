@@ -59,7 +59,8 @@ static const std::string gClientAddress = "tcp://127.0.0.1:5555";
 int main_server()
 {
   ServiceHandler           module2Callback;
-  boost::shared_ptr<Server>       fIppcServer  = boost::shared_ptr<Server>(new Server(gServerAddress));
+  boost::shared_ptr<Server>       fIppcServer  = boost::shared_ptr<Server>(new Server());
+  fIppcServer->serve(gServerAddress);
   fIppcServer->setMessageHandler(&module2Callback);
   fIppcServer->run();
   return 0;
@@ -69,7 +70,8 @@ int main_client(int clientId)
 {
   std::stringstream sstream;
 
-  AL::Messaging::Client client(gClientAddress);
+  AL::Messaging::Client client;
+  client.connect(gClientAddress);
   AL::Messaging::ResultDefinition res;
 
   DataPerfTimer dt;

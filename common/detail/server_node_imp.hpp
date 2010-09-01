@@ -22,8 +22,7 @@ namespace AL {
   namespace Common {
 
     class ServerNodeImp :
-      AL::Messaging::MessageHandler,
-      public AL::Messaging::Server {
+      AL::Messaging::MessageHandler {
     public:
       ServerNodeImp();
       ServerNodeImp(const std::string& nodeName,
@@ -39,7 +38,9 @@ namespace AL {
       // should hide some of bind
       void addService(const std::string& name, Functor* functor);
       
+      bool initOK;
     private:
+      AL::Messaging::Server fServer;
       NodeInfo fInfo;
 
       AL::Messaging::Client fClient;
