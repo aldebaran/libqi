@@ -10,9 +10,8 @@
 
 #include <string>
 
-// TODO(chris) should be just a client, not a node
-#include <alcommon-ng/common/client_node.hpp>
-
+// used to talk to master
+#include <alcommon-ng/messaging/client.hpp>
 #include <alcommon-ng/messaging/messagehandler.hpp>
 #include <alcommon-ng/messaging/server.hpp>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
@@ -43,10 +42,7 @@ namespace AL {
     private:
       NodeInfo fInfo;
 
-      // in fact we only need a single messaging client for talking
-      // with the master
-      // TODO(chris) replace with messaging client.
-      ClientNode fClientNode;
+      AL::Messaging::Client fClient;
 
       // should be map from hash to functor,
       // but we also need to be able to push these hashes to master

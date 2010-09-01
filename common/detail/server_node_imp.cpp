@@ -23,7 +23,7 @@ namespace AL {
       const std::string& serverName,
       const std::string& serverAddress,
       const std::string& masterAddress) :
-        fClientNode(serverName, masterAddress),
+        fClient(masterAddress),
         AL::Messaging::Server(serverAddress)
      {
       fInfo.name = serverName;
@@ -80,7 +80,7 @@ namespace AL {
         callDef.args().push_back(fInfo.address);
         callDef.args().push_back(methodHash);
 
-        fClientNode.call(callDef);
+        fClient.send(callDef);
       }
     }
   }

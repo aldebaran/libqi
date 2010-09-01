@@ -24,6 +24,8 @@ namespace AL {
     template<typename T, typename R>
     class GenericClient {
     public:
+      GenericClient() {}
+
       GenericClient(const std::string &address)
       {
         _client = new AL::Transport::ZMQClient(address);
