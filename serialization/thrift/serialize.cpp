@@ -82,10 +82,6 @@ namespace AL {
       protocol->writeString(t.methodName());
       protocol->writeFieldEnd();
 
-      protocol->writeFieldBegin("ModuleName", ::apache::thrift::protocol::T_STRING, 3);
-      protocol->writeString(t.moduleName());
-      protocol->writeFieldEnd();
-
       protocol->writeFieldBegin("Params", ::apache::thrift::protocol::T_STRUCT, 4);
       thriftSerialize(protocol, t.args());
       protocol->writeFieldEnd();
