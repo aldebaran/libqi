@@ -10,46 +10,20 @@
 #include <protobuf/message.h>
 #include <protobuf/dynamic_message.h>
 #include <protobuf/descriptor.h>
+#include "myproto.pb.h"
 
-//     // Same as the last block, but do it dynamically via the Message
-//     // reflection interface.
-//     Message* foo = new Foo;
-//     Descriptor* descriptor = foo->GetDescriptor();
-//
-//     // Get the descriptors for the fields we're interested in and verify
-//     // their types.
-//     FieldDescriptor* text_field = descriptor->FindFieldByName("text");
-//     assert(text_field != NULL);
-//     assert(text_field->type() == FieldDescriptor::TYPE_STRING);
-//     assert(text_field->label() == FieldDescriptor::TYPE_OPTIONAL);
-//     FieldDescriptor* numbers_field = descriptor->FindFieldByName("numbers");
-//     assert(numbers_field != NULL);
-//     assert(numbers_field->type() == FieldDescriptor::TYPE_INT32);
-//     assert(numbers_field->label() == FieldDescriptor::TYPE_REPEATED);
-//
-//     // Parse the message.
-//     foo->ParseFromString(data);
-//
-//     // Use the reflection interface to examine the contents.
-//     const Reflection* reflection = foo->GetReflection();
-//     assert(reflection->GetString(foo, text_field) == "Hello World!");
-//     assert(reflection->FieldSize(foo, numbers_field) == 3);
-//     assert(reflection->GetRepeatedInt32(foo, numbers_field, 0) == 1);
-//     assert(reflection->GetRepeatedInt32(foo, numbers_field, 1) == 5);
-//     assert(reflection->GetRepeatedInt32(foo, numbers_field, 2) == 42);
-//
-//     delete foo;
 using namespace google::protobuf;
 
 TEST(TestProtoSerialization, Basic) {
-  //Descriptor *desc = new Descriptor();
+  testproto::Person p;
+  p.set_name("toto");
 
-  //DynamicMessageFactory().GetPrototype( Message *foo;
+  testproto::Person_PhoneNumber *phone = p.add_phone();
+  phone->set_number("0642");
 
-  //Message *prototype = factory_.GetPrototype(descriptor_);
+  std::cout << p.phone(0).number() << std::endl;
 
-  //protobuf::Descriptor *foo.desc;
-
+  std::cout << p.name() << std::endl;
 
   std::cout << "ProtoTest" << std::endl;
 }
