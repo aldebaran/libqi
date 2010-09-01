@@ -27,6 +27,7 @@ namespace AL {
 
       virtual ~ClientNode();
 
+      // ---- TODO template these ---
       void call(const std::string& methodName,
         const AL::Messaging::ArgumentList& params,
         AL::Messaging::ReturnValue& result);
@@ -38,6 +39,7 @@ namespace AL {
         const AL::Messaging::ArgumentList& params);
 
       AL::Messaging::ReturnValue call(const std::string& methodName);
+      // -----------------------------
 
     private:
       boost::shared_ptr<ClientNodeImp> fImp;
