@@ -56,12 +56,13 @@ namespace AL {
       return fInfo;
     }
 
-    void ServerNodeImp::addService(const ServiceInfo& service) {
+    void ServerNodeImp::addService(const std::string& name, Functor* functor) {
 
+      ServiceInfo service(name, functor);
       // We should be making a hash here, related to
       // "modulename.methodname" + typeid(arg0).name() ... typeid(argN).name()
       std::string hash = service.methodName;
-
+      
       fLocalServiceList.insert(hash, service);
       xRegisterServiceWithMaster(hash);
     }

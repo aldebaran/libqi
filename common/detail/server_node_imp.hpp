@@ -37,7 +37,7 @@ namespace AL {
 
       // best if we didn't use a ServiceInfo here ...
       // should hide some of bind
-      void addService(const ServiceInfo& service);
+      void addService(const std::string& name, Functor* functor);
       
     private:
       NodeInfo fInfo;
