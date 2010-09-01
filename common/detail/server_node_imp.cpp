@@ -40,15 +40,9 @@ namespace AL {
 
       std::string hash = def.moduleName() + std::string(".") + def.methodName();
       const ServiceInfo& si = xGetService(hash);
-      if (si.nodeName.empty()) {
+      if (si.methodName.empty()) {
         // method not found
         alsdebug << "  Error: Method not found " << hash;
-      }
-
-      if (si.nodeName == fInfo.name) {
-        alsdebug << "  Good: Method is for this node";
-      } else {
-        alsdebug << "  Error: Method is for node: " << si.nodeName;
       }
 
       boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(
