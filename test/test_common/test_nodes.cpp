@@ -1,6 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <alcommon-ng/common/common.hpp>
+#include <alcommon-ng/tools/dataperftimer.hpp>
 #include <boost/timer.hpp>
 #include <string>
 
@@ -39,19 +40,52 @@ MasterNode gMaster(gMasterAddress);
 ServerNode gServer(gServerName, gServerAddress, gMasterAddress);
 ClientNode gClient("client", gMasterAddress);
 
+
+std::string echo(const std::string& in) {
+  return in;
+}
+
+
+
 TEST(Nodes, NormalUsage)
 {
   std::cout << "TEST: Initialized " << std::endl;
   std::cout << "TEST: Calling master.listServices " << std::endl;
   ReturnValue result1 = gClient.call("master.listServices");
 
-  std::cout << "TEST: Calling server.ping " << std::endl;
-  ReturnValue result2 = gClient.call("server.ping");
+  std::cout << "TEST: Binding wibble.echo " << std::endl;
+  gServer.addService("wibble.echo", &echo);
+  std::cout << "TEST: Calling wibble.echo " << std::endl;
 
   std::cout << "TEST: Calling master.gobledigook " << std::endl;
-  ReturnValue result3 = gClient.call("master.gobledigook");
+  ReturnValue result4 = gClient.call("master.gobledigook");
 
-  for(int i=0; i<100; i++) {
-    ReturnValue result4 = gClient.call("master.listServices");
+  //for(int i=0; i<100; i++) {
+  //  ReturnValue result5 = gClient.call("master.listServices");
+  //}
+}
+
+TEST(Nodes, Performance)
+{
+  unsigned int numMessages = 1000;
+  unsigned int numPowers = 12;
+  AL::Test::DataPerfTimer dt("NodeCalls");
+  char character = 'A';
+
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
+    ArgumentList args;
+    ReturnValue result;
+    args.push_back(request);
+
+    dt.start(numMessages, numBytes);
+    for (unsigned int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      gClient.call("wibble.echo", args, result);
+    }
+    dt.stop();
   }
+  
 }
