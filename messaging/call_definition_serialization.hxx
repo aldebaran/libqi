@@ -21,7 +21,7 @@ namespace boost {
       AL::Messaging::CallDefinition & callDef,
       const unsigned int version) {
         ar & boost::serialization::make_nvp("method", callDef.methodName());
-        ar & boost::serialization::make_nvp("list",   callDef.args());
+        ar & boost::serialization::make_nvp("args",   callDef.args());
     }
 
   }
