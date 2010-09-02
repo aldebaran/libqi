@@ -11,6 +11,7 @@
 #include <string>
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/messaging/result_definition.hpp>
+#include <alcommon-ng/functor/functionsignature.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace AL {
