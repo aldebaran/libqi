@@ -12,7 +12,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 BoostProcessSharedSegmentConnector::BoostProcessSharedSegmentConnector (const std::string & process_segment_name) :
   process_segment_name(process_segment_name), segment(0), mapped_region(0) {

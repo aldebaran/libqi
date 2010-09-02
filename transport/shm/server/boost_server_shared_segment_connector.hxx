@@ -13,7 +13,7 @@
 #include <cstring>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 template <typename L>
 L & BoostServerSharedSegmentConnector::getMutex () {

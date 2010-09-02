@@ -23,7 +23,7 @@
 #include <alcommon-ng/transport/shm/memory/mapped_shared_segment.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
     static_assert (sizeof(MappedSharedSegment) == SHARED_SEGMENT_SIZE);
   }
 }

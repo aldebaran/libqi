@@ -26,7 +26,7 @@ namespace boi = boost::interprocess;
 typedef unsigned char byte;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 
 #ifndef _WIN32

@@ -14,7 +14,7 @@
 namespace boi = boost::interprocess;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 BoostServerSharedSegmentConnector::BoostServerSharedSegmentConnector (const std::string & segment_name) :
   ServerSharedSegmentConnector(segment_name), segment(0), mapped_region(0) {

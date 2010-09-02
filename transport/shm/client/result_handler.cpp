@@ -11,9 +11,10 @@
 #include <althread/alcriticalsection.h>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
-ResultHandler::ResultHandler () : pool(SHARED_SEGMENT_SIZE, 500) {
+ResultHandler::ResultHandler ()
+  : pool(SHARED_SEGMENT_SIZE, 500) {
   pool.init();
   m_resultMutex = AL::ALMutex::createALMutex();
 }
@@ -21,27 +22,22 @@ ResultHandler::ResultHandler () : pool(SHARED_SEGMENT_SIZE, 500) {
 ResultHandler::~ResultHandler () {
 }
 
-void ResultHandler::push (unsigned int id) 
-{
-  AL::ALCriticalSection section(m_resultMutex);
-  if (id == 0)
-  {
-    printf("id 0");
-  }
-  m_results[id] = boost::shared_ptr<ResultInfo>(new ResultInfo());
-}
-
-boost::shared_ptr<ResultInfo> ResultHandler::get (unsigned int id) 
+const std::string &ResultHandler::get(unsigned int id)
 {
   AL::ALCriticalSection section(m_resultMutex);
   return m_results[id];
 }
 
-void ResultHandler::remove (unsigned int id) 
+std::string &ResultHandler::set(unsigned int id, const std::string retval)
 {
   AL::ALCriticalSection section(m_resultMutex);
-  std::map<unsigned int, boost::shared_ptr<ResultInfo> >::iterator it = m_results.find(id);
-  //std::cout << "remove : " << id << std::endl;
+  return m_results[id] = retval;
+}
+
+void ResultHandler::remove (unsigned int id)
+{
+  AL::ALCriticalSection section(m_resultMutex);
+  std::map<unsigned int, std::string>::iterator it = m_results.find(id);
   m_results.erase(it);
 }
 

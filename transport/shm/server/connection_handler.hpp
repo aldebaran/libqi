@@ -9,56 +9,44 @@
 #ifndef LIBIPPC_CONNECTIONHANDLER_HPP_
 #define LIBIPPC_CONNECTIONHANDLER_HPP_
 
-#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
-
-#include <alcommon-ng/transport/common/server_command_delegate.hpp>
-#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/datahandler.hpp>
 
 #include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
-/**
- * @brief A connection handler created for each new incoming connection and pushed to
- * the thread pool.
- */
-class ConnectionHandler : public Runnable {
-public:
-  /**
-   * @brief The ConnectionHandler class constructor
-   * @param rdv_name The shared memory name used to share data between the client and server.
-   */
-  ConnectionHandler (const std::string & rdv_name, ServerCommandDelegate *callback, internal::ServerResponseDelegate *responsedelegate);
+    class ResultHandler;
+    /**
+      * @brief A connection handler created for each new incoming connection and pushed to
+      * the thread pool.
+      */
+    class ConnectionHandler : public Runnable {
+    public:
+      /**
+        * @brief The ConnectionHandler class constructor
+        * @param rdv_name The shared memory name used to share data between the client and server.
+        */
+      ConnectionHandler(const std::string & rdv_name, DataHandler *callback, ResultHandler & resultHandler);
 
-  /**
-   * @brief The ConnectionHandler class destructor.
-   */
-  virtual ~ConnectionHandler ();
+      virtual ~ConnectionHandler ();
 
-  /**
-   * @brief The method used by the Thread Pool to run the handler.
-   * It syncs with the client, retrieve data, and send result back.
-   */
-  virtual void run ();
+      /**
+        * @brief The method used by the Thread Pool to run the handler.
+        * It syncs with the client, retrieve data, and send result back.
+        */
+      virtual void run ();
 
-private:
-  /**
-   * @brief The shared memory name for sharing data.
-   */
-  std::string rdv_name;
-
-  /**
-   * The callback to call after recieving a CallDefinition
-   */
-  ServerCommandDelegate * callback;
-
-  /**
-   * The delegate used to send the response
-   */
-  internal::ServerResponseDelegate * response_delegate;
-};
+    private:
+      /**
+        * @brief The shared memory name for sharing data.
+        */
+      std::string    rdv_name;
+      DataHandler   *callback;
+      ResultHandler &resultHandler;
+    };
 
 }
 }

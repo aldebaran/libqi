@@ -24,7 +24,7 @@
 namespace boi = boost::interprocess;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 MappedDevice::MappedDevice (MappedSharedSegment * segment) :
   segment(segment), bptr(0), wptr(0), rptr(0), nb_read(0), connector(0), first_time_writing(true), first_time_reading(true) {

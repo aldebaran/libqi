@@ -12,7 +12,7 @@
 #include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief An abstract class used to synchronize a server with an other process
@@ -23,11 +23,11 @@ public:
   ServerSharedSegmentConnector (const std::string & segment_name) { this->segment_name = segment_name; }
   virtual ~ServerSharedSegmentConnector () {}
 
-  virtual void connect () = 0;
+  virtual void connect ()    = 0;
   virtual void disconnect () = 0;
 
   virtual void notifyInit () = 0;
-  virtual void broadcast () = 0;
+  virtual void broadcast ()  = 0;
 
   // missing waitForRequest, but cannot be virtual because of template
   // std::string waitForRequest ();

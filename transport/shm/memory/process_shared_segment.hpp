@@ -10,7 +10,7 @@
 #define LIBIPPC_PROCESSSHAREDSEGMENT_HPP_
 
 #include <alcommon-ng/transport/shm/transport_config.hpp>
-#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/definition_type.hpp>
 
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
@@ -18,7 +18,7 @@
 namespace boi = boost::interprocess;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A process personal shared segment that allow it to listen for

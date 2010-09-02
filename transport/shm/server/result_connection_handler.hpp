@@ -9,20 +9,20 @@
 #ifndef LIBIPPC_RESULTCONNECTIONHANDLER_HPP_
 #define LIBIPPC_RESULTCONNECTIONHANDLER_HPP_
 
-#include <alcommon-ng/serialization/result_definition.hpp>
+#include <alcommon-ng/messaging/result_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
 
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 class ResultConnectionHandler : public Runnable {
 public:
-  ResultConnectionHandler (const std::string & rdv_name, ResultHandler & resultHandler);
+  ResultConnectionHandler(const std::string & rdv_name, ResultHandler &resultHandler);
   virtual ~ResultConnectionHandler ();
 
-  virtual void run ();
+  virtual void run();
 
 private:
   std::string rdv_name;

@@ -18,7 +18,7 @@
 #endif
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 InviteGenerator::InviteGenerator () {
 }

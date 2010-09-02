@@ -10,7 +10,7 @@
 #include <iostream>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 MappedSharedSegment::MappedSharedSegment () :
   wrote(0), bytes(0), done(false) {

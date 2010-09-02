@@ -7,8 +7,6 @@
  */
 
 #include <alcommon-ng/transport/shm/server/connection_handler.hpp>
-#include <alcommon-ng/serialization/serialization.hpp>
-
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 
 #include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
@@ -22,12 +20,12 @@
 #include <alcommon-ng/collections/variables_list.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
-  ConnectionHandler::ConnectionHandler (const std::string & rdv_name, ServerCommandDelegate * callback, internal::ServerResponseDelegate *responsedelegate)
+  ConnectionHandler::ConnectionHandler(const std::string & rdv_name, DataHandler *callback, ResultHandler &resultHandler)
     : rdv_name(rdv_name),
       callback(callback),
-      response_delegate(responsedelegate)
+      resultHandler(resultHandler)
   {
     this->setTaskName("ConnectionHandler");
   }
@@ -37,18 +35,15 @@ namespace AL {
   }
 
   void ConnectionHandler::run() {
-#ifdef IPPC_DEBUG
-    std::cout << "DEBUG: receiving = `" << rdv_name << "`" << std::endl;
-#endif
-    CallDefinition def;
+    unsigned int id;
+    std::string  def;
 
     try {
       io::stream_buffer<MappedDevice> buf(MappedSegmentSelector::instance().get(rdv_name.c_str(),
-                                                                                            MappedSegmentSelector::MS_OPEN | MappedSegmentSelector::MS_REMOVE));
+        MappedSegmentSelector::MS_OPEN | MappedSegmentSelector::MS_REMOVE));
       std::iostream stream(&buf);
-      IArchive archive(stream);
-      archive >> def;
-
+      stream >> id;
+      stream >> def;
     } catch (const std::exception & e) {
       std::cerr << "[IppcThread] Exception caught : " << e.what() << std::endl;
     }
@@ -58,9 +53,16 @@ namespace AL {
     if (callback) {
       try
       {
-        AL::ALPtr<ResultDefinition> result = callback->ippcCallback(def);
-        if (response_delegate)
-          response_delegate->sendResponse(def, result);
+        std::string result;
+        callback->onData(def, result);
+        std::cout << "Please send result" << std::endl;
+        //ShmConnection connection(def.getSender(), *getResultHandler());
+        //connection.send(result);
+        //TODO:CTAF:
+
+//        AL::ALPtr<ResultDefinition> result = callback->ippcCallback(def);
+//        if (response_delegate)
+//          response_delegate->sendResponse(def, result);
       }
       catch (...)
       {

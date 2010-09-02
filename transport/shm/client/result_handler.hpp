@@ -9,16 +9,17 @@
 #ifndef LIBIPPC_RESULTHANDLER_HPP_
 #define LIBIPPC_RESULTHANDLER_HPP_
 
-#include <alcommon-ng/transport/shm/client/result_info.hpp>
+//#include <alcommon-ng/transport/shm/client/result_info.hpp>
 
 #include <shmpool/pool.hpp>
 
 #include <map>
+#include <string>
 #include <boost/shared_ptr.hpp>
 #include <althread/almutex.h>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 
 class ResultHandler {
@@ -27,21 +28,23 @@ public:
   virtual ~ResultHandler ();
 
 public:
-  void push (unsigned int id);
-  boost::shared_ptr<ResultInfo> get (unsigned int id);
-  void remove (unsigned int id);
-  unsigned int generateID ();
+  //todo: use ref
+  const std::string &get(unsigned int id);
+
+  std::string &set(unsigned int id, const std::string retval);
+
+  void remove(unsigned int id);
+  unsigned int generateID();
 
   AL::shmpool::pool& getShmPool ();
 
 private:
-  AL::ALPtr<AL::ALMutex> m_resultMutex;
-  std::map<unsigned int, boost::shared_ptr<ResultInfo> > m_results;
+  AL::ALPtr<AL::ALMutex>               m_resultMutex;
+  std::map<unsigned int, std::string>  m_results;
 
-  unsigned int counter;
-  boost::mutex counter_access;
-
-  AL::shmpool::pool pool;
+  unsigned int                         counter;
+  boost::mutex                         counter_access;
+  AL::shmpool::pool                    pool;
 };
 
 

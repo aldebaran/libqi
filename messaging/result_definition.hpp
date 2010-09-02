@@ -24,9 +24,10 @@ namespace AL {
     public:
       ResultDefinition ();
 
-      ResultDefinition (const ReturnValue & val);
-      bool operator==(const ResultDefinition& rhs) const;
+      ResultDefinition(const ReturnValue & val);
       virtual ~ResultDefinition();
+
+      bool operator==(const ResultDefinition& rhs) const;
 
       void setException(const std::string & message);
 

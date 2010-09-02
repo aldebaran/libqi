@@ -13,7 +13,7 @@
 #include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A basic exception class, base to other ippc:: exceptions.

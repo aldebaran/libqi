@@ -11,17 +11,18 @@
 
 #include <alcommon-ng/transport/shm/client/boost_process_shared_segment_connector.hpp>
 #include <alcommon-ng/transport/shm/transport_config.hpp>
-#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/definition_type.hpp>
 
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>
 
 #include <string>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 class CallDefinition;
 class ResultDefinition;
+
 
 /**
  * @brief The main client class when sending any data to the server.
@@ -41,33 +42,10 @@ public:
    */
   virtual ~ShmConnection ();
 
-  /**
-   * @brief Send a remote call definition.
-   * @param def The definition to send.
-   */
-  virtual void send (CallDefinition & def);
 
-  /**
-   * @brief Send a remote call definition.
-   * @param def The definition to send.
-   * @param res The result of the call.
-   * send make call blocking
-   */
-  virtual void send (CallDefinition & def, ResultDefinition & res);
 
-  /**
-   * @brief Send a remote call definition.
-   * @param def The definition to send.
-   * @param res The result of the call.
-   * @param sender The broker name who need the result.
-   */
-  virtual void send (const CallDefinition & def, ResultDefinition & res, const std::string & sender);
-
-  /**
-   * @brief Send a result definition, answer to a previous call definition.
-   * @param def The definition to send.
-   */
-  virtual void send (const ResultDefinition & def);
+  virtual void send(const std::string &tosend, std::string &result);
+  virtual void send(const std::string &result);
 
 private:
 
@@ -86,7 +64,7 @@ private:
   /**
    * @brief The shared memory segment name used to transmit data between client and server.
    */
-  char invite [SEGMENT_NAME_MAX];
+  char invite[SEGMENT_NAME_MAX];
 
   /**
    * @brief The connector to the target process shared segment.

@@ -12,7 +12,7 @@
 #include <cstdlib>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A random segment name generator which use /dev/urandom (under linux)

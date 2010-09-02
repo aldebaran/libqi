@@ -4,6 +4,7 @@
 #include <alcommon-ng/tools/dataperftimer.hpp>
 #include <boost/timer.hpp>
 #include <string>
+#include <cmath>
 
 using namespace AL::Common;
 using namespace AL::Messaging;

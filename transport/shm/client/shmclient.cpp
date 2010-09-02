@@ -8,20 +8,17 @@
 #include <alcommon-ng/transport/shm/client/shmclient.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
   ShmClient::ShmClient(const std::string &servername, ResultHandler *resultHandler)
-    : ClientBase(servername),
+    : Client(servername),
       connection(servername, *resultHandler)
   {
   }
 
-  AL::ALPtr<ResultDefinition> ShmClient::send(CallDefinition &def)
+  void ShmClient::send(const std::string &tosend, std::string &result)
   {
-    AL::ALPtr<ResultDefinition>     res(new ResultDefinition());
-
-    connection.send(def, *res);
-    return res;
+    connection.send(tosend, result);
   }
 
 }

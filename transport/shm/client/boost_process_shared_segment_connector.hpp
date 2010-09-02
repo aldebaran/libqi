@@ -9,7 +9,8 @@
 #ifndef LIBIPPC_BOOSTPROCESSSHAREDSEGMENTCONNECTOR_HPP_
 #define LIBIPPC_BOOSTPROCESSSHAREDSEGMENTCONNECTOR_HPP_
 
-#include <alcommon-ng/serialization/definition_type.hpp>
+//#include <alcommon-ng/serialization/definition_type.hpp>
+
 #include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
 #include <alcommon-ng/transport/shm/client/process_shared_segment_connector.hpp>
 
@@ -19,7 +20,7 @@
 namespace boi = boost::interprocess;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A connector class that connect to the given process personal

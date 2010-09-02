@@ -10,10 +10,10 @@
 #define LIBIPPC_PROCESSSHAREDSEGMENTCONNECTOR_HPP_
 
 #include <alcommon-ng/transport/shm/transport_config.hpp>
-#include <alcommon-ng/serialization/definition_type.hpp>
+#include <alcommon-ng/transport/shm/definition_type.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief An abstract class used to synchronize a process with an other one's

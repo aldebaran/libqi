@@ -18,7 +18,7 @@
 namespace io = boost::iostreams;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A device used by Boost.iostreams directly mapped to a shared memory

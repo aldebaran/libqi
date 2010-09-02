@@ -9,13 +9,13 @@
 #ifndef LIBIPPC_SERVER_HPP_
 #define LIBIPPC_SERVER_HPP_
 
-#include <alcommon-ng/transport/serverbase.hpp>
+#include <alcommon-ng/transport/server.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcommon-ng/transport/common/threadable.hpp>
-#include <alcommon-ng/serialization/call_definition.hpp>
+#include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hpp>
 
-#include <alcommon-ng/transport/common/server_command_delegate.hpp>
+
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
@@ -25,14 +25,15 @@
 
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
+
 
 /**
  * @brief The server class. It listen for incoming connection from client
  * and push handlers for those connection to the tread pool.
  * This class need to be instantiated and run at the beginning of the process.
  */
-  class ShmServer : public ServerBase {
+  class ShmServer : public Server {
   public:
     /**
      * @brief The Server class constructor.
@@ -60,9 +61,7 @@ namespace AL {
      */
     void stop ();
 
-    ResultHandler *getResultHandler ();
-
-    virtual void sendResponse(const CallDefinition &def, AL::ALPtr<ResultDefinition> result, void *data = 0);
+    ResultHandler *getResultHandler();
 
   private:
     /**

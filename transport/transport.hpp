@@ -24,7 +24,7 @@
 
 //force Server to be a ShmServer for the moment
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
     //typedef ShmServer Server;
     //typedef ShmClient Client;
 

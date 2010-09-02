@@ -9,14 +9,14 @@
 #ifndef LIBIPPC_BOOSTSERVERSHAREDSEGMENTCONNECTOR_HPP_
 #define LIBIPPC_BOOSTSERVERSHAREDSEGMENTCONNECTOR_HPP_
 
-#include <alcommon-ng/serialization/definition_type.hpp>
+//#include <alcommon-ng/serialization/definition_type.hpp>
 #include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
 #include <alcommon-ng/transport/shm/server/server_shared_segment_connector.hpp>
 
 #include <boost/interprocess/mapped_region.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A connector class that connect to the given shared zone

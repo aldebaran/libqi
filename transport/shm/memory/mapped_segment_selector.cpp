@@ -17,7 +17,7 @@
 #endif
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 MappedSegmentSelector::MappedSegmentSelector () {
 }

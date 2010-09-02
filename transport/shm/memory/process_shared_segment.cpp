@@ -9,7 +9,7 @@
 #include <alcommon-ng/transport/shm/memory/process_shared_segment.hpp>
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 ProcessSharedSegment::ProcessSharedSegment () {
 }

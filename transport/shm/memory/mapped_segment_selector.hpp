@@ -21,7 +21,7 @@
 namespace boi = boost::interprocess;
 
 namespace AL {
-  namespace Messaging {
+  namespace Transport {
 
 /**
  * @brief A segment definition as save in the MappedSegmentSelector.segments map
