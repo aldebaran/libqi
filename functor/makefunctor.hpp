@@ -12,26 +12,8 @@
 
 #include <alcommon-ng/functor/functor.hpp>
 
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/is_member_function_pointer.hpp>
-#include <boost/type_traits/is_member_function_pointer.hpp>
-
 namespace AL
 {
-//  template <typename F>
-//  Functor *makeFun(F f) {
-//    boost::is_member_pointer<F>::type t;
-//    boost::function_types::function_type<F>::arity
-//  }
-//  is_function
-//  is_function_pointer
-//  is_function_reference
-//  is_member_pointer
-//  is_member_object_pointer
-//  is_member_function_pointer
-//  is_callable_builtin
-//  is_nonmember_callable_builtin
-
 
   template <typename C, typename R>
   Functor *makeFunctor(C *obj, R (C::*f) ()) {
