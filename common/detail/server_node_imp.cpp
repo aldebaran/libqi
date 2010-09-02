@@ -41,17 +41,17 @@ namespace AL {
     // shame about this definition of a handler....
     // would be great if we could do R onMessage( {mod, meth, T})
     boost::shared_ptr<AL::Messaging::ResultDefinition> ServerNodeImp::onMessage(const AL::Messaging::CallDefinition &def) {
+      boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(
+        new ResultDefinition());
+
       // handle message
       std::string hash = def.methodName();
       const ServiceInfo& si = xGetService(hash);
       if (si.methodName.empty()) {
         // method not found
         alserror << "  Error: Method not found " << hash;
+        return res;
       }
-
-      boost::shared_ptr<ResultDefinition> res = boost::shared_ptr<ResultDefinition>(
-        new ResultDefinition());
-
       si.functor->call(def.args(), res->value());
       return res;
     }
