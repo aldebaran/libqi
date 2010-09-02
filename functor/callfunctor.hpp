@@ -17,11 +17,11 @@
 namespace AL
 {
 
+
   template <typename R>
   R callFunctor(Functor *f) {
     AL::Messaging::ArgumentList  args;
     AL::Messaging::VariableValue ret;
-
 
     f->call(args, ret);
     return ret.as<R>();
@@ -30,7 +30,6 @@ namespace AL
   void callVoidFunctor(Functor *f) {
     AL::Messaging::ArgumentList  args;
     AL::Messaging::VariableValue ret;
-
 
     f->call(args, ret);
   }

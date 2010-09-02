@@ -31,7 +31,9 @@ namespace AL
     AL::Messaging::ArgumentList  args;
     AL::Messaging::VariableValue ret;
 
+    #if $i != 0
     $generate_argpush_list($i)
+    #end if
     f->call(args, ret);
     return ret.as<R>();
   }
@@ -43,7 +45,9 @@ namespace AL
     AL::Messaging::ArgumentList  args;
     AL::Messaging::VariableValue ret;
 
+    #if $i != 0
     $generate_argpush_list($i)
+    #end if
     f->call(args, ret);
   }
 

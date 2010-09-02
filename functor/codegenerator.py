@@ -6,7 +6,6 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-
 import os.path
 from Cheetah.Template import Template
 
@@ -36,9 +35,9 @@ def generate_param_list(count, begin = False, end = False):
     t = "const P%(count)d &p%(count)d"
     return generate_list(t, count, begin=begin, end=end)
 
-def generate_arg_list(count):
+def generate_arg_list(count, begin = False, end = False):
     t = "p%(count)d"
-    return generate_list(t, count)
+    return generate_list(t, count, begin=begin, end=end)
 
 def generate_argpush_list(count):
     t = "args.push_back(p%(count)d);"
@@ -59,3 +58,4 @@ if __name__ == "__main__":
     generate_file("voidfunctor.hxx.in"      , "voidfunctor.hxx"      , 7)
     generate_file("makefunctor.hpp.in"      , "makefunctor.hpp"      , 7)
     generate_file("callfunctor.hpp.in"      , "callfunctor.hpp"      , 7)
+    generate_file("../common/client_node.hpp.in"      , "../common/client_node.hpp"      , 7)
