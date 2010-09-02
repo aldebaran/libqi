@@ -49,17 +49,17 @@ namespace AL {
 
       template<typename T0, typename T1, typename T2, typename T3>
       void callVoid(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3) {
-        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2));
+        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3));
       }
 
       template<typename T0, typename T1, typename T2, typename T3, typename T4>
       void callVoid(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4) {
-        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg4));
+        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3, arg4));
       }
 
       template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-      void callVoid(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T4& arg5) {
-        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg4, arg5));
+      void callVoid(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5) {
+        xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3, arg4, arg5));
       }
 
       //
@@ -90,19 +90,19 @@ namespace AL {
 
       template<typename R, typename T0, typename T1, typename T2, typename T3>
       R call(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3) {
-        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2));
+        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3));
         return ret.value().as<R>();
       }
 
       template<typename R, typename T0, typename T1, typename T2, typename T3, typename T4>
       R call(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4) {
-        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg4));
+        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3, arg4));
         return ret.value().as<R>();
       }
 
       template<typename R, typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
-      R call(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T4& arg5) {
-        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg4, arg5));
+      R call(const std::string methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5) {
+        AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3, arg4, arg5));
         return ret.value().as<R>();
       }
 
