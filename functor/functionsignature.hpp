@@ -14,8 +14,6 @@
 
 namespace AL
 {
-
-
   template <  typename C, typename R >
   std::string functionSignature(R (C::*f) ()) {
     std::string result;
@@ -176,7 +174,10 @@ namespace AL
     return result;
   }
 
-
+  template<typename F>
+  std::string makeSignature(const std::string name, F f) {
+    return name + std::string("::") + functionSignature(f);
+  }
 }
 
 #endif
