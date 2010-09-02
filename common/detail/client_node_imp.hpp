@@ -26,7 +26,7 @@ namespace AL {
       ClientNodeImp(const std::string& clientName,
         const std::string& masterAddress);
 
-      AL::Messaging::ResultDefinition call(const AL::Messaging::CallDefinition& callDef);
+      void call(const AL::Messaging::CallDefinition& callDef, AL::Messaging::ResultDefinition &result);
 
       //void call(const std::string& methodName,
       //  AL::Messaging::ReturnValue& result);

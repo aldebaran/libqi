@@ -57,14 +57,12 @@ namespace AL {
     //  result = res.value(); // copy crazy
     //}
 
-    ResultDefinition ClientNodeImp::call(
-      const CallDefinition& callDef) {
+    void ClientNodeImp::call(
+      const CallDefinition& callDef,  AL::Messaging::ResultDefinition &result) {
       // todo make a hash from the calldef
-      
+
       if (! initOK) {
-        // should we have killed the client?
-        ResultDefinition result;
-        return result;
+        return;
       }
 
       std::string hash = callDef.methodName();
@@ -75,8 +73,7 @@ namespace AL {
         // throw?
         alserror << "Error Client: " << fClientName <<
           " could not find Server for message " << hash;
-        ResultDefinition result;
-        return result;
+        return;
       }
 
       // get the relevant messaging client for the node that host the service
@@ -91,11 +88,12 @@ namespace AL {
           alserror << "Client: " << fClientName <<
             ", could not find Server for message " << hash;
           // throw?
-          ResultDefinition result;
-          return result;
+          return;
         }
       }
-      return (it->second)->send(callDef);
+      //TODO: optimise
+      result = (it->second)->send(callDef);
+      return;
     }
 
     bool ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
@@ -126,7 +124,8 @@ namespace AL {
       }
 
       try {
-        ResultDefinition r = call(CallDefinition("master.locateService",methodHash));
+        ResultDefinition r;
+        call(CallDefinition("master.locateService",methodHash), r);
         nodeAddress = r.value().as<std::string>();
       } catch(const std::exception& e) {
         alserror << "Could not connect to master Reason: " << e.what();

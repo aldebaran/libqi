@@ -24,8 +24,8 @@ namespace AL {
 
     ClientNode::~ClientNode() {}
 
-    ResultDefinition ClientNode::xCall(const CallDefinition& callDef) {
-      return fImp->call(callDef);
+    void ClientNode::xCall(const CallDefinition& callDef, ResultDefinition &result) {
+      return fImp->call(callDef, result);
     }
 
   }
