@@ -15,7 +15,7 @@ std::string gServerAddress = "127.0.0.1:5556";
 TEST(ClientNode, createWithStupidMasterPort) 
 {
   ClientNode client("client", "blabla");
-  client.call("ognagnuk");
+  client.callVoid("ognagnuk");
 }
 
 TEST(ServerNode, createWithStupidMasterPort) 
@@ -49,21 +49,22 @@ std::string echo(const std::string& in) {
 
 TEST(Nodes, NormalUsage)
 {
-  std::cout << "TEST: Initialized " << std::endl;
-  std::cout << "TEST: Calling master.listServices " << std::endl;
-  ReturnValue result1 = gClient.call("master.listServices");
+  //std::cout << "TEST: Initialized " << std::endl;
+  //std::cout << "TEST: Calling master.listServices " << std::endl;
+  //ReturnValue result1 = gClient.call("master.listServices");
 
   std::cout << "TEST: Binding wibble.echo " << std::endl;
   gServer.addService("wibble.echo", &echo);
+  std::string s = gClient.call<std::string>("wibble.echo", std::string("errr"));
   //std::cout << "TEST: Calling wibble.echo " << std::endl;
 
   std::cout << "TEST: Binding wibble.ping " << std::endl;
   gServer.addService("wibble.ping", &ping);
-  gClient.call("wibble.ping");
+  gClient.callVoid("wibble.ping");
   //std::cout << "TEST: Calling wibble.ping " << std::endl;
 
   std::cout << "TEST: Calling master.gobledigook " << std::endl;
-  ReturnValue result4 = gClient.call("master.gobledigook");
+  gClient.callVoid("master.gobledigook");
 
   //for(int i=0; i<100; i++) {
   //  ReturnValue result5 = gClient.call("master.listServices");
@@ -80,7 +81,7 @@ TEST(Nodes, PerformancePing)
   dt.start(numMessages);
   for (unsigned int loop = 0; loop < numMessages; loop++) {
     // Serialize
-    gClient.call("wibble.ping");
+    gClient.callVoid("wibble.ping");
   }
   dt.stop();
 }
@@ -96,14 +97,15 @@ TEST(Nodes, PerformanceEcho)
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    ArgumentList args;
-    ReturnValue result;
-    args.push_back(request);
+    //ArgumentList args;
+    //ReturnValue result;
+    //args.push_back(request);
+    std::string s;
 
     dt.start(numMessages, numBytes);
     for (unsigned int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      gClient.call("wibble.echo", args, result);
+      s = gClient.call<std::string>("wibble.echo", request);
     }
     dt.stop();
   }

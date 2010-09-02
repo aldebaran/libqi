@@ -38,26 +38,26 @@ namespace AL {
       }
     }
 
-    void ClientNodeImp::call(const std::string& methodName,
-      AL::Messaging::ReturnValue& result) {
-      CallDefinition def;
-      def.methodName() = methodName;
-      ResultDefinition res = xCall(def);
-      result = res.value(); // copy crazy
-    }
+    //void ClientNodeImp::call(const std::string& methodName,
+    //  AL::Messaging::ReturnValue& result) {
+    //  CallDefinition def;
+    //  def.methodName() = methodName;
+    //  ResultDefinition res = xCall(def);
+    //  result = res.value(); // copy crazy
+    //}
 
-    void ClientNodeImp::call(const std::string& methodName,
-        const AL::Messaging::ArgumentList& params,
-        AL::Messaging::ReturnValue& result) {
-      CallDefinition def;
-      def.methodName() = methodName;
-      def.args() = params;
+    //void ClientNodeImp::call(const std::string& methodName,
+    //    const AL::Messaging::ArgumentList& params,
+    //    AL::Messaging::ReturnValue& result) {
+    //  CallDefinition def;
+    //  def.methodName() = methodName;
+    //  def.args() = params;
 
-      ResultDefinition res = xCall(def);
-      result = res.value(); // copy crazy
-    }
+    //  ResultDefinition res = xCall(def);
+    //  result = res.value(); // copy crazy
+    //}
 
-    ResultDefinition ClientNodeImp::xCall(
+    ResultDefinition ClientNodeImp::call(
       const CallDefinition& callDef) {
       // todo make a hash from the calldef
       
@@ -125,16 +125,13 @@ namespace AL {
         return nodeAddress;
       }
 
-      ArgumentList args;
-      args.push_back(methodHash);
-      ReturnValue ret;
       try {
-        call("master.locateService", args, ret);
+        ResultDefinition r = call(CallDefinition("master.locateService",methodHash));
+        nodeAddress = r.value().as<std::string>();
       } catch(const std::exception& e) {
         alserror << "Could not connect to master Reason: " << e.what();
         return "";
       }
-      nodeAddress = ret.as<std::string>();
 
       return nodeAddress;
     }

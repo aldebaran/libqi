@@ -24,29 +24,37 @@ namespace AL {
 
     ClientNode::~ClientNode() {}
 
-    void ClientNode::call(const std::string& methodName,
-      AL::Messaging::ReturnValue& result) {
-      fImp->call(methodName, result);
+    ResultDefinition ClientNode::xCall(const CallDefinition& callDef) {
+      return fImp->call(callDef);
     }
 
-    void ClientNode::call(const std::string& methodName,
-      const AL::Messaging::ArgumentList& params,
-      AL::Messaging::ReturnValue& result) {
-      fImp->call(methodName, params, result);
+    void ClientNode::xCallVoid(const CallDefinition& callDef) {
+      fImp->call(callDef);
     }
 
-    AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName) {
-      AL::Messaging::ReturnValue result;
-      fImp->call(methodName, result);
-      return result;
-    }
+    //void ClientNode::call(const std::string& methodName,
+    //  AL::Messaging::ReturnValue& result) {
+    //  fImp->call(methodName, result);
+    //}
 
-    AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName,
-      const AL::Messaging::ArgumentList& params) {
-      AL::Messaging::ReturnValue result;
-      fImp->call(methodName, params, result);
-      return result;
-    }
+    //void ClientNode::call(const std::string& methodName,
+    //  const AL::Messaging::ArgumentList& params,
+    //  AL::Messaging::ReturnValue& result) {
+    //  fImp->call(methodName, params, result);
+    //}
+
+    //AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName) {
+    //  AL::Messaging::ReturnValue result;
+    //  fImp->call(methodName, result);
+    //  return result;
+    //}
+
+    //AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName,
+    //  const AL::Messaging::ArgumentList& params) {
+    //  AL::Messaging::ReturnValue result;
+    //  fImp->call(methodName, params, result);
+    //  return result;
+    //}
 
 
   }

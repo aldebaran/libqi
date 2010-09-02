@@ -26,15 +26,57 @@ namespace AL {
     public:
       CallDefinition ();
 
-      CallDefinition(const std::string& methodName) {
-        fMethodName = methodName;
+      CallDefinition(const std::string& methodName) : fMethodName(methodName) {
+      }
+
+      CallDefinition(const std::string& methodName, const ArgumentList& args) : fMethodName(methodName), fArgs(args) {
       }
 
       template<typename T>
       CallDefinition(const std::string& methodName, const T& arg0) : fMethodName(methodName) {
-        fArgs.push_back(arg0);
+        fArgs.resize(1);
+        fArgs[0] = arg0;
       }
-      // ... more templates ...
+      template<typename T>
+      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1) : fMethodName(methodName) {
+        fArgs.resize(2);
+        fArgs[0] = arg0;
+        fArgs[1] = arg1;
+      }
+      template<typename T>
+      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2) : fMethodName(methodName) {
+        fArgs.resize(3);
+        fArgs[0] = arg0;
+        fArgs[1] = arg1;
+        fArgs[2] = arg2;
+      }
+      template<typename T>
+      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3) : fMethodName(methodName) {
+        fArgs.resize(4);
+        fArgs[0] = arg0;
+        fArgs[1] = arg1;
+        fArgs[2] = arg2;
+        fArgs[3] = arg3;
+      }
+      template<typename T>
+      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3, const T& arg4) : fMethodName(methodName) {
+        fArgs.resize(5);
+        fArgs[0] = arg0;
+        fArgs[1] = arg1;
+        fArgs[2] = arg2;
+        fArgs[3] = arg3;
+        fArgs[4] = arg4;
+      }
+      template<typename T>
+      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3, const T& arg4, const T& arg5) : fMethodName(methodName) {
+        fArgs.resize(6);
+        fArgs[0] = arg0;
+        fArgs[1] = arg1;
+        fArgs[2] = arg2;
+        fArgs[3] = arg3;
+        fArgs[4] = arg4;
+        fArgs[5] = arg5;
+      }
 
       ~CallDefinition() {}
       bool operator==(const CallDefinition& rhs) const;
