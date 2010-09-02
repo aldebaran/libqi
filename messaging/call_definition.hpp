@@ -32,50 +32,49 @@ namespace AL {
       CallDefinition(const std::string& methodName, const ArgumentList& args) : fMethodName(methodName), fArgs(args) {
       }
 
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0) : fMethodName(methodName) {
-        fArgs.resize(1);
-        fArgs[0] = arg0;
+      template<typename T0>
+      CallDefinition(const std::string& methodName, const T0& arg0) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
       }
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1) : fMethodName(methodName) {
-        fArgs.resize(2);
-        fArgs[0] = arg0;
-        fArgs[1] = arg1;
+
+      template<typename T0, typename T1>
+      CallDefinition(const std::string& methodName, const T0& arg0, const T1& arg1) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
+        fArgs.push_back(arg1);
       }
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2) : fMethodName(methodName) {
-        fArgs.resize(3);
-        fArgs[0] = arg0;
-        fArgs[1] = arg1;
-        fArgs[2] = arg2;
+
+      template<typename T0, typename T1, typename T2>
+      CallDefinition(const std::string& methodName, const T0& arg0, const T1& arg1, const T2& arg2) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
+        fArgs.push_back(arg1);
+        fArgs.push_back(arg2);
       }
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3) : fMethodName(methodName) {
-        fArgs.resize(4);
-        fArgs[0] = arg0;
-        fArgs[1] = arg1;
-        fArgs[2] = arg2;
-        fArgs[3] = arg3;
+
+      template<typename T0, typename T1, typename T2, typename T3>
+      CallDefinition(const std::string& methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
+        fArgs.push_back(arg1);
+        fArgs.push_back(arg2);
+        fArgs.push_back(arg3);
       }
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3, const T& arg4) : fMethodName(methodName) {
-        fArgs.resize(5);
-        fArgs[0] = arg0;
-        fArgs[1] = arg1;
-        fArgs[2] = arg2;
-        fArgs[3] = arg3;
-        fArgs[4] = arg4;
+
+      template<typename T0, typename T1, typename T2, typename T3, typename T4>
+      CallDefinition(const std::string& methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
+        fArgs.push_back(arg1);
+        fArgs.push_back(arg2);
+        fArgs.push_back(arg3);
+        fArgs.push_back(arg4);
       }
-      template<typename T>
-      CallDefinition(const std::string& methodName, const T& arg0, const T& arg1, const T& arg2, const T& arg3, const T& arg4, const T& arg5) : fMethodName(methodName) {
-        fArgs.resize(6);
-        fArgs[0] = arg0;
-        fArgs[1] = arg1;
-        fArgs[2] = arg2;
-        fArgs[3] = arg3;
-        fArgs[4] = arg4;
-        fArgs[5] = arg5;
+
+      template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+      CallDefinition(const std::string& methodName, const T0& arg0, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4, const T5& arg5) : fMethodName(methodName) {
+        fArgs.push_back(arg0);
+        fArgs.push_back(arg1);
+        fArgs.push_back(arg2);
+        fArgs.push_back(arg3);
+        fArgs.push_back(arg4);
+        fArgs.push_back(arg5);
       }
 
       ~CallDefinition() {}
