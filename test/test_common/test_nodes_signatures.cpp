@@ -130,6 +130,7 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
 //  server.addService("doublebind.fun1", &fun2);
 //  int r2 = client.call<int>("doublebind.fun1", 1, 2);
 //  std::cout << "doublebind.fun1 1 2 = " << r2 << std::endl;
+//  KABOOOOOOM!!!! ... no num args check, no overloading
 //  int r1 = client.call<int>("doublebind.fun1", 1);
 //  std::cout << "doublebind.fun1 1 = " << r1 << std::endl;
 //}
