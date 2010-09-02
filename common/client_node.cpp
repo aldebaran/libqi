@@ -28,30 +28,5 @@ namespace AL {
       return fImp->call(callDef);
     }
 
-    //void ClientNode::call(const std::string& methodName,
-    //  AL::Messaging::ReturnValue& result) {
-    //  fImp->call(methodName, result);
-    //}
-
-    //void ClientNode::call(const std::string& methodName,
-    //  const AL::Messaging::ArgumentList& params,
-    //  AL::Messaging::ReturnValue& result) {
-    //  fImp->call(methodName, params, result);
-    //}
-
-    //AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName) {
-    //  AL::Messaging::ReturnValue result;
-    //  fImp->call(methodName, result);
-    //  return result;
-    //}
-
-    //AL::Messaging::ReturnValue ClientNode::call(const std::string& methodName,
-    //  const AL::Messaging::ArgumentList& params) {
-    //  AL::Messaging::ReturnValue result;
-    //  fImp->call(methodName, params, result);
-    //  return result;
-    //}
-
-
   }
 }

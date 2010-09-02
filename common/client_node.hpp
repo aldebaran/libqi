@@ -62,8 +62,6 @@ namespace AL {
         xCall(AL::Messaging::CallDefinition(methodName, arg0, arg1, arg2, arg3, arg4, arg5));
       }
 
-      //
-
       template<typename R>
       R call(const std::string methodName) {
         AL::Messaging::ResultDefinition ret = xCall(AL::Messaging::CallDefinition(methodName));
