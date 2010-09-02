@@ -10,12 +10,15 @@
 
 #include <string>
 #include <alcommon-ng/functor/makefunctor.hpp>
+#include <alcommon-ng/functor/functionsignature.hpp>
 #include <boost/shared_ptr.hpp>
+
+#define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) x
+//#define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) makeSignature(x,y)
 
 namespace AL {
   namespace Common {
 
-    // forward declared implementation
     class ServerNodeImp;
 
     class ServerNode {
@@ -25,78 +28,18 @@ namespace AL {
         const std::string& nodeAddress,
         const std::string& masterAddress);
 
-      template <typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) ()) {
-        xAddService(name, makeFunctor(obj, f));
+      template <typename OBJECT_TYPE, typename METHOD_TYPE>
+      void addService(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method) {
+        xAddService(HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(name, method), makeFunctor(object, method));
       }
 
-      template <typename R>
-      void addService(const std::string& name, R (*f) ()) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0)) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename P1, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename P1, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0, const P1 &p1)) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0, const P1 &p1, const P2 &p2)) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)) {
-        xAddService(name, makeFunctor(f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename C, typename R>
-      void addService(const std::string& name, C *obj, R (C::*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
-        xAddService(name, makeFunctor(obj, f));
-      }
-
-      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename R>
-      void addService(const std::string& name, R (*f) (const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)) {
-        xAddService(name, makeFunctor(f));
+      template <typename FUNCTION_TYPE>
+      void addService(const std::string& name, FUNCTION_TYPE function) {
+        xAddService(HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(name, function), makeFunctor(function));
       }
 
     private:
-      void xAddService(const std::string& name, Functor* functor);
+      void xAddService(const std::string& signature, Functor* functor);
       boost::shared_ptr<ServerNodeImp> fImp;
     };
   }
