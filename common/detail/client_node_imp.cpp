@@ -32,7 +32,7 @@ namespace AL {
       initOK = xCreateServerClient(fMasterAddress);
       if (initOK) {
         // we assert that we think the master can locate services
-        fServiceCache.insert("master.locateService", fMasterAddress);
+        fServiceCache.insert("master.locateService::s#&:s", fMasterAddress);
       } else {
         alserror << "\"" << fClientName << "\" Failed to connect to master at address \"" << fMasterAddress << "\"";
       }
@@ -125,7 +125,7 @@ namespace AL {
 
       try {
         ResultDefinition r;
-        call(CallDefinition("master.locateService",methodHash), r);
+        call(CallDefinition("master.locateService::s#&:s", methodHash), r);
         nodeAddress = r.value().as<std::string>();
       } catch(const std::exception& e) {
         alserror << "Could not connect to master Reason: " << e.what();

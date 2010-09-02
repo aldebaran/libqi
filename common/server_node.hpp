@@ -13,8 +13,8 @@
 #include <alcommon-ng/functor/functionsignature.hpp>
 #include <boost/shared_ptr.hpp>
 
-#define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) x
-//#define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) makeSignature(x,y)
+// #define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) x
+#define HORID_DEFINE_WHILE_SIGNATURES_ARE_NOT_FINISHED(x,y) makeSignature(x,y)
 
 namespace AL {
   namespace Common {
