@@ -55,7 +55,7 @@ MasterNode master(gMasterAddress);
 ServerNode server(gServerName, gServerAddress, gMasterAddress);
 ClientNode client("client", gMasterAddress);
 
-TEST(NodeSignatures, functors)
+TEST(NodeSignatures, allFunctorsBindAndCall)
 {
   server.addService("vfun0", &vfun0);
   server.addService("vfun1", &vfun1);
@@ -72,7 +72,6 @@ TEST(NodeSignatures, functors)
   server.addService("fun4", &fun4);
   server.addService("fun5", &fun5);
   server.addService("fun6", &fun6);
-  std::cout << "Finished binding functions" << std::endl;
 
   Foo f;
   server.addService("foo.vfun0", &f, &Foo::vfun0);
@@ -90,7 +89,6 @@ TEST(NodeSignatures, functors)
   server.addService("foo.fun4", &f, &Foo::fun4);
   server.addService("foo.fun5", &f, &Foo::fun5);
   server.addService("foo.fun6", &f, &Foo::fun6);
-  std::cout << "Finished binding methods" << std::endl;
 
   client.callVoid("vfun0");
   client.callVoid("vfun1", 1);
@@ -100,8 +98,6 @@ TEST(NodeSignatures, functors)
   client.callVoid("vfun5", 1, 2, 3, 4, 5);
   client.callVoid("vfun6", 1, 2, 3, 4, 5, 6);
 
-  std::cout << "Finished calling void functions" << std::endl;
-
   int i0 = client.call<int>("fun0");
   int i1 = client.call<int>("fun1", 1);
   int i2 = client.call<int>("fun2", 1, 2);
@@ -109,8 +105,6 @@ TEST(NodeSignatures, functors)
   int i4 = client.call<int>("fun4", 1, 2, 3, 4);
   int i5 = client.call<int>("fun5", 1, 2, 3, 4, 5);
   int i6 = client.call<int>("fun6", 1, 2, 3, 4, 5, 6);
-
-  std::cout << "Finished calling int functions" << std::endl;
 
   client.callVoid("foo.vfun0");
   client.callVoid("foo.vfun1", 1);
@@ -120,8 +114,6 @@ TEST(NodeSignatures, functors)
   client.callVoid("foo.vfun5", 1, 2, 3, 4, 5);
   client.callVoid("foo.vfun6", 1, 2, 3, 4, 5, 6);
 
-  std::cout << "Finished calling void members" << std::endl;
-
   int fi0 = client.call<int>("foo.fun0");
   int fi1 = client.call<int>("foo.fun1", 1);
   int fi2 = client.call<int>("foo.fun2", 1, 2);
@@ -129,6 +121,15 @@ TEST(NodeSignatures, functors)
   int fi4 = client.call<int>("foo.fun4", 1, 2, 3, 4);
   int fi5 = client.call<int>("foo.fun5", 1, 2, 3, 4, 5);
   int fi6 = client.call<int>("foo.fun6", 1, 2, 3, 4, 5, 6);
-
-  std::cout << "Finished calling int members" << std::endl;
 }
+
+
+//TEST(NodeSignatures, DoubleBind)
+//{
+//  server.addService("doublebind.fun1", &fun1);
+//  server.addService("doublebind.fun1", &fun2);
+//  int r2 = client.call<int>("doublebind.fun1", 1, 2);
+//  std::cout << "doublebind.fun1 1 2 = " << r2 << std::endl;
+//  int r1 = client.call<int>("doublebind.fun1", 1);
+//  std::cout << "doublebind.fun1 1 = " << r1 << std::endl;
+//}
