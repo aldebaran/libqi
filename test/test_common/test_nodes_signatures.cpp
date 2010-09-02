@@ -124,13 +124,47 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
 }
 
 
-//TEST(NodeSignatures, DoubleBind)
+TEST(NodeSignatures, MethodOverloading)
+{
+  server.addService("overload.fun1", &fun1);
+  server.addService("overload.fun1", &fun2);
+  int r2 = client.call<int>("overload.fun1", 1, 2);
+  std::cout << "overload.fun1 1 2 = " << r2 << std::endl;
+  //KABOOOOOOM!!!! ... no num args check, no overloading
+  int r1 = client.call<int>("overload.fun1", 1);
+  std::cout << "overload.fun1 1 = " << r1 << std::endl;
+}
+
+TEST(NodeSignatures, MultipleBind)
+{
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+  server.addService("multiple.fun1", &fun1);
+}
+
+TEST(NodeSignatures, paramTypeChecking)
+{
+  server.addService("typechecking.fun1", &fun1);
+  int r2 = client.call<int>("typechecking.fun1", 1);
+  int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
+}
+
+TEST(NodeSignatures, paramNumChecking)
+{
+  server.addService("paramnumchecking.fun1", &fun1);
+  int r2 = client.call<int>("paramnumchecking.fun1", 1);
+  int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
+}
+
+//TEST(NodeSignatures, ReturnTypeChecking)
 //{
-//  server.addService("doublebind.fun1", &fun1);
-//  server.addService("doublebind.fun1", &fun2);
-//  int r2 = client.call<int>("doublebind.fun1", 1, 2);
-//  std::cout << "doublebind.fun1 1 2 = " << r2 << std::endl;
-//  KABOOOOOOM!!!! ... no num args check, no overloading
-//  int r1 = client.call<int>("doublebind.fun1", 1);
-//  std::cout << "doublebind.fun1 1 = " << r1 << std::endl;
+//  server.addService("returntype.fun1", &fun1);
+// KABOOOM!
+//  int r2 = client.call<int>("returntype.fun1", 1);
+//  client.call<std::string>("returntype.fun1", 1);
 //}
