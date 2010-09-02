@@ -43,7 +43,7 @@ namespace AL {
       template <typename R>
       R call(const std::string methodName) {
         AL::Messaging::ResultDefinition result;
-        void (*f)()  = 0;
+        R (*f)()  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash), result);
         return result.value().as<R>();
@@ -60,7 +60,7 @@ namespace AL {
       template <typename R, typename P0>
       R call(const std::string methodName, const P0 &p0) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0)  = 0;
+        R (*f)(const P0 &p0)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0), result);
         return result.value().as<R>();
@@ -77,7 +77,7 @@ namespace AL {
       template <typename R, typename P0, typename P1>
       R call(const std::string methodName, const P0 &p0, const P1 &p1) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0, const P1 &p1)  = 0;
+        R (*f)(const P0 &p0, const P1 &p1)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0, p1), result);
         return result.value().as<R>();
@@ -94,7 +94,7 @@ namespace AL {
       template <typename R, typename P0, typename P1, typename P2>
       R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
+        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2), result);
         return result.value().as<R>();
@@ -111,7 +111,7 @@ namespace AL {
       template <typename R, typename P0, typename P1, typename P2, typename P3>
       R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
+        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3), result);
         return result.value().as<R>();
@@ -128,7 +128,7 @@ namespace AL {
       template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
       R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
+        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4), result);
         return result.value().as<R>();
@@ -145,7 +145,7 @@ namespace AL {
       template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
       R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
         AL::Messaging::ResultDefinition result;
-        void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
+        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
         std::string hash = makeSignature(methodName, f);
         xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4, p5), result);
         return result.value().as<R>();
