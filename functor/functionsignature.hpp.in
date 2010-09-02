@@ -43,6 +43,10 @@ namespace AL
   }
 
 #end for
+  template<typename F>
+  std::string makeSignature(const std::string name, F f) {
+    return name + std::string("::") + functionSignature(f);
+  }
 
 }
 
