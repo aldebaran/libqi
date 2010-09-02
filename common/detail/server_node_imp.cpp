@@ -11,7 +11,6 @@
 #include <alcommon-ng/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <alcommon-ng/functor/makefunctor.hpp>
 #include <allog/allog.h>
 
 namespace AL {
@@ -64,8 +63,6 @@ namespace AL {
     void ServerNodeImp::addService(const std::string& name, Functor* functor) {
 
       ServiceInfo service(name, functor);
-      // We should be making a hash here, related to
-      // "modulename.methodname" + typeid(arg0).name() ... typeid(argN).name()
       std::string hash = service.methodName;
       
       fLocalServiceList.insert(hash, service);
