@@ -76,8 +76,7 @@ TEST(Nodes, PerformancePing)
 {
   unsigned int numMessages = 10000;
 
-  AL::Test::DataPerfTimer dt("NodeCalls");
-
+  AL::Test::DataPerfTimer dt("Node void -> ping -> void");
   dt.start(numMessages);
   for (unsigned int loop = 0; loop < numMessages; loop++) {
     // Serialize
@@ -90,24 +89,19 @@ TEST(Nodes, PerformanceEcho)
 {
   unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
-  AL::Test::DataPerfTimer dt("NodeCalls");
+  AL::Test::DataPerfTimer dt("Node string -> echo -> string");
   char character = 'A';
 
   // loop message sizes 2^i bytes
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    //ArgumentList args;
-    //ReturnValue result;
-    //args.push_back(request);
-    std::string s;
 
     dt.start(numMessages, numBytes);
     for (unsigned int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      s = gClient.call<std::string>("wibble.echo", request);
+      std::string result = gClient.call<std::string>("wibble.echo", request);
     }
     dt.stop();
   }
-  
 }
