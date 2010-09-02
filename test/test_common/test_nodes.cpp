@@ -12,23 +12,23 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-TEST(ClientNode, createWithStupidMasterPort) 
+TEST(ClientNode, createWithStupidMasterPort)
 {
   ClientNode client("client", "blabla");
   client.callVoid("ognagnuk");
 }
 
-TEST(ServerNode, createWithStupidMasterPort) 
+TEST(ServerNode, createWithStupidMasterPort)
 {
   ServerNode server("server", "blabla", "oink");
 }
 
-TEST(MasterNode, createWithStupidMasterPort) 
+TEST(MasterNode, createWithStupidMasterPort)
 {
   MasterNode master("oink2");
 }
 
-TEST(ServerNode, createWithStupidServerPort) 
+TEST(ServerNode, createWithStupidServerPort)
 {
   MasterNode master("127.0.0.1:6666");
   ServerNode server("server", "blabla", "127.0.0.1:6666");
