@@ -28,10 +28,6 @@ namespace AL {
       return fImp->call(callDef);
     }
 
-    void ClientNode::xCallVoid(const CallDefinition& callDef) {
-      fImp->call(callDef);
-    }
-
     //void ClientNode::call(const std::string& methodName,
     //  AL::Messaging::ReturnValue& result) {
     //  fImp->call(methodName, result);
