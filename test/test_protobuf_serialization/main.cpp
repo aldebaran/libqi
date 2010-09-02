@@ -14,6 +14,11 @@
 
 using namespace google::protobuf;
 
+int toto(int i)
+{
+  return i + 42;
+}
+
 TEST(TestProtoSerialization, Basic) {
   testproto::Person p;
   p.set_name("toto");
