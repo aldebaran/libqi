@@ -28,7 +28,7 @@ namespace AL {
   /// and push handlers for those connection to the tread pool.
   /// This class need to be instantiated and run at the beginning of the process.
   /// </summary>
-  class ZMQSimpleServer : public Server {
+  class ZMQSimpleServer : public Server, public internal::ServerResponseDelegate {
   public:
     /// <summary>The Server class constructor.</summary>
     /// <param name="server_name">
