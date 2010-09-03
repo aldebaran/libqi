@@ -16,13 +16,21 @@ namespace AL {
 
     ClientNode::ClientNode() {}
 
+    ClientNode::~ClientNode() {}
+
     ClientNode::ClientNode(
       const std::string& clientName,
       const std::string& masterAddress) :
-      fImp(boost::shared_ptr<ClientNodeImp>(
-        new ClientNodeImp(clientName, masterAddress))) {}
+    fImp(
+        new ClientNodeImp(clientName, masterAddress)) {}
 
-    ClientNode::~ClientNode() {}
+    // not in the hxx because not a template
+    void ClientNode::callVoid(const std::string& methodName) {
+        AL::Messaging::ResultDefinition result;
+        void (*f)()  = 0;
+        std::string hash = makeSignature(methodName, f);
+        xCall(AL::Messaging::CallDefinition(hash), result);
+    }
 
     void ClientNode::xCall(const CallDefinition& callDef, ResultDefinition &result) {
       return fImp->call(callDef, result);

@@ -14,6 +14,8 @@
 namespace AL {
   namespace Common {
 
+    MasterNodeImp::~MasterNodeImp() {}
+
     MasterNodeImp::MasterNodeImp(
       const std::string& masterAddress) :
     fNodeInfo("master", masterAddress),

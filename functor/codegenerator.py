@@ -59,3 +59,4 @@ if __name__ == "__main__":
     generate_file("makefunctor.hpp.in"      , "makefunctor.hpp"      , 7)
     generate_file("callfunctor.hpp.in"      , "callfunctor.hpp"      , 7)
     generate_file("../common/client_node.hpp.in"      , "../common/client_node.hpp"      , 7)
+    generate_file("../common/client_node.hxx.in"      , "../common/client_node.hxx"      , 7)

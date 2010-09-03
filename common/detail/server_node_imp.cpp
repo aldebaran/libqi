@@ -19,6 +19,8 @@ namespace AL {
 
     ServerNodeImp::ServerNodeImp() : initOK(false) {}
 
+    ServerNodeImp::~ServerNodeImp() {}
+
     ServerNodeImp::ServerNodeImp(
       const std::string& serverName,
       const std::string& serverAddress,

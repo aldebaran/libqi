@@ -13,13 +13,14 @@ namespace AL {
   namespace Common {
 
     ServerNode::ServerNode() {}
+    ServerNode::~ServerNode() {}
 
     ServerNode::ServerNode(
       const std::string& serverName,
       const std::string& serverAddress,
       const std::string& masterAddress) :
-    fImp(boost::shared_ptr<ServerNodeImp>(
-      new ServerNodeImp(serverName, serverAddress, masterAddress)))
+    fImp(
+      new ServerNodeImp(serverName, serverAddress, masterAddress))
       {}
 
     void ServerNode::xAddService(const std::string& name, Functor* functor) {

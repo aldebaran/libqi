@@ -23,6 +23,7 @@ namespace AL {
     public:
       ClientNodeImp();
 
+      virtual ~ClientNodeImp();
       ClientNodeImp(const std::string& clientName,
         const std::string& masterAddress);
 

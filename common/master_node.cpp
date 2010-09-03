@@ -12,7 +12,8 @@
 namespace AL {
   namespace Common {
     MasterNode::MasterNode(const std::string& masterAddress) :
-      fImp(boost::shared_ptr<MasterNodeImp>(
-        new MasterNodeImp(masterAddress))) {}
+      fImp(new MasterNodeImp(masterAddress)) {}
+
+    MasterNode::~MasterNode() {}
   }
 }

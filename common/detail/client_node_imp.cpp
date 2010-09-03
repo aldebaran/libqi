@@ -17,6 +17,8 @@ namespace AL {
 
     ClientNodeImp::ClientNodeImp() : initOK(false) {}
 
+    ClientNodeImp::~ClientNodeImp() {}
+
     ClientNodeImp::ClientNodeImp(
       const std::string& clientName,
       const std::string& masterAddress) :
@@ -25,8 +27,6 @@ namespace AL {
       fMasterAddress(masterAddress) {
         xInit();
     }
-
-    ClientNodeImp::~ClientNodeImp() {}
 
     void ClientNodeImp::xInit() {
       initOK = xCreateServerClient(fMasterAddress);

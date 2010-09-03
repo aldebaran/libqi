@@ -21,6 +21,8 @@ namespace AL {
     public:
       explicit MasterNodeImp(const std::string& masterAddress);
 
+      ~MasterNodeImp();
+
       void registerService(const std::string& nodeAddress,
         const std::string& methodHash);
 

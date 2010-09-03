@@ -13,15 +13,14 @@
 #define COMMON_CLIENT_NODE_HPP_
 
 #include <string>
+#include <memory>
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/messaging/result_definition.hpp>
 #include <alcommon-ng/functor/functionsignature.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace AL {
   namespace Common {
 
-    // forward declared implementation
     class ClientNodeImp;
 
     class ClientNode {
@@ -33,129 +32,53 @@ namespace AL {
 
       virtual ~ClientNode();
 
-      void callVoid(const std::string methodName) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)()  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash), result);
-      }
+      void callVoid(const std::string& methodName);
 
-      template <typename R>
-      R call(const std::string methodName) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)()  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE>
+      RETURN_TYPE call(const std::string& methodName);
 
       template <typename P0>
-      void callVoid(const std::string methodName, const P0 &p0) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0);
 
-      template <typename R, typename P0>
-      R call(const std::string methodName, const P0 &p0) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0);
 
       template <typename P0, typename P1>
-      void callVoid(const std::string methodName, const P0 &p0, const P1 &p1) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0, const P1 &p1)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0, p1), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1);
 
-      template <typename R, typename P0, typename P1>
-      R call(const std::string methodName, const P0 &p0, const P1 &p1) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0, const P1 &p1)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0, p1), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0, typename P1>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1);
 
       template <typename P0, typename P1, typename P2>
-      void callVoid(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
 
-      template <typename R, typename P0, typename P1, typename P2>
-      R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0, typename P1, typename P2>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
 
       template <typename P0, typename P1, typename P2, typename P3>
-      void callVoid(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
 
-      template <typename R, typename P0, typename P1, typename P2, typename P3>
-      R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
 
       template <typename P0, typename P1, typename P2, typename P3, typename P4>
-      void callVoid(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
 
-      template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
-      R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
 
       template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-      void callVoid(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-          AL::Messaging::ResultDefinition result;
-          void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
-          std::string hash = makeSignature(methodName, f);
-          xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4, p5), result);
-      }
+      void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
 
-      template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-      R call(const std::string methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-        AL::Messaging::ResultDefinition result;
-        R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
-        std::string hash = makeSignature(methodName, f);
-        xCall(AL::Messaging::CallDefinition(hash, p0, p1, p2, p3, p4, p5), result);
-        return result.value().as<R>();
-      }
+      template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
+      RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
 
     private:
       void xCall(const AL::Messaging::CallDefinition& callDef, AL::Messaging::ResultDefinition &result);
-      //TODO optimise : autoptr is faster
-      boost::shared_ptr<ClientNodeImp> fImp;
+      std::auto_ptr<ClientNodeImp> fImp;
     };
   }
 }
+
+#include <alcommon-ng/common/client_node.hxx>
 #endif  // COMMON_CLIENT_NODE_HPP_

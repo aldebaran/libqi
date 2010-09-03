@@ -9,20 +9,20 @@
 #define AL_COMMON_MASTER_NODE_HPP_
 
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace AL {
   namespace Common {
 
-    // forward declared implementation
     class MasterNodeImp;
 
     class MasterNode {
     public:
       explicit MasterNode(const std::string& masterAddress);
+      virtual ~MasterNode();
 
     private:
-      boost::shared_ptr<MasterNodeImp> fImp;
+      std::auto_ptr<MasterNodeImp> fImp;
     };
   }
 }

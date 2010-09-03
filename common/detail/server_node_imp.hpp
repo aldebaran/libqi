@@ -25,6 +25,8 @@ namespace AL {
       AL::Messaging::MessageHandler {
     public:
       ServerNodeImp();
+      virtual ~ServerNodeImp();
+
       ServerNodeImp(const std::string& nodeName,
         const std::string& nodeAddress,
         const std::string& masterAddress);
