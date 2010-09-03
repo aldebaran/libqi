@@ -37,8 +37,9 @@ static const int gLoopCount   = 100000;
 //./sdk/bin/test_transport  1.73s user 3.96s system 106% cpu 4.316 total
 
 
-static const std::string gServerAddress = "tcp://127.0.0.1:5555";
-//static const std::string gServerAddress = "ipc:///tmp/test";
+//static const std::string gServerAddress = "tagada";
+//static const std::string gServerAddress = "tcp://127.0.0.1:5555";
+static const std::string gServerAddress = "ipc:///tmp/test";
 //static const std::string gServerAddress = "inproc://workers";
 static const std::string gClientAddress = gServerAddress;
 
@@ -49,7 +50,8 @@ class TestServer : public AL::Transport::Threadable, public AL::Transport::DataH
 public:
   TestServer(const std::string &address)
   {
-    _server = new AL::Transport::ZMQSimpleServer(address);
+    //_server = new AL::Transport::ShmServer(address);
+    _server = new AL::Transport::ZMQServer(address);
     _server->setDataHandler(this);
   }
 
@@ -78,9 +80,12 @@ int main_server()
   return 0;
 }
 
+AL::Transport::ShmServer clientserv("clientserv");
+
 int main_client(int clientId)
 {
   (void) clientId;
+  //AL::Transport::Client *client = new AL::Transport::ShmClient(gClientAddress, clientserv.getResultHandler());
   AL::Transport::Client *client = new AL::Transport::ZMQClient(gClientAddress);
   std::string            tosend = "bim";
   std::string            torecv;
@@ -116,6 +121,8 @@ int main(int argc, char **argv)
     for (int i = 0; i < gThreadCount; ++i)
     {
       std::cout << "starting thread: " << i << std::endl;
+      boost::thread             threadClientServer(boost::bind(&AL::Transport::ShmServer::run, &clientserv));
+      sleep(1);
       thd[i] = boost::thread(boost::bind(&main_client, i));
     }
 
@@ -129,6 +136,7 @@ int main(int argc, char **argv)
   else
   {
     boost::thread             threadServer(&main_server);
+    boost::thread             threadClientServer(boost::bind(&AL::Transport::ShmServer::run, &clientserv));
     sleep(1);
     boost::thread             threadClient(boost::bind(&main_client, 0));
     threadClient.join();
