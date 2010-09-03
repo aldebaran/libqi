@@ -9,6 +9,9 @@
 #ifndef   TYPESIGNATURE_HPP_
 # define  TYPESIGNATURE_HPP_
 
+// decorated name length exceeded, name was truncated
+#pragma warning( disable : 4503 )
+
 # include <string>
 # include <vector>
 # include <map>
