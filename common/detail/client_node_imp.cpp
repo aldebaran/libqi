@@ -10,6 +10,7 @@
 #include <alcommon-ng/common/detail/get_protocol.hpp>
 #include <alcommon-ng/messaging/client.hpp>
 #include <allog/allog.h>
+#include <alcommon-ng/exceptions/exceptions.hpp>
 
 namespace AL {
   using namespace Messaging;
@@ -38,43 +39,14 @@ namespace AL {
       }
     }
 
-    //void ClientNodeImp::call(const std::string& methodName,
-    //  AL::Messaging::ReturnValue& result) {
-    //  CallDefinition def;
-    //  def.methodName() = methodName;
-    //  ResultDefinition res = xCall(def);
-    //  result = res.value(); // copy crazy
-    //}
-
-    //void ClientNodeImp::call(const std::string& methodName,
-    //    const AL::Messaging::ArgumentList& params,
-    //    AL::Messaging::ReturnValue& result) {
-    //  CallDefinition def;
-    //  def.methodName() = methodName;
-    //  def.args() = params;
-
-    //  ResultDefinition res = xCall(def);
-    //  result = res.value(); // copy crazy
-    //}
-
     void ClientNodeImp::call(
       const CallDefinition& callDef,  AL::Messaging::ResultDefinition &result) {
-      // todo make a hash from the calldef
-
       if (! initOK) {
         return;
       }
 
-      std::string hash = callDef.methodName();
-      std::string nodeAddress = xLocateService(hash);
-
-      if (nodeAddress.empty()) {
-        // problem the master doesn't know about this message
-        // throw?
-        alserror << "Error Client: " << fClientName <<
-          " could not find Server for message " << hash;
-        return;
-      }
+      // will throw if service not found
+      const std::string& nodeAddress = xLocateService(callDef.methodName());
 
       // get the relevant messaging client for the node that host the service
       NameLookup<boost::shared_ptr<Client> >::iterator it;
@@ -85,9 +57,8 @@ namespace AL {
         it = fServerClients.find(nodeAddress);
 
         if (it == fServerClients.end()) {
-          alserror << "Client: " << fClientName <<
-            ", could not find Server for message " << hash;
-          // throw?
+          alserror << "Could not create client for server \"" << nodeAddress << "\" Probable connection error. " << callDef.methodName();
+          throw( new AL::Transport::ConnectionException("Could not create client for server. Probable connection error."));
           return;
         }
       }
@@ -109,16 +80,14 @@ namespace AL {
         alsdebug << "Client " << fClientName <<
           " creating client for server " << serverFullAddress << std::endl;
       } else {
-        alsdebug << "Failed to create client for address " << serverAddress << " Reason: connect fail";
+        alserror << "Failed to create client for address " << serverAddress << " Reason: connect failure.";
       }
       return ok;
     }
 
-    const std::string ClientNodeImp::xLocateService(
+    const std::string& ClientNodeImp::xLocateService(
       const std::string& methodHash) {
-      std::string nodeAddress = fServiceCache.get(methodHash);
-
-      // empty means not found
+      const std::string& nodeAddress = fServiceCache.get(methodHash);
       if (!nodeAddress.empty()) {
         return nodeAddress;
       }
@@ -126,12 +95,23 @@ namespace AL {
       try {
         ResultDefinition r;
         call(CallDefinition("master.locateService::s#&:s", methodHash), r);
-        nodeAddress = r.value().as<std::string>();
+        std::string tmpAddress = r.value().as<std::string>();
+
+        if (!tmpAddress.empty()) {
+          // cache located service pair
+          fServiceCache.insert(methodHash, tmpAddress);
+          // return a const string ref address
+          return fServiceCache.get(methodHash);
+        } else {
+          alserror << "Unable to find service \"" << methodHash << "\" Reason: Method not known to master.";
+          throw( new AL::Transport::ServiceNotFoundException("Unable to find service. Reason: Method not known to master."));
+        }
       } catch(const std::exception& e) {
-        alserror << "Could not connect to master Reason: " << e.what();
-        return "";
+        alserror << "Unable to find service \"" << methodHash << "\" Reason: master not found. Detail: " << e.what();
+        throw( new AL::Transport::ServiceNotFoundException("Unable to find service. Reason: master not found."));
       }
 
+      // never happens: we either return early or throw
       return nodeAddress;
     }
   }

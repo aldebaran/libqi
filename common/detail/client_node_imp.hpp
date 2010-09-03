@@ -42,7 +42,7 @@ namespace AL {
 
       void xInit();
       bool xCreateServerClient(const std::string& address);
-      const std::string xLocateService(const std::string& methodHash);
+      const std::string& xLocateService(const std::string& methodHash);
 
     };
   }

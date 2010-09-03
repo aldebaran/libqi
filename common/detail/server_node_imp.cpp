@@ -63,10 +63,9 @@ namespace AL {
     }
 
     void ServerNodeImp::addService(const std::string& name, Functor* functor) {
-
       ServiceInfo service(name, functor);
       std::string hash = service.methodName;
-      
+      //std::cout << "Added Service" << hash << std::endl;
       fLocalServiceList.insert(hash, service);
       xRegisterServiceWithMaster(hash);
     }
