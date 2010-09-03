@@ -1,4 +1,5 @@
 build*
 *.[oa]
 *~
+*.pyc
 CMakeLists.txt.user
