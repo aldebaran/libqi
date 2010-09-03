@@ -16,32 +16,46 @@ namespace AL {
 ResultHandler::ResultHandler ()
   : pool(SHARED_SEGMENT_SIZE, 500) {
   pool.init();
-  m_resultMutex = AL::ALMutex::createALMutex();
 }
 
 ResultHandler::~ResultHandler () {
 }
 
-const std::string &ResultHandler::get(unsigned int id)
+boost::shared_ptr<ResultInfo> ResultHandler::get(unsigned int id)
 {
-  AL::ALCriticalSection section(m_resultMutex);
+  boost::mutex::scoped_lock l(m_resultMutex);
   return m_results[id];
 }
 
-std::string &ResultHandler::set(unsigned int id, const std::string retval)
+void ResultHandler::set(unsigned int id)
 {
-  AL::ALCriticalSection section(m_resultMutex);
-  return m_results[id] = retval;
+  boost::mutex::scoped_lock l(m_resultMutex);
+  m_results[id] = boost::shared_ptr<ResultInfo>(new ResultInfo());
 }
 
-void ResultHandler::remove (unsigned int id)
+void ResultHandler::set(unsigned int id, const std::string retval)
 {
-  AL::ALCriticalSection section(m_resultMutex);
-  std::map<unsigned int, std::string>::iterator it = m_results.find(id);
+  std::cout << "resulthandler set" << std::endl;
+  boost::shared_ptr<ResultInfo> myres = get(id);
+  std::cout << "resulthandler set ap" << std::endl;
+  if (!myres) {
+    std::cout << "WARNING" << std::endl;
+    myres = boost::shared_ptr<ResultInfo>(new ResultInfo());
+    boost::mutex::scoped_lock l(m_resultMutex);
+    m_results[id] = myres;
+  }
+  std::cout << "resulthandler set asss" << std::endl;
+  myres->setResult(retval);
+}
+
+void ResultHandler::remove(unsigned int id)
+{
+  boost::mutex::scoped_lock l(m_resultMutex);
+  std::map<unsigned int,  boost::shared_ptr<ResultInfo> >::iterator it = m_results.find(id);
   m_results.erase(it);
 }
 
-unsigned int ResultHandler::generateID () {
+unsigned int ResultHandler::generateID() {
   boost::mutex::scoped_lock l(counter_access);
   return ++counter;
 }

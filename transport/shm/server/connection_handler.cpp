@@ -18,6 +18,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 
 #include <alcommon-ng/collections/variables_list.hpp>
+#include <alcommon-ng/transport/shm/client/shmconnection.hpp>
 
 namespace AL {
   namespace Transport {
@@ -55,9 +56,9 @@ namespace AL {
       {
         std::string result;
         callback->onData(def, result);
-        std::cout << "Please send result" << std::endl;
-        //ShmConnection connection(def.getSender(), *getResultHandler());
-        //connection.send(result);
+        std::cout << "sending result:" << id << "size:" << result.size() << std::endl;
+        ShmConnection connection("clientserv", resultHandler);
+        connection.sendResult(id, result);
         //TODO:CTAF:
 
 //        AL::ALPtr<ResultDefinition> result = callback->ippcCallback(def);

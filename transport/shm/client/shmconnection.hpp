@@ -45,7 +45,7 @@ public:
 
 
   virtual void send(const std::string &tosend, std::string &result);
-  virtual void send(const std::string &result);
+  virtual void sendResult(const unsigned int id, const std::string &result);
 
 private:
 

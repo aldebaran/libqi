@@ -9,7 +9,7 @@
 #ifndef LIBIPPC_RESULTHANDLER_HPP_
 #define LIBIPPC_RESULTHANDLER_HPP_
 
-//#include <alcommon-ng/transport/shm/client/result_info.hpp>
+#include <alcommon-ng/transport/shm/client/result_info.hpp>
 
 #include <shmpool/pool.hpp>
 
@@ -29,9 +29,11 @@ public:
 
 public:
   //todo: use ref
-  const std::string &get(unsigned int id);
+  boost::shared_ptr<ResultInfo> get(unsigned int id);
 
-  std::string &set(unsigned int id, const std::string retval);
+
+  void set(unsigned int id);
+  void set(unsigned int id, const std::string retval);
 
   void remove(unsigned int id);
   unsigned int generateID();
@@ -39,8 +41,8 @@ public:
   AL::shmpool::pool& getShmPool ();
 
 private:
-  AL::ALPtr<AL::ALMutex>               m_resultMutex;
-  std::map<unsigned int, std::string>  m_results;
+  boost::mutex                                             m_resultMutex;
+  std::map<unsigned int, boost::shared_ptr<ResultInfo> >   m_results;
 
   unsigned int                         counter;
   boost::mutex                         counter_access;

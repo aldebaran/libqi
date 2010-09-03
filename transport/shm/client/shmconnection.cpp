@@ -60,10 +60,10 @@ void ShmConnection::send(const std::string &tosend, std::string &result)
   unsigned int id;
 
   id = resultHandler.generateID();
-  //resultHandler.push(id);
+  resultHandler.set(id);
   {
     //TODO: oups
-    //boost::mutex::scoped_lock l(resultHandler.get(id)->access);
+    boost::mutex::scoped_lock l(resultHandler.get(id)->access);
     {
       io::stream_buffer<MappedDevice> buf(MappedSegmentSelector::instance().get(invite,
         MappedSegmentSelector::MS_CREATE | MappedSegmentSelector::MS_REMOVE), &connector);
@@ -71,10 +71,10 @@ void ShmConnection::send(const std::string &tosend, std::string &result)
       stream << id;
       stream << tosend;
     }
-    std::cout << "wait result for " << id << " mod: " << std::endl;
-    //resultHandler.get(id)->wait_result(l);
+    std::cout << "wait result for " << id << std::endl;
+    resultHandler.get(id)->waitResult(l);
     std::cout << "End wait result for " << id << std::endl;
-
+    result = resultHandler.get(id)->result();
 //    if (resultHandler.get(id)->asResult())
 //      res = resultHandler.get(id)->getResult();
 //    else {
@@ -83,15 +83,16 @@ void ShmConnection::send(const std::string &tosend, std::string &result)
 //      std::cout << "[!!] error thrown" << std::endl;
 //    }
   }
-  //resultHandler.remove(id);
+  resultHandler.remove(id);
 }
 
 //send back a result to the server
-void ShmConnection::send(const std::string& result) {
+void ShmConnection::sendResult(const unsigned int id, const std::string& result) {
   this->init(TypeResult);
   io::stream_buffer<MappedDevice> buf(MappedSegmentSelector::instance().get(invite,
                 MappedSegmentSelector::MS_CREATE | MappedSegmentSelector::MS_REMOVE), &connector);
   std::iostream stream(&buf);
+  stream << id;
   stream << result;
   //OArchive archive(stream);
   //archive << def;

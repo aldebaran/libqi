@@ -33,24 +33,16 @@ void ResultConnectionHandler::run() {
     io::stream_buffer<MappedDevice> buf(MappedSegmentSelector::instance().get(rdv_name.c_str(),
       MappedSegmentSelector::MS_OPEN | MappedSegmentSelector::MS_REMOVE));
     std::iostream stream(&buf);
-    std::string  result;
-    unsigned int id;
+    std::string   result;
+    unsigned int  id;
 
     stream >> id;
     stream >> result;
 
-//    res.getRequestId();
-//    //res.getRequestId()->access;
-//    if (m_resultHandler.get(res.getRequestId()) == NULL)
-//    {
-//      // return;
-//    }
-//    m_resultHandler.get(res.getRequestId())->access;
-//    //		std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! REQUEST ID [" << res.getRequestId() << "]" << std::endl;
-//    boost::mutex::scoped_lock l(m_resultHandler.get(res.getRequestId())->access);
-//    m_resultHandler.get(res.getRequestId())->setResult(res);
-    //TODO: handle result
-    std::cout << "please return a Result" << std::endl;
+    std::cout << "Handling Result:" << id << "size:" << result.size() << std::endl;
+    //boost::mutex::scoped_lock l(m_resultHandler.get(id)->access);
+    m_resultHandler.set(id, result);
+
   } catch (const std::exception & e) {
     std::cerr << "[Ippc] Thread Exception caught : " << e.what() << std::endl;
   }
