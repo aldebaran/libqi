@@ -23,8 +23,10 @@ namespace AL {
     //if you use the custom XREP code, activate the full async experience to use the thread pool
     #define ZMQ_FULL_ASYNC
 
-    ZMQServer::ZMQServer (const std::string &server_name)
-      : Server(server_name),
+    /// <summary> Constructor. </summary>
+    /// <param name="serverAddress"> The server address. </param>
+    ZMQServer::ZMQServer(const std::string &serverAddress)
+      : Server(serverAddress),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
     {

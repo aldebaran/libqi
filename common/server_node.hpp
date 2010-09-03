@@ -18,10 +18,20 @@ namespace AL {
 
     class ServerNodeImp;
 
+    /// <summary> Server node. </summary>
     class ServerNode {
     public:
+
+      /// <summary> Default constructor. </summary>
       ServerNode();
+
+      /// <summary> Finaliser. </summary>
       virtual ~ServerNode();
+
+      /// <summary> Default constructor. </summary>
+      /// <param name="nodeName"> Name of the node. </param>
+      /// <param name="nodeAddress"> The node address. </param>
+      /// <param name="masterAddress"> The master address. </param>
       ServerNode(const std::string& nodeName,
         const std::string& nodeAddress,
         const std::string& masterAddress);

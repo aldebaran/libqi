@@ -11,9 +11,13 @@
 
 namespace AL {
   namespace Common {
+
+    /// <summary> Constructor. </summary>
+    /// <param name="masterAddress"> The master address. </param>
     MasterNode::MasterNode(const std::string& masterAddress) :
       fImp(new MasterNodeImp(masterAddress)) {}
 
+    /// <summary> Destructor. </summary>
     MasterNode::~MasterNode() {}
   }
 }

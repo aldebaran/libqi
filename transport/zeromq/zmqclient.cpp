@@ -15,31 +15,37 @@
 namespace AL {
   namespace Transport {
 
-  ZMQClient::ZMQClient(const std::string &serverAddress)
-    : Client(serverAddress),
+    /// <summary> Constructor. </summary>
+    /// <param name="serverAddress"> The server address. </param>
+    ZMQClient::ZMQClient(const std::string &serverAddress)
+      : Client(serverAddress),
       context(1),
       socket(context, ZMQ_REQ)
-  {
-    connect();
-  }
+    {
+      connect();
+    }
 
-  void ZMQClient::connect()
-  {
-    alsdebug << "ZMQClient::connect " << _serverAddress;
-    socket.connect(_serverAddress.c_str());
-  }
+    /// <summary> Connects to the server </summary>
+    void ZMQClient::connect()
+    {
+      alsdebug << "ZMQClient::connect " << _serverAddress;
+      socket.connect(_serverAddress.c_str());
+    }
 
-  void ZMQClient::send(const std::string &tosend, std::string &result)
-  {
-    //TODO: could we avoid more copy?
-    zmq::message_t msg(tosend.size());
-    //TODO?
-    memcpy(msg.data(), tosend.data(), tosend.size());
-    socket.send(msg);
-    socket.recv(&msg);
-    result.assign((char *)msg.data(), msg.size());
-  }
+    /// <summary> Sends. </summary>
+    /// <param name="tosend"> The data to send. </param>
+    /// <param name="result"> [in,out] The result. </param>
+    void ZMQClient::send(const std::string &tosend, std::string &result)
+    {
+      //TODO: could we avoid more copy?
+      zmq::message_t msg(tosend.size());
+      //TODO?
+      memcpy(msg.data(), tosend.data(), tosend.size());
+      socket.send(msg);
+      socket.recv(&msg);
+      result.assign((char *)msg.data(), msg.size());
+    }
 
-}
+  }
 }
 

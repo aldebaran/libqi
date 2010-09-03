@@ -16,9 +16,18 @@ namespace AL {
 
     class MasterNodeImp;
 
+    /// <summary> Master node. </summary>
     class MasterNode {
     public:
+
+      /// <summary> Constructor. </summary>
+      /// <param name="masterAddress">
+      /// The master address.
+      /// e.g. 127.0.0.1:5555
+      /// </param>
       explicit MasterNode(const std::string& masterAddress);
+
+      /// <summary> Finaliser. </summary>
       virtual ~MasterNode();
 
     private:

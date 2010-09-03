@@ -14,17 +14,30 @@ namespace AL {
   using Messaging::ResultDefinition;
   namespace Common {
 
+    /// <summary>
+    /// Used to call services that have been added to a server. If the service
+    /// is unknown, the master is interogated to find the appropriate server.
+    /// </summary>
     ClientNode::ClientNode() {}
 
+    /// <summary> Destructor. </summary>
     ClientNode::~ClientNode() {}
 
+    /// <summary>
+    /// DefaultConstructor Used to call services that have been added to a
+    /// server. If the service is unknown, the master is interogated
+    ///  to find the appropriate server.
+    /// </summary>
+    /// <param name="clientName"> Name of the client. </param>
+    /// <param name="masterAddress"> The master address. </param>
     ClientNode::ClientNode(
       const std::string& clientName,
       const std::string& masterAddress) :
     fImp(
         new ClientNodeImp(clientName, masterAddress)) {}
 
-    // not in the hxx because not a template
+    /// <summary> A void method call </summary>
+    /// <param name="methodName"> Name of the method. </param>
     void ClientNode::callVoid(const std::string& methodName) {
         AL::Messaging::ResultDefinition result;
         void (*f)()  = 0;

@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_MESSAGING_CONNECTION_HANDLER_HPP_
-#define AL_MESSAGING_CONNECTION_HANDLER_HPP_
+#ifndef AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
+#define AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/runnable.hpp>
@@ -18,18 +18,27 @@ namespace AL {
   namespace Transport {
 
     /// <summary>
-    /// A connection handler created for each new incoming connection and pushed to
-    /// the thread pool.
+    /// A connection handler created for each new incoming connection and
+    /// pushed to the thread pool.
     /// </summary>
     class ZMQConnectionHandler : public Runnable {
     public:
+
+      /// <summary> Constructor. </summary>
+      /// <param name="msg"> The message. </param>
+      /// <param name="sdelegate"> [in,out] If non-null, the sdelegate. </param>
+      /// <param name="rdelegate"> [in,out] If non-null, the rdelegate. </param>
+      /// <param name="data"> [in,out] If non-null, the data. </param>
       ZMQConnectionHandler(
         const std::string &msg,
         DataHandler *sdelegate,
         internal::ServerResponseDelegate* rdelegate,
         void *data);
 
+      /// <summary> Finaliser. </summary>
       virtual ~ZMQConnectionHandler ();
+
+      /// <summary> Runs this object. </summary>
       virtual void run ();
 
     private:
@@ -42,4 +51,4 @@ namespace AL {
   }
 }
 
-#endif /* !AL_MESSAGING_CONNECTION_HANDLER_HPP_ */
+#endif  // AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_

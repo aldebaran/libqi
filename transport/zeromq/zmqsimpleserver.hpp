@@ -21,13 +21,14 @@
 namespace AL {
   namespace Transport {
 
+  class ResultHandler;
+
   /// <summary>
   /// The server class. It listen for incoming connection from client
   /// and push handlers for those connection to the tread pool.
   /// This class need to be instantiated and run at the beginning of the process.
   /// </summary>
-  class ResultHandler;
-  class ZMQSimpleServer : public Server, public internal::ServerResponseDelegate {
+  class ZMQSimpleServer : public Server {
   public:
     /// <summary>The Server class constructor.</summary>
     /// <param name="server_name">

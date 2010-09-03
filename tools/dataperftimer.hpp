@@ -32,11 +32,26 @@ namespace AL {
     class DataPerfTimer
     {
     public:
+
+      /// <summary> Constructor. </summary>
+      /// <param name="testDescription"> Information describing the test. </param>
+      /// <param name="showHeader"> true to show, false to hide the header. </param>
       DataPerfTimer(const std::string& testDescription = "", bool showHeader = true);
 
+      /// <summary> Print header. </summary>
+      /// <param name="testDescription"> Information describing the test. </param>
       void printHeader(const std::string& testDescription = "");
+
+      /// <summary> Starts the timer </summary>
+      /// <param name="loopCount"> Number of loops. </param>
+      /// <param name="msgSize"> Size of the message. </param>
       void start(const unsigned long loopCount = 1, const unsigned long msgSize = 0);
+
+      /// <summary> Stops the timer and optionaly prints results </summary>
+      /// <param name="shouldPrint"> true if should print. </param>
       void stop(bool shouldPrint = true);
+
+      /// <summary> Prints this object. </summary>
       void print();
 
     protected:
