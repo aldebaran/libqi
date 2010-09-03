@@ -13,27 +13,6 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-TEST(ClientNode, createWithStupidMasterPort)
-{
-  ClientNode client("client", "blabla");
-  client.callVoid("ognagnuk");
-}
-
-TEST(ServerNode, createWithStupidMasterPort)
-{
-  ServerNode server("server", "blabla", "oink");
-}
-
-TEST(MasterNode, createWithStupidMasterPort)
-{
-  MasterNode master("oink2");
-}
-
-TEST(ServerNode, createWithStupidServerPort)
-{
-  MasterNode master("127.0.0.1:6666");
-  ServerNode server("server", "blabla", "127.0.0.1:6666");
-}
 
 MasterNode gMaster(gMasterAddress);
 ServerNode gServer(gServerName, gServerAddress, gMasterAddress);
@@ -47,34 +26,10 @@ std::string echo(const std::string& in) {
 }
 
 
-
-TEST(Nodes, NormalUsage)
-{
-  //std::cout << "TEST: Initialized " << std::endl;
-  //std::cout << "TEST: Calling master.listServices " << std::endl;
-  //ReturnValue result1 = gClient.call("master.listServices");
-
-  std::cout << "TEST: Binding wibble.echo " << std::endl;
-  gServer.addService("wibble.echo", &echo);
-  std::string s = gClient.call<std::string>("wibble.echo", std::string("errr"));
-  //std::cout << "TEST: Calling wibble.echo " << std::endl;
-
-  std::cout << "TEST: Binding wibble.ping " << std::endl;
-  gServer.addService("wibble.ping", &ping);
-  gClient.callVoid("wibble.ping");
-  //std::cout << "TEST: Calling wibble.ping " << std::endl;
-
-  std::cout << "TEST: Calling master.gobledigook " << std::endl;
-  gClient.callVoid("master.gobledigook");
-
-  //for(int i=0; i<100; i++) {
-  //  ReturnValue result5 = gClient.call("master.listServices");
-  //}
-}
-
-
 TEST(Nodes, PerformancePing)
 {
+
+  gServer.addService("wibble.ping", &ping);
   unsigned int numMessages = 10000;
 
   AL::Test::DataPerfTimer dt("Node void -> ping -> void");
@@ -88,6 +43,7 @@ TEST(Nodes, PerformancePing)
 
 TEST(Nodes, PerformanceEcho)
 {
+  gServer.addService("wibble.echo", &echo);
   unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
   AL::Test::DataPerfTimer dt("Node string -> echo -> string");
@@ -106,3 +62,57 @@ TEST(Nodes, PerformanceEcho)
     dt.stop();
   }
 }
+
+
+
+TEST(ClientNode, createWithStupidMasterPort)
+{
+  ClientNode client("client", "blabla");
+  bool ex = false;
+  try {
+    client.callVoid("ognagnuk");
+  }
+  catch( const std::exception& e) {
+    ex = true;
+  }
+  EXPECT_EQ(true, ex);
+}
+
+TEST(ServerNode, createWithStupidMasterPort)
+{
+  ServerNode server("server", "blabla", "oink");
+}
+
+TEST(MasterNode, createWithStupidMasterPort)
+{
+  MasterNode master("oink2");
+}
+
+TEST(ServerNode, createWithStupidServerPort)
+{
+  MasterNode master("127.0.0.1:6666");
+  ServerNode server("server", "blabla", "127.0.0.1:6666");
+}
+
+
+
+//TEST(Nodes, NormalUsage)
+//{
+//  //std::cout << "TEST: Initialized " << std::endl;
+//  //std::cout << "TEST: Calling master.listServices " << std::endl;
+//  //ReturnValue result1 = gClient.call("master.listServices");
+//
+//  std::cout << "TEST: Binding wibble.echo " << std::endl;
+//  gServer.addService("wibble.echo", &echo);
+//  std::string s = gClient.call<std::string>("wibble.echo", std::string("errr"));
+//  //std::cout << "TEST: Calling wibble.echo " << std::endl;
+//
+//  std::cout << "TEST: Binding wibble.ping " << std::endl;
+//  gServer.addService("wibble.ping", &ping);
+//  gClient.callVoid("wibble.ping");
+//  //std::cout << "TEST: Calling wibble.ping " << std::endl;
+//
+//  std::cout << "TEST: Calling master.gobledigook " << std::endl;
+//  gClient.callVoid("master.gobledigook");
+//}
+//

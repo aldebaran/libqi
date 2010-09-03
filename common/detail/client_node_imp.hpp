@@ -27,7 +27,9 @@ namespace AL {
       ClientNodeImp(const std::string& clientName,
         const std::string& masterAddress);
 
-      void call(const AL::Messaging::CallDefinition& callDef, AL::Messaging::ResultDefinition &result);
+      void call(
+        const AL::Messaging::CallDefinition& callDef,
+        AL::Messaging::ResultDefinition &result);
 
       bool initOK;
 
@@ -41,6 +43,7 @@ namespace AL {
       NameLookup<boost::shared_ptr<AL::Messaging::Client> > fServerClients;
 
       void xInit();
+      boost::shared_ptr<AL::Messaging::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
 
