@@ -50,8 +50,11 @@ class TestServer : public AL::Transport::Threadable, public AL::Transport::DataH
 public:
   TestServer(const std::string &address)
   {
-    //_server = new AL::Transport::ShmServer(address);
+    #ifdef WITH_SHM
+    _server = new AL::Transport::ShmServer(address);
+    #else
     _server = new AL::Transport::ZMQServer(address);
+    #endif
     _server->setDataHandler(this);
   }
 
@@ -79,14 +82,18 @@ int main_server()
   server.run();
   return 0;
 }
-
+#ifdef WITH_SHM
 AL::Transport::ShmServer clientserv("clientserv");
+#endif
 
 int main_client(int clientId)
 {
   (void) clientId;
-  //AL::Transport::Client *client = new AL::Transport::ShmClient(gClientAddress, clientserv.getResultHandler());
+#ifdef WITH_SHM
+  AL::Transport::Client *client = new AL::Transport::ShmClient(gClientAddress, clientserv.getResultHandler());
+#else
   AL::Transport::Client *client = new AL::Transport::ZMQClient(gClientAddress);
+#endif
   std::string            tosend = "bim";
   std::string            torecv;
   DataPerfTimer dt;
@@ -121,7 +128,9 @@ int main(int argc, char **argv)
     for (int i = 0; i < gThreadCount; ++i)
     {
       std::cout << "starting thread: " << i << std::endl;
+#ifdef WITH_SHM
       boost::thread             threadClientServer(boost::bind(&AL::Transport::ShmServer::run, &clientserv));
+#endif
       sleep(1);
       thd[i] = boost::thread(boost::bind(&main_client, i));
     }
@@ -136,7 +145,9 @@ int main(int argc, char **argv)
   else
   {
     boost::thread             threadServer(&main_server);
+#ifdef WITH_SHM
     boost::thread             threadClientServer(boost::bind(&AL::Transport::ShmServer::run, &clientserv));
+#endif
     sleep(1);
     boost::thread             threadClient(boost::bind(&main_client, 0));
     threadClient.join();
