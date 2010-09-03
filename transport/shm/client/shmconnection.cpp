@@ -62,7 +62,6 @@ void ShmConnection::send(const std::string &tosend, std::string &result)
   id = resultHandler.generateID();
   resultHandler.set(id);
   {
-    //TODO: oups
     boost::mutex::scoped_lock l(resultHandler.get(id)->access);
     {
       io::stream_buffer<MappedDevice> buf(MappedSegmentSelector::instance().get(invite,
@@ -71,17 +70,8 @@ void ShmConnection::send(const std::string &tosend, std::string &result)
       stream << id;
       stream << tosend;
     }
-    std::cout << "wait result for " << id << std::endl;
     resultHandler.get(id)->waitResult(l);
-    std::cout << "End wait result for " << id << std::endl;
     result = resultHandler.get(id)->result();
-//    if (resultHandler.get(id)->asResult())
-//      res = resultHandler.get(id)->getResult();
-//    else {
-//      std::string message = resultHandler.get(id)->getException();
-//      throw ALERROR("ShmConnection", "send", message);
-//      std::cout << "[!!] error thrown" << std::endl;
-//    }
   }
   resultHandler.remove(id);
 }
@@ -94,8 +84,6 @@ void ShmConnection::sendResult(const unsigned int id, const std::string& result)
   std::iostream stream(&buf);
   stream << id;
   stream << result;
-  //OArchive archive(stream);
-  //archive << def;
 }
 
 }

@@ -35,7 +35,7 @@ public:
    * @brief The ShmConnection class constructor.
    * @param server_name The server id name in order to connect to it.
    */
-  ShmConnection (const std::string & server_name, ResultHandler & resultHandler);
+  ShmConnection(const std::string & server_name, ResultHandler & resultHandler);
 
   /**
    * @brief The ShmConnection class destructor.
@@ -43,18 +43,17 @@ public:
   virtual ~ShmConnection ();
 
 
-
   virtual void send(const std::string &tosend, std::string &result);
   virtual void sendResult(const unsigned int id, const std::string &result);
 
 private:
 
-  void init (DefinitionType type);
+  void init(DefinitionType type);
 
   /**
    * @brief Initialize the connection with the server.
    */
-  void handShake (DefinitionType type);
+  void handShake(DefinitionType type);
 
   /**
    * @brief The target server name.

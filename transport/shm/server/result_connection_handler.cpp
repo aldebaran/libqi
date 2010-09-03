@@ -39,8 +39,6 @@ void ResultConnectionHandler::run() {
     stream >> id;
     stream >> result;
 
-    std::cout << "Handling Result:" << id << "size:" << result.size() << std::endl;
-    //boost::mutex::scoped_lock l(m_resultHandler.get(id)->access);
     m_resultHandler.set(id, result);
 
   } catch (const std::exception & e) {

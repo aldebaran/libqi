@@ -35,16 +35,13 @@ void ResultHandler::set(unsigned int id)
 
 void ResultHandler::set(unsigned int id, const std::string retval)
 {
-  std::cout << "resulthandler set" << std::endl;
   boost::shared_ptr<ResultInfo> myres = get(id);
-  std::cout << "resulthandler set ap" << std::endl;
   if (!myres) {
     std::cout << "WARNING" << std::endl;
     myres = boost::shared_ptr<ResultInfo>(new ResultInfo());
     boost::mutex::scoped_lock l(m_resultMutex);
     m_results[id] = myres;
   }
-  std::cout << "resulthandler set asss" << std::endl;
   myres->setResult(retval);
 }
 

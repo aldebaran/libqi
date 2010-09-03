@@ -56,7 +56,7 @@ namespace AL {
       {
         std::string result;
         callback->onData(def, result);
-        std::cout << "sending result:" << id << "size:" << result.size() << std::endl;
+        //std::cout << "sending result:" << id << "size:" << result.size() << std::endl;
         ShmConnection connection("clientserv", resultHandler);
         connection.sendResult(id, result);
         //TODO:CTAF:
