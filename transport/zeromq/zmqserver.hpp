@@ -27,7 +27,7 @@ namespace AL {
  * This class need to be instantiated and run at the beginning of the process.
  */
   class ResultHandler;
-  class ZMQServer : public Server {
+  class ZMQServer : public Server, public internal::ServerResponseDelegate {
   public:
     /**
      * @brief The Server class constructor.

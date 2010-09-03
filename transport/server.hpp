@@ -17,8 +17,7 @@
 namespace AL {
   namespace Transport {
 
-    class Server : public Threadable,
-      public internal::ServerResponseDelegate {
+    class Server : public Threadable {
     public:
       explicit Server(const std::string &_serverAddress)
         : _serverAddress(_serverAddress),
