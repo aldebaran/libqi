@@ -23,15 +23,46 @@ namespace AL {
 
     class ClientNodeImp;
 
+    /// <summary>
+    /// Used to call services that have been added to a server.
+    /// If the service is unknown, the master is interogated
+    //  to find the appropriate server
+    /// </summary>
     class ClientNode {
     public:
+
+      /// <summary>
+      /// DefaultConstructor
+      /// Used to call services that have been added to a server.
+      /// If the service is unknown, the master is interogated
+      //  to find the appropriate server
+      /// </summary>
       ClientNode();
 
+      /// <summary>
+      /// Used to call services that have been added to a server.
+      /// If the service is unknown, the master is interogated
+      //  to find the appropriate server
+      /// </summary>
+      /// <param name="clientName">
+      /// The name you want to give to this client
+      /// e.g. "client"
+      /// </param>
+      /// <param name="masterAddress">
+      /// The address of the master that is used to find services
+      /// e.g. "127.0.0.1:5555"
+      /// </param>
       ClientNode(const std::string& clientName,
         const std::string& masterAddress);
 
       virtual ~ClientNode();
 
+      /// <summary>
+      /// A call with no args other than methodName and a return type of void
+      /// </summary>
+      /// <param name="methodName">
+      /// The name of the method you want to call
+      /// </param>
       void callVoid(const std::string& methodName);
 
       template <typename RETURN_TYPE>

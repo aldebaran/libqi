@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef LIBIPPC_ZEROMQ_SIMPLE_SERVER_HPP_
-#define LIBIPPC_ZEROMQ_SIMPLE_SERVER_HPP_
+#ifndef AL_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
+#define AL_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
 
 #include <zmq.hpp>
 #include <alcommon-ng/transport/server.hpp>
@@ -21,40 +21,32 @@
 namespace AL {
   namespace Transport {
 
-/**
- * @brief The server class. It listen for incoming connection from client
- * and push handlers for those connection to the tread pool.
- * This class need to be instantiated and run at the beginning of the process.
- */
+  /// <summary>
+  /// The server class. It listen for incoming connection from client
+  /// and push handlers for those connection to the tread pool.
+  /// This class need to be instantiated and run at the beginning of the process.
+  /// </summary>
   class ResultHandler;
   class ZMQSimpleServer : public Server, public internal::ServerResponseDelegate {
   public:
-    /**
-     * @brief The Server class constructor.
-     * @param server_name The name given to the server, id for clients to connect.
-     */
+    /// <summary>The Server class constructor.</summary>
+    /// <param name="server_name">
+    /// The name given to the server, id for clients to connect.
+    /// </param>
     ZMQSimpleServer(const std::string & server_name);
 
-    /**
-     * @brief The Server class destructor.
-     */
+    /// <summary>The Server class destructor.</summary>
     virtual ~ZMQSimpleServer();
 
-    /**
-     * @brief Run the server thread.
-     */
+    /// <summary>Run the server thread.</summary>
     virtual void run();
 
-    /**
-     * @brief Wait for the server thread to complete its task.
-     */
+    /// <summary>Wait for the server thread to complete its task.</summary>
     void wait();
 
     zmq::message_t *recv(zmq::message_t &msg);
 
-    /**
-     * @brief Force the server to stop and wait for complete stop.
-     */
+    /// <summary>Force the server to stop and wait for complete stop.</summary>
     void stop();
 
     void poll();
@@ -75,4 +67,4 @@ namespace AL {
 }
 }
 
-#endif /* !LIBIPPC_SERVER_HPP_ */
+#endif  // AL_TRANSPORT_ZEROMQSIMPLESERVER_HPP_

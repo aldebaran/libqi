@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef LIBIPPC_ZEROMQ_SERVER_HPP_
-#define LIBIPPC_ZEROMQ_SERVER_HPP_
+#ifndef AL_TRANSPORT_ZEROMQSERVER_HPP_
+#define AL_TRANSPORT_ZEROMQSERVER_HPP_
 
 #include <zmq.hpp>
 #include <alcommon-ng/transport/server.hpp>
@@ -21,58 +21,49 @@
 namespace AL {
   namespace Transport {
 
-/**
- * @brief The server class. It listen for incoming connection from client
- * and push handlers for those connection to the tread pool.
- * This class need to be instantiated and run at the beginning of the process.
- */
-  class ResultHandler;
-  class ZMQServer : public Server, public internal::ServerResponseDelegate {
-  public:
-    /**
-     * @brief The Server class constructor.
-     * @param server_name The name given to the server, id for clients to connect.
-     */
-    ZMQServer(const std::string & server_name);
+    /// <summary>
+    /// The server class. It listen for incoming connection from client
+    /// and push handlers for those connection to the tread pool.
+    /// This class need to be instantiated and run at the beginning of the process.
+    /// </summary>
+    class ResultHandler;
+    class ZMQServer : public Server {
+    public:
+      /// <summary> The Server class constructor. </summary>
+      /// <param name="server_name">
+      /// The name given to the server, id for clients to connect.
+      /// </param>
+      ZMQServer(const std::string & server_name);
 
-    /**
-     * @brief The Server class destructor.
-     */
-    virtual ~ZMQServer();
+      /// <summary> The Server class destructor </summary>
+      virtual ~ZMQServer();
 
-    /**
-     * @brief Run the server thread.
-     */
-    virtual void run();
+      /// <summary> Run the server thread. </summary>
+      virtual void run();
 
-    /**
-     * @brief Wait for the server thread to complete its task.
-     */
-    void wait();
+      /// <summary> Wait for the server thread to complete its task. </summary>
+      void wait();
 
-    zmq::message_t *recv(zmq::message_t &msg);
+      zmq::message_t *recv(zmq::message_t &msg);
 
-    /**
-     * @brief Force the server to stop and wait for complete stop.
-     */
-    void stop();
+      /// <summary> Force the server to stop and wait for complete stop. </summary>
+      void stop();
 
-    void poll();
-    void sendResponse(const std::string &result, void *data = 0);
+      void poll();
+      void sendResponse(const std::string &result, void *data = 0);
 
-    ResultHandler *getResultHandler() { return 0; }
+      ResultHandler *getResultHandler() { return 0; }
 
-    friend void *worker_routine(void *arg);
+      friend void *worker_routine(void *arg);
 
-  private:
-    bool                server_running;
-    zmq::context_t      zctx;
-    zmq::socket_t       zsocket;
-    boost::mutex        socketMutex;
-    HandlersPool        handlersPool;
-  };
-
-}
+    private:
+      bool                server_running;
+      zmq::context_t      zctx;
+      zmq::socket_t       zsocket;
+      boost::mutex        socketMutex;
+      HandlersPool        handlersPool;
+    };
+  }
 }
 
-#endif /* !LIBIPPC_SERVER_HPP_ */
+#endif  // AL_TRANSPORT_ZEROMQSERVER_HPP_

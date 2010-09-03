@@ -15,4 +15,4 @@
 #  include <unistd.h>
 #endif
 
-#endif    /* !AL_MESSAGING_SLEEP_HXX_ */
+#endif  // AL_MESSAGING_SLEEP_HXX_

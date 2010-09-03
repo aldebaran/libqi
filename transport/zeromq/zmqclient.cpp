@@ -7,8 +7,6 @@
 
 #include <alcommon-ng/transport/zeromq/zmqclient.hpp>
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>
-//#include <alcommon-ng/serialization/iarchive.hpp>
-//#include <alcommon-ng/serialization/oarchive.hpp>
 #include <sstream>
 #include <boost/interprocess/streams/bufferstream.hpp>
 #include <alfile/alfilesystem.h>
@@ -17,13 +15,8 @@
 namespace AL {
   namespace Transport {
 
-    /** Accepted address:
-     *   - ipc:///tmp/naoqi/paf
-     *   - tcp://127.0.0.1:5555
-     */
-
-  ZMQClient::ZMQClient(const std::string &servername)
-    : Client(servername),
+  ZMQClient::ZMQClient(const std::string &serverAddress)
+    : Client(serverAddress),
       context(1),
       socket(context, ZMQ_REQ)
   {

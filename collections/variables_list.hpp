@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 19, 2009 at 11:31:46 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *      Mail  : jdelay@aldebaran-robotics.com
  */
 
 #ifndef LIBIPPC_VARIABLESLIST_HPP_
@@ -108,15 +108,17 @@ namespace AL {
   }
 }
 
-
-
 #include <alcommon-ng/collections/print_visitor.hpp>
-/**
- * Print the value in ostr stream.
- * @param ostr The stream to send the printed value in.
- * @param value The value to print.
- * @return ostr.
- */
+/// </summary>
+/// Print the value in ostr stream.
+/// </summary>
+/// <param name="ostr">
+/// The stream to send the printed value in.
+/// </param>
+/// <param name="value">
+/// The value to print.
+/// </param>
+/// <returns>ostr</returns>
 inline std::ostream & operator << (std::ostream & ostr, const AL::Messaging::VariableValue & value) {
         AL::Messaging::PrintVisitor visitor(ostr);
         return boost::apply_visitor(visitor, value.value());

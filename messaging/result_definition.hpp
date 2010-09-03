@@ -14,12 +14,12 @@
 namespace AL {
   namespace Messaging {
 
-    /**
-    * @brief A exception class definition used to define a result returned by a
-    * remote procedure call.
-    * This class and its attributes must be serializable in order to be sent to
-    * the server.
-    */
+    /// <summary>
+    /// A exception class definition used to define a result returned by a
+    /// remote procedure call.
+    /// This class and its attributes must be serializable in order to be sent to
+    /// the server.
+    /// </summary>
     class ResultDefinition {
     public:
       ResultDefinition ();

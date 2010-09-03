@@ -16,12 +16,11 @@
 namespace AL {
   namespace Messaging {
 
-    /**
-    * @brief A basic call definition used to define a remote procedure call.
-    * This class and its attributes must be serializable in order to be sent to
-    * the server.
-    * "client" class
-    */
+    /// <summary>
+    /// A basic call definition used to define a remote procedure call.
+    /// This class and its attributes must be serializable in order to be sent to
+    /// the server."client" class
+    /// </summary>
     class CallDefinition {
     public:
       CallDefinition ();

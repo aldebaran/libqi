@@ -17,10 +17,10 @@
 namespace AL {
   namespace Transport {
 
-/**
- * @brief A connection handler created for each new incoming connection and pushed to
- * the thread pool.
- */
+    /// <summary>
+    /// A connection handler created for each new incoming connection and pushed to
+    /// the thread pool.
+    /// </summary>
     class ZMQConnectionHandler : public Runnable {
     public:
       ZMQConnectionHandler(

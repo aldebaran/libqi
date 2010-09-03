@@ -3,11 +3,11 @@
  *
  *  Created on: Oct 1, 2009 at 10:47:42 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *      Mail  : jdelay@aldebaran-robotics.com
  */
 
-#ifndef LIBIPPC_EXCEPTIONS_HPP_
-#define LIBIPPC_EXCEPTIONS_HPP_
+#ifndef AL_TRANSPORT_EXCEPTIONS_HPP_
+#define AL_TRANSPORT_EXCEPTIONS_HPP_
 
 #include <exception>
 #include <string>
@@ -15,9 +15,9 @@
 namespace AL {
   namespace Transport {
 
-/**
- * @brief A basic exception class, base to other ippc:: exceptions.
- */
+    /// <summary>
+    /// A basic exception class, base to other ippc:: exceptions.
+    /// </summary>
 class Exception : public std::exception {
 public:
   Exception () {}
@@ -30,9 +30,9 @@ private:
   std::string message;
 };
 
-/**
- * @brief Exception thrown when creating/opening shared memory segments.
- */
+/// <summary>
+/// Exception thrown when creating/opening shared memory segments.
+/// </summary>
 class SharedSegmentInitializationException : public Exception {
 public:
   SharedSegmentInitializationException () {}
@@ -40,9 +40,9 @@ public:
   virtual ~SharedSegmentInitializationException () throw () {}
 };
 
-/**
- * @brief Exception thrown when the connection to the server fail.
- */
+/// <summary>
+/// Exception thrown when the connection to the server fail.
+/// </summary>
 class ConnectionException : public Exception {
 public:
   ConnectionException () {}
@@ -50,9 +50,9 @@ public:
   virtual ~ConnectionException () throw () {}
 };
 
-/**
- * @brief Exception thrown when the server encountered a problem.
- */
+/// <summary>
+/// Exception thrown when the server encountered a problem.
+/// </summary>
 class ServerException : public Exception {
 public:
   ServerException () {}
@@ -60,9 +60,9 @@ public:
   virtual ~ServerException () throw () {}
 };
 
-/**
- * @brief Exception thrown when the server encountered a problem when reading.
- */
+/// <summary>
+///Exception thrown when the server encountered a problem when reading.
+/// </summary>
 class ReadException : public Exception {
 public:
   ReadException () {}
@@ -70,9 +70,9 @@ public:
   virtual ~ReadException () throw () {}
 };
 
-/**
- * @brief Exception thrown when the client encountered a problem when writing.
- */
+/// <summary>
+/// Exception thrown when the client encountered a problem when writing.
+/// </summary>
 class WriteException : public Exception {
 public:
   WriteException () {}
@@ -84,4 +84,4 @@ public:
   }
 }
 
-#endif /* !LIBIPPC_EXCEPTIONS_HPP_ */
+#endif  // AL_TRANSPORT_EXCEPTIONS_HPP_

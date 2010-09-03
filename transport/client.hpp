@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	_AL_MESSAGING_TRANSPORT_CLIENT_HPP_
-# define   	_AL_MESSAGING_TRANSPORT_CLIENT_HPP_
+#ifndef AL_TRANSPORT_CLIENT_HPP_
+# define AL_TRANSPORT_CLIENT_HPP_
 
 #include <string>
 
@@ -26,4 +26,4 @@ namespace AL {
   }
 }
 
-#endif  // _AL_MESSAGING_TRANSPORT_CLIENT_HPP_
+#endif  // AL_TRANSPORT_CLIENT_HPP_

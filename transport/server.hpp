@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _AL_MESSAGING_TRANSPORT_SERVER_HPP_
-# define _AL_MESSAGING_TRANSPORT_SERVER_HPP_
+#ifndef AL_TRANSPORT_SERVER_HPP_
+# define AL_TRANSPORT_SERVER_HPP_
 
 #include <althread/altask.h>
 #include <string>
@@ -38,4 +38,4 @@ namespace AL {
   }
 }
 
-#endif  // _AL_MESSAGING_TRANSPORT_SERVER_HPP_
+#endif  // AL_TRANSPORT_SERVER_HPP_

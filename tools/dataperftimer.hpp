@@ -15,20 +15,20 @@
 namespace AL {
   namespace Test {
 
-    /**
-     * This class is a utility to calculate the msg/sec
-     * and MB/sec performance of a function
-     *
-     * use like this:
-     *
-     * DataPerfTimer dpt();
-     *
-     * dpt.start(10, 512);
-     * for (int i = 0; i < 10; ++i) {
-     *   send(512octect);
-     * }
-     * dpt.stop();
-     */
+    /// <summary>
+    /// This class is a utility to calculate the msg/sec
+    /// and MB/sec performance of a function
+    ///
+    /// Usage:
+    ///
+    /// DataPerfTimer dpt();
+    ///
+    /// dpt.start(10, 512);
+    /// for (int i = 0; i &lt; 10; ++i) {
+    ///   send(512octect);
+    /// }
+    /// dpt.stop();
+    /// </summary>
     class DataPerfTimer
     {
     public:
