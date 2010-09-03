@@ -12,12 +12,13 @@ namespace AL {
 
   ShmClient::ShmClient(const std::string &servername, ResultHandler *resultHandler)
     : Client(servername),
-      connection(servername, *resultHandler)
+      _resultHandler(resultHandler)
   {
   }
 
   void ShmClient::send(const std::string &tosend, std::string &result)
   {
+    ShmConnection  connection(_serverAddress, *_resultHandler);
     connection.send(tosend, result);
   }
 

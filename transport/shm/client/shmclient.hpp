@@ -23,7 +23,7 @@ namespace AL {
     virtual void send(const std::string &tosend, std::string &result);
 
   protected:
-    ShmConnection  connection;
+    ResultHandler *_resultHandler;
   };
 }
 }
