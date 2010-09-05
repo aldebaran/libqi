@@ -78,7 +78,8 @@ namespace AL {
 
     void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodHash) {
       if (fInfo.name != "master") {  // ehem
-        fClient.send(CallDefinition("master.registerService::v:ss", fInfo.address, methodHash));
+        ResultDefinition r;
+        fClient.call(CallDefinition("master.registerService::v:ss", fInfo.address, methodHash),r);
       }
     }
   }

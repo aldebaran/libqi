@@ -52,9 +52,7 @@ namespace AL {
       // will throw if unable to find or create client
       boost::shared_ptr<Client> client = xGetServerClient(nodeAddress);
 
-      //TODO: optimise
-      result = client->send(callDef);
-      return;
+      client->call(callDef, result);
     }
 
     // TODO const ref ?

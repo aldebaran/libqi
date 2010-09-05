@@ -15,10 +15,6 @@
 #include <alcommon-ng/serialization/serializer.hpp>
 #include <allog/allog.h>
 
-// temporary
-//#include <alcommon-ng/messaging/call_definition_serialization.hxx>
-//#include <alcommon-ng/messaging/result_definition_serialization.hxx>
-
 namespace AL {
   namespace Messaging {
 
@@ -37,21 +33,20 @@ namespace AL {
          return initOK;
       }
 
-      R send(const T &def)
+      void call(const T &def, R& result)
       {
         if (! initOK) {
           alserror << "Attempt to use an unitialized client.";
-          // TODO should throw
-          R r;
-          return r;
         }
         std::string tosend = AL::Serialization::Serializer::serialize(def);
         std::string torecv;
 
         _client->send(tosend, torecv);
-        return AL::Serialization::Serializer::deserialize<R>(torecv);
+        // we might have an excetption in the result, even
+        // if the call method was void
+        AL::Serialization::Serializer::deserialize(torecv, result);
       }
-    
+
       bool initOK;
     protected:
       AL::Transport::Client *_client;

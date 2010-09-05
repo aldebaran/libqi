@@ -74,7 +74,7 @@ int main_client(int clientId)
   dt.start(gLoopCount);
   for (int j = 0; j< gLoopCount; ++j)
   {
-    client.send(CallDefinition("ping"));
+    client.call(CallDefinition("ping"),res);
   }
   dt.stop();
 
@@ -87,7 +87,7 @@ int main_client(int clientId)
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
     {
-      res = client.send(CallDefinition("size", request));
+      client.call(CallDefinition("size", request), res);
       int size = res.value().as<int>();
       //assert(tosend == torecv);
     }
@@ -103,7 +103,7 @@ int main_client(int clientId)
     for (int j = 0; j< gLoopCount; ++j)
     {
       AL::Messaging::CallDefinition def("echo", std::string(request));
-      res = client.send(def);
+      client.call(def, res);
       std::string result = res.value().as<std::string>();
     }
     dt.stop();
