@@ -10,8 +10,6 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
-//#include <alcommon-ng/serialization/definition_type.hpp>
-
 #include <zmq.hpp>
 
 #include <pthread.h>
@@ -19,17 +17,14 @@
 #include <boost/thread/mutex.hpp>
 #include <alfile/alfilesystem.h>
 
-
-
-
 namespace AL {
   namespace Transport {
 
     //if you use the custom XREP code, activate the full async experience to use the thread pool
     //#define ZMQ_FULL_ASYNC
 
-    ZMQSimpleServer::ZMQSimpleServer(const std::string &server_name)
-      : Server(server_name),
+    ZMQSimpleServer::ZMQSimpleServer(const std::string &serverAddress)
+      : Server(serverAddress),
         zctx(1),
         zsocket(zctx, ZMQ_REP)
     {

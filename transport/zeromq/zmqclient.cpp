@@ -37,12 +37,18 @@ namespace AL {
     /// <param name="result"> [in,out] The result. </param>
     void ZMQClient::send(const std::string &tosend, std::string &result)
     {
+      // TODO optimise this
+      // Could we copy from the serialized stream without calling
+      // stream.str() before sending to this method?
       //TODO: could we avoid more copy?
       zmq::message_t msg(tosend.size());
       //TODO?
       memcpy(msg.data(), tosend.data(), tosend.size());
       socket.send(msg);
       socket.recv(&msg);
+      // TODO optimize this
+      // boost could serialize from msg.data() and size,
+      // without making a string
       result.assign((char *)msg.data(), msg.size());
     }
 
