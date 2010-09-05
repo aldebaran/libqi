@@ -31,16 +31,18 @@ namespace AL {
         const std::string& nodeAddress,
         const std::string& masterAddress);
 
-      boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(
-        const AL::Messaging::CallDefinition& def);
-
       const NodeInfo& getNodeInfo() const;
 
-      // best if we didn't use a ServiceInfo here ...
-      // should hide some of bind
       void addService(const std::string& name, Functor* functor);
       
       bool initOK;
+
+      // MessageHandler Implementation -----------------
+      void onMessage(
+        const AL::Messaging::CallDefinition& def,
+              AL::Messaging::ResultDefinition& result);
+      // -----------------------------------------------
+
     private:
       AL::Messaging::Server fServer;
       NodeInfo fInfo;

@@ -59,17 +59,22 @@ namespace AL {
 
 
     protected:
-      virtual void onData(const std::string &data, std::string &result)
+      virtual void onData(const std::string &dataIn, std::string &dataOut)
       {
         if (! initOK ) {
           alserror << "Attempt to use an uninitialized server";
         }
-        T def = AL::Serialization::Serializer::deserialize<T>(data);
-        boost::shared_ptr<R> res;
+        // "dataIn" contains a serialized version of "in",
+        // we will de-serialize this and pass it to the method
+        // then serialize the "out" result to "dataOut"
+        T in;
+        AL::Serialization::Serializer::deserialize(dataIn, in);
 
-        res = _onMessageDelegate->onMessage(def);
-        assert(res);
-        result = AL::Serialization::Serializer::serialize(*res);
+        R out;
+        _onMessageDelegate->onMessage(in, out);
+
+        assert(out);
+        dataOut = AL::Serialization::Serializer::serialize(out);
       }
 
     protected:

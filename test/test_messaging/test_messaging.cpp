@@ -26,9 +26,8 @@ class ServiceHandler :  public MessageHandler
 {
 public:
   // to call function on current process
-  boost::shared_ptr<AL::Messaging::ResultDefinition> onMessage(const AL::Messaging::CallDefinition & def)
+  void onMessage(const AL::Messaging::CallDefinition & def, AL::Messaging::ResultDefinition& res)
   {
-    boost::shared_ptr<AL::Messaging::ResultDefinition> res(new AL::Messaging::ResultDefinition());
 
     if (def.methodName() == "ping")
     {
@@ -37,15 +36,14 @@ public:
 
     if (def.methodName() == "size")
     {
-      res->value((int)def.args().front().as<std::string>().size());
+      res.value((int)def.args().front().as<std::string>().size());
     }
 
     else if (def.methodName() == "echo")
     {
       std::string result = def.args().front().as<std::string>();
-      res->value(result);
+      res.value(result);
     }
-    return res;
   }
 };
 
