@@ -6,11 +6,8 @@
 */
 
 #include <alcommon-ng/transport/zeromq/zmqclient.hpp>
-#include <alcommon-ng/transport/shm/client/result_handler.hpp>
-#include <sstream>
-#include <boost/interprocess/streams/bufferstream.hpp>
-#include <alfile/alfilesystem.h>
-#include <allog.h>
+//#include <alcommon-ng/transport/shm/client/result_handler.hpp>
+//#include <sstream>
 
 namespace AL {
   namespace Transport {
@@ -28,7 +25,6 @@ namespace AL {
     /// <summary> Connects to the server </summary>
     void ZMQClient::connect()
     {
-      alsdebug << "ZMQClient::connect " << _serverAddress;
       socket.connect(_serverAddress.c_str());
     }
 
@@ -42,7 +38,6 @@ namespace AL {
       // stream.str() before sending to this method?
       //TODO: could we avoid more copy?
       zmq::message_t msg(tosend.size());
-      //TODO?
       memcpy(msg.data(), tosend.data(), tosend.size());
       socket.send(msg);
       socket.recv(&msg);
@@ -51,7 +46,6 @@ namespace AL {
       // without making a string
       result.assign((char *)msg.data(), msg.size());
     }
-
   }
 }
 
