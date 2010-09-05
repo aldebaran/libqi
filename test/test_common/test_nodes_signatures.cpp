@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <alcommon-ng/common/common.hpp>
 #include <alcommon-ng/tools/dataperftimer.hpp>
+#include <alcommon-ng/exceptions/exceptions.hpp>
 #include <boost/timer.hpp>
 #include <string>
 
@@ -129,10 +130,9 @@ TEST(NodeSignatures, MethodOverloading)
   server.addService("overload.fun1", &fun1);
   server.addService("overload.fun1", &fun2);
   int r2 = client.call<int>("overload.fun1", 1, 2);
-  std::cout << "overload.fun1 1 2 = " << r2 << std::endl;
-  //KABOOOOOOM!!!! ... no num args check, no overloading
+  ASSERT_EQ(3, r2);
   int r1 = client.call<int>("overload.fun1", 1);
-  std::cout << "overload.fun1 1 = " << r1 << std::endl;
+  ASSERT_EQ(1, r1);
 }
 
 TEST(NodeSignatures, MultipleBind)
@@ -151,15 +151,19 @@ TEST(NodeSignatures, paramTypeChecking)
 {
   server.addService("typechecking.fun1", &fun1);
   int r2 = client.call<int>("typechecking.fun1", 1);
-  int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
+  try {
+    int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
+  } catch (const AL::Transport::ServiceNotFoundException& e) {
+    std::cout << "Service not found: what():" << e.what() << std::endl;
+  }
 }
 
-TEST(NodeSignatures, paramNumChecking)
-{
-  server.addService("paramnumchecking.fun1", &fun1);
-  int r2 = client.call<int>("paramnumchecking.fun1", 1);
-  int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
-}
+//TEST(NodeSignatures, paramNumChecking)
+//{
+//  server.addService("paramnumchecking.fun1", &fun1);
+//  int r2 = client.call<int>("paramnumchecking.fun1", 1);
+//  int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
+//}
 
 //TEST(NodeSignatures, ReturnTypeChecking)
 //{
