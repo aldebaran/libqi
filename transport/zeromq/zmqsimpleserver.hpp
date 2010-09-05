@@ -31,10 +31,10 @@ namespace AL {
   class ZMQSimpleServer : public Server, public internal::ServerResponseDelegate {
   public:
     /// <summary>The Server class constructor.</summary>
-    /// <param name="server_name">
-    /// The name given to the server, id for clients to connect.
+    /// <param name="serverAddress">
+    /// The address of the server e.g. tcp://127.0.0.1:5555
     /// </param>
-    ZMQSimpleServer(const std::string & server_name);
+    ZMQSimpleServer(const std::string & serverAddress);
 
     /// <summary>The Server class destructor.</summary>
     virtual ~ZMQSimpleServer();
