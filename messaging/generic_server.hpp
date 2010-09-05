@@ -1,17 +1,18 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris Kilner <ckilner@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	AL_MESSAGING_SERVER_HPP_
-# define   	AL_MESSAGING_SERVER_HPP_
+#ifndef   AL_MESSAGING_SERVER_HPP_
+# define  AL_MESSAGING_SERVER_HPP_
 
 #include <string>
-#include <alcommon-ng/messaging/generic_messagehandler.hpp>
-#include <alcommon-ng/transport/common/datahandler.hpp>
-#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/messaging/i_generic_messagehandler.hpp>
+#include <alcommon-ng/transport/common/i_datahandler.hpp>
+#include <alcommon-ng/transport/common/i_threadable.hpp>
 #include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>
 #include <alcommon-ng/transport/transport.hpp>
 #include <alcommon-ng/serialization/serializer.hpp>
@@ -22,8 +23,9 @@ namespace AL {
   namespace Messaging {
 
     template<typename T, typename R>
-    class GenericServer : public AL::Transport::Threadable,
-      public AL::Transport::DataHandler
+    class GenericServer :
+      public AL::Transport::IThreadable,
+      public AL::Transport::IDataHandler
     {
     public:
       bool initOK;
@@ -32,9 +34,10 @@ namespace AL {
 
       void serve(const std::string &address)
       {
+        fServerAddress = address;
         try {
-          _server = new AL::Transport::ZMQSimpleServer(address);
-          _server->setDataHandler(this);
+          fTransportServer = new AL::Transport::ZMQSimpleServer(address);
+          fTransportServer->setDataHandler(this);
           initOK = true;
         } catch(const std::exception& e) {
           alserror << "Failed to create transport server for address: " << address << " Reason:" << e.what();
@@ -45,21 +48,21 @@ namespace AL {
       virtual void run()
       {
         if (initOK) {
-          _server->run();
+          fTransportServer->run();
         }
       }
 
-      virtual void setMessageHandler(GenericMessageHandler<T, R>* callback) {
-        _onMessageDelegate = callback;
+      virtual void setMessageHandler(IGenericMessageHandler<T, R>* dataHandler) {
+        fMessageHandler = dataHandler;
       }
 
-      virtual GenericMessageHandler<T, R>* getMessageHandler() {
-        return _onMessageDelegate;
+      virtual IGenericMessageHandler<T, R>* getMessageHandler() {
+        return fMessageHandler;
       }
 
 
     protected:
-      virtual void onData(const std::string &dataIn, std::string &dataOut)
+      virtual void dataHandler(const std::string &dataIn, std::string &dataOut)
       {
         if (! initOK ) {
           alserror << "Attempt to use an uninitialized server";
@@ -71,16 +74,15 @@ namespace AL {
         AL::Serialization::Serializer::deserialize(dataIn, in);
 
         R out;
-        _onMessageDelegate->onMessage(in, out);
+        fMessageHandler->messageHandler(in, out);
 
-        assert(out);
         dataOut = AL::Serialization::Serializer::serialize(out);
       }
 
     protected:
-      std::string           _serverAddress;
-      GenericMessageHandler<T, R>  *_onMessageDelegate;
-      AL::Transport::Server *_server;
+      std::string                   fServerAddress;
+      IGenericMessageHandler<T, R>* fMessageHandler;
+      AL::Transport::Server       * fTransportServer;
     };
 
   }
@@ -88,4 +90,4 @@ namespace AL {
 
 
 
-#endif	    /* !AL_MESSAGING_SERVER_HPP_ */
+#endif  // AL_MESSAGING_SERVER_HPP_

@@ -5,32 +5,25 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	SERVER_RESPONSE_DELEGATE_HPP_
-# define   	SERVER_RESPONSE_DELEGATE_HPP_
-
-#include <alcore/alptr.h>
+#ifndef  AL_TRANSPORT_SERVER_RESPONSE_DELEGATE_HPP_
+# define AL_TRANSPORT_SERVER_RESPONSE_DELEGATE_HPP_
 
 /** Delegate that a server should implement to send a response
-  * this is mostly internal
-  */
+* this is mostly internal
+*/
 namespace AL {
   namespace Transport {
 
-  class ConnectionHandler;
-  class ResultDefinition;
-  class CallDefinition;
-
-  namespace internal
-  {
-    class ServerResponseDelegate
+    namespace internal
     {
-    public:
-      virtual void sendResponse(const std::string &result, void *data = 0) = 0;
-    };
+      class ServerResponseDelegate
+      {
+      public:
+        virtual void sendResponse(const std::string &result, void *data = 0) = 0;
+      };
+    }
   }
-
-}
 }
 
 
-#endif	    /* !SERVER_RESPONSE_DELEGATE_PP_ */
+#endif  // AL_TRANSPORT_SERVER_RESPONSE_DELEGATE_HPP_

@@ -11,7 +11,7 @@
 
 #include <alcommon-ng/transport/server.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
-#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/transport/common/i_threadable.hpp>
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hpp>
 

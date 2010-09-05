@@ -9,9 +9,9 @@
 #define AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
 #include <alcommon-ng/messaging/call_definition.hpp>
-#include <alcommon-ng/transport/common/runnable.hpp>
+#include <alcommon-ng/transport/common/i_runnable.hpp>
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
-#include <alcommon-ng/transport/common/datahandler.hpp>
+#include <alcommon-ng/transport/common/i_datahandler.hpp>
 #include <string>
 
 namespace AL {
@@ -21,7 +21,7 @@ namespace AL {
     /// A connection handler created for each new incoming connection and
     /// pushed to the thread pool.
     /// </summary>
-    class ZMQConnectionHandler : public Runnable {
+    class ZMQConnectionHandler : public IRunnable {
     public:
 
       /// <summary> Constructor. </summary>
@@ -31,7 +31,7 @@ namespace AL {
       /// <param name="data"> [in,out] If non-null, the data. </param>
       ZMQConnectionHandler(
         const std::string &msg,
-        DataHandler *sdelegate,
+        IDataHandler* dataHandler,
         internal::ServerResponseDelegate* rdelegate,
         void *data);
 
@@ -42,10 +42,10 @@ namespace AL {
       virtual void run ();
 
     private:
-      void                             *_data;
-      std::string                       _msg;
-      DataHandler                      *_dataHandler;
-      internal::ServerResponseDelegate *_responsedelegate;
+      void                             *fData;
+      std::string                       fMsg;
+      IDataHandler                     *fDataHandler;
+      internal::ServerResponseDelegate *fResponseDelegate;
     };
 
   }

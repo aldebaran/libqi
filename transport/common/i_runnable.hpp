@@ -6,17 +6,17 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_MESSAGING_RUNNABLE_HPP_
-#define AL_MESSAGING_RUNNABLE_HPP_
+#ifndef  AL_TRANSPORT_I_RUNNABLE_HPP_
+# define AL_TRANSPORT_I_RUNNABLE_HPP_
 #include <althread/altask.h>
 
 namespace AL {
   namespace Transport {
 
-    class Runnable: public AL::ALTask
+    class IRunnable: public AL::ALTask
     {
     public:
-      virtual ~Runnable () {}
+      virtual ~IRunnable () {}
 
       virtual void run () = 0;
     };
@@ -24,4 +24,4 @@ namespace AL {
   }
 }
 
-#endif /* !AL_MESSAGING_RUNNABLE_HPP_ */
+#endif  // AL_TRANSPORT_I_RUNNABLE_HPP_

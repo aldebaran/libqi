@@ -45,34 +45,34 @@ static const std::string gClientAddress = gServerAddress;
 
 
 //class ResultHandler;
-class TestServer : public AL::Transport::Threadable, public AL::Transport::DataHandler
+class TestServer : public AL::Transport::IThreadable, public AL::Transport::IDataHandler
 {
 public:
   TestServer(const std::string &address)
   {
     #ifdef WITH_SHM
-    _server = new AL::Transport::ShmServer(address);
+    fServer = new AL::Transport::ShmServer(address);
     #else
-    _server = new AL::Transport::ZMQServer(address);
+    fServer = new AL::Transport::ZMQServer(address);
     #endif
-    _server->setDataHandler(this);
+    fServer->setDataHandler(this);
   }
 
   virtual void run()
   {
-    _server->run();
+    fServer->run();
   }
 
 protected:
-  virtual void onData(const std::string &data, std::string &result)
+  virtual void dataHandler(const std::string &data, std::string &result)
   {
     //simple for test
     result = data;
   }
 
 protected:
-  std::string           _serverAddress;
-  AL::Transport::Server *_server;
+  std::string             fServerAddress;
+  AL::Transport::Server * fServer;
 };
 
 

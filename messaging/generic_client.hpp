@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	AL_MESSAGING_GENERIC_CLIENT_HPP_
-# define   	AL_MESSAGING_GENERIC_CLIENT_HPP_
+#ifndef  AL_MESSAGING_GENERIC_CLIENT_HPP_
+# define AL_MESSAGING_GENERIC_CLIENT_HPP_
 
 #include <string>
 #include <alcommon-ng/transport/client.hpp>
@@ -51,10 +51,7 @@ namespace AL {
     protected:
       AL::Transport::Client *_client;
     };
-
   }
 }
 
-
-
-#endif  // !AL_MESSAGING_GENERIC_CLIENT_HPP_
+#endif  // AL_MESSAGING_GENERIC_CLIENT_HPP_

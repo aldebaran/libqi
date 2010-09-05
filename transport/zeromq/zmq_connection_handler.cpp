@@ -12,27 +12,27 @@ namespace AL {
 
     ZMQConnectionHandler::ZMQConnectionHandler(
       const std::string &msg,
-      DataHandler *callbackdelegate,
-      internal::ServerResponseDelegate *responsedelegate,
+      IDataHandler* dataHandler,
+      internal::ServerResponseDelegate* responseDelegate,
       void *data)
-    : _data(data),
-      _msg(msg),
-      _dataHandler(callbackdelegate),
-      _responsedelegate(responsedelegate)
-  {
-    this->setTaskName("ZMQConnectionHandler");
-  }
+      : fData(data),
+      fMsg(msg),
+      fDataHandler(dataHandler),
+      fResponseDelegate(responseDelegate)
+    {
+      this->setTaskName("ZMQConnectionHandler");
+    }
 
-  ZMQConnectionHandler::~ZMQConnectionHandler () {
-  }
+    ZMQConnectionHandler::~ZMQConnectionHandler () {
+    }
 
-  void ZMQConnectionHandler::run() {
-    assert(_dataHandler);
-    std::string result;
+    void ZMQConnectionHandler::run() {
+      assert(fDataHandler);
+      std::string result;
 
-    _dataHandler->onData(_msg, result);
-    if (_responsedelegate)
-      _responsedelegate->sendResponse(result, _data);
+      fDataHandler->dataHandler(fMsg, result);
+      if (fResponseDelegate)
+        fResponseDelegate->sendResponse(result, fData);
+    }
   }
-}
 }

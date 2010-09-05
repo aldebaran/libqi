@@ -12,7 +12,7 @@
 #include <list>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <alcommon-ng/transport/common/runnable.hpp>
+#include <alcommon-ng/transport/common/i_runnable.hpp>
 #include <althread/althreadpool.h>
 
 namespace AL {
@@ -36,7 +36,7 @@ namespace AL {
       /// <summary>
       /// Push a handler into the pool and schedule it.
       /// </summary>
-      void pushTask (boost::shared_ptr<Runnable> handler);
+      void pushTask (boost::shared_ptr<IRunnable> handler);
 
     private:
       /// <summary>

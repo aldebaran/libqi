@@ -10,8 +10,8 @@
 #define LIBIPPC_CONNECTIONHANDLER_HPP_
 
 #include <alcommon-ng/messaging/call_definition.hpp>
-#include <alcommon-ng/transport/common/runnable.hpp>
-#include <alcommon-ng/transport/common/datahandler.hpp>
+#include <alcommon-ng/transport/common/i_runnable.hpp>
+#include <alcommon-ng/transport/common/i_datahandler.hpp>
 
 #include <string>
 
@@ -23,13 +23,13 @@ namespace AL {
       * @brief A connection handler created for each new incoming connection and pushed to
       * the thread pool.
       */
-    class ConnectionHandler : public Runnable {
+    class ConnectionHandler : public IRunnable {
     public:
       /**
         * @brief The ConnectionHandler class constructor
         * @param rdv_name The shared memory name used to share data between the client and server.
         */
-      ConnectionHandler(const std::string & rdv_name, DataHandler *callback, ResultHandler & resultHandler);
+      ConnectionHandler(const std::string & rdv_name, IDataHandler *dataHandler, ResultHandler & resultHandler);
 
       virtual ~ConnectionHandler ();
 
@@ -44,7 +44,7 @@ namespace AL {
         * @brief The shared memory name for sharing data.
         */
       std::string    rdv_name;
-      DataHandler   *callback;
+      IDataHandler   *fDataHandler;
       ResultHandler &resultHandler;
     };
 

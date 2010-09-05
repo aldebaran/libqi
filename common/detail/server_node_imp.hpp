@@ -12,7 +12,7 @@
 
 // used to talk to master
 #include <alcommon-ng/messaging/client.hpp>
-#include <alcommon-ng/messaging/messagehandler.hpp>
+#include <alcommon-ng/messaging/i_messagehandler.hpp>
 #include <alcommon-ng/messaging/server.hpp>
 #include <alcommon-ng/common/detail/nodeinfo.hpp>
 #include <alcommon-ng/common/serviceinfo.hpp>
@@ -22,7 +22,7 @@ namespace AL {
   namespace Common {
 
     class ServerNodeImp :
-      AL::Messaging::MessageHandler {
+      AL::Messaging::IMessageHandler {
     public:
       ServerNodeImp();
       virtual ~ServerNodeImp();
@@ -37,8 +37,8 @@ namespace AL {
       
       bool initOK;
 
-      // MessageHandler Implementation -----------------
-      void onMessage(
+      // IMessageHandler Implementation -----------------
+      void messageHandler(
         const AL::Messaging::CallDefinition& def,
               AL::Messaging::ResultDefinition& result);
       // -----------------------------------------------

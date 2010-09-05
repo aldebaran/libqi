@@ -22,25 +22,20 @@ using AL::Test::DataPerfTimer;
 static const int gThreadCount = 10;
 static const int gLoopCount   = 10000;
 
-class ServiceHandler :  public MessageHandler
+class ServiceHandler :  public IMessageHandler
 {
 public:
   // to call function on current process
-  void onMessage(const AL::Messaging::CallDefinition & def, AL::Messaging::ResultDefinition& res)
+  void messageHandler(
+    const AL::Messaging::CallDefinition & def,
+          AL::Messaging::ResultDefinition& res)
   {
 
-    if (def.methodName() == "ping")
-    {
+    if (def.methodName() == "ping") {
       // do nothing
-    }
-
-    if (def.methodName() == "size")
-    {
+    } else if (def.methodName() == "size") {
       res.value((int)def.args().front().as<std::string>().size());
-    }
-
-    else if (def.methodName() == "echo")
-    {
+    } else if (def.methodName() == "echo") {
       std::string result = def.args().front().as<std::string>();
       res.value(result);
     }

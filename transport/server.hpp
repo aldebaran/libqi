@@ -10,30 +10,30 @@
 
 #include <althread/altask.h>
 #include <string>
-#include <alcommon-ng/transport/common/threadable.hpp>
+#include <alcommon-ng/transport/common/i_threadable.hpp>
 #include <alcommon-ng/transport/common/server_response_delegate.hpp>
-#include <alcommon-ng/transport/common/datahandler.hpp>
+#include <alcommon-ng/transport/common/i_datahandler.hpp>
 
 namespace AL {
   namespace Transport {
 
-    class Server : public Threadable {
+    class Server : public IThreadable {
     public:
       explicit Server(const std::string &_serverAddress)
         : _serverAddress(_serverAddress),
           _dataHandler(0) {}
       virtual ~Server() {}
 
-      virtual void setDataHandler(DataHandler* callback) {
+      virtual void setDataHandler(IDataHandler* callback) {
         _dataHandler = callback;
       }
-      virtual DataHandler *getDataHandler() {
+      virtual IDataHandler *getDataHandler() {
         return _dataHandler;
       }
 
     protected:
       std::string        _serverAddress;
-      DataHandler        *_dataHandler;
+      IDataHandler        *_dataHandler;
     };
   }
 }

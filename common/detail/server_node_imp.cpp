@@ -40,7 +40,7 @@ namespace AL {
       boost::thread serverThread( boost::bind(&Server::run, fServer));
     }
 
-    void ServerNodeImp::onMessage(const CallDefinition &def, ResultDefinition& result) {
+    void ServerNodeImp::messageHandler(const CallDefinition &def, ResultDefinition& result) {
       // handle message
       std::string hash = def.methodName();
       const ServiceInfo& si = xGetService(hash);

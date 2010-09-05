@@ -23,9 +23,9 @@
 namespace AL {
   namespace Transport {
 
-  ConnectionHandler::ConnectionHandler(const std::string & rdv_name, DataHandler *callback, ResultHandler &resultHandler)
+  ConnectionHandler::ConnectionHandler(const std::string & rdv_name, IDataHandler *dataHandler, ResultHandler &resultHandler)
     : rdv_name(rdv_name),
-      callback(callback),
+      fDataHandler(dataHandler),
       resultHandler(resultHandler)
   {
     this->setTaskName("ConnectionHandler");
@@ -51,11 +51,11 @@ namespace AL {
 
     boost::interprocess::shared_memory_object::remove(rdv_name.c_str());
 
-    if (callback) {
+    if (fDataHandler) {
       try
       {
         std::string result;
-        callback->onData(def, result);
+        fDataHandler->dataHandler(def, result);
         //std::cout << "sending result:" << id << "size:" << result.size() << std::endl;
         ShmConnection connection("clientserv", resultHandler);
         connection.sendResult(id, result);

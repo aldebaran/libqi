@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
-# define   	ALIPPC_TRANSPORT_ZMQCLIENT_HPP_
+#ifndef  AL_TRANSPORT_ZMQCLIENT_HPP_
+# define AL_TRANSPORT_ZMQCLIENT_HPP_
 
 # include <alcommon-ng/transport/client.hpp>
 # include <zmq.hpp>
@@ -14,31 +14,32 @@
 namespace AL {
   namespace Transport {
 
-  class ResultHandler;
-  class ZMQClient : public Client {
-  public:
-    ZMQClient(const std::string &servername, ResultHandler *resultHandler);
+    //class ResultHandler;
 
-    /// <summary>
-    /// Creates a ZMQClient of a server
-    /// </summary>
-    /// <param name="serverAddress">
-    /// The protocol-qualified address of the server
-    /// e.g. ipc:///tmp/naoqi/paf
-    //. or tcp://127.0.0.1:5555
-    /// </param>
-    ZMQClient(const std::string &servername);
+    class ZMQClient : public Client {
+    public:
+      //ZMQClient(const std::string &servername, ResultHandler *resultHandler);
 
-    virtual void send(const std::string &tosend, std::string &result);
+      /// <summary>
+      /// Creates a ZMQClient of a server
+      /// </summary>
+      /// <param name="serverAddress">
+      /// The protocol-qualified address of the server
+      /// e.g. ipc:///tmp/naoqi/paf
+      //. or tcp://127.0.0.1:5555
+      /// </param>
+      ZMQClient(const std::string &servername);
 
-  protected:
-    void connect();
+      virtual void send(const std::string &tosend, std::string &result);
 
-  protected:
-    zmq::context_t context;
-    zmq::socket_t  socket;
-  };
+    protected:
+      void connect();
+
+    protected:
+      zmq::context_t context;
+      zmq::socket_t  socket;
+    };
+  }
 }
-}
 
-#endif	    /* !ALIPPC_TRANSPORT_ZMQCLIENT_HPP_ */
+#endif  // AL_TRANSPORT_ZMQCLIENT_HPP_
