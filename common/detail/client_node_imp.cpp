@@ -23,7 +23,7 @@ namespace AL {
     ClientNodeImp::ClientNodeImp(
       const std::string& clientName,
       const std::string& masterAddress) :
-      initOK(false),
+    initOK(false),
       fClientName(clientName),
       fMasterAddress(masterAddress) {
         xInit();
@@ -42,22 +42,22 @@ namespace AL {
 
     void ClientNodeImp::call(
       const CallDefinition& callDef,  AL::Messaging::ResultDefinition &result) {
-      if (! initOK) {
-        throw( AL::Transport::ConnectionException(
-          "Unable to find service. Reason: initial master connection failed."));
-      }
+        if (! initOK) {
+          throw( AL::Transport::ConnectionException(
+            "Initialization failed. All calls will fail."));
+        }
 
-      // will throw if service not found
-      const std::string& nodeAddress = xLocateService(callDef.methodName());
-      // will throw if unable to find or create client
-      boost::shared_ptr<Client> client = xGetServerClient(nodeAddress);
+        // will throw if service not found
+        const std::string& nodeAddress = xLocateService(callDef.methodName());
+        // will throw if unable to find or create client
+        boost::shared_ptr<Client> client = xGetServerClient(nodeAddress);
 
-      client->call(callDef, result);
+        client->call(callDef, result);
     }
 
     // TODO const ref ?
     boost::shared_ptr<Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
-       // get the relevant messaging client for the node that hosts the service
+      // get the relevant messaging client for the node that hosts the service
       NameLookup<boost::shared_ptr<Client> >::iterator it;
       it = fServerClients.find(serverAddress);
       if (it == fServerClients.end()) {
@@ -93,15 +93,22 @@ namespace AL {
 
     const std::string& ClientNodeImp::xLocateService(
       const std::string& methodHash) {
-      const std::string& nodeAddress = fServiceCache.get(methodHash);
-      if (!nodeAddress.empty()) {
-        return nodeAddress;
-      }
+        const std::string& nodeAddress = fServiceCache.get(methodHash);
+        if (!nodeAddress.empty()) {
+          return nodeAddress;
+        }
 
-      try {
         ResultDefinition r;
-        call(CallDefinition("master.locateService::s#&:s", methodHash), r);
-        std::string tmpAddress = r.value().as<std::string>();
+        std::string tmpAddress;
+        try {
+          call(CallDefinition("master.locateService::s#&:s", methodHash), r);
+          tmpAddress = r.value().as<std::string>();
+        } catch(const std::exception& e) {
+          alswarning << "ServiceNotFoundException \"" << methodHash
+            << "\" Unable to contact master.";
+          throw( AL::Transport::ServiceNotFoundException(
+            "Unable to contact master."));
+        }
 
         if (!tmpAddress.empty()) {
           // cache located service pair
@@ -109,20 +116,14 @@ namespace AL {
           // return a const string ref address
           return fServiceCache.get(methodHash);
         } else {
-          alserror << "Unable to find service \"" << methodHash
-            << "\" Reason: Method not known to master.";
+          alswarning << "ServiceNotFoundException \"" << methodHash
+            << "\" Method not known to master.";
           throw( AL::Transport::ServiceNotFoundException(
-            "Unable to find service. Reason: Method not known to master."));
+            "Method not known to master."));
         }
-      } catch(const std::exception& e) {
-        alserror << "Unable to find service \"" << methodHash
-          << "\" Reason: master not found. Detail: " << e.what();
-        throw( AL::Transport::ServiceNotFoundException(
-          "Unable to find service. Reason: master not found."));
-      }
 
-      // never happens: we either return early or throw
-      return nodeAddress;
+        // never happens: we either return early or throw
+        return nodeAddress;
     }
   }
 }
