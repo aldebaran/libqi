@@ -28,7 +28,7 @@ namespace AL {
   /// and push handlers for those connection to the tread pool.
   /// This class need to be instantiated and run at the beginning of the process.
   /// </summary>
-  class ZMQSimpleServer : public Server, public internal::IServerResponseHandler {
+  class ZMQSimpleServer : public Server, public Detail::IServerResponseHandler {
   public:
     /// <summary>The Server class constructor.</summary>
     /// <param name="serverAddress">
@@ -51,7 +51,7 @@ namespace AL {
     void stop();
 
     void poll();
-    void responseHandler(const std::string &result, void *data = 0);
+    void serverResponseHandler(const std::string &result, void *data = 0);
 
     ResultHandler *getResultHandler() { return 0; }
 

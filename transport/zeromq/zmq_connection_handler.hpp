@@ -32,7 +32,7 @@ namespace AL {
       ZMQConnectionHandler(
         const std::string &msg,
         IDataHandler* dataHandler,
-        internal::IServerResponseHandler* rdelegate,
+        Detail::IServerResponseHandler* rdelegate,
         void *data);
 
       /// <summary> Finaliser. </summary>
@@ -45,7 +45,7 @@ namespace AL {
       void                             *fData;
       std::string                       fMsg;
       IDataHandler                     *fDataHandler;
-      internal::IServerResponseHandler *fResponseDelegate;
+      Detail::IServerResponseHandler   *fResponseDelegate;
     };
 
   }

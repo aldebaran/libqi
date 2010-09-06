@@ -15,12 +15,12 @@
 namespace AL {
   namespace Transport {
 
-    namespace internal
+    namespace Detail
     {
       class IServerResponseHandler
       {
       public:
-        virtual void responseHandler(const std::string &result, void *data = 0) = 0;
+        virtual void serverResponseHandler(const std::string &result, void *data = 0) = 0;
       };
     }
   }

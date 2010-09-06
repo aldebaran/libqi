@@ -27,7 +27,7 @@ namespace AL {
   /// This class need to be instantiated and run at the beginning of the process.
   /// </summary>
   class ResultHandler;
-  class ZMQServerQueue : public Server, public internal::IServerResponseHandler {
+  class ZMQServerQueue : public Server, public Detail::IServerResponseHandler {
   public:
     /// <summary>The Server class constructor.</summary>
     /// <param name="server_name">
@@ -47,7 +47,7 @@ namespace AL {
     /// <summary>Force the server to stop and wait for complete stop.</summary>
     void stop();
 
-    void responseHandler(const std::string &result, void *data = 0);
+    void serverResponseHandler(const std::string &result, void *data = 0);
 
     ResultHandler *getResultHandler() { return 0; }
 

@@ -27,7 +27,7 @@ namespace AL {
     /// This class need to be instantiated and run at the beginning of the process.
     /// </summary>
     class ResultHandler;
-    class ZMQServer : public Server, public internal::IServerResponseHandler {
+    class ZMQServer : public Server, public Detail::IServerResponseHandler {
     public:
       /// <summary> The Server class constructor. </summary>
       /// <param name="server_name">
@@ -50,7 +50,7 @@ namespace AL {
       void stop();
 
       void poll();
-      void responseHandler(const std::string &result, void *data = 0);
+      void serverResponseHandler(const std::string &result, void *data = 0);
 
       ResultHandler *getResultHandler() { return 0; }
 
