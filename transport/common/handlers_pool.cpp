@@ -7,32 +7,25 @@
 */
 
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
-
-#include <cassert>
-#include <boost/bind.hpp>
-#include <boost/smart_ptr.hpp>
-
-#ifndef foreach
-# include <boost/foreach.hpp>
-# define foreach    BOOST_FOREACH
-#endif
+#include <alcommon-ng/transport/common/i_runnable.hpp>
+#include <althread/althreadpool.h>
+#include <boost/shared_ptr.hpp>
 
 namespace AL {
   namespace Transport {
 
-    HandlersPool::HandlersPool () {
-      //pool.size_controller().resize(20);
-      fPool = boost::shared_ptr<AL::ALThreadPool>(new  AL::ALThreadPool(2,  200, 50, 100,  2 ));// Update offset
+    HandlersPool::HandlersPool() :
+    fPool(new  AL::ALThreadPool(2,  200, 50, 100,  2 ))
+    {
       fPool->init( 2,  200, 50, 100,  5 );
     }
 
-    HandlersPool::~HandlersPool () {
+    HandlersPool::~HandlersPool() {
       //fPool.wait();
     }
 
-    void HandlersPool::pushTask (boost::shared_ptr<IRunnable> handler)
+    void HandlersPool::pushTask(boost::shared_ptr<IRunnable> handler)
     {
-      boost::shared_ptr<IRunnable> job(handler);
       fPool->enqueue(handler);
       /* schedule(pool, boost::bind(&Runnable::run, job));*/
     }

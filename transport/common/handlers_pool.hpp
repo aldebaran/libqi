@@ -9,16 +9,16 @@
 #ifndef AL_TRANSPORT_HANDLERS_POOL_HPP_
 #define AL_TRANSPORT_HANDLERS_POOL_HPP_
 
-#include <list>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <alcommon-ng/transport/common/i_runnable.hpp>
-#include <althread/althreadpool.h>
+#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace AL {
+  class ALThreadPool;
+
   namespace Transport {
 
     class ConnectionHandler;
+    class IRunnable;
 
     /// <summary>
     /// The thread pool used to handler ConnectionHandler(s). It creates
@@ -27,22 +27,22 @@ namespace AL {
     class HandlersPool {
     public:
       /// <summary>The HandlersPool constructor.</summary>
-      HandlersPool ();
+      HandlersPool();
 
       /// <summary>The HandlersPool destructor</summary>
-      virtual ~HandlersPool ();
+      virtual ~HandlersPool();
 
     public:
       /// <summary>
       /// Push a handler into the pool and schedule it.
       /// </summary>
-      void pushTask (boost::shared_ptr<IRunnable> handler);
+      void pushTask(boost::shared_ptr<IRunnable> handler);
 
     private:
       /// <summary>
-      /// The Boost implementation of the thread pool.
+      /// The ??Boost?? implementation of the thread pool.
       /// </summary>
-      boost::shared_ptr<AL::ALThreadPool> fPool;
+      std::auto_ptr<AL::ALThreadPool> fPool;
     };
 
   }
