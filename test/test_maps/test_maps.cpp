@@ -92,3 +92,4 @@ TEST(TestMaps, MutexedNameLookup_struct_shared_ptr_method) {
     const std::string& s = mutexedMap.get("500")->bar();
   }
   dt.stop();
+}
