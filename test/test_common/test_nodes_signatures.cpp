@@ -9,10 +9,6 @@
 using namespace AL::Common;
 using namespace AL::Messaging;
 
-std::string gMasterAddress = "127.0.0.1:5555";
-std::string gServerName = "server";
-std::string gServerAddress = "127.0.0.1:5556";
-
 static int gGlobalResult = 0;
 
 void vfun0()                                                                                      { gGlobalResult = 0; }
@@ -51,6 +47,10 @@ struct Foo {
   void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
   void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 };
+
+std::string gMasterAddress = "127.0.0.1:5555";
+std::string gServerName = "server";
+std::string gServerAddress = "127.0.0.1:5556";
 
 MasterNode master(gMasterAddress);
 ServerNode server(gServerName, gServerAddress, gMasterAddress);
