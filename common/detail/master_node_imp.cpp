@@ -38,6 +38,8 @@ namespace AL {
     }
 
     const std::string& MasterNodeImp::locateService(const std::string& methodHash) {
+      // if not found, an empty string is returned
+      // TODO friendly error describing closest service?
       return fServiceCache.get(methodHash);
     }
 

@@ -37,7 +37,7 @@ namespace AL {
       fServer.serve("tcp://" + serverAddress);
 
       fServer.setMessageHandler(this);
-      boost::thread serverThread( boost::bind(&Server::run, fServer));
+      boost::thread serverThread(boost::bind(&Server::run, fServer));
     }
 
     void ServerNodeImp::messageHandler(const CallDefinition &def, ResultDefinition& result) {

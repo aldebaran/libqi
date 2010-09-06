@@ -15,12 +15,13 @@ namespace AL {
 
     HandlersPool::HandlersPool()
     {
-      fPool = boost::shared_ptr<AL::ALThreadPool>(new AL::ALThreadPool(2,  200, 50, 100,  2 ));
-      fPool->init( 2,  200, 50, 100,  5 );
+      fPool = boost::shared_ptr<AL::ALThreadPool>(
+        new AL::ALThreadPool(2, 200, 50, 100, 2));
+      fPool->init(2, 200, 50, 100, 5);
     }
 
     HandlersPool::~HandlersPool() {
-      //fPool.wait();
+      //vfPool.wait();
     }
 
     void HandlersPool::pushTask(boost::shared_ptr<IRunnable> handler)
@@ -28,6 +29,5 @@ namespace AL {
       fPool->enqueue(handler);
       /* schedule(pool, boost::bind(&Runnable::run, job));*/
     }
-
   }
 }
