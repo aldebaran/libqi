@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris Kilner  <ckilner@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
@@ -8,11 +9,10 @@
 #ifndef AL_TRANSPORT_SERVER_HPP_
 # define AL_TRANSPORT_SERVER_HPP_
 
-#include <althread/altask.h>
 #include <string>
 #include <alcommon-ng/transport/common/i_threadable.hpp>
 #include <alcommon-ng/transport/common/i_server_response_handler.hpp>
-#include <alcommon-ng/transport/common/i_datahandler.hpp>
+#include <alcommon-ng/transport/common/i_data_handler.hpp>
 
 namespace AL {
   namespace Transport {
