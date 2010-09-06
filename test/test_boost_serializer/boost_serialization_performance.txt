@@ -106,4 +106,3 @@ Bytes, msg/s, MB/s
 [==========] 8 tests from 2 test cases ran. (173984 ms total)
 [  PASSED  ] 8 tests.
 
-c:\git\src\performance\build\sdk\bin>
