@@ -1,4 +1,5 @@
 build*
+gendoc
 *.[oa]
 *~
 *.pyc
