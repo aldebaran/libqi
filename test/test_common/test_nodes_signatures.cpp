@@ -154,21 +154,29 @@ TEST(NodeSignatures, paramTypeChecking)
   try {
     int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
   } catch (const AL::Transport::ServiceNotFoundException& e) {
-    std::cout << "Service not found: what():" << e.what() << std::endl;
+    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
 }
 
-//TEST(NodeSignatures, paramNumChecking)
-//{
-//  server.addService("paramnumchecking.fun1", &fun1);
-//  int r2 = client.call<int>("paramnumchecking.fun1", 1);
-//  int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
-//}
+TEST(NodeSignatures, paramNumChecking)
+{
+  server.addService("paramnumchecking.fun1", &fun1);
+  int r2 = client.call<int>("paramnumchecking.fun1", 1);
+  try {
+    int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
+  } catch (const AL::Transport::ServiceNotFoundException& e) {
+    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
+  }
+}
 
-//TEST(NodeSignatures, ReturnTypeChecking)
-//{
-//  server.addService("returntype.fun1", &fun1);
-// KABOOOM!
-//  int r2 = client.call<int>("returntype.fun1", 1);
-//  client.call<std::string>("returntype.fun1", 1);
-//}
+TEST(NodeSignatures, ReturnTypeChecking)
+{
+  server.addService("returntype.fun1", &fun1);
+  //KABOOOM!
+  int r2 = client.call<int>("returntype.fun1", 1);
+  try {
+    std::string s = client.call<std::string>("returntype.fun1", 1);
+  } catch (const AL::Transport::ServiceNotFoundException& e) {
+    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
+  }
+}
