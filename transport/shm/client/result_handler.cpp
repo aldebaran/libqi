@@ -3,7 +3,7 @@
  *
  *  Created on: Nov 4, 2009 at 11:52:28 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : delay.jc@gmail.com
+ *       Mail  : delay.jc@gmail.com
  */
 
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>

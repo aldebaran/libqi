@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 8, 2009 at 11:19:32 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #include <alcommon-ng/transport/shm/memory/mapped_shared_segment.hpp>

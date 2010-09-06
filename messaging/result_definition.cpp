@@ -3,7 +3,7 @@
 *
 *  Created on: Oct 5, 2009 at 5:34:02 PM
 *      Author: Jean-Charles DELAY
-* 			Mail  : jdelay@aldebaran-robotics.com
+*       Mail  : jdelay@aldebaran-robotics.com
 */
 
 #include <alcommon-ng/messaging/result_definition.hpp>
@@ -22,9 +22,9 @@ namespace AL {
     return true; // FIXME
 
     //return (
-    //  
+    //
     //  /*(this->v.as<std::string>() == rhs.exceptionMessage()) && */
-    //  (this->request_id == rhs.getRequestId()) 
+    //  (this->request_id == rhs.getRequestId())
     //  /* FIXME(ckilner) ambiguous && (this->v == rhs.value()) */
     //  );
   }

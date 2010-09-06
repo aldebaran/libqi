@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 8, 2009 at 12:26:40 PM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #ifndef LIBIPPC_CONNECTION_HPP_

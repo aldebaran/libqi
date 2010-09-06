@@ -3,7 +3,7 @@
 *
 *  Created on: Oct 5, 2009 at 4:35:09 PM
 *      Author: Jean-Charles DELAY
-* 			Mail  : jdelay@aldebaran-robotics.com
+*       Mail  : jdelay@aldebaran-robotics.com
 */
 
 #include <alcommon-ng/messaging/call_definition.hpp>

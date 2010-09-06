@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	AL_SERIALIZATION_THRIFT_HPP_
-# define   	AL_SERIALIZATION_THRIFT_HPP_
+#ifndef     AL_SERIALIZATION_THRIFT_HPP_
+# define     AL_SERIALIZATION_THRIFT_HPP_
 
 #include <protocol/TProtocol.h>
 #include <boost/variant/static_visitor.hpp>
@@ -72,4 +72,4 @@ namespace AL {
 
 #include <alcommon-ng/serialization/thrift/serialize.hxx>
 
-#endif	    /* !AL_SERIALIZATION_THRIFT_HPP_ */
+#endif      /* !AL_SERIALIZATION_THRIFT_HPP_ */

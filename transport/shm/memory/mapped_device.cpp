@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 9, 2009 at 3:16:52 PM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #include <alcommon-ng/transport/shm/memory/mapped_device.hpp>
@@ -62,9 +62,9 @@ MappedDevice::~MappedDevice () {
   std::cout << "[debug][MappedDevice destructor]" << std::endl;
 #endif
   if (!first_time_writing) {
-	  segment->done = true;
-	  segment->rw_cond.notify_all();
-	  delete lock;
+    segment->done = true;
+    segment->rw_cond.notify_all();
+    delete lock;
   }
 
   if (!first_time_reading) {
@@ -80,14 +80,14 @@ std::streamsize MappedDevice::read (char* s, std::streamsize sz) {
     if (!segment->done) {
 //      std::cout << "[DEBUG][READ] !first_time_reading && !segment->done so waiting for some write" << std::endl;
 //      segment->rw_cond.wait(*lock);
-		  boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
-	    if (!segment->rw_cond.timed_wait(*lock, bTime))
-		    throw ReadException("wait for write from server timed out");
+      boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
+      if (!segment->rw_cond.timed_wait(*lock, bTime))
+        throw ReadException("wait for write from server timed out");
     }
   } else
     first_time_reading = false;
 
-//	std::cout << "done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << std::endl;
+//  std::cout << "done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << std::endl;
 
   if(segment->done && (segment->bytes == nb_read)) {
 #ifdef IPPC_DEBUG_HARD
@@ -102,7 +102,7 @@ std::streamsize MappedDevice::read (char* s, std::streamsize sz) {
     nb_read = to_read;
     rptr += to_read;
 #ifdef IPPC_DEBUG_HARD
-	  std::cout << "[debug][read] sz = " << sz << " [" << to_read << "]" << std::endl;
+    std::cout << "[debug][read] sz = " << sz << " [" << to_read << "]" << std::endl;
 #endif
     return segment->bytes;
   }
@@ -119,7 +119,7 @@ std::streamsize MappedDevice::read (char* s, std::streamsize sz) {
     to_read = (sz - total) <= to_read ? sz - total : to_read;
     to_read = (segment->wrote - nb_read) <= to_read ? segment->wrote - nb_read : to_read;
 //    std::cout << "to_read = " << to_read << std::endl;
-//		std::cout << "sz = " << sz << " | done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << " | total = " << total << std::endl;
+//    std::cout << "sz = " << sz << " | done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << " | total = " << total << std::endl;
     std::memcpy(s + total, rptr, to_read);
     rptr += to_read;
     total += to_read;
@@ -127,18 +127,18 @@ std::streamsize MappedDevice::read (char* s, std::streamsize sz) {
 
     segment->rw_cond.notify_all();
 
-//		std::cout << "sz = " << sz << " | done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << " | total = " << total << std::endl;
+//    std::cout << "sz = " << sz << " | done = " << (segment->done ? "true" : "false") << " | bytes = " << segment->bytes << " | wrote = " << segment->wrote << " | nd_read = " << nb_read << " | total = " << total << std::endl;
 #ifdef IPPC_DEBUG_HARD
-	  std::cout << "Loop #" << loop_no++ << " read " << to_read << " bytes" << std::endl;
+    std::cout << "Loop #" << loop_no++ << " read " << to_read << " bytes" << std::endl;
 #endif
 
     if ((segment->done && segment->wrote == total) || (total == sz) || (segment->bytes == nb_read))
       break;
 
 //    segment->rw_cond.wait(*lock);
-	  boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
+    boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
     if (!segment->rw_cond.timed_wait(*lock, bTime))
-	    throw ReadException("wait for write from server timed out");
+      throw ReadException("wait for write from server timed out");
 
     rptr = bptr;
   };
@@ -192,16 +192,16 @@ std::streamsize MappedDevice::write (const char* s, std::streamsize sz) {
     segment->rw_cond.notify_all();
 
 #ifdef IPPC_DEBUG_HARD
-	  std::cout << "Loop #" << loop_no++ << " wrote " << to_write << " bytes" << std::endl;
+    std::cout << "Loop #" << loop_no++ << " wrote " << to_write << " bytes" << std::endl;
 #endif
 
-	  boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
+    boost::posix_time::ptime bTime = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(3);
     if (!segment->rw_cond.timed_wait(*lock, bTime))
-	    throw WriteException("wait for read from server timed out");
+      throw WriteException("wait for read from server timed out");
 
-	  if (sz == total) {
-	    break;
-	  }
+    if (sz == total) {
+      break;
+    }
 
     wptr = bptr;
   }

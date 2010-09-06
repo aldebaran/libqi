@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 20, 2009 at 9:48:23 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #include <alcommon-ng/collections/print_visitor.hpp>

@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 13, 2009 at 3:24:35 PM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #ifndef LIBIPPC_SERVERSHAREDSEGMENTCONNECTOR_HPP_

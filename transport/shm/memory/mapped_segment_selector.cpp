@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 12, 2009 at 10:27:06 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #include <alcommon-ng/exceptions/exceptions.hpp>
@@ -41,10 +41,10 @@ MappedSharedSegment * MappedSegmentSelector::get (const char segment_name [SEGME
   {
     boi::scoped_lock<boi::interprocess_mutex> lock(map_use);
 //    std::cout << ">>> Map size = " << segments.size() << std::endl;
-	  segments_map::iterator it = segments.find(segment_name);
+    segments_map::iterator it = segments.find(segment_name);
 
-	  if (it != segments.end())
-	    return (*it).second.segment;
+    if (it != segments.end())
+      return (*it).second.segment;
   }
 
   SegmentDefinition sd;
@@ -60,21 +60,21 @@ MappedSharedSegment * MappedSegmentSelector::get (const char segment_name [SEGME
     throw SharedSegmentInitializationException("please specify open mode for streambuf (create/open)");
   }
 
-	boi::scoped_lock<boi::interprocess_mutex> lock(map_use);
-	segments[segment_name] = sd;
-	return sd.segment;
+  boi::scoped_lock<boi::interprocess_mutex> lock(map_use);
+  segments[segment_name] = sd;
+  return sd.segment;
 }
 
 void MappedSegmentSelector::free (const char segment_name [SEGMENT_NAME_MAX]) {
   {
     boi::scoped_lock<boi::interprocess_mutex> lock(map_use);
-	  segments_map::iterator it = segments.find(segment_name);
+    segments_map::iterator it = segments.find(segment_name);
 
-	  if (it == segments.end())
-	    return;
+    if (it == segments.end())
+      return;
 
-	  this->closeSharedSegment(segment_name, (*it).second);
-	  segments.erase(it);
+    this->closeSharedSegment(segment_name, (*it).second);
+    segments.erase(it);
   }
 }
 
@@ -136,19 +136,19 @@ void MappedSegmentSelector::createOrOpenSharedSegment (const char segment_name [
   MappedSharedSegment * segment = 0;
 
   try {
-	  try {
-	    boi::shared_memory_object block(boi::create_only, segment_name, boi::read_write);
-	    block.truncate(sizeof(MappedSharedSegment));
-	    mapped_region = new boi::mapped_region(block, boi::read_write);
-	    void * addr = mapped_region->get_address();
-	    std::memset(segment, 0, sizeof(MappedSharedSegment));
-	    segment = new (addr) MappedSharedSegment;
-	  } catch (const boi::interprocess_exception & /*e*/) {
-	    boi::shared_memory_object block(boi::open_only, segment_name, boi::read_write);
-	    mapped_region = new boi::mapped_region(block, boi::read_write);
-	    void * addr = mapped_region->get_address();
-	    segment = static_cast<MappedSharedSegment *> (addr);
-	  }
+    try {
+      boi::shared_memory_object block(boi::create_only, segment_name, boi::read_write);
+      block.truncate(sizeof(MappedSharedSegment));
+      mapped_region = new boi::mapped_region(block, boi::read_write);
+      void * addr = mapped_region->get_address();
+      std::memset(segment, 0, sizeof(MappedSharedSegment));
+      segment = new (addr) MappedSharedSegment;
+    } catch (const boi::interprocess_exception & /*e*/) {
+      boi::shared_memory_object block(boi::open_only, segment_name, boi::read_write);
+      mapped_region = new boi::mapped_region(block, boi::read_write);
+      void * addr = mapped_region->get_address();
+      segment = static_cast<MappedSharedSegment *> (addr);
+    }
   }
   catch (const boi::interprocess_exception & e) {
     if (mapped_region)

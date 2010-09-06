@@ -8,8 +8,8 @@
 
 // THIS FILE LOOKS LIKE A DYING RELIC ..... DESTROY ?
 
-#ifndef   	_AL_MESSAGING_TRANSPORT_HPP_
-# define   	_AL_MESSAGING_TRANSPORT_HPP_
+#ifndef     _AL_MESSAGING_TRANSPORT_HPP_
+# define     _AL_MESSAGING_TRANSPORT_HPP_
 
 #include <alcommon-ng/config.hpp>
 #include <alcommon-ng/transport/common/common.hpp>
@@ -33,4 +33,4 @@ namespace AL {
   }
 }
 
-#endif	    /* !TRANSPORT_PP_ */
+#endif      /* !TRANSPORT_PP_ */

@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 13, 2009 at 3:26:29 PM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #include <alcommon-ng/exceptions/exceptions.hpp>
@@ -39,7 +39,7 @@ void BoostServerSharedSegmentConnector::connect () {
   } catch (boi::interprocess_exception & e) {
     if (mapped_region)
       delete mapped_region;
-	  mapped_region = 0;
+    mapped_region = 0;
 
     throw ServerException(std::string("shm_create: ") + e.what());
   }

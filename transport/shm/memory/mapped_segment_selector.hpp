@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 12, 2009 at 10:27:06 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *       Mail  : jdelay@aldebaran-robotics.com
  */
 
 #ifndef LIBIPPC_MAPPEDSEGMENTSELECTOR_HPP_
@@ -147,11 +147,11 @@ private:
    * typedefs for the segment definition map.
    */
   typedef std::map<const SegmentName, SegmentDefinition, SegmentNameComparator> segments_map;
-	typedef std::pair<const SegmentName, SegmentDefinition> segments_map_elt;
+  typedef std::pair<const SegmentName, SegmentDefinition> segments_map_elt;
 
-	/**
-	 * @brief The segments map.
-	 */
+  /**
+   * @brief The segments map.
+   */
   segments_map segments;
 };
 

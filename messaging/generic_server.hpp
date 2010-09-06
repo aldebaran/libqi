@@ -30,7 +30,7 @@ namespace AL {
     public:
       bool initOK;
 
-      GenericServer(): initOK(false) {} 
+      GenericServer(): initOK(false) {}
 
       void serve(const std::string &address)
       {

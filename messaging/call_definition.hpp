@@ -3,7 +3,7 @@
 *
 *  Created on: Oct 5, 2009 at 4:35:09 PM
 *      Author: Jean-Charles DELAY
-* 			Mail  : jdelay@aldebaran-robotics.com
+*       Mail  : jdelay@aldebaran-robotics.com
 */
 
 #ifndef MESSAGING_CALL_DEFINITION_HPP_

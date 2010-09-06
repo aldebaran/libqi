@@ -66,7 +66,7 @@ namespace AL {
         ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)0).run();
 #endif
       }
-     
+
     }
 
     void ZMQSimpleServer::serverResponseHandler(const std::string &result, void *data)
