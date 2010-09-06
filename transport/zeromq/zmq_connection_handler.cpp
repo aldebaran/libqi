@@ -13,7 +13,7 @@ namespace AL {
     ZMQConnectionHandler::ZMQConnectionHandler(
       const std::string &msg,
       IDataHandler* dataHandler,
-      internal::ServerResponseDelegate* responseDelegate,
+      internal::IServerResponseHandler* responseDelegate,
       void *data)
       : fData(data),
       fMsg(msg),
@@ -32,7 +32,7 @@ namespace AL {
 
       fDataHandler->dataHandler(fMsg, result);
       if (fResponseDelegate)
-        fResponseDelegate->sendResponse(result, fData);
+        fResponseDelegate->responseHandler(result, fData);
     }
   }
 }

@@ -9,7 +9,7 @@
 # define  AL_TRANSPORT_COMMON_HPP_
 
 # include <alcommon-ng/transport/common/handlers_pool.hpp>
-# include <alcommon-ng/transport/common/server_response_delegate.hpp>
+# include <alcommon-ng/transport/common/i_server_response_handler.hpp>
 # include <alcommon-ng/transport/common/i_datahandler.hpp>
 
 #endif  // AL_TRANSPORT_COMMON_HPP_

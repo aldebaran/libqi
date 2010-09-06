@@ -69,7 +69,7 @@ namespace AL {
      
     }
 
-    void ZMQSimpleServer::sendResponse(const std::string &result, void *data)
+    void ZMQSimpleServer::responseHandler(const std::string &result, void *data)
     {
       int                rc = 0;
       zmq::message_t     msg(result.size());

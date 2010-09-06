@@ -77,7 +77,7 @@ namespace AL {
       std::cout << "quit server" << std::endl;
     }
 
-    void ZMQServerQueue::sendResponse(const std::string &result, void *data)
+    void ZMQServerQueue::responseHandler(const std::string &result, void *data)
     {
       int                rc = 0;
       zmq::message_t     msg(result.size());

@@ -3,7 +3,7 @@
  *
  *  Created on: Oct 8, 2009 at 10:42:17 AM
  *      Author: Jean-Charles DELAY
- * 			Mail  : jdelay@aldebaran-robotics.com
+ *      Mail  : jdelay@aldebaran-robotics.com
  */
 
 #ifndef LIBIPPC_SERVER_HPP_
@@ -16,7 +16,7 @@
 #include <alcommon-ng/transport/shm/server/boost_server_shared_segment_connector.hpp>
 
 
-#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/i_server_response_handler.hpp>
 #include <alcommon-ng/transport/shm/client/result_handler.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcore/alptr.h>

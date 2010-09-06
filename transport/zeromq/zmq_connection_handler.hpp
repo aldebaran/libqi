@@ -10,7 +10,7 @@
 
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/i_runnable.hpp>
-#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/i_server_response_handler.hpp>
 #include <alcommon-ng/transport/common/i_datahandler.hpp>
 #include <string>
 
@@ -32,7 +32,7 @@ namespace AL {
       ZMQConnectionHandler(
         const std::string &msg,
         IDataHandler* dataHandler,
-        internal::ServerResponseDelegate* rdelegate,
+        internal::IServerResponseHandler* rdelegate,
         void *data);
 
       /// <summary> Finaliser. </summary>
@@ -45,7 +45,7 @@ namespace AL {
       void                             *fData;
       std::string                       fMsg;
       IDataHandler                     *fDataHandler;
-      internal::ServerResponseDelegate *fResponseDelegate;
+      internal::IServerResponseHandler *fResponseDelegate;
     };
 
   }

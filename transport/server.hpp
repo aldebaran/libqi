@@ -11,7 +11,7 @@
 #include <althread/altask.h>
 #include <string>
 #include <alcommon-ng/transport/common/i_threadable.hpp>
-#include <alcommon-ng/transport/common/server_response_delegate.hpp>
+#include <alcommon-ng/transport/common/i_server_response_handler.hpp>
 #include <alcommon-ng/transport/common/i_datahandler.hpp>
 
 namespace AL {

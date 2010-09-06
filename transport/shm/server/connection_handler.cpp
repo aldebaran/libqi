@@ -63,7 +63,7 @@ namespace AL {
 
 //        AL::ALPtr<ResultDefinition> result = callback->ippcCallback(def);
 //        if (response_delegate)
-//          response_delegate->sendResponse(def, result);
+//          response_delegate->responseHandler(def, result);
       }
       catch (...)
       {
