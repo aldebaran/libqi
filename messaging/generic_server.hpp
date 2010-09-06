@@ -10,7 +10,7 @@
 # define  AL_MESSAGING_SERVER_HPP_
 
 #include <string>
-#include <alcommon-ng/messaging/i_generic_messagehandler.hpp>
+#include <alcommon-ng/messaging/i_generic_message_handler.hpp>
 #include <alcommon-ng/transport/common/i_data_handler.hpp>
 #include <alcommon-ng/transport/common/i_threadable.hpp>
 #include <alcommon-ng/transport/zeromq/zmqsimpleserver.hpp>

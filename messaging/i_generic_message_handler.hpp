@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_MESSAGING_I_GENERIC_MESSAGEHANDLER_HPP_
-#define AL_MESSAGING_I_GENERIC_MESSAGEHANDLER_HPP_
+#ifndef AL_MESSAGING_i_generic_message_handler_HPP_
+#define AL_MESSAGING_i_generic_message_handler_HPP_
 
 namespace AL {
   namespace Messaging {
@@ -22,4 +22,4 @@ namespace AL {
   }
 }
 
-#endif  // AL_MESSAGING_I_GENERIC_MESSAGEHANDLER_HPP_
+#endif  // AL_MESSAGING_i_generic_message_handler_HPP_

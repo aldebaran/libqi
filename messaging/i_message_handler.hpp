@@ -6,10 +6,10 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_MESSAGING_I_MESSAGEHANDLER_HPP
-#define AL_MESSAGING_I_MESSAGEHANDLER_HPP
+#ifndef AL_MESSAGING_i_message_handler_HPP
+#define AL_MESSAGING_i_message_handler_HPP
 
-#include <alcommon-ng/messaging/i_generic_messagehandler.hpp>
+#include <alcommon-ng/messaging/i_generic_message_handler.hpp>
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/messaging/result_definition.hpp>
 
@@ -27,4 +27,4 @@ namespace AL {
   }
 }
 
-#endif  // AL_MESSAGING_I_MESSAGEHANDLER_HPP
+#endif  // AL_MESSAGING_i_message_handler_HPP

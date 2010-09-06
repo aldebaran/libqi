@@ -10,6 +10,6 @@
 
 #include <alcommon-ng/messaging/client.hpp>
 #include <alcommon-ng/messaging/server.hpp>
-#include <alcommon-ng/messaging/i_messagehandler.hpp>
+#include <alcommon-ng/messaging/i_message_handler.hpp>
 
 #endif // AL_MESSAGING_MESSAGING_HPP
