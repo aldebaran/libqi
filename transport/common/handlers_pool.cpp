@@ -9,14 +9,13 @@
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcommon-ng/transport/common/i_runnable.hpp>
 #include <althread/althreadpool.h>
-#include <boost/shared_ptr.hpp>
 
 namespace AL {
   namespace Transport {
 
-    HandlersPool::HandlersPool() :
-    fPool(new  AL::ALThreadPool(2,  200, 50, 100,  2 ))
+    HandlersPool::HandlersPool()
     {
+      fPool = boost::shared_ptr<AL::ALThreadPool>(new AL::ALThreadPool(2,  200, 50, 100,  2 ));
       fPool->init( 2,  200, 50, 100,  5 );
     }
 

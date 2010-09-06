@@ -10,7 +10,6 @@
 #define AL_TRANSPORT_HANDLERS_POOL_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <memory>
 
 namespace AL {
   class ALThreadPool;
@@ -42,7 +41,7 @@ namespace AL {
       /// <summary>
       /// The ??Boost?? implementation of the thread pool.
       /// </summary>
-      std::auto_ptr<AL::ALThreadPool> fPool;
+      boost::shared_ptr<AL::ALThreadPool> fPool;
     };
 
   }
