@@ -101,7 +101,7 @@ namespace AL {
         ResultDefinition r;
         std::string tmpAddress;
         try {
-          call(CallDefinition("master.locateService::s#&:s", methodHash), r);
+          call(CallDefinition("master.locateService::s:s", methodHash), r);
           tmpAddress = r.value().as<std::string>();
         } catch(const std::exception& e) {
           alswarning << "ServiceNotFoundException \"" << methodHash
