@@ -44,7 +44,7 @@ namespace AL {
       // handle message
       std::string hash = def.methodName();
       const ServiceInfo& si = xGetService(hash);
-      if (si.methodName.empty()) {
+      if (si.methodName.empty() || !si.functor) {
         // method not found
         alserror << "  Error: Method not found " << hash;
       }
