@@ -11,7 +11,7 @@
 #include <string>
 #include <memory>
 #include <alcommon-ng/functor/makefunctor.hpp>
-#include <alcommon-ng/functor/functionsignature.hpp>
+#include <alcommon-ng/functor/signature.hpp>
 
 namespace AL {
   namespace Common {

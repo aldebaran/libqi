@@ -16,7 +16,7 @@
 #include <memory>
 #include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/messaging/result_definition.hpp>
-#include <alcommon-ng/functor/functionsignature.hpp>
+#include <alcommon-ng/functor/signature.hpp>
 
 namespace AL {
   namespace Common {
