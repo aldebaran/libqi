@@ -32,18 +32,6 @@ namespace AL {
   };
 
   struct signatureFromObject {
-//    template<typename T>
-//    static std::string &value(T t, std::string &valueRef) {
-//      (void) t;
-//      return signature<T>::value(valueRef);
-//    }
-
-//    template<typename T>
-//    static std::string value(T t) {
-//      (void) t;
-//      std::string valueRef;
-//      return signature<T>::value(valueRef);
-//    }
 
     template<typename T>
     static std::string &value(const T *t, std::string &valueRef) {

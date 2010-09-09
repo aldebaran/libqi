@@ -131,6 +131,11 @@ TEST(TestSignature, BasicVoidFunctionSignature) {
   EXPECT_EQ("v:ii", AL::signature<void (int, int)>::value());
 }
 
+TEST(TestSignature, FromObject) {
+  int myint;
+  EXPECT_EQ("i*"     , AL::signatureFromObject::value(&myint));
+}
+
 TEST(TestSignature, BasicFunctionSignature) {
   EXPECT_EQ("i:"      , AL::signatureFromObject::value(&fun0));
   EXPECT_EQ("i:i"     , AL::signatureFromObject::value(&fun1));
