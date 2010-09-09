@@ -33,7 +33,7 @@ namespace AL {
       initOK = xCreateServerClient(fMasterAddress);
       if (initOK) {
         // we assert that we think the master can locate services
-        fServiceCache.insert("master.locateService::s#&:s", fMasterAddress);
+        fServiceCache.insert("master.locateService::s:s", fMasterAddress);
       } else {
         alserror << "\"" << fClientName <<
           "\" Failed to connect to master at address \"" << fMasterAddress << "\"";
