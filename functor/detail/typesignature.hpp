@@ -11,105 +11,82 @@
 # include <string>
 # include <vector>
 # include <map>
-# include <boost/mpl/string.hpp>
 # include <boost/utility.hpp>
 # include <boost/function_types/is_function_pointer.hpp>
 # include <boost/function_types/is_function.hpp>
+
 namespace AL {
   namespace detail {
 
+    #define SIMPLE_SIGNATURE(THETYPE, THENAME)                               \
+    template <>                                                              \
+    struct signature<THETYPE>  {                                             \
+      static std::string &value(std::string &val) {                          \
+        val += THENAME;                                                      \
+        return val;                                                          \
+      }                                                                      \
+    };
 
     template <typename T, class Enable = void>
     struct signature {
-      typedef boost::mpl::string<'U', 'N', 'K', 'N', 'O', 'W', 'N'> value;
+      static std::string &value(std::string &val) {
+        val += "UNKNOWN";
+        return val;
+      }
     };
 
-    template <>
-    struct signature<void>  {
-      typedef boost::mpl::string<'v'> value;
+    SIMPLE_SIGNATURE(void       , "v");
+    SIMPLE_SIGNATURE(bool       , "b");
+    SIMPLE_SIGNATURE(char       , "c");
+    SIMPLE_SIGNATURE(int        , "i");
+    SIMPLE_SIGNATURE(float      , "f");
+    SIMPLE_SIGNATURE(double     , "d");
+    SIMPLE_SIGNATURE(std::string, "s");
+
+    //pointer
+    template <typename T>
+    struct signature<T*, typename boost::disable_if< boost::function_types::is_function<T> >::type> {
+      static std::string &value(std::string &val) {
+        AL::detail::signature<T>::value(val);
+        val += "*"; return val;
+      }
     };
 
-    template <>
-    struct signature<bool>  {
-      typedef boost::mpl::string<'b'> value;
+    //& and const are not used for function signature, it's only a compiler detail
+    template <typename T>
+    struct signature<T&> {
+      static std::string &value(std::string &val) {
+        return AL::detail::signature<T>::value(val);
+      }
     };
 
-    template <>
-    struct signature<char> {
-      typedef boost::mpl::string<'c'> value;
-    };
-
-    template <>
-    struct signature<int> {
-      typedef boost::mpl::string<'i'> value;
-    };
-
-    template <>
-    struct signature<float> {
-      typedef boost::mpl::string<'f'> value;
-    };
-
-    template <>
-    struct signature<double> {
-      typedef boost::mpl::string<'d'> value;
-    };
-
-    template <>
-    struct signature<std::string> {
-      typedef boost::mpl::string<'s'> value;
+    template <typename T>
+    struct signature<const T> {
+      static std::string &value(std::string &val) {
+        return AL::detail::signature<T>::value(val);
+      }
     };
 
     //STL
     template <typename U>
     struct signature< std::vector<U> > {
-    private:
-      typedef typename boost::mpl::copy<typename signature<U>::value,
-                                        boost::mpl::back_inserter< boost::mpl::string<'['>::type >
-                                        >::type value0;
-    public:
-      typedef typename boost::mpl::copy<boost::mpl::string<']'>::type,
-                                        boost::mpl::back_inserter< value0 >
-                                        >::type value;
+      static std::string &value(std::string &val) {
+        val += "[";
+        AL::detail::signature<U>::value(val);
+        val += "]";
+        return val;
+      }
     };
 
     template <typename T1, typename T2>
     struct signature< std::map<T1, T2> > {
-    private:
-      typedef typename boost::mpl::copy<typename signature<T1>::value,
-                                        boost::mpl::back_inserter< boost::mpl::string<'{'>::type >
-                                        >::type value0;
-    typedef typename boost::mpl::copy<typename signature<T2>::value,
-                                      boost::mpl::back_inserter< value0 >
-                                      >::type value1;
-    public:
-      typedef typename boost::mpl::copy<boost::mpl::string<'}'>::type,
-                                        boost::mpl::back_inserter< value1 >
-                                        >::type value;
-    };
-
-
-    //TYPE QUALIFIER
-    template <typename T>
-    struct signature<T*, typename boost::disable_if< boost::function_types::is_function<T> >::type> {
-      typedef typename boost::mpl::copy<boost::mpl::string<'*'>::type,
-                                        boost::mpl::back_inserter< typename signature<T>::value >
-                                        >::type value;
-    };
-
-    template <typename T>
-    struct signature<T&> {
-      typedef typename signature<T>::value value;
-//    typedef typename boost::mpl::copy<boost::mpl::string<'&'>::type,
-//                                      boost::mpl::back_inserter< typename signature<T>::value >
-//                                     >::type value;
-    };
-
-    template <typename T>
-    struct signature<const T> {
-      typedef typename signature<T>::value value;
-//    typedef typename boost::mpl::copy<boost::mpl::string<'#'>::type,
-//                                      boost::mpl::back_inserter< typename signature<T>::value >
-//                                     >::type value;
+      static std::string &value(std::string &val) {
+        val += "{";
+        AL::detail::signature<T1>::value(val);
+        AL::detail::signature<T2>::value(val);
+        val += "}";
+        return val;
+      }
     };
 
   }
