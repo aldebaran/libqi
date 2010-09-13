@@ -12,7 +12,7 @@
 #include <string>
 #include <map>
 
-static const int gLoopCount   = 1000000;
+static const unsigned int gLoopCount   = 1000000;
 
 struct Foo {
   static std::string bar() {
