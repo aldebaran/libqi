@@ -1,0 +1,66 @@
+==== Functor ====
+=== Functionality ===
+  This library allow to store a function pointer or a member function pointer, to be called latter.
+  Those functor should be storable in a map.
+
+=== Code Doc ===
+  ::
+  void myfun() {}
+  class Foo { void bar() {} } myfoo;
+  AL::Functor *fun1 = makeFunctor(myfun);
+  AL::Functor *fun2 = makeFunctor(myfoo, Foo::bar);
+  ::
+  TODO
+=== Performance ===
+  TODO
+
+
+==== Signature ====
+=== Functionality ===
+  This library take the signature of a c++ type. It support POD types, map, vector and function signature.
+  const and reference qualifier are discarded by default. (this is only a compiler detail).
+  The signature are as follow:
+
+  POD types:
+    bool   b
+    char   c
+    int    i
+    void   v
+    float  f
+    double d
+
+  STL types:
+    string           : s
+    map<>            : {}        (map<int, int>     => {ii})
+    vector<>         : []        (vector<bool>      => [b])
+
+  Qualifier:
+    pointer          : *         (string *          => s*)
+
+  Function:
+   R (T0, T1, ..)    : R:T0T1..  (bool (int, int)   => b:ii)
+   void (T0, T1, ..) : v:T0T1..  (void ()           => v:)
+
+=== Code doc ===
+  ::
+  std::string mysign;
+  //int signature
+  AL::signature<int>::value(mysign);
+  //void function with two int args
+  AL::signature<void (int, int)>::value(mysign);
+
+  //type from an instanciated object
+  int i;
+  AL::signatureFromObject::value(i, mysign);
+  ::
+
+=== Performance ===
+3 possibility have been explored:
+ - hand made runtime function signature (supporting only const &args).
+   This is the fastest to compile (16ms on my box). Very fast.
+ - generic runtime function signature (using mpl and boost::function_types to support all function types)
+   Good compilation time: 18ms. The code generated is equivalent to the handmade one, same speed.
+ - generic compiletime function signature (mpl + boost::function_types + mpl::string)
+   20ms to build. No runtime overhead, signature are const char * in the binary.
+
+ the choice between generic runtime and generic compile time signature have been keept.
