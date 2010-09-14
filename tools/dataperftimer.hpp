@@ -21,13 +21,15 @@ namespace AL {
     ///
     /// Usage:
     ///
+    /// @code
     /// DataPerfTimer dpt();
     ///
     /// dpt.start(10, 512);
-    /// for (int i = 0; i &lt; 10; ++i) {
+    /// for (int i = 0; i < 10; ++i) {
     ///   send(512octect);
     /// }
     /// dpt.stop();
+    /// @endcode
     /// </summary>
     class DataPerfTimer
     {
