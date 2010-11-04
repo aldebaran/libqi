@@ -10,7 +10,7 @@
 
 #include <boost/timer.hpp>
 #include <string>
-#include <rttools/rttime.h>
+//#include <rttools/rttime.h>
 
 namespace AL {
   namespace Test {
@@ -57,7 +57,8 @@ namespace AL {
       void print();
 
     protected:
-      RtTime        rt;
+      boost::timer    rt;
+      //RtTime        rt;
       unsigned long fLoopCount;
       unsigned long fMsgSize;
       double        fElapsed;
