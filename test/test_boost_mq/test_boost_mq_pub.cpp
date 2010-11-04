@@ -13,8 +13,8 @@ using AL::Test::DataPerfTimer;
 
 using namespace boost::interprocess;
 
-int gThreadCount = 1;
-int gLoopCount = 10000;
+const int gThreadCount = 1;
+const int gLoopCount = 10000;
 unsigned int                  numBytes = 100;
 
 int main_server ()
@@ -34,9 +34,9 @@ int main_server ()
       DataPerfTimer dt("Serv");
       std::string                   request = std::string(numBytes, 'B');
 
-      char data[4096];
-      unsigned int priority;
-      std::size_t recvd_size;
+      //char data[4096];
+      //unsigned int priority;
+      //std::size_t recvd_size;
 
       sleep(1);
       dt.start(gLoopCount, numBytes);
@@ -88,7 +88,7 @@ int main_client ()
       char data[4096];
       //Receive 100 numbers
       for(int i = 0; i < gLoopCount; ++i){
-         int number;
+         //int number;
          //std::cout << "clie:recv" << std::endl;
          mq.receive(data, numBytes, recvd_size, priority);
          //std::cout << "clie:send" << std::endl;
