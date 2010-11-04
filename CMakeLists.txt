@@ -55,7 +55,7 @@ source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
 
 set(HEADERS
   ippc.hpp
-  win_stdint.hpp
+  #win_stdint.hpp moved to transport/shm/memory where it is used
 )
 source_group( Headers FILES ${HEADERS})
 
