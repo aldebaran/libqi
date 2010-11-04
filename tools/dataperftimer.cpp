@@ -6,6 +6,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <iomanip>
 #include "dataperftimer.hpp"
 #include <iostream>
 //#include <rttools/rttime.h>
@@ -56,9 +57,9 @@ namespace AL {
     void DataPerfTimer::print()
     {
       if (fMsgSize > 0) {
-        std::cout << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
+        std::cout << std::setprecision(12) << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
       } else {
-        std::cout << fMsgPs  << " msg/s" << std::endl;
+        std::cout << std::setprecision(12) << fMsgPs  << " msg/s" << std::endl;
       }
     }
   }
