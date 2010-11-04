@@ -4,7 +4,7 @@
 *
 *  Created on: Oct 5, 2009 at 5:34:28 PM
 *      Author: Jean-Charles DELAY
-* 			Mail  : jdelay@aldebaran-robotics.com
+*      Mail  : jdelay@aldebaran-robotics.com
 */
 
 

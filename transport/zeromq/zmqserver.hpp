@@ -10,11 +10,11 @@
 
 #include <zmq.hpp>
 #include <alcommon-ng/transport/server.hpp>
-#include <alcommon-ng/messaging/call_definition.hpp>
+//#include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/handlers_pool.hpp>
 #include <alcommon-ng/transport/zeromq/zmqserver.hpp>
-#include <alcore/alptr.h>
-#include <althread/althread.h>
+//#include <alcore/alptr.h>
+//#include <althread/althread.h>
 #include <string>
 #include <boost/thread/mutex.hpp>
 

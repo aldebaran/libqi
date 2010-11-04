@@ -20,7 +20,7 @@ namespace boi = boost::interprocess;
 #endif
 
 #ifdef WIN32
-# include <alcommon-ng/win_stdint.hpp>
+# include <alcommon-ng/transport/shm/memory/win_stdint.hpp>
 #endif
 
 typedef unsigned char byte;

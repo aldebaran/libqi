@@ -8,7 +8,7 @@
 #ifndef AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 #define AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
-#include <alcommon-ng/messaging/call_definition.hpp>
+//#include <alcommon-ng/messaging/call_definition.hpp>
 #include <alcommon-ng/transport/common/i_runnable.hpp>
 #include <alcommon-ng/transport/common/i_server_response_handler.hpp>
 #include <alcommon-ng/transport/common/i_data_handler.hpp>

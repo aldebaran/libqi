@@ -17,7 +17,7 @@
 #include <pthread.h>
 #include <allog/allog.h>
 #include <boost/thread/mutex.hpp>
-#include <alfile/alfilesystem.h>
+//#include <alfile/alfilesystem.h>
 
 namespace AL {
   namespace Transport {
@@ -92,8 +92,3 @@ namespace AL {
     }
   }
 }
-
-
-
-
-

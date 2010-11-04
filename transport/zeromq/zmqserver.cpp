@@ -7,15 +7,14 @@
 
 #include <alcommon-ng/transport/zeromq/zmqserver.hpp>
 #include <alcommon-ng/transport/zeromq/zmq_connection_handler.hpp>
-
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
 
-#include <pthread.h>
+//#include <pthread.h>
 #include <allog/allog.h>
 #include <boost/thread/mutex.hpp>
-#include <alfile/alfilesystem.h>
+//#include <alfile/alfilesystem.h>
 
 namespace AL {
   namespace Transport {
@@ -108,7 +107,6 @@ namespace AL {
          std::string data;
          data.assign((char *)msg.data(), msg.size());
 
-         //boost::shared_ptr<CallDefinition>          def = unmarshallCall(msg);
 #ifdef ZMQ_FULL_ASYNC
          handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
 #else
