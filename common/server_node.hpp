@@ -47,7 +47,7 @@ namespace AL {
       }
 
     private:
-      void xAddService(const std::string& signature, Functor* functor);
+      void xAddService(const std::string& methodSignature, Functor* functor);
       std::auto_ptr<ServerNodeImp> fImp;
     };
   }

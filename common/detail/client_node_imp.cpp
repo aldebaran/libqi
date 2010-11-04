@@ -30,6 +30,7 @@ namespace AL {
     }
 
     void ClientNodeImp::xInit() {
+      // create a messaging client to the master address
       initOK = xCreateServerClient(fMasterAddress);
       if (initOK) {
         // we assert that we think the master can locate services
@@ -55,7 +56,6 @@ namespace AL {
         client->call(callDef, result);
     }
 
-    // TODO const ref ?
     boost::shared_ptr<Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
       NameLookup<boost::shared_ptr<Client> >::iterator it;
@@ -92,8 +92,8 @@ namespace AL {
     }
 
     const std::string& ClientNodeImp::xLocateService(
-      const std::string& methodHash) {
-        const std::string& nodeAddress = fServiceCache.get(methodHash);
+      const std::string& methodSignature) {
+        const std::string& nodeAddress = fServiceCache.get(methodSignature);
         if (!nodeAddress.empty()) {
           return nodeAddress;
         }
@@ -101,10 +101,10 @@ namespace AL {
         ResultDefinition r;
         std::string tmpAddress;
         try {
-          call(CallDefinition("master.locateService::s:s", methodHash), r);
+          call(CallDefinition("master.locateService::s:s", methodSignature), r);
           tmpAddress = r.value().as<std::string>();
         } catch(const std::exception& e) {
-          alswarning << "ServiceNotFoundException \"" << methodHash
+          alswarning << "ServiceNotFoundException \"" << methodSignature
             << "\" Unable to contact master.";
           throw( AL::Transport::ServiceNotFoundException(
             "Unable to contact master."));
@@ -112,11 +112,11 @@ namespace AL {
 
         if (!tmpAddress.empty()) {
           // cache located service pair
-          fServiceCache.insert(methodHash, tmpAddress);
+          fServiceCache.insert(methodSignature, tmpAddress);
           // return a const string ref address
-          return fServiceCache.get(methodHash);
+          return fServiceCache.get(methodSignature);
         } else {
-          alswarning << "ServiceNotFoundException \"" << methodHash
+          alswarning << "ServiceNotFoundException \"" << methodSignature
             << "\" Method not known to master.";
           throw( AL::Transport::ServiceNotFoundException(
             "Method not known to master."));

@@ -9,8 +9,6 @@
 #define AL_COMMON_MASTER_NODE_IMP_HPP_
 
 #include <string>
-#include <map>
-#include <alcommon-ng/common/detail/nodeinfo.hpp>
 #include <alcommon-ng/common/server_node.hpp>  // could use imp
 #include <alcommon-ng/common/detail/mutexednamelookup.hpp>
 
@@ -24,20 +22,33 @@ namespace AL {
       ~MasterNodeImp();
 
       void registerService(const std::string& nodeAddress,
-        const std::string& methodHash);
+        const std::string& methodSignature);
 
-      const std::string& locateService(const std::string& methodHash);
+      void registerServerNode(const std::string& nodeName, const std::string& nodeAddress);
+      void unregisterServerNode(const std::string& nodeName, const std::string& nodeAddress);
+
+      void registerClientNode(const std::string& nodeName, const std::string& nodeAddress);
+      void unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress);
+
+      const std::string& locateService(const std::string& methodSignature);
 
       const std::map<std::string, std::string>& listServices();
 
     private:
-      NodeInfo fNodeInfo;
+      std::string fName;
+      std::string fAddress;
       ServerNode fServerNode;
 
       void xInit();
 
-      // map from methodHash to nodeAddress
+      // map from methodSignature to nodeAddress
       MutexedNameLookup<std::string> fServiceCache;
+
+      // Auditing: map from nodeName to nodeAddress
+      MutexedNameLookup<std::string> fServerNodeCache;
+
+      // Auditing: map from nodeName to nodeAddress
+      MutexedNameLookup<std::string> fClientNodeCache;
     };
   }
 }
