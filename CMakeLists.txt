@@ -2,6 +2,7 @@
 ## Author(s):
 ##  - Jean-Charles DELAY <jdelay@aldebaran-robotics.com>
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
+##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
@@ -104,7 +105,10 @@ endif (UNIX)
 
 create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
 use_lib (alcommon-ng REQUIRED ALL BOOST)
-use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME ALVALUE LIBCORE LIBTHREAD SHMPOOL ZEROMQ RTTOOLS)
+use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD LIBTHREAD ZEROMQ)
+if (WITH_SHM)
+use_lib(ALVALUE SHMPOOL LIBCORE)
+endif()
 
 if (WITH_THRIFT)
   use_lib(alcommon-ng THRIFT)
@@ -117,5 +121,5 @@ add_subdirectory(transport)
 
 install_header(ALCOMMON-NG SUBFOLDER alippc ${HEADERS})
 
-stage_lib (alcommon-ng ALCOMMON-NG  ${CMAKE_CURRENT_SOURCE_DIR}/..)
+stage_lib (alcommon-ng ALCOMMON-NG ${CMAKE_CURRENT_SOURCE_DIR}/..)
 cond_subdirectory(test BUILD_TESTS)
