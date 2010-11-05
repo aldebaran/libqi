@@ -42,28 +42,28 @@ namespace AL {
 
     void MasterNodeImp::registerService(
       const std::string& nodeAddress, const std::string& methodSignature) {
-        std::cout << "Master::registerService " << nodeAddress << " " << methodSignature << std::endl;
+        alsinfo << "Master::registerService " << nodeAddress << " " << methodSignature;
       fServiceCache.insert(methodSignature, nodeAddress);
     }
 
     void MasterNodeImp::registerServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      std::cout << "Master::registerServerNode " << nodeName << " " << nodeAddress << std::endl;
+      alsinfo << "Master::registerServerNode " << nodeName << " " << nodeAddress;
       fServerNodeCache.insert(nodeName, nodeAddress);
     }
 
     void MasterNodeImp::unregisterServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      std::cout << "Master::unregisterServerNode " << nodeName << " " << nodeAddress << std::endl;
+      alsinfo << "Master::unregisterServerNode " << nodeName << " " << nodeAddress;
       // todo remove associated services
       fServerNodeCache.remove(nodeName);
     }
 
     void MasterNodeImp::registerClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      std::cout << "Master::registerClientNode " << nodeName << " " << nodeAddress << std::endl;
+      alsinfo << "Master::registerClientNode " << nodeName << " " << nodeAddress;
       fClientNodeCache.insert(nodeName, nodeAddress);
     }
 
     void MasterNodeImp::unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      std::cout << "Master::unregisterClientNode " << nodeName << " " << nodeAddress << std::endl;
+      alsinfo << "Master::unregisterClientNode " << nodeName << " " << nodeAddress;
       fClientNodeCache.remove(nodeName);
     }
 
