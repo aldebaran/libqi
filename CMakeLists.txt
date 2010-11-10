@@ -8,62 +8,57 @@
 ##
 
 
-project (ALCommon-NG)
+project (qi)
 
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
-create_config_h("config.hpp.in" "alcommon-ng/config.hpp")
+create_config_h("config.hpp.in" "qi/config.hpp")
 
-file(GLOB COMMON_SRC               common/*.cpp common/*.h*)
-file(GLOB COMMON_DETAIL_SRC        common/detail/*.cpp common/detail/*.h*)
-file(GLOB COLLECTIONS_SRC          collections/*.cpp collections/*.h*)
-file(GLOB SERIALIZATION_SRC        serialization/*.cpp serialization/*.h*)
-file(GLOB SERIALIZATION_THRIFT_SRC serialization/thrift/*.cpp serialization/thrift/*.h*)
-file(GLOB SERIALIZATION_BOOST_SRC  serialization/boost/*.cpp serialization/boost/*.h*)
+file(GLOB NODES_SRC                qi/nodes/*.cpp qi/nodes/*.h*)
+file(GLOB NODES_DETAIL_SRC         qi/nodes/detail/*.cpp qi/nodes/detail/*.h*)
+file(GLOB COLLECTIONS_SRC          qi/collections/*.cpp qi/collections/*.h*)
+file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
+file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
+file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
 
-file(GLOB TOOLS_SRC                tools/*.cpp tools/*.h*)
-file(GLOB EXCEPTIONS_SRC           exceptions/*.cpp exceptions/*.h*)
+file(GLOB TOOLS_SRC                qi/tools/*.cpp qi/tools/*.h*)
+file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
 
-file(GLOB MESSAGING_SRC            messaging/*.cpp messaging/*.h*)
+file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
 
-file(GLOB TRANSPORT_SRC                   transport/*.cpp transport/*.h*)
-file(GLOB TRANSPORT_COMMON_SRC            transport/common/*.cpp transport/common/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   transport/shm/util/*.cpp transport/shm/util/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC transport/shm/client/*.cpp transport/shm/client/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC transport/shm/memory/*.cpp transport/shm/memory/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC transport/shm/server/*.cpp transport/shm/server/*.h*)
-file(GLOB TRANSPORT_ZMQ_SRC               transport/zeromq/*.cpp transport/zeromq/*.h*)
-file(GLOB TRANSPORT_THRIFT_SRC            transport/thrift/*.cpp transport/thrift/*.h*)
-file(GLOB FUNCTOR_SRC                     functor/*.cpp functor/*.h*)
+file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
+file(GLOB TRANSPORT_COMMON_SRC            qi/transport/common/*.cpp qi/transport/common/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   qi/transport/shm/util/*.cpp qi/transport/shm/util/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC qi/transport/shm/client/*.cpp qi/transport/shm/client/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC qi/transport/shm/memory/*.cpp qi/transport/shm/memory/*.h*)
+file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC qi/transport/shm/server/*.cpp qi/transport/shm/server/*.h*)
+file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/zeromq/*.cpp qi/transport/zeromq/*.h*)
+file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/thrift/*.cpp qi/transport/thrift/*.h*)
+file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
+file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 
-source_group( Common                 FILES ${COMMON_SRC})
-source_group( Common\\Detail         FILES ${COMMON_DETAIL_SRC})
-source_group( Messaging              FILES ${MESSAGING_SRC})
-source_group( Collections            FILES ${COLLECTIONS_SRC})
-source_group( Functor                FILES ${FUNCTOR_SRC})
-source_group( Serialization          FILES ${SERIALIZATION_SRC})
-source_group( Serialization\\Thrift  FILES ${SERIALIZATION_THRIFT_SRC})
-source_group( Serialization\\Boost   FILES ${SERIALIZATION_BOOST_SRC})
-source_group( Utils                  FILES ${UTIL_SRC})
-source_group( Exceptions             FILES ${EXCEPTIONS_SRC})
-source_group( Tools                  FILES ${TOOLS_SRC})
-source_group( Transport              FILES ${TRANSPORT_SRC})
-source_group( Transport\\Common      FILES ${TRANSPORT_COMMON_SRC})
+source_group( nodes                  FILES ${NODES_SRC})
+source_group( nodes\\detail          FILES ${NODES_DETAIL_SRC})
+source_group( messaging              FILES ${MESSAGING_SRC})
+source_group( collections            FILES ${COLLECTIONS_SRC})
+source_group( functors               FILES ${FUNCTORS_SRC})
+source_group( functors\\detail       FILES ${FUNCTORS_DETAIL_SRC})
+source_group( serialization          FILES ${SERIALIZATION_SRC})
+source_group( serialization\\thrift  FILES ${SERIALIZATION_THRIFT_SRC})
+source_group( serialization\\boost   FILES ${SERIALIZATION_BOOST_SRC})
+source_group( exceptions             FILES ${EXCEPTIONS_SRC})
+source_group( tools                  FILES ${TOOLS_SRC})
+source_group( transport              FILES ${TRANSPORT_SRC})
+source_group( transport\\common      FILES ${TRANSPORT_COMMON_SRC})
 
-
-set(HEADERS
-  ippc.hpp
-  #win_stdint.hpp moved to transport/shm/memory where it is used
-)
-source_group( Headers FILES ${HEADERS})
-
+file(GLOB HEADERS qi/*.h*)
 
 set(SRC
-    ${COMMON_SRC}
-    ${COMMON_DETAIL_SRC}
+    ${NODES_SRC}
+    ${NODES_DETAIL_SRC}
     ${MESSAGING_SRC}
     ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
@@ -72,12 +67,13 @@ set(SRC
     ${TOOLS_SRC}
     ${TRANSPORT_SRC}
     ${TRANSPORT_COMMON_SRC}
-    ${FUNCTOR_SRC}
+    ${FUNCTORS_SRC}
+    ${FUNCTORS_DETAIL_SRC}
 )
 
 if(WITH_ZMQ)
   set(SRC ${SRC} ${TRANSPORT_ZMQ_SRC})
-  source_group( Transport\\ZeroMq      FILES ${TRANSPORT_ZMQ_SRC})
+  source_group( transport\\zeromq      FILES ${TRANSPORT_ZMQ_SRC})
 endif()
 
 if(WITH_SHM)
@@ -86,10 +82,10 @@ if(WITH_SHM)
                  ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
                  ${TRANSPORT_COMMON_SHM_SERVER_SRC})
 
-  source_group( Transport\\Shm\\Util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
-  source_group( Transport\\Shm\\Client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
-  source_group( Transport\\Shm\\Memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
-  source_group( Transport\\Shm\\Server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
+  source_group( transport\\shm\\util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
+  source_group( transport\\shm\\client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
+  source_group( transport\\shm\\memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
+  source_group( transport\\shm\\server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
 endif()
 
 
@@ -97,29 +93,29 @@ if (WITH_THRIFT)
   set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC} ${TRANSPORT_THRIFT_SRC})
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif (UNIX)
 
-create_static_and_shared_libs(alcommon-ng  "${SRC}" "${HEADERS}")
-use_lib (alcommon-ng REQUIRED ALL BOOST)
-use_lib (alcommon-ng BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD LIBTHREAD ZEROMQ)
+create_static_and_shared_libs(qi  "${SRC}" "${HEADERS}")
+use_lib (qi REQUIRED ALL BOOST)
+use_lib (qi BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD LIBTHREAD ZEROMQ)
 if (WITH_SHM)
-use_lib(ALVALUE SHMPOOL LIBCORE)
+use_lib(qi ALVALUE SHMPOOL LIBCORE)
 endif()
 
 if (WITH_THRIFT)
-  use_lib(alcommon-ng THRIFT)
+  use_lib(qi THRIFT)
 endif()
 
-add_subdirectory(collections)
-add_subdirectory(exceptions)
-add_subdirectory(serialization)
-add_subdirectory(transport)
+add_subdirectory(qi/collections)
+add_subdirectory(qi/exceptions)
+add_subdirectory(qi/serialization)
+add_subdirectory(qi/transport)
 
-install_header(ALCOMMON-NG SUBFOLDER alippc ${HEADERS})
+install_header(qi SUBFOLDER qi ${HEADERS})
 
-stage_lib (alcommon-ng ALCOMMON-NG ${CMAKE_CURRENT_SOURCE_DIR}/..)
-cond_subdirectory(test BUILD_TESTS)
+stage_lib (qi QI ${CMAKE_CURRENT_SOURCE_DIR})
+cond_subdirectory(qi/test BUILD_TESTS)

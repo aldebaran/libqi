@@ -1,0 +1,36 @@
+#from codegenerator import *
+/*
+** $autogen
+**
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2010 Aldebaran Robotics
+*/
+
+#raw
+#ifndef  QI_MESSAGING_MAKE_FUNCTOR_HPP_
+# define QI_MESSAGING_MAKE_FUNCTOR_HPP_
+
+#include <qi/functors/functor.hpp>
+
+namespace qi
+{
+#end raw
+#for $i in $count
+
+  template <${generate_typename_list($i, end = True)}typename C, typename R>
+  Functor *makeFunctor(C *obj, R (C::*f) ($generate_param_list($i))) {
+    return new MemberFunctor_$i<${generate_type_list($i, end = True)}C, R>(obj, f);
+  }
+
+  template <${generate_typename_list($i, end = True)}typename R>
+  Functor *makeFunctor(R (*f) ($generate_param_list($i))) {
+    return new Functor_$i<${generate_type_list($i, end = True)}R>(f);
+  }
+
+#end for
+#raw
+}
+#endif
+#end raw

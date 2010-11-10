@@ -1,0 +1,86 @@
+#from codegenerator import *
+<%
+def generate_argpush_list(count):
+    t = "args.push_back(p%(count)d);"
+    return generate_list(t, count, sep=" ")
+%>
+#raw
+#pragma once
+/*
+** $autogen
+**
+** Author(s):
+**  - Chris Kilner <ckilner@aldebaran-robotics.com>
+**  - Cedric Gestes <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2010 Aldebaran Robotics
+*/
+#ifndef QI_NODES_CLIENT_NODE_HPP_
+#define QI_NODES_CLIENT_NODE_HPP_
+
+#include <string>
+#include <memory>
+#include <qi/messaging/call_definition.hpp>
+#include <qi/messaging/result_definition.hpp>
+#include <qi/functors/detail/functionsignature.hpp>
+
+namespace qi {
+  namespace Nodes {
+
+    class ClientNodeImp;
+
+    /// <summary>
+    /// Used to call services that have been added to a server.
+    /// If the service is unknown, the master is interogated
+    //  to find the appropriate server
+    /// </summary>
+    class ClientNode {
+    public:
+      /// <summary>
+      /// DefaultConstructor
+      /// Used to call services that have been added to a server.
+      /// If the service is unknown, the master is interogated
+      //  to find the appropriate server
+      /// </summary>
+      ClientNode();
+
+      /// <summary>
+      /// Used to call services that have been added to a server.
+      /// If the service is unknown, the master is interogated
+      //  to find the appropriate server
+      /// </summary>
+      /// <param name="clientName">
+      /// The name you want to give to this client
+      /// e.g. "client"
+      /// </param>
+      /// <param name="masterAddress">
+      /// The address of the master that is used to find services
+      /// e.g. "127.0.0.1:5555"
+      /// </param>
+      ClientNode(const std::string& clientName,
+        const std::string& masterAddress);
+
+      virtual ~ClientNode();
+#end raw
+#for $i in $count
+
+      #if $i != 0
+      template <${generate_typename_list($i)}>
+      #end if
+      void callVoid(const std::string& methodName${generate_param_list($i, begin=True)});
+
+      template <typename RETURN_TYPE${generate_typename_list($i, begin=True)}>
+      RETURN_TYPE call(const std::string& methodName${generate_param_list($i, begin=True)});
+#end for
+
+    private:
+      void xCall(const qi::Messaging::CallDefinition& callDef, qi::Messaging::ResultDefinition &result);
+      std::auto_ptr<ClientNodeImp> fImp;
+    };
+  }
+}
+
+#raw
+#include <qi/nodes/client_node.hxx>
+#endif  // QI_NODES_CLIENT_NODE_HPP_
+#end raw

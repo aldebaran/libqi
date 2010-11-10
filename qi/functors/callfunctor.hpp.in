@@ -1,0 +1,57 @@
+#from codegenerator import *
+<%
+def generate_argpush_list(count):
+    t = "args.push_back(p%(count)d);"
+    return generate_list(t, count, sep=" ")
+%>
+/*
+** $autogen
+**
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2010 Aldebaran Robotics
+*/
+
+#raw
+#ifndef  QI_MESSAGING_CALL_FUNCTOR_HPP_
+# define QI_MESSAGING_CALL_FUNCTOR_HPP_
+
+#include <qi/collections/variables_list.hpp>
+#include <qi/functors/functor.hpp>
+#end raw
+
+namespace qi
+{
+#for $i in $count
+
+  template <typename R$generate_typename_list($i, begin = True)>
+  R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
+    qi::Messaging::ArgumentList  args;
+    qi::Messaging::VariableValue ret;
+
+    #if $i != 0
+    $generate_argpush_list($i)
+    #end if
+    f->call(args, ret);
+    return ret.as<R>();
+  }
+
+  #if $i != 0
+  template <$generate_typename_list($i)>
+  #end if
+  void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
+    qi::Messaging::ArgumentList  args;
+    qi::Messaging::VariableValue ret;
+
+    #if $i != 0
+    $generate_argpush_list($i)
+    #end if
+    f->call(args, ret);
+  }
+
+#end for
+#raw
+}
+#endif
+#end raw
