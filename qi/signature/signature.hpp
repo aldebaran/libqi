@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   QI_FUNCTORS_SIGNATURE_HPP_
-# define  QI_FUNCTORS_SIGNATURE_HPP_
+#ifndef   QI_SIGNATURE_SIGNATURE_HPP_
+# define  QI_SIGNATURE_SIGNATURE_HPP_
 
 //runtime signature compile faster
 //compile time signature execute faster  (this one need boost::mpl::string that is not available in boost < 40)
@@ -15,11 +15,11 @@
 #define USE_RUNTIME_SIGNATURE
 
 #ifdef USE_RUNTIME_SIGNATURE
-#include <qi/functors/detail/typesignature.hpp>
-#include <qi/functors/detail/functionsignature.hpp>
+#include <qi/signature/detail/typesignature.hpp>
+#include <qi/signature/detail/functionsignature.hpp>
 #else
-#include <qi/functors/detail/typesignaturecompiletime.hpp>
-#include <qi/functors/detail/functionsignaturecompiletime.hpp>
+#include <qi/signature/detail/typesignaturecompiletime.hpp>
+#include <qi/signature/detail/functionsignaturecompiletime.hpp>
 #endif
 
 namespace qi {
@@ -83,4 +83,4 @@ namespace qi {
     }
 }
 
-#endif  // QI_FUNCTORS_SIGNATURE_HPP_
+#endif  // QI_SIGNATURE_SIGNATURE_HPP_
