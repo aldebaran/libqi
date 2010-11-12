@@ -6,6 +6,7 @@
 */
 
 #include <qi/transport/zeromq/zmqpublisher.hpp>
+#include <qi/perf/sleep.hpp>
 
 namespace qi {
   namespace transport {
@@ -24,6 +25,9 @@ namespace qi {
     void ZMQPublisher::bind()
     {
       socket.bind(_publishAddress.c_str());
+      // we can't allow publishing until the socket is warm
+      // we might be able to detect this in publish instead of sleeping here
+      sleep(1);
     }
 
     /// <summary> Publishes. </summary>

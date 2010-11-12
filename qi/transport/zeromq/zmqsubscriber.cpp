@@ -6,7 +6,6 @@
 */
 
 #include <qi/transport/zeromq/zmqsubscriber.hpp>
-#include <iostream>
 
 namespace qi {
   namespace transport {
@@ -36,7 +35,6 @@ namespace qi {
       {
         zmq::message_t msg;
         socket.recv (&msg);
-        std::cout << "Subscriber received" << std::endl;
         std::string data;
         data.assign((char *)msg.data(), msg.size());
         (this->getSubscribeHandler())->subscribeHandler(data);
