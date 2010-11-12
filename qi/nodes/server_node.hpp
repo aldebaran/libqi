@@ -11,7 +11,7 @@
 #include <string>
 #include <memory>
 #include <qi/functors/makefunctor.hpp>
-#include <qi/functors/signature.hpp>
+#include <qi/signature.hpp>
 
 namespace qi {
   namespace detail {

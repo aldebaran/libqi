@@ -16,7 +16,7 @@
 #include <memory>
 #include <qi/messaging/call_definition.hpp>
 #include <qi/messaging/result_definition.hpp>
-#include <qi/functors/signature.hpp>
+#include <qi/signature.hpp>
 
 namespace qi {
   namespace detail {
