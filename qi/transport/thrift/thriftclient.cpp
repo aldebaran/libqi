@@ -6,12 +6,12 @@
 */
 
 #include <iostream>
-#include <alcommon-ng/transport/thrift/thriftclient.hpp>
+#include <qi/transport/thrift/thriftclient.hpp>
 #include <transport/TSocket.h>
 #include <transport/TBufferTransports.h>
 
-namespace AL {
-  namespace Transport {
+namespace qi {
+  namespace transport {
 
     ThriftClient::ThriftClient(const std::string &servername, ResultHandler *resultHandler)
       : Client(servername)

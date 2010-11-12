@@ -6,14 +6,14 @@
 */
 
 #include <iostream>
-#include <alcommon-ng/collections/variables_list.hpp>
-#include <alcommon-ng/messaging/call_definition.hpp>
-#include <alcommon-ng/messaging/result_definition.hpp>
-#include <alcommon-ng/serialization/thrift/serialize.hpp>
+#include <qi/collections/variables_list.hpp>
+#include <qi/messaging/call_definition.hpp>
+#include <qi/messaging/result_definition.hpp>
+#include <qi/serialization/thrift/serialize.hpp>
 
 
-namespace AL {
-  namespace Serialization {
+namespace qi {
+  namespace serialization {
 
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field)
     {
@@ -43,18 +43,18 @@ namespace AL {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(std::string)" << std::endl);
       protocol->writeString(t);
     }
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::EmptyValue &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::EmptyValue &t, int field)
     {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(EmptyValue)" << std::endl);
     }
 
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::ResultDefinition &t, int field)
     {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(ResultDefinition)" << std::endl);
       //protocol->readWriteMessage();
     }
 
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol,const AL::Messaging::VariableValue &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol,const qi::messaging::VariableValue &t, int field)
     {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(VariablesValue)" << std::endl);
       protocol->writeStructBegin("VariableValue");
@@ -72,7 +72,7 @@ namespace AL {
 //      thriftSerialize(protocol, dynamic_cast<const std::vector< AL::Messaging::VariableValue > &>(t));
 //    }
 
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field)
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::CallDefinition &t, int field)
     {
       DEBUGOUT_THRIFT_SER(std::cout << "Serialize(CallDefinition)" << std::endl);
 

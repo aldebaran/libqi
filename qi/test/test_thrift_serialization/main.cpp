@@ -17,17 +17,18 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
-
-#include <alcommon-ng/ippc.hpp>
-#include <alcommon-ng/serialization/thrift/serialize.hpp>
+#include <iostream>
+#include <cmath>
+#include <qi/messaging/call_definition.hpp>
+#include <qi/serialization/thrift/serialize.hpp>
 
 #include <transport/TTransportUtils.h>
 #include <protocol/TJSONProtocol.h>
 #include <protocol/TBinaryProtocol.h>
 
-#include <alcommon-ng/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 
-using AL::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 static const int gLoopCount   = 100000;
 
@@ -41,7 +42,7 @@ std::string serializeJsonThrift(T &t)
   boost::shared_ptr<TTransport> trans(buffer);
   TJSONProtocol protocol(trans);
 
-  AL::Serialization::thriftSerialize(&protocol, t);
+  qi::serialization::thriftSerialize(&protocol, t);
 
   uint8_t* buf;
   uint32_t size;
@@ -58,7 +59,7 @@ std::string serializeBinaryThrift(T &t)
   boost::shared_ptr<TTransport> trans(buffer);
   TBinaryProtocol protocol(trans);
 
-  AL::Serialization::thriftSerialize(&protocol, t);
+  qi::serialization::thriftSerialize(&protocol, t);
 
   uint8_t* buf;
   uint32_t size;
@@ -68,7 +69,7 @@ std::string serializeBinaryThrift(T &t)
 
 int main(int argc, char *argv[])
 {
-  AL::Messaging::CallDefinition      def;
+  qi::messaging::CallDefinition      def;
 
   DataPerfTimer dt;
 
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
   {
     unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string                   request = std::string(numBytes, 'B');
-    AL::Messaging::CallDefinition def;
+    qi::messaging::CallDefinition def;
 
     def.args()[0] = request;
 
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
   {
     unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string                   request = std::string(numBytes, 'B');
-    AL::Messaging::CallDefinition def;
+    qi::messaging::CallDefinition def;
 
     def.args()[0] = request;
     dt.start(gLoopCount, numBytes);

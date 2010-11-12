@@ -8,11 +8,11 @@
 #ifndef         AL_MESSAGING_TRANSPORT_THRIFTSERVER_HPP_
 # define        AL_MESSAGING_TRANSPORT_THRIFTSERVER_HPP_
 
-# include <alcommon-ng/transport/server.hpp>
-# include <alcommon-ng/transport/common/handlers_pool.hpp>
+# include <qi/transport/server.hpp>
+# include <qi/transport/common/handlers_pool.hpp>
 
-namespace AL {
-  namespace Transport {
+namespace qi {
+  namespace transport {
     class ResultHandler;
     class ThriftServer : public Server {
     public:

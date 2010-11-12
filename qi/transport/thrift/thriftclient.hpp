@@ -8,11 +8,11 @@
 #ifndef         AL_MESSAGING_TRANSPORT_THRIFTCLIENT_HPP_
 # define        AL_MESSAGING_TRANSPORT_THRIFTCLIENT_HPP_
 
-#include <alcommon-ng/transport/client.hpp>
+#include <qi/transport/client.hpp>
 #include <transport/TTransport.h>
 
-namespace AL {
-  namespace Transport {
+namespace qi {
+  namespace transport {
 
     class ResultHandler;
     class ThriftClient : public Client {

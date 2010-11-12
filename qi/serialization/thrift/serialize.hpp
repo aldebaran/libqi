@@ -24,16 +24,17 @@ namespace apache {
 }
 
 
-namespace AL {
+namespace qi {
 
-  namespace Messaging {
+  namespace messaging {
     class ResultDefinition;
     class VariableValue;
     class VariablesList;
     class CallDefinition;
+    class EmptyValue;
   }
 
-  namespace Serialization {
+  namespace serialization {
 
     //POD Types
     void thriftSerialize(::apache::thrift::protocol::TProtocol* protocol, const int &t, int field = 0);
@@ -49,10 +50,10 @@ namespace AL {
     void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const std::list<U> &t, int field = 0);
 
     //AL::Messaging Types
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::ResultDefinition &t, int field = 0);
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::VariableValue &t, int field = 0);
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::EmptyValue &t, int field = 0);
-    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const AL::Messaging::CallDefinition &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::ResultDefinition &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::VariableValue &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::EmptyValue &t, int field = 0);
+    void thriftSerialize(::apache::thrift::protocol::TProtocol *protocol, const qi::messaging::CallDefinition &t, int field = 0);
 
     struct VariableValueSerializeVisitor : boost::static_visitor<> {
       VariableValueSerializeVisitor(::apache::thrift::protocol::TProtocol *protocol)
@@ -70,6 +71,6 @@ namespace AL {
   }
 }
 
-#include <alcommon-ng/serialization/thrift/serialize.hxx>
+#include <qi/serialization/thrift/serialize.hxx>
 
 #endif      /* !AL_SERIALIZATION_THRIFT_HPP_ */

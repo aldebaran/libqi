@@ -6,10 +6,10 @@
 */
 
 #include <allog/allog.h>
-#include <alcommon-ng/transport/thrift/thriftserver.hpp>
+#include <qi/transport/thrift/thriftserver.hpp>
 
-namespace AL {
-  namespace Transport {
+namespace qi {
+  namespace transport {
 
     ThriftServer::ThriftServer(const std::string &server_name)
       : Server(server_name)

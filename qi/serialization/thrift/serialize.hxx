@@ -8,8 +8,8 @@
 #ifndef   	AL_SERIALIZATION_THRIFT_HXX_
 # define   	AL_SERIALIZATION_THRIFT_HXX_
 
-namespace AL {
-  namespace Serialization {
+namespace qi {
+  namespace serialization {
 
 
     template <typename U>
