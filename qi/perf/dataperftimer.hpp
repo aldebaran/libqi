@@ -13,7 +13,7 @@
 //#include <rttools/rttime.h>
 
 namespace qi {
-  namespace Test {
+  namespace perf {
 
     /// <summary>
     /// This class is a utility to calculate the msg/sec

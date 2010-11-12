@@ -24,7 +24,7 @@ file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
 
-file(GLOB TOOLS_SRC                qi/tools/*.cpp qi/tools/*.h*)
+file(GLOB TOOLS_SRC                qi/perf/*.cpp qi/perf/*.h*)
 file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
 
 file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
@@ -41,6 +41,7 @@ file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
 file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 
 file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h* qi/signature.h* qi/signature/detail/*.h*)
+
 source_group( nodes                  FILES ${NODES_SRC})
 source_group( nodes\\detail          FILES ${NODES_DETAIL_SRC})
 source_group( messaging              FILES ${MESSAGING_SRC})

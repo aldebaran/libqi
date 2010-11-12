@@ -12,7 +12,7 @@
 //#include <rttools/rttime.h>
 
 namespace qi {
-  namespace Test {
+  namespace perf {
 
     DataPerfTimer::DataPerfTimer(const std::string& testDescription, bool showHeader)
       : fLoopCount(1),
