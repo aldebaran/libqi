@@ -1,15 +1,16 @@
 /*
- * variables_list.hpp
- *
- *  Created on: Oct 19, 2009 at 11:31:46 AM
- *      Author: Jean-Charles DELAY
- *      Mail  : jdelay@aldebaran-robotics.com
- */
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris Kilner <ckilner@aldebaran-robotics.com>
+**
+** Copyright (C) 2010 Aldebaran Robotics
+*/
 
-#ifndef LIBIPPC_VARIABLESLIST_HPP_
-#define LIBIPPC_VARIABLESLIST_HPP_
+#ifndef QI_MESSAGING_VARIABLES_LIST_HPP_
+#define QI_MESSAGING_VARIABLES_LIST_HPP_
 
 #include <qi/collections/equality_visitor.hpp>
+#include <boost/variant.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
 #include <list>
@@ -109,6 +110,7 @@ namespace qi {
 }
 
 #include <qi/collections/print_visitor.hpp>
+
 /// </summary>
 /// Print the value in ostr stream.
 /// </summary>
@@ -124,4 +126,4 @@ inline std::ostream & operator << (std::ostream & ostr, const qi::messaging::Var
         return boost::apply_visitor(visitor, value.value());
 }
 
-#endif /* !LIBIPPC_VARIABLESLIST_HPP_ */
+#endif  // QI_MESSAGING_VARIABLES_LIST_HPP_

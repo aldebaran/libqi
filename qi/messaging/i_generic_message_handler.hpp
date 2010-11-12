@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_MESSAGING_i_generic_message_handler_HPP_
-#define QI_MESSAGING_i_generic_message_handler_HPP_
+#ifndef QI_MESSAGING_I_GENERIC_MESSAGE_HANDLER_HPP_
+#define QI_MESSAGING_I_GENERIC_MESSAGE_HANDLER_HPP_
 
 namespace qi {
   namespace messaging {
@@ -22,4 +22,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_MESSAGING_i_generic_message_handler_HPP_
+#endif  // QI_MESSAGING_I_GENERIC_MESSAGE_HANDLER_HPP_

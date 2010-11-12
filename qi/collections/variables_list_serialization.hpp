@@ -8,7 +8,7 @@
 #ifndef    QI_MESSAGING_VARIABLES_LIST_SERIALIZATION_HPP_
 # define   QI_MESSAGING_VARIABLES_LIST_SERIALIZATION_HPP_
 
-#include <boost/variant.hpp>
+#include <qi/collections/variables_list.hpp>
 
 namespace boost {
   namespace serialization {
