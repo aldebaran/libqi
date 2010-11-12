@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/signature.hpp>
-//#include <qi/tools/dataperftimer.hpp>
+//#include <qi/perf/dataperftimer.hpp>
 
 #include <vector>
 #include <map>

@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/nodes/detail/mutexednamelookup.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
 #include <map>
@@ -30,7 +30,7 @@ TEST(TestMaps, std_map_string_find) {
     map.insert(make_pair(key, key));
   }
 
-  qi::Test::DataPerfTimer dt("Map std::string find");
+  qi::perf::DataPerfTimer dt("Map std::string find");
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::map<std::string, std::string>::const_iterator it;
@@ -48,7 +48,7 @@ TEST(TestMaps, MutexedNameLookup_string_get) {
     mutexedMap.insert(key, key);
   }
 
-  qi::Test::DataPerfTimer dt("MutexedMap std::string get");
+  qi::perf::DataPerfTimer dt("MutexedMap std::string get");
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500");
@@ -68,7 +68,7 @@ TEST(TestMaps, MutexedNameLookup_struct_ptr_method) {
     mutexedMap.insert(key, f);
   }
 
-  qi::Test::DataPerfTimer dt("MutexedMap struct ptr method");
+  qi::perf::DataPerfTimer dt("MutexedMap struct ptr method");
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500")->bar();
@@ -86,7 +86,7 @@ TEST(TestMaps, MutexedNameLookup_struct_shared_ptr_method) {
     mutexedMap.insert(key, f);
   }
 
-  qi::Test::DataPerfTimer dt("MutexedMap struct shared_ptr method");
+  qi::perf::DataPerfTimer dt("MutexedMap struct shared_ptr method");
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500")->bar();

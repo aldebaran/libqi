@@ -4,11 +4,12 @@
 
 #include <vector>
 #include <iostream>
-#include <qi/tools/dataperftimer.hpp>
-#include <qi/tools/sleep.hpp>
+#include <cmath>
+#include <qi/perf/dataperftimer.hpp>
+#include <qi/perf/sleep.hpp>
 #include <zmq.hpp>
 
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 static const int gThreadCount = 10;
 static const int gLoopCount   = 10000;
@@ -19,7 +20,7 @@ int main(int argc, char **argv)
   zmq::context_t ctx (1);
   zmq::socket_t s (ctx, ZMQ_PUB);
   s.bind("tcp://127.0.0.1:5555");
-  Sleep(5000);
+  sleep(5);
   for (int i = 0; i < 12; ++i)
   {
     unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);

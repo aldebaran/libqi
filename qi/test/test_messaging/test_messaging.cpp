@@ -13,11 +13,11 @@
 
 #include <qi/messaging.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qi/tools/dataperftimer.hpp>
-#include <qi/tools/sleep.hpp>
+#include <qi/perf/dataperftimer.hpp>
+#include <qi/perf/sleep.hpp>
 
 using namespace qi::messaging;
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 static const int gThreadCount = 10;
 static const int gLoopCount   = 10000;

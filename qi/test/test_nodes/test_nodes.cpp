@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/nodes.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 #include <string>
 
 using namespace qi;
@@ -28,7 +28,7 @@ TEST(Nodes, PerformancePing)
   gServer.addService("wibble.ping", &ping);
   unsigned int numMessages = 10000;
 
-  qi::Test::DataPerfTimer dt("Node void -> ping -> void");
+  qi::perf::DataPerfTimer dt("Node void -> ping -> void");
   dt.start(numMessages);
   for (unsigned int loop = 0; loop < numMessages; loop++) {
     // Serialize
@@ -42,7 +42,7 @@ TEST(Nodes, PerformanceEcho)
   gServer.addService("wibble.echo", &echo);
   unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
-  qi::Test::DataPerfTimer dt("Node string -> echo -> string");
+  qi::perf::DataPerfTimer dt("Node string -> echo -> string");
   char character = 'A';
 
   // loop message sizes 2^i bytes

@@ -3,7 +3,7 @@
 #include <string>
 #include <boost/timer.hpp>
 #include <qi/nodes.hpp>
-#include <qi/tools/sleep.hpp>
+#include <qi/perf/sleep.hpp>
 
 using namespace qi;
 

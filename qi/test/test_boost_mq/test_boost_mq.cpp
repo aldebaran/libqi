@@ -5,11 +5,11 @@
 #include <iostream>
 #include <vector>
 
-#include <qi/tools/dataperftimer.hpp>
-#include <qi/tools/sleep.hpp>
+#include <qi/perf/dataperftimer.hpp>
+#include <qi/perf/sleep.hpp>
 
 //using namespace qi::messaging;
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 using namespace boost::interprocess;
 

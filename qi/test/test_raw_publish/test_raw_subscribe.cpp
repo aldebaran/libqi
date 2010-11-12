@@ -4,11 +4,12 @@
 
 #include <vector>
 #include <iostream>
-#include <qi/tools/dataperftimer.hpp>
-#include <qi/tools/sleep.hpp>
+#include <cmath>
+#include <qi/perf/dataperftimer.hpp>
+#include <qi/perf/sleep.hpp>
 #include <zmq.hpp>
 
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 static const int gThreadCount = 10;
 static const int gLoopCount   = 10000;

@@ -12,14 +12,14 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qi/tools/sleep.hpp>
+#include <qi/perf/sleep.hpp>
 #include <qi/transport/transport.hpp>
 #include <qi/transport/zeromq/zmqsimpleserver.hpp>
 #include <qi/transport/zeromq/zmqserver.hpp>
 #include <qi/transport/zeromq/zmqserverqueue.hpp>
 
 #include <boost/shared_ptr.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 
 //#define TEST_TRANSPORT_SHM
 //#define TEST_TRANSPORT_ZMQ_SINGLE
@@ -40,7 +40,7 @@
 # error "please define a transport"
 #endif
 
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 //using AL::ALPtr;
 
 static const int gThreadCount = 1;

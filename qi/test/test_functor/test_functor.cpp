@@ -10,7 +10,7 @@
 #include <qi/functors/functor.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/functors/callfunctor.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 #include <cmath>
 
 static const int gLoopCount   = 1000000;
@@ -170,7 +170,7 @@ TEST(TestBind, VoidCallPerf) {
   ReturnValue   res;
   ArgumentList  cd;
 
-  qi::Test::DataPerfTimer dp;
+  qi::perf::DataPerfTimer dp;
   qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::voidCall);
   std::cout << "qi::Functor call" << std::endl;
   dp.start(gLoopCount);
@@ -194,7 +194,7 @@ TEST(TestBind, IntStringCallPerf) {
   Foo          *p = &chiche;
   ReturnValue res;
 
-  qi::Test::DataPerfTimer dp;
+  qi::perf::DataPerfTimer dp;
 
   std::cout << "qi::Functor call (string with a growing size)" << std::endl;
 

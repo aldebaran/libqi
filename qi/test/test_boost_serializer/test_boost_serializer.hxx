@@ -1,13 +1,13 @@
 
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <qi/serialization/boost/boost_serializers.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 #include <string>
 #include <qi/messaging/call_definition.hpp>
 #include <qi/messaging/result_definition.hpp>
 
 using namespace qi::serialization;
-using qi::Test::DataPerfTimer;
+using qi::perf::DataPerfTimer;
 
 unsigned int numPowers = 12;
 unsigned int numMessages = 10000;

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // gtest must be included before variables_list: errno_t error
 #include <qi/collections/variables_list.hpp>
-#include <qi/tools/dataperftimer.hpp>
+#include <qi/perf/dataperftimer.hpp>
 
 using namespace qi::messaging;
 
