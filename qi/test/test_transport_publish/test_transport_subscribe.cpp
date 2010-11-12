@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <qi/transport/zeromq/zmqsubscriber.hpp>
+#include <qi/perf/sleep.hpp>
 
 struct Handler : qi::transport::ISubscribeHandler {
   void subscribeHandler(const std::string & msg) {
@@ -18,5 +19,8 @@ int main(int argc, char **argv)
   qi::transport::ZMQSubscriber subscriber("tcp://127.0.0.1:5555");
   subscriber.setSubscribeHandler(&h);
   subscriber.subscribe();
+  while(true) {
+    sleep(1);
+  }
   return 0;
 }

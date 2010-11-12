@@ -29,10 +29,9 @@ namespace qi {
       socket.connect(_publishAddress.c_str());
     }
 
-    /// <summary> Subscribe. </summary>
-    void ZMQSubscriber::subscribe()
+    void ZMQSubscriber::receive()
     {
-      // todo make a thread here
+      // TODO allow disconnect
       while(true)
       {
         zmq::message_t msg;
@@ -41,6 +40,12 @@ namespace qi {
         data.assign((char *)msg.data(), msg.size());
         (this->getSubscribeHandler())->subscribeHandler(data);
       }
+    }
+
+    /// <summary> Subscribe. </summary>
+    void ZMQSubscriber::subscribe()
+    {
+      receiveThread = boost::thread(&ZMQSubscriber::receive, this);
     }
   }
 }

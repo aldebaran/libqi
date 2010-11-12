@@ -9,6 +9,7 @@
 # define QI_TRANSPORT_ZMQSUBSCRIBER_HPP_
 
 # include <qi/transport/subscriber.hpp>
+# include <boost/thread.hpp>
 # include <zmq.hpp>
 
 namespace qi {
@@ -32,10 +33,12 @@ namespace qi {
 
     protected:
       void connect();
+      void receive();
 
     protected:
       zmq::context_t context;
       zmq::socket_t  socket;
+      boost::thread  receiveThread;
     };
   }
 }
