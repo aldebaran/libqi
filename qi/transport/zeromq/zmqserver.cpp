@@ -10,11 +10,8 @@
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
-
-//#include <pthread.h>
 #include <allog/allog.h>
 #include <boost/thread/mutex.hpp>
-//#include <alfile/alfilesystem.h>
 
 namespace qi {
   namespace transport {

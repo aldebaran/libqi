@@ -10,11 +10,8 @@
 
 #include <zmq.hpp>
 #include <qi/transport/server.hpp>
-//#include <qi/messaging/call_definition.hpp>
 #include <qi/transport/common/handlers_pool.hpp>
 #include <qi/transport/zeromq/zmqserver.hpp>
-//#include <alcore/alptr.h>
-//#include <althread/althread.h>
 #include <string>
 #include <boost/thread/mutex.hpp>
 

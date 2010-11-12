@@ -8,7 +8,6 @@
 #ifndef QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 #define QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
-//#include <qi/messaging/call_definition.hpp>
 #include <qi/transport/common/i_runnable.hpp>
 #include <qi/transport/common/i_server_response_handler.hpp>
 #include <qi/transport/common/i_data_handler.hpp>
@@ -26,13 +25,13 @@ namespace qi {
 
       /// <summary> Constructor. </summary>
       /// <param name="msg"> The message. </param>
-      /// <param name="sdelegate"> [in,out] If non-null, the sdelegate. </param>
-      /// <param name="rdelegate"> [in,out] If non-null, the rdelegate. </param>
+      /// <param name="dataHandler"> The data handler. </param>
+      /// <param name="serverResponseHander"> The server response hander </param>
       /// <param name="data"> [in,out] If non-null, the data. </param>
       ZMQConnectionHandler(
         const std::string &msg,
         IDataHandler* dataHandler,
-        Detail::IServerResponseHandler* rdelegate,
+        Detail::IServerResponseHandler* serverResponseHander,
         void *data);
 
       /// <summary> Finaliser. </summary>
