@@ -17,7 +17,7 @@
 #include <boost/variant.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     class VariableValue;
     struct EmptyValue;

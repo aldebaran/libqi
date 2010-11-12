@@ -9,7 +9,7 @@
 #include <qi/messaging/call_definition.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     CallDefinition::CallDefinition () {}
 

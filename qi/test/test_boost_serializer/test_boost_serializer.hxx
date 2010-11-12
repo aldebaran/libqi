@@ -6,7 +6,7 @@
 #include <qi/messaging/call_definition.hpp>
 #include <qi/messaging/result_definition.hpp>
 
-using namespace qi::Serialization;
+using namespace qi::serialization;
 using qi::Test::DataPerfTimer;
 
 unsigned int numPowers = 12;
@@ -119,7 +119,7 @@ void testDeSerialization_StringBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::CallDefinition def;
+    qi::messaging::CallDefinition def;
     def.methodName() = "test2";
     def.args().push_back(request);
 
@@ -130,7 +130,7 @@ void testDeSerialization_StringBufferSizes(int numMessages) {
 
     for (int loop = 0; loop < numMessages; loop++) {
       // Serialize
-      qi::Messaging::CallDefinition reply = BoostBinarySerializer::deserialize<qi::Messaging::CallDefinition>(buffer);
+      qi::messaging::CallDefinition reply = BoostBinarySerializer::deserialize<qi::messaging::CallDefinition>(buffer);
     }
 
     dt.stop();
@@ -145,7 +145,7 @@ void testSerialization_CallDefBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::CallDefinition def;
+    qi::messaging::CallDefinition def;
     def.methodName() = "test2";
     def.args().push_back(request);
 
@@ -166,7 +166,7 @@ void testDeSerialization_CallDefBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::CallDefinition def;
+    qi::messaging::CallDefinition def;
     def.methodName() = "test2";
     def.args().push_back(request);
     std::string buffer = BoostBinarySerializer::serialize(def);
@@ -175,7 +175,7 @@ void testDeSerialization_CallDefBufferSizes(int numMessages) {
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      qi::Messaging::CallDefinition reply = BoostBinarySerializer::deserialize<qi::Messaging::CallDefinition>(buffer);
+      qi::messaging::CallDefinition reply = BoostBinarySerializer::deserialize<qi::messaging::CallDefinition>(buffer);
     }
 
     dt.stop();
@@ -191,7 +191,7 @@ void testSerialization_VariableValueBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::VariableValue def;
+    qi::messaging::VariableValue def;
     def = request;
 
     dt.start(numMessages, numBytes);
@@ -211,7 +211,7 @@ void testDeSerialization_VariableValueBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::VariableValue def;
+    qi::messaging::VariableValue def;
     def = request;
     std::string buffer = BoostBinarySerializer::serialize(def);
 
@@ -219,7 +219,7 @@ void testDeSerialization_VariableValueBufferSizes(int numMessages) {
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      qi::Messaging::VariableValue reply = BoostBinarySerializer::deserialize<qi::Messaging::VariableValue>(buffer);
+      qi::messaging::VariableValue reply = BoostBinarySerializer::deserialize<qi::messaging::VariableValue>(buffer);
     }
 
     dt.stop();
@@ -234,7 +234,7 @@ void testSerialization_ValueTypeBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::ValueType def;
+    qi::messaging::ValueType def;
     def = request;
 
     dt.start(numMessages, numBytes);
@@ -254,7 +254,7 @@ void testDeSerialization_ValueTypeBufferSizes(int numMessages) {
   for (unsigned int i = 1; i < numPowers; i++) {
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string request = std::string(numBytes, character);
-    qi::Messaging::ValueType def;
+    qi::messaging::ValueType def;
     def = request;
     std::string buffer = BoostBinarySerializer::serialize(def);
 
@@ -262,7 +262,7 @@ void testDeSerialization_ValueTypeBufferSizes(int numMessages) {
 
     for (int loop = 0; loop < numMessages; loop++) {
       // DeSerialize
-      qi::Messaging::ValueType reply = BoostBinarySerializer::deserialize<qi::Messaging::ValueType>(buffer);
+      qi::messaging::ValueType reply = BoostBinarySerializer::deserialize<qi::messaging::ValueType>(buffer);
     }
 
     dt.stop();

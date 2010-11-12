@@ -36,8 +36,8 @@ namespace qi {
       (*fFunction)($generate_arg_list($i));
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue&) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       (*fFunction)($generate_callparam_list($i));
     };
 

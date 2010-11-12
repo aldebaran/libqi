@@ -32,8 +32,8 @@ namespace qi {
       return (R)(fObject->*fFunction)();
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
       result.value((fObject->*fFunction)());
     };
 
@@ -57,8 +57,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       result.value((fObject->*fFunction)(params[0].as<P0>()));
     };
 
@@ -82,8 +82,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       result.value((fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>()));
     };
 
@@ -107,8 +107,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       result.value((fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>()));
     };
 
@@ -132,8 +132,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       result.value((fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>()));
     };
 
@@ -157,8 +157,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       result.value((fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>()));
     };
 
@@ -182,8 +182,8 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(const qi::Messaging::ArgumentList &params, qi::Messaging::ReturnValue& result) {
-      AL_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
+    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       result.value((fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>(), params[5].as<P5>()));
     };
 

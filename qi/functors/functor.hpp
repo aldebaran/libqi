@@ -9,8 +9,8 @@
 # define  QI_FUNCTORS_FUNCTOR_HPP_
 
 // Activate or disactivate log
-// #define AL_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
-#define AL_FUNCTOR_DEBUG(...)
+// #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
+#define QI_FUNCTOR_DEBUG(...)
 
 #include <qi/messaging/call_definition.hpp>
 #include <qi/messaging/result_definition.hpp>
@@ -22,21 +22,21 @@ namespace qi
   */
   class Functor {
   public:
-    virtual void call(const ::qi::Messaging::ArgumentList& pParams, ::qi::Messaging::ReturnValue& pResult) = 0;
+    virtual void call(const ::qi::messaging::ArgumentList& pParams, ::qi::messaging::ReturnValue& pResult) = 0;
     virtual ~Functor() {}
   };
 
 
 #ifdef DEBUG
 //TODO
-# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
-//# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
+# define QI_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
+//# define QI_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
 //  if(params.size() != nbrparamsrequired)
 //  {
 //    throw ALERROR("ALFunctor", "call", std::string( "Wrong number of parameters for this call requiring: " #nbrparamsrequired " and received: " ) + std::string(atoi( params.size())) + " (total params is: " + params.toString( VerbosityMini ) );
 //  }
 #else
-# define AL_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
+# define QI_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
 #endif
 
 }

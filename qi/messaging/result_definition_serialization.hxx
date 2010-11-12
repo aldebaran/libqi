@@ -18,7 +18,7 @@ namespace boost {
   namespace serialization {
     template<class Archive>
     void serialize(Archive & ar,
-      qi::Messaging::ResultDefinition& result,
+      qi::messaging::ResultDefinition& result,
       const unsigned int version) {
       ar & boost::serialization::make_nvp("is_exception", result.isException());
       ar & boost::serialization::make_nvp("v", result.value());

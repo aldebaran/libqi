@@ -4,7 +4,7 @@
 #include <boost/variant.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     class EqualityVisitor
         : public boost::static_visitor<bool>

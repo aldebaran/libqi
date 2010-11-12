@@ -4,14 +4,14 @@ General:
 - more test
 - clarify the situation with threadable/runnable => should be merged
 - cleanup source code: do not use tab, respect the norm, etc... do not mix CRLF with LF
-- client: standard way to create a client depending on a server. (I would prefer client do not depend at all on the server).
+- client: standard way to create a client depending on a server
   solution include:
     - server.getClient("modulename")
     - Client client("modulename", server)
 
 General later:
 - clean SOAP backend
-- binded function visitor that return the complete type of a function.
+- bound function visitor that return the complete type of a function.
 - support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
 - better stl serialization support (map, pair). Be recursive.
 - abstract the serialisation backend (or use the boost::archive abstraction to implement more serialization backend)
@@ -23,7 +23,7 @@ Functor:
   - split out CallDefinition/ResultDefinition handling in a separate file
 
 
-ippc -> AL::Messaging DONE
+ippc -> AL::messaging DONE
 CallDefinition -> Request NO ... the call definition is not the request
 ResultDefinition -> Response NO ... the call definition is not the request
 All ippc/Shm to al::messaging::shm
@@ -34,32 +34,14 @@ Add Message ... (could be a notification, or async call) ?
 They should have no ostream or serializaion inside them.
 
 Hmmm IArchive and OArchive ~= boost::archive
-Add NVP description for XML serialization
 
 Broker should translate module name to envelope for messaging.
 Messaging level just deals with envelopes. Envelopes are deserialized for a broker.
 What is the endpoint? broker? module? service?
 Envelopes could have timestamps, message-id, from, reply-to, relates-to
 
-enum MessageType {
-    RPC-REQ,
-    RPC-REP,
-    ASYNC
-}
-
-template <class T>
-struct Envelope {
- std::string from
- std::string to
- std::string reply-to;
- int message-id;
- int relates-to;
- MessageType message-type;
- T body;
-}
-
-RpcCall {
-    std::string module;
-    std::string method;
-    T args;
-}
+---------
+Add support for 'dumb' serialization based on signature
+Add support for protobuf messages
+Cleanup startup - less hand-described messages
+Add publishing

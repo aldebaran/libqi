@@ -13,12 +13,12 @@
 namespace boost {
   namespace serialization {
     template<class Archive>
-    void serialize(Archive &, qi::Messaging::EmptyValue &, const unsigned int) {
+    void serialize(Archive &, qi::messaging::EmptyValue &, const unsigned int) {
       return;
     }
 
     template<class Archive>
-    void serialize(Archive &ar, qi::Messaging::VariableValue &value, const unsigned int) {
+    void serialize(Archive &ar, qi::messaging::VariableValue &value, const unsigned int) {
       ar & boost::serialization::make_nvp("value", value.value());
     }
   }

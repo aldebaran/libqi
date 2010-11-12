@@ -1,14 +1,11 @@
 
 #include <gtest/gtest.h>
-#include <qi/nodes/common.hpp>
-#include <boost/timer.hpp>
 #include <string>
-#include <qi/tools/sleep.hpp>
-#include <qi/functors/makefunctor.hpp>
+#include <boost/timer.hpp>
+#include <qi/nodes.hpp>
 #include <qi/tools/sleep.hpp>
 
-using namespace qi::Nodes;
-using namespace qi::Messaging;
+using namespace qi;
 
 std::string gMasterAddress = "tcp://127.0.0.1:5555";
 std::string gServerName = "server";

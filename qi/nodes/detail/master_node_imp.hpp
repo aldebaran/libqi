@@ -13,7 +13,7 @@
 #include <qi/nodes/detail/mutexednamelookup.hpp>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     class MasterNodeImp {
     public:

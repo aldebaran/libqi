@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_TRANSPORT_ZEROMQSERVER_HPP_
-#define AL_TRANSPORT_ZEROMQSERVER_HPP_
+#ifndef QI_TRANSPORT_ZEROMQSERVER_HPP_
+#define QI_TRANSPORT_ZEROMQSERVER_HPP_
 
 #include <zmq.hpp>
 #include <qi/transport/server.hpp>
@@ -19,7 +19,7 @@
 #include <boost/thread/mutex.hpp>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     /// <summary>
     /// The server class. It listen for incoming connection from client
@@ -66,4 +66,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_ZEROMQSERVER_HPP_
+#endif  // QI_TRANSPORT_ZEROMQSERVER_HPP_

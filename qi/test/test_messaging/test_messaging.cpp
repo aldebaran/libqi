@@ -16,7 +16,7 @@
 #include <qi/tools/dataperftimer.hpp>
 #include <qi/tools/sleep.hpp>
 
-using namespace qi::Messaging;
+using namespace qi::messaging;
 using qi::Test::DataPerfTimer;
 
 static const int gThreadCount = 10;
@@ -27,8 +27,8 @@ class ServiceHandler :  public IMessageHandler
 public:
   // to call function on current process
   void messageHandler(
-    const qi::Messaging::CallDefinition & def,
-          qi::Messaging::ResultDefinition& res)
+    const qi::messaging::CallDefinition & def,
+          qi::messaging::ResultDefinition& res)
   {
 
     if (def.methodName() == "ping") {
@@ -59,9 +59,9 @@ int main_client(int clientId)
 {
   std::stringstream sstream;
 
-  qi::Messaging::Client client;
+  qi::messaging::Client client;
   client.connect(gClientAddress);
-  qi::Messaging::ResultDefinition res;
+  qi::messaging::ResultDefinition res;
 
   DataPerfTimer dt("Messaging void -> ping -> void");
   dt.start(gLoopCount);
@@ -95,7 +95,7 @@ int main_client(int clientId)
     dt.start(gLoopCount, numBytes);
     for (int j = 0; j< gLoopCount; ++j)
     {
-      qi::Messaging::CallDefinition def("echo", std::string(request));
+      qi::messaging::CallDefinition def("echo", std::string(request));
       client.call(def, res);
       std::string result = res.value().as<std::string>();
     }

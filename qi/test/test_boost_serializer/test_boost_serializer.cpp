@@ -3,7 +3,7 @@
 #include <qi/messaging/call_definition_serialization.hxx>
 #include <qi/messaging/result_definition_serialization.hxx>
 
-using namespace qi::Serialization;
+using namespace qi::serialization;
 
 // -- basic types
 
@@ -150,13 +150,13 @@ TEST(SerializationTest, VectorString)
 
 TEST(SerializationTest, CallDefinition)
 {
-  qi::Messaging::CallDefinition arg;
+  qi::messaging::CallDefinition arg;
   testSerializationDeserialization(arg);
 }
 
 TEST(SerializationTest, ResultDefinition)
 {
-  qi::Messaging::ResultDefinition arg;
+  qi::messaging::ResultDefinition arg;
   testSerializationDeserialization(arg);
 }
 
@@ -188,15 +188,15 @@ TEST(SerializationPerformance, StringBuffers) {
 
 
 TEST(SerializationPerformance, CallDefinition) {
-  qi::Messaging::CallDefinition calldef;
+  qi::messaging::CallDefinition calldef;
   calldef.args().push_back(1.0f);
   calldef.args().push_back(std::string("hello1"));
   testSerializationDeserializationPerf(calldef);
 }
 
 TEST(SerializationPerformance, ResultDefinition) {
-  qi::Messaging::VariableValue v("result");
-  qi::Messaging::ResultDefinition resultdef(v);
+  qi::messaging::VariableValue v("result");
+  qi::messaging::ResultDefinition resultdef(v);
   testSerializationDeserializationPerf(resultdef);
 }
 
@@ -260,13 +260,13 @@ inline std::ostream & operator << (std::ostream & ostr, const std::map<T, U> & v
 }
 
 // to keep gtest happy
-inline std::ostream & operator << (std::ostream & ostr, const qi::Messaging::CallDefinition & value) {
+inline std::ostream & operator << (std::ostream & ostr, const qi::messaging::CallDefinition & value) {
   ostr << "CallDefinition";
         return ostr;
 }
 
 // to keep gtest happy
-inline std::ostream & operator << (std::ostream & ostr, const qi::Messaging::ResultDefinition & value) {
+inline std::ostream & operator << (std::ostream & ostr, const qi::messaging::ResultDefinition & value) {
   ostr << "ResultDefinition";
         return ostr;
 }

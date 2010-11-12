@@ -14,7 +14,7 @@
 #include <qi/collections/variables_list.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     /// <summary>
     /// A basic call definition used to define a remote procedure call.

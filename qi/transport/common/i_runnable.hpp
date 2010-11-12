@@ -6,12 +6,12 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  AL_TRANSPORT_I_RUNNABLE_HPP_
-# define AL_TRANSPORT_I_RUNNABLE_HPP_
+#ifndef  QI_TRANSPORT_I_RUNNABLE_HPP_
+# define QI_TRANSPORT_I_RUNNABLE_HPP_
 #include <althread/altask.h>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     class IRunnable: public AL::ALTask
     {
@@ -24,4 +24,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_I_RUNNABLE_HPP_
+#endif  // QI_TRANSPORT_I_RUNNABLE_HPP_

@@ -15,8 +15,8 @@
 
 static const int gLoopCount   = 1000000;
 
-using qi::Messaging::ReturnValue;
-using qi::Messaging::ArgumentList;
+using qi::messaging::ReturnValue;
+using qi::messaging::ArgumentList;
 
 static int gGlobalResult = 0;
 

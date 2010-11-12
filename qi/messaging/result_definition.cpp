@@ -9,7 +9,7 @@
 #include <qi/messaging/result_definition.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     ResultDefinition::ResultDefinition() : fIsException(false), fValue(0) {}
 

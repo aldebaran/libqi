@@ -2,17 +2,13 @@
 #include <gtest/gtest.h>
 #include <qi/nodes.hpp>
 #include <qi/tools/dataperftimer.hpp>
-#include <boost/timer.hpp>
 #include <string>
-#include <cmath>
 
-using namespace qi::Nodes;
-using namespace qi::Messaging;
+using namespace qi;
 
 std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
-
 
 MasterNode gMaster(gMasterAddress);
 ServerNode gServer(gServerName, gServerAddress, gMasterAddress);

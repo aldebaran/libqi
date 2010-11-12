@@ -8,7 +8,7 @@
 #include <qi/transport/zeromq/zmq_connection_handler.hpp>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     ZMQConnectionHandler::ZMQConnectionHandler(
       const std::string &msg,

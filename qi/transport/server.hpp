@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_TRANSPORT_SERVER_HPP_
-# define AL_TRANSPORT_SERVER_HPP_
+#ifndef QI_TRANSPORT_SERVER_HPP_
+# define QI_TRANSPORT_SERVER_HPP_
 
 #include <string>
 #include <qi/transport/common/i_threadable.hpp>
@@ -15,7 +15,7 @@
 #include <qi/transport/common/i_data_handler.hpp>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     class Server : public IThreadable {
     public:
@@ -27,15 +27,16 @@ namespace qi {
       virtual void setDataHandler(IDataHandler* callback) {
         _dataHandler = callback;
       }
+
       virtual IDataHandler *getDataHandler() {
         return _dataHandler;
       }
 
     protected:
-      std::string        _serverAddress;
-      IDataHandler        *_dataHandler;
+      std::string   _serverAddress;
+      IDataHandler* _dataHandler;
     };
   }
 }
 
-#endif  // AL_TRANSPORT_SERVER_HPP_
+#endif  // QI_TRANSPORT_SERVER_HPP_

@@ -14,7 +14,7 @@
 #include <boost/thread/mutex.hpp>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     template<typename T>
     class MutexedNameLookup {

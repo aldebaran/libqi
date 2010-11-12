@@ -19,7 +19,7 @@
 #include <boost/thread/mutex.hpp>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
   /// <summary>
   /// The server class. It listen for incoming connection from client

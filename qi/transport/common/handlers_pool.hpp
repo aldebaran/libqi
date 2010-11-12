@@ -6,8 +6,8 @@
 *      Mail  : jdelay@aldebaran-robotics.com
 */
 
-#ifndef AL_TRANSPORT_HANDLERS_POOL_HPP_
-#define AL_TRANSPORT_HANDLERS_POOL_HPP_
+#ifndef QI_TRANSPORT_HANDLERS_POOL_HPP_
+#define QI_TRANSPORT_HANDLERS_POOL_HPP_
 
 #include <boost/shared_ptr.hpp>
 
@@ -16,7 +16,7 @@ namespace AL {
 }
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     class ConnectionHandler;
     class IRunnable;
@@ -48,4 +48,4 @@ namespace qi {
 
   }
 }
-#endif  // AL_TRANSPORT_HANDLERS_POOL_HPP_
+#endif  // QI_TRANSPORT_HANDLERS_POOL_HPP_

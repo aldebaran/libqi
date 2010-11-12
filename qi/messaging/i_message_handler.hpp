@@ -14,15 +14,15 @@
 #include <qi/messaging/result_definition.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
     /// <summary>
     /// Define the IMessageHandler interface as being a specialization
     /// of the IGenericMessageHandler using a CallDefinition as the
     /// request and the a ResultDefinition as the response
     /// </summary>
     typedef IGenericMessageHandler<
-      qi::Messaging::CallDefinition,
-      qi::Messaging::ResultDefinition
+      qi::messaging::CallDefinition,
+      qi::messaging::ResultDefinition
     > IMessageHandler;
   }
 }

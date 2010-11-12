@@ -16,7 +16,7 @@
 #include <qi/messaging/result_definition.hpp>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     class ClientNodeImp {
     public:
@@ -28,8 +28,8 @@ namespace qi {
         const std::string& masterAddress);
 
       void call(
-        const qi::Messaging::CallDefinition& callDef,
-        qi::Messaging::ResultDefinition &result);
+        const qi::messaging::CallDefinition& callDef,
+        qi::messaging::ResultDefinition &result);
 
       bool initOK;
 
@@ -40,10 +40,10 @@ namespace qi {
       MutexedNameLookup<std::string> fServiceCache;
 
       // map from address to Client
-      NameLookup<boost::shared_ptr<qi::Messaging::Client> > fServerClients;
+      NameLookup<boost::shared_ptr<qi::messaging::Client> > fServerClients;
 
       void xInit();
-      boost::shared_ptr<qi::Messaging::Client> xGetServerClient(const std::string& serverAddress);
+      boost::shared_ptr<qi::messaging::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
 

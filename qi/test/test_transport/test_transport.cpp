@@ -101,10 +101,10 @@ static const std::string gClientAddress = gServerAddress;
 
 
 //class ResultHandler;
-class TestServer : public qi::Transport::IThreadable, public qi::Transport::IDataHandler
+class TestServer : public qi::transport::IThreadable, public qi::transport::IDataHandler
 {
 public:
-  TestServer(qi::Transport::Server *server)
+  TestServer(qi::transport::Server *server)
     : _server(server)
   {
     _server->setDataHandler(this);
@@ -123,11 +123,11 @@ protected:
   }
 
 protected:
-  qi::Transport::Server *_server;
+  qi::transport::Server *_server;
 };
 
 
-int main_client(qi::Transport::Client *client)
+int main_client(qi::transport::Client *client)
 {
   DataPerf               dp;
   std::string            tosend;
@@ -151,12 +151,12 @@ int main_client(qi::Transport::Client *client)
 #ifdef TEST_TRANSPORT_SHM
 //global result server: used by all client to receive result
 //WARNING name must be unique to each process (generate a uuid?)
-qi::Transport::ShmServer *gResultServer = new qi::Transport::ShmServer("clientserv");
+qi::transport::ShmServer *gResultServer = new qi::transport::ShmServer("clientserv");
 #endif
 
-qi::Transport::Client *makeClient(int i = 0)
+qi::transport::Client *makeClient(int i = 0)
 {
-  qi::Transport::Client *client = 0;
+  qi::transport::Client *client = 0;
 //TODO: generate client address
 
 #ifdef TEST_TRANSPORT_SHM
@@ -164,28 +164,28 @@ qi::Transport::Client *makeClient(int i = 0)
 
 //  ss << gClientAddress << i;
 //  std::string clientAddress = ss.str();
-//  return new qi::Transport::ShmClient(clientAddress, gResultServer->getResultHandler());
-  return new qi::Transport::ShmClient(gClientAddress, gResultServer->getResultHandler());
+//  return new qi::transport::ShmClient(clientAddress, gResultServer->getResultHandler());
+  return new qi::transport::ShmClient(gClientAddress, gResultServer->getResultHandler());
 #endif
 #ifdef TEST_TRANSPORT_ZMQ
-  return new qi::Transport::ZMQClient(gClientAddress);
+  return new qi::transport::ZMQClient(gClientAddress);
 #endif
   return client;
 }
 
-qi::Transport::Server *makeServer(int i = 0)
+qi::transport::Server *makeServer(int i = 0)
 {
 #ifdef TEST_TRANSPORT_ZMQ_SINGLE
-  return new qi::Transport::ZMQSimpleServer(gServerAddress);
+  return new qi::transport::ZMQSimpleServer(gServerAddress);
 #endif
 #ifdef TEST_TRANSPORT_ZMQ_QUEUE
-  return new qi::Transport::ZMQServerQueue(gServerAddress);
+  return new qi::transport::ZMQServerQueue(gServerAddress);
 #endif
 #ifdef TEST_TRANSPORT_ZMQ_POLL
-  return new qi::Transport::ZMQServer(gServerAddress);
+  return new qi::transport::ZMQServer(gServerAddress);
 #endif
 #ifdef TEST_TRANSPORT_SHM
-  return new qi::Transport::ShmServer(gClientAddress);
+  return new qi::transport::ShmServer(gClientAddress);
 #endif
   return 0;
 
@@ -199,13 +199,13 @@ void start_client(int count)
 
     #ifdef TEST_TRANSPORT_SHM
     //start a result server
-    boost::thread threadClientServer(boost::bind(&qi::Transport::ShmServer::run, gResultServer));
+    boost::thread threadClientServer(boost::bind(&qi::transport::ShmServer::run, gResultServer));
     sleep(1);
     #endif
 
     for (int i = 0; i < count; ++i)
     {
-      qi::Transport::Client *client = 0;
+      qi::transport::Client *client = 0;
       std::cout << "starting thread: " << i << std::endl;
       sleep(1);
       client = makeClient(i);
@@ -219,7 +219,7 @@ void start_client(int count)
 
 int main_server()
 {
-  qi::Transport::Server    *st;
+  qi::transport::Server    *st;
   st = makeServer();
   TestServer                testserver(st);
   testserver.run();

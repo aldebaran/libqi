@@ -6,14 +6,14 @@
 *      Mail  : jdelay@aldebaran-robotics.com
 */
 
-#ifndef AL_TRANSPORT_EXCEPTIONS_HPP_
-#define AL_TRANSPORT_EXCEPTIONS_HPP_
+#ifndef QI_TRANSPORT_EXCEPTIONS_HPP_
+#define QI_TRANSPORT_EXCEPTIONS_HPP_
 
 #include <exception>
 #include <string>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     /// <summary>
     /// A basic exception class, base to other ippc:: exceptions.
@@ -94,4 +94,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_EXCEPTIONS_HPP_
+#endif  // QI_TRANSPORT_EXCEPTIONS_HPP_

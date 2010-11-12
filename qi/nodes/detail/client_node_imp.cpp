@@ -13,8 +13,8 @@
 #include <qi/exceptions/exceptions.hpp>
 
 namespace qi {
-  using namespace Messaging;
-  namespace Nodes {
+  using namespace messaging;
+  namespace detail {
 
     ClientNodeImp::ClientNodeImp() : initOK(false) {}
 
@@ -42,9 +42,9 @@ namespace qi {
     }
 
     void ClientNodeImp::call(
-      const CallDefinition& callDef,  qi::Messaging::ResultDefinition &result) {
+      const CallDefinition& callDef,  qi::messaging::ResultDefinition &result) {
         if (! initOK) {
-          throw( qi::Transport::ConnectionException(
+          throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
         }
 
@@ -69,7 +69,7 @@ namespace qi {
         if (!ok || it == fServerClients.end()) {
           alserror << "Could not create client for server \"" << serverAddress
             << "\" Probable connection error. ";
-          throw( qi::Transport::ConnectionException(
+          throw( qi::transport::ConnectionException(
             "Could not create client for server. Probable connection error."));
         }
       }
@@ -81,7 +81,7 @@ namespace qi {
       std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
 
       boost::shared_ptr<Client> client =
-        boost::shared_ptr<Client>(new qi::Messaging::Client());
+        boost::shared_ptr<Client>(new qi::messaging::Client());
       bool ok = client->connect(serverFullAddress);
       if (ok) {
         fServerClients.insert(make_pair(serverAddress, client));
@@ -106,7 +106,7 @@ namespace qi {
         } catch(const std::exception&) {
           alswarning << "ServiceNotFoundException \"" << methodSignature
             << "\" Unable to contact master.";
-          throw( qi::Transport::ServiceNotFoundException(
+          throw( qi::transport::ServiceNotFoundException(
             "Unable to contact master."));
         }
 
@@ -118,7 +118,7 @@ namespace qi {
         } else {
           alswarning << "ServiceNotFoundException \"" << methodSignature
             << "\" Method not known to master.";
-          throw( qi::Transport::ServiceNotFoundException(
+          throw( qi::transport::ServiceNotFoundException(
             "Method not known to master."));
         }
 

@@ -15,7 +15,7 @@
 #endif
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
 //std::ostream & PrintVisitor::operator () (int * p) {
 //  return ostr << p;

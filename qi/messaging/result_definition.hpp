@@ -12,7 +12,7 @@
 #include <qi/collections/variables_list.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     /// <summary>
     /// A exception class definition used to define a result returned by a

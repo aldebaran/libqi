@@ -18,7 +18,7 @@ namespace boost {
 
     template<class Archive>
     void serialize(Archive & ar,
-      qi::Messaging::CallDefinition & callDef,
+      qi::messaging::CallDefinition & callDef,
       const unsigned int version) {
         ar & boost::serialization::make_nvp("method", callDef.methodName());
         ar & boost::serialization::make_nvp("args",   callDef.args());

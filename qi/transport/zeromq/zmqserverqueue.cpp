@@ -20,7 +20,7 @@
 //#include <alfile/alfilesystem.h>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     static const char *gWorkersAddress      = "inproc://workers";
     static const int   gWorkersThreadsCount = 10;

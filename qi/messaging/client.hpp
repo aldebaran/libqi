@@ -13,8 +13,8 @@
 #include <qi/messaging/result_definition_serialization.hxx>
 
 namespace qi {
-  namespace Messaging {
-    typedef GenericClient<qi::Messaging::CallDefinition, qi::Messaging::ResultDefinition> Client;
+  namespace messaging {
+    typedef GenericClient<qi::messaging::CallDefinition, qi::messaging::ResultDefinition> Client;
   }
 }
 

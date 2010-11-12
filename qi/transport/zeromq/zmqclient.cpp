@@ -10,7 +10,7 @@
 //#include <sstream>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     /// <summary> Constructor. </summary>
     /// <param name="serverAddress"> The server address. </param>

@@ -11,7 +11,7 @@
 #include <string>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
     inline const std::string getProtocol(const std::string& myAddress, const std::string& otherAddress) {
       // if thisIP = remoteIP && UNIX/MAX? return "ipc://"
       return "tcp://";

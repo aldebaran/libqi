@@ -10,7 +10,7 @@
 #define QI_MESSAGING_i_generic_message_handler_HPP_
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
     template<typename T, typename R>
     class IGenericMessageHandler {
     public:

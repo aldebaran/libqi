@@ -4,7 +4,7 @@
 #include <qi/collections/variables_list.hpp>
 #include <qi/tools/dataperftimer.hpp>
 
-using namespace qi::Messaging;
+using namespace qi::messaging;
 
 TEST(VariableValueTest, ToAndFrom_int)
 {

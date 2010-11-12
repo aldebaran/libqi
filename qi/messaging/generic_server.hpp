@@ -20,12 +20,12 @@
 
 namespace qi {
 
-  namespace Messaging {
+  namespace messaging {
 
     template<typename T, typename R>
     class GenericServer :
-      public qi::Transport::IThreadable,
-      public qi::Transport::IDataHandler
+      public qi::transport::IThreadable,
+      public qi::transport::IDataHandler
     {
     public:
       bool initOK;
@@ -36,7 +36,7 @@ namespace qi {
       {
         fServerAddress = address;
         try {
-          fTransportServer = new qi::Transport::ZMQSimpleServer(address);
+          fTransportServer = new qi::transport::ZMQSimpleServer(address);
           fTransportServer->setDataHandler(this);
           initOK = true;
         } catch(const std::exception& e) {
@@ -71,18 +71,18 @@ namespace qi {
         // we will de-serialize this and pass it to the method
         // then serialize the "out" result to "dataOut"
         T in;
-        qi::Serialization::Serializer::deserialize(dataIn, in);
+        qi::serialization::Serializer::deserialize(dataIn, in);
 
         R out;
         fMessageHandler->messageHandler(in, out);
 
-        dataOut = qi::Serialization::Serializer::serialize(out);
+        dataOut = qi::serialization::Serializer::serialize(out);
       }
 
     protected:
       std::string                   fServerAddress;
       IGenericMessageHandler<T, R>* fMessageHandler;
-      qi::Transport::Server       * fTransportServer;
+      qi::transport::Server       * fTransportServer;
     };
 
   }

@@ -7,11 +7,11 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_TRANSPORT_DATAHANDLER_INTERFACE_HPP_
-#define AL_TRANSPORT_DATAHANDLER_INTERFACE_HPP_
+#ifndef QI_TRANSPORT_DATAHANDLER_INTERFACE_HPP_
+#define QI_TRANSPORT_DATAHANDLER_INTERFACE_HPP_
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
     class IDataHandler {
     public:
       /// <summary>
@@ -24,4 +24,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_DATAHANDLER_HPP_
+#endif  // QI_TRANSPORT_DATAHANDLER_HPP_

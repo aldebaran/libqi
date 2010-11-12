@@ -27,8 +27,8 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Messaging::ArgumentList  args;
-    qi::Messaging::VariableValue ret;
+    qi::messaging::ArgumentList  args;
+    qi::messaging::VariableValue ret;
 
     #if $i != 0
     $generate_argpush_list($i)
@@ -41,8 +41,8 @@ namespace qi
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Messaging::ArgumentList  args;
-    qi::Messaging::VariableValue ret;
+    qi::messaging::ArgumentList  args;
+    qi::messaging::VariableValue ret;
 
     #if $i != 0
     $generate_argpush_list($i)

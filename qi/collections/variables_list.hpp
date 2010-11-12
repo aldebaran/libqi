@@ -24,7 +24,7 @@
 #endif
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     class VariableValue;
 
@@ -119,8 +119,8 @@ namespace qi {
 /// The value to print.
 /// </param>
 /// <returns>ostr</returns>
-inline std::ostream & operator << (std::ostream & ostr, const qi::Messaging::VariableValue & value) {
-        qi::Messaging::PrintVisitor visitor(ostr);
+inline std::ostream & operator << (std::ostream & ostr, const qi::messaging::VariableValue & value) {
+        qi::messaging::PrintVisitor visitor(ostr);
         return boost::apply_visitor(visitor, value.value());
 }
 

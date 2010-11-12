@@ -12,7 +12,7 @@
 #include <string>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     // Use std::map for the moment. Future: HashMap or dense_hash_map
     template<typename T>

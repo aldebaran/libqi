@@ -25,7 +25,7 @@
 #include <string>
 
 namespace qi {
-  namespace Serialization {
+  namespace serialization {
 
     template<class T>
     std::string BoostBinarySerializer::serialize(const T& item)

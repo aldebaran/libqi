@@ -10,14 +10,11 @@
 #include <qi/nodes/detail/master_node_imp.hpp>
 
 namespace qi {
-  namespace Nodes {
+  /// <summary> Constructor. </summary>
+  /// <param name="masterAddress"> The master address. </param>
+  MasterNode::MasterNode(const std::string& masterAddress) :
+    fImp(new detail::MasterNodeImp(masterAddress)) {}
 
-    /// <summary> Constructor. </summary>
-    /// <param name="masterAddress"> The master address. </param>
-    MasterNode::MasterNode(const std::string& masterAddress) :
-      fImp(new MasterNodeImp(masterAddress)) {}
-
-    /// <summary> Destructor. </summary>
-    MasterNode::~MasterNode() {}
-  }
+  /// <summary> Destructor. </summary>
+  MasterNode::~MasterNode() {}
 }

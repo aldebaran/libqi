@@ -6,14 +6,14 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  AL_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
-# define AL_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
+#ifndef  QI_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
+# define QI_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
 
 /** Delegate that a server should implement to send a response
 * this is mostly internal
 */
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     namespace Detail
     {
@@ -27,4 +27,4 @@ namespace qi {
 }
 
 
-#endif  // AL_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
+#endif  // QI_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_

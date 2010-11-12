@@ -11,7 +11,7 @@
 #include <althread/althreadpool.h>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     HandlersPool::HandlersPool()
     {

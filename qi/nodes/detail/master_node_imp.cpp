@@ -10,7 +10,7 @@
 #include <allog/allog.h>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     MasterNodeImp::~MasterNodeImp() {}
 

@@ -47,7 +47,7 @@ namespace qi {
     template <typename T>
     struct signature<T*, typename boost::disable_if< boost::function_types::is_function<T> >::type> {
       static std::string &value(std::string &val) {
-        AL::detail::signature<T>::value(val);
+        qi::detail::signature<T>::value(val);
         val += "*"; return val;
       }
     };
@@ -56,14 +56,14 @@ namespace qi {
     template <typename T>
     struct signature<T&> {
       static std::string &value(std::string &val) {
-        return AL::detail::signature<T>::value(val);
+        return qi::detail::signature<T>::value(val);
       }
     };
 
     template <typename T>
     struct signature<const T> {
       static std::string &value(std::string &val) {
-        return AL::detail::signature<T>::value(val);
+        return qi::detail::signature<T>::value(val);
       }
     };
 
@@ -72,7 +72,7 @@ namespace qi {
     struct signature< std::vector<U> > {
       static std::string &value(std::string &val) {
         val += "[";
-        AL::detail::signature<U>::value(val);
+        qi::detail::signature<U>::value(val);
         val += "]";
         return val;
       }
@@ -82,8 +82,8 @@ namespace qi {
     struct signature< std::map<T1, T2> > {
       static std::string &value(std::string &val) {
         val += "{";
-        AL::detail::signature<T1>::value(val);
-        AL::detail::signature<T2>::value(val);
+        qi::detail::signature<T1>::value(val);
+        qi::detail::signature<T2>::value(val);
         val += "}";
         return val;
       }

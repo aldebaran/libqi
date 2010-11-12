@@ -24,7 +24,7 @@
 
 //force Server to be a ShmServer for the moment
 namespace qi {
-  namespace Transport {
+  namespace transport {
     //typedef ShmServer Server;
     //typedef ShmClient Client;
 

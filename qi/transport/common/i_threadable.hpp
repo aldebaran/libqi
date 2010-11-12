@@ -6,11 +6,11 @@
 *      Mail  : jdelay@aldebaran-robotics.com
 */
 
-#ifndef AL_TRANSPORT_I_THREADABLE_HPP_
-#define AL_TRANSPORT_I_THREADABLE_HPP_
+#ifndef QI_TRANSPORT_I_THREADABLE_HPP_
+#define QI_TRANSPORT_I_THREADABLE_HPP_
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     /// <summary>
     /// The threadable interface to ensure that the run () method is available.
@@ -25,4 +25,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_I_THREADABLE_HPP_
+#endif  // QI_TRANSPORT_I_THREADABLE_HPP_

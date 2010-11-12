@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
-#define AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
+#ifndef QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
+#define QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
 //#include <qi/messaging/call_definition.hpp>
 #include <qi/transport/common/i_runnable.hpp>
@@ -15,7 +15,7 @@
 #include <string>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     /// <summary>
     /// A connection handler created for each new incoming connection and
@@ -51,4 +51,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
+#endif  // QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_

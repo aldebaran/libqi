@@ -8,7 +8,7 @@
 #include <qi/tools/dataperftimer.hpp>
 #include <qi/tools/sleep.hpp>
 
-//using namespace qi::Messaging;
+//using namespace qi::messaging;
 using qi::Test::DataPerfTimer;
 
 using namespace boost::interprocess;

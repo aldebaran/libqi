@@ -1,13 +1,10 @@
 
 #include <gtest/gtest.h>
-#include <qi/nodes.hpp>
-#include <qi/tools/dataperftimer.hpp>
-#include <qi/exceptions/exceptions.hpp>
-#include <boost/timer.hpp>
 #include <string>
+#include <boost/timer.hpp>
+#include <qi/nodes.hpp>
 
-using namespace qi::Nodes;
-using namespace qi::Messaging;
+using namespace qi;
 
 static int gGlobalResult = 0;
 
@@ -153,7 +150,7 @@ TEST(NodeSignatures, paramTypeChecking)
   int r2 = client.call<int>("typechecking.fun1", 1);
   try {
     int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
-  } catch (const qi::Transport::ServiceNotFoundException& e) {
+  } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
 }
@@ -164,7 +161,7 @@ TEST(NodeSignatures, paramNumChecking)
   int r2 = client.call<int>("paramnumchecking.fun1", 1);
   try {
     int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
-  } catch (const qi::Transport::ServiceNotFoundException& e) {
+  } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
 }
@@ -176,7 +173,7 @@ TEST(NodeSignatures, ReturnTypeChecking)
   int r2 = client.call<int>("returntype.fun1", 1);
   try {
     std::string s = client.call<std::string>("returntype.fun1", 1);
-  } catch (const qi::Transport::ServiceNotFoundException& e) {
+  } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
 }

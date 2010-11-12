@@ -40,7 +40,7 @@ TEST(TestMaps, std_map_string_find) {
 }
 
 TEST(TestMaps, MutexedNameLookup_string_get) {
-  qi::Nodes::MutexedNameLookup<std::string> mutexedMap;
+  qi::detail::MutexedNameLookup<std::string> mutexedMap;
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::stringstream s;
     s << i;
@@ -59,7 +59,7 @@ TEST(TestMaps, MutexedNameLookup_string_get) {
 
 
 TEST(TestMaps, MutexedNameLookup_struct_ptr_method) {
-  qi::Nodes::MutexedNameLookup<Foo*> mutexedMap;
+  qi::detail::MutexedNameLookup<Foo*> mutexedMap;
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::stringstream s;
     s << i;
@@ -77,7 +77,7 @@ TEST(TestMaps, MutexedNameLookup_struct_ptr_method) {
 }
 
 TEST(TestMaps, MutexedNameLookup_struct_shared_ptr_method) {
-  qi::Nodes::MutexedNameLookup<boost::shared_ptr<Foo> > mutexedMap;
+  qi::detail::MutexedNameLookup<boost::shared_ptr<Foo> > mutexedMap;
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::stringstream s;
     s << i;

@@ -14,8 +14,8 @@
 #include <allog/allog.h>
 
 namespace qi {
-  using namespace Messaging;
-  namespace Nodes {
+  using namespace messaging;
+  namespace detail {
 
     ServerNodeImp::ServerNodeImp() : initOK(false) {}
 

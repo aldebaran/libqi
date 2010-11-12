@@ -12,7 +12,7 @@
 #include <qi/serialization/boost/boost_binary_serializer.hpp>
 
 namespace qi {
-  namespace Serialization {
+  namespace serialization {
     typedef BoostBinarySerializer Serializer;
   }
 }

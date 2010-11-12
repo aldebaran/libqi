@@ -16,7 +16,7 @@
 #include <allog/allog.h>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     template<typename T, typename R>
     class GenericClient {
@@ -25,7 +25,7 @@ namespace qi {
 
       bool connect(const std::string &address) {
         try {
-          _client = new qi::Transport::ZMQClient(address);
+          _client = new qi::transport::ZMQClient(address);
           initOK = true;
         } catch(const std::exception& e) {
           alsdebug << "GenericClient failed to create client for address \"" << address << "\" Reason: " << e.what();
@@ -38,18 +38,18 @@ namespace qi {
         if (! initOK) {
           alserror << "Attempt to use an unitialized client.";
         }
-        std::string tosend = qi::Serialization::Serializer::serialize(def);
+        std::string tosend = qi::serialization::Serializer::serialize(def);
         std::string torecv;
 
         _client->send(tosend, torecv);
         // we might have an excetption in the result, even
         // if the call method was void
-        qi::Serialization::Serializer::deserialize(torecv, result);
+        qi::serialization::Serializer::deserialize(torecv, result);
       }
 
       bool initOK;
     protected:
-      qi::Transport::Client *_client;
+      qi::transport::Client *_client;
     };
   }
 }

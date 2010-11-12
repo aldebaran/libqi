@@ -15,7 +15,7 @@
 #include <boost/serialization/variant.hpp>
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
 template <class Archive>
 class SerializableVisitor : public boost::static_visitor<> {

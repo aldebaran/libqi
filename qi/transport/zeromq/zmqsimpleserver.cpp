@@ -18,7 +18,7 @@
 //#include <alfile/alfilesystem.h>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     //if you use the custom XREP code, activate the full async experience to use the thread pool
     //#define ZMQ_FULL_ASYNC

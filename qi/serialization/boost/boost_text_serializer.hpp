@@ -11,7 +11,7 @@
 #include <string>
 
 namespace qi {
-  namespace Serialization {
+  namespace serialization {
     class BoostTextSerializer {
     public:
 

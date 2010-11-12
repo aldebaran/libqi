@@ -18,10 +18,10 @@
 #include <qi/nodes/detail/mutexednamelookup.hpp>
 
 namespace qi {
-  namespace Nodes {
+  namespace detail {
 
     class ServerNodeImp :
-      qi::Messaging::IMessageHandler {
+      qi::messaging::IMessageHandler {
     public:
       ServerNodeImp();
       virtual ~ServerNodeImp();
@@ -40,8 +40,8 @@ namespace qi {
 
       // IMessageHandler Implementation -----------------
       void messageHandler(
-        const qi::Messaging::CallDefinition& def,
-              qi::Messaging::ResultDefinition& result);
+        const qi::messaging::CallDefinition& def,
+              qi::messaging::ResultDefinition& result);
       // -----------------------------------------------
 
     private:
@@ -52,10 +52,10 @@ namespace qi {
       std::string fAddress;
 
       /// <summary> The underlying messaging server </summary>
-      qi::Messaging::Server fMessagingServer;
+      qi::messaging::Server fMessagingServer;
 
       /// <summary> The messaging client used to talk with the master </summary>
-      qi::Messaging::Client fMessagingClient;
+      qi::messaging::Client fMessagingClient;
 
       /// <summary> true if this server belongs to the master </summary>
       bool fIsMasterServer;

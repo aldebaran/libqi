@@ -5,14 +5,14 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  AL_TRANSPORT_ZMQCLIENT_HPP_
-# define AL_TRANSPORT_ZMQCLIENT_HPP_
+#ifndef  QI_TRANSPORT_ZMQCLIENT_HPP_
+# define QI_TRANSPORT_ZMQCLIENT_HPP_
 
 # include <qi/transport/client.hpp>
 # include <zmq.hpp>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     //class ResultHandler;
 
@@ -42,4 +42,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_ZMQCLIENT_HPP_
+#endif  // QI_TRANSPORT_ZMQCLIENT_HPP_

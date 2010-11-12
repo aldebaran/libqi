@@ -5,13 +5,13 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef AL_TRANSPORT_CLIENT_HPP_
-# define AL_TRANSPORT_CLIENT_HPP_
+#ifndef QI_TRANSPORT_CLIENT_HPP_
+# define QI_TRANSPORT_CLIENT_HPP_
 
 #include <string>
 
 namespace qi {
-  namespace Transport {
+  namespace transport {
 
     class Client {
     public:
@@ -26,4 +26,4 @@ namespace qi {
   }
 }
 
-#endif  // AL_TRANSPORT_CLIENT_HPP_
+#endif  // QI_TRANSPORT_CLIENT_HPP_

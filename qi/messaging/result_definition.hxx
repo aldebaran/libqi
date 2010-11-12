@@ -11,7 +11,7 @@
 #define MESSAGING_RESULT_DEFINITION_HXX_
 
 namespace qi {
-  namespace Messaging {
+  namespace messaging {
 
     template <typename T>
     void ResultDefinition::value(const T & val) {
