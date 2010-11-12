@@ -26,6 +26,8 @@ namespace qi {
       /// </param>
       ZMQSubscriber(const std::string &servername);
 
+      virtual ~ZMQSubscriber();
+
       virtual void subscribe();
 
     protected:

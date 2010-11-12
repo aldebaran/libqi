@@ -21,6 +21,8 @@ namespace qi {
       connect();
     }
 
+    ZMQSubscriber::~ZMQSubscriber() {}
+
     /// <summary> Connects to the publisher </summary>
     void ZMQSubscriber::connect()
     {

@@ -26,6 +26,8 @@ namespace qi {
       /// </param>
       ZMQPublisher(const std::string &publisherAddress);
 
+      virtual ~ZMQPublisher();
+
       virtual void publish(const std::string &tosend);
 
     protected:

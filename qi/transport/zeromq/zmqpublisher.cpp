@@ -21,6 +21,8 @@ namespace qi {
       bind();
     }
 
+    ZMQPublisher::~ZMQPublisher() {}
+
     /// <summary> Binds to the publisher </summary>
     void ZMQPublisher::bind()
     {
