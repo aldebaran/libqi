@@ -5,6 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <cassert>
 #include <qi/transport/zeromq/zmq_connection_handler.hpp>
 
 namespace qi {

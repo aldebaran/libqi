@@ -9,6 +9,8 @@
 #ifndef  QI_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
 # define QI_TRANSPORT_I_SERVER_RESPONSE_HANDLER_HPP_
 
+#include <string>
+
 /** Delegate that a server should implement to send a response
 * this is mostly internal
 */
