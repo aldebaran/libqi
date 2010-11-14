@@ -8,12 +8,12 @@
 
 #ifndef  QI_TRANSPORT_I_RUNNABLE_HPP_
 # define QI_TRANSPORT_I_RUNNABLE_HPP_
-#include <althread/altask.h>
+
 
 namespace qi {
   namespace transport {
 
-    class IRunnable: public AL::ALTask
+    class IRunnable
     {
     public:
       virtual ~IRunnable () {}

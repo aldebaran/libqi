@@ -9,7 +9,7 @@
 #ifndef QI_TRANSPORT_HANDLERS_POOL_HPP_
 #define QI_TRANSPORT_HANDLERS_POOL_HPP_
 
-#include <boost/shared_ptr.hpp>
+#include <boost/threadpool.hpp>
 
 namespace AL {
   class ALThreadPool;
@@ -43,7 +43,8 @@ namespace qi {
       /// <summary>
       /// The ??Boost?? implementation of the thread pool.
       /// </summary>
-      boost::shared_ptr<AL::ALThreadPool> fPool;
+      //boost::shared_ptr<AL::ALThreadPool> fPool;
+      boost::threadpool::pool _pool;
     };
 
   }

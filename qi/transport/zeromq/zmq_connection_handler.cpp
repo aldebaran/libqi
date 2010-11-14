@@ -21,7 +21,7 @@ namespace qi {
       fDataHandler(dataHandler),
       fResponseDelegate(responseDelegate)
     {
-      this->setTaskName("ZMQConnectionHandler");
+      //this->setTaskName("ZMQConnectionHandler");
     }
 
     ZMQConnectionHandler::~ZMQConnectionHandler () {
