@@ -12,6 +12,7 @@
 #include <string>
 #include <qi/transport/zeromq/zmqpublisher.hpp>
 #include <qi/serialization/serializer.hpp>
+#include <qi/log.hpp>
 
 namespace qi {
   namespace messaging {
@@ -26,7 +27,7 @@ namespace qi {
           _publisher = new qi::transport::ZMQPublisher(address);
           initOK = true;
         } catch(const std::exception& e) {
-          alsdebug << "GenericClient failed to create publisher for address \"" << address << "\" Reason: " << e.what();
+          qisDebug << "GenericClient failed to create publisher for address \"" << address << "\" Reason: " << e.what() << std::endl;
         }
          return initOK;
       }
@@ -34,7 +35,7 @@ namespace qi {
       void publish(const T& val)
       {
         if (! initOK) {
-          alserror << "Attempt to use an unitialized publisher.";
+          qisError << "Attempt to use an unitialized publisher." << std::endl;
         }
         std::string tosend = qi::serialization::Serializer::serialize(val);
         _publisher->publish(tosend);

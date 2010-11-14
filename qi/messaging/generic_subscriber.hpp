@@ -12,6 +12,7 @@
 #include <string>
 #include <qi/transport/zeromq/zmqsubscriber.hpp>
 #include <qi/serialization/serializer.hpp>
+#include <qi/log.hpp>
 
 namespace qi {
   namespace messaging {
@@ -29,7 +30,7 @@ namespace qi {
           _subscriber->setSubscribeHandler(this);
           initOK = true;
         } catch(const std::exception& e) {
-          alsdebug << "GenericSubscriber failed to create subscriber for address \"" << address << "\" Reason: " << e.what();
+          qisDebug << "GenericSubscriber failed to create subscriber for address \"" << address << "\" Reason: " << e.what() << std::endl;
         }
         return initOK;
       }
