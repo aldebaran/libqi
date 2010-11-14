@@ -9,7 +9,7 @@
 #include <string>
 #include <qi/nodes/detail/get_protocol.hpp>
 #include <qi/messaging/client.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
 namespace qi {
@@ -36,8 +36,8 @@ namespace qi {
         // we assert that we think the master can locate services
         fServiceCache.insert("master.locateService::s:s", fMasterAddress);
       } else {
-        alserror << "\"" << fClientName <<
-          "\" Failed to connect to master at address \"" << fMasterAddress << "\"";
+        qisError << "\"" << fClientName << "\" Failed to connect to master at address \""
+                 << fMasterAddress << "\"" << std::endl;
       }
     }
 
@@ -67,8 +67,8 @@ namespace qi {
           it = fServerClients.find(serverAddress);
         }
         if (!ok || it == fServerClients.end()) {
-          alserror << "Could not create client for server \"" << serverAddress
-            << "\" Probable connection error. ";
+          qisError << "Could not create client for server \"" << serverAddress
+                   << "\" Probable connection error. " << std::endl;
           throw( qi::transport::ConnectionException(
             "Could not create client for server. Probable connection error."));
         }
@@ -85,8 +85,8 @@ namespace qi {
       bool ok = client->connect(serverFullAddress);
       if (ok) {
         fServerClients.insert(make_pair(serverAddress, client));
-        alsdebug << "Client " << fClientName <<
-          " creating client for server " << serverFullAddress << std::endl;
+        qisDebug << "Client " << fClientName
+                 << " creating client for server " << serverFullAddress << std::endl;
       }
       return ok;
     }
@@ -104,8 +104,8 @@ namespace qi {
           call(CallDefinition("master.locateService::s:s", methodSignature), r);
           tmpAddress = r.value().as<std::string>();
         } catch(const std::exception&) {
-          alswarning << "ServiceNotFoundException \"" << methodSignature
-            << "\" Unable to contact master.";
+          qisWarning << "ServiceNotFoundException \"" << methodSignature
+                     << "\" Unable to contact master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Unable to contact master."));
         }
@@ -116,8 +116,8 @@ namespace qi {
           // return a const string ref address
           return fServiceCache.get(methodSignature);
         } else {
-          alswarning << "ServiceNotFoundException \"" << methodSignature
-            << "\" Method not known to master.";
+          qisWarning << "ServiceNotFoundException \"" << methodSignature
+                     << "\" Method not known to master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Method not known to master."));
         }

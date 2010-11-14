@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <allog/allog.h>
+#include <qi/log.hpp>
 #include <qi/transport/thrift/thriftserver.hpp>
 
 namespace qi {

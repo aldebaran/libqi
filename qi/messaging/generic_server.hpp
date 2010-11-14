@@ -16,7 +16,7 @@
 #include <qi/transport/zeromq/zmqsimpleserver.hpp>
 #include <qi/transport/transport.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 
 namespace qi {
 
@@ -40,7 +40,7 @@ namespace qi {
           fTransportServer->setDataHandler(this);
           initOK = true;
         } catch(const std::exception& e) {
-          alserror << "Failed to create transport server for address: " << address << " Reason:" << e.what();
+          qisError << "Failed to create transport server for address: " << address << " Reason:" << e.what() << std::endl;
           throw(e);
         }
       }
@@ -65,7 +65,7 @@ namespace qi {
       virtual void dataHandler(const std::string &dataIn, std::string &dataOut)
       {
         if (! initOK ) {
-          alserror << "Attempt to use an uninitialized server";
+          qisError << "Attempt to use an uninitialized server" << std::endl;
         }
         // "dataIn" contains a serialized version of "in",
         // we will de-serialize this and pass it to the method
@@ -81,8 +81,8 @@ namespace qi {
 
     protected:
       std::string                   fServerAddress;
-      IGenericMessageHandler<T, R>* fMessageHandler;
-      qi::transport::Server       * fTransportServer;
+      IGenericMessageHandler<T, R> *fMessageHandler;
+      qi::transport::Server        *fTransportServer;
     };
 
   }

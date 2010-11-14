@@ -15,7 +15,7 @@
 #include <zmq.hpp>
 
 #include <pthread.h>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 //#include <alfile/alfilesystem.h>
 

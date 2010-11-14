@@ -7,7 +7,7 @@
 
 #include <qi/nodes/detail/master_node_imp.hpp>
 #include <qi/functors/makefunctor.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 
 namespace qi {
   namespace detail {
@@ -42,28 +42,28 @@ namespace qi {
 
     void MasterNodeImp::registerService(
       const std::string& nodeAddress, const std::string& methodSignature) {
-        alsinfo << "Master::registerService " << nodeAddress << " " << methodSignature;
+      qisInfo << "Master::registerService " << nodeAddress << " " << methodSignature << std::endl;
       fServiceCache.insert(methodSignature, nodeAddress);
     }
 
     void MasterNodeImp::registerServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      alsinfo << "Master::registerServerNode " << nodeName << " " << nodeAddress;
+      qisInfo << "Master::registerServerNode " << nodeName << " " << nodeAddress << std::endl;
       fServerNodeCache.insert(nodeName, nodeAddress);
     }
 
     void MasterNodeImp::unregisterServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      alsinfo << "Master::unregisterServerNode " << nodeName << " " << nodeAddress;
+      qisInfo << "Master::unregisterServerNode " << nodeName << " " << nodeAddress << std::endl;
       // todo remove associated services
       fServerNodeCache.remove(nodeName);
     }
 
     void MasterNodeImp::registerClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      alsinfo << "Master::registerClientNode " << nodeName << " " << nodeAddress;
+      qisInfo << "Master::registerClientNode " << nodeName << " " << nodeAddress << std::endl;
       fClientNodeCache.insert(nodeName, nodeAddress);
     }
 
     void MasterNodeImp::unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      alsinfo << "Master::unregisterClientNode " << nodeName << " " << nodeAddress;
+      qisInfo << "Master::unregisterClientNode " << nodeName << " " << nodeAddress << std::endl;
       fClientNodeCache.remove(nodeName);
     }
 

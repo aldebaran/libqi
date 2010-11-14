@@ -12,7 +12,6 @@
 #include <string>
 #include <qi/transport/zeromq/zmqpublisher.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <allog/allog.h>
 
 namespace qi {
   namespace messaging {

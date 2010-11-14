@@ -11,7 +11,7 @@
 #include <qi/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 
 namespace qi {
   using namespace messaging;
@@ -41,7 +41,7 @@ namespace qi {
       } else {
         initOK = fMessagingClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
         if (! initOK ) {
-          alserror << "\"" << serverName << "\" could not connect to master at address \"" << masterAddress << "\"";
+          qisError << "\"" << serverName << "\" could not connect to master at address \"" << masterAddress << "\"" << std::endl;
           return;
         }
         xRegisterSelfWithMaster();
@@ -57,7 +57,7 @@ namespace qi {
       std::string methodSignature = def.methodName();
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
-        alserror << "  Error: Method not found " << methodSignature;
+        qisError << "  Error: Method not found " << methodSignature << std::endl;
       }
       si.functor->call(def.args(), result.value());
     }

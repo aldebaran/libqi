@@ -13,7 +13,7 @@
 #include <qi/transport/client.hpp>
 #include <qi/transport/zeromq/zmqclient.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 
 namespace qi {
   namespace messaging {
@@ -28,7 +28,7 @@ namespace qi {
           _client = new qi::transport::ZMQClient(address);
           initOK = true;
         } catch(const std::exception& e) {
-          alsdebug << "GenericClient failed to create client for address \"" << address << "\" Reason: " << e.what();
+          qisDebug << "GenericClient failed to create client for address \"" << address << "\" Reason: " << e.what() << std::endl;
         }
          return initOK;
       }
@@ -36,7 +36,7 @@ namespace qi {
       void call(const T &def, R& result)
       {
         if (! initOK) {
-          alserror << "Attempt to use an unitialized client.";
+          qisError << "Attempt to use an unitialized client." << std::endl;
         }
         std::string tosend = qi::serialization::Serializer::serialize(def);
         std::string torecv;

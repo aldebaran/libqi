@@ -13,7 +13,7 @@
 #include <zmq.hpp>
 
 #include <pthread.h>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 //#include <alfile/alfilesystem.h>
 
@@ -42,17 +42,17 @@ namespace qi {
     //use only the number of thread we need
     void ZMQSimpleServer::run() {
       try {
-        alsdebug << "Start ZMQServer on: " << _serverAddress;
+        qisDebug << "Start ZMQServer on: " << _serverAddress << std::endl;
         zsocket.bind(_serverAddress.c_str());
       } catch(const std::exception& e) {
-        alserror << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
+        qisError << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
         return;
       }
 
 #ifdef ZMQ_FULL_ASYNC
       alsdebug << "ZMQ: entering the loop (REP + growing thread mode)";
 #else
-      alsdebug << "ZMQ: entering the loop (REP)";
+      qisDebug << "ZMQ: entering the loop (REP)" << std::endl;
 #endif
       while (true) {
         zmq::message_t  msg;

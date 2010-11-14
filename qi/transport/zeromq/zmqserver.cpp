@@ -10,7 +10,7 @@
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
-#include <allog/allog.h>
+#include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 
 namespace qi {
