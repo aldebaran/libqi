@@ -7,7 +7,6 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
-
 project (qi)
 
 cmake_minimum_required(VERSION 2.6.4)
@@ -123,4 +122,8 @@ add_subdirectory(qi/transport)
 install_header(qi SUBFOLDER qi ${HEADERS})
 
 stage_lib (qi QI ${CMAKE_CURRENT_SOURCE_DIR})
+if (UNIX)
+  #add_definitions("-fvisibility=hidden -fvisibility-inlines-hidden")
+endif(UNIX)
+
 cond_subdirectory(qi/test BUILD_TESTS)

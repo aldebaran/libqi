@@ -8,16 +8,19 @@
 #ifndef         QI_API_HPP_
 # define        QI_API_HPP_
 
-// :TODO: use __attribute__((visibility("hidden"))) on compatible platforms
-#ifdef QI_EXPORTS
-# ifdef _WIN32
+#ifdef qi_EXPORTS
+# if defined _WIN32 || defined __CYGWIN__
 #   define QIAPI __declspec(dllexport)
+# elif __GNUC__ >= 4
+#   define QIAPI __attribute__ ((visibility("default")))
 # else
 #   define QIAPI
 # endif
 #else
-# ifdef _WIN32
+# if defined _WIN32 || defined __CYGWIN__
 #   define QIAPI __declspec(dllimport)
+# elif __GNUC__ >= 4
+#   define QIAPI __attribute__ ((visibility("default")))
 # else
 #   define QIAPI
 # endif
