@@ -25,6 +25,7 @@ file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serializatio
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
 
 file(GLOB TOOLS_SRC                qi/perf/*.cpp qi/perf/*.h*)
+file(GLOB LOGS_SRC                 qi/log/*.cpp qi/log/*.h* qi/log.hpp)
 file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
 
 file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
@@ -72,6 +73,7 @@ set(SRC
     ${FUNCTORS_SRC}
     ${FUNCTORS_DETAIL_SRC}
     ${SIGNATURE_SRC}
+    ${LOGS_SRC}
 )
 
 if(WITH_ZMQ)
@@ -102,9 +104,9 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif (UNIX)
 
-create_static_and_shared_libs(qi  "${SRC}" "${HEADERS}")
+create_lib(qi  "${SRC}" "${HEADERS}")
 use_lib (qi REQUIRED ALL BOOST)
-use_lib (qi BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD LIBTHREAD ZEROMQ)
+use_lib (qi BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD ZEROMQ)
 if (WITH_SHM)
 use_lib(qi ALVALUE SHMPOOL LIBCORE)
 endif()
