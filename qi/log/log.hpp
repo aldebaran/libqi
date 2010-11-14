@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #include <cstdarg>
+#include <boost/function.hpp>
 #include <qi/api.hpp>
 
 
@@ -58,9 +59,9 @@ namespace qi {
 
   namespace log {
 
-  /**
-   * Enum of accepted error types
-   */
+    /**
+     * Log Verbosity
+     */
     enum LogLevel {
       silent = 0,
       fatal,
@@ -71,17 +72,19 @@ namespace qi {
     };
 
 
-    /*
-     * log ptr
+    /**
+     * log handler ptr
      */
-    typedef void (*LogFunctionPtr)(const LogLevel      verb,
-                                   const char         *file,
-                                   const char         *fct,
-                                   const int           line,
-                                   const char         *fmt,
-                                   va_list             vl);
+    typedef boost::function6<void,
+                             qi::log::LogLevel,
+                             const char *,
+                             const char *,
+                             int,
+                             const char*,
+                             va_list> LogFunctionPtr;
 
-    /** call this to make some log
+    /**
+     * call this to make some log
      */
     QIAPI void log(const LogLevel    verb,
                    const char       *file,
@@ -90,8 +93,8 @@ namespace qi {
                    const char       *fmt, ...);
 
 
-    /** default log handler
-     *  output log to console
+    /** a very very basic log handler, this is not used
+     *  and mostly for demo purpose but it's functionnal
      */
     QIAPI void defaultLogHandler(const LogLevel verb,
                                  const char    *file,
@@ -104,6 +107,8 @@ namespace qi {
      * set the function called when we need to log something
      */
     QIAPI void setLogHandler(LogFunctionPtr p);
+
+    QIAPI const char *logLevelToString(const LogLevel verb);
 
     class QIAPI LogStream: public std::stringstream
     {

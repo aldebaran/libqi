@@ -6,23 +6,25 @@
 */
 
 #include <qi/log/log.hpp>
+#include <qi/log/consoleloghandler.hpp>
 
-#include <sstream>
-#include <iostream>
+#include <boost/bind.hpp>
+
 #include <cstdarg>
-# include <cstdio>
-# include <cstring>
+#include <cstdio>
+#include <cstring>
 
 namespace qi {
   namespace log {
 
-    static LogFunctionPtr gLogHandler = 0;
-
+    static LogFunctionPtr    gLogHandler = 0;
+    static ConsoleLogHandler gConsoleLogHandler;
 
     static class LogHandlerInit {
     public:
       LogHandlerInit() {
-        setLogHandler(defaultLogHandler);
+        //setLogHandler(defaultLogHandler);
+        setLogHandler(boost::bind<void>(&ConsoleLogHandler::log, &gConsoleLogHandler, _1, _2, _3, _4, _5, _6));
       }
     } gLogHandlerInit;
 
@@ -59,17 +61,21 @@ namespace qi {
                            const char       *fmt,
                            va_list           vl)
     {
-      static const char *sverb[] = { "",
-                                     "FATAL  :",
-                                     "ERROR  :",
-                                     "WARNING:",
-                                     "",
-                                     "DEBUG  :"
-                                   };
-      printf(sverb[verb]);
+      printf(logLevelToString(verb));
       printf("%s:%s:%d:", file, fct, line);
       vprintf(fmt, vl);
-      //va_end(vl);
+    }
+
+    const char *logLevelToString(const LogLevel verb) {
+      static const char *sverb[] = {
+        "silent",
+        "fatal",
+        "error",
+        "warning",
+        "info",
+        "debug"
+      };
+      return sverb[verb];
     }
 
     LogStream::LogStream(const LogLevel     level,
