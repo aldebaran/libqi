@@ -13,18 +13,46 @@
 #include <cstdarg>
 #include <qi/api.hpp>
 
-// log macro
-#define qiInfo(x)    qi::log::log(qi::log::info,    x, __FILE__, __FUNCTION__, __LINE__)
-#define qiDebug(x)   qi::log::log(qi::log::debug,   x, __FILE__, __FUNCTION__, __LINE__)
-#define qiWarning(x) qi::log::log(qi::log::warning, x, __FILE__, __FUNCTION__, __LINE__)
-#define qiError(x)   qi::log::log(qi::log::error,   x, __FILE__, __FUNCTION__, __LINE__)
-#define qiFatal(x)   qi::log::log(qi::log::fatal,   x, __FILE__, __FUNCTION__, __LINE__)
 
-#define qisInfo      qi::log::LogStream(qi::log::info,    __FILE__,__FUNCTION__, __LINE__).self()
-#define qisDebug     qi::log::LogStream(qi::log::debug,   __FILE__,__FUNCTION__, __LINE__).self()
-#define qisWarning   qi::log::LogStream(qi::log::warning, __FILE__,__FUNCTION__, __LINE__).self()
-#define qisError     qi::log::LogStream(qi::log::error,   __FILE__,__FUNCTION__, __LINE__).self()
-#define qisFatal     qi::log::LogStream(qi::log::fatal,   __FILE__,__FUNCTION__, __LINE__).self()
+#ifdef NO_QI_DEBUG
+# define qiDebug(...)
+# define qisDebug
+#else
+# define qiDebug(...)   qi::log::log(qi::log::debug,         __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+# define qisDebug       qi::log::LogStream(qi::log::debug,   __FILE__, __FUNCTION__, __LINE__).self()
+#endif
+
+#ifdef NO_QI_INFO
+# define qiInfo(...)
+# define qisInfo
+#else
+#define qiInfo(...)    qi::log::log(qi::log::info,          __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define qisInfo        qi::log::LogStream(qi::log::info,    __FILE__, __FUNCTION__, __LINE__).self()
+#endif
+
+#ifdef NO_QI_WARNING
+# define qiWarning(...)
+# define qisWarning
+#else
+# define qiWarning(...) qi::log::log(qi::log::warning,       __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+# define qisWarning     qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__).self()
+#endif
+
+#ifdef NO_QI_ERROR
+# define qiError(...)
+# define qisError
+#else
+# define qiError(...)   qi::log::log(qi::log::error,         __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+# define qisError       qi::log::LogStream(qi::log::error,   __FILE__, __FUNCTION__, __LINE__).self()
+#endif
+
+#ifdef NO_QI_FATAL
+# define qiFatal(...)
+# define qisFatal
+#else
+# define qisFatal       qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__).self()
+# define qiFatal(...)   qi::log::log(qi::log::fatal,       __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+#endif
 
 namespace qi {
 
@@ -46,31 +74,31 @@ namespace qi {
     /*
      * log ptr
      */
-    typedef void (*LogFunctionPtr)(const char         *file,
+    typedef void (*LogFunctionPtr)(const LogLevel      verb,
+                                   const char         *file,
                                    const char         *fct,
                                    const int           line,
-                                   const char          verb,
                                    const char         *fmt,
                                    va_list             vl);
 
     /** call this to make some log
      */
-    QIAPI void log(const char       *file,
+    QIAPI void log(const LogLevel    verb,
+                   const char       *file,
                    const char       *fct,
                    const int         line,
-                   const char        verb,
                    const char       *fmt, ...);
 
 
     /** default log handler
      *  output log to console
      */
-    QIAPI void defaultLogHandler(const char  *file,
-                                 const char  *fct,
-                                 const int    line,
-                                 const char   verb,
-                                 const char  *fmt,
-                                 va_list      vl);
+    QIAPI void defaultLogHandler(const LogLevel verb,
+                                 const char    *file,
+                                 const char    *fct,
+                                 const int      line,
+                                 const char    *fmt,
+                                 va_list        vl);
 
     /**
      * set the function called when we need to log something
@@ -89,7 +117,7 @@ namespace qi {
        * @param pLine __LINE__
        * @param pLogEntry log stream constructor and destructor (for scoped log)
        */
-      LogStream(const LogLevel    &level,
+      LogStream(const LogLevel     level,
                 const char        *file,
                 const char        *function,
                 const int          line);

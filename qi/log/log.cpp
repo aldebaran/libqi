@@ -31,16 +31,16 @@ namespace qi {
       gLogHandler = p;
     }
 
-    void log(const char       *file,
+    void log(const LogLevel    verb,
+             const char       *file,
              const char       *fct,
              const int         line,
-             const char        verb,
              const char       *fmt, ...)
     {
       if (gLogHandler) {
         va_list   vl;
         va_start(vl, fmt);
-        gLogHandler(file, fct, line, verb, fmt, vl);
+        gLogHandler(verb, file, fct, line, fmt, vl);
         va_end(vl);
       }
       else {
@@ -52,27 +52,27 @@ namespace qi {
       }
     }
 
-    void defaultLogHandler(const char       *file,
+    void defaultLogHandler(const LogLevel    verb,
+                           const char       *file,
                            const char       *fct,
                            const int         line,
-                           const char        verb,
                            const char       *fmt,
                            va_list           vl)
     {
-      //va_list     vl;
-      int         len;
-      const char *b = file;
-
-      //va_start(vl, fmt);
-      len = strlen(file);
-      if (len > 20)
-        b = file + (len - 20);
-      printf("%.20s:%s:%d: ", b, fct, line);
+      static const char *sverb[] = { "",
+                                     "FATAL  :",
+                                     "ERROR  :",
+                                     "WARNING:",
+                                     "",
+                                     "DEBUG  :"
+                                   };
+      printf(sverb[verb]);
+      printf("%s:%s:%d:", file, fct, line);
       vprintf(fmt, vl);
       //va_end(vl);
     }
 
-    LogStream::LogStream(const LogLevel    &level,
+    LogStream::LogStream(const LogLevel     level,
                          const char        *file,
                          const char        *function,
                          int                line)
@@ -85,7 +85,7 @@ namespace qi {
 
     LogStream::~LogStream()
     {
-      log(_file, _function, _line, _logLevel, this->str().c_str());
+      log(_logLevel, _file, _function, _line, this->str().c_str());
     }
 
   }
