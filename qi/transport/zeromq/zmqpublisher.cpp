@@ -19,8 +19,8 @@ namespace qi {
       socket(context, ZMQ_PUB)
     {
       // Release socket immediately
-      int lingerMilliseconds = 0;
-      socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
+      // int lingerMilliseconds = 0;
+      // socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
 
       bind();
     }

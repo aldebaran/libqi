@@ -22,8 +22,8 @@ namespace qi {
       socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
       // Release socket immediately when closing
-      int lingerMilliseconds = 0;
-      socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
+      //int lingerMilliseconds = 0;
+      //socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
 
       connect();
     }
