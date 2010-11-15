@@ -39,8 +39,8 @@ file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/zeromq/*.cpp qi/transport
 file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/thrift/*.cpp qi/transport/thrift/*.h*)
 file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
 file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
-file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h* qi/signature.h*)
-
+file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
+file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
 
 source_group( nodes                  FILES ${NODES_SRC})
 source_group( nodes\\detail          FILES ${NODES_DETAIL_SRC})
@@ -75,6 +75,7 @@ set(SRC
     ${FUNCTORS_SRC}
     ${FUNCTORS_DETAIL_SRC}
     ${SIGNATURE_SRC}
+    ${SIGNATURE_DETAIL_SRC}
     ${LOGS_SRC}
 )
 
