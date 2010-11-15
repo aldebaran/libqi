@@ -25,7 +25,7 @@ namespace qi {
       /// e.g. ipc:///tmp/naoqi/paf
       //. or tcp://127.0.0.1:5555
       /// </param>
-      ZMQSubscriber(const std::string &servername);
+      ZMQSubscriber(const std::string &serverAddress);
 
       virtual ~ZMQSubscriber();
 
@@ -38,6 +38,7 @@ namespace qi {
     protected:
       zmq::context_t context;
       zmq::socket_t  socket;
+      zmq::socket_t  control;
       boost::thread  receiveThread;
     };
   }

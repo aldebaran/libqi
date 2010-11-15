@@ -18,6 +18,10 @@ namespace qi {
       context(1),
       socket(context, ZMQ_PUB)
     {
+      // Release socket immediately
+      int lingerMilliseconds = 0;
+      socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
+
       bind();
     }
 
@@ -26,9 +30,11 @@ namespace qi {
     /// <summary> Binds to the publisher </summary>
     void ZMQPublisher::bind()
     {
+      // throws if already bound
       socket.bind(_publishAddress.c_str());
       // we can't allow publishing until the socket is warm
       // we might be able to detect this in publish instead of sleeping here
+      // FIXME: push this responsibility to the user
       sleep(1);
     }
 
@@ -38,7 +44,7 @@ namespace qi {
     {
       zmq::message_t msg(tosend.size());
       memcpy(msg.data(), tosend.data(), tosend.size());
-      socket.send(msg);
+      bool rc = socket.send(msg);
     }
   }
 }
