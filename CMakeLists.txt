@@ -131,3 +131,5 @@ if (UNIX)
 endif(UNIX)
 
 cond_subdirectory(qi/test BUILD_TESTS)
+
+create_doxygen("Doxyfile")
