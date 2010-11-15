@@ -8,6 +8,8 @@
 #ifndef         QI_API_HPP_
 # define        QI_API_HPP_
 
+// qi_EXPORTSE control which symbols are exported when
+// compiled as a SHARED lib.
 #ifdef qi_EXPORTS
 # if defined _WIN32 || defined __CYGWIN__
 #   define QIAPI __declspec(dllexport)
@@ -28,6 +30,13 @@
 # else
 #   define QIAPI
 # endif
+#endif
+
+// Deprecated
+#if defined(__GNUC__)
+#define QIAPI_DEPRECATED __attribute__((deprecated))
+#else
+#define QIAPI_DEPRECATED
 #endif
 
 #endif    /* !QI_API_HPP_ */
