@@ -38,7 +38,6 @@ namespace qi {
         _color = atoi(color)> 0 ? true: false;
       if (!isatty(1))
         _color = 0;
-      printf("Verb: %d, Ctx: %d, Color: %d\n", _verbosity, _context, _color);
     }
 
     void ConsoleLogHandler::log(const LogLevel    verb,
