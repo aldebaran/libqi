@@ -33,9 +33,9 @@ namespace qi {
       if (verbose)
         _verbosity = (LogLevel)atoi(verbose);
       if (context)
-        _context = atoi(context);
+        _context = atoi(context) > 0 ? true: false;
       if (color)
-        _color = atoi(color);
+        _color = atoi(color)> 0 ? true: false;
       if (!isatty(1))
         _color = 0;
       printf("Verb: %d, Ctx: %d, Color: %d\n", _verbosity, _context, _color);
