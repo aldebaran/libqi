@@ -12,7 +12,7 @@
 
 #include <zmq.hpp>
 
-#include <pthread.h>
+//#include <pthread.h>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 //#include <alfile/alfilesystem.h>

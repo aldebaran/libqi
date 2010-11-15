@@ -12,7 +12,7 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qi/perf/sleep.hpp>
+
 #include <qi/transport/transport.hpp>
 #include <qi/transport/zeromq/zmqsimpleserver.hpp>
 #include <qi/transport/zeromq/zmqserver.hpp>
@@ -20,6 +20,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <qi/perf/dataperftimer.hpp>
+
+#include <qi/perf/sleep.hpp>
 
 //#define TEST_TRANSPORT_SHM
 //#define TEST_TRANSPORT_ZMQ_SINGLE

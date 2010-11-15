@@ -18,7 +18,11 @@
 # endif
 #else
 # if defined _WIN32 || defined __CYGWIN__
-#   define QIAPI __declspec(dllimport)
+#   if defined _WINDLL
+#     define QIAPI __declspec(dllimport)
+#   else
+#     define QIAPI
+#   endif
 # elif __GNUC__ >= 4
 #   define QIAPI __attribute__ ((visibility("default")))
 # else

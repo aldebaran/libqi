@@ -62,7 +62,7 @@ namespace qi {
     /**
      * Log Verbosity
      */
-    enum LogLevel {
+    enum QIAPI LogLevel {
       silent = 0,
       fatal,
       error,
