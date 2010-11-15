@@ -1,13 +1,12 @@
 /*
 ** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **  - Chris Kilner  <ckilner@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  QI_MESSAGING_GENERIC_PUBLISHER_HPP_
-# define QI_MESSAGING_GENERIC_PUBLISHER_HPP_
+#ifndef  QI_MESSAGING_GENERIC_SUBSCRIBER_HPP_
+# define QI_MESSAGING_GENERIC_SUBSCRIBER_HPP_
 
 #include <string>
 #include <qi/transport/zeromq/zmqsubscriber.hpp>
@@ -57,4 +56,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_MESSAGING_GENERIC_PUBLISHER_HPP_
+#endif  // QI_MESSAGING_GENERIC_SUBSCRIBER_HPP_

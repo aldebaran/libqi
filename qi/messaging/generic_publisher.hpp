@@ -27,7 +27,7 @@ namespace qi {
           _publisher = new qi::transport::ZMQPublisher(address);
           initOK = true;
         } catch(const std::exception& e) {
-          qisDebug << "GenericClient failed to create publisher for address \"" << address << "\" Reason: " << e.what() << std::endl;
+          qisDebug << "GenericPublisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
         }
          return initOK;
       }
@@ -36,6 +36,7 @@ namespace qi {
       {
         if (! initOK) {
           qisError << "Attempt to use an unitialized publisher." << std::endl;
+          return;
         }
         std::string tosend = qi::serialization::Serializer::serialize(val);
         _publisher->publish(tosend);
