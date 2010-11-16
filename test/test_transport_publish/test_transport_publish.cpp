@@ -28,7 +28,7 @@ struct SubscribePerfHandler : qi::transport::ISubscribeHandler {
     // print results
     double elapsed = timer.elapsed();
     double msgPerSecond = 1.0 /(elapsed / fExpectedMessages);
-    std::cout << "SUB: msg/s: " <<
+    std::cout << "SUB: msg:" << fCount << " msg/s: " <<
       std::setprecision(12) << msgPerSecond << std::endl;
   }
 
