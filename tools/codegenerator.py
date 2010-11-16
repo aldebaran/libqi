@@ -6,7 +6,7 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-import os.path
+import os
 from Cheetah.Template import Template
 
 def generate_list(tpl, count, sep = ", ", begin = False, end = False):
@@ -20,7 +20,7 @@ def generate_list(tpl, count, sep = ", ", begin = False, end = False):
     return result
 
 def generate_callparam_list(count):
-    t = "params[%(count)d].as<P%(count)d>()"
+    t = "p%(count)d"
     return generate_list(t, count)
 
 def generate_typename_list(count, begin = False, end = False):
@@ -51,11 +51,13 @@ def generate_file(src, dst, count):
         f.write(str(code))
 
 if __name__ == "__main__":
-    generate_file("memberfunctor.hxx.in"    , "memberfunctor.hxx"    , 7)
-    generate_file("voidmemberfunctor.hxx.in", "voidmemberfunctor.hxx", 7)
-    generate_file("functor.hxx.in"          , "functor.hxx"          , 7)
-    generate_file("voidfunctor.hxx.in"      , "voidfunctor.hxx"      , 7)
-    generate_file("makefunctor.hpp.in"      , "makefunctor.hpp"      , 7)
-    generate_file("callfunctor.hpp.in"      , "callfunctor.hpp"      , 7)
-    generate_file("../nodes/client_node.hpp.in"      , "../nodes/client_node.hpp"      , 7)
-    generate_file("../nodes/client_node.hxx.in"      , "../nodes/client_node.hxx"      , 7)
+    os.chdir(os.path.dirname(__file__))
+    print "cd", os.path.dirname(__file__)
+    generate_file("../qi/functors/memberfunctor.hxx.in"    , "../qi/functors/memberfunctor.hxx"    , 7)
+    generate_file("../qi/functors/voidmemberfunctor.hxx.in", "../qi/functors/voidmemberfunctor.hxx", 7)
+    generate_file("../qi/functors/functor.hxx.in"          , "../qi/functors/functor.hxx"          , 7)
+    generate_file("../qi/functors/voidfunctor.hxx.in"      , "../qi/functors/voidfunctor.hxx"      , 7)
+    generate_file("../qi/functors/makefunctor.hpp.in"      , "../qi/functors/makefunctor.hpp"      , 7)
+    generate_file("../qi/functors/callfunctor.hpp.in"      , "../qi/functors/callfunctor.hpp"      , 7)
+    generate_file("../qi/nodes/client_node.hpp.in"         , "../qi/nodes/client_node.hpp"         , 7)
+    generate_file("../qi/nodes/client_node.hxx.in"         , "../qi/nodes/client_node.hxx"         , 7)
