@@ -56,9 +56,7 @@
 #endif
 
 namespace qi {
-
   namespace log {
-
     /**
      * Log Verbosity
      */
