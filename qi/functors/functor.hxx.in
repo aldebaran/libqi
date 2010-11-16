@@ -36,10 +36,17 @@ namespace qi {
       return (R)(*fFunction)($generate_arg_list($i));
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue& result) {
-      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, $i);
-      result.value((*fFunction)($generate_callparam_list($i)));
-    }
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result)const {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
+      #for $j in range($i)
+      P$j p$j;
+      #end for
+
+      #for $j in range($i)
+      params.read<P$j>(p$j);
+      #end for
+      result.write<R>((*fFunction)($generate_callparam_list($i)));
+    };
 
   private:
     FunctionType  fFunction;

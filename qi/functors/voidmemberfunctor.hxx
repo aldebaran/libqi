@@ -33,8 +33,9 @@ namespace qi {
       (fObject->*fFunction)();
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
+
       (fObject->*fFunction)();
     };
 
@@ -59,9 +60,12 @@ namespace qi {
       (fObject->*fFunction)(p0);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
-      (fObject->*fFunction)(params[0].as<P0>());
+      P0 p0;
+
+      params.read<P0>(p0);
+      (fObject->*fFunction)(p0);
     };
 
   private:
@@ -85,9 +89,14 @@ namespace qi {
       (fObject->*fFunction)(p0, p1);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
-      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>());
+      P0 p0;
+      P1 p1;
+
+      params.read<P0>(p0);
+      params.read<P1>(p1);
+      (fObject->*fFunction)(p0, p1);
     };
 
   private:
@@ -111,9 +120,16 @@ namespace qi {
       (fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
-      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>());
+      P0 p0;
+      P1 p1;
+      P2 p2;
+
+      params.read<P0>(p0);
+      params.read<P1>(p1);
+      params.read<P2>(p2);
+      (fObject->*fFunction)(p0, p1, p2);
     };
 
   private:
@@ -137,9 +153,18 @@ namespace qi {
       (fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
-      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>());
+      P0 p0;
+      P1 p1;
+      P2 p2;
+      P3 p3;
+
+      params.read<P0>(p0);
+      params.read<P1>(p1);
+      params.read<P2>(p2);
+      params.read<P3>(p3);
+      (fObject->*fFunction)(p0, p1, p2, p3);
     };
 
   private:
@@ -163,9 +188,20 @@ namespace qi {
       (fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
-      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>());
+      P0 p0;
+      P1 p1;
+      P2 p2;
+      P3 p3;
+      P4 p4;
+
+      params.read<P0>(p0);
+      params.read<P1>(p1);
+      params.read<P2>(p2);
+      params.read<P3>(p3);
+      params.read<P4>(p4);
+      (fObject->*fFunction)(p0, p1, p2, p3, p4);
     };
 
   private:
@@ -189,9 +225,22 @@ namespace qi {
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(const qi::messaging::ArgumentList &params, qi::messaging::ReturnValue&) {
+    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
-      (fObject->*fFunction)(params[0].as<P0>(), params[1].as<P1>(), params[2].as<P2>(), params[3].as<P3>(), params[4].as<P4>(), params[5].as<P5>());
+      P0 p0;
+      P1 p1;
+      P2 p2;
+      P3 p3;
+      P4 p4;
+      P5 p5;
+
+      params.read<P0>(p0);
+      params.read<P1>(p1);
+      params.read<P2>(p2);
+      params.read<P3>(p3);
+      params.read<P4>(p4);
+      params.read<P5>(p5);
+      (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     };
 
   private:

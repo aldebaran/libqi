@@ -25,20 +25,39 @@ namespace qi {
   #if $i != 0
   template <${generate_typename_list($i)}>
   void ClientNode::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
-      qi::messaging::ResultDefinition result;
-      void (*f)(${generate_param_list($i)})  = 0;
-      std::string hash = makeSignature(methodName, f);
-      xCall(qi::messaging::CallDefinition(hash${generate_arg_list($i, begin=True)}), result);
+    qi::serialization::SerializedData calldef;
+    qi::serialization::SerializedData resultdef;
+
+    void (*f)(${generate_param_list($i)})  = 0;
+    std::string hash = makeSignature(methodName, f);
+
+    R (*f)(${generate_param_list($i)})  = 0;
+    std::string hash = makeSignature(methodName, f);
+    calldef->write<std::string>(hash);
+    #for $j in range($i)
+    calldef->write<P${j}>(p${j})
+    #end for
+    xCall(calldef, resultdef);
   }
   #end if
 
-  template <typename RETURN_TYPE${generate_typename_list($i, begin=True)}>
-  RETURN_TYPE ClientNode::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::messaging::ResultDefinition result;
-    RETURN_TYPE (*f)(${generate_param_list($i)})  = 0;
+  template <typename R${generate_typename_list($i, begin=True)}>
+  R ClientNode::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
+    qi::serialization::SerializedData calldef;
+    qi::serialization::SerializedData resultdef;
+
+    R (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
-    xCall(qi::messaging::CallDefinition(hash${generate_arg_list($i, begin=True)}), result);
-    return result.value().as<RETURN_TYPE>();
+    calldef->write<std::string>(hash);
+    #for $j in range($i)
+    calldef->write<P${j}>(p${j})
+    #end for
+    xCall(calldef, resultdef);
+
+    //TODO: optimise
+    R ret;
+    resultdef->read<R>(ret);
+    return ret;
   }
 #end for
 

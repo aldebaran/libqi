@@ -12,8 +12,7 @@
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
 #define QI_FUNCTOR_DEBUG(...)
 
-#include <qi/messaging/call_definition.hpp>
-#include <qi/messaging/result_definition.hpp>
+#include <qi/serialization/serializeddata.hpp>
 
 namespace qi
 {
@@ -22,7 +21,7 @@ namespace qi
   */
   class Functor {
   public:
-    virtual void call(const ::qi::messaging::ArgumentList& pParams, ::qi::messaging::ReturnValue& pResult) = 0;
+    virtual void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result)const = 0;
     virtual ~Functor() {}
   };
 
