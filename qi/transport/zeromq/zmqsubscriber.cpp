@@ -15,6 +15,7 @@ namespace qi {
     /// <param name="publishAddress"> The publishing address. </param>
     ZMQSubscriber::ZMQSubscriber(const std::string &publishAddress)
       : Subscriber(publishAddress),
+      _isClosing(false),
       _context(boost::shared_ptr<zmq::context_t>(new zmq::context_t(1))),
       _socket(*_context.get(), ZMQ_SUB),
       _control(*_context.get(), ZMQ_PUB)
@@ -29,6 +30,7 @@ namespace qi {
     /// <param name="publishAddress"> The publishing address. </param>
     ZMQSubscriber::ZMQSubscriber(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
       : Subscriber(publishAddress),
+      _isClosing(false),
       _context(context),
       _socket(*_context.get(), ZMQ_SUB),
       _control(*_context.get(), ZMQ_PUB)
@@ -39,6 +41,7 @@ namespace qi {
     }
 
     ZMQSubscriber::~ZMQSubscriber() {
+      _isClosing = true;
       // Discussion: We have a blocking receive in
       // progress. This is rather difficult to interupt.
       // We have various options:
@@ -53,8 +56,8 @@ namespace qi {
       zmq::message_t msg(7);
       memcpy(msg.data(), "!KILL!", 7);
       //  Send kill signal to receive socket
-      //_control.send(msg);
-      //sleep(1);
+      _control.send(msg);
+      sleep(1);
     }
 
     /// <summary> Connects to the publisher </summary>
@@ -63,16 +66,13 @@ namespace qi {
       _control.bind("inproc://control");
       _socket.connect(_publishAddress.c_str());
       _socket.connect("inproc://control");
-      // we can't allow continuation until the socket is warm
-      // FIXME: push this responsibility to the user
-      //sleep(1);
     }
 
     void ZMQSubscriber::receive()
     {
       bool ok;
       try {
-        while(true)
+        while(!_isClosing)
         {
           zmq::message_t msg;
           ok = _socket.recv (&msg);

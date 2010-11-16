@@ -47,6 +47,7 @@ namespace qi {
       void receive();
 
     protected:
+      bool _isClosing;
       boost::shared_ptr<zmq::context_t> _context;
       zmq::socket_t  _socket;
       zmq::socket_t  _control;
