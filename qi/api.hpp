@@ -8,7 +8,7 @@
 #ifndef         QI_API_HPP_
 # define        QI_API_HPP_
 
-// qi_EXPORTSE control which symbols are exported when
+// qi_EXPORTS controls which symbols are exported when
 // compiled as a SHARED lib.
 #ifdef qi_EXPORTS
 # if defined _WIN32 || defined __CYGWIN__
