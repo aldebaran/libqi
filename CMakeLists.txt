@@ -129,6 +129,6 @@ if (UNIX)
   #add_definitions("-fvisibility=hidden -fvisibility-inlines-hidden")
 endif(UNIX)
 
-add_subdirectory(qi/test)
+cond_subdirectory(test BUILD_TESTS)
 
 create_doxygen("Doxyfile")
