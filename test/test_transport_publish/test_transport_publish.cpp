@@ -72,8 +72,8 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
 {
   int numMessages = 100000;
 
-
-  const int numSubscribers = 50;
+  const int numSubscribers = 80;
+  std::cout << "Using " << numSubscribers << " subscribers" << std::endl;
   std::vector<SubscribePerfHandler*>         handlers;
   std::vector< qi::transport::ZMQSubscriber*> subscribers;
   //boost::shared_ptr<zmq::context_t> subContext(new zmq::context_t(1));
@@ -85,7 +85,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     handlers.push_back(hand);
     subscribers.push_back(sub);
   }
-  sleep(1);
+  sleep(2);
   qi::transport::ZMQPublisher publisher("tcp://127.0.0.1:5555");
 
   sleep(1);
@@ -96,7 +96,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     publisher.publish(msg);
   }
   std::cout << " Done." << std::endl;
-  sleep(1);
+  sleep(3);
   int result = 0;
   for(unsigned int i=0; i < numSubscribers; ++i) {
     result += handlers[i]->getCount();
