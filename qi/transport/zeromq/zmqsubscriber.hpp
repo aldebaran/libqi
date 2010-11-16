@@ -11,6 +11,7 @@
 # include <qi/transport/subscriber.hpp>
 # include <boost/thread.hpp>
 # include <zmq.hpp>
+# include <boost/shared_ptr.hpp>
 
 namespace qi {
   namespace transport {
@@ -27,6 +28,16 @@ namespace qi {
       /// </param>
       ZMQSubscriber(const std::string &serverAddress);
 
+      /// <summary>
+      /// Creates a ZMQSubscriber
+      /// </summary>
+      /// <param name="serverAddress">
+      /// The protocol-qualified address of the publisher
+      /// e.g. ipc:///tmp/naoqi/paf
+      //. or tcp://127.0.0.1:5555
+      /// </param>
+      ZMQSubscriber(boost::shared_ptr<zmq::context_t>, const std::string &serverAddress);
+
       virtual ~ZMQSubscriber();
 
       virtual void subscribe();
@@ -36,10 +47,10 @@ namespace qi {
       void receive();
 
     protected:
-      zmq::context_t context;
-      zmq::socket_t  socket;
-      zmq::socket_t  control;
-      boost::thread  receiveThread;
+      boost::shared_ptr<zmq::context_t> _context;
+      zmq::socket_t  _socket;
+      zmq::socket_t  _control;
+      boost::thread  _receiveThread;
     };
   }
 }

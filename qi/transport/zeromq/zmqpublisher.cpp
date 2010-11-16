@@ -15,23 +15,33 @@ namespace qi {
     /// <param name="publishAddress"> The server address. </param>
     ZMQPublisher::ZMQPublisher(const std::string &publishAddress)
       : Publisher(publishAddress),
-      context(1),
-      socket(context, ZMQ_PUB)
+      _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(1))),
+      _socket(*_context.get(), ZMQ_PUB)
     {
-      // Release socket immediately
-      // int lingerMilliseconds = 0;
-      // socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
+      bind();
+    }
 
+    /// <summary> Constructor. </summary>
+    /// <param name="publishAddress"> The server address. </param>
+    ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
+      : Publisher(publishAddress),
+      _context(context),
+      _socket(*_context.get(), ZMQ_PUB)
+    {
       bind();
     }
 
     ZMQPublisher::~ZMQPublisher() {}
 
+    boost::shared_ptr<zmq::context_t> ZMQPublisher::getContext() const {
+      return _context;
+    }
+
     /// <summary> Binds to the publisher </summary>
     void ZMQPublisher::bind()
     {
       // throws if already bound
-      socket.bind(_publishAddress.c_str());
+      _socket.bind(_publishAddress.c_str());
       // we can't allow publishing until the socket is warm
       // we might be able to detect this in publish instead of sleeping here
       // FIXME: push this responsibility to the user
@@ -44,7 +54,7 @@ namespace qi {
     {
       zmq::message_t msg(tosend.size());
       memcpy(msg.data(), tosend.data(), tosend.size());
-      bool rc = socket.send(msg);
+      bool rc = _socket.send(msg);
     }
   }
 }

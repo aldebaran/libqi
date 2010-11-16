@@ -10,21 +10,31 @@
 
 namespace qi {
   namespace transport {
-    /// <summary> Constructor. </summary>
+
+        /// <summary> Constructor. </summary>
     /// <param name="publishAddress"> The publishing address. </param>
     ZMQSubscriber::ZMQSubscriber(const std::string &publishAddress)
       : Subscriber(publishAddress),
-      context(1),
-      socket(context, ZMQ_SUB),
-      control(context, ZMQ_PUB)
+      _context(boost::shared_ptr<zmq::context_t>(new zmq::context_t(1))),
+      _socket(*_context.get(), ZMQ_SUB),
+      _control(*_context.get(), ZMQ_PUB)
     {
       // Use no subscribe filter
-      socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+      _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+      connect();
+    }
 
-      // Release socket immediately when closing
-      //int lingerMilliseconds = 0;
-      //socket.setsockopt(ZMQ_LINGER, &lingerMilliseconds, sizeof(int));
 
+    /// <summary> Constructor. </summary>
+    /// <param name="publishAddress"> The publishing address. </param>
+    ZMQSubscriber::ZMQSubscriber(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
+      : Subscriber(publishAddress),
+      _context(context),
+      _socket(*_context.get(), ZMQ_SUB),
+      _control(*_context.get(), ZMQ_PUB)
+    {
+      // Use no subscribe filter
+      _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
       connect();
     }
 
@@ -43,16 +53,16 @@ namespace qi {
       zmq::message_t msg(7);
       memcpy(msg.data(), "!KILL!", 7);
       //  Send kill signal to receive socket
-      control.send(msg);
-      sleep(1);
+      //_control.send(msg);
+      //sleep(1);
     }
 
     /// <summary> Connects to the publisher </summary>
     void ZMQSubscriber::connect()
     {
-      control.bind("inproc://control");
-      socket.connect(_publishAddress.c_str());
-      socket.connect("inproc://control");
+      _control.bind("inproc://control");
+      _socket.connect(_publishAddress.c_str());
+      _socket.connect("inproc://control");
       // we can't allow continuation until the socket is warm
       // FIXME: push this responsibility to the user
       //sleep(1);
@@ -65,7 +75,7 @@ namespace qi {
         while(true)
         {
           zmq::message_t msg;
-          ok = socket.recv (&msg);
+          ok = _socket.recv (&msg);
           if (!ok) {
             std::cout << "ZMQSubscriber::recv failed.";
             return;
@@ -91,7 +101,7 @@ namespace qi {
     /// <summary> Subscribe. </summary>
     void ZMQSubscriber::subscribe()
     {
-      receiveThread = boost::thread(&ZMQSubscriber::receive, this);
+      _receiveThread = boost::thread(&ZMQSubscriber::receive, this);
     }
   }
 }

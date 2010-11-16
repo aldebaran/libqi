@@ -10,6 +10,7 @@
 
 # include <qi/transport/publisher.hpp>
 # include <zmq.hpp>
+# include <boost/shared_ptr.hpp>
 
 namespace qi {
   namespace transport {
@@ -26,6 +27,13 @@ namespace qi {
       /// </param>
       ZMQPublisher(const std::string &publisherAddress);
 
+    /// <summary> Constructor. </summary>
+    /// <param name="context"> An existing zmq context </param>
+    /// <param name="publishAddress"> The server address. </param>
+      ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress);
+
+      boost::shared_ptr<zmq::context_t> getContext() const;
+
       virtual ~ZMQPublisher();
 
       virtual void publish(const std::string &tosend);
@@ -34,8 +42,8 @@ namespace qi {
       void bind();
 
     protected:
-      zmq::context_t context;
-      zmq::socket_t  socket;
+      boost::shared_ptr<zmq::context_t> _context;
+      zmq::socket_t   _socket;
     };
   }
 }
