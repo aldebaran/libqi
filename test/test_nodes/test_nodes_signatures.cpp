@@ -1,6 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 #include <boost/timer.hpp>
 #include <qi/nodes.hpp>
 #include <qi/exceptions/exceptions.hpp>
@@ -44,6 +45,11 @@ struct Foo {
   void vfun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { gGlobalResult = p0 + p1 + p2 + p3; }
   void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
   void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
+
+  // two nasty cases
+  std::vector<std::string> fun0vvvvv()                                                              { std::vector<std::string>s; return s; }
+  void vfun0c() const                                                                               { gGlobalResult = 0; }
+
 };
 
 std::string gMasterAddress = "127.0.0.1:5555";
@@ -88,6 +94,12 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
   server.addService("foo.fun4", &f, &Foo::fun4);
   server.addService("foo.fun5", &f, &Foo::fun5);
   server.addService("foo.fun6", &f, &Foo::fun6);
+
+  // KABOOOM!!! std::vector<std::string>
+  //server.addService("foo.fun0vvvvv", &f, &Foo::fun0vvvvv);
+
+  // KABOOOM!!! const
+  //server.addService("foo.vfun0c", &f, &Foo::vfun0c);
 
   client.callVoid("vfun0");
   client.callVoid("vfun1", 1);
