@@ -17,9 +17,9 @@
 namespace qi {
   namespace transport {
 
-    namespace Detail
+    namespace detail
     {
-      class IServerResponseHandler
+      class ServerResponseHandler
       {
       public:
         virtual void serverResponseHandler(const std::string &result, void *data = 0) = 0;

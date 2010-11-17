@@ -11,7 +11,7 @@
 #include <qi/perf/sleep.hpp>
 #include <boost/timer.hpp>
 
-struct SubscribePerfHandler : qi::transport::ISubscribeHandler {
+struct SubscribePerfHandler : qi::transport::SubscribeHandler {
   int fCount;
   int fExpectedMessages;
   boost::timer timer;

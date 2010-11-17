@@ -11,21 +11,16 @@
 
 #include <string>
 #include <qi/log.hpp>
-#include <qi/transport/buffer.hpp>
+#include <qi/transport/message_handler.hpp>
 #include <qi/transport/detail/serverimpl.hpp>
-#include <qi/transport/common/i_threadable.hpp>
-#include <qi/transport/common/i_server_response_handler.hpp>
-#include <qi/transport/common/i_data_handler.hpp>
 #include <qi/transport/zeromq/zmqsimpleserver.hpp>
-#include <qi/transport/i_message_handler.hpp>
 
 
 namespace qi {
   namespace transport {
 
-    template< typename Transport = qi::transport::ZMQSimpleServerImpl,
-              typename Buffer    = qi::transport::Buffer >
-    class _Server: public qi::transport::IThreadable, public qi::transport::IDataHandler
+    template<typename Transport>
+    class _Server
     {
     public:
 
@@ -36,7 +31,6 @@ namespace qi {
         fServerAddress = address;
         try {
           fTransportServer = new Transport(address);
-          fTransportServer->setDataHandler(this);
           initOK = true;
         } catch(const std::exception& e) {
           qisError << "Failed to create transport server for address: " << address << " Reason:" << e.what() << std::endl;
@@ -51,37 +45,25 @@ namespace qi {
         }
       }
 
-      virtual void setMessageHandler(IMessageHandler* dataHandler) {
-        fMessageHandler = dataHandler;
+      virtual void setMessageHandler(MessageHandler* dataHandler) {
+        fTransportServer->setDataHandler(dataHandler);
       }
 
-      virtual IMessageHandler* getMessageHandler() {
-        return fMessageHandler;
+      virtual MessageHandler* getMessageHandler() {
+        return fTransportServer->getDataHandler();
       }
 
 
     protected:
       bool initOK;
-      virtual void dataHandler(const std::string &dataIn, std::string &dataOut)
-      {
-        if (! initOK ) {
-          qisError << "Attempt to use an uninitialized server" << std::endl;
-        }
-        // "dataIn" contains a serialized version of "in",
-        // we will de-serialize this and pass it to the method
-        // then serialize the "out" result to "dataOut"
-
-        fMessageHandler->messageHandler(dataIn, dataOut);
-
-      }
 
     protected:
+      //TODO: do we need that?
       std::string                        fServerAddress;
-      qi::transport::IMessageHandler    *fMessageHandler;
       qi::transport::detail::ServerImpl *fTransportServer;
     };
 
-    typedef _Server<qi::transport::ZMQSimpleServerImpl, std::string> ZMQServer;
+    typedef _Server<qi::transport::ZMQSimpleServerImpl> ZMQServer;
     typedef ZMQServer Server;
   }
 

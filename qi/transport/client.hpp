@@ -16,7 +16,7 @@
 namespace qi {
   namespace transport {
 
-    template<typename Transport = qi::transport::ZMQClientImpl, typename Buffer = qi::transport::Buffer>
+    template<typename Transport, typename Buffer>
     class _Client {
     public:
       _Client()

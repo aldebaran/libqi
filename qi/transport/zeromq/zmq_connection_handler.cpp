@@ -11,15 +11,14 @@
 namespace qi {
   namespace transport {
 
-    ZMQConnectionHandler::ZMQConnectionHandler(
-      const std::string &msg,
-      IDataHandler* dataHandler,
-      Detail::IServerResponseHandler* responseDelegate,
-      void *data)
+    ZMQConnectionHandler::ZMQConnectionHandler(const qi::transport::Buffer    &msg,
+                                               MessageHandler                 *dataHandler,
+                                               detail::ServerResponseHandler  *responseDelegate,
+                                               void                           *data)
       : fData(data),
-      fMsg(msg),
-      fDataHandler(dataHandler),
-      fResponseDelegate(responseDelegate)
+        fMsg(msg),
+        fDataHandler(dataHandler),
+        fResponseDelegate(responseDelegate)
     {
       //this->setTaskName("ZMQConnectionHandler");
     }
@@ -29,9 +28,9 @@ namespace qi {
 
     void ZMQConnectionHandler::run() {
       assert(fDataHandler);
-      std::string result;
+      qi::transport::Buffer result;
 
-      fDataHandler->dataHandler(fMsg, result);
+      fDataHandler->messageHandler(fMsg, result);
       if (fResponseDelegate)
         fResponseDelegate->serverResponseHandler(result, fData);
     }

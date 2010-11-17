@@ -10,32 +10,33 @@
 # define QI_TRANSPORT_DETAIL_SERVERIMPL_HPP_
 
 #include <string>
-#include <qi/transport/common/i_threadable.hpp>
-#include <qi/transport/common/i_server_response_handler.hpp>
-#include <qi/transport/common/i_data_handler.hpp>
+#include <qi/core/runnable.hpp>
+#include <qi/transport/message_handler.hpp>
+#include <qi/transport/detail/server_response_handler.hpp>
 
 namespace qi {
   namespace transport {
     namespace detail {
 
-      class ServerImpl : public IThreadable {
+      class ServerImpl: public qi::Runnable {
       public:
         explicit ServerImpl(const std::string &_serverAddress)
           : _serverAddress(_serverAddress),
             _dataHandler(0) {}
         virtual ~ServerImpl() {}
 
-        virtual void setDataHandler(IDataHandler* callback) {
+        virtual void run() = 0;
+        virtual void setDataHandler(MessageHandler* callback) {
           _dataHandler = callback;
         }
 
-        virtual IDataHandler *getDataHandler() {
+        virtual MessageHandler *getDataHandler() {
           return _dataHandler;
         }
 
       protected:
-        std::string   _serverAddress;
-        IDataHandler* _dataHandler;
+        std::string      _serverAddress;
+        MessageHandler  *_dataHandler;
       };
     }
   }

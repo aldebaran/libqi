@@ -11,7 +11,7 @@
 #include <string>
 
 // used to talk to master
-#include <qi/transport/i_message_handler.hpp>
+#include <qi/transport/message_handler.hpp>
 #include <qi/transport/server.hpp>
 #include <qi/transport/client.hpp>
 
@@ -21,7 +21,7 @@
 namespace qi {
   namespace detail {
 
-    class ServerNodeImp : public qi::transport::IMessageHandler {
+    class ServerNodeImp : public qi::transport::MessageHandler {
     public:
       ServerNodeImp();
       virtual ~ServerNodeImp();

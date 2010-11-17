@@ -14,7 +14,7 @@
 namespace qi {
   namespace transport {
 
-    class IMessageHandler {
+    class MessageHandler {
     public:
       /// <summary> Generic message handler. </summary>
       /// <param name="requestMessage"> The request </param>

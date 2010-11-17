@@ -17,7 +17,7 @@ namespace qi {
   namespace messaging {
 
     template<typename T>
-    class GenericSubscriber : qi::transport::ISubscribeHandler {
+    class GenericSubscriber : qi::transport::SubscribeHandler {
     public:
       typedef void(*SubscribeHandlerPtr)(const T&);
 

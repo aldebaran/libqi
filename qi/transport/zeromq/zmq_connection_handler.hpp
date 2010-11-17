@@ -8,9 +8,10 @@
 #ifndef QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 #define QI_TRANSPORT_ZMQ_CONNECTION_HANDLER_HPP_
 
-#include <qi/transport/common/i_runnable.hpp>
-#include <qi/transport/common/i_server_response_handler.hpp>
-#include <qi/transport/common/i_data_handler.hpp>
+#include <qi/core/runnable.hpp>
+#include <qi/transport/buffer.hpp>
+#include <qi/transport/message_handler.hpp>
+#include <qi/transport/detail/server_response_handler.hpp>
 #include <string>
 
 namespace qi {
@@ -20,7 +21,7 @@ namespace qi {
     /// A connection handler created for each new incoming connection and
     /// pushed to the thread pool.
     /// </summary>
-    class ZMQConnectionHandler : public IRunnable {
+    class ZMQConnectionHandler: public qi::Runnable {
     public:
 
       /// <summary> Constructor. </summary>
@@ -28,11 +29,10 @@ namespace qi {
       /// <param name="dataHandler"> The data handler. </param>
       /// <param name="serverResponseHander"> The server response hander </param>
       /// <param name="data"> [in,out] If non-null, the data. </param>
-      ZMQConnectionHandler(
-        const std::string &msg,
-        IDataHandler* dataHandler,
-        Detail::IServerResponseHandler* serverResponseHander,
-        void *data);
+      ZMQConnectionHandler(const std::string               &msg,
+                           MessageHandler                  *dataHandler,
+                           detail::ServerResponseHandler   *serverResponseHander,
+                           void                            *data);
 
       /// <summary> Finaliser. </summary>
       virtual ~ZMQConnectionHandler ();
@@ -42,9 +42,9 @@ namespace qi {
 
     private:
       void                             *fData;
-      std::string                       fMsg;
-      IDataHandler                     *fDataHandler;
-      Detail::IServerResponseHandler   *fResponseDelegate;
+      qi::transport::Buffer             fMsg;
+      MessageHandler                   *fDataHandler;
+      detail::ServerResponseHandler    *fResponseDelegate;
     };
 
   }

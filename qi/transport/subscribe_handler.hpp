@@ -10,7 +10,7 @@
 
 namespace qi {
   namespace transport {
-    class ISubscribeHandler {
+    class SubscribeHandler {
     public:
       /// <summary>
       /// Subscribe handler. Used by a subscriber to receive data

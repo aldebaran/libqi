@@ -9,7 +9,7 @@
 # define QI_TRANSPORT_SUBSCRIBER_HPP_
 
 #include <string>
-#include <qi/transport/common/i_subscribe_handler.hpp>
+#include <qi/transport/subscribe_handler.hpp>
 
 namespace qi {
   namespace transport {
@@ -21,11 +21,11 @@ namespace qi {
           _subscribeHandler(0) {}
       virtual ~Subscriber() {}
 
-      virtual void setSubscribeHandler(ISubscribeHandler* callback) {
+      virtual void setSubscribeHandler(SubscribeHandler* callback) {
         _subscribeHandler = callback;
       }
 
-      virtual ISubscribeHandler* getSubscribeHandler() {
+      virtual SubscribeHandler* getSubscribeHandler() {
         return _subscribeHandler;
       }
 
@@ -33,7 +33,7 @@ namespace qi {
 
     protected:
       std::string        _publishAddress;
-      ISubscribeHandler* _subscribeHandler;
+      SubscribeHandler*  _subscribeHandler;
     };
   }
 }
