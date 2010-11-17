@@ -3,6 +3,7 @@
 #include <string>
 #include <boost/timer.hpp>
 #include <qi/nodes.hpp>
+#include <qi/exceptions/exceptions.hpp>
 
 using namespace qi;
 

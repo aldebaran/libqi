@@ -26,9 +26,7 @@ class ServiceHandler :  public IMessageHandler
 {
 public:
   // to call function on current process
-  void messageHandler(
-    const qi::messaging::CallDefinition & def,
-          qi::messaging::ResultDefinition& res)
+  void messageHandler(const std::string& def, std::string& res)
   {
 
     if (def.methodName() == "ping") {

@@ -1,10 +1,10 @@
 
 add_subdirectory(test_nodes)
-add_subdirectory(test_collections)
-add_subdirectory(test_messaging)
+#add_subdirectory(test_collections)
+#add_subdirectory(test_messaging)
 add_subdirectory(test_messaging_publish)
 add_subdirectory(test_boost_mq)
-add_subdirectory(test_boost_serializer)
+#add_subdirectory(test_boost_serializer)
 add_subdirectory(test_transport)
 add_subdirectory(test_transport_publish)
 add_subdirectory(test_functor)

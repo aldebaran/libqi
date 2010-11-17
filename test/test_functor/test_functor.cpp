@@ -13,10 +13,8 @@
 #include <qi/perf/dataperftimer.hpp>
 #include <cmath>
 
-static const int gLoopCount   = 1000000;
 
-using qi::messaging::ReturnValue;
-using qi::messaging::ArgumentList;
+static const int gLoopCount   = 1000000;
 
 static int gGlobalResult = 0;
 
@@ -167,8 +165,8 @@ TEST(TestBind, MultiArgVoidFun) {
 TEST(TestBind, VoidCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  ReturnValue   res;
-  ArgumentList  cd;
+  qi::serialization::SerializedData   res;
+  qi::serialization::SerializedData  cd;
 
   qi::perf::DataPerfTimer dp;
   qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::voidCall);
@@ -192,7 +190,7 @@ TEST(TestBind, VoidCallPerf) {
 TEST(TestBind, IntStringCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  ReturnValue res;
+  qi::serialization::SerializedData res;
 
   qi::perf::DataPerfTimer dp;
 
@@ -202,10 +200,10 @@ TEST(TestBind, IntStringCallPerf) {
   {
     unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string     request = std::string(numBytes, 'B');
-    ArgumentList  cd;
+    qi::serialization::SerializedData  cd;
     qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::intStringCall);
 
-    cd.push_back(request);
+    cd.write<std::string>(request);
     dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j) {
       functor->call(cd, res);
