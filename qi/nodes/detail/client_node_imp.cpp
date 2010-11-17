@@ -99,6 +99,7 @@ namespace qi {
 
         SerializedData r;
         SerializedData callDef;
+        callDef.write<std::string>("master.locateService::s:s");
         callDef.write<std::string>(methodSignature);
         std::string tmpAddress;
         try {

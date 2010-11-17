@@ -55,7 +55,7 @@ namespace qi {
       boost::thread serverThread(boost::bind(&qi::transport::Server::run, fMessagingServer));
     }
 
-    void ServerNodeImp::messageHandler(const std::string& defData, std::string& resultData) {
+    void ServerNodeImp::messageHandler(std::string& defData, std::string& resultData) {
       // handle message
       SerializedData def(defData);
       SerializedData result(resultData);

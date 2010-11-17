@@ -36,7 +36,7 @@ namespace qi {
       return (R)(*fFunction)($generate_arg_list($i));
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result)const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       #for $j in range($i)
       P$j p$j;

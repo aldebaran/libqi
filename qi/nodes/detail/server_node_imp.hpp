@@ -39,7 +39,7 @@ namespace qi {
       bool initOK;
 
       // IMessageHandler Implementation -----------------
-      void messageHandler(const std::string& defData, std::string& resultData);
+      void messageHandler(std::string& defData, std::string& resultData);
       // -----------------------------------------------
 
     private:

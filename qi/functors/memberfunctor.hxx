@@ -32,7 +32,7 @@ namespace qi {
       return (R)(fObject->*fFunction)();
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
       result.write<R>((fObject->*fFunction)());
@@ -58,7 +58,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       P0 p0;
 
@@ -86,7 +86,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       P0 p0;
       P1 p1;
@@ -116,7 +116,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       P0 p0;
       P1 p1;
@@ -148,7 +148,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       P0 p0;
       P1 p1;
@@ -182,7 +182,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       P0 p0;
       P1 p1;
@@ -218,7 +218,7 @@ namespace qi {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(const qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
+    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       P0 p0;
       P1 p1;

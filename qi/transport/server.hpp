@@ -67,7 +67,6 @@ namespace qi {
     typedef ZMQServer Server;
   }
 
-
 }
 
 #endif  // QI_TRANSPORT_SERVER_HPP_
