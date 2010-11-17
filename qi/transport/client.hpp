@@ -46,7 +46,7 @@ namespace qi {
       qi::transport::detail::ClientImpl<Buffer> *_client;
     };
 
-    typedef _Client<qi::transport::ZMQClientImpl, qi::transport::Buffer> ZMQClient;
+    typedef _Client<qi::transport::detail::ZMQClientImpl, qi::transport::Buffer> ZMQClient;
     typedef ZMQClient Client;
 
   }

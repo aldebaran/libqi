@@ -15,132 +15,132 @@
 
 namespace qi {
   namespace transport {
+    namespace detail {
+      //if you use the custom XREP code, activate the full async experience to use the thread pool
+#define ZMQ_FULL_ASYNC
 
-    //if you use the custom XREP code, activate the full async experience to use the thread pool
-    #define ZMQ_FULL_ASYNC
-
-    /// <summary> Constructor. </summary>
-    /// <param name="serverAddress"> The server address. </param>
-    ZMQServerImpl::ZMQServerImpl(const std::string &serverAddress)
-      : ServerImpl(serverAddress),
+      /// <summary> Constructor. </summary>
+      /// <param name="serverAddress"> The server address. </param>
+      ZMQServerImpl::ZMQServerImpl(const std::string &serverAddress)
+        : ServerImpl(serverAddress),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
-    {
-    }
-
-    ZMQServerImpl::~ZMQServerImpl () {
-    }
-
-    void ZMQServerImpl::wait () {
-    }
-
-    void ZMQServerImpl::stop () {
-    }
-
-    void ZMQServerImpl::poll() {
-      int             rc = 0;
-      zmq_pollitem_t  items[1];
-
-      items[0].socket  = zsocket;
-      items[0].fd      = 0;
-      items[0].events  = ZMQ_POLLIN;
-      items[0].revents = 0;
-
-      rc = zmq_poll(&items[0], 1, -1);
-      assert(rc > 0);
-      assert(items[0].revents & ZMQ_POLLIN);
-    }
-
-    //receive the message in parameter, return the identity
-    zmq::message_t *ZMQServerImpl::recv(zmq::message_t &msg) {
-      int             rc = 0;
-      boost::int64_t  more;
-      size_t          moresz   = sizeof(more);
-      zmq::message_t *identity = new zmq::message_t();
-
-      // alsdebug << "ZMQ: waiting for a message";
-      poll();
-      boost::mutex::scoped_lock lock(socketMutex);
       {
-        rc = zsocket.recv(identity);
-        assert(rc > 0);
-        zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
-        //first msg we want an identity
-        assert(more);
-        // alsdebug << "ZMQ: identity received";
+      }
 
-        //TODO mettre une condition de sortie
-        while (true)
+      ZMQServerImpl::~ZMQServerImpl () {
+      }
+
+      void ZMQServerImpl::wait () {
+      }
+
+      void ZMQServerImpl::stop () {
+      }
+
+      void ZMQServerImpl::poll() {
+        int             rc = 0;
+        zmq_pollitem_t  items[1];
+
+        items[0].socket  = zsocket;
+        items[0].fd      = 0;
+        items[0].events  = ZMQ_POLLIN;
+        items[0].revents = 0;
+
+        rc = zmq_poll(&items[0], 1, -1);
+        assert(rc > 0);
+        assert(items[0].revents & ZMQ_POLLIN);
+      }
+
+      //receive the message in parameter, return the identity
+      zmq::message_t *ZMQServerImpl::recv(zmq::message_t &msg) {
+        int             rc = 0;
+        boost::int64_t  more;
+        size_t          moresz   = sizeof(more);
+        zmq::message_t *identity = new zmq::message_t();
+
+        // alsdebug << "ZMQ: waiting for a message";
+        poll();
+        boost::mutex::scoped_lock lock(socketMutex);
         {
-          rc = zsocket.recv(&msg);
+          rc = zsocket.recv(identity);
           assert(rc > 0);
           zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
-          if (!more)
+          //first msg we want an identity
+          assert(more);
+          // alsdebug << "ZMQ: identity received";
+
+          //TODO mettre une condition de sortie
+          while (true)
           {
-            // alsdebug << "ZMQ: Receive complete, msg size:" << msg.size();
-            break;
+            rc = zsocket.recv(&msg);
+            assert(rc > 0);
+            zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
+            if (!more)
+            {
+              // alsdebug << "ZMQ: Receive complete, msg size:" << msg.size();
+              break;
+            }
+            // alsdebug << "ZMQ: Receive(need more): " << msg.size();
           }
-          // alsdebug << "ZMQ: Receive(need more): " << msg.size();
         }
+        return identity;
       }
-      return identity;
-    }
 
 
-    //use only the number of thread we need
-     void ZMQServerImpl::run() {
-       // alsdebug << "Start ZMQServer on: " << _serverAddress;
-       zsocket.bind(_serverAddress.c_str());
-
-       #ifdef ZMQ_FULL_ASYNC
-       // alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
-       #else
-       alsdebug << "ZMQ: entering the loop (XREP)";
-       #endif
-       while (true) {
-         zmq::message_t  msg;
-         zmq::message_t *identity;
-         identity = recv(msg);
-         std::string data;
-         data.assign((char *)msg.data(), msg.size());
+      //use only the number of thread we need
+      void ZMQServerImpl::run() {
+        // alsdebug << "Start ZMQServer on: " << _serverAddress;
+        zsocket.bind(_serverAddress.c_str());
 
 #ifdef ZMQ_FULL_ASYNC
-         handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
+        // alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
 #else
-         ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();
+        alsdebug << "ZMQ: entering the loop (XREP)";
 #endif
-       }
-     }
+        while (true) {
+          zmq::message_t  msg;
+          zmq::message_t *identity;
+          identity = recv(msg);
+          std::string data;
+          data.assign((char *)msg.data(), msg.size());
 
-     void ZMQServerImpl::serverResponseHandler(const std::string &result, void *data)
-     {
-       int                rc = 0;
-       zmq::message_t     msg(result.size());
-       zmq::message_t     emptymsg(0);
-       zmq::message_t    *identity = static_cast<zmq::message_t *>(data);
+#ifdef ZMQ_FULL_ASYNC
+          handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
+#else
+          ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();
+#endif
+        }
+      }
 
-       memcpy(msg.data(), result.data(), result.size());
+      void ZMQServerImpl::serverResponseHandler(const std::string &result, void *data)
+      {
+        int                rc = 0;
+        zmq::message_t     msg(result.size());
+        zmq::message_t     emptymsg(0);
+        zmq::message_t    *identity = static_cast<zmq::message_t *>(data);
 
-       assert(identity);
+        memcpy(msg.data(), result.data(), result.size());
 
-       // alsdebug << "ZMQ: send response";
+        assert(identity);
 
-       boost::mutex::scoped_lock lock(socketMutex);
-       {
-         //send identity (and an empty msg for xrep to be happy)
-         rc = zsocket.send(*identity, ZMQ_SNDMORE);
-         assert(rc > 0);
-         //delete identity;
-         rc = zsocket.send(emptymsg, ZMQ_SNDMORE);
-         assert(rc > 0);
+        // alsdebug << "ZMQ: send response";
 
-         //send the message
-         // alsdebug << "ZMQ: response size: " << msg.size();
-         rc = zsocket.send(msg);
-         assert(rc > 0);
-       }
-     }
+        boost::mutex::scoped_lock lock(socketMutex);
+        {
+          //send identity (and an empty msg for xrep to be happy)
+          rc = zsocket.send(*identity, ZMQ_SNDMORE);
+          assert(rc > 0);
+          //delete identity;
+          rc = zsocket.send(emptymsg, ZMQ_SNDMORE);
+          assert(rc > 0);
 
+          //send the message
+          // alsdebug << "ZMQ: response size: " << msg.size();
+          rc = zsocket.send(msg);
+          assert(rc > 0);
+        }
+      }
+
+    }
   }
 }
-

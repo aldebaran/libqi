@@ -63,7 +63,7 @@ namespace qi {
       qi::transport::detail::ServerImpl *fTransportServer;
     };
 
-    typedef _Server<qi::transport::ZMQSimpleServerImpl> ZMQServer;
+    typedef _Server<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;
     typedef ZMQServer Server;
   }
 

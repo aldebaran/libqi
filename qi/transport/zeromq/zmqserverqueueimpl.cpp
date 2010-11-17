@@ -21,74 +21,75 @@
 
 namespace qi {
   namespace transport {
+    namespace detail {
+      static const char *gWorkersAddress      = "inproc://workers";
+      static const int   gWorkersThreadsCount = 10;
 
-    static const char *gWorkersAddress      = "inproc://workers";
-    static const int   gWorkersThreadsCount = 10;
-
-    ZMQServerQueueImpl::ZMQServerQueueImpl (const std::string &server_name)
-      : detail::ServerImpl(server_name),
+      ZMQServerQueueImpl::ZMQServerQueueImpl (const std::string &server_name)
+        : detail::ServerImpl(server_name),
         zctx(1),
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)
-    {
-    }
-
-    ZMQServerQueueImpl::~ZMQServerQueueImpl () {
-    }
-
-    void ZMQServerQueueImpl::wait () {
-    }
-
-    void ZMQServerQueueImpl::stop () {
-    }
-
-    void *worker_routine(void *arg)
-    {
-      int              rc = 0;
-      ZMQServerImpl   *zserv = (ZMQServerImpl *)(arg);
-      zmq::message_t   msg;
-      zmq::socket_t    s(zserv->zctx, ZMQ_REP);
-
-      s.connect(gWorkersAddress);
-      // alsdebug << "ZMQ:entering worker loop";
-      while (true) {
-        rc = s.recv(&msg);
-        assert(rc > 0);
-        std::string data;
-        data.assign((char *)msg.data(), msg.size());
-        ZMQConnectionHandler(data, zserv->getDataHandler(), zserv, &s).run();
+      {
       }
-    }
 
-    void ZMQServerQueueImpl::run() {
-      // alsdebug << "Start ZMQServer on: " << _serverAddress;
-      zsocket.bind(_serverAddress.c_str());
-      zsocketworkers.bind(gWorkersAddress);
+      ZMQServerQueueImpl::~ZMQServerQueueImpl () {
+      }
 
-      // alsdebug << "ZMQ workers binded";
+      void ZMQServerQueueImpl::wait () {
+      }
 
-      pthread_t worker[gWorkersThreadsCount];
-      for (int i = 0; i < gWorkersThreadsCount; ++i)
-        pthread_create(&worker[i], NULL, worker_routine, (void*) this);
-      //sleep(2);
-      // alsdebug << "ZMQ: start queue_device";
-      //zmq::device(ZMQ_QUEUE, workers, zsocket);
-      zmq::device(ZMQ_QUEUE, zsocket, zsocketworkers);
-      std::cout << "quit server" << std::endl;
-    }
+      void ZMQServerQueueImpl::stop () {
+      }
 
-    void ZMQServerQueueImpl::serverResponseHandler(const std::string &result, void *data)
-    {
-      int                rc = 0;
-      zmq::message_t     msg(result.size());
+      void *worker_routine(void *arg)
+      {
+        int              rc = 0;
+        ZMQServerImpl   *zserv = (ZMQServerImpl *)(arg);
+        zmq::message_t   msg;
+        zmq::socket_t    s(zserv->zctx, ZMQ_REP);
 
-      memcpy(msg.data(), result.data(), result.size());
-      zmq::socket_t     *sock = static_cast<zmq::socket_t *>(data);
+        s.connect(gWorkersAddress);
+        // alsdebug << "ZMQ:entering worker loop";
+        while (true) {
+          rc = s.recv(&msg);
+          assert(rc > 0);
+          std::string data;
+          data.assign((char *)msg.data(), msg.size());
+          ZMQConnectionHandler(data, zserv->getDataHandler(), zserv, &s).run();
+        }
+      }
 
-      assert(data);
-      // alsdebug << "ZMQ: send response";
-      rc = sock->send(msg);
-      assert(rc > 0);
+      void ZMQServerQueueImpl::run() {
+        // alsdebug << "Start ZMQServer on: " << _serverAddress;
+        zsocket.bind(_serverAddress.c_str());
+        zsocketworkers.bind(gWorkersAddress);
+
+        // alsdebug << "ZMQ workers binded";
+
+        pthread_t worker[gWorkersThreadsCount];
+        for (int i = 0; i < gWorkersThreadsCount; ++i)
+          pthread_create(&worker[i], NULL, worker_routine, (void*) this);
+        //sleep(2);
+        // alsdebug << "ZMQ: start queue_device";
+        //zmq::device(ZMQ_QUEUE, workers, zsocket);
+        zmq::device(ZMQ_QUEUE, zsocket, zsocketworkers);
+        std::cout << "quit server" << std::endl;
+      }
+
+      void ZMQServerQueueImpl::serverResponseHandler(const std::string &result, void *data)
+      {
+        int                rc = 0;
+        zmq::message_t     msg(result.size());
+
+        memcpy(msg.data(), result.data(), result.size());
+        zmq::socket_t     *sock = static_cast<zmq::socket_t *>(data);
+
+        assert(data);
+        // alsdebug << "ZMQ: send response";
+        rc = sock->send(msg);
+        assert(rc > 0);
+      }
     }
   }
 }
