@@ -12,15 +12,25 @@
 #ifndef QI_NODES_CLIENT_NODE_HXX_
 #define QI_NODES_CLIENT_NODE_HXX_
 
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/serializer.hpp>
 
 namespace qi {
 
+  void ClientNode::callVoid(const std::string& methodName) {
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
+
+    void (*f)()  = 0;
+    std::string hash = makeSignature(methodName, f);
+
+    calldef.write<std::string>(hash);
+    xCall(hash, calldef, resultdef);
+  }
 
   template <typename R>
   R ClientNode::call(const std::string& methodName) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)()  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -35,8 +45,8 @@ namespace qi {
 
   template <typename P0>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -48,8 +58,8 @@ namespace qi {
 
   template <typename R, typename P0>
   R ClientNode::call(const std::string& methodName, const P0 &p0) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -65,8 +75,8 @@ namespace qi {
 
   template <typename P0, typename P1>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -79,8 +89,8 @@ namespace qi {
 
   template <typename R, typename P0, typename P1>
   R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -97,8 +107,8 @@ namespace qi {
 
   template <typename P0, typename P1, typename P2>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -112,8 +122,8 @@ namespace qi {
 
   template <typename R, typename P0, typename P1, typename P2>
   R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -131,8 +141,8 @@ namespace qi {
 
   template <typename P0, typename P1, typename P2, typename P3>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -147,8 +157,8 @@ namespace qi {
 
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -167,8 +177,8 @@ namespace qi {
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -184,8 +194,8 @@ namespace qi {
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -205,8 +215,8 @@ namespace qi {
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -223,8 +233,8 @@ namespace qi {
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string hash = makeSignature(methodName, f);

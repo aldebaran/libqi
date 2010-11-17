@@ -21,14 +21,12 @@ def generate_argpush_list(count):
 #include <string>
 #include <memory>
 #include <qi/signature.hpp>
+#include <qi/serialization/serializer.hpp>
+#include <qi/transport/client.hpp>
 
 namespace qi {
   namespace detail {
     class ClientNodeImp;
-  }
-
-  namespace serialization {
-    class SerializedData;
   }
 
   /// <summary>
@@ -59,13 +57,12 @@ namespace qi {
     /// The address of the master that is used to find services
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    ClientNode(const std::string& clientName,
-      const std::string& masterAddress);
+    ClientNode(const std::string& clientName, const std::string& masterAddress);
 
     virtual ~ClientNode();
 #end raw
-#for $i in $count
 
+#for $i in $count
     #if $i != 0
     template <${generate_typename_list($i)}>
     #end if
@@ -73,10 +70,10 @@ namespace qi {
 
     template <typename RETURN_TYPE${generate_typename_list($i, begin=True)}>
     RETURN_TYPE call(const std::string& methodName${generate_param_list($i, begin=True)});
-#end for
 
+#end for
   private:
-    void xCall(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
+    void xCall(const std::string &signature, const qi::serialization::BinarySerializer &callDef, qi::serialization::BinarySerializer &result);
     std::auto_ptr<detail::ClientNodeImp> fImp;
   };
 

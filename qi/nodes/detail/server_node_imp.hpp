@@ -11,17 +11,17 @@
 #include <string>
 
 // used to talk to master
-#include <qi/messaging/client.hpp>
-#include <qi/messaging/i_message_handler.hpp>
-#include <qi/messaging/server.hpp>
+#include <qi/transport/i_message_handler.hpp>
+#include <qi/transport/server.hpp>
+#include <qi/transport/client.hpp>
+
 #include <qi/nodes/serviceinfo.hpp>
 #include <qi/nodes/detail/mutexednamelookup.hpp>
 
 namespace qi {
   namespace detail {
 
-    class ServerNodeImp :
-      qi::messaging::IMessageHandler {
+    class ServerNodeImp : public qi::transport::IMessageHandler {
     public:
       ServerNodeImp();
       virtual ~ServerNodeImp();
@@ -50,10 +50,10 @@ namespace qi {
       std::string fAddress;
 
       /// <summary> The underlying messaging server </summary>
-      qi::messaging::Server fMessagingServer;
+      qi::transport::Server fMessagingServer;
 
       /// <summary> The messaging client used to talk with the master </summary>
-      qi::messaging::Client fMessagingClient;
+      qi::transport:: Client fMessagingClient;
 
       /// <summary> true if this server belongs to the master </summary>
       bool fIsMasterServer;

@@ -5,17 +5,17 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <qi/log.hpp>
 #include <qi/nodes/detail/server_node_imp.hpp>
 #include <string>
 #include <qi/nodes/detail/get_protocol.hpp>
-#include <qi/messaging/server.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <qi/log.hpp>
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/serializer.hpp>
+#include <qi/transport/buffer.hpp>
+
 
 namespace qi {
-  using namespace messaging;
   using qi::serialization::SerializedData;
 
   namespace detail {
@@ -52,7 +52,7 @@ namespace qi {
 
       fMessagingServer.serve("tcp://" + serverAddress);
       fMessagingServer.setMessageHandler(this);
-      boost::thread serverThread(boost::bind(&Server::run, fMessagingServer));
+      boost::thread serverThread(boost::bind(&qi::transport::Server::run, fMessagingServer));
     }
 
     void ServerNodeImp::messageHandler(const std::string& defData, std::string& resultData) {
@@ -94,35 +94,35 @@ namespace qi {
 
     void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodSignature) {
       static const std::string method("master.registerService::v:ss");
-      std::string              ret;
-      SerializedData           callDef;
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer callDef;
 
       callDef.write<std::string>(method);
       callDef.write<std::string>(fName);
       callDef.write<std::string>(methodSignature);
-      fMessagingClient.call(callDef.str(), ret);
+      fMessagingClient.send(callDef.str(), ret);
     }
 
     void ServerNodeImp::xRegisterSelfWithMaster() {
       static const std::string method("master.registerServerNode::v:ss");
-      std::string              ret;
-      SerializedData           callDef;
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer callDef;
 
       callDef.write<std::string>(method);
       callDef.write<std::string>(fName);
       callDef.write<std::string>(fAddress);
-      fMessagingClient.call(callDef.str(), ret);
+      fMessagingClient.send(callDef.str(), ret);
     }
 
     void ServerNodeImp::xUnregisterSelfWithMaster() {
       static const std::string method("master.unregisterServerNode::v:ss");
-      std::string              ret;
-      SerializedData           callDef;
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer callDef;
 
       callDef.write<std::string>(method);
       callDef.write<std::string>(fName);
       callDef.write<std::string>(fAddress);
-      fMessagingClient.call(callDef.str(), ret);
+      fMessagingClient.send(callDef.str(), ret);
     }
   }
 }

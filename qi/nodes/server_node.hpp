@@ -33,8 +33,8 @@ namespace qi {
     /// <param name="nodeAddress"> The node address. </param>
     /// <param name="masterAddress"> The master address. </param>
     ServerNode(const std::string& nodeName,
-      const std::string& nodeAddress,
-      const std::string& masterAddress);
+               const std::string& nodeAddress,
+               const std::string& masterAddress);
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void addService(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method) {

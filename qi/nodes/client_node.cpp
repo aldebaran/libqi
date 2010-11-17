@@ -8,10 +8,9 @@
 #include <qi/nodes/client_node.hpp>
 #include <string>
 #include <qi/nodes/detail/client_node_imp.hpp>
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/serializer.hpp>
 
 namespace qi {
-  using serialization::SerializedData;
 
   /// <summary>
   /// Used to call services that have been added to a server. If the service
@@ -29,23 +28,24 @@ namespace qi {
   /// </summary>
   /// <param name="clientName"> Name of the client. </param>
   /// <param name="masterAddress"> The master address. </param>
-  ClientNode::ClientNode(
-    const std::string& clientName,
-    const std::string& masterAddress) :
-  fImp(new detail::ClientNodeImp(clientName, masterAddress)) {}
+  ClientNode::ClientNode(const std::string& clientName,
+                         const std::string& masterAddress)
+    : fImp(new detail::ClientNodeImp(clientName, masterAddress))
+  {}
 
-  /// <summary> A void method call </summary>
-  /// <param name="methodName"> Name of the method. </param>
-  void ClientNode::callVoid(const std::string& methodName) {
-    SerializedData result;
-    SerializedData params;
+//  /// <summary> A void method call </summary>
+//  /// <param name="methodName"> Name of the method. </param>
+//  void ClientNode::callVoid(const std::string& methodName) {
+//    Serializer result;
+//    Serializer params;
 
-    void (*f)()  = 0;
-    std::string hash = makeSignature(methodName, f);
-    params.write<std::string>(hash);
-    xCall(hash, params, result);
-  }
-  void ClientNode::xCall(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
+//    void (*f)()  = 0;
+//    std::string hash = makeSignature(methodName, f);
+//    params.write<std::string>(hash);
+//    xCall(hash, params, result);
+//  }
+
+  void ClientNode::xCall(const std::string &signature, const qi::serialization::BinarySerializer& callDef, qi::serialization::BinarySerializer &result) {
     return fImp->call(signature, callDef, result);
   }
 }

@@ -15,14 +15,12 @@
 #include <string>
 #include <memory>
 #include <qi/signature.hpp>
+#include <qi/serialization/serializer.hpp>
+#include <qi/transport/client.hpp>
 
 namespace qi {
   namespace detail {
     class ClientNodeImp;
-  }
-
-  namespace serialization {
-    class SerializedData;
   }
 
   /// <summary>
@@ -53,8 +51,7 @@ namespace qi {
     /// The address of the master that is used to find services
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    ClientNode(const std::string& clientName,
-      const std::string& masterAddress);
+    ClientNode(const std::string& clientName, const std::string& masterAddress);
 
     virtual ~ClientNode();
 
@@ -100,7 +97,7 @@ namespace qi {
     RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
 
   private:
-    void xCall(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
+    void xCall(const std::string &signature, const qi::serialization::BinarySerializer &callDef, qi::serialization::BinarySerializer &result);
     std::auto_ptr<detail::ClientNodeImp> fImp;
   };
 

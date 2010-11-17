@@ -5,16 +5,14 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <qi/log.hpp>
 #include <qi/nodes/detail/client_node_imp.hpp>
 #include <string>
 #include <qi/nodes/detail/get_protocol.hpp>
-#include <qi/messaging/client.hpp>
-#include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
 
 namespace qi {
-  using namespace messaging;
   using serialization::SerializedData;
 
   namespace detail {
@@ -53,15 +51,15 @@ namespace qi {
         // will throw if service not found
         const std::string& nodeAddress = xLocateService(signature);
         // will throw if unable to find or create client
-        boost::shared_ptr<Client> client = xGetServerClient(nodeAddress);
+        boost::shared_ptr<qi::transport::Client> client = xGetServerClient(nodeAddress);
         std::string resultData;
-        client->call(callDef.str(), resultData);
+        client->send(callDef.str(), resultData);
         result.str(resultData);
     }
 
-    boost::shared_ptr<Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
+    boost::shared_ptr<qi::transport::Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
-      NameLookup<boost::shared_ptr<Client> >::iterator it;
+      NameLookup<boost::shared_ptr<qi::transport::Client> >::iterator it;
       it = fServerClients.find(serverAddress);
       if (it == fServerClients.end()) {
         // create messaging client if needed ...
@@ -83,8 +81,7 @@ namespace qi {
       // we don't yet know our current IP address, so we fake
       std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
 
-      boost::shared_ptr<Client> client =
-        boost::shared_ptr<Client>(new qi::messaging::Client());
+      boost::shared_ptr<qi::transport::Client> client = boost::shared_ptr<qi::transport::Client>(new qi::transport::Client());
       bool ok = client->connect(serverFullAddress);
       if (ok) {
         fServerClients.insert(make_pair(serverAddress, client));

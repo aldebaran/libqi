@@ -9,10 +9,11 @@
 #define COMMON_CLIENT_NODE_IMP_HPP_
 
 #include <string>
+#include <boost/shared_ptr.hpp>
 #include <qi/nodes/detail/mutexednamelookup.hpp>
 #include <qi/nodes/detail/namelookup.hpp>
-#include <qi/messaging/client.hpp>
 #include <qi/serialization/serializeddata.hpp>
+#include <qi/transport/client.hpp>
 
 namespace qi {
   namespace detail {
@@ -20,11 +21,9 @@ namespace qi {
     class ClientNodeImp {
     public:
       ClientNodeImp();
-
       virtual ~ClientNodeImp();
 
-      ClientNodeImp(const std::string& clientName,
-        const std::string& masterAddress);
+      ClientNodeImp(const std::string& clientName, const std::string& masterAddress);
 
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
 
@@ -37,14 +36,14 @@ namespace qi {
       MutexedNameLookup<std::string> fServiceCache;
 
       // map from address to Client
-      NameLookup<boost::shared_ptr<qi::messaging::Client> > fServerClients;
+      NameLookup< boost::shared_ptr<qi::transport::Client> > fServerClients;
 
       void xInit();
-      boost::shared_ptr<qi::messaging::Client> xGetServerClient(const std::string& serverAddress);
+      boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
-
     };
+
   }
 }
 

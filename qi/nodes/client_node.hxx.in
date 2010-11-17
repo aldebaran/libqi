@@ -18,17 +18,18 @@ def generate_argpush_list(count):
 #ifndef QI_NODES_CLIENT_NODE_HXX_
 #define QI_NODES_CLIENT_NODE_HXX_
 
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/serializer.hpp>
 
 namespace qi {
 #end raw
 #for $i in $count
 
-  #if $i != 0
+#if $i != 0
   template <${generate_typename_list($i)}>
+#end if
   void ClientNode::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     void (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -39,12 +40,11 @@ namespace qi {
     #end for
     xCall(hash, calldef, resultdef);
   }
-  #end if
 
   template <typename R${generate_typename_list($i, begin=True)}>
   R ClientNode::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::SerializedData calldef;
-    qi::serialization::SerializedData resultdef;
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
