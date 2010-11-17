@@ -11,6 +11,7 @@
 #include <qi/nodes/master_node.hpp>
 #include <qi/nodes/server_node.hpp>
 #include <qi/nodes/client_node.hpp>
+#include <qi/nodes/node.hpp>
 
 #endif  // QI_NODES_HPP_
 
