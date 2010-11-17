@@ -1,0 +1,30 @@
+
+
+=== Client ===
+qi::node::NodeClient
+  call<R>(P0 p0, ..., PN pn)
+    SerializedData data;
+    data.write(p0);
+    ...
+    data.write(pn);
+    qi::messaging::GenericClient::call(const T &def, R& result)
+
+qi::messaging::GenericClient::call(const T &def, R& result)
+    Client.call(string, string)
+
+=== Server ===
+qi::transport::Server
+  dataHandler(std::string, std::string)
+  -> messaging::GenericServer::dataHandler()
+
+qi::messaging::GenericServer
+  dataHandler(std::string, std::string)
+  deserialise()
+  -> node::GenericServer::dataHandler(const CallDefinition& def, ResultDefinition& result)
+  serialize
+
+qi::node::ServerNode
+  ServerNode::messageHandler(const CallDefinition& def, ResultDefinition& result)
+    f = getFunctor(def->method)
+    f->call()
+
