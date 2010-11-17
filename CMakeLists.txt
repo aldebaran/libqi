@@ -18,6 +18,7 @@ enable_testing()
 
 create_config_h("config.hpp.in" "qi/config.hpp")
 
+file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
 file(GLOB NODES_SRC                qi/nodes/*.cpp qi/nodes/*.h*)
 file(GLOB NODES_DETAIL_SRC         qi/nodes/detail/*.cpp qi/nodes/detail/*.h*)
 file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
@@ -57,6 +58,7 @@ source_group( log                    FILES ${LOGS_SRC})
 file(GLOB HEADERS qi/*.h*)
 
 set(SRC
+    ${CORE_SRC}
     ${NODES_SRC}
     ${NODES_DETAIL_SRC}
     ${MESSAGING_SRC}
