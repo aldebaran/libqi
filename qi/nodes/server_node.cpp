@@ -17,10 +17,9 @@ namespace qi {
   /// <param name="serverName"> Name of the server. </param>
   /// <param name="serverAddress"> The server address. </param>
   /// <param name="masterAddress"> The master address. </param>
-  ServerNode::ServerNode(
-    const std::string& serverName,
-    const std::string& serverAddress,
-    const std::string& masterAddress) :
+  ServerNode::ServerNode(const std::string& serverName,
+                         const std::string& serverAddress,
+                         const std::string& masterAddress) :
   fImp(new detail::ServerNodeImp(serverName, serverAddress, masterAddress)) {
   }
 

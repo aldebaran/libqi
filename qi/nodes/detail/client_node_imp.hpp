@@ -9,11 +9,10 @@
 #define COMMON_CLIENT_NODE_IMP_HPP_
 
 #include <string>
-#include <qi/messaging/client.hpp>
 #include <qi/nodes/detail/mutexednamelookup.hpp>
 #include <qi/nodes/detail/namelookup.hpp>
-#include <qi/messaging/call_definition.hpp>
-#include <qi/messaging/result_definition.hpp>
+#include <qi/messaging/client.hpp>
+#include <qi/serialization/serializeddata.hpp>
 
 namespace qi {
   namespace detail {
@@ -27,9 +26,7 @@ namespace qi {
       ClientNodeImp(const std::string& clientName,
         const std::string& masterAddress);
 
-      void call(
-        const qi::messaging::CallDefinition& callDef,
-        qi::messaging::ResultDefinition &result);
+      void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
 
       bool initOK;
 

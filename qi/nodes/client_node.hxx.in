@@ -18,6 +18,8 @@ def generate_argpush_list(count):
 #ifndef QI_NODES_CLIENT_NODE_HXX_
 #define QI_NODES_CLIENT_NODE_HXX_
 
+#include <qi/serialization/serializeddata.hpp>
+
 namespace qi {
 #end raw
 #for $i in $count
@@ -31,13 +33,11 @@ namespace qi {
     void (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    R (*f)(${generate_param_list($i)})  = 0;
-    std::string hash = makeSignature(methodName, f);
-    calldef->write<std::string>(hash);
+    calldef.write<std::string>(hash);
     #for $j in range($i)
-    calldef->write<P${j}>(p${j})
+    calldef.write<P${j}>(p${j});
     #end for
-    xCall(calldef, resultdef);
+    xCall(hash, calldef, resultdef);
   }
   #end if
 
@@ -48,15 +48,15 @@ namespace qi {
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef->write<std::string>(hash);
+    calldef.write<std::string>(hash);
     #for $j in range($i)
-    calldef->write<P${j}>(p${j})
+    calldef.write<P${j}>(p${j});
     #end for
-    xCall(calldef, resultdef);
+    xCall(hash, calldef, resultdef);
 
     //TODO: optimise
     R ret;
-    resultdef->read<R>(ret);
+    resultdef.read<R>(ret);
     return ret;
   }
 #end for

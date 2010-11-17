@@ -12,8 +12,11 @@
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
+
 namespace qi {
   using namespace messaging;
+  using serialization::SerializedData;
+
   namespace detail {
 
     ClientNodeImp::ClientNodeImp() : initOK(false) {}
@@ -41,19 +44,19 @@ namespace qi {
       }
     }
 
-    void ClientNodeImp::call(
-      const CallDefinition& callDef,  qi::messaging::ResultDefinition &result) {
+    void ClientNodeImp::call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
         if (! initOK) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
         }
 
         // will throw if service not found
-        const std::string& nodeAddress = xLocateService(callDef.methodName());
+        const std::string& nodeAddress = xLocateService(signature);
         // will throw if unable to find or create client
         boost::shared_ptr<Client> client = xGetServerClient(nodeAddress);
-
-        client->call(callDef, result);
+        std::string resultData;
+        client->call(callDef.str(), resultData);
+        result.str(resultData);
     }
 
     boost::shared_ptr<Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
@@ -91,18 +94,19 @@ namespace qi {
       return ok;
     }
 
-    const std::string& ClientNodeImp::xLocateService(
-      const std::string& methodSignature) {
+    const std::string& ClientNodeImp::xLocateService(const std::string& methodSignature) {
         const std::string& nodeAddress = fServiceCache.get(methodSignature);
         if (!nodeAddress.empty()) {
           return nodeAddress;
         }
 
-        ResultDefinition r;
+        SerializedData r;
+        SerializedData callDef;
+        callDef.write<std::string>(methodSignature);
         std::string tmpAddress;
         try {
-          call(CallDefinition("master.locateService::s:s", methodSignature), r);
-          tmpAddress = r.value().as<std::string>();
+          call("master.locateService::s:s", callDef, r);
+          r.read<std::string>(tmpAddress);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Unable to contact master." << std::endl;

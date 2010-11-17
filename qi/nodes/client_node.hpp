@@ -14,13 +14,15 @@
 
 #include <string>
 #include <memory>
-#include <qi/messaging/call_definition.hpp>
-#include <qi/messaging/result_definition.hpp>
 #include <qi/signature.hpp>
 
 namespace qi {
   namespace detail {
     class ClientNodeImp;
+  }
+
+  namespace serialization {
+    class SerializedData;
   }
 
   /// <summary>
@@ -98,7 +100,7 @@ namespace qi {
     RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
 
   private:
-    void xCall(const qi::messaging::CallDefinition& callDef, qi::messaging::ResultDefinition &result);
+    void xCall(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
     std::auto_ptr<detail::ClientNodeImp> fImp;
   };
 

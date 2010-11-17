@@ -12,9 +12,12 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
+#include <qi/serialization/serializeddata.hpp>
 
 namespace qi {
   using namespace messaging;
+  using qi::serialization::SerializedData;
+
   namespace detail {
 
     ServerNodeImp::ServerNodeImp() : initOK(false) {}
@@ -52,14 +55,18 @@ namespace qi {
       boost::thread serverThread(boost::bind(&Server::run, fMessagingServer));
     }
 
-    void ServerNodeImp::messageHandler(const CallDefinition& def, ResultDefinition& result) {
+    void ServerNodeImp::messageHandler(const std::string& defData, std::string& resultData) {
       // handle message
-      std::string methodSignature = def.methodName();
+      SerializedData def(defData);
+      SerializedData result(resultData);
+      std::string methodSignature;
+      def.read<std::string>(methodSignature);
+
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
         qisError << "  Error: Method not found " << methodSignature << std::endl;
       }
-      si.functor->call(def.args(), result.value());
+      si.functor->call(def, result);
     }
 
     const std::string& ServerNodeImp::getName() const {
@@ -86,18 +93,36 @@ namespace qi {
     }
 
     void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodSignature) {
-      ResultDefinition r;
-      fMessagingClient.call(CallDefinition("master.registerService::v:ss", fAddress, methodSignature), r);
+      static const std::string method("master.registerService::v:ss");
+      std::string              ret;
+      SerializedData           callDef;
+
+      callDef.write<std::string>(method);
+      callDef.write<std::string>(fName);
+      callDef.write<std::string>(methodSignature);
+      fMessagingClient.call(callDef.str(), ret);
     }
 
     void ServerNodeImp::xRegisterSelfWithMaster() {
-      ResultDefinition r;
-      fMessagingClient.call(CallDefinition("master.registerServerNode::v:ss", fName, fAddress), r);
+      static const std::string method("master.registerServerNode::v:ss");
+      std::string              ret;
+      SerializedData           callDef;
+
+      callDef.write<std::string>(method);
+      callDef.write<std::string>(fName);
+      callDef.write<std::string>(fAddress);
+      fMessagingClient.call(callDef.str(), ret);
     }
 
     void ServerNodeImp::xUnregisterSelfWithMaster() {
-      ResultDefinition r;
-      fMessagingClient.call(CallDefinition("master.unregisterServerNode::v:ss", fName, fAddress), r);
+      static const std::string method("master.unregisterServerNode::v:ss");
+      std::string              ret;
+      SerializedData           callDef;
+
+      callDef.write<std::string>(method);
+      callDef.write<std::string>(fName);
+      callDef.write<std::string>(fAddress);
+      fMessagingClient.call(callDef.str(), ret);
     }
   }
 }
