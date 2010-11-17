@@ -6,8 +6,8 @@
 *      Mail  : jdelay@aldebaran-robotics.com
 */
 
-#ifndef QI_TRANSPORT_HANDLERS_POOL_HPP_
-#define QI_TRANSPORT_HANDLERS_POOL_HPP_
+#ifndef QI_CORE_HANDLERS_POOL_HPP_
+#define QI_CORE_HANDLERS_POOL_HPP_
 
 #include <boost/threadpool.hpp>
 
@@ -42,4 +42,4 @@ namespace qi {
   };
 
 }
-#endif  // QI_TRANSPORT_HANDLERS_POOL_HPP_
+#endif  // QI_CORE_HANDLERS_POOL_HPP_
