@@ -38,8 +38,9 @@ namespace qi {
           qisError << "Attempt to use an unitialized publisher." << std::endl;
           return;
         }
-        std::string tosend = qi::serialization::Serializer::serialize(val);
-        _publisher->publish(tosend);
+        qi::serialization::BinarySerializer ser;
+        ser.write<T>(val);
+        _publisher->publish(ser.str());
       }
 
       bool initOK;

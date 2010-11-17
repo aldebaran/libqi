@@ -43,7 +43,8 @@ namespace qi {
       // called by transport when new data arrives
       void subscribeHandler(const std::string& data) {
         T ret;
-        qi::serialization::Serializer::deserialize(data, ret);
+        qi::serialization::BinarySerializer unser(data);
+        unser.read<T>(ret);
         // call the registered typed-handler
         _handler(ret);
       }
