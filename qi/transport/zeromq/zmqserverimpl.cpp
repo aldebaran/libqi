@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/zeromq/zmqserver.hpp>
+#include <qi/transport/zeromq/zmqserverimpl.hpp>
 #include <qi/transport/zeromq/zmq_connection_handler.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 

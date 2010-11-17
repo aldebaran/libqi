@@ -13,7 +13,7 @@
 #include <qi/transport/detail/serverimpl.hpp>
 #include <qi/transport/common/handlers_pool.hpp>
 #include <qi/transport/common/i_server_response_handler.hpp>
-#include <qi/transport/zeromq/zmqserver.hpp>
+#include <qi/transport/zeromq/zmqserverimpl.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 
