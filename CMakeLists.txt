@@ -18,7 +18,6 @@ create_config_h("config.hpp.in" "qi/config.hpp")
 
 file(GLOB NODES_SRC                qi/nodes/*.cpp qi/nodes/*.h*)
 file(GLOB NODES_DETAIL_SRC         qi/nodes/detail/*.cpp qi/nodes/detail/*.h*)
-file(GLOB COLLECTIONS_SRC          qi/collections/*.cpp qi/collections/*.h*)
 file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
@@ -44,7 +43,6 @@ file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
 source_group( nodes                  FILES ${NODES_SRC})
 source_group( nodes\\detail          FILES ${NODES_DETAIL_SRC})
 source_group( messaging              FILES ${MESSAGING_SRC})
-source_group( collections            FILES ${COLLECTIONS_SRC})
 source_group( functors               FILES ${FUNCTORS_SRC})
 source_group( functors\\detail       FILES ${FUNCTORS_DETAIL_SRC})
 source_group( serialization          FILES ${SERIALIZATION_SRC})
@@ -64,7 +62,6 @@ set(SRC
     ${NODES_SRC}
     ${NODES_DETAIL_SRC}
     ${MESSAGING_SRC}
-    ${COLLECTIONS_SRC}
     ${SERIALIZATION_SRC}
     ${SERIALIZATION_BOOST_SRC}
     ${EXCEPTIONS_SRC}
@@ -117,7 +114,6 @@ if (WITH_THRIFT)
   use_lib(qi THRIFT)
 endif()
 
-add_subdirectory(qi/collections)
 add_subdirectory(qi/exceptions)
 add_subdirectory(qi/serialization)
 add_subdirectory(qi/transport)
