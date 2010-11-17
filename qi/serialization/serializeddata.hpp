@@ -61,6 +61,8 @@ namespace qi {
       // void serialize(const std::list<U> &t);
     };
 
+    typedef SerializedData BinarySerializer;
+
   }
 }
 
