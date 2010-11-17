@@ -17,7 +17,6 @@ def generate_argpush_list(count):
 #ifndef  QI_MESSAGING_CALL_FUNCTOR_HPP_
 # define QI_MESSAGING_CALL_FUNCTOR_HPP_
 
-#include <qi/collections/variables_list.hpp>
 #include <qi/functors/functor.hpp>
 #end raw
 
@@ -27,26 +26,28 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::messaging::ArgumentList  args;
-    qi::messaging::VariableValue ret;
+    qi::serialization::SerializedData args;
+    qi::serialization::SerializedData ret;
 
-    #if $i != 0
-    $generate_argpush_list($i)
-    #end if
+    #for $j in range($i)
+    args.write<P$j>(p$j);
+    #end for
     f->call(args, ret);
-    return ret.as<R>();
+    R r;
+    ret.read<R>(r);
+    return r;
   }
 
   #if $i != 0
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::messaging::ArgumentList  args;
-    qi::messaging::VariableValue ret;
+    qi::serialization::SerializedData args;
+    qi::serialization::SerializedData ret;
 
-    #if $i != 0
-    $generate_argpush_list($i)
-    #end if
+    #for $j in range($i)
+    args.write<P$j>(p$j);
+    #end for
     f->call(args, ret);
   }
 
