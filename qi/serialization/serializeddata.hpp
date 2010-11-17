@@ -21,7 +21,7 @@ namespace qi {
       SerializedData(const std::string &data) : fData(data) {}
 
       template<typename T>
-      void read(T& t)const
+      void read(T& t)
       {
         std::string sig = qi::signature<T>::value();
 
@@ -35,6 +35,12 @@ namespace qi {
         std::cout << "write(" << fData << "):" << sig << std::endl;
       }
 
+//      void read(std::string& s);
+//      void write(const std::string& t);
+
+//      void read(int& s);
+//      void write(const int& t);
+
       std::string str()const {
         return fData;
       }
@@ -45,27 +51,16 @@ namespace qi {
 
     protected:
       std::string fData;
-      //POD Types
-      // void serialize(const int &t);
-      // void serialize(const float &t);
-      // void serialize(const double &t);
-      // void serialize(const bool &t);
-
-      // //STLs
-      // void serialize(const std::string &t);
-
-      // template <typename U>
-      // void serialize(const std::vector<U> &t);
-
-      // template <typename U>
-      // void serialize(const std::list<U> &t);
     };
+
+
+
 
     typedef SerializedData BinarySerializer;
 
   }
 }
 
-//#include <qi/serialization/thrift/serialize.hxx>
+#include <qi/serialization/serializeddata.hxx>
 
 #endif      /* !AL_SERIALIZATION_THRIFT_HPP_ */
