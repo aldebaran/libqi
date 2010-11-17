@@ -23,7 +23,6 @@
 
 #include <qi/perf/sleep.hpp>
 
-//#define TEST_TRANSPORT_SHM
 //#define TEST_TRANSPORT_ZMQ_SINGLE
 //#define TEST_TRANSPORT_ZMQ_QUEUE
 //#define TEST_TRANSPORT_ZMQ_POLL
@@ -38,7 +37,7 @@
 //#define TEST_TRANSPORT_INPROC
 #endif
 
-#if not (defined(TEST_TRANSPORT_ZMQ_SINGLE) || defined(TEST_TRANSPORT_ZMQ_QUEUE) || defined(TEST_TRANSPORT_ZMQ_POLL) || defined(TEST_TRANSPORT_SHM))
+#if not (defined(TEST_TRANSPORT_ZMQ_SINGLE) || defined(TEST_TRANSPORT_ZMQ_QUEUE) || defined(TEST_TRANSPORT_ZMQ_POLL))
 # error "please define a transport"
 #endif
 
@@ -86,9 +85,6 @@ protected:
 
 
 //static const std::string gServerAddress = "tagada";
-#ifdef TEST_TRANSPORT_SHM
-static const std::string gServerAddress = "shmplace";
-#endif
 #ifdef TEST_TRANSPORT_TCP
 static const std::string gServerAddress = "tcp://127.0.0.1:5555";
 #endif
@@ -150,25 +146,12 @@ int main_client(qi::transport::Client *client)
   return 0;
 }
 
-#ifdef TEST_TRANSPORT_SHM
-//global result server: used by all client to receive result
-//WARNING name must be unique to each process (generate a uuid?)
-qi::transport::ShmServer *gResultServer = new qi::transport::ShmServer("clientserv");
-#endif
 
 qi::transport::Client *makeClient(int i = 0)
 {
   qi::transport::Client *client = 0;
 //TODO: generate client address
 
-#ifdef TEST_TRANSPORT_SHM
-//  std::stringstream ss;
-
-//  ss << gClientAddress << i;
-//  std::string clientAddress = ss.str();
-//  return new qi::transport::ShmClient(clientAddress, gResultServer->getResultHandler());
-  return new qi::transport::ShmClient(gClientAddress, gResultServer->getResultHandler());
-#endif
 #ifdef TEST_TRANSPORT_ZMQ
   return new qi::transport::ZMQClient(gClientAddress);
 #endif
@@ -186,9 +169,6 @@ qi::transport::Server *makeServer(int i = 0)
 #ifdef TEST_TRANSPORT_ZMQ_POLL
   return new qi::transport::ZMQServer(gServerAddress);
 #endif
-#ifdef TEST_TRANSPORT_SHM
-  return new qi::transport::ShmServer(gClientAddress);
-#endif
   return 0;
 
 }
@@ -198,12 +178,6 @@ void start_client(int count)
     boost::thread thd[100];
 
     assert(count < 100);
-
-    #ifdef TEST_TRANSPORT_SHM
-    //start a result server
-    boost::thread threadClientServer(boost::bind(&qi::transport::ShmServer::run, gResultServer));
-    sleep(1);
-    #endif
 
     for (int i = 0; i < count; ++i)
     {

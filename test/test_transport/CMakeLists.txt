@@ -25,8 +25,3 @@ if (WITH_ZMQ)
   tc_add_target_definition(test_transport_zmqqueue_bin  "TEST_TRANSPORT_ZMQ_QUEUE")
   tc_add_target_definition(test_transport_zmqpoll_bin   "TEST_TRANSPORT_ZMQ_POLL")
 endif()
-
-if (WITH_SHM)
-  create_gtest(test_transport_shm       SRC test_transport.cpp DEPENDENCIES GTEST QI)
-  tc_add_target_definition(test_transport_shm_bin       "TEST_TRANSPORT_SHM")
-endif()

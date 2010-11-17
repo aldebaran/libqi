@@ -14,10 +14,6 @@
 #include <qi/config.hpp>
 #include <qi/transport/common/common.hpp>
 
-#ifdef WITH_SHM
-# include <qi/transport/shm/shm.hpp>
-#endif
-
 #ifdef WITH_ZMQ
 # include <qi/transport/zeromq/zeromq.hpp>
 #endif

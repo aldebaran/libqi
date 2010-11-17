@@ -31,10 +31,6 @@ file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
 
 file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
 file(GLOB TRANSPORT_COMMON_SRC            qi/transport/common/*.cpp qi/transport/common/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_UTIL_SRC   qi/transport/shm/util/*.cpp qi/transport/shm/util/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_CLIENT_SRC qi/transport/shm/client/*.cpp qi/transport/shm/client/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_MEMORY_SRC qi/transport/shm/memory/*.cpp qi/transport/shm/memory/*.h*)
-file(GLOB TRANSPORT_COMMON_SHM_SERVER_SRC qi/transport/shm/server/*.cpp qi/transport/shm/server/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/zeromq/*.cpp qi/transport/zeromq/*.h*)
 file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/thrift/*.cpp qi/transport/thrift/*.h*)
 file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
@@ -82,19 +78,6 @@ if(WITH_ZMQ)
   source_group( transport\\zeromq      FILES ${TRANSPORT_ZMQ_SRC})
 endif()
 
-if(WITH_SHM)
-  set(SRC ${SRC} ${TRANSPORT_COMMON_SHM_UTIL_SRC}
-                 ${TRANSPORT_COMMON_SHM_CLIENT_SRC}
-                 ${TRANSPORT_COMMON_SHM_MEMORY_SRC}
-                 ${TRANSPORT_COMMON_SHM_SERVER_SRC})
-
-  source_group( transport\\shm\\util   FILES ${TRANSPORT_COMMON_SHM_UTIL_SRC})
-  source_group( transport\\shm\\client FILES ${TRANSPORT_COMMON_SHM_CLIENT_SRC})
-  source_group( transport\\shm\\memory FILES ${TRANSPORT_COMMON_SHM_MEMORY_SRC})
-  source_group( transport\\shm\\server FILES ${TRANSPORT_COMMON_SHM_SERVER_SRC})
-endif()
-
-
 if (WITH_THRIFT)
   set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC} ${TRANSPORT_THRIFT_SRC})
 endif()
@@ -108,9 +91,6 @@ endif (UNIX)
 create_lib(qi "${SRC}" "${HEADERS}")
 use_lib (qi REQUIRED ALL BOOST)
 use_lib (qi BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD ZEROMQ PTHREAD)
-if (WITH_SHM)
-use_lib(qi ALVALUE SHMPOOL LIBCORE)
-endif()
 
 if (WITH_THRIFT)
   use_lib(qi THRIFT)
