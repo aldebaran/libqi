@@ -7,6 +7,7 @@
 
 #include <qi/transport/zeromq/zmqsubscriber.hpp>
 #include <qi/perf/sleep.hpp>
+//#include <boost/uuid.hpp>
 
 namespace qi {
   namespace transport {
@@ -57,12 +58,17 @@ namespace qi {
       memcpy(msg.data(), "!KILL!", 7);
       //  Send kill signal to receive socket
       _control.send(msg);
-      sleep(1);
+      // if the socket tries to close before being killed,
+      // we will deadlock
+      sleep(0.2);
     }
 
     /// <summary> Connects to the publisher </summary>
     void ZMQSubscriber::connect()
     {
+      // FIXME:
+      // this will not work if sharing the same context,
+      // as another subscriber... need uuid
       _control.bind("inproc://control");
       _socket.connect(_publishAddress.c_str());
       _socket.connect("inproc://control");
