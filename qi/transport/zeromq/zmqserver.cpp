@@ -21,23 +21,23 @@ namespace qi {
 
     /// <summary> Constructor. </summary>
     /// <param name="serverAddress"> The server address. </param>
-    ZMQServer::ZMQServer(const std::string &serverAddress)
-      : Server(serverAddress),
+    ZMQServerImpl::ZMQServerImpl(const std::string &serverAddress)
+      : ServerImpl(serverAddress),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
     {
     }
 
-    ZMQServer::~ZMQServer () {
+    ZMQServerImpl::~ZMQServerImpl () {
     }
 
-    void ZMQServer::wait () {
+    void ZMQServerImpl::wait () {
     }
 
-    void ZMQServer::stop () {
+    void ZMQServerImpl::stop () {
     }
 
-    void ZMQServer::poll() {
+    void ZMQServerImpl::poll() {
       int             rc = 0;
       zmq_pollitem_t  items[1];
 
@@ -52,7 +52,7 @@ namespace qi {
     }
 
     //receive the message in parameter, return the identity
-    zmq::message_t *ZMQServer::recv(zmq::message_t &msg) {
+    zmq::message_t *ZMQServerImpl::recv(zmq::message_t &msg) {
       int             rc = 0;
       boost::int64_t  more;
       size_t          moresz   = sizeof(more);
@@ -88,7 +88,7 @@ namespace qi {
 
 
     //use only the number of thread we need
-     void ZMQServer::run() {
+     void ZMQServerImpl::run() {
        // alsdebug << "Start ZMQServer on: " << _serverAddress;
        zsocket.bind(_serverAddress.c_str());
 
@@ -112,7 +112,7 @@ namespace qi {
        }
      }
 
-     void ZMQServer::serverResponseHandler(const std::string &result, void *data)
+     void ZMQServerImpl::serverResponseHandler(const std::string &result, void *data)
      {
        int                rc = 0;
        zmq::message_t     msg(result.size());

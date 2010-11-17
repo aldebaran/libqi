@@ -25,27 +25,27 @@ namespace qi {
     static const char *gWorkersAddress      = "inproc://workers";
     static const int   gWorkersThreadsCount = 10;
 
-    ZMQServerQueue::ZMQServerQueue (const std::string &server_name)
-      : Server(server_name),
+    ZMQServerQueueImpl::ZMQServerQueueImpl (const std::string &server_name)
+      : detail::ServerImpl(server_name),
         zctx(1),
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)
     {
     }
 
-    ZMQServerQueue::~ZMQServerQueue () {
+    ZMQServerQueueImpl::~ZMQServerQueueImpl () {
     }
 
-    void ZMQServerQueue::wait () {
+    void ZMQServerQueueImpl::wait () {
     }
 
-    void ZMQServerQueue::stop () {
+    void ZMQServerQueueImpl::stop () {
     }
 
     void *worker_routine(void *arg)
     {
       int              rc = 0;
-      ZMQServer       *zserv = (ZMQServer *)(arg);
+      ZMQServerImpl   *zserv = (ZMQServerImpl *)(arg);
       zmq::message_t   msg;
       zmq::socket_t    s(zserv->zctx, ZMQ_REP);
 
@@ -60,7 +60,7 @@ namespace qi {
       }
     }
 
-    void ZMQServerQueue::run() {
+    void ZMQServerQueueImpl::run() {
       // alsdebug << "Start ZMQServer on: " << _serverAddress;
       zsocket.bind(_serverAddress.c_str());
       zsocketworkers.bind(gWorkersAddress);
@@ -77,7 +77,7 @@ namespace qi {
       std::cout << "quit server" << std::endl;
     }
 
-    void ZMQServerQueue::serverResponseHandler(const std::string &result, void *data)
+    void ZMQServerQueueImpl::serverResponseHandler(const std::string &result, void *data)
     {
       int                rc = 0;
       zmq::message_t     msg(result.size());

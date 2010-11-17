@@ -14,6 +14,8 @@
 #include <qi/transport/zeromq/zmqserver.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
+#include <qi/transport/detail/serverimpl.hpp>
+
 
 namespace qi {
   namespace transport {
@@ -24,16 +26,16 @@ namespace qi {
   /// This class need to be instantiated and run at the beginning of the process.
   /// </summary>
   class ResultHandler;
-  class ZMQServerQueue : public Server, public Detail::IServerResponseHandler {
+  class ZMQServerQueueImpl : public detail::ServerImpl, public Detail::IServerResponseHandler {
   public:
     /// <summary>The Server class constructor.</summary>
     /// <param name="server_name">
     /// The name given to the server, id for clients to connect.
     /// </param>
-    ZMQServerQueue(const std::string & server_name);
+    ZMQServerQueueImpl(const std::string & server_name);
 
     /// <summary>The Server class destructor.
-    virtual ~ZMQServerQueue();
+    virtual ~ZMQServerQueueImpl();
 
     /// <summary>Run the server thread.</summary>
     virtual void run();

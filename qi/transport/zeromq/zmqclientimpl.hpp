@@ -5,18 +5,17 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  QI_TRANSPORT_ZMQCLIENT_HPP_
-# define QI_TRANSPORT_ZMQCLIENT_HPP_
+#ifndef  QI_TRANSPORT_ZEROMQ_ZMQCLIENTIMPL_HPP_
+# define QI_TRANSPORT_ZEROMQ_ZMQCLIENTIMPL_HPP_
 
-# include <qi/transport/client.hpp>
+# include <qi/transport/buffer.hpp>
+# include <qi/transport/detail/clientimpl.hpp>
 # include <zmq.hpp>
 
 namespace qi {
   namespace transport {
 
-    //class ResultHandler;
-
-    class ZMQClient : public Client {
+    class ZMQClientImpl : public qi::transport::detail::ClientImpl<qi::transport::Buffer> {
     public:
       //ZMQClient(const std::string &servername, ResultHandler *resultHandler);
 
@@ -28,7 +27,7 @@ namespace qi {
       /// e.g. ipc:///tmp/naoqi/paf
       //. or tcp://127.0.0.1:5555
       /// </param>
-      ZMQClient(const std::string &servername);
+      ZMQClientImpl(const std::string &servername);
 
       virtual void send(const std::string &tosend, std::string &result);
 

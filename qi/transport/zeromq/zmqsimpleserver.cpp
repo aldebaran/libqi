@@ -23,24 +23,24 @@ namespace qi {
     //if you use the custom XREP code, activate the full async experience to use the thread pool
     //#define ZMQ_FULL_ASYNC
 
-    ZMQSimpleServer::ZMQSimpleServer(const std::string &serverAddress)
-      : Server(serverAddress),
+    ZMQSimpleServerImpl::ZMQSimpleServerImpl(const std::string &serverAddress)
+      : ServerImpl(serverAddress),
         zctx(1),
         zsocket(zctx, ZMQ_REP)
     {
     }
 
-    ZMQSimpleServer::~ZMQSimpleServer () {
+    ZMQSimpleServerImpl::~ZMQSimpleServerImpl () {
     }
 
-    void ZMQSimpleServer::wait () {
+    void ZMQSimpleServerImpl::wait () {
     }
 
-    void ZMQSimpleServer::stop () {
+    void ZMQSimpleServerImpl::stop () {
     }
 
     //use only the number of thread we need
-    void ZMQSimpleServer::run() {
+    void ZMQSimpleServerImpl::run() {
       try {
         qisDebug << "Start ZMQServer on: " << _serverAddress << std::endl;
         zsocket.bind(_serverAddress.c_str());
@@ -69,7 +69,7 @@ namespace qi {
 
     }
 
-    void ZMQSimpleServer::serverResponseHandler(const std::string &result, void *data)
+    void ZMQSimpleServerImpl::serverResponseHandler(const std::string &result, void *data)
     {
       int                rc = 0;
       zmq::message_t     msg(result.size());

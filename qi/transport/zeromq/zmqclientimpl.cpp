@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Cedric GESTES
 */
 
-#include <qi/transport/zeromq/zmqclient.hpp>
+#include <qi/transport/zeromq/zmqclientimpl.hpp>
 //#include <qi/transport/shm/client/result_handler.hpp>
 //#include <sstream>
 
@@ -14,16 +14,16 @@ namespace qi {
 
     /// <summary> Constructor. </summary>
     /// <param name="serverAddress"> The server address. </param>
-    ZMQClient::ZMQClient(const std::string &serverAddress)
-      : Client(serverAddress),
-      context(1),
-      socket(context, ZMQ_REQ)
+    ZMQClientImpl::ZMQClientImpl(const std::string &serverAddress)
+      : ClientImpl(serverAddress),
+        context(1),
+        socket(context, ZMQ_REQ)
     {
       connect();
     }
 
     /// <summary> Connects to the server </summary>
-    void ZMQClient::connect()
+    void ZMQClientImpl::connect()
     {
       socket.connect(_serverAddress.c_str());
     }
@@ -31,7 +31,7 @@ namespace qi {
     /// <summary> Sends. </summary>
     /// <param name="tosend"> The data to send. </param>
     /// <param name="result"> [in,out] The result. </param>
-    void ZMQClient::send(const std::string &tosend, std::string &result)
+    void ZMQClientImpl::send(const std::string &tosend, std::string &result)
     {
       // TODO optimise this
       // Could we copy from the serialized stream without calling

@@ -8,21 +8,47 @@
 #ifndef QI_TRANSPORT_CLIENT_HPP_
 # define QI_TRANSPORT_CLIENT_HPP_
 
-#include <string>
+#include <qi/log.hpp>
+#include <qi/transport/buffer.hpp>
+#include <qi/transport/detail/clientimpl.hpp>
+#include <qi/transport/zeromq/zmqclientimpl.hpp>
 
 namespace qi {
   namespace transport {
 
-    class Client {
+    template<typename Transport = qi::transport::ZMQClientImpl, typename Buffer = qi::transport::Buffer>
+    class _Client {
     public:
-      explicit Client(const std::string &serverAddress)
-        : _serverAddress(serverAddress) {}
-      virtual ~Client() {}
+      _Client()
+        : initOK(false) {
+      }
 
-      virtual void send(const std::string &tosend, std::string &result) = 0;
+      bool connect(const std::string &address) {
+        try {
+          _client = new Transport(address);
+          initOK = true;
+        } catch(const std::exception& e) {
+          qisDebug << "GenericClient failed to create client for address \"" << address << "\" Reason: " << e.what() << std::endl;
+        }
+         return initOK;
+      }
+
+      void send(const Buffer &def, Buffer &result)
+      {
+        if (!initOK) {
+          qisError << "Attempt to use an unitialized client." << std::endl;
+        }
+        _client->send(def, result);
+      }
+
+      bool initOK;
     protected:
-      std::string _serverAddress;
+      qi::transport::detail::ClientImpl<Buffer> *_client;
     };
+
+    typedef _Client<qi::transport::ZMQClientImpl, qi::transport::Buffer> ZMQClient;
+    typedef ZMQClient Client;
+
   }
 }
 

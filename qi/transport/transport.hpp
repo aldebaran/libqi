@@ -15,7 +15,8 @@
 #include <qi/transport/common/common.hpp>
 
 #ifdef WITH_ZMQ
-# include <qi/transport/zeromq/zeromq.hpp>
+# include <qi/transport/client.hpp>
+# include <qi/transport/server.hpp>
 #endif
 
 //force Server to be a ShmServer for the moment

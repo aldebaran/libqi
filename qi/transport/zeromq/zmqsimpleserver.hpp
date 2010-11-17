@@ -8,12 +8,12 @@
 #ifndef QI_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
 #define QI_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
 
-#include <zmq.hpp>
-#include <qi/transport/server.hpp>
+#include <qi/transport/detail/serverimpl.hpp>
 #include <qi/transport/common/handlers_pool.hpp>
-#include <qi/transport/zeromq/zmqserver.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
+
+#include <zmq.hpp>
 
 namespace qi {
   namespace transport {
@@ -25,16 +25,16 @@ namespace qi {
     /// and push handlers for those connection to the tread pool.
     /// This class need to be instantiated and run at the beginning of the process.
     /// </summary>
-    class ZMQSimpleServer : public Server, public Detail::IServerResponseHandler {
+    class ZMQSimpleServerImpl : public qi::transport::detail::ServerImpl, public Detail::IServerResponseHandler {
     public:
       /// <summary>The Server class constructor.</summary>
       /// <param name="serverAddress">
       /// The address of the server e.g. tcp://127.0.0.1:5555
       /// </param>
-      ZMQSimpleServer(const std::string & serverAddress);
+      ZMQSimpleServerImpl(const std::string & serverAddress);
 
       /// <summary>The Server class destructor.</summary>
-      virtual ~ZMQSimpleServer();
+      virtual ~ZMQSimpleServerImpl();
 
       /// <summary>Run the server thread.</summary>
       virtual void run();
