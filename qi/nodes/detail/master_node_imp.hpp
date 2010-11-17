@@ -30,7 +30,7 @@ namespace qi {
       void registerClientNode(const std::string& nodeName, const std::string& nodeAddress);
       void unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress);
 
-      const std::string& locateService(const std::string& methodSignature);
+      const std::string locateService(const std::string& methodSignature);
 
       const std::map<std::string, std::string>& listServices();
 

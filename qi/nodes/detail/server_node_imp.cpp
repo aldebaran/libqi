@@ -61,12 +61,13 @@ namespace qi {
       SerializedData result(resultData);
       std::string methodSignature;
       def.read<std::string>(methodSignature);
-
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
         qisError << "  Error: Method not found " << methodSignature << std::endl;
+        return;
       }
       si.functor->call(def, result);
+      resultData = result.str();
     }
 
     const std::string& ServerNodeImp::getName() const {
@@ -98,7 +99,7 @@ namespace qi {
       qi::serialization::BinarySerializer callDef;
 
       callDef.write<std::string>(method);
-      callDef.write<std::string>(fName);
+      callDef.write<std::string>(fAddress);
       callDef.write<std::string>(methodSignature);
       fMessagingClient.send(callDef.str(), ret);
     }

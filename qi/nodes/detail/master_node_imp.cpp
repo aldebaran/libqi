@@ -67,7 +67,8 @@ namespace qi {
       fClientNodeCache.remove(nodeName);
     }
 
-    const std::string& MasterNodeImp::locateService(const std::string& methodSignature) {
+    //TODO: add a ref to the return value
+    const std::string MasterNodeImp::locateService(const std::string& methodSignature) {
       // If not found, an empty string is returned
       // TODO friendly error describing closest service?
       return fServiceCache.get(methodSignature);
