@@ -1,0 +1,31 @@
+Class Hierarchy:
+
+template<Serializer, Transport>
+class qi::node::Client:
+  public impl<SerializedTransportClientImpl<Serializer, Transport> >
+  public impl<ServiceDiscoveryClientImpl>
+
+template<Serializer, Transport>
+class qi::node::Master
+  public impl<SerializedTransportMasterImpl<Serializer, Transport> >
+  public impl<ServiceDiscoveryMasterImpl>
+
+template<Serializer, Transport>
+class qi::node::Server
+  public impl<SerializedTransportServerImpl<Serializer, Transport> >
+  public impl<ServiceDiscoveryServerImpl>
+
+
+
+
+#Hidden implementation that handle transport and serialization
+<Serializer, Transport>
+qi::node::detail::SerializedTransportClientImpl
+  void call(std::string, Serializer, Serializer)
+
+<Serializer, Transport>
+qi::node::detail::SerializedTransportServerImpl
+  void messageHandler(const std::string& defData, std::string& resultData)
+
+
+#Hidden Implementation that handle ServiceDiscovery
