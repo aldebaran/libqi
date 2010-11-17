@@ -14,6 +14,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
+enable_testing()
+
 create_config_h("config.hpp.in" "qi/config.hpp")
 
 file(GLOB NODES_SRC                qi/nodes/*.cpp qi/nodes/*.h*)
