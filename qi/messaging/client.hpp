@@ -9,12 +9,11 @@
 #define QI_MESSAGING_MESSAGING_CLIENT_HPP
 
 #include <qi/messaging/generic_client.hpp>
-#include <qi/messaging/call_definition_serialization.hxx>
-#include <qi/messaging/result_definition_serialization.hxx>
+#include <string>
 
 namespace qi {
   namespace messaging {
-    typedef GenericClient<qi::messaging::CallDefinition, qi::messaging::ResultDefinition> Client;
+    typedef GenericClient<std::string, std::string> Client;
   }
 }
 

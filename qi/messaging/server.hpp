@@ -9,12 +9,11 @@
 #define QI_MESSAGING_SERVER_HPP
 
 #include <qi/messaging/generic_server.hpp>
-#include <qi/messaging/call_definition_serialization.hxx>
-#include <qi/messaging/result_definition_serialization.hxx>
+#include <string>
 
 namespace qi {
   namespace messaging {
-    typedef GenericServer<qi::messaging::CallDefinition, qi::messaging::ResultDefinition> Server;
+    typedef GenericServer<std::string, std::string> Server;
   }
 }
 

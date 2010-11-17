@@ -70,13 +70,9 @@ namespace qi {
         // "dataIn" contains a serialized version of "in",
         // we will de-serialize this and pass it to the method
         // then serialize the "out" result to "dataOut"
-        T in;
-        qi::serialization::Serializer::deserialize(dataIn, in);
 
-        R out;
-        fMessageHandler->messageHandler(in, out);
+        fMessageHandler->messageHandler(dataIn, dataOut);
 
-        dataOut = qi::serialization::Serializer::serialize(out);
       }
 
     protected:

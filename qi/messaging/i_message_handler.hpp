@@ -10,8 +10,7 @@
 #define QI_MESSAGING_i_message_handler_HPP
 
 #include <qi/messaging/i_generic_message_handler.hpp>
-#include <qi/messaging/call_definition.hpp>
-#include <qi/messaging/result_definition.hpp>
+#include <qi/serialization/serializeddata.hpp>
 
 namespace qi {
   namespace messaging {
@@ -20,10 +19,7 @@ namespace qi {
     /// of the IGenericMessageHandler using a CallDefinition as the
     /// request and the a ResultDefinition as the response
     /// </summary>
-    typedef IGenericMessageHandler<
-      qi::messaging::CallDefinition,
-      qi::messaging::ResultDefinition
-    > IMessageHandler;
+    typedef IGenericMessageHandler<std::string, std::string> IMessageHandler;
   }
 }
 

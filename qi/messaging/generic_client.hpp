@@ -38,13 +38,7 @@ namespace qi {
         if (! initOK) {
           qisError << "Attempt to use an unitialized client." << std::endl;
         }
-        std::string tosend = qi::serialization::Serializer::serialize(def);
-        std::string torecv;
-
-        _client->send(tosend, torecv);
-        // we might have an excetption in the result, even
-        // if the call method was void
-        qi::serialization::Serializer::deserialize(torecv, result);
+        _client->send(def, result);
       }
 
       bool initOK;
