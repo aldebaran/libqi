@@ -13,5 +13,4 @@ set(headers
 
 install_header(LIBIPPC SUBFOLDER qi/transport/ ${headers})
 
-add_subdirectory("common")
 cond_subdirectory("zeromq"  WITH_ZMQ)

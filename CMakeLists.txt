@@ -31,7 +31,6 @@ file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
 file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
 
 file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
-file(GLOB TRANSPORT_COMMON_SRC            qi/transport/common/*.cpp qi/transport/common/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/zeromq/*.cpp qi/transport/zeromq/*.h*)
 file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/thrift/*.cpp qi/transport/thrift/*.h*)
 file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
@@ -67,7 +66,6 @@ set(SRC
     ${EXCEPTIONS_SRC}
     ${TOOLS_SRC}
     ${TRANSPORT_SRC}
-    ${TRANSPORT_COMMON_SRC}
     ${FUNCTORS_SRC}
     ${FUNCTORS_DETAIL_SRC}
     ${SIGNATURE_SRC}
