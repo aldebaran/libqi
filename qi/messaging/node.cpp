@@ -8,14 +8,10 @@
 #include <qi/messaging/node.hpp>
 
 namespace qi {
-  /// <summary> Default constructor. </summary>
   Node::Node(): Server(), Client() {}
+
   Node::~Node() {}
 
-  /// <summary> Full constructor. </summary>
-  /// <param name="name"> Name of the node. </param>
-  /// <param name="serverAddress"> The server address. </param>
-  /// <param name="masterAddress"> The master address. </param>
   Node::Node(
     const std::string& name,
     const std::string& serverAddress,
