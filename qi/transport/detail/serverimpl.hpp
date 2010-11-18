@@ -23,9 +23,11 @@ namespace qi {
         explicit ServerImpl(const std::string &_serverAddress)
           : _serverAddress(_serverAddress),
             _dataHandler(0) {}
+
         virtual ~ServerImpl() {}
 
         virtual void run() = 0;
+
         virtual void setDataHandler(MessageHandler* callback) {
           _dataHandler = callback;
         }

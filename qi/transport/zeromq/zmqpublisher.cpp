@@ -22,6 +22,7 @@ namespace qi {
     }
 
     /// <summary> Constructor. </summary>
+    /// <param name="context"> An existing zmq context. </param>
     /// <param name="publishAddress"> The server address. </param>
     ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
       : Publisher(publishAddress),

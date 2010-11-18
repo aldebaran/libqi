@@ -53,14 +53,10 @@ namespace qi {
       std::string fData;
     };
 
-
-
-
     typedef SerializedData BinarySerializer;
-
   }
 }
 
 #include <qi/serialization/serializeddata.hxx>
 
-#endif      /* !AL_SERIALIZATION_THRIFT_HPP_ */
+#endif  // QI_SERIALIZATION_SERIALIZE_HPP_
