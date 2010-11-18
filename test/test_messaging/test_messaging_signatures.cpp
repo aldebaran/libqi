@@ -10,10 +10,15 @@ using namespace qi;
 
 static int gGlobalResult = 0;
 
+char        echo_char(const char& b) {return b;}
 bool        echo_bool(const bool& b) {return b;}
 int         echo_int(const int& i) {return i;}
 float       echo_float(const float& f) {return f;}
+double      echo_double(const double& b) {return b;}
 std::string echo_string(const std::string& s) {return s;}
+std::string echo_string1(const std::string& s1, const std::string& s2) {return s1;}
+std::string echo_string2(const std::string& s1, const std::string& s2) {return s2;}
+
 
 void vfun0()                                                                                      { gGlobalResult = 0; }
 void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
@@ -94,6 +99,41 @@ TEST(NodeSignatures, echo_string)
   std::string b = "42";
   server.addService("echo", &echo_string);
   std::string r = client.call<std::string>("echo", b);
+  ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_string1)
+{
+  std::string a = "hello";
+  std::string b = "world";
+  server.addService("echo", &echo_string1);
+  std::string r = client.call<std::string>("echo", a, b);
+  ASSERT_EQ(a, r);
+}
+
+TEST(NodeSignatures, echo_string2)
+{
+  std::string a = "hello";
+  std::string b = "world";
+  server.addService("echo", &echo_string2);
+  std::string r = client.call<std::string>("echo", a, b);
+  ASSERT_EQ(b, r);
+}
+
+
+TEST(NodeSignatures, echo_double)
+{
+  double b = 987986889.87987987979789;
+  server.addService("echo", &echo_double);
+  double r = client.call<double>("echo", b);
+  ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_char)
+{
+  char b = 'c';
+  server.addService("echo", &echo_char);
+  char r = client.call<char>("echo", b);
   ASSERT_EQ(b, r);
 }
 
