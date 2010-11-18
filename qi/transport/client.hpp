@@ -10,8 +10,8 @@
 
 #include <qi/log.hpp>
 #include <qi/transport/buffer.hpp>
-#include <qi/transport/detail/clientimpl.hpp>
-#include <qi/transport/zeromq/zmqclientimpl.hpp>
+#include <qi/transport/detail/client_impl.hpp>
+#include <qi/transport/detail/zmq/zmq_client_impl.hpp>
 
 namespace qi {
   namespace transport {

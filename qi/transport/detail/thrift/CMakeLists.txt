@@ -6,9 +6,9 @@
 ##
 
 set(headers
-  thirftclient.cpp
-  thirftserver.hpp
+  thirft_client.cpp
+  thirft_server.hpp
 )
 
-install_header(LIBIPPC SUBFOLDER qi/transport/thrift ${headers})
+install_header(LIBIPPC SUBFOLDER qi/transport/detail/thrift ${headers})
 

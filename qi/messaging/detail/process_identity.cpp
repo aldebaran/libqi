@@ -4,7 +4,7 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#include <qi/nodes/detail/process_identity.hpp>
+#include <qi/messaging/detail/process_identity.hpp>
 #include <string>
 
 namespace qi {

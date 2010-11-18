@@ -9,7 +9,7 @@
 # define QI_TRANSPORT_ZEROMQ_ZMQCLIENTIMPL_HPP_
 
 # include <qi/transport/buffer.hpp>
-# include <qi/transport/detail/clientimpl.hpp>
+# include <qi/transport/detail/client_impl.hpp>
 # include <zmq.hpp>
 
 namespace qi {

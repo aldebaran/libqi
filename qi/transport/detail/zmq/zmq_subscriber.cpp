@@ -5,9 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/zeromq/zmqsubscriber.hpp>
+#include <qi/transport/detail/zmq/zmq_subscriber.hpp>
 #include <qi/perf/sleep.hpp>
-//#include <boost/uuid.hpp>
 
 namespace qi {
   namespace transport {

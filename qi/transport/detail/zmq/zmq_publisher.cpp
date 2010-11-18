@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/zeromq/zmqpublisher.hpp>
+#include <qi/transport/detail/zmq/zmq_publisher.hpp>
 #include <qi/perf/sleep.hpp>
 
 namespace qi {

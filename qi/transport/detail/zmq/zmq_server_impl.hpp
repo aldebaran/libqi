@@ -10,9 +10,9 @@
 
 #include <zmq.hpp>
 #include <qi/core/handlers_pool.hpp>
-#include <qi/transport/detail/serverimpl.hpp>
+#include <qi/transport/detail/server_impl.hpp>
 #include <qi/transport/detail/server_response_handler.hpp>
-#include <qi/transport/zeromq/zmqserverimpl.hpp>
+#include <qi/transport/detail/zmq/zmq_server_impl.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 

@@ -12,8 +12,8 @@
 #include <string>
 #include <qi/log.hpp>
 #include <qi/transport/message_handler.hpp>
-#include <qi/transport/detail/serverimpl.hpp>
-#include <qi/transport/zeromq/zmqsimpleserver.hpp>
+#include <qi/transport/detail/server_impl.hpp>
+#include <qi/transport/detail/zmq/zmq_simple_server.hpp>
 
 
 namespace qi {

@@ -5,9 +5,7 @@
 ** Copyright (C) 2010 Cedric GESTES
 */
 
-#include <qi/transport/zeromq/zmqclientimpl.hpp>
-//#include <qi/transport/shm/client/result_handler.hpp>
-//#include <sstream>
+#include <qi/transport/detail/zmq/zmq_client_impl.hpp>
 
 namespace qi {
   namespace transport {

@@ -5,38 +5,36 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
-#define QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
+#ifndef QI_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
+#define QI_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
 
-#include <zmq.hpp>
-#include <qi/transport/server.hpp>
+#include <qi/transport/detail/server_impl.hpp>
 #include <qi/core/handlers_pool.hpp>
-#include <qi/transport/zeromq/zmqserverimpl.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
-#include <qi/transport/detail/serverimpl.hpp>
 
+#include <zmq.hpp>
 
 namespace qi {
   namespace transport {
     namespace detail {
+      class ResultHandler;
 
       /// <summary>
       /// The server class. It listen for incoming connection from client
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      class ResultHandler;
-      class ZMQServerQueueImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
+      class ZMQSimpleServerImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
-        /// <param name="server_name">
-        /// The name given to the server, id for clients to connect.
+        /// <param name="serverAddress">
+        /// The address of the server e.g. tcp://127.0.0.1:5555
         /// </param>
-        ZMQServerQueueImpl(const std::string & server_name);
+        ZMQSimpleServerImpl(const std::string & serverAddress);
 
-        /// <summary>The Server class destructor.
-        virtual ~ZMQServerQueueImpl();
+        /// <summary>The Server class destructor.</summary>
+        virtual ~ZMQSimpleServerImpl();
 
         /// <summary>Run the server thread.</summary>
         virtual void run();
@@ -44,9 +42,12 @@ namespace qi {
         /// <summary>Wait for the server thread to complete its task.</summary>
         void wait();
 
+        zmq::message_t *recv(zmq::message_t &msg);
+
         /// <summary>Force the server to stop and wait for complete stop.</summary>
         void stop();
 
+        void poll();
         void serverResponseHandler(const std::string &result, void *data = 0);
 
         ResultHandler *getResultHandler() { return 0; }
@@ -55,15 +56,12 @@ namespace qi {
 
       private:
         bool                server_running;
-        std::string         server_path;
         zmq::context_t      zctx;
-        zmq::socket_t       zsocketworkers;
         zmq::socket_t       zsocket;
         boost::mutex        socketMutex;
         HandlersPool        handlersPool;
       };
-
     }
   }
 }
-#endif /* !QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_ */
+#endif  // QI_TRANSPORT_ZEROMQSIMPLESERVER_HPP_
