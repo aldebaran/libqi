@@ -1,8 +1,25 @@
 /** \mainpage Qi
 
-\b Qi is a C++ librarie.
+\b Qi is a C++ library.
 
-Some general info.
+Qi is a lightweight communication framework for high performance messaging
+between distributed processes in memory-constrained environments.
+
+It support two major styles of styles of messaging:
+
+RPC: Synchronous Remote procedure calls.
+  Library authors can expose methods to clients, in many
+  cases without altering the signature of their methods.
+
+TOPICS: One to many asynchronous publishing
+  Library authors can publish information to clients
+  without having to track subscribers.
+
+Transparently, the optimal communication method is chosen
+from:
+1) In-process (inproc)
+2) Inter process (ipc)
+3) Network (tcp)
 
 This manual is divided in the following sections:
 - \subpage intro
@@ -14,6 +31,7 @@ This manual is divided in the following sections:
 
 /** \page intro Introduction
 This page introduces the user to the topic.
+
 Now you can proceed to the \ref advanced "advanced section".
 */
 
@@ -21,5 +39,6 @@ Now you can proceed to the \ref advanced "advanced section".
 
 /** \page advanced Advanced Usage
 This page is for advanced users.
+
 Make sure you have first read \ref intro "the introduction".
 */
