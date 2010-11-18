@@ -9,7 +9,7 @@
 #define   __QI_MESSAGING_GENERIC_SUBSCRIBER_HPP__
 
 #include <string>
-#include <qi/transport/zeromq/zmqsubscriber.hpp>
+#include <qi/transport/detail/zmq/zmq_subscriber.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/log.hpp>
 
