@@ -6,6 +6,7 @@
 */
 #include <qi/nodes/detail/address_manager.hpp>
 #include <qi/nodes/detail/constants.hpp>
+#include <cstdio>
 
 namespace qi {
   namespace detail {
