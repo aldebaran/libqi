@@ -16,16 +16,7 @@
 
 namespace qi {
 
-  void ClientNode::callVoid(const std::string& methodName) {
-    qi::serialization::BinarySerializer calldef;
-    qi::serialization::BinarySerializer resultdef;
 
-    void (*f)()  = 0;
-    std::string hash = makeSignature(methodName, f);
-
-    calldef.write<std::string>(hash);
-    xCall(hash, calldef, resultdef);
-  }
 
   template <typename R>
   R ClientNode::call(const std::string& methodName) {

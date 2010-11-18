@@ -33,19 +33,20 @@ namespace qi {
     : fImp(new detail::ClientNodeImp(clientName, masterAddress))
   {}
 
-//  /// <summary> A void method call </summary>
-//  /// <param name="methodName"> Name of the method. </param>
-//  void ClientNode::callVoid(const std::string& methodName) {
-//    Serializer result;
-//    Serializer params;
+  void ClientNode::callVoid(const std::string& methodName) {
+    qi::serialization::BinarySerializer calldef;
+    qi::serialization::BinarySerializer resultdef;
 
-//    void (*f)()  = 0;
-//    std::string hash = makeSignature(methodName, f);
-//    params.write<std::string>(hash);
-//    xCall(hash, params, result);
-//  }
+    void (*f)()  = 0;
+    std::string hash = makeSignature(methodName, f);
 
-  void ClientNode::xCall(const std::string &signature, const qi::serialization::BinarySerializer& callDef, qi::serialization::BinarySerializer &result) {
+    calldef.write<std::string>(hash);
+    xCall(hash, calldef, resultdef);
+  }
+
+  void ClientNode::xCall(const std::string &signature,
+    const qi::serialization::BinarySerializer& callDef,
+    qi::serialization::BinarySerializer &result) {
     return fImp->call(signature, callDef, result);
   }
 }
