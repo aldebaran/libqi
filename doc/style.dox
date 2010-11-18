@@ -1,3 +1,10 @@
 /** \page style Style
 This page define the style used by the Qi project.
+
+
+Source and header should be in the same folder.
+
+
+
+
 */

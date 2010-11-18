@@ -19,6 +19,8 @@
 #include <qi/functors/functor.hpp>
 
 namespace qi {
+namespace detail {
+
 #end raw
 #for $i in $count
   template <$generate_typename_list($i, end = True) typename C, typename R>
@@ -55,6 +57,7 @@ namespace qi {
 
 #end for
 #raw
+}
 }
 #endif  // QI_FUNCTORS_MEMBERFUNCTOR_HXX_
 #end raw

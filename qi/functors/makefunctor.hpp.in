@@ -21,12 +21,12 @@ namespace qi
 
   template <${generate_typename_list($i, end = True)}typename C, typename R>
   Functor *makeFunctor(C *obj, R (C::*f) ($generate_param_list($i))) {
-    return new MemberFunctor_$i<${generate_type_list($i, end = True)}C, R>(obj, f);
+    return new detail::MemberFunctor_$i<${generate_type_list($i, end = True)}C, R>(obj, f);
   }
 
   template <${generate_typename_list($i, end = True)}typename R>
   Functor *makeFunctor(R (*f) ($generate_param_list($i))) {
-    return new Functor_$i<${generate_type_list($i, end = True)}R>(f);
+    return new detail::Functor_$i<${generate_type_list($i, end = True)}R>(f);
   }
 
 #end for

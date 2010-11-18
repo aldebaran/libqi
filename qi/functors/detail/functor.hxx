@@ -17,6 +17,7 @@
 # include <qi/functors/functor.hpp>
 
 namespace qi {
+namespace detail {
 
   template < typename R>
   class Functor_0 : public Functor
@@ -234,5 +235,6 @@ namespace qi {
     FunctionType  fFunction;
   };
 
+}
 }
 #endif  // QI_FUNCTORS_FUNCTOR_HXX_

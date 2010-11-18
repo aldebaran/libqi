@@ -19,6 +19,8 @@
 # include <qi/functors/functor.hpp>
 
 namespace qi {
+namespace detail {
+
 #end raw
 #for $i in $count
 
@@ -56,6 +58,7 @@ namespace qi {
 
 #end for
 #raw
+}
 }
 #endif  // QI_FUNCTORS_VOIDMEMBERFUNCTOR_HXX_
 #end raw

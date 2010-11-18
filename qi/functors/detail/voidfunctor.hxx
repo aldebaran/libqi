@@ -17,6 +17,8 @@
 # include <qi/functors/functor.hpp>
 
 namespace qi {
+namespace detail {
+
 
   template <>
   class Functor_0<void> : public Functor
@@ -234,5 +236,6 @@ namespace qi {
     FunctionType  fFunction;
   };
 
+}
 }
 #endif  // QI_FUNCTORS_VOIDFUNCTOR_HXX_

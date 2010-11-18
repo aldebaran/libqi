@@ -26,7 +26,6 @@ namespace qi {
 
 #if $i != 0
   template <${generate_typename_list($i)}>
-#end if
   void Client::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
@@ -40,6 +39,7 @@ namespace qi {
     #end for
     xCall(hash, calldef, resultdef);
   }
+#end if
 
   template <typename R${generate_typename_list($i, begin=True)}>
   R Client::call(const std::string& methodName${generate_param_list($i, begin=True)}) {

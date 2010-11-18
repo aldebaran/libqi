@@ -10,30 +10,32 @@
 
 #raw
 #ifndef I_WANT_HXX
-#error("do not include hxx in your code")
+#error "do not include hxx in your code"
 #endif
 
-#ifndef  QI_FUNCTORS_FUNCTOR_HXX_
-# define QI_FUNCTORS_FUNCTOR_HXX_
+#ifndef  QI_FUNCTORS_VOIDFUNCTOR_HXX_
+# define QI_FUNCTORS_VOIDFUNCTOR_HXX_
 
 # include <qi/functors/functor.hpp>
 
 namespace qi {
+namespace detail {
+
 #end raw
 #for $i in $count
 
-  template <$generate_typename_list($i, end = True) typename R>
-  class Functor_${i} : public Functor
+  template <$generate_typename_list($i)>
+  class Functor_$i<${generate_type_list($i, end=True)}void> : public Functor
   {
   public:
-    typedef R(*FunctionType) ($generate_param_list($i));
+    typedef void(*FunctionType) ($generate_param_list($i));
 
     Functor_${i}(FunctionType pFunction)
       : fFunction(pFunction)
     {}
 
-    R operator()($generate_param_list($i)) {
-      return (R)(*fFunction)($generate_arg_list($i));
+    void operator()($generate_param_list($i)) {
+      (*fFunction)($generate_arg_list($i));
     }
 
     void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result)const {
@@ -45,7 +47,7 @@ namespace qi {
       #for $j in range($i)
       params.read<P$j>(p$j);
       #end for
-      result.write<R>((*fFunction)($generate_callparam_list($i)));
+      (*fFunction)($generate_callparam_list($i));
     };
 
   private:
@@ -55,5 +57,6 @@ namespace qi {
 #end for
 #raw
 }
-#endif  // QI_FUNCTORS_FUNCTOR_HXX_
+}
+#endif  // QI_FUNCTORS_VOIDFUNCTOR_HXX_
 #end raw

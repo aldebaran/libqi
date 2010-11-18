@@ -17,7 +17,6 @@
 namespace qi {
 
 
-
   template <typename R>
   R Client::call(const std::string& methodName) {
     qi::serialization::BinarySerializer calldef;
