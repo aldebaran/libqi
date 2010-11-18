@@ -17,33 +17,35 @@ namespace qi {
 
   namespace detail {
 
-    ClientImpl::ClientImpl() : isInitialized(false) {}
+    ClientImpl::ClientImpl() : _isInitialized(false) {}
 
     ClientImpl::~ClientImpl() {}
 
     ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
-    isInitialized(false),
-      fClientName(clientName),
-      fMasterAddress(masterAddress) {
+        _isInitialized(false),
+        _clientName(clientName),
+        _masterAddress(masterAddress) {
         xInit();
     }
 
     void ClientImpl::xInit() {
       // create a messaging client to the master address
-      isInitialized = xCreateServerClient(fMasterAddress);
-      if (isInitialized) {
+      _isInitialized = xCreateServerClient(_masterAddress);
+      if (_isInitialized) {
         // we assert that we think the master can locate services
-        fServiceCache.insert("master.locateService::s:s", fMasterAddress);
+        _serviceCache.insert("master.locateService::s:s", _masterAddress);
       } else {
-        qisError << "\"" << fClientName << "\" Failed to connect to master at address \""
-                 << fMasterAddress << "\"" << std::endl;
+        qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
+                 << _masterAddress << "\"" << std::endl;
       }
     }
 
-    void ClientImpl::call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
-        if (! isInitialized) {
+    void ClientImpl::call(const std::string &signature,
+      const qi::serialization::SerializedData& callDef,
+            qi::serialization::SerializedData &result) {
+        if (!_isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
         }
@@ -60,14 +62,14 @@ namespace qi {
     boost::shared_ptr<qi::transport::Client> ClientImpl::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
       NameLookup<boost::shared_ptr<qi::transport::Client> >::iterator it;
-      it = fServerClients.find(serverAddress);
-      if (it == fServerClients.end()) {
+      it = _serverClients.find(serverAddress);
+      if (it == _serverClients.end()) {
         // create messaging client if needed ...
         bool ok = xCreateServerClient(serverAddress);
         if (ok) {
-          it = fServerClients.find(serverAddress);
+          it = _serverClients.find(serverAddress);
         }
-        if (!ok || it == fServerClients.end()) {
+        if (!ok || it == _serverClients.end()) {
           qisError << "Could not create client for server \"" << serverAddress
                    << "\" Probable connection error. " << std::endl;
           throw( qi::transport::ConnectionException(
@@ -81,30 +83,33 @@ namespace qi {
       // we don't yet know our current IP address, so we fake
       std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
 
-      boost::shared_ptr<qi::transport::Client> client = boost::shared_ptr<qi::transport::Client>(new qi::transport::Client());
+      boost::shared_ptr<qi::transport::Client> client(new qi::transport::Client());
       bool ok = client->connect(serverFullAddress);
       if (ok) {
-        fServerClients.insert(make_pair(serverAddress, client));
-        qisDebug << "Client " << fClientName
+        _serverClients.insert(make_pair(serverAddress, client));
+        qisDebug << "Client " << _clientName
                  << " creating client for server " << serverFullAddress << std::endl;
       }
       return ok;
     }
 
     const std::string& ClientImpl::xLocateService(const std::string& methodSignature) {
-        const std::string& nodeAddress = fServiceCache.get(methodSignature);
+        const std::string& nodeAddress = _serviceCache.get(methodSignature);
         if (!nodeAddress.empty()) {
           return nodeAddress;
         }
 
-        SerializedData r;
-        SerializedData callDef;
-        callDef.write<std::string>("master.locateService::s:s");
-        callDef.write<std::string>(methodSignature);
+        SerializedData response_msg;
+
+        // prepare a request to master.locateService
+        SerializedData request_msg;
+        request_msg.write<std::string>("master.locateService::s:s");
+        request_msg.write<std::string>(methodSignature);
         std::string tmpAddress;
+
         try {
-          call("master.locateService::s:s", callDef, r);
-          r.read<std::string>(tmpAddress);
+          call("master.locateService::s:s", request_msg, response_msg);
+          response_msg.read<std::string>(tmpAddress);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Unable to contact master." << std::endl;
@@ -114,9 +119,9 @@ namespace qi {
 
         if (!tmpAddress.empty()) {
           // cache located service pair
-          fServiceCache.insert(methodSignature, tmpAddress);
+          _serviceCache.insert(methodSignature, tmpAddress);
           // return a const string ref address
-          return fServiceCache.get(methodSignature);
+          return _serviceCache.get(methodSignature);
         } else {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Method not known to master." << std::endl;

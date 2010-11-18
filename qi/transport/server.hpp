@@ -15,7 +15,6 @@
 #include <qi/transport/detail/server_impl.hpp>
 #include <qi/transport/detail/zmq/zmq_simple_server.hpp>
 
-
 namespace qi {
   namespace transport {
 
@@ -23,43 +22,42 @@ namespace qi {
     class GenericTransportServer
     {
     public:
-      GenericTransportServer(): isInitialized(false) {}
+      GenericTransportServer(): _isInitialized(false) {}
 
       void serve(const std::string &address)
       {
-        fServerAddress = address;
         try {
-          fTransportServer = new TRANSPORT(address);
-          isInitialized = true;
+          _transportServer = new TRANSPORT(address);
+          _isInitialized = true;
         } catch(const std::exception& e) {
-          qisError << "Failed to create transport server for address: " << address << " Reason:" << e.what() << std::endl;
+          qisError << "Failed to create transport server for address: " <<
+            address << " Reason:" << e.what() << std::endl;
           throw(e);
         }
       }
 
       virtual void run()
       {
-        if (isInitialized) {
-          fTransportServer->run();
+        if (_isInitialized) {
+          _transportServer->run();
         }
       }
 
       virtual void setMessageHandler(MessageHandler* dataHandler) {
-        fTransportServer->setDataHandler(dataHandler);
+        _transportServer->setDataHandler(dataHandler);
       }
 
       virtual MessageHandler* getMessageHandler() {
-        return fTransportServer->getDataHandler();
+        return _transportServer->getDataHandler();
       }
 
+      bool isInitialized() {
+        return _isInitialized;
+      }
 
     protected:
-      bool isInitialized;
-
-    protected:
-      //TODO: do we need that?
-      std::string                        fServerAddress;
-      qi::transport::detail::ServerImpl *fTransportServer;
+      bool _isInitialized;
+      qi::transport::detail::ServerImpl* _transportServer;
     };
 
     typedef GenericTransportServer<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;

@@ -51,7 +51,7 @@ namespace qi {
 
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
-    std::auto_ptr<detail::ServerImpl> fImp;
+    std::auto_ptr<detail::ServerImpl> _impl;
   };
 
 }

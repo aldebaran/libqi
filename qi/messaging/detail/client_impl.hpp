@@ -27,16 +27,17 @@ namespace qi {
 
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
 
-      bool isInitialized;
+      bool isInitialized() const;
 
     private:
-      std::string fClientName;
-      std::string fMasterAddress;
+      bool        _isInitialized;
+      std::string _clientName;
+      std::string _masterAddress;
 
-      MutexedNameLookup<std::string> fServiceCache;
+      MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
-      NameLookup< boost::shared_ptr<qi::transport::Client> > fServerClients;
+      NameLookup< boost::shared_ptr<qi::transport::Client> > _serverClients;
 
       void xInit();
       boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);

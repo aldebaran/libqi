@@ -19,43 +19,43 @@ namespace qi {
     template<typename T>
     class MutexedNameLookup {
     private:
-      std::map<std::string, T> fMap;
-      T fInvalidValue;
-      boost::mutex fMutex;
+      std::map<std::string, T> _map;
+      T                        _invalidValue;
+      boost::mutex             _mutex;
     public:
       MutexedNameLookup() {}
 
       void replace(const std::map<std::string, T>& other) {
-        boost::mutex::scoped_lock lock(fMutex);
-        fMap = other;
+        boost::mutex::scoped_lock lock(_mutex);
+        _map = other;
       }
 
       const std::map<std::string, T>& getMap() {
-        boost::mutex::scoped_lock lock(fMutex);
-        return fMap;
+        boost::mutex::scoped_lock lock(_mutex);
+        return _map;
       }
 
       const T& get(std::string key) {
-        boost::mutex::scoped_lock lock(fMutex);
-        typename std::map<std::string, T>::const_iterator it = fMap.find(key);
-        if (it != fMap.end()) {
+        boost::mutex::scoped_lock lock(_mutex);
+        typename std::map<std::string, T>::const_iterator it = _map.find(key);
+        if (it != _map.end()) {
           return it->second;
         }
-        return fInvalidValue;
+        return _invalidValue;
       }
 
       void insert(const std::string key, const T& val) {
-        boost::mutex::scoped_lock lock(fMutex);
-        typename std::map<std::string, T>::const_iterator it = fMap.find(key);
-        if (it != fMap.end()) {
-          fMap.erase(key);
+        boost::mutex::scoped_lock lock(_mutex);
+        typename std::map<std::string, T>::const_iterator it = _map.find(key);
+        if (it != _map.end()) {
+          _map.erase(key);
         }
-        fMap.insert(make_pair(key, val));
+        _map.insert(make_pair(key, val));
       }
 
       void remove(const std::string key) {
-        boost::mutex::scoped_lock lock(fMutex);
-        fMap.erase(key);
+        boost::mutex::scoped_lock lock(_mutex);
+        _map.erase(key);
       }
     };
   }

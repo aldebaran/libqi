@@ -11,7 +11,6 @@
 #include <qi/serialization/serializer.hpp>
 
 namespace qi {
-
   /// <summary>
   /// Used to call services that have been added to a server. If the service
   /// is unknown, the master is interogated to find the appropriate server.
@@ -30,7 +29,7 @@ namespace qi {
   /// <param name="masterAddress"> The master address. </param>
   Client::Client(const std::string& clientName,
                          const std::string& masterAddress)
-    : fImp(new detail::ClientImpl(clientName, masterAddress))
+    : _impl(new detail::ClientImpl(clientName, masterAddress))
   {}
 
   void Client::callVoid(const std::string& methodName) {
@@ -46,7 +45,8 @@ namespace qi {
 
   void Client::xCall(const std::string &signature,
     const qi::serialization::BinarySerializer& callDef,
-    qi::serialization::BinarySerializer &result) {
-    return fImp->call(signature, callDef, result);
+    qi::serialization::BinarySerializer &result)
+  {
+    return _impl->call(signature, callDef, result);
   }
 }

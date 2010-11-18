@@ -20,10 +20,10 @@ namespace qi {
   Server::Server(const std::string& serverName,
                          const std::string& serverAddress,
                          const std::string& masterAddress) :
-  fImp(new detail::ServerImpl(serverName, serverAddress, masterAddress)) {
-  }
+    _impl(new detail::ServerImpl(serverName, serverAddress, masterAddress))
+  {}
 
   void Server::xAddService(const std::string& methodSignature, qi::Functor* functor) {
-    fImp->addService(methodSignature, functor);
+    _impl->addService(methodSignature, functor);
   }
 }

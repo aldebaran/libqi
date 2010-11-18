@@ -73,10 +73,11 @@ namespace qi {
 
 #end for
   private:
-    void xCall(const std::string &signature, const qi::serialization::BinarySerializer &callDef, qi::serialization::BinarySerializer &result);
-    std::auto_ptr<detail::ClientImpl> fImp;
+    void xCall(const std::string &signature,
+      const qi::serialization::BinarySerializer &request,
+            qi::serialization::BinarySerializer &result);
+    std::auto_ptr<detail::ClientImpl> _impl;
   };
-
 }
 
 #raw

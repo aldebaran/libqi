@@ -31,7 +31,7 @@ namespace qi {
     virtual ~Master();
 
   private:
-    std::auto_ptr<detail::MasterImpl> fImp;
+    std::auto_ptr<detail::MasterImpl> _impl;
   };
 
 }

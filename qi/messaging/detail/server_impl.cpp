@@ -5,25 +5,24 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/log.hpp>
 #include <qi/messaging/detail/server_impl.hpp>
 #include <string>
-#include <qi/messaging/detail/get_protocol.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/transport/buffer.hpp>
-
+#include <qi/log.hpp>
 
 namespace qi {
   using qi::serialization::SerializedData;
 
   namespace detail {
 
-    ServerImpl::ServerImpl() : isInitialized(false) {}
+    ServerImpl::ServerImpl() : _isInitialized(false) {}
 
     ServerImpl::~ServerImpl() {
-      if (!fIsMasterServer) {
+      if (!_isMasterServer) {
         xUnregisterSelfWithMaster();
       }
     }
@@ -32,27 +31,31 @@ namespace qi {
       const std::string serverName,
       const std::string serverAddress,
       const std::string masterAddress) :
-        isInitialized(false),
-        fName(serverName),
-        fAddress(serverAddress),
-        fIsMasterServer(false)
+        _isInitialized(false),
+        _isMasterServer(false),
+        _name(serverName),
+        _address(serverAddress)
     {
       if (serverAddress == masterAddress) {
         // we are the master's server, so we don't need a client to ourselves
-        fIsMasterServer = true;
-        isInitialized = true;
+        _isMasterServer = true;
+        _isInitialized = true;
       } else {
-        isInitialized = fMessagingClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
-        if (! isInitialized ) {
-          qisError << "\"" << serverName << "\" could not connect to master at address \"" << masterAddress << "\"" << std::endl;
+        _isInitialized = _transportClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
+        if (! _isInitialized ) {
+          qisError << "\"" << _name << "\" could not connect to master at address \"" << masterAddress << "\"" << std::endl;
           return;
         }
         xRegisterSelfWithMaster();
       }
 
-      fMessagingServer.serve("tcp://" + serverAddress);
-      fMessagingServer.setMessageHandler(this);
-      boost::thread serverThread(boost::bind(&qi::transport::Server::run, fMessagingServer));
+      _transportServer.serve("tcp://" + _address);
+      _transportServer.setMessageHandler(this);
+      boost::thread serverThread(boost::bind(&qi::transport::Server::run, _transportServer));
+    }
+
+    bool ServerImpl::isInitialized() const {
+      return _isInitialized;
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
@@ -71,18 +74,18 @@ namespace qi {
     }
 
     const std::string& ServerImpl::getName() const {
-      return fName;
+      return _name;
     }
 
     const std::string& ServerImpl::getAddress() const {
-      return fAddress;
+      return _address;
     }
 
     void ServerImpl::addService(const std::string& methodSignature, qi::Functor* functor) {
       ServiceInfo service(methodSignature, functor);
       //std::cout << "Added Service" << hash << std::endl;
-      fLocalServiceList.insert(methodSignature, service);
-      if (!fIsMasterServer) {
+      _localServices.insert(methodSignature, service);
+      if (!_isMasterServer) {
         xRegisterServiceWithMaster(methodSignature);
       }
     }
@@ -90,40 +93,40 @@ namespace qi {
     const ServiceInfo& ServerImpl::xGetService(
       const std::string& methodSignature) {
       // functors ... should be found here
-      return fLocalServiceList.get(methodSignature);
+      return _localServices.get(methodSignature);
     }
 
     void ServerImpl::xRegisterServiceWithMaster(const std::string& methodSignature) {
       static const std::string method("master.registerService::v:ss");
       qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer callDef;
+      qi::serialization::BinarySerializer msg;
 
-      callDef.write<std::string>(method);
-      callDef.write<std::string>(fAddress);
-      callDef.write<std::string>(methodSignature);
-      fMessagingClient.send(callDef.str(), ret);
+      msg.write<std::string>(method);
+      msg.write<std::string>(_address);
+      msg.write<std::string>(methodSignature);
+      _transportClient.send(msg.str(), ret);
     }
 
     void ServerImpl::xRegisterSelfWithMaster() {
       static const std::string method("master.registerServerNode::v:ss");
       qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer callDef;
+      qi::serialization::BinarySerializer msg;
 
-      callDef.write<std::string>(method);
-      callDef.write<std::string>(fName);
-      callDef.write<std::string>(fAddress);
-      fMessagingClient.send(callDef.str(), ret);
+      msg.write<std::string>(method);
+      msg.write<std::string>(_name);
+      msg.write<std::string>(_address);
+      _transportClient.send(msg.str(), ret);
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {
       static const std::string method("master.unregisterServerNode::v:ss");
       qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer callDef;
+      qi::serialization::BinarySerializer msg;
 
-      callDef.write<std::string>(method);
-      callDef.write<std::string>(fName);
-      callDef.write<std::string>(fAddress);
-      fMessagingClient.send(callDef.str(), ret);
+      msg.write<std::string>(method);
+      msg.write<std::string>(_name);
+      msg.write<std::string>(_address);
+      _transportClient.send(msg.str(), ret);
     }
   }
 }

@@ -35,20 +35,20 @@ namespace qi {
       const std::map<std::string, std::string>& listServices();
 
     private:
-      std::string fName;
-      std::string fAddress;
-      Server fServer;
+      std::string _name;
+      std::string _address;
+      Server      _server;
 
       void xInit();
 
       // map from methodSignature to nodeAddress
-      MutexedNameLookup<std::string> fServiceCache;
+      MutexedNameLookup<std::string> _knownServices;
 
       // Auditing: map from nodeName to nodeAddress
-      MutexedNameLookup<std::string> fServerNodeCache;
+      MutexedNameLookup<std::string> _knownServers;
 
       // Auditing: map from nodeName to nodeAddress
-      MutexedNameLookup<std::string> fClientNodeCache;
+      MutexedNameLookup<std::string> _knownClients;
     };
   }
 }

@@ -13,7 +13,7 @@ namespace qi {
   /// <summary> Constructor. </summary>
   /// <param name="masterAddress"> The master address. </param>
   Master::Master(const std::string& masterAddress) :
-    fImp(new detail::MasterImpl(masterAddress)) {}
+    _impl(new detail::MasterImpl(masterAddress)) {}
 
   /// <summary> Destructor. </summary>
   Master::~Master() {}
