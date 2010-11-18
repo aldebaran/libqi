@@ -101,6 +101,9 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
   // KABOOOM!!! const
   //server.addService("foo.vfun0c", &f, &Foo::vfun0c);
 
+  // KABOOOM!!! char*
+  //client.call("foo.echo", "jsalkdjljasd");
+
   client.callVoid("vfun0");
   client.callVoid("vfun1", 1);
   client.callVoid("vfun2", 1, 2);
