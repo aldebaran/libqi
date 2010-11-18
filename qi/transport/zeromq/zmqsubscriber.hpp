@@ -18,25 +18,22 @@ namespace qi {
 
     class ZMQSubscriber : public Subscriber {
     public:
-      /// <summary>
-      /// Creates a ZMQSubscriber
-      /// </summary>
-      /// <param name="serverAddress">
+      /// <summary>Creates a ZMQSubscriber</summary>
+      /// <param name="publishAddress">
       /// The protocol-qualified address of the publisher
       /// e.g. ipc:///tmp/naoqi/paf
       //. or tcp://127.0.0.1:5555
       /// </param>
-      ZMQSubscriber(const std::string &serverAddress);
+      ZMQSubscriber(const std::string &publishAddress);
 
-      /// <summary>
-      /// Creates a ZMQSubscriber
-      /// </summary>
-      /// <param name="serverAddress">
+      /// <summary> Creates a ZMQSubscriber </summary>
+      /// <param name="context">An existing zmq context</param>
+      /// <param name="publishAddress">
       /// The protocol-qualified address of the publisher
       /// e.g. ipc:///tmp/naoqi/paf
       //. or tcp://127.0.0.1:5555
       /// </param>
-      ZMQSubscriber(boost::shared_ptr<zmq::context_t>, const std::string &serverAddress);
+      ZMQSubscriber(boost::shared_ptr<zmq::context_t>, const std::string &publishAddress);
 
       virtual ~ZMQSubscriber();
 

@@ -8,8 +8,9 @@
 #ifndef QI_MESSAGING_HPP
 #define QI_MESSAGING_HPP
 
+#include <qi/messaging/master.hpp>
 #include <qi/messaging/client.hpp>
 #include <qi/messaging/server.hpp>
-#include <qi/messaging/i_message_handler.hpp>
+#include <qi/messaging/node.hpp>
 
 #endif  // QI_MESSAGING_HPP

@@ -9,17 +9,17 @@
 #define QI_NODE_MASTER_NODE_IMP_HPP_
 
 #include <string>
-#include <qi/nodes/server_node.hpp>  // could use imp
-#include <qi/nodes/detail/mutexednamelookup.hpp>
+#include <qi/messaging/server.hpp>  // could use imp
+#include <qi/messaging/detail/mutexednamelookup.hpp>
 
 namespace qi {
   namespace detail {
 
-    class MasterNodeImp {
+    class MasterImpl {
     public:
-      explicit MasterNodeImp(const std::string& masterAddress);
+      explicit MasterImpl(const std::string& masterAddress);
 
-      ~MasterNodeImp();
+      ~MasterImpl();
 
       void registerService(const std::string& nodeAddress,
         const std::string& methodSignature);
@@ -37,7 +37,7 @@ namespace qi {
     private:
       std::string fName;
       std::string fAddress;
-      ServerNode fServerNode;
+      Server fServer;
 
       void xInit();
 

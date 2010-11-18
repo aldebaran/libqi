@@ -22,7 +22,7 @@ namespace qi {
     }
 
     /// <summary> Constructor. </summary>
-    /// <param name="context"> An existing zmq context. </param>
+    /// <param name="context">An existing zmq context</param>
     /// <param name="publishAddress"> The server address. </param>
     ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
       : Publisher(publishAddress),
@@ -50,11 +50,11 @@ namespace qi {
     }
 
     /// <summary> Publishes. </summary>
-    /// <param name="tosend"> The data to send. </param>
-    void ZMQPublisher::publish(const std::string &tosend)
+    /// <param name="toSend"> The data to send. </param>
+    void ZMQPublisher::publish(const std::string &toSend)
     {
-      zmq::message_t msg(tosend.size());
-      memcpy(msg.data(), tosend.data(), tosend.size());
+      zmq::message_t msg(toSend.size());
+      memcpy(msg.data(), toSend.data(), toSend.size());
       bool rc = _socket.send(msg);
     }
   }

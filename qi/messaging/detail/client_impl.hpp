@@ -10,20 +10,20 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <qi/nodes/detail/mutexednamelookup.hpp>
-#include <qi/nodes/detail/namelookup.hpp>
+#include <qi/messaging/detail/mutexednamelookup.hpp>
+#include <qi/messaging/detail/namelookup.hpp>
 #include <qi/serialization/serializeddata.hpp>
 #include <qi/transport/client.hpp>
 
 namespace qi {
   namespace detail {
 
-    class ClientNodeImp {
+    class ClientImpl {
     public:
-      ClientNodeImp();
-      virtual ~ClientNodeImp();
+      ClientImpl();
+      virtual ~ClientImpl();
 
-      ClientNodeImp(const std::string& clientName, const std::string& masterAddress);
+      ClientImpl(const std::string& clientName, const std::string& masterAddress);
 
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
 

@@ -1,11 +1,15 @@
-##
-## Author(s):
-##  - Cedric GESTES <gestes@aldebaran-robotics.com>
-##
-## Copyright (C) 2010 Aldebaran Robotics
-##
 
 create_gtest(test_messaging
-             SRC          test_messaging.cpp
-             DEPENDENCIES QI
-             TIMEOUT      120)
+ SRC test_messaging.cpp
+ DEPENDENCIES QI GTEST
+ TIMEOUT 120)
+
+create_gtest(test_messaging_stress
+ SRC test_messaging_stress.cpp
+ DEPENDENCIES QI GTEST
+ TIMEOUT 120)
+
+create_gtest(test_messaging_signatures
+ SRC test_messaging_signatures.cpp
+ DEPENDENCIES QI GTEST
+ TIMEOUT 120)

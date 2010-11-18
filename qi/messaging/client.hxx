@@ -19,7 +19,7 @@ namespace qi {
 
 
   template <typename R>
-  R ClientNode::call(const std::string& methodName) {
+  R Client::call(const std::string& methodName) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -35,7 +35,7 @@ namespace qi {
   }
 
   template <typename P0>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -48,7 +48,7 @@ namespace qi {
   }
 
   template <typename R, typename P0>
-  R ClientNode::call(const std::string& methodName, const P0 &p0) {
+  R Client::call(const std::string& methodName, const P0 &p0) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -65,7 +65,7 @@ namespace qi {
   }
 
   template <typename P0, typename P1>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -79,7 +79,7 @@ namespace qi {
   }
 
   template <typename R, typename P0, typename P1>
-  R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1) {
+  R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -97,7 +97,7 @@ namespace qi {
   }
 
   template <typename P0, typename P1, typename P2>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -112,7 +112,7 @@ namespace qi {
   }
 
   template <typename R, typename P0, typename P1, typename P2>
-  R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
+  R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -131,7 +131,7 @@ namespace qi {
   }
 
   template <typename P0, typename P1, typename P2, typename P3>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -147,7 +147,7 @@ namespace qi {
   }
 
   template <typename R, typename P0, typename P1, typename P2, typename P3>
-  R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
+  R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -167,7 +167,7 @@ namespace qi {
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -184,7 +184,7 @@ namespace qi {
   }
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
-  R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
+  R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -205,7 +205,7 @@ namespace qi {
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-  void ClientNode::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
+  void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 
@@ -223,7 +223,7 @@ namespace qi {
   }
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-  R ClientNode::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
+  R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::serialization::BinarySerializer calldef;
     qi::serialization::BinarySerializer resultdef;
 

@@ -3,7 +3,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/nodes/detail/process_identity.hpp>
+#include <qi/messaging/detail/process_identity.hpp>
 
 using qi::detail::getProcessID;
 using qi::detail::getHostName;

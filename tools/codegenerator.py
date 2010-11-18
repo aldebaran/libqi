@@ -59,5 +59,5 @@ if __name__ == "__main__":
     generate_file("../qi/functors/voidfunctor.hxx.in"      , "../qi/functors/voidfunctor.hxx"      , 7)
     generate_file("../qi/functors/makefunctor.hpp.in"      , "../qi/functors/makefunctor.hpp"      , 7)
     generate_file("../qi/functors/callfunctor.hpp.in"      , "../qi/functors/callfunctor.hpp"      , 7)
-    generate_file("../qi/nodes/client_node.hpp.in"         , "../qi/nodes/client_node.hpp"         , 7)
-    generate_file("../qi/nodes/client_node.hxx.in"         , "../qi/nodes/client_node.hxx"         , 7)
+    generate_file("../qi/messaging/client.hpp.in"          , "../qi/messaging/client.hpp"          , 7)
+    generate_file("../qi/messaging/client.hxx.in"          , "../qi/messaging/client.hxx"          , 7)

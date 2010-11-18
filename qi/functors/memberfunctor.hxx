@@ -35,7 +35,7 @@ namespace qi {
     void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
-      result.write<R>((fObject->*fFunction)());
+      result.write((fObject->*fFunction)());
     };
 
   private:
@@ -63,7 +63,7 @@ namespace qi {
       P0 p0;
 
       params.read<P0>(p0);
-      result.write<R>((fObject->*fFunction)(p0));
+      result.write((fObject->*fFunction)(p0));
     };
 
   private:
@@ -93,7 +93,7 @@ namespace qi {
 
       params.read<P0>(p0);
       params.read<P1>(p1);
-      result.write<R>((fObject->*fFunction)(p0, p1));
+      result.write((fObject->*fFunction)(p0, p1));
     };
 
   private:
@@ -125,7 +125,7 @@ namespace qi {
       params.read<P0>(p0);
       params.read<P1>(p1);
       params.read<P2>(p2);
-      result.write<R>((fObject->*fFunction)(p0, p1, p2));
+      result.write((fObject->*fFunction)(p0, p1, p2));
     };
 
   private:
@@ -159,7 +159,7 @@ namespace qi {
       params.read<P1>(p1);
       params.read<P2>(p2);
       params.read<P3>(p3);
-      result.write<R>((fObject->*fFunction)(p0, p1, p2, p3));
+      result.write((fObject->*fFunction)(p0, p1, p2, p3));
     };
 
   private:
@@ -195,7 +195,7 @@ namespace qi {
       params.read<P2>(p2);
       params.read<P3>(p3);
       params.read<P4>(p4);
-      result.write<R>((fObject->*fFunction)(p0, p1, p2, p3, p4));
+      result.write((fObject->*fFunction)(p0, p1, p2, p3, p4));
     };
 
   private:
@@ -233,7 +233,7 @@ namespace qi {
       params.read<P3>(p3);
       params.read<P4>(p4);
       params.read<P5>(p5);
-      result.write<R>((fObject->*fFunction)(p0, p1, p2, p3, p4, p5));
+      result.write((fObject->*fFunction)(p0, p1, p2, p3, p4, p5));
     };
 
   private:

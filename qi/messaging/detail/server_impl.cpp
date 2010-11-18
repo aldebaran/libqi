@@ -6,9 +6,9 @@
 */
 
 #include <qi/log.hpp>
-#include <qi/nodes/detail/server_node_imp.hpp>
+#include <qi/messaging/detail/server_impl.hpp>
 #include <string>
-#include <qi/nodes/detail/get_protocol.hpp>
+#include <qi/messaging/detail/get_protocol.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <qi/serialization/serializer.hpp>
@@ -20,15 +20,15 @@ namespace qi {
 
   namespace detail {
 
-    ServerNodeImp::ServerNodeImp() : isInitialized(false) {}
+    ServerImpl::ServerImpl() : isInitialized(false) {}
 
-    ServerNodeImp::~ServerNodeImp() {
+    ServerImpl::~ServerImpl() {
       if (!fIsMasterServer) {
         xUnregisterSelfWithMaster();
       }
     }
 
-    ServerNodeImp::ServerNodeImp(
+    ServerImpl::ServerImpl(
       const std::string serverName,
       const std::string serverAddress,
       const std::string masterAddress) :
@@ -55,7 +55,7 @@ namespace qi {
       boost::thread serverThread(boost::bind(&qi::transport::Server::run, fMessagingServer));
     }
 
-    void ServerNodeImp::messageHandler(std::string& defData, std::string& resultData) {
+    void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
       // handle message
       SerializedData def(defData);
       SerializedData result(resultData);
@@ -70,15 +70,15 @@ namespace qi {
       resultData = result.str();
     }
 
-    const std::string& ServerNodeImp::getName() const {
+    const std::string& ServerImpl::getName() const {
       return fName;
     }
 
-    const std::string& ServerNodeImp::getAddress() const {
+    const std::string& ServerImpl::getAddress() const {
       return fAddress;
     }
 
-    void ServerNodeImp::addService(const std::string& methodSignature, qi::Functor* functor) {
+    void ServerImpl::addService(const std::string& methodSignature, qi::Functor* functor) {
       ServiceInfo service(methodSignature, functor);
       //std::cout << "Added Service" << hash << std::endl;
       fLocalServiceList.insert(methodSignature, service);
@@ -87,13 +87,13 @@ namespace qi {
       }
     }
 
-    const ServiceInfo& ServerNodeImp::xGetService(
+    const ServiceInfo& ServerImpl::xGetService(
       const std::string& methodSignature) {
       // functors ... should be found here
       return fLocalServiceList.get(methodSignature);
     }
 
-    void ServerNodeImp::xRegisterServiceWithMaster(const std::string& methodSignature) {
+    void ServerImpl::xRegisterServiceWithMaster(const std::string& methodSignature) {
       static const std::string method("master.registerService::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer callDef;
@@ -104,7 +104,7 @@ namespace qi {
       fMessagingClient.send(callDef.str(), ret);
     }
 
-    void ServerNodeImp::xRegisterSelfWithMaster() {
+    void ServerImpl::xRegisterSelfWithMaster() {
       static const std::string method("master.registerServerNode::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer callDef;
@@ -115,7 +115,7 @@ namespace qi {
       fMessagingClient.send(callDef.str(), ret);
     }
 
-    void ServerNodeImp::xUnregisterSelfWithMaster() {
+    void ServerImpl::xUnregisterSelfWithMaster() {
       static const std::string method("master.unregisterServerNode::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer callDef;

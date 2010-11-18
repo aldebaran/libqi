@@ -5,25 +5,25 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/nodes/server_node.hpp>
-#include <qi/nodes/detail/server_node_imp.hpp>
+#include <qi/messaging/server.hpp>
+#include <qi/messaging/detail/server_impl.hpp>
 
 namespace qi {
   /// <summary> Default constructor. </summary>
-  ServerNode::ServerNode() {}
-  ServerNode::~ServerNode() {}
+  Server::Server() {}
+  Server::~Server() {}
 
   /// <summary> Default constructor. </summary>
   /// <param name="serverName"> Name of the server. </param>
   /// <param name="serverAddress"> The server address. </param>
   /// <param name="masterAddress"> The master address. </param>
-  ServerNode::ServerNode(const std::string& serverName,
+  Server::Server(const std::string& serverName,
                          const std::string& serverAddress,
                          const std::string& masterAddress) :
-  fImp(new detail::ServerNodeImp(serverName, serverAddress, masterAddress)) {
+  fImp(new detail::ServerImpl(serverName, serverAddress, masterAddress)) {
   }
 
-  void ServerNode::xAddService(const std::string& methodSignature, qi::Functor* functor) {
+  void Server::xAddService(const std::string& methodSignature, qi::Functor* functor) {
     fImp->addService(methodSignature, functor);
   }
 }

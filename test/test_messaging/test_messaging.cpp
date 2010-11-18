@@ -1,138 +1,114 @@
-/*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
-*/
 
-#include <vector>
-#include <iostream>
-
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
-
+#include <gtest/gtest.h>
 #include <qi/messaging.hpp>
-#include <boost/shared_ptr.hpp>
 #include <qi/perf/dataperftimer.hpp>
-#include <qi/perf/sleep.hpp>
+#include <string>
 
-using namespace qi::messaging;
-using qi::perf::DataPerfTimer;
+using namespace qi;
 
-static const int gThreadCount = 10;
-static const int gLoopCount   = 10000;
+std::string gMasterAddress = "127.0.0.1:5555";
+std::string gServerName = "server";
+std::string gServerAddress = "127.0.0.1:5556";
 
-class ServiceHandler :  public IMessageHandler
-{
-public:
-  // to call function on current process
-  void messageHandler(const std::string& def, std::string& res)
-  {
+Master gMaster(gMasterAddress);
+Server gServer(gServerName, gServerAddress, gMasterAddress);
+Client gClient("client", gMasterAddress);
 
-    if (def.methodName() == "ping") {
-      // do nothing
-    } else if (def.methodName() == "size") {
-      res.value((int)def.args().front().as<std::string>().size());
-    } else if (def.methodName() == "echo") {
-      std::string result = def.args().front().as<std::string>();
-      res.value(result);
-    }
-  }
-};
-
-static const std::string gServerAddress = "tcp://127.0.0.1:5555";
-static const std::string gClientAddress = "tcp://127.0.0.1:5555";
-
-int main_server()
-{
-  ServiceHandler           module2Callback;
-  boost::shared_ptr<Server>       fIppcServer  = boost::shared_ptr<Server>(new Server());
-  fIppcServer->serve(gServerAddress);
-  fIppcServer->setMessageHandler(&module2Callback);
-  fIppcServer->run();
-  return 0;
+void ping() {
 }
 
-int main_client(int clientId)
+std::string echo(const std::string& in) {
+  return in;
+}
+
+
+TEST(Messaging, PerformancePing)
 {
-  std::stringstream sstream;
 
-  qi::messaging::Client client;
-  client.connect(gClientAddress);
-  qi::messaging::ResultDefinition res;
+  gServer.addService("wibble.ping", &ping);
+  unsigned int numMessages = 10000;
 
-  DataPerfTimer dt("Messaging void -> ping -> void");
-  dt.start(gLoopCount);
-  for (int j = 0; j< gLoopCount; ++j)
-  {
-    client.call(CallDefinition("ping"),res);
+  qi::perf::DataPerfTimer dt("Node void -> ping -> void");
+  dt.start(numMessages);
+  for (unsigned int loop = 0; loop < numMessages; loop++) {
+    // Serialize
+    gClient.callVoid("wibble.ping");
   }
   dt.stop();
-
-  dt.printHeader("Messaging string -> size -> int");
-  for (int i = 0; i < 12; ++i)
-  {
-    unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string                   request = std::string(numBytes, 'B');
-
-    dt.start(gLoopCount, numBytes);
-    for (int j = 0; j< gLoopCount; ++j)
-    {
-      client.call(CallDefinition("size", request), res);
-      int size = res.value().as<int>();
-      //assert(tosend == torecv);
-    }
-    dt.stop();
-  }
-
-  dt.printHeader("Messaging string -> echo -> string");
-  for (int i = 0; i < 12; ++i)
-  {
-    unsigned int                  numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string                   request = std::string(numBytes, 'B');
-    dt.start(gLoopCount, numBytes);
-    for (int j = 0; j< gLoopCount; ++j)
-    {
-      qi::messaging::CallDefinition def("echo", std::string(request));
-      client.call(def, res);
-      std::string result = res.value().as<std::string>();
-    }
-    dt.stop();
-  }
-
-  return 0;
 }
 
-
-
-
-int main(int argc, char **argv)
+TEST(Messaging, PerformanceEcho)
 {
+  gServer.addService("wibble.echo", &echo);
+  unsigned int numMessages = 10000;
+  unsigned int numPowers = 12;
+  qi::perf::DataPerfTimer dt("Node string -> echo -> string");
+  char character = 'A';
 
-  if (argc > 1 && !strcmp(argv[1], "--client"))
-  {
-    boost::thread thd[gThreadCount];
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string request = std::string(numBytes, character);
 
-    for (int i = 0; i < gThreadCount; ++i)
-    {
-      std::cout << "starting thread: " << i << std::endl;
-      thd[i] = boost::thread(boost::bind(&main_client, i));
+    dt.start(numMessages, numBytes);
+    for (unsigned int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      std::string result = gClient.call<std::string>("wibble.echo", request);
     }
-
-    for (int i = 0; i < gThreadCount; ++i)
-      thd[i].join();
+    dt.stop();
   }
-  else if (argc > 1 && !strcmp(argv[1], "--server"))
-  {
-    return main_server();
-  }
-  else
-  {
-    boost::thread             threadServer(&main_server);
-    sleep(1);
-    boost::thread             threadClient(boost::bind(&main_client, 0));
-    threadClient.join();
-    sleep(1);
-  }
-  return 0;
 }
+
+
+
+TEST(Client, createWithStupidMasterPort)
+{
+  Client client("client", "blabla");
+  bool ex = false;
+  try {
+    client.callVoid("ognagnuk");
+  }
+  catch( const std::exception& e) {
+    ex = true;
+  }
+  EXPECT_EQ(true, ex);
+}
+
+TEST(Server, createWithStupidMasterPort)
+{
+  Server server("server", "blabla", "oink");
+}
+
+TEST(Master, createWithStupidMasterPort)
+{
+  Master master("oink2");
+}
+
+TEST(Server, createWithStupidServerPort)
+{
+  Master master("127.0.0.1:6666");
+  Server server("server", "blabla", "127.0.0.1:6666");
+}
+
+
+
+//TEST(Messaging, NormalUsage)
+//{
+//  //std::cout << "TEST: Initialized " << std::endl;
+//  //std::cout << "TEST: Calling master.listServices " << std::endl;
+//  //ReturnValue result1 = gClient.call("master.listServices");
+//
+//  std::cout << "TEST: Binding wibble.echo " << std::endl;
+//  gServer.addService("wibble.echo", &echo);
+//  std::string s = gClient.call<std::string>("wibble.echo", std::string("errr"));
+//  //std::cout << "TEST: Calling wibble.echo " << std::endl;
+//
+//  std::cout << "TEST: Binding wibble.ping " << std::endl;
+//  gServer.addService("wibble.ping", &ping);
+//  gClient.callVoid("wibble.ping");
+//  //std::cout << "TEST: Calling wibble.ping " << std::endl;
+//
+//  std::cout << "TEST: Calling master.gobledigook " << std::endl;
+//  gClient.callVoid("master.gobledigook");
+//}
+//

@@ -45,7 +45,7 @@ namespace qi {
       #for $j in range($i)
       params.read<P$j>(p$j);
       #end for
-      result.write<R>((fObject->*fFunction)($generate_callparam_list($i)));
+      result.write((fObject->*fFunction)($generate_callparam_list($i)));
     };
 
   private:

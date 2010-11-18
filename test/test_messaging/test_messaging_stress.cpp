@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <boost/timer.hpp>
-#include <qi/nodes.hpp>
+#include <qi/messaging.hpp>
 #include <qi/perf/sleep.hpp>
 
 using namespace qi;
@@ -13,32 +13,32 @@ std::string gServerAddress = "tcp://127.0.0.1:5556";
 
 TEST(MasterServerClient, creation)
 {
-  MasterNode master(gMasterAddress);
-  ServerNode server(gServerName, gServerAddress, gMasterAddress);
-  ClientNode client("client", gMasterAddress);
+  Master master(gMasterAddress);
+  Server server(gServerName, gServerAddress, gMasterAddress);
+  Client client("client", gMasterAddress);
 }
 
-TEST(ClientNodeTest, creation)
+TEST(ClientTest, creation)
 {
-  ClientNode client("client", gMasterAddress);
+  Client client("client", gMasterAddress);
 }
 
-TEST(ClientNodeTest, multipleCreation)
+TEST(ClientTest, multipleCreation)
 {
   for (int i = 0; i< 100; i++) {
-    ClientNode client("client", gMasterAddress);
+    Client client("client", gMasterAddress);
   }
 }
 
 
 
-//TEST(ServerNodeTest, creation)
+//TEST(ServerTest, creation)
 //{
-//  ServerNode server(gServerName, gServerAddress, gMasterAddress);
+//  Server server(gServerName, gServerAddress, gMasterAddress);
 //  Sleep(1000);
 //}
 
-TEST(ServerNodeTest, multipleCreationNewPorts)
+TEST(ServerTest, multipleCreationNewPorts)
 {
   // PROBLEM: limited by number of threads !?
 
@@ -50,7 +50,7 @@ TEST(ServerNodeTest, multipleCreationNewPorts)
     ss << i;
     std::string serverAddress = ss.str();
     std::cout << "Creating Server " << serverAddress << std::endl;
-    ServerNode server(gServerName, serverAddress, gMasterAddress);
+    Server server(gServerName, serverAddress, gMasterAddress);
     // after about 12 services ... crash
     // not enough storage space is available ../src/thread.cpp
     // sometimes a pthread create error.
@@ -59,13 +59,13 @@ TEST(ServerNodeTest, multipleCreationNewPorts)
   }
 }
 
-TEST(ServerNodeTest, multipleCreationSamePort)
+TEST(ServerTest, multipleCreationSamePort)
 {
   // PROBLEM: starting servers too fast crashes
   // PROBLEM: server object should throw, or needs OK? method
   for (int i = 0; i< 10; i++) {
     std::cout << "Creating Server " << i << std::endl;
-    ServerNode server(gServerName, gServerAddress, gMasterAddress);
+    Server server(gServerName, gServerAddress, gMasterAddress);
     // without this sleep, bad things happen!!!
     sleep(1);
     std::cout << "Created Server " << i << std::endl;
@@ -80,24 +80,24 @@ int test(const int &t)
   return t + 42;
 }
 
-TEST(MasterNodeTest, creation)
+TEST(MasterTest, creation)
 {
-  MasterNode master(gMasterAddress);
+  Master master(gMasterAddress);
   sleep(1);
 }
 
-TEST(MasterNodeTest, nodeInfo)
+TEST(MasterTest, nodeInfo)
 {
-  MasterNode master(gMasterAddress);
+  Master master(gMasterAddress);
   //sleep(1);
   //NodeInfo ni = master.getNodeInfo();
   //EXPECT_EQ(gMasterName, ni.name);
   //EXPECT_EQ(gMasterAddress, ni.address);
 }
 
-TEST(MasterNodeTest, serviceInfo)
+TEST(MasterTest, serviceInfo)
 {
-  MasterNode master(gMasterAddress);
+  Master master(gMasterAddress);
   //sleep(1);
   //ServiceInfo si("n", "mod", "meth", qi::makeFunctor(&test));
   //master.addLocalService(si);
@@ -110,14 +110,14 @@ TEST(MasterNodeTest, serviceInfo)
 
 
   //std::string gAddress = "tcp://127.0.0.1:5555";
-  //MasterNode master("master", gAddress);
+  //Master master("master", gAddress);
 
   //ServiceInfo s = master.getService("master.addNode");
   //EXPECT_EQ("master", s.nodeName);
   //EXPECT_EQ("master", s.moduleName);
   //EXPECT_EQ("addNode", s.methodName);
 
-  //ClientNode client(gAddress);
+  //Client client(gAddress);
   //CallDefinition def;
   //def.methodName() = "addNode";
   //def.moduleName() = "master";

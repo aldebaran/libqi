@@ -13,11 +13,11 @@
 
 namespace qi {
   namespace detail {
-    class MasterNodeImp;
+    class MasterImpl;
   }
 
-  /// <summary> Master node. </summary>
-  class MasterNode {
+  /// <summary> Master. </summary>
+  class Master {
   public:
 
     /// <summary> Constructor. </summary>
@@ -25,13 +25,13 @@ namespace qi {
     /// The master address.
     /// e.g. 127.0.0.1:5555
     /// </param>
-    explicit MasterNode(const std::string& masterAddress);
+    explicit Master(const std::string& masterAddress);
 
     /// <summary> Finaliser. </summary>
-    virtual ~MasterNode();
+    virtual ~Master();
 
   private:
-    std::auto_ptr<detail::MasterNodeImp> fImp;
+    std::auto_ptr<detail::MasterImpl> fImp;
   };
 
 }

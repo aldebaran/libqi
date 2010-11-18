@@ -15,18 +15,18 @@
 #include <qi/transport/server.hpp>
 #include <qi/transport/client.hpp>
 
-#include <qi/nodes/serviceinfo.hpp>
-#include <qi/nodes/detail/mutexednamelookup.hpp>
+#include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/detail/mutexednamelookup.hpp>
 
 namespace qi {
   namespace detail {
 
-    class ServerNodeImp : public qi::transport::MessageHandler {
+    class ServerImpl : public qi::transport::MessageHandler {
     public:
-      ServerNodeImp();
-      virtual ~ServerNodeImp();
+      ServerImpl();
+      virtual ~ServerImpl();
 
-      ServerNodeImp(const std::string nodeName,
+      ServerImpl(const std::string nodeName,
         const std::string nodeAddress,
         const std::string masterAddress);
 

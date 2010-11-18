@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/nodes/detail/mutexednamelookup.hpp>
+#include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/perf/dataperftimer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>

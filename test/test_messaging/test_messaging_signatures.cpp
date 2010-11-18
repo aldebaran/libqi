@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <boost/timer.hpp>
-#include <qi/nodes.hpp>
+#include <qi/messaging.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
 using namespace qi;
@@ -56,9 +56,9 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-MasterNode master(gMasterAddress);
-ServerNode server(gServerName, gServerAddress, gMasterAddress);
-ClientNode client("client", gMasterAddress);
+Master master(gMasterAddress);
+Server server(gServerName, gServerAddress, gMasterAddress);
+Client client("client", gMasterAddress);
 
 TEST(NodeSignatures, allFunctorsBindAndCall)
 {

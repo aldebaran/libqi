@@ -8,12 +8,12 @@
 #ifndef QI_NODES_NODE_HPP_
 #define QI_NODES_NODE_HPP_
 
-#include <qi/nodes/server_node.hpp>
-#include <qi/nodes/client_node.hpp>
+#include <qi/messaging/server.hpp>
+#include <qi/messaging/client.hpp>
 
 namespace qi {
-  /// <summary> Node: A combination of Server node and Client node. </summary>
-  class Node : public ServerNode, public ClientNode {
+  /// <summary> Node: A combination of Server and Client. </summary>
+  class Node : public Server, public Client {
   public:
 
     /// <summary> Default constructor. </summary>

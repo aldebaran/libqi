@@ -6,9 +6,9 @@
 */
 
 #include <qi/log.hpp>
-#include <qi/nodes/detail/client_node_imp.hpp>
+#include <qi/messaging/detail/client_impl.hpp>
 #include <string>
-#include <qi/nodes/detail/get_protocol.hpp>
+#include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
 
@@ -17,11 +17,11 @@ namespace qi {
 
   namespace detail {
 
-    ClientNodeImp::ClientNodeImp() : isInitialized(false) {}
+    ClientImpl::ClientImpl() : isInitialized(false) {}
 
-    ClientNodeImp::~ClientNodeImp() {}
+    ClientImpl::~ClientImpl() {}
 
-    ClientNodeImp::ClientNodeImp(
+    ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
     isInitialized(false),
@@ -30,7 +30,7 @@ namespace qi {
         xInit();
     }
 
-    void ClientNodeImp::xInit() {
+    void ClientImpl::xInit() {
       // create a messaging client to the master address
       isInitialized = xCreateServerClient(fMasterAddress);
       if (isInitialized) {
@@ -42,7 +42,7 @@ namespace qi {
       }
     }
 
-    void ClientNodeImp::call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
+    void ClientImpl::call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
         if (! isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
@@ -57,7 +57,7 @@ namespace qi {
         result.str(resultData);
     }
 
-    boost::shared_ptr<qi::transport::Client> ClientNodeImp::xGetServerClient(const std::string& serverAddress) {
+    boost::shared_ptr<qi::transport::Client> ClientImpl::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
       NameLookup<boost::shared_ptr<qi::transport::Client> >::iterator it;
       it = fServerClients.find(serverAddress);
@@ -77,7 +77,7 @@ namespace qi {
       return it->second;
     }
 
-    bool ClientNodeImp::xCreateServerClient(const std::string& serverAddress) {
+    bool ClientImpl::xCreateServerClient(const std::string& serverAddress) {
       // we don't yet know our current IP address, so we fake
       std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
 
@@ -91,7 +91,7 @@ namespace qi {
       return ok;
     }
 
-    const std::string& ClientNodeImp::xLocateService(const std::string& methodSignature) {
+    const std::string& ClientImpl::xLocateService(const std::string& methodSignature) {
         const std::string& nodeAddress = fServiceCache.get(methodSignature);
         if (!nodeAddress.empty()) {
           return nodeAddress;

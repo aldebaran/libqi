@@ -20,7 +20,7 @@
 
 namespace qi {
   namespace detail {
-    class ClientNodeImp;
+    class ClientImpl;
   }
 
   /// <summary>
@@ -29,7 +29,7 @@ namespace qi {
   /// If the service is unknown, the master is interogated
   /// to find the appropriate server
   /// </summary>
-  class ClientNode {
+  class Client {
   public:
     /// <summary>
     /// DefaultConstructor
@@ -37,7 +37,7 @@ namespace qi {
     /// If the service is unknown, the master is interogated
     //  to find the appropriate server
     /// </summary>
-    ClientNode();
+    Client();
 
     /// <summary>
     /// Used to call services that have been added to a server.
@@ -52,9 +52,9 @@ namespace qi {
     /// The address of the master that is used to find services
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    ClientNode(const std::string& clientName, const std::string& masterAddress);
+    Client(const std::string& clientName, const std::string& masterAddress);
 
-    virtual ~ClientNode();
+    virtual ~Client();
 
     void callVoid(const std::string& methodName);
 
@@ -105,10 +105,10 @@ namespace qi {
 
   private:
     void xCall(const std::string &signature, const qi::serialization::BinarySerializer &callDef, qi::serialization::BinarySerializer &result);
-    std::auto_ptr<detail::ClientNodeImp> fImp;
+    std::auto_ptr<detail::ClientImpl> fImp;
   };
 
 }
 
-#include <qi/nodes/client_node.hxx>
+#include <qi/messaging/client.hxx>
 #endif  // QI_NODES_CLIENT_NODE_HPP_

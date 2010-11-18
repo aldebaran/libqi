@@ -15,26 +15,25 @@
 
 namespace qi {
   namespace detail {
-    class ServerNodeImp;
+    class ServerImpl;
   }
 
-  /// <summary> Server node. </summary>
-  /// \example example_qi_server.cpp
-  class ServerNode {
+  /// <summary> Server. </summary>
+  class Server {
   public:
 
     /// <summary> Default constructor. </summary>
-    ServerNode();
+    Server();
 
     /// <summary> Finaliser. </summary>
-    virtual ~ServerNode();
+    virtual ~Server();
 
     /// <summary> Default constructor. </summary>
-    /// <param name="nodeName"> Name of the node. </param>
-    /// <param name="nodeAddress"> The node address. </param>
+    /// <param name="serverName"> Name of the server. </param>
+    /// <param name="serverAddress"> The server address. </param>
     /// <param name="masterAddress"> The master address. </param>
-    ServerNode(const std::string& nodeName,
-               const std::string& nodeAddress,
+    Server(const std::string& serverName,
+               const std::string& serverAddress,
                const std::string& masterAddress);
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -52,7 +51,7 @@ namespace qi {
 
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
-    std::auto_ptr<detail::ServerNodeImp> fImp;
+    std::auto_ptr<detail::ServerImpl> fImp;
   };
 
 }

@@ -1,6 +1,5 @@
 ##
 ## Author(s):
-##  - Jean-Charles DELAY <jdelay@aldebaran-robotics.com>
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
@@ -15,12 +14,11 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
 enable_testing()
-
 create_config_h("config.hpp.in" "qi/config.hpp")
 
 file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
-file(GLOB NODES_SRC                qi/nodes/*.cpp qi/nodes/*.h*)
-file(GLOB NODES_DETAIL_SRC         qi/nodes/detail/*.cpp qi/nodes/detail/*.h*)
+file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
+file(GLOB MESSAGING_DETAIL_SRC     qi/messaging/detail/*.cpp qi/messaging/detail/*.h*)
 file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
@@ -28,8 +26,6 @@ file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization
 file(GLOB TOOLS_SRC                qi/perf/*.cpp qi/perf/*.h*)
 file(GLOB LOGS_SRC                 qi/log/*.cpp qi/log/*.h*)
 file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
-file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
-
 file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/zeromq/*.cpp qi/transport/zeromq/*.h*)
 file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/thrift/*.cpp qi/transport/thrift/*.h*)
@@ -38,9 +34,8 @@ file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
 file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
 
-source_group( nodes                  FILES ${NODES_SRC})
-source_group( nodes\\detail          FILES ${NODES_DETAIL_SRC})
 source_group( messaging              FILES ${MESSAGING_SRC})
+source_group( messaging\\detail      FILES ${MESSAGING_DETAIL_SRC})
 source_group( functors               FILES ${FUNCTORS_SRC})
 source_group( functors\\detail       FILES ${FUNCTORS_DETAIL_SRC})
 source_group( serialization          FILES ${SERIALIZATION_SRC})
@@ -58,9 +53,8 @@ file(GLOB HEADERS qi/*.h*)
 
 set(SRC
     ${CORE_SRC}
-    ${NODES_SRC}
-    ${NODES_DETAIL_SRC}
     ${MESSAGING_SRC}
+    ${MESSAGING_DETAIL_SRC}
     ${SERIALIZATION_SRC}
     ${SERIALIZATION_BOOST_SRC}
     ${EXCEPTIONS_SRC}
