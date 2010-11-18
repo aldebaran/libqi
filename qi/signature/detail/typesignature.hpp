@@ -18,13 +18,13 @@
 namespace qi {
   namespace detail {
 
-#define SIMPLE_SIGNATURE(THETYPE, THENAME)                             \
-  template <>                                                          \
-    struct signature<THETYPE>  {                                     \
-    static std::string &value(std::string &val) {                  \
-    val += THENAME;                                                \
-    return val;                                                    \
-  }                                                              \
+#define SIMPLE_SIGNATURE(THETYPE, THENAME)                      \
+  template <>                                                   \
+    struct signature<THETYPE>  {                                \
+    static std::string &value(std::string &val) {               \
+    val += THENAME;                                             \
+    return val;                                                 \
+  }                                                             \
     };
 
     template <typename T, class Enable = void>
