@@ -32,7 +32,7 @@ namespace qi {
   /// <summary>
   /// Used to call services that have been added to a server.
   /// If the service is unknown, the master is interogated
-  //  to find the appropriate server
+  /// to find the appropriate server.
   /// </summary>
   class Client {
   public:
@@ -40,14 +40,14 @@ namespace qi {
     /// DefaultConstructor
     /// Used to call services that have been added to a server.
     /// If the service is unknown, the master is interogated
-    //  to find the appropriate server
+    /// to find the appropriate server.
     /// </summary>
     Client();
 
     /// <summary>
     /// Used to call services that have been added to a server.
     /// If the service is unknown, the master is interogated
-    //  to find the appropriate server
+    /// to find the appropriate server
     /// </summary>
     /// <param name="clientName">
     /// The name you want to give to this client
@@ -73,9 +73,9 @@ namespace qi {
 
 #end for
   private:
-    void xCall(const std::string &signature,
-      const qi::serialization::BinarySerializer &request,
-            qi::serialization::BinarySerializer &result);
+    void xCall(const std::string& signature,
+      const qi::serialization::BinarySerializer& request,
+            qi::serialization::BinarySerializer& result);
     std::auto_ptr<detail::ClientImpl> _impl;
   };
 }

@@ -25,7 +25,7 @@ namespace qi {
   /// <summary>
   /// Used to call services that have been added to a server.
   /// If the service is unknown, the master is interogated
-  //  to find the appropriate server
+  ///  to find the appropriate server
   /// </summary>
   class Client {
   public:
@@ -33,7 +33,7 @@ namespace qi {
     /// DefaultConstructor
     /// Used to call services that have been added to a server.
     /// If the service is unknown, the master is interogated
-    //  to find the appropriate server
+    ///  to find the appropriate server
     /// </summary>
     Client();
 
