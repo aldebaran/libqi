@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef    QI_MESSAGING_SLEEP_HXX_
-# define   QI_MESSAGING_SLEEP_HXX_
+#ifndef   __QI_PERF_SLEEP_HPP__
+#define   __QI_PERF_SLEEP_HPP__
 
 #ifdef _WIN32
 #  include <winsock2.h>
@@ -15,4 +15,4 @@
 #  include <unistd.h>
 #endif
 
-#endif  // QI_MESSAGING_SLEEP_HXX_
+#endif // __QI_PERF_SLEEP_HPP__

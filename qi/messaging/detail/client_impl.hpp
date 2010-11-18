@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef COMMON_CLIENT_NODE_IMP_HPP_
-#define COMMON_CLIENT_NODE_IMP_HPP_
+#ifndef   __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__
+#define   __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -47,4 +47,4 @@ namespace qi {
   }
 }
 
-#endif  // COMMON_CLIENT_NODE_IMP_HPP_
+#endif // __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__

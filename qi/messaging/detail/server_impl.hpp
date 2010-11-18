@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef COMMON_SERVER_NODE_IMP_HPP_
-#define COMMON_SERVER_NODE_IMP_HPP_
+#ifndef   __QI_MESSAGING_DETAIL_SERVER_IMPL_HPP__
+#define   __QI_MESSAGING_DETAIL_SERVER_IMPL_HPP__
 
 #include <string>
 
@@ -74,5 +74,5 @@ namespace qi {
   }
 }
 
-#endif  // COMMON_SERVER_NODE_IMP_HPP_
+#endif // __QI_MESSAGING_DETAIL_SERVER_IMPL_HPP__
 

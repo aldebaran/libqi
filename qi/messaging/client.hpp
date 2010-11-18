@@ -1,5 +1,7 @@
+
 #pragma once
 /*
+** $autogen
 **
 ** Author(s):
 **  - Chris Kilner  <ckilner@aldebaran-robotics.com>
@@ -7,10 +9,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-
-
-#ifndef QI_NODES_CLIENT_NODE_HPP_
-#define QI_NODES_CLIENT_NODE_HPP_
+#ifndef   __QI_MESSAGING_CLIENT_HPP_IN__
+#define   __QI_MESSAGING_CLIENT_HPP_IN__
 
 #include <string>
 #include <memory>
@@ -24,10 +24,9 @@ namespace qi {
   }
 
   /// <summary>
-  /// \example example_qi_client.cpp
   /// Used to call services that have been added to a server.
   /// If the service is unknown, the master is interogated
-  /// to find the appropriate server
+  //  to find the appropriate server
   /// </summary>
   class Client {
   public:
@@ -97,12 +96,6 @@ namespace qi {
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
     RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
 
-    //template<typename TOPIC_TYPE>
-    //Subscriber subscribe(std::string topicName, FunctionPtr func);
-
-    //template<typename TOPIC_TYPE>
-    //Subscriber subscribe(std::string topicName, ObjPtr obj, MethodPtr meth);
-
   private:
     void xCall(const std::string &signature, const qi::serialization::BinarySerializer &callDef, qi::serialization::BinarySerializer &result);
     std::auto_ptr<detail::ClientImpl> fImp;
@@ -111,4 +104,4 @@ namespace qi {
 }
 
 #include <qi/messaging/client.hxx>
-#endif  // QI_NODES_CLIENT_NODE_HPP_
+#endif // __QI_MESSAGING_CLIENT_HPP_IN__

@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_SERIALIZATION_SERIALIZER_HPP_
-#define QI_SERIALIZATION_SERIALIZER_HPP_
+#ifndef   __QI_SERIALIZATION_SERIALIZER_HPP__
+#define   __QI_SERIALIZATION_SERIALIZER_HPP__
 
 //#include <qi/serialization/boost/boost_binary_serializer.hpp>
 
@@ -20,4 +20,4 @@
 
 #include <qi/serialization/serializeddata.hpp>
 
-#endif  // QI_SERIALIZATION_SERIALIZER_HPP_
+#endif // __QI_SERIALIZATION_SERIALIZER_HPP__

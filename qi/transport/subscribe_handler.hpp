@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_TRANSPORT_I_SUBSCRIBEHANDLER_HPP_
-#define QI_TRANSPORT_I_SUBSCRIBEHANDLER_HPP_
+#ifndef   __QI_TRANSPORT_SUBSCRIBE_HANDLER_HPP__
+#define   __QI_TRANSPORT_SUBSCRIBE_HANDLER_HPP__
 
 namespace qi {
   namespace transport {
@@ -21,4 +21,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_TRANSPORT_I_SUBSCRIBEHANDLER_HPP_
+#endif // __QI_TRANSPORT_SUBSCRIBE_HANDLER_HPP__

@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  QI_CORE_RUNNABLE_HPP_
-# define QI_CORE_RUNNABLE_HPP_
+#ifndef   __QI_CORE_RUNNABLE_HPP__
+#define   __QI_CORE_RUNNABLE_HPP__
 
 
 namespace qi {
@@ -20,4 +20,4 @@ namespace qi {
 
 }
 
-#endif  // QI_CORE_RUNNABLE_HPP_
+#endif // __QI_CORE_RUNNABLE_HPP__

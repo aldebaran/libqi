@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef     QI_SERIALIZATION_SERIALIZE_HPP_
-# define     QI_SERIALIZATION_SERIALIZE_HPP_
+#ifndef   __QI_SERIALIZATION_SERIALIZEDDATA_HPP__
+#define   __QI_SERIALIZATION_SERIALIZEDDATA_HPP__
 
 #include <iostream>
 #include <qi/signature.hpp>
@@ -59,4 +59,4 @@ namespace qi {
 
 #include <qi/serialization/serializeddata.hxx>
 
-#endif  // QI_SERIALIZATION_SERIALIZE_HPP_
+#endif // __QI_SERIALIZATION_SERIALIZEDDATA_HPP__

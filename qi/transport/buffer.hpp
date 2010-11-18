@@ -23,8 +23,8 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef         QI_TRANSPORT_BUFFER_HPP_
-# define        QI_TRANSPORT_BUFFER_HPP_
+#ifndef   __QI_TRANSPORT_BUFFER_HPP__
+#define   __QI_TRANSPORT_BUFFER_HPP__
 
 #include <string>
 
@@ -35,4 +35,4 @@ namespace qi {
 }
 
 
-#endif      /* !BUFFER_PP_ */
+#endif // __QI_TRANSPORT_BUFFER_HPP__

@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_TRANSPORT_I_MESSAGE_HANDLER_HPP_
-# define QI_TRANSPORT_I_MESSAGE_HANDLER_HPP_
+#ifndef   __QI_TRANSPORT_MESSAGE_HANDLER_HPP__
+#define   __QI_TRANSPORT_MESSAGE_HANDLER_HPP__
 
 # include <qi/transport/buffer.hpp>
 
@@ -24,4 +24,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_MESSAGING_I_GENERIC_MESSAGE_HANDLER_HPP_
+#endif // __QI_TRANSPORT_MESSAGE_HANDLER_HPP__

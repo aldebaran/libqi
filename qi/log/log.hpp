@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_LOG_LOG_H
-#define QI_LOG_LOG_H
+#ifndef   __QI_LOG_LOG_HPP__
+#define   __QI_LOG_LOG_HPP__
 
 #include <string>
 #include <sstream>
@@ -140,5 +140,5 @@ namespace qi {
   }
 }
 
-#endif
+#endif // __QI_LOG_LOG_HPP__
 

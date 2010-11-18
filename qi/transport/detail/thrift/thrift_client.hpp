@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Cedric GESTES
 */
 
-#ifndef         AL_MESSAGING_TRANSPORT_THRIFTCLIENT_HPP_
-# define        AL_MESSAGING_TRANSPORT_THRIFTCLIENT_HPP_
+#ifndef   __QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP__
+#define   __QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP__
 
 #include <qi/transport/client.hpp>
 #include <transport/TTransport.h>
@@ -32,4 +32,4 @@ namespace qi {
 }
 
 
-#endif
+#endif // __QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP__

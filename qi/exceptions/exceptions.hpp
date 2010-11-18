@@ -6,8 +6,8 @@
 *      Mail  : jdelay@aldebaran-robotics.com
 */
 
-#ifndef QI_TRANSPORT_EXCEPTIONS_HPP_
-#define QI_TRANSPORT_EXCEPTIONS_HPP_
+#ifndef   __QI_EXCEPTIONS_EXCEPTIONS_HPP__
+#define   __QI_EXCEPTIONS_EXCEPTIONS_HPP__
 
 #include <exception>
 #include <string>
@@ -94,4 +94,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_TRANSPORT_EXCEPTIONS_HPP_
+#endif // __QI_EXCEPTIONS_EXCEPTIONS_HPP__

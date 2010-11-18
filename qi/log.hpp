@@ -6,9 +6,9 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef         QI_LOG_HPP_
-# define        QI_LOG_HPP_
+#ifndef   __QI_LOG_HPP__
+#define   __QI_LOG_HPP__
 
 # include <qi/log/log.hpp>
 
-#endif      /* !QI_LOG_HPP_ */
+#endif // __QI_LOG_HPP__

@@ -7,12 +7,9 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef I_WANT_HXX
-#error "do not include hxx in your code"
-#endif
 
-#ifndef  QI_FUNCTORS_VOIDMEMBERFUNCTOR_HXX_
-# define QI_FUNCTORS_VOIDMEMBERFUNCTOR_HXX_
+#ifndef   __QI_FUNCTORS_DETAIL_VOIDMEMBERFUNCTOR_HXX_IN__
+#define   __QI_FUNCTORS_DETAIL_VOIDMEMBERFUNCTOR_HXX_IN__
 
 # include <qi/functors/functor.hpp>
 
@@ -252,4 +249,4 @@ namespace detail {
 
 }
 }
-#endif  // QI_FUNCTORS_VOIDMEMBERFUNCTOR_HXX_
+#endif // __QI_FUNCTORS_DETAIL_VOIDMEMBERFUNCTOR_HXX_IN__

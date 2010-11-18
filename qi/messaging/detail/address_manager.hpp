@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef QI_NODE_DETAIL_ADDRESS_MANAGER_HPP
-#define QI_NODE_DETAIL_ADDRESS_MANAGER_HPP
+#ifndef   __QI_MESSAGING_DETAIL_ADDRESS_MANAGER_HPP__
+#define   __QI_MESSAGING_DETAIL_ADDRESS_MANAGER_HPP__
 
 #include <string>
 #include <vector>
@@ -29,5 +29,5 @@ namespace qi {
     };
   }
 }
-#endif  // QI_NODE_DETAIL_ADDRESS_MANAGER_HPP
+#endif // __QI_MESSAGING_DETAIL_ADDRESS_MANAGER_HPP__
 

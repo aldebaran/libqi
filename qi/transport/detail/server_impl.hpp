@@ -6,8 +6,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  QI_TRANSPORT_DETAIL_SERVERIMPL_HPP_
-# define QI_TRANSPORT_DETAIL_SERVERIMPL_HPP_
+#ifndef   __QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP__
+#define   __QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP__
 
 #include <string>
 #include <qi/core/runnable.hpp>
@@ -44,4 +44,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_TRANSPORT_SERVER_HPP_
+#endif // __QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP__

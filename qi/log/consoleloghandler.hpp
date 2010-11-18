@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef    QI_LOG_DEFAULTLOGHANDLER_HPP_
-# define   QI_LOG_DEFAULTLOGHANDLER_HPP_
+#ifndef   __QI_LOG_CONSOLELOGHANDLER_HPP__
+#define   __QI_LOG_CONSOLELOGHANDLER_HPP__
 
 #include <cstdarg>
 #include <qi/log/log.hpp>
@@ -65,4 +65,4 @@ namespace qi {
 }
 
 
-#endif     /* !DEFAULTLOGHANDLER_PP_ */
+#endif // __QI_LOG_CONSOLELOGHANDLER_HPP__

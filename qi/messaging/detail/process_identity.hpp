@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef QI_NODE_DETAIL_PROCESS_IDENTITY_HPP
-#define QI_NODE_DETAIL_PROCESS_IDENTITY_HPP
+#ifndef   __QI_MESSAGING_DETAIL_PROCESS_IDENTITY_HPP__
+#define   __QI_MESSAGING_DETAIL_PROCESS_IDENTITY_HPP__
 
 #include <string>
 namespace qi {
@@ -26,5 +26,5 @@ namespace qi {
     std::string getFirstMacAddress();
   }
 }
-#endif  // QI_NODE_DETAIL_PROCESS_IDENTITY_HPP
+#endif // __QI_MESSAGING_DETAIL_PROCESS_IDENTITY_HPP__
 

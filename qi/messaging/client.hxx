@@ -9,8 +9,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef QI_NODES_CLIENT_NODE_HXX_
-#define QI_NODES_CLIENT_NODE_HXX_
+#ifndef   __QI_MESSAGING_CLIENT_HXX_IN__
+#define   __QI_MESSAGING_CLIENT_HXX_IN__
 
 #include <qi/serialization/serializer.hpp>
 
@@ -244,4 +244,4 @@ namespace qi {
   }
 
 }
-#endif  // QI_NODES_CLIENT_NODE_HXX_
+#endif // __QI_MESSAGING_CLIENT_HXX_IN__

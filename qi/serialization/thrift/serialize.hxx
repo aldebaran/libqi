@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   	AL_SERIALIZATION_THRIFT_HXX_
-# define   	AL_SERIALIZATION_THRIFT_HXX_
+#ifndef   __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__
+#define   __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__
 
 namespace qi {
   namespace serialization {
@@ -51,4 +51,4 @@ namespace qi {
   }
 }
 
-#endif	    /* !AL_SERIALIZATION_THRIFT_HXX_ */
+#endif // __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__

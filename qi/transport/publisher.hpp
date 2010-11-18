@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_TRANSPORT_PUBLISHER_HPP_
-# define QI_TRANSPORT_PUBLISHER_HPP_
+#ifndef   __QI_TRANSPORT_PUBLISHER_HPP__
+#define   __QI_TRANSPORT_PUBLISHER_HPP__
 
 #include <string>
 
@@ -26,4 +26,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_TRANSPORT_PUBLISHER_HPP_
+#endif // __QI_TRANSPORT_PUBLISHER_HPP__

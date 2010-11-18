@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef QI_NODE_DETAIL_CONSTANTS_HPP
-#define QI_NODE_DETAIL_CONSTANTS_HPP
+#ifndef   __QI_MESSAGING_DETAIL_CONSTANTS_HPP__
+#define   __QI_MESSAGING_DETAIL_CONSTANTS_HPP__
 
 #include <string>
 namespace qi {
@@ -15,5 +15,5 @@ namespace qi {
     static const std::string kLocalHost         = "127.0.0.1";
   }
 }
-#endif  // QI_NODE_DETAIL_CONSTANTS_HPP
+#endif // __QI_MESSAGING_DETAIL_CONSTANTS_HPP__
 

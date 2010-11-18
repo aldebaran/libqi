@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef COMMON_NAMELOOKUP_H_
-#define COMMON_NAMELOOKUP_H_
+#ifndef   __QI_MESSAGING_DETAIL_NAMELOOKUP_HPP__
+#define   __QI_MESSAGING_DETAIL_NAMELOOKUP_HPP__
 
 #include <map>
 #include <string>
@@ -23,5 +23,5 @@ namespace qi {
   }  // namespace Nodes
 }  // namespace qi
 
-#endif  // COMMON_NODE_H_
+#endif // __QI_MESSAGING_DETAIL_NAMELOOKUP_HPP__
 

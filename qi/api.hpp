@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef         QI_API_HPP_
-# define        QI_API_HPP_
+#ifndef   __QI_API_HPP__
+#define   __QI_API_HPP__
 
 // qi_EXPORTS controls which symbols are exported when
 // compiled as a SHARED lib.
@@ -39,4 +39,4 @@
 #define QIAPI_DEPRECATED
 #endif
 
-#endif    /* !QI_API_HPP_ */
+#endif // __QI_API_HPP__

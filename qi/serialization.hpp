@@ -6,9 +6,9 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_SERIALIZATION_HPP_
-#define QI_SERIALIZATION_HPP_
+#ifndef   __QI_SERIALIZATION_HPP__
+#define   __QI_SERIALIZATION_HPP__
 
 #include <qi/serialization/serialize.hpp>
 
-#endif  // QI_SERIALIZATION_HPP_
+#endif // __QI_SERIALIZATION_HPP__

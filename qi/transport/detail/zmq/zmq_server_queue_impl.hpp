@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
-#define QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_
+#ifndef   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP__
+#define   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP__
 
 #include <zmq.hpp>
 #include <qi/transport/server.hpp>
@@ -66,4 +66,4 @@ namespace qi {
     }
   }
 }
-#endif /* !QI_MESSAGING_TRANSPORT_ZEROMQ_SERVERQUEUE_HPP_ */
+#endif // __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP__

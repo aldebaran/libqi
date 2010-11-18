@@ -5,8 +5,8 @@
 * Version : $Id$
 */
 
-#ifndef   QI_FUNCTORS_FUNCTOR_HPP_
-# define  QI_FUNCTORS_FUNCTOR_HPP_
+#ifndef   __QI_FUNCTORS_FUNCTOR_HPP__
+#define   __QI_FUNCTORS_FUNCTOR_HPP__
 
 // Activate or disactivate log
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
@@ -45,4 +45,4 @@ namespace qi
 #include <qi/functors/detail/memberfunctor.hxx>
 #include <qi/functors/detail/voidmemberfunctor.hxx>
 
-#endif
+#endif // __QI_FUNCTORS_FUNCTOR_HPP__

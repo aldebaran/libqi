@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef     QI_FUNCTORS_DETAIL_FUNCTIONSIGNATURE_HPP_
-# define    QI_FUNCTORS_DETAIL_FUNCTIONSIGNATURE_HPP_
+#ifndef   __QI_SIGNATURE_DETAIL_FUNCTIONSIGNATURE_HPP__
+#define   __QI_SIGNATURE_DETAIL_FUNCTIONSIGNATURE_HPP__
 
 #include <boost/utility.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -104,5 +104,5 @@ struct newFunctionSignature {
     boost::mpl::back_inserter< returnValueColon >
   >::type value;
 };
-#endif
+#endif // __QI_SIGNATURE_DETAIL_FUNCTIONSIGNATURE_HPP__
 

@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef  QI_TRANSPORT_ZMQSUBSCRIBER_HPP_
-# define QI_TRANSPORT_ZMQSUBSCRIBER_HPP_
+#ifndef   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP__
+#define   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP__
 
 # include <qi/transport/subscriber.hpp>
 # include <boost/thread.hpp>
@@ -53,4 +53,4 @@ namespace qi {
   }
 }
 
-#endif  // QI_TRANSPORT_ZMQSUBSCRIBER_HPP_
+#endif // __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP__

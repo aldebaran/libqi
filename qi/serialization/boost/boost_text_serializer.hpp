@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef SERIALIZATION_BOOST_TEXT_SERIALIZER_HPP_
-#define SERIALIZATION_BOOST_TEXT_SERIALIZER_HPP_
+#ifndef   __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HPP__
+#define   __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HPP__
 
 #include <string>
 
@@ -71,5 +71,5 @@ namespace qi {
 // implementation
 #include <qi/serialization/boost/boost_text_serializer.hxx>
 
-#endif  // SERIALIZATION_BOOST_TEXT_SERIALIZER_HPP_
+#endif // __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HPP__
 

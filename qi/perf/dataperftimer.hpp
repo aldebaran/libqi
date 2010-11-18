@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef     QI_TEST_DATAPERFTIMER_HPP_
-# define    QI_TEST_DATAPERFTIMER_HPP_
+#ifndef   __QI_PERF_DATAPERFTIMER_HPP__
+#define   __QI_PERF_DATAPERFTIMER_HPP__
 
 #include <boost/timer.hpp>
 #include <string>
@@ -69,5 +69,5 @@ namespace qi {
 }
 
 
-#endif  // QI_TEST_DATAPERFTIMER_HPP_
+#endif // __QI_PERF_DATAPERFTIMER_HPP__
 

@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef QI_NODES_DETAIL_GETPROTOCOL_HPP_
-#define QI_NODES_DETAIL_GETPROTOCOL_HPP_
+#ifndef   __QI_MESSAGING_DETAIL_GET_PROTOCOL_HPP__
+#define   __QI_MESSAGING_DETAIL_GET_PROTOCOL_HPP__
 
 #include <string>
 
@@ -19,5 +19,5 @@ namespace qi {
   }
 }
 
-#endif  // QI_NODES_DETAIL_GETPROTOCOL_HPP_
+#endif // __QI_MESSAGING_DETAIL_GET_PROTOCOL_HPP__
 

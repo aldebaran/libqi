@@ -23,8 +23,8 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef   	QI_SERIALIZATION_SERIALIZEDDATA_HXX_
-# define   	QI_SERIALIZATION_SERIALIZEDDATA_HXX_
+#ifndef   __QI_SERIALIZATION_SERIALIZEDDATA_HXX__
+#define   __QI_SERIALIZATION_SERIALIZEDDATA_HXX__
 
 
 namespace qi {
@@ -109,4 +109,4 @@ namespace qi {
   }
 }
 
-#endif	    /* !SERIALIZEDDATA_HXX_ */
+#endif // __QI_SERIALIZATION_SERIALIZEDDATA_HXX__

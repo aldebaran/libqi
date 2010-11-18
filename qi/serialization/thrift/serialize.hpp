@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef     AL_SERIALIZATION_THRIFT_HPP_
-# define     AL_SERIALIZATION_THRIFT_HPP_
+#ifndef   __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__
+#define   __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__
 
 #include <protocol/TProtocol.h>
 #include <boost/variant/static_visitor.hpp>
@@ -73,4 +73,4 @@ namespace qi {
 
 #include <qi/serialization/thrift/serialize.hxx>
 
-#endif      /* !AL_SERIALIZATION_THRIFT_HPP_ */
+#endif // __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__

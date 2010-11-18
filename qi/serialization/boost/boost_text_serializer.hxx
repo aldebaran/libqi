@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef SERIALIZATION_BOOST_TEXT_SERIALIZATION_HXX_
-#define SERIALIZATION_BOOST_TEXT_SERIALIZATION_HXX_
+#ifndef   __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HXX__
+#define   __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HXX__
 
 // internal type (fixed size buffer)
 #include <boost/interprocess/streams/bufferstream.hpp>
@@ -68,4 +68,4 @@ namespace qi {
   }
 }
 
-#endif  // SERIALIZATION_BOOST_TEXT_SERIALIZATION_HXX_
+#endif // __QI_SERIALIZATION_BOOST_BOOST_TEXT_SERIALIZER_HXX__
