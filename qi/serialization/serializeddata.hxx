@@ -52,7 +52,25 @@ namespace qi {
 //        write<T>(i);
 //    };
 
+    // bool
+    template<>
+    inline void SerializedData::read<bool>(bool& b)
+    {
+      std::string sig = qi::signature<bool>::value();
+      b = *((bool *) fData.data());
+      fData.erase(0, sizeof(bool));
+      //std::cout << "readB(" << b << "):" << sig << std::endl;
+    }
 
+    template<>
+    inline void SerializedData::write<bool>(const bool& b)
+    {
+      std::string sig = qi::signature<bool>::value();
+      fData.append((char *)&b, sizeof(b));
+      //std::cout << "writeB(" << b << "):" << sig << std::endl;
+    }
+
+    // int
     template<>
     inline void SerializedData::read<int>(int& i)
     {
@@ -70,6 +88,25 @@ namespace qi {
       //std::cout << "writeI(" << i << "):" << sig << std::endl;
     }
 
+    // float
+    template<>
+    inline void SerializedData::read<float>(float& f)
+    {
+      std::string sig = qi::signature<float>::value();
+      f = *((float *) fData.data());
+      fData.erase(0, sizeof(float));
+      //std::cout << "readF(" << f << "):" << sig << std::endl;
+    }
+
+    template<>
+    inline void SerializedData::write<float>(const float& f)
+    {
+      std::string sig = qi::signature<int>::value();
+      fData.append((char *)&f, sizeof(f));
+      //std::cout << "writeF(" << f << "):" << sig << std::endl;
+    }
+
+    // string
     template<>
     inline void SerializedData::read<std::string>(std::string& s)
     {
