@@ -9,9 +9,6 @@
 */
 
 #raw
-#ifndef I_WANT_HXX
-#error("do not include hxx in your code")
-#endif
 
 #ifndef  QI_FUNCTORS_FUNCTOR_HXX_
 # define QI_FUNCTORS_FUNCTOR_HXX_

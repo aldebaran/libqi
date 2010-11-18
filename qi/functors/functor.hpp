@@ -40,11 +40,9 @@ namespace qi
 
 }
 
-#define I_WANT_HXX
 #include <qi/functors/detail/functor.hxx>
 #include <qi/functors/detail/voidfunctor.hxx>
 #include <qi/functors/detail/memberfunctor.hxx>
 #include <qi/functors/detail/voidmemberfunctor.hxx>
-#undef I_WANT_HXX
 
 #endif
