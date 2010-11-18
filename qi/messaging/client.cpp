@@ -11,42 +11,30 @@
 #include <qi/serialization/serializer.hpp>
 
 namespace qi {
-  /// <summary>
-  /// Used to call services that have been added to a server. If the service
-  /// is unknown, the master is interogated to find the appropriate server.
-  /// </summary>
   Client::Client() {}
 
-  /// <summary> Destructor. </summary>
   Client::~Client() {}
 
-  /// <summary>
-  /// DefaultConstructor Used to call services that have been added to a
-  /// server. If the service is unknown, the master is interogated
-  /// to find the appropriate server.
-  /// </summary>
-  /// <param name="clientName"> Name of the client. </param>
-  /// <param name="masterAddress"> The master address. </param>
   Client::Client(const std::string& clientName,
                          const std::string& masterAddress)
     : _impl(new detail::ClientImpl(clientName, masterAddress))
   {}
 
   void Client::callVoid(const std::string& methodName) {
-    qi::serialization::BinarySerializer calldef;
-    qi::serialization::BinarySerializer resultdef;
+    qi::serialization::BinarySerializer msg;
+    qi::serialization::BinarySerializer result;
 
     void (*f)()  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string signature = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    xCall(hash, calldef, resultdef);
+    msg.write<std::string>(signature);
+    xCall(signature, msg, result);
   }
 
-  void Client::xCall(const std::string &signature,
-    const qi::serialization::BinarySerializer& callDef,
-    qi::serialization::BinarySerializer &result)
+  void Client::xCall(const std::string& signature,
+    const qi::serialization::BinarySerializer& msg,
+          qi::serialization::BinarySerializer& result)
   {
-    return _impl->call(signature, callDef, result);
+    return _impl->call(signature, msg, result);
   }
 }

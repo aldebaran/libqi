@@ -9,14 +9,9 @@
 #include <qi/messaging/detail/server_impl.hpp>
 
 namespace qi {
-  /// <summary> Default constructor. </summary>
   Server::Server() {}
   Server::~Server() {}
 
-  /// <summary> Default constructor. </summary>
-  /// <param name="serverName"> Name of the server. </param>
-  /// <param name="serverAddress"> The server address. </param>
-  /// <param name="masterAddress"> The master address. </param>
   Server::Server(const std::string& serverName,
                          const std::string& serverAddress,
                          const std::string& masterAddress) :
