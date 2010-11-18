@@ -19,6 +19,7 @@ namespace qi {
   }
 
   /// <summary> Server node. </summary>
+  /// \example example_qi_server.cpp
   class ServerNode {
   public:
 

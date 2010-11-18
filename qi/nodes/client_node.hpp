@@ -1,7 +1,5 @@
-
 #pragma once
 /*
-** $autogen
 **
 ** Author(s):
 **  - Chris Kilner  <ckilner@aldebaran-robotics.com>
@@ -9,6 +7,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
+
+
 #ifndef QI_NODES_CLIENT_NODE_HPP_
 #define QI_NODES_CLIENT_NODE_HPP_
 
@@ -24,9 +24,10 @@ namespace qi {
   }
 
   /// <summary>
+  /// \example example_qi_client.cpp
   /// Used to call services that have been added to a server.
   /// If the service is unknown, the master is interogated
-  //  to find the appropriate server
+  /// to find the appropriate server
   /// </summary>
   class ClientNode {
   public:
