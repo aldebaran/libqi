@@ -10,6 +10,11 @@ using namespace qi;
 
 static int gGlobalResult = 0;
 
+bool        echo_bool(const bool& b) {return b;}
+int         echo_int(const int& i) {return i;}
+float       echo_float(const float& f) {return f;}
+std::string echo_string(const std::string& s) {return s;}
+
 void vfun0()                                                                                      { gGlobalResult = 0; }
 void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
 void vfun2(const int &p0,const int &p1)                                                           { gGlobalResult = p0 + p1; }
@@ -59,6 +64,38 @@ std::string gServerAddress = "127.0.0.1:5556";
 Master master(gMasterAddress);
 Server server(gServerName, gServerAddress, gMasterAddress);
 Client client("client", gMasterAddress);
+
+TEST(NodeSignatures, echo_bool)
+{
+  bool b = true;
+  server.addService("echo", &echo_bool);
+  bool r = client.call<bool>("echo", b);
+  ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_int)
+{
+  int b = 42;
+  server.addService("echo", &echo_int);
+  int r = client.call<int>("echo", b);
+  ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_float)
+{
+  float b = 42.42f;
+  server.addService("echo", &echo_float);
+  float r = client.call<float>("echo", b);
+  ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_string)
+{
+  std::string b = "42";
+  server.addService("echo", &echo_string);
+  std::string r = client.call<std::string>("echo", b);
+  ASSERT_EQ(b, r);
+}
 
 TEST(NodeSignatures, allFunctorsBindAndCall)
 {
