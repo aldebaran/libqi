@@ -11,14 +11,15 @@
 namespace qi {
   namespace transport {
     namespace detail {
-      ZMQConnectionHandler::ZMQConnectionHandler(const qi::transport::Buffer    &msg,
-                                                 MessageHandler                 *dataHandler,
-                                                 detail::ServerResponseHandler  *responseDelegate,
-                                                 void                           *data)
-                                                   : fData(data),
-                                                   fMsg(msg),
-                                                   fDataHandler(dataHandler),
-                                                   fResponseDelegate(responseDelegate)
+      ZMQConnectionHandler::ZMQConnectionHandler(
+        const qi::transport::Buffer    &msg,
+         MessageHandler                 *dataHandler,
+         detail::ServerResponseHandler  *responseDelegate,
+         void                           *data)
+           : fData(data),
+             fMsg(msg),
+             fDataHandler(dataHandler),
+             fResponseDelegate(responseDelegate)
       {
         //this->setTaskName("ZMQConnectionHandler");
       }
