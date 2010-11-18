@@ -46,6 +46,9 @@ namespace qi {
       xAddService(makeSignature(name, function), makeFunctor(function));
     }
 
+    //template<typename TOPIC_TYPE>
+    //Publisher addTopic(std::string topicName);
+
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
     std::auto_ptr<detail::ServerNodeImp> fImp;
