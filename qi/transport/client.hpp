@@ -16,39 +16,41 @@
 namespace qi {
   namespace transport {
 
-    template<typename Transport, typename Buffer>
-    class _Client {
+    template<typename TRANSPORT, typename BUFFER>
+    class GenericTransportClient {
     public:
-      _Client()
-        : initOK(false) {
-      }
+      GenericTransportClient() : isInitialized(false) {}
 
       bool connect(const std::string &address) {
         try {
-          _client = new Transport(address);
-          initOK = true;
+          _client = new TRANSPORT(address);
+          isInitialized = true;
         } catch(const std::exception& e) {
-          qisDebug << "GenericClient failed to create client for address \"" << address << "\" Reason: " << e.what() << std::endl;
+          qisDebug << "GenericClient failed to create client for address \""
+            << address << "\" Reason: " << e.what() << std::endl;
         }
-         return initOK;
+         return isInitialized;
       }
 
-      void send(const Buffer &def, Buffer &result)
+      void send(const BUFFER &def, BUFFER &result)
       {
-        if (!initOK) {
+        if (!isInitialized) {
           qisError << "Attempt to use an unitialized client." << std::endl;
         }
         _client->send(def, result);
       }
 
-      bool initOK;
+      bool isInitialized;
     protected:
-      qi::transport::detail::ClientImpl<Buffer> *_client;
+      qi::transport::detail::ClientImpl<BUFFER> *_client;
     };
 
-    typedef _Client<qi::transport::detail::ZMQClientImpl, qi::transport::Buffer> ZMQClient;
-    typedef ZMQClient Client;
+    typedef GenericTransportClient<
+      qi::transport::detail::ZMQClientImpl,
+      qi::transport::Buffer
+    > ZMQTransportClient;
 
+    typedef ZMQTransportClient Client;
   }
 }
 

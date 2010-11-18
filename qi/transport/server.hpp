@@ -19,19 +19,18 @@
 namespace qi {
   namespace transport {
 
-    template<typename Transport>
-    class _Server
+    template<typename TRANSPORT>
+    class GenericTransportServer
     {
     public:
-
-      _Server(): initOK(false) {}
+      GenericTransportServer(): isInitialized(false) {}
 
       void serve(const std::string &address)
       {
         fServerAddress = address;
         try {
-          fTransportServer = new Transport(address);
-          initOK = true;
+          fTransportServer = new TRANSPORT(address);
+          isInitialized = true;
         } catch(const std::exception& e) {
           qisError << "Failed to create transport server for address: " << address << " Reason:" << e.what() << std::endl;
           throw(e);
@@ -40,7 +39,7 @@ namespace qi {
 
       virtual void run()
       {
-        if (initOK) {
+        if (isInitialized) {
           fTransportServer->run();
         }
       }
@@ -55,7 +54,7 @@ namespace qi {
 
 
     protected:
-      bool initOK;
+      bool isInitialized;
 
     protected:
       //TODO: do we need that?
@@ -63,7 +62,7 @@ namespace qi {
       qi::transport::detail::ServerImpl *fTransportServer;
     };
 
-    typedef _Server<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;
+    typedef GenericTransportServer<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;
     typedef ZMQServer Server;
   }
 
