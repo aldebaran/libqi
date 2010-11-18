@@ -17,14 +17,14 @@ namespace qi {
 
   namespace detail {
 
-    ClientNodeImp::ClientNodeImp() : initOK(false) {}
+    ClientNodeImp::ClientNodeImp() : isInitialized(false) {}
 
     ClientNodeImp::~ClientNodeImp() {}
 
     ClientNodeImp::ClientNodeImp(
       const std::string& clientName,
       const std::string& masterAddress) :
-    initOK(false),
+    isInitialized(false),
       fClientName(clientName),
       fMasterAddress(masterAddress) {
         xInit();
@@ -32,8 +32,8 @@ namespace qi {
 
     void ClientNodeImp::xInit() {
       // create a messaging client to the master address
-      initOK = xCreateServerClient(fMasterAddress);
-      if (initOK) {
+      isInitialized = xCreateServerClient(fMasterAddress);
+      if (isInitialized) {
         // we assert that we think the master can locate services
         fServiceCache.insert("master.locateService::s:s", fMasterAddress);
       } else {
@@ -43,7 +43,7 @@ namespace qi {
     }
 
     void ClientNodeImp::call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result) {
-        if (! initOK) {
+        if (! isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
         }

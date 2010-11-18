@@ -20,7 +20,7 @@ namespace qi {
 
   namespace detail {
 
-    ServerNodeImp::ServerNodeImp() : initOK(false) {}
+    ServerNodeImp::ServerNodeImp() : isInitialized(false) {}
 
     ServerNodeImp::~ServerNodeImp() {
       if (!fIsMasterServer) {
@@ -32,7 +32,7 @@ namespace qi {
       const std::string serverName,
       const std::string serverAddress,
       const std::string masterAddress) :
-        initOK(false),
+        isInitialized(false),
         fName(serverName),
         fAddress(serverAddress),
         fIsMasterServer(false)
@@ -40,10 +40,10 @@ namespace qi {
       if (serverAddress == masterAddress) {
         // we are the master's server, so we don't need a client to ourselves
         fIsMasterServer = true;
-        initOK = true;
+        isInitialized = true;
       } else {
-        initOK = fMessagingClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
-        if (! initOK ) {
+        isInitialized = fMessagingClient.connect(getProtocol(serverAddress, masterAddress) + masterAddress);
+        if (! isInitialized ) {
           qisError << "\"" << serverName << "\" could not connect to master at address \"" << masterAddress << "\"" << std::endl;
           return;
         }

@@ -36,7 +36,7 @@ namespace qi {
 
       void addService(const std::string& methodSignature, qi::Functor* functor);
 
-      bool initOK;
+      bool isInitialized;
 
       // IMessageHandler Implementation -----------------
       void messageHandler(std::string& defData, std::string& resultData);

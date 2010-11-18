@@ -20,21 +20,21 @@ namespace qi {
     template<typename T>
     class GenericPublisher {
     public:
-      GenericPublisher() : initOK(false) {}
+      GenericPublisher() : isInitialized(false) {}
 
       bool connect(const std::string &address) {
         try {
           _publisher = new qi::transport::ZMQPublisher(address);
-          initOK = true;
+          isInitialized = true;
         } catch(const std::exception& e) {
           qisDebug << "GenericPublisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
         }
-         return initOK;
+         return isInitialized;
       }
 
       void publish(const T& val)
       {
-        if (! initOK) {
+        if (! isInitialized) {
           qisError << "Attempt to use an unitialized publisher." << std::endl;
           return;
         }
@@ -43,7 +43,7 @@ namespace qi {
         _publisher->publish(ser.str());
       }
 
-      bool initOK;
+      bool isInitialized;
     protected:
       qi::transport::Publisher* _publisher;
     };

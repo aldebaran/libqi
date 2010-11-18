@@ -27,7 +27,7 @@ namespace qi {
 
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
 
-      bool initOK;
+      bool isInitialized;
 
     private:
       std::string fClientName;

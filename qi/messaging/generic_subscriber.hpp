@@ -21,17 +21,17 @@ namespace qi {
     public:
       typedef void(*SubscribeHandlerPtr)(const T&);
 
-      GenericSubscriber() : initOK(false) {}
+      GenericSubscriber() : isInitialized(false) {}
 
       bool connect(const std::string& address) {
         try {
           _subscriber = new qi::transport::ZMQSubscriber(address);
           _subscriber->setSubscribeHandler(this);
-          initOK = true;
+          isInitialized = true;
         } catch(const std::exception& e) {
           qisDebug << "GenericSubscriber failed to create subscriber for address \"" << address << "\" Reason: " << e.what() << std::endl;
         }
-        return initOK;
+        return isInitialized;
       }
 
       void subscribe(SubscribeHandlerPtr handler)
@@ -49,7 +49,7 @@ namespace qi {
         _handler(ret);
       }
 
-      bool initOK;
+      bool isInitialized;
     protected:
       qi::transport::Subscriber* _subscriber;
       SubscribeHandlerPtr _handler;
