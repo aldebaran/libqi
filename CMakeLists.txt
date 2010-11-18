@@ -108,5 +108,6 @@ if (UNIX)
 endif(UNIX)
 
 add_subdirectory(test)
+add_subdirectory(examples)
 
 create_doxygen("Doxyfile")
