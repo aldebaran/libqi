@@ -20,10 +20,12 @@ void qi_call(const char *addr) {
 
   //client.call("master.listServices::{ss}")
 
-  std::map<std::string, std::string>                 mymap;
-  std::map<std::string, std::string>::const_iterator it;
+  typedef std::map<std::string, std::string>  StringMap;
+  StringMap                 mymap;
+  StringMap::const_iterator it;
 
-  mymap = client.call< std::map<std::string, std::string> >("master.listServices");
+  mymap = client.call< StringMap >("master.listServices");
+
   for (it = mymap.begin(); it != mymap.end(); ++it)
   {
     std::cout << it->first << " :" << it->second << std::endl;

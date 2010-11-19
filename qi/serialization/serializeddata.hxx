@@ -113,15 +113,14 @@ namespace qi {
           v.resize(sz);
           for(unsigned int i=0; i < sz; ++i) {
             serialize<U>::read(v[i]);
-            //U &myref = v[i];
-            //read<U>(myref);
           }
         }
         __QI_DEBUG_SERIALIZATION_CONTAINER_R(std::vector<U>, v);
       }
     };
 
-    // vector
+
+
     template<typename K, typename V>
     struct serialize< std::map<K, V> >  {
 
@@ -145,7 +144,7 @@ namespace qi {
         m.clear();
 
         if (sz) {
-          for(unsigned int i=0; i < sz; ++i) {
+          for(int i=0; i < sz; ++i) {
             K k;
             V v;
             serialize<K>::read(sd, k);
