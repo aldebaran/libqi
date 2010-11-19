@@ -42,7 +42,7 @@ namespace detail {
       #end for
 
       #for $j in range($i)
-      qi::serialization::serialize<P$j>::read(result, p$j);
+      qi::serialization::serialize<P$j>::read(params, p$j);
       #end for
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)($generate_callparam_list($i)));
     };

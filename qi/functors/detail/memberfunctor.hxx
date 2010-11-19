@@ -61,7 +61,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       P0 p0;
 
-      qi::serialization::serialize<P0>::read(result, p0);
+      qi::serialization::serialize<P0>::read(params, p0);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0));
     };
 
@@ -90,8 +90,8 @@ namespace detail {
       P0 p0;
       P1 p1;
 
-      qi::serialization::serialize<P0>::read(result, p0);
-      qi::serialization::serialize<P1>::read(result, p1);
+      qi::serialization::serialize<P0>::read(params, p0);
+      qi::serialization::serialize<P1>::read(params, p1);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0, p1));
     };
 
@@ -121,9 +121,9 @@ namespace detail {
       P1 p1;
       P2 p2;
 
-      qi::serialization::serialize<P0>::read(result, p0);
-      qi::serialization::serialize<P1>::read(result, p1);
-      qi::serialization::serialize<P2>::read(result, p2);
+      qi::serialization::serialize<P0>::read(params, p0);
+      qi::serialization::serialize<P1>::read(params, p1);
+      qi::serialization::serialize<P2>::read(params, p2);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0, p1, p2));
     };
 
@@ -154,10 +154,10 @@ namespace detail {
       P2 p2;
       P3 p3;
 
-      qi::serialization::serialize<P0>::read(result, p0);
-      qi::serialization::serialize<P1>::read(result, p1);
-      qi::serialization::serialize<P2>::read(result, p2);
-      qi::serialization::serialize<P3>::read(result, p3);
+      qi::serialization::serialize<P0>::read(params, p0);
+      qi::serialization::serialize<P1>::read(params, p1);
+      qi::serialization::serialize<P2>::read(params, p2);
+      qi::serialization::serialize<P3>::read(params, p3);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0, p1, p2, p3));
     };
 
@@ -189,11 +189,11 @@ namespace detail {
       P3 p3;
       P4 p4;
 
-      qi::serialization::serialize<P0>::read(result, p0);
-      qi::serialization::serialize<P1>::read(result, p1);
-      qi::serialization::serialize<P2>::read(result, p2);
-      qi::serialization::serialize<P3>::read(result, p3);
-      qi::serialization::serialize<P4>::read(result, p4);
+      qi::serialization::serialize<P0>::read(params, p0);
+      qi::serialization::serialize<P1>::read(params, p1);
+      qi::serialization::serialize<P2>::read(params, p2);
+      qi::serialization::serialize<P3>::read(params, p3);
+      qi::serialization::serialize<P4>::read(params, p4);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0, p1, p2, p3, p4));
     };
 
@@ -226,12 +226,12 @@ namespace detail {
       P4 p4;
       P5 p5;
 
-      qi::serialization::serialize<P0>::read(result, p0);
-      qi::serialization::serialize<P1>::read(result, p1);
-      qi::serialization::serialize<P2>::read(result, p2);
-      qi::serialization::serialize<P3>::read(result, p3);
-      qi::serialization::serialize<P4>::read(result, p4);
-      qi::serialization::serialize<P5>::read(result, p5);
+      qi::serialization::serialize<P0>::read(params, p0);
+      qi::serialization::serialize<P1>::read(params, p1);
+      qi::serialization::serialize<P2>::read(params, p2);
+      qi::serialization::serialize<P3>::read(params, p3);
+      qi::serialization::serialize<P4>::read(params, p4);
+      qi::serialization::serialize<P5>::read(params, p5);
       qi::serialization::serialize<R>::write(result, (fObject->*fFunction)(p0, p1, p2, p3, p4, p5));
     };
 
