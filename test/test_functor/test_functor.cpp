@@ -203,7 +203,7 @@ TEST(TestBind, IntStringCallPerf) {
     qi::serialization::SerializedData  cd;
     qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::intStringCall);
 
-    cd.write<std::string>(request);
+    cd.writeString(request);
     dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j) {
       functor->call(cd, res);

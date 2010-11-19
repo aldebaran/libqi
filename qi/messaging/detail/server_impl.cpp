@@ -63,7 +63,7 @@ namespace qi {
       SerializedData def(defData);
       SerializedData result(resultData);
       std::string methodSignature;
-      def.read<std::string>(methodSignature);
+      def.readString(methodSignature);
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
         qisError << "  Error: Method not found " << methodSignature << std::endl;
@@ -101,9 +101,9 @@ namespace qi {
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
-      msg.write<std::string>(method);
-      msg.write<std::string>(_address);
-      msg.write<std::string>(methodSignature);
+      msg.writeString(method);
+      msg.writeString(_address);
+      msg.writeString(methodSignature);
       _transportClient.send(msg.str(), ret);
     }
 
@@ -112,9 +112,9 @@ namespace qi {
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
-      msg.write<std::string>(method);
-      msg.write<std::string>(_name);
-      msg.write<std::string>(_address);
+      msg.writeString(method);
+      msg.writeString(_name);
+      msg.writeString(_address);
       _transportClient.send(msg.str(), ret);
     }
 
@@ -123,9 +123,9 @@ namespace qi {
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
-      msg.write<std::string>(method);
-      msg.write<std::string>(_name);
-      msg.write<std::string>(_address);
+      msg.writeString(method);
+      msg.writeString(_name);
+      msg.writeString(_address);
       _transportClient.send(msg.str(), ret);
     }
   }

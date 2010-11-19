@@ -108,5 +108,5 @@ endif(UNIX)
 
 add_subdirectory(test)
 add_subdirectory(examples)
-
+add_subdirectory(bin)
 create_doxygen("Doxyfile")

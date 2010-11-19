@@ -24,12 +24,12 @@ namespace qi {
 
     R (*f)()  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
+    calldef.writeString(hash);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -41,8 +41,8 @@ namespace qi {
     void (*f)(const P0 &p0)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
     xCall(hash, calldef, resultdef);
   }
 
@@ -53,13 +53,13 @@ namespace qi {
 
     R (*f)(const P0 &p0)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -71,9 +71,9 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
     xCall(hash, calldef, resultdef);
   }
 
@@ -84,14 +84,14 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -103,10 +103,10 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
     xCall(hash, calldef, resultdef);
   }
 
@@ -117,15 +117,15 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -137,11 +137,11 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
     xCall(hash, calldef, resultdef);
   }
 
@@ -152,16 +152,16 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -173,12 +173,12 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
-    calldef.write<P4>(p4);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
+    qi::serialization::serialize<P4>::write(calldef, p4);
     xCall(hash, calldef, resultdef);
   }
 
@@ -189,17 +189,17 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
-    calldef.write<P4>(p4);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
+    qi::serialization::serialize<P4>::write(calldef, p4);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 
@@ -211,13 +211,13 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
-    calldef.write<P4>(p4);
-    calldef.write<P5>(p5);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
+    qi::serialization::serialize<P4>::write(calldef, p4);
+    qi::serialization::serialize<P5>::write(calldef, p5);
     xCall(hash, calldef, resultdef);
   }
 
@@ -228,18 +228,18 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
-    calldef.write<P0>(p0);
-    calldef.write<P1>(p1);
-    calldef.write<P2>(p2);
-    calldef.write<P3>(p3);
-    calldef.write<P4>(p4);
-    calldef.write<P5>(p5);
+    calldef.writeString(hash);
+    qi::serialization::serialize<P0>::write(calldef, p0);
+    qi::serialization::serialize<P1>::write(calldef, p1);
+    qi::serialization::serialize<P2>::write(calldef, p2);
+    qi::serialization::serialize<P3>::write(calldef, p3);
+    qi::serialization::serialize<P4>::write(calldef, p4);
+    qi::serialization::serialize<P5>::write(calldef, p5);
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 

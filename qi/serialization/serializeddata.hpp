@@ -20,26 +20,24 @@ namespace qi {
       SerializedData() {}
       SerializedData(const std::string &data) : fData(data) {}
 
-      template<typename T>
-      void read(T& t)
-      {
-        std::string sig = qi::signature<T>::value();
+      void readBool(bool& s);
+      void writeBool(const bool& t);
 
-        std::cout << "read(" << fData << "):" << sig << std::endl;
-      }
+      void readChar(char& s);
+      void writeChar(const char& t);
 
-      template<typename T>
-      void write(const T& t)
-      {
-        std::string sig = qi::signature<T>::value();
-        std::cout << "write(" << fData << "):" << sig << std::endl;
-      }
+      void readInt(int& s);
+      void writeInt(const int& t);
 
-//      void read(std::string& s);
-//      void write(const std::string& t);
+      void readFloat(float& s);
+      void writeFloat(const float& t);
 
-//      void read(int& s);
-//      void write(const int& t);
+      void readString(std::string& s);
+      void writeString(const std::string& t);
+
+      void readDouble(double& d);
+      void writeDouble(const double& d);
+
 
       std::string str()const {
         return fData;
@@ -51,6 +49,19 @@ namespace qi {
 
     protected:
       std::string fData;
+    };
+
+    template <typename T>
+    struct serialize {
+      static void read(SerializedData &sd, T &t){
+        std::cout << "BAM: read" << std::endl;
+        //#error "This type is not serializable"
+      }
+
+      static void write(SerializedData &sd, const T &t) {
+        std::cout << "BAM: write" << std::endl;
+        //#error "This type is not serializable"
+      }
     };
 
     typedef SerializedData BinarySerializer;

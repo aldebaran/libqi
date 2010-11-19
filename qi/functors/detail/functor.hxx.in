@@ -41,9 +41,9 @@ namespace detail {
       #end for
 
       #for $j in range($i)
-      params.read<P$j>(p$j);
+      qi::serialization::serialize<P$j>::read(params, p$j);
       #end for
-      result.write<R>((*fFunction)($generate_callparam_list($i)));
+      qi::serialization::serialize<R>::write(result, (*fFunction)($generate_callparam_list($i)));
     };
 
   private:

@@ -7,6 +7,7 @@
 
 #include <qi/transport/detail/zmq/zmq_subscriber.hpp>
 #include <qi/perf/sleep.hpp>
+#include <iostream>
 
 namespace qi {
   namespace transport {
@@ -82,7 +83,7 @@ namespace qi {
           zmq::message_t msg;
           ok = _socket.recv (&msg);
           if (!ok) {
-            std::cout << "ZMQSubscriber::recv failed.";
+            std::cout << "ZMQSubscriber::recv failed." << std::endl;
             return;
           }
           std::string data;

@@ -30,11 +30,11 @@ namespace qi
     qi::serialization::SerializedData ret;
 
     #for $j in range($i)
-    args.write<P$j>(p$j);
+    qi::serialization::serialize<P$j>::write(args, p$j);
     #end for
     f->call(args, ret);
     R r;
-    ret.read<R>(r);
+    qi::serialization::serialize<R>::read(ret, r);
     return r;
   }
 
@@ -46,7 +46,7 @@ namespace qi
     qi::serialization::SerializedData ret;
 
     #for $j in range($i)
-    args.write<P$j>(p$j);
+    qi::serialization::serialize<P$j>::write(args, p$j);
     #end for
     f->call(args, ret);
   }

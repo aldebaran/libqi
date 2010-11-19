@@ -44,7 +44,7 @@ namespace qi {
       void subscribeHandler(const std::string& data) {
         T ret;
         qi::serialization::BinarySerializer unser(data);
-        unser.read<T>(ret);
+        qi::serialization::serialize<T>::read(unser, ret);
         // call the registered typed-handler
         _handler(ret);
       }

@@ -27,7 +27,7 @@ namespace qi {
     void (*f)()  = 0;
     std::string signature = makeSignature(methodName, f);
 
-    msg.write<std::string>(signature);
+    msg.writeString(signature);
     xCall(signature, msg, result);
   }
 

@@ -39,7 +39,7 @@ namespace qi {
           return;
         }
         qi::serialization::BinarySerializer ser;
-        ser.write<T>(val);
+        qi::serialization::serialize<T>::write(ser, val);
         _publisher->publish(ser.str());
       }
 

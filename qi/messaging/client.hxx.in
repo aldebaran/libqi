@@ -33,9 +33,9 @@ namespace qi {
     void (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
 
-    calldef.write<std::string>(hash);
+    calldef.writeString(hash);
     #for $j in range($i)
-    calldef.write<P${j}>(p${j});
+    qi::serialization::serialize<P${j}>::write(calldef, p${j});
     #end for
     xCall(hash, calldef, resultdef);
   }
@@ -48,15 +48,15 @@ namespace qi {
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
-    calldef.write<std::string>(hash);
+    calldef.writeString(hash);
     #for $j in range($i)
-    calldef.write<P${j}>(p${j});
+    qi::serialization::serialize<P${j}>::write(calldef, p${j});
     #end for
     xCall(hash, calldef, resultdef);
 
-    //TODO: optimise
+    //Optimise? I think compiler is smart enought to inline the returned object
     R ret;
-    resultdef.read<R>(ret);
+    qi::serialization::serialize<R>::read(resultdef, ret);
     return ret;
   }
 #end for

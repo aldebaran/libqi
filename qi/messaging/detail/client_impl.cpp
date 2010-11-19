@@ -103,13 +103,13 @@ namespace qi {
 
         // prepare a request to master.locateService
         SerializedData request_msg;
-        request_msg.write<std::string>("master.locateService::s:s");
-        request_msg.write<std::string>(methodSignature);
+        request_msg.writeString("master.locateService::s:s");
+        request_msg.writeString(methodSignature);
         std::string tmpAddress;
 
         try {
           call("master.locateService::s:s", request_msg, response_msg);
-          response_msg.read<std::string>(tmpAddress);
+          response_msg.readString(tmpAddress);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Unable to contact master." << std::endl;

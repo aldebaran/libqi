@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
+#include <iostream>
 //#include <alfile/alfilesystem.h>
 
 namespace qi {
