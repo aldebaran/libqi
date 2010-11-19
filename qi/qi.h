@@ -32,14 +32,16 @@ extern "C"
 #endif
 
 typedef void qi_client_t;
+typedef void qi_message_t;
 // typedef void * qi_server_t;
 // typedef void * qi_master_t;
-// typedef void * qi_message_t;
 
 qi_client_t *qi_client_create(const char *name, const char *address);
+void         qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret);
+
+
 //void         qi_client_connect(qi_client_t *client, const char *address);
 // void         qi_client_close(client_t *client);
-// void         qi_client_call(client_t *client, message_t *msg);
 
 // server_t *qi_server_create(const char *name);
 // void      qi_server_connect(client_t *server, const char *address);
@@ -50,9 +52,15 @@ qi_client_t *qi_client_create(const char *name, const char *address);
 // void      qi_master_close(client_t *master);
 
 
-// void qi_message_write_int(qi_message_t *message, const int i);
+qi_message_t *qi_message_create();
+void          qi_message_write_int(qi_message_t *message, const int i);
+void          qi_message_write_string(qi_message_t *message, const char *);
+
+
+
+int qi_message_read_int(qi_message_t *msg);
+char *qi_message_read_string(qi_message_t *msg);
 // void qi_message_write_void(qi_message_t *message, const int i);
-// void qi_message_write_string(qi_message_t *message, const char *);
 // void qi_message_write_raw(qi_message_t *message, const char *raw, int size);
 
 // void qi_message_read_int(qi_message_t *message, const int i);
