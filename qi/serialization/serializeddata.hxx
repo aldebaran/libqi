@@ -16,13 +16,15 @@ namespace qi {
   namespace serialization {
 
 
+//Inline this function => they do nothing, they just call SerializedData method
+//we keep vector/map not inlined at the moment because they take space.
 #define SIMPLE_SERIALIZER(Name, Type)                                 \
   template <>                                                         \
   struct serialize<Type>  {                                           \
-    static void write(SerializedData &sd, const Type &val) {          \
+    static inline void write(SerializedData &sd, const Type &val) {   \
       sd.write##Name(val);                                            \
     }                                                                 \
-    static void read(SerializedData &sd, Type &val) {                 \
+    static inline void read(SerializedData &sd, Type &val) {          \
       sd.read##Name(val);                                             \
     }                                                                 \
   };
