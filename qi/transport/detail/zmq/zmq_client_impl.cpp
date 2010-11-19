@@ -12,7 +12,7 @@ namespace qi {
       /// <summary> Constructor. </summary>
       /// <param name="serverAddress"> The server address. </param>
       ZMQClientImpl::ZMQClientImpl(const std::string &serverAddress)
-        : qi::transport::detail::ClientImpl<qi::transport::Buffer>(serverAddress),
+        : ClientImpl<qi::transport::Buffer>(serverAddress),
         context(1),
         socket(context, ZMQ_REQ)
       {
