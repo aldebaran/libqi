@@ -8,6 +8,7 @@
 using qi::detail::getProcessID;
 using qi::detail::getHostName;
 using qi::detail::getFirstMacAddress;
+using qi::detail::getUUID;
 
 TEST(ProcessIdentity, getProcessID)
 {
@@ -24,13 +25,19 @@ TEST(ProcessIdentity, getFirstMacAddress)
   std::cout << "Mac: " << getFirstMacAddress() << std::endl;
 }
 
+TEST(ProcessIdentity, getUUID)
+{
+  std::cout << "UUID: " << getUUID() << std::endl;
+}
+
 TEST(ProcessIdentity, ProcessIdentity)
 {
   qi::detail::ProcessIdentity i;
   std::cout <<
     i.hostName << " " <<
     i.macAddress << " " <<
-    i.processID << std::endl;
+    i.processID << " " <<
+    i.id << std::endl;
 }
 
 TEST(ProcessIdentityPerf, 1000000getProcessID)

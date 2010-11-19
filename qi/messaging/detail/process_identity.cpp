@@ -6,14 +6,21 @@
 */
 #include <qi/messaging/detail/process_identity.hpp>
 #include <string>
+#include "uuid.hpp"
 
 namespace qi {
   namespace detail {
     ProcessIdentity::ProcessIdentity():
       processID(getProcessID()),
       hostName(getHostName()),
-      macAddress(getFirstMacAddress())
+      macAddress(getFirstMacAddress()),
+      id(getUUID())
     {}
+
+    std::string getUUID() {
+      qi::detail::uuid_t u;
+      return std::string(u.to_string());
+    }
   }
 }
 
@@ -25,6 +32,7 @@ namespace qi {
 
 namespace qi {
   namespace detail {
+
     int getProcessID() {
       // 200000 calls per ms
       return (int)GetCurrentProcessId();
