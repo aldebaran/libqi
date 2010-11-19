@@ -10,6 +10,33 @@
 #ifndef   __QI_SERIALIZATION_SERIALIZEDDATA_HXX__
 #define   __QI_SERIALIZATION_SERIALIZEDDATA_HXX__
 
+#if 0
+#define __QI_DEBUG_SERIALIZATION_W(x, extra) {                \
+  std::string sig = qi::signature< x >::value();              \
+  std::cout << "write(" << sig << ")" << extra << std::endl;  \
+}
+
+#define __QI_DEBUG_SERIALIZATION_R(x, extra) {                \
+  std::string sig = qi::signature< x >::value();              \
+  std::cout << "read (" << sig << ")" << extra << std::endl;  \
+}
+
+#define __QI_DEBUG_SERIALIZATION_CONTAINER_W(x, c) {                   \
+  std::string sig = qi::signature< x >::value();                       \
+  std::cout << "write(" << sig << ") size: " << c.size() << std::endl; \
+}
+
+#define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c) {                  \
+  std::string sig = qi::signature< x >::value();                      \
+  std::cout << "read (" << sig << ") size: " << c.size() << std::endl; \
+}
+#else
+# define __QI_DEBUG_SERIALIZATION_W(x, extra)
+# define __QI_DEBUG_SERIALIZATION_R(x, extra)
+# define __QI_DEBUG_SERIALIZATION_CONTAINER_W(x, c)
+# define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
+#endif
+
 //#include <vector>
 
 namespace qi {
@@ -36,7 +63,30 @@ namespace qi {
     SIMPLE_SERIALIZER(String, std::string);
 
 
-  // vector
+    template <typename T>
+    struct serialize<T&> {
+      static inline void write(SerializedData &sd, const T &val) {
+        __QI_DEBUG_SERIALIZATION_W(T, "&");
+        serialize<T>::write(sd, val);
+      }
+      static inline void read(SerializedData &sd, T &val) {
+        __QI_DEBUG_SERIALIZATION_R(T, "&");
+        serialize<T>::read(sd, val);
+      }
+    };
+
+    template <typename T>
+    struct serialize<const T> {
+      static inline void write(SerializedData &sd, const T &val) {
+        __QI_DEBUG_SERIALIZATION_W(T, "Const");
+        serialize<T>::write(sd, val);
+      }
+      static inline void read(SerializedData &sd, T &val) {
+        __QI_DEBUG_SERIALIZATION_R(T, "Const");
+        serialize<T>::read(sd, val);
+      }
+    };
+
     template<typename U>
     struct serialize< std::vector<U> >  {
 
@@ -51,8 +101,7 @@ namespace qi {
             serialize<U>::write(*it);
           }
         }
-        //std::string sig = qi::signature<std::vector>::value();
-        //std::cout << "writeVect(" << v.size() << "):" << sig << std::endl;
+        __QI_DEBUG_SERIALIZATION_CONTAINER_W(std::vector<U>, v);
       }
 
       static void read(SerializedData &sd, std::vector<U> &v) {
@@ -68,8 +117,44 @@ namespace qi {
             //read<U>(myref);
           }
         }
-        //std::string sig = qi::signature<std::string>::value();
-        //std::cout << "readVect(" << sz << "):" << sig << std::endl;
+        __QI_DEBUG_SERIALIZATION_CONTAINER_R(std::vector<U>, v);
+      }
+    };
+
+    // vector
+    template<typename K, typename V>
+    struct serialize< std::map<K, V> >  {
+
+      static void write(SerializedData &sd, const std::map<K, V> &m) {
+        sd.writeInt(m.size());
+        if (m.size()) {
+          typename std::map<K, V>::const_iterator it = m.begin();
+          typename std::map<K, V>::const_iterator end = m.end();
+          for (; it != end; ++it) {
+            serialize<K>::write(sd, it->first);
+            serialize<V>::write(sd, it->second);
+          }
+        }
+        typedef std::map<K, V> debugMap;
+        __QI_DEBUG_SERIALIZATION_CONTAINER_W(debugMap, m);
+      }
+
+      static void read(SerializedData &sd, std::map<K, V>  &m) {
+        int sz;
+        sd.readInt(sz);
+        m.clear();
+
+        if (sz) {
+          for(unsigned int i=0; i < sz; ++i) {
+            K k;
+            V v;
+            serialize<K>::read(sd, k);
+            serialize<V>::read(sd, v);
+            m[k] = v;
+          }
+        }
+        typedef std::map<K, V> debugMap;
+        __QI_DEBUG_SERIALIZATION_CONTAINER_R(debugMap, m);
       }
     };
 
