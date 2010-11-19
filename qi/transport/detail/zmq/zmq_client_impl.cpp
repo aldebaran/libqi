@@ -4,7 +4,6 @@
 **
 ** Copyright (C) 2010 Cedric GESTES
 */
-
 #include <qi/transport/detail/zmq/zmq_client_impl.hpp>
 
 namespace qi {
@@ -13,7 +12,7 @@ namespace qi {
       /// <summary> Constructor. </summary>
       /// <param name="serverAddress"> The server address. </param>
       ZMQClientImpl::ZMQClientImpl(const std::string &serverAddress)
-        : ClientImpl(serverAddress),
+        : qi::transport::detail::ClientImpl<qi::transport::Buffer>(serverAddress),
         context(1),
         socket(context, ZMQ_REQ)
       {
