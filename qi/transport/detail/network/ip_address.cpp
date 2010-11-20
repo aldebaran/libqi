@@ -4,25 +4,7 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#include <qi/messaging/detail/process_identity.hpp>
-#include <string>
-#include "uuid.hpp"
-
-namespace qi {
-  namespace detail {
-    ProcessIdentity::ProcessIdentity():
-      processID(getProcessID()),
-      hostName(getHostName()),
-      macAddress(getFirstMacAddress()),
-      id(getUUID())
-    {}
-
-    std::string getUUID() {
-      qi::detail::uuid_t u;
-      return std::string(u.to_string());
-    }
-  }
-}
+#include <qi/transport/detail/network/ip_address.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -32,104 +14,76 @@ namespace qi {
 
 namespace qi {
   namespace detail {
-
-    int getProcessID() {
-      // 200000 calls per ms
-      return (int)GetCurrentProcessId();
+    std::string getPrimaryPublicIPAddress() {
+      return "";
     }
 
-    std::string getHostName() {
-      // 173 calls per ms
-      DWORD dwBufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-      TCHAR chrComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-      if(GetComputerName(chrComputerName, &dwBufferSize)) {
-        return std::string(chrComputerName);
-      } else {
-        return "";
-      }
-    }
-
-    std::string getFirstMacAddress() {
-      // BEWARE: Takes about 1.6 ms
-      // Get the buffer length required for IP_ADAPTER_INFO.
-      ULONG BufferLength = 0;
-      BYTE* pBuffer = 0;
-      if( ERROR_BUFFER_OVERFLOW == GetAdaptersInfo( 0, &BufferLength ))
-      {
-        // Now the BufferLength contain the required buffer length.
-        // Allocate necessary buffer.
-        pBuffer = new BYTE[ BufferLength ];
-      } else {
-        return "";
-      }
-      // Get the Adapter Information.
-      PIP_ADAPTER_INFO pAdapterInfo =
-        reinterpret_cast<PIP_ADAPTER_INFO>(pBuffer);
-      GetAdaptersInfo( pAdapterInfo, &BufferLength );
-
-      char buf[25];
-      // Iterate the network adapters and print their MAC address.
-      while( pAdapterInfo )
-      {
-        if (pAdapterInfo->AddressLength == 6) {
-          //IP4
-        sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X",
-          pAdapterInfo->Address[0],
-          pAdapterInfo->Address[1],
-          pAdapterInfo->Address[2],
-          pAdapterInfo->Address[3],
-          pAdapterInfo->Address[4],
-          pAdapterInfo->Address[5]);
-        } else if (pAdapterInfo->AddressLength == 8) {
-          // IP6
-          sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-          pAdapterInfo->Address[0],
-          pAdapterInfo->Address[1],
-          pAdapterInfo->Address[2],
-          pAdapterInfo->Address[3],
-          pAdapterInfo->Address[4],
-          pAdapterInfo->Address[5],
-          pAdapterInfo->Address[6],
-          pAdapterInfo->Address[7]);
-        }
-        // we are just interested in the first one
-        break;
-        // Get next adapter info.
-        // pAdapterInfo = pAdapterInfo->Next;
-      }
-
-      // deallocate the buffer.
-      delete[] pBuffer;
-      return buf;
+    std::vector<std::string> getIPAddresses() {
+      std::vector<std::string> v;
+      return v;
     }
   }
 }
 #else  // end WIN32
 
-# include <sys/types.h>
-# include <unistd.h>
-
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+//
 namespace qi {
   namespace detail {
-    int getProcessID() {
-      return getpid();
-    }
-
-    std::string getHostName() {
-      char szHostName[128] = "";
-      if (gethostname(szHostName, sizeof(szHostName) -1) == 0) {
-        return std::string(szHostName);
+    std::string getPrimaryPublicIPAddress() {
+      std::vector<std::string> ips = getIPAddresses();
+      // todo: some logic to find a good public ip address
+      if (ips.size() > 0) {
+        return ips[0];
       }
       return "";
     }
 
-    std::string getFirstMacAddress() {
-      std::string macAddress;
-      // TODO implement
-      return macAddress;
+    std::vector<std::string> getIPAddresses() {
+      std::vector<std::string> ret;
+
+      struct ifaddrs *ifaddr, *ifa;
+      int family, s;
+      char host[NI_MAXHOST];
+
+      if (getifaddrs(&ifaddr) == -1) {
+        return ret;
+      }
+
+      for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == NULL)
+          continue;
+
+        family = ifa->ifa_addr->sa_family;
+
+        // Don't include AF_INET6 for the moment
+        if (family == AF_INET) {
+          s = getnameinfo(ifa->ifa_addr,
+                          (family == AF_INET) ? sizeof(struct sockaddr_in) :
+                              sizeof(struct sockaddr_in6),
+                          host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+          if (s != 0) {
+            // err is in: gai_strerror(s));
+            break;
+          }
+          ret.push_back(host);
+          //printf("%s\n", host);
+        }
+      }
+
+      freeifaddrs(ifaddr);
+      return ret;
     }
   }
+}
 
+#endif
 //
 //#include <sys/socket.h>
 //#include <sys/ioctl.h>
@@ -152,8 +106,8 @@ namespace qi {
 //  }
 //  return 1;
 //}
-}
-#endif  // !_WIN32
+//}
+//#endif  // !_WIN32
 //
 //
 //#include <stdio.h>

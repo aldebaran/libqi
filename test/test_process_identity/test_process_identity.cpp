@@ -3,41 +3,94 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/messaging/detail/process_identity.hpp>
+#include <qi/transport/detail/network/process_identity.hpp>
+#include <qi/transport/detail/network/network.hpp>
 
 using qi::detail::getProcessID;
 using qi::detail::getHostName;
 using qi::detail::getFirstMacAddress;
 using qi::detail::getUUID;
+using qi::detail::getPrimaryPublicIPAddress;
 
 TEST(ProcessIdentity, getProcessID)
 {
+  int pid = getProcessID();
   std::cout << "PID: " << getProcessID() << std::endl;
+  ASSERT_NE(pid, 0) << "PID was zero. Unlikely";
+}
+
+TEST(ProcessIdentity, pidConstant)
+{
+  int pid1 = getProcessID();
+  int pid2 = getProcessID();
+  ASSERT_EQ(pid1, pid2) << "PID changed";
 }
 
 TEST(ProcessIdentity, getHostName)
 {
-  std::cout << "Host: " << getHostName() << std::endl;
+  std::string host = getHostName();
+  std::cout << "Host: " << host << std::endl;
+  ASSERT_NE(host, std::string()) << "HostName was empty";
+}
+
+TEST(ProcessIdentity, hostNameIsConstant)
+{
+  std::string host1 = getHostName();
+  std::string host2 = getHostName();
+  ASSERT_EQ(host1, host2) << "Host name changed";
 }
 
 TEST(ProcessIdentity, getFirstMacAddress)
 {
-  std::cout << "Mac: " << getFirstMacAddress() << std::endl;
+  std::string mac = getFirstMacAddress();
+  std::cout << "Mac: " << mac << std::endl;
+  ASSERT_NE(mac, std::string()) << "Mac Address was empty";
+}
+
+TEST(ProcessIdentity, macAddressIsConstant)
+{
+  std::string mac1 = getFirstMacAddress();
+  std::string mac2 = getFirstMacAddress();
+  ASSERT_EQ(mac1, mac2) << "Mac Address changed";
 }
 
 TEST(ProcessIdentity, getUUID)
 {
-  std::cout << "UUID: " << getUUID() << std::endl;
+  std::string u = getUUID();
+  std::cout << "UUID: " << u << std::endl;
+  ASSERT_NE(u, std::string()) << "UUID was empty";
+}
+
+TEST(ProcessIdentity, uuidIsNotConstant)
+{
+  std::string u1 = getUUID();
+  std::string u2 = getUUID();
+  ASSERT_NE(u1, u2) << "uuid did not change";
+}
+
+TEST(ProcessIdentity, getPrimaryPublicIPAddress)
+{
+  std::string ip =  getPrimaryPublicIPAddress();
+  std::cout << "IP: " << ip << std::endl;
+  ASSERT_NE(ip, std::string())  << "IP Address was empty";
+}
+
+TEST(ProcessIdentity, primaryIPIsConstant)
+{
+  std::string ip1 =  getPrimaryPublicIPAddress();
+  std::string ip2 =  getPrimaryPublicIPAddress();
+  ASSERT_EQ(ip1, ip2) << "IP Changed";
 }
 
 TEST(ProcessIdentity, ProcessIdentity)
 {
   qi::detail::ProcessIdentity i;
   std::cout <<
-    i.hostName << " " <<
-    i.macAddress << " " <<
-    i.processID << " " <<
-    i.id << std::endl;
+    "hostName:   " << i.hostName   << std::endl <<
+    "macAddress: " << i.macAddress << std::endl <<
+    "processID:  " << i.processID  << std::endl <<
+    "id:         " << i.id         << std::endl <<
+    "ipAddress:  " << i.ipAddress  << std::endl;
 }
 
 TEST(ProcessIdentityPerf, 1000000getProcessID)
@@ -65,169 +118,21 @@ TEST(ProcessIdentityPerf, 1000getFirstMacAddress)
   }
 }
 
+TEST(ProcessIdentityPerf, 10000getUUID)
+{
+  std::string s;
+  for(unsigned int i=0; i<10000; i++) {
+    s = getUUID();
+  }
+}
 
-//
-//// ----------------------- GET MAC ADDRES LINUX ---------------
-//
-//#include <stdio.h>
-//#include <string.h>
-//#include <net/if.h>
-//#include <sys/ioctl.h>
-//
-////
-//// Global public data
-////
-//unsigned char cMacAddr[8]; // Server's MAC address
-//
-//static int GetSvrMacAddress( char *pIface )
-//{
-//int nSD; // Socket descriptor
-//struct ifreq sIfReq; // Interface request
-//struct if_nameindex *pIfList; // Ptr to interface name index
-//struct if_nameindex *pListSave; // Ptr to interface name index
-//
-////
-//// Initialize this function
-////
-//pIfList = (struct if_nameindex *)NULL;
-//pListSave = (struct if_nameindex *)NULL;
-//#ifndef SIOCGIFADDR
-//// The kernel does not support the required ioctls
-//return( 0 );
-//#endif
-//
-////
-//// Create a socket that we can use for all of our ioctls
-////
-//nSD = socket( PF_INET, SOCK_STREAM, 0 );
-//if ( nSD < 0 )
-//{
-//// Socket creation failed, this is a fatal error
-//printf( "File %s: line %d: Socket failed\n", __FILE__, __LINE__ );
-//return( 0 );
-//}
-//
-////
-//// Obtain a list of dynamically allocated structures
-////
-//pIfList = pListSave = if_nameindex();
-//
-////
-//// Walk thru the array returned and query for each interface's
-//// address
-////
-//for ( pIfList; *(char *)pIfList != 0; pIfList++ )
-//{
-////
-//// Determine if we are processing the interface that we
-//// are interested in
-////
-//if ( strcmp(pIfList->if_name, pIface) )
-//// Nope, check the next one in the list
-//continue;
-//strncpy( sIfReq.ifr_name, pIfList->if_name, IF_NAMESIZE );
-//
-////
-//// Get the MAC address for this interface
-////
-//if ( ioctl(nSD, SIOCGIFHWADDR, &sIfReq) != 0 )
-//{
-//// We failed to get the MAC address for the interface
-//printf( "File %s: line %d: Ioctl failed\n", __FILE__, __LINE__ );
-//return( 0 );
-//}
-//memmove( (void *)&cMacAddr[0], (void *)&sIfReq.ifr_ifru.ifru_hwaddr.sa_data[0], 6 );
-//break;
-//}
-//
-////
-//// Clean up things and return
-////
-//if_freenameindex( pListSave );
-//close( nSD );
-//return( 1 );
-//}
-//
-//int main( int argc, char * argv[] )
-//{
-////
-//// Initialize this program
-////
-//bzero( (void *)&cMacAddr[0], sizeof(cMacAddr) );
-//if ( !GetSvrMacAddress("eth0") )
-//{
-//// We failed to get the local host's MAC address
-//printf( "Fatal error: Failed to get local host's MAC address\n" );
-//}
-//printf( "HWaddr %02X:%02X:%02X:%02X:%02X:%02X\n",
-//cMacAddr[0], cMacAddr[1], cMacAddr[2],
-//cMacAddr[3], cMacAddr[4], cMacAddr[5] );
-//
-////
-//// And exit
-////
-//exit( 0 );
-//}
-
-
-// ------------------------------- GET IP ADDRESSES LINUX
-#include <arpa/inet.h>
-       #include <sys/socket.h>
-       #include <netdb.h>
-       #include <ifaddrs.h>
-       #include <stdio.h>
-       #include <stdlib.h>
-       #include <unistd.h>
-
-       int
-       main(int argc, char *argv[])
-       {
-           struct ifaddrs *ifaddr, *ifa;
-           int family, s;
-           char host[NI_MAXHOST];
-
-           if (getifaddrs(&ifaddr) == -1) {
-               perror("getifaddrs");
-               exit(EXIT_FAILURE);
-           }
-
-           /* Walk through linked list, maintaining head pointer so we
-              can free list later */
-
-           for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-               if (ifa->ifa_addr == NULL)
-                   continue;
-
-               family = ifa->ifa_addr->sa_family;
-
-               /* Display interface name and family (including symbolic
-                  form of the latter for the common families) */
-
-               printf("%s  address family: %d%s\n",
-                       ifa->ifa_name, family,
-                       (family == AF_PACKET) ? " (AF_PACKET)" :
-                       (family == AF_INET) ?   " (AF_INET)" :
-                       (family == AF_INET6) ?  " (AF_INET6)" : "");
-
-               /* For an AF_INET* interface address, display the address */
-
-               if (family == AF_INET || family == AF_INET6) {
-                   s = getnameinfo(ifa->ifa_addr,
-                           (family == AF_INET) ? sizeof(struct sockaddr_in) :
-                                                 sizeof(struct sockaddr_in6),
-                           host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-                   if (s != 0) {
-                       printf("getnameinfo() failed: %s\n", gai_strerror(s));
-                       exit(EXIT_FAILURE);
-                   }
-                   printf("\taddress: <%s>\n", host);
-               }
-           }
-
-           freeifaddrs(ifaddr);
-           exit(EXIT_SUCCESS);
-       }
-
+TEST(ProcessIdentityPerf, 10000PrimaryPublicIPAddress)
+{
+  std::string s;
+  for(unsigned int i=0; i<10000; i++) {
+    s = getPrimaryPublicIPAddress();
+  }
+}
 
 // --------------------------------------- GET IP ADDRESSES WIN
 //
@@ -271,3 +176,5 @@ TEST(ProcessIdentityPerf, 1000getFirstMacAddress)
 //
 //// Cleanup
 //WSACleanup();
+
+

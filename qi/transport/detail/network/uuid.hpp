@@ -15,14 +15,15 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Adapted for qi from zmq
+    TODO: use uuid from boost 1.44
 */
 
 #ifndef __QI_UUID_HPP_INCLUDED__
 #define __QI_UUID_HPP_INCLUDED__
 
-//#include "platform.hpp"
-//#include "stdint.hpp"
-
+#include <string>
 #ifdef _WIN32
 #include "windows.hpp"
 #include <rpc.h>
@@ -39,7 +40,6 @@ namespace qi {
     class uuid_t
     {
     public:
-
         uuid_t ();
         ~uuid_t ();
 
@@ -74,6 +74,8 @@ namespace qi {
 #endif
         unsigned char blob_buf [uuid_blob_len];
     };
+
+    std::string getUUID();
   }
 }
 

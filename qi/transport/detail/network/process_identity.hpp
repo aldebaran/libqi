@@ -20,6 +20,7 @@ namespace qi {
       std::string hostName;
       std::string macAddress;
       std::string id;
+      std::string ipAddress;
       ProcessIdentity();
     };
 

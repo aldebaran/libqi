@@ -30,26 +30,28 @@ file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
 file(GLOB TRANSPORT_DETAIL_SRC            qi/transport/detail/*.cpp qi/transport/detail/*.h*)
 file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/detail/zmq/*.cpp qi/transport/detail/zmq/*.h*)
 file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/detail/thrift/*.cpp qi/transport/detail/thrift/*.h*)
+file(GLOB TRANSPORT_NETWORK_SRC           qi/transport/detail/network/*.cpp qi/transport/detail/network/*.h*)
 file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
 file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
 file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
 file(GLOB CBINDINGS_SRC                   qi/qi.h qi/cbindings.cpp)
 
-source_group( messaging              FILES ${MESSAGING_SRC})
-source_group( messaging\\detail      FILES ${MESSAGING_DETAIL_SRC})
-source_group( functors               FILES ${FUNCTORS_SRC})
-source_group( functors\\detail       FILES ${FUNCTORS_DETAIL_SRC})
-source_group( serialization          FILES ${SERIALIZATION_SRC})
-source_group( serialization\\thrift  FILES ${SERIALIZATION_THRIFT_SRC})
-source_group( serialization\\boost   FILES ${SERIALIZATION_BOOST_SRC})
-source_group( exceptions             FILES ${EXCEPTIONS_SRC})
-source_group( tools                  FILES ${TOOLS_SRC})
-source_group( transport              FILES ${TRANSPORT_SRC})
-source_group( transport\\detail      FILES ${TRANSPORT_DETAIL_SRC})
-source_group( signature              FILES ${SIGNATURE_SRC})
-source_group( signature\\detail      FILES ${SIGNATURE_DETAIL_SRC})
-source_group( log                    FILES ${LOGS_SRC})
+source_group( messaging                 FILES ${MESSAGING_SRC})
+source_group( messaging\\detail         FILES ${MESSAGING_DETAIL_SRC})
+source_group( functors                  FILES ${FUNCTORS_SRC})
+source_group( functors\\detail          FILES ${FUNCTORS_DETAIL_SRC})
+source_group( serialization             FILES ${SERIALIZATION_SRC})
+source_group( serialization\\thrift     FILES ${SERIALIZATION_THRIFT_SRC})
+source_group( serialization\\boost      FILES ${SERIALIZATION_BOOST_SRC})
+source_group( exceptions                FILES ${EXCEPTIONS_SRC})
+source_group( tools                     FILES ${TOOLS_SRC})
+source_group( transport                 FILES ${TRANSPORT_SRC})
+source_group( transport\\detail         FILES ${TRANSPORT_DETAIL_SRC})
+source_group( transport\\detail\network FILES ${TRANSPORT_NETWORK_SRC})
+source_group( signature                 FILES ${SIGNATURE_SRC})
+source_group( signature\\detail         FILES ${SIGNATURE_DETAIL_SRC})
+source_group( log                       FILES ${LOGS_SRC})
 
 file(GLOB HEADERS qi/*.h*)
 
@@ -62,6 +64,7 @@ set(SRC
     ${EXCEPTIONS_SRC}
     ${TOOLS_SRC}
     ${TRANSPORT_SRC}
+    ${TRANSPORT_NETWORK_SRC}
     ${FUNCTORS_SRC}
     ${FUNCTORS_DETAIL_SRC}
     ${SIGNATURE_SRC}

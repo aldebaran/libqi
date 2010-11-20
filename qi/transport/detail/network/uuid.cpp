@@ -15,12 +15,12 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Adapted for qi from zmq
+    TODO: use uuid from boost 1.44
 */
 
 #include "uuid.hpp"
-//#include "err.hpp"
-
-
 
 namespace qi {
   namespace detail {
@@ -127,8 +127,13 @@ void uuid_t::create_blob ()
     blob_buf [14] = convert_byte (buf + 32);
     blob_buf [15] = convert_byte (buf + 34);
 }
-
 #endif
 
+
+std::string getUUID() {
+  uuid_t u;
+  return std::string(u.to_string());
 }
+
+  }
 }
