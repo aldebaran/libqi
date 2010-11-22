@@ -94,15 +94,34 @@ TEST(TestSignature, BasicTypeSignature) {
 }
 
 TEST(TestSignature, ComplexTypeSignature) {
-  typedef std::map<int,int> MapInt;
   //{ii}
-  typedef std::map<MapInt,MapInt> MapInt2;
+  typedef std::map<int,int> MapInt;
   //{{ii}{ii}}
-  typedef std::map<std::vector<MapInt2>, std::vector<const std::vector<MapInt2&> > > FuckinMap;
+  typedef std::map<MapInt,MapInt>        MapInt2;
+  typedef std::vector<MapInt2>           VectorMapInt2;
+
+  // MapInt2& Does not works
+  typedef MapInt2                        MapInt2Ref;
+
+  typedef std::vector<MapInt2Ref>        VectMapInt2Ref;
+
+  //const VectMapInt2Ref does not works
+  typedef VectMapInt2Ref                 VectMapInt2RefConst;
+
+  typedef std::vector< VectMapInt2RefConst > VectVectMapInt2ConstRef;
+
+  typedef std::map<VectorMapInt2, VectVectMapInt2ConstRef> FuckinMap;
+
   //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
   //and obama said: Yes We Can!
-
-  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}"      , qi::signature<FuckinMap>::value());
+  EXPECT_EQ("{ii}"              , qi::signature<MapInt>::value());
+  EXPECT_EQ("{{ii}{ii}}"        , qi::signature<MapInt2>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectorMapInt2>::value());
+  EXPECT_EQ("{{ii}{ii}}"        , qi::signature<MapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectMapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectMapInt2RefConst>::value());
+  EXPECT_EQ("[[{{ii}{ii}}]]"    , qi::signature<VectVectMapInt2ConstRef>::value());
+  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::signature<FuckinMap>::value());
 
 }
 
