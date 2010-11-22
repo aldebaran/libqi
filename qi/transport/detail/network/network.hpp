@@ -13,6 +13,7 @@
 #include <qi/transport/detail/network/process_id.hpp>
 #include <qi/transport/detail/network/host_name.hpp>
 #include <qi/transport/detail/network/uuid.hpp>
+#include <qi/transport/detail/network/platform.hpp>
 
 #endif // __QI_TRANSPORT_DETAIL_NETWORK_NETWORK_HPP__
 
