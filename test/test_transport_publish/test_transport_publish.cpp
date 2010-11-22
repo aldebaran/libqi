@@ -72,7 +72,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
 {
   int numMessages = 100000;
 
-  const int numSubscribers = 80;
+  const unsigned int numSubscribers = 80;
   std::cout << "Using " << numSubscribers << " subscribers" << std::endl;
   std::vector<SubscribePerfHandler*>         handlers;
   std::vector< qi::transport::ZMQSubscriber*> subscribers;
@@ -102,7 +102,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     result += handlers[i]->getCount();
   }
 
-  for(int i=0; i < numSubscribers; i++) {
+  for(unsigned int i=0; i < numSubscribers; i++) {
     delete subscribers[i];
   }
   ASSERT_EQ( numMessages * numSubscribers, result) << "Did not receive all messages";
