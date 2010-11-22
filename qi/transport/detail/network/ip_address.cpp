@@ -38,7 +38,13 @@ namespace qi {
   namespace detail {
     std::string getPrimaryPublicIPAddress() {
       std::vector<std::string> ips = getIPAddresses();
-      // todo: some logic to find a good public ip address
+      static const std::string ipLocalHost = "127.0.0.1";
+      // todo: some logic to choose between good addresses
+      for(unsigned int i = 0; i< ips.size(); i++) {
+        if (ipLocalHost.compare(ips[i]) != 0) {
+          return ips[i];
+        }
+      }
       if (ips.size() > 0) {
         return ips[0];
       }
