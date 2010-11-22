@@ -51,7 +51,7 @@ namespace qi {
     /// The address of the master that is used to find services
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    Client(const std::string& clientName, const std::string& masterAddress);
+    Client(const std::string& clientName, const std::string& masterAddress = "127.0.0.1:5555");
 
     virtual ~Client();
 
