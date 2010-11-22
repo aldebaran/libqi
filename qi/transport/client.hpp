@@ -23,6 +23,7 @@ namespace qi {
 
       bool connect(const std::string &address) {
         try {
+          qisInfo << "* GenericTransportClient:connect " << address << std::endl;
           _client = new TRANSPORT(address);
           isInitialized = true;
         } catch(const std::exception& e) {
