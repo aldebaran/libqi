@@ -7,11 +7,11 @@
 
 #include <gtest/gtest.h>
 #include <qi/signature.hpp>
-//#include <qi/perf/dataperftimer.hpp>
 
 #include <vector>
 #include <map>
 
+#include "alvalue.pb.h"
 
 static const int gLoopCount   = 1000000;
 
@@ -88,9 +88,12 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("s",    qi::signature<const std::string&>::value());
   EXPECT_EQ("[i]",  qi::signature<const std::vector< int >& >::value());
   EXPECT_EQ("{ii}", qi::signature<const MapInt& >::value());
-
   //ERROR
   EXPECT_EQ("UNKNOWN", qi::signature<short>::value());
+}
+
+TEST(TestSignature, ProtobufSignature) {
+  EXPECT_EQ("@ALCompat.ALValue@", qi::signature<ALCompat::ALValue>::value());
 }
 
 TEST(TestSignature, ComplexTypeSignature) {
