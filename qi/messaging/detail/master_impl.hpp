@@ -11,6 +11,8 @@
 #include <string>
 #include <qi/messaging/server.hpp>  // could use imp
 #include <qi/messaging/detail/mutexednamelookup.hpp>
+#include <qi/messaging/detail/address_manager.hpp>
+#include <qi/transport/detail/network/endpoint_context.hpp>
 
 namespace qi {
   namespace detail {
@@ -24,11 +26,20 @@ namespace qi {
       void registerService(const std::string& nodeAddress,
         const std::string& methodSignature);
 
-      void registerServer(const std::string& nodeName, const std::string& nodeAddress);
-      void unregisterServer(const std::string& nodeName, const std::string& nodeAddress);
+      int registerServer(const std::string& name,
+                          const std::string& id,
+                          const std::string& contextID,
+                          const std::string& machineID,
+                          const int&         platformID,
+                          const std::string& publicIPAddress);
 
-      void registerClient(const std::string& nodeName, const std::string& nodeAddress);
-      void unregisterClient(const std::string& nodeName, const std::string& nodeAddress);
+      void unregisterServer(const std::string& id);
+
+      void registerClient(const std::string& name,
+                          const std::string& id,
+                          const std::string& machineID,
+                          const int& plarformID);
+      void unregisterClient(const std::string& id);
 
       const std::string locateService(const std::string& methodSignature);
 
@@ -44,11 +55,13 @@ namespace qi {
       // map from methodSignature to nodeAddress
       MutexedNameLookup<std::string> _knownServices;
 
-      // Auditing: map from nodeName to nodeAddress
-      MutexedNameLookup<std::string> _knownServers;
+      // map from id to EndpointContext
+      MutexedNameLookup<qi::detail::EndpointContext> _knownServers;
 
-      // Auditing: map from nodeName to nodeAddress
-      MutexedNameLookup<std::string> _knownClients;
+      // map from id to EndpointContext
+      MutexedNameLookup<qi::detail::EndpointContext> _knownClients;
+
+      AddressManager addressManager;
     };
   }
 }

@@ -108,24 +108,30 @@ namespace qi {
     }
 
     void ServerImpl::xRegisterSelfWithMaster() {
-      static const std::string method("master.registerServer::v:ss");
+      static const std::string method("master.registerServer::i:ssssis");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
       msg.writeString(method);
-      msg.writeString(_name);
-      msg.writeString(_address);
+      msg.writeString(_context.name);
+      msg.writeString(_context.endpointID);
+      msg.writeString(_context.contextID);
+      msg.writeString(_context.machineID);
+      msg.writeInt(_context.platformID);
+      msg.writeString(_context.publicIP);
+
       _transportClient.send(msg.str(), ret);
+
+      //ret.readInt(_context.port);
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {
-      static const std::string method("master.unregisterServer::v:ss");
+      static const std::string method("master.unregisterServer::v:s");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
       msg.writeString(method);
-      msg.writeString(_name);
-      msg.writeString(_address);
+      msg.writeString(_context.endpointID);
       _transportClient.send(msg.str(), ret);
     }
   }

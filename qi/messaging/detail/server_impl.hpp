@@ -14,6 +14,7 @@
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/transport/client.hpp>
 #include <qi/transport/server.hpp>
+#include <qi/transport/detail/network/endpoint_context.hpp>
 
 namespace qi {
   namespace detail {
@@ -68,6 +69,8 @@ namespace qi {
       void xRegisterServiceWithMaster(const std::string& methodHash);
       void xRegisterSelfWithMaster();
       void xUnregisterSelfWithMaster();
+
+      qi::detail::EndpointContext _context;
     };
   }
 }

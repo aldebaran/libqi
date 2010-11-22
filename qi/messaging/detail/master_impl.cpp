@@ -30,9 +30,9 @@ namespace qi {
       registerService(_address, "master.listServices::{ss}:");
 
       _server.addService("master.registerServer", this, &MasterImpl::registerServer);
-      registerService(_address, "master.registerServer::v:ss");
+      registerService(_address, "master.registerServer::i:ssssis");
       _server.addService("master.unregisterServer", this, &MasterImpl::unregisterServer);
-      registerService(_address, "master.unregisterServer::v:ss");
+      registerService(_address, "master.unregisterServer::v:s");
 
       _server.addService("master.registerClientNode", this, &MasterImpl::registerClient);
       registerService(_address, "master.registerClient::v:ss");
@@ -46,20 +46,62 @@ namespace qi {
       _knownServices.insert(methodSignature, nodeAddress);
     }
 
-    void MasterImpl::registerServer(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::registerServer " << nodeName << " " << nodeAddress << std::endl;
-      _knownServers.insert(nodeName, nodeAddress);
+    int MasterImpl::registerServer(const std::string& name,
+                                   const std::string& id,
+                                   const std::string& contextID,
+                                   const std::string& machineID,
+                                   const int&         platformID,
+                                   const std::string& publicIPAddress)
+    {
+      // Put into a context struct: TODO use a protobuf
+      qi::detail::EndpointContext c;
+      c.name       = name;
+      c.endpointID = id;
+      c.contextID  = contextID;
+      c.machineID  = machineID;
+      c.platformID = platformID;
+      c.publicIP   = publicIPAddress;
+      c.port = addressManager.getNewPort();
+
+      qisInfo << "Master::registerServer ===" << std::endl;
+      qisInfo << "endpointID: " << c.endpointID << std::endl;
+      qisInfo << "machineID : " << c.machineID  << std::endl;
+      qisInfo << "hostName  : " << c.hostName   << std::endl;
+      qisInfo << "processID : " << c.processID  << std::endl;
+      qisInfo << "platformID: " << c.platformID << std::endl;
+      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
+      qisInfo << "name      : " << c.name       << std::endl;
+      qisInfo << "contextID : " << c.contextID  << std::endl;
+      qisInfo << "port      : " << c.port       << std::endl;
+      qisInfo << "==========================" << std::endl;
+
+      _knownServers.insert(c.endpointID, c);
+
+      return c.port;
     }
 
-    void MasterImpl::unregisterServer(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::unregisterServer " << nodeName << " " << nodeAddress << std::endl;
-      // todo remove associated services
-      _knownServers.remove(nodeName);
+    void MasterImpl::unregisterServer(const std::string& id) {
+
+      const EndpointContext& c = _knownServers.get(id);
+      qisInfo << "Master::unregisterServer =" << std::endl;
+      qisInfo << "endpointID: " << c.endpointID << std::endl;
+      qisInfo << "machineID : " << c.machineID  << std::endl;
+      qisInfo << "hostName  : " << c.hostName   << std::endl;
+      qisInfo << "processID : " << c.processID  << std::endl;
+      qisInfo << "platformID: " << c.platformID << std::endl;
+      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
+      qisInfo << "name      : " << c.name       << std::endl;
+      qisInfo << "contextID : " << c.contextID  << std::endl;
+      qisInfo << "port      : " << c.port       << std::endl;
+      qisInfo << "==========================" << std::endl;
+
+      // TODO remove associated services
+      _knownServers.remove(id);
     }
 
     void MasterImpl::registerClient(const std::string& nodeName, const std::string& nodeAddress) {
       qisInfo << "Master::registerClient " << nodeName << " " << nodeAddress << std::endl;
-      _knownClients.insert(nodeName, nodeAddress);
+      //_knownClients.insert(nodeName, nodeAddress);
     }
 
     void MasterImpl::unregisterClient(const std::string& nodeName, const std::string& nodeAddress) {
