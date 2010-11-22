@@ -17,11 +17,11 @@ include("${TOOLCHAIN_DIR}/cmake/libfind.cmake")
 #
 # Nice wrapper for swig.
 #
-# wrap_python(module_name interface_file SRCS srcs... DEPENDENCIES deps ...)
+# wrap_ruby(module_name interface_file SRCS srcs... DEPENDENCIES deps ...)
 #
 # /!\ The module_name must be the same as the one declare in ${interface_file}
-# for instance, if module_name equals foo, foo.i must contain:
-#   %module foo
+# for instance, if module_name equals Foo, Foo.i must contain:
+#   %module Foo
 ##############
 function(wrap_ruby module_name interface_file)
 
@@ -38,15 +38,6 @@ function(wrap_ruby module_name interface_file)
   find_package(SWIG REQUIRED)
   include(${SWIG_USE_FILE})
   set_source_files_properties(${interface_file} PROPERTIES CPLUSPLUS ON)
-  # tell swig that the generated module name is ${module_name}.py
-  # without this property, it assumes that it is ${interface_file}.py
-  # TODO: check that it is a correct way to do this and not a nifty hack
-  # set_source_files_properties(
-  #   ${interface_file} PROPERTIES SWIG_MODULE_NAME "${module_name}")
-
-  # Everything will end up in ${SDK_DIR}/${SDK_DIR}, so that
-  # setting PYTHONPATH and LD_LIBRARY_PATH (or PATH) is enough
-  set(CMAKE_SWIG_OUTDIR ${SDK_DIR}/${_SDK_LIB})
 
   ##
   # Deal with dependencies:
@@ -55,7 +46,8 @@ function(wrap_ruby module_name interface_file)
     include_directories(${${_dep}_INCLUDE_DIR})
   endforeach()
 
-  # Since there is often a "lazy" include in the interface file:
+  # Since there is often a "lazy" include in the interface file,
+  # we have to find it.
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
   swig_add_module(${module_name} ruby ${interface_file} ${_srcs})
@@ -66,7 +58,6 @@ function(wrap_ruby module_name interface_file)
   # Store the target created by swig_add_module in a more friendly name:
   set(_swig_target ${SWIG_MODULE_${module_name}_REAL_NAME})
 
-  #TODO
   use_lib(${_swig_target} RUBY ${_deps})
 
   set_target_properties(${_swig_target}
@@ -85,11 +76,5 @@ function(wrap_ruby module_name interface_file)
     LIBRARY DESTINATION "${_SDK_LIB}"
     RUNTIME DESTINATION "${_SDK_LIB}"
   )
-
-  # install(FILES "${SDK_DIR}/${_SDK_LIB}/${module_name}.py"
-  #   COMPONENT ruby
-  #   DESTINATION "${_SDK_LIB}"
-  #)
-
 
 endfunction()
