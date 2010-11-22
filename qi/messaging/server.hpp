@@ -31,11 +31,9 @@ namespace qi {
     /// <summary> Constructs a Server object that can be used to
     /// advertise services to clients. </summary>
     /// <param name="serverName"> Name of the server. </param>
-    /// <param name="serverAddress"> The server address. </param>
     /// <param name="masterAddress"> The master address. </param>
     Server(const std::string& serverName,
-               const std::string& serverAddress,
-               const std::string& masterAddress);
+           const std::string& masterAddress = "127.0.0.1:5555");
 
     /// <summary>
     /// Makes an object's method available as a service, and registers
