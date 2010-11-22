@@ -5,6 +5,7 @@
 #include <boost/timer.hpp>
 #include <qi/messaging.hpp>
 #include <qi/exceptions/exceptions.hpp>
+#include "alvalue.pb.h"
 
 using namespace qi;
 
@@ -18,7 +19,7 @@ double      echo_double(const double& b) {return b;}
 std::string echo_string(const std::string& s) {return s;}
 std::string echo_string1(const std::string& s1, const std::string& s2) {return s1;}
 std::string echo_string2(const std::string& s1, const std::string& s2) {return s2;}
-
+ALCompat::ALValue echo_myawesomeness(const ALCompat::ALValue &crunch) { return crunch; }
 
 void vfun0()                                                                                      { gGlobalResult = 0; }
 void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
@@ -135,6 +136,19 @@ TEST(NodeSignatures, echo_char)
   server.addService("echo", &echo_char);
   char r = client.call<char>("echo", b);
   ASSERT_EQ(b, r);
+}
+
+TEST(NodeSignatures, echo_myawesomeness)
+{
+  ALCompat::ALValue miam;
+  //miam.PrintDebugString();
+  server.addService("echo", &echo_myawesomeness);
+  miam.set_type(ALCompat::ALValue::STRING);
+  miam.set_stringvalue("I like It");
+  ALCompat::ALValue r = client.call<ALCompat::ALValue>("echo", miam);
+  //r.PrintDebugString();
+  ASSERT_EQ(miam.stringvalue(), r.stringvalue());
+  ASSERT_EQ(miam.type(), r.type());
 }
 
 TEST(NodeSignatures, allFunctorsBindAndCall)

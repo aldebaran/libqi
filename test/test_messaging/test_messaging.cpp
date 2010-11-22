@@ -3,6 +3,7 @@
 #include <qi/messaging.hpp>
 #include <qi/perf/dataperftimer.hpp>
 #include <string>
+#include <alvalue.pb.h>
 
 using namespace qi;
 
@@ -17,10 +18,15 @@ Client gClient("client", gMasterAddress);
 void ping() {
 }
 
+ALCompat::ALValue echo_proto(const ALCompat::ALValue& in) {
+  ALCompat::ALValue val = in;
+  return val;
+}
+
+
 std::string echo(const std::string& in) {
   return in;
 }
-
 
 TEST(Messaging, PerformancePing)
 {
@@ -59,7 +65,30 @@ TEST(Messaging, PerformanceEcho)
   }
 }
 
+TEST(Messaging, PerformanceEchoProtobuf)
+{
+  gServer.addService("wibble.echo", &echo_proto);
+  unsigned int numMessages = 10000;
+  unsigned int numPowers = 12;
+  qi::perf::DataPerfTimer dt("Node string -> echo -> string");
+  char character = 'A';
 
+  // loop message sizes 2^i bytes
+  for (unsigned int i = 1; i < numPowers; i++) {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string requeststr = std::string(numBytes, character);
+
+    ALCompat::ALValue request;
+    request.set_type(ALCompat::ALValue::STRING);
+    request.set_stringvalue(requeststr);
+    dt.start(numMessages, numBytes);
+    for (unsigned int loop = 0; loop < numMessages; loop++) {
+      // Serialize
+      ALCompat::ALValue result = gClient.call<ALCompat::ALValue>("wibble.echo", request);
+    }
+    dt.stop();
+  }
+}
 
 TEST(Client, createWithStupidMasterPort)
 {
