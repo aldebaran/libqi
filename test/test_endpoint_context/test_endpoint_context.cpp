@@ -96,15 +96,15 @@ TEST(EndpointContext, EndpointContext)
 {
   qi::detail::EndpointContext i;
   std::cout <<
-      "endpointID" << i.endpointID << std::endl <<
-      "machineID"  << i.machineID  << std::endl <<
-      "hostName"   << i.hostName   << std::endl <<
-      "processID"  << i.processID  << std::endl <<
-      "platformID" << i.platformID << std::endl <<
-      "publicIP"   << i.publicIP   << std::endl <<
-      "name"       << i.name       << std::endl <<
-      "contextID"  << i.contextID  << std::endl <<
-      "port"       << i.port       << std::endl;
+      "endpointID " << i.endpointID << std::endl <<
+      "machineID  " << i.machineID  << std::endl <<
+      "hostName   " << i.hostName   << std::endl <<
+      "processID  " << i.processID  << std::endl <<
+      "platformID " << i.platformID << std::endl <<
+      "publicIP   " << i.publicIP   << std::endl <<
+      "name       " << i.name       << std::endl <<
+      "contextID  " << i.contextID  << std::endl <<
+      "port       " << i.port       << std::endl;
 }
 
 TEST(EndpointContextPerf, 1000000getProcessID)
