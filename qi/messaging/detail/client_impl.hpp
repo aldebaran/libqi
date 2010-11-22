@@ -12,8 +12,10 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/namelookup.hpp>
+#include <qi/messaging/context.hpp>
 #include <qi/serialization/serializeddata.hpp>
 #include <qi/transport/client.hpp>
+#include <qi/transport/detail/network/endpoint_context.hpp>
 
 namespace qi {
   namespace detail {
@@ -30,9 +32,11 @@ namespace qi {
       bool isInitialized() const;
 
     private:
-      bool        _isInitialized;
-      std::string _clientName;
-      std::string _masterAddress;
+      bool                        _isInitialized;
+      std::string                 _clientName;
+      std::string                 _masterAddress;
+      qi::Context                 _qiContext;
+      qi::detail::EndpointContext _endpointContext;
 
       MutexedNameLookup<std::string> _serviceCache;
 
@@ -43,6 +47,9 @@ namespace qi {
       boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
+
+      void xRegisterSelfWithMaster();
+      void xUnregisterSelfWithMaster();
     };
 
   }

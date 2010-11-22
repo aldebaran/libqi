@@ -19,15 +19,22 @@ namespace qi {
 
     ClientImpl::ClientImpl() : _isInitialized(false) {}
 
-    ClientImpl::~ClientImpl() {}
+    ClientImpl::~ClientImpl() {
+      if (_isInitialized) {
+        xUnregisterSelfWithMaster();
+      }
+    }
 
     ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
         _isInitialized(false),
         _clientName(clientName),
-        _masterAddress(masterAddress) {
-        xInit();
+        _masterAddress(masterAddress)
+    {
+      _endpointContext.name = _clientName;
+      _endpointContext.contextID = _qiContext.getID();
+      xInit();
     }
 
     void ClientImpl::xInit() {
@@ -35,7 +42,11 @@ namespace qi {
       _isInitialized = xCreateServerClient(_masterAddress);
       if (_isInitialized) {
         // we assert that we think the master can locate services
-        _serviceCache.insert("master.locateService::s:s", _masterAddress);
+        // and that we can register and unregister ourselves
+        _serviceCache.insert("master.registerClient::v:ssssi", _masterAddress);
+        _serviceCache.insert("master.unregisterClient::v:s",   _masterAddress);
+        _serviceCache.insert("master.locateService::s:s",      _masterAddress);
+        xRegisterSelfWithMaster();
       } else {
         qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
                  << _masterAddress << "\"" << std::endl;
@@ -131,6 +142,28 @@ namespace qi {
 
         // never happens: we either return early or throw
         return nodeAddress;
+    }
+
+    void ClientImpl::xRegisterSelfWithMaster() {
+      static const std::string method = "master.registerClient::v:ssssi";
+      SerializedData request_msg;
+      SerializedData response_msg;
+      request_msg.writeString(method);
+      request_msg.writeString(_endpointContext.name);
+      request_msg.writeString(_endpointContext.endpointID);
+      request_msg.writeString(_endpointContext.contextID);
+      request_msg.writeString(_endpointContext.machineID);
+      request_msg.writeInt(_endpointContext.platformID);
+      call(method, request_msg, response_msg);
+    }
+
+    void ClientImpl::xUnregisterSelfWithMaster() {
+      static const std::string method = "master.unregisterClient::v:s";
+      SerializedData request_msg;
+      SerializedData response_msg;
+      request_msg.writeString(method);
+      request_msg.writeString(_endpointContext.endpointID);
+      call(method, request_msg, response_msg);
     }
   }
 }

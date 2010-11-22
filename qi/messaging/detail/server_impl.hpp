@@ -12,6 +12,7 @@
 #include <qi/transport/message_handler.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
+#include <qi/messaging/context.hpp>
 #include <qi/transport/client.hpp>
 #include <qi/transport/server.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
@@ -25,12 +26,9 @@ namespace qi {
       virtual ~ServerImpl();
 
       ServerImpl(const std::string nodeName,
-        const std::string nodeAddress,
         const std::string masterAddress);
 
       const std::string& getName() const;
-
-      const std::string& getAddress() const;
 
       void addService(const std::string& methodSignature, qi::Functor* functor);
 
@@ -50,8 +48,14 @@ namespace qi {
       /// <summary> The friendly name of this server </summary>
       std::string _name;
 
-      /// <summary> The address of the server </summary>
+      // tmp
       std::string _address;
+
+      /// <summary> The port of the server </summary>
+      int _port;
+
+      qi::Context _qiContext;
+      qi::detail::EndpointContext _endpointContext;
 
       /// <summary> The underlying transport server </summary>
       qi::transport::Server _transportServer;
@@ -69,8 +73,6 @@ namespace qi {
       void xRegisterServiceWithMaster(const std::string& methodHash);
       void xRegisterSelfWithMaster();
       void xUnregisterSelfWithMaster();
-
-      qi::detail::EndpointContext _context;
     };
   }
 }

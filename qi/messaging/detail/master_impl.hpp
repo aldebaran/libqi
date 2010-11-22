@@ -12,6 +12,7 @@
 #include <qi/messaging/server.hpp>  // could use imp
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/address_manager.hpp>
+#include <qi/messaging/context.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
 
 namespace qi {
@@ -37,8 +38,10 @@ namespace qi {
 
       void registerClient(const std::string& name,
                           const std::string& id,
+                          const std::string& contextID,
                           const std::string& machineID,
                           const int& plarformID);
+
       void unregisterClient(const std::string& id);
 
       const std::string locateService(const std::string& methodSignature);
@@ -48,6 +51,8 @@ namespace qi {
     private:
       std::string _name;
       std::string _address;
+      qi::Context                 _qiContext;
+      qi::detail::EndpointContext _endpointContext;
       Server      _server;
 
       void xInit();
