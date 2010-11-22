@@ -15,8 +15,8 @@
 #define USE_RUNTIME_SIGNATURE
 
 #ifdef USE_RUNTIME_SIGNATURE
-#include <qi/signature/detail/typesignature.hpp>
-#include <qi/signature/detail/functionsignature.hpp>
+#include <qi/signature/detail/type_signature.hpp>
+#include <qi/signature/detail/function_signature.hpp>
 #else
 #include <qi/signature/detail/typesignaturecompiletime.hpp>
 #include <qi/signature/detail/functionsignaturecompiletime.hpp>
@@ -24,7 +24,7 @@
 
 namespace qi {
     /** Return a signature based on the type passed.
-    * Ref and const are not computed (this is a function call detail)
+    * Ref and const are not computed
     * those qualifiers are compiler details.
     */
 
