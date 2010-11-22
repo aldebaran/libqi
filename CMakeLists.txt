@@ -37,7 +37,7 @@ file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
 file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
 file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
-file(GLOB CBINDINGS_SRC                   bindings/c/qi/qi.h bindings/c/qi/cbindings.cpp)
+file(GLOB CBINDINGS_SRC                   bindings/c/qi/qi.h bindings/c/cbindings.cpp)
 
 source_group( messaging                 FILES ${MESSAGING_SRC})
 source_group( messaging\\detail         FILES ${MESSAGING_DETAIL_SRC})
