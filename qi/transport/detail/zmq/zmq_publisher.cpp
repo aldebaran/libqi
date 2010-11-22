@@ -55,7 +55,7 @@ namespace qi {
     {
       zmq::message_t msg(toSend.size());
       memcpy(msg.data(), toSend.data(), toSend.size());
-      bool rc = _socket.send(msg);
+      _socket.send(msg);
     }
   }
 }
