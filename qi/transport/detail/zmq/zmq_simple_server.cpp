@@ -23,8 +23,8 @@ namespace qi {
       //if you use the custom XREP code, activate the full async experience to use the thread pool
       //#define ZMQ_FULL_ASYNC
 
-      ZMQSimpleServerImpl::ZMQSimpleServerImpl(const std::string &serverAddress)
-        : ServerImpl(serverAddress),
+      ZMQSimpleServerImpl::ZMQSimpleServerImpl(const std::vector<std::string> &serverAddresses)
+        : ServerImpl(serverAddresses),
         zctx(1),
         zsocket(zctx, ZMQ_REP)
       {
@@ -42,10 +42,16 @@ namespace qi {
       //use only the number of thread we need
       void ZMQSimpleServerImpl::run() {
         try {
-          qisDebug << "Start ZMQServer on: " << _serverAddress << std::endl;
-          zsocket.bind(_serverAddress.c_str());
+          for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
+            qisDebug << "Run ZMQServer on: " << _serverAddresses[i] << std::endl;
+            zsocket.bind(_serverAddresses[i].c_str());
+          }
         } catch(const std::exception& e) {
-          qisError << "Failed to bind to address " << _serverAddress << " Reason: " << e.what() << std::endl;
+          qisError << "Failed to bind to addresses ";
+          for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
+            qisError << _serverAddresses[i].c_str();
+          }
+          qisError << " Reason: " << e.what() << std::endl;
           return;
         }
 

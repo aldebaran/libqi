@@ -26,8 +26,8 @@ namespace qi {
       static const char *gWorkersAddress      = "inproc://workers";
       static const int   gWorkersThreadsCount = 10;
 
-      ZMQServerQueueImpl::ZMQServerQueueImpl (const std::string &server_name)
-        : detail::ServerImpl(server_name),
+      ZMQServerQueueImpl::ZMQServerQueueImpl (const std::vector<std::string> &serverAddresses)
+        : detail::ServerImpl(serverAddresses),
         zctx(1),
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)
@@ -62,8 +62,10 @@ namespace qi {
       }
 
       void ZMQServerQueueImpl::run() {
-        // alsdebug << "Start ZMQServer on: " << _serverAddress;
-        zsocket.bind(_serverAddress.c_str());
+        for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
+          qisDebug << "Start ZMQServer on: " << _serverAddresses[i] << std::endl;
+          zsocket.bind(_serverAddresses[i].c_str());
+        }
         zsocketworkers.bind(gWorkersAddress);
 
         // alsdebug << "ZMQ workers binded";

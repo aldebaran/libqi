@@ -28,10 +28,10 @@ namespace qi {
       class ZMQSimpleServerImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
-        /// <param name="serverAddress">
-        /// The address of the server e.g. tcp://127.0.0.1:5555
+        /// <param name="serverAddresses">
+        /// The addresses of the server e.g. tcp://127.0.0.1:5555, inproc://something, ipc://something
         /// </param>
-        ZMQSimpleServerImpl(const std::string & serverAddress);
+        ZMQSimpleServerImpl(const std::vector<std::string> & serverAddresses);
 
         /// <summary>The Server class destructor.</summary>
         virtual ~ZMQSimpleServerImpl();

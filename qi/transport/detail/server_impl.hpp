@@ -10,6 +10,7 @@
 #define   __QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP__
 
 #include <string>
+#include <vector>
 #include <qi/core/runnable.hpp>
 #include <qi/transport/message_handler.hpp>
 #include <qi/transport/detail/server_response_handler.hpp>
@@ -20,8 +21,8 @@ namespace qi {
 
       class ServerImpl: public qi::Runnable {
       public:
-        explicit ServerImpl(const std::string &_serverAddress)
-          : _serverAddress(_serverAddress),
+        explicit ServerImpl(const std::vector<std::string> &_serverAddresses)
+          : _serverAddresses(_serverAddresses),
             _dataHandler(0) {}
 
         virtual ~ServerImpl() {}
@@ -37,7 +38,7 @@ namespace qi {
         }
 
       protected:
-        std::string      _serverAddress;
+        std::vector<std::string>      _serverAddresses;
         MessageHandler  *_dataHandler;
       };
     }

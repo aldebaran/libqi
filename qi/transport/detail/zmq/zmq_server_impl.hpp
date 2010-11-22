@@ -29,9 +29,9 @@ namespace qi {
       public:
         /// <summary> The Server class constructor. </summary>
         /// <param name="server_name">
-        /// The name given to the server, id for clients to connect.
+        /// The addresses given to the server
         /// </param>
-        ZMQServerImpl(const std::string & server_name);
+        ZMQServerImpl(const std::vector<std::string> & serverAddresses);
 
         /// <summary> The Server class destructor </summary>
         virtual ~ZMQServerImpl();

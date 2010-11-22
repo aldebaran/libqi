@@ -20,9 +20,9 @@ namespace qi {
 #define ZMQ_FULL_ASYNC
 
       /// <summary> Constructor. </summary>
-      /// <param name="serverAddress"> The server address. </param>
-      ZMQServerImpl::ZMQServerImpl(const std::string &serverAddress)
-        : ServerImpl(serverAddress),
+      /// <param name="serverAddresses"> The server addresses. </param>
+      ZMQServerImpl::ZMQServerImpl(const std::vector<std::string> &serverAddresses)
+        : ServerImpl(serverAddresses),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
       {
@@ -89,8 +89,10 @@ namespace qi {
 
       //use only the number of thread we need
       void ZMQServerImpl::run() {
-        // alsdebug << "Start ZMQServer on: " << _serverAddress;
-        zsocket.bind(_serverAddress.c_str());
+        for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
+          qisDebug << "Start ZMQServer on: " << _serverAddresses[i];
+          zsocket.bind(_serverAddresses[i].c_str());
+        }
 
 #ifdef ZMQ_FULL_ASYNC
         // alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";

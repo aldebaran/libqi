@@ -30,10 +30,10 @@ namespace qi {
       class ZMQServerQueueImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
-        /// <param name="server_name">
-        /// The name given to the server, id for clients to connect.
+        /// <param name="serverAddresses">
+        /// The addresses to serve
         /// </param>
-        ZMQServerQueueImpl(const std::string & server_name);
+        ZMQServerQueueImpl(const std::vector<std::string> & serverAddresses);
 
         /// <summary>The Server class destructor.
         virtual ~ZMQServerQueueImpl();

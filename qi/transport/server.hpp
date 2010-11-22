@@ -24,14 +24,26 @@ namespace qi {
     public:
       GenericTransportServer(): _isInitialized(false) {}
 
-      void serve(const std::string &address)
+      void serve(const std::string &address) {
+        std::vector<std::string> v;
+        v.push_back(address);
+        serve(v);
+      }
+
+      void serve(const std::vector<std::string> &addresses)
       {
+        for(unsigned int i = 0 ; i< addresses.size(); ++i) {
+          qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
+        }
         try {
-          _transportServer = new TRANSPORT(address);
+          _transportServer = new TRANSPORT(addresses);
           _isInitialized = true;
         } catch(const std::exception& e) {
-          qisError << "Failed to create transport server for address: " <<
-            address << " Reason:" << e.what() << std::endl;
+          qisError << "Failed to create transport server for addresses:";
+          for(unsigned int i = 0 ; i< addresses.size(); ++i) {
+            qisInfo << " " << addresses[i] << std::endl;
+          }
+          qisError << " Reason:" << e.what() << std::endl;
           throw(e);
         }
       }
