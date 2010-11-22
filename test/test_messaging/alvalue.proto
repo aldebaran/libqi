@@ -3,7 +3,7 @@
 package ALCompat;
 
 message ALValue {
-  required ValueType type               = 1 [default = EMPTY];
+  required ValueType        type        = 1 [default = EMPTY];
 
   optional bool             boolValue   = 2;
   optional int32            int32Value  = 3;

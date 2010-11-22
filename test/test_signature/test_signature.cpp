@@ -117,21 +117,19 @@ TEST(TestSignature, ComplexTypeSignature) {
 
   //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
   //and obama said: Yes We Can!
-  EXPECT_EQ("{ii}"              , qi::signature<MapInt>::value());
-  EXPECT_EQ("{{ii}{ii}}"        , qi::signature<MapInt2>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectorMapInt2>::value());
-  EXPECT_EQ("{{ii}{ii}}"        , qi::signature<MapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectMapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"      , qi::signature<VectMapInt2RefConst>::value());
-  EXPECT_EQ("[[{{ii}{ii}}]]"    , qi::signature<VectVectMapInt2ConstRef>::value());
+  EXPECT_EQ("{ii}"                        , qi::signature<MapInt>::value());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::signature<MapInt2>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectorMapInt2>::value());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::signature<MapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectMapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectMapInt2RefConst>::value());
+  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::signature<VectVectMapInt2ConstRef>::value());
   EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::signature<FuckinMap>::value());
-
 }
 
 TEST(TestSignature, FunctionType) {
   EXPECT_EQ("v:ii", qi::signature<void (int, int)>::value());
   EXPECT_EQ("v:ii", qi::signature<void (*)(int, int)>::value());
-  //exit(1);
 }
 
 TEST(TestSignature, BasicVoidFunctionSignature) {
