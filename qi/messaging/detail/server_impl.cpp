@@ -108,7 +108,7 @@ namespace qi {
     }
 
     void ServerImpl::xRegisterSelfWithMaster() {
-      static const std::string method("master.registerServerNode::v:ss");
+      static const std::string method("master.registerServer::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
@@ -119,7 +119,7 @@ namespace qi {
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {
-      static const std::string method("master.unregisterServerNode::v:ss");
+      static const std::string method("master.unregisterServer::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 

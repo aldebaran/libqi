@@ -24,11 +24,11 @@ namespace qi {
       void registerService(const std::string& nodeAddress,
         const std::string& methodSignature);
 
-      void registerServerNode(const std::string& nodeName, const std::string& nodeAddress);
-      void unregisterServerNode(const std::string& nodeName, const std::string& nodeAddress);
+      void registerServer(const std::string& nodeName, const std::string& nodeAddress);
+      void unregisterServer(const std::string& nodeName, const std::string& nodeAddress);
 
-      void registerClientNode(const std::string& nodeName, const std::string& nodeAddress);
-      void unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress);
+      void registerClient(const std::string& nodeName, const std::string& nodeAddress);
+      void unregisterClient(const std::string& nodeName, const std::string& nodeAddress);
 
       const std::string locateService(const std::string& methodSignature);
 

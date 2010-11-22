@@ -29,15 +29,15 @@ namespace qi {
       _server.addService("master.listServices", this, &MasterImpl::listServices);
       registerService(_address, "master.listServices::{ss}:");
 
-      _server.addService("master.registerServerNode", this, &MasterImpl::registerServerNode);
-      registerService(_address, "master.registerServerNode::v:ss");
-      _server.addService("master.unregisterServerNode", this, &MasterImpl::unregisterServerNode);
-      registerService(_address, "master.unregisterServerNode::v:ss");
+      _server.addService("master.registerServer", this, &MasterImpl::registerServer);
+      registerService(_address, "master.registerServer::v:ss");
+      _server.addService("master.unregisterServer", this, &MasterImpl::unregisterServer);
+      registerService(_address, "master.unregisterServer::v:ss");
 
-      _server.addService("master.registerClientNode", this, &MasterImpl::registerClientNode);
-      registerService(_address, "master.registerClientNode::v:ss");
-      _server.addService("master.unregisterClientNode", this, &MasterImpl::unregisterClientNode);
-      registerService(_address, "master.unregisterClientNode::v:ss");
+      _server.addService("master.registerClientNode", this, &MasterImpl::registerClient);
+      registerService(_address, "master.registerClient::v:ss");
+      _server.addService("master.unregisterClientNode", this, &MasterImpl::unregisterClient);
+      registerService(_address, "master.unregisterClient::v:ss");
     }
 
     void MasterImpl::registerService(
@@ -46,24 +46,24 @@ namespace qi {
       _knownServices.insert(methodSignature, nodeAddress);
     }
 
-    void MasterImpl::registerServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::registerServerNode " << nodeName << " " << nodeAddress << std::endl;
+    void MasterImpl::registerServer(const std::string& nodeName, const std::string& nodeAddress) {
+      qisInfo << "Master::registerServer " << nodeName << " " << nodeAddress << std::endl;
       _knownServers.insert(nodeName, nodeAddress);
     }
 
-    void MasterImpl::unregisterServerNode(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::unregisterServerNode " << nodeName << " " << nodeAddress << std::endl;
+    void MasterImpl::unregisterServer(const std::string& nodeName, const std::string& nodeAddress) {
+      qisInfo << "Master::unregisterServer " << nodeName << " " << nodeAddress << std::endl;
       // todo remove associated services
       _knownServers.remove(nodeName);
     }
 
-    void MasterImpl::registerClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::registerClientNode " << nodeName << " " << nodeAddress << std::endl;
+    void MasterImpl::registerClient(const std::string& nodeName, const std::string& nodeAddress) {
+      qisInfo << "Master::registerClient " << nodeName << " " << nodeAddress << std::endl;
       _knownClients.insert(nodeName, nodeAddress);
     }
 
-    void MasterImpl::unregisterClientNode(const std::string& nodeName, const std::string& nodeAddress) {
-      qisInfo << "Master::unregisterClientNode " << nodeName << " " << nodeAddress << std::endl;
+    void MasterImpl::unregisterClient(const std::string& nodeName, const std::string& nodeAddress) {
+      qisInfo << "Master::unregisterClient " << nodeName << " " << nodeAddress << std::endl;
       _knownClients.remove(nodeName);
     }
 
