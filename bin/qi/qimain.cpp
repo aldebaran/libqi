@@ -6,17 +6,18 @@
 */
 
 #include <iostream>
+#include <string>
 #include <map>
 #include <qi/messaging.hpp>
 #include <qi/perf/sleep.hpp>
 
 void usage()
 {
-  std::cout << "qimaster address" << std::endl;
+  std::cout << "qimaster [address]" << std::endl;
 }
 
-void qi_call(const char *addr) {
-  qi::Client client("clicli", std::string(addr));
+void qi_call(std::string addr) {
+  qi::Client client("qi client", addr);
 
   //client.call("master.listServices::{ss}")
 
@@ -37,9 +38,14 @@ void qi_call(const char *addr) {
 
 int main(int argc, char *argv[])
 {
-  if (argc < 2)
+  std::string masterAddress;
+  if (argc > 2)
     usage();
+  if (argc == 2)
+    masterAddress = argv[1];
+  else
+    masterAddress = "127.0.0.1:5555";
 
-  qi_call(argv[1]);
+  qi_call(masterAddress);
   return 0;
 }
