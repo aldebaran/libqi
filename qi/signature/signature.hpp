@@ -17,6 +17,7 @@
 #ifdef USE_RUNTIME_SIGNATURE
 #include <qi/signature/detail/type_signature.hpp>
 #include <qi/signature/detail/function_signature.hpp>
+#include <qi/signature/detail/protobuf_signature.hpp>
 #else
 #include <qi/signature/detail/typesignaturecompiletime.hpp>
 #include <qi/signature/detail/functionsignaturecompiletime.hpp>

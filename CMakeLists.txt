@@ -93,7 +93,7 @@ endif (UNIX)
 create_lib(qi "${SRC}" "${HEADERS}")
 use_lib (qi REQUIRED ALL BOOST)
 use_lib (qi BOOST_SERIALIZATION BOOST_DATE_TIME BOOST_THREAD ZEROMQ PTHREAD)
-
+use_lib (qi PROTOBUF)
 if (WITH_THRIFT)
   use_lib(qi THRIFT)
 endif()
