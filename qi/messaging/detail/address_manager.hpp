@@ -9,7 +9,6 @@
 #define   __QI_MESSAGING_DETAIL_ADDRESS_MANAGER_HPP__
 
 #include <string>
-#include <vector>
 
 namespace qi {
   namespace detail {
@@ -20,9 +19,6 @@ namespace qi {
 
       int getMasterPort() const;
       int getNewPort();
-
-      std::vector<std::string> getNewServerBindAddresses(void);
-      std::vector<std::string> getServerBindAddresses(int port);
 
     protected:
       int _nextFreePort;
