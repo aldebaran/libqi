@@ -13,7 +13,7 @@ int foo(const int &bar)
 
 int main(int argc, char *argv[])
 {
-  qi::Server server("myserver", "127.0.0.1:5595", "127.0.0.1:5509");
+  qi::Server server("myserver", "127.0.0.1:5509");
 
   server.addService("mymethod", &foo);
   sleep(5);

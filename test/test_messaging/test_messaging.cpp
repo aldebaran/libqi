@@ -12,7 +12,7 @@ std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
 Master gMaster(gMasterAddress);
-Server gServer(gServerName, gServerAddress, gMasterAddress);
+Server gServer(gServerName, gMasterAddress);
 Client gClient("client", gMasterAddress);
 
 void ping() {
@@ -105,7 +105,7 @@ TEST(Client, createWithStupidMasterPort)
 
 TEST(Server, createWithStupidMasterPort)
 {
-  Server server("server", "blabla", "oink");
+  Server server("server", "oink");
 }
 
 TEST(Master, createWithStupidMasterPort)
@@ -113,11 +113,6 @@ TEST(Master, createWithStupidMasterPort)
   Master master("oink2");
 }
 
-TEST(Server, createWithStupidServerPort)
-{
-  Master master("127.0.0.1:6666");
-  Server server("server", "blabla", "127.0.0.1:6666");
-}
 
 
 

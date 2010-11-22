@@ -68,7 +68,7 @@ std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
 Master master(gMasterAddress);
-Server server(gServerName, gServerAddress, gMasterAddress);
+Server server(gServerName, gMasterAddress);
 Client client("client", gMasterAddress);
 
 TEST(NodeSignatures, echo_bool)

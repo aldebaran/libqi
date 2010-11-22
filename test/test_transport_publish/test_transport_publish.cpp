@@ -105,7 +105,8 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
   for(unsigned int i=0; i < numSubscribers; i++) {
     delete subscribers[i];
   }
-  ASSERT_EQ( numMessages * numSubscribers, result) << "Did not receive all messages";
+  int expectedMessaged = numMessages * numSubscribers;
+  ASSERT_EQ( expectedMessaged, result) << "Did not receive all messages";
 
 }
 
