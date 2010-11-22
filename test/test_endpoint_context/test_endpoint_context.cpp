@@ -3,7 +3,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/transport/detail/network/process_identity.hpp>
+#include <qi/transport/detail/network/endpoint_context.hpp>
 #include <qi/transport/detail/network/network.hpp>
 
 using qi::detail::getProcessID;
@@ -11,89 +11,103 @@ using qi::detail::getHostName;
 using qi::detail::getFirstMacAddress;
 using qi::detail::getUUID;
 using qi::detail::getPrimaryPublicIPAddress;
+using qi::detail::getIPAddresses;
 
-TEST(ProcessIdentity, getProcessID)
+TEST(EndpointContext, getProcessID)
 {
   int pid = getProcessID();
   std::cout << "PID: " << getProcessID() << std::endl;
   ASSERT_NE(pid, 0) << "PID was zero. Unlikely";
 }
 
-TEST(ProcessIdentity, pidConstant)
+TEST(EndpointContext, pidConstant)
 {
   int pid1 = getProcessID();
   int pid2 = getProcessID();
   ASSERT_EQ(pid1, pid2) << "PID changed";
 }
 
-TEST(ProcessIdentity, getHostName)
+TEST(EndpointContext, getHostName)
 {
   std::string host = getHostName();
   std::cout << "Host: " << host << std::endl;
   ASSERT_NE(host, std::string()) << "HostName was empty";
 }
 
-TEST(ProcessIdentity, hostNameIsConstant)
+TEST(EndpointContext, hostNameIsConstant)
 {
   std::string host1 = getHostName();
   std::string host2 = getHostName();
   ASSERT_EQ(host1, host2) << "Host name changed";
 }
 
-TEST(ProcessIdentity, getFirstMacAddress)
+TEST(EndpointContext, getFirstMacAddress)
 {
   std::string mac = getFirstMacAddress();
   std::cout << "Mac: " << mac << std::endl;
   ASSERT_NE(mac, std::string()) << "Mac Address was empty";
 }
 
-TEST(ProcessIdentity, macAddressIsConstant)
+TEST(EndpointContext, macAddressIsConstant)
 {
   std::string mac1 = getFirstMacAddress();
   std::string mac2 = getFirstMacAddress();
   ASSERT_EQ(mac1, mac2) << "Mac Address changed";
 }
 
-TEST(ProcessIdentity, getUUID)
+TEST(EndpointContext, getUUID)
 {
   std::string u = getUUID();
   std::cout << "UUID: " << u << std::endl;
   ASSERT_NE(u, std::string()) << "UUID was empty";
 }
 
-TEST(ProcessIdentity, uuidIsNotConstant)
+TEST(EndpointContext, uuidIsNotConstant)
 {
   std::string u1 = getUUID();
   std::string u2 = getUUID();
   ASSERT_NE(u1, u2) << "uuid did not change";
 }
 
-TEST(ProcessIdentity, getPrimaryPublicIPAddress)
+TEST(EndpointContext, getPrimaryPublicIPAddress)
 {
   std::string ip =  getPrimaryPublicIPAddress();
   std::cout << "IP: " << ip << std::endl;
   ASSERT_NE(ip, std::string())  << "IP Address was empty";
 }
 
-TEST(ProcessIdentity, primaryIPIsConstant)
+TEST(EndpointContext, primaryIPIsConstant)
 {
   std::string ip1 =  getPrimaryPublicIPAddress();
   std::string ip2 =  getPrimaryPublicIPAddress();
   ASSERT_EQ(ip1, ip2) << "IP Changed";
 }
 
-TEST(ProcessIdentity, ProcessIdentity)
+TEST(EndpointContext, getIPAddresses)
 {
-  qi::detail::ProcessIdentity i;
-  std::cout <<
-    "hostName:   " << i.hostName   << std::endl <<
-    "macAddress: " << i.macAddress << std::endl <<
-    "processID:  " << i.processID  << std::endl <<
-    "id:         " << i.id         << std::endl <<
-    "ipAddress:  " << i.ipAddress  << std::endl;
+  std::vector<std::string> ips =  getIPAddresses();
+  for (unsigned int i = 0; i < ips.size(); ++i) {
+    std::cout << "IP: " << ips[i] << std::endl;
+  }
+  //ASSERT_NE(ip, std::string())  << "IP Address was empty";
 }
 
-TEST(ProcessIdentityPerf, 1000000getProcessID)
+TEST(EndpointContext, EndpointContext)
+{
+  qi::detail::EndpointContext i;
+  std::cout <<
+      "endpointID" << i.endpointID << std::endl <<
+      "machineID"  << i.machineID  << std::endl <<
+      "hostName"   << i.hostName   << std::endl <<
+      "processID"  << i.processID  << std::endl <<
+      "platformID" << i.platformID << std::endl <<
+      "publicIP"   << i.publicIP   << std::endl <<
+      "name"       << i.name       << std::endl <<
+      "contextID"  << i.contextID  << std::endl <<
+      "port"       << i.port       << std::endl;
+}
+
+TEST(EndpointContextPerf, 1000000getProcessID)
 {
   int id;
   for(unsigned int i=0; i<1000000; i++) {
@@ -102,7 +116,7 @@ TEST(ProcessIdentityPerf, 1000000getProcessID)
   id++;
 }
 
-TEST(ProcessIdentityPerf, 100000getHostName)
+TEST(EndpointContextPerf, 100000getHostName)
 {
   std::string s;
   for(unsigned int i=0; i<100000; i++) {
@@ -110,7 +124,7 @@ TEST(ProcessIdentityPerf, 100000getHostName)
   }
 }
 
-TEST(ProcessIdentityPerf, 1000getFirstMacAddress)
+TEST(EndpointContextPerf, 1000getFirstMacAddress)
 {
   std::string s;
   for(unsigned int i=0; i<1000; i++) {
@@ -118,7 +132,7 @@ TEST(ProcessIdentityPerf, 1000getFirstMacAddress)
   }
 }
 
-TEST(ProcessIdentityPerf, 10000getUUID)
+TEST(EndpointContextPerf, 10000getUUID)
 {
   std::string s;
   for(unsigned int i=0; i<10000; i++) {
@@ -126,7 +140,7 @@ TEST(ProcessIdentityPerf, 10000getUUID)
   }
 }
 
-TEST(ProcessIdentityPerf, 10000PrimaryPublicIPAddress)
+TEST(EndpointContextPerf, 10000PrimaryPublicIPAddress)
 {
   std::string s;
   for(unsigned int i=0; i<10000; i++) {
