@@ -51,7 +51,8 @@ namespace qi {
       std::string fData;
     };
 
-    template <typename T>
+    //Enable is need for protobuf (for conditionnal template specialisation)
+    template <typename T, class Enable = void>
     struct serialize {
       static void read(SerializedData &sd, T &t){
         std::cout << "BAM: read" << std::endl;

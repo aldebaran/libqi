@@ -37,6 +37,7 @@
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
+#include <protobuf/message.h>
 //#include <vector>
 
 namespace qi {
@@ -84,6 +85,23 @@ namespace qi {
       static inline void read(SerializedData &sd, T &val) {
         __QI_DEBUG_SERIALIZATION_R(T, "Const");
         serialize<T>::read(sd, val);
+      }
+    };
+
+    template <typename T>
+    struct serialize<T, typename boost::enable_if< typename boost::is_base_of<google::protobuf::Message , T>::type >::type > {
+      static void write(SerializedData &sd, const T &val) {
+        __QI_DEBUG_SERIALIZATION_W(T, "Proto");
+        std::string ser;
+        val.SerializeToString(&ser);
+        sd.writeString(ser);
+      }
+
+      static void read(SerializedData &sd, T &val) {
+        __QI_DEBUG_SERIALIZATION_R(T, "Proto");
+        std::string ser;
+        sd.readString(ser);
+        val.ParseFromString(ser);
       }
     };
 
