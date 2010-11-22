@@ -1,47 +1,33 @@
-== ALIppc ToDo ==
+== QiMessaging ToDo ==
 
 General:
-- more test
-- clarify the situation with threadable/runnable => should be merged
-- cleanup source code: do not use tab, respect the norm, etc... do not mix CRLF with LF
-- client: standard way to create a client depending on a server
-  solution include:
-    - server.getClient("modulename")
-    - Client client("modulename", server)
-
-General later:
-- clean SOAP backend
-- bound function visitor that return the complete type of a function.
-- support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
-- better stl serialization support (map, pair). Be recursive.
-- abstract the serialisation backend (or use the boost::archive abstraction to implement more serialization backend)
-
+  - proper public API separation: QIAPI
+  - basic ACL
 
 Functor:
-  - use boost::ref ?
-  - support function pointer
-  - split out CallDefinition/ResultDefinition handling in a separate file
+  - use boost::ref or boost::bind?
 
+Messaging:
+  - support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
+  - Cleanup startup - less hand-described messages
+  - Add publishing
+  - Fast Local Call
 
-ippc -> AL::messaging DONE
-CallDefinition -> Request NO ... the call definition is not the request
-ResultDefinition -> Response NO ... the call definition is not the request
-All ippc/Shm to al::messaging::shm
-VariablesList should be exposed as a list, called args?
+Goals:
+  - define an API
 
-Request and Response could become structs
-Add Message ... (could be a notification, or async call) ?
-They should have no ostream or serializaion inside them.
+Events:
+  - define an API, maybe events are only
 
-Hmmm IArchive and OArchive ~= boost::archive
+Transport:
+  - see if ACE shm transport is more efficient than
 
-Broker should translate module name to envelope for messaging.
-Messaging level just deals with envelopes. Envelopes are deserialized for a broker.
-What is the endpoint? broker? module? service?
-Envelopes could have timestamps, message-id, from, reply-to, relates-to
+Serialization:
+  - Add support for 'dumb' serialization based on signature
+  - abstract the serialisation backend
 
----------
-Add support for 'dumb' serialization based on signature
-Add support for protobuf messages
-Cleanup startup - less hand-described messages
-Add publishing
+Test:
+  - more test
+  - split performance test and autotest
+  - test coverage
+
