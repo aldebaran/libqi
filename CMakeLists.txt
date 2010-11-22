@@ -16,6 +16,8 @@ add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 enable_testing()
 create_config_h("config.hpp.in" "qi/config.hpp")
 
+include_directories(bindings/c/)
+
 file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
 file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
 file(GLOB MESSAGING_DETAIL_SRC     qi/messaging/detail/*.cpp qi/messaging/detail/*.h*)
@@ -35,7 +37,7 @@ file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
 file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
 file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
 file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.h*)
-file(GLOB CBINDINGS_SRC                   qi/qi.h qi/cbindings.cpp)
+file(GLOB CBINDINGS_SRC                   bindings/c/qi/qi.h bindings/c/qi/cbindings.cpp)
 
 source_group( messaging                 FILES ${MESSAGING_SRC})
 source_group( messaging\\detail         FILES ${MESSAGING_DETAIL_SRC})
