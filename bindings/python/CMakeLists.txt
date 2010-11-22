@@ -2,7 +2,7 @@
 
 
 cmake_minimum_required(VERSION 2.6)
-project(swig-overlaod)
+project(PyQiMessaging)
 
 use(PYTHON-TOOLS)
 wrap_python(qi qi.i DEPENDENCIES QI)

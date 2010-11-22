@@ -114,4 +114,4 @@ add_subdirectory(examples)
 add_subdirectory(bin)
 create_doxygen("Doxyfile")
 
-add_subdirectory(python)
+add_subdirectory(bindings/python)
