@@ -25,7 +25,7 @@ namespace qi {
     /// The master address.
     /// e.g. 127.0.0.1:5555
     /// </param>
-    explicit Master(const std::string& masterAddress);
+    explicit Master(const std::string& masterAddress = "127.0.0.1:5555");
 
     /// <summary> Finaliser. </summary>
     virtual ~Master();

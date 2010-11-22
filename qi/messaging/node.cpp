@@ -14,8 +14,7 @@ namespace qi {
 
   Node::Node(
     const std::string& name,
-    const std::string& serverAddress,
     const std::string& masterAddress) :
-        Server(name, serverAddress, masterAddress),
+        Server(name, masterAddress),
         Client(name, masterAddress) {}
 }

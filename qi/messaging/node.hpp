@@ -24,11 +24,9 @@ namespace qi {
 
     /// <summary> Full Constructor. </summary>
     /// <param name="nodeName"> Name of the node. </param>
-    /// <param name="nodeAddress"> The node address. </param>
     /// <param name="masterAddress"> The master address. </param>
     Node(const std::string& nodeName,
-      const std::string& nodeAddress,
-      const std::string& masterAddress);
+         const std::string& masterAddress = "127.0.0.1:5555");
   };
 }
 
