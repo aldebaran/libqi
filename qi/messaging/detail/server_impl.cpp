@@ -12,8 +12,8 @@
 #include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/transport/buffer.hpp>
+#include <qi/transport/detail/network/negotiate_endpoint.hpp>
 #include <qi/log.hpp>
-#include <cstdio>
 
 namespace qi {
   using qi::serialization::SerializedData;
@@ -42,7 +42,7 @@ namespace qi {
         // we are the master's server, so we don't need a client to ourselves
         _isMasterServer = true;
         _isInitialized = true;
-        _port = 5555;
+        _endpointContext.port = 5555; // FIXME
       } else {
         _isInitialized = _transportClient.connect(std::string("tcp://") + masterAddress);
         if (! _isInitialized ) {
@@ -53,24 +53,19 @@ namespace qi {
         xRegisterSelfWithMaster();
       }
 
-      // Ask the transport server to bind on all our addresses ----------------------------------------
-      std::vector<std::string> addresses;
-      char port[10];
-      sprintf(port, "%d", _port);
-      addresses.push_back(std::string("inproc://127.0.0.1:")                                   + port);
-      addresses.push_back(std::string("ipc://127.0.0.1:")                                      + port);
-      addresses.push_back(std::string("tcp://127.0.0.1:")                                      + port);
-      addresses.push_back(std::string("tcp://") + _endpointContext.publicIP + std::string(":") + port);
-      _transportServer.serve(addresses);
-      // ----------------------------------------------------------------------------------------------
 
-      _address = std::string("127.0.0.1:") + port; // tmp
+      _transportServer.serve(qi::detail::getEndpoints(_endpointContext));
+      _address = std::string("127.0.0.1:");// + _endpointContext.port; // tmp
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(boost::bind(&qi::transport::Server::run, _transportServer));
     }
 
     bool ServerImpl::isInitialized() const {
       return _isInitialized;
+    }
+
+    const qi::detail::EndpointContext& ServerImpl::getEndpointContext() const {
+      return _endpointContext;
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
@@ -113,8 +108,8 @@ namespace qi {
       qi::serialization::BinarySerializer msg;
 
       msg.writeString(method);
-      msg.writeString(_address);
       msg.writeString(methodSignature);
+      msg.writeString(_endpointContext.endpointID);
       _transportClient.send(msg.str(), ret);
     }
 
@@ -133,8 +128,7 @@ namespace qi {
 
       _transportClient.send(msg.str(), ret);
       qi::serialization::BinarySerializer retSer(ret);
-      retSer.readInt(_port);
-      //ret.readInt(_endpointContext.port);
+      retSer.readInt(_endpointContext.port);
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {

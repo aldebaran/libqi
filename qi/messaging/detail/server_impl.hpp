@@ -34,6 +34,8 @@ namespace qi {
 
       bool isInitialized() const;
 
+      const qi::detail::EndpointContext& getEndpointContext() const;
+
       // MessageHandler Implementation -----------------
       void messageHandler(std::string& defData, std::string& resultData);
       // -----------------------------------------------

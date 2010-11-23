@@ -9,7 +9,7 @@
 #define   __QI_MESSAGING_DETAIL_MASTER_IMPL_HPP__
 
 #include <string>
-#include <qi/messaging/server.hpp>  // could use imp
+#include <qi/messaging/detail/server_impl.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/address_manager.hpp>
 #include <qi/messaging/context.hpp>
@@ -24,8 +24,8 @@ namespace qi {
 
       ~MasterImpl();
 
-      void registerService(const std::string& nodeAddress,
-        const std::string& methodSignature);
+      void registerService(const std::string& methodSignature,
+                           const std::string& serverID);
 
       int registerServer(const std::string& name,
                           const std::string& id,
@@ -44,18 +44,25 @@ namespace qi {
 
       void unregisterClient(const std::string& id);
 
-      const std::string locateService(const std::string& methodSignature);
+      std::string locateService(const std::string& methodSignature, const std::string& clientID);
 
       const std::map<std::string, std::string>& listServices();
 
     private:
       std::string _name;
       std::string _address;
-      qi::Context                 _qiContext;
-      qi::detail::EndpointContext _endpointContext;
-      Server      _server;
+      ServerImpl  _server;
 
       void xInit();
+
+      // Helper method
+      template <typename METHOD_TYPE>
+      void xAddMasterMethod(std::string name, METHOD_TYPE method) {
+        const EndpointContext& serverContext = _server.getEndpointContext();
+        std::string sig = makeSignature(name, method);
+        _server.addService(makeSignature(name, method), makeFunctor(this, method));
+        registerService(sig, serverContext.endpointID);
+      }
 
       // map from methodSignature to nodeAddress
       MutexedNameLookup<std::string> _knownServices;

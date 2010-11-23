@@ -39,13 +39,13 @@ namespace qi {
 
     void ClientImpl::xInit() {
       // create a messaging client to the master address
-      _isInitialized = xCreateServerClient(_masterAddress);
+      _isInitialized = xCreateServerClient(std::string("tcp://") + _masterAddress);
       if (_isInitialized) {
         // we assert that we think the master can locate services
         // and that we can register and unregister ourselves
-        _serviceCache.insert("master.registerClient::v:ssssi", _masterAddress);
-        _serviceCache.insert("master.unregisterClient::v:s",   _masterAddress);
-        _serviceCache.insert("master.locateService::s:s",      _masterAddress);
+        _serviceCache.insert("master.registerClient::v:ssssi", std::string("tcp://") +_masterAddress);
+        _serviceCache.insert("master.unregisterClient::v:s",   std::string("tcp://") +_masterAddress);
+        _serviceCache.insert("master.locateService::s:ss",     std::string("tcp://") +_masterAddress);
         xRegisterSelfWithMaster();
       } else {
         qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
@@ -91,15 +91,13 @@ namespace qi {
     }
 
     bool ClientImpl::xCreateServerClient(const std::string& serverAddress) {
-      // we don't yet know our current IP address, so we fake
-      std::string serverFullAddress = getProtocol(serverAddress, serverAddress) + serverAddress;
 
       boost::shared_ptr<qi::transport::Client> client(new qi::transport::Client());
-      bool ok = client->connect(serverFullAddress);
+      bool ok = client->connect(serverAddress);
       if (ok) {
         _serverClients.insert(make_pair(serverAddress, client));
         qisDebug << "Client " << _clientName
-                 << " creating client for server " << serverFullAddress << std::endl;
+                 << " creating client for server " << serverAddress << std::endl;
       }
       return ok;
     }
@@ -114,12 +112,13 @@ namespace qi {
 
         // prepare a request to master.locateService
         SerializedData request_msg;
-        request_msg.writeString("master.locateService::s:s");
+        request_msg.writeString("master.locateService::s:ss");
         request_msg.writeString(methodSignature);
+        request_msg.writeString(_endpointContext.endpointID);
         std::string tmpAddress;
 
         try {
-          call("master.locateService::s:s", request_msg, response_msg);
+          call("master.locateService::s:ss", request_msg, response_msg);
           response_msg.readString(tmpAddress);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
