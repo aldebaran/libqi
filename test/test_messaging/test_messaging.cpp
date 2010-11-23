@@ -98,7 +98,7 @@ TEST(Client, createWithStupidMasterPort)
   try {
     client.callVoid("ognagnuk");
   }
-  catch( const std::exception& e) {
+  catch( const std::exception&) {
     ex = true;
   }
   EXPECT_EQ(true, ex);
