@@ -92,6 +92,7 @@ TEST(Messaging, PerformanceEchoProtobuf)
 
 TEST(Client, createWithStupidMasterPort)
 {
+  std::cout << "THIS WILL EXPLODE: TODO RESOLVE NAME EARLY" << std::endl;
   Client client("client", "blabla");
   bool ex = false;
   try {
