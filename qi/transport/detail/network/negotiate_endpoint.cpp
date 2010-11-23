@@ -6,6 +6,7 @@
 */
 #include <qi/transport/detail/network/negotiate_endpoint.hpp>
 #include <qi/transport/detail/network/platform.hpp>
+#include <vector>
 #include <cstdio>
 
 namespace qi {
@@ -30,6 +31,22 @@ namespace qi {
         sprintf(endpoint, "tcp://%s:%d", serverContext.publicIP.c_str(), serverContext.port);
       }
       return endpoint;
+    }
+
+    std::vector<std::string> getEndpoints(const EndpointContext serverContext) {
+      std::vector<std::string> endpoints;
+      char port[10]; // 10 for port
+      sprintf(port, "%d", serverContext.port);
+
+      endpoints.push_back(std::string("inproc://127.0.0.1:") + port);
+      endpoints.push_back(std::string("tcp://127.0.0.1:") + port);
+      endpoints.push_back(std::string("tcp://") + serverContext.publicIP + std::string(":") + port);
+      if (serverContext.platformID != PlatformWindows) {
+        // windows does not support IPC
+        endpoints.push_back(std::string("ipc://127.0.0.1:") + port);
+      }
+
+      return endpoints;
     }
   }
 }
