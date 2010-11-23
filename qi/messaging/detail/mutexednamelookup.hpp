@@ -57,6 +57,11 @@ namespace qi {
         boost::mutex::scoped_lock lock(_mutex);
         _map.erase(key);
       }
+
+      void setInvalidValue(const T& val) {
+        _invalidValue = val;
+      }
+
     };
   }
 }
