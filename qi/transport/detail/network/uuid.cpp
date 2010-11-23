@@ -21,6 +21,7 @@
 */
 
 #include "uuid.hpp"
+#include "assert.h"
 
 namespace qi {
   namespace detail {
@@ -68,6 +69,7 @@ const char *uuid_t::to_string ()
     return string_buf;
 }
 
+#endif
 
 const unsigned char *uuid_t::to_blob ()
 {
@@ -127,7 +129,7 @@ void uuid_t::create_blob ()
     blob_buf [14] = convert_byte (buf + 32);
     blob_buf [15] = convert_byte (buf + 34);
 }
-#endif
+
 
 
 std::string getUUID() {
