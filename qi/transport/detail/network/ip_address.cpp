@@ -33,7 +33,9 @@ namespace qi {
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-//
+#include <boost/algorithm/string.hpp>
+
+
 namespace qi {
   namespace detail {
     std::string getPrimaryPublicIPAddress() {
@@ -86,6 +88,77 @@ namespace qi {
       freeifaddrs(ifaddr);
       return ret;
     }
+
+//
+//    bool resolveHostAndPort(const std::string& userHostString, std::pair<std::string, std::string>& hostAndPort)
+//    {
+//      if (userHostString.empty()) {
+//        return false;
+//      }
+//
+//      std::vector<std::string> parts;
+//      boost::split(parts, userHostString, boost::is_any_of(":"));
+//
+//      if (parts.empty() || parts.size() > 2) {
+//        return false;
+//      }
+//
+//      if (parts[0].empty()) {
+//        return false;
+//      }
+//      std::string host = parts[0];
+//
+//      if (parts.size() == 2) {
+//        hostAndPort.second = parts[1];
+//      }
+//
+//
+//      addrinfo req;
+//      memset(&req, 0, sizeof(req));
+//      req.ai_family = AF_INET;
+//      req.ai_socktype = SOCK_STREAM;
+//      req.ai_flags = AI_NUMERICSERV;
+//      addrinfo *res;
+//
+//      int rc = getaddrinfo (hostname.c_str (), service.c_str (), &req, &res);
+//      if (rc) {
+//        errno = EINVAL;
+//        return -1;
+//      }
+//
+//      //  Copy first result to output addr with hostname and service.
+//      zmq_assert ((size_t) (res->ai_addrlen) <= sizeof (*addr_));
+//      memcpy (addr_, res->ai_addr, res->ai_addrlen);
+//      *addr_len_ = res->ai_addrlen;
+//
+//      freeaddrinfo(res);
+//
+//      return 0;
+//    }
+//
+//    bool resolveHostName(const std::string& literalHostName, std::string numericHostName) {
+//      addrinfo req;
+//      memset(&req, 0, sizeof(req));
+//      req.ai_family = AF_INET;
+//      req.ai_socktype = SOCK_STREAM;
+//      req.ai_flags = AI_NUMERICSERV;
+//      addrinfo *res;
+//
+//      int rc = getaddrinfo (literalHostName.c_str (), service.c_str (), &req, &res);
+//      if (rc) {
+//        errno = EINVAL;
+//        return -1;
+//      }
+//
+//      //  Copy first result to output addr with hostname and service.
+//      zmq_assert ((size_t) (res->ai_addrlen) <= sizeof (*addr_));
+//      memcpy (addr_, res->ai_addr, res->ai_addrlen);
+//      *addr_len_ = res->ai_addrlen;
+//
+//      freeaddrinfo(res);
+//
+//      return 0;
+//    }
   }
 }
 
