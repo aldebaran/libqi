@@ -84,11 +84,12 @@ int qi_message_read_int(qi_message_t *msg)
   return i;
 }
 
-char *qi_message_read_string(qi_message_t *msg)
-{
-  message_private_t *pmsg = (message_private_t *)msg;
-  std::string s;
-  pmsg->msg.readString(s);
-  //TODO: buffer overflow
-  return strndup(s.c_str(), s.size());
-}
+// FIXME: strndup is a gnu thing
+//char *qi_message_read_string(qi_message_t *msg)
+//{
+//  message_private_t *pmsg = (message_private_t *)msg;
+//  std::string s;
+//  pmsg->msg.readString(s);
+//  //TODO: buffer overflow
+//  return strndup(s.c_str(), s.size());
+//}
