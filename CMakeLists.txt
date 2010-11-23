@@ -117,4 +117,4 @@ add_subdirectory(bin)
 create_doxygen("Doxyfile")
 
 add_subdirectory(bindings/python)
-add_subdirectory(bindings/ruby)
+#add_subdirectory(bindings/ruby)
