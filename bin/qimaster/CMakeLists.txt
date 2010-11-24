@@ -9,5 +9,5 @@
 project (QiMaster)
 
 create_bin(qi-master qimaster.cpp)
-use_lib(qi-master QI)
+use_lib(qi-master QI BOOST_PROGRAM_OPTIONS)
 
