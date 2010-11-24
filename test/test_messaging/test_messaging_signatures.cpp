@@ -211,6 +211,15 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
   int i5 = client.call<int>("fun5", 1, 2, 3, 4, 5);
   int i6 = client.call<int>("fun6", 1, 2, 3, 4, 5, 6);
 
+  //avoid "unused var" warning
+  (void) i0;
+  (void) i1;
+  (void) i2;
+  (void) i3;
+  (void) i4;
+  (void) i5;
+  (void) i6;
+
   client.callVoid("foo.vfun0");
   client.callVoid("foo.vfun1", 1);
   client.callVoid("foo.vfun2", 1, 2);
@@ -226,6 +235,16 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
   int fi4 = client.call<int>("foo.fun4", 1, 2, 3, 4);
   int fi5 = client.call<int>("foo.fun5", 1, 2, 3, 4, 5);
   int fi6 = client.call<int>("foo.fun6", 1, 2, 3, 4, 5, 6);
+
+  //avoid "unused var" warning
+  (void) fi0;
+  (void) fi1;
+  (void) fi2;
+  (void) fi3;
+  (void) fi4;
+  (void) fi5;
+  (void) fi6;
+
 }
 
 
@@ -255,8 +274,10 @@ TEST(NodeSignatures, paramTypeChecking)
 {
   server.addService("typechecking.fun1", &fun1);
   int r2 = client.call<int>("typechecking.fun1", 1);
+  (void) r2;
   try {
     int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
+    (void) r3;
   } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
@@ -266,8 +287,10 @@ TEST(NodeSignatures, paramNumChecking)
 {
   server.addService("paramnumchecking.fun1", &fun1);
   int r2 = client.call<int>("paramnumchecking.fun1", 1);
+  (void) r2;
   try {
     int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
+    (void) r3;
   } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
@@ -278,8 +301,10 @@ TEST(NodeSignatures, ReturnTypeChecking)
   server.addService("returntype.fun1", &fun1);
   //KABOOOM!
   int r2 = client.call<int>("returntype.fun1", 1);
+  (void) r2;
   try {
     std::string s = client.call<std::string>("returntype.fun1", 1);
+    (void) s;
   } catch (const qi::transport::ServiceNotFoundException& e) {
     std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
   }
