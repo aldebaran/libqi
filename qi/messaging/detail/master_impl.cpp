@@ -47,12 +47,7 @@ namespace qi {
         return;
       }
       const EndpointContext& serverContext = _server.getEndpointContext();
-      registerServer(serverContext.name,
-        serverContext.endpointID,
-        serverContext.contextID,
-        serverContext.machineID,
-        serverContext.platformID,
-        serverContext.publicIP);
+      xRegisterServer(serverContext);
 
       xAddMasterMethod(serverContext.endpointID, "master.registerService",  &MasterImpl::registerService);
       xAddMasterMethod(serverContext.endpointID, "master.locateService",    &MasterImpl::locateService);
@@ -95,11 +90,13 @@ namespace qi {
       c.platformID = platformID;
       c.publicIP   = publicIPAddress;
       c.port = addressManager.getNewPort();
-      MASTERIMPL_DEBUG_ENDPOINT("Master::registerServer", c);
-
-      _knownServers.insert(c.endpointID, c);
-
+      xRegisterServer(c);
       return c.port;
+    }
+
+    void MasterImpl::xRegisterServer(const EndpointContext& endpoint) {
+      MASTERIMPL_DEBUG_ENDPOINT("Master::registerServer", endpoint);
+      _knownServers.insert(endpoint.endpointID, endpoint);
     }
 
     void MasterImpl::unregisterServer(const std::string& id) {

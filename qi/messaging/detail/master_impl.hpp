@@ -54,6 +54,7 @@ namespace qi {
       ServerImpl  _server;
 
       void xInit();
+      void xRegisterServer(const EndpointContext& endpoint);
 
       // Helper method
       template <typename METHOD_TYPE>
