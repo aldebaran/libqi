@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris KILNER  <ckilner@aldebaran-robotics.com
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
@@ -12,6 +13,7 @@
 #include <qi/log/consoleloghandler.hpp>
 
 #ifdef _WIN32
+# include <windows.h>
 # include <io.h>
 # define isatty _isatty
 #else
@@ -26,6 +28,9 @@ namespace qi {
         _context(0),
         _color(1)
     {
+#ifdef WIN32
+    _winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
       const char *verbose = std::getenv("VERBOSE");
       const char *context = std::getenv("CONTEXT");
       const char *color   = std::getenv("CLICOLOR");
@@ -57,6 +62,10 @@ namespace qi {
     {
       if (!_color)
         return;
+#ifdef _WIN32
+      SetConsoleTextAttribute(_winScreenHandle, fg);
+      return;
+#endif
       if (attr != -1 && bg != -1)
         printf("%c[%d;%d;%dm", 0x1B, attr, fg + 30, bg + 40);
       else if (bg != -1)
@@ -69,6 +78,9 @@ namespace qi {
     {
       if (!_color)
         return;
+#ifdef _WIN32
+      return;
+#endif
       printf("%c[%dm", 0x1B, bg + 40);
     }
 
@@ -76,6 +88,13 @@ namespace qi {
     {
       if (!_color)
         return;
+
+#ifdef _WIN32
+      if (attr == reset) {
+        SetConsoleTextAttribute(_winScreenHandle, white);
+      }
+      return;
+#endif
       printf("%c[%dm", 0x1B, attr);
     }
 
@@ -87,31 +106,22 @@ namespace qi {
       if (_context)
       {
         textColorAttr(reset);
-        printf("%s", file);
-        //textColorAttr(dim);
-        textColor(blue);
-        printf(":");
-        textColor(green);
-        printf("%s", fct);
-        textColor(blue);
-        printf(":");
-        textColor(magenta);
-        printf("%d", line);
-        textColor(blue);
-        printf(":");
+        textColor(gray);
+        printf("%s(%d) %s\n", file, line, fct);
         textColorAttr(reset);
-        printf("\n");
       }
 
       //display log level
       textColorAttr(bright);
-      if (verb == fatal || verb == error)
+      if (verb == fatal)
+        textColor(magenta);
+      if (verb == error)
         textColor(red);
       if (verb == warning)
         textColor(yellow);
       if (verb == debug)
         textColorAttr(dim);
-      printf("%-7s: ", logLevelToString(verb));
+      printf("%s ", logLevelToString(verb));
       textColorAttr(reset);
     }
 

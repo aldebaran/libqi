@@ -68,12 +68,12 @@ namespace qi {
 
     const char *logLevelToString(const LogLevel verb) {
       static const char *sverb[] = {
-        "silent",
-        "fatal",
-        "error",
-        "warning",
-        "info",
-        "debug"
+        "[SILENT]", // never shown
+        "[FATAL]",
+        "[ERROR]",
+        "[WARN ]",
+        "[INFO ]",
+        "[DEBUG]"
       };
       return sverb[verb];
     }

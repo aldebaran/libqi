@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Chris KILNER  <ckilner@aldebaran-robotics.com
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
@@ -23,8 +24,6 @@ namespace qi {
                const int         line,
                const char       *fmt,
                va_list           vl);
-
-
     protected:
 
       enum ConsoleAttr {
@@ -38,6 +37,17 @@ namespace qi {
       };
 
       enum ConsoleColor {
+#ifdef _WIN32
+        black      = 0,
+        blue = 9,
+        green = 10,
+        cyan = 11,
+        red = 12,
+        magenta =13,
+        yellow = 14,
+        white = 15,
+        gray = 8
+#else
         black      = 0,
         red,
         green,
@@ -45,8 +55,11 @@ namespace qi {
         blue,
         magenta,
         cyan,
-        white
+        white,
+        gray
+#endif
       };
+
 
       void textColor(char fg, char bg = -1, char attr = -1) const;
       void textColorBG(char bg) const;
@@ -60,6 +73,10 @@ namespace qi {
       qi::log::LogLevel _verbosity;
       bool              _context;
       bool              _color;
+
+#ifdef _WIN32
+      void* _winScreenHandle;
+#endif
     };
   }
 }
