@@ -10,6 +10,7 @@
 #include <string>
 #include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/exceptions/exceptions.hpp>
+#include <qi/transport/detail/network/ip_address.hpp>
 
 
 namespace qi {
@@ -38,6 +39,14 @@ namespace qi {
     }
 
     void ClientImpl::xInit() {
+
+      std::pair<std::string, std::string> masterHostAndPort;
+      if (!qi::detail::isValidAddress(_masterAddress, masterHostAndPort)) {
+        _isInitialized = false;
+        qisError << "\"" << _clientName << "\" initialized with invalid master address: \"" << _masterAddress <<
+          "\" All calls will fail." << std::endl;
+        return;
+      }
       // create a messaging client to the master address
       _isInitialized = xCreateServerClient(std::string("tcp://") + _masterAddress);
       if (_isInitialized) {
@@ -96,8 +105,8 @@ namespace qi {
       bool ok = client->connect(serverAddress);
       if (ok) {
         _serverClients.insert(make_pair(serverAddress, client));
-        qisDebug << "Client " << _clientName
-                 << " creating client for server " << serverAddress << std::endl;
+        qisDebug << "Client \"" << _clientName
+                 << "\" connected to " << serverAddress << std::endl;
       }
       return ok;
     }

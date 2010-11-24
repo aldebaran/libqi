@@ -43,11 +43,11 @@ namespace qi {
       void ZMQSimpleServerImpl::run() {
         try {
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
-            qisDebug << "Run ZMQServer on: " << _serverAddresses[i] << std::endl;
+            qisDebug << "Binding Server to: " << _serverAddresses[i] << std::endl;
             zsocket.bind(_serverAddresses[i].c_str());
           }
         } catch(const std::exception& e) {
-          qisError << "Failed to bind to addresses ";
+          qisError << "Bind Server Failed to: ";
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
             qisError << _serverAddresses[i].c_str();
           }
@@ -72,7 +72,6 @@ namespace qi {
           ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)0).run();
 #endif
         }
-
       }
 
       void ZMQSimpleServerImpl::serverResponseHandler(const std::string &result, void *data)
@@ -84,7 +83,6 @@ namespace qi {
         rc = zsocket.send(msg);
         assert(rc > 0);
       }
-
     }
   }
 }

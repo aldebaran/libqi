@@ -12,10 +12,26 @@
 #include <qi/transport/detail/network/negotiate_endpoint.hpp>
 #include <qi/signature.hpp>
 
+#define MASTERIMPL_DEBUG_ENDPOINT(msg, endpoint)                   \
+  qisDebug << "===" << msg << " ===" << std::endl;                 \
+  qisDebug << "endpointID: " << endpoint.endpointID << std::endl;  \
+  qisDebug << "machineID : " << endpoint.machineID  << std::endl;  \
+  qisDebug << "hostName  : " << endpoint.hostName   << std::endl;  \
+  qisDebug << "processID : " << endpoint.processID  << std::endl;  \
+  qisDebug << "platformID: " << endpoint.platformID << std::endl;  \
+  qisDebug << "publicIP  : " << endpoint.publicIP   << std::endl;  \
+  qisDebug << "name      : " << endpoint.name       << std::endl;  \
+  qisDebug << "contextID : " << endpoint.contextID  << std::endl;  \
+  qisDebug << "port      : " << endpoint.port       << std::endl;  \
+  qisDebug << "============================" << std::endl;         \
+
 namespace qi {
   namespace detail {
 
-    MasterImpl::~MasterImpl() {}
+    MasterImpl::~MasterImpl() {
+      const EndpointContext& serverContext = _server.getEndpointContext();
+      unregisterServer(serverContext.endpointID);
+    }
 
     MasterImpl::MasterImpl(const std::string& masterAddress) :
         _name("master"),
@@ -27,13 +43,24 @@ namespace qi {
 
 
     void MasterImpl::xInit() {
-      xAddMasterMethod("master.registerService",  &MasterImpl::registerService);
-      xAddMasterMethod("master.locateService",    &MasterImpl::locateService);
-      xAddMasterMethod("master.listServices",     &MasterImpl::listServices);
-      xAddMasterMethod("master.registerServer",   &MasterImpl::registerServer);
-      xAddMasterMethod("master.unregisterServer", &MasterImpl::unregisterServer);
-      xAddMasterMethod("master.registerClient",   &MasterImpl::registerClient);
-      xAddMasterMethod("master.unregisterClient", &MasterImpl::unregisterClient);
+      if (!_server.isInitialized()) {
+        return;
+      }
+      const EndpointContext& serverContext = _server.getEndpointContext();
+      registerServer(serverContext.name,
+        serverContext.endpointID,
+        serverContext.contextID,
+        serverContext.machineID,
+        serverContext.platformID,
+        serverContext.publicIP);
+
+      xAddMasterMethod(serverContext.endpointID, "master.registerService",  &MasterImpl::registerService);
+      xAddMasterMethod(serverContext.endpointID, "master.locateService",    &MasterImpl::locateService);
+      xAddMasterMethod(serverContext.endpointID, "master.listServices",     &MasterImpl::listServices);
+      xAddMasterMethod(serverContext.endpointID, "master.registerServer",   &MasterImpl::registerServer);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterServer", &MasterImpl::unregisterServer);
+      xAddMasterMethod(serverContext.endpointID, "master.registerClient",   &MasterImpl::registerClient);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterClient", &MasterImpl::unregisterClient);
     }
 
     void MasterImpl::registerService(
@@ -46,7 +73,7 @@ namespace qi {
             serverID << std::endl;
         return;
       }
-      qisInfo << "Master::registerService " << serverContext.publicIP <<
+      qisDebug << "Master::registerService " << serverContext.publicIP <<
          ":" << serverContext.port << " " << methodSignature << std::endl;
 
       _knownServices.insert(methodSignature, serverID);
@@ -68,18 +95,7 @@ namespace qi {
       c.platformID = platformID;
       c.publicIP   = publicIPAddress;
       c.port = addressManager.getNewPort();
-
-      qisInfo << "Master::registerServer =====" << std::endl;
-      qisInfo << "endpointID: " << c.endpointID << std::endl;
-      qisInfo << "machineID : " << c.machineID  << std::endl;
-      qisInfo << "hostName  : " << c.hostName   << std::endl;
-      qisInfo << "processID : " << c.processID  << std::endl;
-      qisInfo << "platformID: " << c.platformID << std::endl;
-      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
-      qisInfo << "name      : " << c.name       << std::endl;
-      qisInfo << "contextID : " << c.contextID  << std::endl;
-      qisInfo << "port      : " << c.port       << std::endl;
-      qisInfo << "============================" << std::endl;
+      MASTERIMPL_DEBUG_ENDPOINT("Master::registerServer", c);
 
       _knownServers.insert(c.endpointID, c);
 
@@ -89,17 +105,7 @@ namespace qi {
     void MasterImpl::unregisterServer(const std::string& id) {
 
       const EndpointContext& c = _knownServers.get(id);
-      qisInfo << "Master::unregisterServer ===" << std::endl;
-      qisInfo << "endpointID: " << c.endpointID << std::endl;
-      qisInfo << "machineID : " << c.machineID  << std::endl;
-      qisInfo << "hostName  : " << c.hostName   << std::endl;
-      qisInfo << "processID : " << c.processID  << std::endl;
-      qisInfo << "platformID: " << c.platformID << std::endl;
-      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
-      qisInfo << "name      : " << c.name       << std::endl;
-      qisInfo << "contextID : " << c.contextID  << std::endl;
-      qisInfo << "port      : " << c.port       << std::endl;
-      qisInfo << "============================" << std::endl;
+      MASTERIMPL_DEBUG_ENDPOINT("Master::unregisterServer", c);
 
       // TODO remove associated services
       _knownServers.remove(id);
@@ -118,36 +124,14 @@ namespace qi {
       c.contextID  = contextID;
       c.machineID  = machineID;
       c.platformID = platformID;
-
-      qisInfo << "Master::registerClient =====" << std::endl;
-      qisInfo << "endpointID: " << c.endpointID << std::endl;
-      qisInfo << "machineID : " << c.machineID  << std::endl;
-      qisInfo << "hostName  : " << c.hostName   << std::endl;
-      qisInfo << "processID : " << c.processID  << std::endl;
-      qisInfo << "platformID: " << c.platformID << std::endl;
-      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
-      qisInfo << "name      : " << c.name       << std::endl;
-      qisInfo << "contextID : " << c.contextID  << std::endl;
-      qisInfo << "port      : " << c.port       << std::endl;
-      qisInfo << "============================" << std::endl;
+      MASTERIMPL_DEBUG_ENDPOINT("Master::registerClient", c);
 
       _knownClients.insert(c.endpointID, c);
     }
 
     void MasterImpl::unregisterClient(const std::string& id) {
       const EndpointContext& c = _knownClients.get(id);
-      qisInfo << "Master::unregisterClient ===" << std::endl;
-      qisInfo << "endpointID: " << c.endpointID << std::endl;
-      qisInfo << "machineID : " << c.machineID  << std::endl;
-      qisInfo << "hostName  : " << c.hostName   << std::endl;
-      qisInfo << "processID : " << c.processID  << std::endl;
-      qisInfo << "platformID: " << c.platformID << std::endl;
-      qisInfo << "publicIP  : " << c.publicIP   << std::endl;
-      qisInfo << "name      : " << c.name       << std::endl;
-      qisInfo << "contextID : " << c.contextID  << std::endl;
-      qisInfo << "port      : " << c.port       << std::endl;
-      qisInfo << "============================" << std::endl;
-
+      MASTERIMPL_DEBUG_ENDPOINT("Master::unregisterClient", c);
       _knownClients.remove(id);
     }
 

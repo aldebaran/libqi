@@ -13,7 +13,9 @@
 #include <qi/serialization/serializer.hpp>
 #include <qi/transport/buffer.hpp>
 #include <qi/transport/detail/network/negotiate_endpoint.hpp>
+#include <qi/transport/detail/network/ip_address.hpp>
 #include <qi/log.hpp>
+#include <qi/exceptions/exceptions.hpp>
 
 namespace qi {
   using qi::serialization::SerializedData;
@@ -35,8 +37,17 @@ namespace qi {
         _isMasterServer(false),
         _name(serverName)
     {
+      
       _endpointContext.name = serverName;
       _endpointContext.contextID = _qiContext.getID();
+
+      std::pair<std::string, std::string> masterHostAndPort;
+      if (!qi::detail::isValidAddress(masterAddress, masterHostAndPort)) {
+        _isInitialized = false;
+        qisError << "\"" << _name << "\" initialized with invalid master address: \"" << masterAddress <<
+          "\" All calls will fail." << std::endl;
+        return;
+      }
 
       if (_name == "master") {
         // we are the master's server, so we don't need a client to ourselves
@@ -88,6 +99,11 @@ namespace qi {
     }
 
     void ServerImpl::addService(const std::string& methodSignature, qi::Functor* functor) {
+      if (! _isInitialized ) {
+        qisError << "Attempt to use uninitialized server: \"" << _name << "\". Service \"" << methodSignature << "\" not added." << std::endl;
+        throw qi::transport::ServerException(std::string("Attempt to use uninitialized server: \"") + _name + "\". Service not added.");
+        return;
+      }
       ServiceInfo service(methodSignature, functor);
       //std::cout << "Added Service" << hash << std::endl;
       _localServices.insert(methodSignature, service);
@@ -103,6 +119,9 @@ namespace qi {
     }
 
     void ServerImpl::xRegisterServiceWithMaster(const std::string& methodSignature) {
+      if (!_isInitialized) {
+        return;
+      }
       static const std::string method("master.registerService::v:ss");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
@@ -114,6 +133,9 @@ namespace qi {
     }
 
     void ServerImpl::xRegisterSelfWithMaster() {
+      if (!_isInitialized) {
+        return;
+      }
       static const std::string method("master.registerServer::i:ssssis");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
@@ -132,6 +154,9 @@ namespace qi {
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {
+      if (!_isInitialized) {
+        return;
+      }
       static const std::string method("master.unregisterServer::v:s");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
