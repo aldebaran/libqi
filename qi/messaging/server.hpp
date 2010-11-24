@@ -81,6 +81,8 @@ namespace qi {
     //template<typename TOPIC_TYPE>
     //Publisher addTopic(std::string topicName);
 
+    bool isInitialized() const;
+
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
     std::auto_ptr<detail::ServerImpl> _impl;

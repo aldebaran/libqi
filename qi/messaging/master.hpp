@@ -30,6 +30,8 @@ namespace qi {
     /// <summary> Finaliser. </summary>
     virtual ~Master();
 
+    bool isInitialized() const;
+
   private:
     std::auto_ptr<detail::MasterImpl> _impl;
   };

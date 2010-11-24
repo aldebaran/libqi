@@ -48,6 +48,8 @@ namespace qi {
 
       const std::map<std::string, std::string>& listServices();
 
+      bool isInitialized() const;
+
     private:
       std::string _name;
       std::string _address;

@@ -14,5 +14,9 @@ namespace qi {
   Master::Master(const std::string& masterAddress) :
     _impl(new detail::MasterImpl(masterAddress)) {}
 
+  bool Master::isInitialized() const {
+    return _impl->isInitialized();
+  }
+
   Master::~Master() {}
 }

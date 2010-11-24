@@ -37,4 +37,8 @@ namespace qi {
   {
     return _impl->call(signature, msg, result);
   }
+
+  bool Client::isInitialized() const {
+    return _impl->isInitialized();
+  }
 }

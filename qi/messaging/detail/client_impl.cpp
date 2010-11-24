@@ -39,7 +39,6 @@ namespace qi {
     }
 
     void ClientImpl::xInit() {
-
       std::pair<std::string, std::string> masterHostAndPort;
       if (!qi::detail::isValidAddress(_masterAddress, masterHostAndPort)) {
         _isInitialized = false;
@@ -60,6 +59,10 @@ namespace qi {
         qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
                  << _masterAddress << "\"" << std::endl;
       }
+    }
+
+    bool ClientImpl::isInitialized() const {
+      return _isInitialized;
     }
 
     void ClientImpl::call(const std::string &signature,

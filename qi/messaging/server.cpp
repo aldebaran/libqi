@@ -20,4 +20,8 @@ namespace qi {
   void Server::xAddService(const std::string& methodSignature, qi::Functor* functor) {
     _impl->addService(methodSignature, functor);
   }
+
+  bool Server::isInitialized() const {
+    return _impl->isInitialized();
+  }
 }

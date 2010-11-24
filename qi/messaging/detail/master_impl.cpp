@@ -29,6 +29,9 @@ namespace qi {
   namespace detail {
 
     MasterImpl::~MasterImpl() {
+      if (!_server.isInitialized()) {
+        return;
+      }
       const EndpointContext& serverContext = _server.getEndpointContext();
       unregisterServer(serverContext.endpointID);
     }
@@ -56,6 +59,10 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.unregisterServer", &MasterImpl::unregisterServer);
       xAddMasterMethod(serverContext.endpointID, "master.registerClient",   &MasterImpl::registerClient);
       xAddMasterMethod(serverContext.endpointID, "master.unregisterClient", &MasterImpl::unregisterClient);
+    }
+
+    bool MasterImpl::isInitialized() const {
+      return _server.isInitialized();
     }
 
     void MasterImpl::registerService(
