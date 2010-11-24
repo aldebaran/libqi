@@ -15,6 +15,8 @@ Master gMaster(gMasterAddress);
 Server gServer(gServerName, gMasterAddress);
 Client gClient("client", gMasterAddress);
 
+
+
 void ping() {
 }
 
@@ -26,6 +28,38 @@ ALCompat::ALValue echo_proto(const ALCompat::ALValue& in) {
 
 std::string echo(const std::string& in) {
   return in;
+}
+
+TEST(Client, createWithStupidMasterAddress)
+{
+  Client client("client", "blabla");
+  bool ex = false;
+  try {
+    client.callVoid("ognagnuk");
+  }
+  catch( const std::exception&) {
+    ex = true;
+  }
+  EXPECT_EQ(true, ex);
+}
+
+TEST(Server, createWithStupidMasterAddress)
+{
+  Server server("server", "oink");
+  bool ex = false;
+  try {
+    server.addService("ognagnuk", &ping);
+  }
+  catch( const std::exception&) {
+    ex = true;
+  }
+  EXPECT_EQ(true, ex);
+}
+
+TEST(Master, createWithStupidMasterAddress)
+{
+  Master master("oink2");
+  // should not blow up, but we should be able to find if it is happy
 }
 
 TEST(Messaging, PerformancePing)
@@ -90,29 +124,6 @@ TEST(Messaging, PerformanceEchoProtobuf)
   }
 }
 
-TEST(Client, createWithStupidMasterPort)
-{
-  std::cout << "THIS WILL EXPLODE: TODO RESOLVE NAME EARLY" << std::endl;
-  Client client("client", "blabla");
-  bool ex = false;
-  try {
-    client.callVoid("ognagnuk");
-  }
-  catch( const std::exception&) {
-    ex = true;
-  }
-  EXPECT_EQ(true, ex);
-}
-
-TEST(Server, createWithStupidMasterPort)
-{
-  Server server("server", "oink");
-}
-
-TEST(Master, createWithStupidMasterPort)
-{
-  Master master("oink2");
-}
 
 
 
