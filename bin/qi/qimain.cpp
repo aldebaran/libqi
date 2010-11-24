@@ -13,7 +13,7 @@
 
 void usage()
 {
-  std::cout << "qimaster [address]" << std::endl;
+  std::cout << "qi [address]" << std::endl;
 }
 
 void qi_call(std::string addr) {
