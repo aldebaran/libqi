@@ -46,7 +46,7 @@ namespace qi {
 
 //Inline this function => they do nothing, they just call SerializedData method
 //we keep vector/map not inlined at the moment because they take space.
-#define SIMPLE_SERIALIZER(Name, Type)                                 \
+#define QI_SIMPLE_SERIALIZER(Name, Type)                                 \
   template <>                                                         \
   struct serialize<Type>  {                                           \
     static inline void write(SerializedData &sd, const Type &val) {   \
@@ -57,11 +57,11 @@ namespace qi {
     }                                                                 \
   };
 
-    SIMPLE_SERIALIZER(Bool, bool);
-    SIMPLE_SERIALIZER(Char, char);
-    SIMPLE_SERIALIZER(Int, int);
-    SIMPLE_SERIALIZER(Float, float);
-    SIMPLE_SERIALIZER(String, std::string);
+    QI_SIMPLE_SERIALIZER(Bool, bool);
+    QI_SIMPLE_SERIALIZER(Char, char);
+    QI_SIMPLE_SERIALIZER(Int, int);
+    QI_SIMPLE_SERIALIZER(Float, float);
+    QI_SIMPLE_SERIALIZER(String, std::string);
 
 
     template <typename T>

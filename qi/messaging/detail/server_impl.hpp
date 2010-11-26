@@ -57,7 +57,7 @@ namespace qi {
       qi::transport::Server _transportServer;
 
       /// <summary> The transport client used to talk with the master </summary>
-      qi::transport:: Client _transportClient;
+      qi::transport::Client _transportClient;
 
       // should be map from hash to functor,
       // but we also need to be able to push these hashes to master

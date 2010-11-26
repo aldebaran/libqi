@@ -17,7 +17,7 @@ namespace qi {
   namespace transport {
     namespace detail {
       //if you use the custom XREP code, activate the full async experience to use the thread pool
-#define ZMQ_FULL_ASYNC
+#define _QI_ZMQ_FULL_ASYNC
 
       /// <summary> Constructor. </summary>
       /// <param name="serverAddresses"> The server addresses. </param>
@@ -94,7 +94,7 @@ namespace qi {
           zsocket.bind(_serverAddresses[i].c_str());
         }
 
-#ifdef ZMQ_FULL_ASYNC
+#ifdef _QI_ZMQ_FULL_ASYNC
         // alsdebug << "ZMQ: entering the loop (XREP + growing thread mode)";
 #else
         alsdebug << "ZMQ: entering the loop (XREP)";
@@ -106,7 +106,7 @@ namespace qi {
           std::string data;
           data.assign((char *)msg.data(), msg.size());
 
-#ifdef ZMQ_FULL_ASYNC
+#ifdef _QI_ZMQ_FULL_ASYNC
           handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
 #else
           ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();

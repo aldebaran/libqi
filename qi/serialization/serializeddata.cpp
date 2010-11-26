@@ -27,7 +27,7 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_DATA_W(x, d)
 #endif
 
-#define SIMPLE_SERIALIZER_IMPL(Name, Type)                   \
+#define QI_SIMPLE_SERIALIZER_IMPL(Name, Type)                   \
     void SerializedData::read##Name(Type& b)                 \
     {                                                        \
       b = *((Type *) fData.data());                          \
@@ -41,10 +41,10 @@ namespace qi {
       __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
     }
 
-    SIMPLE_SERIALIZER_IMPL(Bool, bool);
-    SIMPLE_SERIALIZER_IMPL(Char, char);
-    SIMPLE_SERIALIZER_IMPL(Int, int);
-    SIMPLE_SERIALIZER_IMPL(Float, float);
+    QI_SIMPLE_SERIALIZER_IMPL(Bool, bool);
+    QI_SIMPLE_SERIALIZER_IMPL(Char, char);
+    QI_SIMPLE_SERIALIZER_IMPL(Int, int);
+    QI_SIMPLE_SERIALIZER_IMPL(Float, float);
     //SIMPLE_SERIALIZER(Float, double);
 
     void SerializedData::readDouble(double& d)

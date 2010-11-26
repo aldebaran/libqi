@@ -9,10 +9,15 @@
 #define   __QI_PERF_SLEEP_HPP__
 
 #ifdef _WIN32
-#  include <winsock2.h>
-#  define sleep(x) Sleep(x * 1000)
+# include <winsock2.h>
+
+  template<typename T>
+  inline void sleep(const T& t) {
+    ::Sleep((int)(t * 1000));
+  }
+
 #else
-#  include <unistd.h>
+# include <unistd.h>
 #endif
 
 #endif // __QI_PERF_SLEEP_HPP__

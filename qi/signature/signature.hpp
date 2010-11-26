@@ -12,9 +12,9 @@
 //runtime signature compile faster
 //compile time signature execute faster  (this one need boost::mpl::string that is not available in boost < 40)
 //but runtime signature may be good enought in most case
-#define USE_RUNTIME_SIGNATURE
+#define _QI_USE_RUNTIME_SIGNATURE
 
-#ifdef USE_RUNTIME_SIGNATURE
+#ifdef _QI_USE_RUNTIME_SIGNATURE
 #include <qi/signature/detail/type_signature.hpp>
 #include <qi/signature/detail/function_signature.hpp>
 #include <qi/signature/detail/protobuf_signature.hpp>
@@ -33,10 +33,10 @@ namespace qi {
     template <typename T>
     struct signature {
       static std::string &value(std::string &valueRef) {
-#ifdef USE_RUNTIME_SIGNATURE
+#ifdef _QI_USE_RUNTIME_SIGNATURE
         ::qi::detail::signature<T>::value(valueRef);
 #else
-        valueRef += boost::mpl::c_str< typename ::qi::detail::signature<T>::value >::value;
+        valueRef += ::boost::mpl::c_str< typename ::qi::detail::signature<T>::value >::value;
 #endif
         return valueRef;
       }

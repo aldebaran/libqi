@@ -23,8 +23,8 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef         QI_H_
-# define        QI_H_
+#ifndef         _QI_H_
+# define        _QI_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -72,4 +72,4 @@ char *qi_message_read_string(qi_message_t *msg);
 }
 #endif
 
-#endif /* !QI_H_ */
+#endif /* !_QI_H_ */

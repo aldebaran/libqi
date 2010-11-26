@@ -14,7 +14,7 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      template<typename Buffer = std::string>
+      template<typename BUFFER_TYPE = std::string>
       class ClientImpl {
       public:
         explicit ClientImpl(const std::string &serverAddress)
@@ -24,7 +24,7 @@ namespace qi {
         virtual ~ClientImpl()
         {}
 
-        virtual void send(const Buffer &tosend, Buffer &result) = 0;
+        virtual void send(const BUFFER_TYPE &tosend, BUFFER_TYPE &result) = 0;
 
       protected:
         std::string _serverAddress;

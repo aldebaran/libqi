@@ -18,7 +18,7 @@
 namespace qi {
   namespace detail {
 
-#define SIMPLE_SIGNATURE(THETYPE, THENAME)                      \
+#define _QI_SIMPLE_SIGNATURE(THETYPE, THENAME)                  \
   template <>                                                   \
     struct signature<THETYPE>  {                                \
     static std::string &value(std::string &val) {               \
@@ -35,13 +35,13 @@ namespace qi {
       }
     };
 
-    SIMPLE_SIGNATURE(void       , "v");
-    SIMPLE_SIGNATURE(bool       , "b");
-    SIMPLE_SIGNATURE(char       , "c");
-    SIMPLE_SIGNATURE(int        , "i");
-    SIMPLE_SIGNATURE(float      , "f");
-    SIMPLE_SIGNATURE(double     , "d");
-    SIMPLE_SIGNATURE(std::string, "s");
+    _QI_SIMPLE_SIGNATURE(void       , "v");
+    _QI_SIMPLE_SIGNATURE(bool       , "b");
+    _QI_SIMPLE_SIGNATURE(char       , "c");
+    _QI_SIMPLE_SIGNATURE(int        , "i");
+    _QI_SIMPLE_SIGNATURE(float      , "f");
+    _QI_SIMPLE_SIGNATURE(double     , "d");
+    _QI_SIMPLE_SIGNATURE(std::string, "s");
 
     //pointer
     template <typename T>

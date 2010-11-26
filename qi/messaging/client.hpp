@@ -16,7 +16,7 @@
 #include <memory>
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <qi/transport/client.hpp>
+
 
 namespace qi {
   namespace detail {
@@ -101,7 +101,7 @@ namespace qi {
     void xCall(const std::string& signature,
       const qi::serialization::BinarySerializer& request,
             qi::serialization::BinarySerializer& result);
-    std::auto_ptr<detail::ClientImpl> _impl;
+    std::auto_ptr<qi::detail::ClientImpl> _impl;
   };
 }
 
