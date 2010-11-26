@@ -5,12 +5,11 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/log.hpp>
 #include <qi/messaging/detail/client_impl.hpp>
 #include <string>
-#include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/exceptions/exceptions.hpp>
-#include <qi/transport/detail/network/ip_address.hpp>
+#include <qi/transport/detail/network/master_endpoint.hpp>
+#include <qi/log.hpp>
 
 
 namespace qi {
@@ -39,25 +38,25 @@ namespace qi {
     }
 
     void ClientImpl::xInit() {
-      std::pair<std::string, std::string> masterHostAndPort;
-      if (!qi::detail::isValidAddress(_masterAddress, masterHostAndPort)) {
+      std::pair<std::string, int> masterEndpointAndPort;
+      if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "\"" << _clientName << "\" initialized with invalid master address: \"" << _masterAddress <<
-          "\" All calls will fail." << std::endl;
+        qisError << "\"" << _clientName << "\" initialized with invalid master address: \""
+          << _masterAddress << "\" All calls will fail." << std::endl;
         return;
       }
       // create a messaging client to the master address
-      _isInitialized = xCreateServerClient(std::string("tcp://") + _masterAddress);
+      _isInitialized = xCreateServerClient(masterEndpointAndPort.first);
       if (_isInitialized) {
         // we assert that we think the master can locate services
         // and that we can register and unregister ourselves
-        _serviceCache.insert("master.registerClient::v:ssssi", std::string("tcp://") +_masterAddress);
-        _serviceCache.insert("master.unregisterClient::v:s",   std::string("tcp://") +_masterAddress);
-        _serviceCache.insert("master.locateService::s:ss",     std::string("tcp://") +_masterAddress);
+        _serviceCache.insert("master.registerClient::v:ssssi", masterEndpointAndPort.first);
+        _serviceCache.insert("master.unregisterClient::v:s",   masterEndpointAndPort.first);
+        _serviceCache.insert("master.locateService::s:ss",     masterEndpointAndPort.first);
         xRegisterSelfWithMaster();
       } else {
         qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
-                 << _masterAddress << "\"" << std::endl;
+                 << masterEndpointAndPort.first << "\"" << std::endl;
       }
     }
 

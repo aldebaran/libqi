@@ -18,7 +18,7 @@ namespace qi {
 
     std::vector<std::string> getIPAddresses();
 
-    bool isValidAddress(const std::string& userHostString, std::pair<std::string, std::string>& hostAndPort);
+    bool isValidAddress(const std::string& userHostString, std::pair<std::string, int>& hostAndPort);
 
     bool isValidHostAndPort(const std::string& literalHostName, std::string& numericHostName);
   }

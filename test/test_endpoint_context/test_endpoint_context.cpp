@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <qi/transport/detail/network/endpoint_context.hpp>
 #include <qi/transport/detail/network/network.hpp>
+#include <qi/transport/detail/network/master_endpoint.hpp>
 
 using qi::detail::getProcessID;
 using qi::detail::getHostName;
@@ -12,6 +13,7 @@ using qi::detail::getFirstMacAddress;
 using qi::detail::getUUID;
 using qi::detail::getPrimaryPublicIPAddress;
 using qi::detail::getIPAddresses;
+using qi::detail::validateMasterEndpoint;
 
 TEST(EndpointContext, getProcessID)
 {
@@ -94,7 +96,7 @@ TEST(EndpointContext, getIPAddresses)
 
 TEST(EndpointContext, isValidAddressRetValue)
 {
-  std::pair<std::string, std::string> res;
+  std::pair<std::string, int> res;
   std::string test = "127.0.0.1:5555";
   bool b = qi::detail::isValidAddress(test, res);
   ASSERT_EQ(true, b) << "127.0.0.1:5555 was considered invalid";
@@ -102,7 +104,7 @@ TEST(EndpointContext, isValidAddressRetValue)
 
 TEST(EndpointContext, isValidAddressIP)
 {
-  std::pair<std::string, std::string> res;
+  std::pair<std::string, int> res;
   std::string test = "127.0.0.1:5555";
   bool b = qi::detail::isValidAddress(test, res);
   ASSERT_EQ("127.0.0.1", res.first) << "Should have returned an IP";
@@ -110,15 +112,15 @@ TEST(EndpointContext, isValidAddressIP)
 
 TEST(EndpointContext, isValidAddressPort)
 {
-  std::pair<std::string, std::string> res;
+  std::pair<std::string, int> res;
   std::string test = "127.0.0.1:5555";
   bool b = qi::detail::isValidAddress(test, res);
-  ASSERT_EQ("5555", res.second) << "Should have returned a port";
+  ASSERT_EQ(5555, res.second) << "Should have returned a port";
 }
 
 TEST(EndpointContext, isValidAddressRetValueInvalid)
 {
-  std::pair<std::string, std::string> res;
+  std::pair<std::string, int> res;
   std::string test = "127.0.0.655:5555";
   bool b = qi::detail::isValidAddress(test, res);
   ASSERT_EQ(false, b) << "127.0.0.655:5555 was considered valid";
@@ -126,10 +128,41 @@ TEST(EndpointContext, isValidAddressRetValueInvalid)
 
 TEST(EndpointContext, isValidAddressIPRubbish)
 {
-  std::pair<std::string, std::string> res;
+  std::pair<std::string, int> res;
   std::string test = "rubbish";
   bool b = qi::detail::isValidAddress(test, res);
-   ASSERT_EQ(false, b) << "rubbish was considered valid";
+  ASSERT_EQ(false, b) << "rubbish was considered valid";
+  ASSERT_EQ(0, res.second) << "rubbish port not zero";
+}
+
+TEST(validateMasterEndpoint, valid)
+{
+  std::pair<std::string, int> res;
+  std::string test = "127.0.0.1:5555";
+  bool b = qi::detail::validateMasterEndpoint(test, res);
+  ASSERT_EQ(true, b) << "127.0.0.1:5555 considered invalid";
+  ASSERT_EQ(5555, res.second) << "should be 5555";
+  ASSERT_EQ("tcp://127.0.0.1:5555", res.first) << "rubbish port not zero";
+}
+
+TEST(validateMasterEndpoint, incomplete)
+{
+  std::pair<std::string, int> res;
+  std::string test = "127.0.0.1";
+  bool b = qi::detail::validateMasterEndpoint(test, res);
+  ASSERT_EQ(true, b) << "127.0.0.1 considered invalid";
+  ASSERT_EQ(5555, res.second) << "should be 5555";
+  ASSERT_EQ("tcp://127.0.0.1:5555", res.first) << "rubbish port not zero";
+}
+
+TEST(validateMasterEndpoint, invalid)
+{
+  std::pair<std::string, int> res;
+  std::string test = "oink:asdsad";
+  bool b = qi::detail::validateMasterEndpoint(test, res);
+  ASSERT_EQ(false, b) << "asdasd:asdsad considered valid";
+  ASSERT_EQ(0, res.second) << "should be 0";
+  ASSERT_EQ("oink", res.first) << "rubbish port not zero";
 }
 
 

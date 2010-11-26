@@ -9,11 +9,10 @@
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <qi/messaging/detail/get_protocol.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/transport/buffer.hpp>
-#include <qi/transport/detail/network/negotiate_endpoint.hpp>
-#include <qi/transport/detail/network/ip_address.hpp>
+#include <qi/transport/detail/network/endpoints.hpp>
+#include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
 
@@ -41,8 +40,8 @@ namespace qi {
       _endpointContext.name = serverName;
       _endpointContext.contextID = _qiContext.getID();
 
-      std::pair<std::string, std::string> masterHostAndPort;
-      if (!qi::detail::isValidAddress(masterAddress, masterHostAndPort)) {
+      std::pair<std::string, int> masterEndpointAndPort;
+      if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
         qisError << "\"" << _name << "\" initialized with invalid master address: \"" << masterAddress <<
           "\" All calls will fail." << std::endl;
@@ -53,20 +52,21 @@ namespace qi {
         // we are the master's server, so we don't need a client to ourselves
         _isMasterServer = true;
         _isInitialized = true;
-        _endpointContext.port = 5555; // FIXME
+        _endpointContext.port = masterEndpointAndPort.second;
       } else {
-        _isInitialized = _transportClient.connect(std::string("tcp://") + masterAddress);
+        _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
         if (! _isInitialized ) {
-          qisError << "\"" << _name << "\" could not connect to master at address \"" << masterAddress << "\"" << std::endl;
+          qisError << "\"" << _name << "\" could not connect to master at address \""
+            << masterEndpointAndPort.first << "\"" << std::endl;
           return;
         }
         // should really be split into two phases: getPort / register (once active)
         xRegisterSelfWithMaster();
       }
 
-
       _transportServer.serve(qi::detail::getEndpoints(_endpointContext));
-      _address = std::string("127.0.0.1:");// + _endpointContext.port; // tmp
+      //_address = std::string("127.0.0.1:");// + _endpointContext.port; // tmp
+
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(boost::bind(&qi::transport::Server::run, _transportServer));
     }
@@ -145,7 +145,7 @@ namespace qi {
       msg.writeString(_endpointContext.endpointID);
       msg.writeString(_endpointContext.contextID);
       msg.writeString(_endpointContext.machineID);
-      msg.writeInt(_endpointContext.platformID);
+      msg.writeInt(   _endpointContext.platformID);
       msg.writeString(_endpointContext.publicIP);
 
       _transportClient.send(msg.str(), ret);

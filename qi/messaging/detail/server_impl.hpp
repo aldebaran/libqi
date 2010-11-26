@@ -50,12 +50,6 @@ namespace qi {
       /// <summary> The friendly name of this server </summary>
       std::string _name;
 
-      // tmp
-      std::string _address;
-
-      /// <summary> The port of the server </summary>
-      int _port;
-
       qi::Context _qiContext;
       qi::detail::EndpointContext _endpointContext;
 

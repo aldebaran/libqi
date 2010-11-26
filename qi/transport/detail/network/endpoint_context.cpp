@@ -9,7 +9,6 @@
 
 namespace qi {
   namespace detail {
-
     EndpointContext::EndpointContext():
         endpointID(getUUID()),
         machineID(getFirstMacAddress()),

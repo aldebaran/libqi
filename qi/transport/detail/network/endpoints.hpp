@@ -13,6 +13,7 @@
 
 namespace qi {
   namespace detail {
+
     /// <summary> Returns a fully qualified endpoint for connecting a client and a server </summary>
     std::string negotiateEndpoint(const EndpointContext& clientContext, const EndpointContext serverContext);
 

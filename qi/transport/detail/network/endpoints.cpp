@@ -4,7 +4,7 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#include <qi/transport/detail/network/negotiate_endpoint.hpp>
+#include <qi/transport/detail/network/endpoints.hpp>
 #include <qi/transport/detail/network/platform.hpp>
 #include <vector>
 #include <cstdio>

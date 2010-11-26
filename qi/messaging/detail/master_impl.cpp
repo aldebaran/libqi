@@ -9,7 +9,7 @@
 #include <qi/functors/makefunctor.hpp>
 #include <qi/log.hpp>
 #include <qi/functors/makefunctor.hpp>
-#include <qi/transport/detail/network/negotiate_endpoint.hpp>
+#include <qi/transport/detail/network/endpoints.hpp>
 #include <qi/signature.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT(msg, endpoint)                   \
@@ -140,7 +140,6 @@ namespace qi {
     }
 
     std::string MasterImpl::locateService(const std::string& methodSignature, const std::string& clientID) {
-      // TODO error checking
       const std::string& serverID = _knownServices.get(methodSignature);
       if (serverID.empty()) {
         qisDebug << "Master::locateService: Could not find server for method: " << methodSignature << std::endl;

@@ -39,7 +39,7 @@ namespace qi {
       return "";
     }
 
-    bool isValidAddress(const std::string& userHostString, std::pair<std::string, std::string>& outHostAndPort)
+    bool isValidAddress(const std::string& userHostString, std::pair<std::string, int>& outHostAndPort)
     {
       if (userHostString.empty()) {
         return false;
@@ -58,10 +58,15 @@ namespace qi {
       outHostAndPort.first = parts[0];
 
       if (parts.size() == 2) {
-        outHostAndPort.second = parts[1];
+        int i;
+        i = atoi (parts[1].c_str());
+        outHostAndPort.second = i;
+      } else {
+        outHostAndPort.second = 0;
+        parts.push_back(""); /// hmmm
       }
 
-      return isValidHostAndPort(outHostAndPort.first, outHostAndPort.second);
+      return isValidHostAndPort(outHostAndPort.first, parts[1]);
     }
 
 
