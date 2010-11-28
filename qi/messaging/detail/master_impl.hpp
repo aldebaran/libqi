@@ -60,9 +60,15 @@ namespace qi {
 
       // Helper method
       template <typename METHOD_TYPE>
-      void xAddMasterMethod(const std::string& endpointID, const std::string& name, METHOD_TYPE method) {
+      void xAddMasterMethod(
+        const std::string& endpointID,
+        const std::string& name,
+        METHOD_TYPE method)
+      {
         std::string sig = makeSignature(name, method);
-        _server.addService(makeSignature(name, method), makeFunctor(this, method));
+        _server.addService(
+          makeSignature(name, method),
+          makeFunctor(this, method));
         registerService(sig, endpointID);
       }
 

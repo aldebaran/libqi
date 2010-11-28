@@ -8,9 +8,6 @@
 
 #ifdef _WIN32
 # include <windows.h>
-//# include <winsock2.h>
-//# include <iphlpapi.h>
-# pragma comment(lib, "IPHLPAPI.lib")
 #else
 # include <sys/types.h>
 # include <unistd.h>

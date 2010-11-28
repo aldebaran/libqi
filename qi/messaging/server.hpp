@@ -12,6 +12,7 @@
 #include <memory>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
+#include <qi/messaging/generic_publisher.hpp>
 
 namespace qi {
   namespace detail {
@@ -49,15 +50,19 @@ namespace qi {
     /// e.g. server.addService("hello", &myObject, &MyObject::helloMethod);
     /// </summary>
     /// <param name="name"> The advertised name of the service.</param>
-    /// <param name="object"> The memory address of the object. This could be
-    /// a "this" pointer if you are adding a method of your class,
+    /// <param name="object"> The memory address of the object. This could
+    /// be a "this" pointer if you are adding a method of your class,
     /// or a "&myObject" for the address of a member object.</param>
-    /// <param name="method"> The memory address of the method. This should fully
-    /// qualify the type of your method such as "&MyClass::myMethod" or
-    /// "&MyObject::objectMethod".</param>
+    /// <param name="method"> The memory address of the method. This should
+    /// fully qualify the type of your method such as "&MyClass::myMethod"
+    /// or "&MyObject::objectMethod".</param>
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    void addService(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method) {
-      xAddService(makeSignature(name, method), makeFunctor(object, method));
+    void addService(
+      const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+    {
+      xAddService(
+        makeSignature(name, method),
+        makeFunctor(object, method));
     }
 
     /// <summary>
@@ -72,14 +77,16 @@ namespace qi {
     /// e.g. server.addService("hello", &helloFunction);
     /// </summary>
     /// <param name="name"> The advertised name of the service.</param>
-    /// <param name="function"> The memory address of the function. e.g. "&globalFunction"</param>
+    /// <param name="function"> The memory address of the function. e.g.
+    /// "&globalFunction"
+    /// </param>
     template <typename FUNCTION_TYPE>
     void addService(const std::string& name, FUNCTION_TYPE function) {
       xAddService(makeSignature(name, function), makeFunctor(function));
     }
 
     //template<typename TOPIC_TYPE>
-    //Publisher addTopic(std::string topicName);
+    //Publisher addTopic(const std::string& topicName);
 
     bool isInitialized() const;
 
@@ -87,6 +94,14 @@ namespace qi {
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
     std::auto_ptr<detail::ServerImpl> _impl;
   };
+
+  //template<typename TOPIC_TYPE>
+  //Publisher qi::Server<TOPIC_TYPE>::addTopic( const std::string& topicName )
+  //{
+  //  qi::GenericPublisher<TOPIC_TYPE> pub;
+  //  pub.connect("address");
+  //  return pub;
+  //}
 
 }
 

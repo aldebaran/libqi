@@ -43,8 +43,9 @@ namespace qi {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "\"" << _name << "\" initialized with invalid master address: \"" << masterAddress <<
-          "\" All calls will fail." << std::endl;
+        qisError << "\"" << _name << "\" initialized with invalid master "
+          "address: \"" << masterAddress << "\" All calls will fail."
+          << std::endl;
         return;
       }
 
@@ -56,8 +57,9 @@ namespace qi {
       } else {
         _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
         if (! _isInitialized ) {
-          qisError << "\"" << _name << "\" could not connect to master at address \""
-            << masterEndpointAndPort.first << "\"" << std::endl;
+          qisError << "\"" << _name << "\" could not connect to master "
+            "at address \"" << masterEndpointAndPort.first << "\""
+            << std::endl;
           return;
         }
         // should really be split into two phases: getPort / register (once active)
@@ -65,10 +67,10 @@ namespace qi {
       }
 
       _transportServer.serve(qi::detail::getEndpoints(_endpointContext));
-      //_address = std::string("127.0.0.1:");// + _endpointContext.port; // tmp
 
       _transportServer.setMessageHandler(this);
-      boost::thread serverThread(boost::bind(&qi::transport::Server::run, _transportServer));
+      boost::thread serverThread(
+        boost::bind(&qi::transport::Server::run, _transportServer));
     }
 
     bool ServerImpl::isInitialized() const {
@@ -98,10 +100,17 @@ namespace qi {
       return _name;
     }
 
-    void ServerImpl::addService(const std::string& methodSignature, qi::Functor* functor) {
+    void ServerImpl::addService(
+      const std::string& methodSignature,
+      qi::Functor* functor)
+    {
       if (! _isInitialized ) {
-        qisError << "Attempt to use uninitialized server: \"" << _name << "\". Service \"" << methodSignature << "\" not added." << std::endl;
-        throw qi::transport::ServerException(std::string("Attempt to use uninitialized server: \"") + _name + "\". Service not added.");
+        qisError << "Attempt to use uninitialized server: \"" << _name <<
+          "\". Service \"" << methodSignature << "\" not added."
+          << std::endl;
+        throw qi::transport::ServerException(
+          std::string("Attempt to use uninitialized server: \"") +
+          _name + "\". Service not added.");
         return;
       }
       ServiceInfo service(methodSignature, functor);
@@ -113,12 +122,15 @@ namespace qi {
     }
 
     const ServiceInfo& ServerImpl::xGetService(
-      const std::string& methodSignature) {
+      const std::string& methodSignature)
+    {
       // functors ... should be found here
       return _localServices.get(methodSignature);
     }
 
-    void ServerImpl::xRegisterServiceWithMaster(const std::string& methodSignature) {
+    void ServerImpl::xRegisterServiceWithMaster(
+      const std::string& methodSignature)
+    {
       if (!_isInitialized) {
         return;
       }

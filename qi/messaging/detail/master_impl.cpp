@@ -23,7 +23,7 @@
   qisDebug << "name      : " << endpoint.name       << std::endl;  \
   qisDebug << "contextID : " << endpoint.contextID  << std::endl;  \
   qisDebug << "port      : " << endpoint.port       << std::endl;  \
-  qisDebug << "============================" << std::endl;         \
+  qisDebug << "============================"        << std::endl;  \
 
 namespace qi {
   namespace detail {
@@ -70,8 +70,9 @@ namespace qi {
 
       const EndpointContext& serverContext = _knownServers.get(serverID);
       if(serverContext.name.empty()) {
-        qisError << "Master::registerService Attempt to register the method of an unknown server, "
-            " Please call registerService first: signature: " << methodSignature << " serverID " <<
+        qisError << "Master::registerService Attempt to register the "
+          "method of an unknown server, Please call registerService first"
+          ": signature: " << methodSignature << " serverID " <<
             serverID << std::endl;
         return;
       }
@@ -139,7 +140,9 @@ namespace qi {
       _knownClients.remove(id);
     }
 
-    std::string MasterImpl::locateService(const std::string& methodSignature, const std::string& clientID) {
+    std::string MasterImpl::locateService(
+      const std::string& methodSignature, const std::string& clientID)
+    {
       const std::string& serverID = _knownServices.get(methodSignature);
       if (serverID.empty()) {
         qisDebug << "Master::locateService: Could not find server for method: " << methodSignature << std::endl;

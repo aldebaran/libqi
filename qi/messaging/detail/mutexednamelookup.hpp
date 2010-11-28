@@ -37,7 +37,8 @@ namespace qi {
 
       const T& get(std::string key) {
         boost::mutex::scoped_lock lock(_mutex);
-        typename std::map<std::string, T>::const_iterator it = _map.find(key);
+        typename std::map<std::string, T>::const_iterator it;
+        it = _map.find(key);
         if (it != _map.end()) {
           return it->second;
         }

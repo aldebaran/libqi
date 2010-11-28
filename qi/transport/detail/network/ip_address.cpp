@@ -39,7 +39,8 @@ namespace qi {
       return "";
     }
 
-    bool isValidAddress(const std::string& userHostString, std::pair<std::string, int>& outHostAndPort)
+    bool isValidAddress(const std::string& userHostString,
+      std::pair<std::string, int>& outHostAndPort)
     {
       if (userHostString.empty()) {
         return false;
