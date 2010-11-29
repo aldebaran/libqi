@@ -13,11 +13,17 @@
 namespace qi {
   namespace detail {
     struct MachineContext {
-      std::string machineID;
       std::string hostName;
+      std::string machineID;
       std::string publicIP;
       int platformID;
+
       MachineContext();
+
+      MachineContext(const std::string& hostName,
+        const std::string& machineID,
+        const std::string& publicIPAddress,
+        const int&         platformID);
     };
   }
 }

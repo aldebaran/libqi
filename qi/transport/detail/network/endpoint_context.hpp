@@ -13,14 +13,21 @@
 namespace qi {
   namespace detail {
     struct EndpointContext {
+      std::string name;
       std::string endpointID;
+      std::string contextID;
       std::string machineID;
       int processID;
-      // not discoverable at construction
-      std::string name;
-      std::string contextID;
       int port;
+
       EndpointContext();
+
+      EndpointContext(const std::string& name,
+        const std::string& endpointID,
+        const std::string& contextID,
+        const std::string& machineID,
+        const int& processID,
+        const int& port);
     };
   }
 }

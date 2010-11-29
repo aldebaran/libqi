@@ -10,13 +10,26 @@
 namespace qi {
   namespace detail {
     EndpointContext::EndpointContext():
-        endpointID(getUUID()),
-        machineID(getFirstMacAddress()),
-        processID(getProcessID()),
-        name(""),
-        contextID(""),
-        port(0)
-        {}
+      name(""),
+      endpointID(getUUID()),
+      contextID(""),
+      machineID(getFirstMacAddress()),
+      processID(getProcessID()),
+      port(0) {}
+
+      EndpointContext::EndpointContext(
+        const std::string& pName,
+        const std::string& pEndpointID,
+        const std::string& pContextID,
+        const std::string& pMachineID,
+        const int& pProcessID,
+        const int& pPort) :
+        name(pName),
+        endpointID(pEndpointID),
+        contextID(pContextID),
+        machineID(pMachineID),
+        processID(pProcessID),
+        port(pPort) {}
   }
 }
 

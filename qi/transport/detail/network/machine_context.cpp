@@ -10,11 +10,20 @@
 namespace qi {
   namespace detail {
     MachineContext::MachineContext():
-        machineID(getFirstMacAddress()),
-        hostName(getHostName()),
-        publicIP(getPrimaryPublicIPAddress()),
-        platformID(getPlatform())
-        {}
+      hostName(getHostName()),      
+      machineID(getFirstMacAddress()),
+      publicIP(getPrimaryPublicIPAddress()),
+      platformID(getPlatform()) {}
+
+    MachineContext::MachineContext(
+      const std::string& pHostName,
+      const std::string& pMachineID,
+      const std::string& pPublicIPAddress,
+      const int&         pPlatformID) :
+        hostName(pHostName),
+        machineID(pMachineID),
+        publicIP(pPublicIPAddress),
+        platformID(pPlatformID) {}
   }
 }
 

@@ -96,15 +96,10 @@ namespace qi {
     }
 
     void MasterImpl::registerMachine(const std::string& hostName,
-                                     const std::string& machineID,
-                                     const std::string& publicIPAddress,
-                                     const int&         platformID)
+      const std::string& machineID, const std::string& publicIPAddress,
+      const int& platformID)
     {
-      MachineContext m;
-      m.hostName   = hostName;
-      m.machineID  = machineID;
-      m.publicIP   = publicIPAddress;
-      m.platformID = platformID;
+      MachineContext m(hostName, machineID, publicIPAddress, platformID);
       xRegisterMachine(m);
     }
 
@@ -114,28 +109,21 @@ namespace qi {
     }
 
     void MasterImpl::registerServer(const std::string& name,
-                                    const std::string& endpointID,
-                                    const std::string& contextID,
-                                    const std::string& machineID,
-                                    const int& port)
+      const std::string& endpointID, const std::string& contextID,
+      const std::string& machineID, const int& port)
     {
-      // Put into a context struct: TODO use a protobuf
-      EndpointContext c;
-      c.name       = name;
-      c.endpointID = endpointID;
-      c.contextID  = contextID;
-      c.machineID  = machineID;
-      c.port       = port;
-
+      EndpointContext c(name, endpointID, contextID, machineID, 0, port);
       xRegisterServer(c);
     }
 
     void MasterImpl::xRegisterServer(const EndpointContext& endpoint) {
       MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerServer", endpoint);
-      const MachineContext& m =_knownMachines.get(endpoint.machineID);
-      if (m.hostName.empty()) {
-        qisError << "Master::registerServer: Attempt to register a server for a machine that has not bee registered. machineID: " << endpoint.machineID <<
-            " Please call registerMachine first." << std::endl;
+
+      if ( ! _knownMachines.exists(endpoint.machineID)) {
+        qisError << "Master::registerServer: Attempt to register a "
+          "server for a machine that has not bee registered. machineID: " <<
+          endpoint.machineID <<
+          " Please call registerMachine first." << std::endl;
       } else {
         _knownServers.insert(endpoint.endpointID, endpoint);
       }
@@ -145,24 +133,16 @@ namespace qi {
 
       const EndpointContext& c = _knownServers.get(id);
       MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::unregisterServer", c);
-
       // TODO remove associated services
       _knownServers.remove(id);
     }
 
     void MasterImpl::registerClient(const std::string& name,
-                                    const std::string& clientID,
-                                    const std::string& contextID,
-                                    const std::string& machineID)
+      const std::string& clientID, const std::string& contextID,
+      const std::string& machineID)
     {
-      // Put into a context struct: TODO use a protobuf
-      EndpointContext c;
-      c.name       = name;
-      c.endpointID = clientID;
-      c.contextID  = contextID;
-      c.machineID  = machineID;
+      EndpointContext c(name, clientID, contextID, machineID, 0, 0);
       MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerClient", c);
-
       _knownClients.insert(c.endpointID, c);
     }
 
@@ -203,6 +183,5 @@ namespace qi {
     const std::map<std::string, std::string>& MasterImpl::listServices() {
       return _knownServices.getMap();
     }
-
   }
 }
