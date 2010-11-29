@@ -47,9 +47,9 @@ namespace qi {
             zsocket.bind(_serverAddresses[i].c_str());
           }
         } catch(const std::exception& e) {
-          qisError << "Bind Server Failed to: ";
+          qisError << "Bind Server Failed to: " << std::endl;
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
-            qisError << _serverAddresses[i].c_str();
+            qisError << _serverAddresses[i].c_str() << std::endl;
           }
           qisError << " Reason: " << e.what() << std::endl;
           return;
