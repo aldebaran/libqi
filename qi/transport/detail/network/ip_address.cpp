@@ -86,14 +86,15 @@ namespace qi {
       req.ai_flags = AI_NUMERICSERV;
       addrinfo *res;
 
-      if(getaddrinfo(hostName.c_str(), port.c_str(), &req, &res))
-        ret = false;; // lookup failed
-
-      if (res == NULL) {
-        ret = false;
+      if(getaddrinfo(hostName.c_str(), port.c_str(), &req, &res)) {
+        ret = false; // lookup failed
+      } else {
+        if (res == NULL) {
+          ret = false;
+        } else {
+          freeaddrinfo(res);
+        }
       }
-      freeaddrinfo(res);
-
 #ifdef _WIN32
       WSACleanup();
 #endif
