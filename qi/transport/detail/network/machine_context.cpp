@@ -4,18 +4,16 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#include <qi/transport/detail/network/endpoint_context.hpp>
+#include <qi/transport/detail/network/machine_context.hpp>
 #include <qi/transport/detail/network/network.hpp>
 
 namespace qi {
   namespace detail {
-    EndpointContext::EndpointContext():
-        endpointID(getUUID()),
+    MachineContext::MachineContext():
         machineID(getFirstMacAddress()),
-        processID(getProcessID()),
-        name(""),
-        contextID(""),
-        port(0)
+        hostName(getHostName()),
+        publicIP(getPrimaryPublicIPAddress()),
+        platformID(getPlatform())
         {}
   }
 }

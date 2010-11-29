@@ -3,6 +3,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <qi/transport/detail/network/machine_context.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
 #include <qi/transport/detail/network/network.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
@@ -172,13 +173,20 @@ TEST(EndpointContext, EndpointContext)
   std::cout <<
       "endpointID " << i.endpointID << std::endl <<
       "machineID  " << i.machineID  << std::endl <<
-      "hostName   " << i.hostName   << std::endl <<
       "processID  " << i.processID  << std::endl <<
-      "platformID " << i.platformID << std::endl <<
-      "publicIP   " << i.publicIP   << std::endl <<
       "name       " << i.name       << std::endl <<
       "contextID  " << i.contextID  << std::endl <<
       "port       " << i.port       << std::endl;
+}
+
+TEST(MachineContext, MachineContext)
+{
+  qi::detail::MachineContext i;
+  std::cout <<
+      "machineID  " << i.machineID  << std::endl <<
+      "hostName   " << i.hostName   << std::endl <<
+      "platformID " << i.platformID << std::endl <<
+      "publicIP   " << i.publicIP   << std::endl;
 }
 
 TEST(EndpointContextPerf, 1000000getProcessID)
@@ -403,11 +411,11 @@ TEST(EndpointContextPerf, 10000getUUID)
 //
 //// It is possible for an adapter to have multiple
 //// IPv4 addresses, gateways, and secondary WINS servers
-//// assigned to the adapter. 
+//// assigned to the adapter.
 ////
-//// Note that this sample code only prints out the 
+//// Note that this sample code only prints out the
 //// first entry for the IP address/mask, and gateway, and
-//// the primary and secondary WINS server for each adapter. 
+//// the primary and secondary WINS server for each adapter.
 //
 //    PIP_ADAPTER_INFO pAdapterInfo;
 //    PIP_ADAPTER_INFO pAdapter = NULL;
@@ -496,7 +504,7 @@ TEST(EndpointContextPerf, 10000getUUID)
 //                if (error)
 //                    printf("Invalid Argument to _localtime32_s\n");
 //                else {
-//                    // Convert to an ASCII representation 
+//                    // Convert to an ASCII representation
 //                    error = asctime_s(buffer, 32, &newtime);
 //                    if (error)
 //                        printf("Invalid Argument to asctime_s\n");
@@ -510,7 +518,7 @@ TEST(EndpointContextPerf, 10000getUUID)
 //                if (error)
 //                    printf("Invalid Argument to _localtime32_s\n");
 //                else {
-//                    // Convert to an ASCII representation 
+//                    // Convert to an ASCII representation
 //                    error = asctime_s(buffer, 32, &newtime);
 //                    if (error)
 //                        printf("Invalid Argument to asctime_s\n");

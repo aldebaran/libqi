@@ -4,6 +4,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
+#include <stdio.h>
+#include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/transport/detail/network/ip_address.hpp>
 #include <qi/transport/detail/network/constants.hpp>
 

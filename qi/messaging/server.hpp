@@ -10,13 +10,14 @@
 
 #include <string>
 #include <memory>
+#include <qi/messaging/publisher.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
-#include <qi/messaging/generic_publisher.hpp>
 
 namespace qi {
   namespace detail {
     class ServerImpl;
+    class PublisherImpl;
   }
 
   /// <summary> Server. </summary>
@@ -85,25 +86,24 @@ namespace qi {
       xAddService(makeSignature(name, function), makeFunctor(function));
     }
 
-    //template<typename TOPIC_TYPE>
-    //Publisher addTopic(const std::string& topicName);
+    template <typename PUBLISH_TYPE>
+    Publisher<PUBLISH_TYPE> advertiseTopic(const std::string& topicName) {
+      std::string signature = ""; //makeSignature(T);
+      boost::shared_ptr<qi::detail::PublisherImpl> pubImpl =
+        xAdvertiseTopic(topicName, signature);
+      return Publisher<PUBLISH_TYPE>(pubImpl);
+    }
 
     bool isInitialized() const;
 
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
+
+    boost::shared_ptr<qi::detail::PublisherImpl> xAdvertiseTopic(
+      const std::string& topicName, const std::string& typeSignature);
+
     std::auto_ptr<detail::ServerImpl> _impl;
   };
-
-  //template<typename TOPIC_TYPE>
-  //Publisher qi::Server<TOPIC_TYPE>::addTopic( const std::string& topicName )
-  //{
-  //  qi::GenericPublisher<TOPIC_TYPE> pub;
-  //  pub.connect("address");
-  //  return pub;
-  //}
-
 }
 
 #endif // __QI_MESSAGING_SERVER_HPP__
-

@@ -12,18 +12,22 @@
 #include <qi/transport/detail/network/endpoints.hpp>
 #include <qi/signature.hpp>
 
-#define MASTERIMPL_DEBUG_ENDPOINT(msg, endpoint)                   \
+#define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
   qisDebug << "===" << msg << " ===" << std::endl;                 \
   qisDebug << "endpointID: " << endpoint.endpointID << std::endl;  \
   qisDebug << "machineID : " << endpoint.machineID  << std::endl;  \
-  qisDebug << "hostName  : " << endpoint.hostName   << std::endl;  \
-  qisDebug << "processID : " << endpoint.processID  << std::endl;  \
-  qisDebug << "platformID: " << endpoint.platformID << std::endl;  \
-  qisDebug << "publicIP  : " << endpoint.publicIP   << std::endl;  \
   qisDebug << "name      : " << endpoint.name       << std::endl;  \
   qisDebug << "contextID : " << endpoint.contextID  << std::endl;  \
   qisDebug << "port      : " << endpoint.port       << std::endl;  \
   qisDebug << "============================"        << std::endl;  \
+
+#define MASTERIMPL_DEBUG_MACHINE_CONTEXT(msg, machine)            \
+  qisDebug << "===" << msg << " ===" << std::endl;                \
+  qisDebug << "machineID : " << machine.machineID  << std::endl;  \
+  qisDebug << "hostName  : " << machine.hostName   << std::endl;  \
+  qisDebug << "platformID: " << machine.platformID << std::endl;  \
+  qisDebug << "publicIP  : " << machine.publicIP   << std::endl;  \
+  qisDebug << "============================"        << std::endl; \
 
 namespace qi {
   namespace detail {
@@ -49,16 +53,26 @@ namespace qi {
       if (!_server.isInitialized()) {
         return;
       }
+      // Force an invalid Machine Context in the lookup
+      MachineContext m;
+      m.machineID = "";
+      _knownMachines.setInvalidValue(m);
+
+      // Register machine and server ( without network activity )
+      xRegisterMachine(_server.getMachineContext());
       const EndpointContext& serverContext = _server.getEndpointContext();
       xRegisterServer(serverContext);
 
-      xAddMasterMethod(serverContext.endpointID, "master.registerService",  &MasterImpl::registerService);
-      xAddMasterMethod(serverContext.endpointID, "master.locateService",    &MasterImpl::locateService);
-      xAddMasterMethod(serverContext.endpointID, "master.listServices",     &MasterImpl::listServices);
-      xAddMasterMethod(serverContext.endpointID, "master.registerServer",   &MasterImpl::registerServer);
-      xAddMasterMethod(serverContext.endpointID, "master.unregisterServer", &MasterImpl::unregisterServer);
-      xAddMasterMethod(serverContext.endpointID, "master.registerClient",   &MasterImpl::registerClient);
-      xAddMasterMethod(serverContext.endpointID, "master.unregisterClient", &MasterImpl::unregisterClient);
+      // Bind methods
+      xAddMasterMethod(serverContext.endpointID, "master.registerService",  this, &MasterImpl::registerService);
+      xAddMasterMethod(serverContext.endpointID, "master.locateService",    this, &MasterImpl::locateService);
+      xAddMasterMethod(serverContext.endpointID, "master.listServices",     this, &MasterImpl::listServices);
+      xAddMasterMethod(serverContext.endpointID, "master.registerMachine",  this, &MasterImpl::registerMachine);
+      xAddMasterMethod(serverContext.endpointID, "master.registerServer",   this, &MasterImpl::registerServer);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterServer", this, &MasterImpl::unregisterServer);
+      xAddMasterMethod(serverContext.endpointID, "master.registerClient",   this, &MasterImpl::registerClient);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterClient", this, &MasterImpl::unregisterClient);
+      xAddMasterMethod(serverContext.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
     }
 
     bool MasterImpl::isInitialized() const {
@@ -76,67 +90,85 @@ namespace qi {
             serverID << std::endl;
         return;
       }
-      qisDebug << "Master::registerService " << serverContext.publicIP <<
-         ":" << serverContext.port << " " << methodSignature << std::endl;
+      qisDebug << "Master::registerService " << serverContext.name << " " << methodSignature << std::endl;
 
       _knownServices.insert(methodSignature, serverID);
     }
 
-    int MasterImpl::registerServer(const std::string& name,
-                                   const std::string& id,
-                                   const std::string& contextID,
-                                   const std::string& machineID,
-                                   const int&         platformID,
-                                   const std::string& publicIPAddress)
+    void MasterImpl::registerMachine(const std::string& hostName,
+                                     const std::string& machineID,
+                                     const std::string& publicIPAddress,
+                                     const int&         platformID)
+    {
+      MachineContext m;
+      m.hostName   = hostName;
+      m.machineID  = machineID;
+      m.publicIP   = publicIPAddress;
+      m.platformID = platformID;
+      xRegisterMachine(m);
+    }
+
+    void MasterImpl::xRegisterMachine(const MachineContext& machine) {
+      MASTERIMPL_DEBUG_MACHINE_CONTEXT("registerMachine", machine);
+      _knownMachines.insert(machine.machineID, machine);
+    }
+
+    void MasterImpl::registerServer(const std::string& name,
+                                    const std::string& endpointID,
+                                    const std::string& contextID,
+                                    const std::string& machineID,
+                                    const int& port)
     {
       // Put into a context struct: TODO use a protobuf
       EndpointContext c;
       c.name       = name;
-      c.endpointID = id;
+      c.endpointID = endpointID;
       c.contextID  = contextID;
       c.machineID  = machineID;
-      c.platformID = platformID;
-      c.publicIP   = publicIPAddress;
-      c.port = addressManager.getNewPort();
+      c.port       = port;
+
       xRegisterServer(c);
-      return c.port;
     }
 
     void MasterImpl::xRegisterServer(const EndpointContext& endpoint) {
-      MASTERIMPL_DEBUG_ENDPOINT("Master::registerServer", endpoint);
-      _knownServers.insert(endpoint.endpointID, endpoint);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerServer", endpoint);
+      const MachineContext& m =_knownMachines.get(endpoint.machineID);
+      if (m.hostName.empty()) {
+        qisError << "Master::registerServer: Attempt to register a server for a machine that has not bee registered. machineID: " << endpoint.machineID <<
+            " Please call registerMachine first." << std::endl;
+      } else {
+        _knownServers.insert(endpoint.endpointID, endpoint);
+      }
     }
 
     void MasterImpl::unregisterServer(const std::string& id) {
 
       const EndpointContext& c = _knownServers.get(id);
-      MASTERIMPL_DEBUG_ENDPOINT("Master::unregisterServer", c);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::unregisterServer", c);
 
       // TODO remove associated services
       _knownServers.remove(id);
     }
 
     void MasterImpl::registerClient(const std::string& name,
-                                    const std::string& id,
+                                    const std::string& clientID,
                                     const std::string& contextID,
-                                    const std::string& machineID,
-                                    const int& platformID)
+                                    const std::string& machineID)
     {
       // Put into a context struct: TODO use a protobuf
       EndpointContext c;
       c.name       = name;
-      c.endpointID = id;
+      c.endpointID = clientID;
       c.contextID  = contextID;
       c.machineID  = machineID;
-      c.platformID = platformID;
-      MASTERIMPL_DEBUG_ENDPOINT("Master::registerClient", c);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerClient", c);
 
       _knownClients.insert(c.endpointID, c);
     }
 
     void MasterImpl::unregisterClient(const std::string& id) {
       const EndpointContext& c = _knownClients.get(id);
-      MASTERIMPL_DEBUG_ENDPOINT("Master::unregisterClient", c);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::unregisterClient", c);
       _knownClients.remove(id);
     }
 
@@ -158,7 +190,12 @@ namespace qi {
         qisDebug << "Master::locateService: Could not find client for clientID: " << clientID << std::endl;
         return "";
       }
-      std::string endpoint = negotiateEndpoint(clientContext, serverContext);
+      const MachineContext& serverMachineContext = _knownMachines.get(serverContext.machineID);
+      if (serverMachineContext.machineID.empty()) {
+        qisDebug << "Master::locateService: Could not find machine for serverID: " << serverID << std::endl;
+        return "";
+      }
+      std::string endpoint = negotiateEndpoint(clientContext, serverContext, serverMachineContext);
       qisDebug << "Master::locateService: Resolved: " << methodSignature << " to " << endpoint << std::endl;
       return endpoint;
     }

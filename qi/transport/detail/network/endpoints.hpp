@@ -10,18 +10,22 @@
 
 #include <vector>
 #include <qi/transport/detail/network/endpoint_context.hpp>
+#include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
 
     /// <summary> Returns a fully qualified endpoint for connecting a client and a server </summary>
-    std::string negotiateEndpoint(const EndpointContext& clientContext, const EndpointContext serverContext);
+    std::string negotiateEndpoint(const EndpointContext& clientContext,
+                                  const EndpointContext& serverContext,
+                                  const MachineContext&  serverMachineContext);
 
     /// <summary>
     /// Gets the list of endpoints that can be bound to.
     /// This result is only valid if made on the platform of the server
     /// </summary>
-    std::vector<std::string> getEndpoints(const EndpointContext serverContext);
+    std::vector<std::string> getEndpoints(const EndpointContext serverContext,
+                                          const MachineContext& serverMachineContext);
   }
 }
 #endif // __QI_MESSAGING_DETAIL_NEGOTIATE_ENDPOINT_HPP__

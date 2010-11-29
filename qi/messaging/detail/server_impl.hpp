@@ -16,9 +16,11 @@
 #include <qi/transport/client.hpp>
 #include <qi/transport/server.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
+#include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
+    class PublisherImpl;
 
     class ServerImpl : public qi::transport::MessageHandler {
     public:
@@ -32,9 +34,15 @@ namespace qi {
 
       void addService(const std::string& methodSignature, qi::Functor* functor);
 
+      boost::shared_ptr<qi::detail::PublisherImpl> advertiseTopic(
+        const std::string& topicName,
+        const std::string& typeSignature);
+
       bool isInitialized() const;
 
       const qi::detail::EndpointContext& getEndpointContext() const;
+
+      const qi::detail::MachineContext& getMachineContext() const;
 
       // MessageHandler Implementation -----------------
       void messageHandler(std::string& defData, std::string& resultData);
@@ -51,6 +59,7 @@ namespace qi {
       std::string _name;
 
       qi::Context _qiContext;
+      qi::detail::MachineContext  _machineContext;
       qi::detail::EndpointContext _endpointContext;
 
       /// <summary> The underlying transport server </summary>
@@ -66,7 +75,9 @@ namespace qi {
       MutexedNameLookup<ServiceInfo> _localServices;
 
       const ServiceInfo& xGetService(const std::string& methodHash);
+      int  xGetNewPortFromMaster(const std::string& machineID);
       void xRegisterServiceWithMaster(const std::string& methodHash);
+      void xRegisterMachineWithMaster();
       void xRegisterSelfWithMaster();
       void xUnregisterSelfWithMaster();
     };

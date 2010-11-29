@@ -50,9 +50,11 @@ namespace qi {
       if (_isInitialized) {
         // we assert that we think the master can locate services
         // and that we can register and unregister ourselves
-        _serviceCache.insert("master.registerClient::v:ssssi", masterEndpointAndPort.first);
+        _serviceCache.insert("master.registerMachine::v:sssi", masterEndpointAndPort.first);
+        _serviceCache.insert("master.registerClient::v:ssss", masterEndpointAndPort.first);
         _serviceCache.insert("master.unregisterClient::v:s",   masterEndpointAndPort.first);
         _serviceCache.insert("master.locateService::s:ss",     masterEndpointAndPort.first);
+        xRegisterMachineWithMaster();
         xRegisterSelfWithMaster();
       } else {
         qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
@@ -154,8 +156,20 @@ namespace qi {
         return nodeAddress;
     }
 
+    void ClientImpl::xRegisterMachineWithMaster() {
+      static const std::string method = "master.registerMachine::v:sssi";
+      SerializedData request_msg;
+      SerializedData response_msg;
+      request_msg.writeString(method);
+      request_msg.writeString(_machineContext.machineID);
+      request_msg.writeString(_machineContext.hostName);
+      request_msg.writeString(_machineContext.publicIP);
+      request_msg.writeInt(   _machineContext.platformID);
+      call(method, request_msg, response_msg);
+    }
+
     void ClientImpl::xRegisterSelfWithMaster() {
-      static const std::string method = "master.registerClient::v:ssssi";
+      static const std::string method = "master.registerClient::v:ssss";
       SerializedData request_msg;
       SerializedData response_msg;
       request_msg.writeString(method);
@@ -163,7 +177,6 @@ namespace qi {
       request_msg.writeString(_endpointContext.endpointID);
       request_msg.writeString(_endpointContext.contextID);
       request_msg.writeString(_endpointContext.machineID);
-      request_msg.writeInt(_endpointContext.platformID);
       call(method, request_msg, response_msg);
     }
 

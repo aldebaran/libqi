@@ -17,10 +17,12 @@ namespace qi {
       AddressManager();
       virtual ~AddressManager();
 
+      void setMasterPort(int masterPort);
       int getMasterPort() const;
-      int getNewPort();
+      int getNewPort(const std::string& machineID);
 
     protected:
+      int _masterPort;
       int _nextFreePort;
     };
   }

@@ -15,10 +15,17 @@ namespace qi {
   Server::Server(const std::string& serverName,
                  const std::string& masterAddress) :
     _impl(new detail::ServerImpl(serverName, masterAddress))
-  {}
+  {
+    // TODO prevent the name "master"
+  }
 
   void Server::xAddService(const std::string& methodSignature, qi::Functor* functor) {
     _impl->addService(methodSignature, functor);
+  }
+
+  boost::shared_ptr<qi::detail::PublisherImpl> Server::xAdvertiseTopic(
+    const std::string& topicName, const std::string& typeSignature) {
+      return _impl->advertiseTopic(topicName, typeSignature);
   }
 
   bool Server::isInitialized() const {

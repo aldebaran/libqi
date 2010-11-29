@@ -10,18 +10,27 @@
 
 namespace qi {
   namespace detail {
-    AddressManager::AddressManager() {
-      _nextFreePort = kDefaultMasterPort+1;
-    }
+    AddressManager::AddressManager() :
+      _masterPort(kDefaultMasterPort),
+      _nextFreePort(kDefaultMasterPort)
+    {}
 
     AddressManager::~AddressManager() {}
 
     int AddressManager::getMasterPort() const {
-      return kDefaultMasterPort;
+      return _masterPort;
     }
 
-    int AddressManager::getNewPort() {
-      return _nextFreePort++;
+    void AddressManager::setMasterPort(int masterPort) {
+      // ehem, hope no other ports have been given out.
+      _masterPort = masterPort;
+      _nextFreePort = masterPort;
+    }
+
+    int AddressManager::getNewPort(const std::string& machineID) {
+      // FIXME: machineID currently ignored
+      // should really have per machine lists
+      return ++_nextFreePort;
     }
   }
 }

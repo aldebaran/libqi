@@ -14,6 +14,7 @@
 #include <qi/messaging/detail/address_manager.hpp>
 #include <qi/messaging/context.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
+#include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
@@ -27,20 +28,23 @@ namespace qi {
       void registerService(const std::string& methodSignature,
                            const std::string& serverID);
 
-      int registerServer(const std::string& name,
-                          const std::string& id,
+      void registerMachine(const std::string& hostName,
+                           const std::string& machineID,
+                           const std::string& publicIPAddress,
+                           const int&         platformID);
+
+      void registerServer(const std::string& name,
+                          const std::string& endpointID,
                           const std::string& contextID,
                           const std::string& machineID,
-                          const int&         platformID,
-                          const std::string& publicIPAddress);
+                          const int& port);
 
       void unregisterServer(const std::string& id);
 
       void registerClient(const std::string& name,
-                          const std::string& id,
+                          const std::string& clientID,
                           const std::string& contextID,
-                          const std::string& machineID,
-                          const int& plarformID);
+                          const std::string& machineID);
 
       void unregisterClient(const std::string& id);
 
@@ -57,19 +61,19 @@ namespace qi {
 
       void xInit();
       void xRegisterServer(const EndpointContext& endpoint);
+      void xRegisterMachine(const MachineContext& machine);
 
       // Helper method
-      template <typename METHOD_TYPE>
+      template <typename OBJECT_TYPE, typename METHOD_TYPE>
       void xAddMasterMethod(
         const std::string& endpointID,
-        const std::string& name,
+        const std::string& methodName,
+        OBJECT_TYPE obj,
         METHOD_TYPE method)
       {
-        std::string sig = makeSignature(name, method);
-        _server.addService(
-          makeSignature(name, method),
-          makeFunctor(this, method));
-        registerService(sig, endpointID);
+        std::string signature = makeSignature(methodName, method);
+        _server.addService(signature, makeFunctor(obj, method));
+        registerService(signature, endpointID);
       }
 
       // map from methodSignature to nodeAddress
@@ -81,7 +85,10 @@ namespace qi {
       // map from id to EndpointContext
       MutexedNameLookup<qi::detail::EndpointContext> _knownClients;
 
-      AddressManager addressManager;
+      // map from id to MachineContext
+      MutexedNameLookup<qi::detail::MachineContext> _knownMachines;
+
+      AddressManager _addressManager;
     };
   }
 }

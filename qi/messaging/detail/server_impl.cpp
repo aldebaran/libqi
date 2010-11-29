@@ -15,6 +15,8 @@
 #include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
+#include <qi/messaging/detail/publisher_impl.hpp>
+
 
 namespace qi {
   using qi::serialization::SerializedData;
@@ -36,7 +38,7 @@ namespace qi {
         _isMasterServer(false),
         _name(serverName)
     {
-      
+
       _endpointContext.name = serverName;
       _endpointContext.contextID = _qiContext.getID();
 
@@ -62,19 +64,24 @@ namespace qi {
             << std::endl;
           return;
         }
-        // should really be split into two phases: getPort / register (once active)
+        _endpointContext.port = xGetNewPortFromMaster(_endpointContext.machineID);
+        xRegisterMachineWithMaster();
         xRegisterSelfWithMaster();
       }
 
-      _transportServer.serve(qi::detail::getEndpoints(_endpointContext));
+      _transportServer.serve(qi::detail::getEndpoints(_endpointContext, _machineContext));
 
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(
-        boost::bind(&qi::transport::Server::run, _transportServer));
+        ::boost::bind(&qi::transport::Server::run, _transportServer));
     }
 
     bool ServerImpl::isInitialized() const {
       return _isInitialized;
+    }
+
+    const qi::detail::MachineContext& ServerImpl::getMachineContext() const {
+      return _machineContext;
     }
 
     const qi::detail::EndpointContext& ServerImpl::getEndpointContext() const {
@@ -144,11 +151,35 @@ namespace qi {
       _transportClient.send(msg.str(), ret);
     }
 
+
+    int ServerImpl::xGetNewPortFromMaster(const std::string& machineID) {
+      static const std::string method("master.getNewPort::i:s");
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer msg;
+
+      msg.writeString(method);
+      msg.writeString(machineID);
+      _transportClient.send(msg.str(), ret);
+      qi::serialization::BinarySerializer retSer(ret);
+      int port;
+      retSer.readInt(port);
+      return port;
+    }
+
+    void ServerImpl::xRegisterMachineWithMaster() {
+      static const std::string method = "master.registerMachine::v:sssi";
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer msg;
+      msg.writeString(method);
+      msg.writeString(_machineContext.machineID);
+      msg.writeString(_machineContext.hostName);
+      msg.writeString(_machineContext.publicIP);
+      msg.writeInt(   _machineContext.platformID);
+      _transportClient.send(msg.str(), ret);
+    }
+
     void ServerImpl::xRegisterSelfWithMaster() {
-      if (!_isInitialized) {
-        return;
-      }
-      static const std::string method("master.registerServer::i:ssssis");
+      static const std::string method("master.registerServer::v:ssssi");
       qi::transport::Buffer               ret;
       qi::serialization::BinarySerializer msg;
 
@@ -157,12 +188,8 @@ namespace qi {
       msg.writeString(_endpointContext.endpointID);
       msg.writeString(_endpointContext.contextID);
       msg.writeString(_endpointContext.machineID);
-      msg.writeInt(   _endpointContext.platformID);
-      msg.writeString(_endpointContext.publicIP);
-
+      msg.writeInt(   _endpointContext.port);
       _transportClient.send(msg.str(), ret);
-      qi::serialization::BinarySerializer retSer(ret);
-      retSer.readInt(_endpointContext.port);
     }
 
     void ServerImpl::xUnregisterSelfWithMaster() {
@@ -176,6 +203,37 @@ namespace qi {
       msg.writeString(method);
       msg.writeString(_endpointContext.endpointID);
       _transportClient.send(msg.str(), ret);
+    }
+
+
+    boost::shared_ptr<qi::detail::PublisherImpl> ServerImpl::advertiseTopic(
+      const std::string& topicName,
+      const std::string& typeSignature)
+    {
+      boost::shared_ptr<qi::detail::PublisherImpl> pubImpl(new qi::detail::PublisherImpl());
+      // contact master to get topic info
+      return pubImpl;
+    //  TopicInfo topicInfo = call<TopicInfo>("getTopicInfo", "name");
+
+    //  if (topicInfo.isPublished) {
+    //    if (! topicInfo.isManyToMany) {
+    //      // return dead publisher;
+    //    } else (
+    //      // manyToMany
+    //      const std::string endpoint = getEndpoint(_endpointContext, topicInfo.publishEndpoint);
+    //    PublisherImpl impl();
+    //    impl.connect(endpoint);
+    //    Publisher pub(impl);
+    //    connect(endpoint)
+    //  }
+    //} else {
+    //  // not Published
+    //  if (isOneToMany) ( bind to getAddresses(getNewServicePort(contextID)) )
+    //    registerTopic(TopicInfo);
+    //  if isManyToMany
+    //    connect( getEndpoint(publishPort) )
+    //    registerPublisher(my)
+
     }
   }
 }

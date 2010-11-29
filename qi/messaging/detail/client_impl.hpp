@@ -16,6 +16,7 @@
 #include <qi/serialization/serializeddata.hpp>
 #include <qi/transport/client.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
+#include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
@@ -36,6 +37,7 @@ namespace qi {
       std::string                 _clientName;
       std::string                 _masterAddress;
       qi::Context                 _qiContext;
+      qi::detail::MachineContext  _machineContext;
       qi::detail::EndpointContext _endpointContext;
 
       MutexedNameLookup<std::string> _serviceCache;
@@ -48,6 +50,7 @@ namespace qi {
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
 
+      void xRegisterMachineWithMaster();
       void xRegisterSelfWithMaster();
       void xUnregisterSelfWithMaster();
     };
