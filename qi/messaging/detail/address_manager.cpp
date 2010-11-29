@@ -22,7 +22,7 @@ namespace qi {
     }
 
     void AddressManager::setMasterPort(int masterPort) {
-      // ehem, hope no other ports have been given out.
+      // FIXME ehem, hope no other ports have been given out.
       _masterPort = masterPort;
       _nextFreePort = masterPort;
     }
