@@ -12,13 +12,13 @@
 #include <qi/messaging/detail/server_impl.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/address_manager.hpp>
+#include <qi/messaging/detail/topic_info.hpp>
 #include <qi/messaging/context.hpp>
 #include <qi/transport/detail/network/endpoint_context.hpp>
 #include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
-
     class MasterImpl {
     public:
       explicit MasterImpl(const std::string& masterAddress);
@@ -87,6 +87,15 @@ namespace qi {
 
       // map from id to MachineContext
       MutexedNameLookup<qi::detail::MachineContext> _knownMachines;
+
+      // map from id to EndpointContext
+      MutexedNameLookup<qi::detail::EndpointContext> _knownPublishers;
+
+      // map from id to EndpointContext
+      MutexedNameLookup<qi::detail::EndpointContext> _knownSubscribers;
+
+      // map from id to EndpointContext
+      MutexedNameLookup<qi::detail::TopicInfo>       _knownTopics;
 
       AddressManager _addressManager;
     };
