@@ -13,7 +13,7 @@
 
 # include <boost/utility.hpp>
 # include <boost/type_traits/is_base_of.hpp>
-# include <protobuf/message.h>
+# include <google/protobuf/message.h>
 
 namespace qi {
   namespace detail {

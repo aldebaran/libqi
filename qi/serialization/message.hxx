@@ -37,7 +37,7 @@
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-#include <protobuf/message.h>
+#include <google/protobuf/message.h>
 //#include <vector>
 
 namespace qi {
