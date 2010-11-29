@@ -17,33 +17,37 @@ namespace qi {
 
     class ZMQPublisher : public Publisher {
     public:
-      /// <summary>
-      /// Creates a ZMQPublisher
-      /// </summary>
-      /// <param name="publisherAddress">
-      /// The protocol-qualified address of the publisher
-      /// e.g. ipc:///tmp/naoqi/paf
-      //. or tcp://127.0.0.1:5555
-      /// </param>
-      ZMQPublisher(const std::string &publisherAddress);
+      /// <summary> Default Constructor. </summary>
+      ZMQPublisher();
 
-    /// <summary> Constructor. </summary>
-    /// <param name="context"> An existing zmq context </param>
-    /// <param name="publishAddress"> The server address. </param>
-      ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress);
+      /// <summary> Constructor that allows an existing zmq context to be used </summary>
+      /// <param name="context">An existing zmq context</param>
+      ZMQPublisher(boost::shared_ptr<zmq::context_t> context);
+
+      /// <summary> Destructor </summary>
+      virtual ~ZMQPublisher();
+
+      /// <summary> Connects to a forwarder </summary>
+      /// <param name="publishEndpoint"> The forwarder's publish endpoint </param>
+      void connect(const std::string& publishEndpoint);
+
+      /// <summary> Binds to the publisher </summary>
+      /// <param name="publishEndpoint"> The endpoint to bind to </param>
+      void bind(const std::string& publishEndpoint);
+
+      /// <summary> Binds to the publisher </summary>
+      /// <param name="publishEndpoints"> The endpoints to bind to </param>
+      void bind(const std::vector<std::string> &publishEndpoints);
 
       boost::shared_ptr<zmq::context_t> getContext() const;
 
-      virtual ~ZMQPublisher();
-
+      /// <summary> Publishes. </summary>
+      /// <param name="toSend"> The data to send. </param>
       virtual void publish(const std::string &tosend);
 
     protected:
-      void bind();
-
-    protected:
       boost::shared_ptr<zmq::context_t> _context;
-      zmq::socket_t   _socket;
+      zmq::socket_t                     _socket;
     };
   }
 }

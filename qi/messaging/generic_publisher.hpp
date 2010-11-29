@@ -22,9 +22,10 @@ namespace qi {
     public:
       GenericPublisher() : isInitialized(false) {}
 
-      bool connect(const std::string &address) {
+      bool bind(const std::string &address) {
         try {
-          _publisher = new qi::transport::ZMQPublisher(address);
+          _publisher = new qi::transport::ZMQPublisher();
+          _publisher->bind(address);
           isInitialized = true;
         } catch(const std::exception& e) {
           qisDebug << "GenericPublisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
@@ -35,7 +36,7 @@ namespace qi {
       void publish(const T& val)
       {
         if (! isInitialized) {
-          qisError << "Attempt to use an unitialized publisher." << std::endl;
+          qisError << "Attempt to use an uninitialized publisher." << std::endl;
           return;
         }
         qi::serialization::BinarySerializer ser;

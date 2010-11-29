@@ -11,26 +11,15 @@
 namespace qi {
   namespace transport {
 
-    /// <summary> Constructor. </summary>
-    /// <param name="publishAddress"> The server address. </param>
-    ZMQPublisher::ZMQPublisher(const std::string &publishAddress)
-      : Publisher(publishAddress),
+    ZMQPublisher::ZMQPublisher():
       _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(1))),
       _socket(*_context.get(), ZMQ_PUB)
-    {
-      bind();
-    }
+    {}
 
-    /// <summary> Constructor. </summary>
-    /// <param name="context">An existing zmq context</param>
-    /// <param name="publishAddress"> The server address. </param>
-    ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
-      : Publisher(publishAddress),
-      _context(context),
-      _socket(*_context.get(), ZMQ_PUB)
-    {
-      bind();
-    }
+    ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context)
+      : _context(context),
+        _socket(*_context.get(), ZMQ_PUB)
+    {}
 
     ZMQPublisher::~ZMQPublisher() {}
 
@@ -38,19 +27,36 @@ namespace qi {
       return _context;
     }
 
-    /// <summary> Binds to the publisher </summary>
-    void ZMQPublisher::bind()
+    void ZMQPublisher::connect(const std::string& publishEndpoint)
     {
       // throws if already bound
-      _socket.bind(_publishAddress.c_str());
+      _socket.connect(publishEndpoint.c_str());
       // we can't allow publishing until the socket is warm
       // we might be able to detect this in publish instead of sleeping here
       // FIXME: push this responsibility to the user
       sleep(1);
     }
 
-    /// <summary> Publishes. </summary>
-    /// <param name="toSend"> The data to send. </param>
+    void ZMQPublisher::bind(const std::string& publishEndpoint)
+    {
+      std::vector<std::string> v;
+      v.push_back(publishEndpoint);
+      bind(v);
+    }
+
+    void ZMQPublisher::bind(const std::vector<std::string> &publishEndpoints)
+    {
+      // throws if already bound
+      std::vector<std::string>::const_iterator it = publishEndpoints.begin();
+      for (; it != publishEndpoints.end(); it++) {
+        _socket.bind((*it).c_str());
+      }
+      // we can't allow publishing until the socket is warm
+      // we might be able to detect this in publish instead of sleeping here
+      // FIXME: push this responsibility to the user
+      sleep(1);
+    }
+
     void ZMQPublisher::publish(const std::string &toSend)
     {
       zmq::message_t msg(toSend.size());

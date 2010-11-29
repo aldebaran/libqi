@@ -9,19 +9,20 @@
 #define   __QI_TRANSPORT_PUBLISHER_HPP__
 
 #include <string>
+#include <vector>
 
 namespace qi {
   namespace transport {
 
     class Publisher {
     public:
-      explicit Publisher(const std::string& publishAddress)
-        : _publishAddress(publishAddress) {}
+      Publisher() {}
       virtual ~Publisher() {}
 
+      virtual void connect(const std::string& serverAddresses) = 0;
+      virtual void bind(const std::string& serverAddress) = 0;
+      virtual void bind(const std::vector<std::string>& serverAddresses) = 0;
       virtual void publish(const std::string& tosend) = 0;
-    protected:
-      std::string _publishAddress;
     };
   }
 }
