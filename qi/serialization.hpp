@@ -9,6 +9,6 @@
 #ifndef   __QI_SERIALIZATION_HPP__
 #define   __QI_SERIALIZATION_HPP__
 
-#include <qi/serialization/serialize.hpp>
+#include <qi/serialization/serializer.hpp>
 
 #endif // __QI_SERIALIZATION_HPP__
