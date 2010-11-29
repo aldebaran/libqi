@@ -36,7 +36,6 @@ namespace qi {
 
     //  This class provides RFC 4122 (a Universally Unique IDentifier)
     //  implementation.
-
     class uuid_t
     {
     public:

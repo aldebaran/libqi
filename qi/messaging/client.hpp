@@ -17,7 +17,6 @@
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
 
-
 namespace qi {
   namespace detail {
     class ClientImpl;

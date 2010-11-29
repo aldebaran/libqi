@@ -21,7 +21,6 @@ struct Foo {
 };
 
 TEST(TestMaps, std_map_string_find) {
-
   std::map<std::string, std::string> map;
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::stringstream s;

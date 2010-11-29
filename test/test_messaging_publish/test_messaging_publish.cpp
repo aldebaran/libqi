@@ -54,5 +54,3 @@ TEST(MessagingZMQPublisher , perf)
   sleep(1);
   ASSERT_EQ( numMessages, fCount) << "Did not receive all messages";
 }
-
-

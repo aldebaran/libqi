@@ -6,7 +6,7 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
-project (qi)
+project(qi)
 
 cmake_minimum_required(VERSION 2.6.4)
 include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
