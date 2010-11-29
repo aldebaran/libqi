@@ -125,7 +125,7 @@ namespace qi {
 
       if ( ! _knownMachines.exists(endpoint.machineID)) {
         qisError << "Master::registerServer: Attempt to register a "
-          "server for a machine that has not bee registered. machineID: " <<
+          "server for a machine that has not been registered. machineID: " <<
           endpoint.machineID <<
           " Please call registerMachine first." << std::endl;
       } else {
