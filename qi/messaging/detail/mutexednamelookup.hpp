@@ -45,6 +45,13 @@ namespace qi {
         return _invalidValue;
       }
 
+      bool exists(std::string key) {
+        boost::mutex::scoped_lock lock(_mutex);
+        typename std::map<std::string, T>::const_iterator it;
+        it = _map.find(key);
+        return !(it == _map.end());
+      }
+
       void insert(const std::string key, const T& val) {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it = _map.find(key);
