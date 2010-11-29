@@ -72,6 +72,10 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.unregisterServer", this, &MasterImpl::unregisterServer);
       xAddMasterMethod(serverContext.endpointID, "master.registerClient",   this, &MasterImpl::registerClient);
       xAddMasterMethod(serverContext.endpointID, "master.unregisterClient", this, &MasterImpl::unregisterClient);
+      xAddMasterMethod(serverContext.endpointID, "master.registerPublisher",   this, &MasterImpl::registerPublisher);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterPublisher", this, &MasterImpl::unregisterPublisher);
+      xAddMasterMethod(serverContext.endpointID, "master.topicExists",         this, &MasterImpl::topicExists);
+      xAddMasterMethod(serverContext.endpointID, "master.registerTopic",       this, &MasterImpl::registerTopic);
       xAddMasterMethod(serverContext.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
     }
 
@@ -183,5 +187,36 @@ namespace qi {
     const std::map<std::string, std::string>& MasterImpl::listServices() {
       return _knownServices.getMap();
     }
+
+    void MasterImpl::registerPublisher(const std::string& name,
+      const std::string& endpointID,
+      const std::string& contextID,
+      const std::string& machineID,
+      const int& port)
+    {
+      EndpointContext c(name, endpointID, contextID, machineID, 0, port);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerPublisher", c)
+      _knownPublishers.insert(endpointID, c);
+    }
+
+    void MasterImpl::unregisterPublisher(const std::string& endpointID) {
+      const EndpointContext& c = _knownPublishers.get(endpointID);
+      MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::unregisterPublisher", c);
+      _knownPublishers.remove(endpointID);
+    }
+
+    void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
+      //FIXME: check for existence
+      qisDebug << "Register Topic " << topicName << " " << endpointID << std::endl;
+      TopicInfo ti;
+      ti.publishEndpointID = endpointID;
+      ti.subscribeEndpointID = endpointID;
+      _knownTopics.insert(topicName, ti);
+    }
+
+    bool MasterImpl::topicExists(const std::string& topicName) {
+      return _knownTopics.exists(topicName);
+    }
+
   }
 }

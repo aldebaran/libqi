@@ -68,10 +68,6 @@ namespace qi {
       /// <summary> The transport client used to talk with the master </summary>
       qi::transport::Client _transportClient;
 
-      // should be map from hash to functor,
-      // but we also need to be able to push these hashes to master
-      // and ...
-      // if would be good if we were capable of describing a mehtod
       MutexedNameLookup<ServiceInfo> _localServices;
 
       const ServiceInfo& xGetService(const std::string& methodHash);
@@ -80,6 +76,7 @@ namespace qi {
       void xRegisterMachineWithMaster();
       void xRegisterSelfWithMaster();
       void xUnregisterSelfWithMaster();
+      bool xTopicExists(const std::string& topicName);
     };
   }
 }

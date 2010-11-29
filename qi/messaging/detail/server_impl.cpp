@@ -205,15 +205,46 @@ namespace qi {
       _transportClient.send(msg.str(), ret);
     }
 
+    bool ServerImpl::xTopicExists(const std::string& topicName) {
+      static const std::string method("master.topicExists::b:s");
+      qi::transport::Buffer               ret;
+      qi::serialization::BinarySerializer msg;
+      msg.writeString(method);
+      msg.writeString(topicName);
+      _transportClient.send(msg.str(), ret);
+      qi::serialization::BinarySerializer retSer(ret);
+      bool exists;
+      retSer.readBool(exists);
+      return exists;
+    }
+
+    //void ServerImpl::xRegisterPublisherWithMaster(const EndpointContext& publisherContext) {
+    //  //
+    //}
+
+    //void xRegisterTopicWithMaster() {
+
+    //}
 
     boost::shared_ptr<qi::detail::PublisherImpl> ServerImpl::advertiseTopic(
       const std::string& topicName,
       const std::string& typeSignature)
     {
       boost::shared_ptr<qi::detail::PublisherImpl> pubImpl(new qi::detail::PublisherImpl());
+      bool exists = xTopicExists(topicName);
+      if (exists) {
+        qisError << "Attempt to publish on existing topic " << topicName << std::endl;
+        return pubImpl;
+      }
+      //std::string subscribeAddress = xGetTopicSubscribeAddress(_endpointContext.contextID);
+      int publisherPort = xGetNewPortFromMaster(_machineContext.machineID);
+      //xRegisterPublisherWithMaster();
+      //xRegisterTopicWithMaster();
+      // pubImpl->bind(qi::detail::getEndpoints(_endpointContext, _machineContext));
       // contact master to get topic info
+      //bool ok xAdvertiseTopicWithMaster("name");
       return pubImpl;
-    //  TopicInfo topicInfo = call<TopicInfo>("getTopicInfo", "name");
+      //  TopicInfo topicInfo = call<TopicInfo>("getTopicInfo", "name");
 
     //  if (topicInfo.isPublished) {
     //    if (! topicInfo.isManyToMany) {

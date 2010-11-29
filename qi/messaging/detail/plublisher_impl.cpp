@@ -10,17 +10,17 @@
 #include <qi/log.hpp>
 
 namespace qi {
-
   namespace detail {
 
     PublisherImpl::PublisherImpl() : _isInitialized(false) {}
 
     bool PublisherImpl::bind(const std::string& address) {
       try {
-        _publisher = new qi::transport::ZMQPublisher(address);
+        _publisher = new qi::transport::ZMQPublisher();
+        _publisher->bind(address);
         _isInitialized = true;
       } catch(const std::exception& e) {
-        qisDebug << "GenericPublisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
+        qisDebug << "Publisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
       }
       return _isInitialized;
     }

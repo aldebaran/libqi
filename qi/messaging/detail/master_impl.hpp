@@ -52,6 +52,19 @@ namespace qi {
 
       const std::map<std::string, std::string>& listServices();
 
+      void registerPublisher(const std::string& name,
+        const std::string& endpointID,
+        const std::string& contextID,
+        const std::string& machineID,
+        const int& port);
+
+      void unregisterPublisher(const std::string& endpointID);
+
+      void registerTopic(const std::string& topicName, const std::string& endpointID);
+
+      bool topicExists(const std::string& topicName);
+
+
       bool isInitialized() const;
 
     private:
