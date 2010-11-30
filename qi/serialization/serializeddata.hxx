@@ -129,8 +129,10 @@ namespace qi {
 
         if (sz) {
           v.resize(sz);
-          for(unsigned int i=0; i < sz; ++i) {
-            serialize<U>::read(v[i]);
+          typename std::vector<U>::iterator it = v.begin();
+          typename std::vector<U>::iterator end = v.end();
+          for (; it != end; ++it) {
+            serialize<U>::read(*it);
           }
         }
         __QI_DEBUG_SERIALIZATION_CONTAINER_R(std::vector<U>, v);
