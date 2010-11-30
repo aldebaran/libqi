@@ -51,8 +51,8 @@ def generate_file(src, dst, count):
         f.write(str(code))
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
-    print "cd", os.path.dirname(__file__)
+    #print "cd", os.path.dirname(__file__)
+    #os.chdir(os.path.dirname(__file__))
     numArgs = 10 # This results in n-1 arguments
     generate_file("../qi/functors/detail/memberfunctor.hxx.in"    , "../qi/functors/detail/memberfunctor.hxx"    , numArgs)
     generate_file("../qi/functors/detail/voidmemberfunctor.hxx.in", "../qi/functors/detail/voidmemberfunctor.hxx", numArgs)
