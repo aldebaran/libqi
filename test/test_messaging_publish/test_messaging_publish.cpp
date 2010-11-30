@@ -40,7 +40,7 @@ TEST(MessagingZMQPublisher , perf)
 
 //  SubscribePerfHandler<int> handler(numMessages);
   qi::messaging::GenericPublisher<std::string> publisher;
-  publisher.connect("tcp://127.0.0.1:5555");
+  publisher.bind("tcp://127.0.0.1:5555");
 
   qi::messaging::GenericSubscriber<std::string> subscriber;
   subscriber.connect("tcp://127.0.0.1:5555");

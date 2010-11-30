@@ -50,7 +50,8 @@ TEST(TransportZMQPublisher , MillionPerSecond)
 
   SubscribePerfHandler handler(numMessages);
   //qi::transport::ZMQPublisher publisher1("tcp://127.0.0.1:5556");
-  qi::transport::ZMQPublisher publisher("tcp://127.0.0.1:5555");
+  qi::transport::ZMQPublisher publisher;
+  publisher.bind("tcp://127.0.0.1:5555");
   qi::transport::ZMQSubscriber subscriber("tcp://127.0.0.1:5555");
 
   subscriber.setSubscribeHandler(&handler);
@@ -86,7 +87,8 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     subscribers.push_back(sub);
   }
   sleep(2);
-  qi::transport::ZMQPublisher publisher("tcp://127.0.0.1:5555");
+  qi::transport::ZMQPublisher publisher;
+  publisher.bind("tcp://127.0.0.1:5555");
 
   sleep(1);
   std::string msg = "Hello";
