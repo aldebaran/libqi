@@ -12,34 +12,26 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/namelookup.hpp>
-#include <qi/messaging/context.hpp>
+#include <qi/messaging/detail/client_impl_base.hpp>
 #include <qi/serialization/serializeddata.hpp>
 #include <qi/transport/client.hpp>
-#include <qi/transport/detail/network/endpoint_context.hpp>
-#include <qi/transport/detail/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {
 
-    class ClientImpl {
+    class ClientImpl : public ClientImplBase {
     public:
       ClientImpl();
       virtual ~ClientImpl();
 
       ClientImpl(const std::string& clientName, const std::string& masterAddress);
 
-      void call(const std::string &signature, const qi::serialization::SerializedData& callDef, qi::serialization::SerializedData &result);
-
-      bool isInitialized() const;
+      void call(const std::string &signature, const qi::serialization::SerializedData& callDef,
+        qi::serialization::SerializedData &result);
 
     private:
-      bool                        _isInitialized;
-      std::string                 _clientName;
-      std::string                 _masterAddress;
-      qi::Context                 _qiContext;
-      qi::detail::MachineContext  _machineContext;
-      qi::detail::EndpointContext _endpointContext;
-
+      std::string                    _clientName;
+      std::string                    _masterAddress;
       MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
@@ -50,9 +42,9 @@ namespace qi {
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
 
-      void xRegisterMachineWithMaster();
-      void xRegisterSelfWithMaster();
-      void xUnregisterSelfWithMaster();
+      //void xRegisterMachineWithMaster();
+      //void xRegisterSelfWithMaster();
+      //void xUnregisterSelfWithMaster();
     };
 
   }

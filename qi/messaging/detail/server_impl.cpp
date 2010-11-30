@@ -23,7 +23,7 @@ namespace qi {
 
   namespace detail {
 
-    ServerImpl::ServerImpl() : _isInitialized(false) {}
+    ServerImpl::ServerImpl() {}
 
     ServerImpl::~ServerImpl() {
       if (!_isMasterServer) {
@@ -34,11 +34,10 @@ namespace qi {
     ServerImpl::ServerImpl(
       const std::string serverName,
       const std::string masterAddress) :
-        _isInitialized(false),
         _isMasterServer(false),
         _name(serverName)
     {
-
+      _endpointContext.type = SERVER_ENDPOINT;
       _endpointContext.name = serverName;
       _endpointContext.contextID = _qiContext.getID();
 
@@ -74,18 +73,6 @@ namespace qi {
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(
         ::boost::bind(&qi::transport::Server::run, _transportServer));
-    }
-
-    bool ServerImpl::isInitialized() const {
-      return _isInitialized;
-    }
-
-    const qi::detail::MachineContext& ServerImpl::getMachineContext() const {
-      return _machineContext;
-    }
-
-    const qi::detail::EndpointContext& ServerImpl::getEndpointContext() const {
-      return _endpointContext;
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
@@ -151,59 +138,6 @@ namespace qi {
       _transportClient.send(msg.str(), ret);
     }
 
-
-    int ServerImpl::xGetNewPortFromMaster(const std::string& machineID) {
-      static const std::string method("master.getNewPort::i:s");
-      qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer msg;
-
-      msg.writeString(method);
-      msg.writeString(machineID);
-      _transportClient.send(msg.str(), ret);
-      qi::serialization::BinarySerializer retSer(ret);
-      int port;
-      retSer.readInt(port);
-      return port;
-    }
-
-    void ServerImpl::xRegisterMachineWithMaster() {
-      static const std::string method = "master.registerMachine::v:sssi";
-      qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer msg;
-      msg.writeString(method);
-      msg.writeString(_machineContext.machineID);
-      msg.writeString(_machineContext.hostName);
-      msg.writeString(_machineContext.publicIP);
-      msg.writeInt(   _machineContext.platformID);
-      _transportClient.send(msg.str(), ret);
-    }
-
-    void ServerImpl::xRegisterSelfWithMaster() {
-      static const std::string method("master.registerServer::v:ssssi");
-      qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer msg;
-
-      msg.writeString(method);
-      msg.writeString(_endpointContext.name);
-      msg.writeString(_endpointContext.endpointID);
-      msg.writeString(_endpointContext.contextID);
-      msg.writeString(_endpointContext.machineID);
-      msg.writeInt(   _endpointContext.port);
-      _transportClient.send(msg.str(), ret);
-    }
-
-    void ServerImpl::xUnregisterSelfWithMaster() {
-      if (!_isInitialized) {
-        return;
-      }
-      static const std::string method("master.unregisterServer::v:s");
-      qi::transport::Buffer               ret;
-      qi::serialization::BinarySerializer msg;
-
-      msg.writeString(method);
-      msg.writeString(_endpointContext.endpointID);
-      _transportClient.send(msg.str(), ret);
-    }
 
     bool ServerImpl::xTopicExists(const std::string& topicName) {
       static const std::string method("master.topicExists::b:s");

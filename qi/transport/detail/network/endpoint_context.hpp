@@ -12,17 +12,28 @@
 
 namespace qi {
   namespace detail {
+
+    enum EndpointType {
+      SERVER_ENDPOINT     = 0,
+      CLIENT_ENDPOINT     = 1,
+      PUBLISHER_ENDPOINT  = 2,
+      SUBSCRIBER_ENDPOINT = 3
+    };
+
     struct EndpointContext {
-      std::string name;
-      std::string endpointID;
-      std::string contextID;
-      std::string machineID;
-      int processID;
-      int port;
+      EndpointType type;
+      std::string  name;
+      std::string  endpointID;
+      std::string  contextID;
+      std::string  machineID;
+      int          processID;
+      int          port;
 
       EndpointContext();
 
-      EndpointContext(const std::string& name,
+      EndpointContext(
+        const EndpointType& type,
+        const std::string& name,
         const std::string& endpointID,
         const std::string& contextID,
         const std::string& machineID,

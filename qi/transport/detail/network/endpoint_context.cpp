@@ -10,6 +10,7 @@
 namespace qi {
   namespace detail {
     EndpointContext::EndpointContext():
+      type(CLIENT_ENDPOINT),
       name(""),
       endpointID(getUUID()),
       contextID(""),
@@ -18,12 +19,14 @@ namespace qi {
       port(0) {}
 
       EndpointContext::EndpointContext(
+        const EndpointType& pType,
         const std::string& pName,
         const std::string& pEndpointID,
         const std::string& pContextID,
         const std::string& pMachineID,
         const int& pProcessID,
         const int& pPort) :
+        type(pType),
         name(pName),
         endpointID(pEndpointID),
         contextID(pContextID),

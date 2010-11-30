@@ -12,17 +12,14 @@
 #include <qi/transport/message_handler.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
-#include <qi/messaging/context.hpp>
-#include <qi/transport/client.hpp>
 #include <qi/transport/server.hpp>
-#include <qi/transport/detail/network/endpoint_context.hpp>
-#include <qi/transport/detail/network/machine_context.hpp>
+#include <qi/messaging/detail/client_impl_base.hpp>
 
 namespace qi {
   namespace detail {
     class PublisherImpl;
 
-    class ServerImpl : public qi::transport::MessageHandler {
+    class ServerImpl : public qi::detail::ClientImplBase, public qi::transport::MessageHandler {
     public:
       ServerImpl();
       virtual ~ServerImpl();
@@ -38,44 +35,24 @@ namespace qi {
         const std::string& topicName,
         const std::string& typeSignature);
 
-      bool isInitialized() const;
-
-      const qi::detail::EndpointContext& getEndpointContext() const;
-
-      const qi::detail::MachineContext& getMachineContext() const;
-
       // MessageHandler Implementation -----------------
       void messageHandler(std::string& defData, std::string& resultData);
       // -----------------------------------------------
 
-    private:
-      /// <summary> Becomes true when the server can be used </summary>
-      bool _isInitialized;
-
+    protected:
       /// <summary> true if this server belongs to the master </summary>
       bool _isMasterServer;
 
       /// <summary> The friendly name of this server </summary>
       std::string _name;
 
-      qi::Context _qiContext;
-      qi::detail::MachineContext  _machineContext;
-      qi::detail::EndpointContext _endpointContext;
-
       /// <summary> The underlying transport server </summary>
       qi::transport::Server _transportServer;
-
-      /// <summary> The transport client used to talk with the master </summary>
-      qi::transport::Client _transportClient;
 
       MutexedNameLookup<ServiceInfo> _localServices;
 
       const ServiceInfo& xGetService(const std::string& methodHash);
-      int  xGetNewPortFromMaster(const std::string& machineID);
       void xRegisterServiceWithMaster(const std::string& methodHash);
-      void xRegisterMachineWithMaster();
-      void xRegisterSelfWithMaster();
-      void xUnregisterSelfWithMaster();
       bool xTopicExists(const std::string& topicName);
     };
   }

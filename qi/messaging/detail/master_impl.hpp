@@ -33,37 +33,20 @@ namespace qi {
                            const std::string& publicIPAddress,
                            const int&         platformID);
 
-      void registerServer(const std::string& name,
-                          const std::string& endpointID,
-                          const std::string& contextID,
-                          const std::string& machineID,
-                          const int& port);
+      void registerEndpoint(
+        const int& type, const std::string& name,
+        const std::string& endpointID, const std::string& contextID,
+        const std::string& machineID, const int& processID, const int& port);
 
-      void unregisterServer(const std::string& id);
-
-      void registerClient(const std::string& name,
-                          const std::string& clientID,
-                          const std::string& contextID,
-                          const std::string& machineID);
-
-      void unregisterClient(const std::string& id);
+      void unregisterEndpoint(const std::string& id);
 
       std::string locateService(const std::string& methodSignature, const std::string& clientID);
 
       const std::map<std::string, std::string>& listServices();
 
-      void registerPublisher(const std::string& name,
-        const std::string& endpointID,
-        const std::string& contextID,
-        const std::string& machineID,
-        const int& port);
-
-      void unregisterPublisher(const std::string& endpointID);
-
       void registerTopic(const std::string& topicName, const std::string& endpointID);
 
       bool topicExists(const std::string& topicName);
-
 
       bool isInitialized() const;
 
@@ -73,7 +56,7 @@ namespace qi {
       ServerImpl  _server;
 
       void xInit();
-      void xRegisterServer(const EndpointContext& endpoint);
+      void xRegisterEndpoint(const EndpointContext& endpoint);
       void xRegisterMachine(const MachineContext& machine);
 
       // Helper method
@@ -92,20 +75,11 @@ namespace qi {
       // map from methodSignature to nodeAddress
       MutexedNameLookup<std::string> _knownServices;
 
-      // map from id to EndpointContext
-      MutexedNameLookup<qi::detail::EndpointContext> _knownServers;
-
-      // map from id to EndpointContext
-      MutexedNameLookup<qi::detail::EndpointContext> _knownClients;
-
       // map from id to MachineContext
       MutexedNameLookup<qi::detail::MachineContext> _knownMachines;
 
       // map from id to EndpointContext
-      MutexedNameLookup<qi::detail::EndpointContext> _knownPublishers;
-
-      // map from id to EndpointContext
-      MutexedNameLookup<qi::detail::EndpointContext> _knownSubscribers;
+      MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
       // map from id to EndpointContext
       MutexedNameLookup<qi::detail::TopicInfo>       _knownTopics;

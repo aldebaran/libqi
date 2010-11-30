@@ -11,13 +11,12 @@
 #include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
-
 namespace qi {
   using serialization::SerializedData;
 
   namespace detail {
 
-    ClientImpl::ClientImpl() : _isInitialized(false) {}
+    ClientImpl::ClientImpl() {}
 
     ClientImpl::~ClientImpl() {
       if (_isInitialized) {
@@ -28,10 +27,10 @@ namespace qi {
     ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
-        _isInitialized(false),
         _clientName(clientName),
         _masterAddress(masterAddress)
     {
+      _endpointContext.type = CLIENT_ENDPOINT;
       _endpointContext.name = _clientName;
       _endpointContext.contextID = _qiContext.getID();
       xInit();
@@ -45,25 +44,16 @@ namespace qi {
           << _masterAddress << "\" All calls will fail." << std::endl;
         return;
       }
-      // create a messaging client to the master address
-      _isInitialized = xCreateServerClient(masterEndpointAndPort.first);
-      if (_isInitialized) {
-        // we assert that we think the master can locate services
-        // and that we can register and unregister ourselves
-        _serviceCache.insert("master.registerMachine::v:sssi", masterEndpointAndPort.first);
-        _serviceCache.insert("master.registerClient::v:ssss", masterEndpointAndPort.first);
-        _serviceCache.insert("master.unregisterClient::v:s",   masterEndpointAndPort.first);
-        _serviceCache.insert("master.locateService::s:ss",     masterEndpointAndPort.first);
-        xRegisterMachineWithMaster();
-        xRegisterSelfWithMaster();
-      } else {
-        qisError << "\"" << _clientName << "\" Failed to connect to master at address \""
-                 << masterEndpointAndPort.first << "\"" << std::endl;
-      }
-    }
 
-    bool ClientImpl::isInitialized() const {
-      return _isInitialized;
+      _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
+      if (! _isInitialized ) {
+        qisError << "\"" << _clientName << "\" could not connect to master "
+          "at address \"" << masterEndpointAndPort.first << "\""
+          << std::endl;
+        return;
+      }
+      xRegisterMachineWithMaster();
+      xRegisterSelfWithMaster();
     }
 
     void ClientImpl::call(const std::string &signature,
@@ -121,18 +111,9 @@ namespace qi {
           return nodeAddress;
         }
 
-        SerializedData response_msg;
-
-        // prepare a request to master.locateService
-        SerializedData request_msg;
-        request_msg.writeString("master.locateService::s:ss");
-        request_msg.writeString(methodSignature);
-        request_msg.writeString(_endpointContext.endpointID);
         std::string tmpAddress;
-
         try {
-          call("master.locateService::s:ss", request_msg, response_msg);
-          response_msg.readString(tmpAddress);
+          tmpAddress = xLocateServiceWithMaster(methodSignature);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Unable to contact master." << std::endl;
@@ -154,39 +135,6 @@ namespace qi {
 
         // never happens: we either return early or throw
         return nodeAddress;
-    }
-
-    void ClientImpl::xRegisterMachineWithMaster() {
-      static const std::string method = "master.registerMachine::v:sssi";
-      SerializedData request_msg;
-      SerializedData response_msg;
-      request_msg.writeString(method);
-      request_msg.writeString(_machineContext.machineID);
-      request_msg.writeString(_machineContext.hostName);
-      request_msg.writeString(_machineContext.publicIP);
-      request_msg.writeInt(   _machineContext.platformID);
-      call(method, request_msg, response_msg);
-    }
-
-    void ClientImpl::xRegisterSelfWithMaster() {
-      static const std::string method = "master.registerClient::v:ssss";
-      SerializedData request_msg;
-      SerializedData response_msg;
-      request_msg.writeString(method);
-      request_msg.writeString(_endpointContext.name);
-      request_msg.writeString(_endpointContext.endpointID);
-      request_msg.writeString(_endpointContext.contextID);
-      request_msg.writeString(_endpointContext.machineID);
-      call(method, request_msg, response_msg);
-    }
-
-    void ClientImpl::xUnregisterSelfWithMaster() {
-      static const std::string method = "master.unregisterClient::v:s";
-      SerializedData request_msg;
-      SerializedData response_msg;
-      request_msg.writeString(method);
-      request_msg.writeString(_endpointContext.endpointID);
-      call(method, request_msg, response_msg);
     }
   }
 }
