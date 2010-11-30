@@ -22,7 +22,6 @@ def generate_argpush_list(count):
 #include <memory>
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <qi/transport/client.hpp>
 
 namespace qi {
   namespace detail {
@@ -57,9 +56,12 @@ namespace qi {
     /// The address of the master that is used to find services
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    Client(const std::string& clientName, const std::string& masterAddress);
+    Client(const std::string& clientName, const std::string& masterAddress = "127.0.0.1:5555");
 
     virtual ~Client();
+    
+    bool isInitialized() const;
+
 #end raw
 
 #for $i in $count
@@ -76,7 +78,7 @@ namespace qi {
     void xCall(const std::string& signature,
       const qi::serialization::BinarySerializer& request,
             qi::serialization::BinarySerializer& result);
-    std::auto_ptr<detail::ClientImpl> _impl;
+    std::auto_ptr<qi::detail::ClientImpl> _impl;
   };
 }
 
