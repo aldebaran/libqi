@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SIGNATURE_DETAIL_TYPESIGNATURE_HPP__
-#define   __QI_SIGNATURE_DETAIL_TYPESIGNATURE_HPP__
+#ifndef   __QI_SIGNATURE_DETAIL_TYPE_SIGNATURE_HPP__
+#define   __QI_SIGNATURE_DETAIL_TYPE_SIGNATURE_HPP__
 
 # include <string>
 # include <vector>
@@ -91,4 +91,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_SIGNATURE_DETAIL_TYPESIGNATURE_HPP__
+#endif // __QI_SIGNATURE_DETAIL_TYPE_SIGNATURE_HPP__

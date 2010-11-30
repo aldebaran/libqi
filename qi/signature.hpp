@@ -10,5 +10,6 @@
 #define   __QI_SIGNATURE_HPP__
 
 # include <qi/signature/signature.hpp>
+# include <qi/signature/signature_to_string.hpp>
 
 #endif // __QI_SIGNATURE_HPP__

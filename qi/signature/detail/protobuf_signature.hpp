@@ -31,4 +31,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_SIGNATURE_DETAIL_TYPESIGNATURE_HPP__
+#endif // __QI_SIGNATURE_DETAIL_PROTOBUF_SIGNATURE_HPP__

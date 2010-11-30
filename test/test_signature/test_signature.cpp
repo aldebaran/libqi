@@ -192,3 +192,39 @@ TEST(TestSignature, BasicMemberSignature) {
   EXPECT_EQ("i:iiiii" , qi::signatureFromObject::value(&Foo::fun5));
   EXPECT_EQ("i:iiiiii", qi::signatureFromObject::value(&Foo::fun6));
 }
+
+TEST(TestSignature, SignatureToString) {
+  EXPECT_EQ("int (vector<int>, map<bool, string>)", qi::signatureToString("i:[i]{bs}"));
+  EXPECT_EQ("map<vector<map<map<int, int>, map<int, int>>>, vector<vector<map<map<int, int>, map<int, int>>>>>", qi::signatureToString("{[{{ii}{ii}}][[{{ii}{ii}}]]}"));
+
+  EXPECT_EQ("int int"                   , qi::signatureToString("ii"));
+  EXPECT_EQ("int (int)"                 , qi::signatureToString("i:i"));
+
+  EXPECT_EQ("Protobuf(ALCompat.ALValue)", qi::signatureToString("@ALCompat.ALValue@"));
+  EXPECT_EQ("bool"                      , qi::signatureToString("b"));
+  EXPECT_EQ("int"                       , qi::signatureToString("i"));
+  EXPECT_EQ("float"                     , qi::signatureToString("f"));
+  EXPECT_EQ("double"                    , qi::signatureToString("d"));
+  EXPECT_EQ("string"                    , qi::signatureToString("s"));
+  EXPECT_EQ("vector<int>"               , qi::signatureToString("[i]"));
+  EXPECT_EQ("map<int, int>"             , qi::signatureToString("{ii}"));
+  EXPECT_EQ("bool*"                     , qi::signatureToString("b*"));
+  EXPECT_EQ("int*"                      , qi::signatureToString("i*"));
+  EXPECT_EQ("float*"                    , qi::signatureToString("f*"));
+  EXPECT_EQ("double*"                   , qi::signatureToString("d*"));
+  EXPECT_EQ("string*"                   , qi::signatureToString("s*"));
+  EXPECT_EQ("vector<int>*"              , qi::signatureToString("[i]*"));
+  EXPECT_EQ("map<int, int>*"            , qi::signatureToString("{ii}*"));
+
+  EXPECT_EQ("int* (bool*)"              , qi::signatureToString("i*:b*"));
+
+  //test the second signature
+  std::string result;
+  qi::signatureToString("{[{{ii}{ii}}][[{{ii}{ii}}]]}", result);
+  EXPECT_EQ("map<vector<map<map<int, int>, map<int, int>>>, vector<vector<map<map<int, int>, map<int, int>>>>>", result);
+
+  result.clear();
+  qi::signatureToString("i", result);
+  qi::signatureToString("i", result);
+  EXPECT_EQ("intint", result);
+}
