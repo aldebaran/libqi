@@ -23,7 +23,7 @@ namespace qi {
 
       // ** Helper methods for talking to the master **
 
-      int ClientImplBase::xGetNewPortFromMaster(const std::string& machineID) {
+      int xGetNewPortFromMaster(const std::string& machineID) {
         if (!_isInitialized) {
           return 0;
         }
@@ -40,7 +40,7 @@ namespace qi {
         return port;
       }
 
-      void ClientImplBase::xRegisterMachineWithMaster() {
+      void xRegisterMachineWithMaster() {
         if (!_isInitialized) {
           return;
         }
@@ -55,7 +55,7 @@ namespace qi {
         _transportClient.send(msg.str(), ret);
       }
 
-      void ClientImplBase::xRegisterSelfWithMaster() {
+      void xRegisterSelfWithMaster() {
         if (!_isInitialized) {
           return;
         }
@@ -74,7 +74,7 @@ namespace qi {
         _transportClient.send(msg.str(), ret);
       }
 
-      void ClientImplBase::xUnregisterSelfWithMaster() {
+      void xUnregisterSelfWithMaster() {
         if (!_isInitialized) {
           return;
         }
@@ -86,7 +86,7 @@ namespace qi {
         _transportClient.send(msg.str(), ret);
       }
 
-      std::string ClientImplBase::xLocateServiceWithMaster(const std::string& methodSignature) {
+      std::string xLocateServiceWithMaster(const std::string& methodSignature) {
         if (!_isInitialized) {
           return "";
         }
@@ -109,5 +109,5 @@ namespace qi {
   }
 }
 
-#endif  // __QI_MESSAGING_DETAIL_CLIENT_IMPL_BASE_HPP__
+#endif // __QI_MESSAGING_DETAIL_CLIENT_IMPL_BASE_HPP__
 

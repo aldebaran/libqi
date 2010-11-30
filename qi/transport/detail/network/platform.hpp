@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_DETAIL_NETWORK_PLATFORM_HPP__
-#define   __QI_MESSAGING_DETAIL_NETWORK_PLATFORM_HPP__
+#ifndef   __QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP__
+#define   __QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP__
 
 namespace qi {
   namespace detail {
@@ -30,5 +30,5 @@ namespace qi {
     }
   }
 }
-#endif // __QI_MESSAGING_DETAIL_NETWORK_PLATFORM_HPP__
+#endif // __QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP__
 

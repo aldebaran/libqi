@@ -9,8 +9,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_CLIENT_HPP_IN__
-#define   __QI_MESSAGING_CLIENT_HPP_IN__
+#ifndef   __QI_MESSAGING_CLIENT_HPP__
+#define   __QI_MESSAGING_CLIENT_HPP__
 
 #include <string>
 #include <memory>
@@ -125,4 +125,4 @@ namespace qi {
 }
 
 #include <qi/messaging/client.hxx>
-#endif // __QI_MESSAGING_CLIENT_HPP_IN__
+#endif // __QI_MESSAGING_CLIENT_HPP__

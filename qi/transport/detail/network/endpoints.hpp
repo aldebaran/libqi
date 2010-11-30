@@ -5,8 +5,8 @@
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_DETAIL_NEGOTIATE_ENDPOINT_HPP__
-#define   __QI_MESSAGING_DETAIL_NEGOTIATE_ENDPOINT_HPP__
+#ifndef   __QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP__
+#define   __QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP__
 
 #include <vector>
 #include <qi/transport/detail/network/endpoint_context.hpp>
@@ -28,5 +28,5 @@ namespace qi {
                                           const MachineContext& serverMachineContext);
   }
 }
-#endif // __QI_MESSAGING_DETAIL_NEGOTIATE_ENDPOINT_HPP__
+#endif // __QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP__
 

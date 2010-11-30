@@ -43,5 +43,5 @@ namespace qi {
   }
 }
 
-#endif  // __QI_MESSAGING_DETAIL_IMPL_BASE_HPP__
+#endif // __QI_MESSAGING_DETAIL_IMPL_BASE_HPP__
 

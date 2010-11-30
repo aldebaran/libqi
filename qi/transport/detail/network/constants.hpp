@@ -14,5 +14,5 @@ namespace qi {
     static const int kDefaultMasterPort = 5555;
   }
 }
-#endif  // __QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP__
+#endif // __QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP__
 

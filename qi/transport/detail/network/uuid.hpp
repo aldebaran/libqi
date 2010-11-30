@@ -20,8 +20,8 @@
     TODO: use uuid from boost 1.44
 */
 
-#ifndef __QI_UUID_HPP_INCLUDED__
-#define __QI_UUID_HPP_INCLUDED__
+#ifndef   __QI_TRANSPORT_DETAIL_NETWORK_UUID_HPP__
+#define   __QI_TRANSPORT_DETAIL_NETWORK_UUID_HPP__
 
 #include <string>
 #ifdef _WIN32
@@ -78,4 +78,4 @@ namespace qi {
   }
 }
 
-#endif
+#endif // __QI_TRANSPORT_DETAIL_NETWORK_UUID_HPP__

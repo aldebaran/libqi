@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_MESSAGING_GENERIC_SUBSCRIBER_HPP__
-#define   __QI_MESSAGING_GENERIC_SUBSCRIBER_HPP__
+#ifndef   __QI_MESSAGING_SUBSCRIBER_HPP__
+#define   __QI_MESSAGING_SUBSCRIBER_HPP__
 
 #include <string>
 #include <qi/transport/detail/zmq/zmq_subscriber.hpp>
@@ -55,4 +55,4 @@ namespace qi {
     };
 }
 
-#endif // __QI_MESSAGING_GENERIC_SUBSCRIBER_HPP__
+#endif // __QI_MESSAGING_SUBSCRIBER_HPP__

@@ -8,8 +8,8 @@
 */
 
 
-#ifndef   __QI_FUNCTORS_DETAIL_FUNCTOR_HXX_IN__
-#define   __QI_FUNCTORS_DETAIL_FUNCTOR_HXX_IN__
+#ifndef   __QI_FUNCTORS_DETAIL_FUNCTOR_HXX__
+#define   __QI_FUNCTORS_DETAIL_FUNCTOR_HXX__
 
 # include <qi/functors/functor.hpp>
 
@@ -357,4 +357,4 @@ namespace detail {
 
 }
 }
-#endif // __QI_FUNCTORS_DETAIL_FUNCTOR_HXX_IN__
+#endif // __QI_FUNCTORS_DETAIL_FUNCTOR_HXX__
