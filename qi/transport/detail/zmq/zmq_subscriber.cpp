@@ -12,10 +12,9 @@
 namespace qi {
   namespace transport {
 
-        /// <summary> Constructor. </summary>
-    /// <param name="publishAddress"> The publishing address. </param>
-    ZMQSubscriber::ZMQSubscriber(const std::string &publishAddress)
-      : Subscriber(publishAddress),
+    /// <summary> Constructor. </summary>
+    ZMQSubscriber::ZMQSubscriber()
+      :
       _isClosing(false),
       _context(boost::shared_ptr<zmq::context_t>(new zmq::context_t(1))),
       _socket(*_context.get(), ZMQ_SUB),
@@ -23,14 +22,13 @@ namespace qi {
     {
       // Use no subscribe filter
       _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-      connect();
     }
 
 
     /// <summary> Constructor. </summary>
     /// <param name="publishAddress"> The publishing address. </param>
-    ZMQSubscriber::ZMQSubscriber(boost::shared_ptr<zmq::context_t> context, const std::string &publishAddress)
-      : Subscriber(publishAddress),
+    ZMQSubscriber::ZMQSubscriber(boost::shared_ptr<zmq::context_t> context)
+      :
       _isClosing(false),
       _context(context),
       _socket(*_context.get(), ZMQ_SUB),
@@ -38,7 +36,6 @@ namespace qi {
     {
       // Use no subscribe filter
       _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-      connect();
     }
 
     ZMQSubscriber::~ZMQSubscriber() {
@@ -64,13 +61,13 @@ namespace qi {
     }
 
     /// <summary> Connects to the publisher </summary>
-    void ZMQSubscriber::connect()
+    void ZMQSubscriber::connect(const std::string &publishAddress)
     {
       // FIXME:
       // this will not work if sharing the same context,
       // as another subscriber... need uuid
       _control.bind("inproc://control");
-      _socket.connect(_publishAddress.c_str());
+      _socket.connect(publishAddress.c_str());
       _socket.connect("inproc://control");
     }
 

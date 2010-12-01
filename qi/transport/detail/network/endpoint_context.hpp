@@ -17,7 +17,8 @@ namespace qi {
       SERVER_ENDPOINT     = 0,
       CLIENT_ENDPOINT     = 1,
       PUBLISHER_ENDPOINT  = 2,
-      SUBSCRIBER_ENDPOINT = 3
+      SUBSCRIBER_ENDPOINT = 3,
+      UNDEFINED_ENDPOINT  = 99,
     };
 
     struct EndpointContext {

@@ -10,6 +10,7 @@
 #include <qi/messaging/detail/client_impl.hpp>
 #include <qi/serialization/serializer.hpp>
 
+
 namespace qi {
   Client::Client() {}
 
@@ -19,6 +20,11 @@ namespace qi {
                          const std::string& masterAddress)
     : _impl(new detail::ClientImpl(clientName, masterAddress))
   {}
+
+
+  boost::shared_ptr<qi::transport::SubscribeHandlerUser> Client::xSubscribe(const std::string& topicName) {
+    return _impl->subscribe(topicName);
+  }
 
   void Client::callVoid(const std::string& methodName) {
     qi::serialization::BinarySerializer msg;

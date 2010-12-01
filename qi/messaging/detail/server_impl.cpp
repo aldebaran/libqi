@@ -34,6 +34,7 @@ namespace qi {
     ServerImpl::ServerImpl(
       const std::string serverName,
       const std::string masterAddress) :
+        ClientImplBase(masterAddress),
         _isMasterServer(false),
         _name(serverName)
     {
@@ -164,7 +165,7 @@ namespace qi {
       const std::string& topicName,
       const std::string& typeSignature)
     {
-      boost::shared_ptr<qi::detail::PublisherImpl> pubImpl(new qi::detail::PublisherImpl());
+      boost::shared_ptr<qi::detail::PublisherImpl> pubImpl(new qi::detail::PublisherImpl(_masterAddress));
       bool exists = xTopicExists(topicName);
       if (exists) {
         qisError << "Attempt to publish on existing topic " << topicName << std::endl;
@@ -172,6 +173,9 @@ namespace qi {
       }
       //std::string subscribeAddress = xGetTopicSubscribeAddress(_endpointContext.contextID);
       int publisherPort = xGetNewPortFromMaster(_machineContext.machineID);
+      std::vector<std::string> v;
+      v.push_back("tcp://127.0.0.1:6000");
+      pubImpl->bind(v);
       //xRegisterPublisherWithMaster();
       //xRegisterTopicWithMaster();
       // pubImpl->bind(qi::detail::getEndpoints(_endpointContext, _machineContext));

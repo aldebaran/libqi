@@ -25,16 +25,6 @@ namespace qi {
       Publisher(
         boost::shared_ptr<qi::detail::PublisherImpl> impl) : _impl(impl) {}
 
-      //bool connect(const std::string &address) {
-      //  try {
-      //    _publisher = new qi::transport::ZMQPublisher(address);
-      //    isInitialized = true;
-      //  } catch(const std::exception& e) {
-      //    qisDebug << "GenericPublisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
-      //  }
-      //   return isInitialized;
-      //}
-
       void publish(const T& val)
       {
         qi::serialization::BinarySerializer ser;
@@ -42,7 +32,6 @@ namespace qi {
         _impl->publish(ser.str());
       }
 
-      bool isInitialized;
     protected:
       boost::shared_ptr<qi::detail::PublisherImpl> _impl;
     };

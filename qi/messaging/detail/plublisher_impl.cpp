@@ -7,20 +7,54 @@
 
 #include <qi/messaging/detail/publisher_impl.hpp>
 #include <qi/transport/detail/zmq/zmq_publisher.hpp>
+#include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
   namespace detail {
 
-    PublisherImpl::PublisherImpl() : _isInitialized(false) {}
+    PublisherImpl::PublisherImpl(const std::string& masterAddress) :
+      _masterAddress(masterAddress),
+      _publisher(new qi::transport::ZMQPublisher())
+    {
+      _endpointContext.type = PUBLISHER_ENDPOINT;
+      _endpointContext.contextID = _qiContext.getID();
+      xInit();
+    }
 
-    bool PublisherImpl::bind(const std::string& address) {
+    void PublisherImpl::xInit() {
+      std::pair<std::string, int> masterEndpointAndPort;
+      if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
+        _isInitialized = false;
+        qisError << "Publisher initialized with invalid master address: \""
+          << _masterAddress << "\" All calls will fail." << std::endl;
+        return;
+      }
+
+      _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
+      if (! _isInitialized ) {
+        qisError << "Publisher could not connect to master "
+          "at address \"" << masterEndpointAndPort.first << "\""
+          << std::endl;
+        return;
+      }
+      //xRegisterMachineWithMaster();
+      //xRegisterSelfWithMaster();
+    }
+
+    bool PublisherImpl::bind(const std::vector<std::string>& publishAddresses) {
       try {
-        _publisher = new qi::transport::ZMQPublisher();
-        _publisher->bind(address);
+        _publisher->bind(publishAddresses);
+        xRegisterSelfWithMaster();
         _isInitialized = true;
       } catch(const std::exception& e) {
-        qisDebug << "Publisher failed to create publisher for address \"" << address << "\" Reason: " << e.what();
+        qisDebug << "Publisher failed to create publisher for addresses" << std::endl;
+        std::vector<std::string>::const_iterator it = publishAddresses.begin();
+        std::vector<std::string>::const_iterator end = publishAddresses.end();
+        for(; it != end; ++it) {
+          qisDebug << *it << std::endl;
+        }
+        qisDebug << "Reason: " << e.what() << std::endl;
       }
       return _isInitialized;
     }
@@ -35,8 +69,8 @@ namespace qi {
     }
 
     PublisherImpl::~PublisherImpl() {
-      delete _publisher;
-      _publisher = NULL;
+      xUnregisterSelfWithMaster();
     }
+
   }
 }

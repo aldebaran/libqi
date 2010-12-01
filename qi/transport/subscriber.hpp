@@ -9,31 +9,32 @@
 #define   __QI_TRANSPORT_SUBSCRIBER_HPP__
 
 #include <string>
-#include <qi/transport/subscribe_handler.hpp>
+#include <qi/transport/subscribe_handler_user.hpp>
 
 namespace qi {
   namespace transport {
 
-    class Subscriber {
+    class Subscriber : SubscribeHandlerUser {
     public:
-      explicit Subscriber(const std::string &publishAddress)
-        : _publishAddress(publishAddress),
-          _subscribeHandler(0) {}
+      Subscriber() : _subscribeHandler(NULL) {}
+      explicit Subscriber(const Subscriber& rhs) : _subscribeHandler(rhs.getSubscribeHandler()) {}
+
       virtual ~Subscriber() {}
 
       virtual void setSubscribeHandler(SubscribeHandler* callback) {
         _subscribeHandler = callback;
       }
 
-      virtual SubscribeHandler* getSubscribeHandler() {
+      virtual SubscribeHandler* getSubscribeHandler() const {
         return _subscribeHandler;
       }
+
+      virtual void connect(const std::string &publishAddress) = 0;
 
       virtual void subscribe() = 0;
 
     protected:
-      std::string        _publishAddress;
-      SubscribeHandler*  _subscribeHandler;
+      SubscribeHandler* _subscribeHandler;
     };
   }
 }

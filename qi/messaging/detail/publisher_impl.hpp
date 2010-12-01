@@ -9,6 +9,9 @@
 #define   __QI_MESSAGING_DETAIL_PUBLISHER_IMPL_HPP__
 
 #include <string>
+#include <vector>
+#include <boost/scoped_ptr.hpp>
+#include <qi/messaging/detail/client_impl_base.hpp>
 
 namespace qi {
   namespace transport {
@@ -17,20 +20,19 @@ namespace qi {
 
   namespace detail {
 
-    class PublisherImpl {
+    class PublisherImpl : ClientImplBase{
     public:
-      PublisherImpl();
+      PublisherImpl(const std::string& masterAddress);
       virtual ~PublisherImpl();
 
-      bool bind(const std::string &address);
+      bool bind(const std::vector<std::string> &publishAddresses);
 
       void publish(const std::string& data);
 
-      bool isInitialized() const;
-
     protected:
-      bool _isInitialized;
-      qi::transport::Publisher* _publisher;
+      void xInit();
+      const std::string& _masterAddress;
+      boost::scoped_ptr<qi::transport::Publisher> _publisher;
     };
 
   }

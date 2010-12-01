@@ -9,6 +9,7 @@
 #include <string>
 #include <qi/exceptions/exceptions.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
+#include <qi/messaging/detail/subscriber_impl.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
@@ -27,8 +28,8 @@ namespace qi {
     ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
-        _clientName(clientName),
-        _masterAddress(masterAddress)
+        ClientImplBase(masterAddress),
+        _clientName(clientName)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
       _endpointContext.name = _clientName;
@@ -54,6 +55,12 @@ namespace qi {
       }
       xRegisterMachineWithMaster();
       xRegisterSelfWithMaster();
+    }
+
+    boost::shared_ptr<qi::transport::SubscribeHandlerUser> ClientImpl::subscribe(const std::string& topicName) {
+      boost::shared_ptr<qi::detail::SubscriberImpl> subscriberImpl(new qi::detail::SubscriberImpl(_masterAddress));
+      subscriberImpl->connect("tcp://127.0.0.1:6000");
+      return subscriberImpl;
     }
 
     void ClientImpl::call(const std::string &signature,

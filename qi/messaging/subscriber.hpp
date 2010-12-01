@@ -9,49 +9,37 @@
 #define   __QI_MESSAGING_SUBSCRIBER_HPP__
 
 #include <string>
-#include <qi/transport/detail/zmq/zmq_subscriber.hpp>
+#include <boost/shared_ptr.hpp>
+#include <qi/transport/subscribe_handler.hpp>
+#include <qi/transport/subscribe_handler_user.hpp>
 #include <qi/serialization/serializer.hpp>
+#include <boost/function.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
 
-    template<typename T>
-    class GenericSubscriber : qi::transport::SubscribeHandler {
+    template<typename SUBSCRIBE_TYPE>
+    class Subscriber : public qi::transport::SubscribeHandler {
     public:
-      typedef void(*SubscribeHandlerPtr)(const T&);
-
-      GenericSubscriber() : isInitialized(false) {}
-
-      bool connect(const std::string& address) {
-        try {
-          _subscriber = new qi::transport::ZMQSubscriber(address);
-          _subscriber->setSubscribeHandler(this);
-          isInitialized = true;
-        } catch(const std::exception& e) {
-          qisDebug << "GenericSubscriber failed to create subscriber for address \"" << address << "\" Reason: " << e.what() << std::endl;
-        }
-        return isInitialized;
+      Subscriber(boost::shared_ptr<qi::transport::SubscribeHandlerUser> impl) : _impl(impl) {}
+      Subscriber(const Subscriber& rhs) : _impl(rhs._impl), _callback(rhs._callback) {
+        std::cout << "bla";
       }
-
-      void subscribe(SubscribeHandlerPtr handler)
-      {
-        _handler = handler;
-        _subscriber->subscribe();
-      }
-
-      // called by transport when new data arrives
+      virtual ~Subscriber() {}
       void subscribeHandler(const std::string& data) {
-        T ret;
+        SUBSCRIBE_TYPE ret;
         qi::serialization::BinarySerializer unser(data);
-        qi::serialization::serialize<T>::read(unser, ret);
-        // call the registered typed-handler
-        _handler(ret);
+        qi::serialization::serialize<SUBSCRIBE_TYPE>::read(unser, ret);
+        _callback(ret);
       }
 
-      bool isInitialized;
+      void setCallback(boost::function<void (const SUBSCRIBE_TYPE&)> f) {
+        _callback = f;
+      }
+
     protected:
-      qi::transport::Subscriber* _subscriber;
-      SubscribeHandlerPtr _handler;
+      boost::function<void (const SUBSCRIBE_TYPE&)> _callback;
+      boost::shared_ptr<qi::transport::SubscribeHandlerUser> _impl;
     };
 }
 

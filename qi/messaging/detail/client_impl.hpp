@@ -14,6 +14,7 @@
 #include <qi/messaging/detail/namelookup.hpp>
 #include <qi/messaging/detail/client_impl_base.hpp>
 #include <qi/serialization/serializeddata.hpp>
+#include <qi/transport/subscribe_handler_user.hpp>
 #include <qi/transport/client.hpp>
 
 namespace qi {
@@ -29,9 +30,10 @@ namespace qi {
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef,
         qi::serialization::SerializedData &result);
 
+      boost::shared_ptr<qi::transport::SubscribeHandlerUser> subscribe(const std::string& topicName);
+
     private:
       std::string                    _clientName;
-      std::string                    _masterAddress;
       MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
@@ -41,10 +43,6 @@ namespace qi {
       boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
-
-      //void xRegisterMachineWithMaster();
-      //void xRegisterSelfWithMaster();
-      //void xUnregisterSelfWithMaster();
     };
 
   }

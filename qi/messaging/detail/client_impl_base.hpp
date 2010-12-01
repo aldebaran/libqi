@@ -17,6 +17,7 @@ namespace qi {
     class ClientImplBase: public ImplBase {
     public:
       ClientImplBase() {}
+      ClientImplBase(const std::string& masterAddress) : _masterAddress(masterAddress) {}
       virtual ~ClientImplBase() {}
 
     protected:
@@ -102,6 +103,8 @@ namespace qi {
         retSer.readString(endpoint);
         return endpoint;
       }
+
+      std::string _masterAddress;
 
       /// <summary> The transport client used to talk with the master </summary>
       qi::transport::Client _transportClient;

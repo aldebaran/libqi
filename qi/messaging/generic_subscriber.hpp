@@ -25,7 +25,8 @@ namespace qi {
 
       bool connect(const std::string& address) {
         try {
-          _subscriber = new qi::transport::ZMQSubscriber(address);
+          _subscriber = new qi::transport::ZMQSubscriber();
+          _subscriber->connect(address);
           _subscriber->setSubscribeHandler(this);
           isInitialized = true;
         } catch(const std::exception& e) {

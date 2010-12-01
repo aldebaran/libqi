@@ -52,7 +52,8 @@ TEST(TransportZMQPublisher , MillionPerSecond)
   //qi::transport::ZMQPublisher publisher1("tcp://127.0.0.1:5556");
   qi::transport::ZMQPublisher publisher;
   publisher.bind("tcp://127.0.0.1:5555");
-  qi::transport::ZMQSubscriber subscriber("tcp://127.0.0.1:5555");
+  qi::transport::ZMQSubscriber subscriber;
+  subscriber.connect("tcp://127.0.0.1:5555");
 
   subscriber.setSubscribeHandler(&handler);
   subscriber.subscribe();
@@ -80,7 +81,8 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
   //boost::shared_ptr<zmq::context_t> subContext(new zmq::context_t(1));
   for (unsigned int i = 0; i < numSubscribers; ++i) {
     SubscribePerfHandler* hand = new SubscribePerfHandler(numMessages);
-    qi::transport::ZMQSubscriber* sub = new qi::transport::ZMQSubscriber(/*subContext, */"tcp://127.0.0.1:5555");
+    qi::transport::ZMQSubscriber* sub = new qi::transport::ZMQSubscriber();
+    sub->connect("tcp://127.0.0.1:5555");
     sub->setSubscribeHandler(hand);
     sub->subscribe();
     handlers.push_back(hand);
