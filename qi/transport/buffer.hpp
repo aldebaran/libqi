@@ -30,6 +30,7 @@
 
 namespace qi {
   namespace transport {
+    //use a string for the moment, but this will be a zerocopybuffer.
     typedef std::string Buffer;
   }
 }
