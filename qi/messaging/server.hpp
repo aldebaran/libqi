@@ -16,7 +16,6 @@
 namespace qi {
   namespace detail {
     class ServerImpl;
-    class PublisherImpl;
   }
 
   /// <summary> Server. </summary>
