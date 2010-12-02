@@ -10,7 +10,6 @@
 
 #include <string>
 #include <memory>
-#include <qi/messaging/publisher.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
 
