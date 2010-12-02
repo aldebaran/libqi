@@ -28,10 +28,10 @@
 # endif
 #
 # ===>
-# ifndef    __EXAMPLE_H__
-# define    __EXAMPLE_H__
+# ifndef _EXAMPLE_H_
+# define _EXAMPLE_H_
 # ...
-# endif  // __EXAMPLE_H__
+# endif  // _EXAMPLE_H_
 #
 
 import sys
@@ -83,11 +83,11 @@ def write_header_guard(fname, guard, pos):
         for i in range(len(lines)):
             line = lines[i]
             if i == pos[0]:
-                f.write("#ifndef   %s\n" % (guard))
+                f.write("#ifndef %s\n" % (guard))
             elif i == pos[1]:
-                f.write("#define   %s\n" % (guard))
+                f.write("#define %s\n" % (guard))
             elif i == pos[2]:
-                f.write("#endif // %s\n" % (guard))
+                f.write("#endif  // %s\n" % (guard))
             else:
                 f.write(line)
     pass
@@ -99,7 +99,7 @@ def generate_name(fname):
     ret = ret.replace("/", "_")
     ret = ret.replace(".", "_")
     ret = ret.replace("-", "_")
-    return "__%s__" % (ret)
+    return "_%s_" % (ret)
     return ret
 
 def ls_r(directory, pattern):
