@@ -27,8 +27,8 @@ namespace qi {
 #if $i != 0
   template <${generate_typename_list($i)}>
   void Client::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::BinarySerializer calldef;
-    qi::serialization::BinarySerializer resultdef;
+    qi::serialization::Message calldef;
+    qi::serialization::Message resultdef;
 
     void (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);
@@ -43,8 +43,8 @@ namespace qi {
 
   template <typename R${generate_typename_list($i, begin=True)}>
   R Client::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::BinarySerializer calldef;
-    qi::serialization::BinarySerializer resultdef;
+    qi::serialization::Message calldef;
+    qi::serialization::Message resultdef;
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string hash = makeSignature(methodName, f);

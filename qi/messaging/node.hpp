@@ -10,22 +10,20 @@
 
 #include <qi/messaging/server.hpp>
 #include <qi/messaging/client.hpp>
+#include <qi/messaging/publisher.hpp>
+#include <qi/messaging/subscriber.hpp>
 
 namespace qi {
-  /// <summary> Node: A combination of Server and Client. </summary>
-  class Node : public Server, public Client {
+  /// <summary> Node: A combination of Server, Client, Publisher and Subscriber </summary>
+  class Node : public Server, public Client, public Publisher, public Subscriber {
   public:
-
-    /// <summary> Default constructor. </summary>
-    Node();
-
     /// <summary> Finaliser. </summary>
     virtual ~Node();
 
-    /// <summary> Full Constructor. </summary>
-    /// <param name="nodeName"> Name of the node. </param>
+    /// <summary> Creates a Node </summary>
+    /// <param name="nodeName"> Name of the node. Default: "Node" </param>
     /// <param name="masterAddress"> The master address. </param>
-    Node(const std::string& nodeName,
+    Node(const std::string& nodeName = "node",
          const std::string& masterAddress = "127.0.0.1:5555");
   };
 }

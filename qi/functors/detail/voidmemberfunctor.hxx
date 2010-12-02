@@ -32,7 +32,7 @@ namespace detail {
       (fObject->*fFunction)();
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
       (fObject->*fFunction)();
@@ -59,7 +59,7 @@ namespace detail {
       (fObject->*fFunction)(p0);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       P0 p0;
 
@@ -88,7 +88,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       P0 p0;
       P1 p1;
@@ -119,7 +119,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       P0 p0;
       P1 p1;
@@ -152,7 +152,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       P0 p0;
       P1 p1;
@@ -187,7 +187,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       P0 p0;
       P1 p1;
@@ -224,7 +224,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       P0 p0;
       P1 p1;
@@ -263,7 +263,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
       P0 p0;
       P1 p1;
@@ -304,7 +304,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
       P0 p0;
       P1 p1;
@@ -347,7 +347,7 @@ namespace detail {
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     }
 
-    void call(qi::serialization::SerializedData &params, qi::serialization::SerializedData& result) const{
+    void call(qi::serialization::Message &params, qi::serialization::Message& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
       P0 p0;
       P1 p1;

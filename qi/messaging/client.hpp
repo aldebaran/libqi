@@ -117,8 +117,8 @@ namespace qi {
 
   private:
     void xCall(const std::string& signature,
-      const qi::serialization::BinarySerializer& request,
-            qi::serialization::BinarySerializer& result);
+      const qi::serialization::Message& request,
+            qi::serialization::Message& result);
     std::auto_ptr<qi::detail::ClientImpl> _impl;
   };
 }

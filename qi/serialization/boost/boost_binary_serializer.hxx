@@ -28,7 +28,7 @@ namespace qi {
   namespace serialization {
 
     template<class T>
-    std::string BoostBinarySerializer::serialize(const T& item)
+    std::string BoostMessage::serialize(const T& item)
     {
       std::stringstream stream;
       boost::archive::binary_oarchive oa(stream, boost::archive::no_header);
@@ -37,7 +37,7 @@ namespace qi {
     }
 
     template<class T>
-    T BoostBinarySerializer::deserialize(const std::string & buffer)
+    T BoostMessage::deserialize(const std::string & buffer)
     {
       T ret;
       deserialize<T>((char*)buffer.c_str(), buffer.size(), ret);
@@ -45,7 +45,7 @@ namespace qi {
     }
 
     template<class T>
-    T BoostBinarySerializer::deserialize(char* chars, const int size)
+    T BoostMessage::deserialize(char* chars, const int size)
     {
       T ret;
       deserialize<T>(chars, size, ret);
@@ -53,13 +53,13 @@ namespace qi {
     }
 
     template<class T>
-    void BoostBinarySerializer::deserialize(const std::string& buffer, T& ret)
+    void BoostMessage::deserialize(const std::string& buffer, T& ret)
     {
       deserialize<T>((char*)buffer.c_str(), buffer.size(), ret);
     }
 
     template<class T>
-    void BoostBinarySerializer::deserialize(char* chars, const int size, T& ret)
+    void BoostMessage::deserialize(char* chars, const int size, T& ret)
     {
       boost::interprocess::bufferstream buff(chars, size);
       boost::archive::binary_iarchive ia(buff, boost::archive::no_header);

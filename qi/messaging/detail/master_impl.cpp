@@ -6,11 +6,8 @@
 */
 
 #include <qi/messaging/detail/master_impl.hpp>
-#include <qi/functors/makefunctor.hpp>
-#include <qi/log.hpp>
-#include <qi/functors/makefunctor.hpp>
 #include <qi/transport/detail/network/endpoints.hpp>
-#include <qi/signature.hpp>
+#include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
   qisDebug << "===" << msg << " ===" << std::endl;                 \

@@ -40,8 +40,8 @@ TEST(MessagingPublisher , publisher)
   Subscriber s2("subscriber");
   Publisher p("publisher");
 
-  p.advertise<std::string>("hello");
-  p.advertise<std::string>("goodbye");
+  p.advertiseTopic<std::string>("hello");
+  p.advertiseTopic<std::string>("goodbye");
   s.subscribe("hello", &handler1);
   s.subscribe("goodbye", &handler2);
   s2.subscribe("goodbye", &handler3);

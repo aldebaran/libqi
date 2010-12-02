@@ -20,15 +20,16 @@ namespace qi {
 
   class Publisher {
   public:
+    Publisher();
     Publisher(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
     virtual ~Publisher();
 
     template<typename T>
-    void advertise(const std::string& topicName)
+    void advertiseTopic(const std::string& topicName)
     {
       void (*f)(const T &p0)  = 0;
       std::string signature = makeSignature(topicName, f);
-      xAdvertise(signature);
+      xAdvertiseTopic(signature);
     }
 
     template<typename T>
@@ -36,14 +37,14 @@ namespace qi {
     {
       //typedef void(C::*FunctionType) (const T &p0);
       void (*f)(const T &p0)  = 0;
-      qi::serialization::BinarySerializer ser;
+      qi::serialization::Message ser;
       qi::serialization::serialize<std::string>::write(ser, makeSignature(topicName, f));
       qi::serialization::serialize<T>::write(ser, val);
       xPublish(ser.str());
     }
 
   protected:
-    void xAdvertise(const std::string& signature);
+    void xAdvertiseTopic(const std::string& signature);
     void xPublish(const std::string& message);
     boost::shared_ptr<qi::detail::PublisherImpl> _impl;
   };

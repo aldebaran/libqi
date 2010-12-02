@@ -9,6 +9,7 @@
 #include <qi/messaging/detail/publisher_impl.hpp>
 
 namespace qi {
+  Publisher::Publisher() {}
 
   Publisher::Publisher(
     const std::string& name,
@@ -17,8 +18,8 @@ namespace qi {
 
   Publisher::~Publisher() {}
 
-  void Publisher::xAdvertise(const std::string& signature) {
-    _impl->advertise(signature);
+  void Publisher::xAdvertiseTopic(const std::string& signature) {
+    _impl->advertiseTopic(signature);
   }
 
   void Publisher::xPublish(const std::string& message) {

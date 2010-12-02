@@ -15,10 +15,10 @@ namespace qi {
 
   namespace serialization {
 
-    class SerializedData {
+    class Message {
     public:
-      SerializedData() {}
-      SerializedData(const std::string &data) : fData(data) {}
+      Message() {}
+      Message(const std::string &data) : fData(data) {}
 
       void readBool(bool& s);
       void writeBool(const bool& t);
@@ -51,24 +51,23 @@ namespace qi {
       std::string fData;
     };
 
-    //Enable is need for protobuf (for conditionnal template specialisation)
+    //Enable is need for protobuf (for conditional template specialization)
     template <typename T, class Enable = void>
     struct serialize {
-      static void read(SerializedData &sd, T &t){
+      static void read(Message &sd, T &t){
         std::cout << "BAM: read" << std::endl;
         //#error "This type is not serializable"
       }
 
-      static void write(SerializedData &sd, const T &t) {
+      static void write(Message &sd, const T &t) {
         std::cout << "BAM: write" << std::endl;
         //#error "This type is not serializable"
       }
     };
 
-    typedef SerializedData BinarySerializer;
   }
 }
 
-#include <qi/serialization/serializeddata.hxx>
+#include <qi/serialization/message.hxx>
 
 #endif // __QI_SERIALIZATION_SERIALIZEDDATA_HPP__

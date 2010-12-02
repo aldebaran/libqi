@@ -26,8 +26,8 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::serialization::SerializedData args;
-    qi::serialization::SerializedData ret;
+    qi::serialization::Message args;
+    qi::serialization::Message ret;
 
     #for $j in range($i)
     qi::serialization::serialize<P$j>::write(args, p$j);
@@ -42,8 +42,8 @@ namespace qi
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::serialization::SerializedData args;
-    qi::serialization::SerializedData ret;
+    qi::serialization::Message args;
+    qi::serialization::Message ret;
 
     #for $j in range($i)
     qi::serialization::serialize<P$j>::write(args, p$j);

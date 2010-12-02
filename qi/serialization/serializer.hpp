@@ -14,10 +14,10 @@
 //namespace qi {
 //  namespace serialization {
 
-//    typedef BoostBinarySerializer Serializer;
+//    typedef BoostMessage Serializer;
 //  }
 //}
 
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/message.hpp>
 
 #endif // __QI_SERIALIZATION_SERIALIZER_HPP__

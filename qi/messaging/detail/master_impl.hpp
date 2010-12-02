@@ -8,14 +8,11 @@
 #ifndef   __QI_MESSAGING_DETAIL_MASTER_IMPL_HPP__
 #define   __QI_MESSAGING_DETAIL_MASTER_IMPL_HPP__
 
-#include <string>
 #include <qi/messaging/detail/server_impl.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/address_manager.hpp>
-#include <qi/messaging/detail/topic_info.hpp>
-#include <qi/messaging/context.hpp>
-#include <qi/transport/detail/network/endpoint_context.hpp>
-#include <qi/transport/detail/network/machine_context.hpp>
+#include <qi/functors/makefunctor.hpp>
+#include <qi/signature.hpp>
 
 namespace qi {
   namespace detail {
@@ -74,16 +71,16 @@ namespace qi {
         registerService(signature, endpointID);
       }
 
-      // map from methodSignature to nodeAddress
+      /// map from methodSignature to endpointID
       MutexedNameLookup<std::string> _knownServices;
 
-      // map from id to MachineContext
+      /// map from machine to MachineContext
       MutexedNameLookup<qi::detail::MachineContext> _knownMachines;
 
-      // map from id to EndpointContext
+      /// map from endpointID to EndpointContext
       MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
-      // map from id to EndpointContext
+      /// map from topicSignature to endpointID
       MutexedNameLookup<std::string>                 _knownTopics;
 
       AddressManager _addressManager;

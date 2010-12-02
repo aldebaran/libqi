@@ -39,7 +39,7 @@ namespace qi {
           qisError << "Attempt to use an uninitialized publisher." << std::endl;
           return;
         }
-        qi::serialization::BinarySerializer ser;
+        qi::serialization::Message ser;
         qi::serialization::serialize<T>::write(ser, val);
         _publisher->publish(ser.str());
       }

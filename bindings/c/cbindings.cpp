@@ -40,7 +40,7 @@ public:
 
 
 struct message_private_t {
-  qi::serialization::BinarySerializer msg;
+  qi::serialization::Message msg;
 };
 
 

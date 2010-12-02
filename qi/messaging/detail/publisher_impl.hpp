@@ -25,13 +25,12 @@ namespace qi {
       PublisherImpl(const std::string& name, const std::string& masterAddress);
       virtual ~PublisherImpl();
 
-      bool bind(const std::vector<std::string> &publishAddresses);
-
-      void advertise(const std::string& signature);
+      void advertiseTopic(const std::string& signature);
       void publish(const std::string& data);
 
     protected:
       void xInitPublisher();
+      bool xBind(const std::vector<std::string> &publishAddresses);
 
       bool _publisherInitialized;
       boost::scoped_ptr<qi::transport::Publisher> _publisher;

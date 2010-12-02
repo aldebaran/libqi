@@ -6,13 +6,12 @@
 */
 
 #include <qi/messaging/detail/client_impl.hpp>
-#include <string>
 #include <qi/exceptions/exceptions.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
-  using serialization::SerializedData;
+  using serialization::Message;
 
   namespace detail {
 
@@ -34,8 +33,8 @@ namespace qi {
     }
 
     void ClientImpl::call(const std::string &signature,
-      const qi::serialization::SerializedData& callDef,
-            qi::serialization::SerializedData &result) {
+      const qi::serialization::Message& callDef,
+            qi::serialization::Message &result) {
         if (!_isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
@@ -52,22 +51,22 @@ namespace qi {
 
     boost::shared_ptr<qi::transport::Client> ClientImpl::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
-      NameLookup<boost::shared_ptr<qi::transport::Client> >::iterator it;
-      it = _serverClients.find(serverAddress);
-      if (it == _serverClients.end()) {
+
+      boost::shared_ptr<qi::transport::Client> c = _serverClients.get(serverAddress);
+      if (c == NULL) {
         // create messaging client if needed ...
         bool ok = xCreateServerClient(serverAddress);
         if (ok) {
-          it = _serverClients.find(serverAddress);
+          c = _serverClients.get(serverAddress);
         }
-        if (!ok || it == _serverClients.end()) {
+        if (!ok || c == NULL) {
           qisError << "Could not create client for server \"" << serverAddress
                    << "\" Probable connection error. " << std::endl;
           throw( qi::transport::ConnectionException(
             "Could not create client for server. Probable connection error."));
         }
       }
-      return it->second;
+      return c;
     }
 
     bool ClientImpl::xCreateServerClient(const std::string& serverAddress) {
@@ -75,7 +74,7 @@ namespace qi {
       boost::shared_ptr<qi::transport::Client> client(new qi::transport::Client());
       bool ok = client->connect(serverAddress);
       if (ok) {
-        _serverClients.insert(make_pair(serverAddress, client));
+        _serverClients.insert(serverAddress, client);
         qisDebug << "Client \"" << _name
                  << "\" connected to " << serverAddress << std::endl;
       }

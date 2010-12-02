@@ -8,7 +8,7 @@
 #include <qi/messaging/detail/subscriber_impl.hpp>
 #include <qi/transport/detail/zmq/zmq_subscriber.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
-#include <qi/serialization/serializeddata.hpp>
+#include <qi/serialization/message.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
@@ -52,7 +52,7 @@ namespace qi {
 
     void SubscriberImpl::subscribeHandler(qi::transport::Buffer &requestMessage) {
       qisDebug << "SubscriberImpl::subscribeHandler called " << std::endl;
-      qi::serialization::BinarySerializer ser(requestMessage);
+      qi::serialization::Message ser(requestMessage);
       std::string targetTopic;
       ser.readString(targetTopic);
       const ServiceInfo& si = _subscriberCallBacks.get(targetTopic);
@@ -60,7 +60,7 @@ namespace qi {
         qisDebug << "SubscriberImpl::subscribeHandler: topic not found \"" << targetTopic << "\"" << std::endl;
       } else {
         qisDebug << "SubscriberImpl::subscribeHandler: found topic \"" << si.methodName << "\"" << std::endl;
-        qi::serialization::SerializedData sd;
+        qi::serialization::Message sd;
         si.functor->call(ser, sd);
       }
     }

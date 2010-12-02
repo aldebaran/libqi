@@ -9,8 +9,8 @@
 #define   __QI_MESSAGING_DETAIL_CLIENT_IMPL_BASE_HPP__
 
 #include <qi/messaging/detail/impl_base.hpp>
-#include <qi/transport/client.hpp>
 #include <qi/serialization.hpp>
+#include <qi/transport/client.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
 
 namespace qi {
@@ -57,12 +57,12 @@ namespace qi {
         }
         static const std::string method("master.getNewPort::i:s");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
 
         msg.writeString(method);
         msg.writeString(machineID);
         _transportClient.send(msg.str(), ret);
-        qi::serialization::BinarySerializer retSer(ret);
+        qi::serialization::Message retSer(ret);
         int port;
         retSer.readInt(port);
         return port;
@@ -74,7 +74,7 @@ namespace qi {
         }
         static const std::string method = "master.registerMachine::v:sssi";
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
         msg.writeString(method);
         msg.writeString(m.machineID);
         msg.writeString(m.hostName);
@@ -89,7 +89,7 @@ namespace qi {
         }
         static const std::string method("master.registerEndpoint::v:issssii");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
 
         msg.writeString(method);
         msg.writeInt((int)e.type);
@@ -108,7 +108,7 @@ namespace qi {
         }
         static const std::string method("master.unregisterEndpoint::v:s");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
         msg.writeString(method);
         msg.writeString(e.endpointID);
         _transportClient.send(msg.str(), ret);
@@ -119,13 +119,13 @@ namespace qi {
           return "";
         }
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
         static const std::string method("master.locateService::s:ss");
         msg.writeString(method);
         msg.writeString(methodSignature);
         msg.writeString(e.endpointID);
         _transportClient.send(msg.str(), ret);
-        qi::serialization::BinarySerializer retSer(ret);
+        qi::serialization::Message retSer(ret);
         std::string endpoint;
         retSer.readString(endpoint);
         return endpoint;
@@ -139,7 +139,7 @@ namespace qi {
         }
         static const std::string method("master.registerService::v:ss");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
 
         msg.writeString(method);
         msg.writeString(methodSignature);
@@ -152,13 +152,13 @@ namespace qi {
           return "";
         }
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
         static const std::string method("master.locateTopic::s:ss");
         msg.writeString(method);
         msg.writeString(methodSignature);
         msg.writeString(e.endpointID);
         _transportClient.send(msg.str(), ret);
-        qi::serialization::BinarySerializer retSer(ret);
+        qi::serialization::Message retSer(ret);
         std::string endpoint;
         retSer.readString(endpoint);
         return endpoint;
@@ -171,12 +171,12 @@ namespace qi {
         }
         static const std::string method("master.topicExists::b:s");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
 
         msg.writeString(method);
         msg.writeString(signature);
         _transportClient.send(msg.str(), ret);
-        qi::serialization::BinarySerializer retSer(ret);
+        qi::serialization::Message retSer(ret);
         bool exists;
         retSer.readBool(exists);
         return exists;
@@ -190,7 +190,7 @@ namespace qi {
         }
         static const std::string method("master.registerTopic::v:ss");
         qi::transport::Buffer               ret;
-        qi::serialization::BinarySerializer msg;
+        qi::serialization::Message msg;
 
         msg.writeString(method);
         msg.writeString(signature);

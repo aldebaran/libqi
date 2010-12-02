@@ -19,7 +19,7 @@
 
 
 namespace qi {
-  using qi::serialization::SerializedData;
+  using qi::serialization::Message;
 
   namespace detail {
 
@@ -75,8 +75,8 @@ namespace qi {
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
       // handle message
-      SerializedData def(defData);
-      SerializedData result(resultData);
+      Message def(defData);
+      Message result(resultData);
       std::string methodSignature;
       def.readString(methodSignature);
       const ServiceInfo& si = xGetService(methodSignature);

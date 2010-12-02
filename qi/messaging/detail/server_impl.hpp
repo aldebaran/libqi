@@ -8,12 +8,11 @@
 #ifndef   __QI_MESSAGING_DETAIL_SERVER_IMPL_HPP__
 #define   __QI_MESSAGING_DETAIL_SERVER_IMPL_HPP__
 
-#include <string>
-#include <qi/transport/message_handler.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
-#include <qi/transport/server.hpp>
 #include <qi/messaging/detail/master_client.hpp>
+#include <qi/transport/message_handler.hpp>
+#include <qi/transport/server.hpp>
 
 namespace qi {
   namespace detail {

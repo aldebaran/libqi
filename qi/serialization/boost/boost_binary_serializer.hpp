@@ -12,7 +12,7 @@
 
 namespace qi {
   namespace serialization {
-    class BoostBinarySerializer {
+    class BoostMessage {
     public:
       /// <summary>
       /// Serializes a type to a string containing

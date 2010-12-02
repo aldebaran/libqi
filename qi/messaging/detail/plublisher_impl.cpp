@@ -29,10 +29,8 @@ namespace qi {
           // prepare this publisher
           _endpointContext.port = getNewPort(_machineContext.machineID);
           std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
-          // HACK
-          //subscribeAddresses.clear();
-          //subscribeAddresses.push_back("tcp://127.0.0.1:5556");
-          if (! bind(subscribeAddresses)) {
+
+          if (! xBind(subscribeAddresses)) {
             qisError << "PublisherImpl::advertise Failed to bind publisher: " << _name << std::endl;
             return;
           }
@@ -41,7 +39,7 @@ namespace qi {
         }
       }
 
-      void PublisherImpl::advertise(const std::string& topicSignature) {
+      void PublisherImpl::advertiseTopic(const std::string& topicSignature) {
         if (! _publisherInitialized) {
           xInitPublisher();
         }
@@ -54,7 +52,7 @@ namespace qi {
         registerTopic(topicSignature, _endpointContext);
       }
 
-    bool PublisherImpl::bind(const std::vector<std::string>& publishAddresses) {
+    bool PublisherImpl::xBind(const std::vector<std::string>& publishAddresses) {
       try {
         _publisher->bind(publishAddresses);
         _isInitialized = true;

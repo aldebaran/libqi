@@ -22,8 +22,8 @@ namespace qi {
   {}
 
   void Client::callVoid(const std::string& methodName) {
-    qi::serialization::BinarySerializer msg;
-    qi::serialization::BinarySerializer result;
+    qi::serialization::Message msg;
+    qi::serialization::Message result;
 
     void (*f)()  = 0;
     std::string signature = makeSignature(methodName, f);
@@ -33,8 +33,8 @@ namespace qi {
   }
 
   void Client::xCall(const std::string& signature,
-    const qi::serialization::BinarySerializer& msg,
-          qi::serialization::BinarySerializer& result)
+    const qi::serialization::Message& msg,
+          qi::serialization::Message& result)
   {
     return _impl->call(signature, msg, result);
   }

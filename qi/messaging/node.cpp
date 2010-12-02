@@ -8,13 +8,13 @@
 #include <qi/messaging/node.hpp>
 
 namespace qi {
-  Node::Node(): Server(), Client() {}
-
   Node::~Node() {}
 
   Node::Node(
     const std::string& name,
     const std::string& masterAddress) :
         Server(name, masterAddress),
-        Client(name, masterAddress) {}
+        Client(name, masterAddress),
+        Publisher(name, masterAddress),
+        Subscriber(name, masterAddress) {}
 }
