@@ -9,12 +9,13 @@
 #define   __QI_TRANSPORT_SUBSCRIBER_HPP__
 
 #include <string>
-#include <qi/transport/subscribe_handler_user.hpp>
+#include <qi/transport/subscribe_handler.hpp>
 
 namespace qi {
   namespace transport {
 
-    class Subscriber : SubscribeHandlerUser {
+
+    class Subscriber {
     public:
       Subscriber() : _subscribeHandler(NULL) {}
       explicit Subscriber(const Subscriber& rhs) : _subscribeHandler(rhs.getSubscribeHandler()) {}
@@ -34,7 +35,7 @@ namespace qi {
       virtual void subscribe() = 0;
 
     protected:
-      SubscribeHandler* _subscribeHandler;
+      SubscribeHandler  *_subscribeHandler;
     };
   }
 }

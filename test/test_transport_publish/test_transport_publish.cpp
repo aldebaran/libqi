@@ -17,7 +17,7 @@ struct SubscribePerfHandler : qi::transport::SubscribeHandler {
   boost::timer timer;
 
   // conforms to ISubscriberHandler
-  void subscribeHandler(const std::string& msg) {
+  void subscribeHandler(qi::transport::Buffer& msg) {
     if (fCount == 0) {
       timer.restart();
     }

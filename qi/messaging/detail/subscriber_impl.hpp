@@ -9,30 +9,32 @@
 #define   __QI_MESSAGING_DETAIL_SUBSCRIBER_IMPL_HPP__
 
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <qi/transport/subscriber.hpp>
-#include <qi/messaging/detail/client_impl_base.hpp>
-#include <qi/transport/subscribe_handler_user.hpp>
+#include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/detail/mutexednamelookup.hpp>
+#include <qi/messaging/detail/master_client.hpp>
 
 namespace qi {
   namespace detail {
 
-    class SubscriberImpl : public qi::transport::SubscribeHandlerUser, public qi::detail::ClientImplBase {
+    class SubscriberImpl : public qi::detail::MasterClient, public qi::transport::SubscribeHandler {
     public:
 
-      explicit SubscriberImpl(const std::string& masterAddress);
+      explicit SubscriberImpl(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
 
       virtual ~SubscriberImpl();
 
-      bool connect(const std::string& address);
+      void subscribe(const std::string& topicName, qi::Functor* f);
 
-      void setSubscribeHandler(qi::transport::SubscribeHandler* callback);
-
-      qi::transport::SubscribeHandler* getSubscribeHandler() const;
+      // Subscribe Handler Interface Implementation
+      void subscribeHandler(qi::transport::Buffer &requestMessage);
 
     protected:
       void xInit();
-      boost::shared_ptr<qi::transport::Subscriber> _subscriber;
+      bool xConnect(const std::string& address);
+
+      boost::shared_ptr<qi::transport::Subscriber> _transportSubscriber;
+      MutexedNameLookup<ServiceInfo> _subscriberCallBacks;
     };
   }
 }

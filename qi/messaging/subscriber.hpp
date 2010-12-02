@@ -1,46 +1,71 @@
+
+#pragma once
 /*
+** $autogen
+**
 ** Author(s):
 **  - Chris Kilner  <ckilner@aldebaran-robotics.com>
+**  - Cedric Gestes <gestes@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-
 #ifndef   __QI_MESSAGING_SUBSCRIBER_HPP__
 #define   __QI_MESSAGING_SUBSCRIBER_HPP__
 
 #include <string>
-#include <boost/shared_ptr.hpp>
-#include <qi/transport/subscribe_handler.hpp>
-#include <qi/transport/subscribe_handler_user.hpp>
-#include <qi/serialization/serializer.hpp>
-#include <boost/function.hpp>
-#include <qi/log.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <qi/signature.hpp>
+#include <qi/serialization.hpp>
+#include <qi/functors/makefunctor.hpp>
 
 namespace qi {
+  namespace detail {
+    class SubscriberImpl;
+  }
 
-    template<typename SUBSCRIBE_TYPE>
-    class Subscriber : public qi::transport::SubscribeHandler {
-    public:
-      Subscriber(boost::shared_ptr<qi::transport::SubscribeHandlerUser> impl) : _impl(impl) {}
-      Subscriber(const Subscriber& rhs) : _impl(rhs._impl), _callback(rhs._callback) {
-        std::cout << "bla";
-      }
-      virtual ~Subscriber() {}
-      void subscribeHandler(const std::string& data) {
-        SUBSCRIBE_TYPE ret;
-        qi::serialization::BinarySerializer unser(data);
-        qi::serialization::serialize<SUBSCRIBE_TYPE>::read(unser, ret);
-        _callback(ret);
-      }
+  /// <summary>
+  /// Used to subscribe to services.
+  /// </summary>
+  class Subscriber {
+  public:
+    /// <summary>
+    /// DefaultConstructor
+    /// </summary>
+    Subscriber();
 
-      void setCallback(boost::function<void (const SUBSCRIBE_TYPE&)> f) {
-        _callback = f;
-      }
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="subscriberName">
+    /// The name you want to give to this subscriber
+    /// e.g. "subscriber"
+    /// </param>
+    /// <param name="masterAddress">
+    /// The address of the master that is used to find publishers
+    /// e.g. "127.0.0.1:5555"
+    /// </param>
+    Subscriber(const std::string& subscriberName, const std::string& masterAddress = "127.0.0.1:5555");
 
-    protected:
-      boost::function<void (const SUBSCRIBE_TYPE&)> _callback;
-      boost::shared_ptr<qi::transport::SubscribeHandlerUser> _impl;
-    };
+    virtual ~Subscriber();
+
+    bool isInitialized() const;
+
+    template<typename FUNCTION_TYPE>
+    void subscribe(const std::string& topicName, FUNCTION_TYPE callback)
+    {
+      xSubscribe(makeSignature(topicName, callback), makeFunctor(callback));
+    }
+
+    template <typename OBJECT_TYPE, typename METHOD_TYPE>
+    void subscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
+    {
+      xSubscribe(makeSignature(topicName, callback), makeFunctor(object, callback));
+    }
+
+  private:
+    void xSubscribe(const std::string& topicName, Functor* f);
+    boost::scoped_ptr<qi::detail::SubscriberImpl> _impl;
+  };
 }
 
 #endif // __QI_MESSAGING_SUBSCRIBER_HPP__
