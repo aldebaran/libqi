@@ -45,9 +45,20 @@ def write_header(fname, header, body):
         for l in body:
             f.write(l)
 
-def get_header():
+def get_hpp_header():
     return """#pragma once
 /*
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
+
+"""
+
+def get_cpp_header():
+    return """/*
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
@@ -87,20 +98,10 @@ if __name__ == "__main__":
     for f in flist:
         print "checking file:", f
         (header, body) = read_header(f)
-
-        # print "++++++++++++++++++++++++++"
-        # print "++++++++++++++++++++++++++"
-        # print "++++++++++++++++++++++++++"
-        # print "".join(header)
-        # print "++++++++++++++++++++++++++"
-
-        # print ""
-        # print "++++++++++++++++++++++++++"
-        # print "++++++++++++++++++++++++++"
-        # print "++++++++++++++++++++++++++"
-        # print "".join(body)
-
-        write_header(f, get_header(), body)
+        if (f.endswith("cpp")):
+          write_header(f, get_cpp_header(), body)
+        else:
+          write_header(f, get_hpp_header(), body)
         #(guard, l1, l2, l3) = read_header_guard(f)
         #guard = generate_name(f)
         #print "new name: ", guard
