@@ -3,23 +3,24 @@
 General:
   - proper public API separation: QIAPI
   - basic ACL
+  - scoped_ptr when needed (PImpl)
 
 Functor:
   - use boost::ref or boost::bind?
 
 Messaging:
   - support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
-  - Cleanup startup - less hand-described messages
-  - Add publishing
   - Fast Local Call
 
-Goals:
+Goals/Tasks:
   - define an API
 
 Events:
   - define an API, maybe events are only
 
 Transport:
+  - let the possibility to avoid thread in server/subscriber. (add a receive method)
+  - share a context between transport
   - see if ACE shm transport is more efficient than
 
 Serialization:
@@ -31,3 +32,8 @@ Test:
   - split performance test and autotest
   - test coverage
 
+Tracing:
+  - timestamp
+  - bandwitdh
+  - service/topics introspection
+  - who use who?
