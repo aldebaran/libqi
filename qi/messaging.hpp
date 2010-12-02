@@ -8,9 +8,16 @@
 #ifndef   __QI_MESSAGING_HPP__
 #define   __QI_MESSAGING_HPP__
 
+// the master
 #include <qi/messaging/master.hpp>
-#include <qi/messaging/client.hpp>
+
+// base services
 #include <qi/messaging/server.hpp>
+#include <qi/messaging/client.hpp>
+#include <qi/messaging/publisher.hpp>
+#include <qi/messaging/subscriber.hpp>
+
+// a combination of all base services
 #include <qi/messaging/node.hpp>
 
 #endif // __QI_MESSAGING_HPP__
