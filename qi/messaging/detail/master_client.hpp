@@ -19,11 +19,11 @@ namespace qi {
     public:
       MasterClient() {}
       MasterClient(const std::string name, const std::string& masterAddress) :
-        _name(name),
+      _name(name),
         _masterAddress(masterAddress) {
           _endpointContext.name = _name;
           _endpointContext.contextID = _qiContext.getID();
-        }
+      }
       virtual ~MasterClient() {}
 
       void init() {
@@ -143,6 +143,57 @@ namespace qi {
 
         msg.writeString(method);
         msg.writeString(methodSignature);
+        msg.writeString(e.endpointID);
+        _transportClient.send(msg.str(), ret);
+      }
+
+      std::string locateTopic(const std::string& methodSignature, const qi::detail::EndpointContext& e) {
+        if (!_isInitialized) {
+          return "";
+        }
+        qi::transport::Buffer               ret;
+        qi::serialization::BinarySerializer msg;
+        static const std::string method("master.locateTopic::s:ss");
+        msg.writeString(method);
+        msg.writeString(methodSignature);
+        msg.writeString(e.endpointID);
+        _transportClient.send(msg.str(), ret);
+        qi::serialization::BinarySerializer retSer(ret);
+        std::string endpoint;
+        retSer.readString(endpoint);
+        return endpoint;
+      }
+
+      bool topicExists(const std::string& signature)
+      {
+        if (!_isInitialized) {
+          return false;
+        }
+        static const std::string method("master.topicExists::b:s");
+        qi::transport::Buffer               ret;
+        qi::serialization::BinarySerializer msg;
+
+        msg.writeString(method);
+        msg.writeString(signature);
+        _transportClient.send(msg.str(), ret);
+        qi::serialization::BinarySerializer retSer(ret);
+        bool exists;
+        retSer.readBool(exists);
+        return exists;
+      }
+
+      void registerTopic(
+        const std::string& signature, const qi::detail::EndpointContext& e)
+      {
+        if (!_isInitialized) {
+          return;
+        }
+        static const std::string method("master.registerTopic::v:ss");
+        qi::transport::Buffer               ret;
+        qi::serialization::BinarySerializer msg;
+
+        msg.writeString(method);
+        msg.writeString(signature);
         msg.writeString(e.endpointID);
         _transportClient.send(msg.str(), ret);
       }
