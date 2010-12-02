@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Chris Kilner  <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_TRANSPORT_SUBSCRIBER_HPP__
-#define   __QI_TRANSPORT_SUBSCRIBER_HPP__
+#ifndef _QI_TRANSPORT_SUBSCRIBER_HPP_
+#define _QI_TRANSPORT_SUBSCRIBER_HPP_
 
 #include <string>
 #include <qi/transport/subscribe_handler.hpp>
@@ -40,4 +42,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_TRANSPORT_SUBSCRIBER_HPP__
+#endif  // _QI_TRANSPORT_SUBSCRIBER_HPP_

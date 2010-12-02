@@ -1,12 +1,14 @@
 #pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP__
-#define   __QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP__
+
+#ifndef _QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP_
+#define _QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP_
 
 #include <string>
 
@@ -26,5 +28,5 @@ namespace qi {
       std::pair<std::string, int>& outEndpointAndPort);
   }
 }
-#endif // __QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP__
+#endif  // _QI_TRANSPORT_DETAIL_NETWORK_MASTER_ENDPOINT_HPP_
 

@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SERIALIZATION_SERIALIZEDDATA_HPP__
-#define   __QI_SERIALIZATION_SERIALIZEDDATA_HPP__
+#ifndef _QI_SERIALIZATION_MESSAGE_HPP_
+#define _QI_SERIALIZATION_MESSAGE_HPP_
 
 #include <iostream>
 #include <qi/signature.hpp>
@@ -70,4 +72,4 @@ namespace qi {
 
 #include <qi/serialization/message.hxx>
 
-#endif // __QI_SERIALIZATION_SERIALIZEDDATA_HPP__
+#endif  // _QI_SERIALIZATION_MESSAGE_HPP_

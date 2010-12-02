@@ -9,8 +9,8 @@
 */
 
 #raw
-#ifndef   __QI_FUNCTORS_MAKEFUNCTOR_HPP_IN__
-#define   __QI_FUNCTORS_MAKEFUNCTOR_HPP_IN__
+#ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
+#define _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
 
 #include <qi/functors/functor.hpp>
 
@@ -32,5 +32,5 @@ namespace qi
 #end for
 #raw
 }
-#endif // __QI_FUNCTORS_MAKEFUNCTOR_HPP_IN__
+#endif  // _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
 #end raw

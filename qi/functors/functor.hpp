@@ -1,12 +1,14 @@
-/**
-* @author Aldebaran Robotics
-* Aldebaran Robotics (c) 2007 All Rights Reserved - This file is confidential.\n
+#pragma once
+/*
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-* Version : $Id$
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_FUNCTORS_FUNCTOR_HPP__
-#define   __QI_FUNCTORS_FUNCTOR_HPP__
+#ifndef _QI_FUNCTORS_FUNCTOR_HPP_
+#define _QI_FUNCTORS_FUNCTOR_HPP_
 
 // Activate or disactivate log
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
@@ -45,4 +47,4 @@ namespace qi
 #include <qi/functors/detail/memberfunctor.hxx>
 #include <qi/functors/detail/voidmemberfunctor.hxx>
 
-#endif // __QI_FUNCTORS_FUNCTOR_HPP__
+#endif  // _QI_FUNCTORS_FUNCTOR_HPP_

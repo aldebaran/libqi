@@ -1,4 +1,12 @@
+#pragma once
 /*
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
+
 Copyright (c) 2007-2010 iMatix Corporation
 
 This file is part of 0MQ.

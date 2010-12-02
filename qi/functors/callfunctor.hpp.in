@@ -14,8 +14,8 @@ def generate_argpush_list(count):
 */
 
 #raw
-#ifndef   __QI_FUNCTORS_CALLFUNCTOR_HPP_IN__
-#define   __QI_FUNCTORS_CALLFUNCTOR_HPP_IN__
+#ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
+#define _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
 
 #include <qi/functors/functor.hpp>
 #end raw
@@ -54,5 +54,5 @@ namespace qi
 #end for
 #raw
 }
-#endif // __QI_FUNCTORS_CALLFUNCTOR_HPP_IN__
+#endif  // _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
 #end raw

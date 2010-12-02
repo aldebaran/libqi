@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_MESSAGING_HPP__
-#define   __QI_MESSAGING_HPP__
+#ifndef _QI_MESSAGING_HPP_
+#define _QI_MESSAGING_HPP_
 
 // the master
 #include <qi/messaging/master.hpp>
@@ -20,4 +22,4 @@
 // a combination of all base services
 #include <qi/messaging/node.hpp>
 
-#endif // __QI_MESSAGING_HPP__
+#endif  // _QI_MESSAGING_HPP_

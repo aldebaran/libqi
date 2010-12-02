@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_PERF_SLEEP_HPP__
-#define   __QI_PERF_SLEEP_HPP__
+#ifndef _QI_PERF_SLEEP_HPP_
+#define _QI_PERF_SLEEP_HPP_
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -20,4 +22,4 @@
 # include <unistd.h>
 #endif
 
-#endif // __QI_PERF_SLEEP_HPP__
+#endif  // _QI_PERF_SLEEP_HPP_

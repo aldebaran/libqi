@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP__
-#define   __QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP__
+#ifndef _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
+#define _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
 
 #include <boost/utility.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -104,5 +106,5 @@ struct newFunctionSignature {
     boost::mpl::back_inserter< returnValueColon >
   >::type value;
 };
-#endif // __QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP__
+#endif  // _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
 

@@ -1,13 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**  - Chris Kilner  <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_MESSAGING_PUBLISHER_HPP__
-#define   __QI_MESSAGING_PUBLISHER_HPP__
+#ifndef _QI_MESSAGING_PUBLISHER_HPP_
+#define _QI_MESSAGING_PUBLISHER_HPP_
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -50,4 +51,4 @@ namespace qi {
   };
 }
 
-#endif // __QI_MESSAGING_PUBLISHER_HPP__
+#endif  // _QI_MESSAGING_PUBLISHER_HPP_

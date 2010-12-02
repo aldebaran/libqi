@@ -1,9 +1,10 @@
+#pragma once
 /*
-* handler_pool.cpp
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Created on: Oct 13, 2009 at 2:41:05 PM
-*      Author: Jean-Charles DELAY
-*      Mail  : jdelay@aldebaran-robotics.com
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
 #include <qi/core/runnable.hpp>

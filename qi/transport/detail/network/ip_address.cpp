@@ -1,9 +1,12 @@
+#pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
+
 #include <qi/transport/detail/network/ip_address.hpp>
 #include <boost/algorithm/string.hpp>
 

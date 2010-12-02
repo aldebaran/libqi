@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__
-#define   __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__
+#ifndef _QI_SERIALIZATION_THRIFT_SERIALIZE_HXX_
+#define _QI_SERIALIZATION_THRIFT_SERIALIZE_HXX_
 
 namespace qi {
   namespace serialization {
@@ -51,4 +53,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_SERIALIZATION_THRIFT_SERIALIZE_HXX__
+#endif  // _QI_SERIALIZATION_THRIFT_SERIALIZE_HXX_

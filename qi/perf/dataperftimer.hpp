@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_PERF_DATAPERFTIMER_HPP__
-#define   __QI_PERF_DATAPERFTIMER_HPP__
+#ifndef _QI_PERF_DATAPERFTIMER_HPP_
+#define _QI_PERF_DATAPERFTIMER_HPP_
 
 #include <boost/timer.hpp>
 #include <string>
@@ -69,5 +71,5 @@ namespace qi {
 }
 
 
-#endif // __QI_PERF_DATAPERFTIMER_HPP__
+#endif  // _QI_PERF_DATAPERFTIMER_HPP_
 

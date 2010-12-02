@@ -1,13 +1,14 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SIGNATURE_SIGNATURE_HPP__
-#define   __QI_SIGNATURE_SIGNATURE_HPP__
+#ifndef _QI_SIGNATURE_SIGNATURE_HPP_
+#define _QI_SIGNATURE_SIGNATURE_HPP_
 
 //runtime signature compile faster
 //compile time signature execute faster  (this one need boost::mpl::string that is not available in boost < 40)
@@ -84,4 +85,4 @@ namespace qi {
     }
 }
 
-#endif // __QI_SIGNATURE_SIGNATURE_HPP__
+#endif  // _QI_SIGNATURE_SIGNATURE_HPP_

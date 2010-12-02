@@ -1,13 +1,14 @@
+#pragma once
 /*
-* handler_pool.hpp
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Created on: Oct 13, 2009 at 2:41:05 PM
-*      Author: Jean-Charles DELAY
-*      Mail  : jdelay@aldebaran-robotics.com
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_CORE_HANDLERS_POOL_HPP__
-#define   __QI_CORE_HANDLERS_POOL_HPP__
+#ifndef _QI_CORE_HANDLERS_POOL_HPP_
+#define _QI_CORE_HANDLERS_POOL_HPP_
 
 #include <boost/threadpool.hpp>
 
@@ -42,4 +43,4 @@ namespace qi {
   };
 
 }
-#endif // __QI_CORE_HANDLERS_POOL_HPP__
+#endif  // _QI_CORE_HANDLERS_POOL_HPP_

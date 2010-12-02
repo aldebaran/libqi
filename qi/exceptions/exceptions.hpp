@@ -1,13 +1,14 @@
+#pragma once
 /*
-* exceptions.hpp
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Created on: Oct 1, 2009 at 10:47:42 AM
-*      Author: Jean-Charles DELAY
-*      Mail  : jdelay@aldebaran-robotics.com
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_EXCEPTIONS_EXCEPTIONS_HPP__
-#define   __QI_EXCEPTIONS_EXCEPTIONS_HPP__
+#ifndef _QI_EXCEPTIONS_EXCEPTIONS_HPP_
+#define _QI_EXCEPTIONS_EXCEPTIONS_HPP_
 
 #include <exception>
 #include <string>
@@ -94,4 +95,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_EXCEPTIONS_EXCEPTIONS_HPP__
+#endif  // _QI_EXCEPTIONS_EXCEPTIONS_HPP_

@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_API_HPP__
-#define   __QI_API_HPP__
+#ifndef _QI_API_HPP_
+#define _QI_API_HPP_
 
 // qi_EXPORTS controls which symbols are exported when
 // compiled as a SHARED lib.
@@ -39,4 +41,4 @@
 #define QIAPI_DEPRECATED
 #endif
 
-#endif // __QI_API_HPP__
+#endif  // _QI_API_HPP_

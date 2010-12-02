@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES      <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP__
-#define   __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP__
+#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
+#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
 
 #include <qi/core/runnable.hpp>
 #include <qi/transport/buffer.hpp>
@@ -50,4 +52,4 @@ namespace qi {
     }
   }
 }
-#endif // __QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP__
+#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_

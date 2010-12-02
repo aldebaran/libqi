@@ -1,13 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Jean-Charles DELAY <jdelay@aldebaran-robotics.com>
-**  - Cedric GESTES      <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_CORE_RUNNABLE_HPP__
-#define   __QI_CORE_RUNNABLE_HPP__
+#ifndef _QI_CORE_RUNNABLE_HPP_
+#define _QI_CORE_RUNNABLE_HPP_
 
 
 namespace qi {
@@ -20,4 +21,4 @@ namespace qi {
 
 }
 
-#endif // __QI_CORE_RUNNABLE_HPP__
+#endif  // _QI_CORE_RUNNABLE_HPP_

@@ -15,8 +15,8 @@ def generate_argpush_list(count):
 **
 ** Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_CLIENT_HXX_IN__
-#define   __QI_MESSAGING_CLIENT_HXX_IN__
+#ifndef _QI_MESSAGING_CLIENT_HXX_IN_
+#define _QI_MESSAGING_CLIENT_HXX_IN_
 
 #include <qi/serialization/serializer.hpp>
 
@@ -63,5 +63,5 @@ namespace qi {
 
 }
 #raw
-#endif // __QI_MESSAGING_CLIENT_HXX_IN__
+#endif  // _QI_MESSAGING_CLIENT_HXX_IN_
 #end raw

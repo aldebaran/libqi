@@ -1,12 +1,14 @@
 #pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP__
-#define   __QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP__
+
+#ifndef _QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP_
+#define _QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP_
 
 #include <string>
 
@@ -69,4 +71,4 @@ namespace qi {
 // implementation
 #include <qi/serialization/boost/boost_xml_serializer.hxx>
 
-#endif // __QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP__
+#endif  // _QI_SERIALIZATION_BOOST_BOOST_XML_SERIALIZER_HPP_

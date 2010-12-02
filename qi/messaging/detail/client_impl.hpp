@@ -1,24 +1,21 @@
 #pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__
-#define   __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__
+
+#ifndef _QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP_
+#define _QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP_
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
-//#include <qi/messaging/detail/namelookup.hpp>
 #include <qi/messaging/detail/master_client.hpp>
 #include <qi/serialization/message.hpp>
-//#include <qi/transport/subscribe_handler.hpp>
 #include <qi/transport/client.hpp>
-//#include <qi/functors/functor.hpp>
-//#include <qi/messaging/serviceinfo.hpp>
-//#include <qi/messaging/detail/subscriber_impl.hpp>
 
 namespace qi {
   namespace detail {
@@ -47,4 +44,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP__
+#endif  // _QI_MESSAGING_DETAIL_CLIENT_IMPL_HPP_

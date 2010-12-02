@@ -1,12 +1,14 @@
 #pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_MESSAGING_SERVICEINFO_HPP__
-#define   __QI_MESSAGING_SERVICEINFO_HPP__
+
+#ifndef _QI_MESSAGING_SERVICEINFO_HPP_
+#define _QI_MESSAGING_SERVICEINFO_HPP_
 
 #include <string>
 #include <qi/functors/functor.hpp>
@@ -33,5 +35,5 @@ namespace qi {
   };
 }
 
-#endif // __QI_MESSAGING_SERVICEINFO_HPP__
+#endif  // _QI_MESSAGING_SERVICEINFO_HPP_
 

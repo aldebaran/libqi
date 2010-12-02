@@ -1,13 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**  - Chris Kilner  <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_TRANSPORT_SERVER_HPP__
-#define   __QI_TRANSPORT_SERVER_HPP__
+#ifndef _QI_TRANSPORT_SERVER_HPP_
+#define _QI_TRANSPORT_SERVER_HPP_
 
 #include <string>
 #include <qi/log.hpp>
@@ -78,4 +79,4 @@ namespace qi {
 
 }
 
-#endif // __QI_TRANSPORT_SERVER_HPP__
+#endif  // _QI_TRANSPORT_SERVER_HPP_

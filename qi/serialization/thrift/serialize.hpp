@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__
-#define   __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__
+#ifndef _QI_SERIALIZATION_THRIFT_SERIALIZE_HPP_
+#define _QI_SERIALIZATION_THRIFT_SERIALIZE_HPP_
 
 #include <protocol/TProtocol.h>
 #include <boost/variant/static_visitor.hpp>
@@ -73,4 +75,4 @@ namespace qi {
 
 #include <qi/serialization/thrift/serialize.hxx>
 
-#endif // __QI_SERIALIZATION_THRIFT_SERIALIZE_HPP__
+#endif  // _QI_SERIALIZATION_THRIFT_SERIALIZE_HPP_

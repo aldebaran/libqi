@@ -1,12 +1,14 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef   __QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP__
-#define   __QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP__
+#ifndef _QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP_
+#define _QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP_
 
 # include<string>
 
@@ -38,4 +40,4 @@ namespace qi {
 };
 
 
-#endif // __QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP__
+#endif  // _QI_SIGNATURE_DETAIL_SIGNATURE_VISITOR_HPP_

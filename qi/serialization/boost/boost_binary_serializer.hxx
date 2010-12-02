@@ -1,12 +1,14 @@
 #pragma once
 /*
-** Author(s):
-**  - Chris Kilner <ckilner@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef   __QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX__
-#define   __QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX__
+
+#ifndef _QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX_
+#define _QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX_
 
 // internal type (fixed size buffer)
 #include <boost/interprocess/streams/bufferstream.hpp>
@@ -69,4 +71,4 @@ namespace qi {
   }
 }
 
-#endif // __QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX__
+#endif  // _QI_SERIALIZATION_BOOST_BOOST_BINARY_SERIALIZER_HXX_
