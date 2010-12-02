@@ -35,6 +35,7 @@ namespace qi {
 
       boost::shared_ptr<qi::transport::Subscriber> _transportSubscriber;
       MutexedNameLookup<ServiceInfo> _subscriberCallBacks;
+      MutexedNameLookup<std::string> _subscribedEndpoints;
     };
   }
 }

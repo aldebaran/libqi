@@ -18,12 +18,12 @@ namespace qi {
 
     ServiceInfo() {}
 
-    ServiceInfo(const std::string  &module,
-                const std::string  &method,
-                qi::Functor        *functor)
-      : methodName(module + std::string(".") + method),
-        functor(functor)
-    {}
+    //ServiceInfo(const std::string  &module,
+    //            const std::string  &method,
+    //            qi::Functor        *functor)
+    //  : methodName(module + std::string(".") + method),
+    //    functor(functor)
+    //{}
 
     ServiceInfo(const std::string  &method,
         qi::Functor        *functor)

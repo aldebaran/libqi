@@ -31,8 +31,9 @@ namespace qi {
       void publish(const std::string& data);
 
     protected:
-      //void xInit();
-      //const std::string& _masterAddress;
+      void xInitPublisher();
+
+      bool _publisherInitialized;
       boost::scoped_ptr<qi::transport::Publisher> _publisher;
     };
 

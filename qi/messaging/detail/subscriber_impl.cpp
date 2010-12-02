@@ -21,6 +21,8 @@ namespace qi {
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
       init();
+      registerMachine(_machineContext);
+      registerEndpoint(_endpointContext);
       _transportSubscriber->setSubscribeHandler(this);
     }
 
@@ -29,25 +31,23 @@ namespace qi {
     }
 
     void SubscriberImpl::subscribe(const std::string& topicName, qi::Functor* f) {
-      qisDebug << "SubscriberImpl::subscribe: inserting: " << topicName << std::endl;
+      std::string endpoint = locateTopic(topicName, _endpointContext);
+      if (endpoint.empty()) {
+        qisWarning << "Subscriber \"" << _name << "\": Topic not found \"" << topicName << "\"" << std::endl;
+         return;
+      }
+
+      qisDebug << "SubscriberImpl::subscribe: storing callback for : " << topicName << std::endl;
       ServiceInfo si(topicName, f);
-
-      // endpoint = locateTopic(topicName, _endpointContext.endpointID);
-      // if (endpoint.empty()) {
-      //    not found
-      //    return;
-      // }
-      // if (!_knownPublisherEndpoints.exist(endpoint) {
-      //   _transportPublisher.connect(endpoint);
-      // }
-
       _subscriberCallBacks.insert(topicName, si);
 
-      // need subscriber for each publisher, or need to connect to each
-      //SubscriberImpl subImpl(_masterAddress);
-      xConnect("tcp://127.0.0.1:6000");
-      //_transportSubscriber->setSubscribeHandler(this);
-      // Create Subscriber to publisher ...
+      if (! _subscribedEndpoints.exists(endpoint)) {
+        xConnect(endpoint);
+        if (_subscribedEndpoints.empty()) {
+          _transportSubscriber->subscribe();
+        }
+        _subscribedEndpoints.insert(endpoint, endpoint);
+      }
     }
 
     void SubscriberImpl::subscribeHandler(qi::transport::Buffer &requestMessage) {
@@ -67,11 +67,11 @@ namespace qi {
 
     bool SubscriberImpl::xConnect(const std::string& address) {
       try {
+        qisDebug << "SubscriberImpl::xConnect: connecting to: " << address << std::endl;
         _transportSubscriber->connect(address);
-        registerEndpoint(_endpointContext);
-        _transportSubscriber->subscribe();
         _isInitialized = true;
       } catch(const std::exception& e) {
+        _isInitialized = false;
         qisDebug << "Subscriber failed to create subscriber for address \"" << address << "\" Reason: " << e.what() << std::endl;
       }
       return _isInitialized;

@@ -22,20 +22,40 @@ Master gMaster(gMasterAddress);
 //Client gClient("client", gMasterAddress);
 
 
-void handler(const std::string& msg) {
-  std::cout << "Received : " << msg << std::endl;
+void handler1(const std::string& msg) {
+  std::cout << msg << "  Subscriber 1H" << std::endl;
+}
+
+void handler2(const std::string& msg) {
+  std::cout << msg << "  Subscriber 1G" << std::endl;
+}
+
+void handler3(const std::string& msg) {
+  std::cout << msg << "  Subscriber 2G" << std::endl;
 }
 
 TEST(MessagingPublisher , publisher)
 {
   Subscriber s("subscriber");
-  s.subscribe("hello", &handler);
-
+  Subscriber s2("subscriber");
   Publisher p("publisher");
+
   p.advertise<std::string>("hello");
+  p.advertise<std::string>("goodbye");
+  s.subscribe("hello", &handler1);
+  s.subscribe("goodbye", &handler2);
+  s2.subscribe("goodbye", &handler3);
+  sleep(2.0);
 
-  p.publish("hello", std::string("hhheeelllloooo"));
+  for (int i = 0 ; i < 50 ; i++) {
+    std::stringstream s;
+    s << i;
+    p.publish("hello", s.str());
+    p.publish("goodbye", s.str());
+    sleep(0.1f);
+  }
 
+  sleep(2);
   //Publisher<std::string> publisher = gServer.advertiseTopic<std::string>("hello");
   //suscriber.subscribeHandler(std::string("a message"));
 

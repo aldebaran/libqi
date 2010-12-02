@@ -91,6 +91,7 @@ namespace qi {
           }
           // No way to notice that the subscriber handler has
           // been deallocated. If it has, this will segfault
+          //          // getSubscribeHandler
           this->getSubscribeHandler()->subscribeHandler(data);
         }
       } catch(const std::exception&) {
