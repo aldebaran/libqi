@@ -14,7 +14,18 @@
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
   qisDebug << "===" << msg << " ===" << std::endl;                 \
-  qisDebug << "type: " << endpoint.type             << std::endl;  \
+  if (endpoint.type == SERVER_ENDPOINT) {                          \
+  qisDebug << "type: SERVER" << std::endl;                         \
+  }                                                                \
+  if (endpoint.type == CLIENT_ENDPOINT) {                          \
+  qisDebug << "type: CLIENT" << std::endl;                         \
+  }                                                                \
+  if (endpoint.type == PUBLISHER_ENDPOINT) {                       \
+  qisDebug << "type: PUBLISHER" << std::endl;                      \
+  }                                                                \
+  if (endpoint.type == SUBSCRIBER_ENDPOINT) {                      \
+  qisDebug << "type: SUBSCRIBER" << std::endl;                     \
+  }                                                                \
   qisDebug << "endpointID: " << endpoint.endpointID << std::endl;  \
   qisDebug << "machineID : " << endpoint.machineID  << std::endl;  \
   qisDebug << "name      : " << endpoint.name       << std::endl;  \
@@ -43,13 +54,11 @@ namespace qi {
     }
 
     MasterImpl::MasterImpl(const std::string& masterAddress) :
-        _name("master"),
         _address(masterAddress),
-        _server(_name, _address)
+        _server("master", _address)
     {
       xInit();
     }
-
 
     void MasterImpl::xInit() {
       if (!_server.isInitialized()) {

@@ -12,15 +12,18 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/namelookup.hpp>
-#include <qi/messaging/detail/client_impl_base.hpp>
+#include <qi/messaging/detail/master_client.hpp>
 #include <qi/serialization/serializeddata.hpp>
-#include <qi/transport/subscribe_handler_user.hpp>
+#include <qi/transport/subscribe_handler.hpp>
 #include <qi/transport/client.hpp>
+#include <qi/functors/functor.hpp>
+#include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/detail/subscriber_impl.hpp>
 
 namespace qi {
   namespace detail {
 
-    class ClientImpl : public ClientImplBase {
+    class ClientImpl : public MasterClient {
     public:
       ClientImpl();
       virtual ~ClientImpl();
@@ -30,16 +33,13 @@ namespace qi {
       void call(const std::string &signature, const qi::serialization::SerializedData& callDef,
         qi::serialization::SerializedData &result);
 
-      boost::shared_ptr<qi::transport::SubscribeHandlerUser> subscribe(const std::string& topicName);
-
     private:
-      std::string                    _clientName;
       MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
       NameLookup< boost::shared_ptr<qi::transport::Client> > _serverClients;
 
-      void xInit();
+
       boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);

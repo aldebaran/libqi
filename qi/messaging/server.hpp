@@ -86,21 +86,10 @@ namespace qi {
       xAddService(makeSignature(name, function), makeFunctor(function));
     }
 
-    template <typename PUBLISH_TYPE>
-    Publisher<PUBLISH_TYPE> advertiseTopic(const std::string& topicName) {
-      std::string signature = ""; //makeSignature(T);
-      boost::shared_ptr<qi::detail::PublisherImpl> pubImpl =
-        xAdvertiseTopic(topicName, signature);
-      return Publisher<PUBLISH_TYPE>(pubImpl);
-    }
-
     bool isInitialized() const;
 
   private:
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
-
-    boost::shared_ptr<qi::detail::PublisherImpl> xAdvertiseTopic(
-      const std::string& topicName, const std::string& typeSignature);
 
     std::auto_ptr<detail::ServerImpl> _impl;
   };

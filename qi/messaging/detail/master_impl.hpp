@@ -51,7 +51,6 @@ namespace qi {
       bool isInitialized() const;
 
     private:
-      std::string _name;
       std::string _address;
       ServerImpl  _server;
 

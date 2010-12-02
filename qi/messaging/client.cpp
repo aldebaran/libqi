@@ -21,11 +21,6 @@ namespace qi {
     : _impl(new detail::ClientImpl(clientName, masterAddress))
   {}
 
-
-  boost::shared_ptr<qi::transport::SubscribeHandlerUser> Client::xSubscribe(const std::string& topicName) {
-    return _impl->subscribe(topicName);
-  }
-
   void Client::callVoid(const std::string& methodName) {
     qi::serialization::BinarySerializer msg;
     qi::serialization::BinarySerializer result;

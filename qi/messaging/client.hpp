@@ -16,7 +16,6 @@
 #include <memory>
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
-#include <qi/messaging/subscriber.hpp>
 
 namespace qi {
   namespace detail {
@@ -56,16 +55,6 @@ namespace qi {
     virtual ~Client();
 
     bool isInitialized() const;
-
-    template<typename SUBSCRIBE_TYPE>
-    Subscriber<SUBSCRIBE_TYPE> subscribe(const std::string& topicName, boost::function<void (const SUBSCRIBE_TYPE&)> callback)
-    {
-      boost::shared_ptr<qi::transport::SubscribeHandlerUser> subImpl(xSubscribe(topicName));
-      Subscriber<SUBSCRIBE_TYPE> subscriber(subImpl);
-      subImpl->setSubscribeHandler(&subscriber);
-      subscriber.setCallback(callback);
-      return subscriber;
-    }
 
     void callVoid(const std::string& methodName);
 
@@ -130,7 +119,6 @@ namespace qi {
     void xCall(const std::string& signature,
       const qi::serialization::BinarySerializer& request,
             qi::serialization::BinarySerializer& result);
-    boost::shared_ptr<qi::transport::SubscribeHandlerUser> xSubscribe(const std::string& topicName);
     std::auto_ptr<qi::detail::ClientImpl> _impl;
   };
 }

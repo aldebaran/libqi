@@ -9,7 +9,6 @@
 #include <string>
 #include <qi/exceptions/exceptions.hpp>
 #include <qi/transport/detail/network/master_endpoint.hpp>
-#include <qi/messaging/detail/subscriber_impl.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
@@ -20,47 +19,18 @@ namespace qi {
     ClientImpl::ClientImpl() {}
 
     ClientImpl::~ClientImpl() {
-      if (_isInitialized) {
-        xUnregisterSelfWithMaster();
-      }
+      unregisterEndpoint(_endpointContext);
     }
 
     ClientImpl::ClientImpl(
       const std::string& clientName,
       const std::string& masterAddress) :
-        ClientImplBase(masterAddress),
-        _clientName(clientName)
+        MasterClient(clientName, masterAddress)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
-      _endpointContext.name = _clientName;
-      _endpointContext.contextID = _qiContext.getID();
-      xInit();
-    }
-
-    void ClientImpl::xInit() {
-      std::pair<std::string, int> masterEndpointAndPort;
-      if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
-        _isInitialized = false;
-        qisError << "\"" << _clientName << "\" initialized with invalid master address: \""
-          << _masterAddress << "\" All calls will fail." << std::endl;
-        return;
-      }
-
-      _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
-      if (! _isInitialized ) {
-        qisError << "\"" << _clientName << "\" could not connect to master "
-          "at address \"" << masterEndpointAndPort.first << "\""
-          << std::endl;
-        return;
-      }
-      xRegisterMachineWithMaster();
-      xRegisterSelfWithMaster();
-    }
-
-    boost::shared_ptr<qi::transport::SubscribeHandlerUser> ClientImpl::subscribe(const std::string& topicName) {
-      boost::shared_ptr<qi::detail::SubscriberImpl> subscriberImpl(new qi::detail::SubscriberImpl(_masterAddress));
-      subscriberImpl->connect("tcp://127.0.0.1:6000");
-      return subscriberImpl;
+      init();
+      registerMachine(_machineContext);
+      registerEndpoint(_endpointContext);
     }
 
     void ClientImpl::call(const std::string &signature,
@@ -106,7 +76,7 @@ namespace qi {
       bool ok = client->connect(serverAddress);
       if (ok) {
         _serverClients.insert(make_pair(serverAddress, client));
-        qisDebug << "Client \"" << _clientName
+        qisDebug << "Client \"" << _name
                  << "\" connected to " << serverAddress << std::endl;
       }
       return ok;
@@ -120,7 +90,7 @@ namespace qi {
 
         std::string tmpAddress;
         try {
-          tmpAddress = xLocateServiceWithMaster(methodSignature);
+          tmpAddress = locateService(methodSignature, _endpointContext);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << methodSignature
                      << "\" Unable to contact master." << std::endl;

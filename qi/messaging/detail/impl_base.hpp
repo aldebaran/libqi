@@ -18,6 +18,7 @@ namespace qi {
     class ImplBase {
     public:
       ImplBase() : _isInitialized(false) {}
+
       virtual ~ImplBase() {}
 
       bool isInitialized() const {

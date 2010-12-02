@@ -13,18 +13,18 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/transport/server.hpp>
-#include <qi/messaging/detail/client_impl_base.hpp>
+#include <qi/messaging/detail/master_client.hpp>
 
 namespace qi {
   namespace detail {
     class PublisherImpl;
 
-    class ServerImpl : public qi::detail::ClientImplBase, public qi::transport::MessageHandler {
+    class ServerImpl : public qi::detail::MasterClient, public qi::transport::MessageHandler {
     public:
       ServerImpl();
       virtual ~ServerImpl();
 
-      ServerImpl(const std::string nodeName,
+      ServerImpl(const std::string name,
         const std::string masterAddress);
 
       const std::string& getName() const;
@@ -42,9 +42,6 @@ namespace qi {
     protected:
       /// <summary> true if this server belongs to the master </summary>
       bool _isMasterServer;
-
-      /// <summary> The friendly name of this server </summary>
-      std::string _name;
 
       /// <summary> The underlying transport server </summary>
       qi::transport::Server _transportServer;

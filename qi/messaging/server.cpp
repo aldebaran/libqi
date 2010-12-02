@@ -23,11 +23,6 @@ namespace qi {
     _impl->addService(methodSignature, functor);
   }
 
-  boost::shared_ptr<qi::detail::PublisherImpl> Server::xAdvertiseTopic(
-    const std::string& topicName, const std::string& typeSignature) {
-      return _impl->advertiseTopic(topicName, typeSignature);
-  }
-
   bool Server::isInitialized() const {
     return _impl->isInitialized();
   }
