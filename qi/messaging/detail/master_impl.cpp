@@ -83,6 +83,7 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.topicExists",        this, &MasterImpl::topicExists);
       xAddMasterMethod(serverContext.endpointID, "master.registerTopic",      this, &MasterImpl::registerTopic);
+      xAddMasterMethod(serverContext.endpointID, "master.locateTopic",        this, &MasterImpl::locateTopic);
       xAddMasterMethod(serverContext.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
     }
 
@@ -110,8 +111,10 @@ namespace qi {
       const std::string& machineID, const std::string& publicIPAddress,
       const int& platformID)
     {
-      MachineContext m(hostName, machineID, publicIPAddress, platformID);
-      xRegisterMachine(m);
+      if (!_knownMachines.exists(machineID)) {
+        MachineContext m(hostName, machineID, publicIPAddress, platformID);
+        xRegisterMachine(m);
+      }
     }
 
     void MasterImpl::xRegisterMachine(const MachineContext& machine) {
@@ -156,22 +159,7 @@ namespace qi {
         qisDebug << "Master::locateService: Could not find server for method: " << methodSignature << std::endl;
         return "";
       }
-      const EndpointContext& serverContext = _knownEndpoints.get(serverID);
-      if (serverContext.name.empty()) {
-        qisDebug << "Master::locateService: Could not find server for serverID: " << serverID << std::endl;
-        return "";
-      }
-      const EndpointContext& clientContext = _knownEndpoints.get(clientID);
-      if (clientContext.name.empty()) {
-        qisDebug << "Master::locateService: Could not find client for clientID: " << clientID << std::endl;
-        return "";
-      }
-      const MachineContext& serverMachineContext = _knownMachines.get(serverContext.machineID);
-      if (serverMachineContext.machineID.empty()) {
-        qisDebug << "Master::locateService: Could not find machine for serverID: " << serverID << std::endl;
-        return "";
-      }
-      std::string endpoint = negotiateEndpoint(clientContext, serverContext, serverMachineContext);
+      std::string endpoint = xNegotiateEndpoint(clientID, serverID);
       qisDebug << "Master::locateService: Resolved: " << methodSignature << " to " << endpoint << std::endl;
       return endpoint;
     }
@@ -182,13 +170,42 @@ namespace qi {
     }
 
 
+    std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
+      const std::string& publisherEndpointID = _knownTopics.get(topicName);
+      if (publisherEndpointID.empty()) {
+        qisDebug << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
+        return "";
+      }
+      std::string endpoint = xNegotiateEndpoint(endpointID, publisherEndpointID);
+      qisDebug << "Master::locateTopic: Resolved: " << topicName << " to " << endpoint << std::endl;
+      return endpoint;
+    }
+
+    std::string MasterImpl::xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID) {
+      const EndpointContext& serverContext = _knownEndpoints.get(serverEndpointID);
+      if (serverContext.name.empty()) {
+        qisDebug << "Master::xNegotiateEndpoint: Could not find server for serverID: " << serverEndpointID << std::endl;
+        return "";
+      }
+      const EndpointContext& clientContext = _knownEndpoints.get(clientEndpointID);
+      if (clientContext.name.empty()) {
+        qisDebug << "Master::xNegotiateEndpoint: Could not find client for clientID: " << clientEndpointID << std::endl;
+        return "";
+      }
+      const MachineContext& serverMachineContext = _knownMachines.get(serverContext.machineID);
+      if (serverMachineContext.machineID.empty()) {
+        qisDebug << "Master::xNegotiateEndpoint: Could not find machine for serverID: " << serverEndpointID << std::endl;
+        return "";
+      }
+      std::string endpoint = negotiateEndpoint(clientContext, serverContext, serverMachineContext);
+      return endpoint;
+    }
+
+
     void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
       //FIXME: check for existence
       qisDebug << "Register Topic " << topicName << " " << endpointID << std::endl;
-      TopicInfo ti;
-      ti.publishEndpointID = endpointID;
-      ti.subscribeEndpointID = endpointID;
-      _knownTopics.insert(topicName, ti);
+      _knownTopics.insert(topicName, endpointID);
     }
 
     bool MasterImpl::topicExists(const std::string& topicName) {

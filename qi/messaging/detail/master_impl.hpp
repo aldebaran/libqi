@@ -44,6 +44,8 @@ namespace qi {
 
       const std::map<std::string, std::string>& listServices();
 
+      std::string locateTopic(const std::string& methodSignature, const std::string& clientID);
+
       void registerTopic(const std::string& topicName, const std::string& endpointID);
 
       bool topicExists(const std::string& topicName);
@@ -57,6 +59,7 @@ namespace qi {
       void xInit();
       void xRegisterEndpoint(const EndpointContext& endpoint);
       void xRegisterMachine(const MachineContext& machine);
+      std::string xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID);
 
       // Helper method
       template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -81,7 +84,7 @@ namespace qi {
       MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
       // map from id to EndpointContext
-      MutexedNameLookup<qi::detail::TopicInfo>       _knownTopics;
+      MutexedNameLookup<std::string>                 _knownTopics;
 
       AddressManager _addressManager;
     };
