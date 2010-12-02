@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cstdio>
 
+
 #include <qi/log/consoleloghandler.hpp>
 
 #ifdef _WIN32
@@ -54,8 +55,11 @@ namespace qi {
     {
       if (verb > _verbosity)
         return;
-      header(verb, file, fct, line);
-      vprintf(fmt, vl);
+      {
+        boost::mutex::scoped_lock scopedLock(_mutex);
+        header(verb, file, fct, line);
+        vprintf(fmt, vl);
+      }
     }
 
     void ConsoleLogHandler::textColor(char fg, char bg, char attr) const

@@ -11,6 +11,7 @@
 
 #include <cstdarg>
 #include <qi/log/log.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace qi {
   namespace log {
@@ -25,6 +26,8 @@ namespace qi {
                const char       *fmt,
                va_list           vl);
     protected:
+
+      boost::mutex _mutex;
 
       enum ConsoleAttr {
         reset      = 0,
