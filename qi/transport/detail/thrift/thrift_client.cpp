@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
