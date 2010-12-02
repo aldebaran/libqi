@@ -70,6 +70,10 @@ namespace qi {
         _invalidValue = val;
       }
 
+      bool empty() {
+        return _map.empty();
+      }
+
     };
   }
 }
