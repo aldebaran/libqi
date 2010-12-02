@@ -90,5 +90,9 @@ char *qi_message_read_string(qi_message_t *msg)
  std::string s;
  pmsg->msg.readString(s);
  //TODO: buffer overflow
+#ifdef _WIN32
+ return _strdup(s.c_str());
+#else
  return strdup(s.c_str());
+#endif
 }
