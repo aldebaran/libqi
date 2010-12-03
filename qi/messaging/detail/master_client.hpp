@@ -78,8 +78,8 @@ namespace qi {
         qi::transport::Buffer               ret;
         qi::serialization::Message msg;
         msg.writeString(method);
-        msg.writeString(m.machineID);
         msg.writeString(m.hostName);
+        msg.writeString(m.machineID);
         msg.writeString(m.publicIP);
         msg.writeInt(   m.platformID);
         _transportClient.send(msg.str(), ret);
