@@ -35,9 +35,6 @@ namespace qi {
           return ips[i];
         }
       }
-      if (ips.size() > 0) {
-        return ips[0];
-      }
       return "";
     }
 
