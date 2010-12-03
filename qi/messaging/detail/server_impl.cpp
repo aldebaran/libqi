@@ -82,7 +82,7 @@ namespace qi {
       def.readString(methodSignature);
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
-        qisError << "Server Error: Method not found: " << methodSignature << std::endl;
+        qisError << "Server Error: Method not found: " << qi::signatureToString(methodSignature) << std::endl;
         return;
       }
       si.functor->call(def, result);
@@ -95,7 +95,7 @@ namespace qi {
     {
       if (! _isInitialized ) {
         qisError << "Attempt to use uninitialized server: \"" << _name <<
-          "\". Service \"" << methodSignature << "\" not added."
+          "\". Service \"" << qi::signatureToString(methodSignature) << "\" not added."
           << std::endl;
         throw qi::transport::ServerException(
           std::string("Attempt to use uninitialized server: \"") +

@@ -93,11 +93,11 @@ namespace qi {
       if(serverContext.name.empty()) {
         qisError << "Master::registerService Attempt to register the "
           "method of an unknown server, Please call registerService first"
-          ": signature: " << methodSignature << " serverID " <<
+          ": signature: " << qi::signatureToString(methodSignature) << " serverID " <<
             serverID << std::endl;
         return;
       }
-      qisDebug << "Master::registerService " << serverContext.name << " " << methodSignature << std::endl;
+      qisDebug << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
 
       _knownServices.insert(methodSignature, serverID);
     }
@@ -151,11 +151,11 @@ namespace qi {
     {
       const std::string& serverID = _knownServices.get(methodSignature);
       if (serverID.empty()) {
-        qisDebug << "Master::locateService: Could not find server for method: " << methodSignature << std::endl;
+        qisDebug << "Master::locateService: Could not find server for method: " << qi::signatureToString(methodSignature) << std::endl;
         return "";
       }
       std::string endpoint = xNegotiateEndpoint(clientID, serverID);
-      qisDebug << "Master::locateService: Resolved: " << methodSignature << " to " << endpoint << std::endl;
+      qisDebug << "Master::locateService: Resolved: " << qi::signatureToString(methodSignature) << " to " << endpoint << std::endl;
       return endpoint;
     }
 

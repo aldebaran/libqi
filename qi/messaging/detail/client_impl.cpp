@@ -92,7 +92,7 @@ namespace qi {
         try {
           tmpAddress = locateService(methodSignature, _endpointContext);
         } catch(const std::exception&) {
-          qisWarning << "ServiceNotFoundException \"" << methodSignature
+          qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Unable to contact master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Unable to contact master."));
@@ -104,7 +104,7 @@ namespace qi {
           // return a const string ref address
           return _serviceCache.get(methodSignature);
         } else {
-          qisWarning << "ServiceNotFoundException \"" << methodSignature
+          qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Method not known to master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Method not known to master."));
