@@ -116,7 +116,7 @@ namespace qi {
           typename std::vector<U>::const_iterator it = v.begin();
           typename std::vector<U>::const_iterator end = v.end();
           for (; it != end; ++it) {
-            serialize<U>::write(*it);
+            serialize<U>::write(sd, *it);
           }
         }
         __QI_DEBUG_SERIALIZATION_CONTAINER_W(std::vector<U>, v);
@@ -132,7 +132,7 @@ namespace qi {
           typename std::vector<U>::iterator it = v.begin();
           typename std::vector<U>::iterator end = v.end();
           for (; it != end; ++it) {
-            serialize<U>::read(*it);
+            serialize<U>::read(sd, *it);
           }
         }
         __QI_DEBUG_SERIALIZATION_CONTAINER_R(std::vector<U>, v);
