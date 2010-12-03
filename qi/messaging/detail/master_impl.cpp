@@ -239,7 +239,7 @@ namespace qi {
       ret.insert(std::make_pair("machineID", m.machineID));
       ret.insert(std::make_pair("hostName", m.hostName));
       ret.insert(std::make_pair("publicIP", m.publicIP));
-      ret.insert(std::make_pair("publicIP", platformAsString((Platform)m.platformID)));
+      ret.insert(std::make_pair("platform", platformAsString((Platform)m.platformID)));
       return ret;
     }
 
