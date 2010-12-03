@@ -29,7 +29,7 @@ namespace qi {
           sprintf(endpoint, "tcp://127.0.0.1:%d", serverContext.port);
         } else {
           // mac and linux both support ipc
-          sprintf(endpoint, "ipc:///tmp/127.0.0.1:%d", serverContext.port);
+          sprintf(endpoint, "ipc:///tmp/qi_127.0.0.1:%d", serverContext.port);
         }
       } else {
         // default to tcp on public ip
@@ -46,11 +46,13 @@ namespace qi {
       sprintf(port, "%d", serverContext.port);
 
       endpoints.push_back(std::string("inproc://127.0.0.1:") + port);
-      endpoints.push_back(std::string("tcp://127.0.0.1:") + port);
-      endpoints.push_back(std::string("tcp://") + serverMachineContext.publicIP + std::string(":") + port);
       if (serverMachineContext.platformID != PlatformWindows) {
         // windows does not support IPC
-        endpoints.push_back(std::string("ipc:///tmp/127.0.0.1:") + port);
+        endpoints.push_back(std::string("ipc:///tmp/qi_127.0.0.1:") + port);
+      }
+      endpoints.push_back(std::string("tcp://127.0.0.1:") + port);
+      if (!serverMachineContext.publicIP.empty()) {
+        endpoints.push_back(std::string("tcp://") + serverMachineContext.publicIP + std::string(":") + port);
       }
 
       return endpoints;
