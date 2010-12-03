@@ -193,6 +193,10 @@ TEST(TestSignature, BasicMemberSignature) {
   EXPECT_EQ("i:iiiiii", qi::signatureFromObject::value(&Foo::fun6));
 }
 
+TEST(TestSignature, MethodSignatureToString) {
+  EXPECT_EQ("int oink(int)", qi::signatureToString("oink::i:i"));
+}
+
 TEST(TestSignature, SignatureToString) {
   EXPECT_EQ("int (vector<int>, map<bool, string>)", qi::signatureToString("i:[i]{bs}"));
   EXPECT_EQ("map<vector<map<map<int, int>, map<int, int>>>, vector<vector<map<map<int, int>, map<int, int>>>>>", qi::signatureToString("{[{{ii}{ii}}][[{{ii}{ii}}]]}"));
