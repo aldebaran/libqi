@@ -11,18 +11,13 @@
 #include <qi/signature/detail/signature_visitor.hpp>
 
 namespace qi {
-
   namespace detail {
-
-
 
     SignatureVisitor::SignatureVisitor(const char *signature, std::string &result)
       : _result(result),
         _current(signature),
         _signature(signature)
-    {
-
-    }
+    {}
 
     void SignatureVisitor::visit(const char *sep) {
       char first = 1;
@@ -62,13 +57,11 @@ namespace qi {
         break;
       }
 
-      //pointer is just an extra qualifer over a single type
+      //pointer is just an extra qualifier over a single type
       if (*_current == '*') {
         _result += "*";
         _current++;
       }
-
-
     }
 
     void SignatureVisitor::visitSimple() {
@@ -137,7 +130,5 @@ namespace qi {
       _result += name + ")";
       _current++;
     }
-
   }
-
 };
