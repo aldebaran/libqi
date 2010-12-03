@@ -19,6 +19,7 @@ Events:
   - define an API, maybe events are only
 
 Transport:
+  - Client/Subscriber: handle timeout on connect/call/read
   - let the possibility to avoid thread in server/subscriber. (add a receive method)
   - share a context between transport
   - see if ACE shm transport is more efficient than
