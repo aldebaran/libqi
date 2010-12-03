@@ -30,6 +30,8 @@ namespace qi {
         ZMQClientImpl(const std::string &servername);
 
         virtual void send(const std::string &tosend, std::string &result);
+        void pollRecv(long timeout);
+
 
       protected:
         void connect();

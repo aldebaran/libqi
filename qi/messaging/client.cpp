@@ -18,7 +18,7 @@ namespace qi {
   Client::~Client() {}
 
   Client::Client(const std::string& clientName,
-                         const std::string& masterAddress)
+                 const std::string& masterAddress)
     : _impl(new detail::ClientImpl(clientName, masterAddress))
   {}
 

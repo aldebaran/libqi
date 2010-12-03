@@ -7,6 +7,8 @@
 */
 
 #include <qi/transport/detail/zmq/zmq_client_impl.hpp>
+#include <qi/exceptions/exceptions.hpp>
+#include <iostream>
 
 namespace qi {
   namespace transport {
@@ -25,6 +27,25 @@ namespace qi {
       void ZMQClientImpl::connect()
       {
         socket.connect(_serverAddress.c_str());
+        //TODO: check that the connection is OK
+        //sleep(1);
+      }
+
+      void ZMQClientImpl::pollRecv(long timeout) {
+        int             rc = 0;
+        zmq_pollitem_t  items[1];
+
+        items[0].socket  = socket;
+        items[0].fd      = 0;
+        items[0].events  = ZMQ_POLLIN;
+        items[0].revents = 0;
+
+        rc = zmq_poll(items, 1, timeout);
+        std::cout << "timeout:" << timeout << std::endl;
+        std::cout << "Rc:" << rc << std::endl;
+        std::cout << "PollIn:" << (items[0].revents) << std::endl;
+        if ((rc <= 0) || (!(items[0].revents & ZMQ_POLLIN)))
+          throw qi::transport::Exception("no response");
       }
 
       /// <summary> Sends. </summary>
@@ -39,7 +60,11 @@ namespace qi {
         zmq::message_t msg(tosend.size());
         memcpy(msg.data(), tosend.data(), tosend.size());
         socket.send(msg);
+
+        //we leave the possibility to timeout, pollRecv will throw and avoid the call to recv
+        //pollRecv(1000 * 1000 * 1000);
         socket.recv(&msg);
+
         // TODO optimize this
         // boost could serialize from msg.data() and size,
         // without making a string
