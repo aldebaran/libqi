@@ -9,6 +9,7 @@
 using qi::detail::MachineContext;
 using qi::detail::EndpointContext;
 using qi::detail::negotiateEndpoint;
+using qi::detail::Platform;
 
 TEST(NegotiateEndpoint, sameDefaultContext)
 {
@@ -34,7 +35,7 @@ TEST(NegotiateEndpoint, realServerPortWin)
   EndpointContext c1;
   EndpointContext c2;
   MachineContext m;
-  m.platformID = 0;
+  m.platformID = (Platform)0;
   c2.port = 5555;
   std::string endpoint = negotiateEndpoint(c1, c2, m);
   std::cout << endpoint << std::endl;
@@ -58,7 +59,7 @@ TEST(NegotiateEndpoint, differentContextWin)
   MachineContext m;
   c2.port = 5555;
   c2.contextID = "somethingdifferent";
-  m.platformID = 0;
+  m.platformID = (Platform)0;
   std::string endpoint = negotiateEndpoint(c1, c2, m);
   std::cout << endpoint << std::endl;
 }
@@ -82,7 +83,7 @@ TEST(NegotiateEndpoint, differentMachineWin)
   MachineContext m;
   c2.port = 5555;
   c2.machineID = "somethingdifferent";
-  m.platformID = 0;
+  m.platformID = (Platform)0;
   std::string endpoint = negotiateEndpoint(c1, c2, m);
   std::cout << endpoint << std::endl;
 }
