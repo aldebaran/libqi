@@ -20,6 +20,12 @@ namespace qi {
     return result;
   }
 
+  std::string signatureToString(const std::string& signature) {
+    std::string result;
+    detail::SignatureVisitor(signature.c_str(), result).visit();
+    return result;
+  }
+
 
 
 };

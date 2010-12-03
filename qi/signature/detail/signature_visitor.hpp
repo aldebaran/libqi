@@ -29,10 +29,12 @@ namespace qi {
       void visitMap();
       void visitProtobuf();
       void visitFunctionArguments();
+      void visitFunction();
 
       std::string &_result;
       const char  *_current;
       const char  *_signature;
+      std::string _method;
     };
 
   };

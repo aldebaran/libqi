@@ -16,6 +16,8 @@ namespace qi {
 
   std::string signatureToString(const char *signature);
 
+  std::string signatureToString(const std::string& signature);
+
 };
 
 

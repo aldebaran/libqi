@@ -194,7 +194,9 @@ TEST(TestSignature, BasicMemberSignature) {
 }
 
 TEST(TestSignature, MethodSignatureToString) {
-  EXPECT_EQ("int oink(int)", qi::signatureToString("oink::i:i"));
+  EXPECT_EQ("int meth(int)", qi::signatureToString("meth::i:i"));
+  EXPECT_EQ("map<double, int> meth(vector<string>, int*, bool)", qi::signatureToString("oink::{di}:[v]i*b"));
+  EXPECT_EQ("void meth(void)", qi::signatureToString("oink::v:v"));
 }
 
 TEST(TestSignature, SignatureToString) {

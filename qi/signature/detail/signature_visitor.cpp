@@ -16,10 +16,14 @@ namespace qi {
     SignatureVisitor::SignatureVisitor(const char *signature, std::string &result)
       : _result(result),
         _current(signature),
-        _signature(signature)
+        _signature(signature),
+        _method("")
     {}
 
     void SignatureVisitor::visit(const char *sep) {
+      if (_current == _signature)
+        visitFunction();
+
       char first = 1;
       while(*_current != 0)
       {
@@ -36,6 +40,15 @@ namespace qi {
           break;
         }
       }
+    }
+
+    void SignatureVisitor::visitFunction() {
+      const char* sep = "::";
+      const char* delimiter = strstr(_signature, sep);
+      if (delimiter == NULL)
+        return;
+      _method  = std::string(_signature, delimiter - _signature);
+      _current = delimiter + 2;
     }
 
     void SignatureVisitor::visitSingle() {
@@ -92,6 +105,7 @@ namespace qi {
     }
 
     void SignatureVisitor::visitFunctionArguments() {
+      _result += _method;
       _result += "(";
       _current++;
       visit(", ");
