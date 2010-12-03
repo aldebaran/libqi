@@ -43,13 +43,13 @@ namespace qi {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "\"" << _name << "\" initialized with invalid master "
+        qisError << "\"" << _endpointContext.name << "\" initialized with invalid master "
           "address: \"" << masterAddress << "\" All calls will fail."
           << std::endl;
         return;
       }
 
-      if (_name == "master") {
+      if (_endpointContext.name == "master") {
         // we are the master's server, so we don't need a client to ourselves
         _isMasterServer = true;
         _isInitialized = true;
@@ -57,7 +57,7 @@ namespace qi {
       } else {
         _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
         if (! _isInitialized ) {
-          qisError << "\"" << _name << "\" could not connect to master "
+          qisError << "\"" << _endpointContext.name << "\" could not connect to master "
             "at address \"" << masterEndpointAndPort.first << "\""
             << std::endl;
           return;
@@ -94,12 +94,12 @@ namespace qi {
       qi::Functor* functor)
     {
       if (! _isInitialized ) {
-        qisError << "Attempt to use uninitialized server: \"" << _name <<
+        qisError << "Attempt to use uninitialized server: \"" << _endpointContext.name <<
           "\". Service \"" << qi::signatureToString(methodSignature) << "\" not added."
           << std::endl;
         throw qi::transport::ServerException(
           std::string("Attempt to use uninitialized server: \"") +
-          _name + "\". Service not added.");
+          _endpointContext.name + "\". Service not added.");
         return;
       }
       ServiceInfo service(methodSignature, functor);

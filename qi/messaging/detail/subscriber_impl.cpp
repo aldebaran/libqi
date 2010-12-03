@@ -34,7 +34,7 @@ namespace qi {
     void SubscriberImpl::subscribe(const std::string& topicName, qi::Functor* f) {
       std::string endpoint = locateTopic(topicName, _endpointContext);
       if (endpoint.empty()) {
-        qisWarning << "Subscriber \"" << _name << "\": Topic not found \"" << topicName << "\"" << std::endl;
+        qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << topicName << "\"" << std::endl;
          return;
       }
 

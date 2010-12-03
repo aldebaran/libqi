@@ -18,9 +18,6 @@ namespace qi {
 
     class Publisher {
     public:
-      Publisher() {}
-      virtual ~Publisher() {}
-
       virtual void connect(const std::string& serverAddresses) = 0;
       virtual void bind(const std::string& serverAddress) = 0;
       virtual void bind(const std::vector<std::string>& serverAddresses) = 0;

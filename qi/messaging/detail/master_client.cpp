@@ -20,11 +20,11 @@ namespace qi {
 
     MasterClient::~MasterClient() {}
 
-    MasterClient::MasterClient(const std::string name, const std::string& masterAddress) :
-        _name(name),
+    MasterClient::MasterClient(const std::string name,
+                               const std::string& masterAddress) :
         _masterAddress(masterAddress)
     {
-      _endpointContext.name = _name;
+      _endpointContext.name = name;
       _endpointContext.contextID = _qiContext.getID();
     }
 
@@ -32,21 +32,17 @@ namespace qi {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "\"" << _name << "\" initialized with invalid master address: \""
+        qisError << "\"" << _endpointContext.name << "\" initialized with invalid master address: \""
             << _masterAddress << "\" All calls will fail." << std::endl;
         return;
       }
       _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
       if (! _isInitialized ) {
-        qisError << "\"" << _name << "\" could not connect to master "
+        qisError << "\"" << _endpointContext.name << "\" could not connect to master "
             "at address \"" << masterEndpointAndPort.first << "\""
             << std::endl;
         return;
       }
-    }
-
-    const std::string& MasterClient::getName() const {
-      return _name;
     }
 
     const std::string& MasterClient::getMasterAddress() const {

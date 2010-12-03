@@ -11,7 +11,7 @@
 #define _QI_MESSAGING_CLIENT_HPP_
 
 #include <string>
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
 
@@ -118,7 +118,7 @@ namespace qi {
     void xCall(const std::string& signature,
       const qi::serialization::Message& request,
             qi::serialization::Message& result);
-    std::auto_ptr<qi::detail::ClientImpl> _impl;
+    boost::scoped_ptr<qi::detail::ClientImpl> _impl;
   };
 }
 

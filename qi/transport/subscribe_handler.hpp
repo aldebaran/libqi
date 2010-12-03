@@ -10,7 +10,7 @@
 #ifndef _QI_TRANSPORT_SUBSCRIBE_HANDLER_HPP_
 #define _QI_TRANSPORT_SUBSCRIBE_HANDLER_HPP_
 
-# include <qi/transport/buffer.hpp>
+#include <qi/transport/buffer.hpp>
 
 namespace qi {
   namespace transport {

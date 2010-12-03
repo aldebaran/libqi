@@ -11,7 +11,7 @@
 #define _QI_MESSAGING_MASTER_HPP_
 
 #include <string>
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 
 namespace qi {
   namespace detail {
@@ -35,7 +35,7 @@ namespace qi {
     bool isInitialized() const;
 
   private:
-    std::auto_ptr<detail::MasterImpl> _impl;
+    boost::scoped_ptr<detail::MasterImpl> _impl;
   };
 
 }

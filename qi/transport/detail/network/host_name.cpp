@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
-#pragma comment(lib, "IPHLPAPI.lib")
 
 namespace qi {
   namespace detail {

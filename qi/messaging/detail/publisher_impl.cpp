@@ -32,7 +32,7 @@ namespace qi {
           std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
 
           if (! xBind(subscribeAddresses)) {
-            qisError << "PublisherImpl::advertise Failed to bind publisher: " << _name << std::endl;
+            qisError << "PublisherImpl::advertise Failed to bind publisher: " << _endpointContext.name << std::endl;
             return;
           }
           registerEndpoint(_endpointContext);

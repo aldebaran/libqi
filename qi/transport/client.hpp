@@ -20,30 +20,30 @@ namespace qi {
     template<typename TRANSPORT_TYPE, typename BUFFER_TYPE>
     class GenericTransportClient {
     public:
-      GenericTransportClient() : isInitialized(false) {}
+      GenericTransportClient() : _isInitialized(false) {}
 
       bool connect(const std::string &address) {
         try {
-          //qisDebug << "* GenericTransportClient:connect " << address << std::endl;
           _client = new TRANSPORT_TYPE(address);
-          isInitialized = true;
+          _isInitialized = true;
         } catch(const std::exception& e) {
           qisDebug << "GenericClient failed to create client for address \""
             << address << "\" Reason: " << e.what() << std::endl;
+          _isInitialized = false;
         }
-         return isInitialized;
+        return _isInitialized;
       }
 
       void send(const BUFFER_TYPE &def, BUFFER_TYPE &result)
       {
-        if (!isInitialized) {
+        if (!_isInitialized) {
           qisError << "Attempt to use an unitialized client." << std::endl;
         }
         _client->send(def, result);
       }
 
-      bool isInitialized;
     protected:
+     bool _isInitialized;
       qi::transport::detail::ClientImpl<BUFFER_TYPE> *_client;
     };
 

@@ -10,7 +10,6 @@
 #ifndef _QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP_
 #define _QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP_
 
-#include <string>
 namespace qi {
   namespace detail {
     static const int kDefaultMasterPort = 5555;

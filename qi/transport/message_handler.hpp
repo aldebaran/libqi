@@ -19,8 +19,9 @@ namespace qi {
     public:
       /// <summary> Generic message handler. </summary>
       /// <param name="requestMessage"> The request </param>
-      /// <param name="responseMessage"> [in,out] The reply </param>
-      virtual void messageHandler(qi::transport::Buffer &requestMessage, qi::transport::Buffer& responseMessage) = 0;
+      /// <param name="responseMessage"> The reply </param>
+      virtual void messageHandler(qi::transport::Buffer& requestMessage,
+                                  qi::transport::Buffer& responseMessage) = 0;
     };
   }
 }

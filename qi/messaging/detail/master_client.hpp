@@ -20,11 +20,10 @@ namespace qi {
       MasterClient();
       virtual ~MasterClient();
 
-      MasterClient(const std::string name, const std::string& masterAddress);
+      MasterClient(const std::string name,
+                   const std::string& masterAddress);
 
       void init();
-
-      const std::string& getName() const;
 
       const std::string& getMasterAddress() const;
 
@@ -36,19 +35,20 @@ namespace qi {
 
       void unregisterEndpoint(const qi::detail::EndpointContext& e);
 
-      std::string locateService(const std::string& methodSignature, const qi::detail::EndpointContext& e);
+      std::string locateService(const std::string& methodSignature,
+                                const qi::detail::EndpointContext& e);
 
-      void registerService(
-        const std::string& methodSignature, const qi::detail::EndpointContext& e);
+      void registerService(const std::string& methodSignature,
+                           const qi::detail::EndpointContext& e);
 
-      std::string locateTopic(const std::string& methodSignature, const qi::detail::EndpointContext& e);
+      std::string locateTopic(const std::string& methodSignature,
+                              const qi::detail::EndpointContext& e);
 
-      bool topicExists(const std::string& signature);
+      bool topicExists(const std::string& topicSignature);
 
-      void registerTopic(
-        const std::string& signature, const qi::detail::EndpointContext& e);
+      void registerTopic(const std::string& topicSignature,
+                         const qi::detail::EndpointContext& e);
 
-      std::string _name;
       std::string _masterAddress;
 
       /// <summary> The transport client used to talk with the master </summary>

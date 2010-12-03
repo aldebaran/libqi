@@ -10,6 +10,6 @@
 #ifndef _QI_LOG_HPP_
 #define _QI_LOG_HPP_
 
-# include <qi/log/log.hpp>
+#include <qi/log/log.hpp>
 
 #endif  // _QI_LOG_HPP_

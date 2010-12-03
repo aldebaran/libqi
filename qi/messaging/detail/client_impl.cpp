@@ -76,7 +76,7 @@ namespace qi {
       bool ok = client->connect(serverAddress);
       if (ok) {
         _serverClients.insert(serverAddress, client);
-        qisDebug << "Client \"" << _name
+        qisDebug << "Client \"" << _endpointContext.name
                  << "\" connected to " << serverAddress << std::endl;
       }
       return ok;
