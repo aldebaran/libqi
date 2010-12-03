@@ -23,6 +23,8 @@ namespace qi {
       UNDEFINED_ENDPOINT  = 99,
     };
 
+    std::string endpointTypeAsString(EndpointType type);
+
     struct EndpointContext {
       EndpointType type;
       std::string  name;

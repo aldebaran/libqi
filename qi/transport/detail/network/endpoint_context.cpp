@@ -11,6 +11,22 @@
 
 namespace qi {
   namespace detail {
+    std::string endpointTypeAsString(EndpointType type) {
+      if (type == SERVER_ENDPOINT) {
+        return "Server";
+      }
+      if (type == CLIENT_ENDPOINT) {
+        return "Client";
+      }
+      if (type == PUBLISHER_ENDPOINT) {
+        return "Publisher";
+      }
+      if (type == SUBSCRIBER_ENDPOINT) {
+        return "Subscriber";
+      }
+      return "Unknown";
+    }
+
     EndpointContext::EndpointContext():
       type(CLIENT_ENDPOINT),
       name(""),
