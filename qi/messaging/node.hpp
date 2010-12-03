@@ -16,8 +16,16 @@
 #include <qi/messaging/subscriber.hpp>
 
 namespace qi {
-  /// <summary> Node: A combination of Server, Client, Publisher and Subscriber </summary>
-  class Node : public Server, public Client, public Publisher, public Subscriber {
+  /// <summary>
+  /// Node: A combination of Server, Client, Publisher and
+  /// Subscriber
+  ///   /// </summary>
+  class Node :
+    public Server,
+    public Client,
+    public Publisher,
+    public Subscriber
+  {
   public:
     /// <summary> Finaliser. </summary>
     virtual ~Node();
