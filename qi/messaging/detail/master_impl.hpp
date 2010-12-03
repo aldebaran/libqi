@@ -42,6 +42,11 @@ namespace qi {
       std::string locateService(const std::string& methodSignature, const std::string& clientID);
 
       const std::map<std::string, std::string>& listServices();
+      const std::map<std::string, std::string>& listTopics();
+      const std::vector<std::string> listMachines();
+      const std::vector<std::string> listEndpoints();
+      const std::map<std::string, std::string> listMachine(const std::string& machineID);
+      const std::map<std::string, std::string> listEndpoint(const std::string& endpointID);
 
       std::string locateTopic(const std::string& methodSignature, const std::string& clientID);
 
@@ -86,6 +91,13 @@ namespace qi {
       MutexedNameLookup<std::string>                 _knownTopics;
 
       AddressManager _addressManager;
+
+      // Helpful typedefs
+      typedef std::map<std::string, MachineContext>                  MachineMap;
+      typedef std::map<std::string, MachineContext>::const_iterator  MachineMapCIT;
+      typedef std::map<std::string, EndpointContext>                 EndpointMap;
+      typedef std::map<std::string, EndpointContext>::const_iterator EndpointMapCIT;
+
     };
   }
 }

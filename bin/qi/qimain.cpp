@@ -22,14 +22,77 @@ void qi_call(std::string addr) {
   //client.call("master.listServices::{ss}")
 
   typedef std::map<std::string, std::string>  StringMap;
-  StringMap                 mymap;
-  StringMap::const_iterator it;
+  typedef std::map<std::string, StringMap>    MapMap;
+  typedef std::vector<std::string>            VString;
+  StringMap::const_iterator mit;
+  VString::const_iterator   vit;
 
-  mymap = client.call< StringMap >("master.listServices");
+  StringMap                 serviceMap;
+  StringMap                 topicMap;
+  VString endpointsIDs;
+  VString machinesIDs;
 
-  for (it = mymap.begin(); it != mymap.end(); ++it)
+  // DATA GATHERING ------------
+  serviceMap = client.call< StringMap >("master.listServices");
+  topicMap = client.call< StringMap >("master.listTopics");
+  machinesIDs = client.call< VString >("master.listMachines");
+  endpointsIDs = client.call< VString >("master.listEndpoints");
+  MapMap machines;
+  MapMap endpoints;
+  for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit) {
+    machines.insert(std::make_pair(*vit, client.call< StringMap >("master.listMachine", *vit)));
+  }
+  for (vit = endpointsIDs.begin(); vit != endpointsIDs.end(); ++vit) {
+    endpoints.insert(std::make_pair(*vit, client.call< StringMap >("master.listEndpoint", *vit)));
+  }
+  // ----------------------------
+
+  std::cout << "Services:" << std::endl;
+  for (mit = serviceMap.begin(); mit != serviceMap.end(); ++mit)
   {
-    std::cout << it->first << " :" << it->second << std::endl;
+    std::cout << mit->first << " :" << mit->second << std::endl;
+  }
+
+  std::cout << "Topics:" << std::endl;
+  for (mit = topicMap.begin(); mit != topicMap.end(); ++mit)
+  {
+    std::cout << mit->first << " :" << mit->second << std::endl;
+  }
+
+  std::cout << "Machines:" << std::endl;
+  for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit)
+  {
+    std::cout << *vit << std::endl;
+  }
+
+  std::cout << "Endpoints:" << std::endl;
+  for (vit = endpointsIDs.begin(); vit != endpointsIDs.end(); ++vit)
+  {
+    std::cout << *vit << std::endl;
+  }
+
+  std::cout << "-----------" << std::endl;
+  MapMap::const_iterator it;
+  std::cout << "Endpoints:" << std::endl;
+  for (it = endpoints.begin(); it != endpoints.end(); ++it)
+  {
+    const StringMap& m = it->second;
+    for (mit = m.begin(); mit != m.end(); ++mit)
+    {
+      std::cout << mit->first << ": " << mit->second << std::endl;
+    }
+    std::cout << "--" << std::endl;
+  }
+
+  std::cout << "Machines:" << std::endl;
+  for (it = machines.begin(); it != machines.end(); ++it)
+  {
+    const StringMap& m = it->second;
+    for (mit = m.begin(); mit != m.end(); ++mit)
+    {
+      std::cout << mit->first << ": " << mit->second << std::endl;
+    }
+    std::cout << "--" << std::endl;
   }
   //  std::string locatethismethod("master.listServices::{ss}:");
   //  std::string result = client.call<std::string>("master.locateService", locatethismethod);

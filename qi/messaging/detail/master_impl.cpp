@@ -8,22 +8,13 @@
 
 #include <qi/messaging/detail/master_impl.hpp>
 #include <qi/transport/detail/network/endpoints.hpp>
+#include <qi/transport/detail/network/platform.hpp>
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
   qisDebug << "===" << msg << " ===" << std::endl;                 \
-  if (endpoint.type == SERVER_ENDPOINT) {                          \
-  qisDebug << "type: SERVER" << std::endl;                         \
-  }                                                                \
-  if (endpoint.type == CLIENT_ENDPOINT) {                          \
-  qisDebug << "type: CLIENT" << std::endl;                         \
-  }                                                                \
-  if (endpoint.type == PUBLISHER_ENDPOINT) {                       \
-  qisDebug << "type: PUBLISHER" << std::endl;                      \
-  }                                                                \
-  if (endpoint.type == SUBSCRIBER_ENDPOINT) {                      \
-  qisDebug << "type: SUBSCRIBER" << std::endl;                     \
-  }                                                                \
+  qisDebug << "type: " << endpointTypeAsString(endpoint.type)      \
+                                                     << std::endl; \
   qisDebug << "endpointID: " << endpoint.endpointID << std::endl;  \
   qisDebug << "machineID : " << endpoint.machineID  << std::endl;  \
   qisDebug << "name      : " << endpoint.name       << std::endl;  \
@@ -32,13 +23,14 @@
   qisDebug << "port      : " << endpoint.port       << std::endl;  \
   qisDebug << "============================"        << std::endl;  \
 
-#define MASTERIMPL_DEBUG_MACHINE_CONTEXT(msg, machine)            \
-  qisDebug << "===" << msg << " ===" << std::endl;                \
-  qisDebug << "machineID : " << machine.machineID  << std::endl;  \
-  qisDebug << "hostName  : " << machine.hostName   << std::endl;  \
-  qisDebug << "platformID: " << machine.platformID << std::endl;  \
-  qisDebug << "publicIP  : " << machine.publicIP   << std::endl;  \
-  qisDebug << "============================"        << std::endl; \
+#define MASTERIMPL_DEBUG_MACHINE_CONTEXT(msg, machine)               \
+  qisDebug << "===" << msg << " ===" << std::endl;                   \
+  qisDebug << "machineID : " << machine.machineID  << std::endl;     \
+  qisDebug << "hostName  : " << machine.hostName   << std::endl;     \
+  qisDebug << "platformID: " << platformAsString(machine.platformID) \
+                                                      << std::endl;  \
+  qisDebug << "publicIP  : " << machine.publicIP   << std::endl;     \
+  qisDebug << "============================"        << std::endl;    \
 
 namespace qi {
   namespace detail {
@@ -76,6 +68,11 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.registerService",    this, &MasterImpl::registerService);
       xAddMasterMethod(serverContext.endpointID, "master.locateService",      this, &MasterImpl::locateService);
       xAddMasterMethod(serverContext.endpointID, "master.listServices",       this, &MasterImpl::listServices);
+      xAddMasterMethod(serverContext.endpointID, "master.listTopics",         this, &MasterImpl::listTopics);
+      xAddMasterMethod(serverContext.endpointID, "master.listMachines",       this, &MasterImpl::listMachines);
+      xAddMasterMethod(serverContext.endpointID, "master.listEndpoints",      this, &MasterImpl::listEndpoints);
+      xAddMasterMethod(serverContext.endpointID, "master.listMachine",        this, &MasterImpl::listMachine);
+      xAddMasterMethod(serverContext.endpointID, "master.listEndpoint",       this, &MasterImpl::listEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.registerMachine",    this, &MasterImpl::registerMachine);
       xAddMasterMethod(serverContext.endpointID, "master.registerEndpoint",   this, &MasterImpl::registerEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
@@ -110,7 +107,7 @@ namespace qi {
       const int& platformID)
     {
       if (!_knownMachines.exists(machineID)) {
-        MachineContext m(hostName, machineID, publicIPAddress, platformID);
+        MachineContext m(hostName, machineID, publicIPAddress, (Platform)platformID);
         xRegisterMachine(m);
       }
     }
@@ -162,12 +159,6 @@ namespace qi {
       return endpoint;
     }
 
-
-    const std::map<std::string, std::string>& MasterImpl::listServices() {
-      return _knownServices.getMap();
-    }
-
-
     std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
       const std::string& publisherEndpointID = _knownTopics.get(topicName);
       if (publisherEndpointID.empty()) {
@@ -208,6 +199,61 @@ namespace qi {
 
     bool MasterImpl::topicExists(const std::string& topicName) {
       return _knownTopics.exists(topicName);
+    }
+
+    const std::map<std::string, std::string>& MasterImpl::listServices() {
+      return _knownServices.getMap();
+    }
+
+    const std::map<std::string, std::string>& MasterImpl::listTopics() {
+      return _knownTopics.getMap();
+    }
+
+    const std::vector<std::string> MasterImpl::listMachines() {
+      std::vector<std::string> v;
+      const MachineMap& m = _knownMachines.getMap();
+      MachineMapCIT it    = m.begin();
+      MachineMapCIT end   = m.end();
+      v.resize(m.size());
+      for (int i=0; it != end; ++it) {
+        v[i++] = it->first;
+      }
+      return v;
+    }
+
+    const std::vector<std::string> MasterImpl::listEndpoints() {
+      std::vector<std::string> v;
+      const EndpointMap& e = _knownEndpoints.getMap();
+      EndpointMapCIT it    = e.begin();
+      EndpointMapCIT end   = e.end();
+      v.resize(e.size());
+        for (int i=0; it != end; ++it) {
+          v[i++] = it->first;
+        }
+        return v;
+    }
+
+    const std::map<std::string, std::string> MasterImpl::listMachine(const std::string& machineID) {
+      const MachineContext& m = _knownMachines.get(machineID);
+      std::map<std::string, std::string> ret;
+      ret.insert(std::make_pair("machineID", m.machineID));
+      ret.insert(std::make_pair("hostName", m.hostName));
+      ret.insert(std::make_pair("publicIP", m.publicIP));
+      ret.insert(std::make_pair("publicIP", platformAsString((Platform)m.platformID)));
+      return ret;
+    }
+
+    const std::map<std::string, std::string> MasterImpl::listEndpoint(const std::string& endpointID) {
+      const EndpointContext& e = _knownEndpoints.get(endpointID);
+      std::map<std::string, std::string> ret;
+      ret.insert(std::make_pair("endpointID", e.endpointID));
+      ret.insert(std::make_pair("contextID", e.contextID));
+      ret.insert(std::make_pair("machineID", e.machineID));
+      ret.insert(std::make_pair("processID", "FIXME: ... master_impl.cpp"));
+      ret.insert(std::make_pair("name", e.name));
+      ret.insert(std::make_pair("type", endpointTypeAsString(e.type)));
+      ret.insert(std::make_pair("port", "FIXME..master_impl.cpp line 258!"));
+      return ret;
     }
 
   }
