@@ -21,7 +21,7 @@ namespace qi {
       const std::string& pHostName,
       const std::string& pMachineID,
       const std::string& pPublicIPAddress,
-      const int&         pPlatformID) :
+      const Platform&    pPlatformID) :
         hostName(pHostName),
         machineID(pMachineID),
         publicIP(pPublicIPAddress),

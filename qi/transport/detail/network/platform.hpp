@@ -15,13 +15,26 @@ namespace qi {
 
     enum Platform {
       PlatformWindows = 0,
-      platformMac     = 1,
+      PlatformMac     = 1,
       PlatformLinux   = 2,
       PlatformUnknown = 99
     };
 
+    inline std::string platformAsString(Platform p) {
+      if (p == PlatformWindows) {
+        return "Windows";
+      }
+      if (p == PlatformMac) {
+        return "Mac";
+      }
+      if (p == PlatformMac) {
+        return "Linux";
+      }
+      return "Unknown";
+    }
+
     /// <summary> Gets the platform </summary>
-    inline int getPlatform() {
+    inline Platform getPlatform() {
 #ifdef _WIN32
      return PlatformWindows;
 #else

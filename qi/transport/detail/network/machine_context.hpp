@@ -11,6 +11,7 @@
 #define _QI_TRANSPORT_DETAIL_NETWORK_MACHINE_CONTEXT_HPP_
 
 #include <string>
+#include <qi/transport/detail/network/platform.hpp>
 
 namespace qi {
   namespace detail {
@@ -18,14 +19,14 @@ namespace qi {
       std::string hostName;
       std::string machineID;
       std::string publicIP;
-      int platformID;
+      Platform platformID;
 
       MachineContext();
 
       MachineContext(const std::string& hostName,
         const std::string& machineID,
         const std::string& publicIPAddress,
-        const int&         platformID);
+        const Platform&    platformID);
     };
   }
 }
