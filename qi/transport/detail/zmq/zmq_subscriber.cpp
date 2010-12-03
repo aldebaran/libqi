@@ -58,7 +58,7 @@ namespace qi {
       _control.send(msg);
       // if the socket tries to close before being killed,
       // we will deadlock
-      sleep(0.2);
+      sleep(1.0);
     }
 
     /// <summary> Connects to the publisher </summary>
