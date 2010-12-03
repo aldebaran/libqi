@@ -27,7 +27,7 @@ namespace qi {
           sprintf(endpoint, "tcp://127.0.0.1:%d", serverContext.port);
         } else {
           // mac and linux both support ipc
-          sprintf(endpoint, "ipc://127.0.0.1:%d", serverContext.port);
+          sprintf(endpoint, "ipc:///tmp/127.0.0.1:%d", serverContext.port);
         }
       } else {
         // default to tcp on public ip
@@ -48,7 +48,7 @@ namespace qi {
       endpoints.push_back(std::string("tcp://") + serverMachineContext.publicIP + std::string(":") + port);
       if (serverMachineContext.platformID != PlatformWindows) {
         // windows does not support IPC
-        endpoints.push_back(std::string("ipc://127.0.0.1:") + port);
+        endpoints.push_back(std::string("ipc:///tmp/127.0.0.1:") + port);
       }
 
       return endpoints;
