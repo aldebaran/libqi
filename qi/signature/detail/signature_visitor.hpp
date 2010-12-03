@@ -31,8 +31,8 @@ namespace qi {
       void visitFunctionArguments();
 
       std::string &_result;
-      const char  *_signature;
       const char  *_current;
+      const char  *_signature;
     };
 
   };
