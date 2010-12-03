@@ -36,7 +36,6 @@ namespace qi {
     template<typename T>
     void publish(const std::string topicName, const T& val)
     {
-      //typedef void(C::*FunctionType) (const T &p0);
       void (*f)(const T &p0)  = 0;
       qi::serialization::Message ser;
       qi::serialization::serialize<std::string>::write(ser, makeSignature(topicName, f));
