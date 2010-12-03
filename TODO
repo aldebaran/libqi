@@ -28,6 +28,7 @@ Serialization:
   - abstract the serialisation backend
 
 Test:
+  - test_serialization (base the test on test_boost_serialization)
   - more test
   - split performance test and autotest
   - test coverage
