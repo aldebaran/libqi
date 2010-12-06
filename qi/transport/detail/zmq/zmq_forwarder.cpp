@@ -10,9 +10,9 @@
 
 namespace qi {
   namespace transport {
-
-    ZMQForwarder::ZMQForwarder():
-      _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(2))),
+    namespace detail {
+      ZMQForwarder::ZMQForwarder():
+    _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(2))),
       _in_socket(*_context.get(), ZMQ_SUB),
       _out_socket(*_context.get(), ZMQ_PUB)
     {
@@ -34,11 +34,11 @@ namespace qi {
     }
 
     void ZMQForwarder::run(const std::string& inEndpoint, const std::string& outEndpoint) {
-       std::vector<std::string> in;
-       std::vector<std::string> out;
-       in.push_back(inEndpoint);
-       out.push_back(outEndpoint);
-       run(in, out);
+      std::vector<std::string> in;
+      std::vector<std::string> out;
+      in.push_back(inEndpoint);
+      out.push_back(outEndpoint);
+      run(in, out);
     }
 
 
@@ -53,6 +53,7 @@ namespace qi {
       }
       // FIXME: how can this be torn down?
       zmq::device(ZMQ_FORWARDER, _in_socket, _out_socket);
+    }
     }
   }
 }

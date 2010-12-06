@@ -18,7 +18,7 @@ namespace qi {
     PublisherImpl::PublisherImpl(const std::string& name, const std::string& masterAddress) :
       MasterClient(name, masterAddress),
       _publisherInitialized(false),
-      _publisher(new qi::transport::ZMQPublisher())
+      _publisher(new qi::transport::detail::ZMQPublisher())
     {
       _endpointContext.type = PUBLISHER_ENDPOINT;
       init();

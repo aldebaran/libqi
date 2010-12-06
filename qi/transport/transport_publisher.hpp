@@ -17,7 +17,7 @@
 namespace qi {
   namespace transport {
 
-    class Publisher {
+    class TransportPublisher {
     public:
       virtual void connect(const std::string& serverAddresses) = 0;
       virtual void bind(const std::string& serverAddress) = 0;

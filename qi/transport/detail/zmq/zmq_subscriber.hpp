@@ -11,7 +11,7 @@
 #ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP_
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP_
 
-# include <qi/transport/subscriber.hpp>
+# include <qi/transport/transport_subscriber.hpp>
 # include <boost/thread.hpp>
 # include <zmq.hpp>
 # include <boost/shared_ptr.hpp>
@@ -19,7 +19,7 @@
 namespace qi {
   namespace transport {
 
-    class ZMQSubscriber : public Subscriber {
+    class ZMQSubscriber : public TransportSubscriber {
     public:
       /// <summary>Creates a ZMQSubscriber</summary>
       ZMQSubscriber();

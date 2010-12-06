@@ -16,7 +16,7 @@
 namespace qi {
   namespace transport {
 
-    class SubscribeHandler {
+    class TransportSubscribeHandler {
     public:
       /// <summary> Generic subscribe handler. </summary>
       /// <param name="requestMessage"> The request </param>

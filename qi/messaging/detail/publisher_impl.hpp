@@ -18,7 +18,7 @@
 
 namespace qi {
   namespace transport {
-    class Publisher;
+    class TransportPublisher;
   }
 
   namespace detail {
@@ -36,7 +36,7 @@ namespace qi {
       bool xBind(const std::vector<std::string> &publishAddresses);
 
       bool _publisherInitialized;
-      boost::scoped_ptr<qi::transport::Publisher> _publisher;
+      boost::scoped_ptr<qi::transport::TransportPublisher> _publisher;
     };
 
   }

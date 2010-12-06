@@ -21,7 +21,7 @@
 namespace qi {
   namespace transport {
     namespace detail {
-      class ResultHandler;
+      //class ResultHandler;
 
       /// <summary>
       /// The server class. It listen for incoming connection from client
@@ -53,7 +53,7 @@ namespace qi {
         void poll();
         void serverResponseHandler(const std::string &result, void *data = 0);
 
-        ResultHandler *getResultHandler() { return 0; }
+//        ResultHandler *getResultHandler() { return 0; }
 
         friend void *worker_routine(void *arg);
 

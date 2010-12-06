@@ -16,7 +16,7 @@
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/master_client.hpp>
 #include <qi/serialization/message.hpp>
-#include <qi/transport/client.hpp>
+#include <qi/transport/transport_generic_client.hpp>
 
 namespace qi {
   namespace detail {
@@ -35,9 +35,10 @@ namespace qi {
       MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
-      MutexedNameLookup< boost::shared_ptr<qi::transport::Client> > _serverClients;
+      MutexedNameLookup< boost::shared_ptr<qi::transport::TransportClient> > _serverClients;
 
-      boost::shared_ptr<qi::transport::Client> xGetServerClient(const std::string& serverAddress);
+      boost::shared_ptr<qi::transport::TransportClient> xGetServerClient(
+        const std::string& serverAddress);
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
     };

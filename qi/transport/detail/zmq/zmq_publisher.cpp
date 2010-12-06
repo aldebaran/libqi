@@ -11,15 +11,15 @@
 
 namespace qi {
   namespace transport {
-
-    ZMQPublisher::ZMQPublisher():
-      _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(1))),
+    namespace detail {
+      ZMQPublisher::ZMQPublisher():
+    _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(1))),
       _socket(*_context.get(), ZMQ_PUB)
     {}
 
     ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context)
       : _context(context),
-        _socket(*_context.get(), ZMQ_PUB)
+      _socket(*_context.get(), ZMQ_PUB)
     {}
 
     ZMQPublisher::~ZMQPublisher() {}
@@ -63,6 +63,8 @@ namespace qi {
       zmq::message_t msg(toSend.size());
       memcpy(msg.data(), toSend.data(), toSend.size());
       _socket.send(msg);
+    }
+
     }
   }
 }

@@ -12,7 +12,7 @@
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP_
 
 #include <zmq.hpp>
-#include <qi/transport/server.hpp>
+#include <qi/transport/transport_generic_server.hpp>
 #include <qi/core/handlers_pool.hpp>
 #include <qi/transport/detail/zmq/zmq_server_impl.hpp>
 #include <string>
@@ -29,7 +29,7 @@ namespace qi {
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      class ResultHandler;
+      //class ResultHandler;
       class ZMQServerQueueImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
@@ -52,7 +52,7 @@ namespace qi {
 
         void serverResponseHandler(const std::string &result, void *data = 0);
 
-        ResultHandler *getResultHandler() { return 0; }
+        //ResultHandler *getResultHandler() { return 0; }
 
         friend void *worker_routine(void *arg);
 

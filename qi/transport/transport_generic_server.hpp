@@ -13,7 +13,7 @@
 
 #include <string>
 #include <qi/log.hpp>
-#include <qi/transport/message_handler.hpp>
+#include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/detail/server_impl.hpp>
 #include <qi/transport/detail/zmq/zmq_simple_server.hpp>
 
@@ -21,10 +21,10 @@ namespace qi {
   namespace transport {
 
     template<typename TRANSPORT>
-    class GenericTransportServer
+    class TransportGenericServer
     {
     public:
-      GenericTransportServer(): _isInitialized(false) {}
+      TransportGenericServer(): _isInitialized(false) {}
 
       void serve(const std::string &address) {
         std::vector<std::string> v;
@@ -57,11 +57,11 @@ namespace qi {
         }
       }
 
-      virtual void setMessageHandler(MessageHandler* dataHandler) {
+      virtual void setMessageHandler(TransportMessageHandler* dataHandler) {
         _transportServer->setDataHandler(dataHandler);
       }
 
-      virtual MessageHandler* getMessageHandler() {
+      virtual TransportMessageHandler* getMessageHandler() {
         return _transportServer->getDataHandler();
       }
 
@@ -74,8 +74,8 @@ namespace qi {
       qi::transport::detail::ServerImpl* _transportServer;
     };
 
-    typedef GenericTransportServer<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;
-    typedef ZMQServer Server;
+    typedef TransportGenericServer<qi::transport::detail::ZMQSimpleServerImpl> ZMQServer;
+    typedef ZMQServer TransportServer;
   }
 
 }

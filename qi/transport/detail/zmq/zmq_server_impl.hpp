@@ -27,7 +27,7 @@ namespace qi {
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      class ResultHandler;
+      //class ResultHandler;
       class ZMQServerImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
       public:
         /// <summary> The Server class constructor. </summary>
@@ -53,7 +53,7 @@ namespace qi {
         void poll();
         void serverResponseHandler(const std::string &result, void *data = 0);
 
-        ResultHandler *getResultHandler() { return 0; }
+        //ResultHandler *getResultHandler() { return 0; }
 
         friend void *worker_routine(void *arg);
 

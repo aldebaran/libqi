@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #include <qi/core/runnable.hpp>
-#include <qi/transport/message_handler.hpp>
+#include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/detail/server_response_handler.hpp>
 
 namespace qi {
@@ -31,17 +31,17 @@ namespace qi {
 
         virtual void run() = 0;
 
-        virtual void setDataHandler(MessageHandler* callback) {
+        virtual void setDataHandler(TransportMessageHandler* callback) {
           _dataHandler = callback;
         }
 
-        virtual MessageHandler *getDataHandler() {
+        virtual TransportMessageHandler *getDataHandler() {
           return _dataHandler;
         }
 
       protected:
         std::vector<std::string>      _serverAddresses;
-        MessageHandler  *_dataHandler;
+        TransportMessageHandler  *_dataHandler;
       };
     }
   }

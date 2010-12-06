@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_DETAIL_SUBSCRIBER_IMPL_HPP_
 
 #include <string>
-#include <qi/transport/subscriber.hpp>
+#include <qi/transport/transport_subscriber.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/detail/mutexednamelookup.hpp>
 #include <qi/messaging/detail/master_client.hpp>
@@ -20,7 +20,9 @@
 namespace qi {
   namespace detail {
 
-    class SubscriberImpl : public qi::detail::MasterClient, public qi::transport::SubscribeHandler {
+    class SubscriberImpl :
+      public qi::detail::MasterClient,
+      public qi::transport::TransportSubscribeHandler {
     public:
 
       explicit SubscriberImpl(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
@@ -36,7 +38,7 @@ namespace qi {
       void xInit();
       bool xConnect(const std::string& address);
 
-      boost::shared_ptr<qi::transport::Subscriber> _transportSubscriber;
+      boost::shared_ptr<qi::transport::TransportSubscriber> _transportSubscriber;
       MutexedNameLookup<ServiceInfo> _subscriberCallBacks;
       MutexedNameLookup<std::string> _subscribedEndpoints;
     };

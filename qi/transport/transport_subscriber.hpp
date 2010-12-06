@@ -12,24 +12,24 @@
 #define _QI_TRANSPORT_SUBSCRIBER_HPP_
 
 #include <string>
-#include <qi/transport/subscribe_handler.hpp>
+#include <qi/transport/transport_subscribe_handler.hpp>
 
 namespace qi {
   namespace transport {
 
 
-    class Subscriber {
+    class TransportSubscriber {
     public:
-      Subscriber() : _subscribeHandler(NULL) {}
-      explicit Subscriber(const Subscriber& rhs) : _subscribeHandler(rhs.getSubscribeHandler()) {}
+      TransportSubscriber() : _subscribeHandler(NULL) {}
+      explicit TransportSubscriber(const TransportSubscriber& rhs) : _subscribeHandler(rhs.getSubscribeHandler()) {}
 
-      virtual ~Subscriber() {}
+      virtual ~TransportSubscriber() {}
 
-      virtual void setSubscribeHandler(SubscribeHandler* callback) {
+      virtual void setSubscribeHandler(TransportSubscribeHandler* callback) {
         _subscribeHandler = callback;
       }
 
-      virtual SubscribeHandler* getSubscribeHandler() const {
+      virtual TransportSubscribeHandler* getSubscribeHandler() const {
         return _subscribeHandler;
       }
 
@@ -38,7 +38,7 @@ namespace qi {
       virtual void subscribe() = 0;
 
     protected:
-      SubscribeHandler  *_subscribeHandler;
+      TransportSubscribeHandler  *_subscribeHandler;
     };
   }
 }

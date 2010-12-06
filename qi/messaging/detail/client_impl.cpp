@@ -11,6 +11,8 @@
 #include <qi/transport/detail/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
+using qi::transport::TransportClient;
+
 namespace qi {
   using serialization::Message;
 
@@ -44,16 +46,16 @@ namespace qi {
         // will throw if service not found
         const std::string& nodeAddress = xLocateService(signature);
         // will throw if unable to find or create client
-        boost::shared_ptr<qi::transport::Client> client = xGetServerClient(nodeAddress);
+        boost::shared_ptr<TransportClient> client = xGetServerClient(nodeAddress);
         std::string resultData;
         client->send(callDef.str(), resultData);
         result.str(resultData);
     }
 
-    boost::shared_ptr<qi::transport::Client> ClientImpl::xGetServerClient(const std::string& serverAddress) {
+    boost::shared_ptr<TransportClient> ClientImpl::xGetServerClient(const std::string& serverAddress) {
       // get the relevant messaging client for the node that hosts the service
 
-      boost::shared_ptr<qi::transport::Client> c = _serverClients.get(serverAddress);
+      boost::shared_ptr<TransportClient> c = _serverClients.get(serverAddress);
       if (c == NULL) {
         // create messaging client if needed ...
         bool ok = xCreateServerClient(serverAddress);
@@ -72,7 +74,7 @@ namespace qi {
 
     bool ClientImpl::xCreateServerClient(const std::string& serverAddress) {
 
-      boost::shared_ptr<qi::transport::Client> client(new qi::transport::Client());
+      boost::shared_ptr<TransportClient> client(new TransportClient());
       bool ok = client->connect(serverAddress);
       if (ok) {
         _serverClients.insert(serverAddress, client);

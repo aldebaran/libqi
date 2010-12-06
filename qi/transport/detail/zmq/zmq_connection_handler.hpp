@@ -13,7 +13,7 @@
 
 #include <qi/core/runnable.hpp>
 #include <qi/transport/buffer.hpp>
-#include <qi/transport/message_handler.hpp>
+#include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/detail/server_response_handler.hpp>
 #include <string>
 
@@ -32,10 +32,10 @@ namespace qi {
         /// <param name="dataHandler"> The data handler. </param>
         /// <param name="serverResponseHander"> The server response hander </param>
         /// <param name="data"> [in,out] If non-null, the data. </param>
-        ZMQConnectionHandler(const std::string               &msg,
-                             qi::transport::MessageHandler   *dataHandler,
-                             ServerResponseHandler           *serverResponseHander,
-                             void                            *data);
+        ZMQConnectionHandler(const std::string                      &msg,
+                             qi::transport::TransportMessageHandler *dataHandler,
+                             ServerResponseHandler                  *serverResponseHander,
+                             void                                   *data);
 
         /// <summary> Finaliser. </summary>
         virtual ~ZMQConnectionHandler ();
@@ -46,7 +46,7 @@ namespace qi {
       private:
         void                             *fData;
         qi::transport::Buffer             fMsg;
-        MessageHandler                   *fDataHandler;
+        TransportMessageHandler          *fDataHandler;
         detail::ServerResponseHandler    *fResponseDelegate;
       };
 

@@ -14,7 +14,7 @@ namespace qi {
     namespace detail {
       ZMQConnectionHandler::ZMQConnectionHandler(
         const qi::transport::Buffer    &msg,
-         MessageHandler                 *dataHandler,
+         TransportMessageHandler        *dataHandler,
          detail::ServerResponseHandler  *responseDelegate,
          void                           *data)
            : fData(data),

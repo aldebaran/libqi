@@ -71,7 +71,7 @@ namespace qi {
 
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(
-        ::boost::bind(&qi::transport::Server::run, _transportServer));
+        ::boost::bind(&qi::transport::TransportServer::run, _transportServer));
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
