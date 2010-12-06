@@ -64,13 +64,19 @@ to a service or topic is peer-to-peer.
 
 \image html master.png
 
+- \subpage overview
+- \subpage quickstart
+- \subpage cheatsheet
+- \subpage advanced
+- \subpage style
+
 */
 
 //-----------------------------------------------------------
 
 /** \page quickstart Quick Start
 
-\b Advertising a Service
+\b Advertise a Service
 \code
 #include <qi/messaging/server.hpp>
 
@@ -85,10 +91,11 @@ int main(int argc, char *argv[])
   qi::Server server("deepThought");
   // Add the service, giving it a name.
   server.addService("deepThought.getMeaningOfLife", &getMeaningOfLife);
+  // FIXME: need a nice way to sleep
 }
 \endcode
 
-\b Calling a service
+\b Call a service
 \code
 #include <qi/messaging/client.hpp>
 
@@ -101,7 +108,12 @@ int main(int argc, char *argv[])
 }
 \endcode
 
-Now you can proceed to the \ref advanced "advanced section".
+- \subpage overview
+- \subpage quickstart
+- \subpage cheatsheet
+- \subpage advanced
+- \subpage style
+
 */
 
 
@@ -125,6 +137,13 @@ server.addMethod("methodName", &handler);                 // add a global functi
 server.addMethod("methodName", &object, &Class::handler); // add an object method
 server.addMethod("methodName", this   , &Class::handler); // add a method from this class
 \endcode
+
+- \subpage overview
+- \subpage quickstart
+- \subpage cheatsheet
+- \subpage advanced
+- \subpage style
+
 */
 
 //-----------------------------------------------------------
@@ -132,5 +151,9 @@ server.addMethod("methodName", this   , &Class::handler); // add a method from t
 /** \page advanced Advanced Usage
 This page is for advanced users.
 
-Make sure you have first read \ref intro "the introduction".
+- \subpage overview
+- \subpage quickstart
+- \subpage cheatsheet
+- \subpage advanced
+- \subpage style
 */
