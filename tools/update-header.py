@@ -11,6 +11,7 @@
 import sys
 import re
 import os
+import random
 
 regex_pragma_once = re.compile("^\s*\#pragma\s+once\s*$")
 
@@ -45,28 +46,35 @@ def write_header(fname, header, body):
         for l in body:
             f.write(l)
 
+def get_cpp_header():
+    val = random.randint(0, 1)
+    if val:
+        return """/*
+*  Author(s):
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
+
+"""
+    else:
+        return """/*
+*  Author(s):
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
+
+"""
+
+
 def get_hpp_header():
     return """#pragma once
-/*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
-*/
+%s
+""" % (get_cpp_header())
 
-"""
-
-def get_cpp_header():
-    return """/*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
-*/
-
-"""
 
 def ls_r(directory, pattern):
     """Returns a sorted list of all the files present in a diretory,
@@ -102,8 +110,3 @@ if __name__ == "__main__":
           write_header(f, get_cpp_header(), body)
         else:
           write_header(f, get_hpp_header(), body)
-        #(guard, l1, l2, l3) = read_header_guard(f)
-        #guard = generate_name(f)
-        #print "new name: ", guard
-        #write_header_guard(f, guard, (l1, l2, l3))
-        #exit(1)
