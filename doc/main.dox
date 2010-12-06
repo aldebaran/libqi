@@ -64,11 +64,6 @@ to a service or topic is peer-to-peer.
 
 \image html master.png
 
-- \subpage overview
-- \subpage quickstart
-- \subpage cheatsheet
-- \subpage advanced
-- \subpage style
 
 */
 
@@ -108,11 +103,6 @@ int main(int argc, char *argv[])
 }
 \endcode
 
-- \subpage overview
-- \subpage quickstart
-- \subpage cheatsheet
-- \subpage advanced
-- \subpage style
 
 */
 
@@ -138,11 +128,7 @@ server.addMethod("methodName", &object, &Class::handler); // add an object metho
 server.addMethod("methodName", this   , &Class::handler); // add a method from this class
 \endcode
 
-- \subpage overview
-- \subpage quickstart
-- \subpage cheatsheet
-- \subpage advanced
-- \subpage style
+
 
 */
 
@@ -151,9 +137,4 @@ server.addMethod("methodName", this   , &Class::handler); // add a method from t
 /** \page advanced Advanced Usage
 This page is for advanced users.
 
-- \subpage overview
-- \subpage quickstart
-- \subpage cheatsheet
-- \subpage advanced
-- \subpage style
 */
