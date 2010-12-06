@@ -1,38 +1,130 @@
-/** \mainpage Qi
+/** \mainpage Qi - a lightweight cross language open source communication framework
 
-\b Qi is a C++ library.
-
-Qi is a lightweight communication framework for high performance messaging
+\b Qi is a lightweight communication framework for high performance messaging
 between distributed processes in memory-constrained environments.
 
-It support two major styles of styles of messaging:
+It places the minimum of requirements on your code. We do not wrap your 'main' method
+and we do not wrap your message types. This makes it easy to integrate existing libraries
+into qi, in most cases without the need to modify the signature of your methods.
 
-RPC: Synchronous Remote procedure calls.
-  Library authors can expose methods to clients, in many
-  cases without altering the signature of their methods.
+Qi was designed with the following goals:
+- Simple
+- Non-intrusive
+- Low memory
+- Performance 
+- Flexible
+- Distributed
+- Fast compilation
 
-TOPICS: One to many asynchronous publishing
-  Library authors can publish information to clients
-  without having to track subscribers.
-
-Transparently, the optimal communication method is chosen
-from:
-1) In-process (inproc)
-2) Inter process (ipc)
-3) Network (tcp)
+For detailed examples, see the \subpage quickstart , or look at the \subpage cheatsheet for an overview of the API.
 
 This manual is divided in the following sections:
-- \subpage intro
-- \subpage advanced "Advanced usage"
+- \subpage overview
+- \subpage quickstart
+- \subpage cheatsheet
+- \subpage advanced
 - \subpage style
 */
 
 //-----------------------------------------------------------
 
-/** \page intro Introduction
-This page introduces the user to the topic.
+/** \page overview Overview
+
+Qi support two major styles of styles of messaging:
+
+\b RPC
+
+Synchronous remote procedure calls. These enable the classic Request-Response
+pattern of communication. The server advertises a named handler, then clients can
+call the handle using the name.
+
+\image html rpc.png
+
+\b Topics
+
+One to many asynchronous publishing. These enable efficient broadcast of data or
+events, typical to message passing architectures. The publisher advertises a named topic
+with associated type, then subscribers can declare handlers that receive the data that
+is published to the topic.
+
+\image html publish.png
+\image html many_to_many.png
+  
+\b Transport
+
+Transparently, the optimal communication method is chosen according to your context.
+
+\image html transport.png
+
+\b "Peer-to-peer communication"
+
+A Master Server acts as a directory of services and topics so that processes can find
+each other's services. After an initial lookup with the master, all further communication
+to a service or topic is peer-to-peer.
+
+\image html master.png
+
+*/
+
+//-----------------------------------------------------------
+
+/** \page quickstart Quick Start
+
+\b Advertising a Service
+\code
+#include <qi/messaging/server.hpp>
+
+// The handler that you want to bind
+int getMeaningOfLife() {
+  return 42
+}
+
+int main(int argc, char *argv[])
+{
+  // Create the server, giving it a name that helps to track it
+  qi::Server server("deepThought");
+  // Add the service, giving it a name.
+  server.addService("deepThought.getMeaningOfLife", &getMeaningOfLife);
+}
+\endcode
+
+\b Calling a service
+\code
+#include <qi/messaging/client.hpp>
+
+int main(int argc, char *argv[])
+{
+  // Create a client giving it a name that helps to track it.
+  qi::Client client("user");
+  // Call the method, expecting an int as the reply type
+  int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
+}
+\endcode
 
 Now you can proceed to the \ref advanced "advanced section".
+*/
+
+
+//-----------------------------------------------------------
+
+/** \page cheatsheet Cheet Sheet
+Overview of API
+\code
+// Client
+qi::Client client;                                        // anonymous
+qi::Client client("user");                                // name
+qi::Client client("user", "127.0.0.1");                   // name and master address
+client.callVoid("methodName", ... args ...);              // up to 9 args
+T result = client.call<T>("methodName", ... args ...);    // up to 9 args, return type T
+
+// Server
+qi::Server server;                                        // anonymous
+qi::Server server("user");                                // name
+qi::Server server("user", "127.0.0.1");                   // name and master address
+server.addMethod("methodName", &handler);                 // add a global function
+server.addMethod("methodName", &object, &Class::handler); // add an object method
+server.addMethod("methodName", this   , &Class::handler); // add a method from this class
+\endcode
 */
 
 //-----------------------------------------------------------
