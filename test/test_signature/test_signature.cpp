@@ -194,9 +194,10 @@ TEST(TestSignature, BasicMemberSignature) {
 }
 
 TEST(TestSignature, MethodSignatureToString) {
-  EXPECT_EQ("int meth(int)", qi::signatureToString("meth::i:i"));
-  EXPECT_EQ("map<double, int> meth(vector<string>, int*, bool)", qi::signatureToString("oink::{di}:[v]i*b"));
-  EXPECT_EQ("void meth(void)", qi::signatureToString("oink::v:v"));
+  EXPECT_EQ("int meth(int)"                                    , qi::signatureToString("meth::i:i"));
+  EXPECT_EQ("map<double, int> oink(vector<string>, int*, bool)", qi::signatureToString("oink::{di}:[s]i*b"));
+  EXPECT_EQ("void oink(void)"                                  , qi::signatureToString("oink::v:v"));
+  EXPECT_EQ("int* myfunc(bool*)"                               , qi::signatureToString("myfunc::i*:b*"));
 }
 
 TEST(TestSignature, SignatureToString) {
