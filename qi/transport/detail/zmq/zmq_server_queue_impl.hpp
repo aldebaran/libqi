@@ -57,13 +57,13 @@ namespace qi {
         friend void *worker_routine(void *arg);
 
       private:
-        bool                server_running;
-        std::string         server_path;
-        zmq::context_t      zctx;
-        zmq::socket_t       zsocketworkers;
-        zmq::socket_t       zsocket;
-        boost::mutex        socketMutex;
-        HandlersPool        handlersPool;
+        bool                     server_running;
+        std::string              server_path;
+        zmq::context_t           zctx;
+        zmq::socket_t            zsocketworkers;
+        zmq::socket_t            zsocket;
+        boost::mutex             socketMutex;
+        qi::detail::HandlersPool handlersPool;
       };
 
     }

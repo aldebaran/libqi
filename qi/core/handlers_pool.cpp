@@ -11,19 +11,19 @@
 #include <boost/threadpool.hpp>
 
 namespace qi {
+  namespace detail {
+    HandlersPool::HandlersPool()
+      : _pool(20)
+    {
+    }
 
-  HandlersPool::HandlersPool()
-    : _pool(20)
-  {
+    HandlersPool::~HandlersPool() {
+      //vfPool.wait();
+    }
+
+    void HandlersPool::pushTask(boost::shared_ptr<qi::detail::Runnable> handler)
+    {
+      _pool.schedule(::boost::bind(&qi::detail::Runnable::run, handler));
+    }
   }
-
-  HandlersPool::~HandlersPool() {
-    //vfPool.wait();
-  }
-
-  void HandlersPool::pushTask(boost::shared_ptr<qi::Runnable> handler)
-  {
-    _pool.schedule(boost::bind(&qi::Runnable::run, handler));
-  }
-
 }

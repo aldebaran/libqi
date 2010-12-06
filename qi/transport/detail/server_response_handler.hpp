@@ -18,7 +18,6 @@
 */
 namespace qi {
   namespace transport {
-
     namespace detail
     {
       class ServerResponseHandler

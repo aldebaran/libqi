@@ -15,26 +15,20 @@
 #include <qi/functors/functor.hpp>
 
 namespace qi {
-  struct ServiceInfo {
-    std::string  methodName;
-    qi::Functor     *functor;
+  namespace detail {
+    struct ServiceInfo {
+      std::string  methodName;
+      qi::Functor     *functor;
 
-    ServiceInfo() {}
+      ServiceInfo() {}
 
-    //ServiceInfo(const std::string  &module,
-    //            const std::string  &method,
-    //            qi::Functor        *functor)
-    //  : methodName(module + std::string(".") + method),
-    //    functor(functor)
-    //{}
-
-    ServiceInfo(const std::string  &method,
+      ServiceInfo(const std::string  &method,
         qi::Functor        *functor)
-      : methodName(method),
+        : methodName(method),
         functor(functor)
-    {}
-  };
+      {}
+    };
+  }
 }
-
 #endif  // _QI_MESSAGING_SERVICEINFO_HPP_
 

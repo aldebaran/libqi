@@ -13,13 +13,13 @@
 
 
 namespace qi {
-
-  class Runnable
-  {
-  public:
-    virtual void run() = 0;
-  };
-
+  namespace detail {
+    class Runnable
+    {
+    public:
+      virtual void run() = 0;
+    };
+  }
 }
 
 #endif  // _QI_CORE_RUNNABLE_HPP_

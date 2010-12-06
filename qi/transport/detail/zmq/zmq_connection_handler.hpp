@@ -24,7 +24,7 @@ namespace qi {
       /// A connection handler created for each new incoming connection and
       /// pushed to the thread pool.
       /// </summary>
-      class ZMQConnectionHandler: public qi::Runnable {
+      class ZMQConnectionHandler: public qi::detail::Runnable {
       public:
 
         /// <summary> Constructor. </summary>
@@ -33,8 +33,8 @@ namespace qi {
         /// <param name="serverResponseHander"> The server response hander </param>
         /// <param name="data"> [in,out] If non-null, the data. </param>
         ZMQConnectionHandler(const std::string               &msg,
-                             MessageHandler                  *dataHandler,
-                             detail::ServerResponseHandler   *serverResponseHander,
+                             qi::transport::MessageHandler   *dataHandler,
+                             ServerResponseHandler           *serverResponseHander,
                              void                            *data);
 
         /// <summary> Finaliser. </summary>

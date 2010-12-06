@@ -21,7 +21,7 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      class ServerImpl: public qi::Runnable {
+      class ServerImpl: public qi::detail::Runnable {
       public:
         explicit ServerImpl(const std::vector<std::string> &_serverAddresses)
           : _serverAddresses(_serverAddresses),
