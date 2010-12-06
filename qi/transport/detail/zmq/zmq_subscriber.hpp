@@ -18,36 +18,37 @@
 
 namespace qi {
   namespace transport {
+    namespace detail {
+      class ZMQSubscriber : public TransportSubscriber {
+      public:
+        /// <summary>Creates a ZMQSubscriber</summary>
+        ZMQSubscriber();
 
-    class ZMQSubscriber : public TransportSubscriber {
-    public:
-      /// <summary>Creates a ZMQSubscriber</summary>
-      ZMQSubscriber();
+        /// <summary> Creates a ZMQSubscriber </summary>
+        /// <param name="context">An existing zmq context</param>
+        ZMQSubscriber(boost::shared_ptr<zmq::context_t>);
 
-      /// <summary> Creates a ZMQSubscriber </summary>
-      /// <param name="context">An existing zmq context</param>
-      ZMQSubscriber(boost::shared_ptr<zmq::context_t>);
+        virtual ~ZMQSubscriber();
 
-      virtual ~ZMQSubscriber();
+        virtual void subscribe();
 
-      virtual void subscribe();
+        /// <param name="publishAddress">
+        /// The protocol-qualified address of the publisher
+        /// e.g. ipc:///tmp/naoqi/paf
+        //. or tcp://127.0.0.1:5555
+        /// </param>
+        void connect(const std::string& subscribeAddress);
 
-      /// <param name="publishAddress">
-      /// The protocol-qualified address of the publisher
-      /// e.g. ipc:///tmp/naoqi/paf
-      //. or tcp://127.0.0.1:5555
-      /// </param>
-      void connect(const std::string& subscribeAddress);
+        void receive();
 
-      void receive();
-
-    protected:
-      bool _isClosing;
-      boost::shared_ptr<zmq::context_t> _context;
-      zmq::socket_t  _socket;
-      zmq::socket_t  _control;
-      boost::thread  _receiveThread;
-    };
+      protected:
+        bool _isClosing;
+        boost::shared_ptr<zmq::context_t> _context;
+        zmq::socket_t  _socket;
+        zmq::socket_t  _control;
+        boost::thread  _receiveThread;
+      };
+    }
   }
 }
 

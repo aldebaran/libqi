@@ -18,7 +18,7 @@ namespace qi {
       const std::string& name,
       const std::string& masterAddress) :
       MasterClient(name, masterAddress),
-      _transportSubscriber(new qi::transport::ZMQSubscriber())
+        _transportSubscriber(new qi::transport::detail::ZMQSubscriber())
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
       init();

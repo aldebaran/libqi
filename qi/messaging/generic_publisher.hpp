@@ -26,7 +26,7 @@ namespace qi {
 
       bool bind(const std::string &address) {
         try {
-          _publisher = new qi::transport::ZMQPublisher();
+          _publisher = new qi::transport::detail::ZMQPublisher();
           _publisher->bind(address);
           isInitialized = true;
         } catch(const std::exception& e) {
@@ -48,7 +48,7 @@ namespace qi {
 
       bool isInitialized;
     protected:
-      qi::transport::Publisher* _publisher;
+      qi::transport::TransportPublisher* _publisher;
     };
   }
 }

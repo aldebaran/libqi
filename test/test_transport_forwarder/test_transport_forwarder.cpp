@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv)
 {
-  qi::transport::ZMQForwarder f;
+  qi::transport::detail::ZMQForwarder f;
   f.run("tcp://127.0.0.1:6000", "tcp://127.0.0.1:6001");
   return 0;
 }

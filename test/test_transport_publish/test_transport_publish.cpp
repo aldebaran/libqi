@@ -11,7 +11,7 @@
 #include <qi/perf/sleep.hpp>
 #include <boost/timer.hpp>
 
-struct SubscribePerfHandler : qi::transport::SubscribeHandler {
+struct SubscribePerfHandler : qi::transport::TransportSubscribeHandler {
   int fCount;
   int fExpectedMessages;
   boost::timer timer;
@@ -50,9 +50,9 @@ TEST(TransportZMQPublisher , MillionPerSecond)
 
   SubscribePerfHandler handler(numMessages);
   //qi::transport::ZMQPublisher publisher1("tcp://127.0.0.1:5556");
-  qi::transport::ZMQPublisher publisher;
+  qi::transport::detail::ZMQPublisher publisher;
   publisher.bind("tcp://127.0.0.1:5555");
-  qi::transport::ZMQSubscriber subscriber;
+  qi::transport::detail::ZMQSubscriber subscriber;
   subscriber.connect("tcp://127.0.0.1:5555");
 
   subscriber.setSubscribeHandler(&handler);
@@ -77,11 +77,11 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
   const unsigned int numSubscribers = 80;
   std::cout << "Using " << numSubscribers << " subscribers" << std::endl;
   std::vector<SubscribePerfHandler*>         handlers;
-  std::vector< qi::transport::ZMQSubscriber*> subscribers;
+  std::vector< qi::transport::detail::ZMQSubscriber*> subscribers;
   //boost::shared_ptr<zmq::context_t> subContext(new zmq::context_t(1));
   for (unsigned int i = 0; i < numSubscribers; ++i) {
     SubscribePerfHandler* hand = new SubscribePerfHandler(numMessages);
-    qi::transport::ZMQSubscriber* sub = new qi::transport::ZMQSubscriber();
+    qi::transport::detail::ZMQSubscriber* sub = new qi::transport::detail::ZMQSubscriber();
     sub->connect("tcp://127.0.0.1:5555");
     sub->setSubscribeHandler(hand);
     sub->subscribe();
@@ -89,7 +89,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     subscribers.push_back(sub);
   }
   sleep(2);
-  qi::transport::ZMQPublisher publisher;
+  qi::transport::detail::ZMQPublisher publisher;
   publisher.bind("tcp://127.0.0.1:5555");
 
   sleep(1);

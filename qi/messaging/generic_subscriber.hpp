@@ -20,7 +20,7 @@ namespace qi {
   namespace messaging {
 
     template<typename T>
-    class GenericSubscriber : qi::transport::SubscribeHandler {
+    class GenericSubscriber : qi::transport::TransportSubscribeHandler {
     public:
       typedef void(*SubscribeHandlerPtr)(const T&);
 
@@ -28,7 +28,7 @@ namespace qi {
 
       bool connect(const std::string& address) {
         try {
-          _subscriber = new qi::transport::ZMQSubscriber();
+          _subscriber = new qi::transport::detail::ZMQSubscriber();
           _subscriber->connect(address);
           _subscriber->setSubscribeHandler(this);
           isInitialized = true;
@@ -55,7 +55,7 @@ namespace qi {
 
       bool isInitialized;
     protected:
-      qi::transport::Subscriber* _subscriber;
+      qi::transport::TransportSubscriber* _subscriber;
       SubscribeHandlerPtr _handler;
     };
   }
