@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_MESSAGING_DETAIL_MUTEXEDNAMELOOKUP_HPP_
 #define _QI_MESSAGING_DETAIL_MUTEXEDNAMELOOKUP_HPP_
 

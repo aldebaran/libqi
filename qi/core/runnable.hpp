@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_CORE_RUNNABLE_HPP_
 #define _QI_CORE_RUNNABLE_HPP_
 

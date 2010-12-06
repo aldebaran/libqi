@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
 

@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 #define _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 

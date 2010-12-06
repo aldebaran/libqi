@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_CORE_HANDLERS_POOL_HPP_
 #define _QI_CORE_HANDLERS_POOL_HPP_
 

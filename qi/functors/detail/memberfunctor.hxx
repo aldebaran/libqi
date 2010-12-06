@@ -1,11 +1,12 @@
 #pragma once
 /*
 *  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
 *  Copyright (C) 2010 Aldebaran Robotics
 */
+
 
 #ifndef _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
 #define _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_

@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_SIGNATURE_SIGNATURE_HPP_
 #define _QI_SIGNATURE_SIGNATURE_HPP_
 

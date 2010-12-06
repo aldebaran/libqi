@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
 #ifndef _QI_SERIALIZATION_MESSAGE_HXX_
 #define _QI_SERIALIZATION_MESSAGE_HXX_
 
