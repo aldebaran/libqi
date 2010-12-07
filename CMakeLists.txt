@@ -19,8 +19,10 @@ create_config_h("config.hpp.in" "qi/config.hpp")
 include_directories(bindings/c/)
 
 file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
-file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
-file(GLOB MESSAGING_DETAIL_SRC     qi/messaging/src/*.cpp qi/messaging/src/*.h*)
+file(GLOB MESSAGING                qi/messaging/*.cpp qi/messaging/*.h*)
+file(GLOB MESSAGING_SRC            qi/messaging/src/*.cpp qi/messaging/src/*.h*)
+file(GLOB MESSAGING_SRC_NETWORK    qi/messaging/src/network/*.cpp qi/messaging/src/network/*.h*)
+
 file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
@@ -28,19 +30,22 @@ file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization
 file(GLOB TOOLS_SRC                qi/perf/*.cpp qi/perf/*.h*)
 file(GLOB LOGS_SRC                 qi/log/*.cpp qi/log/*.h*)
 file(GLOB EXCEPTIONS_SRC           qi/exceptions/*.cpp qi/exceptions/*.h*)
-file(GLOB TRANSPORT_SRC                   qi/transport/*.cpp qi/transport/*.h*)
-file(GLOB TRANSPORT_DETAIL_SRC            qi/transport/src/*.cpp qi/transport/src/*.h*)
-file(GLOB TRANSPORT_ZMQ_SRC               qi/transport/src/zmq/*.cpp qi/transport/src/zmq/*.h*)
-file(GLOB TRANSPORT_THRIFT_SRC            qi/transport/src/thrift/*.cpp qi/transport/src/thrift/*.h*)
-file(GLOB TRANSPORT_NETWORK_SRC           qi/messaging/src/network/*.cpp qi/messaging/src/network/*.h*)
-file(GLOB FUNCTORS_SRC                    qi/functors/*.cpp qi/functors/*.h*)
-file(GLOB FUNCTORS_DETAIL_SRC             qi/functors/detail/*.h*)
-file(GLOB SIGNATURE_SRC                   qi/signature/*.cpp qi/signature/*.h*)
-file(GLOB SIGNATURE_DETAIL_SRC            qi/signature/detail/*.cpp qi/signature/detail/*.h*)
-file(GLOB CBINDINGS_SRC                   bindings/c/qi/qi.h bindings/c/cbindings.cpp)
 
-source_group( messaging                  FILES ${MESSAGING_SRC})
-source_group( messaging\\detail          FILES ${MESSAGING_DETAIL_SRC})
+file(GLOB TRANSPORT                qi/transport/*.cpp qi/transport/*.h*)
+file(GLOB TRANSPORT_SRC            qi/transport/src/*.cpp qi/transport/src/*.h*)
+file(GLOB TRANSPORT_SRC_ZMQ        qi/transport/src/zmq/*.cpp qi/transport/src/zmq/*.h*)
+file(GLOB TRANSPORT_SRC_THRIFT     qi/transport/src/thrift/*.cpp qi/transport/src/thrift/*.h*)
+
+file(GLOB FUNCTORS_SRC             qi/functors/*.cpp qi/functors/*.h*)
+file(GLOB FUNCTORS_DETAIL_SRC      qi/functors/detail/*.h*)
+
+file(GLOB SIGNATURE_SRC            qi/signature/*.cpp qi/signature/*.h*)
+file(GLOB SIGNATURE_DETAIL_SRC     qi/signature/detail/*.cpp qi/signature/detail/*.h*)
+file(GLOB CBINDINGS_SRC            bindings/c/qi/qi.h bindings/c/cbindings.cpp)
+
+source_group( messaging                  FILES ${MESSAGING})
+source_group( messaging\\src             FILES ${MESSAGING_SRC})
+source_group( messaging\\src\\network    FILES ${MESSAGING_SRC_NETWORK})
 source_group( functors                   FILES ${FUNCTORS_SRC})
 source_group( functors\\detail           FILES ${FUNCTORS_DETAIL_SRC})
 source_group( serialization              FILES ${SERIALIZATION_SRC})
@@ -48,9 +53,8 @@ source_group( serialization\\thrift      FILES ${SERIALIZATION_THRIFT_SRC})
 source_group( serialization\\boost       FILES ${SERIALIZATION_BOOST_SRC})
 source_group( exceptions                 FILES ${EXCEPTIONS_SRC})
 source_group( tools                      FILES ${TOOLS_SRC})
-source_group( transport                  FILES ${TRANSPORT_SRC})
-source_group( transport\\detail          FILES ${TRANSPORT_DETAIL_SRC})
-source_group( transport\\detail\\network FILES ${TRANSPORT_NETWORK_SRC})
+source_group( transport                  FILES ${TRANSPORT})
+source_group( transport\\src             FILES ${TRANSPORT_SRC})
 source_group( signature                  FILES ${SIGNATURE_SRC})
 source_group( signature\\detail          FILES ${SIGNATURE_DETAIL_SRC})
 source_group( log                        FILES ${LOGS_SRC})
@@ -59,14 +63,15 @@ file(GLOB HEADERS qi/*.h*)
 
 set(SRC
     ${CORE_SRC}
+    ${MESSAGING}
+    ${MESSAGING_SRC_NETWORK}
     ${MESSAGING_SRC}
-    ${MESSAGING_DETAIL_SRC}
     ${SERIALIZATION_SRC}
     ${SERIALIZATION_BOOST_SRC}
     ${EXCEPTIONS_SRC}
     ${TOOLS_SRC}
+    ${TRANSPORT}
     ${TRANSPORT_SRC}
-    ${TRANSPORT_NETWORK_SRC}
     ${FUNCTORS_SRC}
     ${FUNCTORS_DETAIL_SRC}
     ${SIGNATURE_SRC}
@@ -76,14 +81,14 @@ set(SRC
 )
 
 if(WITH_ZMQ)
-  set(SRC ${SRC} ${TRANSPORT_ZMQ_SRC})
-  source_group( transport\\detail\\zmq      FILES ${TRANSPORT_ZMQ_SRC})
+  set(SRC ${SRC} ${TRANSPORT_SRC_ZMQ})
+  source_group( transport\\src\\zmq      FILES ${TRANSPORT_SRC_ZMQ})
 endif()
 
 if (WITH_THRIFT)
-  set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC} ${TRANSPORT_THRIFT_SRC})
-  source_group( transport\\detail\\thrift        FILES ${TRANSPORT_THRIFT_SRC})
-  source_group( transport\\serialization\\thrift FILES ${SERIALIZATION_THRIFT_SRC})
+  set(SRC ${SRC} ${SERIALIZATION_THRIFT_SRC} ${TRANSPORT_SRC_THRIFT})
+  source_group( transport\\src\\thrift           FILES ${TRANSPORT_SRC_THRIFT})
+  source_group( serialization\\thrift FILES      ${SERIALIZATION_THRIFT_SRC})
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -101,8 +106,6 @@ if (WITH_THRIFT)
 endif()
 
 add_subdirectory(qi/exceptions)
-add_subdirectory(qi/serialization)
-add_subdirectory(qi/transport)
 
 install_header(qi SUBFOLDER qi ${HEADERS})
 
