@@ -66,6 +66,7 @@ namespace qi {
 
       // Bind methods
       xAddMasterMethod(serverContext.endpointID, "master.registerService",    this, &MasterImpl::registerService);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterService",  this, &MasterImpl::unregisterService);
       xAddMasterMethod(serverContext.endpointID, "master.locateService",      this, &MasterImpl::locateService);
       xAddMasterMethod(serverContext.endpointID, "master.listServices",       this, &MasterImpl::listServices);
       xAddMasterMethod(serverContext.endpointID, "master.listTopics",         this, &MasterImpl::listTopics);
@@ -78,6 +79,7 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.topicExists",        this, &MasterImpl::topicExists);
       xAddMasterMethod(serverContext.endpointID, "master.registerTopic",      this, &MasterImpl::registerTopic);
+      xAddMasterMethod(serverContext.endpointID, "master.unregisterTopic",    this, &MasterImpl::unregisterTopic);
       xAddMasterMethod(serverContext.endpointID, "master.locateTopic",        this, &MasterImpl::locateTopic);
       xAddMasterMethod(serverContext.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
     }
@@ -100,6 +102,11 @@ namespace qi {
       qisDebug << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
 
       _knownServices.insert(methodSignature, serverID);
+    }
+
+    void MasterImpl::unregisterService(const std::string& methodSignature) {
+      _knownServices.remove(methodSignature);
+      qisDebug << "Master::unregisterService " << qi::signatureToString(methodSignature) << std::endl;
     }
 
     void MasterImpl::registerMachine(const std::string& hostName,
@@ -139,11 +146,28 @@ namespace qi {
       }
     }
 
-    void MasterImpl::unregisterEndpoint(const std::string& id) {
-      const EndpointContext& c = _knownEndpoints.get(id);
+    void MasterImpl::unregisterEndpoint(const std::string& endpointID) {
+      std::vector<std::string>::const_iterator it;
+
+      // remove services
+      std::vector<std::string> servicesToDelete = xListServicesForEndpoint(endpointID);
+      if (! servicesToDelete.empty()) {
+        for (it = servicesToDelete.begin(); it != servicesToDelete.end(); ++it) {
+          unregisterService(*it);
+        }
+      }
+
+      // remove topics
+      std::vector<std::string> topicsToDelete = xListTopicsForEndpoint(endpointID);
+      if (! topicsToDelete.empty()) {
+        for (it = topicsToDelete.begin(); it != topicsToDelete.end(); ++it) {
+          unregisterTopic(*it);
+        }
+      }
+
+      const EndpointContext& c = _knownEndpoints.get(endpointID);
       MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::unregisterEndpoint", c);
-      // TODO remove associated services
-      _knownEndpoints.remove(id);
+      _knownEndpoints.remove(endpointID);
     }
 
     std::string MasterImpl::locateService(
@@ -193,9 +217,15 @@ namespace qi {
 
     void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
       //FIXME: check for existence
-      qisDebug << "Register Topic " << topicName << " " << endpointID << std::endl;
+      qisDebug << "Master::registerTopic " << topicName << " " << endpointID << std::endl;
       _knownTopics.insert(topicName, endpointID);
     }
+
+    void MasterImpl::unregisterTopic(const std::string& topicName) {
+      qisDebug << "Master::unregisterTopic " << topicName << std::endl;
+      _knownTopics.remove(topicName);
+    }
+
 
     bool MasterImpl::topicExists(const std::string& topicName) {
       return _knownTopics.exists(topicName);
@@ -254,6 +284,32 @@ namespace qi {
       ret.insert(std::make_pair("type", endpointTypeAsString(e.type)));
       ret.insert(std::make_pair("port", "FIXME..master_impl.cpp line 258!"));
       return ret;
+    }
+
+    std::vector<std::string> MasterImpl::xListServicesForEndpoint(const std::string& endpointID) {
+      std::vector<std::string> result;
+      const std::map<std::string, std::string>& services = _knownServices.getMap();
+      std::map<std::string, std::string>::const_iterator it = services.begin();
+      std::map<std::string, std::string>::const_iterator end = services.end();
+      for (; it != end; ++it) {
+        if (it->second == endpointID) {
+          result.push_back(it->first);
+        }
+      }
+      return result;
+    }
+
+    std::vector<std::string> MasterImpl::xListTopicsForEndpoint(const std::string& endpointID) {
+      std::vector<std::string> result;
+      const std::map<std::string, std::string>& topics = _knownTopics.getMap();
+      std::map<std::string, std::string>::const_iterator it = topics.begin();
+      std::map<std::string, std::string>::const_iterator end = topics.end();
+      for (; it != end; ++it) {
+        if (it->second == endpointID) {
+          result.push_back(it->first);
+        }
+      }
+      return result;
     }
 
   }

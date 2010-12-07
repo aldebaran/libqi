@@ -27,6 +27,7 @@ namespace qi {
 
       void registerService(const std::string& methodSignature,
                            const std::string& serverID);
+      void unregisterService(const std::string& methodSignature);
 
       void registerMachine(const std::string& hostName,
                            const std::string& machineID,
@@ -52,6 +53,7 @@ namespace qi {
       std::string locateTopic(const std::string& methodSignature, const std::string& clientID);
 
       void registerTopic(const std::string& topicName, const std::string& endpointID);
+      void unregisterTopic(const std::string& topicName);
 
       bool topicExists(const std::string& topicName);
 
@@ -65,6 +67,8 @@ namespace qi {
       void xRegisterEndpoint(const EndpointContext& endpoint);
       void xRegisterMachine(const MachineContext& machine);
       std::string xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID);
+      std::vector<std::string> xListServicesForEndpoint(const std::string& endpointID);
+      std::vector<std::string> xListTopicsForEndpoint(const std::string& endpointID);
 
       // Helper method
       template <typename OBJECT_TYPE, typename METHOD_TYPE>
