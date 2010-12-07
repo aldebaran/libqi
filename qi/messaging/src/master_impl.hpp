@@ -11,9 +11,9 @@
 #ifndef _QI_MESSAGING_DETAIL_MASTER_IMPL_HPP_
 #define _QI_MESSAGING_DETAIL_MASTER_IMPL_HPP_
 
-#include <qi/messaging/detail/server_impl.hpp>
-#include <qi/messaging/detail/mutexednamelookup.hpp>
-#include <qi/messaging/detail/address_manager.hpp>
+#include <qi/messaging/src/server_impl.hpp>
+#include <qi/messaging/src/mutexednamelookup.hpp>
+#include <qi/messaging/src/address_manager.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
 

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/detail/master_impl.hpp>
+#include <qi/messaging/src/master_impl.hpp>
 #include <qi/messaging/src/network/endpoints.hpp>
 #include <qi/messaging/src/network/platform.hpp>
 #include <qi/log.hpp>

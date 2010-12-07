@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/server.hpp>
-#include <qi/messaging/detail/server_impl.hpp>
+#include <qi/messaging/src/server_impl.hpp>
 
 namespace qi {
   Server::Server() {}

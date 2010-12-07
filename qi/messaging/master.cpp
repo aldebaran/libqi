@@ -8,7 +8,7 @@
 
 #include <qi/messaging/master.hpp>
 #include <string>
-#include <qi/messaging/detail/master_impl.hpp>
+#include <qi/messaging/src/master_impl.hpp>
 
 namespace qi {
 

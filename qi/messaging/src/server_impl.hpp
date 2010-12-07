@@ -12,8 +12,8 @@
 #define _QI_MESSAGING_DETAIL_SERVER_IMPL_HPP_
 
 #include <qi/messaging/serviceinfo.hpp>
-#include <qi/messaging/detail/mutexednamelookup.hpp>
-#include <qi/messaging/detail/master_client.hpp>
+#include <qi/messaging/src/mutexednamelookup.hpp>
+#include <qi/messaging/src/master_client.hpp>
 #include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/transport_server.hpp>
 

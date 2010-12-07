@@ -25,7 +25,7 @@
 
 #include <qi/qi.h>
 #include <qi/messaging.hpp>
-#include <qi/messaging/detail/client_impl.hpp>
+#include <qi/messaging/src/client_impl.hpp>
 
 struct client_private_t {
 public:

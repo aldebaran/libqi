@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/subscriber.hpp>
-#include <qi/messaging/detail/subscriber_impl.hpp>
+#include <qi/messaging/src/subscriber_impl.hpp>
 
 namespace qi {
   Subscriber::Subscriber() {}

@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/publisher.hpp>
-#include <qi/messaging/detail/publisher_impl.hpp>
+#include <qi/messaging/src/publisher_impl.hpp>
 
 namespace qi {
   Publisher::Publisher() {}

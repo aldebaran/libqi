@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #include <boost/scoped_ptr.hpp>
-#include <qi/messaging/detail/master_client.hpp>
+#include <qi/messaging/src/master_client.hpp>
 
 namespace qi {
   namespace transport {

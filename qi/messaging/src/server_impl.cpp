@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/detail/server_impl.hpp>
+#include <qi/messaging/src/server_impl.hpp>
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -16,7 +16,7 @@
 #include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
-#include <qi/messaging/detail/publisher_impl.hpp>
+#include <qi/messaging/src/publisher_impl.hpp>
 
 
 namespace qi {

@@ -8,7 +8,7 @@
 
 #include <qi/messaging/client.hpp>
 #include <string>
-#include <qi/messaging/detail/client_impl.hpp>
+#include <qi/messaging/src/client_impl.hpp>
 #include <qi/serialization/serializer.hpp>
 
 

@@ -14,8 +14,8 @@
 #include <string>
 #include <qi/transport/transport_subscriber.hpp>
 #include <qi/messaging/serviceinfo.hpp>
-#include <qi/messaging/detail/mutexednamelookup.hpp>
-#include <qi/messaging/detail/master_client.hpp>
+#include <qi/messaging/src/mutexednamelookup.hpp>
+#include <qi/messaging/src/master_client.hpp>
 
 namespace qi {
   namespace detail {

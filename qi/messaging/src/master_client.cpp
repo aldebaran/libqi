@@ -7,7 +7,7 @@
 */
 
 #include <qi/log.hpp>
-#include <qi/messaging/detail/master_client.hpp>
+#include <qi/messaging/src/master_client.hpp>
 #include <qi/serialization.hpp>
 #include <qi/messaging/src/network/master_endpoint.hpp>
 

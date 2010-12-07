@@ -11,7 +11,7 @@
 #ifndef _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
 #define _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
 
-#include <qi/messaging/detail/impl_base.hpp>
+#include <qi/messaging/src/impl_base.hpp>
 #include <qi/transport/transport_client.hpp>
 
 namespace qi {

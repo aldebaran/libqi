@@ -20,7 +20,7 @@ include_directories(bindings/c/)
 
 file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
 file(GLOB MESSAGING_SRC            qi/messaging/*.cpp qi/messaging/*.h*)
-file(GLOB MESSAGING_DETAIL_SRC     qi/messaging/detail/*.cpp qi/messaging/detail/*.h*)
+file(GLOB MESSAGING_DETAIL_SRC     qi/messaging/src/*.cpp qi/messaging/src/*.h*)
 file(GLOB SERIALIZATION_SRC        qi/serialization/*.cpp qi/serialization/*.h*)
 file(GLOB SERIALIZATION_THRIFT_SRC qi/serialization/thrift/*.cpp qi/serialization/thrift/*.h*)
 file(GLOB SERIALIZATION_BOOST_SRC  qi/serialization/boost/*.cpp qi/serialization/boost/*.h*)
