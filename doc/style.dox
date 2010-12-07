@@ -2,9 +2,18 @@
 This page define the style used by the Qi project.
 
 
-Source and header should be in the same folder.
+\b Source and header should be in the same folder.
+This allow editor to associate header and implementation, furthermore it avoid to have to search
+for implementation or header, they are in the same place.
 
+\b Private Implementation for classes
+Public and private headers should be separated. Using Pimpl reduce compile time dependencies,
+and increase separation of public API. when using Pimpl, sources should be in a src subfolder.
+Only .cpp have access to the content of the src subfolder. Templated class could not use Pimpl.
 
-
+\b Private Implementation for templated classes
+To define split public API from implementation for a templated class you should place your api
+in a .hpp, and depends on details in the subfolder detail. Placing detail in the namespace detail
+is prefered too.
 
 */
