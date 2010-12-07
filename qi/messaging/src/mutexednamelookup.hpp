@@ -26,6 +26,8 @@ namespace qi {
       T                        _invalidValue;
       boost::mutex             _mutex;
     public:
+
+      
       MutexedNameLookup() {}
 
       void replace(const std::map<std::string, T>& other) {
@@ -75,6 +77,31 @@ namespace qi {
 
       bool empty() {
         return _map.empty();
+      }
+
+      std::vector<std::string> getKeys() {
+        boost::mutex::scoped_lock lock(_mutex);
+        std::map<std::string, T>::const_iterator it;
+        std::vector<std::string> result;
+        result.resize(_map.size());
+        int i = 0;
+        for(it = _map.begin(); it != _map.end(); ++it) {
+          result[i++] = it->first;
+        }
+        return result;
+      }
+
+      std::vector<std::string> getKeysWhereValueEquals(const T& val) {
+        boost::mutex::scoped_lock lock(_mutex);
+        std::map<std::string, T>::const_iterator it;
+        std::vector<std::string> result;
+        int i = 0;
+        for(it = _map.begin(); it != _map.end(); ++it) {
+          if (it->second == val) {
+            result.push_back(it->first);
+          }
+        }
+        return result;
       }
 
     };
