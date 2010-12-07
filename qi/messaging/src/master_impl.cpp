@@ -11,17 +11,17 @@
 #include <qi/messaging/src/network/platform.hpp>
 #include <qi/log.hpp>
 
-#define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
-  qisDebug << "===" << msg << " ===" << std::endl;                 \
-  qisDebug << "type: " << endpointTypeAsString(endpoint.type)      \
-                                                     << std::endl; \
-  qisDebug << "endpointID: " << endpoint.endpointID << std::endl;  \
-  qisDebug << "machineID : " << endpoint.machineID  << std::endl;  \
-  qisDebug << "name      : " << endpoint.name       << std::endl;  \
-  qisDebug << "contextID : " << endpoint.contextID  << std::endl;  \
-  qisDebug << "processID : " << endpoint.processID  << std::endl;  \
-  qisDebug << "port      : " << endpoint.port       << std::endl;  \
-  qisDebug << "============================"        << std::endl;  \
+#define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
+  qisDebug << "===" << msg << " ===" << std::endl;                  \
+  qisDebug << "type      : " << endpointTypeAsString(endpoint.type) \
+                                                     << std::endl;  \
+  qisDebug << "endpointID: " << endpoint.endpointID << std::endl;   \
+  qisDebug << "machineID : " << endpoint.machineID  << std::endl;   \
+  qisDebug << "name      : " << endpoint.name       << std::endl;   \
+  qisDebug << "contextID : " << endpoint.contextID  << std::endl;   \
+  qisDebug << "processID : " << endpoint.processID  << std::endl;   \
+  qisDebug << "port      : " << endpoint.port       << std::endl;   \
+  qisDebug << "============================"        << std::endl;   \
 
 #define MASTERIMPL_DEBUG_MACHINE_CONTEXT(msg, machine)               \
   qisDebug << "===" << msg << " ===" << std::endl;                   \
