@@ -9,6 +9,7 @@
 #include <qi/messaging/src/master_impl.hpp>
 #include <qi/messaging/src/network/endpoints.hpp>
 #include <qi/messaging/src/network/platform.hpp>
+#include <qi/perf/to_string.hpp> // wrong place, sorry
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
@@ -277,10 +278,11 @@ namespace qi {
       ret.insert(std::make_pair("endpointID", e.endpointID));
       ret.insert(std::make_pair("contextID", e.contextID));
       ret.insert(std::make_pair("machineID", e.machineID));
-      ret.insert(std::make_pair("processID", "FIXME: ... master_impl.cpp"));
+      ret.insert(std::make_pair("processID", toString(e.processID)));
+
       ret.insert(std::make_pair("name", e.name));
       ret.insert(std::make_pair("type", endpointTypeAsString(e.type)));
-      ret.insert(std::make_pair("port", "FIXME..master_impl.cpp line 258!"));
+      ret.insert(std::make_pair("port", toString(e.port)));
       return ret;
     }
 
