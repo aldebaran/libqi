@@ -7,8 +7,8 @@
 */
 
 #include <qi/messaging/detail/subscriber_impl.hpp>
-#include <qi/transport/detail/zmq/zmq_subscriber.hpp>
-#include <qi/transport/messaging/src/network/master_endpoint.hpp>
+#include <qi/transport/src/zmq/zmq_subscriber.hpp>
+#include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/serialization/message.hpp>
 #include <qi/log.hpp>
 

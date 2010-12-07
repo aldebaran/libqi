@@ -8,7 +8,7 @@
 
 #include <qi/messaging/detail/client_impl.hpp>
 #include <qi/exceptions/exceptions.hpp>
-#include <qi/transport/messaging/src/network/master_endpoint.hpp>
+#include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
 using qi::transport::TransportClient;

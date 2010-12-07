@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/zmq/zmq_server_impl.hpp>
-#include <qi/transport/detail/zmq/zmq_connection_handler.hpp>
+#include <qi/transport/src/zmq/zmq_server_impl.hpp>
+#include <qi/transport/src/zmq/zmq_connection_handler.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
@@ -23,7 +23,7 @@ namespace qi {
       /// <summary> Constructor. </summary>
       /// <param name="serverAddresses"> The server addresses. </param>
       ZMQServerImpl::ZMQServerImpl(const std::vector<std::string> &serverAddresses)
-        : ServerImpl(serverAddresses),
+        : ServerBackend(serverAddresses),
         zctx(1),
         zsocket(zctx, ZMQ_XREP)
       {

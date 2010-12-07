@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
 
 #include <qi/messaging/detail/impl_base.hpp>
-#include <qi/transport/transport_generic_client.hpp>
+#include <qi/transport/transport_client.hpp>
 
 namespace qi {
   namespace detail {

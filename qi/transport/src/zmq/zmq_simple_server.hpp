@@ -11,7 +11,7 @@
 #ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 
-#include <qi/transport/detail/server_impl.hpp>
+#include <qi/transport/src/server_backend.hpp>
 #include <qi/core/handlers_pool.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
@@ -28,7 +28,7 @@ namespace qi {
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      class ZMQSimpleServerImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
+      class ZMQSimpleServerImpl : public detail::ServerBackend, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
         /// <param name="serverAddresses">

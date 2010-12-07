@@ -14,7 +14,7 @@
 #include <qi/core/runnable.hpp>
 #include <qi/transport/buffer.hpp>
 #include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/detail/server_response_handler.hpp>
+#include <qi/transport/src/server_response_handler.hpp>
 #include <string>
 
 namespace qi {

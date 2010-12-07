@@ -12,13 +12,13 @@
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CLIENT_IMPL_HPP_
 
 # include <qi/transport/buffer.hpp>
-# include <qi/transport/detail/client_impl.hpp>
+# include <qi/transport/src/client_backend.hpp>
 # include <zmq.hpp>
 
 namespace qi {
   namespace transport {
     namespace detail {
-      class ZMQClientImpl : public qi::transport::detail::ClientImpl<qi::transport::Buffer> {
+      class ZMQClientImpl : public ClientBackend {
       public:
         /// <summary>
         /// Creates a ZMQClientImpl for a server

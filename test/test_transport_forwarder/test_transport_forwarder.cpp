@@ -5,7 +5,7 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/zmq/zmq_forwarder.hpp>
+#include <qi/transport/src/zmq/zmq_forwarder.hpp>
 
 int main(int argc, char **argv)
 {

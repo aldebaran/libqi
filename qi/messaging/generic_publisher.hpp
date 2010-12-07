@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_GENERIC_PUBLISHER_HPP_
 
 #include <string>
-#include <qi/transport/detail/zmq/zmq_publisher.hpp>
+#include <qi/transport/src/zmq/zmq_publisher.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/log.hpp>
 

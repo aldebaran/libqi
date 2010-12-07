@@ -15,7 +15,7 @@
 #include <vector>
 #include <qi/core/runnable.hpp>
 #include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/detail/server_response_handler.hpp>
+#include <qi/transport/src/server_response_handler.hpp>
 
 namespace qi {
   namespace transport {

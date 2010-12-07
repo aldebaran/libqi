@@ -3,8 +3,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/transport/detail/network/endpoints.hpp>
-#include <qi/transport/detail/network/machine_context.hpp>
+#include <qi/messaging/src/network/endpoints.hpp>
+#include <qi/messaging/src/network/machine_context.hpp>
 
 using qi::detail::MachineContext;
 using qi::detail::EndpointContext;

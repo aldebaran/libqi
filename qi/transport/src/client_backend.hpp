@@ -15,6 +15,11 @@
 
 namespace qi {
   namespace transport {
+
+
+    //TODO:
+    typedef std::string Buffer;
+
     namespace detail {
 
       class ClientBackend {

@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
@@ -7,10 +6,9 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <qi/transport/transport_client.hpp>
 
-#ifndef _QI_TRANSPORT_CLIENT_HPP_
-#define _QI_TRANSPORT_CLIENT_HPP_
-
+#include <qi/transport/buffer.hpp>
 #include <qi/transport/src/client_backend.hpp>
 #include <qi/transport/src/zmq/zmq_client_impl.hpp>
 #include <qi/log.hpp>
@@ -35,7 +33,7 @@ namespace qi {
       return _isInitialized;
     }
 
-    void TransportClient::send(const BUFFER_TYPE &def, BUFFER_TYPE &result)
+    void TransportClient::send(const qi::transport::Buffer &def, qi::transport::Buffer &result)
     {
       if (!_isInitialized) {
         qisError << "Attempt to use an uninitialized client." << std::endl;
@@ -45,5 +43,3 @@ namespace qi {
 
   }
 }
-
-#endif  // _QI_TRANSPORT_CLIENT_HPP_

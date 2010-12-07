@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/zmq/zmq_server_queue_impl.hpp>
-#include <qi/transport/detail/zmq/zmq_connection_handler.hpp>
+#include <qi/transport/src/zmq/zmq_server_queue_impl.hpp>
+#include <qi/transport/src/zmq/zmq_connection_handler.hpp>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
@@ -28,7 +28,7 @@ namespace qi {
       static const int   gWorkersThreadsCount = 10;
 
       ZMQServerQueueImpl::ZMQServerQueueImpl (const std::vector<std::string> &serverAddresses)
-        : detail::ServerImpl(serverAddresses),
+        : detail::ServerBackend(serverAddresses),
         zctx(1),
         zsocketworkers(zctx, ZMQ_XREQ),
         zsocket(zctx, ZMQ_XREP)

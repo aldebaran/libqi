@@ -6,17 +6,15 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/zmq/zmq_simple_server.hpp>
-#include <qi/transport/detail/zmq/zmq_connection_handler.hpp>
+#include <qi/transport/src/zmq/zmq_simple_server.hpp>
+#include <qi/transport/src/zmq/zmq_connection_handler.hpp>
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
 
-//#include <pthread.h>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
-//#include <alfile/alfilesystem.h>
 
 namespace qi {
   namespace transport {
@@ -25,7 +23,7 @@ namespace qi {
       //#define ZMQ_FULL_ASYNC
 
       ZMQSimpleServerImpl::ZMQSimpleServerImpl(const std::vector<std::string> &serverAddresses)
-        : ServerImpl(serverAddresses),
+        : ServerBackend(serverAddresses),
         zctx(1),
         zsocket(zctx, ZMQ_REP)
       {

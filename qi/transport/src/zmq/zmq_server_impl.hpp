@@ -13,9 +13,9 @@
 
 #include <zmq.hpp>
 #include <qi/core/handlers_pool.hpp>
-#include <qi/transport/detail/server_impl.hpp>
-#include <qi/transport/detail/server_response_handler.hpp>
-#include <qi/transport/detail/zmq/zmq_server_impl.hpp>
+#include <qi/transport/src/server_backend.hpp>
+#include <qi/transport/src/server_response_handler.hpp>
+#include <qi/transport/src/zmq/zmq_server_impl.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 
@@ -28,7 +28,7 @@ namespace qi {
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
       //class ResultHandler;
-      class ZMQServerImpl : public detail::ServerImpl, public detail::ServerResponseHandler {
+      class ZMQServerImpl : public detail::ServerBackend, public detail::ServerResponseHandler {
       public:
         /// <summary> The Server class constructor. </summary>
         /// <param name="server_name">

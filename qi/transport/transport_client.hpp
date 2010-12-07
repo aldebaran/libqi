@@ -20,7 +20,8 @@ namespace qi {
       class ClientBackend;
     }
 
-    class Buffer;
+    //TODO: bad!
+    typedef std::string Buffer;
 
     class TransportClient {
     public:

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/zmq/zmq_client_impl.hpp>
+#include <qi/transport/src/zmq/zmq_client_impl.hpp>
 #include <qi/exceptions/exceptions.hpp>
 #include <iostream>
 
@@ -16,7 +16,7 @@ namespace qi {
       /// <summary> Constructor. </summary>
       /// <param name="serverAddress"> The server address. </param>
       ZMQClientImpl::ZMQClientImpl(const std::string &serverAddress)
-        : ClientImpl<qi::transport::Buffer>(serverAddress),
+        : ClientBackend(serverAddress),
         context(1),
         socket(context, ZMQ_REQ)
       {

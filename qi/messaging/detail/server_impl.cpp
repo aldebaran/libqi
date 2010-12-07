@@ -12,8 +12,8 @@
 #include <boost/bind.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/transport/buffer.hpp>
-#include <qi/transport/messaging/src/network/endpoints.hpp>
-#include <qi/transport/messaging/src/network/master_endpoint.hpp>
+#include <qi/messaging/src/network/endpoints.hpp>
+#include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
 #include <qi/messaging/detail/publisher_impl.hpp>

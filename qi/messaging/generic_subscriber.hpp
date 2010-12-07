@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_GENERIC_SUBSCRIBER_HPP_
 
 #include <string>
-#include <qi/transport/detail/zmq/zmq_subscriber.hpp>
+#include <qi/transport/src/zmq/zmq_subscriber.hpp>
 #include <qi/serialization/serializer.hpp>
 #include <qi/log.hpp>
 

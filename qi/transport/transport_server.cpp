@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
@@ -8,14 +7,12 @@
 */
 
 
-#ifndef _QI_TRANSPORT_SERVER_HPP_
-#define _QI_TRANSPORT_SERVER_HPP_
-
 #include <string>
 #include <qi/log.hpp>
+#include <qi/transport/transport_server.hpp>
 #include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/detail/server_impl.hpp>
-#include <qi/transport/detail/zmq/zmq_simple_server.hpp>
+#include <qi/transport/src/server_backend.hpp>
+#include <qi/transport/src/zmq/zmq_simple_server.hpp>
 
 namespace qi {
   namespace transport {
@@ -25,7 +22,7 @@ namespace qi {
     {
     }
 
-    void serve(const std::string &address) {
+    void TransportServer::serve(const std::string &address) {
       std::vector<std::string> v;
       v.push_back(address);
       serve(v);
@@ -37,7 +34,7 @@ namespace qi {
       //  qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
       //}
       try {
-        _transportServer = new qi::transport::detail::ZMQSimpleServerImp(addresses);
+        _transportServer = new detail::ZMQSimpleServerImpl(addresses);
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisError << "Failed to create transport server for addresses:";
@@ -49,18 +46,18 @@ namespace qi {
       }
     }
 
-    virtual void TransportServer::run()
+    void TransportServer::run()
     {
       if (_isInitialized) {
         _transportServer->run();
       }
     }
 
-    virtual void TransportServer::setMessageHandler(TransportMessageHandler* dataHandler) {
+    void TransportServer::setMessageHandler(TransportMessageHandler* dataHandler) {
       _transportServer->setDataHandler(dataHandler);
     }
 
-    virtual TransportMessageHandler* TransportServer::getMessageHandler() {
+    TransportMessageHandler* TransportServer::getMessageHandler() {
       return _transportServer->getDataHandler();
     }
 
@@ -71,5 +68,3 @@ namespace qi {
   }
 
 }
-
-#endif  // _QI_TRANSPORT_SERVER_HPP_
