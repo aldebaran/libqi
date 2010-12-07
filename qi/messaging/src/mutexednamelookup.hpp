@@ -12,6 +12,7 @@
 #define _QI_MESSAGING_SRC_MUTEXEDNAMELOOKUP_HPP_
 
 #include <map>
+#include <vector>
 #include <string>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -27,7 +28,7 @@ namespace qi {
       boost::mutex             _mutex;
     public:
 
-      
+
       MutexedNameLookup() {}
 
       void replace(const std::map<std::string, T>& other) {
@@ -81,7 +82,7 @@ namespace qi {
 
       std::vector<std::string> getKeys() {
         boost::mutex::scoped_lock lock(_mutex);
-        std::map<std::string, T>::const_iterator it;
+        typename std::map<std::string, T>::const_iterator it;
         std::vector<std::string> result;
         result.resize(_map.size());
         int i = 0;
@@ -93,7 +94,7 @@ namespace qi {
 
       std::vector<std::string> getKeysWhereValueEquals(const T& val) {
         boost::mutex::scoped_lock lock(_mutex);
-        std::map<std::string, T>::const_iterator it;
+        typename std::map<std::string, T>::const_iterator it;
         std::vector<std::string> result;
         int i = 0;
         for(it = _map.begin(); it != _map.end(); ++it) {
