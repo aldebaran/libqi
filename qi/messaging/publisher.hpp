@@ -26,21 +26,40 @@ namespace qi {
     Publisher(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
     virtual ~Publisher();
 
-    template<typename T>
+    /// <summary>Advertises to the master that you wish to publish data
+    /// of type "PUBLISH_TYPE" to a topic of name "topicName".</summary>
+    /// <param name="topicName">The name of the topic you wish to publish to.</param>
+    template<typename PUBLISH_TYPE>
     void advertiseTopic(const std::string& topicName)
     {
-      void (*f)(const T &p0)  = 0;
+      void (*f)(const PUBLISH_TYPE &p0)  = 0;
       std::string signature = makeSignature(topicName, f);
       xAdvertiseTopic(signature);
     }
 
-    template<typename T>
-    void publish(const std::string topicName, const T& val)
+    /// <summary>
+    /// Publishes messages to an existing topic.
+    /// 
+    /// e.g. publisher.publish("/time/hour_of_the_day", 10);
+    /// 
+    /// A subscriber would be able to subscribe to the above with
+    /// subscriber.subscribe("time/hout_of_the_day", &handler);
+    /// where the handler expects an int type.
+    /// </summary>
+    /// <param name="topicName">The name of the topic you want to publish to.
+    /// 
+    /// By convention, topic names use forward slashes as a separator
+    /// e.g. "/time/hour_of_the_day"
+    /// </param>
+    /// <param name="publishData">The typed data that you wish to publish</param>
+    /// <returns>void</returns>
+    template<typename PUBLISH_TYPE>
+    void publish(const std::string topicName, const T& publishData)
     {
-      void (*f)(const T &p0)  = 0;
+      void (*f)(const PUBLISH_TYPE &p0)  = 0;
       qi::serialization::Message ser;
       qi::serialization::serialize<std::string>::write(ser, makeSignature(topicName, f));
-      qi::serialization::serialize<T>::write(ser, val);
+      qi::serialization::serialize<PUBLISH_TYPE>::write(ser, publishData);
       xPublish(ser.str());
     }
 

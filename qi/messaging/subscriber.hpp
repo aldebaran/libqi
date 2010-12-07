@@ -48,12 +48,36 @@ namespace qi {
 
     bool isInitialized() const;
 
+    /// <summary>Subscribes to a published Topic.
+    /// 
+    /// The provided callback method will be called when the publisher
+    /// publishes on the topic.
+    /// 
+    /// e.g. subscriber.subscribe("timeOfDay", &callbackFunction);
+    /// </summary>
+    /// <param name="name"> The advertised name of the service.</param>
+    /// <param name="function"> The memory address of the function. e.g.
+    /// "&globalFunction"
+    /// </param>
     template<typename FUNCTION_TYPE>
     void subscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
       xSubscribe(makeSignature(topicName, callback), makeFunctor(callback));
     }
 
+    /// <summary>Subscribes to a published Topic.
+    /// 
+    /// The provided callback method will be called when the publisher
+    /// publishes on the topic.
+    /// 
+    /// e.g. subscriber.subscribe("timeOfDay", this, &myCallbackMethod);
+    /// </summary>
+    /// <param name="object"> The memory address of the object. This could
+    /// be a "this" pointer if you are adding a callback to a method of your class,
+    /// or a "&myObject" for the address of a member object.</param>
+    /// <param name="method"> The memory address of the method to call. This should
+    /// fully qualify the type of your method such as "&MyClass::myMethod"
+    /// or "&MyObject::objectMethod".</param>
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void subscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
     {
