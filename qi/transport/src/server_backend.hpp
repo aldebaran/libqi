@@ -42,7 +42,7 @@ namespace qi {
 
       protected:
         std::vector<std::string>      _serverAddresses;
-        TransportMessageHandler  *_dataHandler;
+        TransportMessageHandler      *_dataHandler;
       };
     }
   }

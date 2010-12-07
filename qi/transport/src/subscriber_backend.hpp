@@ -16,30 +16,30 @@
 
 namespace qi {
   namespace transport {
+    namespace detail {
 
+      class SubscriberBackend {
+      public:
+        SubscriberBackend() : _subscribeHandler(NULL) {}
 
-    class TransportSubscriber {
-    public:
-      TransportSubscriber() : _subscribeHandler(NULL) {}
-      explicit TransportSubscriber(const TransportSubscriber& rhs) : _subscribeHandler(rhs.getSubscribeHandler()) {}
+        virtual ~SubscriberBackend() {}
 
-      virtual ~TransportSubscriber() {}
+        virtual void setSubscribeHandler(TransportSubscribeHandler* callback) {
+          _subscribeHandler = callback;
+        }
 
-      virtual void setSubscribeHandler(TransportSubscribeHandler* callback) {
-        _subscribeHandler = callback;
-      }
+        virtual TransportSubscribeHandler* getSubscribeHandler() const {
+          return _subscribeHandler;
+        }
 
-      virtual TransportSubscribeHandler* getSubscribeHandler() const {
-        return _subscribeHandler;
-      }
+        virtual void connect(const std::string &publishAddress) = 0;
 
-      virtual void connect(const std::string &publishAddress) = 0;
+        virtual void subscribe() = 0;
 
-      virtual void subscribe() = 0;
-
-    protected:
-      TransportSubscribeHandler  *_subscribeHandler;
-    };
+      protected:
+        TransportSubscribeHandler  *_subscribeHandler;
+      };
+    }
   }
 }
 

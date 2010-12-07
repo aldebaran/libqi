@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/src/subscriber_impl.hpp>
-#include <qi/transport/src/zmq/zmq_subscriber.hpp>
+#include <qi/transport/transport_subscriber.hpp>
 #include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/serialization/message.hpp>
 #include <qi/log.hpp>
@@ -18,7 +18,7 @@ namespace qi {
       const std::string& name,
       const std::string& masterAddress) :
       MasterClient(name, masterAddress),
-        _transportSubscriber(new qi::transport::detail::ZMQSubscriber())
+        _transportSubscriber(new qi::transport::TransportSubscriber())
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
       init();

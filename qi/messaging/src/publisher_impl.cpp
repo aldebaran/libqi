@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/src/publisher_impl.hpp>
-#include <qi/transport/src/zmq/zmq_publisher.hpp>
+#include <qi/transport/transport_publisher.hpp>
 #include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/messaging/src/network/endpoints.hpp>
 #include <qi/log.hpp>
@@ -18,7 +18,7 @@ namespace qi {
     PublisherImpl::PublisherImpl(const std::string& name, const std::string& masterAddress) :
       MasterClient(name, masterAddress),
       _publisherInitialized(false),
-      _publisher(new qi::transport::detail::ZMQPublisher())
+      _publisher(new qi::transport::TransportPublisher())
     {
       _endpointContext.type = PUBLISHER_ENDPOINT;
       init();

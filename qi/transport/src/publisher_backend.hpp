@@ -17,13 +17,16 @@
 namespace qi {
   namespace transport {
 
-    class TransportPublisher {
-    public:
-      virtual void connect(const std::string& serverAddresses) = 0;
-      virtual void bind(const std::string& serverAddress) = 0;
-      virtual void bind(const std::vector<std::string>& serverAddresses) = 0;
-      virtual void publish(const std::string& tosend) = 0;
-    };
+    namespace detail {
+      class PublisherBackend {
+      public:
+        virtual void connect(const std::string& serverAddresses) = 0;
+        virtual void bind(const std::string& serverAddress) = 0;
+        virtual void bind(const std::vector<std::string>& serverAddresses) = 0;
+        virtual void publish(const std::string& tosend) = 0;
+      };
+    }
+
   }
 }
 
