@@ -26,24 +26,24 @@ namespace qi {
       delete _publisher;
     }
 
-    void TransportPublisher::connect(const std::string& serverAddresses)
+    void TransportPublisher::connect(const std::string& endpoint)
     {
-      _publisher->connect(serverAddresses);
+      _publisher->connect(endpoint);
     }
 
-    void TransportPublisher::bind(const std::string& serverAddress)
+    void TransportPublisher::bind(const std::string& endpoint)
     {
-      _publisher->bind(serverAddress);
+      _publisher->bind(endpoint);
     }
 
-    void TransportPublisher::bind(const std::vector<std::string>& serverAddresses)
+    void TransportPublisher::bind(const std::vector<std::string>& endpoints)
     {
-      _publisher->bind(serverAddresses);
+      _publisher->bind(endpoints);
     }
 
-    void TransportPublisher::publish(const std::string& tosend)
+    void TransportPublisher::publish(const std::string& message)
     {
-      _publisher->publish(tosend);
+      _publisher->publish(message);
     }
 
   }

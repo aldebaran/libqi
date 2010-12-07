@@ -26,16 +26,16 @@ namespace qi {
       delete _subscriber;
     }
 
-    void TransportSubscriber::setSubscribeHandler(TransportSubscribeHandler* callback) {
-      _subscriber->setSubscribeHandler(callback);
+    void TransportSubscriber::setSubscribeHandler(TransportSubscribeHandler* handler) {
+      _subscriber->setSubscribeHandler(handler);
     }
 
     TransportSubscribeHandler* TransportSubscriber::getSubscribeHandler() const {
       return _subscriber->getSubscribeHandler();
     }
 
-    void TransportSubscriber::connect(const std::string &publishAddress) {
-      _subscriber->connect(publishAddress);
+    void TransportSubscriber::connect(const std::string &endpoint) {
+      _subscriber->connect(endpoint);
     }
 
     void TransportSubscriber::subscribe() {

@@ -25,10 +25,10 @@ namespace qi {
     public:
       TransportPublisher();
       ~TransportPublisher();
-      virtual void connect(const std::string& serverAddresses);
-      virtual void bind(const std::string& serverAddress);
-      virtual void bind(const std::vector<std::string>& serverAddresses);
-      virtual void publish(const std::string& tosend);
+      virtual void connect(const std::string& endpoint);
+      virtual void bind(const std::string& endpoint);
+      virtual void bind(const std::vector<std::string>& endpoints);
+      virtual void publish(const std::string& message);
 
     protected:
       qi::transport::detail::PublisherBackend *_publisher;

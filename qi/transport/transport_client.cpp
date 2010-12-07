@@ -21,24 +21,24 @@ namespace qi {
     {
     }
 
-    bool TransportClient::connect(const std::string &address) {
+    bool TransportClient::connect(const std::string &endpoint) {
       try {
-        _client = new qi::transport::detail::ZMQClientBackend(address);
+        _client = new qi::transport::detail::ZMQClientBackend(endpoint);
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisDebug << "GenericClient failed to create client for address \""
-            << address << "\" Reason: " << e.what() << std::endl;
+            << endpoint << "\" Reason: " << e.what() << std::endl;
         _isInitialized = false;
       }
       return _isInitialized;
     }
 
-    void TransportClient::send(const qi::transport::Buffer &def, qi::transport::Buffer &result)
+    void TransportClient::send(const qi::transport::Buffer &request, qi::transport::Buffer &reply)
     {
       if (!_isInitialized) {
         qisError << "Attempt to use an uninitialized client." << std::endl;
         }
-      _client->send(def, result);
+      _client->send(request, reply);
     }
 
   }

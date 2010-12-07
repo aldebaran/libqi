@@ -27,10 +27,10 @@ namespace qi {
       TransportSubscriber();
       virtual ~TransportSubscriber();
 
-      virtual void setSubscribeHandler(TransportSubscribeHandler* callback);
+      virtual void setSubscribeHandler(TransportSubscribeHandler* handler);
       virtual TransportSubscribeHandler* getSubscribeHandler() const;
 
-      virtual void connect(const std::string &publishAddress);
+      virtual void connect(const std::string &endpoint);
       virtual void subscribe();
 
     protected:

@@ -12,6 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
 
 #include <string>
+#include <qi/transport/buffer.hpp>
 
 namespace qi {
   namespace transport {
@@ -20,16 +21,13 @@ namespace qi {
       class ClientBackend;
     }
 
-    //TODO: bad!
-    typedef std::string Buffer;
-
     class TransportClient {
     public:
       TransportClient();
 
-      bool connect(const std::string &address);
+      bool connect(const std::string &endpoint);
 
-      void send(const qi::transport::Buffer &def, qi::transport::Buffer &result);
+      void send(const qi::transport::Buffer &request, qi::transport::Buffer &reply);
 
     protected:
      bool                                  _isInitialized;
