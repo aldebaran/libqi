@@ -114,7 +114,7 @@ namespace qi {
         }
 
         // never happens: we either return early or throw
-        return tmpEndpoint;
+        return serverEndpoint;
     }
   }
 }
