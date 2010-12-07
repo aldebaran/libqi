@@ -14,7 +14,6 @@
 #include <string>
 #include <boost/scoped_ptr.hpp>
 #include <qi/signature.hpp>
-//#include <qi/serialization.hpp>
 #include <qi/functors/makefunctor.hpp>
 
 namespace qi {
