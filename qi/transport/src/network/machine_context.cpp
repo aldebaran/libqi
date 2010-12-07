@@ -12,7 +12,7 @@
 namespace qi {
   namespace detail {
     MachineContext::MachineContext():
-      hostName(getHostName()),      
+      hostName(getHostName()),
       machineID(getFirstMacAddress()),
       publicIP(getPrimaryPublicIPAddress()),
       platformID(getPlatform()) {}
