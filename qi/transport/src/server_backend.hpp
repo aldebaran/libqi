@@ -21,13 +21,14 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      class ServerImpl: public qi::detail::Runnable {
+
+      class ServerBackend: public qi::detail::Runnable {
       public:
-        explicit ServerImpl(const std::vector<std::string> &_serverAddresses)
+        explicit ServerBackend(const std::vector<std::string> &_serverAddresses)
           : _serverAddresses(_serverAddresses),
             _dataHandler(0) {}
 
-        virtual ~ServerImpl() {}
+        virtual ~ServerBackend() {}
 
         virtual void run() = 0;
 

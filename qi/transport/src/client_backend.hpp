@@ -17,17 +17,16 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      template<typename BUFFER_TYPE = std::string>
-      class ClientImpl {
+      class ClientBackend {
       public:
-        explicit ClientImpl(const std::string &serverAddress)
+        explicit ClientBackend(const std::string &serverAddress)
           : _serverAddress(serverAddress)
         {}
 
-        virtual ~ClientImpl()
+        virtual ~ClientBackend()
         {}
 
-        virtual void send(const BUFFER_TYPE &tosend, BUFFER_TYPE &result) = 0;
+        virtual void send(const qi::transport::Buffer &tosend, qi::transport::Buffer &result) = 0;
 
       protected:
         std::string _serverAddress;
