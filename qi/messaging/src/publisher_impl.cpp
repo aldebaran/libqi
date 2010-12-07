@@ -15,10 +15,10 @@
 namespace qi {
   namespace detail {
 
-    PublisherImpl::PublisherImpl(const std::string& name, const std::string& masterAddress) :
-      MasterClient(name, masterAddress),
-      _publisherInitialized(false),
-      _publisher(new qi::transport::TransportPublisher())
+    PublisherImpl::PublisherImpl(const std::string& name, Context *ctx)
+      : MasterClient(name, ctx),
+        _publisherInitialized(false),
+        _publisher(new qi::transport::TransportPublisher(Context::transportContext(ctx)))
     {
       _endpointContext.type = PUBLISHER_ENDPOINT;
       init();

@@ -20,11 +20,12 @@ namespace qi {
       class SubscriberBackend;
     };
 
+    class TransportContext;
     class TransportSubscribeHandler;
 
     class TransportSubscriber {
     public:
-      TransportSubscriber();
+      TransportSubscriber(TransportContext *ctx = 0);
       virtual ~TransportSubscriber();
 
       virtual void setSubscribeHandler(TransportSubscribeHandler* handler);

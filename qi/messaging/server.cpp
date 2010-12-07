@@ -7,15 +7,16 @@
 */
 
 #include <qi/messaging/server.hpp>
+#include <qi/messaging/context.hpp>
 #include <qi/messaging/src/server_impl.hpp>
 
 namespace qi {
-  Server::Server() {}
-  Server::~Server() {}
+  Server::~Server()
+  {
+  }
 
-  Server::Server(const std::string& serverName,
-                 const std::string& masterAddress) :
-    _impl(new detail::ServerImpl(serverName, masterAddress))
+  Server::Server(const std::string& serverName, Context *ctx)
+    : _impl(new detail::ServerImpl(serverName, ctx))
   {
     // TODO prevent the name "master"
   }

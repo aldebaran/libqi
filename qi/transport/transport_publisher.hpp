@@ -21,9 +21,11 @@ namespace qi {
       class PublisherBackend;
     }
 
+    class TransportContext;
+
     class TransportPublisher {
     public:
-      TransportPublisher();
+      TransportPublisher(TransportContext *ctx = 0);
       ~TransportPublisher();
 
       /// <summary>Connects to an endpoint</summary>

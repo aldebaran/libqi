@@ -23,13 +23,14 @@ namespace qi {
 
     class ClientImpl : public MasterClient {
     public:
-      ClientImpl();
+      ClientImpl(const std::string &clientName = "", Context *ctx = 0);
       virtual ~ClientImpl();
+      void reset(const std::string &name = "", Context *ctx = 0);
+      void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
-      ClientImpl(const std::string& clientName, const std::string& masterAddress);
-
-      void call(const std::string &signature, const qi::serialization::Message& callDef,
-        qi::serialization::Message &result);
+      void call(const std::string &signature,
+                const qi::serialization::Message& callDef,
+                qi::serialization::Message &result);
 
     private:
       MutexedNameLookup<std::string> _serviceCache;

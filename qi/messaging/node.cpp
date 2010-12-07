@@ -7,15 +7,18 @@
 */
 
 #include <qi/messaging/node.hpp>
+#include <qi/messaging/context.hpp>
 
 namespace qi {
   Node::~Node() {}
 
-  Node::Node(
-    const std::string& name,
-    const std::string& masterAddress) :
-        Server(name, masterAddress),
-        Client(name, masterAddress),
-        Publisher(name, masterAddress),
-        Subscriber(name, masterAddress) {}
+  Node::Node(const std::string& name, Context *ctx)
+    : Server(name, ctx),
+      Client(name, ctx),
+      Publisher(name, ctx),
+      Subscriber(name, ctx)
+  {
+  }
+
+
 }

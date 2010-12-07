@@ -21,6 +21,8 @@ namespace qi {
     class SubscriberImpl;
   }
 
+  class Context;
+
   /// <summary>
   /// Used to subscribe to services.
   /// </summary>
@@ -42,7 +44,18 @@ namespace qi {
     /// The address of the master that is used to find publishers
     /// e.g. "127.0.0.1:5555"
     /// </param>
-    Subscriber(const std::string& subscriberName, const std::string& masterAddress = "127.0.0.1:5555");
+    Subscriber(const std::string& subscriberName = "", Context *ctx = 0);
+
+    /// <summary> Reset to the default state, this will disconnect
+    /// and reset the object, like a new fresh copy. </summary>
+    /// <param name="name"> Name </param>
+    /// <param name="context"> an optional Context </param>
+    void reset(const std::string &name = "", Context *ctx = 0);
+
+    /// <summary> Connect to masterAddress. If no address is specified
+    /// the default 127.0.0.1:5555 is used </summary>
+    /// <param name="masterAddress"> The master address. </param>
+    void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
     virtual ~Subscriber();
 

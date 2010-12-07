@@ -17,17 +17,16 @@ namespace qi {
     using qi::transport::Buffer;
     using qi::serialization::Message;
 
-    MasterClient::MasterClient() {}
-
     MasterClient::~MasterClient() {}
 
-    MasterClient::MasterClient(const std::string& name,
-                               const std::string& masterAddress) :
-        _masterAddress(masterAddress)
+    MasterClient::MasterClient(const std::string name,
+                               Context *ctx)
     {
       _endpointContext.name = name;
       _endpointContext.contextID = _qiContext.getID();
     }
+
+//TODO:    _masterAddress(masterAddress)
 
     void MasterClient::init() {
       std::pair<std::string, int> masterEndpointAndPort;

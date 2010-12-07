@@ -10,12 +10,9 @@
 #include <qi/messaging/src/publisher_impl.hpp>
 
 namespace qi {
-  Publisher::Publisher() {}
 
-  Publisher::Publisher(
-    const std::string& name,
-    const std::string& masterAddress) :
-    _impl(new qi::detail::PublisherImpl(name, masterAddress)) {}
+  Publisher::Publisher(const std::string& name, Context *ctx)
+    : _impl(new qi::detail::PublisherImpl(name, ctx)) {}
 
   Publisher::~Publisher() {}
 

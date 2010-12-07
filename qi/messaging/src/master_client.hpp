@@ -18,11 +18,9 @@ namespace qi {
   namespace detail {
     class MasterClient: public ImplBase {
     public:
-      MasterClient();
+      MasterClient(const std::string name = "", Context *ctx = 0);
       virtual ~MasterClient();
 
-      MasterClient(const std::string& name,
-                   const std::string& masterAddress);
 
       void init();
 

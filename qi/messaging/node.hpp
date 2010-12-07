@@ -34,8 +34,19 @@ namespace qi {
     /// <summary> Creates a Node </summary>
     /// <param name="nodeName"> Name of the node. Default: "Node" </param>
     /// <param name="masterAddress"> The master address. </param>
-    Node(const std::string& nodeName = "node",
-         const std::string& masterAddress = "127.0.0.1:5555");
+    Node(const std::string& nodeName = "", Context *ctx = 0);
+
+    /// <summary> Reset to the default state, this will disconnect
+    /// and reset the object, like a new fresh copy. </summary>
+    /// <param name="name"> Name </param>
+    /// <param name="context"> an optional Context </param>
+    void reset(const std::string &name = "", Context *ctx = 0);
+
+    /// <summary> Connect to masterAddress. If no address is specified
+    /// the default 127.0.0.1:5555 is used </summary>
+    /// <param name="masterAddress"> The master address. </param>
+    void connect(const std::string &masterAddress = "127.0.0.1:5555");
+
   };
 }
 

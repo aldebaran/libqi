@@ -25,11 +25,13 @@ namespace qi {
       public qi::detail::MasterClient,
       public qi::transport::TransportMessageHandler {
     public:
-      ServerImpl();
       virtual ~ServerImpl();
 
-      ServerImpl(const std::string& name,
-        const std::string& masterAddress);
+      ServerImpl(const std::string name = "", Context *ctx = 0);
+      void reset(const std::string &name = "", Context *ctx = 0);
+      void connect(const std::string &masterAddress = "127.0.0.1:5555");
+
+      const std::string& getName() const;
 
       /// <summary>Adds a service. </summary>
       /// <param name="methodSignature">The method signature.</param>

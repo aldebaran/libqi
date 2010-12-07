@@ -9,14 +9,14 @@
 
 #include <qi/transport/transport_publisher.hpp>
 #include <qi/transport/src/zmq/zmq_publisher.hpp>
-
+#include <qi/transport/transport_context.hpp>
 #include <string>
 #include <vector>
 
 namespace qi {
   namespace transport {
 
-    TransportPublisher::TransportPublisher()
+    TransportPublisher::TransportPublisher(TransportContext *ctx)
     {
       _publisher = new qi::transport::detail::ZMQPublisher();
     }

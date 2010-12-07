@@ -24,22 +24,22 @@ namespace qi {
 
   namespace detail {
 
-    ServerImpl::ServerImpl() {}
-
     ServerImpl::~ServerImpl() {
       if (!_isMasterServer) {
         unregisterEndpoint(_endpointContext);
       }
     }
 
-    ServerImpl::ServerImpl(
-      const std::string& serverName,
-      const std::string& masterAddress) :
-        MasterClient(serverName, masterAddress),
+    ServerImpl::ServerImpl(const std::string serverName, Context *ctx)
+      : MasterClient(serverName, ctx),
         _isMasterServer(false)
     {
       _endpointContext.type = SERVER_ENDPOINT;
+    }
 
+    void ServerImpl::connect(const std::string &masterAddress)
+    {
+      //TODO
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;

@@ -19,12 +19,24 @@ namespace qi {
   namespace detail {
     class PublisherImpl;
   }
+  class Context;
 
   class Publisher {
   public:
-    Publisher();
-    Publisher(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
+    Publisher(const std::string &name = "", Context *ctx = 0);
     virtual ~Publisher();
+
+    /// <summary> Reset to the default state, this will disconnect
+    /// and reset the object, like a new fresh copy. </summary>
+    /// <param name="name"> Name </param>
+    /// <param name="context"> an optional Context </param>
+    void reset(const std::string &name = "", Context *ctx = 0);
+
+    /// <summary> Connect to masterAddress. If no address is specified
+    /// the default 127.0.0.1:5555 is used </summary>
+    /// <param name="masterAddress"> The master address. </param>
+    void connect(const std::string &masterAddress = "127.0.0.1:5555");
+
 
     /// <summary>Advertises to the master that you wish to publish data
     /// of type "PUBLISH_TYPE" to a topic of name "topicName".</summary>

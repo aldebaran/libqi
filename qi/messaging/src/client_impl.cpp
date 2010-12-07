@@ -18,16 +18,12 @@ namespace qi {
 
   namespace detail {
 
-    ClientImpl::ClientImpl() {}
-
     ClientImpl::~ClientImpl() {
       unregisterEndpoint(_endpointContext);
     }
 
-    ClientImpl::ClientImpl(
-      const std::string& clientName,
-      const std::string& masterAddress) :
-        MasterClient(clientName, masterAddress)
+    ClientImpl::ClientImpl(const std::string& clientName, Context *ctx)
+      : MasterClient(clientName, ctx)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
       init();

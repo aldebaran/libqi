@@ -13,14 +13,12 @@
 
 
 namespace qi {
-  Client::Client() {}
-
   Client::~Client() {}
 
-  Client::Client(const std::string& clientName,
-                 const std::string& masterAddress)
-    : _impl(new detail::ClientImpl(clientName, masterAddress))
-  {}
+  Client::Client(const std::string& clientName, Context *ctx)
+    : _impl(new detail::ClientImpl(clientName, ctx))
+  {
+  }
 
   void Client::callVoid(const std::string& methodName) {
     qi::serialization::Message msg;

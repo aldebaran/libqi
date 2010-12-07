@@ -44,9 +44,9 @@ namespace qi {
       unregisterEndpoint(serverContext.endpointID);
     }
 
-    MasterImpl::MasterImpl(const std::string& masterAddress) :
+    MasterImpl::MasterImpl(const std::string& masterAddress, Context *ctx) :
         _address(masterAddress),
-        _server("master", _address)
+        _server("master", ctx)
     {
       xInit();
     }

@@ -27,11 +27,15 @@
 #include <qi/messaging.hpp>
 #include <qi/messaging/src/client_impl.hpp>
 
+struct context_private_t {
+public:
+  context_private_t();
+};
+
 struct client_private_t {
 public:
   //Constructor
-  client_private_t(const char *name, const char *address)
-    : client(std::string(name), std::string(address))
+  client_private_t(const char *name, const char *addr)
   {}
 
 public:

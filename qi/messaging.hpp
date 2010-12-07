@@ -11,6 +11,9 @@
 #ifndef _QI_MESSAGING_HPP_
 #define _QI_MESSAGING_HPP_
 
+// context that could be shared between nodes
+#include <qi/messaging/context.hpp>
+
 // the master
 #include <qi/messaging/master.hpp>
 

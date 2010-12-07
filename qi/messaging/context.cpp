@@ -24,5 +24,18 @@ namespace qi {
   const std::string& Context::getID() const {
     return _contextID;
   }
+
+  transport::TransportContext *Context::transportContext(Context *ctx)
+  {
+    if (ctx)
+      return ctx->transportContext();
+    return 0;
+  }
+
+  transport::TransportContext *Context::transportContext()
+  {
+    return _transportContext;
+  }
+
 }
 

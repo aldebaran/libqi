@@ -14,11 +14,10 @@
 
 namespace qi {
   namespace detail {
-    SubscriberImpl::SubscriberImpl(
-      const std::string& name,
-      const std::string& masterAddress) :
-      MasterClient(name, masterAddress),
-        _transportSubscriber(new qi::transport::TransportSubscriber())
+
+    SubscriberImpl::SubscriberImpl(const std::string& name, Context *ctx)
+      : MasterClient(name, ctx),
+        _transportSubscriber(new qi::transport::TransportSubscriber(Context::transportContext(ctx)))
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
       init();

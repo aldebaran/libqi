@@ -7,17 +7,17 @@
 */
 
 #include <qi/messaging/subscriber.hpp>
+#include <qi/messaging/context.hpp>
 #include <qi/messaging/src/subscriber_impl.hpp>
 
 namespace qi {
-  Subscriber::Subscriber() {}
 
   Subscriber::~Subscriber() {}
 
-  Subscriber::Subscriber(const std::string& name,
-                         const std::string& masterAddress)
-    : _impl(new detail::SubscriberImpl(name, masterAddress))
-  {}
+  Subscriber::Subscriber(const std::string& name, Context *ctx)
+    : _impl(new detail::SubscriberImpl(name, ctx))
+  {
+  }
 
   void Subscriber::xSubscribe(const std::string& topicName, qi::Functor* f) {
     return _impl->subscribe(topicName, f);

@@ -8,6 +8,7 @@
 
 
 #include <string>
+#include <qi/transport/transport_context.hpp>
 #include <qi/transport/transport_subscriber.hpp>
 #include <qi/transport/src/zmq/zmq_subscriber.hpp>
 #include <qi/transport/transport_subscribe_handler.hpp>
@@ -15,7 +16,7 @@
 namespace qi {
   namespace transport {
 
-    TransportSubscriber::TransportSubscriber()
+    TransportSubscriber::TransportSubscriber(TransportContext *ctx)
       : _subscribeHandler(NULL)
     {
       _subscriber = new qi::transport::detail::ZMQSubscriber();
