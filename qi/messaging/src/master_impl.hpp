@@ -47,8 +47,8 @@ namespace qi {
       const std::map<std::string, std::string>& listTopics();
       const std::vector<std::string> listMachines();
       const std::vector<std::string> listEndpoints();
-      const std::map<std::string, std::string> listMachine(const std::string& machineID);
-      const std::map<std::string, std::string> listEndpoint(const std::string& endpointID);
+      const std::map<std::string, std::string> getMachine(const std::string& machineID);
+      const std::map<std::string, std::string> getEndpoint(const std::string& endpointID);
 
       std::string locateTopic(const std::string& methodSignature, const std::string& clientID);
 

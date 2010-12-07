@@ -72,8 +72,8 @@ namespace qi {
       xAddMasterMethod(serverContext.endpointID, "master.listTopics",         this, &MasterImpl::listTopics);
       xAddMasterMethod(serverContext.endpointID, "master.listMachines",       this, &MasterImpl::listMachines);
       xAddMasterMethod(serverContext.endpointID, "master.listEndpoints",      this, &MasterImpl::listEndpoints);
-      xAddMasterMethod(serverContext.endpointID, "master.listMachine",        this, &MasterImpl::listMachine);
-      xAddMasterMethod(serverContext.endpointID, "master.listEndpoint",       this, &MasterImpl::listEndpoint);
+      xAddMasterMethod(serverContext.endpointID, "master.getMachine",         this, &MasterImpl::getMachine);
+      xAddMasterMethod(serverContext.endpointID, "master.getEndpoint",        this, &MasterImpl::getEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.registerMachine",    this, &MasterImpl::registerMachine);
       xAddMasterMethod(serverContext.endpointID, "master.registerEndpoint",   this, &MasterImpl::registerEndpoint);
       xAddMasterMethod(serverContext.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
@@ -263,7 +263,7 @@ namespace qi {
         return v;
     }
 
-    const std::map<std::string, std::string> MasterImpl::listMachine(const std::string& machineID) {
+    const std::map<std::string, std::string> MasterImpl::getMachine(const std::string& machineID) {
       const MachineContext& m = _knownMachines.get(machineID);
       std::map<std::string, std::string> ret;
       ret.insert(std::make_pair("machineID", m.machineID));
@@ -273,7 +273,7 @@ namespace qi {
       return ret;
     }
 
-    const std::map<std::string, std::string> MasterImpl::listEndpoint(const std::string& endpointID) {
+    const std::map<std::string, std::string> MasterImpl::getEndpoint(const std::string& endpointID) {
       const EndpointContext& e = _knownEndpoints.get(endpointID);
       std::map<std::string, std::string> ret;
       ret.insert(std::make_pair("endpointID", e.endpointID));

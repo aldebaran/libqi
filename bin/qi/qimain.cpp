@@ -40,10 +40,10 @@ void qi_call(std::string addr) {
   MapMap machines;
   MapMap endpoints;
   for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit) {
-    machines.insert(std::make_pair(*vit, client.call< StringMap >("master.listMachine", *vit)));
+    machines.insert(std::make_pair(*vit, client.call< StringMap >("master.getMachine", *vit)));
   }
   for (vit = endpointsIDs.begin(); vit != endpointsIDs.end(); ++vit) {
-    endpoints.insert(std::make_pair(*vit, client.call< StringMap >("master.listEndpoint", *vit)));
+    endpoints.insert(std::make_pair(*vit, client.call< StringMap >("master.getEndpoint", *vit)));
   }
   // ----------------------------
 
