@@ -8,8 +8,8 @@
 
 #include <qi/messaging/detail/publisher_impl.hpp>
 #include <qi/transport/detail/zmq/zmq_publisher.hpp>
-#include <qi/transport/detail/network/master_endpoint.hpp>
-#include <qi/transport/detail/network/endpoints.hpp>
+#include <qi/transport/messaging/src/network/master_endpoint.hpp>
+#include <qi/transport/messaging/src/network/endpoints.hpp>
 #include <qi/log.hpp>
 
 namespace qi {

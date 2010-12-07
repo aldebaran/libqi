@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/detail/address_manager.hpp>
-#include <qi/transport/detail/network/constants.hpp>
+#include <qi/transport/messaging/src/network/constants.hpp>
 #include <cstdio>
 
 namespace qi {

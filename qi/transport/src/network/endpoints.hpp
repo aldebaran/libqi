@@ -12,8 +12,8 @@
 #define _QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP_
 
 #include <vector>
-#include <qi/transport/detail/network/endpoint_context.hpp>
-#include <qi/transport/detail/network/machine_context.hpp>
+#include <qi/transport/messaging/src/network/endpoint_context.hpp>
+#include <qi/transport/messaging/src/network/machine_context.hpp>
 
 namespace qi {
   namespace detail {

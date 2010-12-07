@@ -12,7 +12,7 @@
 #define _QI_TRANSPORT_DETAIL_NETWORK_MACHINE_CONTEXT_HPP_
 
 #include <string>
-#include <qi/transport/detail/network/platform.hpp>
+#include <qi/transport/messaging/src/network/platform.hpp>
 
 namespace qi {
   namespace detail {

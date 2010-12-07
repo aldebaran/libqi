@@ -8,7 +8,7 @@
 
 #include <qi/messaging/detail/master_client.hpp>
 #include <qi/serialization.hpp>
-#include <qi/transport/detail/network/master_endpoint.hpp>
+#include <qi/transport/messaging/src/network/master_endpoint.hpp>
 
 namespace qi {
   namespace detail {

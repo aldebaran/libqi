@@ -7,7 +7,7 @@
 */
 
 #include <qi/messaging/context.hpp>
-#include <qi/transport/detail/network/uuid.hpp>
+#include <qi/transport/messaging/src/network/uuid.hpp>
 
 using qi::detail::getUUID;
 

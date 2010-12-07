@@ -7,9 +7,9 @@
 */
 
 #include <stdio.h>
-#include <qi/transport/detail/network/master_endpoint.hpp>
-#include <qi/transport/detail/network/ip_address.hpp>
-#include <qi/transport/detail/network/constants.hpp>
+#include <qi/transport/messaging/src/network/master_endpoint.hpp>
+#include <qi/transport/messaging/src/network/ip_address.hpp>
+#include <qi/transport/messaging/src/network/constants.hpp>
 
 namespace qi {
   namespace detail {

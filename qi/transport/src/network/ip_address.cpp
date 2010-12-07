@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/network/ip_address.hpp>
+#include <qi/transport/messaging/src/network/ip_address.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32

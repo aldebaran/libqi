@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/detail/network/endpoint_context.hpp>
-#include <qi/transport/detail/network/network.hpp>
+#include <qi/transport/messaging/src/network/endpoint_context.hpp>
+#include <qi/transport/messaging/src/network/network.hpp>
 
 namespace qi {
   namespace detail {

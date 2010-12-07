@@ -7,8 +7,8 @@
 */
 
 #include <qi/messaging/detail/master_impl.hpp>
-#include <qi/transport/detail/network/endpoints.hpp>
-#include <qi/transport/detail/network/platform.hpp>
+#include <qi/transport/messaging/src/network/endpoints.hpp>
+#include <qi/transport/messaging/src/network/platform.hpp>
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)           \
