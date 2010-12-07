@@ -184,12 +184,12 @@ namespace qi {
     }
 
     std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
-      const std::string& publisherEndpointID = _knownTopics.get(topicName);
-      if (publisherEndpointID.empty()) {
+      const Topic& t = _knownTopics.get(topicName);
+      if (t.subscribeEndpointID.empty()) {
         qisDebug << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
         return "";
       }
-      std::string endpoint = xNegotiateEndpoint(endpointID, publisherEndpointID);
+      std::string endpoint = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
       qisDebug << "Master::locateTopic: Resolved: " << topicName << " to " << endpoint << std::endl;
       return endpoint;
     }
@@ -218,7 +218,11 @@ namespace qi {
     void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
       //FIXME: check for existence
       qisDebug << "Master::registerTopic " << topicName << " " << endpointID << std::endl;
-      _knownTopics.insert(topicName, endpointID);
+      Topic t;
+      t.publishEndpointID = endpointID;
+      t.subscribeEndpointID = endpointID;
+      t.publisherIDs.push_back(endpointID);
+      _knownTopics.insert(topicName, t);
     }
 
     void MasterImpl::unregisterTopic(const std::string& topicName) {
@@ -235,32 +239,26 @@ namespace qi {
       return _knownServices.getMap();
     }
 
-    const std::map<std::string, std::string>& MasterImpl::listTopics() {
-      return _knownTopics.getMap();
+    std::vector<std::string> MasterImpl::listTopics() {
+      return _knownTopics.getKeys();
+    }
+
+    std::map<std::string, std::string> MasterImpl::getTopic(const std::string& topicID) {
+      std::map<std::string, std::string> result;
+      const Topic& t = _knownTopics.get(topicID);
+      result.insert(std::make_pair("topicName", t.topicName));
+      result.insert(std::make_pair("publishEndpointID", t.publishEndpointID));
+      result.insert(std::make_pair("subscribeEndpointID", t.subscribeEndpointID));
+      // FIXME ignore publishers and subscribers for now
+      return result;
     }
 
     const std::vector<std::string> MasterImpl::listMachines() {
-      std::vector<std::string> v;
-      const MachineMap& m = _knownMachines.getMap();
-      MachineMapCIT it    = m.begin();
-      MachineMapCIT end   = m.end();
-      v.resize(m.size());
-      for (int i=0; it != end; ++it) {
-        v[i++] = it->first;
-      }
-      return v;
+      return _knownMachines.getKeys();
     }
 
     const std::vector<std::string> MasterImpl::listEndpoints() {
-      std::vector<std::string> v;
-      const EndpointMap& e = _knownEndpoints.getMap();
-      EndpointMapCIT it    = e.begin();
-      EndpointMapCIT end   = e.end();
-      v.resize(e.size());
-        for (int i=0; it != end; ++it) {
-          v[i++] = it->first;
-        }
-        return v;
+      return _knownEndpoints.getKeys();
     }
 
     const std::map<std::string, std::string> MasterImpl::getMachine(const std::string& machineID) {
@@ -287,25 +285,17 @@ namespace qi {
     }
 
     std::vector<std::string> MasterImpl::xListServicesForEndpoint(const std::string& endpointID) {
-      std::vector<std::string> result;
-      const std::map<std::string, std::string>& services = _knownServices.getMap();
-      std::map<std::string, std::string>::const_iterator it = services.begin();
-      std::map<std::string, std::string>::const_iterator end = services.end();
-      for (; it != end; ++it) {
-        if (it->second == endpointID) {
-          result.push_back(it->first);
-        }
-      }
-      return result;
+      return _knownServices.getKeysWhereValueEquals(endpointID);
     }
 
     std::vector<std::string> MasterImpl::xListTopicsForEndpoint(const std::string& endpointID) {
       std::vector<std::string> result;
-      const std::map<std::string, std::string>& topics = _knownTopics.getMap();
-      std::map<std::string, std::string>::const_iterator it = topics.begin();
-      std::map<std::string, std::string>::const_iterator end = topics.end();
+      const TopicMap& topics = _knownTopics.getMap();
+      TopicMapCIT it = topics.begin();
+      TopicMapCIT end = topics.end();
       for (; it != end; ++it) {
-        if (it->second == endpointID) {
+        if (((it->second).publishEndpointID == endpointID) ||
+           ((it->second).subscribeEndpointID == endpointID)) {
           result.push_back(it->first);
         }
       }

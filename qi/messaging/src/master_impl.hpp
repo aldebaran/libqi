@@ -14,6 +14,7 @@
 #include <qi/messaging/src/server_impl.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/address_manager.hpp>
+#include <qi/messaging/src/topic.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
 
@@ -44,7 +45,8 @@ namespace qi {
       std::string locateService(const std::string& methodSignature, const std::string& clientID);
 
       const std::map<std::string, std::string>& listServices();
-      const std::map<std::string, std::string>& listTopics();
+      std::vector<std::string> listTopics();
+      std::map<std::string, std::string> getTopic(const std::string& topicID);
       const std::vector<std::string> listMachines();
       const std::vector<std::string> listEndpoints();
       const std::map<std::string, std::string> getMachine(const std::string& machineID);
@@ -92,8 +94,8 @@ namespace qi {
       /// map from endpointID to EndpointContext
       MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
-      /// map from topicSignature to endpointID
-      MutexedNameLookup<std::string>                 _knownTopics;
+      /// map from topicSignature to topic
+      MutexedNameLookup<qi::detail::Topic>           _knownTopics;
 
       AddressManager _addressManager;
 
@@ -102,6 +104,8 @@ namespace qi {
       typedef std::map<std::string, MachineContext>::const_iterator  MachineMapCIT;
       typedef std::map<std::string, EndpointContext>                 EndpointMap;
       typedef std::map<std::string, EndpointContext>::const_iterator EndpointMapCIT;
+      typedef std::map<std::string, Topic>                           TopicMap;
+      typedef std::map<std::string, Topic>::const_iterator           TopicMapCIT;
 
     };
   }

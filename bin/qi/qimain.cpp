@@ -27,23 +27,27 @@ void qi_call(std::string addr) {
   StringMap::const_iterator mit;
   VString::const_iterator   vit;
 
-  StringMap                 serviceMap;
-  StringMap                 topicMap;
-  VString endpointsIDs;
-  VString machinesIDs;
-
+  StringMap serviceMap;
+  VString   topics;
+  VString   endpointsIDs;
+  VString   machinesIDs;
+  MapMap    machines;
+  MapMap    endpoints;
   // DATA GATHERING ------------
-  serviceMap = client.call< StringMap >("master.listServices");
-  topicMap = client.call< StringMap >("master.listTopics");
-  machinesIDs = client.call< VString >("master.listMachines");
-  endpointsIDs = client.call< VString >("master.listEndpoints");
-  MapMap machines;
-  MapMap endpoints;
-  for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit) {
-    machines.insert(std::make_pair(*vit, client.call< StringMap >("master.getMachine", *vit)));
-  }
-  for (vit = endpointsIDs.begin(); vit != endpointsIDs.end(); ++vit) {
-    endpoints.insert(std::make_pair(*vit, client.call< StringMap >("master.getEndpoint", *vit)));
+  try {
+    serviceMap = client.call< StringMap >("master.listServices");
+    topics = client.call< VString >("master.listTopics");
+    machinesIDs = client.call< VString >("master.listMachines");
+    endpointsIDs = client.call< VString >("master.listEndpoints");
+    
+    for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit) {
+      machines.insert(std::make_pair(*vit, client.call< StringMap >("master.getMachine", *vit)));
+    }
+    for (vit = endpointsIDs.begin(); vit != endpointsIDs.end(); ++vit) {
+      endpoints.insert(std::make_pair(*vit, client.call< StringMap >("master.getEndpoint", *vit)));
+    }
+  } catch(const std::exception e) {
+    std::cout << "Failed to gather data from master. Reason: " << e.what() << std::endl;
   }
   // ----------------------------
 
@@ -54,9 +58,9 @@ void qi_call(std::string addr) {
   }
 
   std::cout << "Topics:" << std::endl;
-  for (mit = topicMap.begin(); mit != topicMap.end(); ++mit)
+  for (vit = topics.begin(); vit != topics.end(); ++vit)
   {
-    std::cout << mit->first << " :" << mit->second << std::endl;
+    std::cout << *vit << std::endl;
   }
 
   std::cout << "Machines:" << std::endl;
