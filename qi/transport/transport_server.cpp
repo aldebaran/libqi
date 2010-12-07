@@ -34,7 +34,7 @@ namespace qi {
       //  qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
       //}
       try {
-        _transportServer = new detail::ZMQSimpleServerImpl(addresses);
+        _transportServer = new detail::ZMQSimpleServerBackend(addresses);
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisError << "Failed to create transport server for addresses:";

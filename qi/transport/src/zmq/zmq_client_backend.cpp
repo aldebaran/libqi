@@ -15,7 +15,7 @@ namespace qi {
     namespace detail {
       /// <summary> Constructor. </summary>
       /// <param name="serverAddress"> The server address. </param>
-      ZMQClientImpl::ZMQClientImpl(const std::string &serverAddress)
+      ZMQClientBackend::ZMQClientBackend(const std::string &serverAddress)
         : ClientBackend(serverAddress),
         context(1),
         socket(context, ZMQ_REQ)
@@ -24,14 +24,14 @@ namespace qi {
       }
 
       /// <summary> Connects to the server </summary>
-      void ZMQClientImpl::connect()
+      void ZMQClientBackend::connect()
       {
         socket.connect(_serverAddress.c_str());
         //TODO: check that the connection is OK
         //sleep(1);
       }
 
-      void ZMQClientImpl::pollRecv(long timeout) {
+      void ZMQClientBackend::pollRecv(long timeout) {
         int             rc = 0;
         zmq_pollitem_t  items[1];
 
@@ -51,7 +51,7 @@ namespace qi {
       /// <summary> Sends. </summary>
       /// <param name="tosend"> The data to send. </param>
       /// <param name="result"> [in,out] The result. </param>
-      void ZMQClientImpl::send(const std::string &tosend, std::string &result)
+      void ZMQClientBackend::send(const std::string &tosend, std::string &result)
       {
         // TODO optimise this
         // Could we copy from the serialized stream without calling

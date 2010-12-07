@@ -8,48 +8,49 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP_
+#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_IMPL_HPP_
+#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_IMPL_HPP_
 
 #include <zmq.hpp>
-#include <qi/transport/transport_server.hpp>
 #include <qi/core/handlers_pool.hpp>
+#include <qi/transport/src/server_backend.hpp>
+#include <qi/transport/src/server_response_handler.hpp>
 #include <qi/transport/src/zmq/zmq_server_impl.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
-#include <qi/transport/src/server_backend.hpp>
-
 
 namespace qi {
   namespace transport {
     namespace detail {
-
       /// <summary>
       /// The server class. It listen for incoming connection from client
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
       //class ResultHandler;
-      class ZMQServerQueueImpl : public detail::ServerBackend, public detail::ServerResponseHandler {
+      class ZMQServerBackend : public detail::ServerBackend, public detail::ServerResponseHandler {
       public:
-        /// <summary>The Server class constructor.</summary>
-        /// <param name="serverAddresses">
-        /// The addresses to serve
+        /// <summary> The Server class constructor. </summary>
+        /// <param name="server_name">
+        /// The addresses given to the server
         /// </param>
-        ZMQServerQueueImpl(const std::vector<std::string> & serverAddresses);
+        ZMQServerBackend(const std::vector<std::string> & serverAddresses);
 
-        /// <summary>The Server class destructor.
-        virtual ~ZMQServerQueueImpl();
+        /// <summary> The Server class destructor </summary>
+        virtual ~ZMQServerBackend();
 
-        /// <summary>Run the server thread.</summary>
+        /// <summary> Run the server thread. </summary>
         virtual void run();
 
-        /// <summary>Wait for the server thread to complete its task.</summary>
+        /// <summary> Wait for the server thread to complete its task. </summary>
         void wait();
 
-        /// <summary>Force the server to stop and wait for complete stop.</summary>
+        zmq::message_t *recv(zmq::message_t &msg);
+
+        /// <summary> Force the server to stop and wait for complete stop. </summary>
         void stop();
 
+        void poll();
         void serverResponseHandler(const std::string &result, void *data = 0);
 
         //ResultHandler *getResultHandler() { return 0; }
@@ -58,15 +59,12 @@ namespace qi {
 
       private:
         bool                     server_running;
-        std::string              server_path;
         zmq::context_t           zctx;
-        zmq::socket_t            zsocketworkers;
         zmq::socket_t            zsocket;
         boost::mutex             socketMutex;
         qi::detail::HandlersPool handlersPool;
       };
-
     }
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_QUEUE_IMPL_HPP_
+#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SERVER_IMPL_HPP_

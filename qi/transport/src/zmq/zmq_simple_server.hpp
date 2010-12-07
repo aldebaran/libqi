@@ -28,16 +28,16 @@ namespace qi {
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      class ZMQSimpleServerImpl : public detail::ServerBackend, public detail::ServerResponseHandler {
+      class ZMQSimpleServerBackend : public detail::ServerBackend, public detail::ServerResponseHandler {
       public:
         /// <summary>The Server class constructor.</summary>
         /// <param name="serverAddresses">
         /// The addresses of the server e.g. tcp://127.0.0.1:5555, inproc://something, ipc://something
         /// </param>
-        ZMQSimpleServerImpl(const std::vector<std::string> & serverAddresses);
+        ZMQSimpleServerBackend(const std::vector<std::string> & serverAddresses);
 
         /// <summary>The Server class destructor.</summary>
-        virtual ~ZMQSimpleServerImpl();
+        virtual ~ZMQSimpleServerBackend();
 
         /// <summary>Run the server thread.</summary>
         virtual void run();

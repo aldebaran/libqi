@@ -18,17 +18,17 @@
 namespace qi {
   namespace transport {
     namespace detail {
-      class ZMQClientImpl : public ClientBackend {
+      class ZMQClientBackend : public ClientBackend {
       public:
         /// <summary>
-        /// Creates a ZMQClientImpl for a server
+        /// Creates a ZMQClientBackend for a server
         /// </summary>
         /// <param name="serverAddress">
         /// The protocol-qualified address of the server
         /// e.g. ipc:///tmp/naoqi/paf
         //. or tcp://127.0.0.1:5555
         /// </param>
-        ZMQClientImpl(const std::string &servername);
+        ZMQClientBackend(const std::string &servername);
 
         virtual void send(const std::string &tosend, std::string &result);
         void pollRecv(long timeout);
