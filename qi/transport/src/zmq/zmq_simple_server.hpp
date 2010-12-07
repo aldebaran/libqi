@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
+#ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
+#define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 
 #include <qi/transport/src/server_backend.hpp>
 #include <qi/core/handlers_pool.hpp>
@@ -67,4 +67,4 @@ namespace qi {
     }
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
+#endif  // _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_

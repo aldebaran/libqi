@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_MACHINE_CONTEXT_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_MACHINE_CONTEXT_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
 
 #include <string>
 #include <qi/messaging/src/network/platform.hpp>
@@ -31,5 +31,5 @@ namespace qi {
     };
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_MACHINE_CONTEXT_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
 

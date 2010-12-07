@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_CLIENT_HPP_
-#define _QI_TRANSPORT_CLIENT_HPP_
+#ifndef _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
+#define _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
 
 #include <string>
 
@@ -39,4 +39,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_CLIENT_HPP_
+#endif  // _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_

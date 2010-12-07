@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP_
-#define _QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP_
+#ifndef _QI_TRANSPORT_SRC_SERVER_BACKEND_HPP_
+#define _QI_TRANSPORT_SRC_SERVER_BACKEND_HPP_
 
 #include <string>
 #include <vector>
@@ -48,4 +48,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_DETAIL_SERVER_IMPL_HPP_
+#endif  // _QI_TRANSPORT_SRC_SERVER_BACKEND_HPP_

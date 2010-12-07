@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CLIENT_IMPL_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CLIENT_IMPL_HPP_
+#ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_CLIENT_BACKEND_HPP_
+#define _QI_TRANSPORT_SRC_ZMQ_ZMQ_CLIENT_BACKEND_HPP_
 
 # include <qi/transport/buffer.hpp>
 # include <qi/transport/src/client_backend.hpp>
@@ -45,4 +45,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_CLIENT_IMPL_HPP_
+#endif  // _QI_TRANSPORT_SRC_ZMQ_ZMQ_CLIENT_BACKEND_HPP_

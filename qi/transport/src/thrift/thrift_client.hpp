@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP_
-#define _QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP_
+#ifndef _QI_TRANSPORT_SRC_THRIFT_THRIFT_CLIENT_HPP_
+#define _QI_TRANSPORT_SRC_THRIFT_THRIFT_CLIENT_HPP_
 
 #include <qi/transport/client.hpp>
 #include <transport/TTransport.h>
@@ -35,4 +35,4 @@ namespace qi {
 }
 
 
-#endif  // _QI_TRANSPORT_DETAIL_THRIFT_THRIFT_CLIENT_HPP_
+#endif  // _QI_TRANSPORT_SRC_THRIFT_THRIFT_CLIENT_HPP_

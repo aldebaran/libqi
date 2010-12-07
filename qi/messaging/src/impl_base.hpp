@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_DETAIL_IMPL_BASE_HPP_
-#define _QI_MESSAGING_DETAIL_IMPL_BASE_HPP_
+#ifndef _QI_MESSAGING_SRC_IMPL_BASE_HPP_
+#define _QI_MESSAGING_SRC_IMPL_BASE_HPP_
 
 #include <string>
 #include <qi/messaging/context.hpp>
@@ -47,5 +47,5 @@ namespace qi {
   }
 }
 
-#endif  // _QI_MESSAGING_DETAIL_IMPL_BASE_HPP_
+#endif  // _QI_MESSAGING_SRC_IMPL_BASE_HPP_
 

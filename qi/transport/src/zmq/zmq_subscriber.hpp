@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP_
+#ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
+#define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
 
 # include <qi/transport/src/subscriber_backend.hpp>
 # include <boost/thread.hpp>
@@ -52,4 +52,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_SUBSCRIBER_HPP_
+#endif  // _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_

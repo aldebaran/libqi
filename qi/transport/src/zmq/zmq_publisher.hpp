@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
+#ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_PUBLISHER_HPP_
+#define _QI_TRANSPORT_SRC_ZMQ_ZMQ_PUBLISHER_HPP_
 
 # include <qi/transport/src/publisher_backend.hpp>
 # include <zmq.hpp>
@@ -56,4 +56,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
+#endif  // _QI_TRANSPORT_SRC_ZMQ_ZMQ_PUBLISHER_HPP_

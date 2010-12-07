@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_SUBSCRIBER_HPP_
-#define _QI_TRANSPORT_SUBSCRIBER_HPP_
+#ifndef _QI_TRANSPORT_SRC_SUBSCRIBER_BACKEND_HPP_
+#define _QI_TRANSPORT_SRC_SUBSCRIBER_BACKEND_HPP_
 
 #include <string>
 #include <qi/transport/transport_subscribe_handler.hpp>
@@ -43,4 +43,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_SUBSCRIBER_HPP_
+#endif  // _QI_TRANSPORT_SRC_SUBSCRIBER_BACKEND_HPP_

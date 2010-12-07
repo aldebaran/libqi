@@ -8,13 +8,13 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_CONSTANTS_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_CONSTANTS_HPP_
 
 namespace qi {
   namespace detail {
     static const int kDefaultMasterPort = 5555;
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_CONSTANTS_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_CONSTANTS_HPP_
 

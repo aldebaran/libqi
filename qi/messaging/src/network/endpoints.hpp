@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_ENDPOINTS_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_ENDPOINTS_HPP_
 
 #include <vector>
 #include <qi/messaging/src/network/endpoint_context.hpp>
@@ -31,5 +31,5 @@ namespace qi {
                                           const MachineContext& serverMachineContext);
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_ENDPOINTS_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_ENDPOINTS_HPP_
 

@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_DETAIL_SUBSCRIBER_IMPL_HPP_
-#define _QI_MESSAGING_DETAIL_SUBSCRIBER_IMPL_HPP_
+#ifndef _QI_MESSAGING_SRC_SUBSCRIBER_IMPL_HPP_
+#define _QI_MESSAGING_SRC_SUBSCRIBER_IMPL_HPP_
 
 #include <string>
 #include <qi/transport/transport_subscriber.hpp>
@@ -45,4 +45,4 @@ namespace qi {
     };
   }
 }
-#endif  // _QI_MESSAGING_DETAIL_SUBSCRIBER_IMPL_HPP_
+#endif  // _QI_MESSAGING_SRC_SUBSCRIBER_IMPL_HPP_

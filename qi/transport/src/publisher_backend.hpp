@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_PUBLISHER_HPP_
-#define _QI_TRANSPORT_PUBLISHER_HPP_
+#ifndef _QI_TRANSPORT_SRC_PUBLISHER_BACKEND_HPP_
+#define _QI_TRANSPORT_SRC_PUBLISHER_BACKEND_HPP_
 
 #include <string>
 #include <vector>
@@ -30,4 +30,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_PUBLISHER_HPP_
+#endif  // _QI_TRANSPORT_SRC_PUBLISHER_BACKEND_HPP_

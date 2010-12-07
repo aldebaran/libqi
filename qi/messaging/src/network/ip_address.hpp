@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_IP_ADDRESS_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_IP_ADDRESS_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
 
 #include <string>
 #include <vector>
@@ -26,5 +26,5 @@ namespace qi {
     bool isValidHostAndPort(const std::string& literalHostName, std::string& numericHostName);
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_IP_ADDRESS_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
 

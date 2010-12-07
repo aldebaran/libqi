@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_DETAIL_SERVER_IMPL_HPP_
-#define _QI_MESSAGING_DETAIL_SERVER_IMPL_HPP_
+#ifndef _QI_MESSAGING_SRC_SERVER_IMPL_HPP_
+#define _QI_MESSAGING_SRC_SERVER_IMPL_HPP_
 
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
@@ -59,5 +59,5 @@ namespace qi {
   }
 }
 
-#endif  // _QI_MESSAGING_DETAIL_SERVER_IMPL_HPP_
+#endif  // _QI_MESSAGING_SRC_SERVER_IMPL_HPP_
 

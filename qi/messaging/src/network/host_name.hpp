@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_HOST_NAME_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_HOST_NAME_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_HOST_NAME_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_HOST_NAME_HPP_
 
 #include <string>
 
@@ -18,5 +18,5 @@ namespace qi {
     std::string getHostName();
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_HOST_NAME_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_HOST_NAME_HPP_
 

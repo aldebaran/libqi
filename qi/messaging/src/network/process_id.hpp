@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_PROCESS_ID_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_PROCESS_ID_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_PROCESS_ID_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_PROCESS_ID_HPP_
 
 namespace qi {
   namespace detail {
@@ -17,5 +17,5 @@ namespace qi {
     int getProcessID();
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_PROCESS_ID_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_PROCESS_ID_HPP_
 

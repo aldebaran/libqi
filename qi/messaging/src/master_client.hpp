@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
-#define _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
+#ifndef _QI_MESSAGING_SRC_MASTER_CLIENT_HPP_
+#define _QI_MESSAGING_SRC_MASTER_CLIENT_HPP_
 
 #include <qi/messaging/src/impl_base.hpp>
 #include <qi/transport/transport_client.hpp>
@@ -58,5 +58,5 @@ namespace qi {
   }
 }
 
-#endif  // _QI_MESSAGING_DETAIL_MASTER_CLIENT_HPP_
+#endif  // _QI_MESSAGING_SRC_MASTER_CLIENT_HPP_
 

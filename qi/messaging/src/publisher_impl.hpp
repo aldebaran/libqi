@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_DETAIL_PUBLISHER_IMPL_HPP_
-#define _QI_MESSAGING_DETAIL_PUBLISHER_IMPL_HPP_
+#ifndef _QI_MESSAGING_SRC_PUBLISHER_IMPL_HPP_
+#define _QI_MESSAGING_SRC_PUBLISHER_IMPL_HPP_
 
 #include <string>
 #include <vector>
@@ -42,4 +42,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_MESSAGING_DETAIL_PUBLISHER_IMPL_HPP_
+#endif  // _QI_MESSAGING_SRC_PUBLISHER_IMPL_HPP_

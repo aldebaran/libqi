@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP_
-#define _QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP_
+#ifndef _QI_MESSAGING_SRC_NETWORK_PLATFORM_HPP_
+#define _QI_MESSAGING_SRC_NETWORK_PLATFORM_HPP_
 
 namespace qi {
   namespace detail {
@@ -46,5 +46,5 @@ namespace qi {
     }
   }
 }
-#endif  // _QI_TRANSPORT_DETAIL_NETWORK_PLATFORM_HPP_
+#endif  // _QI_MESSAGING_SRC_NETWORK_PLATFORM_HPP_
 

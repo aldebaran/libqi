@@ -7,8 +7,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_FORWARDER_HPP_
-#define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_FORWARDER_HPP_
+#ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_FORWARDER_HPP_
+#define _QI_TRANSPORT_SRC_ZMQ_ZMQ_FORWARDER_HPP_
 
 #include <string>
 #include <vector>
@@ -58,4 +58,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_FORWARDER_HPP_
+#endif  // _QI_TRANSPORT_SRC_ZMQ_ZMQ_FORWARDER_HPP_
