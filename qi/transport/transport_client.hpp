@@ -11,48 +11,30 @@
 #ifndef _QI_TRANSPORT_CLIENT_HPP_
 #define _QI_TRANSPORT_CLIENT_HPP_
 
-#include <qi/transport/detail/client_impl.hpp>
-#include <qi/transport/detail/zmq/zmq_client_impl.hpp>
-#include <qi/log.hpp>
+#include <string>
 
 namespace qi {
   namespace transport {
 
-    template<typename TRANSPORT_TYPE, typename BUFFER_TYPE>
-    class TransportGenericClient {
+    namespace detail {
+      class ClientBackend;
+    }
+
+    class Buffer;
+
+    class TransportClient {
     public:
-      TransportGenericClient() : _isInitialized(false) {}
+      TransportClient();
 
-      bool connect(const std::string &address) {
-        try {
-          _client = new TRANSPORT_TYPE(address);
-          _isInitialized = true;
-        } catch(const std::exception& e) {
-          qisDebug << "GenericClient failed to create client for address \""
-            << address << "\" Reason: " << e.what() << std::endl;
-          _isInitialized = false;
-        }
-        return _isInitialized;
-      }
+      bool connect(const std::string &address);
 
-      void send(const BUFFER_TYPE &def, BUFFER_TYPE &result)
-      {
-        if (!_isInitialized) {
-          qisError << "Attempt to use an uninitialized client." << std::endl;
-        }
-        _client->send(def, result);
-      }
+      void send(const qi::transport::Buffer &def, qi::transport::Buffer &result);
 
     protected:
-     bool _isInitialized;
-      qi::transport::detail::ClientImpl<BUFFER_TYPE> *_client;
+     bool                                  _isInitialized;
+     qi::transport::detail::ClientBackend *_client;
     };
 
-    typedef TransportGenericClient<
-      qi::transport::detail::ZMQClientImpl,
-      qi::transport::Buffer> ZMQTransportClient;
-
-    typedef ZMQTransportClient TransportClient;
   }
 }
 
