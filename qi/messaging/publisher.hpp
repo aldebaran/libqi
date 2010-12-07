@@ -29,6 +29,8 @@ namespace qi {
     /// <summary>Advertises to the master that you wish to publish data
     /// of type "PUBLISH_TYPE" to a topic of name "topicName".</summary>
     /// <param name="topicName">The name of the topic you wish to publish to.</param>
+    /// <seealso cref="qi::Subscriber"/>
+    /// <seealso cref="qi::Master"/>
     template<typename PUBLISH_TYPE>
     void advertiseTopic(const std::string& topicName)
     {
@@ -43,7 +45,9 @@ namespace qi {
     /// e.g. publisher.publish("/time/hour_of_the_day", 10);
     /// 
     /// A subscriber would be able to subscribe to the above with
-    /// subscriber.subscribe("time/hout_of_the_day", &handler);
+    /// 
+    /// subscriber.subscribe("time/hour_of_the_day", &handler);
+    /// 
     /// where the handler expects an int type.
     /// </summary>
     /// <param name="topicName">The name of the topic you want to publish to.
@@ -53,8 +57,9 @@ namespace qi {
     /// </param>
     /// <param name="publishData">The typed data that you wish to publish</param>
     /// <returns>void</returns>
+    /// <seealso cref="qi::Subscriber"/>
     template<typename PUBLISH_TYPE>
-    void publish(const std::string topicName, const T& publishData)
+    void publish(const std::string topicName, const PUBLISH_TYPE& publishData)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
       qi::serialization::Message ser;

@@ -28,6 +28,10 @@ namespace qi {
     /// The master address.
     /// e.g. 127.0.0.1:5555
     /// </param>
+    /// <seealso cref="qi::Server"/>
+    /// <seealso cref="qi::Client"/>
+    /// <seealso cref="qi::Publisher"/>
+    /// <seealso cref="qi::Subscriber"/>
     explicit Master(const std::string& masterAddress = "127.0.0.1:5555");
 
     /// <summary> Finaliser. </summary>

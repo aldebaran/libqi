@@ -59,6 +59,8 @@ namespace qi {
     /// <param name="function"> The memory address of the function. e.g.
     /// "&globalFunction"
     /// </param>
+    /// <seealso cref="qi::Publisher"/>
+    /// <seealso cref="qi::Master"/>
     template<typename FUNCTION_TYPE>
     void subscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
@@ -78,6 +80,8 @@ namespace qi {
     /// <param name="method"> The memory address of the method to call. This should
     /// fully qualify the type of your method such as "&MyClass::myMethod"
     /// or "&MyObject::objectMethod".</param>
+    /// <seealso cref="qi::Publisher"/>
+    /// <seealso cref="qi::Master"/>
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void subscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
     {
