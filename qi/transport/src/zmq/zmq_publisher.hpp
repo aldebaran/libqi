@@ -11,14 +11,14 @@
 #ifndef _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
 #define _QI_TRANSPORT_DETAIL_ZMQ_ZMQ_PUBLISHER_HPP_
 
-# include <qi/transport/transport_publisher.hpp>
+# include <qi/transport/src/publisher_backend.hpp>
 # include <zmq.hpp>
 # include <boost/shared_ptr.hpp>
 
 namespace qi {
   namespace transport {
     namespace detail {
-      class ZMQPublisher : public TransportPublisher {
+      class ZMQPublisher : public PublisherBackend {
       public:
         /// <summary> Default Constructor. </summary>
         ZMQPublisher();
