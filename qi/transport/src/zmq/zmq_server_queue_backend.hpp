@@ -14,7 +14,7 @@
 #include <zmq.hpp>
 #include <qi/transport/transport_server.hpp>
 #include <qi/core/handlers_pool.hpp>
-#include <qi/transport/src/zmq/zmq_server_impl.hpp>
+#include <qi/transport/src/zmq/zmq_server_backend.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <qi/transport/src/server_backend.hpp>

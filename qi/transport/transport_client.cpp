@@ -10,7 +10,7 @@
 
 #include <qi/transport/buffer.hpp>
 #include <qi/transport/src/client_backend.hpp>
-#include <qi/transport/src/zmq/zmq_client_impl.hpp>
+#include <qi/transport/src/zmq/zmq_client_backend.hpp>
 #include <qi/log.hpp>
 
 namespace qi {

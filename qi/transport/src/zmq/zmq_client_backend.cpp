@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_client_impl.hpp>
+#include <qi/transport/src/zmq/zmq_client_backend.hpp>
 #include <qi/exceptions/exceptions.hpp>
 #include <iostream>
 
