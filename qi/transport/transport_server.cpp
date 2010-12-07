@@ -22,24 +22,24 @@ namespace qi {
     {
     }
 
-    void TransportServer::serve(const std::string &address) {
+    void TransportServer::serve(const std::string &endpoint) {
       std::vector<std::string> v;
-      v.push_back(address);
+      v.push_back(endpoint);
       serve(v);
     }
 
-    void TransportServer::serve(const std::vector<std::string> &addresses)
+    void TransportServer::serve(const std::vector<std::string> &endpoints)
     {
       //for(unsigned int i = 0 ; i< addresses.size(); ++i) {
       //  qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
       //}
       try {
-        _transportServer = new detail::ZMQSimpleServerBackend(addresses);
+        _transportServer = new detail::ZMQSimpleServerBackend(endpoints);
         _isInitialized = true;
       } catch(const std::exception& e) {
-        qisError << "Failed to create transport server for addresses:";
-        for(unsigned int i = 0 ; i< addresses.size(); ++i) {
-          qisError << " " << addresses[i] << std::endl;
+        qisError << "Failed to create transport server for endpoints:";
+        for(unsigned int i = 0 ; i< endpoints.size(); ++i) {
+          qisError << " " << endpoints[i] << std::endl;
         }
         qisError << " Reason:" << e.what() << std::endl;
         throw(e);

@@ -28,9 +28,9 @@ namespace qi {
     public:
       TransportServer();
 
-      void serve(const std::string &address);
+      void serve(const std::string &endpoint);
 
-      void serve(const std::vector<std::string> &addresses);
+      void serve(const std::vector<std::string> &endpoints);
 
       virtual void run();
 

@@ -37,62 +37,63 @@ namespace qi {
 
     void ClientImpl::call(const std::string &signature,
       const qi::serialization::Message& callDef,
-            qi::serialization::Message &result) {
+            qi::serialization::Message& result) {
         if (!_isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));
         }
 
         // will throw if service not found
-        const std::string& nodeAddress = xLocateService(signature);
+        const std::string& serverEndpoint = xLocateService(signature);
         // will throw if unable to find or create client
-        boost::shared_ptr<TransportClient> client = xGetServerClient(nodeAddress);
+        boost::shared_ptr<TransportClient> client = xGetServerClient(serverEndpoint);
         std::string resultData;
         client->send(callDef.str(), resultData);
         result.str(resultData);
     }
 
-    boost::shared_ptr<TransportClient> ClientImpl::xGetServerClient(const std::string& serverAddress) {
+    boost::shared_ptr<TransportClient> ClientImpl::xGetServerClient(const std::string& serverEndpoint) {
       // get the relevant messaging client for the node that hosts the service
 
-      boost::shared_ptr<TransportClient> c = _serverClients.get(serverAddress);
-      if (c == NULL) {
-        // create messaging client if needed ...
-        bool ok = xCreateServerClient(serverAddress);
-        if (ok) {
-          c = _serverClients.get(serverAddress);
-        }
-        if (!ok || c == NULL) {
-          qisError << "Could not create client for server \"" << serverAddress
-                   << "\" Probable connection error. " << std::endl;
-          throw( qi::transport::ConnectionException(
-            "Could not create client for server. Probable connection error."));
-        }
+      boost::shared_ptr<TransportClient> tc = _serverClients.get(serverEndpoint);
+      if (tc != NULL)
+        return tc;
+
+      // create messaging client if needed ...
+      bool ok = xCreateServerClient(serverEndpoint);
+      if (ok) {
+        tc = _serverClients.get(serverEndpoint);
       }
-      return c;
+      if (!ok || tc == NULL) {
+        qisError << "Could not create client for server \"" << serverEndpoint
+                 << "\" Probable connection error. " << std::endl;
+        throw( qi::transport::ConnectionException(
+          "Could not create client for server. Probable connection error."));
+      }
+      return tc;
     }
 
-    bool ClientImpl::xCreateServerClient(const std::string& serverAddress) {
+    bool ClientImpl::xCreateServerClient(const std::string& serverEndpoint) {
 
       boost::shared_ptr<TransportClient> client(new TransportClient());
-      bool ok = client->connect(serverAddress);
+      bool ok = client->connect(serverEndpoint);
       if (ok) {
-        _serverClients.insert(serverAddress, client);
+        _serverClients.insert(serverEndpoint, client);
         qisDebug << "Client \"" << _endpointContext.name
-                 << "\" connected to " << serverAddress << std::endl;
+                 << "\" connected to " << serverEndpoint << std::endl;
       }
       return ok;
     }
 
     const std::string& ClientImpl::xLocateService(const std::string& methodSignature) {
-        const std::string& nodeAddress = _serviceCache.get(methodSignature);
-        if (!nodeAddress.empty()) {
-          return nodeAddress;
+        const std::string& serverEndpoint = _serviceCache.get(methodSignature);
+        if (!serverEndpoint.empty()) {
+          return serverEndpoint;
         }
 
-        std::string tmpAddress;
+        std::string tmpEndpoint;
         try {
-          tmpAddress = locateService(methodSignature, _endpointContext);
+          tmpEndpoint = locateService(methodSignature, _endpointContext);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Unable to contact master." << std::endl;
@@ -100,9 +101,9 @@ namespace qi {
             "Unable to contact master."));
         }
 
-        if (!tmpAddress.empty()) {
+        if (!tmpEndpoint.empty()) {
           // cache located service pair
-          _serviceCache.insert(methodSignature, tmpAddress);
+          _serviceCache.insert(methodSignature, tmpEndpoint);
           // return a const string ref address
           return _serviceCache.get(methodSignature);
         } else {
@@ -113,7 +114,7 @@ namespace qi {
         }
 
         // never happens: we either return early or throw
-        return nodeAddress;
+        return tmpEndpoint;
     }
   }
 }

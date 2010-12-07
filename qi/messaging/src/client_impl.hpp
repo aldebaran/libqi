@@ -39,6 +39,7 @@ namespace qi {
 
       boost::shared_ptr<qi::transport::TransportClient> xGetServerClient(
         const std::string& serverAddress);
+
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
     };
