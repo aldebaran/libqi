@@ -13,3 +13,6 @@ use_lib(example_qi_client QI)
 
 create_bin(example_qi_server NO_INSTALL example_qi_server.cpp)
 use_lib(example_qi_server QI)
+
+create_bin(example_qi_advertise NO_INSTALL example_qi_advertise.cpp)
+use_lib(example_qi_advertise QI)
