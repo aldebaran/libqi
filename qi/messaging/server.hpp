@@ -69,10 +69,10 @@ namespace qi {
     /// fully qualify the type of your method such as "&MyClass::myMethod"
     /// or "&MyObject::objectMethod".</param>
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    void addService(
+    void advertiseService(
       const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
     {
-      xAddService(
+      xAdvertiseService(
         makeSignature(name, method),
         makeFunctor(object, method));
     }
@@ -93,18 +93,36 @@ namespace qi {
     /// "&globalFunction"
     /// </param>
     template <typename FUNCTION_TYPE>
-    void addService(const std::string& name, FUNCTION_TYPE function) {
-      xAddService(makeSignature(name, function), makeFunctor(function));
+    void advertiseService(const std::string& name, FUNCTION_TYPE function)
+    {
+      xAdvertiseService(makeSignature(name, function), makeFunctor(function));
+    }
+
+    template <typename OBJECT_TYPE, typename METHOD_TYPE>
+    void unadvertiseService(
+      const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+    {
+      xUnadvertiseService(makeSignature(name, method));
+    }
+
+    template <typename FUNCTION_TYPE>
+    void unadvertiseService(const std::string& name, FUNCTION_TYPE function)
+    {
+      xUnadvertiseService(makeSignature(name, function));
     }
 
     bool isInitialized() const;
 
   private:
 
-    /// <summary> Private method that adds a service </summary>
+    /// <summary> Private method that advertises a service </summary>
     /// <param name="methodSignature">The method signature.</param>
     /// <param name="functor"> The functor that handles the messages</param>
-    void xAddService(const std::string& methodSignature, qi::Functor* functor);
+    void xAdvertiseService(const std::string& methodSignature, qi::Functor* functor);
+
+    /// <summary>Private method that unadvertises a service. </summary>
+    /// <param name="methodSignature">The method signature.</param>
+    void xUnadvertiseService(const std::string& methodSignature);
 
     /// <summary> The private implementation </summary>
     std::auto_ptr<detail::ServerImpl> _impl;

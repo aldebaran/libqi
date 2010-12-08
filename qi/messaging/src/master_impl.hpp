@@ -121,7 +121,7 @@ namespace qi {
         METHOD_TYPE method)
       {
         std::string signature = makeSignature(methodName, method);
-        _server.addService(signature, makeFunctor(obj, method));
+        _server.advertiseService(signature, makeFunctor(obj, method));
         registerService(signature, endpointID);
       }
 

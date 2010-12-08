@@ -40,6 +40,8 @@ namespace qi {
       void registerService(const std::string& methodSignature,
                            const qi::detail::EndpointContext& e);
 
+      void unregisterService(const std::string& methodSignature);
+
       std::string locateTopic(const std::string& methodSignature,
                               const qi::detail::EndpointContext& e);
 
@@ -47,6 +49,9 @@ namespace qi {
 
       void registerTopic(const std::string& topicSignature,
                          const qi::detail::EndpointContext& e);
+
+      void unregisterTopic(const std::string& topicSignature,
+        const qi::detail::EndpointContext& e);
 
       std::string _masterAddress;
 

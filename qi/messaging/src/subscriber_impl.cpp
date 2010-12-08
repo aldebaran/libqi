@@ -30,24 +30,32 @@ namespace qi {
       unregisterEndpoint(_endpointContext);
     }
 
-    void SubscriberImpl::subscribe(const std::string& topicName, qi::Functor* f) {
-      std::string endpoint = locateTopic(topicName, _endpointContext);
+    void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
+      std::string endpoint = locateTopic(signature, _endpointContext);
       if (endpoint.empty()) {
-        qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << topicName << "\"" << std::endl;
+        qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << signature << "\"" << std::endl;
          return;
       }
 
-      qisDebug << "SubscriberImpl::subscribe: storing callback for : " << topicName << std::endl;
-      ServiceInfo si(topicName, f);
-      _subscriberCallBacks.insert(topicName, si);
+      qisDebug << "SubscriberImpl::subscribe: storing callback for : " << signature << std::endl;
+      ServiceInfo si(signature, f);
+      _subscriberCallBacks.insert(signature, si);
 
       if (! _subscribedEndpoints.exists(endpoint)) {
         xConnect(endpoint);
         if (_subscribedEndpoints.empty()) {
+          // hmm creates the thread
+          // TODO move the thread out of the transport subscriber
           _transportSubscriber->subscribe();
         }
         _subscribedEndpoints.insert(endpoint, endpoint);
       }
+    }
+
+    void SubscriberImpl::unsubscribe(const std::string& signature) {
+      _subscriberCallBacks.remove(signature);
+      // TODO cleanup the transport subscriber if no longer needed
+      // TODO tell the master that we have unsubscribed
     }
 
     void SubscriberImpl::subscribeHandler(qi::transport::Buffer &requestMessage) {
@@ -57,9 +65,9 @@ namespace qi {
       ser.readString(targetTopic);
       const ServiceInfo& si = _subscriberCallBacks.get(targetTopic);
       if (si.methodName.empty() || si.functor == NULL) {
-        qisDebug << "SubscriberImpl::subscribeHandler: topic not found \"" << targetTopic << "\"" << std::endl;
+        qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << std::endl;
       } else {
-        qisDebug << "SubscriberImpl::subscribeHandler: found topic \"" << si.methodName << "\"" << std::endl;
+        qisDebug << "SubscriberImpl::subscribeHandler: found handler for \"" << targetTopic << "\"" << std::endl;
         qi::serialization::Message sd;
         si.functor->call(ser, sd);
       }

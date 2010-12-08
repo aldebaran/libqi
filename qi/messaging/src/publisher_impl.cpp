@@ -53,6 +53,10 @@ namespace qi {
         registerTopic(topicSignature, _endpointContext);
       }
 
+      void PublisherImpl::unadvertiseTopic(const std::string& topicSignature) {
+        unregisterTopic(topicSignature, _endpointContext);
+      }
+
     bool PublisherImpl::xBind(const std::vector<std::string>& publishAddresses) {
       try {
         _publisher->bind(publishAddresses);

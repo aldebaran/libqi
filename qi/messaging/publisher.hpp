@@ -51,6 +51,14 @@ namespace qi {
       xAdvertiseTopic(signature);
     }
 
+    template<typename PUBLISH_TYPE>
+    void unadvertiseTopic(const std::string& topicName)
+    {
+      void (*f)(const PUBLISH_TYPE &p0)  = 0;
+      std::string signature = makeSignature(topicName, f);
+      xUnadvertiseTopic(signature);
+    }
+
     /// <summary>
     /// Publishes messages to an existing topic.
     /// 
@@ -85,6 +93,8 @@ namespace qi {
     /// <summary>Advertises a Topic </summary>
     /// <param name="signature">The signature of the topic</param>
     void xAdvertiseTopic(const std::string& signature);
+
+    void xUnadvertiseTopic(const std::string& signature);
 
     /// <summary> Publishes a serialized message </summary>
     /// <param name="message">The message.</param>

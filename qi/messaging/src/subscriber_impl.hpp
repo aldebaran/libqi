@@ -37,6 +37,8 @@ namespace qi {
       /// <param name="functor">The functor handler</param>
       void subscribe(const std::string& topicName, qi::Functor* functor);
 
+      void unsubscribe(const std::string& topicName);
+
       /// <summary>Subscribe handler that implements the SubscribeHandler interface </summary>
       /// <param name="message"> The incoming Message.</param>
       /// <seealso cref="qi::transport::SubscribeHandler"/>

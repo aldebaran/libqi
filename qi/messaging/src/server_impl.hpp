@@ -33,10 +33,14 @@ namespace qi {
 
       const std::string& getName() const;
 
-      /// <summary>Adds a service. </summary>
+      /// <summary>Advertises a service. </summary>
       /// <param name="methodSignature">The method signature.</param>
       /// <param name="functor">The functor that handles calls to the service.</param>
-      void addService(const std::string& methodSignature, qi::Functor* functor);
+      void advertiseService(const std::string& methodSignature, qi::Functor* functor);
+
+      /// <summary>Unadvertises a service. </summary>
+      /// <param name="methodSignature">The method signature.</param>
+      void unadvertiseService(const std::string& methodSignature);
 
       /// <summary>Message handler that implements the MessageHandler interface </summary>
       /// <param name="request">The serialized request message</param>

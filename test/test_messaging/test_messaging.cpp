@@ -48,7 +48,7 @@ TEST(Server, createWithStupidMasterAddress)
   Server server("server", "oink");
   bool ex = false;
   try {
-    server.addService("ognagnuk", &ping);
+    server.advertiseService("ognagnuk", &ping);
   }
   catch( const std::exception&) {
     ex = true;
@@ -65,7 +65,7 @@ TEST(Master, createWithStupidMasterAddress)
 TEST(Messaging, PerformancePing)
 {
 
-  gServer.addService("wibble.ping", &ping);
+  gServer.advertiseService("wibble.ping", &ping);
   unsigned int numMessages = 10000;
 
   qi::perf::DataPerfTimer dt("Node void -> ping -> void");
@@ -79,7 +79,7 @@ TEST(Messaging, PerformancePing)
 
 TEST(Messaging, PerformanceEcho)
 {
-  gServer.addService("wibble.echo", &echo);
+  gServer.advertiseService("wibble.echo", &echo);
   unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
   qi::perf::DataPerfTimer dt("Node string -> echo -> string");
@@ -101,7 +101,7 @@ TEST(Messaging, PerformanceEcho)
 
 TEST(Messaging, PerformanceEchoProtobuf)
 {
-  gServer.addService("wibble.echo", &echo_proto);
+  gServer.advertiseService("wibble.echo", &echo_proto);
   unsigned int numMessages = 10000;
   unsigned int numPowers = 12;
   qi::perf::DataPerfTimer dt("Node string -> echo -> string");

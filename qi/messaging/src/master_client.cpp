@@ -145,6 +145,20 @@ namespace qi {
       _transportClient.send(msg.str(), ret);
     }
 
+    void MasterClient::unregisterService(const std::string& methodSignature)
+    {
+      if (!_isInitialized) {
+        return;
+      }
+      static const std::string method("master.unregisterService::v:s");
+      Buffer ret;
+      Message msg;
+
+      msg.writeString(method);
+      msg.writeString(methodSignature);
+      _transportClient.send(msg.str(), ret);
+    }
+
     std::string MasterClient::locateTopic(const std::string& methodSignature, const qi::detail::EndpointContext& e) {
       if (!_isInitialized) {
         return "";
@@ -187,6 +201,23 @@ namespace qi {
         return;
       }
       static const std::string method("master.registerTopic::v:ss");
+      Buffer ret;
+      Message msg;
+
+      msg.writeString(method);
+      msg.writeString(signature);
+      msg.writeString(e.endpointID);
+      _transportClient.send(msg.str(), ret);
+    }
+
+    void MasterClient::unregisterTopic(
+      const std::string& signature,
+      const qi::detail::EndpointContext& e)
+    {
+      if (!_isInitialized) {
+        return;
+      }
+      static const std::string method("master.unregisterTopic::v:ss");
       Buffer ret;
       Message msg;
 

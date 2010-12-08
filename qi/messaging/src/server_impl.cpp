@@ -89,7 +89,7 @@ namespace qi {
       resultData = result.str();
     }
 
-    void ServerImpl::addService(
+    void ServerImpl::advertiseService(
       const std::string& methodSignature,
       qi::Functor* functor)
     {
@@ -108,6 +108,11 @@ namespace qi {
       if (!_isMasterServer) {
         registerService(methodSignature, _endpointContext);
       }
+    }
+
+    void ServerImpl::unadvertiseService(const std::string& methodSignature) {
+      unregisterService(methodSignature);
+      _localServices.remove(methodSignature);
     }
 
     const ServiceInfo& ServerImpl::xGetService(

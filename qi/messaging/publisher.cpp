@@ -20,6 +20,10 @@ namespace qi {
     _impl->advertiseTopic(signature);
   }
 
+  void Publisher::xUnadvertiseTopic(const std::string& signature) {
+    _impl->unadvertiseTopic(signature);
+  }
+
   void Publisher::xPublish(const std::string& message) {
     _impl->publish(message);
   }

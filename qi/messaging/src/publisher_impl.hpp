@@ -34,6 +34,10 @@ namespace qi {
       /// <param name="signature">The signature of the topic</param>
       void advertiseTopic(const std::string& signature);
 
+      /// <summary>Unadvertise a topic. </summary>
+      /// <param name="signature">The signature of the topic.</param>
+      void unadvertiseTopic(const std::string& signature);
+
       /// <summary>Publishes a serialized message</summary>
       /// <param name="message">The serialized message.</param>
       void publish(const std::string& message);

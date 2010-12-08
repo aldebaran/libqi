@@ -101,8 +101,21 @@ namespace qi {
       xSubscribe(makeSignature(topicName, callback), makeFunctor(object, callback));
     }
 
+    template<typename FUNCTION_TYPE>
+    void unsubscribe(const std::string& topicName, FUNCTION_TYPE callback)
+    {
+      xUnsubscribe(makeSignature(topicName, callback));
+    }
+
+    template <typename OBJECT_TYPE, typename METHOD_TYPE>
+    void unsubscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
+    {
+      xUnsubscribe(makeSignature(topicName, callback));
+    }
+
   private:
-    void xSubscribe(const std::string& topicName, Functor* f);
+    void xSubscribe(const std::string& signature, Functor* f);
+    void xUnsubscribe(const std::string& signature);
     boost::scoped_ptr<qi::detail::SubscriberImpl> _impl;
   };
 }

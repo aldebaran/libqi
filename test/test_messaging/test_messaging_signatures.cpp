@@ -74,7 +74,7 @@ Client client("client", gMasterAddress);
 TEST(NodeSignatures, echo_bool)
 {
   bool b = true;
-  server.addService("echo", &echo_bool);
+  server.advertiseService("echo", &echo_bool);
   bool r = client.call<bool>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -82,7 +82,7 @@ TEST(NodeSignatures, echo_bool)
 TEST(NodeSignatures, echo_int)
 {
   int b = 42;
-  server.addService("echo", &echo_int);
+  server.advertiseService("echo", &echo_int);
   int r = client.call<int>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -90,7 +90,7 @@ TEST(NodeSignatures, echo_int)
 TEST(NodeSignatures, echo_float)
 {
   float b = 42.42f;
-  server.addService("echo", &echo_float);
+  server.advertiseService("echo", &echo_float);
   float r = client.call<float>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -98,7 +98,7 @@ TEST(NodeSignatures, echo_float)
 TEST(NodeSignatures, echo_string)
 {
   std::string b = "42";
-  server.addService("echo", &echo_string);
+  server.advertiseService("echo", &echo_string);
   std::string r = client.call<std::string>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -107,7 +107,7 @@ TEST(NodeSignatures, echo_string1)
 {
   std::string a = "hello";
   std::string b = "world";
-  server.addService("echo", &echo_string1);
+  server.advertiseService("echo", &echo_string1);
   std::string r = client.call<std::string>("echo", a, b);
   ASSERT_EQ(a, r);
 }
@@ -116,7 +116,7 @@ TEST(NodeSignatures, echo_string2)
 {
   std::string a = "hello";
   std::string b = "world";
-  server.addService("echo", &echo_string2);
+  server.advertiseService("echo", &echo_string2);
   std::string r = client.call<std::string>("echo", a, b);
   ASSERT_EQ(b, r);
 }
@@ -125,7 +125,7 @@ TEST(NodeSignatures, echo_string2)
 TEST(NodeSignatures, echo_double)
 {
   double b = 987986889.87987987979789;
-  server.addService("echo", &echo_double);
+  server.advertiseService("echo", &echo_double);
   double r = client.call<double>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -133,7 +133,7 @@ TEST(NodeSignatures, echo_double)
 TEST(NodeSignatures, echo_char)
 {
   char b = 'c';
-  server.addService("echo", &echo_char);
+  server.advertiseService("echo", &echo_char);
   char r = client.call<char>("echo", b);
   ASSERT_EQ(b, r);
 }
@@ -142,7 +142,7 @@ TEST(NodeSignatures, echo_myawesomeness)
 {
   ALCompat::ALValue miam;
   //miam.PrintDebugString();
-  server.addService("echo", &echo_myawesomeness);
+  server.advertiseService("echo", &echo_myawesomeness);
   miam.set_type(ALCompat::ALValue::STRING);
   miam.set_stringvalue("I like It");
   ALCompat::ALValue r = client.call<ALCompat::ALValue>("echo", miam);
@@ -153,38 +153,38 @@ TEST(NodeSignatures, echo_myawesomeness)
 
 TEST(NodeSignatures, allFunctorsBindAndCall)
 {
-  server.addService("vfun0", &vfun0);
-  server.addService("vfun1", &vfun1);
-  server.addService("vfun2", &vfun2);
-  server.addService("vfun3", &vfun3);
-  server.addService("vfun4", &vfun4);
-  server.addService("vfun5", &vfun5);
-  server.addService("vfun6", &vfun6);
+  server.advertiseService("vfun0", &vfun0);
+  server.advertiseService("vfun1", &vfun1);
+  server.advertiseService("vfun2", &vfun2);
+  server.advertiseService("vfun3", &vfun3);
+  server.advertiseService("vfun4", &vfun4);
+  server.advertiseService("vfun5", &vfun5);
+  server.advertiseService("vfun6", &vfun6);
 
-  server.addService("fun0", &fun0);
-  server.addService("fun1", &fun1);
-  server.addService("fun2", &fun2);
-  server.addService("fun3", &fun3);
-  server.addService("fun4", &fun4);
-  server.addService("fun5", &fun5);
-  server.addService("fun6", &fun6);
+  server.advertiseService("fun0", &fun0);
+  server.advertiseService("fun1", &fun1);
+  server.advertiseService("fun2", &fun2);
+  server.advertiseService("fun3", &fun3);
+  server.advertiseService("fun4", &fun4);
+  server.advertiseService("fun5", &fun5);
+  server.advertiseService("fun6", &fun6);
 
   Foo f;
-  server.addService("foo.vfun0", &f, &Foo::vfun0);
-  server.addService("foo.vfun1", &f, &Foo::vfun1);
-  server.addService("foo.vfun2", &f, &Foo::vfun2);
-  server.addService("foo.vfun3", &f, &Foo::vfun3);
-  server.addService("foo.vfun4", &f, &Foo::vfun4);
-  server.addService("foo.vfun5", &f, &Foo::vfun5);
-  server.addService("foo.vfun6", &f, &Foo::vfun6);
+  server.advertiseService("foo.vfun0", &f, &Foo::vfun0);
+  server.advertiseService("foo.vfun1", &f, &Foo::vfun1);
+  server.advertiseService("foo.vfun2", &f, &Foo::vfun2);
+  server.advertiseService("foo.vfun3", &f, &Foo::vfun3);
+  server.advertiseService("foo.vfun4", &f, &Foo::vfun4);
+  server.advertiseService("foo.vfun5", &f, &Foo::vfun5);
+  server.advertiseService("foo.vfun6", &f, &Foo::vfun6);
 
-  server.addService("foo.fun0", &f, &Foo::fun0);
-  server.addService("foo.fun1", &f, &Foo::fun1);
-  server.addService("foo.fun2", &f, &Foo::fun2);
-  server.addService("foo.fun3", &f, &Foo::fun3);
-  server.addService("foo.fun4", &f, &Foo::fun4);
-  server.addService("foo.fun5", &f, &Foo::fun5);
-  server.addService("foo.fun6", &f, &Foo::fun6);
+  server.advertiseService("foo.fun0", &f, &Foo::fun0);
+  server.advertiseService("foo.fun1", &f, &Foo::fun1);
+  server.advertiseService("foo.fun2", &f, &Foo::fun2);
+  server.advertiseService("foo.fun3", &f, &Foo::fun3);
+  server.advertiseService("foo.fun4", &f, &Foo::fun4);
+  server.advertiseService("foo.fun5", &f, &Foo::fun5);
+  server.advertiseService("foo.fun6", &f, &Foo::fun6);
 
   // KABOOOM!!! std::vector<std::string>
   //server.addService("foo.fun0vvvvv", &f, &Foo::fun0vvvvv);
@@ -250,8 +250,8 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
 
 TEST(NodeSignatures, MethodOverloading)
 {
-  server.addService("overload.fun1", &fun1);
-  server.addService("overload.fun1", &fun2);
+  server.advertiseService("overload.fun1", &fun1);
+  server.advertiseService("overload.fun1", &fun2);
   int r2 = client.call<int>("overload.fun1", 1, 2);
   ASSERT_EQ(3, r2);
   int r1 = client.call<int>("overload.fun1", 1);
@@ -260,19 +260,19 @@ TEST(NodeSignatures, MethodOverloading)
 
 TEST(NodeSignatures, MultipleBind)
 {
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
-  server.addService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
+  server.advertiseService("multiple.fun1", &fun1);
 }
 
 TEST(NodeSignatures, paramTypeChecking)
 {
-  server.addService("typechecking.fun1", &fun1);
+  server.advertiseService("typechecking.fun1", &fun1);
   int r2 = client.call<int>("typechecking.fun1", 1);
   (void) r2;
   try {
@@ -285,7 +285,7 @@ TEST(NodeSignatures, paramTypeChecking)
 
 TEST(NodeSignatures, paramNumChecking)
 {
-  server.addService("paramnumchecking.fun1", &fun1);
+  server.advertiseService("paramnumchecking.fun1", &fun1);
   int r2 = client.call<int>("paramnumchecking.fun1", 1);
   (void) r2;
   try {
@@ -298,7 +298,7 @@ TEST(NodeSignatures, paramNumChecking)
 
 TEST(NodeSignatures, ReturnTypeChecking)
 {
-  server.addService("returntype.fun1", &fun1);
+  server.advertiseService("returntype.fun1", &fun1);
   //KABOOOM!
   int r2 = client.call<int>("returntype.fun1", 1);
   (void) r2;

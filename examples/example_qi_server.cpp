@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 {
   qi::Server server("myserver", "127.0.0.1:5509");
 
-  server.addService("mymethod", &foo);
+  server.advertiseService("mymethod", &foo);
   sleep(5);
   return 0;
 }

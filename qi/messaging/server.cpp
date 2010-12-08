@@ -21,8 +21,12 @@ namespace qi {
     // TODO prevent the name "master"
   }
 
-  void Server::xAddService(const std::string& methodSignature, qi::Functor* functor) {
-    _impl->addService(methodSignature, functor);
+  void Server::xAdvertiseService(const std::string& methodSignature, qi::Functor* functor) {
+    _impl->advertiseService(methodSignature, functor);
+  }
+
+  void Server::xUnadvertiseService(const std::string& methodSignature) {
+    _impl->unadvertiseService(methodSignature);
   }
 
   bool Server::isInitialized() const {

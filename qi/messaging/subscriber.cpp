@@ -19,8 +19,12 @@ namespace qi {
   {
   }
 
-  void Subscriber::xSubscribe(const std::string& topicName, qi::Functor* f) {
-    return _impl->subscribe(topicName, f);
+  void Subscriber::xSubscribe(const std::string& signature, qi::Functor* f) {
+    _impl->subscribe(signature, f);
+  }
+
+  void Subscriber::xUnsubscribe(const std::string& signature) {
+    _impl->unsubscribe(signature);
   }
 
   bool Subscriber::isInitialized() const {
