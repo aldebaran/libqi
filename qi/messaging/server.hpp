@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_SERVER_HPP_
 
 #include <string>
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
 
@@ -125,7 +125,7 @@ namespace qi {
     void xUnadvertiseService(const std::string& methodSignature);
 
     /// <summary> The private implementation </summary>
-    std::auto_ptr<detail::ServerImpl> _impl;
+    boost::scoped_ptr<detail::ServerImpl> _impl;
   };
 }
 
