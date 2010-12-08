@@ -51,6 +51,7 @@ namespace qi {
       virtual void publish(const std::string& message);
 
     protected:
+      qi::transport::TransportContext          &_transportContext;
       qi::transport::detail::PublisherBackend *_publisher;
     };
   }
