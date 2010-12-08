@@ -31,9 +31,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(${generate_param_list($i)})  = 0;
-    std::string hash = makeSignature(methodName, f);
-
-    calldef.writeString(hash);
+    calldef.writeString(makeSignature(methodName, f));
     #for $j in range($i)
     qi::serialization::serialize<P${j}>::write(calldef, p${j});
     #end for
@@ -47,8 +45,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(${generate_param_list($i)})  = 0;
-    std::string hash = makeSignature(methodName, f);
-    calldef.writeString(hash);
+    calldef.writeString(makeSignature(methodName, f));
     #for $j in range($i)
     qi::serialization::serialize<P${j}>::write(calldef, p${j});
     #end for
