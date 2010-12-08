@@ -26,7 +26,7 @@ namespace qi {
       public qi::transport::TransportSubscribeHandler {
     public:
 
-      explicit SubscriberImpl(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
+      SubscriberImpl(const std::string& name, const std::string& masterAddress = "127.0.0.1:5555");
 
       virtual ~SubscriberImpl();
 
