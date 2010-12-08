@@ -38,7 +38,8 @@ namespace qi {
     {
       if (!_isInitialized) {
         qisError << "Attempt to use an uninitialized client." << std::endl;
-        }
+        return;
+      }
       _client->send(request, reply);
     }
 
