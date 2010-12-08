@@ -11,9 +11,9 @@
 #ifndef _QI_SIGNATURE_SIGNATURE_HPP_
 #define _QI_SIGNATURE_SIGNATURE_HPP_
 
-//runtime signature compile faster
-//compile time signature execute faster  (this one need boost::mpl::string that is not available in boost < 40)
-//but runtime signature may be good enought in most case
+// runtime signature compiles faster
+// compile time signature execute faster  (this one needs boost::mpl::string that is not available in boost < 40)
+// but runtime signature may be good enough in most cases
 #define _QI_USE_RUNTIME_SIGNATURE
 
 #ifdef _QI_USE_RUNTIME_SIGNATURE

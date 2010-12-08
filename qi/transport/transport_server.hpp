@@ -34,8 +34,16 @@ namespace qi {
 
       virtual void run();
 
+      /// <summary>Sets a message handler. </summary>
+      /// <param name="dataHandler">A pointer to a class derived from
+      /// TransportMessageHandler.</param>
       virtual void setMessageHandler(TransportMessageHandler* dataHandler);
 
+      /// <summary>Gets the message handler. </summary>
+      /// <returns>
+      /// null if it fails, otherwise a pointer to a class derived from
+      /// TransportMessageHandler.
+      /// </returns>
       virtual TransportMessageHandler* getMessageHandler();
 
       bool isInitialized();

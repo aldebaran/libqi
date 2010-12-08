@@ -28,10 +28,14 @@ namespace qi {
         return _isInitialized;
       }
 
+      /// <summary>Gets the endpoint context. </summary>
+      /// <returns>The endpoint context.</returns>
       const qi::detail::EndpointContext& getEndpointContext() const {
         return _endpointContext;
       }
 
+      /// <summary>Gets the machine context. </summary>
+      /// <returns>The machine context.</returns>
       const qi::detail::MachineContext& getMachineContext() const {
         return _machineContext;
       }
@@ -40,8 +44,13 @@ namespace qi {
       /// <summary> Indicates if initialization was successful </summary>
       bool _isInitialized;
 
+      /// <summary> The qi Context</summary>
       qi::Context                 _qiContext;
+
+      /// <summary> Context for the machine </summary>
       qi::detail::MachineContext  _machineContext;
+
+      /// <summary> Context for the endpoint </summary>
       qi::detail::EndpointContext _endpointContext;
     };
   }

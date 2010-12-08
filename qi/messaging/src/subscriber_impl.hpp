@@ -30,10 +30,15 @@ namespace qi {
 
       virtual ~SubscriberImpl();
 
-      void subscribe(const std::string& topicName, qi::Functor* f);
+      /// <summary>Subscribes to a topic and registers a handler</summary>
+      /// <param name="topicName">Name of the topic.</param>
+      /// <param name="functor">The functor handler</param>
+      void subscribe(const std::string& topicName, qi::Functor* functor);
 
-      // Subscribe Handler Interface Implementation
-      void subscribeHandler(qi::transport::Buffer &requestMessage);
+      /// <summary>Subscribe handler that implements the SubscribeHandler interface </summary>
+      /// <param name="message"> The incoming Message.</param>
+      /// <seealso cref="qi::transport::SubscribeHandler"/>
+      void subscribeHandler(qi::transport::Buffer &message);
 
     protected:
       void xInit();

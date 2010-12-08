@@ -69,8 +69,16 @@ namespace qi {
     }
 
   protected:
+
+    /// <summary>Advertises a Topic </summary>
+    /// <param name="signature">The signature of the topic</param>
     void xAdvertiseTopic(const std::string& signature);
+
+    /// <summary> Publishes a serialized message </summary>
+    /// <param name="message">The message.</param>
     void xPublish(const std::string& message);
+
+    /// <summary> The private implementation </summary>
     boost::shared_ptr<qi::detail::PublisherImpl> _impl;
   };
 }

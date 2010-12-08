@@ -28,8 +28,13 @@ namespace qi {
       PublisherImpl(const std::string& name, const std::string& masterAddress);
       virtual ~PublisherImpl();
 
+      /// <summary>Advertises a topic. </summary>
+      /// <param name="signature">The signature of the topic</param>
       void advertiseTopic(const std::string& signature);
-      void publish(const std::string& data);
+
+      /// <summary>Publishes a serialized message</summary>
+      /// <param name="message">The serialized message.</param>
+      void publish(const std::string& message);
 
     protected:
       void xInitPublisher();

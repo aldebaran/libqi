@@ -25,9 +25,27 @@ namespace qi {
     public:
       TransportPublisher();
       ~TransportPublisher();
+
+      /// <summary>Connects to an endpoint</summary>
+      /// <param name="endpoint">
+      /// The fully qualified endpoint to connect to.
+      /// </param>
       virtual void connect(const std::string& endpoint);
+
+      /// <summary>Binds to an endpoint </summary>
+      /// <param name="endpoint">
+      /// The fully qualified endpoint to bind to.
+      /// </param>
       virtual void bind(const std::string& endpoint);
+
+      /// <summary>Binds to multiple endpoints </summary>
+      /// <param name="endpoint">
+      /// A vector of fully qualified endpoints to bind to.
+      /// </param>
       virtual void bind(const std::vector<std::string>& endpoints);
+
+      /// <summary>Publishes a message </summary>
+      /// <param name="message">The message.</param>
       virtual void publish(const std::string& message);
 
     protected:

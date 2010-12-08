@@ -34,12 +34,13 @@ namespace qi {
     /// <seealso cref="qi::Subscriber"/>
     explicit Master(const std::string& masterAddress = "127.0.0.1:5555");
 
-    /// <summary> Finaliser. </summary>
+    /// <summary>Destructor. </summary>
     virtual ~Master();
 
     bool isInitialized() const;
 
   private:
+    /// <summary> The private implementation </summary>
     boost::scoped_ptr<detail::MasterImpl> _impl;
   };
 

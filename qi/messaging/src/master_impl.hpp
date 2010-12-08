@@ -26,22 +26,47 @@ namespace qi {
 
       ~MasterImpl();
 
+      /// <summary>Registers the service. </summary>
+      /// <param name="methodSignature">The method signature.</param>
+      /// <param name="serverID">Identifier for the server.</param>
       void registerService(const std::string& methodSignature,
                            const std::string& serverID);
+
+      /// <summary>Unregisters the service described by methodSignature. </summary>
+      /// <param name="methodSignature">The method signature.</param>
       void unregisterService(const std::string& methodSignature);
 
+      /// <summary>Registers the machine. </summary>
+      /// <param name="hostName">Name of the host.</param>
+      /// <param name="machineID">Identifier for the machine.</param>
+      /// <param name="publicIPAddress">The public ip address.</param>
+      /// <param name="platformID">Identifier for the platform.</param>
       void registerMachine(const std::string& hostName,
                            const std::string& machineID,
                            const std::string& publicIPAddress,
                            const int&         platformID);
 
+      /// <summary>Registers the endpoint. </summary>
+      /// <param name="type">The type of the endpoint</param>
+      /// <param name="name">The name of the endpoint</param>
+      /// <param name="endpointID">Identifier for the endpoint.</param>
+      /// <param name="contextID">Identifier for the context.</param>
+      /// <param name="machineID">Identifier for the machine.</param>
+      /// <param name="processID">Identifier for the process.</param>
+      /// <param name="port">The port.</param>
       void registerEndpoint(
         const int& type, const std::string& name,
         const std::string& endpointID, const std::string& contextID,
         const std::string& machineID, const int& processID, const int& port);
 
-      void unregisterEndpoint(const std::string& id);
+      /// <summary>Unregisters the endpoint described by endpointID. </summary>
+      /// <param name="endpointID">Identifier for the endpoint.</param>
+      void unregisterEndpoint(const std::string& endpointID);
 
+      /// <summary>Locates a service. </summary>
+      /// <param name="methodSignature">The method signature.</param>
+      /// <param name="clientID">Identifier for the client.</param>
+      /// <returns>The fully qualified endpoint for the service.</returns>
       std::string locateService(const std::string& methodSignature, const std::string& clientID);
 
       const std::map<std::string, std::string>& listServices();
@@ -52,17 +77,32 @@ namespace qi {
       const std::map<std::string, std::string> getMachine(const std::string& machineID);
       const std::map<std::string, std::string> getEndpoint(const std::string& endpointID);
 
+      /// <summary>Locates a topic. </summary>
+      /// <param name="methodSignature">The method signature.</param>
+      /// <param name="clientID">Identifier for the client.</param>
+      /// <returns>The fully qualified endpoint for the service.</returns>
       std::string locateTopic(const std::string& methodSignature, const std::string& clientID);
 
+      /// <summary>Registers the topic. </summary>
+      /// <param name="topicName">Name of the topic.</param>
+      /// <param name="endpointID">Identifier for the endpoint.</param>
       void registerTopic(const std::string& topicName, const std::string& endpointID);
+
+      /// <summary>Unregisters the topic described by topicName. </summary>
+      /// <param name="topicName">Name of the topic.</param>
       void unregisterTopic(const std::string& topicName);
 
+      /// <summary>Queries if a given topic exists. </summary>
+      /// <param name="topicName">Name of the topic.</param>
+      /// <returns>true if it exists, false otherwise.</returns>
       bool topicExists(const std::string& topicName);
 
       bool isInitialized() const;
 
     private:
       std::string _address;
+
+      /// <summary> The Master's server that is used by clients to call methods</summary>
       ServerImpl  _server;
 
       void xInit();
@@ -85,16 +125,16 @@ namespace qi {
         registerService(signature, endpointID);
       }
 
-      /// map from methodSignature to endpointID
+      /// <summary> A map from service signatures to endpointIDs </summary>
       MutexedNameLookup<std::string> _knownServices;
 
-      /// map from machine to MachineContext
+      /// <summary> A map from machineIDs to their complete contexts </summary>
       MutexedNameLookup<qi::detail::MachineContext> _knownMachines;
 
-      /// map from endpointID to EndpointContext
+      /// <summary> A map from endpointIDs to their complete contexts </summary>
       MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
-      /// map from topicSignature to topic
+      /// <summary> A map from topic signatures to their Topic structure </summary>
       MutexedNameLookup<qi::detail::Topic>           _knownTopics;
 
       AddressManager _addressManager;
@@ -106,7 +146,6 @@ namespace qi {
       typedef std::map<std::string, EndpointContext>::const_iterator EndpointMapCIT;
       typedef std::map<std::string, Topic>                           TopicMap;
       typedef std::map<std::string, Topic>::const_iterator           TopicMapCIT;
-
     };
   }
 }

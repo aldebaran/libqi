@@ -25,8 +25,14 @@ namespace qi {
     public:
       TransportClient();
 
+      /// <summary>Connects to an endpoint</summary>
+      /// <param name="endpoint">The fully qualified endpoint to connect to.</param>
+      /// <returns>true if it succeeds, false if it fails.</returns>
       bool connect(const std::string &endpoint);
 
+      /// <summary>Sends a message.</summary>
+      /// <param name="request">The request.</param>
+      /// <param name="reply">[in,out] The reply.</param>
       void send(const qi::transport::Buffer &request, qi::transport::Buffer &reply);
 
     protected:

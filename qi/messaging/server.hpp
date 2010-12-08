@@ -90,8 +90,13 @@ namespace qi {
     bool isInitialized() const;
 
   private:
+
+    /// <summary> Private method that adds a service </summary>
+    /// <param name="methodSignature">The method signature.</param>
+    /// <param name="functor"> The functor that handles the messages</param>
     void xAddService(const std::string& methodSignature, qi::Functor* functor);
 
+    /// <summary> The private implementation </summary>
     std::auto_ptr<detail::ServerImpl> _impl;
   };
 }
