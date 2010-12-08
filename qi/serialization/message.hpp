@@ -59,12 +59,12 @@ namespace qi {
     template <typename T, class Enable = void>
     struct serialize {
       static void read(Message &sd, T &t){
-        std::cout << "BAM: read" << std::endl;
+        std::cout << "ERROR: this type is not serializable" << std::endl;
         //#error "This type is not serializable"
       }
 
       static void write(Message &sd, const T &t) {
-        std::cout << "BAM: write" << std::endl;
+        std::cout << "ERROR: this type is not serializable" << std::endl;
         //#error "This type is not serializable"
       }
     };
