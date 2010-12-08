@@ -13,10 +13,11 @@
 #include <boost/bind.hpp>
 
 
-#include <qi/transport/transport.hpp>
-#include <qi/transport/zeromq/zmqsimpleserver.hpp>
-#include <qi/transport/zeromq/zmqserver.hpp>
-#include <qi/transport/zeromq/zmqserverqueue.hpp>
+#include <qi/transport.hpp>
+#include <qi/transport/src/zmq/zmq_server_backend.hpp>
+#include <qi/transport/src/zmq/zmq_server_queue_backend.hpp>
+#include <qi/transport/src/zmq/zmq_simple_server.hpp>
+#include <qi/transport/src/zmq/zmq_client_backend.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <qi/perf/dataperftimer.hpp>
@@ -32,9 +33,9 @@
 
 #if TEST_TRANSPORT_ZMQ_SINGLE || TEST_TRANSPORT_ZMQ_QUEUE || TEST_TRANSPORT_ZMQ_POLL
 # define TEST_TRANSPORT_ZMQ
-# define TEST_TRANSPORT_TCP
+//# define TEST_TRANSPORT_TCP
 //#define TEST_TRANSPORT_IPC
-//#define TEST_TRANSPORT_INPROC
+#define TEST_TRANSPORT_INPROC
 #endif
 
 #if not (defined(TEST_TRANSPORT_ZMQ_SINGLE) || defined(TEST_TRANSPORT_ZMQ_QUEUE) || defined(TEST_TRANSPORT_ZMQ_POLL))
@@ -83,29 +84,26 @@ protected:
   unsigned int  _bytes;
 };
 
-
-//static const std::string gServerAddress = "tagada";
 #ifdef TEST_TRANSPORT_TCP
 static const std::string gServerAddress = "tcp://127.0.0.1:5555";
 #endif
 #ifdef TEST_TRANSPORT_IPC
-static const std::string gServerAddress = "ipc:///tmp/test";
+static const std::string gServerAddress = "ipc:///tmp/toto-test";
 #endif
 #ifdef TEST_TRANSPORT_INPROC
-static const std::string gServerAddress = "inproc://workers";
+static const std::string gServerAddress = "inproc:///toto-workers";
 #endif
+
 
 static const std::string gClientAddress = gServerAddress;
 
-
-//class ResultHandler;
-class TestServer : public qi::transport::IThreadable, public qi::transport::IDataHandler
+class TestServer : public qi::transport::TransportMessageHandler
 {
 public:
-  TestServer(qi::transport::Server *server)
+  TestServer(qi::transport::detail::ServerBackend *server)
     : _server(server)
   {
-    _server->setDataHandler(this);
+    _server->setMessageHandler(this);
   }
 
   virtual void run()
@@ -114,18 +112,18 @@ public:
   }
 
 protected:
-  virtual void dataHandler(const std::string &data, std::string &result)
+  void messageHandler(qi::transport::Buffer &request, qi::transport::Buffer &reply)
   {
     //simple for test
-    result = data;
+    reply = request;
   }
 
 protected:
-  qi::transport::Server *_server;
+  qi::transport::detail::ServerBackend *_server;
 };
 
 
-int main_client(qi::transport::Client *client)
+int main_client(qi::transport::detail::ClientBackend *client)
 {
   DataPerf               dp;
   std::string            tosend;
@@ -147,33 +145,36 @@ int main_client(qi::transport::Client *client)
 }
 
 
-qi::transport::Client *makeClient(int i = 0)
+qi::transport::detail::ClientBackend *makeClient(int i, zmq::context_t &ctx)
 {
-  qi::transport::Client *client = 0;
+  qi::transport::detail::ClientBackend *client = 0;
 //TODO: generate client address
 
 #ifdef TEST_TRANSPORT_ZMQ
-  return new qi::transport::ZMQClient(gClientAddress);
+  return new qi::transport::detail::ZMQClientBackend(gClientAddress, ctx);
 #endif
   return client;
 }
 
-qi::transport::Server *makeServer(int i = 0)
+qi::transport::detail::ServerBackend *makeServer(zmq::context_t &ctx)
 {
+  std::vector<std::string> addresses;
+  addresses.push_back(gServerAddress);
+
 #ifdef TEST_TRANSPORT_ZMQ_SINGLE
-  return new qi::transport::ZMQSimpleServer(gServerAddress);
+  return new qi::transport::detail::ZMQSimpleServerBackend(addresses, ctx);
 #endif
 #ifdef TEST_TRANSPORT_ZMQ_QUEUE
-  return new qi::transport::ZMQServerQueue(gServerAddress);
+  return new qi::transport::detail::ZMQServerQueueBackend(addresses, ctx);
 #endif
 #ifdef TEST_TRANSPORT_ZMQ_POLL
-  return new qi::transport::ZMQServer(gServerAddress);
+  return new qi::transport::detail::ZMQServerBackend(addresses, ctx);
 #endif
   return 0;
 
 }
 
-void start_client(int count)
+void start_client(int count, zmq::context_t &ctx)
 {
     boost::thread thd[100];
 
@@ -181,10 +182,10 @@ void start_client(int count)
 
     for (int i = 0; i < count; ++i)
     {
-      qi::transport::Client *client = 0;
+      qi::transport::detail::ClientBackend *client = 0;
       std::cout << "starting thread: " << i << std::endl;
       sleep(1);
-      client = makeClient(i);
+      client = makeClient(i, ctx);
       thd[i] = boost::thread(boost::bind(&main_client, client));
     }
 
@@ -193,10 +194,10 @@ void start_client(int count)
     std::cout << "end client" << std::endl;
 }
 
-int main_server()
+int main_server(zmq::context_t *ctx)
 {
-  qi::transport::Server    *st;
-  st = makeServer();
+  qi::transport::detail::ServerBackend    *st;
+  st = makeServer(*ctx);
   TestServer                testserver(st);
   testserver.run();
   return 0;
@@ -211,16 +212,16 @@ int main_server()
 
 int main(int argc, char **argv)
 {
-
+  zmq::context_t ctx(1);
   if (argc > 1 && !strcmp(argv[1], "--client")) {
-    start_client(1);
+    start_client(1, ctx);
   } else if (argc > 1 && !strcmp(argv[1], "--server")) {
-    return main_server();
+    return main_server(&ctx);
   } else {
     //start the server
-    boost::thread threadServer(&main_server);
+    boost::thread threadServer(boost::bind(&main_server, &ctx));
     sleep(1);
-    start_client(gThreadCount);
+    start_client(gThreadCount, ctx);
   }
   return 0;
 }
