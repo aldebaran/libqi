@@ -21,9 +21,6 @@ namespace qi {
 
       class ZMQForwarder {
       public:
-        /// <summary> Default Constructor. </summary>
-        ZMQForwarder();
-
         /// <summary> Constructor that allows an existing zmq context to be used </summary>
         /// <param name="context">An existing zmq context</param>
         ZMQForwarder(zmq::context_t &context);
