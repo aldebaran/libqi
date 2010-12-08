@@ -36,8 +36,6 @@ namespace qi {
       //  qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
       //}
       try {
-        zmq::context_t ctx(1);
-        //TODO
         _transportServer = new detail::ZMQSimpleServerBackend(endpoints, _transportContext.getContext<zmq::context_t>(endpoints[0]));
         _isInitialized = true;
       } catch(const std::exception& e) {

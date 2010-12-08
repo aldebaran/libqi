@@ -80,8 +80,7 @@ namespace qi {
     }
 
     bool ClientImpl::xCreateServerClient(const std::string& serverEndpoint) {
-
-      boost::shared_ptr<TransportClient> client(new TransportClient());
+      boost::shared_ptr<TransportClient> client(new TransportClient(_masterClient.getQiContextPtr()->getTransportContext()));
       bool ok = client->connect(serverEndpoint);
       if (ok) {
         _serverClients.insert(serverEndpoint, client);

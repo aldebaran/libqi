@@ -20,6 +20,7 @@ namespace qi {
     MasterClient::~MasterClient() {}
 
     MasterClient::MasterClient(qi::Context *ctx)
+      : _transportClient(ctx->getTransportContext())
     {
       _qiContextPtr = ctx;
 
