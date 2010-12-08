@@ -28,24 +28,27 @@ namespace qi {
     void PublisherImpl::connect(const std::string& masterAddress) {
       _masterClient.connect(masterAddress);
       _masterClient.registerMachine(_machineContext);
+      _isInitialized = _masterClient.isInitialized();
     }
 
       void PublisherImpl::xInitPublisher() {
-        if (! _publisherInitialized) {
-          // prepare this publisher
-          _endpointContext.port = _masterClient.getNewPort(_machineContext.machineID);
-          std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
+        // prepare this publisher
+        _endpointContext.port = _masterClient.getNewPort(_machineContext.machineID);
+        std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
 
-          if (! xBind(subscribeAddresses)) {
-            qisError << "PublisherImpl::advertise Failed to bind publisher: " << _endpointContext.name << std::endl;
-            return;
-          }
-          _masterClient.registerEndpoint(_endpointContext);
-          _publisherInitialized = true;
+        if (! xBind(subscribeAddresses)) {
+          qisError << "PublisherImpl::advertise Failed to bind publisher: " << _endpointContext.name << std::endl;
+          return;
         }
+        _masterClient.registerEndpoint(_endpointContext);
+        _publisherInitialized = true;
       }
 
       void PublisherImpl::advertiseTopic(const std::string& topicSignature) {
+        if (!_isInitialized) {
+          qisError << "PublisherImpl::advertiseTopic Attempt to use uninitializes publisher" << std::endl;
+          return;
+        }
         if (! _publisherInitialized) {
           xInitPublisher();
         }

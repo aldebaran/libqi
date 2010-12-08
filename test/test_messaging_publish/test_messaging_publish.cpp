@@ -37,6 +37,8 @@ void handler3(const std::string& msg) {
 TEST(MessagingPublisher, simpleCase) {
   Subscriber sub("subscriber");
   Publisher pub("publisher");
+  pub.connect();
+  sub.connect();
   pub.advertiseTopic<std::string>("hello");
   sub.subscribe("hello", &handler1);
   sleep(1.0); // FIXME
@@ -49,6 +51,9 @@ TEST(MessagingPublisher , publisher)
   Subscriber s("subscriber");
   Subscriber s2("subscriber");
   Publisher p("publisher");
+  p.connect();
+  s.connect();
+  s2.connect();
 
   p.advertiseTopic<std::string>("hello");
   p.advertiseTopic<std::string>("goodbye");

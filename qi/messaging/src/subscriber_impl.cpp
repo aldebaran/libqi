@@ -29,6 +29,7 @@ namespace qi {
       _masterClient.registerMachine(_machineContext);
       _masterClient.registerEndpoint(_endpointContext);
       _transportSubscriber->setSubscribeHandler(this);
+      _isInitialized = _masterClient.isInitialized();
     }
 
     SubscriberImpl::~SubscriberImpl() {
@@ -41,6 +42,10 @@ namespace qi {
     }
 
     void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
+      if (!_isInitialized) {
+        qisError << "Subscriber:subscribe \"" << signature  << "\": Attempt to use uninitialized subscriber \"" << _endpointContext.name << "\"" << std::endl;
+        return;
+      }
       std::string endpoint = _masterClient.locateTopic(signature, _endpointContext);
       if (endpoint.empty()) {
         qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << signature << "\"" << std::endl;
