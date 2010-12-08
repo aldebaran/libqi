@@ -21,7 +21,7 @@ namespace qi {
 
     MasterClient::~MasterClient() {}
 
-    MasterClient::MasterClient(const std::string name,
+    MasterClient::MasterClient(const std::string& name,
                                const std::string& masterAddress) :
         _masterAddress(masterAddress)
     {

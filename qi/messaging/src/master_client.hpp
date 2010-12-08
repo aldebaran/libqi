@@ -21,7 +21,7 @@ namespace qi {
       MasterClient();
       virtual ~MasterClient();
 
-      MasterClient(const std::string name,
+      MasterClient(const std::string& name,
                    const std::string& masterAddress);
 
       void init();
