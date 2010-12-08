@@ -17,12 +17,16 @@ namespace qi {
   namespace transport {
 
     TransportPublisher::TransportPublisher(TransportContext &ctx) :
-      _transportContext(ctx)
+      _transportContext(ctx),
+      _publisher(NULL)
     {}
 
     TransportPublisher::~TransportPublisher()
     {
-      delete _publisher;
+      if (_publisher != NULL) {
+        delete _publisher;
+        _publisher = NULL;
+      }
     }
 
     void TransportPublisher::connect(const std::string& endpoint)
