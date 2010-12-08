@@ -22,7 +22,15 @@ namespace qi {
       TransportContext();
       ~TransportContext();
 
-    //TODO: protected:
+
+    protected:
+      friend class TransportClient;
+      friend class TransportServer;
+      friend class TransportSubscriber;
+      friend class TransportPublisher;
+
+      //protected because, this return implementation detail not relevant for users.
+      //that's why we have friend classes.
       template <typename T>
       T &getContext(const std::string &address) {
         //we only have one context type, so we dont need address ATM
