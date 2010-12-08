@@ -48,6 +48,7 @@ namespace qi {
         _address(masterAddress),
         _server("master", ctx)
     {
+      _server.connect(masterAddress);
       xInit();
     }
 
