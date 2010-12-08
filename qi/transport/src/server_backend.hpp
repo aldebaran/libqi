@@ -26,7 +26,7 @@ namespace qi {
       public:
         explicit ServerBackend(const std::vector<std::string> &_serverAddresses)
           : _serverAddresses(_serverAddresses),
-            _dataHandler(0)
+            _messageHandler(0)
         {
         }
 
@@ -34,17 +34,17 @@ namespace qi {
 
         virtual void run() = 0;
 
-        virtual void setDataHandler(TransportMessageHandler* callback) {
-          _dataHandler = callback;
+        virtual void setMessageHandler(TransportMessageHandler* callback) {
+          _messageHandler = callback;
         }
 
-        virtual TransportMessageHandler *getDataHandler() {
-          return _dataHandler;
+        virtual TransportMessageHandler *getMessageHandler() {
+          return _messageHandler;
         }
 
       protected:
         std::vector<std::string>      _serverAddresses;
-        TransportMessageHandler      *_dataHandler;
+        TransportMessageHandler      *_messageHandler;
       };
     }
   }

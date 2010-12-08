@@ -58,7 +58,7 @@ namespace qi {
           assert(rc > 0);
           std::string data;
           data.assign((char *)msg.data(), msg.size());
-          ZMQConnectionHandler(data, zserv->getDataHandler(), zserv, &s).run();
+          ZMQConnectionHandler(data, zserv->getMessageHandler(), zserv, &s).run();
         }
       }
 

@@ -108,9 +108,9 @@ namespace qi {
           data.assign((char *)msg.data(), msg.size());
 
 #ifdef _QI_ZMQ_FULL_ASYNC
-          _handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
+          _handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getMessageHandler(), this, (void *)identity)));
 #else
-          ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();
+          ZMQConnectionHandler(data, this->getMessageHandler(), this, (void *)identity).run();
 #endif
         }
       }

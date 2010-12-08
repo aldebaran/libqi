@@ -56,11 +56,11 @@ namespace qi {
     }
 
     void TransportServer::setMessageHandler(TransportMessageHandler* dataHandler) {
-      _transportServer->setDataHandler(dataHandler);
+      _transportServer->setMessageHandler(dataHandler);
     }
 
     TransportMessageHandler* TransportServer::getMessageHandler() {
-      return _transportServer->getDataHandler();
+      return _transportServer->getMessageHandler();
     }
 
     bool TransportServer::isInitialized() {
