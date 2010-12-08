@@ -13,6 +13,7 @@
 
 #include <string>
 #include <qi/messaging/context.hpp>
+#include <qi/messaging/src/master_client.hpp>
 #include <qi/messaging/src/network/endpoint_context.hpp>
 #include <qi/messaging/src/network/machine_context.hpp>
 
@@ -20,7 +21,9 @@ namespace qi {
   namespace detail {
     class ImplBase {
     public:
-      ImplBase() : _isInitialized(false) {}
+      ImplBase(qi::Context* context) :
+      _isInitialized(false),
+      _masterClient(context) {}
 
       virtual ~ImplBase() {}
 
@@ -41,6 +44,8 @@ namespace qi {
       }
 
     protected:
+      MasterClient _masterClient;
+
       /// <summary> Indicates if initialization was successful </summary>
       bool _isInitialized;
 

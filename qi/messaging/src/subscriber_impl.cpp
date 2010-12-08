@@ -16,7 +16,7 @@ namespace qi {
   namespace detail {
 
     SubscriberImpl::SubscriberImpl(const std::string& name, qi::Context *ctx)
-      : _masterClient(ctx),
+      : ImplBase(ctx),
         _transportSubscriber(new qi::transport::TransportSubscriber(_masterClient.getQiContextPtr()->getTransportContext()))
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;

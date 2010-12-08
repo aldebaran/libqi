@@ -8,7 +8,6 @@
 
 #include <qi/messaging/src/client_impl.hpp>
 #include <qi/exceptions/exceptions.hpp>
-#include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 
 using qi::transport::TransportClient;
@@ -23,7 +22,7 @@ namespace qi {
     }
 
     ClientImpl::ClientImpl(const std::string& name, Context *ctx)
-      : _masterClient(ctx)
+      : ImplBase(ctx)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
       _endpointContext.name = name;

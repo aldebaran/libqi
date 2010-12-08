@@ -16,7 +16,7 @@ namespace qi {
   namespace detail {
 
     PublisherImpl::PublisherImpl(const std::string& name, Context *ctx)
-      : _masterClient(ctx),
+      : ImplBase(ctx),
         _publisherInitialized(false),
         _publisher(new qi::transport::TransportPublisher(_masterClient.getQiContextPtr()->getTransportContext()))
     {

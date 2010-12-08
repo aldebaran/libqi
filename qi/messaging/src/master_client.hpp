@@ -11,8 +11,10 @@
 #ifndef _QI_MESSAGING_SRC_MASTER_CLIENT_HPP_
 #define _QI_MESSAGING_SRC_MASTER_CLIENT_HPP_
 
-#include <qi/messaging/src/impl_base.hpp>
 #include <qi/transport/transport_client.hpp>
+#include <qi/messaging/src/network/endpoint_context.hpp>
+#include <qi/messaging/src/network/machine_context.hpp>
+#include <qi/messaging/context.hpp>
 
 namespace qi {
   namespace detail {

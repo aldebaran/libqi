@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 #include <boost/scoped_ptr.hpp>
-#include <qi/messaging/src/master_client.hpp>
 #include <qi/messaging/src/impl_base.hpp>
 
 namespace qi {
@@ -46,7 +45,6 @@ namespace qi {
     protected:
       void xInitPublisher();
       bool xBind(const std::vector<std::string> &publishAddresses);
-      qi::detail::MasterClient _masterClient;
       bool _publisherInitialized;
       boost::scoped_ptr<qi::transport::TransportPublisher> _publisher;
     };

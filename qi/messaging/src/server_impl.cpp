@@ -16,8 +16,6 @@
 #include <qi/messaging/src/network/master_endpoint.hpp>
 #include <qi/log.hpp>
 #include <qi/exceptions/exceptions.hpp>
-#include <qi/messaging/src/publisher_impl.hpp>
-
 
 namespace qi {
   using qi::serialization::Message;
@@ -31,7 +29,7 @@ namespace qi {
     }
 
     ServerImpl::ServerImpl(const std::string name, Context *ctx)
-      : _masterClient(ctx),
+      : ImplBase(ctx),
         _transportServer(_masterClient.getQiContextPtr()->getTransportContext()),
         _isMasterServer(false)
     {
