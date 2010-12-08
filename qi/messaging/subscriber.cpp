@@ -32,4 +32,15 @@ namespace qi {
   bool Subscriber::isInitialized() const {
     return _impl->isInitialized();
   }
+
+  void Subscriber::reset(const std::string &name, Context *ctx)
+  {
+    _impl->reset(name, ctx);
+  }
+
+  void Subscriber::connect(const std::string &masterAddress)
+  {
+    _impl->connect(masterAddress);
+  }
+
 }

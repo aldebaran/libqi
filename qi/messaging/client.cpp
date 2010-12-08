@@ -20,14 +20,15 @@ namespace qi {
   {
   }
 
-  void Client::connect(const std::string &masterAddress) {
-    // FIXME
+  void Client::reset(const std::string &name, Context *ctx)
+  {
+    _impl->reset(name, ctx);
   }
 
-  void Client::reset(const std::string& clientName, Context *ctx) {
-    // FIXME
+  void Client::connect(const std::string &masterAddress)
+  {
+    _impl->connect(masterAddress);
   }
-
 
   void Client::callVoid(const std::string& methodName) {
     qi::serialization::Message msg;
