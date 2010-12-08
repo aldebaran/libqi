@@ -35,6 +35,7 @@ namespace qi {
       virtual void subscribe();
 
     protected:
+      qi::transport::TransportContext          &_transportContext;
       qi::transport::detail::SubscriberBackend *_subscriber;
       TransportSubscribeHandler                *_subscribeHandler;
     };

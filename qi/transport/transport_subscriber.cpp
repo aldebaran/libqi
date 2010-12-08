@@ -17,7 +17,8 @@ namespace qi {
   namespace transport {
 
     TransportSubscriber::TransportSubscriber(TransportContext &ctx)
-      : _subscribeHandler(NULL)
+      : _subscribeHandler(NULL),
+        _transportContext(ctx)
     {
     }
 
@@ -35,7 +36,7 @@ namespace qi {
     }
 
     void TransportSubscriber::connect(const std::string &endpoint) {
-      _subscriber = new qi::transport::detail::ZMQSubscriber(ctx.getContext<zmq::context_t>(endpoint));
+      _subscriber = new qi::transport::detail::ZMQSubscriber(_transportContext.getContext<zmq::context_t>(endpoint));
       _subscriber->connect(endpoint);
     }
 
