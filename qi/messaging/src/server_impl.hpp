@@ -27,9 +27,9 @@ namespace qi {
     public:
       virtual ~ServerImpl();
 
-      ServerImpl(const std::string name = "", Context *ctx = 0);
-      void reset(const std::string &name = "", Context *ctx = 0);
-      void connect(const std::string &masterAddress = "127.0.0.1:5555");
+      ServerImpl(const std::string& name = "", Context *ctx = 0);
+      void reset(const std::string& name = "", Context *ctx = 0);
+      void connect(const std::string& masterAddress = "127.0.0.1:5555");
 
       const std::string& getName() const;
 

@@ -67,7 +67,8 @@ TEST(Master, createWithStupidMasterAddress)
 
 TEST(Messaging, PerformancePing)
 {
-
+  gServer.connect();
+  gClient.connect();
   gServer.advertiseService("wibble.ping", &ping);
   unsigned int numMessages = 10000;
 

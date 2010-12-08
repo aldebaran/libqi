@@ -28,7 +28,7 @@ namespace qi {
       }
     }
 
-    ServerImpl::ServerImpl(const std::string name, Context *ctx)
+    ServerImpl::ServerImpl(const std::string& name, Context *ctx)
       : ImplBase(ctx),
         _isMasterServer(false),
         _transportServer(_masterClient.getQiContextPtr()->getTransportContext())
@@ -51,16 +51,21 @@ namespace qi {
         return;
       }
 
+      // TODO cleanup... the above work could be done in master client
+      // all we need below is the port. Indeed, if coming from the master,
+      // all we want is a port.
+
       if (_endpointContext.name == "master") {
         // we are the master's server, so we don't need a client to ourselves
         _isMasterServer = true;
         _isInitialized = true;
         _endpointContext.port = masterEndpointAndPort.second;
       } else {
-        _masterClient.connect(masterEndpointAndPort.first);
+        _masterClient.connect(masterAddress);
         _endpointContext.port = _masterClient.getNewPort(_endpointContext.machineID);
         _masterClient.registerMachine(_machineContext);
         _masterClient.registerEndpoint(_endpointContext);
+        _isInitialized = _masterClient.isInitialized();
       }
 
       _transportServer.serve(qi::detail::getEndpoints(_endpointContext, _machineContext));
@@ -68,6 +73,10 @@ namespace qi {
       _transportServer.setMessageHandler(this);
       boost::thread serverThread(
         ::boost::bind(&qi::transport::TransportServer::run, _transportServer));
+    }
+
+    void ServerImpl::reset(const std::string& name, Context *ctx) {
+      // FIXME: do something
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {

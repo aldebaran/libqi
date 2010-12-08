@@ -22,11 +22,11 @@ namespace qi {
   }
 
   void Server::connect(const std::string& masterAddress) {
-    // FIXME
+    _impl->connect(masterAddress);
   }
 
   void Server::reset(const std::string& serverName, Context *ctx) {
-    // FIXME
+    _impl->reset(serverName, ctx);
   }
 
   void Server::xAdvertiseService(const std::string& methodSignature, qi::Functor* functor) {
