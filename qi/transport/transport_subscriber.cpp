@@ -16,10 +16,10 @@
 namespace qi {
   namespace transport {
 
-    TransportSubscriber::TransportSubscriber(TransportContext *ctx)
+    TransportSubscriber::TransportSubscriber(TransportContext &ctx)
       : _subscribeHandler(NULL)
     {
-      _subscriber = new qi::transport::detail::ZMQSubscriber();
+      _subscriber = new qi::transport::detail::ZMQSubscriber(ctx.getContext<zmq::context_t>());
     }
 
     TransportSubscriber::~TransportSubscriber()

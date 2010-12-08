@@ -13,21 +13,13 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      ZMQPublisher::ZMQPublisher():
-    _context(boost::shared_ptr<zmq::context_t> (new zmq::context_t(1))),
-      _socket(*_context.get(), ZMQ_PUB)
-    {}
-
-    ZMQPublisher::ZMQPublisher(boost::shared_ptr<zmq::context_t> context)
+    ZMQPublisher::ZMQPublisher(zmq::context_t &context)
       : _context(context),
-      _socket(*_context.get(), ZMQ_PUB)
+      _socket(_context, ZMQ_PUB)
     {}
 
     ZMQPublisher::~ZMQPublisher() {}
 
-    boost::shared_ptr<zmq::context_t> ZMQPublisher::getContext() const {
-      return _context;
-    }
 
     void ZMQPublisher::connect(const std::string& publishEndpoint)
     {

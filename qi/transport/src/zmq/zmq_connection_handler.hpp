@@ -44,10 +44,10 @@ namespace qi {
         virtual void run ();
 
       private:
-        void                             *fData;
-        qi::transport::Buffer             fMsg;
-        TransportMessageHandler          *fDataHandler;
-        detail::ServerResponseHandler    *fResponseDelegate;
+        void                             *_data;
+        qi::transport::Buffer             _msg;
+        TransportMessageHandler          *_dataHandler;
+        detail::ServerResponseHandler    *_responseDelegate;
       };
 
     }

@@ -19,9 +19,17 @@ namespace qi {
 
     class TransportContext {
     public:
-      TransportContext();
+      TransportContext(const std::string &address);
+      ~TransportContext();
+
+    //TODO: protected:
+      template <typename T>
+      T &getContext() {
+        return *static_cast<T*>(_ctx);
+      }
 
     protected:
+      void *_ctx;
     };
 
   }

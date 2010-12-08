@@ -26,7 +26,7 @@ namespace qi {
 
         /// <summary> Constructor that allows an existing zmq context to be used </summary>
         /// <param name="context">An existing zmq context</param>
-        ZMQForwarder(boost::shared_ptr<zmq::context_t> context);
+        ZMQForwarder(zmq::context_t &context);
 
         /// <summary> Destructor </summary>
         virtual ~ZMQForwarder();
@@ -50,9 +50,9 @@ namespace qi {
         boost::shared_ptr<zmq::context_t> getContext() const;
 
       protected:
-        boost::shared_ptr<zmq::context_t> _context;
-        zmq::socket_t                     _in_socket;
-        zmq::socket_t                     _out_socket;
+        zmq::context_t &_context;
+        zmq::socket_t   _in_socket;
+        zmq::socket_t   _out_socket;
       };
     }
   }

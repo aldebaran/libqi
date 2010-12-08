@@ -25,7 +25,7 @@ namespace qi {
 
     class TransportPublisher {
     public:
-      TransportPublisher(TransportContext *ctx = 0);
+      TransportPublisher(TransportContext &ctx);
       ~TransportPublisher();
 
       /// <summary>Connects to an endpoint</summary>

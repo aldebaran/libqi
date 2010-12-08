@@ -25,7 +25,7 @@ namespace qi {
 
     class TransportSubscriber {
     public:
-      TransportSubscriber(TransportContext *ctx = 0);
+      TransportSubscriber(TransportContext &ctx);
       virtual ~TransportSubscriber();
 
       virtual void setSubscribeHandler(TransportSubscribeHandler* handler);

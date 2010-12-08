@@ -7,7 +7,7 @@
 */
 
 #include <qi/transport/transport_client.hpp>
-
+#include <qi/transport/transport_context.hpp>
 #include <qi/transport/buffer.hpp>
 #include <qi/transport/src/client_backend.hpp>
 #include <qi/transport/src/zmq/zmq_client_backend.hpp>
@@ -16,14 +16,15 @@
 namespace qi {
   namespace transport {
 
-    TransportClient::TransportClient()
-      : _isInitialized(false)
+    TransportClient::TransportClient(TransportContext &context)
+      : _isInitialized(false),
+        _transportContext(context)
     {
     }
 
     bool TransportClient::connect(const std::string &endpoint) {
       try {
-        _client = new qi::transport::detail::ZMQClientBackend(endpoint);
+        _client = new qi::transport::detail::ZMQClientBackend(endpoint, _transportContext.getContext<zmq::context_t>());
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisDebug << "GenericClient failed to create client for address \""

@@ -13,27 +13,14 @@
 namespace qi {
   namespace transport {
     namespace detail {
-      /// <summary> Constructor. </summary>
-      ZMQSubscriber::ZMQSubscriber()
-        :
-      _isClosing(false),
-        _context(boost::shared_ptr<zmq::context_t>(new zmq::context_t(1))),
-        _socket(*_context.get(), ZMQ_SUB),
-        _control(*_context.get(), ZMQ_PUB)
-      {
-        // Use no subscribe filter
-        _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-      }
-
 
       /// <summary> Constructor. </summary>
       /// <param name="publishAddress"> The publishing address. </param>
-      ZMQSubscriber::ZMQSubscriber(boost::shared_ptr<zmq::context_t> context)
-        :
-      _isClosing(false),
-        _context(context),
-        _socket(*_context.get(), ZMQ_SUB),
-        _control(*_context.get(), ZMQ_PUB)
+      ZMQSubscriber::ZMQSubscriber(zmq::context_t &context)
+        : _isClosing(false),
+          _context(context),
+          _socket(_context, ZMQ_SUB),
+          _control(_context, ZMQ_PUB)
       {
         // Use no subscribe filter
         _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);

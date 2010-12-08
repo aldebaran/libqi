@@ -22,10 +22,10 @@ namespace qi {
       //if you use the custom XREP code, activate the full async experience to use the thread pool
       //#define ZMQ_FULL_ASYNC
 
-      ZMQSimpleServerBackend::ZMQSimpleServerBackend(const std::vector<std::string> &serverAddresses)
+      ZMQSimpleServerBackend::ZMQSimpleServerBackend(const std::vector<std::string> &serverAddresses, zmq::context_t &context)
         : ServerBackend(serverAddresses),
-        zctx(1),
-        zsocket(zctx, ZMQ_REP)
+          _zcontext(context),
+          _zsocket(_zcontext, ZMQ_REP)
       {
       }
 
@@ -43,7 +43,7 @@ namespace qi {
         try {
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
             qisDebug << "Binding Server to: " << _serverAddresses[i] << std::endl;
-            zsocket.bind(_serverAddresses[i].c_str());
+            _zsocket.bind(_serverAddresses[i].c_str());
           }
         } catch(const std::exception& e) {
           qisError << "Bind Server Failed to: " << std::endl;
@@ -61,7 +61,7 @@ namespace qi {
 #endif
         while (true) {
           zmq::message_t  msg;
-          zsocket.recv(&msg);
+          _zsocket.recv(&msg);
           std::string data;
           data.assign((char *)msg.data(), msg.size());
 
@@ -79,7 +79,7 @@ namespace qi {
         zmq::message_t     msg(result.size());
 
         memcpy(msg.data(), result.data(), result.size());
-        rc = zsocket.send(msg);
+        rc = _zsocket.send(msg);
         assert(rc > 0);
       }
     }

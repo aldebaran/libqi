@@ -21,12 +21,10 @@ namespace qi {
     namespace detail {
       class ZMQSubscriber : public SubscriberBackend {
       public:
-        /// <summary>Creates a ZMQSubscriber</summary>
-        ZMQSubscriber();
 
         /// <summary> Creates a ZMQSubscriber </summary>
         /// <param name="context">An existing zmq context</param>
-        ZMQSubscriber(boost::shared_ptr<zmq::context_t>);
+        ZMQSubscriber(zmq::context_t &context);
 
         virtual ~ZMQSubscriber();
 
@@ -42,11 +40,11 @@ namespace qi {
         void receive();
 
       protected:
-        bool _isClosing;
-        boost::shared_ptr<zmq::context_t> _context;
-        zmq::socket_t  _socket;
-        zmq::socket_t  _control;
-        boost::thread  _receiveThread;
+        bool            _isClosing;
+        zmq::context_t &_context;
+        zmq::socket_t   _socket;
+        zmq::socket_t   _control;
+        boost::thread   _receiveThread;
       };
     }
   }

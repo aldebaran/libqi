@@ -16,9 +16,9 @@
 namespace qi {
   namespace transport {
 
-    TransportPublisher::TransportPublisher(TransportContext *ctx)
+    TransportPublisher::TransportPublisher(TransportContext &ctx)
     {
-      _publisher = new qi::transport::detail::ZMQPublisher();
+      _publisher = new qi::transport::detail::ZMQPublisher(ctx.getContext<zmq::context_t>());
     }
 
     TransportPublisher::~TransportPublisher()

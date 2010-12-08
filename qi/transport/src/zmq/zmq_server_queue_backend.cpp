@@ -27,11 +27,11 @@ namespace qi {
       static const char *gWorkersAddress      = "inproc://workers";
       static const int   gWorkersThreadsCount = 10;
 
-      ZMQServerQueueBackend::ZMQServerQueueBackend (const std::vector<std::string> &serverAddresses)
+      ZMQServerQueueBackend::ZMQServerQueueBackend(const std::vector<std::string> &serverAddresses, zmq::context_t &context)
         : detail::ServerBackend(serverAddresses),
-        zctx(1),
-        zsocketworkers(zctx, ZMQ_XREQ),
-        zsocket(zctx, ZMQ_XREP)
+          _zcontext(context),
+          _zsocketworkers(_zcontext, ZMQ_XREQ),
+          _zsocket(_zcontext, ZMQ_XREP)
       {
       }
 
@@ -49,7 +49,7 @@ namespace qi {
         int              rc = 0;
         ZMQServerBackend   *zserv = (ZMQServerBackend *)(arg);
         zmq::message_t   msg;
-        zmq::socket_t    s(zserv->zctx, ZMQ_REP);
+        zmq::socket_t    s(zserv->_zcontext, ZMQ_REP);
 
         s.connect(gWorkersAddress);
         // alsdebug << "ZMQ:entering worker loop";
@@ -65,9 +65,9 @@ namespace qi {
       void ZMQServerQueueBackend::run() {
         for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
           qisDebug << "Start ZMQServer on: " << _serverAddresses[i] << std::endl;
-          zsocket.bind(_serverAddresses[i].c_str());
+          _zsocket.bind(_serverAddresses[i].c_str());
         }
-        zsocketworkers.bind(gWorkersAddress);
+        _zsocketworkers.bind(gWorkersAddress);
 
         // alsdebug << "ZMQ workers binded";
 
@@ -77,7 +77,7 @@ namespace qi {
         //sleep(2);
         // alsdebug << "ZMQ: start queue_device";
         //zmq::device(ZMQ_QUEUE, workers, zsocket);
-        zmq::device(ZMQ_QUEUE, zsocket, zsocketworkers);
+        zmq::device(ZMQ_QUEUE, _zsocket, _zsocketworkers);
         std::cout << "quit server" << std::endl;
       }
 

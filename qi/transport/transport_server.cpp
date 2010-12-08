@@ -10,6 +10,7 @@
 #include <string>
 #include <qi/log.hpp>
 #include <qi/transport/transport_server.hpp>
+#include <qi/transport/transport_context.hpp>
 #include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/src/server_backend.hpp>
 #include <qi/transport/src/zmq/zmq_simple_server.hpp>
@@ -17,8 +18,9 @@
 namespace qi {
   namespace transport {
 
-    TransportServer::TransportServer()
-      : _isInitialized(false)
+    TransportServer::TransportServer(TransportContext &context)
+      : _isInitialized(false),
+        _transportContext(context)
     {
     }
 
@@ -34,7 +36,9 @@ namespace qi {
       //  qisInfo << "* GenericTransportServer:serve " << addresses[i] << std::endl;
       //}
       try {
-        _transportServer = new detail::ZMQSimpleServerBackend(endpoints);
+        zmq::context_t ctx(1);
+        //TODO
+        _transportServer = new detail::ZMQSimpleServerBackend(endpoints, _transportContext.getContext<zmq::context_t>());
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisError << "Failed to create transport server for endpoints:";

@@ -34,7 +34,7 @@ namespace qi {
         /// <param name="serverAddresses">
         /// The addresses of the server e.g. tcp://127.0.0.1:5555, inproc://something, ipc://something
         /// </param>
-        ZMQSimpleServerBackend(const std::vector<std::string> & serverAddresses);
+        ZMQSimpleServerBackend(const std::vector<std::string> & serverAddresses, zmq::context_t &context);
 
         /// <summary>The Server class destructor.</summary>
         virtual ~ZMQSimpleServerBackend();
@@ -58,11 +58,11 @@ namespace qi {
         friend void *worker_routine(void *arg);
 
       private:
-        bool                     server_running;
-        zmq::context_t           zctx;
-        zmq::socket_t            zsocket;
-        boost::mutex             socketMutex;
-        qi::detail::HandlersPool handlersPool;
+        bool                     _running;
+        zmq::context_t          &_zcontext;
+        zmq::socket_t            _zsocket;
+        boost::mutex             _socketMutex;
+        qi::detail::HandlersPool _handlersPool;
       };
     }
   }

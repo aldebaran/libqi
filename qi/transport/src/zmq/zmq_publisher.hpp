@@ -20,12 +20,9 @@ namespace qi {
     namespace detail {
       class ZMQPublisher : public PublisherBackend {
       public:
-        /// <summary> Default Constructor. </summary>
-        ZMQPublisher();
-
         /// <summary> Constructor that allows an existing zmq context to be used </summary>
         /// <param name="context">An existing zmq context</param>
-        ZMQPublisher(boost::shared_ptr<zmq::context_t> context);
+        ZMQPublisher(zmq::context_t &context);
 
         /// <summary> Destructor </summary>
         virtual ~ZMQPublisher();
@@ -49,8 +46,8 @@ namespace qi {
         virtual void publish(const std::string &tosend);
 
       protected:
-        boost::shared_ptr<zmq::context_t> _context;
-        zmq::socket_t                     _socket;
+        zmq::context_t &_context;
+        zmq::socket_t   _socket;
       };
     }
   }

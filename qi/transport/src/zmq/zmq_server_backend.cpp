@@ -22,10 +22,10 @@ namespace qi {
 
       /// <summary> Constructor. </summary>
       /// <param name="serverAddresses"> The server addresses. </param>
-      ZMQServerBackend::ZMQServerBackend(const std::vector<std::string> &serverAddresses)
+      ZMQServerBackend::ZMQServerBackend(const std::vector<std::string> &serverAddresses, zmq::context_t &context)
         : ServerBackend(serverAddresses),
-        zctx(1),
-        zsocket(zctx, ZMQ_XREP)
+          _zcontext(context),
+          _zsocket(_zcontext, ZMQ_XREP)
       {
       }
 
@@ -42,7 +42,7 @@ namespace qi {
         int             rc = 0;
         zmq_pollitem_t  items[1];
 
-        items[0].socket  = zsocket;
+        items[0].socket  = _zsocket;
         items[0].fd      = 0;
         items[0].events  = ZMQ_POLLIN;
         items[0].revents = 0;
@@ -61,11 +61,11 @@ namespace qi {
 
         // alsdebug << "ZMQ: waiting for a message";
         poll();
-        boost::mutex::scoped_lock lock(socketMutex);
+        boost::mutex::scoped_lock lock(_socketMutex);
         {
-          rc = zsocket.recv(identity);
+          rc = _zsocket.recv(identity);
           assert(rc > 0);
-          zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
+          _zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
           //first msg we want an identity
           assert(more);
           // alsdebug << "ZMQ: identity received";
@@ -73,9 +73,9 @@ namespace qi {
           //TODO mettre une condition de sortie
           while (true)
           {
-            rc = zsocket.recv(&msg);
+            rc = _zsocket.recv(&msg);
             assert(rc > 0);
-            zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
+            _zsocket.getsockopt(ZMQ_RCVMORE, &more, &moresz);
             if (!more)
             {
               // alsdebug << "ZMQ: Receive complete, msg size:" << msg.size();
@@ -92,7 +92,7 @@ namespace qi {
       void ZMQServerBackend::run() {
         for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
           qisDebug << "Start ZMQServer on: " << _serverAddresses[i];
-          zsocket.bind(_serverAddresses[i].c_str());
+          _zsocket.bind(_serverAddresses[i].c_str());
         }
 
 #ifdef _QI_ZMQ_FULL_ASYNC
@@ -108,7 +108,7 @@ namespace qi {
           data.assign((char *)msg.data(), msg.size());
 
 #ifdef _QI_ZMQ_FULL_ASYNC
-          handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
+          _handlersPool.pushTask(boost::shared_ptr<ZMQConnectionHandler>(new ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity)));
 #else
           ZMQConnectionHandler(data, this->getDataHandler(), this, (void *)identity).run();
 #endif
@@ -128,18 +128,18 @@ namespace qi {
 
         // alsdebug << "ZMQ: send response";
 
-        boost::mutex::scoped_lock lock(socketMutex);
+        boost::mutex::scoped_lock lock(_socketMutex);
         {
           //send identity (and an empty msg for xrep to be happy)
-          rc = zsocket.send(*identity, ZMQ_SNDMORE);
+          rc = _zsocket.send(*identity, ZMQ_SNDMORE);
           assert(rc > 0);
           //delete identity;
-          rc = zsocket.send(emptymsg, ZMQ_SNDMORE);
+          rc = _zsocket.send(emptymsg, ZMQ_SNDMORE);
           assert(rc > 0);
 
           //send the message
           // alsdebug << "ZMQ: response size: " << msg.size();
-          rc = zsocket.send(msg);
+          rc = _zsocket.send(msg);
           assert(rc > 0);
         }
       }

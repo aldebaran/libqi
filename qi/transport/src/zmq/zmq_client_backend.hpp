@@ -28,7 +28,8 @@ namespace qi {
         /// e.g. ipc:///tmp/naoqi/paf
         //. or tcp://127.0.0.1:5555
         /// </param>
-        ZMQClientBackend(const std::string &servername);
+        /// <param name="context"> a zmq context </param>
+        ZMQClientBackend(const std::string &servername, zmq::context_t &context);
 
         virtual void send(const std::string &tosend, std::string &result);
         void pollRecv(long timeout);
@@ -38,8 +39,8 @@ namespace qi {
         void connect();
 
       protected:
-        zmq::context_t context;
-        zmq::socket_t  socket;
+        zmq::context_t &_zcontext;
+        zmq::socket_t   _zsocket;
       };
     }
   }

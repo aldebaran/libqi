@@ -7,13 +7,20 @@
 */
 
 #include <qi/transport/transport_context.hpp>
+#include <zmq.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
   namespace transport {
 
-    TransportContext::TransportContext()
+    TransportContext::TransportContext(const std::string &address)
     {
+      _ctx = static_cast<void *>(new zmq::context_t(1));
+    }
+
+    TransportContext::~TransportContext()
+    {
+      delete static_cast<zmq::context_t *>(_ctx);
     }
 
   }

@@ -26,7 +26,9 @@ namespace qi {
       public:
         explicit ServerBackend(const std::vector<std::string> &_serverAddresses)
           : _serverAddresses(_serverAddresses),
-            _dataHandler(0) {}
+            _dataHandler(0)
+        {
+        }
 
         virtual ~ServerBackend() {}
 

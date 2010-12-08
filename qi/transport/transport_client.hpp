@@ -21,9 +21,11 @@ namespace qi {
       class ClientBackend;
     }
 
+    class TransportContext;
+
     class TransportClient {
     public:
-      TransportClient();
+      TransportClient(TransportContext &context);
 
       /// <summary>Connects to an endpoint</summary>
       /// <param name="endpoint">The fully qualified endpoint to connect to.</param>
@@ -36,8 +38,9 @@ namespace qi {
       void send(const qi::transport::Buffer &request, qi::transport::Buffer &reply);
 
     protected:
-     bool                                  _isInitialized;
-     qi::transport::detail::ClientBackend *_client;
+      qi::transport::TransportContext      &_transportContext;
+      bool                                  _isInitialized;
+      qi::transport::detail::ClientBackend *_client;
     };
 
   }

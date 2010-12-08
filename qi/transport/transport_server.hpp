@@ -22,11 +22,12 @@ namespace qi {
     };
 
     class TransportMessageHandler;
+    class TransportContext;
 
     class TransportServer
     {
     public:
-      TransportServer();
+      TransportServer(TransportContext &context);
 
       void serve(const std::string &endpoint);
 
@@ -49,6 +50,7 @@ namespace qi {
       bool isInitialized();
 
     protected:
+      qi::transport::TransportContext      &_transportContext;
       bool                                  _isInitialized;
       qi::transport::detail::ServerBackend *_transportServer;
     };
