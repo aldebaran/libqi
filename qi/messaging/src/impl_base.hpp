@@ -20,16 +20,12 @@ namespace qi {
   namespace detail {
     class ImplBase {
     public:
-      ImplBase() : _isInitialized(false), _qiContextPtr(NULL) {}
+      ImplBase() : _isInitialized(false) {}
 
       virtual ~ImplBase() {}
 
       bool isInitialized() const {
         return _isInitialized;
-      }
-
-      qi::Context* getQiContextPtr() const {
-        return _qiContextPtr;
       }
 
       /// <summary>Gets the endpoint context. </summary>
@@ -47,9 +43,6 @@ namespace qi {
     protected:
       /// <summary> Indicates if initialization was successful </summary>
       bool _isInitialized;
-
-      /// <summary> The qi Context</summary>
-      qi::Context*                _qiContextPtr;
 
       /// <summary> Context for the machine </summary>
       qi::detail::MachineContext  _machineContext;

@@ -16,29 +16,31 @@ namespace qi {
   namespace detail {
 
     PublisherImpl::PublisherImpl(const std::string& name, Context *ctx)
-      : MasterClient(name, ctx),
+      : _masterClient(ctx),
         _publisherInitialized(false),
-        _publisher(new qi::transport::TransportPublisher(getQiContextPtr()->getTransportContext()))
+        _publisher(new qi::transport::TransportPublisher(_masterClient.getQiContextPtr()->getTransportContext()))
     {
       _endpointContext.type = PUBLISHER_ENDPOINT;
+      _endpointContext.name = name;
+      _endpointContext.contextID = _masterClient.getQiContextPtr()->getID();
     }
 
     void PublisherImpl::connect(const std::string& masterAddress) {
-      MasterClient::connect(masterAddress);
-      registerMachine(_machineContext);
+      _masterClient.connect(masterAddress);
+      _masterClient.registerMachine(_machineContext);
     }
 
       void PublisherImpl::xInitPublisher() {
         if (! _publisherInitialized) {
           // prepare this publisher
-          _endpointContext.port = getNewPort(_machineContext.machineID);
+          _endpointContext.port = _masterClient.getNewPort(_machineContext.machineID);
           std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
 
           if (! xBind(subscribeAddresses)) {
             qisError << "PublisherImpl::advertise Failed to bind publisher: " << _endpointContext.name << std::endl;
             return;
           }
-          registerEndpoint(_endpointContext);
+          _masterClient.registerEndpoint(_endpointContext);
           _publisherInitialized = true;
         }
       }
@@ -48,16 +50,16 @@ namespace qi {
           xInitPublisher();
         }
 
-        bool exists = topicExists(topicSignature);
+        bool exists = _masterClient.topicExists(topicSignature);
         if (exists) {
           qisError << "Attempt to publish on an existing topic " << topicSignature << std::endl;
           return;
         }
-        registerTopic(topicSignature, _endpointContext);
+        _masterClient.registerTopic(topicSignature, _endpointContext);
       }
 
       void PublisherImpl::unadvertiseTopic(const std::string& topicSignature) {
-        unregisterTopic(topicSignature, _endpointContext);
+        _masterClient.unregisterTopic(topicSignature, _endpointContext);
       }
 
     bool PublisherImpl::xBind(const std::vector<std::string>& publishAddresses) {
@@ -88,7 +90,7 @@ namespace qi {
 
     PublisherImpl::~PublisherImpl() {
       if (_publisherInitialized) {
-        unregisterEndpoint(_endpointContext);
+        _masterClient.unregisterEndpoint(_endpointContext);
       }
     }
 

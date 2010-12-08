@@ -26,15 +26,17 @@ namespace qi {
 
     ServerImpl::~ServerImpl() {
       if (!_isMasterServer) {
-        unregisterEndpoint(_endpointContext);
+        _masterClient.unregisterEndpoint(_endpointContext);
       }
     }
 
-    ServerImpl::ServerImpl(const std::string serverName, Context *ctx)
-      : MasterClient(serverName, ctx),
+    ServerImpl::ServerImpl(const std::string name, Context *ctx)
+      : _masterClient(ctx),
         _isMasterServer(false)
     {
       _endpointContext.type = SERVER_ENDPOINT;
+      _endpointContext.name = name;
+      _endpointContext.contextID = _masterClient.getQiContextPtr()->getID();
     }
 
     void ServerImpl::connect(const std::string &masterAddress)
@@ -55,16 +57,10 @@ namespace qi {
         _isInitialized = true;
         _endpointContext.port = masterEndpointAndPort.second;
       } else {
-        _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
-        if (! _isInitialized ) {
-          qisError << "\"" << _endpointContext.name << "\" could not connect to master "
-            "at address \"" << masterEndpointAndPort.first << "\""
-            << std::endl;
-          return;
-        }
-        _endpointContext.port = getNewPort(_endpointContext.machineID);
-        registerMachine(_machineContext);
-        registerEndpoint(_endpointContext);
+        _masterClient.connect(masterEndpointAndPort.first);
+        _endpointContext.port = _masterClient.getNewPort(_endpointContext.machineID);
+        _masterClient.registerMachine(_machineContext);
+        _masterClient.registerEndpoint(_endpointContext);
       }
 
       _transportServer.serve(qi::detail::getEndpoints(_endpointContext, _machineContext));
@@ -106,12 +102,12 @@ namespace qi {
       //std::cout << "Added Service" << hash << std::endl;
       _localServices.insert(methodSignature, service);
       if (!_isMasterServer) {
-        registerService(methodSignature, _endpointContext);
+        _masterClient.registerService(methodSignature, _endpointContext);
       }
     }
 
     void ServerImpl::unadvertiseService(const std::string& methodSignature) {
-      unregisterService(methodSignature);
+      _masterClient.unregisterService(methodSignature);
       _localServices.remove(methodSignature);
     }
 

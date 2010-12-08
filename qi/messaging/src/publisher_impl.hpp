@@ -15,6 +15,7 @@
 #include <vector>
 #include <boost/scoped_ptr.hpp>
 #include <qi/messaging/src/master_client.hpp>
+#include <qi/messaging/src/impl_base.hpp>
 
 namespace qi {
   namespace transport {
@@ -23,7 +24,7 @@ namespace qi {
 
   namespace detail {
 
-    class PublisherImpl : MasterClient {
+    class PublisherImpl : ImplBase {
     public:
       PublisherImpl(const std::string& name = "", Context *ctx = 0);
       virtual ~PublisherImpl();
@@ -45,7 +46,7 @@ namespace qi {
     protected:
       void xInitPublisher();
       bool xBind(const std::vector<std::string> &publishAddresses);
-
+      qi::detail::MasterClient _masterClient;
       bool _publisherInitialized;
       boost::scoped_ptr<qi::transport::TransportPublisher> _publisher;
     };

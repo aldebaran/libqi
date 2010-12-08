@@ -17,12 +17,13 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/master_client.hpp>
+#include <qi/messaging/src/impl_base.hpp>
 
 namespace qi {
   namespace detail {
 
     class SubscriberImpl :
-      public qi::detail::MasterClient,
+      public qi::detail::ImplBase,
       public qi::transport::TransportSubscribeHandler {
     public:
 
@@ -50,7 +51,7 @@ namespace qi {
     protected:
       void xInit();
       bool xConnect(const std::string& address);
-
+      qi::detail::MasterClient _masterClient;
       boost::shared_ptr<qi::transport::TransportSubscriber> _transportSubscriber;
       MutexedNameLookup<ServiceInfo> _subscriberCallBacks;
       MutexedNameLookup<std::string> _subscribedEndpoints;

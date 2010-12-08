@@ -15,13 +15,15 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/master_client.hpp>
+#include <qi/messaging/src/impl_base.hpp>
 #include <qi/serialization/message.hpp>
 #include <qi/transport/transport_client.hpp>
+
 
 namespace qi {
   namespace detail {
 
-    class ClientImpl : public MasterClient {
+    class ClientImpl : public ImplBase {
     public:
       ClientImpl(const std::string &clientName = "", Context *ctx = 0);
       virtual ~ClientImpl();
@@ -34,6 +36,8 @@ namespace qi {
 
     private:
       MutexedNameLookup<std::string> _serviceCache;
+
+      qi::detail::MasterClient _masterClient;
 
       // map from address to Client
       MutexedNameLookup< boost::shared_ptr<qi::transport::TransportClient> > _serverClients;

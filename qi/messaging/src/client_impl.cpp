@@ -19,19 +19,21 @@ namespace qi {
   namespace detail {
 
     ClientImpl::~ClientImpl() {
-      unregisterEndpoint(_endpointContext);
+      _masterClient.unregisterEndpoint(_endpointContext);
     }
 
-    ClientImpl::ClientImpl(const std::string& clientName, Context *ctx)
-      : MasterClient(clientName, ctx)
+    ClientImpl::ClientImpl(const std::string& name, Context *ctx)
+      : _masterClient(ctx)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
+      _endpointContext.name = name;
+      _endpointContext.contextID = _masterClient.getQiContextPtr()->getID();
     }
 
     void ClientImpl::connect(const std::string& masterAddress) {
-      MasterClient::connect(masterAddress);
-      registerMachine(_machineContext);
-      registerEndpoint(_endpointContext);
+      _masterClient.connect(masterAddress);
+      _masterClient.registerMachine(_machineContext);
+      _masterClient.registerEndpoint(_endpointContext);
     }
 
     void ClientImpl::reset(const std::string &name, Context *ctx)
@@ -97,7 +99,7 @@ namespace qi {
 
         std::string tmpEndpoint;
         try {
-          tmpEndpoint = locateService(methodSignature, _endpointContext);
+          tmpEndpoint = _masterClient.locateService(methodSignature, _endpointContext);
         } catch(const std::exception&) {
           qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Unable to contact master." << std::endl;

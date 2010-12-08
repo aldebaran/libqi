@@ -14,6 +14,7 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/master_client.hpp>
+#include <qi/messaging/src/impl_base.hpp>
 #include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/transport_server.hpp>
 
@@ -22,7 +23,7 @@ namespace qi {
     class PublisherImpl;
 
     class ServerImpl :
-      public qi::detail::MasterClient,
+      public qi::detail::ImplBase,
       public qi::transport::TransportMessageHandler {
     public:
       virtual ~ServerImpl();
@@ -51,6 +52,8 @@ namespace qi {
     protected:
       /// <summary> true if this server belongs to the master </summary>
       bool _isMasterServer;
+
+      qi::detail::MasterClient _masterClient;
 
       /// <summary> The underlying transport server </summary>
       qi::transport::TransportServer _transportServer;

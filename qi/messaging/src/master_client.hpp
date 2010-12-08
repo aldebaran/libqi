@@ -16,9 +16,9 @@
 
 namespace qi {
   namespace detail {
-    class MasterClient: public ImplBase {
+    class MasterClient {
     public:
-      MasterClient(const std::string name = "", qi::Context *ctx = NULL);
+      MasterClient(qi::Context *ctx = NULL);
       virtual ~MasterClient();
 
       void connect(const std::string masterAddress);
@@ -52,8 +52,17 @@ namespace qi {
       void unregisterTopic(const std::string& topicSignature,
         const qi::detail::EndpointContext& e);
 
+      qi::Context* getQiContextPtr() const {
+        return _qiContextPtr;
+      }
+
     protected:
       std::string _masterAddress;
+
+      bool _isInitialized;
+
+      /// <summary> The qi Context</summary>
+      qi::Context*                _qiContextPtr;
 
       /// <summary> The transport client used to talk with the master </summary>
       qi::transport::TransportClient _transportClient;

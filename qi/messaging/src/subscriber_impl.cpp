@@ -16,21 +16,23 @@ namespace qi {
   namespace detail {
 
     SubscriberImpl::SubscriberImpl(const std::string& name, qi::Context *ctx)
-      : MasterClient(name, ctx),
-        _transportSubscriber(new qi::transport::TransportSubscriber(getQiContextPtr()->getTransportContext()))
+      : _masterClient(ctx),
+        _transportSubscriber(new qi::transport::TransportSubscriber(_masterClient.getQiContextPtr()->getTransportContext()))
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
+      _endpointContext.name = name;
+      _endpointContext.contextID = _masterClient.getQiContextPtr()->getID();
     }
 
     void SubscriberImpl::connect(const std::string& masterAddress) {
-      MasterClient::connect(masterAddress);
-      registerMachine(_machineContext);
-      registerEndpoint(_endpointContext);
+      _masterClient.connect(masterAddress);
+      _masterClient.registerMachine(_machineContext);
+      _masterClient.registerEndpoint(_endpointContext);
       _transportSubscriber->setSubscribeHandler(this);
     }
 
     SubscriberImpl::~SubscriberImpl() {
-      unregisterEndpoint(_endpointContext);
+      _masterClient.unregisterEndpoint(_endpointContext);
     }
 
     void SubscriberImpl::reset(const std::string &name, Context *ctx)
@@ -39,7 +41,7 @@ namespace qi {
     }
 
     void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
-      std::string endpoint = locateTopic(signature, _endpointContext);
+      std::string endpoint = _masterClient.locateTopic(signature, _endpointContext);
       if (endpoint.empty()) {
         qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << signature << "\"" << std::endl;
          return;
