@@ -27,7 +27,7 @@ namespace qi {
       /// and push handlers for those connection to the tread pool.
       /// This class need to be instantiated and run at the beginning of the process.
       /// </summary>
-      //class ResultHandler;
+      /// \ingroup Transport
       class ZMQServerBackend : public detail::ServerBackend, public detail::ServerResponseHandler {
       public:
         /// <summary> The Server class constructor. </summary>

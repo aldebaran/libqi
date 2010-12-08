@@ -23,6 +23,7 @@ namespace qi {
 
     class TransportContext;
 
+    /// \ingroup Transport
     class TransportClient {
     public:
       TransportClient(TransportContext &context);

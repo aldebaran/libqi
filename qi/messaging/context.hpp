@@ -15,6 +15,8 @@
 #include <qi/transport/transport_context.hpp>
 
 namespace qi {
+
+  /// \ingroup Messaging
   class Context {
   public:
     Context();

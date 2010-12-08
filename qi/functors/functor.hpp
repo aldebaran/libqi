@@ -21,6 +21,7 @@ namespace qi
 {
   /**
   * Generic functor class
+  * \ingroup Functors
   */
   class Functor {
   public:

@@ -16,6 +16,7 @@
 namespace qi {
   namespace transport {
 
+    /// \ingroup Transport
     class TransportMessageHandler {
     public:
       /// <summary> Generic message handler. </summary>

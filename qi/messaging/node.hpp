@@ -20,7 +20,8 @@ namespace qi {
   /// <summary>
   /// Node: A combination of Server, Client, Publisher and
   /// Subscriber
-  ///   /// </summary>
+  /// </summary>
+  /// \ingroup Messaging
   class Node :
     public Server,
     public Client,

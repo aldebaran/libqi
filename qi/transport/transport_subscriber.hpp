@@ -23,6 +23,7 @@ namespace qi {
     class TransportContext;
     class TransportSubscribeHandler;
 
+    /// \ingroup Transport
     class TransportSubscriber {
     public:
       TransportSubscriber(TransportContext &ctx);

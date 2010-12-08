@@ -17,6 +17,7 @@
 namespace qi {
   namespace transport {
 
+    /// \ingroup Transport
     class TransportContext {
     public:
       TransportContext();

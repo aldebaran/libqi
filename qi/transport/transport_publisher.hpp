@@ -23,6 +23,7 @@ namespace qi {
 
     class TransportContext;
 
+    /// \ingroup Transport
     class TransportPublisher {
     public:
       TransportPublisher(TransportContext &ctx);

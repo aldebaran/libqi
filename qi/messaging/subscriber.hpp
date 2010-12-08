@@ -26,6 +26,7 @@ namespace qi {
   /// <summary>
   /// Used to subscribe to services.
   /// </summary>
+  /// \ingroup Messaging
   class Subscriber {
   public:
     /// <summary>
@@ -54,10 +55,10 @@ namespace qi {
     bool isInitialized() const;
 
     /// <summary>Subscribes to a published Topic.
-    /// 
+    ///
     /// The provided callback method will be called when the publisher
     /// publishes on the topic.
-    /// 
+    ///
     /// e.g. subscriber.subscribe("timeOfDay", &callbackFunction);
     /// </summary>
     /// <param name="name"> The advertised name of the service.</param>
@@ -73,10 +74,10 @@ namespace qi {
     }
 
     /// <summary>Subscribes to a published Topic.
-    /// 
+    ///
     /// The provided callback method will be called when the publisher
     /// publishes on the topic.
-    /// 
+    ///
     /// e.g. subscriber.subscribe("timeOfDay", this, &myCallbackMethod);
     /// </summary>
     /// <param name="object"> The memory address of the object. This could

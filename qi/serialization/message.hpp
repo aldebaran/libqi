@@ -18,6 +18,7 @@ namespace qi {
 
   namespace serialization {
 
+    /// \ingroup Serialization
     class Message {
     public:
       Message() {}

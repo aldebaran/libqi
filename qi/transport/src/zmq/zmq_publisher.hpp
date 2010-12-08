@@ -18,6 +18,8 @@
 namespace qi {
   namespace transport {
     namespace detail {
+
+      /// \ingroup Transport
       class ZMQPublisher : public PublisherBackend {
       public:
         /// <summary> Constructor that allows an existing zmq context to be used </summary>

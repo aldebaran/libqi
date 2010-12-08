@@ -29,6 +29,7 @@ namespace qi {
   /// If the service is unknown, the master is interrogated
   /// to find the appropriate server.
   /// </summary>
+  /// \ingroup Messaging
   class Client {
   public:
     /// <summary>

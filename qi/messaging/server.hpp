@@ -25,6 +25,7 @@ namespace qi {
 
 
   /// <summary> Server. </summary>
+  /// \ingroup Messaging
   class Server {
   public:
 

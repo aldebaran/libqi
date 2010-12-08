@@ -24,6 +24,7 @@ namespace qi {
     class TransportMessageHandler;
     class TransportContext;
 
+    /// \ingroup Transport
     class TransportServer
     {
     public:

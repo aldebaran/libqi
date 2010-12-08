@@ -21,6 +21,7 @@ namespace qi {
   }
 
   /// <summary> Master. </summary>
+  /// \ingroup Messaging
   class Master {
   public:
 

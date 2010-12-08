@@ -11,7 +11,7 @@ Qi was designed with the following goals:
 - Simple
 - Non-intrusive
 - Low memory
-- Performance 
+- Performance
 - Flexible
 - Distributed
 - Fast compilation
@@ -49,7 +49,7 @@ is published to the topic.
 
 \image html publish.png
 \image html many_to_many.png
-  
+
 \b Transport
 
 Transparently, the optimal communication method is chosen according to your context.
@@ -137,4 +137,36 @@ server.addMethod("methodName", this   , &Class::handler); // add a method from t
 /** \page advanced Advanced Usage
 This page is for advanced users.
 
+*/
+
+
+/**
+\defgroup Messaging Messaging Classes
+Messaging classes. Each classes register to a master.
+
+\defgroup Signature Signature Classes
+This module generate signature for a specified type. You can take the signature
+of most POD and STL types. When protobuf support is compiled in, you can take
+the signature of protobuf messages too.
+
+\defgroup Serialization Serialization Classes
+This module handle serialization. qi::serialization::Message represent a message
+that will be exchanged by Messaging classes.
+
+\defgroup Functors Functors Classes
+the Functor class can be created from either a function or an object method, it can
+handle a maximum of 9 arguments. This class can be used with a serialization::Message.
+It can be called with two Message, one for the request, one for the response.
+
+\defgroup Transport Transport Classes
+This module contains single connection transport classes. They allow direct
+communication between two endpoint but does not register with a master.
+
+Two communication models are provided, you can use standard client/server connection,
+or a publisher/subscriber pattern.
+
+Context management is explicit in the transport module. It's always prefered to have
+the same Context between differents transport, this will allow to have more effective
+communication, by reusing tcp/ipc connections. ZeroMq inproc transport impose to have
+the same context between the client and the server.
 */

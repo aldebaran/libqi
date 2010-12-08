@@ -18,6 +18,7 @@
 namespace qi {
   namespace transport {
     namespace detail {
+
       class ZMQClientBackend : public ClientBackend {
       public:
         /// <summary>

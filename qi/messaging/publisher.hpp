@@ -21,6 +21,7 @@ namespace qi {
   }
   class Context;
 
+  /// \ingroup Messaging
   class Publisher {
   public:
     Publisher(const std::string &name = "", Context *ctx = 0);
@@ -61,17 +62,17 @@ namespace qi {
 
     /// <summary>
     /// Publishes messages to an existing topic.
-    /// 
+    ///
     /// e.g. publisher.publish("/time/hour_of_the_day", 10);
-    /// 
+    ///
     /// A subscriber would be able to subscribe to the above with
-    /// 
+    ///
     /// subscriber.subscribe("time/hour_of_the_day", &handler);
-    /// 
+    ///
     /// where the handler expects an int type.
     /// </summary>
     /// <param name="topicName">The name of the topic you want to publish to.
-    /// 
+    ///
     /// By convention, topic names use forward slashes as a separator
     /// e.g. "/time/hour_of_the_day"
     /// </param>
