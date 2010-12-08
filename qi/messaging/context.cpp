@@ -34,7 +34,7 @@ namespace qi {
     _transportContext = ctx;
   }
 
-  transport::TransportContext Context::getTransportContext()
+  transport::TransportContext &Context::getTransportContext()
   {
     return *_transportContext;
   }

@@ -24,7 +24,7 @@ namespace qi {
     const std::string& getID() const;
     void setID(const std::string& contextID);
 
-    transport::TransportContext getTransportContext();
+    transport::TransportContext &getTransportContext();
     void setTransportContext(transport::TransportContext* ctx);
 
   protected:
