@@ -34,6 +34,16 @@ void handler3(const std::string& msg) {
   std::cout << msg << "  Subscriber 2G" << std::endl;
 }
 
+TEST(MessagingPublisher, simpleCase) {
+  Subscriber sub("subscriber");
+  Publisher pub("publisher");
+  pub.advertiseTopic<std::string>("hello");
+  sub.subscribe("hello", &handler1);
+  sleep(1.0); // FIXME
+  pub.publish("hello", "world");
+
+}
+
 TEST(MessagingPublisher , publisher)
 {
   Subscriber s("subscriber");
@@ -48,10 +58,13 @@ TEST(MessagingPublisher , publisher)
   sleep(2.0);
 
   for (int i = 0 ; i < 50 ; i++) {
-    std::stringstream s;
-    s << i;
-    p.publish("hello", s.str());
-    p.publish("goodbye", s.str());
+    std::stringstream str;
+    str << i;
+    p.publish("hello", str.str());
+    p.publish("goodbye", str.str());
+    if (i==20) {
+      s.unsubscribe("goodbye", &handler2);
+    }
     sleep(0.1f);
   }
 
