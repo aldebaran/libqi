@@ -72,37 +72,10 @@ to a service or topic is peer-to-peer.
 /** \page quickstart Quick Start
 
 \b Advertise a Service
-\code
-#include <qi/messaging/server.hpp>
-
-// The handler that you want to bind
-int getMeaningOfLife() {
-  return 42
-}
-
-int main(int argc, char *argv[])
-{
-  // Create the server, giving it a name that helps to track it
-  qi::Server server("deepThought");
-  // Add the service, giving it a name.
-  server.addService("deepThought.getMeaningOfLife", &getMeaningOfLife);
-  // FIXME: need a nice way to sleep
-}
-\endcode
+\include example_qi_advertise.cpp
 
 \b Call a service
-\code
-#include <qi/messaging/client.hpp>
-
-int main(int argc, char *argv[])
-{
-  // Create a client giving it a name that helps to track it.
-  qi::Client client("user");
-  // Call the method, expecting an int as the reply type
-  int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
-}
-\endcode
-
+\include example_qi_client.cpp
 
 */
 

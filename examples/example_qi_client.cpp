@@ -11,6 +11,6 @@ int main(int argc, char *argv[])
   client.connect("127.0.0.1:44544");
 
   /// call mymethod
-  client.call<int>("mymethod", 42, 42);
+  int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
   return 0;
 }
