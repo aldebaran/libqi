@@ -19,12 +19,14 @@ namespace qi {
 
     class TransportContext {
     public:
-      TransportContext(const std::string &address = "");
+      TransportContext();
       ~TransportContext();
 
     //TODO: protected:
       template <typename T>
-      T &getContext() {
+      T &getContext(const std::string &address) {
+        //we only have one context type, so we dont need address ATM
+        (void) address;
         return *static_cast<T*>(_ctx);
       }
 

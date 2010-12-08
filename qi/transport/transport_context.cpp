@@ -13,7 +13,7 @@
 namespace qi {
   namespace transport {
 
-    TransportContext::TransportContext(const std::string &address)
+    TransportContext::TransportContext()
     {
       _ctx = static_cast<void *>(new zmq::context_t(1));
     }

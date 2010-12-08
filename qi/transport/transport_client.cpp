@@ -24,7 +24,7 @@ namespace qi {
 
     bool TransportClient::connect(const std::string &endpoint) {
       try {
-        _client = new qi::transport::detail::ZMQClientBackend(endpoint, _transportContext.getContext<zmq::context_t>());
+        _client = new qi::transport::detail::ZMQClientBackend(endpoint, _transportContext.getContext<zmq::context_t>(endpoint));
         _isInitialized = true;
       } catch(const std::exception& e) {
         qisDebug << "GenericClient failed to create client for address \""

@@ -18,7 +18,6 @@ namespace qi {
 
     TransportPublisher::TransportPublisher(TransportContext &ctx)
     {
-      _publisher = new qi::transport::detail::ZMQPublisher(ctx.getContext<zmq::context_t>());
     }
 
     TransportPublisher::~TransportPublisher()
@@ -28,6 +27,7 @@ namespace qi {
 
     void TransportPublisher::connect(const std::string& endpoint)
     {
+      _publisher = new qi::transport::detail::ZMQPublisher(ctx.getContext<zmq::context_t>(endpoint));
       _publisher->connect(endpoint);
     }
 
