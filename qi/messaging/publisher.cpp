@@ -16,6 +16,14 @@ namespace qi {
 
   Publisher::~Publisher() {}
 
+  void Publisher::connect(const std::string &masterAddress) {
+    _impl->connect(masterAddress);
+  }
+
+  void Publisher::reset(const std::string& name, Context *ctx) {
+    // FIXME
+  }
+
   void Publisher::xAdvertiseTopic(const std::string& signature) {
     _impl->advertiseTopic(signature);
   }

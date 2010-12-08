@@ -21,6 +21,14 @@ namespace qi {
   {
   }
 
+  void Subscriber::connect(const std::string &masterAddress) {
+    _impl->connect(masterAddress);
+  }
+
+  void Subscriber::reset(const std::string& name, Context *ctx) {
+    // FIXME
+  }
+
   void Subscriber::xSubscribe(const std::string& signature, qi::Functor* f) {
     _impl->subscribe(signature, f);
   }

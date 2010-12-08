@@ -18,10 +18,13 @@ namespace qi {
     PublisherImpl::PublisherImpl(const std::string& name, Context *ctx)
       : MasterClient(name, ctx),
         _publisherInitialized(false),
-        _publisher(new qi::transport::TransportPublisher(Context::transportContext(ctx)))
+        _publisher(new qi::transport::TransportPublisher(getQiContextPtr()->getTransportContext()))
     {
       _endpointContext.type = PUBLISHER_ENDPOINT;
-      init();
+    }
+
+    void PublisherImpl::connect(const std::string& masterAddress) {
+      MasterClient::connect(masterAddress);
       registerMachine(_machineContext);
     }
 

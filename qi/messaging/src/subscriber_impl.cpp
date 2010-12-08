@@ -15,12 +15,15 @@
 namespace qi {
   namespace detail {
 
-    SubscriberImpl::SubscriberImpl(const std::string& name, Context *ctx)
+    SubscriberImpl::SubscriberImpl(const std::string& name, qi::Context *ctx)
       : MasterClient(name, ctx),
-        _transportSubscriber(new qi::transport::TransportSubscriber(Context::transportContext(ctx)))
+        _transportSubscriber(new qi::transport::TransportSubscriber(getQiContextPtr()->getTransportContext()))
     {
       _endpointContext.type = SUBSCRIBER_ENDPOINT;
-      init();
+    }
+
+    void SubscriberImpl::connect(const std::string& masterAddress) {
+      MasterClient::connect(masterAddress);
       registerMachine(_machineContext);
       registerEndpoint(_endpointContext);
       _transportSubscriber->setSubscribeHandler(this);

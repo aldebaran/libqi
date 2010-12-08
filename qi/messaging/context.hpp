@@ -22,18 +22,18 @@ namespace qi {
     Context(const Context& rhs);
 
     const std::string& getID() const;
+    void setID(const std::string& contextID);
 
-    //helper function for Nodes, return a transportContext if one is available
-    //TODO: should not be public
-    static transport::TransportContext *transportContext(Context *ctx);
-
-    transport::TransportContext *transportContext();
+    transport::TransportContext *getTransportContext();
+    void setTransportContext(transport::TransportContext *);
 
   protected:
     std::string                      _contextID;
     qi::transport::TransportContext *_transportContext;
 
   };
+
+  extern qi::Context* getDefaultQiContextPtr();
 }
 
 #endif  // _QI_MESSAGING_CONTEXT_HPP_

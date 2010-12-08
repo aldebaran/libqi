@@ -22,7 +22,7 @@ namespace qi {
   namespace detail {
     class MasterImpl {
     public:
-      explicit MasterImpl(const std::string& masterAddress, Context *ctx = 0);
+      MasterImpl(const std::string& masterAddress, Context *ctx = NULL);
 
       ~MasterImpl();
 

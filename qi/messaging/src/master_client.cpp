@@ -19,16 +19,21 @@ namespace qi {
 
     MasterClient::~MasterClient() {}
 
-    MasterClient::MasterClient(const std::string name,
-                               Context *ctx)
+    MasterClient::MasterClient(const std::string name, qi::Context *ctx)
     {
+      _qiContextPtr = ctx;
+
+      if (_qiContextPtr == NULL) {
+        // get default global process context
+        _qiContextPtr = getDefaultQiContextPtr();
+      }
       _endpointContext.name = name;
-      _endpointContext.contextID = _qiContext.getID();
+      _endpointContext.contextID = _qiContextPtr->getID();
     }
 
-//TODO:    _masterAddress(masterAddress)
+    void MasterClient::connect(const std::string masterAddress) {
+      _masterAddress = masterAddress;
 
-    void MasterClient::init() {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;

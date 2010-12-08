@@ -26,7 +26,10 @@ namespace qi {
       : MasterClient(clientName, ctx)
     {
       _endpointContext.type = CLIENT_ENDPOINT;
-      init();
+    }
+
+    void ClientImpl::connect(const std::string& masterAddress) {
+      MasterClient::connect(masterAddress);
       registerMachine(_machineContext);
       registerEndpoint(_endpointContext);
     }

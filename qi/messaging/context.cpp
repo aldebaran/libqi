@@ -9,14 +9,14 @@
 #include <qi/messaging/context.hpp>
 #include <qi/messaging/src/network/uuid.hpp>
 
-using qi::detail::getUUID;
-
 namespace qi {
   Context::Context() :
-      _contextID(getUUID()) {}
+      _contextID(""),
+      _transportContext(NULL) {}
 
   Context::Context(const Context& rhs) {
-    _contextID = rhs.getID();
+    _contextID = rhs._contextID;
+    _transportContext = rhs._transportContext;
   }
 
   Context::~Context() {}
@@ -25,17 +25,31 @@ namespace qi {
     return _contextID;
   }
 
-  transport::TransportContext *Context::transportContext(Context *ctx)
-  {
-    if (ctx)
-      return ctx->transportContext();
-    return 0;
+   void Context::setID(const std::string& contextID) {
+    _contextID = contextID;
   }
 
-  transport::TransportContext *Context::transportContext()
+  void Context::setTransportContext(transport::TransportContext *ctx)
+  {
+    _transportContext = ctx;
+  }
+
+  transport::TransportContext *Context::getTransportContext()
   {
     return _transportContext;
   }
 
+  // Access to a static global context -----
+  static qi::Context* gQiContextPtr;
+
+  qi::Context* getDefaultQiContextPtr() {
+    if (gQiContextPtr == NULL) {
+      gQiContextPtr = new qi::Context(); // who deletes this? need a singleton
+      gQiContextPtr->setID(qi::detail::getUUID());
+      gQiContextPtr->setTransportContext(new transport::TransportContext());
+    }
+    return gQiContextPtr;
+  }
+  // ---------------------------------------
 }
 
