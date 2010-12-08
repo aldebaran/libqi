@@ -13,6 +13,7 @@
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
+#include <qi/messaging/context.hpp>
 
 namespace qi {
   namespace detail {
@@ -32,7 +33,7 @@ namespace qi {
     /// <seealso cref="qi::Client"/>
     /// <seealso cref="qi::Publisher"/>
     /// <seealso cref="qi::Subscriber"/>
-    explicit Master(const std::string& masterAddress = "127.0.0.1:5555");
+    Master(const std::string& masterAddress = "127.0.0.1:5555", qi::Context *ctx = NULL);
 
     /// <summary>Destructor. </summary>
     virtual ~Master();
