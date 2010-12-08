@@ -28,18 +28,14 @@ namespace qi {
       ServerImpl();
       virtual ~ServerImpl();
 
-      ServerImpl(const std::string name,
-        const std::string masterAddress);
+      ServerImpl(const std::string& name,
+        const std::string& masterAddress);
 
-      const std::string& getName() const;
       /// <summary>Adds a service. </summary>
       /// <param name="methodSignature">The method signature.</param>
       /// <param name="functor">The functor that handles calls to the service.</param>
       void addService(const std::string& methodSignature, qi::Functor* functor);
 
-      boost::shared_ptr<qi::detail::PublisherImpl> advertiseTopic(
-        const std::string& topicName,
-        const std::string& typeSignature);
       /// <summary>Message handler that implements the MessageHandler interface </summary>
       /// <param name="request">The serialized request message</param>
       /// <param name="reply">The serializaed reply message</param>
@@ -56,7 +52,6 @@ namespace qi {
       /// <summary> A map from methodSignature to ServiceInfo </summary>
       MutexedNameLookup<ServiceInfo> _localServices;
 
-      bool xTopicExists(const std::string& topicName);
       const ServiceInfo& xGetService(const std::string& signature);
       void xRegisterServiceWithMaster(const std::string& signature);
     };

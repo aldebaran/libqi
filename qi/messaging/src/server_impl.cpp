@@ -33,8 +33,8 @@ namespace qi {
     }
 
     ServerImpl::ServerImpl(
-      const std::string serverName,
-      const std::string masterAddress) :
+      const std::string& serverName,
+      const std::string& masterAddress) :
         MasterClient(serverName, masterAddress),
         _isMasterServer(false)
     {
