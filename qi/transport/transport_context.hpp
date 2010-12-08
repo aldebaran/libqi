@@ -19,7 +19,7 @@ namespace qi {
 
     class TransportContext {
     public:
-      TransportContext(const std::string &address);
+      TransportContext(const std::string &address = "");
       ~TransportContext();
 
     //TODO: protected:
