@@ -11,8 +11,8 @@
 
 namespace qi {
   Context::Context() :
-      _contextID(""),
-      _transportContext(NULL) {}
+      _contextID(qi::detail::getUUID()),
+      _transportContext(new transport::TransportContext()) {}
 
   Context::Context(const Context& rhs) {
     _contextID = rhs._contextID;
@@ -45,8 +45,6 @@ namespace qi {
   qi::Context* getDefaultQiContextPtr() {
     if (gQiContextPtr == NULL) {
       gQiContextPtr = new qi::Context(); // who deletes this? need a singleton
-      gQiContextPtr->setID(qi::detail::getUUID());
-      gQiContextPtr->setTransportContext(new transport::TransportContext());
     }
     return gQiContextPtr;
   }
