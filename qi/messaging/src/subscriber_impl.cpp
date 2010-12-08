@@ -59,7 +59,6 @@ namespace qi {
     }
 
     void SubscriberImpl::subscribeHandler(qi::transport::Buffer &requestMessage) {
-      qisDebug << "SubscriberImpl::subscribeHandler called " << std::endl;
       qi::serialization::Message ser(requestMessage);
       std::string targetTopic;
       ser.readString(targetTopic);
@@ -67,7 +66,7 @@ namespace qi {
       if (si.methodName.empty() || si.functor == NULL) {
         qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << std::endl;
       } else {
-        qisDebug << "SubscriberImpl::subscribeHandler: found handler for \"" << targetTopic << "\"" << std::endl;
+        //qisDebug << "SubscriberImpl::subscribeHandler: found handler for \"" << targetTopic << "\"" << std::endl;
         qi::serialization::Message sd;
         si.functor->call(ser, sd);
       }
