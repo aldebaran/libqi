@@ -44,10 +44,10 @@ namespace qi {
       }
 
     protected:
-      MasterClient _masterClient;
-
       /// <summary> Indicates if initialization was successful </summary>
       bool _isInitialized;
+
+      MasterClient _masterClient;
 
       /// <summary> Context for the machine </summary>
       qi::detail::MachineContext  _machineContext;

@@ -30,8 +30,9 @@ namespace qi {
 
     ServerImpl::ServerImpl(const std::string name, Context *ctx)
       : ImplBase(ctx),
-        _transportServer(_masterClient.getQiContextPtr()->getTransportContext()),
-        _isMasterServer(false)
+        _isMasterServer(false),
+        _transportServer(_masterClient.getQiContextPtr()->getTransportContext())
+
     {
       _endpointContext.type = SERVER_ENDPOINT;
       _endpointContext.name = name;

@@ -50,8 +50,8 @@ namespace qi {
       bool isInitialized();
 
     protected:
-      qi::transport::TransportContext      &_transportContext;
       bool                                  _isInitialized;
+      qi::transport::TransportContext      &_transportContext;
       qi::transport::detail::ServerBackend *_transportServer;
     };
 

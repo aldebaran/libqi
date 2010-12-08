@@ -34,6 +34,7 @@ TEST(TestMaps, std_map_string_find) {
   for (unsigned int i=0; i < gLoopCount; i++) {
     std::map<std::string, std::string>::const_iterator it;
     const std::string& s = map.find("500")->second;
+    (void)s;
   }
   dt.stop();
 }
@@ -51,6 +52,7 @@ TEST(TestMaps, MutexedNameLookup_string_get) {
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500");
+    (void)s;
   }
   dt.stop();
 }
@@ -71,6 +73,7 @@ TEST(TestMaps, MutexedNameLookup_struct_ptr_method) {
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500")->bar();
+    (void)s;
   }
   dt.stop();
 }
@@ -89,6 +92,7 @@ TEST(TestMaps, MutexedNameLookup_struct_shared_ptr_method) {
   dt.start(gLoopCount);
   for (unsigned int i=0; i < gLoopCount; i++) {
     const std::string& s = mutexedMap.get("500")->bar();
+    (void)s;
   }
   dt.stop();
 }

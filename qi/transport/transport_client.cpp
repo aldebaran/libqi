@@ -17,8 +17,8 @@ namespace qi {
   namespace transport {
 
     TransportClient::TransportClient(TransportContext &context)
-      : _isInitialized(false),
-        _transportContext(context)
+      : _transportContext(context),
+        _isInitialized(false)
     {
     }
 

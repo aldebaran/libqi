@@ -96,7 +96,6 @@ namespace qi {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it;
         std::vector<std::string> result;
-        int i = 0;
         for(it = _map.begin(); it != _map.end(); ++it) {
           if (it->second == val) {
             result.push_back(it->first);
