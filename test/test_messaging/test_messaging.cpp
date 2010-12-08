@@ -11,9 +11,9 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-Master gMaster(gMasterAddress);
-Server gServer(gServerName, gMasterAddress);
-Client gClient("client", gMasterAddress);
+Master gMaster;
+Server gServer(gServerName);
+Client gClient("client");
 
 
 
@@ -32,7 +32,8 @@ std::string echo(const std::string& in) {
 
 TEST(Client, createWithStupidMasterAddress)
 {
-  Client client("client", "blabla");
+  Client client("client");
+  client.connect("blabla");
   bool ex = false;
   try {
     client.callVoid("ognagnuk");
@@ -45,7 +46,8 @@ TEST(Client, createWithStupidMasterAddress)
 
 TEST(Server, createWithStupidMasterAddress)
 {
-  Server server("server", "oink");
+  Server server("server");
+  server.connect("oink");
   bool ex = false;
   try {
     server.advertiseService("ognagnuk", &ping);

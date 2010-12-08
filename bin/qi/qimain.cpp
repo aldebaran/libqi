@@ -15,7 +15,8 @@
 namespace po = boost::program_options;
 
 void qi_call(std::string addr) {
-  qi::Client client("qi command line client", addr);
+  qi::Client client("qi command line client");
+  client.connect(addr);
   if (!client.isInitialized()) {
     return;
   }

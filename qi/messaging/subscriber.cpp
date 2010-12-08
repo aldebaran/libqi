@@ -12,7 +12,9 @@
 
 namespace qi {
 
-  Subscriber::~Subscriber() {}
+  Subscriber::~Subscriber() {
+
+  }
 
   Subscriber::Subscriber(const std::string& name, Context *ctx)
     : _impl(new detail::SubscriberImpl(name, ctx))

@@ -21,6 +21,14 @@ namespace qi {
     // TODO prevent the name "master"
   }
 
+  void Server::connect(const std::string& masterAddress) {
+    // FIXME
+  }
+
+  void Server::reset(const std::string& serverName, Context *ctx) {
+    // FIXME
+  }
+
   void Server::xAdvertiseService(const std::string& methodSignature, qi::Functor* functor) {
     _impl->advertiseService(methodSignature, functor);
   }

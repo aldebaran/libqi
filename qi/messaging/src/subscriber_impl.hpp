@@ -27,17 +27,20 @@ namespace qi {
     public:
 
       explicit SubscriberImpl(const std::string& name = "", Context *ctx = 0);
+
       void reset(const std::string &name = "", Context *ctx = 0);
       void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
       virtual ~SubscriberImpl();
 
       /// <summary>Subscribes to a topic and registers a handler</summary>
-      /// <param name="topicName">Name of the topic.</param>
+      /// <param name="signature">Signature of the topic.</param>
       /// <param name="functor">The functor handler</param>
-      void subscribe(const std::string& topicName, qi::Functor* functor);
+      void subscribe(const std::string& signature, qi::Functor* functor);
 
-      void unsubscribe(const std::string& topicName);
+      /// <summary>Unsubscribes. </summary>
+      /// <param name="topicName">Name of the topic.</param>
+      void unsubscribe(const std::string& signature);
 
       /// <summary>Subscribe handler that implements the SubscribeHandler interface </summary>
       /// <param name="message"> The incoming Message.</param>
