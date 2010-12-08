@@ -41,8 +41,9 @@ int main(int argc, char *argv[])
 
     if(vm.count("master-address")==1) {
       std::string masterAddress = vm["master-address"].as<std::string>();
-      qi::Context* context = new qi::Context();
-      qi::Master master(masterAddress, context);
+      //qi::Context* context = new qi::Context();
+      //qi::Master master(masterAddress, context);
+      qi::Master master(masterAddress);
       if (master.isInitialized()) {
         while (1)
           sleep(1);

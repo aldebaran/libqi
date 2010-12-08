@@ -20,14 +20,9 @@ namespace qi {
     MasterClient::~MasterClient() {}
 
     MasterClient::MasterClient(qi::Context *ctx)
-      : _transportClient(ctx->getTransportContext())
+      : _qiContextPtr( (ctx == NULL)? getDefaultQiContextPtr() : ctx),
+      _transportClient(_qiContextPtr->getTransportContext())
     {
-      _qiContextPtr = ctx;
-
-      if (_qiContextPtr == NULL) {
-        // get default global process context
-        _qiContextPtr = getDefaultQiContextPtr();
-      }
     }
 
     void MasterClient::connect(const std::string masterAddress) {
@@ -46,6 +41,10 @@ namespace qi {
             << std::endl;
         return;
       }
+    }
+
+    bool MasterClient::isInitialized() const {
+      return _isInitialized;
     }
 
     const std::string& MasterClient::getMasterAddress() const {

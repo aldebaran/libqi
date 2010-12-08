@@ -33,6 +33,7 @@ namespace qi {
       _masterClient.connect(masterAddress);
       _masterClient.registerMachine(_machineContext);
       _masterClient.registerEndpoint(_endpointContext);
+      _isInitialized = _masterClient.isInitialized();
     }
 
     void ClientImpl::reset(const std::string &name, Context *ctx)

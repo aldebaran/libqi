@@ -58,6 +58,8 @@ namespace qi {
         return _qiContextPtr;
       }
 
+      bool isInitialized() const;
+
     protected:
       std::string _masterAddress;
 
