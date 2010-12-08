@@ -45,4 +45,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
+#endif  // _QI_TRANSPORT_TRANSPORT_CONTEXT_HPP_

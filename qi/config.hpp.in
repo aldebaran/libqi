@@ -5,8 +5,8 @@
  * Aldebaran Robotics (c) 2010 All Rights Reserved
  */
 
-#ifndef AL_MESSAGING_CONFIG_HPP_
-#define AL_MESSAGING_CONFIG_HPP_
+#ifndef _QI_CONFIG_HPP_IN_
+#define _QI_CONFIG_HPP_IN_
 
 #define AL_MESSAGING_ON  1
 #define AL_MESSAGING_OFF 0
@@ -23,5 +23,5 @@
 # define WITH_THRIFT
 #endif
 
-#endif // !AL_MESSAGING_CONFIG_HPP_
+#endif  // _QI_CONFIG_HPP_IN_
 
