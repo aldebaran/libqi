@@ -14,7 +14,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 add_definitions(" -D_SCL_SECURE_NO_WARNINGS ")
 
 enable_testing()
-create_config_h("config.hpp.in" "qi/config.hpp")
+create_config_h("qi/config.hpp.in" "qi/config.hpp")
 
 include_directories(bindings/c/)
 
