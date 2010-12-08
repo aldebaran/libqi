@@ -38,13 +38,8 @@ namespace qi {
       //TODO
     }
 
-    void SubscriberImpl::connect(const std::string &masterAddress)
-    {
-      //TODO
-    }
-
-    void SubscriberImpl::subscribe(const std::string& topicName, qi::Functor* f) {
-      std::string endpoint = locateTopic(topicName, _endpointContext);
+    void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
+      std::string endpoint = locateTopic(signature, _endpointContext);
       if (endpoint.empty()) {
         qisWarning << "Subscriber \"" << _endpointContext.name << "\": Topic not found \"" << signature << "\"" << std::endl;
          return;

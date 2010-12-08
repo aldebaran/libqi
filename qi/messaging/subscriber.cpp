@@ -26,7 +26,7 @@ namespace qi {
   }
 
   void Subscriber::reset(const std::string& name, Context *ctx) {
-    // FIXME
+    _impl->reset(name, ctx);
   }
 
   void Subscriber::xSubscribe(const std::string& signature, qi::Functor* f) {
@@ -41,14 +41,5 @@ namespace qi {
     return _impl->isInitialized();
   }
 
-  void Subscriber::reset(const std::string &name, Context *ctx)
-  {
-    _impl->reset(name, ctx);
-  }
-
-  void Subscriber::connect(const std::string &masterAddress)
-  {
-    _impl->connect(masterAddress);
-  }
 
 }

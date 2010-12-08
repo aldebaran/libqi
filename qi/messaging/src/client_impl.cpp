@@ -39,11 +39,6 @@ namespace qi {
       //TODO
     }
 
-    void ClientImpl::connect(const std::string &masterAddress)
-    {
-      //TODO
-    }
-
     void ClientImpl::call(const std::string &signature,
       const qi::serialization::Message& callDef,
             qi::serialization::Message& result) {
