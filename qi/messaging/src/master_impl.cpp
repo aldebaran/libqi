@@ -121,7 +121,7 @@ namespace qi {
     }
 
     void MasterImpl::xRegisterMachine(const MachineContext& machine) {
-      MASTERIMPL_DEBUG_MACHINE_CONTEXT("registerMachine", machine);
+      MASTERIMPL_DEBUG_MACHINE_CONTEXT("Master::registerMachine", machine);
       _knownMachines.insert(machine.machineID, machine);
     }
 
