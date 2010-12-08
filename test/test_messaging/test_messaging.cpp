@@ -11,9 +11,10 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-Master gMaster;
-Server gServer(gServerName);
-Client gClient("client");
+Context* c = new Context();
+Master gMaster(gMasterAddress, c);
+Server gServer(gServerName, c);
+Client gClient("client", c);
 
 
 
@@ -32,7 +33,7 @@ std::string echo(const std::string& in) {
 
 TEST(Client, createWithStupidMasterAddress)
 {
-  Client client("client");
+  Client client("client", c);
   client.connect("blabla");
   bool ex = false;
   try {
@@ -46,7 +47,7 @@ TEST(Client, createWithStupidMasterAddress)
 
 TEST(Server, createWithStupidMasterAddress)
 {
-  Server server("server");
+  Server server("server", c);
   server.connect("oink");
   bool ex = false;
   try {
@@ -60,7 +61,7 @@ TEST(Server, createWithStupidMasterAddress)
 
 TEST(Master, createWithStupidMasterAddress)
 {
-  Master master("oink2");
+  Master master("oink2", c);
   // should not blow up, but we should be able to find if it is happy
 }
 
