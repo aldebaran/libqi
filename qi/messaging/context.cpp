@@ -19,7 +19,9 @@ namespace qi {
     _transportContext = rhs._transportContext;
   }
 
-  Context::~Context() {}
+  Context::~Context() {
+    delete(_transportContext);
+  }
 
   const std::string& Context::getID() const {
     return _contextID;
