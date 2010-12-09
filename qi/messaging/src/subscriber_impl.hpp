@@ -14,7 +14,7 @@
 #include <string>
 #include <qi/transport/transport_subscriber.hpp>
 #include <qi/transport/transport_subscribe_handler.hpp>
-#include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/src/serviceinfo.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/impl_base.hpp>
 

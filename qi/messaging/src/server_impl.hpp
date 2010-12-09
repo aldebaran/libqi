@@ -11,7 +11,7 @@
 #ifndef _QI_MESSAGING_SRC_SERVER_IMPL_HPP_
 #define _QI_MESSAGING_SRC_SERVER_IMPL_HPP_
 
-#include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/src/serviceinfo.hpp>
 #include <qi/messaging/src/mutexednamelookup.hpp>
 #include <qi/messaging/src/impl_base.hpp>
 #include <qi/transport/transport_message_handler.hpp>
