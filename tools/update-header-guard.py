@@ -127,7 +127,7 @@ if __name__ == "__main__":
         checkheader.py qi
     """
     dest = sys.argv[1]
-    flist = ls_r(dest, ".*\.h(pp|xx)?$")
+    flist = ls_r(dest, ".*\.h(pp|xx)$")
     flist = [ os.path.join(dest, x) for x in flist ]
     for f in flist:
         print "checking file:", f
