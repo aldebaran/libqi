@@ -29,9 +29,12 @@ namespace qi {
       }
     }
 
+    void TransportPublisher::init() {
+      _publisher = new qi::transport::detail::ZMQPublisher(_transportContext.getContext<zmq::context_t>(""));
+    }
+
     void TransportPublisher::connect(const std::string& endpoint)
     {
-      _publisher = new qi::transport::detail::ZMQPublisher(_transportContext.getContext<zmq::context_t>(endpoint));
       _publisher->connect(endpoint);
     }
 

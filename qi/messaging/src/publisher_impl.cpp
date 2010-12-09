@@ -34,9 +34,9 @@ namespace qi {
       void PublisherImpl::xInitPublisher() {
         // prepare this publisher
         _endpointContext.port = _masterClient.getNewPort(_machineContext.machineID);
-        std::vector<std::string> subscribeAddresses = getEndpoints(_endpointContext, _machineContext);
+        std::vector<std::string> publishAddresses = getEndpoints(_endpointContext, _machineContext);
 
-        if (! xBind(subscribeAddresses)) {
+        if (! xBind(publishAddresses)) {
           qisError << "PublisherImpl::advertise Failed to bind publisher: " << _endpointContext.name << std::endl;
           return;
         }
@@ -67,6 +67,7 @@ namespace qi {
 
     bool PublisherImpl::xBind(const std::vector<std::string>& publishAddresses) {
       try {
+        _publisher->init();
         _publisher->bind(publishAddresses);
         _isInitialized = true;
       } catch(const std::exception& e) {

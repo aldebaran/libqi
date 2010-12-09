@@ -14,8 +14,6 @@ namespace qi {
   namespace transport {
     namespace detail {
 
-      /// <summary> Constructor. </summary>
-      /// <param name="publishAddress"> The publishing address. </param>
       ZMQSubscriber::ZMQSubscriber(zmq::context_t &context)
         : _isClosing(false),
           _context(context),
@@ -48,7 +46,6 @@ namespace qi {
         sleep(1.0);
       }
 
-      /// <summary> Connects to the publisher </summary>
       void ZMQSubscriber::connect(const std::string &publishAddress)
       {
         // FIXME:
@@ -79,7 +76,6 @@ namespace qi {
             }
             // No way to notice that the subscriber handler has
             // been deallocated. If it has, this will segfault
-            //          // getSubscribeHandler
             this->getSubscribeHandler()->subscribeHandler(data);
           }
         } catch(const std::exception&) {
@@ -90,7 +86,6 @@ namespace qi {
         }
       }
 
-      /// <summary> Subscribe. </summary>
       void ZMQSubscriber::subscribe()
       {
         _receiveThread = boost::thread(&ZMQSubscriber::receive, this);

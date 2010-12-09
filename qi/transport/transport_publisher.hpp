@@ -29,6 +29,9 @@ namespace qi {
       TransportPublisher(TransportContext &ctx);
       ~TransportPublisher();
 
+      /// <summary>Initialises this object. </summary>
+      void init();
+
       /// <summary>Connects to an endpoint</summary>
       /// <param name="endpoint">
       /// The fully qualified endpoint to connect to.

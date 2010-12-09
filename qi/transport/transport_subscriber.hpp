@@ -32,6 +32,7 @@ namespace qi {
       virtual void setSubscribeHandler(TransportSubscribeHandler* handler);
       virtual TransportSubscribeHandler* getSubscribeHandler() const;
 
+      virtual void init();
       virtual void connect(const std::string &endpoint);
       virtual void subscribe();
 

@@ -39,8 +39,11 @@ namespace qi {
       return _subscriber->getSubscribeHandler();
     }
 
+    void TransportSubscriber::init() {
+      _subscriber = new qi::transport::detail::ZMQSubscriber(_transportContext.getContext<zmq::context_t>(""));
+    }
+
     void TransportSubscriber::connect(const std::string &endpoint) {
-      _subscriber = new qi::transport::detail::ZMQSubscriber(_transportContext.getContext<zmq::context_t>(endpoint));
       _subscriber->connect(endpoint);
     }
 

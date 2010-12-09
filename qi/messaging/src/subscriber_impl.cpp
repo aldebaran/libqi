@@ -28,6 +28,7 @@ namespace qi {
       _masterClient.connect(masterAddress);
       _masterClient.registerMachine(_machineContext);
       _masterClient.registerEndpoint(_endpointContext);
+      _transportSubscriber->init();
       _transportSubscriber->setSubscribeHandler(this);
       _isInitialized = _masterClient.isInitialized();
     }
