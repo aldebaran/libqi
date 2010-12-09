@@ -75,10 +75,6 @@ namespace qi {
         ::boost::bind(&qi::transport::TransportServer::run, _transportServer));
     }
 
-    void ServerImpl::reset(const std::string& name, Context *ctx) {
-      // FIXME: do something
-    }
-
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
       // handle message
       Message def(defData);

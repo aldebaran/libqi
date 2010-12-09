@@ -37,10 +37,6 @@ namespace qi {
       _masterClient.unregisterEndpoint(_endpointContext);
     }
 
-    void SubscriberImpl::reset(const std::string &name, Context *ctx)
-    {
-      //TODO
-    }
 
     void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
       if (!_isInitialized) {

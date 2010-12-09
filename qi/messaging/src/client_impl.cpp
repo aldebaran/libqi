@@ -36,11 +36,6 @@ namespace qi {
       _isInitialized = _masterClient.isInitialized();
     }
 
-    void ClientImpl::reset(const std::string &name, Context *ctx)
-    {
-      //TODO
-    }
-
     void ClientImpl::call(const std::string &signature,
       const qi::serialization::Message& callDef,
             qi::serialization::Message& result) {

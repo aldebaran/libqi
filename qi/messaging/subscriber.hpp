@@ -24,7 +24,7 @@ namespace qi {
   class Context;
 
   /// <summary>
-  /// Used to subscribe to named Topics.  If the Topic is unknown, the 
+  /// Used to subscribe to named Topics.  If the Topic is unknown, the
   /// master is interrogated to find the appropriate server.
   /// </summary>
   /// \ingroup Messaging
@@ -42,16 +42,6 @@ namespace qi {
     /// transport resources.
     /// </param>
     Subscriber(const std::string& name = "", Context *context = 0);
-
-    /// <summary> Reset to the default state, this will disconnect
-    /// and reset the object, like a new fresh copy. </summary>
-    /// <param name="name"> The name you want to give to this
-    /// subscriber </param>
-    /// <param name="context">
-    /// An optional context that can be used to group or separate
-    /// transport resources.
-    /// </param>
-    void reset(const std::string& name = "", Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>

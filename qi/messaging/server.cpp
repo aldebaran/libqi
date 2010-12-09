@@ -25,10 +25,6 @@ namespace qi {
     _impl->connect(masterAddress);
   }
 
-  void Server::reset(const std::string& serverName, Context *ctx) {
-    _impl->reset(serverName, ctx);
-  }
-
   void Server::xAdvertiseService(const std::string& methodSignature, qi::Functor* functor) {
     _impl->advertiseService(methodSignature, functor);
   }

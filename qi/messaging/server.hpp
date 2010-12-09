@@ -41,15 +41,6 @@ namespace qi {
     /// </param>
     Server(const std::string &name = "", qi::Context *context = 0);
 
-    /// <summary> Reset to the default state, this will disconnect
-    /// and reset the object, like a new fresh copy. </summary>
-    /// <param name="name"> The name you want to give to the server. </param>
-    /// <param name="context">
-    /// An optional context that can be used to group or separate
-    /// transport resources.
-    /// </param>
-    void reset(const std::string &name = "", qi::Context *context = 0);
-
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>
     /// <param name="masterAddress"> The master address. </param>

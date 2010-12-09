@@ -20,11 +20,6 @@ namespace qi {
   {
   }
 
-  void Client::reset(const std::string &name, Context *ctx)
-  {
-    _impl->reset(name, ctx);
-  }
-
   void Client::connect(const std::string &masterAddress)
   {
     _impl->connect(masterAddress);
