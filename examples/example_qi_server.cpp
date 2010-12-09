@@ -1,22 +1,20 @@
-/** This is a simple Qi messaging example
- * It creates a server and binds a foo method
- */
-
 #include <qi/messaging/server.hpp>
-#include <qi/perf/sleep.hpp>
 
-/// simple method that will be bound
-int foo(const int &bar)
-{
-  return bar + 1;
+// The handler for the service that you want to advertise
+int getMeaningOfLife() {
+  return 42;
 }
 
 int main(int argc, char *argv[])
 {
-  qi::Server server("myserver");
-  server.connect();
+  // Create the server, giving it a name that helps to track it
+  qi::Server server("deepThought");
 
-  server.advertiseService("mymethod", &foo);
-  sleep(5);
-  return 0;
+  // Connect the client to the master
+  const std::string masterAddress = "127.0.0.1:5555";
+  server.connect(masterAddress);
+
+  // Advertise the service, giving it a name.
+  server.advertiseService("deepThought.getMeaningOfLife", &getMeaningOfLife);
+  // FIXME: need a nice way to sleep
 }

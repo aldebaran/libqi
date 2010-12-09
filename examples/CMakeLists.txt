@@ -12,8 +12,11 @@ use_lib(example_qi_client QI)
 create_bin(example_qi_server NO_INSTALL example_qi_server.cpp)
 use_lib(example_qi_server QI)
 
-create_bin(example_qi_advertise NO_INSTALL example_qi_advertise.cpp)
-use_lib(example_qi_advertise QI)
+create_bin(example_qi_publisher NO_INSTALL example_qi_publisher.cpp)
+use_lib(example_qi_publisher QI)
+
+create_bin(example_qi_subscriber NO_INSTALL example_qi_subscriber.cpp)
+use_lib(example_qi_subscriber QI)
 
 create_bin(example_qi_signature_type NO_INSTALL example_qi_signature_type.cpp)
 use_lib(example_qi_signature_type QI)

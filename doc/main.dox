@@ -72,11 +72,16 @@ to a service or topic is peer-to-peer.
 /** \page quickstart Quick Start
 
 \b Advertise a Service
-\include example_qi_advertise.cpp
+\include example_qi_server.cpp
 
 \b Call a service
 \include example_qi_client.cpp
 
+\b Advertise a Topic
+\include example_qi_publisher.cpp
+
+\b Subscribe to a Topic
+\include example_qi_subscriber.cpp
 */
 
 
