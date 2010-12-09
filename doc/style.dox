@@ -1,6 +1,10 @@
 /** \page style Style
 This page define the style used by the Qi project.
 
+\b Split library by subfolder
+each fonctionality should be restricted to it's own folder.
+A public header should include the bare minimum public API, it should be located in qi/<functionnality.hpp>
+while each files implementating the functionnality belong to qi/<functionnality>
 
 \b Source and header should be in the same folder.
 This allow editor to associate header and implementation, furthermore it avoid to have to search
