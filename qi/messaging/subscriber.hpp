@@ -27,6 +27,8 @@ namespace qi {
   /// Used to subscribe to named Topics.  If the Topic is unknown, the
   /// master is interrogated to find the appropriate server.
   /// </summary>
+  /// \b Subscribe to a Topic
+  /// \include example_qi_subscriber.cpp
   /// \ingroup Messaging
   class Subscriber {
   public:
@@ -96,6 +98,10 @@ namespace qi {
     }
 
     template<typename FUNCTION_TYPE>
+
+
+
+
     void unsubscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
       xUnsubscribe(makeFunctionSignature(topicName, callback));

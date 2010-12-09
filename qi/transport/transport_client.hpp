@@ -21,11 +21,15 @@ namespace qi {
       class ClientBackend;
     }
 
+    /// <summary>Transport context. </summary>
     class TransportContext;
 
     /// \ingroup Transport
     class TransportClient {
     public:
+
+      /// <summary>Constructor. </summary>
+      /// <param name="context">The context.</param>
       TransportClient(TransportContext &context);
 
       /// <summary>Connects to an endpoint</summary>
@@ -39,8 +43,14 @@ namespace qi {
       void send(const qi::transport::Buffer &request, qi::transport::Buffer &reply);
 
     protected:
+
+      /// <summary> Context for the transport </summary>
       qi::transport::TransportContext      &_transportContext;
+
+      /// <summary> true if is initialized </summary>
       bool                                  _isInitialized;
+
+      /// <summary> The client </summary>
       qi::transport::detail::ClientBackend *_client;
     };
 

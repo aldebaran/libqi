@@ -25,6 +25,8 @@ namespace qi {
 
   /// <summary> Used to advertise named services. Advertised Services are
   /// registered with the master so that clients can find them.</summary>
+  /// \b Advertise a Service
+  /// \include example_qi_server.cpp
   /// \ingroup Messaging
   class Server {
   public:

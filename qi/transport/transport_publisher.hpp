@@ -20,13 +20,18 @@ namespace qi {
     namespace detail {
       class PublisherBackend;
     }
-
     class TransportContext;
 
+    /// <summary>Transport Publisher. </summary>
     /// \ingroup Transport
     class TransportPublisher {
     public:
+
+      /// <summary>Constructor. </summary>
+      /// <param name="ctx">The transport context.</param>
       TransportPublisher(TransportContext &ctx);
+
+      /// <summary>Finaliser. </summary>
       ~TransportPublisher();
 
       /// <summary>Initialises this object. </summary>
@@ -55,7 +60,11 @@ namespace qi {
       virtual void publish(const std::string& message);
 
     protected:
+
+      /// <summary> Context for the transport </summary>
       qi::transport::TransportContext          &_transportContext;
+
+      /// <summary> The backend publisher </summary>
       qi::transport::detail::PublisherBackend *_publisher;
     };
   }

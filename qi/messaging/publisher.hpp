@@ -24,6 +24,8 @@ namespace qi {
   /// <summary>Used to distribute data on named Topics.
   /// Advertised Topics are registered with the master so that
   /// subscribers can find them.</summary>
+  /// \b Advertise a Topic
+  /// \include example_qi_publisher.cpp
   /// \ingroup Messaging
   class Publisher {
   public:

@@ -28,12 +28,19 @@ namespace qi {
     class TransportServer
     {
     public:
+      /// <summary>Constructor. </summary>
+      /// <param name="context"> The context.</param>
       TransportServer(TransportContext &context);
 
+      /// <summary>Serves</summary>
+      /// <param name="endpoint">The endpoint.</param>
       void serve(const std::string &endpoint);
 
+      /// <summary>Serves.</summary>
+      /// <param name="endpoints">The endpoints.</param>
       void serve(const std::vector<std::string> &endpoints);
 
+      /// <summary>Runs this object. </summary>
       virtual void run();
 
       /// <summary>Sets a message handler. </summary>
