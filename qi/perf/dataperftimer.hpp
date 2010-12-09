@@ -13,7 +13,6 @@
 
 #include <boost/timer.hpp>
 #include <string>
-//#include <rttools/rttime.h>
 
 namespace qi {
   namespace perf {
@@ -60,12 +59,23 @@ namespace qi {
       void print();
 
     protected:
-      boost::timer    rt;
-      //RtTime        rt;
+
+      /// <summary> The timer </summary>
+      boost::timer  rt;
+
+      /// <summary> Number of loops </summary>
       unsigned long fLoopCount;
+
+      /// <summary> Size of the message </summary>
       unsigned long fMsgSize;
+
+      /// <summary> The elapsed </summary>
       double        fElapsed;
+
+      /// <summary> The message ps </summary>
       double        fMsgPs;
+
+      /// <summary> The mgb ps </summary>
       double        fMgbPs;
     };
   }

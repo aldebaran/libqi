@@ -27,7 +27,7 @@ namespace qi {
       ZMQSubscriber::~ZMQSubscriber() {
         _isClosing = true;
         // Discussion: We have a blocking receive in
-        // progress. This is rather difficult to interupt.
+        // progress. This is rather difficult to interrupt.
         // We have various options:
         // 1) close the socket ( doesn't work ... error in receive)
         // 2) terminate the context ( meant to work , but...)

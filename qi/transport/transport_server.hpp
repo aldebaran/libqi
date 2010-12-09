@@ -48,11 +48,18 @@ namespace qi {
       /// </returns>
       virtual TransportMessageHandler* getMessageHandler();
 
+      /// <summary>Query if this object is initialized. </summary>
+      /// <returns>true if initialized, false if not.</returns>
       bool isInitialized();
 
     protected:
+      /// <summary> true if is initialized </summary>
       bool                                  _isInitialized;
+
+      /// <summary> Context for the transport </summary>
       qi::transport::TransportContext      &_transportContext;
+
+      /// <summary> The transport server </summary>
       qi::transport::detail::ServerBackend *_transportServer;
     };
 
