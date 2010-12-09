@@ -4,18 +4,20 @@ def generate_argpush_list(count):
     t = "args.push_back(p%(count)d);"
     return generate_list(t, count, sep=" ")
 %>
+#pragma once
 /*
-** $autogen
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*  $autogen
+*
+*  Author(s):
+*  - Cedric GESTES <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
 #raw
-#ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
-#define _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
+#ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_
+#define _QI_FUNCTORS_CALLFUNCTOR_HPP_
 
 #include <qi/functors/functor.hpp>
 #end raw
@@ -54,5 +56,5 @@ namespace qi
 #end for
 #raw
 }
-#endif  // _QI_FUNCTORS_CALLFUNCTOR_HPP_IN_
+#endif  // _QI_FUNCTORS_CALLFUNCTOR_HPP_
 #end raw

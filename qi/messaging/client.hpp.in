@@ -8,58 +8,60 @@ def generate_argpush_list(count):
 #pragma once
 /*
 ** $autogen
-**
-** Author(s):
-**  - Chris Kilner  <ckilner@aldebaran-robotics.com>
-**  - Cedric Gestes <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+*
+*  Author(s):
+*  - Chris Kilner  <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef _QI_MESSAGING_CLIENT_HPP_IN_
-#define _QI_MESSAGING_CLIENT_HPP_IN_
+
+
+#ifndef _QI_MESSAGING_CLIENT_HPP_
+#define _QI_MESSAGING_CLIENT_HPP_
 
 #include <string>
-#include <memory>
 #include <qi/signature.hpp>
 #include <qi/serialization.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace qi {
   namespace detail {
     class ClientImpl;
   }
+  class Context;
 
   /// <summary>
   /// Used to call services that have been added to a server.
-  /// If the service is unknown, the master is interogated
+  /// If the service is unknown, the master is interrogated
   /// to find the appropriate server.
   /// </summary>
+  /// \include example_qi_client.cpp
+  /// \ingroup Messaging
   class Client {
   public:
     /// <summary>
-    /// DefaultConstructor
     /// Used to call services that have been added to a server.
-    /// If the service is unknown, the master is interogated
-    /// to find the appropriate server.
-    /// </summary>
-    Client();
-
-    /// <summary>
-    /// Used to call services that have been added to a server.
-    /// If the service is unknown, the master is interogated
+    /// If the service is unknown, the master is interrogated
     /// to find the appropriate server
     /// </summary>
-    /// <param name="clientName">
+    /// <param name="name">
     /// The name you want to give to this client
     /// e.g. "client"
     /// </param>
-    /// <param name="masterAddress">
-    /// The address of the master that is used to find services
-    /// e.g. "127.0.0.1:5555"
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
     /// </param>
-    Client(const std::string& clientName, const std::string& masterAddress = "127.0.0.1:5555");
+    Client(const std::string& name = "", qi::Context *context = 0);
+
+    /// <summary> Connect to masterAddress. If no address is specified
+    /// the default 127.0.0.1:5555 is used </summary>
+    /// <param name="masterAddress"> The master address. e.g 127.0.0.1:5555</param>
+    void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
     virtual ~Client();
-    
+
     bool isInitialized() const;
 
 #end raw
@@ -78,11 +80,11 @@ namespace qi {
     void xCall(const std::string& signature,
       const qi::serialization::Message& request,
             qi::serialization::Message& result);
-    std::auto_ptr<qi::detail::ClientImpl> _impl;
+    boost::scoped_ptr<qi::detail::ClientImpl> _impl;
   };
 }
 
 #raw
 #include <qi/messaging/client.hxx>
-#endif  // _QI_MESSAGING_CLIENT_HPP_IN_
+#endif  // _QI_MESSAGING_CLIENT_HPP_
 #end raw

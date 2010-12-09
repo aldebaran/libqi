@@ -1,16 +1,17 @@
 #from codegenerator import *
+#pragma once
 /*
-** $autogen
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+* $autogen
+*
+*  Author(s):
+*  - Cedric GESTES <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
 #raw
-#ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
-#define _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
+#ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_
+#define _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 
 #include <qi/functors/functor.hpp>
 
@@ -32,5 +33,5 @@ namespace qi
 #end for
 #raw
 }
-#endif  // _QI_FUNCTORS_MAKEFUNCTOR_HPP_IN_
+#endif  // _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 #end raw

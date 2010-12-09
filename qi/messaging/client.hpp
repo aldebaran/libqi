@@ -1,8 +1,11 @@
+
 #pragma once
 /*
+** $autogen
+*
 *  Author(s):
+*  - Chris Kilner  <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
 *  Copyright (C) 2010 Aldebaran Robotics
 */
@@ -20,7 +23,6 @@ namespace qi {
   namespace detail {
     class ClientImpl;
   }
-
   class Context;
 
   /// <summary>
@@ -55,6 +57,7 @@ namespace qi {
     virtual ~Client();
 
     bool isInitialized() const;
+
 
     void callVoid(const std::string& methodName);
 

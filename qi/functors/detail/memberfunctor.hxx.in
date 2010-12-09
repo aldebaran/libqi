@@ -1,17 +1,17 @@
 #from codegenerator import *
 /*
-** $autogen
-**
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2010 Aldebaran Robotics
+* $autogen
+*
+*  Author(s):
+*  - Cedric GESTES <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
 */
 
 #raw
 
-#ifndef _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_IN_
-#define _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_IN_
+#ifndef _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
+#define _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
 
 #include <qi/functors/functor.hpp>
 
@@ -56,5 +56,5 @@ namespace detail {
 #raw
 }
 }
-#endif  // _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_IN_
+#endif  // _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
 #end raw
