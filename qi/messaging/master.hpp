@@ -41,6 +41,9 @@ namespace qi {
     /// <summary>Destructor. </summary>
     virtual ~Master();
 
+    /// <summary>Runs the master. </summary>
+    void run();
+
     bool isInitialized() const;
 
   private:

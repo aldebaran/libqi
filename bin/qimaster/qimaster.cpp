@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
       //qi::Context* context = new qi::Context();
       //qi::Master master(masterAddress, context);
       qi::Master master(masterAddress);
+      master.run();
       if (master.isInitialized()) {
         while (1)
           sleep(1);

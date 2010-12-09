@@ -26,6 +26,8 @@ namespace qi {
 
       ~MasterImpl();
 
+      void run();
+
       /// <summary>Registers the service. </summary>
       /// <param name="methodSignature">The method signature.</param>
       /// <param name="serverID">Identifier for the server.</param>
@@ -105,7 +107,6 @@ namespace qi {
       /// <summary> The Master's server that is used by clients to call methods</summary>
       ServerImpl  _server;
 
-      void xInit();
       void xRegisterEndpoint(const EndpointContext& endpoint);
       void xRegisterMachine(const MachineContext& machine);
       std::string xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID);

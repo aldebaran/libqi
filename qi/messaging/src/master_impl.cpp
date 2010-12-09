@@ -15,7 +15,7 @@
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
   qisDebug << "===" << msg << " ===" << std::endl;                  \
   qisDebug << "type      : " << endpointTypeAsString(endpoint.type) \
-                                                     << std::endl;  \
+  << std::endl;  \
   qisDebug << "endpointID: " << endpoint.endpointID << std::endl;   \
   qisDebug << "machineID : " << endpoint.machineID  << std::endl;   \
   qisDebug << "name      : " << endpoint.name       << std::endl;   \
@@ -29,7 +29,7 @@
   qisDebug << "machineID : " << machine.machineID  << std::endl;     \
   qisDebug << "hostName  : " << machine.hostName   << std::endl;     \
   qisDebug << "platformID: " << platformAsString(machine.platformID) \
-                                                      << std::endl;  \
+  << std::endl;  \
   qisDebug << "publicIP  : " << machine.publicIP   << std::endl;     \
   qisDebug << "============================"        << std::endl;    \
 
@@ -45,14 +45,14 @@ namespace qi {
     }
 
     MasterImpl::MasterImpl(const std::string& masterAddress, Context *ctx) :
-        _address(masterAddress),
-        _server("master", ctx)
+    _address(masterAddress),
+      _server("master", ctx)
     {
-      _server.connect(masterAddress);
-      xInit();
     }
 
-    void MasterImpl::xInit() {
+    void MasterImpl::run() {
+      _server.connect(_address);
+
       if (!_server.isInitialized()) {
         return;
       }
@@ -91,19 +91,19 @@ namespace qi {
     }
 
     void MasterImpl::registerService(
-       const std::string& methodSignature, const std::string& serverID) {
+      const std::string& methodSignature, const std::string& serverID) {
 
-      const EndpointContext& serverContext = _knownEndpoints.get(serverID);
-      if(serverContext.name.empty()) {
-        qisError << "Master::registerService Attempt to register the "
-          "method of an unknown server, Please call registerService first"
-          ": signature: " << qi::signatureToString(methodSignature) << " serverID " <<
+        const EndpointContext& serverContext = _knownEndpoints.get(serverID);
+        if(serverContext.name.empty()) {
+          qisError << "Master::registerService Attempt to register the "
+            "method of an unknown server, Please call registerService first"
+            ": signature: " << qi::signatureToString(methodSignature) << " serverID " <<
             serverID << std::endl;
-        return;
-      }
-      qisDebug << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
+          return;
+        }
+        qisDebug << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
 
-      _knownServices.insert(methodSignature, serverID);
+        _knownServices.insert(methodSignature, serverID);
     }
 
     void MasterImpl::unregisterService(const std::string& methodSignature) {
@@ -298,8 +298,8 @@ namespace qi {
       TopicMapCIT end = topics.end();
       for (; it != end; ++it) {
         if (((it->second).publishEndpointID == endpointID) ||
-           ((it->second).subscribeEndpointID == endpointID)) {
-          result.push_back(it->first);
+          ((it->second).subscribeEndpointID == endpointID)) {
+            result.push_back(it->first);
         }
       }
       return result;

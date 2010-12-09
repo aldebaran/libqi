@@ -19,5 +19,9 @@ namespace qi {
     return _impl->isInitialized();
   }
 
+  void Master::run() {
+    _impl->run();
+  }
+
   Master::~Master() {}
 }
