@@ -20,8 +20,16 @@ namespace qi {
 
     TransportServer::TransportServer(TransportContext &context)
       : _isInitialized(false),
-        _transportContext(context)
+        _transportContext(context),
+        _transportServer(NULL)
     {
+    }
+
+    TransportServer::~TransportServer() {
+      if (_transportServer != NULL) {
+        delete(_transportServer);
+        _transportServer = NULL;
+      }
     }
 
     void TransportServer::serve(const std::string &endpoint) {
