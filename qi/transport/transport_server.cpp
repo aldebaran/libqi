@@ -64,7 +64,11 @@ namespace qi {
     void TransportServer::run()
     {
       if (_isInitialized) {
-        _transportServer->run();
+        try {
+          _transportServer->run();
+        } catch(const std::exception& e) {
+          qisError << "TransportServer::run exception " << e.what() << std::endl;
+        }
       }
     }
 
