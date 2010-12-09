@@ -114,24 +114,24 @@ This page is for advanced users.
 
 
 /**
-\defgroup Messaging Messaging Classes
+\defgroup Messaging Messaging
 Messaging classes. Each classes register to a master.
 
-\defgroup Signature Signature Classes
+\defgroup Signature Signature
 This module generate signature for a specified type. You can take the signature
 of most POD and STL types. When protobuf support is compiled in, you can take
 the signature of protobuf messages too.
 
-\defgroup Serialization Serialization Classes
+\defgroup Serialization Serialization
 This module handle serialization. qi::serialization::Message represent a message
 that will be exchanged by Messaging classes.
 
-\defgroup Functors Functors Classes
+\defgroup Functors Functors
 the Functor class can be created from either a function or an object method, it can
 handle a maximum of 9 arguments. This class can be used with a serialization::Message.
 It can be called with two Message, one for the request, one for the response.
 
-\defgroup Transport Transport Classes
+\defgroup Transport Transport
 This module contains single connection transport classes. They allow direct
 communication between two endpoint but does not register with a master.
 
