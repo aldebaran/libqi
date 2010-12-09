@@ -13,5 +13,5 @@ int main(int argc, char *argv[])
   publisher.advertiseTopic<int>("time/hour");
 
   // Publish the hour to the Topic, sending an int
-  publisher.publish("time/hour", 10)
+  publisher.publish("time/hour", 10);
 }
