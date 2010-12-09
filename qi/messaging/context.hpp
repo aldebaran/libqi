@@ -16,6 +16,9 @@
 
 namespace qi {
 
+  /// <summary> Messaging context that can be used to share or separate
+  /// resources used by Servers, Clients, Publishers and Subscribers
+  /// </summary>
   /// \ingroup Messaging
   class Context {
   public:
@@ -23,10 +26,20 @@ namespace qi {
     virtual ~Context();
     Context(const Context& rhs);
 
+    /// <summary>Gets the context identifier. </summary>
+    /// <returns>The identifier.</returns>
     const std::string& getID() const;
+
+    /// <summary>Sets the context identifier. </summary>
+    /// <param name="contextID">Identifier for the context.</param>
     void setID(const std::string& contextID);
 
+    /// <summary>Gets the transport context. </summary>
+    /// <returns>The transport context.</returns>
     transport::TransportContext &getTransportContext();
+
+    /// <summary>Sets a transport context. </summary>
+    /// <param name="ctx">The transport context.</param>
     void setTransportContext(transport::TransportContext* ctx);
 
   protected:

@@ -6,11 +6,14 @@
 
 int main(int argc, char *argv[])
 {
-  /// create a client
-  qi::Client client("myclient");
-  client.connect("127.0.0.1:44544");
+  // create a client
+  qi::Client client("myClient");
 
-  /// call mymethod
+  // Connect the client to the master
+  const std::string masterAddress = "127.0.0.1:5555";
+  client.connect(masterAddress);
+
+  // call a method, expecting an int return type
   int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
   return 0;
 }

@@ -12,17 +12,17 @@
 #define _QI_TRANSPORT_TRANSPORT_CONTEXT_HPP_
 
 #include <string>
-#include <qi/transport/buffer.hpp>
 
 namespace qi {
   namespace transport {
 
+    /// <summary> The context used for Transport. This is typically a
+    /// shared resources such as io threads</summary>
     /// \ingroup Transport
     class TransportContext {
     public:
       TransportContext();
       ~TransportContext();
-
 
     protected:
       friend class TransportClient;
@@ -30,12 +30,15 @@ namespace qi {
       friend class TransportSubscriber;
       friend class TransportPublisher;
 
-      //protected because, this return implementation detail not relevant for users.
-      //that's why we have friend classes.
+      /// <summary>Gets a context. The method is protected because,
+      /// the return implementation is only relevant to friends
+      /// </summary>
+      /// <param name="address">An address.</param>
+      /// <returns>The context.</returns>
       template <typename T>
       T &getContext(const std::string &address) {
-        //we only have one context type, so we dont need address ATM
-        (void) address;
+        // we only have one context type, so we don't need address ATM
+        (void) address; // prevent warning
         return *static_cast<T*>(_ctx);
       }
 

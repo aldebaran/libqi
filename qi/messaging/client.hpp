@@ -12,9 +12,9 @@
 #define _QI_MESSAGING_CLIENT_HPP_
 
 #include <string>
-#include <boost/scoped_ptr.hpp>
 #include <qi/signature.hpp>
 #include <qi/serialization/serializer.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace qi {
   namespace detail {
@@ -22,7 +22,6 @@ namespace qi {
   }
 
   class Context;
-
 
   /// <summary>
   /// Used to call services that have been added to a server.
@@ -37,25 +36,28 @@ namespace qi {
     /// If the service is unknown, the master is interrogated
     /// to find the appropriate server
     /// </summary>
-    /// <param name="clientName">
+    /// <param name="name">
     /// The name you want to give to this client
     /// e.g. "client"
     /// </param>
-    /// <param name="masterAddress">
-    /// The address of the master that is used to find services
-    /// e.g. "127.0.0.1:5555"
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
     /// </param>
-    Client(const std::string& clientName = "", Context *ctx = 0);
+    Client(const std::string& name = "", qi::Context *context = 0);
 
     /// <summary> Reset to the default state, this will disconnect
     /// and reset the object, like a new fresh copy. </summary>
     /// <param name="name"> Name </param>
-    /// <param name="context"> an optional Context </param>
-    void reset(const std::string &name = "", Context *ctx = 0);
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    void reset(const std::string &name = "", qi::Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>
-    /// <param name="masterAddress"> The master address. </param>
+    /// <param name="masterAddress"> The master address. e.g 127.0.0.1:5555</param>
     void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
     virtual ~Client();

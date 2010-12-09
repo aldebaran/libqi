@@ -20,7 +20,9 @@ namespace qi {
     class MasterImpl;
   }
 
-  /// <summary> Master. </summary>
+  /// <summary> A central directory that allows Services and Topics to
+  /// be discovered.
+  /// </summary>
   /// \ingroup Messaging
   class Master {
   public:

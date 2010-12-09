@@ -18,8 +18,8 @@
 
 namespace qi {
   /// <summary>
-  /// Node: A combination of Server, Client, Publisher and
-  /// Subscriber
+  /// A combination of Server, Client, Publisher and Subscriber that
+  /// exposes all their methods.
   /// </summary>
   /// \ingroup Messaging
   class Node :
@@ -33,15 +33,21 @@ namespace qi {
     virtual ~Node();
 
     /// <summary> Creates a Node </summary>
-    /// <param name="nodeName"> Name of the node. Default: "Node" </param>
-    /// <param name="masterAddress"> The master address. </param>
-    Node(const std::string& nodeName = "", Context *ctx = 0);
+    /// <param name="name"> The name you want to give to the node. </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    Node(const std::string& name = "", qi::Context *context = 0);
 
     /// <summary> Reset to the default state, this will disconnect
     /// and reset the object, like a new fresh copy. </summary>
-    /// <param name="name"> Name </param>
-    /// <param name="context"> an optional Context </param>
-    void reset(const std::string &name = "", Context *ctx = 0);
+    /// <param name="name"> The name you want to give to the node. </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    void reset(const std::string &name = "", qi::Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>

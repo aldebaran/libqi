@@ -21,23 +21,38 @@ namespace qi {
   }
   class Context;
 
+  /// <summary>Used to distribute data on named Topics.
+  /// Advertised Topics are registered with the master so that
+  /// subscribers can find them.</summary>
   /// \ingroup Messaging
   class Publisher {
   public:
-    Publisher(const std::string &name = "", Context *ctx = 0);
+
+    /// <summary> Create a Publisher that can be used to distribute data
+    /// on named Topics
+    /// </summary>
+    /// <param name="name"> The name of the publisher </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    Publisher(const std::string &name = "", qi::Context *context = 0);
     virtual ~Publisher();
 
     /// <summary> Reset to the default state, this will disconnect
     /// and reset the object, like a new fresh copy. </summary>
-    /// <param name="name"> Name </param>
-    /// <param name="context"> an optional Context </param>
-    void reset(const std::string &name = "", Context *ctx = 0);
+    /// <param name="name"> The name of the publisher </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    void reset(const std::string &name = "", qi::Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>
-    /// <param name="masterAddress"> The master address. </param>
+    /// <param name="masterAddress"> The master address. e.g 127.0.0.1:5555
+    /// </param>
     void connect(const std::string &masterAddress = "127.0.0.1:5555");
-
 
     /// <summary>Advertises to the master that you wish to publish data
     /// of type "PUBLISH_TYPE" to a topic of name "topicName".</summary>
@@ -95,6 +110,8 @@ namespace qi {
     /// <param name="signature">The signature of the topic</param>
     void xAdvertiseTopic(const std::string& signature);
 
+    /// <summary>Unadvertises a Topic. </summary>
+    /// <param name="signature">The signature of the topic.</param>
     void xUnadvertiseTopic(const std::string& signature);
 
     /// <summary> Publishes a serialized message </summary>

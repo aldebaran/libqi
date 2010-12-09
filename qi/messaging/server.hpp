@@ -23,8 +23,8 @@ namespace qi {
 
   class Context;
 
-
-  /// <summary> Server. </summary>
+  /// <summary> Used to advertise named services. Advertised Services are
+  /// registered with the master so that clients can find them.</summary>
   /// \ingroup Messaging
   class Server {
   public:
@@ -34,15 +34,21 @@ namespace qi {
 
     /// <summary> Constructs a Server object that can be used to
     /// advertise services to clients. </summary>
-    /// <param name="serverName"> Name of the server. </param>
-    /// <param name="masterAddress"> The master address. </param>
-    Server(const std::string &serverName = "", Context *ctx = 0);
+    /// <param name="name"> The name you want to give to the server. </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    Server(const std::string &name = "", qi::Context *context = 0);
 
     /// <summary> Reset to the default state, this will disconnect
     /// and reset the object, like a new fresh copy. </summary>
-    /// <param name="name"> Name </param>
-    /// <param name="context"> an optional Context </param>
-    void reset(const std::string &name = "", Context *ctx = 0);
+    /// <param name="name"> The name you want to give to the server. </param>
+    /// <param name="context">
+    /// An optional context that can be used to group or separate
+    /// transport resources.
+    /// </param>
+    void reset(const std::string &name = "", qi::Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>
