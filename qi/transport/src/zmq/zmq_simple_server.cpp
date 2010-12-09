@@ -40,17 +40,17 @@ namespace qi {
 
       //use only the number of thread we need
       void ZMQSimpleServerBackend::run() {
+        std::string currentAddress;
         try {
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
-            qisDebug << "Binding Server to: " << _serverAddresses[i] << std::endl;
-            _zsocket.bind(_serverAddresses[i].c_str());
+            currentAddress = _serverAddresses[i];
+            qisDebug << "Binding Server to: " << currentAddress << std::endl;
+            _zsocket.bind(currentAddress.c_str());
           }
         } catch(const std::exception& e) {
-          qisError << "Bind Server Failed to: " << std::endl;
-          for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
-            qisError << _serverAddresses[i].c_str() << std::endl;
-          }
-          qisError << " Reason: " << e.what() << std::endl;
+          qisError << "Bind Server Failed to: " << currentAddress <<
+            " Reason: " << e.what() << std::endl;
+          // TODO throw here ?
           return;
         }
 
