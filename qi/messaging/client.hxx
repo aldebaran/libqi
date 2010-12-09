@@ -22,7 +22,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)()  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     xCall(hash, calldef, resultdef);
 
@@ -38,7 +38,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -51,7 +51,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     xCall(hash, calldef, resultdef);
@@ -68,7 +68,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -82,7 +82,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -100,7 +100,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -115,7 +115,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -134,7 +134,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -150,7 +150,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -170,7 +170,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -187,7 +187,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -208,7 +208,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -226,7 +226,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -248,7 +248,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -267,7 +267,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -290,7 +290,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -310,7 +310,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);
@@ -334,7 +334,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
 
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
@@ -355,7 +355,7 @@ namespace qi {
     qi::serialization::Message resultdef;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
-    std::string hash = makeSignature(methodName, f);
+    std::string hash = makeFunctionSignature(methodName, f);
     calldef.writeString(hash);
     qi::serialization::serialize<P0>::write(calldef, p0);
     qi::serialization::serialize<P1>::write(calldef, p1);

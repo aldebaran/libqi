@@ -35,7 +35,7 @@ namespace qi {
     qi::serialization::Message result;
 
     void (*f)()  = 0;
-    std::string signature = makeSignature(methodName, f);
+    std::string signature = makeFunctionSignature(methodName, f);
 
     msg.writeString(signature);
     xCall(signature, msg, result);

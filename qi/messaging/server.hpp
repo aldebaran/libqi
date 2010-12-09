@@ -80,7 +80,7 @@ namespace qi {
       const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
     {
       xAdvertiseService(
-        makeSignature(name, method),
+        makeFunctionSignature(name, method),
         makeFunctor(object, method));
     }
 
@@ -102,20 +102,20 @@ namespace qi {
     template <typename FUNCTION_TYPE>
     void advertiseService(const std::string& name, FUNCTION_TYPE function)
     {
-      xAdvertiseService(makeSignature(name, function), makeFunctor(function));
+      xAdvertiseService(makeFunctionSignature(name, function), makeFunctor(function));
     }
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void unadvertiseService(
       const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
     {
-      xUnadvertiseService(makeSignature(name, method));
+      xUnadvertiseService(makeFunctionSignature(name, method));
     }
 
     template <typename FUNCTION_TYPE>
     void unadvertiseService(const std::string& name, FUNCTION_TYPE function)
     {
-      xUnadvertiseService(makeSignature(name, function));
+      xUnadvertiseService(makeFunctionSignature(name, function));
     }
 
     bool isInitialized() const;

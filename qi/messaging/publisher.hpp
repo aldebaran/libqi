@@ -63,7 +63,7 @@ namespace qi {
     void advertiseTopic(const std::string& topicName)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
-      std::string signature = makeSignature(topicName, f);
+      std::string signature = makeFunctionSignature(topicName, f);
       xAdvertiseTopic(signature);
     }
 
@@ -74,7 +74,7 @@ namespace qi {
     void unadvertiseTopic(const std::string& topicName)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
-      std::string signature = makeSignature(topicName, f);
+      std::string signature = makeFunctionSignature(topicName, f);
       xUnadvertiseTopic(signature);
     }
 
@@ -102,7 +102,7 @@ namespace qi {
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
       qi::serialization::Message ser;
-      qi::serialization::serialize<std::string>::write(ser, makeSignature(topicName, f));
+      qi::serialization::serialize<std::string>::write(ser, makeFunctionSignature(topicName, f));
       qi::serialization::serialize<PUBLISH_TYPE>::write(ser, publishData);
       xPublish(ser.str());
     }

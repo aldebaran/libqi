@@ -81,7 +81,7 @@ namespace qi {
     template<typename FUNCTION_TYPE>
     void subscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
-      xSubscribe(makeSignature(topicName, callback), makeFunctor(callback));
+      xSubscribe(makeFunctionSignature(topicName, callback), makeFunctor(callback));
     }
 
     /// <summary>Subscribes to a published Topic.
@@ -102,19 +102,19 @@ namespace qi {
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void subscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
     {
-      xSubscribe(makeSignature(topicName, callback), makeFunctor(object, callback));
+      xSubscribe(makeFunctionSignature(topicName, callback), makeFunctor(object, callback));
     }
 
     template<typename FUNCTION_TYPE>
     void unsubscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
-      xUnsubscribe(makeSignature(topicName, callback));
+      xUnsubscribe(makeFunctionSignature(topicName, callback));
     }
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     void unsubscribe(const std::string& topicName, OBJECT_TYPE object, METHOD_TYPE callback)
     {
-      xUnsubscribe(makeSignature(topicName, callback));
+      xUnsubscribe(makeFunctionSignature(topicName, callback));
     }
 
   private:
