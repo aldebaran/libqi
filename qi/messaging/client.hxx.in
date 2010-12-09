@@ -18,7 +18,7 @@ def generate_argpush_list(count):
 #ifndef _QI_MESSAGING_CLIENT_HXX_IN_
 #define _QI_MESSAGING_CLIENT_HXX_IN_
 
-#include <qi/serialization/serializer.hpp>
+#include <qi/serialization.hpp>
 
 namespace qi {
 #end raw

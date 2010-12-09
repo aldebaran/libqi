@@ -13,7 +13,7 @@
 
 #include <string>
 #include <qi/signature.hpp>
-#include <qi/serialization/serializer.hpp>
+#include <qi/serialization.hpp>
 #include <boost/scoped_ptr.hpp>
 
 namespace qi {

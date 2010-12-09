@@ -10,7 +10,7 @@
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <qi/serialization/serializer.hpp>
+#include <qi/serialization.hpp>
 #include <qi/transport/buffer.hpp>
 #include <qi/messaging/src/network/endpoints.hpp>
 #include <qi/messaging/src/network/master_endpoint.hpp>

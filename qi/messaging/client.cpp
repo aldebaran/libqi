@@ -9,7 +9,7 @@
 #include <qi/messaging/client.hpp>
 #include <string>
 #include <qi/messaging/src/client_impl.hpp>
-#include <qi/serialization/serializer.hpp>
+#include <qi/serialization.hpp>
 
 
 namespace qi {
