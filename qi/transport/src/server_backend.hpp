@@ -24,6 +24,10 @@ namespace qi {
 
       class ServerBackend: public qi::detail::Runnable {
       public:
+        ServerBackend(const ServerBackend& rhs) :
+            _serverAddresses(rhs._serverAddresses),
+            _messageHandler(rhs._messageHandler) {}
+
         explicit ServerBackend(const std::vector<std::string> &_serverAddresses)
           : _serverAddresses(_serverAddresses),
             _messageHandler(0)

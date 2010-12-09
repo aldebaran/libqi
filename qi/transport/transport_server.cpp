@@ -18,6 +18,11 @@
 namespace qi {
   namespace transport {
 
+    TransportServer::TransportServer(const TransportServer& rhs) :
+      _isInitialized(rhs._isInitialized),
+      _transportContext(rhs._transportContext),
+      _transportServer(rhs._transportServer) {}
+
     TransportServer::TransportServer(TransportContext &context)
       : _isInitialized(false),
         _transportContext(context),

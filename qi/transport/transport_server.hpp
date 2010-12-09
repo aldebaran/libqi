@@ -30,6 +30,8 @@ namespace qi {
     public:
       virtual ~TransportServer();
 
+      TransportServer(const TransportServer& rhs);
+
       /// <summary>Constructor. </summary>
       /// <param name="context"> The context.</param>
       TransportServer(TransportContext &context);

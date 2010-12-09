@@ -21,6 +21,7 @@ namespace qi {
     /// \ingroup Transport
     class TransportContext {
     public:
+      TransportContext(const TransportContext& rhs);
       TransportContext();
       ~TransportContext();
 
