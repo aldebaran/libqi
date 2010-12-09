@@ -67,6 +67,9 @@ namespace qi {
       xAdvertiseTopic(signature);
     }
 
+    /// <summary> Unadvertises a topic</summary>
+    /// <param name="topicName">The name of the topic you wish to
+    /// unadvertise.</param>
     template<typename PUBLISH_TYPE>
     void unadvertiseTopic(const std::string& topicName)
     {
@@ -105,7 +108,6 @@ namespace qi {
     }
 
   protected:
-
     /// <summary>Advertises a Topic </summary>
     /// <param name="signature">The signature of the topic</param>
     void xAdvertiseTopic(const std::string& signature);

@@ -22,8 +22,15 @@ namespace qi {
   /// \ingroup Messaging
   class Context {
   public:
+
+    /// <summary>Default constructor. </summary>
     Context();
+
+    /// <summary>Finaliser. </summary>
     virtual ~Context();
+
+    /// <summary>Copy constructor. </summary>
+    /// <param name="rhs">The right hand side.</param>
     Context(const Context& rhs);
 
     /// <summary>Gets the context identifier. </summary>
@@ -43,11 +50,18 @@ namespace qi {
     void setTransportContext(transport::TransportContext* ctx);
 
   protected:
+    /// <summary> Identifier for the context </summary>
     std::string                      _contextID;
+    /// <summary> Context for the transport </summary>
     qi::transport::TransportContext *_transportContext;
 
   };
 
+  /// <summary>Gets the default qi context pointer. This is a global context
+  /// shared by all messaging components within a process unless their
+  /// context has been explicitly set.
+  /// </summary>
+  /// <returns>The default qi context pointer.</returns>
   extern qi::Context* getDefaultQiContextPtr();
 }
 

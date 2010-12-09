@@ -58,8 +58,11 @@ namespace qi {
     /// <param name="masterAddress"> The master address. </param>
     void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
+    /// <summary>Finaliser. </summary>
     virtual ~Subscriber();
 
+    /// <summary>Query if this object is initialized. </summary>
+    /// <returns>true if initialized, false if not.</returns>
     bool isInitialized() const;
 
     /// <summary>Subscribes to a published Topic.

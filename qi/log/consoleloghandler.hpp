@@ -17,6 +17,8 @@
 
 namespace qi {
   namespace log {
+
+    /// <summary> Can print colored logs to the console </summary>
     class ConsoleLogHandler {
     public:
       ConsoleLogHandler();
