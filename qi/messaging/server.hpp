@@ -41,7 +41,7 @@ namespace qi {
     /// An optional context that can be used to group or separate
     /// transport resources.
     /// </param>
-    Server(const std::string &name = "", qi::Context *context = 0);
+    Server(const std::string &name = "server", qi::Context *context = 0);
 
     /// <summary> Connect to masterAddress. If no address is specified
     /// the default 127.0.0.1:5555 is used </summary>

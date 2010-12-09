@@ -38,7 +38,7 @@ namespace qi {
     /// An optional context that can be used to group or separate
     /// transport resources.
     /// </param>
-    Publisher(const std::string &name = "", qi::Context *context = 0);
+    Publisher(const std::string &name = "publisher", qi::Context *context = 0);
     virtual ~Publisher();
 
     /// <summary> Connect to masterAddress. If no address is specified
