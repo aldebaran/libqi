@@ -16,6 +16,9 @@
 namespace qi {
   namespace transport {
 
+
+
+    /// \ingroup Transport
     class TransportSubscribeHandler {
     public:
       /// <summary> Generic subscribe handler. </summary>

@@ -8,6 +8,8 @@
 */
 
 
+
+
 #ifndef _QI_SIGNATURE_SIGNATURE_HPP_
 #define _QI_SIGNATURE_SIGNATURE_HPP_
 
@@ -26,58 +28,62 @@
 #endif
 
 namespace qi {
-    /** Return a signature based on the type passed.
-    * Ref and const are not computed
-    * those qualifiers are compiler details.
-    */
 
     //this is the entry point of all the signature machinery
-    template <typename T>
-    struct signature {
-      static std::string &value(std::string &valueRef) {
+
+  /// Return a signature based on the templated type T, provided in parameter to the struct.
+  /// Ref and const are not computed, those qualifiers are compiler details.
+  /// \ingroup Signature
+  /// \include example_qi_signature_type.cpp
+  template <typename T>
+  struct signature {
+    static std::string &value(std::string &valueRef) {
 #ifdef _QI_USE_RUNTIME_SIGNATURE
-        ::qi::detail::signature<T>::value(valueRef);
+      ::qi::detail::signature<T>::value(valueRef);
 #else
-        valueRef += ::boost::mpl::c_str< typename ::qi::detail::signature<T>::value >::value;
+      valueRef += ::boost::mpl::c_str< typename ::qi::detail::signature<T>::value >::value;
 #endif
-        return valueRef;
-      }
-
-      static std::string value() {
-        std::string valueRef;
-        return value(valueRef);
-      }
-    };
-
-    struct signatureFromObject {
-      template<typename T>
-      static std::string &value(const T *t, std::string &valueRef) {
-        (void) t;
-        return signature<T*>::value(valueRef);
-      }
-
-      template<typename T>
-      static std::string value(const T *t) {
-        (void) t;
-        std::string valueRef;
-        return signature<T*>::value(valueRef);
-      }
-
-      template<typename T>
-      static std::string &value(const T &t, std::string &valueRef) {
-        (void) t;
-        return signature<T>::value(valueRef);
-      }
-
-      template<typename T>
-      static std::string value(const T &t) {
-        (void) t;
-        std::string valueRef;
-        return signature<T>::value(valueRef);
-      }
-    };
-
+      return valueRef;
     }
+
+    static std::string value() {
+      std::string valueRef;
+      return value(valueRef);
+    }
+  };
+
+  /// Take the signature of an instanciated Object, it could be a references or a pointer.
+  /// \ingroup Signature
+  /// \include example_qi_signature_instance.cpp
+  struct signatureFromObject {
+    template<typename T>
+    static std::string &value(const T *t, std::string &valueRef) {
+      (void) t;
+      return signature<T*>::value(valueRef);
+    }
+
+    template<typename T>
+    static std::string value(const T *t) {
+      (void) t;
+      std::string valueRef;
+      return signature<T*>::value(valueRef);
+    }
+
+    template<typename T>
+    static std::string &value(const T &t, std::string &valueRef) {
+      (void) t;
+      return signature<T>::value(valueRef);
+    }
+
+    template<typename T>
+    static std::string value(const T &t) {
+      (void) t;
+      std::string valueRef;
+      return signature<T>::value(valueRef);
+    }
+  };
+
+
   /// Take the signature of a function with it's name. This is a simple wrapper arround qi::signatureFromObject.
   /// <param name="name"> the function name </param>
   /// <param name="f"> a function pointer to take the signature of </param>
