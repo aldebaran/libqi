@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SERIALIZATION_MESSAGE_HXX_
-#define _QI_SERIALIZATION_MESSAGE_HXX_
+#ifndef _QI_SERIALIZATION_SERIALIZE_HXX_
+#define _QI_SERIALIZATION_SERIALIZE_HXX_
 
 #if 0
 #define __QI_DEBUG_SERIALIZATION_W(x, extra) {                \
@@ -181,4 +181,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_SERIALIZATION_MESSAGE_HXX_
+#endif  // _QI_SERIALIZATION_SERIALIZE_HXX_

@@ -15,7 +15,7 @@
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
 #define QI_FUNCTOR_DEBUG(...)
 
-#include <qi/serialization/message.hpp>
+#include <qi/serialization.hpp>
 
 namespace qi
 {

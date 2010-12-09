@@ -7,8 +7,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
-#define _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
+#ifndef _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_
+#define _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_
 
 # include <qi/functors/functor.hpp>
 
@@ -357,4 +357,4 @@ namespace detail {
 
 }
 }
-#endif  // _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
+#endif  // _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_

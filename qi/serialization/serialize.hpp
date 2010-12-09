@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SERIALIZATION_MESSAGE_HPP_
-#define _QI_SERIALIZATION_MESSAGE_HPP_
+#ifndef _QI_SERIALIZATION_SERIALIZE_HPP_
+#define _QI_SERIALIZATION_SERIALIZE_HPP_
 
 #include <iostream>
 #include <qi/signature.hpp>
@@ -40,4 +40,4 @@ namespace qi {
 
 #include <qi/serialization/serialize.hxx>
 
-#endif  // _QI_SERIALIZATION_MESSAGE_HPP_
+#endif  // _QI_SERIALIZATION_SERIALIZE_HPP_

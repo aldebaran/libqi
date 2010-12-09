@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SERVICEINFO_HPP_
-#define _QI_MESSAGING_SERVICEINFO_HPP_
+#ifndef _QI_MESSAGING_SRC_SERVICEINFO_HPP_
+#define _QI_MESSAGING_SRC_SERVICEINFO_HPP_
 
 #include <string>
 #include <qi/functors/functor.hpp>
@@ -30,5 +30,5 @@ namespace qi {
     };
   }
 }
-#endif  // _QI_MESSAGING_SERVICEINFO_HPP_
+#endif  // _QI_MESSAGING_SRC_SERVICEINFO_HPP_
 
