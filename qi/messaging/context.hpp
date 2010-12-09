@@ -29,10 +29,6 @@ namespace qi {
     /// <summary>Finaliser. </summary>
     virtual ~Context();
 
-    /// <summary>Copy constructor. </summary>
-    /// <param name="rhs">The right hand side.</param>
-    Context(const Context& rhs);
-
     /// <summary>Gets the context identifier. </summary>
     /// <returns>The identifier.</returns>
     const std::string& getID() const;
@@ -55,6 +51,9 @@ namespace qi {
     /// <summary> Context for the transport </summary>
     qi::transport::TransportContext *_transportContext;
 
+  private:
+    // no copy constructor allowed
+    Context(const Context &rhs) {;}
   };
 
   /// <summary>Gets the default qi context pointer. This is a global context

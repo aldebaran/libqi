@@ -14,11 +14,6 @@ namespace qi {
       _contextID(qi::detail::getUUID()),
       _transportContext(new transport::TransportContext()) {}
 
-  Context::Context(const Context& rhs) {
-    _contextID = rhs._contextID;
-    _transportContext = rhs._transportContext;
-  }
-
   Context::~Context() {
     delete(_transportContext);
   }

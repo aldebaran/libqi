@@ -21,7 +21,6 @@ namespace qi {
     /// \ingroup Transport
     class TransportContext {
     public:
-      TransportContext(const TransportContext& rhs);
       TransportContext();
       ~TransportContext();
 
@@ -46,6 +45,10 @@ namespace qi {
     protected:
       /// <summary> The context </summary>
       void *_ctx;
+
+    private:
+      //private copy constructor
+      TransportContext(const TransportContext &) {;}
     };
 
   }

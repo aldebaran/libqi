@@ -13,9 +13,6 @@
 namespace qi {
   namespace transport {
 
-    TransportContext::TransportContext(const TransportContext& rhs) :
-      _ctx(rhs._ctx) {}
-
     TransportContext::TransportContext()
     {
       _ctx = static_cast<void *>(new zmq::context_t(1));
