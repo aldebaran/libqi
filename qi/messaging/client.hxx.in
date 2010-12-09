@@ -27,35 +27,41 @@ namespace qi {
 #for $i in $count
 
 #if $i != 0
+
+  /// <summary> Calls a void method </summary>
   template <${generate_typename_list($i)}>
   void Client::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::Message calldef;
-    qi::serialization::Message resultdef;
+    qi::serialization::Message request;
+    qi::serialization::Message reply;
 
     void (*f)(${generate_param_list($i)})  = 0;
-    calldef.writeString(makeFunctionSignature(methodName, f));
+    std::string signature = makeFunctionSignature(methodName, f);
+    request.writeString(signature);
     #for $j in range($i)
-    qi::serialization::serialize<P${j}>::write(calldef, p${j});
+    qi::serialization::serialize<P${j}>::write(request, p${j});
     #end for
-    xCall(hash, calldef, resultdef);
+    xCall(signature, request, reply);
   }
 #end if
 
+  /// <summary> Calls a method </summary>
+  /// <returns> The response </returns>
   template <typename R${generate_typename_list($i, begin=True)}>
   R Client::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::serialization::Message calldef;
-    qi::serialization::Message resultdef;
+    qi::serialization::Message request;
+    qi::serialization::Message reply;
 
     R (*f)(${generate_param_list($i)})  = 0;
-    calldef.writeString(makeFunctionSignature(methodName, f));
+    std::string signature = makeFunctionSignature(methodName, f);
+    request.writeString(signature);
     #for $j in range($i)
-    qi::serialization::serialize<P${j}>::write(calldef, p${j});
+    qi::serialization::serialize<P${j}>::write(request, p${j});
     #end for
-    xCall(hash, calldef, resultdef);
+    xCall(signature, request, reply);
 
-    //Optimise? I think compiler is smart enought to inline the returned object
+    // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(resultdef, ret);
+    qi::serialization::serialize<R>::read(reply, ret);
     return ret;
   }
 #end for
