@@ -71,7 +71,7 @@ namespace qi {
       void writeString(const std::string& t);
 
       /// <summary>Reads a double. </summary>
-      /// <param name="s">The result</param>
+      /// <param name="d">The result</param>
       void readDouble(double& d);
 
       /// <summary>Writes a double. </summary>
