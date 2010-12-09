@@ -47,8 +47,14 @@ namespace qi {
     /// </summary>
     class SharedSegmentInitializationException : public Exception {
     public:
+      /// <summary>Default constructor. </summary>
       SharedSegmentInitializationException () {}
+
+      /// <summary>Constructor. </summary>
+      /// <param name="message">The message.</param>
       SharedSegmentInitializationException (const std::string & message) : Exception(message) {}
+
+      /// <summary>Finaliser. </summary>
       virtual ~SharedSegmentInitializationException () throw () {}
     };
 

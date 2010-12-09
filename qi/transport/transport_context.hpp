@@ -43,6 +43,7 @@ namespace qi {
       }
 
     protected:
+      /// <summary> The context </summary>
       void *_ctx;
     };
 

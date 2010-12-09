@@ -50,7 +50,7 @@ namespace qi {
       virtual void bind(const std::string& endpoint);
 
       /// <summary>Binds to multiple endpoints </summary>
-      /// <param name="endpoint">
+      /// <param name="endpoints">
       /// A vector of fully qualified endpoints to bind to.
       /// </param>
       virtual void bind(const std::vector<std::string>& endpoints);
