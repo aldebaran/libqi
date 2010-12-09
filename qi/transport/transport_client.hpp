@@ -27,6 +27,7 @@ namespace qi {
     /// \ingroup Transport
     class TransportClient {
     public:
+      virtual ~TransportClient();
 
       /// <summary>Constructor. </summary>
       /// <param name="context">The context.</param>

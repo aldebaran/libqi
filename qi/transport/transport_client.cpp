@@ -18,8 +18,16 @@ namespace qi {
 
     TransportClient::TransportClient(TransportContext &context)
       : _transportContext(context),
-        _isInitialized(false)
+        _isInitialized(false),
+        _client(NULL)
     {
+    }
+
+    TransportClient::~TransportClient() {
+      if (_client != NULL) {
+        delete(_client);
+        _client = NULL;
+      }
     }
 
     bool TransportClient::connect(const std::string &endpoint) {
