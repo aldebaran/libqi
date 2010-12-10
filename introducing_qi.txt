@@ -1,0 +1,110 @@
+=== Introducing qi ===
+
+Some of you may have heard of "qi" or "NaoQi2" in recent times. This
+mail aims at introducing you all to the project as it stands, and
+welcoming you all as reviewers / critics / contributors. The name "qi"
+is provisional and not definitive. Reasonable suggestions for
+alternative names are welcomed.
+
+=== Overview ===
+
+The project is aimed at being an open source replacement for ALCommon
+with a target audience broader even than the robotics community. It
+will remain private to Aldebaran in early development, then open to
+the Developer Community and select partners once the core has become
+solid before being released to the wider community.
+
+ALCommon, ALNetwork, ALSoap, ALValue, ALFindIPPC and ALIPPC together
+provide communication services to the rest of the modules. This
+communication aspect is to be provided by a library called qiMessaging
+- more on this later.
+
+A vital aspect of communities such as ROS, and to some extent NaoQi
+today, is the ability to share libraries with each other and to be
+able to build and link them easily. This build aspect is to be
+provided by qiBuild - more on this later.
+
+=== qiMessaging ===
+Status: Unstable Beta - not production ready
+
+qiMessaging was designed with these goals:
+* Simple
+* Non-intrusive
+* Low memory
+* High Performance
+* Flexible
+* Distributed
+* Fast compilation
+
+Much early effort has gone into a very clear separation of public API
+and private implementation, so that the public API remains minimal, so
+that implementations can change without affecting the API, and that
+compilation times are fast. This same clear separation has been
+applied to the major constituent parts namely:
+
+messaging     : core user api
+functors      : abstraction of callable methods
+signatures    : description of types or methods
+serialization : converting types to transport or output formats
+transport     : sending and receiving of serialized data
+discovery     : finding each other in a distributed environment
+
+The public API is minimal and concentrated on exactly two messaging patterns:
+RPC     : synchronous request-reply services 
+         ( binding and calling in NaoQi )
+PUB/SUB : asynchronous one-to-many distribution on names Topics
+         ( events in NaoQi )
+
+For further information, please see the doxygen documentation:
+http://http://doc.aldebaran.lan/qimessaging
+
+=== qiBuild ===
+Status: Unstable Beta - not production ready
+
+QiBuild aims to make compilation of your sources easy. It manages
+dependencies between projects and supports easy cross-compilation.
+By default QiBuild use libraries provided by your system, but you
+can use QiToolchain to get a toolchain if you dont want to build 
+with your system libraries or want to cross-compile.
+
+It is composed of three parts:
+ - the QiBuild CMake Framework
+ - qibuild command line tool
+ - qitoolchain command line tool
+
+The QiBuild CMake framework is a major upgrade of t001chain, featuring
+many improvements:
+ - more compliant with cmake standards
+ - documented ( http://doc.aldebaran.lan/qibuild )
+ - by default no toolchain file is needed, this will build system libraries.
+ - all function starts with qi_
+ - submodule, documentation, globbing for qi_create_bin/qi_create_lib
+and all install rules.
+
+QiBuild is a command line tool, that allows building a project taking
+dependencies into account. It is a refactoring of toc.
+
+QiToolchain is a command line tool that manages toolchains. It fetches
+binary packages from an http server.
+
+=== Road map ===
+Dec 2010 Inernal beta release
+Jan 2011 qiMessaging API feature freeze
+Feb 2011 first extenal release to partners
+Apr 2011 qi integrated with Naoqi in beta
+Jul 2011 Release of a NaoQi that uses qi
+
+=== Conclusion ===
+
+No open source development is complete without its flame wars. Please join in:
+
+Use the mailing list:
+qi-dev@aldebaran-robotics.com
+
+Get the code:
+git@git.aldebaran.lan:qi/qimessaging.git
+git@git.aldebaran.lan:qi/qibuild.git
+
+Report bugs:
+Use the Flyspray qi categories
+
