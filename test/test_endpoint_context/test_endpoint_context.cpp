@@ -124,7 +124,7 @@ TEST(EndpointContext, isValidAddressRetValueInvalid)
   std::pair<std::string, int> res;
   std::string test = "127.0.0.655:5555";
   bool b = qi::detail::isValidAddress(test, res);
-  ASSERT_EQ(false, b) << "127.0.0.655:5555 was considered valid";
+  ASSERT_EQ(0, b) << "127.0.0.655:5555 was considered valid";
 }
 
 TEST(EndpointContext, isValidAddressIPRubbish)
@@ -132,7 +132,7 @@ TEST(EndpointContext, isValidAddressIPRubbish)
   std::pair<std::string, int> res;
   std::string test = "rubbish";
   bool b = qi::detail::isValidAddress(test, res);
-  ASSERT_EQ(false, b) << "rubbish was considered valid";
+  ASSERT_EQ(0, b) << "rubbish was considered valid";
   ASSERT_EQ(0, res.second) << "rubbish port not zero";
 }
 
@@ -161,7 +161,7 @@ TEST(validateMasterEndpoint, invalid)
   std::pair<std::string, int> res;
   std::string test = "oink:asdsad";
   bool b = qi::detail::validateMasterEndpoint(test, res);
-  ASSERT_EQ(false, b) << "asdasd:asdsad considered valid";
+  ASSERT_EQ(0, b) << "asdasd:asdsad considered valid";
   ASSERT_EQ(0, res.second) << "should be 0";
   ASSERT_EQ("oink", res.first) << "rubbish port not zero";
 }
