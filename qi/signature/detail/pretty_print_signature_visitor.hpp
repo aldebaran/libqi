@@ -17,9 +17,9 @@ namespace qi {
 
   namespace detail {
 
-    class SignatureVisitor {
+    class PrettyPrintSignatureVisitor {
     public:
-      SignatureVisitor(const char *signature, std::string &result);
+      PrettyPrintSignatureVisitor(const char *signature, std::string &result);
 
       void visit(const char *sep = " ");
 

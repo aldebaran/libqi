@@ -8,19 +8,19 @@
 
 #include <iostream>
 #include <qi/log.hpp>
-#include <qi/signature/detail/signature_visitor.hpp>
+#include <qi/signature/detail/pretty_print_signature_visitor.hpp>
 
 namespace qi {
   namespace detail {
 
-    SignatureVisitor::SignatureVisitor(const char *signature, std::string &result)
+    PrettyPrintSignatureVisitor::PrettyPrintSignatureVisitor(const char *signature, std::string &result)
       : _result(result),
         _current(signature),
         _signature(signature),
         _method("")
     {}
 
-    void SignatureVisitor::visit(const char *sep) {
+    void PrettyPrintSignatureVisitor::visit(const char *sep) {
       if (_current == _signature)
         visitFunction();
 
@@ -42,7 +42,7 @@ namespace qi {
       }
     }
 
-    void SignatureVisitor::visitFunction() {
+    void PrettyPrintSignatureVisitor::visitFunction() {
       const char* sep = "::";
       const char* delimiter = strstr(_signature, sep);
       if (delimiter == NULL)
@@ -51,7 +51,7 @@ namespace qi {
       _current = delimiter + 2;
     }
 
-    void SignatureVisitor::visitSingle() {
+    void PrettyPrintSignatureVisitor::visitSingle() {
       switch(*_current) {
       case '[':
         visitList();
@@ -77,7 +77,7 @@ namespace qi {
       }
     }
 
-    void SignatureVisitor::visitSimple() {
+    void PrettyPrintSignatureVisitor::visitSimple() {
       switch(*_current) {
       case 'b':
         _result += "bool";
@@ -104,7 +104,7 @@ namespace qi {
       _current++;
     }
 
-    void SignatureVisitor::visitFunctionArguments() {
+    void PrettyPrintSignatureVisitor::visitFunctionArguments() {
       _result += _method;
       _result += "(";
       _current++;
@@ -112,7 +112,7 @@ namespace qi {
       _result += ")";
     }
 
-    void SignatureVisitor::visitList() {
+    void PrettyPrintSignatureVisitor::visitList() {
       _result += "vector<";
       _current++;
       visitSingle();
@@ -120,7 +120,7 @@ namespace qi {
       _current++;
     }
 
-    void SignatureVisitor::visitMap() {
+    void PrettyPrintSignatureVisitor::visitMap() {
       _result += "map<";
       _current++;
       visitSingle();
@@ -130,7 +130,7 @@ namespace qi {
       _current++;
     }
 
-    void SignatureVisitor::visitProtobuf() {
+    void PrettyPrintSignatureVisitor::visitProtobuf() {
       _result += "Protobuf(";
       _current++;
 
