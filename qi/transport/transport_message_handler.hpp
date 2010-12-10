@@ -16,6 +16,9 @@
 namespace qi {
   namespace transport {
 
+    /// <summary> Server Interface. You need to create a class that inherit TransportMessageHandler
+    /// and implement messageHandler. Each time a server receive a request, it will call messageHandler
+    /// with a request, you should then complete the reply.</summary>
     /// \ingroup Transport
     class TransportMessageHandler {
     public:

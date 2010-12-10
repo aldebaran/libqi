@@ -24,6 +24,8 @@ namespace qi {
     class TransportMessageHandler;
     class TransportContext;
 
+    /// <summary> TransportServer, you need to register a TransportMessageHandler object,
+    /// that will handle each message.</summary>
     /// \ingroup Transport
     class TransportServer
     {
