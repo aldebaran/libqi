@@ -18,6 +18,9 @@ namespace qi {
 
 
 
+    /// <summary> Subscriber Interface. You need to create a class that inherit TransportSubscribeHandler
+    /// and implement subscribeHandler. Each time the subscriber receive a request, it will call subscribeHandler
+    /// with the message received.</summary>
     /// \ingroup Transport
     class TransportSubscribeHandler {
     public:
