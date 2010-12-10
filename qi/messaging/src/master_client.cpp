@@ -20,9 +20,10 @@ namespace qi {
     MasterClient::~MasterClient() {}
 
     MasterClient::MasterClient(qi::Context *ctx)
-      : _qiContextPtr( (ctx == NULL)? getDefaultQiContextPtr() : ctx),
-      _transportClient(_qiContextPtr->getTransportContext()),
-      _isInitialized(false)
+      : _isInitialized(false),
+        _qiContextPtr( (ctx == NULL)? getDefaultQiContextPtr() : ctx),
+        _transportClient(_qiContextPtr->getTransportContext())
+
     {
     }
 

@@ -18,8 +18,8 @@ namespace qi {
 
     TransportSubscriber::TransportSubscriber(TransportContext &ctx)
       : _transportContext(ctx),
-        _subscribeHandler(NULL),
-        _subscriber(NULL)
+        _subscriber(NULL),
+        _subscribeHandler(NULL)
     {
     }
 
