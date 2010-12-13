@@ -33,6 +33,8 @@ namespace qi {
           _zsocketworkers(_zcontext, ZMQ_XREQ),
           _zsocket(_zcontext, ZMQ_XREP)
       {
+        int linger = 0;
+        _zsocket.setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
       }
 
       ZMQServerQueueBackend::~ZMQServerQueueBackend () {

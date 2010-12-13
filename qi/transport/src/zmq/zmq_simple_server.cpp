@@ -27,6 +27,8 @@ namespace qi {
           _zcontext(context),
           _zsocket(_zcontext, ZMQ_REP)
       {
+        int linger = 0;
+        _zsocket.setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
       }
 
       ZMQSimpleServerBackend::~ZMQSimpleServerBackend () {
