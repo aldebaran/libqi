@@ -10,12 +10,12 @@
 //we want PimpL for module: we count instanciate a real module, or a proxied one
 
 #include <qi/serialization/message.hpp>
-#include <qi/signature/detail/signature_visitor.hpp>
+#include <qi/signature/signature_lexer.hpp>
 
 namespace qi {
   namespace serialization {
 
-    class MessageVisitor : public qi::detail::SignatureVisitor
+    class MessageVisitor
     {
     public:
       MessageVisitor(Message &msg, const char *signature);
@@ -31,6 +31,7 @@ namespace qi {
       virtual void onProtobuf(const std::string &name);
 
     protected:
+      qi::SignatureLexer          _lexer;
       qi::serialization::Message &_message;
     };
 

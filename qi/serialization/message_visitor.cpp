@@ -7,7 +7,7 @@ namespace qi {
 
 
     MessageVisitor::MessageVisitor(Message &msg, const char *signature)
-      : SignatureVisitor(signature),
+      : _lexer(signature),
         _message(msg)
     {
 
@@ -16,7 +16,7 @@ namespace qi {
     void MessageVisitor::visit()
     {
       std::cout << "visit" << std::endl;
-      SignatureVisitor::visit();
+      //SignatureVisitor::visit();
     }
 
     void MessageVisitor::onFunction(const std::string &name, const char *prototype)
