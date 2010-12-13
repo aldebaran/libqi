@@ -10,11 +10,7 @@
 #include <qi/functors/functor.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/functors/callfunctor.hpp>
-#include <qi/perf/dataperftimer.hpp>
 #include <cmath>
-
-
-static const int gLoopCount   = 1000000;
 
 static int gGlobalResult = 0;
 
@@ -160,68 +156,4 @@ TEST(TestBind, MultiArgVoidFun) {
   functor = qi::makeFunctor(&vfun6);
   qi::callVoidFunctor(functor, 1, 2, 3, 4, 5, 6);
   EXPECT_EQ(21, gGlobalResult);
-}
-
-TEST(TestBind, VoidCallPerf) {
-  Foo           chiche;
-  Foo          *p = &chiche;
-  qi::serialization::Message   res;
-  qi::serialization::Message  cd;
-
-  qi::perf::DataPerfTimer dp;
-  qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::voidCall);
-  std::cout << "qi::Functor call" << std::endl;
-  dp.start(gLoopCount);
-  for (int i = 0; i < gLoopCount; ++i)
-  {
-    functor->call(cd, res);
-  }
-  dp.stop();
-
-  std::cout << "pointer call" << std::endl;
-  dp.start(gLoopCount);
-  for (int i = 0; i < gLoopCount; ++i)
-  {
-    p->voidCall();
-  }
-  dp.stop();
-}
-
-TEST(TestBind, IntStringCallPerf) {
-  Foo           chiche;
-  Foo          *p = &chiche;
-  qi::serialization::Message res;
-
-  qi::perf::DataPerfTimer dp;
-
-  std::cout << "qi::Functor call (string with a growing size)" << std::endl;
-
-  for (int i = 0; i < 12; ++i)
-  {
-    unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string     request = std::string(numBytes, 'B');
-    qi::serialization::Message  cd;
-    qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::intStringCall);
-
-    cd.writeString(request);
-    dp.start(gLoopCount, numBytes);
-    for (int j = 0; j < gLoopCount; ++j) {
-      functor->call(cd, res);
-    }
-    dp.stop();
-  }
-
-  std::cout << "pointer call (string with a growing size)" << std::endl;
-  for (int i = 0; i < 12; ++i)
-  {
-    unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
-    std::string     request = std::string(numBytes, 'B');
-
-    dp.start(gLoopCount, numBytes);
-    for (int j = 0; j < gLoopCount; ++j) {
-      p->intStringCall(request);
-    }
-    dp.stop();
-  }
-
 }
