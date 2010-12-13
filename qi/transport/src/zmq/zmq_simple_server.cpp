@@ -8,7 +8,7 @@
 
 #include <qi/transport/src/zmq/zmq_simple_server.hpp>
 #include <qi/transport/src/zmq/zmq_connection_handler.hpp>
-
+#include <qi/perf/sleep.hpp>
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
@@ -34,6 +34,8 @@ namespace qi {
       }
 
       ZMQSimpleServerBackend::~ZMQSimpleServerBackend () {
+        _running = false;
+        sleep(1); // allow the polling loop to terminate before killing the socket :(
       }
 
       void ZMQSimpleServerBackend::wait () {
@@ -84,7 +86,7 @@ namespace qi {
           try {
             bool isMessageReceived = false;
             while (! isMessageReceived) {
-              isMessageReceived = poll(1000 * 1000); // 1s in us
+              isMessageReceived = poll(500 * 1000); // 0.5s in us
               if (!_running) {
                 return;
               }
