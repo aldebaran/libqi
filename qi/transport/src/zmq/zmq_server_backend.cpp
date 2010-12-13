@@ -40,7 +40,7 @@ namespace qi {
       void ZMQServerBackend::stop () {
       }
 
-      void ZMQServerBackend::poll() {
+      bool ZMQServerBackend::poll(long timeout) {
         int             rc = 0;
         zmq_pollitem_t  items[1];
 
@@ -49,9 +49,9 @@ namespace qi {
         items[0].events  = ZMQ_POLLIN;
         items[0].revents = 0;
 
-        rc = zmq_poll(&items[0], 1, -1);
+        rc = zmq::poll(&items[0], 1, timeout);
         assert(rc > 0);
-        assert(items[0].revents & ZMQ_POLLIN);
+        return (items[0].revents & ZMQ_POLLIN);
       }
 
       //receive the message in parameter, return the identity
@@ -62,7 +62,10 @@ namespace qi {
         zmq::message_t *identity = new zmq::message_t();
 
         // alsdebug << "ZMQ: waiting for a message";
-        poll();
+        bool haveMessage = false;
+        while (haveMessage == false) {
+          haveMessage = poll(1000 * 1000);
+        }
         boost::mutex::scoped_lock lock(_socketMutex);
         {
           rc = _zsocket.recv(identity);

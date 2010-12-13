@@ -51,7 +51,7 @@ namespace qi {
         /// <summary>Force the server to stop and wait for complete stop.</summary>
         void stop();
 
-        void poll();
+        bool poll(long timeout);
         void serverResponseHandler(const std::string &result, void *data = 0);
 
 //        ResultHandler *getResultHandler() { return 0; }
