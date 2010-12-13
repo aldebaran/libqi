@@ -35,6 +35,7 @@ void handler3(const std::string& msg) {
 }
 
 TEST(MessagingPublisher, simpleCase) {
+  gMaster.run();
   Subscriber sub("subscriber");
   Publisher pub("publisher");
   pub.connect();
@@ -67,9 +68,9 @@ TEST(MessagingPublisher , publisher)
     str << i;
     p.publish("hello", str.str());
     p.publish("goodbye", str.str());
-    if (i==20) {
-      s.unsubscribe("goodbye", &handler2);
-    }
+    //if (i==20) {
+    //  s.unsubscribe("goodbye", &handler2);
+    //}
     sleep(0.1f);
   }
 
