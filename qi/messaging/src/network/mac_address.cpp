@@ -73,17 +73,30 @@ namespace qi {
   }
 }
 
-#else  // end WIN32
+#elif defined(__APPLE__)
 
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <net/if.h>
+namespace qi {
+  namespace detail {
+    //TODO: this is broken by design, we should ask for available interface
+    std::string getFirstMacAddress() {
+      return std::string("en0");
+    }
 
-#if defined(__APPLE__)
-# include <net/if.h>
+    //TODO: this is broken by design too
+    std::string getMacAddres(std::string pIfInterface)
+    {
+      return std::string("42:42:42:42:42:42");
+    }
+  }
+}
+
 #else
-# include <linux/if.h>
-#endif
-
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <linux/if.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <cstring>
