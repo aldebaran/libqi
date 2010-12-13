@@ -77,7 +77,13 @@ namespace qi {
 
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <if.h>  # on linux: <linux/if.h> on mac: <net/if.h>
+
+#if defined(__APPLE__)
+# include <net/if.h>
+#else
+# include <linux/if.h>
+#endif
+
 #include <netdb.h>
 #include <stdio.h>
 #include <cstring>
