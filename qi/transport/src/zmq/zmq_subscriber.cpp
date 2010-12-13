@@ -71,6 +71,7 @@ namespace qi {
               std::cout << "ZMQSubscriber::recv failed." << std::endl;
               return;
             }
+            std::string data((char *)msg.data(), msg.size());
             // No way to notice that the subscriber handler has
             // been deallocated. If it has, this will segfault
             this->getSubscribeHandler()->subscribeHandler(data);
