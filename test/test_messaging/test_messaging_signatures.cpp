@@ -6,6 +6,7 @@
 #include <qi/messaging.hpp>
 #include <qi/exceptions/exceptions.hpp>
 #include "alvalue.pb.h"
+#include <qi/perf/sleep.hpp>
 
 using namespace qi;
 
@@ -67,12 +68,17 @@ std::string gMasterAddress = "127.0.0.1:5555";
 std::string gServerName = "server";
 std::string gServerAddress = "127.0.0.1:5556";
 
-Master master(gMasterAddress);
-Server server(gServerName);
-Client client("client");
+Master master;
+Server server;
+Client client;
 
 TEST(NodeSignatures, echo_bool)
 {
+  master.run();
+  server.connect();
+  sleep(1);
+  client.connect();
+
   bool b = true;
   server.advertiseService("echo", &echo_bool);
   bool r = client.call<bool>("echo", b);
@@ -122,13 +128,13 @@ TEST(NodeSignatures, echo_string2)
 }
 
 
-TEST(NodeSignatures, echo_double)
-{
-  double b = 987986889.87987987979789;
-  server.advertiseService("echo", &echo_double);
-  double r = client.call<double>("echo", b);
-  ASSERT_EQ(b, r);
-}
+//TEST(NodeSignatures, DISABLE_echo_double)
+//{
+//  double b = 987986889.87987987979789;
+//  server.advertiseService("echo", &echo_double);
+//  double r = client.call<double>("echo", b);
+//  ASSERT_EQ(b, r);
+//}
 
 TEST(NodeSignatures, echo_char)
 {
