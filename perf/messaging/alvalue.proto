@@ -1,0 +1,25 @@
+//Sample ALValue Protobuf wrapper
+
+package ALCompat;
+
+message ALValue {
+  required ValueType        type        = 1 [default = EMPTY];
+
+  optional bool             boolValue   = 2;
+  optional int32            int32Value  = 3;
+  optional float            floatValue  = 4;
+  optional double           doubleValue = 5;
+  optional string           stringValue = 6;
+  repeated ALValue          vectorValue = 7;
+
+  enum ValueType {
+    EMPTY  = 0;
+    BOOL   = 1;
+    INT    = 2;
+    FLOAT  = 3;
+    DOUBLE = 4;
+    STRING = 5;
+    VECTOR = 6;
+  }
+
+}
