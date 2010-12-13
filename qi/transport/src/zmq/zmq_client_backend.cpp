@@ -40,7 +40,7 @@ namespace qi {
         items[0].events  = ZMQ_POLLIN;
         items[0].revents = 0;
 
-        rc = zmq_poll(items, 1, timeout);
+        rc = zmq::poll(items, 1, timeout);
         std::cout << "timeout:" << timeout << std::endl;
         std::cout << "Rc:" << rc << std::endl;
         std::cout << "PollIn:" << (items[0].revents) << std::endl;
