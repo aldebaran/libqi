@@ -61,31 +61,29 @@ struct Foo {
   // two nasty cases
   std::vector<std::string> fun0vvvvv()                                                              { std::vector<std::string>s; return s; }
   void vfun0c() const                                                                               { gGlobalResult = 0; }
-
 };
 
-std::string gMasterAddress = "127.0.0.1:5555";
-std::string gServerName = "server";
-std::string gServerAddress = "127.0.0.1:5556";
 
 Master master;
 Server server;
 Client client;
 
-TEST(NodeSignatures, echo_bool)
+TEST(MessagingSignatures, setup)
 {
   master.run();
   server.connect();
-  sleep(1);
   client.connect();
+}
 
+TEST(MessagingSignatures, echo_bool)
+{
   bool b = true;
   server.advertiseService("echo", &echo_bool);
   bool r = client.call<bool>("echo", b);
   ASSERT_EQ(b, r);
 }
 
-TEST(NodeSignatures, echo_int)
+TEST(MessagingSignatures, echo_int)
 {
   int b = 42;
   server.advertiseService("echo", &echo_int);
@@ -93,7 +91,7 @@ TEST(NodeSignatures, echo_int)
   ASSERT_EQ(b, r);
 }
 
-TEST(NodeSignatures, echo_float)
+TEST(MessagingSignatures, echo_float)
 {
   float b = 42.42f;
   server.advertiseService("echo", &echo_float);
@@ -101,7 +99,7 @@ TEST(NodeSignatures, echo_float)
   ASSERT_EQ(b, r);
 }
 
-TEST(NodeSignatures, echo_string)
+TEST(MessagingSignatures, echo_string)
 {
   std::string b = "42";
   server.advertiseService("echo", &echo_string);
@@ -109,7 +107,7 @@ TEST(NodeSignatures, echo_string)
   ASSERT_EQ(b, r);
 }
 
-TEST(NodeSignatures, echo_string1)
+TEST(MessagingSignatures, echo_string1)
 {
   std::string a = "hello";
   std::string b = "world";
@@ -118,7 +116,7 @@ TEST(NodeSignatures, echo_string1)
   ASSERT_EQ(a, r);
 }
 
-TEST(NodeSignatures, echo_string2)
+TEST(MessagingSignatures, echo_string2)
 {
   std::string a = "hello";
   std::string b = "world";
@@ -128,7 +126,7 @@ TEST(NodeSignatures, echo_string2)
 }
 
 
-//TEST(NodeSignatures, DISABLE_echo_double)
+//TEST(MessagingSignatures, DISABLE_echo_double)
 //{
 //  double b = 987986889.87987987979789;
 //  server.advertiseService("echo", &echo_double);
@@ -136,7 +134,7 @@ TEST(NodeSignatures, echo_string2)
 //  ASSERT_EQ(b, r);
 //}
 
-TEST(NodeSignatures, echo_char)
+TEST(MessagingSignatures, echo_char)
 {
   char b = 'c';
   server.advertiseService("echo", &echo_char);
@@ -144,7 +142,7 @@ TEST(NodeSignatures, echo_char)
   ASSERT_EQ(b, r);
 }
 
-TEST(NodeSignatures, echo_myawesomeness)
+TEST(MessagingSignatures, echo_myawesomeness)
 {
   ALCompat::ALValue miam;
   //miam.PrintDebugString();
@@ -157,7 +155,7 @@ TEST(NodeSignatures, echo_myawesomeness)
   ASSERT_EQ(miam.type(), r.type());
 }
 
-TEST(NodeSignatures, allFunctorsBindAndCall)
+TEST(MessagingSignatures, allFunctorsBindAndCall)
 {
   server.advertiseService("vfun0", &vfun0);
   server.advertiseService("vfun1", &vfun1);
@@ -250,11 +248,10 @@ TEST(NodeSignatures, allFunctorsBindAndCall)
   (void) fi4;
   (void) fi5;
   (void) fi6;
-
 }
 
 
-TEST(NodeSignatures, MethodOverloading)
+TEST(MessagingSignatures, MethodOverloading)
 {
   server.advertiseService("overload.fun1", &fun1);
   server.advertiseService("overload.fun1", &fun2);
@@ -264,7 +261,7 @@ TEST(NodeSignatures, MethodOverloading)
   ASSERT_EQ(1, r1);
 }
 
-TEST(NodeSignatures, MultipleBind)
+TEST(MessagingSignatures, MultipleBind)
 {
   server.advertiseService("multiple.fun1", &fun1);
   server.advertiseService("multiple.fun1", &fun1);
@@ -276,7 +273,7 @@ TEST(NodeSignatures, MultipleBind)
   server.advertiseService("multiple.fun1", &fun1);
 }
 
-TEST(NodeSignatures, paramTypeChecking)
+TEST(MessagingSignatures, paramTypeChecking)
 {
   server.advertiseService("typechecking.fun1", &fun1);
   int r2 = client.call<int>("typechecking.fun1", 1);
@@ -285,11 +282,11 @@ TEST(NodeSignatures, paramTypeChecking)
     int r3 = client.call<int>("typechecking.fun1", std::string("anything"));
     (void) r3;
   } catch (const qi::transport::ServiceNotFoundException& e) {
-    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
+    std::cout << "ServiceNotFoundException: " << e.what() << std::endl;
   }
 }
 
-TEST(NodeSignatures, paramNumChecking)
+TEST(MessagingSignatures, paramNumChecking)
 {
   server.advertiseService("paramnumchecking.fun1", &fun1);
   int r2 = client.call<int>("paramnumchecking.fun1", 1);
@@ -298,20 +295,19 @@ TEST(NodeSignatures, paramNumChecking)
     int r3 = client.call<int>("paramnumchecking.fun1", 1, 2);
     (void) r3;
   } catch (const qi::transport::ServiceNotFoundException& e) {
-    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
+    std::cout << "ServiceNotFoundException: " << e.what() << std::endl;
   }
 }
 
-TEST(NodeSignatures, ReturnTypeChecking)
+TEST(MessagingSignatures, returnTypeChecking)
 {
   server.advertiseService("returntype.fun1", &fun1);
-  //KABOOOM!
   int r2 = client.call<int>("returntype.fun1", 1);
   (void) r2;
   try {
     std::string s = client.call<std::string>("returntype.fun1", 1);
     (void) s;
   } catch (const qi::transport::ServiceNotFoundException& e) {
-    std::cout << "ServiceNotFoundException:" << e.what() << std::endl;
+    std::cout << "ServiceNotFoundException: " << e.what() << std::endl;
   }
 }
