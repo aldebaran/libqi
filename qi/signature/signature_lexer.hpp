@@ -38,7 +38,9 @@ namespace qi {
     std::string message;
   };
 
-
+  /// <summary>
+  /// Signature Lexer, this will return type composing a signature one by one.
+  /// </summary>
   class SignatureLexer {
   public:
     SignatureLexer(const char *signature);
@@ -50,8 +52,8 @@ namespace qi {
       const char         *child_2;
     };
 
+    /// <summary> return an element representing a type </summary>
     SignatureLexer::Element getNext();
-
 
   protected:
     void eat() { _current++; }
