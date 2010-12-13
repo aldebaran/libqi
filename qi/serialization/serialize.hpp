@@ -12,6 +12,7 @@
 #define _QI_SERIALIZATION_SERIALIZE_HPP_
 
 #include <iostream>
+#include <typeinfo>
 #include <qi/signature.hpp>
 
 namespace qi {
