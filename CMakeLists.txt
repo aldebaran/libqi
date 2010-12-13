@@ -115,9 +115,11 @@ if (UNIX)
 endif(UNIX)
 
 add_subdirectory(test)
-add_subdirectory(examples)
+
 add_subdirectory(bin)
 create_doxygen("Doxyfile")
 
 add_subdirectory(bindings/python)
 #add_subdirectory(bindings/ruby)
+cond_subdirectory(examples WITH_EXAMPLES)
+cond_subdirectory(perf     WITH_PERF)
