@@ -19,9 +19,11 @@ namespace qi {
           _context(context),
           _socket(_context, ZMQ_SUB)
       {
-        
+
         int linger = 0;
+#ifdef ZMQ_LINGER
         _socket.setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
+#endif
         // Use no subscribe filter
         _socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
       }

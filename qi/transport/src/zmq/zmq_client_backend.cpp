@@ -21,7 +21,9 @@ namespace qi {
           _zsocket(context, ZMQ_REQ)
       {
         int linger = 0;
+#ifdef ZMQ_LINGER
         _zsocket.setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
+#endif
         connect();
       }
 

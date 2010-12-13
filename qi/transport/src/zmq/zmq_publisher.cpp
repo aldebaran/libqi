@@ -18,7 +18,9 @@ namespace qi {
         _socket(_context, ZMQ_PUB)
       {
         int linger = 0;
+#ifdef ZMQ_LINGER
         _socket.setsockopt(ZMQ_LINGER, &linger, sizeof(linger));
+#endif
       }
 
       ZMQPublisher::~ZMQPublisher() {}
