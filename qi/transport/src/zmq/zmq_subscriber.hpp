@@ -37,13 +37,14 @@ namespace qi {
         /// </param>
         void connect(const std::string& subscribeAddress);
 
+        bool poll(long timeout);
+
         void receive();
 
       protected:
         bool            _isClosing;
         zmq::context_t &_context;
         zmq::socket_t   _socket;
-        zmq::socket_t   _control;
         boost::thread   _receiveThread;
       };
     }

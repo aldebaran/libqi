@@ -17,8 +17,7 @@ namespace qi {
       ZMQSubscriber::ZMQSubscriber(zmq::context_t &context)
         : _isClosing(false),
           _context(context),
-          _socket(_context, ZMQ_SUB),
-          _control(_context, ZMQ_PUB)
+          _socket(_context, ZMQ_SUB)
       {
         
         int linger = 0;
@@ -29,34 +28,27 @@ namespace qi {
 
       ZMQSubscriber::~ZMQSubscriber() {
         _isClosing = true;
-        // Discussion: We have a blocking receive in
-        // progress. This is rather difficult to interrupt.
-        // We have various options:
-        // 1) close the socket ( doesn't work ... error in receive)
-        // 2) terminate the context ( meant to work , but...)
-        // 3) use poll with short timeout and signal an exit
-        // 4) send a poison message to the receiver.
-
-        // Poison message: Unfortunately, it uses an extra socket
-        // and probably requires a unique socket name, otherwise
-        // the second subscriber will fail the bind.
-        zmq::message_t msg(7);
-        memcpy(msg.data(), "!KILL!", 7);
-        //  Send kill signal to receive socket
-        _control.send(msg);
-        // if the socket tries to close before being killed,
-        // we will deadlock
         sleep(1.0);
       }
 
       void ZMQSubscriber::connect(const std::string &publishAddress)
       {
-        // FIXME:
-        // this will not work if sharing the same context,
-        // as another subscriber... need uuid
-        _control.bind("inproc://control");
         _socket.connect(publishAddress.c_str());
-        _socket.connect("inproc://control");
+      }
+
+      bool ZMQSubscriber::poll(long timeout) {
+        int             rc = 0;
+        zmq_pollitem_t  items[1];
+
+        items[0].socket  = _socket;
+        items[0].fd      = 0;
+        items[0].events  = ZMQ_POLLIN;
+        items[0].revents = 0;
+
+        // unfortunately there is an assert in getsockopt
+        rc = zmq::poll(&items[0], 1, timeout);
+        assert(rc >= 0);
+        return (items[0].revents & ZMQ_POLLIN);
       }
 
       void ZMQSubscriber::receive()
@@ -66,15 +58,15 @@ namespace qi {
           while(!_isClosing)
           {
             zmq::message_t msg;
-            ok = _socket.recv (&msg);
+            bool haveMessage = false;
+            while (!haveMessage) {
+              haveMessage = poll(1000*1000);
+              if (_isClosing)
+                return;
+            }
+            ok = _socket.recv(&msg);
             if (!ok) {
               std::cout << "ZMQSubscriber::recv failed." << std::endl;
-              return;
-            }
-            std::string data;
-            data.assign((char *)msg.data(), msg.size());
-            if (strcmp((char *)msg.data(), "!KILL!")==0) {
-              std::cout << "ZMQSubscriber:: received kill message" << std::endl;
               return;
             }
             // No way to notice that the subscriber handler has
