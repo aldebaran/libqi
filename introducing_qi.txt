@@ -50,7 +50,7 @@ transport     : sending and receiving of serialized data
 discovery     : finding each other in a distributed environment
 
 The public API is minimal and concentrated on exactly two messaging patterns:
-RPC     : synchronous request-reply services 
+RPC     : synchronous request-reply services
          ( binding and calling in NaoQi )
 PUB/SUB : asynchronous one-to-many distribution on names Topics
          ( events in NaoQi )
@@ -64,13 +64,13 @@ Status: Unstable Beta - not production ready
 QiBuild aims to make compilation of your sources easy. It manages
 dependencies between projects and supports easy cross-compilation.
 By default QiBuild use libraries provided by your system, but you
-can use QiToolchain to get a toolchain if you dont want to build 
+can use QiToolchain to get a toolchain if you dont want to build
 with your system libraries or want to cross-compile.
 
 It is composed of three parts:
  - the QiBuild CMake Framework
- - qibuild command line tool
- - qitoolchain command line tool
+ - the qibuild command line tool
+ - the qitoolchain command line tool
 
 The QiBuild CMake framework is a major upgrade of t001chain, featuring
 many improvements:
@@ -78,17 +78,17 @@ many improvements:
  - documented ( http://doc.aldebaran.lan/qibuild )
  - by default no toolchain file is needed, this will build system libraries.
  - all function starts with qi_
- - submodule, documentation, globbing for qi_create_bin/qi_create_lib
-and all install rules.
+ - submodule, globbing, new install rules, look at the doc for more information.
+
 
 QiBuild is a command line tool, that allows building a project taking
 dependencies into account. It is a refactoring of toc.
 
-QiToolchain is a command line tool that manages toolchains. It fetches
+QiToolchain is a brand new command line tool that manages toolchains. It fetches
 binary packages from an http server.
 
 === Road map ===
-Dec 2010 Inernal beta release
+Dec 2010 Internal beta release
 Jan 2011 qiMessaging API feature freeze
 Feb 2011 first extenal release to partners
 Apr 2011 qi integrated with Naoqi in beta
