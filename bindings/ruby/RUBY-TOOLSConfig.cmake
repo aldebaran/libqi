@@ -1,16 +1,10 @@
-###
-#
-# Could one day contain stuff such as:
-#
-#   - Wrappers around SWIG
-#
-#   - Auto-generation of setup.py files
-#
-#   - Adding a "python setup.py install --prefix=CMAKE_INSTALL_PREFIX" command
-#
-#  ....
-
-include("${TOOLCHAIN_DIR}/cmake/libfind.cmake")
+##
+## Author(s):
+##  - Dimitri Merejkowsky <dmerejkowsky@aldebaran-robotics.com>
+##  - Cedric GESTES <gestes@aldebaran-robotics.com>
+##
+## Copyright (C) 2010 Aldebaran Robotics
+##
 
 
 #############
@@ -22,7 +16,13 @@ include("${TOOLCHAIN_DIR}/cmake/libfind.cmake")
 # /!\ The module_name must be the same as the one declare in ${interface_file}
 # for instance, if module_name equals Foo, Foo.i must contain:
 #   %module Foo
+#
+# After this, you should be able to use "require ./Foo" in a ruby script
 ##############
+
+include("${TOOLCHAIN_DIR}/cmake/libfind.cmake")
+
+
 function(wrap_ruby module_name interface_file)
 
   ##
@@ -72,7 +72,7 @@ function(wrap_ruby module_name interface_file)
 
   # Re-create install rules:
   install(TARGETS ${_swig_target}
-    COMPONENT python
+    COMPONENT ruby
     LIBRARY DESTINATION "${_SDK_LIB}"
     RUNTIME DESTINATION "${_SDK_LIB}"
   )
