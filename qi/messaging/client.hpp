@@ -29,6 +29,7 @@ namespace qi {
   /// Used to call services that have been added to a server.
   /// If the service is unknown, the master is interrogated
   /// to find the appropriate server.
+  /// \image html client-call-overview.png
   /// </summary>
   /// \include example_qi_client.cpp
   /// \ingroup Messaging
