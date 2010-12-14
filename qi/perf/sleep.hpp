@@ -19,8 +19,19 @@
     ::Sleep((int)(t * 1000));
   }
 
+  template<typename T>
+  inline void msleep(const T& t) {
+    ::Sleep((int)(t));
+  }
+
 #else
 # include <unistd.h>
+
+  inline void msleep(const long &t) {
+    //TODO if sleeptime is bigger that 1sec, this will not work... prefer using nanosleep
+    usleep(t * 1000);
+  }
+
 #endif
 
 #endif  // _QI_PERF_SLEEP_HPP_
