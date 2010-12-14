@@ -174,12 +174,18 @@ std::string echo(const std::string& in) {
 TEST(ClientServer, defaultArgs)
 {
   Master master;
-  master.run();
-  Server server;
-  server.connect();
-  server.advertiseService("server.echo", &echo);
   Client client;
+  Server server;
+
+  //should not wait for the master to be really available
+  master.run();
+
+  //wait for the master
+  server.connect();
   client.connect();
+
+  server.advertiseService("server.echo", &echo);
+
   std::string arg = "hello world";
   std::string ret = client.call<std::string>("server.echo", arg);
   ASSERT_EQ(arg, ret);
