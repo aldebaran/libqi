@@ -10,6 +10,8 @@
 #include <qi/transport/src/zmq/zmq_client_backend.hpp>
 #include <qi/exceptions/exceptions.hpp>
 #include <iostream>
+#include <qi/log.hpp>
+#include <qi/perf/sleep.hpp>
 
 namespace qi {
   namespace transport {
@@ -30,12 +32,27 @@ namespace qi {
       }
 
       /// <summary> Connects to the server </summary>
+      /// this is a little bit tricky, zmq does asynchronous connect/bind. Inproc will fail if
+      /// bind is not ready
       void ZMQClientBackend::connect()
       {
-        _zsocket.connect(_serverAddress.c_str());
-        //TODO: check that the connection is OK
-        //sleep(1);
+        int i = 3;
+        while (i > 0)
+        {
+          try {
+            _zsocket.connect(_serverAddress.c_str());
+            return;
+          } catch(const std::exception& e) {
+            qisDebug << "ZMQClientBackend failed to create client for address \""
+                << _serverAddress << "\" Reason: " << e.what() << std::endl;
+            qisDebug << "retrying.." << std::endl;
+          }
+          ++i;
+          msleep(100);
+        }
+        throw qi::transport::Exception("ZMQClientBackend cant connect.");
       }
+
 
       /// <summary> Sends. </summary>
       /// <param name="tosend"> The data to send. </param>
