@@ -16,6 +16,28 @@ namespace qi {
     void MessageVisitor::visit()
     {
       std::cout << "visit" << std::endl;
+      qi::SignatureLexer::Element elt;
+
+      while (true) {
+        elt = _lexer.getNext();
+        switch (elt.signature[0]) {
+        case '[':
+          onList(elt.child_1);
+          break;
+        case '{':
+          onMap(elt.child_1, elt.child_2);
+          break;
+        case '@':
+          onProtobuf(elt.signature);
+          break;
+        default:
+          onSimple(elt.signature);
+          break;
+        }
+
+        if (!elt.signature || !elt.signature[0])
+          break;
+      }
       //SignatureVisitor::visit();
     }
 
@@ -35,17 +57,17 @@ namespace qi {
       std::cout << "simple type:" << (char) simpleType[0] << std::endl;
     }
 
-    void MessageVisitor::onList(const int count, const char *elementType)
+    void MessageVisitor::onList(const char *elementType)
     {
       std::cout << "list" << std::endl;
     }
 
-    void MessageVisitor::onMap(const int count, const char *keyType, const char *valueType)
+    void MessageVisitor::onMap(const char *keyType, const char *valueType)
     {
       std::cout << "map" << std::endl;
     }
 
-    void MessageVisitor::onProtobuf(const std::string &name)
+    void MessageVisitor::onProtobuf(const char *signature)
     {
       std::cout << "protobuf" << std::endl;
     }

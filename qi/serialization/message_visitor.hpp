@@ -26,9 +26,9 @@ namespace qi {
       virtual void onFunction(const std::string &name, const char *prototype);
       virtual void onFunctionPrototype(const char *returnType, const char *argumentsType);
       virtual void onSimple(const char *simpleType);
-      virtual void onList(const int count, const char *elementType);
-      virtual void onMap(const int count, const char *keyType, const char *valueType);
-      virtual void onProtobuf(const std::string &name);
+      virtual void onList(const char *elementType);
+      virtual void onMap(const char *keyType, const char *valueType);
+      virtual void onProtobuf(const char *name);
 
     protected:
       qi::SignatureLexer          _lexer;
