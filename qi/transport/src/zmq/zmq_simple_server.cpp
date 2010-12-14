@@ -23,7 +23,8 @@ namespace qi {
       //#define ZMQ_FULL_ASYNC
 
       ZMQSimpleServerBackend::ZMQSimpleServerBackend(const std::vector<std::string> &serverAddresses, zmq::context_t &context)
-        : ServerBackend(serverAddresses),
+        : _running(false),
+          ServerBackend(serverAddresses),
           _zcontext(context),
           _zsocket(_zcontext, ZMQ_REP)
       {
@@ -55,7 +56,6 @@ namespace qi {
 
         // unfortunately there is an assert in getsockopt
         rc = zmq::poll(&items[0], 1, timeout);
-        assert(rc >= 0);
         return (items[0].revents & ZMQ_POLLIN);
       }
 
@@ -80,6 +80,7 @@ namespace qi {
 #else
         qisDebug << "ZMQ: entering the loop (REP)" << std::endl;
 #endif
+        _running = true;
         while (_running) {
           zmq::message_t  msg;
 
@@ -102,10 +103,6 @@ namespace qi {
 #endif
           } catch(const zmq::error_t& e) {
             _running = false;
-            //int linger;
-            // do something to the socket
-            //_zsocket.getsockopt(ZMQ_LINGER, &linger, (size_t *)sizeof(linger));
-            //_zsocket.~socket_t();
             qisError << "ZMQSimpleServerBackend::run Fatal error, stopping. Reason: " << e.what() << std::endl;
           }
         }
