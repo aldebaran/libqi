@@ -13,6 +13,7 @@
 
 # include <qi/transport/buffer.hpp>
 # include <qi/transport/src/client_backend.hpp>
+# include <qi/transport/src/zmq/zmq_poll_client.hpp>
 # include <zmq.hpp>
 
 namespace qi {
@@ -33,7 +34,6 @@ namespace qi {
         ZMQClientBackend(const std::string &servername, zmq::context_t &context);
 
         virtual void send(const std::string &tosend, std::string &result);
-        void pollRecv(long timeout);
 
 
       protected:
@@ -42,6 +42,7 @@ namespace qi {
       protected:
         zmq::context_t &_zcontext;
         zmq::socket_t   _zsocket;
+        ZMQPollClient   _poll;
       };
     }
   }
