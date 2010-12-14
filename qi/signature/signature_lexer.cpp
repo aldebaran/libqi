@@ -78,6 +78,10 @@ namespace qi {
       eat();
       break;
 
+    //this is the end of the signature
+    case 0:
+      return elt;
+
     default:
       std::stringstream ss;
       ss << "signature bad format: " << _signature;
