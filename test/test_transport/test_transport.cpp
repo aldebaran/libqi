@@ -16,7 +16,7 @@
 #include <qi/transport.hpp>
 #include <qi/transport/src/zmq/zmq_server_backend.hpp>
 #include <qi/transport/src/zmq/zmq_server_queue_backend.hpp>
-#include <qi/transport/src/zmq/zmq_simple_server.hpp>
+#include <qi/transport/src/zmq/zmq_simple_server_backend.hpp>
 #include <qi/transport/src/zmq/zmq_client_backend.hpp>
 
 #include <boost/shared_ptr.hpp>

@@ -13,7 +13,7 @@
 #include <qi/transport/transport_context.hpp>
 #include <qi/transport/transport_message_handler.hpp>
 #include <qi/transport/src/server_backend.hpp>
-#include <qi/transport/src/zmq/zmq_simple_server.hpp>
+#include <qi/transport/src/zmq/zmq_simple_server_backend.hpp>
 
 namespace qi {
   namespace transport {
