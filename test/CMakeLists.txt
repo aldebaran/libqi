@@ -8,5 +8,5 @@ add_subdirectory(test_signature)
 add_subdirectory(test_log)
 add_subdirectory(test_c_bindings)
 add_subdirectory(test_endpoint_context)
-cond_subdirectory(test_thrift_serialization WITH_THRIFT)
+add_subdirectory(test_serialization)
 
