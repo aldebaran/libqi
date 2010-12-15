@@ -17,7 +17,8 @@ namespace qi {
       ZMQSubscriber::ZMQSubscriber(zmq::context_t &context)
         : _isClosing(false),
           _context(context),
-          _socket(_context, ZMQ_SUB)
+          _socket(_context, ZMQ_SUB),
+          _poller(_socket)
       {
 
         int linger = 0;
@@ -38,40 +39,15 @@ namespace qi {
         _socket.connect(publishAddress.c_str());
       }
 
-      bool ZMQSubscriber::poll(long timeout) {
-        int             rc = 0;
-        zmq_pollitem_t  items[1];
-
-        items[0].socket  = _socket;
-        items[0].fd      = 0;
-        items[0].events  = ZMQ_POLLIN;
-        items[0].revents = 0;
-
-        // unfortunately there is an assert in getsockopt
-        rc = zmq::poll(&items[0], 1, timeout);
-        assert(rc >= 0);
-        return (items[0].revents & ZMQ_POLLIN);
-      }
-
       void ZMQSubscriber::receive()
       {
-        bool ok;
         try {
           while(!_isClosing)
           {
             zmq::message_t msg;
-            bool haveMessage = false;
-            while (!haveMessage) {
-              haveMessage = poll(1000*1000);
-              if (_isClosing)
-                return;
-            }
-            ok = _socket.recv(&msg);
-            if (!ok) {
-              std::cout << "ZMQSubscriber::recv failed." << std::endl;
-              return;
-            }
+            _poller.recv(&msg, 10 * 1000 * 1000);
             std::string data((char *)msg.data(), msg.size());
+
             // No way to notice that the subscriber handler has
             // been deallocated. If it has, this will segfault
             this->getSubscribeHandler()->subscribeHandler(data);

@@ -11,10 +11,12 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
 
-# include <qi/transport/src/subscriber_backend.hpp>
-# include <boost/thread.hpp>
-# include <zmq.hpp>
-# include <boost/shared_ptr.hpp>
+#include <qi/transport/src/subscriber_backend.hpp>
+#include <qi/transport/src/zmq/zmq_poll_client.hpp>
+#include <boost/thread.hpp>
+#include <zmq.hpp>
+#include <boost/shared_ptr.hpp>
+
 
 namespace qi {
   namespace transport {
@@ -37,14 +39,13 @@ namespace qi {
         /// </param>
         void connect(const std::string& subscribeAddress);
 
-        bool poll(long timeout);
-
         void receive();
 
       protected:
         bool            _isClosing;
         zmq::context_t &_context;
         zmq::socket_t   _socket;
+        ZMQPollClient   _poller;
         boost::thread   _receiveThread;
       };
     }
