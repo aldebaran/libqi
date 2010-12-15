@@ -52,7 +52,8 @@ namespace qi {
         items[0].revents = 0;
 
         rc = zmq::poll(&items[0], 1, timeout);
-        assert(rc > 0);
+        //assert(rc > 0);
+        //TODO: use ZMQPollCLient
         return (items[0].revents & ZMQ_POLLIN);
       }
 
