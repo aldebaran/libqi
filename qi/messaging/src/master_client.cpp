@@ -17,7 +17,20 @@ namespace qi {
     using qi::transport::Buffer;
     using qi::serialization::Message;
 
-    MasterClient::~MasterClient() {}
+    static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v:s");
+    static const std::string methodRegisterTopic("master.registerTopic::v:ss");
+    static const std::string methodUnregisterTopic("master.unregisterTopic::v:ss");
+    static const std::string methodGetNewPort("master.getNewPort::i:s");
+    static const std::string methodRegisterMachine("master.registerMachine::v:sssi");
+    static const std::string methodRegisterEndpoint("master.registerEndpoint::v:issssii");
+    static const std::string methodTopicExists("master.topicExists::b:s");
+    static const std::string methodLocateService("master.locateService::s:ss");
+    static const std::string methodRegisterService("master.registerService::v:ss");
+    static const std::string methodUnregisterService("master.unregisterService::v:s");
+    static const std::string methodLocateTopic("master.locateTopic::s:ss");
+
+    MasterClient::~MasterClient() {
+    }
 
     MasterClient::MasterClient(qi::Context *ctx)
       : _isInitialized(false),
@@ -57,11 +70,10 @@ namespace qi {
       if (!_isInitialized) {
         return 0;
       }
-      static const std::string method("master.getNewPort::i:s");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodGetNewPort);
       msg.writeString(machineID);
       _transportClient.send(msg.str(), ret);
       Message retSer(ret);
@@ -74,10 +86,9 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method = "master.registerMachine::v:sssi";
       Buffer ret;
       Message msg;
-      msg.writeString(method);
+      msg.writeString(methodRegisterMachine);
       msg.writeString(m.hostName);
       msg.writeString(m.machineID);
       msg.writeString(m.publicIP);
@@ -89,11 +100,10 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.registerEndpoint::v:issssii");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodRegisterEndpoint);
       msg.writeInt((int)e.type);
       msg.writeString(e.name);
       msg.writeString(e.endpointID);
@@ -108,10 +118,9 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.unregisterEndpoint::v:s");
       Buffer ret;
       Message msg;
-      msg.writeString(method);
+      msg.writeString(methodUnregisterEndpoint);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
     }
@@ -122,8 +131,7 @@ namespace qi {
       }
       Buffer ret;
       Message msg;
-      static const std::string method("master.locateService::s:ss");
-      msg.writeString(method);
+      msg.writeString(methodLocateService);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
@@ -139,11 +147,10 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.registerService::v:ss");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodRegisterService);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
@@ -154,11 +161,10 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.unregisterService::v:s");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodUnregisterService);
       msg.writeString(methodSignature);
       _transportClient.send(msg.str(), ret);
     }
@@ -169,8 +175,8 @@ namespace qi {
       }
       Buffer ret;
       Message msg;
-      static const std::string method("master.locateTopic::s:ss");
-      msg.writeString(method);
+
+      msg.writeString(methodLocateTopic);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
@@ -185,11 +191,10 @@ namespace qi {
       if (!_isInitialized) {
         return false;
       }
-      static const std::string method("master.topicExists::b:s");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodTopicExists);
       msg.writeString(signature);
       _transportClient.send(msg.str(), ret);
       Message retSer(ret);
@@ -204,11 +209,10 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.registerTopic::v:ss");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodRegisterTopic);
       msg.writeString(signature);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
@@ -221,11 +225,10 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      static const std::string method("master.unregisterTopic::v:ss");
       Buffer ret;
       Message msg;
 
-      msg.writeString(method);
+      msg.writeString(methodUnregisterTopic);
       msg.writeString(signature);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
