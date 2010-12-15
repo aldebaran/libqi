@@ -66,7 +66,7 @@ TEST(TransportZMQPublisher , MillionPerSecond)
     publisher.publish(msg);
   }
 
-  sleep(2);
+  sleep(10);
   int result = handler.getCount();
   ASSERT_EQ( numMessages, result) << "Did not receive all messages";
 }
@@ -77,7 +77,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
 {
   int numMessages = 100000;
 
-  const unsigned int numSubscribers = 80;
+  const unsigned int numSubscribers = 10;
   std::cout << "Using " << numSubscribers << " subscribers" << std::endl;
   std::vector<SubscribePerfHandler*>         handlers;
   std::vector< qi::transport::detail::ZMQSubscriber*> subscribers;
@@ -92,7 +92,6 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     handlers.push_back(hand);
     subscribers.push_back(sub);
   }
-  sleep(2);
   qi::transport::detail::ZMQPublisher publisher(ctx);
   publisher.bind("tcp://127.0.0.1:5555");
 
@@ -104,7 +103,7 @@ TEST(TransportZMQPublisher , MultipleSubscribers)
     publisher.publish(msg);
   }
   std::cout << " Done." << std::endl;
-  sleep(3);
+  sleep(10);
   int result = 0;
   for(unsigned int i=0; i < numSubscribers; ++i) {
     result += handlers[i]->getCount();
