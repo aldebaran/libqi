@@ -16,7 +16,7 @@ namespace qi {
     namespace detail {
       ZMQPollClient::ZMQPollClient(zmq::socket_t &socket)
         : _zsocket(socket),
-          _first_time(1)
+          _first_time(true)
       {
         _items[0].socket  = _zsocket;
         _items[0].fd      = 0;
@@ -29,7 +29,9 @@ namespace qi {
         int             rc = 0;
 
         rc = zmq::poll(_items, 1, timeout);
-        qisDebug << "ZMQPollClient: timeout:" << timeout << std::endl;
+        //if (rc <= 0) { // less debug when ok
+        //  qisDebug << "ZMQPollClient rc:" << rc << " _items[0].revents: " << _items[0].revents << " timeout: " << timeout << std::endl;
+        //}
         if ((rc <= 0) || (!(_items[0].revents & ZMQ_POLLIN)))
           return -1;
         return 0;
@@ -40,18 +42,18 @@ namespace qi {
         if (_first_time) {
           int rc = 0;
           long elapsed = 0;
-          _first_time = 0;
+          _first_time = false;
           do {
-            rc = pollRecv(1000);
+            rc = pollRecv(10 * 1000); // 10 ms
             elapsed += 1;
           } while (rc < 0 && elapsed < usTimeout);
           if (rc < 0)
-            throw qi::transport::Exception("no response");
+            throw qi::transport::Exception("No response received.");
         }
         else
         {
-          if (pollRecv(usTimeout) < 0)
-            throw qi::transport::Exception("no response");
+           if (pollRecv(usTimeout) < 0)
+            throw qi::transport::Exception("No response received.");
         }
         _zsocket.recv(msg);
       }
