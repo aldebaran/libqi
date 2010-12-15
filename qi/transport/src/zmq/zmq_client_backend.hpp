@@ -42,7 +42,7 @@ namespace qi {
       protected:
         zmq::context_t &_zcontext;
         zmq::socket_t   _zsocket;
-        ZMQPollClient   _poll;
+        ZMQPollClient   _poller;
       };
     }
   }
