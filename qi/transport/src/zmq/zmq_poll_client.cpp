@@ -50,7 +50,8 @@ namespace qi {
         }
         else
         {
-          pollRecv(usTimeout);
+          if (pollRecv(usTimeout) < 0)
+            throw qi::transport::Exception("no response");
         }
         _zsocket.recv(msg);
       }
