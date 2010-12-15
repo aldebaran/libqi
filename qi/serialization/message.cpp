@@ -76,7 +76,7 @@ namespace qi {
     void Message::writeString(const std::string &s)
     {
       writeInt(s.size());
-      if (s.size()) {
+      if (!s.empty()) {
         fData.append(s.data(), s.size());
         __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
       }
