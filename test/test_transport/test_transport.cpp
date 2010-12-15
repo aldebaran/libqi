@@ -174,7 +174,7 @@ qi::transport::detail::ServerBackend *makeServer(zmq::context_t &ctx)
 
 }
 
-void start_client(int count, zmq::context_t &ctx)
+void start_client(int count, zmq::context_t *ctx)
 {
     boost::thread thd[100];
 
@@ -185,7 +185,7 @@ void start_client(int count, zmq::context_t &ctx)
       qi::transport::detail::ClientBackend *client = 0;
       std::cout << "starting thread: " << i << std::endl;
       sleep(1);
-      client = makeClient(i, ctx);
+      client = makeClient(i, *ctx);
       thd[i] = boost::thread(boost::bind(&main_client, client));
     }
 
@@ -212,14 +212,14 @@ int main_server(zmq::context_t *ctx)
 
 int main(int argc, char **argv)
 {
-  zmq::context_t ctx(1);
+  zmq::context_t *ctx = new zmq::context_t(1);
   if (argc > 1 && !strcmp(argv[1], "--client")) {
     start_client(1, ctx);
   } else if (argc > 1 && !strcmp(argv[1], "--server")) {
-    return main_server(&ctx);
+    return main_server(ctx);
   } else {
     //start the server
-    boost::thread threadServer(boost::bind(&main_server, &ctx));
+    boost::thread threadServer(boost::bind(&main_server, ctx));
     sleep(1);
     start_client(gThreadCount, ctx);
   }
