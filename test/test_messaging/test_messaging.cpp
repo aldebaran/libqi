@@ -130,41 +130,64 @@ TEST(MasterTest, createWithContext)
 
 
 
-//TEST(ClientServer, explicitAddressPlusContext)
-//{
-//  //sleep(10);
-//  Context* c = new Context();
-//  std::string address = "127.0.0.1:5555";
-//  Master master(address, c);
-//  master.run();
-//  Server server("server", c);
-//  server.connect(address);
-//  server.advertiseService("server.echo", &echo);
-//  Client client("client", c);
-//  client.connect(address);
-//  std::string arg = "hello world";
-//  std::string ret = client.call<std::string>("server.echo", arg);
-//  ASSERT_EQ(arg, ret);
-//  delete(c);
-//}
+TEST(ClientServer, explicitAddressPlusContextPointer)
+{
+  //sleep(10);
+  Context* c = new Context();
+  //context should be destroyed after, each socket that use them
+  {
+    std::string address = "127.0.0.1:5555";
+    Master master(address, c);
+    master.run();
+    Server server("server", c);
+    server.connect(address);
+    server.advertiseService("server.echo", &echo);
+    Client client("client", c);
+    client.connect(address);
+    std::string arg = "hello world";
+    std::string ret = client.call<std::string>("server.echo", arg);
+    ASSERT_EQ(arg, ret);
+  }
+  delete(c);
+}
 
-//TEST(ClientServer, explicitAddressPlusContext2)
-//{
-//  //sleep(10);
-//  Context* c = new Context();
-//  std::string address = "127.0.0.1:5555";
-//  Master master(address, c);
-//  master.run();
-//  Server server("server", c);
-//  server.connect(address);
-//  server.advertiseService("server.echo", &echo);
-//  Client client("client", c);
-//  client.connect(address);
-//  std::string arg = "hello world";
-//  std::string ret = client.call<std::string>("server.echo", arg);
-//  ASSERT_EQ(arg, ret);
-//  delete(c);
-//}
+
+TEST(ClientServer, explicitAddressPlusContext)
+{
+  Context c;
+  //context should be destroyed after, each socket that use them
+  {
+    std::string address = "127.0.0.1:5555";
+    Master master(address, &c);
+    master.run();
+    Server server("server", &c);
+    server.connect(address);
+    server.advertiseService("server.echo", &echo);
+    Client client("client", &c);
+    client.connect(address);
+    std::string arg = "hello world";
+    std::string ret = client.call<std::string>("server.echo", arg);
+    ASSERT_EQ(arg, ret);
+  }
+}
+
+TEST(ClientServer, explicitAddressPlusContextNoScope)
+{
+  Context c;
+  //context should be destroyed after, each socket that use them
+  std::string address = "127.0.0.1:5555";
+  Master master(address, &c);
+  master.run();
+  Server server("server", &c);
+  server.connect(address);
+  server.advertiseService("server.echo", &echo);
+  Client client("client", &c);
+  client.connect(address);
+  std::string arg = "hello world";
+  std::string ret = client.call<std::string>("server.echo", arg);
+  ASSERT_EQ(arg, ret);
+}
+
 
 
 TEST(ClientServer, defaultArgs)
