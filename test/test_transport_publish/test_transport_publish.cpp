@@ -43,10 +43,10 @@ struct SubscribePerfHandler : qi::transport::TransportSubscribeHandler {
     fExpectedMessages(expectedMessages) {}
 };
 
-TEST(TransportZMQPublisher , MillionPerSecond)
+TEST(TransportZMQPublisher , HundredThousandPerSecond)
 {
   int numMillions = 1;
-  int numMessages = numMillions * 1000000;
+  int numMessages = numMillions * 100000;
   zmq::context_t ctx1(1);
   zmq::context_t ctx2(1);
 
