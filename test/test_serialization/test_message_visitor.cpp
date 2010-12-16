@@ -50,3 +50,27 @@ TEST(TestMessageVisitor, Basic)
   mv.visit();
   //EXPECT_EQ()
 }
+
+TEST(TestMessageCopyVisitor, Basic)
+{
+  qi::serialization::Message msg1;
+  qi::serialization::Message msg2;
+
+  int i = 42;
+  std::string s = "paf";
+  qi::serialization::serialize<int>::write(msg1, i);
+  qi::serialization::serialize<std::string>::write(msg1, s);
+
+  qi::serialization::MessageCopyVisitor<qi::serialization::Message, qi::serialization::Message> mv(msg1, msg2, "is");
+  mv.visit();
+
+  std::cout << "finished visit" << std::endl;
+  int i2;
+  std::string s2;
+
+  qi::serialization::serialize<int>::read(msg2, i2);
+  qi::serialization::serialize<std::string>::read(msg2, s2);
+
+  EXPECT_EQ(42, i2);
+  EXPECT_EQ("paf", s2);
+}
