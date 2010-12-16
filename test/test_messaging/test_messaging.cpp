@@ -226,21 +226,21 @@ TEST(ClientServer, explicitAddress)
   ASSERT_EQ(arg, ret);
 }
 
-//TEST(ClientServer, explicitAddressPlusOne)
-//{
-//  sleep(1);
-//  std::string address = "127.0.0.1:5556";
-//  Master master(address);
-//  master.run();
-//  Server server;
-//  server.connect(address);
-//  server.advertiseService("server.echo", &echo);
-//  Client client;
-//  client.connect(address);
-//  std::string arg = "hello world";
-//  std::string ret = client.call<std::string>("server.echo", arg);
-//  ASSERT_EQ(arg, ret);
-//}
+TEST(ClientServer, explicitAddressPlusOne)
+{
+  sleep(1);
+  std::string address = "127.0.0.1:5555";
+  Master master(address);
+  master.run();
+  Server server;
+  server.connect(address);
+  server.advertiseService("server.echo", &echo);
+  Client client;
+  client.connect(address);
+  std::string arg = "hello world";
+  std::string ret = client.call<std::string>("server.echo", arg);
+  ASSERT_EQ(arg, ret);
+}
 
 
 void ping() {
