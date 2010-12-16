@@ -13,7 +13,7 @@ create_gtest(perf_messaging_stress
  TIMEOUT 120)
 
 create_gtest(perf_messaging_signatures
- SRC test_messaging_signatures.cpp ${PROTO_SRC}
+ SRC perf_messaging_signatures.cpp ${PROTO_SRC}
  DEPENDENCIES QI GTEST
  TIMEOUT 120)
  
