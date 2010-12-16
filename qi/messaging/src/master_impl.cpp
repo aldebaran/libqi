@@ -221,9 +221,15 @@ namespace qi {
         qisDebug << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
         return "";
       }
-      std::string endpoint = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
-      qisDebug << "Master::locateTopic: Resolved: " << topicName << " to " << endpoint << std::endl;
-      return endpoint;
+      std::string ret;
+      const EndpointContext& e = _knownEndpoints.get(endpointID);
+      if (e.type == PUBLISHER_ENDPOINT) {
+          ret = xNegotiateEndpoint(endpointID, t.publishEndpointID);
+      } else {
+          ret = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
+      }
+      qisDebug << "Master::locateTopic: Resolved: " << topicName << " to " << ret << std::endl;
+      return ret;
     }
 
     std::string MasterImpl::xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID) {
@@ -245,7 +251,6 @@ namespace qi {
       std::string endpoint = negotiateEndpoint(clientContext, serverContext, serverMachineContext);
       return endpoint;
     }
-
 
     void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
       //FIXME: check for existence
