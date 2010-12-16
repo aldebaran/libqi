@@ -1,4 +1,4 @@
-/** \mainpage Qi - a lightweight cross language open source communication framework
+/** \mainpage Qi - a lightweight open source communication framework
 
 \b Qi is a lightweight communication framework for high performance messaging
 between distributed processes in memory-constrained environments.
@@ -11,12 +11,12 @@ Qi was designed with the following goals:
 - Simple
 - Non-intrusive
 - Low memory
-- Performance
+- High Performance
 - Flexible
 - Distributed
 - Fast compilation
 
-For detailed examples, see the \subpage quickstart , or look at the \subpage cheatsheet for an overview of the API.
+Please continue to the \subpage overview, or dive straight into the \subpage quickstart for code examples.
 
 This manual is divided in the following sections:
 - \subpage overview
@@ -30,7 +30,7 @@ This manual is divided in the following sections:
 
 /** \page overview Overview
 
-Qi support two major styles of styles of messaging:
+Qi supports two major styles of styles of messaging:
 
 \b RPC
 
@@ -56,7 +56,7 @@ Transparently, the optimal communication method is chosen according to your cont
 
 \image html transport.png
 
-\b "Peer-to-peer communication"
+\b Discovery
 
 A Master Server acts as a directory of services and topics so that processes can find
 each other's services. After an initial lookup with the master, all further communication
@@ -91,19 +91,21 @@ to a service or topic is peer-to-peer.
 Overview of API
 \code
 // Client
-qi::Client client;                                        // anonymous
-qi::Client client("user");                                // name
-qi::Client client("user", "127.0.0.1");                   // name and master address
-client.callVoid("methodName", ... args ...);              // up to 9 args
-T result = client.call<T>("methodName", ... args ...);    // up to 9 args, return type T
+qi::Client client;                                               // default name "client"
+qi::Client client("myclient");                                   // name your client
+client.connect();                                                // connect to a local master
+client.connect("192.168.0.10");                                  // connect to specific master
+client.callVoid("methodName", ... args ...);                     // up to 9 args, return type void
+T result = client.call<T>("methodName", ... args ...);           // up to 9 args, return type T
 
 // Server
-qi::Server server;                                        // anonymous
-qi::Server server("user");                                // name
-qi::Server server("user", "127.0.0.1");                   // name and master address
-server.addMethod("methodName", &handler);                 // add a global function
-server.addMethod("methodName", &object, &Class::handler); // add an object method
-server.addMethod("methodName", this   , &Class::handler); // add a method from this class
+qi::Server server;                                               // default name "server"
+qi::Server server("myserver");                                   // name your server
+server.connect();                                                // connect to a local master
+server.connect("192.168.0.10");                                  // connect to a specific master
+server.advertiseService("methodName", &handler);                 // advertise a global function
+server.advertiseService("methodName", &object, &Class::handler); // advertise an object method
+server.advertiseService("methodName", this   , &Class::handler); // advertise a method from this class
 \endcode
 
 
