@@ -28,7 +28,7 @@ namespace qi {
 
       /// <summary>Default constructor.</summary>
       /// <param name="data">The data.</param>
-      Message(const std::string &data) : fData(data) {}
+      Message(const std::string &data) : _data(data) {}
 
       /// <summary>Reads a bool. </summary>
       /// <param name="s">The result</param>
@@ -89,18 +89,19 @@ namespace qi {
       /// <summary>Gets the string. </summary>
       /// <returns> The string representation of the serialized message</returns>
       std::string str()const {
-        return fData;
+        return _data;
       }
 
       /// <summary>Gets the string.</summary>
       /// <param name="str">The result string.</param>
       void str(const std::string &str) {
-        fData = str;
+        _data = str;
       }
 
     protected:
       /// <summary> The underlying data </summary>
-      std::string fData;
+      std::string _data;
+      long        _index;
     };
 
 

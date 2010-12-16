@@ -28,16 +28,16 @@ namespace qi {
 #endif
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Name, Type)                \
-    void Message::read##Name(Type& b)                 \
+    void Message::read##Name(Type& b)                        \
     {                                                        \
-      b = *((Type *) fData.data());                          \
-      fData.erase(0, sizeof(Type));                          \
+      b = *((Type *) _data.data() + index);                  \
+      index += sizeof(Type);                                 \
       __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
     }                                                        \
                                                              \
-    void Message::write##Name(const Type& b)          \
+    void Message::write##Name(const Type& b)                 \
     {                                                        \
-      fData.append((char *)&b, sizeof(b));                   \
+      _data.append((char *)&b, sizeof(b));                   \
       __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
     }
 
@@ -67,8 +67,8 @@ namespace qi {
       readInt(sz);
       s.clear();
       if (sz) {
-        s.append(fData.data(), sz);
-        fData.erase(0, sz);
+        s.append(_data.data() + index, sz);
+        index += sz;
         __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
       }
     }
@@ -77,7 +77,7 @@ namespace qi {
     {
       writeInt(s.size());
       if (!s.empty()) {
-        fData.append(s.data(), s.size());
+        _data.append(s.data(), s.size());
         __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
       }
     }
