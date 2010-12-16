@@ -61,7 +61,7 @@ TEST(NegotiateEndpoint, differentContext)
     std::string expected = "tcp://127.0.0.1:5555";
     EXPECT_EQ(expected, endpoint) << "Different context win should return tcp://127.0.0.1:5555";
   } else {
-    std::string expected = "ipc:///tmp/127.0.0.1:5555";
+    std::string expected = "ipc:///tmp/qi_127.0.0.1:5555";
     EXPECT_EQ(expected, endpoint) << "Different context linux should return ipc:///tmp/127.0.0.1:5555";
   }
 }
