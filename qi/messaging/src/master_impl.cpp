@@ -81,6 +81,7 @@ namespace qi {
       xAddMasterMethod(e.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
       xAddMasterMethod(e.endpointID, "master.topicExists",        this, &MasterImpl::topicExists);
       xAddMasterMethod(e.endpointID, "master.registerTopic",      this, &MasterImpl::registerTopic);
+      xAddMasterMethod(e.endpointID, "master.registerTopicParticipant", this, &MasterImpl::registerTopicParticipant);
       xAddMasterMethod(e.endpointID, "master.unregisterTopic",    this, &MasterImpl::unregisterTopic);
       xAddMasterMethod(e.endpointID, "master.locateTopic",        this, &MasterImpl::locateTopic);
       xAddMasterMethod(e.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
@@ -252,13 +253,20 @@ namespace qi {
       return endpoint;
     }
 
-    void MasterImpl::registerTopic(const std::string& topicName, const std::string& endpointID) {
-      //FIXME: check for existence
+    void MasterImpl::registerTopic(const std::string& topicName, const bool& isManyToMany, const std::string& endpointID) {
+      const Topic& existingTopic = _knownTopics.get(topicName);
+      if (! existingTopic.topicName.empty()) {
+        qisWarning << "Master::registerTopic " << topicName << " already exists. Not registering again." << std::endl;
+        return;
+      }
+      // FIXME: add manyToMany option
+
       qisDebug << "Master::registerTopic " << topicName << " " << endpointID << std::endl;
       Topic t;
       t.publishEndpointID = endpointID;
       t.subscribeEndpointID = endpointID;
       t.publisherIDs.push_back(endpointID);
+
       _knownTopics.insert(topicName, t);
     }
 

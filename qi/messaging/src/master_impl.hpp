@@ -17,6 +17,8 @@
 #include <qi/messaging/src/topic.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
+#include <qi/transport/src/zmq/zmq_forwarder.hpp> // TODO hide this
+#include <boost/shared_ptr.hpp>
 
 namespace qi {
   namespace detail {
@@ -79,10 +81,6 @@ namespace qi {
       const std::map<std::string, std::string> getMachine(const std::string& machineID);
       const std::map<std::string, std::string> getEndpoint(const std::string& endpointID);
 
-
-      void registerTopicParticipant(const std::string& topicName,
-        const std::string& endpointID);
-
       /// <summary>Locates a topic. </summary>
       /// <param name="methodSignature">The method signature.</param>
       /// <param name="clientID">Identifier for the client.</param>
@@ -91,12 +89,16 @@ namespace qi {
 
       /// <summary>Registers the topic. </summary>
       /// <param name="topicName">Name of the topic.</param>
+      /// <param name="isManyToMany">Specifies if multiple publishers should be allowed</param>
       /// <param name="endpointID">Identifier for the endpoint.</param>
-      void registerTopic(const std::string& topicName, const std::string& endpointID);
+      void registerTopic(const std::string& topicName, const bool& isManyToMany, const std::string& endpointID);
 
       /// <summary>Unregisters the topic described by topicName. </summary>
       /// <param name="topicName">Name of the topic.</param>
       void unregisterTopic(const std::string& topicName);
+
+      void registerTopicParticipant(const std::string& topicName,
+        const std::string& endpointID);
 
       /// <summary>Queries if a given topic exists. </summary>
       /// <param name="topicName">Name of the topic.</param>
@@ -141,6 +143,10 @@ namespace qi {
 
       /// <summary> A map from topic signatures to their Topic structure </summary>
       MutexedNameLookup<qi::detail::Topic>           _knownTopics;
+
+      MutexedNameLookup<
+        boost::shared_ptr<qi::transport::detail::ZMQForwarder>
+        > _topicForwarders;
 
       AddressManager _addressManager;
 

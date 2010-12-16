@@ -62,6 +62,9 @@ namespace qi {
         }
         _subscribedEndpoints.insert(endpoint, endpoint);
       }
+
+      // Tell the master that we are interested, he will know that we are a subscriber
+      _masterClient.registerTopicParticipant(signature, _endpointContext.endpointID);
     }
 
     void SubscriberImpl::unsubscribe(const std::string& signature) {

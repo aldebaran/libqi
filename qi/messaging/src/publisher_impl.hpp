@@ -31,7 +31,9 @@ namespace qi {
 
       /// <summary>Advertises a topic. </summary>
       /// <param name="signature">The signature of the topic</param>
-      void advertiseTopic(const std::string& signature);
+      /// <param name="isManyToMany">Allows many to many publishing</param>
+      void advertiseTopic(const std::string& signature,
+        const bool& isManyToMany);
 
       /// <summary>Unadvertise a topic. </summary>
       /// <param name="signature">The signature of the topic.</param>

@@ -20,8 +20,9 @@ namespace qi {
     _impl->connect(masterAddress);
   }
 
-  void Publisher::xAdvertiseTopic(const std::string& signature) {
-    _impl->advertiseTopic(signature);
+  void Publisher::xAdvertiseTopic(const std::string& signature,
+    const bool& isManyToMany) {
+    _impl->advertiseTopic(signature, isManyToMany);
   }
 
   void Publisher::xUnadvertiseTopic(const std::string& signature) {

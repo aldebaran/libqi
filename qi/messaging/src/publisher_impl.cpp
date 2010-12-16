@@ -44,7 +44,8 @@ namespace qi {
         _publisherInitialized = true;
       }
 
-      void PublisherImpl::advertiseTopic(const std::string& topicSignature) {
+      void PublisherImpl::advertiseTopic(const std::string& topicSignature,
+        const bool& isManyToMany) {
         if (!_isInitialized) {
           qisError << "PublisherImpl::advertiseTopic Attempt to use uninitializes publisher" << std::endl;
           return;
@@ -58,7 +59,7 @@ namespace qi {
           qisError << "Attempt to publish on an existing topic " << topicSignature << std::endl;
           return;
         }
-        _masterClient.registerTopic(topicSignature, _endpointContext);
+        _masterClient.registerTopic(topicSignature, isManyToMany, _endpointContext);
       }
 
       void PublisherImpl::unadvertiseTopic(const std::string& topicSignature) {

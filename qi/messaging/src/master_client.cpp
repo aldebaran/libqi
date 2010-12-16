@@ -18,7 +18,7 @@ namespace qi {
     using qi::serialization::Message;
 
     static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v:s");
-    static const std::string methodRegisterTopic("master.registerTopic::v:ss");
+    static const std::string methodRegisterTopic("master.registerTopic::v:sbs");
     static const std::string methodUnregisterTopic("master.unregisterTopic::v:ss");
     static const std::string methodGetNewPort("master.getNewPort::i:s");
     static const std::string methodRegisterMachine("master.registerMachine::v:sssi");
@@ -28,6 +28,7 @@ namespace qi {
     static const std::string methodRegisterService("master.registerService::v:ss");
     static const std::string methodUnregisterService("master.unregisterService::v:s");
     static const std::string methodLocateTopic("master.locateTopic::s:ss");
+    static const std::string methodRegisterTopicParticipant("master.methodRegisterTopicParticipant::v:ss");
 
     MasterClient::~MasterClient() {
     }
@@ -204,7 +205,8 @@ namespace qi {
     }
 
     void MasterClient::registerTopic(
-        const std::string& signature, const qi::detail::EndpointContext& e)
+        const std::string& signature, const bool& isManyToMany,
+        const qi::detail::EndpointContext& e)
     {
       if (!_isInitialized) {
         return;
@@ -213,8 +215,25 @@ namespace qi {
       Message msg;
 
       msg.writeString(methodRegisterTopic);
+      msg.writeBool(isManyToMany);
       msg.writeString(signature);
       msg.writeString(e.endpointID);
+      _transportClient.send(msg.str(), ret);
+    }
+
+    void MasterClient::registerTopicParticipant(
+      const std::string& signature,
+      const std::string& endpointID)
+    {
+      if (!_isInitialized) {
+        return;
+      }
+      Buffer ret;
+      Message msg;
+
+      msg.writeString(methodRegisterTopicParticipant);
+      msg.writeString(signature);
+      msg.writeString(endpointID);
       _transportClient.send(msg.str(), ret);
     }
 

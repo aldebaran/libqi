@@ -16,6 +16,7 @@
 #include <qi/messaging/src/network/machine_context.hpp>
 #include <qi/messaging/context.hpp>
 
+
 namespace qi {
   namespace detail {
     class MasterClient {
@@ -49,7 +50,11 @@ namespace qi {
       bool topicExists(const std::string& topicSignature);
 
       void registerTopic(const std::string& topicSignature,
+                         const bool& isManyToMany,
                          const qi::detail::EndpointContext& e);
+
+      void registerTopicParticipant(const std::string& signature,
+        const std::string& endpointID);
 
       void unregisterTopic(const std::string& topicSignature,
         const qi::detail::EndpointContext& e);

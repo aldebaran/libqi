@@ -50,14 +50,16 @@ namespace qi {
     /// <summary>Advertises to the master that you wish to publish data
     /// of type "PUBLISH_TYPE" to a topic of name "topicName".</summary>
     /// <param name="topicName">The name of the topic you wish to publish to.</param>
+    /// <param name="isManyToMany">Allows many to many publishing</param>
     /// <seealso cref="qi::Subscriber"/>
     /// <seealso cref="qi::Master"/>
     template<typename PUBLISH_TYPE>
-    void advertiseTopic(const std::string& topicName)
+    void advertiseTopic(const std::string& topicName,
+      const bool& isManyToMany = false)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
       std::string signature = makeFunctionSignature(topicName, f);
-      xAdvertiseTopic(signature);
+      xAdvertiseTopic(signature, isManyToMany);
     }
 
     /// <summary> Unadvertises a topic</summary>
@@ -103,7 +105,8 @@ namespace qi {
   protected:
     /// <summary>Advertises a Topic </summary>
     /// <param name="signature">The signature of the topic</param>
-    void xAdvertiseTopic(const std::string& signature);
+    /// <param name="isManyToMany">Allows many to many publishing</param>
+    void xAdvertiseTopic(const std::string& signature, const bool& isManyToMany);
 
     /// <summary>Unadvertises a Topic. </summary>
     /// <param name="signature">The signature of the topic.</param>
