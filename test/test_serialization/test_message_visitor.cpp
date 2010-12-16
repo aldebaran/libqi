@@ -27,6 +27,7 @@
 
 #include <qi/serialization.hpp>
 #include <qi/serialization/message_visitor.hpp>
+#include <qi/serialization/message_copy_visitor.hpp>
 #include <gtest/gtest.h>
 
 TEST(TestMessageVisitor, Basic)
@@ -36,8 +37,15 @@ TEST(TestMessageVisitor, Basic)
 
   int i = 0;
   std::string s = "paf";
+  std::map<std::string, std::vector<std::string> > m;
+  std::vector<std::string> vs;
+
+  vs.push_back(std::string("titi"));
+
+  m["titi"] = vs;
   qi::serialization::serialize<int>::write(msg, i);
   qi::serialization::serialize<std::string>::write(msg, s);
+  qi::serialization::serialize< std::map<std::string, std::vector<std::string> > >::write(msg, m);
 
   mv.visit();
   //EXPECT_EQ()

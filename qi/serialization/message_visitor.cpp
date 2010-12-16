@@ -54,12 +54,28 @@ namespace qi {
 
     void MessageVisitor::onList(const char *elementType)
     {
-      std::cout << "list" << std::endl;
+      int count, i;
+      _message.readInt(count);
+      std::cout << "list with " << count << "elements." << std::endl;
+      MessageVisitor mv(_message, elementType);
+      for (i = 0; i < count; ++i)
+      {
+        mv.visit();
+      }
     }
 
     void MessageVisitor::onMap(const char *keyType, const char *valueType)
     {
-      std::cout << "map" << std::endl;
+      int count, i;
+      _message.readInt(count);
+      std::cout << "map with " << count << "elements." << std::endl;
+      MessageVisitor mv1(_message, keyType);
+      MessageVisitor mv2(_message, valueType);
+      for (i = 0; i < count; ++i)
+      {
+        mv1.visit();
+        mv2.visit();
+      }
     }
 
     void MessageVisitor::onProtobuf(const char *signature)

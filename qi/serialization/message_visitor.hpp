@@ -9,14 +9,6 @@
 #ifndef _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 #define _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
-
-//we want JsonMessage, TextMessage
-//we want to copy between message type to convert data
-//we want a treeview for qigui that can display a message, or allow create one
-
-
-//we want PimpL for module: we count instanciate a real module, or a proxied one
-
 #include <qi/serialization/message.hpp>
 #include <qi/signature/signature_lexer.hpp>
 
