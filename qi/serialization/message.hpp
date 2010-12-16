@@ -32,7 +32,7 @@ namespace qi {
       /// <param name="data">The data.</param>
       Message(const std::string &data)
         : _data(data),
-          _index(data.size())
+          _index(0)
       {}
 
       /// <summary>Reads a bool. </summary>
