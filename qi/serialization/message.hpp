@@ -24,11 +24,16 @@ namespace qi {
     public:
 
       /// <summary>Default constructor. </summary>
-      Message() {}
+      Message()
+        : _index(0)
+      {}
 
       /// <summary>Default constructor.</summary>
       /// <param name="data">The data.</param>
-      Message(const std::string &data) : _data(data) {}
+      Message(const std::string &data)
+        : _data(data),
+          _index(data.size())
+      {}
 
       /// <summary>Reads a bool. </summary>
       /// <param name="s">The result</param>
@@ -96,6 +101,7 @@ namespace qi {
       /// <param name="str">The result string.</param>
       void str(const std::string &str) {
         _data = str;
+        _index = 0;
       }
 
     protected:

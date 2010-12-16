@@ -41,10 +41,10 @@ namespace qi {
       __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
     }
 
-    QI_SIMPLE_SERIALIZER_IMPL(Bool, bool);
-    QI_SIMPLE_SERIALIZER_IMPL(Char, char);
-    QI_SIMPLE_SERIALIZER_IMPL(Int, int);
-    QI_SIMPLE_SERIALIZER_IMPL(Float, float);
+    QI_SIMPLE_SERIALIZER_IMPL(Bool,   bool);
+    QI_SIMPLE_SERIALIZER_IMPL(Char,   char);
+    QI_SIMPLE_SERIALIZER_IMPL(Int,    int);
+    QI_SIMPLE_SERIALIZER_IMPL(Float,  float);
     QI_SIMPLE_SERIALIZER_IMPL(Double, double);
 
     // string
