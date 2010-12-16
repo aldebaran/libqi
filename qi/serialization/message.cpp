@@ -30,8 +30,8 @@ namespace qi {
 #define QI_SIMPLE_SERIALIZER_IMPL(Name, Type)                \
     void Message::read##Name(Type& b)                        \
     {                                                        \
-      b = *((Type *) _data.data() + index);                  \
-      index += sizeof(Type);                                 \
+      b = *((Type *) (_data.data() + _index));               \
+      _index += sizeof(Type);                                \
       __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
     }                                                        \
                                                              \
@@ -54,8 +54,8 @@ namespace qi {
       readInt(sz);
       s.clear();
       if (sz) {
-        s.append(_data.data() + index, sz);
-        index += sz;
+        s.append(_data.data() + _index, sz);
+        _index += sz;
         __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
       }
     }

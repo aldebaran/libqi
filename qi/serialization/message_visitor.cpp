@@ -1,4 +1,10 @@
-
+/*
+*  Author(s):
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
 #include <qi/serialization/message_visitor.hpp>
 
 namespace qi {

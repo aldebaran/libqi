@@ -1,3 +1,11 @@
+#pragma once
+/*
+*  Author(s):
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
 #ifndef _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 #define _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
@@ -19,12 +27,11 @@ namespace qi {
     {
     public:
       MessageVisitor(Message &msg, const char *signature);
+      virtual ~MessageVisitor() {;}
 
       void visit();
 
     protected:
-      virtual void onFunction(const std::string &name, const char *prototype);
-      virtual void onFunctionPrototype(const char *returnType, const char *argumentsType);
       virtual void onSimple(const char *simpleType);
       virtual void onList(const char *elementType);
       virtual void onMap(const char *keyType, const char *valueType);
