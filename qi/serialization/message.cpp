@@ -45,20 +45,7 @@ namespace qi {
     QI_SIMPLE_SERIALIZER_IMPL(Char, char);
     QI_SIMPLE_SERIALIZER_IMPL(Int, int);
     QI_SIMPLE_SERIALIZER_IMPL(Float, float);
-    //SIMPLE_SERIALIZER(Float, double);
-
-    void Message::readDouble(double& d)
-    {
-      memcpy(&d, fData.data(), sizeof(double));
-      fData.erase(0, sizeof(double));
-      __QI_DEBUG_SERIALIZATION_DATA_R(double, d);
-    }
-
-    void Message::writeDouble(const double& d)
-    {
-      fData.append((char *)&d, sizeof(d));
-      __QI_DEBUG_SERIALIZATION_DATA_W(double, d);
-    }
+    QI_SIMPLE_SERIALIZER_IMPL(Double, double);
 
     // string
     void Message::readString(std::string& s)
