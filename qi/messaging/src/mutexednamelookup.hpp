@@ -51,6 +51,16 @@ namespace qi {
         return _invalidValue;
       }
 
+      T& getEditable(const std::string& key) {
+        boost::mutex::scoped_lock lock(_mutex);
+        typename std::map<std::string, T>::iterator it;
+        it = _map.find(key);
+        if (it != _map.end()) {
+          return it->second;
+        }
+        return _invalidValue;
+      }
+
       bool exists(const std::string& key) {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it;
