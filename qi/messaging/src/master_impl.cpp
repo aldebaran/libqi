@@ -185,6 +185,36 @@ namespace qi {
       return endpoint;
     }
 
+    void MasterImpl::registerTopicParticipant(const std::string& topicName, const std::string& endpointID) {
+      Topic& t = _knownTopics.getEditable(topicName);
+      if (t.topicName.empty()) {
+        qisDebug << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
+        return;
+      }
+
+      const EndpointContext& e = _knownEndpoints.get(endpointID);
+      switch(e.type) {
+        case PUBLISHER_ENDPOINT:
+          t.publisherIDs.push_back(e.endpointID);
+          qisDebug << "Master::registerTopicParticipant: Added " <<
+            "Publisher for \"" <<
+            topicName << "\" : " << e.endpointID << std::endl;
+          break;
+        case SUBSCRIBER_ENDPOINT:
+          t.subscriberIDs.push_back(e.endpointID);
+          qisDebug << "Master::registerTopicParticipant: Added " <<
+            "Subscriber for \"" <<
+            topicName << "\" : " << e.endpointID << std::endl;
+          break;
+        default:
+          qisWarning << "Master::registerTopicParticipant: Invalid " <<
+            "attempt to register a topic participant for \"" <<
+            topicName << "\" that is neither a publisher, nor " <<
+            "a subscriber: " << e.endpointID << std::endl;
+          break;
+      }
+    }
+
     std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
       const Topic& t = _knownTopics.get(topicName);
       if (t.subscribeEndpointID.empty()) {

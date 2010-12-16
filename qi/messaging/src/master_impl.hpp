@@ -79,6 +79,10 @@ namespace qi {
       const std::map<std::string, std::string> getMachine(const std::string& machineID);
       const std::map<std::string, std::string> getEndpoint(const std::string& endpointID);
 
+
+      void registerTopicParticipant(const std::string& topicName,
+        const std::string& endpointID);
+
       /// <summary>Locates a topic. </summary>
       /// <param name="methodSignature">The method signature.</param>
       /// <param name="clientID">Identifier for the client.</param>
