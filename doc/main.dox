@@ -122,31 +122,36 @@ This page is for advanced users.
 
 /**
 \defgroup Messaging Messaging
-Messaging classes. Each classes register to a master.
+The messaging classes provide the main entry point for users of qi::messaging. 
+Each class registers with a master upon connection, and uses the master to
+advertise its capacities or discover the capacities of other classes in the qi
+network. The first lookup of a service will interogate the master for the location
+of the service server, then the client will communicate directly with that server.
 
 \defgroup Signature Signature
-This module generate signature for a specified type. You can take the signature
+This module generates signatures for specified types. It can take the signature
 of most POD and STL types. When protobuf support is compiled in, you can take
 the signature of protobuf messages too.
 
 \defgroup Serialization Serialization
-This module handle serialization. qi::serialization::Message represent a message
-that will be exchanged by Messaging classes.
+This module handles serialization or arguments and return types to and from messages. 
+The qi::serialization::Message is used by the transport layer to exchange information
+between messaging classes.
 
 \defgroup Functors Functors
-the Functor class can be created from either a function or an object method, it can
+The Functor class can be created from either a function or an object method and can
 handle a maximum of 9 arguments. This class can be used with a serialization::Message.
-It can be called with two Message, one for the request, one for the response.
+It can be called with two Messages, one for the request, one for the response.
 
 \defgroup Transport Transport
 This module contains single connection transport classes. They allow direct
-communication between two endpoint but does not register with a master.
+communication between two endpoints but do not require registration with a master.
 
-Two communication models are provided, you can use standard client/server connection,
+Two communication models are provided: standard client/server connection,
 or a publisher/subscriber pattern.
 
-Context management is explicit in the transport module. It's always prefered to have
-the same Context between differents transport, this will allow to have more effective
-communication, by reusing tcp/ipc connections. ZeroMq inproc transport impose to have
-the same context between the client and the server.
+Context management is explicit in the transport module. It is always prefered to have
+the same Context between differents transport, this allows more effective
+communication, by reusing tcp/ipc connections. ZeroMq inproc transport requires that
+the same context is shared between clients and the servers.
 */
