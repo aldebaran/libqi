@@ -178,7 +178,7 @@ namespace qi {
     {
       const std::string& serverID = _knownServices.get(methodSignature);
       if (serverID.empty()) {
-        qisDebug << "Master::locateService: Could not find server for method: " << qi::signatureToString(methodSignature) << std::endl;
+        qisWarning << "Master::locateService: Could not find server for method: " << qi::signatureToString(methodSignature) << std::endl;
         return "";
       }
       std::string endpoint = xNegotiateEndpoint(clientID, serverID);
@@ -189,7 +189,7 @@ namespace qi {
     void MasterImpl::registerTopicParticipant(const std::string& topicName, const std::string& endpointID) {
       Topic& t = _knownTopics.getEditable(topicName);
       if (t.topicName.empty()) {
-        qisDebug << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
+        qisWarning << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
         return;
       }
 
@@ -263,6 +263,7 @@ namespace qi {
 
       qisDebug << "Master::registerTopic " << topicName << " " << endpointID << std::endl;
       Topic t;
+      t.topicName = topicName;
       t.publishEndpointID = endpointID;
       t.subscribeEndpointID = endpointID;
       t.publisherIDs.push_back(endpointID);

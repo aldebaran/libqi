@@ -28,7 +28,7 @@ namespace qi {
     static const std::string methodRegisterService("master.registerService::v:ss");
     static const std::string methodUnregisterService("master.unregisterService::v:s");
     static const std::string methodLocateTopic("master.locateTopic::s:ss");
-    static const std::string methodRegisterTopicParticipant("master.methodRegisterTopicParticipant::v:ss");
+    static const std::string methodRegisterTopicParticipant("master.registerTopicParticipant::v:ss");
 
     MasterClient::~MasterClient() {
     }
@@ -215,8 +215,8 @@ namespace qi {
       Message msg;
 
       msg.writeString(methodRegisterTopic);
-      msg.writeBool(isManyToMany);
       msg.writeString(signature);
+      msg.writeBool(isManyToMany);
       msg.writeString(e.endpointID);
       _transportClient.send(msg.str(), ret);
     }

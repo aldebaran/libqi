@@ -62,5 +62,5 @@ TEST(MessagingPublisher , twoSubscribers)
     p.publish("hello", str.str());
     p.publish("goodbye", str.str());
   }
- 
+  sleep(2.0);
 }
