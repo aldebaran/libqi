@@ -24,7 +24,8 @@ namespace qi {
     }
 
     void AddressManager::setMasterPort(int masterPort) {
-      // FIXME ehem, hope no other ports have been given out.
+      // This should only be called by the master
+      // at startup before any ports are given
       _masterPort = masterPort;
       _nextFreePort = masterPort;
     }

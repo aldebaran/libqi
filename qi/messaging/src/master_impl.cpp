@@ -52,7 +52,6 @@ namespace qi {
 
     void MasterImpl::run() {
       _server.connect(_address);
-
       if (!_server.isInitialized()) {
         return;
       }
@@ -63,27 +62,28 @@ namespace qi {
 
       // Register machine and server ( without network activity )
       xRegisterMachine(_server.getMachineContext());
-      const EndpointContext& serverContext = _server.getEndpointContext();
-      xRegisterEndpoint(serverContext);
+      const EndpointContext& e = _server.getEndpointContext();
+      _addressManager.setMasterPort(e.port);
+      xRegisterEndpoint(e);
 
       // Bind methods
-      xAddMasterMethod(serverContext.endpointID, "master.registerService",    this, &MasterImpl::registerService);
-      xAddMasterMethod(serverContext.endpointID, "master.unregisterService",  this, &MasterImpl::unregisterService);
-      xAddMasterMethod(serverContext.endpointID, "master.locateService",      this, &MasterImpl::locateService);
-      xAddMasterMethod(serverContext.endpointID, "master.listServices",       this, &MasterImpl::listServices);
-      xAddMasterMethod(serverContext.endpointID, "master.listTopics",         this, &MasterImpl::listTopics);
-      xAddMasterMethod(serverContext.endpointID, "master.listMachines",       this, &MasterImpl::listMachines);
-      xAddMasterMethod(serverContext.endpointID, "master.listEndpoints",      this, &MasterImpl::listEndpoints);
-      xAddMasterMethod(serverContext.endpointID, "master.getMachine",         this, &MasterImpl::getMachine);
-      xAddMasterMethod(serverContext.endpointID, "master.getEndpoint",        this, &MasterImpl::getEndpoint);
-      xAddMasterMethod(serverContext.endpointID, "master.registerMachine",    this, &MasterImpl::registerMachine);
-      xAddMasterMethod(serverContext.endpointID, "master.registerEndpoint",   this, &MasterImpl::registerEndpoint);
-      xAddMasterMethod(serverContext.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
-      xAddMasterMethod(serverContext.endpointID, "master.topicExists",        this, &MasterImpl::topicExists);
-      xAddMasterMethod(serverContext.endpointID, "master.registerTopic",      this, &MasterImpl::registerTopic);
-      xAddMasterMethod(serverContext.endpointID, "master.unregisterTopic",    this, &MasterImpl::unregisterTopic);
-      xAddMasterMethod(serverContext.endpointID, "master.locateTopic",        this, &MasterImpl::locateTopic);
-      xAddMasterMethod(serverContext.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
+      xAddMasterMethod(e.endpointID, "master.registerService",    this, &MasterImpl::registerService);
+      xAddMasterMethod(e.endpointID, "master.unregisterService",  this, &MasterImpl::unregisterService);
+      xAddMasterMethod(e.endpointID, "master.locateService",      this, &MasterImpl::locateService);
+      xAddMasterMethod(e.endpointID, "master.listServices",       this, &MasterImpl::listServices);
+      xAddMasterMethod(e.endpointID, "master.listTopics",         this, &MasterImpl::listTopics);
+      xAddMasterMethod(e.endpointID, "master.listMachines",       this, &MasterImpl::listMachines);
+      xAddMasterMethod(e.endpointID, "master.listEndpoints",      this, &MasterImpl::listEndpoints);
+      xAddMasterMethod(e.endpointID, "master.getMachine",         this, &MasterImpl::getMachine);
+      xAddMasterMethod(e.endpointID, "master.getEndpoint",        this, &MasterImpl::getEndpoint);
+      xAddMasterMethod(e.endpointID, "master.registerMachine",    this, &MasterImpl::registerMachine);
+      xAddMasterMethod(e.endpointID, "master.registerEndpoint",   this, &MasterImpl::registerEndpoint);
+      xAddMasterMethod(e.endpointID, "master.unregisterEndpoint", this, &MasterImpl::unregisterEndpoint);
+      xAddMasterMethod(e.endpointID, "master.topicExists",        this, &MasterImpl::topicExists);
+      xAddMasterMethod(e.endpointID, "master.registerTopic",      this, &MasterImpl::registerTopic);
+      xAddMasterMethod(e.endpointID, "master.unregisterTopic",    this, &MasterImpl::unregisterTopic);
+      xAddMasterMethod(e.endpointID, "master.locateTopic",        this, &MasterImpl::locateTopic);
+      xAddMasterMethod(e.endpointID, "master.getNewPort", &_addressManager, &AddressManager::getNewPort);
     }
 
     bool MasterImpl::isInitialized() const {
