@@ -28,7 +28,7 @@ namespace qi {
     }
 
     EndpointContext::EndpointContext():
-      type(CLIENT_ENDPOINT),
+      type(UNDEFINED_ENDPOINT),
       name(""),
       endpointID(getUUID()),
       contextID(""),
