@@ -9,6 +9,7 @@ Functor:
   - use boost::ref or boost::bind?
 
 Messaging:
+  - rename run to start (because it does not block)
   - support address for client and server. (for example "soap://<ip>", "tcp://<ip>", "shm://<folder>", "ipc://<folder>")
   - Fast Local Call
 
