@@ -41,7 +41,7 @@ namespace qi {
         return _map;
       }
 
-      const T& get(std::string key) {
+      const T& get(const std::string& key) {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it;
         it = _map.find(key);
@@ -51,14 +51,14 @@ namespace qi {
         return _invalidValue;
       }
 
-      bool exists(std::string key) {
+      bool exists(const std::string& key) {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it;
         it = _map.find(key);
         return !(it == _map.end());
       }
 
-      void insert(const std::string key, const T& val) {
+      void insert(const std::string& key, const T& val) {
         boost::mutex::scoped_lock lock(_mutex);
         typename std::map<std::string, T>::const_iterator it = _map.find(key);
         if (it != _map.end()) {
@@ -67,7 +67,7 @@ namespace qi {
         _map.insert(make_pair(key, val));
       }
 
-      void remove(const std::string key) {
+      void remove(const std::string& key) {
         boost::mutex::scoped_lock lock(_mutex);
         _map.erase(key);
       }
