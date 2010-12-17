@@ -15,6 +15,11 @@ using namespace qi;
 
 Master gMaster;
 
+
+void printHandler(const std::string& msg) {
+  std::cout << "printHandler: " << msg << std::endl;
+}
+
 void handler1(const std::string& msg) {
 //  std::cout << msg << "  Subscriber 1H" << std::endl;
 }
@@ -34,16 +39,16 @@ TEST(MessagingPublisher, simpleCase) {
   pub.connect();
   sub.connect();
   pub.advertiseTopic<std::string>("hello");
-  sub.subscribe("hello", &handler1);
+  sub.subscribe("hello", &printHandler);
   sleep(1.0); // FIXME
-  pub.publish("hello", "world");
+  pub.publish("hello", std::string("world"));
 
 }
 
 TEST(MessagingPublisher , twoSubscribers)
 {
-  Subscriber s("subscriber");
-  Subscriber s2("subscriber");
+  Subscriber s("subscriber1");
+  Subscriber s2("subscriber2");
   Publisher p("publisher");
   p.connect();
   s.connect();
@@ -56,7 +61,10 @@ TEST(MessagingPublisher , twoSubscribers)
   s2.subscribe("goodbye", &handler3);
   sleep(2.0);
 
-  for (int i = 0 ; i < 50 ; i++) {
+  // TODO implement topic subscriptions in zmq subscriber,
+  // so that you don't receive all messages from a publisher
+  // when you are only subscribed to one of its messages
+  for (int i = 0 ; i < 10 ; i++) {
     std::stringstream str;
     str << i;
     p.publish("hello", str.str());
