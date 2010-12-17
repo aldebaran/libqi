@@ -137,21 +137,24 @@ namespace qi {
     void PublisherImpl::publish(const std::string& topicSignature, const std::string& data)
     {
       if (! _isInitialized) {
-        qisError << "Publisher: Attempt to use an uninitialized publisher." << std::endl;
+        qisError << "Publisher::publish Attempt to use an "
+          << "uninitialized publisher." << std::endl;
         return;
       }
 
       // find the endpoint for this topic
       const std::string& endpointID = _knownTopics.get(topicSignature);
       if (endpointID.empty()) {
-        qisError << "Publisher: Attempt to publish to unadvertised topic: " << topicSignature << std::endl;
+        qisError << "Publisher::publish Attempt to publish to "
+          << "unadvertised topic: " << topicSignature << std::endl;
         return;
       }
 
       // find the transport publisher for this endpoint
       const TPubPtr& pub = _transportPublishers.get(endpointID);
       if (pub == NULL) {
-        qisError << "Publisher: Unable to find transport for  " << endpointID << std::endl;
+        qisError << "Publisher::publish Unable to find transport for "
+          << endpointID << std::endl;
         return;
       }
 
