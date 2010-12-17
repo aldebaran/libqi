@@ -256,18 +256,26 @@ namespace qi {
     void MasterImpl::registerTopic(const std::string& topicName, const bool& isManyToMany, const std::string& endpointID) {
       const Topic& existingTopic = _knownTopics.get(topicName);
       if (! existingTopic.topicName.empty()) {
-        qisWarning << "Master::registerTopic " << topicName << " already exists. Not registering again." << std::endl;
+        if (isManyToMany) {
+          qisDebug << "Master::registerTopic for existing topic \"" << topicName << "\"" << std::endl;
+          return;
+        }
+        qisWarning << "Master::registerTopic \"" << topicName << "\" already exists. Not registering again." << std::endl;
         return;
       }
-      // FIXME: add manyToMany option
 
-      qisDebug << "Master::registerTopic " << topicName << " " << endpointID << std::endl;
+      qisDebug << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
       Topic t;
       t.topicName = topicName;
-      t.publishEndpointID = endpointID;
-      t.subscribeEndpointID = endpointID;
-      t.publisherIDs.push_back(endpointID);
 
+      if (isManyToMany) {
+        // create forwarder
+        
+      } else {
+        t.publishEndpointID = endpointID;
+        t.subscribeEndpointID = endpointID;
+        t.publisherIDs.push_back(endpointID);
+      }
       _knownTopics.insert(topicName, t);
     }
 

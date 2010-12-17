@@ -79,7 +79,7 @@ namespace qi {
       ser.readString(targetTopic);
       const ServiceInfo& si = _subscriberCallBacks.get(targetTopic);
       if (si.methodName.empty() || si.functor == NULL) {
-        qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << std::endl;
+        qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << " " << _endpointContext.endpointID << std::endl;
       } else {
         //qisDebug << "SubscriberImpl::subscribeHandler: found handler for \"" << targetTopic << "\"" << std::endl;
         qi::serialization::Message sd;
