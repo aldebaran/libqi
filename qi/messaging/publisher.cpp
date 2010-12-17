@@ -20,16 +20,16 @@ namespace qi {
     _impl->connect(masterAddress);
   }
 
-  void Publisher::xAdvertiseTopic(const std::string& signature,
+  void Publisher::xAdvertiseTopic(const std::string& topicSignature,
     const bool& isManyToMany) {
-    _impl->advertiseTopic(signature, isManyToMany);
+    _impl->advertiseTopic(topicSignature, isManyToMany);
   }
 
-  void Publisher::xUnadvertiseTopic(const std::string& signature) {
-    _impl->unadvertiseTopic(signature);
+  void Publisher::xUnadvertiseTopic(const std::string& topicSignature) {
+    _impl->unadvertiseTopic(topicSignature);
   }
 
-  void Publisher::xPublish(const std::string& message) {
-    _impl->publish(message);
+  void Publisher::xPublish(const std::string& topicSignature, const std::string& message) {
+    _impl->publish(topicSignature, message);
   }
 }

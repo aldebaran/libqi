@@ -97,24 +97,26 @@ namespace qi {
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
       qi::serialization::Message ser;
-      qi::serialization::serialize<std::string>::write(ser, makeFunctionSignature(topicName, f));
+      std::string topicSignature = makeFunctionSignature(topicName, f);
+      qi::serialization::serialize<std::string>::write(ser, topicSignature);
       qi::serialization::serialize<PUBLISH_TYPE>::write(ser, publishData);
-      xPublish(ser.str());
+      xPublish(topicSignature, ser.str());
     }
 
   protected:
     /// <summary>Advertises a Topic </summary>
-    /// <param name="signature">The signature of the topic</param>
+    /// <param name="topicSignature">The signature of the topic</param>
     /// <param name="isManyToMany">Allows many to many publishing</param>
-    void xAdvertiseTopic(const std::string& signature, const bool& isManyToMany);
+    void xAdvertiseTopic(const std::string& topicSignature, const bool& isManyToMany);
 
     /// <summary>Unadvertises a Topic. </summary>
-    /// <param name="signature">The signature of the topic.</param>
-    void xUnadvertiseTopic(const std::string& signature);
+    /// <param name="topicSignature">The signature of the topic.</param>
+    void xUnadvertiseTopic(const std::string& topicSignature);
 
     /// <summary> Publishes a serialized message </summary>
+    /// <param name="topicSignature">The signature of the topic.</param>
     /// <param name="message">The message.</param>
-    void xPublish(const std::string& message);
+    void xPublish(const std::string& topicSignature, const std::string& message);
 
     /// <summary> The private implementation </summary>
     boost::shared_ptr<qi::detail::PublisherImpl> _impl;
