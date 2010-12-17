@@ -28,7 +28,7 @@ namespace qi {
       while (true) {
         qi::SignatureLexer::Element elt;
         elt = _lexer.getNext();
-        if (!visitSingle(elt))
+        if (!visitElement(elt))
           break;
       }
     }
