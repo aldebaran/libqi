@@ -15,6 +15,9 @@
 namespace qi {
   namespace serialization {
 
+    /// <summary> Copy a message to another. This allow for conversion between arbitrary type of message.
+    /// this class is templated with the two message type, this avoid having (slow) virtual for all function
+    //// in message. (because they are really used too often). </summary>
     template <typename MessageSrc, typename MessageDest>
     class MessageCopyVisitor
     {
@@ -23,6 +26,9 @@ namespace qi {
       virtual ~MessageCopyVisitor() {;}
 
       void visit();
+
+    protected:
+      int visitElement(qi::SignatureLexer::Element &elt);
 
     protected:
       virtual void onSimple(const char *simpleType);

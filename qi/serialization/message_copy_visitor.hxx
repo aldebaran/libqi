@@ -24,29 +24,36 @@ namespace qi {
     void MessageCopyVisitor<MessageSrc, MessageDest>::visit()
     {
       std::cout << "visit" << std::endl;
-      qi::SignatureLexer::Element elt;
 
       while (true) {
+        qi::SignatureLexer::Element elt;
         elt = _lexer.getNext();
-        switch (elt.signature[0]) {
-        case '[':
-          onList(elt.child_1);
-          break;
-        case '{':
-          onMap(elt.child_1, elt.child_2);
-          break;
-        case '@':
-          onProtobuf(elt.signature);
-          break;
-        default:
-          onSimple(elt.signature);
-          break;
-        }
-
-        if (!elt.signature || !elt.signature[0])
+        if (!visitSingle(elt))
           break;
       }
-      //SignatureVisitor::visit();
+    }
+
+    template <typename MessageSrc, typename MessageDest>
+    int MessageCopyVisitor<MessageSrc, MessageDest>::visitElement(qi::SignatureLexer::Element &elt)
+    {
+      std::cout << "visit" << std::endl;
+      switch (elt.signature[0]) {
+      case '[':
+        onList(elt.child_1);
+        break;
+      case '{':
+        onMap(elt.child_1, elt.child_2);
+        break;
+      case '@':
+        onProtobuf(elt.signature);
+        break;
+      case 0:
+        return 0;
+      default:
+        onSimple(elt.signature);
+        break;
+      }
+      return 1;
     }
 
     template <typename MessageSrc, typename MessageDest>
@@ -73,6 +80,11 @@ namespace qi {
         _msgSrc.readFloat(f);
         _msgDest.writeFloat(f);
         break;
+      case 'd':
+        double d;
+        _msgSrc.readDouble(d);
+        _msgDest.writeDouble(d);
+        break;
       case 's':
         std::string s;
         _msgSrc.readString(s);
@@ -80,8 +92,6 @@ namespace qi {
         break;
 
       }
-
-      std::cout << "simple type:" << (char) simpleType[0] << std::endl;
     }
 
     template <typename MessageSrc, typename MessageDest>
@@ -90,11 +100,13 @@ namespace qi {
       int count, i;
       _msgSrc.readInt(count);
       _msgDest.writeInt(count);
-      std::cout << "list with " << count << "elements." << std::endl;
-      MessageCopyVisitor<MessageSrc, MessageDest> mcv(_msgSrc, _msgDest, elementType);
+      qi::SignatureLexer lex(elementType);
+      qi::SignatureLexer::Element elt;
+
+      elt = lex.getNext();
       for (i = 0; i < count; ++i)
       {
-        mcv.visit();
+        visitElement(elt);
       }
     }
 
@@ -104,13 +116,15 @@ namespace qi {
       int count, i;
       _msgSrc.readInt(count);
       _msgDest.writeInt(count);
-      std::cout << "copy map with " << count << "elements." << std::endl;
-      MessageCopyVisitor<MessageSrc, MessageDest> mv1(_msgSrc, _msgDest, keyType);
-      MessageCopyVisitor<MessageSrc, MessageDest> mv2(_msgSrc, _msgDest, valueType);
+      qi::SignatureLexer          lexk(keyType);
+      qi::SignatureLexer::Element eltk = lexk.getNext();
+      qi::SignatureLexer          lexv(valueType);
+      qi::SignatureLexer::Element eltv = lexv.getNext();
+
       for (i = 0; i < count; ++i)
       {
-        mv1.visit();
-        mv2.visit();
+        visitElement(eltk);
+        visitElement(eltv);
       }
     }
 

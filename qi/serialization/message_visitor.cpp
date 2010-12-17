@@ -36,6 +36,8 @@ namespace qi {
         case '@':
           onProtobuf(elt.signature);
           break;
+        case 0:
+          return;
         default:
           onSimple(elt.signature);
           break;
