@@ -17,11 +17,13 @@ namespace qi {
   namespace detail {
 
     enum EndpointType {
-      SERVER_ENDPOINT     = 0,
-      CLIENT_ENDPOINT     = 1,
-      PUBLISHER_ENDPOINT  = 2,
-      SUBSCRIBER_ENDPOINT = 3,
-      UNDEFINED_ENDPOINT  = 99,
+      SERVER_ENDPOINT        = 0,
+      CLIENT_ENDPOINT        = 1,
+      PUBLISHER_ENDPOINT     = 2,
+      SUBSCRIBER_ENDPOINT    = 3,
+      FORWARDER_IN_ENDPOINT  = 4,
+      FORWARDER_OUT_ENDPOINT = 5,
+      UNDEFINED_ENDPOINT     = 99
     };
 
     std::string endpointTypeAsString(EndpointType type);

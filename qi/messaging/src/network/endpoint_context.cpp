@@ -24,6 +24,12 @@ namespace qi {
       if (type == SUBSCRIBER_ENDPOINT) {
         return "Subscriber";
       }
+      if (type == FORWARDER_IN_ENDPOINT) {
+        return "ForwarderIn";
+      }
+      if (type == FORWARDER_OUT_ENDPOINT) {
+        return "ForwarderOut";
+      }
       return "Unknown";
     }
 
