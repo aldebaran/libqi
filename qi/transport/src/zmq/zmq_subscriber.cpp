@@ -9,6 +9,7 @@
 #include <qi/transport/src/zmq/zmq_subscriber.hpp>
 #include <qi/perf/sleep.hpp>
 #include <qi/exceptions/exceptions.hpp>
+#include <qi/log/log.hpp>
 #include <iostream>
 
 namespace qi {
@@ -53,9 +54,16 @@ namespace qi {
             // been deallocated. If it has, this will segfault
             this->getSubscribeHandler()->subscribeHandler(data);
           }
-        } catch(const qi::transport::Exception& e) {
-          // don't print what() because it may be invalid during destruction
-          std::cout << "ZMQSubscriber::recv exception. Reason: " << e.what() << std::endl;
+        }
+        catch(const zmq::error_t& e) {
+          if (!_isClosing) {
+            qisError << "ZMQSubscriber::receive zmq exception. Reason: " << e.what() << std::endl;
+          }
+        }
+        catch(const qi::transport::Exception& e) {
+          if (!_isClosing) {
+            qisError << "ZMQSubscriber::receive transport exception. Reason: " << e.what() << std::endl;
+          }
         }
       }
 
