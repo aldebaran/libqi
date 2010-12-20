@@ -68,7 +68,7 @@ namespace qi {
         _zsocket.send(msg);
 
         //we leave the possibility to timeout, pollRecv will throw and avoid the call to recv
-        _poller.recv(&msg, 10 * 1000 * 1000);
+        _poller.recv(&msg, 60 * 1000 * 1000);
 
         // TODO optimize this
         // boost could serialize from msg.data() and size,
