@@ -10,7 +10,7 @@
 #define _QI_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_
 
 #include <qi/serialization/message.hpp>
-#include <qi/signature/signature_lexer.hpp>
+#include <qi/signature/signature_iterator.hpp>
 
 namespace qi {
   namespace serialization {
@@ -28,16 +28,16 @@ namespace qi {
       void visit();
 
     protected:
-      int visitElement(qi::SignatureLexer::Element &elt);
+      void visitElement(qi::Signature::iterator &elt);
 
     protected:
-      virtual void onSimple(const char *simpleType);
-      virtual void onList(const char *elementType);
-      virtual void onMap(const char *keyType, const char *valueType);
-      virtual void onProtobuf(const char *name);
+      void onSimple(const char *simpleType);
+      void onList(const char *elementType);
+      void onMap(const char *keyType, const char *valueType);
+      void onProtobuf(const char *name);
 
     protected:
-      qi::SignatureLexer  _lexer;
+      qi::Signature       _signature;
       MessageSrc         &_msgSrc;
       MessageDest        &_msgDest;
     };

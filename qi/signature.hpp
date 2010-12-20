@@ -13,5 +13,6 @@
 
 #include <qi/signature/signature.hpp>
 #include <qi/signature/signature_to_string.hpp>
+#include <qi/signature/signature_iterator.hpp>
 
 #endif  // _QI_SIGNATURE_HPP_

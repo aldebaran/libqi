@@ -10,7 +10,7 @@
 #define _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
 #include <qi/serialization/message.hpp>
-#include <qi/signature/signature_lexer.hpp>
+#include <qi/signature/signature_iterator.hpp>
 
 namespace qi {
   namespace serialization {
@@ -30,7 +30,7 @@ namespace qi {
       virtual void onProtobuf(const char *name);
 
     protected:
-      qi::SignatureLexer          _lexer;
+      qi::Signature               _sig;
       qi::serialization::Message &_message;
     };
 

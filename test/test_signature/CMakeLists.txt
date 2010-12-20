@@ -13,7 +13,7 @@ create_gtest(test_signature
              DEPENDENCIES QI GTEST
              TIMEOUT      120)
 
-create_gtest(test_signature_lexer
-             SRC          test_signature_lexer.cpp ${PROTO_SRC}
+create_gtest(test_signature_iterator
+             SRC          test_signature_iterator.cpp ${PROTO_SRC}
              DEPENDENCIES QI GTEST
              TIMEOUT      120)

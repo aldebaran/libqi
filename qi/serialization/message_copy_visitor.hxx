@@ -13,7 +13,7 @@ namespace qi {
 
     template <typename MessageSrc, typename MessageDest>
     MessageCopyVisitor<MessageSrc, MessageDest>::MessageCopyVisitor(MessageSrc &msgSrc, MessageDest &msgDest, const char *signature)
-      : _lexer(signature),
+      : _signature(signature),
         _msgSrc(msgSrc),
         _msgDest(msgDest)
     {
@@ -25,18 +25,17 @@ namespace qi {
     {
       std::cout << "visit" << std::endl;
 
-      while (true) {
-        qi::SignatureLexer::Element elt;
-        elt = _lexer.getNext();
-        if (!visitElement(elt))
-          break;
+      qi::Signature::iterator it;
+
+      for(it = _signature.begin(); it != _signature.end(); ++it)
+      {
+        visitElement(it);
       }
     }
 
     template <typename MessageSrc, typename MessageDest>
-    int MessageCopyVisitor<MessageSrc, MessageDest>::visitElement(qi::SignatureLexer::Element &elt)
+    void MessageCopyVisitor<MessageSrc, MessageDest>::visitElement(qi::Signature::iterator &elt)
     {
-      std::cout << "visit" << std::endl;
       switch (elt.signature[0]) {
       case '[':
         onList(elt.child_1);
@@ -48,12 +47,11 @@ namespace qi {
         onProtobuf(elt.signature);
         break;
       case 0:
-        return 0;
+        break;
       default:
         onSimple(elt.signature);
         break;
       }
-      return 1;
     }
 
     template <typename MessageSrc, typename MessageDest>
@@ -100,13 +98,13 @@ namespace qi {
       int count, i;
       _msgSrc.readInt(count);
       _msgDest.writeInt(count);
-      qi::SignatureLexer lex(elementType);
-      qi::SignatureLexer::Element elt;
+      qi::Signature           sig(elementType);
+      qi::Signature::iterator it;
+      it = sig.begin();
 
-      elt = lex.getNext();
       for (i = 0; i < count; ++i)
       {
-        visitElement(elt);
+        visitElement(it);
       }
     }
 
@@ -116,15 +114,15 @@ namespace qi {
       int count, i;
       _msgSrc.readInt(count);
       _msgDest.writeInt(count);
-      qi::SignatureLexer          lexk(keyType);
-      qi::SignatureLexer::Element eltk = lexk.getNext();
-      qi::SignatureLexer          lexv(valueType);
-      qi::SignatureLexer::Element eltv = lexv.getNext();
+      qi::Signature           sigk(keyType);
+      qi::Signature::iterator itk = sigk.begin();
+      qi::Signature           sigv(valueType);
+      qi::Signature::iterator itv = sigv.begin();
 
       for (i = 0; i < count; ++i)
       {
-        visitElement(eltk);
-        visitElement(eltv);
+        visitElement(itk);
+        visitElement(itv);
       }
     }
 

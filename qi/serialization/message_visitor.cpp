@@ -13,7 +13,7 @@ namespace qi {
 
 
     MessageVisitor::MessageVisitor(Message &msg, const char *signature)
-      : _lexer(signature),
+      : _sig(signature),
         _message(msg)
     {
 
@@ -21,30 +21,28 @@ namespace qi {
 
     void MessageVisitor::visit()
     {
-      std::cout << "visit" << std::endl;
-      qi::SignatureLexer::Element elt;
+      qi::Signature::iterator it;
 
-      while (true) {
-        elt = _lexer.getNext();
-        switch (elt.signature[0]) {
+      for (it = _sig.begin(); it != _sig.end(); ++it)
+      {
+        std::cout << "visit" << std::endl;
+
+        switch (it.signature[0]) {
         case '[':
-          onList(elt.child_1);
+          onList(it.child_1);
           break;
         case '{':
-          onMap(elt.child_1, elt.child_2);
+          onMap(it.child_1, it.child_2);
           break;
         case '@':
-          onProtobuf(elt.signature);
+          onProtobuf(it.signature);
           break;
         case 0:
           return;
         default:
-          onSimple(elt.signature);
+          onSimple(it.signature);
           break;
         }
-
-        if (!elt.signature || !elt.signature[0])
-          break;
       }
       //SignatureVisitor::visit();
     }
