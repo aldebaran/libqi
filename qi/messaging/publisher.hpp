@@ -93,7 +93,7 @@ namespace qi {
     /// <returns>void</returns>
     /// <seealso cref="qi::Subscriber"/>
     template<typename PUBLISH_TYPE>
-    void publish(const std::string topicName, const PUBLISH_TYPE& publishData)
+    void publish(const std::string& topicName, const PUBLISH_TYPE& publishData)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
       qi::serialization::Message ser;
