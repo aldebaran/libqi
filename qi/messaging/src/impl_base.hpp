@@ -31,6 +31,10 @@ namespace qi {
         return _isInitialized;
       }
 
+      qi::Context* getQiContextPtr() {
+        return _masterClient.getQiContextPtr();
+      }
+
       /// <summary>Gets the endpoint context. </summary>
       /// <returns>The endpoint context.</returns>
       const qi::detail::EndpointContext& getEndpointContext() const {
