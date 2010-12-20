@@ -56,7 +56,8 @@ void qichatprompt(std::string& username, const std::string& addr) {
       publisher.publish("qichat", disconnectMessage);
     }
   }
-  std::cout << "===========================================" << std::endl;
+  std::cout << std::endl <<
+    "===========================================" << std::endl;
 }
 
 int main(int argc, char *argv[])
