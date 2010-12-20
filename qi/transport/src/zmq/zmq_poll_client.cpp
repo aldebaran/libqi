@@ -26,15 +26,21 @@ namespace qi {
 
       //return -1 on error, 0 otherwise
       int ZMQPollClient::pollRecv(long timeout) {
-        int             rc = 0;
-
+        int rc = 0;
         rc = zmq::poll(_items, 1, timeout);
-        //if (rc <= 0) { // less debug when ok
-        //  qisDebug << "ZMQPollClient rc:" << rc << " _items[0].revents: " << _items[0].revents << " timeout: " << timeout << std::endl;
-        //}
         if ((rc <= 0) || (!(_items[0].revents & ZMQ_POLLIN)))
           return -1;
         return 0;
+      }
+
+      void ZMQPollClient::recv(zmq::message_t *msg)
+      {
+        int rc = 0;
+        // used by subscriber who wants polling, but no timeout
+        do {
+          rc = pollRecv(1000 * 1000); // 1s
+        } while(rc < 0);
+        _zsocket.recv(msg);
       }
 
       void ZMQPollClient::recv(zmq::message_t *msg, long usTimeout)

@@ -30,6 +30,10 @@ namespace qi {
         /// <param name="msg"> a microsecond timeout </param>
         void recv(zmq::message_t *msg, long usTimeout);
 
+        /// <summary> zmq::recv with no timeout </summary>
+        /// <param name="msg"> a pointer to a zmq message </param>
+        void recv(zmq::message_t *msg);
+
       protected:
         int pollRecv(long usTimeout);
 
