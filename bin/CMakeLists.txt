@@ -8,4 +8,5 @@
 
 add_subdirectory("qimaster")
 add_subdirectory("qi")
+add_subdirectory("qichat")
 
