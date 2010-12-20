@@ -8,6 +8,7 @@
 
 #include <qi/transport/src/zmq/zmq_subscriber.hpp>
 #include <qi/perf/sleep.hpp>
+#include <qi/exceptions/exceptions.hpp>
 #include <iostream>
 
 namespace qi {
@@ -45,18 +46,16 @@ namespace qi {
           while(!_isClosing)
           {
             zmq::message_t msg;
-            _poller.recv(&msg, 10 * 1000 * 1000);
+            _poller.recv(&msg);
             std::string data((char *)msg.data(), msg.size());
 
             // No way to notice that the subscriber handler has
             // been deallocated. If it has, this will segfault
             this->getSubscribeHandler()->subscribeHandler(data);
           }
-        } catch(const std::exception&) {
+        } catch(const qi::transport::Exception& e) {
           // don't print what() because it may be invalid during destruction
-          std::cout << "ZMQSubscriber::recv exception " << std::endl;
-        } catch(...) {
-          std::cout << "ZMQSubscriber::deallocated? " << std::endl;
+          std::cout << "ZMQSubscriber::recv exception. Reason: " << e.what() << std::endl;
         }
       }
 
