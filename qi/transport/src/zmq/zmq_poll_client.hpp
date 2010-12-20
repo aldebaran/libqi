@@ -25,6 +25,8 @@ namespace qi {
       public:
         ZMQPollClient(zmq::socket_t &socket);
 
+        virtual ~ZMQPollClient();
+
         /// <summary> zmq::recv with timeout </summary>
         /// <param name="msg"> a pointer to a zmq message </param>
         /// <param name="msg"> a microsecond timeout </param>
@@ -40,7 +42,8 @@ namespace qi {
       protected:
         zmq::socket_t   &_zsocket;
         zmq_pollitem_t   _items[1];
-        bool             _first_time;
+        bool             _firstTime;
+        bool             _shuttingDown;
       };
     }
   }
