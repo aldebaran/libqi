@@ -16,7 +16,6 @@
 #include <qi/messaging/src/network/machine_context.hpp>
 #include <qi/messaging/context.hpp>
 
-
 namespace qi {
   namespace detail {
     class MasterClient {

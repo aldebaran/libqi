@@ -37,7 +37,6 @@ namespace qi {
       : _isInitialized(false),
         _qiContextPtr( (ctx == NULL)? getDefaultQiContextPtr() : ctx),
         _transportClient(_qiContextPtr->getTransportContext())
-
     {
     }
 
