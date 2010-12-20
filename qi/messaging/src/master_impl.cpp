@@ -10,6 +10,7 @@
 #include <qi/messaging/src/network/endpoints.hpp>
 #include <qi/messaging/src/network/platform.hpp>
 #include <qi/perf/to_string.hpp> // wrong place, sorry
+#include <qi/perf/sleep.hpp>
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
@@ -265,18 +266,73 @@ namespace qi {
       }
 
       qisDebug << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
-      Topic t;
-      t.topicName = topicName;
 
       if (isManyToMany) {
         // create forwarder
-        
+        xCreateManyToManyTopicForwarder(topicName, endpointID);
       } else {
+        Topic t;
+        t.topicName = topicName;
         t.publishEndpointID = endpointID;
         t.subscribeEndpointID = endpointID;
         t.publisherIDs.push_back(endpointID);
+        _knownTopics.insert(topicName, t);
       }
-      _knownTopics.insert(topicName, t);
+    }
+
+    void MasterImpl::xCreateManyToManyTopicForwarder(
+      const std::string& topicName,
+      const std::string& originalPublisherEndpointID)
+    {
+        // Use the master transport context
+        qi::Context* c = _server.getQiContextPtr();
+
+        qi::transport::TransportForwarder* forwarder =
+          new qi::transport::TransportForwarder(
+          c->getTransportContext());
+
+        //TForwarderPtr forwarder(
+        //  new qi::transport::TransportForwarder(
+        //  c->getTransportContext()));
+
+        // Use the server's machine context ( we know it is the same machine )
+        const MachineContext& m = _server.getMachineContext();
+
+        // Create the in context and endpoints for publishers to connect to
+        EndpointContext inContext;
+        inContext.type = FORWARDER_IN_ENDPOINT;
+        inContext.machineID = m.machineID;
+        inContext.port = _addressManager.getNewPort(m.machineID);
+        inContext.name = topicName + " Topic Forwarder In";
+        inContext.contextID = c->getID();
+        std::vector<std::string> inAddresses  = getEndpoints(inContext, m);
+        xRegisterEndpoint(inContext);
+
+        // Create the out context for subscribers to connect to
+        EndpointContext outContext;
+        outContext.type = FORWARDER_OUT_ENDPOINT;
+        outContext.machineID = m.machineID;
+        outContext.port = _addressManager.getNewPort(m.machineID);
+        outContext.name = topicName + " Topic Forwarder Out";
+        outContext.contextID = inContext.contextID;
+        std::vector<std::string> outAddresses = getEndpoints(outContext, m);
+        xRegisterEndpoint(outContext);
+
+        // tell the forwarder to bind all these addresses
+        forwarder->bind(inAddresses, outAddresses);
+
+        // start the forwarder in a new thread for now 
+        boost::thread forwarderThread(
+          ::boost::bind(&qi::transport::TransportForwarder::run, forwarder));
+//        sleep(4.0);
+
+        // finish and insert the Topic description
+        Topic t;
+        t.topicName = topicName;
+        t.publishEndpointID   = inContext.endpointID;
+        t.subscribeEndpointID = outContext.endpointID;
+        t.publisherIDs.push_back(originalPublisherEndpointID);
+        _knownTopics.insert(topicName, t);
     }
 
     void MasterImpl::unregisterTopic(const std::string& topicName) {

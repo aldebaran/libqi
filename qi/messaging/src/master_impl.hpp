@@ -17,7 +17,7 @@
 #include <qi/messaging/src/topic.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
-#include <qi/transport/src/zmq/zmq_forwarder.hpp> // TODO hide this
+#include <qi/transport/transport_forwarder.hpp> // TODO hide this
 #include <boost/shared_ptr.hpp>
 
 namespace qi {
@@ -119,6 +119,10 @@ namespace qi {
       std::vector<std::string> xListServicesForEndpoint(const std::string& endpointID);
       std::vector<std::string> xListTopicsForEndpoint(const std::string& endpointID);
 
+      void xCreateManyToManyTopicForwarder(
+        const std::string& topicName,
+        const std::string& originalPublisherEndpointID);
+
       // Helper method
       template <typename OBJECT_TYPE, typename METHOD_TYPE>
       void xAddMasterMethod(
@@ -144,9 +148,8 @@ namespace qi {
       /// <summary> A map from topic signatures to their Topic structure </summary>
       MutexedNameLookup<qi::detail::Topic>           _knownTopics;
 
-      MutexedNameLookup<
-        boost::shared_ptr<qi::transport::detail::ZMQForwarder>
-        > _topicForwarders;
+      typedef boost::shared_ptr<qi::transport::TransportForwarder> TForwarderPtr;
+      MutexedNameLookup<TForwarderPtr> _topicForwarders;
 
       AddressManager _addressManager;
 
