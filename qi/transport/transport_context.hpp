@@ -29,6 +29,7 @@ namespace qi {
       friend class TransportServer;
       friend class TransportSubscriber;
       friend class TransportPublisher;
+      friend class TransportForwarder;
 
       /// <summary>Gets a context. The method is protected because,
       /// the return implementation is only relevant to friends
