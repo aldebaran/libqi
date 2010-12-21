@@ -6,7 +6,9 @@ add_subdirectory(test_transport_publish)
 add_subdirectory(test_functor)
 add_subdirectory(test_signature)
 add_subdirectory(test_log)
-add_subdirectory(test_c_bindings)
+
+# This is not a test
+# add_subdirectory(test_c_bindings)
 add_subdirectory(test_endpoint_context)
 add_subdirectory(test_serialization)
 
