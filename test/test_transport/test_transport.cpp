@@ -129,7 +129,7 @@ int main_client(qi::transport::detail::ClientBackend *client)
   std::string            tosend;
   std::string            torecv;
 
-  for (int i = 0; i < 12; ++i)
+  for (int i = 4; i < 5; ++i)
   {
     tosend = dp.buffer(i);
     dp.start(gLoopCount);
