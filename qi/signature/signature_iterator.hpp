@@ -35,6 +35,20 @@ namespace qi {
       _end._current   = _signature + signature.size() + 1;
     }
 
+    enum Type {
+      None     = 0,
+      Bool     = 'b',
+      Char     = 'c',
+      Void     = 'v',
+      Int      = 'i',
+      Float    = 'f',
+      Double   = 'd',
+      String   = 's',
+      List     = '[',
+      Map      = '{',
+      Protobuf = '@'
+    };
+
     /// Bad signature format
     class BadFormatException : public std::exception {
     public:
@@ -71,6 +85,11 @@ namespace qi {
       };
 
       iterator &next();
+
+      /// <summary> return the type of the current element. </summary>
+      Type type()const {
+        return static_cast<Type>(raw_signature[0]);
+      }
 
       /// <summary> return the complete signature for the current type.
       /// This will include items types for list and map </summary>

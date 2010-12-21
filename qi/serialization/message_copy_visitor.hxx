@@ -36,14 +36,14 @@ namespace qi {
     template <typename MessageSrc, typename MessageDest>
     void MessageCopyVisitor<MessageSrc, MessageDest>::visitElement(qi::Signature::iterator &elt)
     {
-      switch (elt.raw_signature[0]) {
-      case '[':
+      switch (elt.type()) {
+      case qi::Signature::List:
         onList(elt.raw_child_1);
         break;
-      case '{':
+      case qi::Signature::Map:
         onMap(elt.raw_child_1, elt.raw_child_2);
         break;
-      case '@':
+      case qi::Signature::Protobuf:
         onProtobuf(elt.raw_signature);
         break;
       case 0:
@@ -58,32 +58,32 @@ namespace qi {
     void MessageCopyVisitor<MessageSrc, MessageDest>::onSimple(const char *simpleType)
     {
       switch(*simpleType) {
-      case 'b':
+      case qi::Signature::Bool:
         bool b;
         _msgSrc.readBool(b);
         _msgDest.writeBool(b);
         break;
-      case 'c':
+      case qi::Signature::Char:
         char c;
         _msgSrc.readChar(c);
         _msgDest.writeChar(c);
         break;
-      case 'i':
+      case qi::Signature::Int:
         int i;
         _msgSrc.readInt(i);
         _msgDest.writeInt(i);
         break;
-      case 'f':
+      case qi::Signature::Float:
         float f;
         _msgSrc.readFloat(f);
         _msgDest.writeFloat(f);
         break;
-      case 'd':
+      case qi::Signature::Double:
         double d;
         _msgSrc.readDouble(d);
         _msgDest.writeDouble(d);
         break;
-      case 's':
+      case qi::Signature::String:
         std::string s;
         _msgSrc.readString(s);
         _msgDest.writeString(s);

@@ -27,14 +27,14 @@ namespace qi {
       {
         std::cout << "visit" << std::endl;
 
-        switch (it.raw_signature[0]) {
-        case '[':
+        switch (it.type()) {
+        case qi::Signature::List:
           onList(it.raw_child_1);
           break;
-        case '{':
+        case qi::Signature::Map:
           onMap(it.raw_child_1, it.raw_child_2);
           break;
-        case '@':
+        case qi::Signature::Protobuf:
           onProtobuf(it.raw_signature);
           break;
         case 0:
