@@ -75,7 +75,7 @@ TEST(TransportZMQPublisher , HundredThousand)
 
 TEST(TransportZMQPublisher , MultipleSubscribers)
 {
-  int numMessages = 100000;
+  int numMessages = 10000;
 
   const unsigned int numSubscribers = 10;
   std::cout << "Using " << numSubscribers << " subscribers" << std::endl;
