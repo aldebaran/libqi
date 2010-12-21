@@ -50,10 +50,10 @@ namespace qi {
 
       void *worker_routine(void *arg)
       {
-        int              rc = 0;
-        ZMQServerBackend   *zserv = (ZMQServerBackend *)(arg);
-        zmq::message_t   msg;
-        zmq::socket_t    s(zserv->_zcontext, ZMQ_REP);
+        int                   rc = 0;
+        ZMQServerQueueBackend *zserv = (ZMQServerQueueBackend *)(arg);
+        zmq::message_t        msg;
+        zmq::socket_t         s(zserv->_zcontext, ZMQ_REP);
 
         s.connect(gWorkersAddress);
         // alsdebug << "ZMQ:entering worker loop";
