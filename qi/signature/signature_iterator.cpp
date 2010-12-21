@@ -17,22 +17,21 @@ namespace qi {
     const char *_current_signature = _current;
 
     //reinit ourself
-    child_1   = 0;
-    child_2   = 0;
-    pointer   = 0;
-    signature = 0;
+    raw_child_1      = 0;
+    raw_child_2      = 0;
+    pointer          = 0;
+    raw_signature    = 0;
+    _child_1_current = 0;
+    _child_2_current = 0;
 
     switch (*_current) {
     case '[':
       {
         eat(); //[
-        //small recursion into ourself, dont be afraid, we stored _current!
-//        next();
-//        child_1 = signature;
         Signature s1(_current);
         Signature::iterator it1 = s1.begin();
-        child_1 = it1.signature;
-        _current = it1._current;
+        raw_child_1 = it1.raw_signature;
+        _child_1_current = _current = it1._current;
         if (*_current != ']') {
           std::stringstream ss;
           ss << "signature bad format: " << _signature;
@@ -48,18 +47,13 @@ namespace qi {
         eat(); //{
         Signature s1(_current);
         Signature::iterator it1 = s1.begin();
-        child_1 = it1.signature;
-        _current = it1._current;
-      //small recursion into ourself, dont be afraid, we stored _current!
-      //next();
-        //      child_1 = signature;
+        raw_child_1 = it1.raw_signature;
+        _child_1_current = _current = it1._current;
+
         Signature s2(_current);
         Signature::iterator it2 = s2.begin();
-        child_2 = it2.signature;
-        _current = it2._current;
-        //      //small recursion into ourself, dont be afraid, we stored _current!
-        //      next();
-        //      child_2 = signature;
+        raw_child_2 = it2.raw_signature;
+        _child_2_current = _current = it2._current;
 
         if (*_current != '}') {
           std::stringstream ss;
@@ -111,7 +105,7 @@ namespace qi {
       pointer = 1;
       eat();
     }
-    signature = _current_signature;
+    raw_signature = _current_signature;
     return *this;
   }
 

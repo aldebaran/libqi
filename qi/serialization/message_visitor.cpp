@@ -27,20 +27,20 @@ namespace qi {
       {
         std::cout << "visit" << std::endl;
 
-        switch (it.signature[0]) {
+        switch (it.raw_signature[0]) {
         case '[':
-          onList(it.child_1);
+          onList(it.raw_child_1);
           break;
         case '{':
-          onMap(it.child_1, it.child_2);
+          onMap(it.raw_child_1, it.raw_child_2);
           break;
         case '@':
-          onProtobuf(it.signature);
+          onProtobuf(it.raw_signature);
           break;
         case 0:
           return;
         default:
-          onSimple(it.signature);
+          onSimple(it.raw_signature);
           break;
         }
       }

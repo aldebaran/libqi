@@ -21,31 +21,41 @@ TEST(TestSignatureIterator, Simple) {
   qi::Signature sig("i");
   it = sig.begin();
 
-  EXPECT_STREQ("i", it.signature);
-  EXPECT_FALSE(it.child_1);
-  EXPECT_FALSE(it.child_2);
+  EXPECT_STREQ("i", it.raw_signature);
+  EXPECT_FALSE(it.raw_child_1);
+  EXPECT_FALSE(it.raw_child_2);
   EXPECT_FALSE(it.pointer);
+  EXPECT_EQ("i", it.signature());
+  EXPECT_EQ("",  it.child_1());
+  EXPECT_EQ("",  it.child_2());
 }
 
 TEST(TestSignatureIterator, STL) {
   qi::Signature::iterator it;
 
   qi::Signature sig1("[iiss]");
-  EXPECT_THROW(sig1.begin(), qi::BadFormatException);
+  EXPECT_THROW(sig1.begin(), qi::Signature::BadFormatException);
 
   qi::Signature sig2("[i]*");
   it = sig2.begin();
-  EXPECT_STREQ("[i]*", it.signature);
-  EXPECT_STREQ("i]*",  it.child_1);
-  EXPECT_FALSE(it.child_2);
+  EXPECT_STREQ("[i]*", it.raw_signature);
+  EXPECT_STREQ("i]*",  it.raw_child_1);
+  EXPECT_FALSE(it.raw_child_2);
   EXPECT_TRUE(it.pointer);
+  EXPECT_EQ("[i]*", it.signature());
+  EXPECT_EQ("i",    it.child_1());
+  EXPECT_EQ("",     it.child_2());
+
 
   qi::Signature sig3("{is}*");
   it = sig3.begin();
-  EXPECT_STREQ("{is}*", it.signature);
-  EXPECT_STREQ("is}*",  it.child_1);
-  EXPECT_STREQ("s}*",   it.child_2);
+  EXPECT_STREQ("{is}*", it.raw_signature);
+  EXPECT_STREQ("is}*",  it.raw_child_1);
+  EXPECT_STREQ("s}*",   it.raw_child_2);
   EXPECT_TRUE(it.pointer);
+  EXPECT_EQ("{is}*", it.signature());
+  EXPECT_EQ("i",     it.child_1());
+  EXPECT_EQ("s",     it.child_2());
 }
 
 TEST(TestSignatureIterator, Protobuf) {
@@ -54,17 +64,24 @@ TEST(TestSignatureIterator, Protobuf) {
   qi::Signature sig1("@toto@*i");
   it = sig1.begin();
 
-  EXPECT_STREQ("@toto@*i", it.signature);
-  EXPECT_FALSE(it.child_1);
-  EXPECT_FALSE(it.child_2);
+  EXPECT_STREQ("@toto@*i", it.raw_signature);
+  EXPECT_FALSE(it.raw_child_1);
+  EXPECT_FALSE(it.raw_child_2);
   EXPECT_TRUE(it.pointer);
+  EXPECT_EQ("@toto@*", it.signature());
+  EXPECT_EQ("",        it.child_1());
+  EXPECT_EQ("",        it.child_2());
 
   EXPECT_TRUE(it != sig1.end());
   ++it;
-  EXPECT_STREQ("i", it.signature);
-  EXPECT_FALSE(it.child_1);
-  EXPECT_FALSE(it.child_2);
+  EXPECT_STREQ("i", it.raw_signature);
+  EXPECT_FALSE(it.raw_child_1);
+  EXPECT_FALSE(it.raw_child_2);
   EXPECT_FALSE(it.pointer);
+  EXPECT_EQ("i", it.signature());
+  EXPECT_EQ("",  it.child_1());
+  EXPECT_EQ("",  it.child_2());
+
   EXPECT_TRUE(it != sig1.end());
   ++it;
   EXPECT_TRUE(it == sig1.end());

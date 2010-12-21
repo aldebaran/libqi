@@ -29,3 +29,6 @@ use_lib(example_qi_signature_pp QI)
 
 create_bin(example_qi_signature_function NO_INSTALL example_qi_signature_function.cpp)
 use_lib(example_qi_signature_function QI)
+
+create_bin(example_qi_signature_iterator NO_INSTALL example_qi_signature_iterator.cpp)
+use_lib(example_qi_signature_iterator QI)

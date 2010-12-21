@@ -36,20 +36,20 @@ namespace qi {
     template <typename MessageSrc, typename MessageDest>
     void MessageCopyVisitor<MessageSrc, MessageDest>::visitElement(qi::Signature::iterator &elt)
     {
-      switch (elt.signature[0]) {
+      switch (elt.raw_signature[0]) {
       case '[':
-        onList(elt.child_1);
+        onList(elt.raw_child_1);
         break;
       case '{':
-        onMap(elt.child_1, elt.child_2);
+        onMap(elt.raw_child_1, elt.raw_child_2);
         break;
       case '@':
-        onProtobuf(elt.signature);
+        onProtobuf(elt.raw_signature);
         break;
       case 0:
         break;
       default:
-        onSimple(elt.signature);
+        onSimple(elt.raw_signature);
         break;
       }
     }

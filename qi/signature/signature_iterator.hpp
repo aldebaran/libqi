@@ -12,25 +12,11 @@
 
 namespace qi {
 
-  /// <summary>
-  /// Bad signature format
-  /// </summary>
-  class BadFormatException : public std::exception {
-  public:
-    /// <summary>Constructor. </summary>
-    BadFormatException () {}
-    /// <summary>Constructor. </summary>
-    /// <param name="message">The message.</param>
-    BadFormatException (const std::string & message) { this->message = message; }
-    virtual ~BadFormatException () throw () {}
-    /// <summary>Gets the exception message. </summary>
-    /// <returns>The message</returns>
-    virtual const char * what () const throw () { return message.c_str(); }
-  private:
-    std::string message;
-  };
 
-  /// <summary> Signature container. This class is mostly useful because it implement an iterator </summary>
+
+  /// Signature container. This class provide a useful iterator.
+  /// \ingroup Signature
+  /// \include example_qi_signature_iterator.cpp
   class Signature {
   public:
     Signature(const char *signature)
@@ -48,6 +34,23 @@ namespace qi {
       //+1 to be after the end
       _end._current   = _signature + signature.size() + 1;
     }
+
+    /// Bad signature format
+    class BadFormatException : public std::exception {
+    public:
+      BadFormatException () {}
+      /// Constructor
+      /// <param name="message">The message.</param>
+      BadFormatException (const std::string & message) { this->message = message; }
+      virtual ~BadFormatException () throw () {}
+      /// <summary>Gets the exception message. </summary>
+      /// <returns>The message</returns>
+      virtual const char * what () const throw () { return message.c_str(); }
+    private:
+      std::string message;
+    };
+
+
 
     /// <summary>
     /// Signature iterator, this will return type composing a signature one by one.
@@ -69,18 +72,60 @@ namespace qi {
 
       iterator &next();
 
+      /// <summary> return the complete signature for the current type.
+      /// This will include items types for list and map </summary>
+      std::string signature()const {
+        return std::string(raw_signature, _current - raw_signature);
+      }
+
+      /// <summary> return the item type for list, and the key type for map. return empty when the current
+      /// type is not a list nor a map.
+      /// </summary>
+      std::string child_1()const {
+        if (raw_child_1 && _child_1_current)
+          return std::string(raw_child_1, _child_1_current - raw_child_1);
+        return std::string();
+      }
+
+      /// <summary> return the value type for a map. return empty when the current type is not a a map.
+      /// </summary>
+      std::string child_2()const {
+        if (raw_child_2 && _child_2_current)
+          return std::string(raw_child_2, _child_2_current - raw_child_2);
+        return std::string();
+      }
+
     public:
-      const char         *signature;
+      /// <summary> the raw signature, this is not a null terminated string, just a pointer to
+      /// the current position in the signature buffer.
+      /// </summary>
+      const char         *raw_signature;
+
+      /// <summary> true if the current type is a pointer </summary>
       bool                pointer;
-      const char         *child_1;
-      const char         *child_2;
 
-    protected:
+      /// <summary> the raw child1, this is not a null terminated string, just a pointer to
+      /// the current position in the signature buffer.
+      /// raw_child_1 is null for all value except list and map. For list it represent point to the
+      /// the start of items type of the list. For the map it point to the start of the key type of the map.
+      /// </summary>
+
+      const char         *raw_child_1;
+      /// <summary> the raw child2, this is not a null terminated string, just a pointer to
+      /// the current position in the signature buffer.
+      /// raw_child_1 is null for all value except map. For the map it point to the start of the value type of the map.
+      /// </summary>
+      const char         *raw_child_2;
+
+    private:
       void eat() { _current++; }
-
       const char *_signature;
       const char *_current;
+      const char *_child_1_current;
+      const char *_child_2_current;
     };
+
+
 
     iterator begin()const {
       iterator it;
@@ -94,7 +139,7 @@ namespace qi {
       return _end;
     }
 
-  protected:
+  private:
     iterator    _end;
     const char *_signature;
   };
