@@ -63,7 +63,7 @@ namespace qi {
         outHostAndPort.second = i;
       } else {
         outHostAndPort.second = 0;
-        parts.push_back(""); /// hmmm
+        parts.push_back("0"); /// hmmm
       }
 
       return isValidHostAndPort(outHostAndPort.first, parts[1]);
