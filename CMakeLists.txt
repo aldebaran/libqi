@@ -18,7 +18,7 @@ create_config_h("qi/config.hpp.in" "qi/config.hpp")
 
 include_directories(bindings/c/)
 
-file(GLOB CORE_SRC                 qi/core/*.cpp qi/core/*.h*)
+file(GLOB CORE_SRC                 qi/core/*.h*)
 file(GLOB MESSAGING                qi/messaging/*.cpp qi/messaging/*.h*)
 file(GLOB MESSAGING_SRC            qi/messaging/src/*.cpp qi/messaging/src/*.h*)
 file(GLOB MESSAGING_SRC_NETWORK    qi/messaging/src/network/*.cpp qi/messaging/src/network/*.h*)

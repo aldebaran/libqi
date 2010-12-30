@@ -12,7 +12,6 @@
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 
 #include <qi/transport/src/server_backend.hpp>
-#include <qi/core/handlers_pool.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 
@@ -63,7 +62,6 @@ namespace qi {
         zmq::context_t          &_zcontext;
         zmq::socket_t            _zsocket;
         boost::mutex             _socketMutex;
-        qi::detail::HandlersPool _handlersPool;
       };
     }
   }
