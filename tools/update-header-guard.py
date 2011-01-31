@@ -77,9 +77,9 @@ def read_header_guard(fname):
 def write_header_guard(fname, guard, pos):
     """ rewrite the header guard lines """
     lines = []
-    with open(fname, "r") as f:
+    with open(fname, "rb") as f:
         lines = f.readlines()
-    with open(fname, "w") as f:
+    with open(fname, "wb") as f:
         for i in range(len(lines)):
             line = lines[i]
             if i == pos[0]:
@@ -122,12 +122,8 @@ def ls_r(directory, pattern):
             res.append(os.path.join(new_root, f))
     return [ x for x in res if myreg.match(x) ]
 
-if __name__ == "__main__":
-    """ for example try :
-        checkheader.py qi
-    """
-    dest = sys.argv[1]
-    flist = ls_r(dest, ".*\.h(pp|xx)$")
+def main(dest):
+    flist = ls_r(dest, ".*\.h(|pp|xx)$")
     flist = [ os.path.join(dest, x) for x in flist ]
     for f in flist:
         print "checking file:", f
@@ -135,3 +131,10 @@ if __name__ == "__main__":
         guard = generate_name(f)
         print "new name: ", guard
         write_header_guard(f, guard, (l1, l2, l3))
+
+if __name__ == "__main__":
+    """ for example try :
+        update-header-guard.py qi
+    """
+    dest = sys.argv[1]
+    main(dest)
