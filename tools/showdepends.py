@@ -38,35 +38,35 @@ def build_trees(top_src_dir):
             continue
         cmake_files = [f for f in files if is_cmake(f)]
         for cmake_file in cmake_files:
-			path = os.path.normpath(os.path.join(rel_root, cmake_file))
-			res = res + build_proj_objects(os.path.join(top_src_dir, path ))
+            path = os.path.normpath(os.path.join(rel_root, cmake_file))
+            res = res + build_proj_objects(os.path.join(top_src_dir, path ))
     return res
 
 def build_proj_objects(path_to_file):
-	#print "==========================="
-	#print path_to_file
-	projects = []
-	o = open(path_to_file, "rb")
-	whole_file = o.read()
-	p = re.compile(r'[\s]*use_lib[\s]*[(]+[\s]*(?P<proj>[\w]+)[\s]+(?P<deps>[^)]+)[)]+', re.MULTILINE)
-	iter = p.finditer(whole_file)
-	for m in iter:
-		#print "Proj:", m.group("proj")
-		#print "AllDeps:", m.group("deps")
-		splitre = re.compile(r'[\\r\\n\W]+', re.MULTILINE)
-		deps = splitre.split(m.group("deps"))
-		#print "SplitDeps:", deps
-		proj_obj = proj_object()
-		proj_obj.name = m.group("proj").upper()
-		proj_obj.path = path_to_file
-		for d in deps:
-			if d is not "":
-				#print "Dep:", d
-				proj_obj.depends.append(d)
-		projects.append(proj_obj)
-		#print "--"
-	o.close()
-	return merge_projects(projects)
+    #print "==========================="
+    #print path_to_file
+    projects = []
+    o = open(path_to_file, "rb")
+    whole_file = o.read()
+    p = re.compile(r'[\s]*use_lib[\s]*[(]+[\s]*(?P<proj>[\w]+)[\s]+(?P<deps>[^)]+)[)]+', re.MULTILINE)
+    iter = p.finditer(whole_file)
+    for m in iter:
+        #print "Proj:", m.group("proj")
+        #print "AllDeps:", m.group("deps")
+        splitre = re.compile(r'[\\r\\n\W]+', re.MULTILINE)
+        deps = splitre.split(m.group("deps"))
+        #print "SplitDeps:", deps
+        proj_obj = proj_object()
+        proj_obj.name = m.group("proj").upper()
+        proj_obj.path = path_to_file
+        for d in deps:
+            if d is not "":
+                #print "Dep:", d
+                proj_obj.depends.append(d)
+        projects.append(proj_obj)
+        #print "--"
+    o.close()
+    return merge_projects(projects)
 
 def is_included(path_to_file, trees):
     for t in trees:
@@ -82,19 +82,19 @@ def print_trees(filter, trees):
         print_tree("", t, trees)
 
 def print_tree(indent, tree, trees):
-	print indent + tree.name
-	for i in tree.depends:
-		# see if we know this file
-		tt = find_proj(i, trees)
-		if tt is None:
-			if i == "ALL" or i == "REQUIRED":
-				print indent + "  " + i + " WARNING " + tree.name
-			else:
-				# An external header
-				print indent + "  " + i + "*"
-		else:
-			# A known header
-			print_tree(indent + "  ", tt, trees)
+    print indent + tree.name
+    for i in tree.depends:
+        # see if we know this file
+        tt = find_proj(i, trees)
+        if tt is None:
+            if i == "ALL" or i == "REQUIRED":
+                print indent + "  " + i + " WARNING " + tree.name
+            else:
+                # An external header
+                print indent + "  " + i + "*"
+        else:
+            # A known header
+            print_tree(indent + "  ", tt, trees)
 
 def find_proj(path, trees):
     for t in trees:
@@ -105,22 +105,22 @@ def find_proj(path, trees):
     return None
 
 def contains_proj(trees, name):
-	for t in trees:
-		if t.name == name:
-			return True
-	return False
+    for t in trees:
+        if t.name == name:
+            return True
+    return False
 
 def merge_projects(trees):
-	new_trees = []
-	for i in range(0, len(trees)):
-		name = trees[i].name
-		if not contains_proj(new_trees, name):
-			if i < len(trees)-1:
-				for k in range(i+1, len(trees)):
-					if trees[k].name == name:
-						trees[i].depends = trees[i].depends + trees[k].depends
-			new_trees.append(trees[i])
-	return new_trees
+    new_trees = []
+    for i in range(0, len(trees)):
+        name = trees[i].name
+        if not contains_proj(new_trees, name):
+            if i < len(trees)-1:
+                for k in range(i+1, len(trees)):
+                    if trees[k].name == name:
+                        trees[i].depends = trees[i].depends + trees[k].depends
+            new_trees.append(trees[i])
+    return new_trees
 
 def filter_trees(filter, trees):
     if filter is None:
