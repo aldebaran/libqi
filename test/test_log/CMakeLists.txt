@@ -1,5 +1,5 @@
 
-create_gtest(test_log
+qi_add_gtest(test_log
  SRC test_log.cpp
- DEPENDENCIES QI GTEST
+ DEPENDS QI GTEST
  TIMEOUT 120)

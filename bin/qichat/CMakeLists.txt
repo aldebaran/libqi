@@ -6,11 +6,8 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
-project (qichat-display)
-create_bin(qichat-display qichat-display.cpp)
-use_lib(qichat-display QI BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qichat-display qichat-display.cpp
+              DEPENDS QI BOOST_PROGRAM_OPTIONS)
 
-
-project (qichat-prompt)
-create_bin(qichat-prompt qichat-prompt.cpp)
-use_lib(qichat-prompt QI BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qichat-prompt qichat-prompt.cpp
+              DEPENDS QI BOOST_PROGRAM_OPTIONS)

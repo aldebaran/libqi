@@ -1,20 +1,25 @@
 
-use(PROTOBUF-TOOLS)
-tc_wrap_proto(PROTO_SRC alvalue.proto)
 
-create_gtest(test_messaging
- SRC test_messaging.cpp ${PROTO_SRC}
- DEPENDENCIES QI GTEST
+find_package(Protobuf)
+
+protobuf_generate_cpp(PROTO_SRC PROTO_H alvalue.proto)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+#use(PROTOBUF-TOOLS)
+#tc_wrap_proto(PROTO_SRC alvalue.proto)
+
+qi_add_gtest(test_messaging
+ SRC test_messaging.cpp ${PROTO_SRC} ${PROTO_H}
+ DEPENDS QI GTEST
  TIMEOUT 120)
 
-create_gtest(test_messaging_stress
+qi_add_gtest(test_messaging_stress
  SRC test_messaging_stress.cpp
- DEPENDENCIES QI GTEST
+ DEPENDS QI GTEST
  TIMEOUT 120)
 
-create_gtest(test_messaging_signatures
- SRC test_messaging_signatures.cpp ${PROTO_SRC}
- DEPENDENCIES QI GTEST
+qi_add_gtest(test_messaging_signatures
+ SRC test_messaging_signatures.cpp ${PROTO_SRC} ${PROTO_H}
+ DEPENDS QI GTEST
  TIMEOUT 120)
 
 #qi_create_gtest(test_messaging_naoqi

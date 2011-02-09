@@ -4,9 +4,6 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(perf-transport)
 
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.cmake)
-
 function("tc_add_target_definition" target property)
   set(_prev_compdef)
   get_target_property(_prev_compdef ${target} COMPILE_DEFINITIONS)
@@ -18,9 +15,9 @@ endfunction()
 
 
 if (WITH_ZMQ)
-  create_gtest(perf_transport_zmqsingle SRC perf_transport.cpp DEPENDENCIES GTEST QI)
-  create_gtest(perf_transport_zmqqueue  SRC perf_transport.cpp DEPENDENCIES GTEST QI)
-  create_gtest(perf_transport_zmqpoll   SRC perf_transport.cpp DEPENDENCIES GTEST QI)
+  qi_add_gtest(perf_transport_zmqsingle SRC perf_transport.cpp DEPENDS GTEST QI)
+  qi_add_gtest(perf_transport_zmqqueue  SRC perf_transport.cpp DEPENDS GTEST QI)
+  qi_add_gtest(perf_transport_zmqpoll   SRC perf_transport.cpp DEPENDS GTEST QI)
   tc_add_target_definition(perf_transport_zmqsingle_bin "TEST_TRANSPORT_ZMQ_SINGLE")
   tc_add_target_definition(perf_transport_zmqqueue_bin  "TEST_TRANSPORT_ZMQ_QUEUE")
   tc_add_target_definition(perf_transport_zmqpoll_bin   "TEST_TRANSPORT_ZMQ_POLL")

@@ -3,7 +3,7 @@
 ##
 
 # Can't test this as is, because it will never return
-#create_gtest(test_transport_forwarder
-#             SRC          test_transport_forwarder.cpp
-#             DEPENDENCIES QI ZEROMQ GTEST
-#             TIMEOUT      120)
+#qi_add_gtest(test_transport_forwarder
+#                SRC          test_transport_forwarder.cpp
+#                DEPENDS      QI ZEROMQ GTEST
+#                TIMEOUT      120)

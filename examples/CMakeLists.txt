@@ -6,29 +6,12 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
-create_bin(example_qi_client NO_INSTALL example_qi_client.cpp)
-use_lib(example_qi_client QI)
-
-create_bin(example_qi_server NO_INSTALL example_qi_server.cpp)
-use_lib(example_qi_server QI)
-
-create_bin(example_qi_publisher NO_INSTALL example_qi_publisher.cpp)
-use_lib(example_qi_publisher QI)
-
-create_bin(example_qi_subscriber NO_INSTALL example_qi_subscriber.cpp)
-use_lib(example_qi_subscriber QI)
-
-create_bin(example_qi_signature_type NO_INSTALL example_qi_signature_type.cpp)
-use_lib(example_qi_signature_type QI)
-
-create_bin(example_qi_signature_instance NO_INSTALL example_qi_signature_instance.cpp)
-use_lib(example_qi_signature_instance QI)
-
-create_bin(example_qi_signature_pp NO_INSTALL example_qi_signature_pp.cpp)
-use_lib(example_qi_signature_pp QI)
-
-create_bin(example_qi_signature_function NO_INSTALL example_qi_signature_function.cpp)
-use_lib(example_qi_signature_function QI)
-
-create_bin(example_qi_signature_iterator NO_INSTALL example_qi_signature_iterator.cpp)
-use_lib(example_qi_signature_iterator QI)
+qi_create_bin(example_qi_client             NO_INSTALL example_qi_client.cpp             DEPENDS QI)
+qi_create_bin(example_qi_server             NO_INSTALL example_qi_server.cpp             DEPENDS QI)
+qi_create_bin(example_qi_publisher          NO_INSTALL example_qi_publisher.cpp          DEPENDS QI)
+qi_create_bin(example_qi_subscriber         NO_INSTALL example_qi_subscriber.cpp         DEPENDS QI)
+qi_create_bin(example_qi_signature_type     NO_INSTALL example_qi_signature_type.cpp     DEPENDS QI)
+qi_create_bin(example_qi_signature_instance NO_INSTALL example_qi_signature_instance.cpp DEPENDS QI)
+qi_create_bin(example_qi_signature_pp       NO_INSTALL example_qi_signature_pp.cpp       DEPENDS QI)
+qi_create_bin(example_qi_signature_function NO_INSTALL example_qi_signature_function.cpp DEPENDS QI)
+qi_create_bin(example_qi_signature_iterator NO_INSTALL example_qi_signature_iterator.cpp DEPENDS QI)

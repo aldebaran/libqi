@@ -1,0 +1,3 @@
+[project qimessaging]
+depends = "zeromq protobuf python gtest boost"
+rdepends = "zeromq boost"

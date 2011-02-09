@@ -5,15 +5,17 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-use(PROTOBUF-TOOLS)
-tc_wrap_proto(PROTO_SRC alvalue.proto)
+find_package(Protobuf)
 
-create_gtest(test_signature
-             SRC          test_signature.cpp ${PROTO_SRC}
-             DEPENDENCIES QI GTEST
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+protobuf_generate_cpp(PROTO_SRC PROTO_HDR alvalue.proto)
+
+qi_add_gtest(test_signature
+             SRC          test_signature.cpp ${PROTO_SRC} ${PROTO_HDR}
+             DEPENDS QI GTEST
              TIMEOUT      120)
 
-create_gtest(test_signature_iterator
-             SRC          test_signature_iterator.cpp ${PROTO_SRC}
-             DEPENDENCIES QI GTEST
-             TIMEOUT      120)
+qi_add_gtest(test_signature_iterator
+                SRC          test_signature_iterator.cpp ${PROTO_SRC}
+                DEPENDS      QI GTEST
+                TIMEOUT      120)

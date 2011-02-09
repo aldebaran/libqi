@@ -5,7 +5,7 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-create_gtest(test_messaging
+qi_add_gtest(test_messaging
              SRC          test_messaging.cpp
-             DEPENDENCIES QI
+             DEPENDS QI
              TIMEOUT      120)

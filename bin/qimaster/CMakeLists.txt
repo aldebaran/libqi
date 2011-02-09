@@ -8,6 +8,5 @@
 
 project (QiMaster)
 
-create_bin(qi-master qimaster.cpp)
-use_lib(qi-master QI BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qi-master qimaster.cpp DEPENDS QI BOOST_PROGRAM_OPTIONS)
 

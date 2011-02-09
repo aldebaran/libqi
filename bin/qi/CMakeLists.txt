@@ -8,6 +8,5 @@
 
 project (QiTools)
 
-create_bin(qitools qimain.cpp)
+qi_create_bin(qitools qimain.cpp DEPENDS QI BOOST_PROGRAM_OPTIONS)
 set_target_properties(qitools PROPERTIES OUTPUT_NAME qi)
-use_lib(qitools QI BOOST_PROGRAM_OPTIONS)

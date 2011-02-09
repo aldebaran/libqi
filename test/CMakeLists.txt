@@ -1,6 +1,7 @@
 
 add_subdirectory(test_messaging)
 add_subdirectory(test_messaging_publish)
+add_subdirectory(test_serialization)
 add_subdirectory(test_transport)
 add_subdirectory(test_transport_publish)
 add_subdirectory(test_functor)
@@ -10,6 +11,4 @@ add_subdirectory(test_log)
 # This is not a test
 # add_subdirectory(test_c_bindings)
 add_subdirectory(test_endpoint_context)
-add_subdirectory(test_serialization)
 add_subdirectory(test_serializeable)
-
