@@ -321,7 +321,7 @@ namespace qi {
         // tell the forwarder to bind all these addresses
         forwarder->bind(inAddresses, outAddresses);
 
-        // start the forwarder in a new thread for now 
+        // start the forwarder in a new thread for now
         boost::thread forwarderThread(
           ::boost::bind(&qi::transport::TransportForwarder::run, forwarder));
 //        sleep(4.0);

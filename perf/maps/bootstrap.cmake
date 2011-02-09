@@ -28,13 +28,13 @@ if (NOT CMAKE_TOOLCHAIN_FILE)
     "===========================================================\n"
     )
   message(FATAL_ERROR "")
-endif (NOT CMAKE_TOOLCHAIN_FILE)
+endif()
 
 #ok I must admin 1337 15 n07 7h47 gr347 f0r c0d1ng
 #for the export of TOOLCHAIN_DIR to T001CHAIN_DIR
 if (NOT TOOLCHAIN_DIR STREQUAL "")
   set(T001CHAIN_DIR ${TOOLCHAIN_DIR} CACHE PATH "" FORCE)
-endif (NOT TOOLCHAIN_DIR STREQUAL "")
+endif()
 
 if (NOT T001CHAIN_DIR OR NOT EXISTS "${T001CHAIN_DIR}/cmake/general.cmake")
   message(STATUS
@@ -48,6 +48,6 @@ if (NOT T001CHAIN_DIR OR NOT EXISTS "${T001CHAIN_DIR}/cmake/general.cmake")
     "===========================================================\n"
     )
   message(FATAL_ERROR "")
-endif (NOT T001CHAIN_DIR OR NOT EXISTS "${T001CHAIN_DIR}/cmake/general.cmake")
+endif()
 
 include("${T001CHAIN_DIR}/cmake/general.cmake")

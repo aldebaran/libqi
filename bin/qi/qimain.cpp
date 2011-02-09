@@ -41,7 +41,7 @@ void qi_call(std::string addr) {
     topics = client.call< VString >("master.listTopics");
     machinesIDs = client.call< VString >("master.listMachines");
     endpointsIDs = client.call< VString >("master.listEndpoints");
-    
+
     for (vit = machinesIDs.begin(); vit != machinesIDs.end(); ++vit) {
       machines.insert(std::make_pair(*vit, client.call< StringMap >("master.getMachine", *vit)));
     }
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 {
   // declare the program options
   po::options_description desc("Usage:\n  qi masterAddress [options]\nOptions");
-  desc.add_options() 
+  desc.add_options()
     ("help", "Print this help.")
     ("master-address",
     po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),

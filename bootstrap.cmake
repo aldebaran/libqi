@@ -33,6 +33,6 @@ endif()
 
 if (NOT TOOLCHAIN_DIR STREQUAL "")
   set(T001CHAIN_DIR ${TOOLCHAIN_DIR} CACHE PATH "" FORCE)
-endif (NOT TOOLCHAIN_DIR STREQUAL "")
+endif()
 
 include("${T001CHAIN_DIR}/cmake/general.cmake")

@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 {
    // declare the program options
   po::options_description desc("Usage:\n  qi-master masterAddress [options]\nOptions");
-  desc.add_options() 
+  desc.add_options()
     ("help", "Print this help.")
     ("master-address",
     po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),

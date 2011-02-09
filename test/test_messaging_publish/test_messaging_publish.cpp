@@ -62,7 +62,7 @@ TEST(MessagingPublisher , twoSubscribers)
 
   p.advertiseTopic<std::string>("hello");
   p.advertiseTopic<std::string>("goodbye");
-  
+
   //sleep(3);
   s1.subscribe("hello", &printHandler);
   s1.subscribe("goodbye", &handler2);

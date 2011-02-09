@@ -78,7 +78,7 @@ namespace qi {
 
         // One to Many
         if (exists) {
-          qisError << "Attempt to publish on an existing topic \"" 
+          qisError << "Attempt to publish on an existing topic \""
             << topicSignature << "\" with isManyToMany = false: " << std::endl;
           return;
         }

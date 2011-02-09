@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
   (void) signal(SIGINT, exitHandler);
   // declare the program options
   po::options_description desc("Usage:\n  qichat-prompt username masterAddress [options]\nOptions");
-  desc.add_options() 
+  desc.add_options()
     ("help", "Print this help.")
     ("master-address",
     po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),

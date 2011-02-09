@@ -95,7 +95,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
-endif (UNIX)
+endif()
 
 create_lib(qi "${SRC}" "${HEADERS}")
 use_lib (qi REQUIRED ALL BOOST)
@@ -112,7 +112,7 @@ install_header(qi SUBFOLDER qi ${HEADERS})
 stage_lib (qi QI ${CMAKE_CURRENT_SOURCE_DIR})
 if (UNIX)
   #add_definitions("-fvisibility=hidden -fvisibility-inlines-hidden")
-endif(UNIX)
+endif()
 
 add_subdirectory(test)
 
