@@ -5,7 +5,7 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-qi_add_gtest(perf_functor
+qi_create_gtest(perf_functor
                 SRC          perf_functor.cpp
                 DEPENDS      QI GTEST
                 TIMEOUT      120)

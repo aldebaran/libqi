@@ -15,9 +15,9 @@ endfunction()
 
 
 if (WITH_ZMQ)
-  qi_add_gtest(test_transport_zmqsingle SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
-  #qi_add_gtest(test_transport_zmqqueue  SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
-  #qi_add_gtest(test_transport_zmqpoll   SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
+  qi_create_gtest(test_transport_zmqsingle SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
+  #qi_create_gtest(test_transport_zmqqueue  SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
+  #qi_create_gtest(test_transport_zmqpoll   SRC test_transport.cpp DEPENDS GTEST QI TIMEOUT 120)
   tc_add_target_definition(test_transport_zmqsingle_bin "TEST_TRANSPORT_ZMQ_SINGLE")
   #tc_add_target_definition(test_transport_zmqqueue_bin  "TEST_TRANSPORT_ZMQ_QUEUE")
   #tc_add_target_definition(test_transport_zmqpoll_bin   "TEST_TRANSPORT_ZMQ_POLL")

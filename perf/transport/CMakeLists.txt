@@ -15,9 +15,9 @@ endfunction()
 
 
 if (WITH_ZMQ)
-  qi_add_gtest(perf_transport_zmqsingle SRC perf_transport.cpp DEPENDS GTEST QI)
-  qi_add_gtest(perf_transport_zmqqueue  SRC perf_transport.cpp DEPENDS GTEST QI)
-  qi_add_gtest(perf_transport_zmqpoll   SRC perf_transport.cpp DEPENDS GTEST QI)
+  qi_create_gtest(perf_transport_zmqsingle SRC perf_transport.cpp DEPENDS GTEST QI)
+  qi_create_gtest(perf_transport_zmqqueue  SRC perf_transport.cpp DEPENDS GTEST QI)
+  qi_create_gtest(perf_transport_zmqpoll   SRC perf_transport.cpp DEPENDS GTEST QI)
   tc_add_target_definition(perf_transport_zmqsingle_bin "TEST_TRANSPORT_ZMQ_SINGLE")
   tc_add_target_definition(perf_transport_zmqqueue_bin  "TEST_TRANSPORT_ZMQ_QUEUE")
   tc_add_target_definition(perf_transport_zmqpoll_bin   "TEST_TRANSPORT_ZMQ_POLL")
