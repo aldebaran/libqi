@@ -39,7 +39,8 @@
 #endif
 
 #include <google/protobuf/message.h>
-//#include <vector>
+#include <qi/serialization/serializable.hpp>
+#include <iostream>
 
 namespace qi {
   namespace serialization {
@@ -106,6 +107,23 @@ namespace qi {
       }
     };
 
+    template <typename T>
+    struct serialize<T, typename boost::enable_if< typename boost::is_base_of<qi::serialization::Serializable , T>::type >::type > {
+      static void write(Message &sd, T &val) {
+        //__QI_DEBUG_SERIALIZATION_W(T, "Serializable");
+        //std::cout << "Serialize, Serializable" << std::end;
+        Serializer s(ACTION_SERIALIZE, sd);
+        val.accept(s);
+      }
+
+      static void read(Message &sd, T &val) {
+        Serializer s(ACTION_DESERIALIZE, sd);
+        val.accept(s);
+        //__QI_DEBUG_SERIALIZATION_R(T, "Serializable");
+        //std::cout << "DeSerialize, Serializable" << std::end;
+      }
+    };
+
     template<typename U>
     struct serialize< std::vector<U> >  {
 
@@ -116,6 +134,21 @@ namespace qi {
           // and directly assign the contents if we can
           typename std::vector<U>::const_iterator it = v.begin();
           typename std::vector<U>::const_iterator end = v.end();
+          for (; it != end; ++it) {
+            serialize<U>::write(sd, *it);
+          }
+        }
+        __QI_DEBUG_SERIALIZATION_CONTAINER_W(std::vector<U>, v);
+      }
+
+      // non-const write
+      static void write(Message &sd, std::vector<U> &v) {
+        sd.writeInt(v.size());
+        if (v.size()) {
+          // we should find out if the contents is a fixed size type
+          // and directly assign the contents if we can
+          typename std::vector<U>::iterator it = v.begin();
+          typename std::vector<U>::iterator end = v.end();
           for (; it != end; ++it) {
             serialize<U>::write(sd, *it);
           }
@@ -150,6 +183,21 @@ namespace qi {
         if (m.size()) {
           typename std::map<K, V>::const_iterator it = m.begin();
           typename std::map<K, V>::const_iterator end = m.end();
+          for (; it != end; ++it) {
+            serialize<K>::write(sd, it->first);
+            serialize<V>::write(sd, it->second);
+          }
+        }
+        typedef std::map<K, V> debugMap;
+        __QI_DEBUG_SERIALIZATION_CONTAINER_W(debugMap, m);
+      }
+
+      // non-const write
+      static void write(Message &sd, std::map<K, V> &m) {
+        sd.writeInt(m.size());
+        if (m.size()) {
+          typename std::map<K, V>::iterator it = m.begin();
+          typename std::map<K, V>::iterator end = m.end();
           for (; it != end; ++it) {
             serialize<K>::write(sd, it->first);
             serialize<V>::write(sd, it->second);

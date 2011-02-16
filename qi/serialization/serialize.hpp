@@ -16,9 +16,7 @@
 #include <qi/signature.hpp>
 
 namespace qi {
-
   namespace serialization {
-
 
     /// serialize a c++ type to a message
     /// \ingroup Serialization
