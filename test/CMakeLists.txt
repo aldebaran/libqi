@@ -11,4 +11,5 @@ add_subdirectory(test_log)
 # add_subdirectory(test_c_bindings)
 add_subdirectory(test_endpoint_context)
 add_subdirectory(test_serialization)
+add_subdirectory(test_serializeable)
 
