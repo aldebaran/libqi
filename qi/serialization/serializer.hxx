@@ -32,6 +32,83 @@ namespace qi {
       }
     }
 
+    template <typename P0, typename P1>
+    void Serializer::visit(P0& p0, P1& p1) {
+      visit(p0);
+      visit(p1);
+    }
+
+    template <typename P0, typename P1, typename P2>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+    }
+
+    template <typename P0, typename P1, typename P2, typename P3>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+    }
+
+    template <typename P0, typename P1, typename P2, typename P3, typename P4>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+      visit(p4);
+    }
+
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+      visit(p4);
+      visit(p5);
+    }
+
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+      visit(p4);
+      visit(p5);
+      visit(p6);
+    }
+
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6, P7& p7) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+      visit(p4);
+      visit(p5);
+      visit(p6);
+      visit(p7);
+    }
+
+
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
+    void Serializer::visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6, P7& p7, P8& p8) {
+      visit(p0);
+      visit(p1);
+      visit(p2);
+      visit(p3);
+      visit(p4);
+      visit(p5);
+      visit(p6);
+      visit(p7);
+      visit(p8);
+    }
+
   }
 }
 

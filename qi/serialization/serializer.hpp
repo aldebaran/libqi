@@ -74,6 +74,38 @@ namespace qi {
       /// <param name="m"> [in,out] The std::map </param>
       template <typename K, typename V>
       void visit(std::map<K, V>& m);
+
+      /// <summary> Helper method: Visits two parameters in one call </summary>
+      template <typename P0, typename P1>
+      void visit(P0& p0, P1& p1);
+
+      /// <summary> Helper method: Visits three parameters in one call </summary>
+      template <typename P0, typename P1, typename P2>
+      void visit(P0& p0, P1& p1, P2& p2);
+
+      /// <summary> Helper method: Visits four parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3);
+
+      /// <summary> Helper method: Visits five parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3, typename P4>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4);
+
+      /// <summary> Helper method: Visits six parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5);
+
+      /// <summary> Helper method: Visits seven parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6);
+
+      /// <summary> Helper method: Visits eight parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6, P7& p7);
+
+      /// <summary> Helper method: Visits nine parameters in one call </summary>
+      template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
+      void visit(P0& p0, P1& p1, P2& p2, P3& p3, P4& p4, P5& p5, P6& p6, P7& p7, P8& p8);
     };
   }
 }
