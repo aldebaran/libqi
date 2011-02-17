@@ -26,7 +26,7 @@ namespace qi {
 
     /// <summary>
     /// Serializer class. Provides methods that can visit fields of a struct of class
-    /// and either serialize or deserialize into the reference of a message provided in 
+    /// and either serialize or deserialize into the reference of a message provided in
     /// the constructor. Supports recursive POD types, vectors, maps and classes derived
     /// from Serializable.
     /// </summary>
