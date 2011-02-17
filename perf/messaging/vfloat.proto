@@ -1,0 +1,3 @@
+message VFloat {
+  repeated float f = 1;
+}
