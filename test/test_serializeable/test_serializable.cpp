@@ -117,3 +117,84 @@ TEST(testSerializable, harder) {
   Harder t2;
   t2.accept(deserializer);
 }
+
+struct Point2D : Serializable {
+  int x;
+  int y;
+
+  void accept(Serializer& s) {
+    s.visit(x, y);
+  }
+};
+
+struct TimeStamp : Serializable {
+  int seconds;
+  int nanoseconds;
+
+  void accept(Serializer& s) {
+    s.visit(seconds);
+    s.visit(nanoseconds);
+  }
+};
+
+struct StampedPoint2D : Serializable {
+  Point2D point;
+  TimeStamp time;
+
+  void accept(Serializer& s) {
+    s.visit(point, time);
+  }
+};
+
+TEST(testSerializable, points) {
+  Point2D point;
+  point.x = 1;
+  point.y = 2;
+
+  TimeStamp timestamp;
+  timestamp.seconds = 10001;
+  timestamp.nanoseconds = 999;
+
+  StampedPoint2D stampedPoint;
+  stampedPoint.point = point;
+  stampedPoint.time = timestamp;
+
+  // ---- code that will never be seen, and needs a little clearup
+  qi::serialization::Message pointMessage;
+  Serializer s1(ACTION_SERIALIZE, pointMessage);
+  point.accept(s1);
+
+  qi::serialization::Message stampedPointMessage;
+  Serializer s2(ACTION_SERIALIZE, stampedPointMessage);
+  stampedPoint.accept(s2);
+
+  qi::serialization::Message stampedPointMessageAgain;
+  Serializer s3(ACTION_SERIALIZE, stampedPointMessageAgain);
+  stampedPoint.accept(s3);
+
+  // -- Get a Point2D from a Point2D message
+  Serializer s4(ACTION_DESERIALIZE, pointMessage);
+  Point2D resultPoint1;
+  resultPoint1.accept(s4);
+
+  // -- Get a Point2D from a StampedPoint2D message
+  Serializer s5(ACTION_DESERIALIZE, stampedPointMessageAgain);
+  Point2D resultPoint2;
+  // This only works because the first two serialized fields are x and y
+  resultPoint2.accept(s5);
+
+  // -- Get a StampedPoint2D from a StampedPoint2D message
+  Serializer s6(ACTION_DESERIALIZE, stampedPointMessage);
+  StampedPoint2D resultStampedPoint;
+  resultStampedPoint.accept(s6);
+  // ---------------------------------------------------
+
+  ASSERT_EQ(point.x, resultPoint1.x);
+  ASSERT_EQ(point.y, resultPoint1.y);
+  ASSERT_EQ(point.x, resultPoint2.x);
+  ASSERT_EQ(point.y, resultPoint2.y);
+  ASSERT_EQ(point.x, resultStampedPoint.point.x);
+  ASSERT_EQ(point.y, resultStampedPoint.point.y);
+  ASSERT_EQ(timestamp.seconds, resultStampedPoint.time.seconds);
+  ASSERT_EQ(timestamp.nanoseconds, resultStampedPoint.time.nanoseconds);
+}
