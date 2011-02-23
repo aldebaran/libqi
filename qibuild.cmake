@@ -1,6 +1,4 @@
-##
-## Copyright (C) 2010 Aldebaran Robotics
-##
+## Copyright (C) 2011 Aldebaran Robotics
 
 ###############################################
 # Auto-generated file.                        #
@@ -8,7 +6,7 @@
 # This file is part of the qibuild project    #
 ###############################################
 
-set(QIBUILD_BOOTSTRAP_VERSION 5)
+set(QIBUILD_BOOTSTRAP_VERSION 6)
 
 
 ##
@@ -16,8 +14,12 @@ set(QIBUILD_BOOTSTRAP_VERSION 5)
 # and include it.
 # This allow us to find all qibuild/qibuild.cmake
 function(bootstrap)
-  find_program(PYTHON_EXECUTABLE NAMES python2 python python.exe)
-  find_program(QI_BUILD_EXECUTABLE qibuild.py)
+  find_program(PYTHON_EXECUTABLE NAMES python2 python python.exe
+    PATHS
+      [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.6\\InstallPath]
+      [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath]
+  )
+
 
   if(NOT PYTHON_EXECUTABLE)
     message(STATUS
@@ -30,6 +32,13 @@ function(bootstrap)
     )
     message(FATAL_ERROR "")
   endif()
+
+  get_filename_component(_python_root ${PYTHON_EXECUTABLE} PATH)
+  find_program(QI_BUILD_EXECUTABLE qibuild.py
+    PATHS
+      "${_python_root}/Scripts"
+  )
+
 
   if(NOT QI_BUILD_EXECUTABLE)
     message(STATUS
