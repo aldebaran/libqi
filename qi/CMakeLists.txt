@@ -11,33 +11,33 @@
 function(submodule _submodule _name)
   #TODO: convert _name and _submodule => s!/!\\! for VSGROUP
   qi_submodule_create("${_submodule}" VSGROUP "${_submodule}\\${_name}"
-                                      PUBLIC_HEADER "${_name}/*.hxx" "${_name}/*.hpp" "${_name}.hpp"
-                                      SRC "${_name}/*.cpp" "${_name}/detail/*.cpp" "${_name}/detail/*.hxx" "${_name}/detail/*.hpp")
+                                       "${_name}/*.hxx" "${_name}/*.hpp" "${_name}.hpp"
+                                       "${_name}/*.cpp" "${_name}/detail/*.cpp" "${_name}/detail/*.hxx" "${_name}/detail/*.hpp")
 endfunction()
 
-qi_submodule_create("qi-core"           PUBLIC_HEADER "core/*.h[px][px]")
+qi_submodule_create("qi-core"            "core/*.h[px][px]")
 
-qi_submodule_create("qi-exceptions"     PUBLIC_HEADER "exceptions/exceptions.hpp")
+qi_submodule_create("qi-exceptions"      "exceptions/exceptions.hpp")
 
-qi_submodule_create("qi-messaging"      PUBLIC_HEADER "messaging/*.h[px][px]" "messaging.hpp"
-                                        SRC           "messaging/*.cpp" "messaging/src/*.[ch][px][px]")
+qi_submodule_create("qi-messaging"       "messaging/*.h[px][px]" "messaging.hpp"
+                                         "messaging/*.cpp" "messaging/src/*.[ch][px][px]")
 
-qi_submodule_create("qi-serialization"  PUBLIC_HEADER "serialization/*.h[px][px]" "serialization.hpp"
-                                        SRC           "serialization/*.cpp")
+qi_submodule_create("qi-serialization"   "serialization/*.h[px][px]" "serialization.hpp"
+                                         "serialization/*.cpp")
 
-qi_submodule_create("qi-perf"           PUBLIC_HEADER "perf/*.h[px][px]"
-                                        SRC           "perf/*.cpp")
+qi_submodule_create("qi-perf"            "perf/*.h[px][px]"
+                                         "perf/*.cpp")
 
-qi_submodule_create("qi-log"            PUBLIC_HEADER "log/*.h[px][px]" "log.hpp"
-                                        SRC           "log/*.cpp")
+qi_submodule_create("qi-log"             "log/*.h[px][px]" "log.hpp"
+                                         "log/*.cpp")
 
-qi_submodule_create("qi-transport"      PUBLIC_HEADER "transport/*.[ch][px][px]")
+qi_submodule_create("qi-transport"       "transport/*.[ch][px][px]")
 
-qi_submodule_create("qi-functors"       PUBLIC_HEADER "functors/*.[ch][px][px]"
-                                        SRC           "functors/detail/*.[hc][px][px]")
+qi_submodule_create("qi-functors"        "functors/*.[ch][px][px]"
+                                         "functors/detail/*.[hc][px][px]")
 
-qi_submodule_create("qi-signature"      PUBLIC_HEADER "signature/*.[ch][px][px]" "signature.hpp"
-                                        SRC           "signature/*.cpp" "signature/detail/*.[ch][px][px]")
+qi_submodule_create("qi-signature"       "signature/*.[ch][px][px]" "signature.hpp"
+                                         "signature/*.cpp" "signature/detail/*.[ch][px][px]")
 
 qi_submodule_add(qi-transport VSGROUP "messaging\\src\\network" SRC "messaging/src/network/*.[ch][px][px]")
 

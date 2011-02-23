@@ -5,4 +5,5 @@
 ## Copyright (C) 2010 Aldebaran Robotics
 ##
 
-qi_submodule_create(qi-cbinding VSGROUP cbinding PUBLIC_HEADER qi/qi.h SRC cbindings.cpp)
+qi_submodule_create(qi-cbinding VSGROUP cbinding 
+    qi/qi.h cbindings.cpp)
