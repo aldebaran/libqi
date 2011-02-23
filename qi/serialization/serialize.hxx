@@ -38,7 +38,9 @@
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-#include <google/protobuf/message.h>
+#ifdef WITH_PROTOBUF
+# include <google/protobuf/message.h>
+#endif
 #include <qi/serialization/serializable.hpp>
 #include <iostream>
 
@@ -90,6 +92,7 @@ namespace qi {
       }
     };
 
+#ifdef WITH_PROTOBUF
     template <typename T>
     struct serialize<T, typename boost::enable_if< typename boost::is_base_of<google::protobuf::Message , T>::type >::type > {
       static void write(Message &sd, const T &val) {
@@ -106,6 +109,7 @@ namespace qi {
         val.ParseFromString(ser);
       }
     };
+#endif
 
     template <typename T>
     struct serialize<T, typename boost::enable_if< typename boost::is_base_of<qi::serialization::Serializable , T>::type >::type > {
