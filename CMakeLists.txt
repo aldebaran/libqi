@@ -23,7 +23,7 @@ option(WITH_PERF     "Performances test" ON)
 
 #include(${CMAKE_CURRENT_SOURCE_DIR}/options.cmake)
 if (WIN32)
-  add_definitions(" -D_SCL_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
+  add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
 endif()
 
 if (UNIX)
