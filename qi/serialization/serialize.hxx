@@ -113,12 +113,12 @@ namespace qi {
         //__QI_DEBUG_SERIALIZATION_W(T, "Serializable");
         //std::cout << "Serialize, Serializable" << std::end;
         Serializer s(ACTION_SERIALIZE, sd);
-        val.accept(s);
+        val.serialize(s);
       }
 
       static void read(Message &sd, T &val) {
         Serializer s(ACTION_DESERIALIZE, sd);
-        val.accept(s);
+        val.serialize(s);
         //__QI_DEBUG_SERIALIZATION_R(T, "Serializable");
         //std::cout << "DeSerialize, Serializable" << std::end;
       }

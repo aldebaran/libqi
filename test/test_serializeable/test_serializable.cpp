@@ -12,7 +12,7 @@ struct Inner : Serializable {
   std::string text;
   int number;
 
-  void accept(Serializer& v) {
+  void serialize(Serializer& v) {
     v.visit(text);
     v.visit(number);
   }
@@ -25,7 +25,7 @@ struct Outer : Serializable {
   float floatNumber;
   Inner inner;
 
-  void accept(Serializer& v) {
+  void serialize(Serializer& v) {
     v.visit(floatNumber);
     v.visit(inner);
     v.visit(inner);
@@ -35,7 +35,7 @@ struct Outer : Serializable {
 struct Hard : Serializable {
   std::vector<std::map<std::string, int> > content;
 
-  void accept(Serializer& v) {
+  void serialize(Serializer& v) {
      v.visit(content);
   }
 };
@@ -43,7 +43,7 @@ struct Hard : Serializable {
 struct Harder : Serializable {
   std::vector<std::map<std::string, Inner> > content;
 
-  void accept(Serializer& v) {
+  void serialize(Serializer& v) {
      v.visit(content);
   }
 };
@@ -55,11 +55,11 @@ TEST(testSerializable, simpleStruct) {
 
   qi::serialization::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
-  t.accept(serializer);
+  t.serialize(serializer);
 
   Serializer deserializer(ACTION_DESERIALIZE, m);
   Inner t2;
-  t2.accept(deserializer);
+  t2.serialize(deserializer);
 }
 
 TEST(testSerializable, multiLayer) {
@@ -70,11 +70,11 @@ TEST(testSerializable, multiLayer) {
 
   qi::serialization::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
-  t.accept(serializer);
+  t.serialize(serializer);
 
   Serializer deserializer(ACTION_DESERIALIZE, m);
   Outer t2;
-  t2.accept(deserializer);
+  t2.serialize(deserializer);
 }
 
 TEST(testSerializable, hard) {
@@ -88,11 +88,11 @@ TEST(testSerializable, hard) {
 
   qi::serialization::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
-  t.accept(serializer);
+  t.serialize(serializer);
 
   Serializer deserializer(ACTION_DESERIALIZE, m);
   Hard t2;
-  t2.accept(deserializer);
+  t2.serialize(deserializer);
 }
 
 
@@ -111,18 +111,18 @@ TEST(testSerializable, harder) {
 
   qi::serialization::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
-  t.accept(serializer);
+  t.serialize(serializer);
 
   Serializer deserializer(ACTION_DESERIALIZE, m);
   Harder t2;
-  t2.accept(deserializer);
+  t2.serialize(deserializer);
 }
 
 struct Point2D : Serializable {
   int x;
   int y;
 
-  void accept(Serializer& s) {
+  void serialize(Serializer& s) {
     s.visit(x, y);
   }
 };
@@ -131,7 +131,7 @@ struct TimeStamp : Serializable {
   int seconds;
   int nanoseconds;
 
-  void accept(Serializer& s) {
+  void serialize(Serializer& s) {
     s.visit(seconds);
     s.visit(nanoseconds);
   }
@@ -141,7 +141,7 @@ struct StampedPoint2D : Serializable {
   Point2D point;
   TimeStamp time;
 
-  void accept(Serializer& s) {
+  void serialize(Serializer& s) {
     s.visit(point, time);
   }
 };
@@ -162,31 +162,31 @@ TEST(testSerializable, points) {
   // ---- code that will never be seen, and needs a little clearup
   qi::serialization::Message pointMessage;
   Serializer s1(ACTION_SERIALIZE, pointMessage);
-  point.accept(s1);
+  point.serialize(s1);
 
   qi::serialization::Message stampedPointMessage;
   Serializer s2(ACTION_SERIALIZE, stampedPointMessage);
-  stampedPoint.accept(s2);
+  stampedPoint.serialize(s2);
 
   qi::serialization::Message stampedPointMessageAgain;
   Serializer s3(ACTION_SERIALIZE, stampedPointMessageAgain);
-  stampedPoint.accept(s3);
+  stampedPoint.serialize(s3);
 
   // -- Get a Point2D from a Point2D message
   Serializer s4(ACTION_DESERIALIZE, pointMessage);
   Point2D resultPoint1;
-  resultPoint1.accept(s4);
+  resultPoint1.serialize(s4);
 
   // -- Get a Point2D from a StampedPoint2D message
   Serializer s5(ACTION_DESERIALIZE, stampedPointMessageAgain);
   Point2D resultPoint2;
   // This only works because the first two serialized fields are x and y
-  resultPoint2.accept(s5);
+  resultPoint2.serialize(s5);
 
   // -- Get a StampedPoint2D from a StampedPoint2D message
   Serializer s6(ACTION_DESERIALIZE, stampedPointMessage);
   StampedPoint2D resultStampedPoint;
-  resultStampedPoint.accept(s6);
+  resultStampedPoint.serialize(s6);
   // ---------------------------------------------------
 
   ASSERT_EQ(point.x, resultPoint1.x);
