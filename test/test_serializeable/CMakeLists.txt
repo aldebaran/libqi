@@ -1,5 +1,5 @@
 
-create_gtest(test_serializable
+qi_create_gtest(test_serializable
              SRC test_serializable.cpp
-             DEPENDENCIES QI GTEST
+             DEPENDS QI GTEST
              TIMEOUT 120)

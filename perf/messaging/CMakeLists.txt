@@ -19,6 +19,13 @@ if(WITH_PROTOBUF)
      SRC perf_messaging.cpp ${PROTO_SRC} ${PROTO_HDR}
      DEPENDS QI GTEST
      TIMEOUT 120)
+     
+    protobuf_generate_cpp(PROTO_F_SRC PROTO_F_HDR vfloat.proto)
+
+    create_gtest(perf_messaging_serialization
+     SRC perf_messaging_serialization.cpp ${PROTO_F_SRC} ${PROTO_F_HDR}
+     DEPENDENCIES QI GTEST
+     TIMEOUT 120)
 endif()
 
 qi_create_gtest(perf_messaging_stress
@@ -27,9 +34,4 @@ qi_create_gtest(perf_messaging_stress
  TIMEOUT 120)
 
 
-tc_wrap_proto(PROTO_F_SRC vfloat.proto)
 
-create_gtest(perf_messaging_serialization
- SRC perf_messaging_serialization.cpp ${PROTO_F_SRC}
- DEPENDENCIES QI GTEST
- TIMEOUT 120)
