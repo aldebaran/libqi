@@ -6,7 +6,7 @@
 # This file is part of the qibuild project    #
 ###############################################
 
-set(QIBUILD_BOOTSTRAP_VERSION 6)
+set(QIBUILD_BOOTSTRAP_VERSION 8)
 
 
 ##
@@ -34,11 +34,10 @@ function(bootstrap)
   endif()
 
   get_filename_component(_python_root ${PYTHON_EXECUTABLE} PATH)
-  find_program(QI_BUILD_EXECUTABLE qibuild.py
+  find_program(QI_BUILD_EXECUTABLE NAMES qibuild.py qibuild
     PATHS
       "${_python_root}/Scripts"
   )
-
 
   if(NOT QI_BUILD_EXECUTABLE)
     message(STATUS
@@ -79,15 +78,17 @@ function(bootstrap)
   endif()
 endfunction()
 
+
+include(qibuild/general OPTIONAL RESULT_VARIABLE _qibuild_found)
+if(_qibuild_found)
+  return()
+endif()
+
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/dependencies.cmake)
   bootstrap()
 endif()
 
-if(EXISTS ${CMAKE_BINARY_DIR}/dependencies.cmake)
-  include(${CMAKE_BINARY_DIR}/dependencies.cmake)
-else()
-  message(STATUS "can't find dependencies.cmake")
-endif()
+include(${CMAKE_BINARY_DIR}/dependencies.cmake)
+
 
 include(qibuild/general)
-
