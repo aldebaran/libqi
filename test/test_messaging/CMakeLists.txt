@@ -17,3 +17,7 @@ create_gtest(test_messaging_signatures
  DEPENDENCIES QI GTEST
  TIMEOUT 120)
 
+#qi_create_gtest(test_messaging_naoqi
+# SRC test_messaging_naoqi.cpp
+# DEPENDS QI GTEST
+# TIMEOUT 120)
