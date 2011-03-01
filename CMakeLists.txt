@@ -3,7 +3,7 @@
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
 ##
 
 project(qi)
@@ -51,7 +51,7 @@ add_subdirectory(test)
 qi_add_subdirectory(examples WITH_EXAMPLES)
 qi_add_subdirectory(perf     WITH_PERF)
 add_subdirectory(bin)
-qi_gen_doc(DOXYFILES "Doxyfile")
+#qi_gen_doc(DOXYFILES "Doxyfile")
 
 #add_subdirectory(bindings/python)
 #add_subdirectory(bindings/ruby)
