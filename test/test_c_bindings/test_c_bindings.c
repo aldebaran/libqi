@@ -12,17 +12,19 @@ int main(int argc, char **argv)
 {
   char *result;
 
-  qi_client_t *client = qi_client_create("simplecli", argv[1]);
+  qi_client_t *client = qi_client_create("simplecli");
+  qi_client_connect(client, argv[1]);
+  //qi_message_t *message = qi_message_create();
+  //qi_message_t *ret = qi_message_create();
 
-  qi_message_t *message = qi_message_create();
-  qi_message_t *ret = qi_message_create();
+//  qi_message_write_string(message, "master.locateService::s:ss");
+//  qi_message_write_string(message, "master.listServices::{ss}:");
+//  qi_message_write_string()
+//  qi_client_call(client, "master.locateService::s:ss", message, ret);
 
-  qi_message_write_string(message, "master.locateService::s:s");
-  qi_message_write_string(message, "master.listServices::{ss}:");
+  result = qi_master_locate_service(client, "master.locateService::s:ss");
 
-  qi_client_call(client, "master.locateService::s:s", message, ret);
-
-  result = qi_message_read_string(ret);
+  //result = qi_message_read_string(ret);
   printf("locate returned: %s\n", result);
   return 0;
 }
