@@ -31,6 +31,8 @@ namespace qi {
                 const qi::serialization::Message& callDef,
                 qi::serialization::Message &result);
 
+      std::string endpointId() { return _endpointContext.endpointID; }
+
     private:
       MutexedNameLookup<std::string> _serviceCache;
 
