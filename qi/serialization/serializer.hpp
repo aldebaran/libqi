@@ -12,7 +12,6 @@
 #define _QI_SERIALIZATION_SERIALIZER_HPP_
 
 #include <qi/serialization/message.hpp>
-#include <qi/serialization/serialize.hpp>
 
 namespace qi {
   namespace serialization {
@@ -109,6 +108,8 @@ namespace qi {
     };
   }
 }
+#include <qi/serialization/serialize.hpp>
+
 #include <qi/serialization/serializer.hxx>
 
 #endif  // _QI_SERIALIZATION_SERIALIZER_HPP_

@@ -12,6 +12,7 @@
 #define _QI_SERIALIZATION_HPP_
 
 #include <qi/serialization/message.hpp>
+#include <qi/serialization/serializer.hpp>
 #include <qi/serialization/serialize.hpp>
 
 #endif  // _QI_SERIALIZATION_HPP_
