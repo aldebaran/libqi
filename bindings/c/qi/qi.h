@@ -7,7 +7,7 @@
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010 Cedric GESTES
+** Copyright (C) 2010, 2011 Cedric GESTES
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
@@ -31,42 +31,55 @@ extern "C"
 {
 #endif
 
-typedef void qi_client_t;
-typedef void qi_message_t;
+  typedef void qi_context_t;
+  typedef void qi_client_t;
+  typedef void qi_message_t;
 // typedef void * qi_server_t;
 // typedef void * qi_master_t;
 
-qi_client_t *qi_client_create(const char *name, const char *address);
+  qi_context_t *qi_context_create();
+  void          qi_context_destroy(qi_context_t *ctx);
+
+
+qi_client_t *qi_client_create(const char *name);
+qi_client_t *qi_client_create_with_context(const char *name, qi_context_t *ctx);
+void         qi_client_destroy(qi_client_t *client);
+
+void         qi_client_connect(qi_client_t *client, const char *address);
+
 void         qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret);
 
 
-//void         qi_client_connect(qi_client_t *client, const char *address);
-// void         qi_client_close(client_t *client);
 
 // server_t *qi_server_create(const char *name);
 // void      qi_server_connect(client_t *server, const char *address);
-// void      qi_server_close(client_t *server);
+// void      qi_server_destroy(client_t *server);
 
 // master_t *qi_master_create(const char *name);
 // void      qi_master_connect(client_t *master, const char *address);
-// void      qi_master_close(client_t *master);
+// void      qi_master_destroy(client_t *master);
 
 
 qi_message_t *qi_message_create();
+void          qi_message_write_bool(qi_message_t *msg, const char b);
+void          qi_message_write_char(qi_message_t *msg, const char b);
 void          qi_message_write_int(qi_message_t *message, const int i);
+void          qi_message_write_float(qi_message_t *msg, const float f);
+void          qi_message_write_double(qi_message_t *msg, const double d);
 void          qi_message_write_string(qi_message_t *message, const char *);
+void          qi_message_write_raw(qi_message_t *message, const char *, unsigned int size);
+
+char   qi_message_read_bool(qi_message_t *msg);
+char   qi_message_read_char(qi_message_t *msg);
+int    qi_message_read_int(qi_message_t *msg);
+float  qi_message_read_float(qi_message_t *msg);
+double qi_message_read_double(qi_message_t *msg);
+char  *qi_message_read_string(qi_message_t *msg);
+char  *qi_message_read_raw(qi_message_t *msg);
 
 
-
-int qi_message_read_int(qi_message_t *msg);
-char *qi_message_read_string(qi_message_t *msg);
-// void qi_message_write_void(qi_message_t *message, const int i);
-// void qi_message_write_raw(qi_message_t *message, const char *raw, int size);
-
-// void qi_message_read_int(qi_message_t *message, const int i);
-// void qi_message_read_void(qi_message_t *message, const int i);
-// void qi_message_read_string(qi_message_t *message, const char *);
-// void qi_message_read_raw(qi_message_t *message, const char *raw, int size);
+// MASTER API
+char *qi_master_locate_service(qi_client_t *client, const char *signature);
 
 #ifdef __cplusplus
 }

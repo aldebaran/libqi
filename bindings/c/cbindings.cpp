@@ -27,78 +27,191 @@
 #include <qi/messaging.hpp>
 #include <qi/messaging/src/client_impl.hpp>
 
-struct context_private_t {
-public:
-  context_private_t();
-};
-
-struct client_private_t {
-public:
-  //Constructor
-  client_private_t(const char *name, const char *addr)
-    : client(std::string(name))
-  {}
-
-public:
-  qi::detail::ClientImpl client;
-};
-
 
 struct message_private_t {
   qi::serialization::Message msg;
 };
 
 
-qi_client_t *qi_client_create(const char *name, const char *address) {
-  client_private_t *pclient = new client_private_t(name, address);
-  pclient->client.connect(address);
+/// Context
+
+qi_context_t *qi_create_context() {
+  qi::Context *pctx = new qi::Context();
+  return (qi_context_t *)pctx;
+}
+
+void qi_context_destroy(qi_context_t *ctx) {
+  if (!ctx)
+    return;
+  qi::Context *pctx = (qi::Context *)ctx;
+  delete pctx;
+}
+
+
+/// Client
+
+qi_client_t *qi_client_create(const char *name) {
+  qi::detail::ClientImpl *pclient = new qi::detail::ClientImpl(name);
   return (qi_client_t *)pclient;
+}
+
+qi_client_t *qi_client_create_with_context(const char *name, qi_context_t *ctx) {
+  qi::Context *pctx = (qi::Context *)ctx;
+  qi::detail::ClientImpl *pclient = new qi::detail::ClientImpl(name, pctx);
+  return (qi_client_t *)pclient;
+}
+
+void qi_client_connect(qi_client_t *client, const char *address)
+{
+  qi::detail::ClientImpl  *pclient  = (qi::detail::ClientImpl *)client;
+  pclient->connect(address);
+}
+
+void      qi_client_destroy(qi_client_t *client)
+{
+  qi::detail::ClientImpl  *pclient  = (qi::detail::ClientImpl *)client;
+  delete pclient;
 }
 
 void      qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret)
 {
-  client_private_t  *pclient  = (client_private_t *)client;
-  message_private_t *preturn  = (message_private_t *)ret;
-  message_private_t *pmessage = (message_private_t *)msg;
+  qi::detail::ClientImpl  *pclient  = (qi::detail::ClientImpl *)client;
+  qi::serialization::Message *preturn  = (qi::serialization::Message *)ret;
+  qi::serialization::Message *pmessage = (qi::serialization::Message *)msg;
 
-  pclient->client.call(std::string(method), pmessage->msg, preturn->msg);
+  pclient->call(std::string(method), *pmessage, *preturn);
 }
+
+
+/// Message
 
 qi_message_t *qi_message_create()
 {
-  message_private_t *pmsg = new message_private_t();
+  qi::serialization::Message *pmsg = new qi::serialization::Message();
   return (qi_message_t *)pmsg;
+}
+
+void qi_message_destroy(qi_message_t *msg)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  delete pmsg;
+}
+
+
+void qi_message_write_bool(qi_message_t *msg, const bool b)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeBool(b);
+}
+
+void qi_message_write_char(qi_message_t *msg, const char c)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeChar(c);
 }
 
 void qi_message_write_int(qi_message_t *msg, const int i)
 {
-  message_private_t *pmsg = (message_private_t *)msg;
-  pmsg->msg.writeInt(i);
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeInt(i);
+}
+
+void qi_message_write_float(qi_message_t *msg, const float f)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeFloat(f);
+}
+
+void qi_message_write_double(qi_message_t *msg, const double d)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeDouble(d);
 }
 
 void qi_message_write_string(qi_message_t *msg, const char *s)
 {
-  message_private_t *pmsg = (message_private_t *)msg;
-  pmsg->msg.writeString(std::string(s));
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeString(std::string(s));
+}
+
+void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
+{
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  pmsg->writeString(std::string(s, size));
+}
+
+
+
+
+char  qi_message_read_bool(qi_message_t *msg) {
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  bool b;
+  pmsg->readBool(b);
+  return b;
+
+}
+
+char  qi_message_read_char(qi_message_t *msg) {
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  char c;
+  pmsg->readChar(c);
+  return c;
 }
 
 int qi_message_read_int(qi_message_t *msg)
 {
-  message_private_t *pmsg = (message_private_t *)msg;
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
   int i;
-  pmsg->msg.readInt(i);
+  pmsg->readInt(i);
   return i;
+}
+
+float qi_message_read_float(qi_message_t *msg) {
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  float f;
+  pmsg->readFloat(f);
+  return f;
+}
+
+double qi_message_read_double(qi_message_t *msg) {
+  qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
+  double d;
+  pmsg->readDouble(d);
+  return d;
 }
 
 char *qi_message_read_string(qi_message_t *msg)
 {
- message_private_t *pmsg = (message_private_t *)msg;
+ qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
  std::string s;
- pmsg->msg.readString(s);
+ pmsg->readString(s);
  //TODO: buffer overflow
 #ifdef _WIN32
  return _strdup(s.c_str());
 #else
  return strdup(s.c_str());
 #endif
+}
+
+char *qi_message_read_raw(qi_message_t *msg)
+{
+  return qi_message_read_string(msg);
+}
+
+
+// MASTER API
+char *qi_master_locate_service(qi_client_t *client, const char *signature)
+{
+  qi::detail::ClientImpl     *pclient = (qi::detail::ClientImpl *)client;
+  qi::serialization::Message  message;
+  qi::serialization::Message  ret;
+
+  message.writeString("master.locateService::s:ss");
+  message.writeString(signature);
+  message.writeString(pclient->endpointId());
+
+  pclient->call(std::string("master.locateService::s:ss"), message, ret);
+  std::string addr;
+  ret.readString(addr);
+  return strdup(addr.c_str());
 }
