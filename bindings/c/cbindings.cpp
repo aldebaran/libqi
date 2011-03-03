@@ -35,7 +35,7 @@ struct message_private_t {
 
 /// Context
 
-qi_context_t *qi_create_context() {
+qi_context_t *qi_context_create() {
   qi::Context *pctx = new qi::Context();
   return (qi_context_t *)pctx;
 }
@@ -98,7 +98,7 @@ void qi_message_destroy(qi_message_t *msg)
 }
 
 
-void qi_message_write_bool(qi_message_t *msg, const bool b)
+void qi_message_write_bool(qi_message_t *msg, const char b)
 {
   qi::serialization::Message *pmsg = (qi::serialization::Message *)msg;
   pmsg->writeBool(b);
