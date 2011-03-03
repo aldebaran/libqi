@@ -7,4 +7,4 @@ project(PyQiMessaging)
 
 #use(PYTHON-TOOLS)
 include("qibuild/swig/python")
-qi_swig_wrap_python(qi qi.i DEPENDENCIES QI)
+qi_swig_wrap_python(qi qi.i DEPENDS QI)

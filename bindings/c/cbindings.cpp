@@ -7,7 +7,7 @@
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010 Cedric GESTES
+** Copyright (C) 2010, 2011 Cedric GESTES
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 3 of the License, or
@@ -36,6 +36,7 @@ struct client_private_t {
 public:
   //Constructor
   client_private_t(const char *name, const char *addr)
+    : client(std::string(name))
   {}
 
 public:
@@ -50,6 +51,7 @@ struct message_private_t {
 
 qi_client_t *qi_client_create(const char *name, const char *address) {
   client_private_t *pclient = new client_private_t(name, address);
+  pclient->client.connect(address);
   return (qi_client_t *)pclient;
 }
 

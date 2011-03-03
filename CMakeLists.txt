@@ -53,7 +53,7 @@ qi_add_subdirectory(perf     WITH_PERF)
 add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
-#add_subdirectory(bindings/python)
+add_subdirectory(bindings/python)
 #add_subdirectory(bindings/ruby)
 
 message(STATUS "")

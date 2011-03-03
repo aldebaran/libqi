@@ -3,7 +3,7 @@
 ## Author(s):
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010 Aldebaran Robotics
+## Copyright (C) 2010, 2011 Aldebaran Robotics
 ##
 
 import _qi as qi
@@ -37,7 +37,7 @@ def _write(message, signature, data):
     di = 0
     length = len(signature)
     dlength = len(data)
-    while for i < length:
+    while i < length:
         i  += 1
         di += 1
         (i, di) = _write_single(message, signature[i:], data[di:])
