@@ -28,20 +28,23 @@ import _qi
 import sys
 
 def test_1():
-    client = _qi.qi_client_create("simplecli", sys.argv[1])
-    msg = _qi.qi_message_create()
-    ret = _qi.qi_message_create()
+    client = _qi.qi_client_create("simplecli")
+    _qi.qi_client_connect(client, sys.argv[1])
+    #msg = _qi.qi_message_create()
+    #ret = _qi.qi_message_create()
 
-    _qi.qi_message_write_string(msg, "master.locateService::s:s");
-    _qi.qi_message_write_string(msg, "master.listServices::{ss}:");
+    #_qi.qi_message_write_string(msg, "master.locateService::s:ss");
+    #_qi.qi_message_write_string(msg, "master.listServices::{ss}:");
 
-    _qi.qi_client_call(client, "master.locateService::s:s", msg, ret);
+    #_qi.qi_client_call(client, "master.locateService::s:s", msg, ret);
 
-    result = _qi.qi_message_read_string(ret);
+    #result = _qi.qi_message_read_string(ret);
+    result = _qi.qi_master_locate_service(client, "master.listServices::{ss}:")
     print "locate returned: ", result
 
 def test_2():
-    client = _qi.qi_client_create("simplecli", sys.argv[1])
+    client = _qi.qi_client_create("simplecli")
+    _qi.qi_client_connect(client, sys.argv[1])
     msg = _qi.qi_message_create()
     ret = _qi.qi_message_create()
 
