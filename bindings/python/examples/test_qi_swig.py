@@ -8,7 +8,7 @@
 ## Author(s):
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010 Cedric GESTES
+## Copyright (C) 2010, 2011 Cedric GESTES
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 3 of the License, or
@@ -60,5 +60,14 @@ def test_2():
         value = _qi.qi_message_read_string(ret);
         print "k: %s, v: %s" % (key, value)
 
+def test_3():
+    client = qi.Client("tata")
+    client.connect(sys.argv[1])
+    msg = qi.Message()
+    ret = qi.Message()
+    msg.write_string("master.listServices::{ss}:")
+    client.raw_call("master.listServices::{ss}:", msg, ret)
+
 test_1()
 test_2()
+test_3()
