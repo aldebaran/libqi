@@ -3,10 +3,10 @@
 ## Author(s):
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010 Aldebaran Robotics
+## Copyright (C) 2010, 2011 Aldebaran Robotics
 ##
 
-from .signature import Bool, Char, Void, Int, String, Map, Function, Signature
+from .signature import Bool, Char, Void, Int, String, Float, Map, Function, Signature
 from .message   import Message
 from .client    import Client
 from .server    import Server
