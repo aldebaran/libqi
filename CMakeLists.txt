@@ -14,9 +14,11 @@ include(CMakeDependentOption)
 
 #find_package(Protobuf)
 find_package(ZEROMQ)
+find_package(PYTHON)
 
 cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
 cmake_dependent_option(WITH_PROTOBUF "Use protobuf" OFF "PROTOBUF_FOUND" OFF)
+cmake_dependent_option(WITH_PYTHON "Build python bindings" OFF "PYTHON_FOUND" ON)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 
@@ -53,7 +55,7 @@ qi_add_subdirectory(perf     WITH_PERF)
 add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
-add_subdirectory(bindings/python)
+qi_add_subdirectory(bindings/python WITH_PYTHON)
 #add_subdirectory(bindings/ruby)
 
 message(STATUS "")
@@ -62,3 +64,4 @@ message(STATUS "WITH_ZEROMQ  : ${WITH_ZEROMQ}")
 message(STATUS "WITH_PROTOBUF: ${WITH_PROTOBUF}")
 message(STATUS "WITH_EXAMPLES: ${WITH_EXAMPLES}")
 message(STATUS "WITH_PERF    : ${WITH_PERF}")
+message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
