@@ -1,3 +1,3 @@
 [project qimessaging]
-depends = "zeromq pthread zlib gtest boost"
+depends = "zeromq pthread zlib gtest boost python"
 rdepends = "zeromq boost"
