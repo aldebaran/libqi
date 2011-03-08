@@ -7,14 +7,6 @@
 ##
 
 
-# helper function to manage submodule and qi sources folders
-function(submodule _submodule _name)
-  #TODO: convert _name and _submodule => s!/!\\! for VSGROUP
-  qi_submodule_create("${_submodule}" VSGROUP "${_submodule}\\${_name}"
-                                       "${_name}/*.hxx" "${_name}/*.hpp" "${_name}.hpp"
-                                       "${_name}/*.cpp" "${_name}/detail/*.cpp" "${_name}/detail/*.hxx" "${_name}/detail/*.hpp")
-endfunction()
-
 qi_submodule_create("qi-core"            "core/*.h[px][px]")
 
 qi_submodule_create("qi-exceptions"      "exceptions/exceptions.hpp")
@@ -39,10 +31,9 @@ qi_submodule_create("qi-functors"        "functors/*.[ch][px][px]"
 qi_submodule_create("qi-signature"       "signature/*.[ch][px][px]" "signature.hpp"
                                          "signature/*.cpp" "signature/detail/*.[ch][px][px]")
 
-qi_submodule_add(qi-transport VSGROUP "messaging\\src\\network" SRC "messaging/src/network/*.[ch][px][px]")
+qi_submodule_add(qi-messaging "messaging/src/network/*.[ch][px][px]")
 
-qi_submodule_add(qi-transport VSGROUP transport\\zmq
-                 SRC
+qi_submodule_add(qi-messaging
                  transport/src/zmq/zmq_client_backend.cpp
                  transport/src/zmq/zmq_client_backend.hpp
                  transport/src/zmq/zmq_connection_handler.cpp
@@ -60,13 +51,11 @@ qi_submodule_add(qi-transport VSGROUP transport\\zmq
                  IF WITH_ZEROMQ
                  DEPENDS ZEROMQ)
 
-# qi_submodule_add(qi SRC qi/serialization/thrift
-#                     VSGROUP serialization\\thrift
+# qi_submodule_add(qi-serialization SRC qi/serialization/thrift
 #                     IF WITH_THRIFT
 #                     DEPEND thrift)
 
-# qi_submodule_add(qi SRC qi/serialization/boost
-#                     VSGROUP serialization\\boost
+# qi_submodule_add(qi-serialization SRC qi/serialization/boost
 #                     IF WITH_BOOST_SERIALIZATION
 #                     DEPEND boost_serialization)
 
