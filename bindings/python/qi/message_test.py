@@ -11,6 +11,8 @@ import qi.message
 
 def test_message():
     msg = qi.message.Message()
+    msg.write_string("bcifds[s]{ss}{s[s]}")
+
     msg.write_bool(1)
     msg.write_char("c")
     msg.write_int(42)
@@ -43,7 +45,7 @@ def test_message():
     msg.write_string("2a")
     msg.write_string("2b")
 
-    ret = qi.message.message_to_python("bcifds[s]{ss}{s[s]}", msg)
+    ret = qi.message.message_to_python(msg)
     assert(ret == [True, 'c', 42, 42.0, 42.0, 'str', ['1', '2'],
                    {'1a': '1b', '2a': '2b'},
                    {'1': ['1a', '1b'], '2': ['2a', '2b']}])
@@ -51,7 +53,7 @@ def test_message():
 
     msg2 = qi.message.python_to_message("bcifds[s]{ss}{s[s]}", *ret)
     print "msg2"
-    ret2 = qi.message.message_to_python("bcifds[s]{ss}{s[s]}", msg2)
+    ret2 = qi.message.message_to_python(msg2)
     assert(ret2 == [True, 'c', 42, 42.0, 42.0, 'str', ['1', '2'],
                     {'1a': '1b', '2a': '2b'},
                     {'1': ['1a', '1b'], '2': ['2a', '2b']}])

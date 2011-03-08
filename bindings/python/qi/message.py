@@ -33,7 +33,6 @@ class Message:
 def single_value_to_python(sig, message):
     """ convert the first value of a message based on the first type in the sig
     """
-    print "single value: %s" % (sig[0])
     if sig[0] == 'b':
         return True if message.read_bool() else False
     elif sig[0] == 'c':
@@ -45,10 +44,8 @@ def single_value_to_python(sig, message):
     elif sig[0] == 'd':
         return message.read_double()
     elif sig[0] == 's':
-        print "aie aie aie"
         return message.read_string()
     elif sig[0] == '[':
-        print "oups"
         ret = list()
         subsig = qi.signature.split(sig[1:-1])
         if len(subsig) != 1:
@@ -70,7 +67,7 @@ def single_value_to_python(sig, message):
         return ret
     raise qi.signature.BadSignatureException("what?")
 
-def message_to_python(sig, message):
+def message_to_python(message):
     """ convert a message to a native python type.
         result could be :
         - None
@@ -79,6 +76,7 @@ def message_to_python(sig, message):
 
         a value could be a POD, a list, a map
     """
+    sig = message.read_string()
     sigsplit = qi.signature.split(sig)
 
     if len(sigsplit) == 0:
@@ -106,7 +104,6 @@ def single_value_to_message(sig, data, message):
         message.write_double(float(data))
         return
     elif sig[0] == 's':
-        print "towrite:", data
         message.write_string(str(data))
         return
     elif sig[0] == '[':
@@ -137,9 +134,8 @@ def python_to_message(signature, *args):
         raise qi.signature.BadSignatureException()
 
     message = qi.Message()
-    #message.write_string(signature)
+    message.write_string(signature)
 
     for s,a in zip(sigsplit, args):
-        print "converting %s: %s" % (s, a)
         single_value_to_message(s, a, message)
     return message
