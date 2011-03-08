@@ -68,6 +68,17 @@ def test_3():
     msg.write_string("master.listServices::{ss}:")
     client.raw_call("master.listServices::{ss}:", msg, ret)
 
-test_1()
-test_2()
-test_3()
+def test_4():
+    import qi
+    client = qi.Client("toto")
+    client.connect(sys.argv[1])
+
+    ret = client.call("master.listServices", "::{ss}:")
+    print ret
+    # for i in range(result):
+    #     print "k: %s, v: %s" % (key, value)
+
+#test_1()
+#test_2()
+#test_3()
+test_4()

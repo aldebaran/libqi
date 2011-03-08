@@ -7,6 +7,7 @@
 ##
 
 import _qi
+import qi
 
 def _explode(sig):
     if sig.startswith("::"):
@@ -17,7 +18,7 @@ class Client:
     def __init__(self, name, context=None):
         """
         """
-        self.pclient = _qi.qi_create_client(name, context)
+        self.pclient = _qi.qi_client_create(name)
 
     def connect(self, address):
         """ connect to a master """
@@ -27,16 +28,16 @@ class Client:
         ret = qi.Message()
         if not isinstance(message, qi.Message):
             raise Exception("message is not of type qi.Message")
-        _qi.qi_call_client(self.pclient, message.pmessage, ret.pmessage)
+        _qi.qi_client_call(self.pclient, message.pmessage, ret.pmessage)
         return ret
 
     def call(self, method, signature, *args):
         """ """
-        (retsig, callsig) = explode(signature)
-        message = Message()
-        message.fill(callsig, args)
-        mereturn.pmessage = _qi.qi_call_client(self.pclient, method, message.pmessage)
-        return mereturn.decode(retsig)
+        (retsig, callsig) = _explode(signature)
+        message = qi.message.python_to_message(callsig, *args)
+        ret = qi.Message()
+        _qi.qi_client_call(self.pclient, method + signature, message.pmessage, ret.pmessage)
+        return qi.message.message_to_python(ret)
 
     def locate_service(self, methodSignature):
         return  _qi.qi_master_locate_service(self.pclient, methodSignature)
