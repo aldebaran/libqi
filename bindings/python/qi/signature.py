@@ -89,6 +89,46 @@ def _search_closing_char(sig, start, cstart, cend):
         raise BadSignatureException("what?")
     return advance
 
+def split_complete_signature(sig):
+    """ split a complete method signature into:
+        - methodName
+        - return signature
+        - call signature
+
+        >>> split_complete_signature("toto::i:s")
+        ('toto', 'i', 's')
+        >>> split_complete_signature("::i:s")
+        ('', 'i', 's')
+        >>> split_complete_signature("i:s")
+        (None, 'i', 's')
+        >>> split_complete_signature("sdf[s]")
+        (None, None, 'sdf[s]')
+        >>> split_complete_signature("master.listServices::{ss}:")
+        ('master.listServices', '{ss}', '')
+        >>> split_complete_signature(":::")
+        ('', '', '')
+    """
+    fn   = None
+    ret  = None
+    fsig = None
+
+    sp = sig.split("::", 1)
+    if len(sp) == 2:
+        fn = sp[0]
+        sig = sp[1]
+    else:
+        sig = sp[0]
+    if sig.startswith("::"):
+        sig = sig[2:]
+    sp2 = sig.split(":", 1)
+    if len(sp2) == 2:
+        ret = sp2[0]
+        fsig = sp2[1]
+    else:
+        fsig = sp2[0]
+    return (fn, ret, fsig)
+
+
 def split(sig):
     """ Split a signature in individual type. Warning it is not recursive.
         for example [[s]]s will become [[s]], s
