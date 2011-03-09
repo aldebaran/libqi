@@ -67,7 +67,7 @@ def single_value_to_python(sig, message):
         return ret
     raise qi.signature.BadSignatureException("what?")
 
-def message_to_python(message):
+def message_to_python(sig, message):
     """ convert a message to a native python type.
         result could be :
         - None
@@ -76,9 +76,7 @@ def message_to_python(message):
 
         a value could be a POD, a list, a map
     """
-    sig = message.read_string()
     sigsplit = qi.signature.split(sig)
-
     if len(sigsplit) == 0:
         return None
     elif len(sigsplit) == 1:
@@ -125,17 +123,12 @@ def single_value_to_message(sig, data, message):
         return
     raise qi.signature.BadSignatureException("what?")
 
-def python_to_message(signature, *args):
+def python_to_message(sig, message, *args):
     """ write a list of python type to a message
     """
-    sigsplit = qi.signature.split(signature)
-
+    sigsplit = qi.signature.split(sig)
     if len(sigsplit) != len(args):
         raise qi.signature.BadSignatureException()
-
-    message = qi.Message()
-    message.write_string(signature)
-
     for s,a in zip(sigsplit, args):
         single_value_to_message(s, a, message)
     return message

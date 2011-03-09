@@ -89,8 +89,7 @@ def _search_closing_char(sig, start, cstart, cend):
         raise BadSignatureException("what?")
     return advance
 
-
-def split(signature):
+def split(sig):
     """ Split a signature in individual type. Warning it is not recursive.
         for example [[s]]s will become [[s]], s
 
@@ -108,26 +107,28 @@ def split(signature):
 
     ret = list()
 
-    siglen = len(signature)
+    siglen = len(sig)
+    if siglen == 0:
+        return ret
     i = 0
     while i < siglen:
-        current = signature[i]
+        current = sig[i]
         # vector
         if current == '[':
-            advance = _search_closing_char(signature, i, '[', ']')
-            ret.append(signature[i:i + advance + 1])
+            advance = _search_closing_char(sig, i, '[', ']')
+            ret.append(sig[i:i + advance + 1])
             i += advance
         # map
         elif current == '{':
-            advance = _search_closing_char(signature, i, '{', '}')
-            ret.append(signature[i:i + advance + 1])
+            advance = _search_closing_char(sig, i, '{', '}')
+            ret.append(sig[i:i + advance + 1])
             i += advance
         # simple type
         elif current in 'bcifdvs':
             ret.append(current)
         elif current == '*':
             if len(ret) == 0:
-                raise BadSignatureException("Pointer should refer to a type for : %s" % (signature))
+                raise BadSignatureException("Pointer should refer to a type for : %s" % (sig))
             ret[-1] += '*'
         else:
             raise BadSignatureException("Unknown signature")
