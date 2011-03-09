@@ -9,11 +9,6 @@
 import _qi
 import qi
 
-def _explode(sig):
-    if sig.startswith("::"):
-        sig = sig[2:]
-    return sig.split(":", 1)
-
 class Client:
     def __init__(self, name, context=None):
         """
@@ -31,13 +26,15 @@ class Client:
         _qi.qi_client_call(self.pclient, message.pmessage, ret.pmessage)
         return ret
 
-    def call(self, method, signature, *args):
+    def call(self, methodSignature, *args):
         """ """
-        (retsig, callsig) = _explode(signature)
-        message = qi.message.python_to_message(callsig, *args)
+        (_, retsig, callsig) = qi.signature.split_complete_signature(methodSignature)
+        message = qi.Message()
+        message.write_string(methodSignature)
+        qi.message.python_to_message(callsig, message, *args)
         ret = qi.Message()
-        _qi.qi_client_call(self.pclient, method + signature, message.pmessage, ret.pmessage)
-        return qi.message.message_to_python(ret)
+        _qi.qi_client_call(self.pclient, methodSignature, message.pmessage, ret.pmessage)
+        return qi.message.message_to_python(retsig, ret)
 
     def locate_service(self, methodSignature):
         return  _qi.qi_master_locate_service(self.pclient, methodSignature)

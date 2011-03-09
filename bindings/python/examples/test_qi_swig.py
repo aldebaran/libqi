@@ -73,10 +73,9 @@ def test_4():
     client = qi.Client("toto")
     client.connect(sys.argv[1])
 
-    ret = client.call("master.listServices", "::{ss}:")
-    print ret
-    # for i in range(result):
-    #     print "k: %s, v: %s" % (key, value)
+    ret = client.call("master.listServices::{ss}:")
+    for k,v in ret.iteritems():
+        print k, "=", v
 
 #test_1()
 #test_2()
