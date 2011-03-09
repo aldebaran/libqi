@@ -83,14 +83,6 @@ namespace qi {
       /// <param name="d">The double</param>
       void writeDouble(const double& d);
 
-      /// <summary>Write a list. </summary>
-      /// <param name="count">The double</param>
-      inline void writeList(const int &count) {};
-
-      /// <summary>Write a map. </summary>
-      /// <param name="count">The double</param>
-      inline void writeMap(const int &count) {};
-
       /// <summary>Gets the string. </summary>
       /// <returns> The string representation of the serialized message</returns>
       std::string str()const {
