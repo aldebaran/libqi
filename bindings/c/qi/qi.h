@@ -34,8 +34,8 @@ extern "C"
   typedef void qi_context_t;
   typedef void qi_client_t;
   typedef void qi_message_t;
-// typedef void * qi_server_t;
-// typedef void * qi_master_t;
+  typedef void qi_server_t;
+// typedef void qi_master_t;
 
   qi_context_t *qi_context_create();
   void          qi_context_destroy(qi_context_t *ctx);
@@ -46,14 +46,18 @@ qi_client_t *qi_client_create_with_context(const char *name, qi_context_t *ctx);
 void         qi_client_destroy(qi_client_t *client);
 
 void         qi_client_connect(qi_client_t *client, const char *address);
-
 void         qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret);
 
 
 
-// server_t *qi_server_create(const char *name);
-// void      qi_server_connect(client_t *server, const char *address);
-// void      qi_server_destroy(client_t *server);
+qi_server_t *qi_server_create(const char *name);
+void         qi_server_destroy(qi_server_t *server);
+void         qi_server_connect(qi_server_t *server, const char *address);
+
+typedef void (*BindedMethod)(qi_message_t *msg, qi_message_t *ret, void *data);
+
+void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BindedMethod func);
+void         qi_server_unadvertise_service(qi_server_t *server, const char *methodSignature);
 
 // master_t *qi_master_create(const char *name);
 // void      qi_master_connect(client_t *master, const char *address);
@@ -61,21 +65,21 @@ void         qi_client_call(qi_client_t *client, const char *method, qi_message_
 
 
 qi_message_t *qi_message_create();
-void          qi_message_write_bool(qi_message_t *msg, const char b);
-void          qi_message_write_char(qi_message_t *msg, const char b);
-void          qi_message_write_int(qi_message_t *message, const int i);
-void          qi_message_write_float(qi_message_t *msg, const float f);
-void          qi_message_write_double(qi_message_t *msg, const double d);
+void          qi_message_write_bool(qi_message_t   *msg,     const char b);
+void          qi_message_write_char(qi_message_t   *msg,     const char b);
+void          qi_message_write_int(qi_message_t    *message, const int i);
+void          qi_message_write_float(qi_message_t  *msg,     const float f);
+void          qi_message_write_double(qi_message_t *msg,     const double d);
 void          qi_message_write_string(qi_message_t *message, const char *);
-void          qi_message_write_raw(qi_message_t *message, const char *, unsigned int size);
+void          qi_message_write_raw(qi_message_t    *message, const char *, unsigned int size);
 
-char   qi_message_read_bool(qi_message_t *msg);
-char   qi_message_read_char(qi_message_t *msg);
-int    qi_message_read_int(qi_message_t *msg);
-float  qi_message_read_float(qi_message_t *msg);
+char   qi_message_read_bool(qi_message_t   *msg);
+char   qi_message_read_char(qi_message_t   *msg);
+int    qi_message_read_int(qi_message_t    *msg);
+float  qi_message_read_float(qi_message_t  *msg);
 double qi_message_read_double(qi_message_t *msg);
 char  *qi_message_read_string(qi_message_t *msg);
-char  *qi_message_read_raw(qi_message_t *msg);
+char  *qi_message_read_raw(qi_message_t    *msg);
 
 
 // MASTER API
