@@ -30,11 +30,24 @@
 extern "C"
 {
 #endif
+  enum QiSignatureType {
+    QI_BOOL   = 'b',
+    QI_CHAR   = 'c',
+    QI_INT    = 'i',
+    QI_FLOAT  = 'f',
+    QI_DOUBLE = 'd',
+    QI_STRING = 's',
+    QI_LIST   = '[',
+    QI_MAP    = '{'
+  };
+
 
   typedef void qi_context_t;
   typedef void qi_client_t;
   typedef void qi_message_t;
   typedef void qi_server_t;
+  typedef void qi_signature_t;
+
 // typedef void qi_master_t;
 
   qi_context_t *qi_context_create();
@@ -79,7 +92,17 @@ int    qi_message_read_int(qi_message_t    *msg);
 float  qi_message_read_float(qi_message_t  *msg);
 double qi_message_read_double(qi_message_t *msg);
 char  *qi_message_read_string(qi_message_t *msg);
-char  *qi_message_read_raw(qi_message_t    *msg);
+char  *qi_message_read_raw(qi_message_t    *msg, unsigned int *size);
+
+// Signature
+qi_signature_t *qi_signature_create(const char *signature);
+void qi_signature_destroy(qi_signature_t *signature);
+//return 0 on error or EOL
+char *qi_signature_get_next(qi_signature_t *signature);
+
+char *qi_signature_get_name(const char *sig);
+char *qi_signature_get_params(const char *sig);
+char *qi_signature_get_return(const char *sig);
 
 
 // MASTER API
