@@ -56,7 +56,7 @@ void         qi_server_connect(qi_server_t *server, const char *address);
 
 typedef void (*BindedMethod)(qi_message_t *msg, qi_message_t *ret, void *data);
 
-void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BindedMethod func);
+void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BindedMethod func, void *data);
 void         qi_server_unadvertise_service(qi_server_t *server, const char *methodSignature);
 
 // master_t *qi_master_create(const char *name);
