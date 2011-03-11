@@ -102,7 +102,7 @@ void         qi_server_connect(qi_server_t *server, const char *address) {
 
 class CFunctor : public qi::Functor {
 public:
-  CFunctor(BindedMethod func, void *data = 0)
+  CFunctor(BoundMethod func, void *data = 0)
     : _func(func),
       _data(data)
   {
@@ -118,12 +118,12 @@ public:
   }
 
 private:
-  BindedMethod  _func;
+  BoundMethod   _func;
   void         *_data;
 
 };
 
-void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BindedMethod func, void *data) {
+void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BoundMethod func, void *data) {
   qi::detail::ServerImpl  *pserver  = (qi::detail::ServerImpl *)server;
   CFunctor *fun = new CFunctor(func, data);
   pserver->advertiseService(methodSignature, fun);
@@ -267,3 +267,7 @@ char *qi_master_locate_service(qi_client_t *client, const char *signature)
   ret.readString(addr);
   return strdup(addr.c_str());
 }
+
+
+
+
