@@ -18,6 +18,7 @@ class Server:
         return _qi.qi_server_connect(self.pclient, address)
 
     def advertise_service(self, servicename, func):
+        return _qi.qi_server_advertise_python_service(self.pclient, servicename, func)
         pass
 
     def unadvertise_service(self, servicename):

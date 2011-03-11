@@ -77,7 +77,29 @@ def test_4():
     for k,v in ret.iteritems():
         print k, "=", v
 
+def moule(*args, **kargs):
+    print "moule"
+
+def test_5():
+    import qi
+    import time
+    print "ici"
+    client = qi.Client("flds")
+    client.connect(sys.argv[1])
+
+    server = qi.Server("blam")
+    server.connect(sys.argv[1])
+
+    server.advertise_service("moule:::", moule)
+    time.sleep(1)
+
+    print "ici2"
+    ret = client.call("moule:::")
+    time.sleep(1)
+
+
 #test_1()
 #test_2()
 #test_3()
-test_4()
+#test_4()
+test_5()
