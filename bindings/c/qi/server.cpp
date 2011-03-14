@@ -1,0 +1,63 @@
+/*
+**
+** Author(s):
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**
+** Copyright (C) 2010, 2011 Aldebaran Robotics
+*/
+
+#include <qi/qi.h>
+#include <qi/messaging.hpp>
+#include <qi/messaging/src/server_impl.hpp>
+
+
+qi_server_t *qi_server_create(const char *name) {
+  qi::detail::ServerImpl *pserver = new qi::detail::ServerImpl(name);
+  return static_cast<qi_server_t *>(pserver);
+}
+
+void         qi_server_destroy(qi_server_t *server) {
+  qi::detail::ServerImpl  *pserver  = static_cast<qi::detail::ServerImpl *>(server);
+  delete pserver;
+}
+
+void         qi_server_connect(qi_server_t *server, const char *address) {
+  qi::detail::ServerImpl  *pserver  = static_cast<qi::detail::ServerImpl *>(server);
+  pserver->connect(address);
+}
+
+
+class CFunctor : public qi::Functor {
+public:
+  CFunctor(BoundMethod func, void *data = 0)
+    : _func(func),
+      _data(data)
+  {
+    ;
+  }
+
+  virtual void call(qi::serialization::Message &params, qi::serialization::Message& result)const {
+    if (_func)
+      _func(static_cast<qi_message_t *>(&params), static_cast<qi_message_t *>(&result), _data);
+  }
+
+  virtual ~CFunctor() {
+  }
+
+private:
+  BoundMethod   _func;
+  void         *_data;
+
+};
+
+
+void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BoundMethod func, void *data) {
+  qi::detail::ServerImpl  *pserver  = static_cast<qi::detail::ServerImpl *>(server);
+  CFunctor *fun = new CFunctor(func, data);
+  pserver->advertiseService(methodSignature, fun);
+}
+
+void         qi_server_unadvertise_service(qi_server_t *server, const char *methodSignature) {
+  qi::detail::ServerImpl  *pserver  = static_cast<qi::detail::ServerImpl *>(server);
+  pserver->unadvertiseService(methodSignature);
+}
