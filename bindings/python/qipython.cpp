@@ -9,77 +9,59 @@
 #include "qipython.hpp"
 #include <Python.h>
 
-static PyObject *qi_value_to_python_list(const char *parent_sig, qi_message_t *msg)
+static PyObject *qi_value_to_python_list(qi_signature_t *sig, qi_message_t *msg)
 {
-  int             size    = qi_message_read_int(msg);
-  char           *ssubsig = strdup(parent_sig);
-  int             len     = strlen(ssubsig);
+  int       size    = qi_message_read_int(msg);
+  int       retcode = qi_signature_next(sig);
+  int       i       = 0;
+  PyObject *lst     = 0;
 
-  if (len < 3)
-  {
-    free(ssubsig);
+  if (retcode != 0)
     return 0;
-  }
 
-  //we dont want the first and last char, remove them
-  ssubsig[len - 1] = 0;
-  qi_signature_t *subsig = qi_signature_create(ssubsig + 1);
-  char *current = qi_signature_get_next(subsig);
-
-  int       i   = 0;
-  PyObject *lst = PyList_New(size);
-
+  lst = PyList_New(size);
   for (;i < size; ++i) {
-    PyList_Append(lst, qi_value_to_python(current, msg));
+    PyList_Append(lst, qi_value_to_python(sig->current, msg));
   }
-
-  if (current)
-    free(current);
-  free(ssubsig);
-  qi_signature_destroy(subsig);
   return lst;
 }
 
 
-static PyObject *qi_value_to_python_dict(const char *parent_sig, qi_message_t *msg)
+static PyObject *qi_value_to_python_dict(qi_signature_t *sig, qi_message_t *msg)
 {
-  int             size    = qi_message_read_int(msg);
-  char           *ssubsig = strdup(parent_sig);
-  int             len     = strlen(ssubsig);
+  int       size    = qi_message_read_int(msg);
+  int       retcode = 0;
+  int       i       = 0;
+  PyObject *map     = 0;
 
-  if (len < 3)
-  {
-    free(ssubsig);
+  retcode = qi_signature_next(sig);
+  if (retcode != 0)
+    return 0;
+  //need to store sk, because the next call to qi_signature_next will change sig->current
+  char *sk = strdup(sig->current);
+
+  retcode = qi_signature_next(sig);
+  if (retcode != 0) {
+    free(sk);
     return 0;
   }
+  char *sv = sig->current;
 
-  //we dont want the first and last char, remove them
-  ssubsig[len - 1] = 0;
-  qi_signature_t *subsig = qi_signature_create(ssubsig + 1);
-  char *sk = qi_signature_get_next(subsig);
-  char *sv = qi_signature_get_next(subsig);
-
-  int       i   = 0;
-  PyObject *map = PyDict_New();
-
+  map = PyDict_New();
   for (;i < size; ++i) {
     PyDict_SetItem(map, qi_value_to_python(sk, msg), qi_value_to_python(sv, msg));
   }
 
-  if (sk)
-    free(sk);
-  if (sv)
-    free(sv);
-  free(ssubsig);
-  qi_signature_destroy(subsig);
+  free(sk);
+  free(sv);
   return map;
 }
 
-PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
+PyObject *qi_value_to_python(qi_signature_t *sig, qi_message_t *msg)
 {
   PyObject *ret = 0;
 
-  switch (sig[0]) {
+  switch (sig->current[0]) {
   case QI_BOOL:
     return PyBool_FromLong(qi_message_read_bool(msg));
   case QI_CHAR:
@@ -106,54 +88,59 @@ PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
 
 PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
 {
-  PyObject       *ret = 0;
-  qi_signature_t *sig = 0;
-  char           *current = 0;
+  PyObject       *ret     = 0;
+  qi_signature_t *sig     = 0;
+  int             retcode = 0;
 
   sig     = qi_signature_create(signature);
-  current = qi_signature_get_next(sig);
-
-  if (!current) {
+  retcode = qi_signature_next(sig);
+  if (retcode != 0)
+    return 0;
+  if (!sig->current || !*(sig->current)) {
     Py_INCREF(Py_None);
     return Py_None;
   }
-  while (current) {
-    PyObject *obj = qi_value_to_python(current, msg);
-    free(current);
-    current = qi_signature_get_next(sig);
-    if (!current && !ret) {
-      return obj;
+  while (retcode == 0) {
+    PyObject *obj = qi_value_to_python(sig, msg);
+    retcode = qi_signature_next(sig);
+    if (retcode != 2) {
+      Py_XDECREF(obj);
+      return 0;
+    }
+    if (retcode == 1) {
+      if (!ret)
+        return obj;
+      return ret;
     }
     if (!ret)
       ret = PyList_New(0);
     PyList_Append(ret, obj);
   }
-
   qi_signature_destroy(sig);
   return ret;
 }
 
-void qi_value_to_message(const char *signature, PyObject *data, qi_message_t *msg)
+int qi_value_to_message(qi_signature_t *sig, PyObject *data, qi_message_t *msg)
 {
-  switch (signature[0]) {
+  switch (sig->current[0]) {
   case QI_BOOL:
     qi_message_write_bool(msg, PyInt_AsLong(data));
-    return;
+    return 0;
   case QI_CHAR:
     qi_message_write_char(msg, PyInt_AsLong(data));
-    return;
+    return 0;
   case QI_INT:
     qi_message_write_int(msg, PyInt_AsLong(data));
-    return;
+    return 0;
   case QI_FLOAT:
     qi_message_write_float(msg, PyFloat_AsDouble(data));
-    return;
+    return 0;
   case QI_DOUBLE:
     qi_message_write_double(msg, PyFloat_AsDouble(data));
-    return;
+    return 0;
   case QI_STRING:
     qi_message_write_string(msg, PyString_AsString(data));
-    return;
+    return 0;
   case QI_LIST:
     {
       //qi_message_write_python_list()
@@ -164,50 +151,48 @@ void qi_value_to_message(const char *signature, PyObject *data, qi_message_t *ms
         //qi_value_to_message()
       }
     }
-    break;
+    return 0;
       //return qi_value_to_python_list(sig, msg);
   case QI_MAP:
       break;
       ;
       //return qi_value_to_python_dict(sig, msg);
+      return 0;
   default:
-    return;
+    return 1;
   }
+  return 1;
 }
 
-void qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data)
+int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data)
 {
   qi_signature_t *sig = qi_signature_create(signature);
-  char           *current;
+  int             retcode;
 
   //if none => return
   if (Py_None == data)
   {
-    if (strlen(signature))
+    if (strlen(signature)) {
       printf("WTF?\n");
-    return;
+      return 2;
+    }
+    return 0;
   }
 
   //if single type => convert and return
-  if (!PyIter_Check(data))
-  {
-    qi_value_to_message(signature, data, msg);
-    return;
+  if (!PyIter_Check(data)) {
+    qi_value_to_message(sig, data, msg);
+    return 0;
   }
 
   PyObject *currentObj = PyIter_Next(data);
-  current              = qi_signature_get_next(sig);
-  while(current && currentObj) {
-    free(current);
-    current = qi_signature_get_next(sig);
-    qi_value_to_message(current, currentObj, msg);
+  retcode = qi_signature_next(sig);
+  while(retcode == 0 && currentObj) {
+    qi_value_to_message(sig, currentObj, msg);
     currentObj = PyIter_Next(data);
-    free(current);
+    retcode = qi_signature_next(sig);
   };
-
-  if (current || currentObj) {
-    printf("WTF?\n");
-  }
+  return retcode;
 }
 
 static void _qi_server_callback(qi_message_t *params, qi_message_t *ret, void *data)

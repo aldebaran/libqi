@@ -13,9 +13,12 @@
 # include <Python.h>
 
 extern "C" {
-  void qi_server_advertise_python_service(qi_server_t *server, const char *name, PyObject *func);
 
-  PyObject *qi_value_to_python(const char *sig, qi_message_t *msg);
+  void      qi_server_advertise_python_service(qi_server_t *server, const char *name, PyObject *func);
+
+  PyObject *qi_value_to_python(  const char *signature, qi_message_t *msg);
+  int       qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data);
+
 }
 
 #endif      /* !QIPYTHON_H_ */
