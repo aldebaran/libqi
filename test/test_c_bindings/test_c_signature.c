@@ -7,20 +7,21 @@
 #include <string.h>
 #include <assert.h>
 
-#define check(retcode, lvl, str, ptr) \
+#define check(retcode, str, ptr) \
 { \
-  printf("current signature: %s, ret: %d\n", sig->current, ret); \
-  printf(" level: %d, pointer: %d\n", sig->level, qi_signature_is_pointer(sig)); \
+  printf("current signature: %s, pointer: %d ret: %d\n", sig->current, qi_signature_is_pointer(sig), ret); \
   assert(ret == retcode); \
-  verify(sig, lvl, str, ptr); \
+  verify(sig, str, ptr); \
   printf("\n");\
   }
 
-void verify(qi_signature_t *sig, int level, char *current, int ispointer)
+void verify(qi_signature_t *sig, char *current, int ispointer)
 {
   assert(sig);
-  assert(sig->level == level);
-  assert(!strcmp(sig->current, current));
+  if (sig->current)
+    assert(!strcmp(sig->current, current));
+  else
+    assert(sig->current == current);
   assert(qi_signature_is_pointer(sig) == ispointer);
 }
 
@@ -31,53 +32,48 @@ void test() {
   char           *signature = 0;
 
   printf("Signature: Us**S\n");
-  signature = strdup("Us**S");
-  sig = qi_signature_create(signature);
-  ret = qi_signature_next(sig); check(2, -1, "Us**S", 0);
-  ret = qi_signature_next(sig); check(2, -1, "Us**S", 0);
+  sig = qi_signature_create("Us**S");
+  ret = qi_signature_next(sig); check(2, 0, 0);
+  ret = qi_signature_next(sig); check(2, 0, 0);
   qi_signature_destroy(sig);
 
-  free(signature);
   printf("Signature: s\n");
-  signature = strdup("s");
-  sig = qi_signature_create(signature);
-  ret = qi_signature_next(sig); check(0, 0, "s", 0);
-  ret = qi_signature_next(sig); check(1, 0, "", 0);
-  ret = qi_signature_next(sig); check(1, 0, "", 0);
+  sig = qi_signature_create("s");
+  ret = qi_signature_next(sig); check(0, "s", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
   qi_signature_destroy(sig);
 
-  free(signature);
   printf("Signature: s*\n");
-  signature = strdup("s*");
-  sig = qi_signature_create(signature);
-  ret = qi_signature_next(sig); check(0, 0, "s*", 1);
-  ret = qi_signature_next(sig); check(1, 0, "", 0);
+  sig = qi_signature_create("s*");
+  ret = qi_signature_next(sig); check(0, "s*", 1);
+  ret = qi_signature_next(sig); check(1, "", 0);
   qi_signature_destroy(sig);
 
-  free(signature);
   printf("Signature: s*[s]{ss}*\n");
-  signature = strdup("s*[s]{ss}*");
-  sig = qi_signature_create(signature);
-  ret = qi_signature_next(sig); check(0, 0, "s*", 1);
-  ret = qi_signature_next(sig); check(0, 0, "[s]", 0);
-  ret = qi_signature_next(sig); check(0, 1, "s", 0);
-  ret = qi_signature_next(sig); check(0, 0, "{ss}*", 1);
-  ret = qi_signature_next(sig); check(0, 1, "s", 0);
-  ret = qi_signature_next(sig); check(0, 1, "s", 0);
-  ret = qi_signature_next(sig); check(1, 0, "", 0);
-  ret = qi_signature_next(sig); check(1, 0, "", 0);
+  sig = qi_signature_create("s*[s]{ss}*");
+  ret = qi_signature_next(sig); check(0, "s*", 1);
+  ret = qi_signature_next(sig); check(0, "[s]", 0);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  ret = qi_signature_next(sig); check(0, "{ss}*", 1);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
   qi_signature_destroy(sig);
 
-//  free(signature);
-//  printf("Signature: s\n");
 
-//  signature = strdup("s*[s*]*{s*s*}*");
-//  ret = qi_signature_create(&sig, signature);
-//  assert(ret == 0);
-//  verify(&sig, 0, "s*", 1);
-
-//  free(signature);
-//  signature = strdup("s*[s*]*{s*[{s*s*}*]*}*");
+  printf("SubSignature: [s*[s]{ss}*]*\n");
+  sig = qi_signature_create_subsignature("[s*[s]{ss}*]*");
+  ret = qi_signature_next(sig); check(0, "s*", 1);
+  ret = qi_signature_next(sig); check(0, "[s]", 0);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  ret = qi_signature_next(sig); check(0, "{ss}*", 1);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
+  ret = qi_signature_next(sig); check(1, "", 0);
+  qi_signature_destroy(sig);
 }
 
 int main(void) {

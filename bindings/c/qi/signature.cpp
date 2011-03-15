@@ -11,113 +11,124 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// update _current_end and _current_end_replacement
-// take pointer and container into account.
-int _qi_signature_update_end(qi_signature_t *sig)
+static int _qi_signature_find_end(qi_signature_t *sig, char **pcurrent, const char **psignature, char copen, char close)
 {
-  char tofind     = 0;
-  int  opencount  = 0;
-  int  closecount = 0;
-  char *end       = sig->current;
+  int         opencount  = 1;
+  int         closecount = 0;
+  char       *current    = *pcurrent;
+  const char *signature  = *psignature;
 
-  if (*sig->current == QI_LIST) {
-    tofind = QI_LIST_END;
-  }
-  else if (*sig->current == QI_MAP) {
-    tofind = QI_MAP_END;
-  }
-  else if (*sig->current == QI_TUPPLE) {
-    tofind = QI_TUPPLE_END;
-  }
-
-  //verify that the current signature is correct
-  switch(*sig->current) {
-  case QI_VOID   :
-  case QI_BOOL   :
-  case QI_CHAR   :
-  case QI_INT    :
-  case QI_FLOAT  :
-  case QI_DOUBLE :
-  case QI_STRING :
-  case QI_LIST   :
-  case QI_MAP    :
-  case QI_TUPPLE :
-  case QI_MESSAGE:
-    break;
-  case QI_POINTER:
-    //we cant have pointer now, nor other values
-  default:
-    sig->level = -1;
-    return 2;
-  }
-
-  //initiate the loop
-  if (tofind) {
-    opencount++;
-    end++;
-  }
-  while ((*end != 0) && (opencount != closecount))
+  *current = *signature;
+  signature++;
+  current++;
+  while ((*signature != 0) && (opencount != closecount))
   {
-    if (*end == *sig->current)
+    if (*signature == copen)
       opencount++;
-    if (*end == tofind)
+    if (*signature == close)
       closecount++;
-    end++;
+    *current = *signature;
+    signature++;
+    current++;
   }
-  if (opencount != closecount)
-  {
-    printf("error opencount(%d) != closecount(%d)\n", opencount, closecount);
-    sig->level = -1;
-    return 2;
-  }
-
-  //not a container, advance once
-  if (!opencount)
-    end++;
-
-  if (*end == QI_POINTER) {
-    end++;
-  }
-  //printf("current end: %c\n", end);
-  sig->_current_end = end;
-  sig->_current_end_replacement = *(sig->_current_end);
-  *(sig->_current_end) = 0;
-  //detect end
-  if (sig->current + 1 == sig->_end)
-  {
-    printf("end curret+1 = end;\n");
-    return 0;
-  }
-  if (*(sig->current + 1) == QI_POINTER && sig->current + 2 == sig->_end)
-  {
-    printf("end curret+ 1 = ptr, end;\n");
-    return 0;
-  }
-  return 0;
+  *pcurrent   = current;
+  *psignature = signature;
 }
 
+// go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
+static int _qi_signature_split(qi_signature_t *sig, const char *signature, const char *end)
+{
+  char *current = sig->_signature;
+  int   i       = 0;
 
-//TODO: last case to handle: when it is the end of the signature,
-//      and we have ]]*]]* and level = 4, we should dec level, and
-//      move forward til current == _end
-//      and .. return 1
+  while(*signature) {
+    if (end && signature >= end)
+      break;
+    //verify that the current signature is correct
+    switch(*signature) {
+    case QI_VOID   :
+    case QI_BOOL   :
+    case QI_CHAR   :
+    case QI_INT    :
+    case QI_FLOAT  :
+    case QI_DOUBLE :
+    case QI_STRING :
+    case QI_MESSAGE:
+    //case QI_POINTER:
+      *current = *signature;
+      current++;
+      signature++;
+      break;
+    case QI_LIST   :
+      _qi_signature_find_end(sig, &current, &signature, QI_LIST, QI_LIST_END);
+      break;
+    case QI_MAP    :
+      _qi_signature_find_end(sig, &current, &signature, QI_MAP, QI_MAP_END);
+      break;
+    case QI_TUPPLE :
+      _qi_signature_find_end(sig, &current, &signature, QI_TUPPLE, QI_TUPPLE_END);
+      break;
+    default:
+      return 2;
+    }
+
+    if (*signature == QI_POINTER) {
+      *current = *signature;
+      current++;
+      signature++;
+    }
+
+    *current = 0;
+    current++;
+  }
+  sig->_end = current - 1;
+  return 0;
+}
 
 //return 0 on success
 //qi_signature_t *qi_signature_create(const char *signature)
 qi_signature_t *qi_signature_create(const char *signature)
 {
-  qi_signature_t *sig = new qi_signature_t();
+  int             size;
+  qi_signature_t *sig;
+
   if (!signature)
     return 0;
 
+  size = strlen(signature) * 2;
+  sig  = new qi_signature_t();
+
+
+  sig->_signature               = (char *)malloc(size);
   sig->current                  = 0;
-  sig->level                    = 0;
-  sig->_signature               = strdup(signature);
-  sig->_end                     = sig->_signature + strlen(signature);
-  sig->_current_end             = 0;
-  sig->_current_end_replacement = 0;
+  sig->_end                     = sig->_signature + size;
+  sig->_status                  = _qi_signature_split(sig, signature, 0);
   return sig;
 }
+
+qi_signature_t *qi_signature_create_subsignature(const char *signature)
+{
+  int             size;
+  qi_signature_t *sig;
+
+  if (!signature)
+    return 0;
+  size = strlen(signature);
+  if (size < 3)
+    return 0;
+  sig  = new qi_signature_t();
+
+  if (signature[size - 1] == QI_POINTER)
+    size--;
+  size -= 2;
+
+  sig->_signature               = (char *)malloc(size);
+  sig->current                  = 0;
+  sig->_end                     = sig->_signature + size;
+  sig->_status                  = _qi_signature_split(sig, signature + 1, signature + 1 + size);
+  return sig;
+}
+
 
 void qi_signature_destroy(qi_signature_t *sig)
 {
@@ -129,8 +140,8 @@ void qi_signature_destroy(qi_signature_t *sig)
 
 int qi_signature_is_pointer(const qi_signature_t *sig)
 {
-  if (sig && sig->current != sig->_end && sig->_current_end && (*(sig->_current_end - 1) == QI_POINTER))
-    return 1;
+  if (sig && sig->current && sig->_status != 2 && sig->current != sig->_end)
+    return sig->current[strlen(sig->current) - 1] == QI_POINTER;
   return 0;
 }
 
@@ -141,52 +152,26 @@ int qi_signature_is_pointer(const qi_signature_t *sig)
 int qi_signature_next(qi_signature_t *sig) {
   if (!sig)
     return 2;
-  //level is set to a negative value on error
-  if (sig->level < 0) {
-    printf("lvl < 0\n");
+
+  if (sig->_status == 2)
     return 2;
-  }
-  else if (sig->current == sig->_end) {
+
+  if (sig->current >= sig->_end)
     return 1;
-  }
-  // replace the previous end (only if equal 0)
-  if (sig->_current_end && !(*sig->_current_end))
-    *sig->_current_end = sig->_current_end_replacement;
 
-  if (sig->current && (*sig->current == QI_MAP || *sig->current == QI_LIST || *sig->current == QI_TUPPLE)) {
-    sig->level++;
-  }
-
-  //current is null the first run, initialise it
-  if (!sig->current)
+  if (sig->_status == 0) {
     sig->current = sig->_signature;
-  else
-    sig->current++;
-
-  printf("current is:%s\n", sig->current);
-
-  while ( sig->current != 0             &&
-         *sig->current != 0             &&
-         (*sig->current == QI_MAP_END    ||
-          *sig->current == QI_LIST_END   ||
-          *sig->current == QI_TUPPLE_END ||
-          *sig->current == QI_POINTER))
-  {
-    if (*sig->current == QI_MAP_END || *sig->current == QI_LIST_END || *sig->current == QI_TUPPLE_END) {
-      sig->current++;
-      sig->level--;
-      if (sig->level < 0) {
-        printf("sig level < 0\n", sig->level);
-        return 2;
-      }
-    }
-    if (*sig->current == QI_POINTER)
-      sig->current++;
+    sig->_status = 1;
+    return 0;
   }
 
-  if (sig->current == sig->_end)
+  sig->current += strlen(sig->current) + 1;
+  if (sig->current >= sig->_end)
+  {
+    sig->current = sig->_end;
     return 1;
-  return _qi_signature_update_end(sig);
+  }
+  return 0;
 }
 
 

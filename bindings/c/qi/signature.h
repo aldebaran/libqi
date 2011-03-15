@@ -34,24 +34,17 @@ extern "C"
 
 
   typedef struct signature {
-    int   level;
     char *current;
 
     // private
     char *_signature;
     char *_end;
-    char *_current_end;
-    char  _current_end_replacement;
+    char  _status;
   } qi_signature_t;
 
 
-  /* find the end of the current signature,
-   backup the next char into _current_end_replacement,
-   then set it to 0 end update _current_end
- */
-  int _qi_signature_update_end(qi_signature_t *sig);
-
   qi_signature_t *qi_signature_create(const char *signature);
+  qi_signature_t *qi_signature_create_subsignature(const char *signature);
   void            qi_signature_destroy(qi_signature_t *sig);
 
   //return:
@@ -64,6 +57,7 @@ extern "C"
   // 0 if the current type is not a pointer or on error
   // 1 if the current type is a pointer
   int qi_signature_is_pointer(const qi_signature_t *sig);
+
 
 #ifdef __cplusplus
 }
