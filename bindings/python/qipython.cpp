@@ -19,7 +19,9 @@ static PyObject *qi_value_to_python_list(const char *sig, qi_message_t *msg)
 
   lst = PyList_New(size);
   for (;i < size; ++i) {
-    PyList_Append(lst, qi_value_to_python(sig, msg));
+    PyObject *p;
+    p = qi_value_to_python(sig, msg);
+    PyList_SetItem(lst, i, p);
   }
   return lst;
 }
@@ -33,7 +35,12 @@ static PyObject *qi_value_to_python_dict(const char *sigk, const char *sigv, qi_
 
   map = PyDict_New();
   for (;i < size; ++i) {
-    PyDict_SetItem(map, qi_value_to_python(sigk, msg), qi_value_to_python(sigv, msg));
+    PyObject *pk;
+    PyObject *pv;
+
+    pk = qi_value_to_python(sigk, msg);
+    pv = qi_value_to_python(sigv, msg);
+    PyDict_SetItem(map, pk, pv);
   }
   return map;
 }
@@ -47,7 +54,7 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
   case QI_BOOL:
     return PyBool_FromLong(qi_message_read_bool(msg));
   case QI_CHAR:
-    return PyInt_FromLong(qi_message_read_char(msg));
+    return PyString_FromFormat("%c", qi_message_read_char(msg));
   case QI_INT:
     return PyInt_FromLong(qi_message_read_int(msg));
   case QI_FLOAT:
@@ -126,7 +133,6 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
     if (!ret)
       ret = PyTuple_New(items);
     PyTuple_SetItem(ret, i, obj);
-    Py_XDECREF(obj);
     if (retcode == 1) {
       break;
     }
@@ -183,7 +189,19 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     qi_message_write_bool(msg, PyInt_AsLong(data));
     return 0;
   case QI_CHAR:
-    qi_message_write_char(msg, PyInt_AsLong(data));
+    if (PyNumber_Check(data))
+      qi_message_write_char(msg, PyInt_AsLong(data));
+    else if (PyString_Check(data)) {
+      char *str = PyString_AsString(data);
+      if (!str)
+        return 1;
+      qi_message_write_char(msg, str[0]);
+    }
+    else
+    {
+      printf("WTF\n");
+      return 1;
+    }
     return 0;
   case QI_INT:
     qi_message_write_int(msg, PyInt_AsLong(data));
@@ -200,7 +218,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
   case QI_LIST:
     {
       PyObject *iter = PyObject_GetIter(data);
-      int       size = PyList_Size(iter);
+      int       size = PySequence_Size(data);
       qi_message_write_int(msg, size);
 
       PyObject *currentObj = PyIter_Next(iter);
