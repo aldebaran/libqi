@@ -100,30 +100,34 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   PyObject       *ret     = 0;
   qi_signature_t *sig     = 0;
   int             retcode = 0;
+  int             items   = 0;
+  int             i       = 0;
 
   sig     = qi_signature_create(signature);
+  items   = qi_signature_count(sig);
   retcode = qi_signature_next(sig);
-  if (retcode != 0)
+  if (retcode != 0 || items < 0)
     return 0;
+  ret = PyTuple_New(items);
   if (!sig->current || !*(sig->current)) {
     Py_INCREF(Py_None);
-    return Py_None;
+    PyTuple_SetItem(ret, 0, Py_None);
+    return ret;
   }
   while (retcode == 0) {
     PyObject *obj = qi_value_to_python(sig->current, msg);
     retcode = qi_signature_next(sig);
-    if (retcode != 2) {
+    if (retcode == 2) {
       Py_XDECREF(obj);
+      Py_XDECREF(ret);
       return 0;
     }
+    PyTuple_SetItem(ret, i, obj);
+    Py_XDECREF(obj);
     if (retcode == 1) {
-      if (!ret)
-        return obj;
       return ret;
     }
-    if (!ret)
-      ret = PyList_New(0);
-    PyList_Append(ret, obj);
+    ++i;
   }
   qi_signature_destroy(sig);
   return ret;
@@ -229,7 +233,7 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
   int             retcode;
 
   //if none => return
-  if (Py_None == data)
+  if (Py_None == data || !data)
   {
     qi_signature_destroy(sig);
     if (strlen(signature)) {
@@ -257,24 +261,25 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
   return retcode;
 }
 
-static void _qi_server_callback(qi_message_t *params, qi_message_t *ret, void *data)
+static void _qi_server_callback(const char *complete_sig, qi_message_t *params, qi_message_t *ret, void *data)
 {
   PyObject *func = static_cast<PyObject *>(data);
   printf("server callback\n");
-  if (!PyCallable_Check(func)) {
-    printf("Callable baby\n");
+  if (PyCallable_Check(func))
+  {
+    char      callsig[100];
+    char      retsig[100];
     PyObject *pyret;
-    char *sig     = qi_message_read_string(params);
-    char *callsig = qi_signature_get_params(sig);
-    char *retsig  = qi_signature_get_return(sig);
 
-    PyObject *args = qi_message_to_python(sig, params);
+    qi_signature_get_params(complete_sig, callsig, 100);
+    qi_signature_get_return(complete_sig, retsig, 100);
+
+    PyObject *args = qi_message_to_python(callsig, params);
     pyret = PyObject_CallObject(func, args);
-
     qi_python_to_message(retsig, ret, pyret);
-    free(sig);
-    free(callsig);
-    free(retsig);
+
+  } else {
+    printf("NOT Callable baby %x\n", func);
   }
 }
 
@@ -287,7 +292,9 @@ void qi_server_advertise_python_service(qi_server_t *server, const char *name, P
     printf("Fail... func is not callable\n");
     return;
   }
-  printf("register callback\n");
+  printf("register callback %x\n", func);
+  //increase the ref, because we store the object
+  Py_XINCREF(func);
   qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
 }
 

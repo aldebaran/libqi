@@ -80,6 +80,10 @@ def test_4():
 def moule(*args, **kargs):
     print "moule"
 
+def poutre(a, s):
+    print "poutre", a
+    return 42
+
 def test_5():
     import qi
     import time
@@ -89,12 +93,16 @@ def test_5():
 
     server = qi.Server("blam")
     server.connect(sys.argv[1])
+    #time.sleep(1)
 
-    server.advertise_service("moule:::", moule)
-    time.sleep(1)
+    #server.advertise_service("moule:::", moule)
+    server.advertise_service("poutre::i:is", poutre)
+    #time.sleep(1)
 
-    print "ici2"
-    ret = client.call("moule:::")
+    print "before client.call"
+    #ret = client.call("moule:::")
+    ret = client.call("poutre::i:is", 41, "caca")
+    print "called result:", ret
     time.sleep(1)
 
 

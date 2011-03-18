@@ -6,6 +6,7 @@
 ## Copyright (C) 2010, 2011 Aldebaran Robotics
 ##
 
+import _qi
 
 class Server:
     def __init__(self, name, context=None):
