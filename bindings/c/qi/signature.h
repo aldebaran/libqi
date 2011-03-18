@@ -47,6 +47,9 @@ extern "C"
   qi_signature_t *qi_signature_create_subsignature(const char *signature);
   void            qi_signature_destroy(qi_signature_t *sig);
 
+  //return the number of first level element in the signature
+  int qi_signature_count(qi_signature_t *sig);
+
   //return:
   // 0 on success
   // 1 on EOL
@@ -57,6 +60,13 @@ extern "C"
   // 0 if the current type is not a pointer or on error
   // 1 if the current type is a pointer
   int qi_signature_is_pointer(const qi_signature_t *sig);
+
+  // copy the name to buffer
+  // return the size copied
+  // -1 on error
+  int qi_signature_get_name(const char *complete_sig, char *buffer, int size);
+  int qi_signature_get_return(const char *complete_sig, char *buffer, int size);
+  int qi_signature_get_params(const char *complete_sig, char *buffer, int size);
 
 
 #ifdef __cplusplus

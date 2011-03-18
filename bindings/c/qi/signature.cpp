@@ -174,19 +174,100 @@ int qi_signature_next(qi_signature_t *sig) {
   return 0;
 }
 
+//return the number of first level element in the signature
+int qi_signature_count(qi_signature_t *sig)
+{
+  char *it;
+  int   count = 0;
 
-//char *qi_signature_get_name(const char *sig) {
-//  //TODO
-//  return 0;
-//}
+  if (!sig || !sig->_signature)
+    return -1;
 
-//char *qi_signature_get_params(const char *sig) {
-//  //TODO
-//  return 0;
-//}
+  it = sig->_signature;
+  while(it <= sig->_end) {
+    if (*it == 0)
+      count++;
+    ++it;
+  }
+  return count;
+}
 
-//char *qi_signature_get_return(const char *sig) {
-//  //TODO
-//  return 0;
-//}
+
+// copy the name to buffer
+// return the size copied
+// -1 on error
+int qi_signature_get_name(const char *complete_sig, char *buffer, int size) {
+  const char *ret;
+  int   len;
+  ret = strstr(complete_sig, "::");
+
+
+  if (!ret) {
+    buffer[0] = 0;
+    return 0;
+  }
+
+  len = ret - complete_sig;
+  if (len > size)
+    return -1;
+
+  strncpy(buffer, complete_sig, len + 1);
+  buffer[len] = 0;
+  return len;
+}
+
+// copy the name to buffer
+// return the size copied
+// -1 on error
+int qi_signature_get_return(const char *complete_sig, char *buffer, int size) {
+  const char *start, *ret;
+  int   len;
+  start = strstr(complete_sig, (const char *)"::");
+
+  if (!start)
+    start = complete_sig;
+  else
+    start += 2;
+
+  ret = strstr(start, ":");
+  if (!ret) {
+    buffer[0] = 0;
+    return 0;
+  }
+  len = ret - start;
+  if (len > size)
+    return -1;
+
+  strncpy(buffer, start, len);
+  buffer[len] = 0;
+  return len;
+}
+
+// copy the name to buffer
+// return the size copied
+// -1 on error
+int qi_signature_get_params(const char *complete_sig, char *buffer, int size) {
+  const char *start, *ret;
+  int   len;
+  start = strstr(complete_sig, "::");
+
+  if (!start)
+    start = complete_sig;
+  else
+    start += 2;
+
+  ret = strstr(start, ":");
+  if (!ret)
+    ret = start;
+  else
+    ret += 1;
+  len = strlen(ret);
+  if (len > size)
+    return -1;
+
+  strncpy(buffer, ret, len + 1);
+  buffer[len] = 0;
+  return len;
+}
+
 

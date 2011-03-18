@@ -76,7 +76,21 @@ void test() {
   qi_signature_destroy(sig);
 }
 
+void test_split() {
+  char buffer[512];
+  int size = 512;
+  int ret;
+
+  ret = qi_signature_get_name("poutre::i:i", buffer, size);
+  printf("name: %d %d %s\n", ret, size, buffer);
+  ret = qi_signature_get_return("poutre::i:i", buffer, size);
+  printf("name: %d %d %s\n", ret, size, buffer);
+  ret = qi_signature_get_params("poutre::i:i", buffer, size);
+  printf("name: %d %d %s\n", ret, size, buffer);
+}
+
 int main(void) {
-  test();
+  test_split();
+  //test();
   return 0;
 }
