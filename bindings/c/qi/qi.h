@@ -19,10 +19,6 @@ extern "C"
 {
 #endif
 
-  char *qi_signature_get_name(const char *sig);
-  char *qi_signature_get_params(const char *sig);
-  char *qi_signature_get_return(const char *sig);
-
   // MASTER API
   char *qi_master_locate_service(qi_client_t *client, const char *signature);
 

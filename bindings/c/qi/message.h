@@ -18,7 +18,7 @@ extern "C"
 
 
   qi_message_t *qi_message_create();
-  void          qi_message_destroy();
+  void          qi_message_destroy(qi_message_t *msg);
 
   void          qi_message_write_bool(qi_message_t   *msg, const char b);
   void          qi_message_write_char(qi_message_t   *msg, const char b);

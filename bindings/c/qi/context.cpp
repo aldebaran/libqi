@@ -20,25 +20,3 @@ void qi_context_destroy(qi_context_t *ctx) {
   qi::Context *pctx = (qi::Context *)ctx;
   delete pctx;
 }
-
-
-// MASTER API
-char *qi_master_locate_service(qi_client_t *client, const char *signature)
-{
-  qi::detail::ClientImpl     *pclient = static_cast<qi::detail::ClientImpl *>(client);
-  qi::serialization::Message  message;
-  qi::serialization::Message  ret;
-
-  message.writeString("master.locateService::s:ss");
-  message.writeString(signature);
-  message.writeString(pclient->endpointId());
-
-  pclient->call(std::string("master.locateService::s:ss"), message, ret);
-  std::string addr;
-  ret.readString(addr);
-  return strdup(addr.c_str());
-}
-
-
-
-
