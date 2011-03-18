@@ -28,45 +28,6 @@ class Message:
     def read_string(self) : return _qi.qi_message_read_string(self.pmessage)
 
 
-
-
-def single_value_to_python(sig, message):
-    """ convert the first value of a message based on the first type in the sig
-    """
-    if sig[0] == 'b':
-        return True if message.read_bool() else False
-    elif sig[0] == 'c':
-        return message.read_char()
-    elif sig[0] == 'i':
-        return message.read_int()
-    elif sig[0] == 'f':
-        return message.read_float()
-    elif sig[0] == 'd':
-        return message.read_double()
-    elif sig[0] == 's':
-        return message.read_string()
-    elif sig[0] == '[':
-        ret = list()
-        subsig = qi.signature.split(sig[1:-1])
-        if len(subsig) != 1:
-            raise qi.signature.BadSignatureException("what?")
-        c = message.read_int()
-        for i in range(c):
-            ret.append(single_value_to_python(subsig[0], message))
-        return ret
-    elif sig[0] == '{':
-        ret = dict()
-        subsig = qi.signature.split(sig[1:-1])
-        if len(subsig) != 2:
-            raise qi.signature.BadSignatureException("what?")
-        c = message.read_int()
-        for i in range(c):
-            k = single_value_to_python(subsig[0], message)
-            v = single_value_to_python(subsig[1], message)
-            ret[k] = v
-        return ret
-    raise qi.signature.BadSignatureException("what?")
-
 def message_to_python(sig, message):
     """ convert a message to a native python type.
         result could be :
@@ -76,59 +37,11 @@ def message_to_python(sig, message):
 
         a value could be a POD, a list, a map
     """
-    sigsplit = qi.signature.split(sig)
-    if len(sigsplit) == 0:
-        return None
-    elif len(sigsplit) == 1:
-        return single_value_to_python(sigsplit[0], message)
-    return [ single_value_to_python(s, message) for s in sigsplit ]
+    return _qi.qi_message_to_python(sig, message.pmessage)
 
-def single_value_to_message(sig, data, message):
-    """ write a python type to a message
-    """
-    if sig[0] == 'b':
-        message.write_bool(data)
-        return
-    elif sig[0] == 'c':
-        message.write_char(data)
-        return
-    elif sig[0] == 'i':
-        message.write_int(int(data))
-        return
-    elif sig[0] == 'f':
-        message.write_float(float(data))
-        return
-    elif sig[0] == 'd':
-        message.write_double(float(data))
-        return
-    elif sig[0] == 's':
-        message.write_string(str(data))
-        return
-    elif sig[0] == '[':
-        listlen = len(data)
-        subsig = qi.signature.split(sig[1:-1])
-        message.write_int(listlen)
-        assert(len(subsig) == 1)
-        for i in range(listlen):
-            single_value_to_message(subsig[0], data[i], message)
-        return
-    elif sig[0] == '{':
-        dictlen = len(data)
-        subsig = qi.signature.split(sig[1:-1])
-        assert(len(subsig) == 2)
-        message.write_int(dictlen)
-        for k,v in data.iteritems():
-            single_value_to_message(subsig[0], k, message)
-            single_value_to_message(subsig[1], v, message)
-        return
-    raise qi.signature.BadSignatureException("what?")
 
 def python_to_message(sig, message, *args):
     """ write a list of python type to a message
     """
-    sigsplit = qi.signature.split(sig)
-    if len(sigsplit) != len(args):
-        raise qi.signature.BadSignatureException()
-    for s,a in zip(sigsplit, args):
-        single_value_to_message(s, a, message)
+    _qi.qi_python_to_message(sig, message.pmessage, args)
     return message
