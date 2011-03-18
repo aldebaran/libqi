@@ -28,13 +28,7 @@ class Client:
 
     def call(self, methodSignature, *args):
         """ """
-        (_, retsig, callsig) = qi.signature.split_complete_signature(methodSignature)
-        message = qi.Message()
-        message.write_string(methodSignature)
-        qi.message.python_to_message(callsig, message, *args)
-        ret = qi.Message()
-        _qi.qi_client_call(self.pclient, methodSignature, message.pmessage, ret.pmessage)
-        return qi.message.message_to_python(retsig, ret)
+        return _qi.qi_client_python_call(self.pclient, methodSignature, args)
 
     def locate_service(self, methodSignature):
         return  _qi.qi_master_locate_service(self.pclient, methodSignature)

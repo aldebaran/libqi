@@ -9,6 +9,8 @@
 #include "qipython.hpp"
 #include <Python.h>
 
+static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg);
+
 static PyObject *qi_value_to_python_list(const char *sig, qi_message_t *msg)
 {
   int       size    = qi_message_read_int(msg);
@@ -36,7 +38,7 @@ static PyObject *qi_value_to_python_dict(const char *sigk, const char *sigv, qi_
   return map;
 }
 
-PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
+static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
 {
   PyObject *ret = 0;
   int retcode;
@@ -94,8 +96,48 @@ PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
   return 0;
 }
 
-
 PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
+{
+  PyObject       *ret     = 0;
+  qi_signature_t *sig     = 0;
+  int             retcode = 0;
+  int             items   = 0;
+  int             i       = 0;
+
+  sig     = qi_signature_create(signature);
+  items   = qi_signature_count(sig);
+  retcode = qi_signature_next(sig);
+  if (retcode != 0 || items < 0)
+    return 0;
+  if (!sig->current || !*(sig->current)) {
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+  while (retcode == 0) {
+    PyObject *obj = qi_value_to_python(sig->current, msg);
+    retcode = qi_signature_next(sig);
+    if (retcode == 2) {
+      Py_XDECREF(obj);
+      Py_XDECREF(ret);
+      return 0;
+    }
+    if (retcode == 1 && !ret)
+      return obj;
+    if (!ret)
+      ret = PyTuple_New(items);
+    PyTuple_SetItem(ret, i, obj);
+    Py_XDECREF(obj);
+    if (retcode == 1) {
+      break;
+    }
+    ++i;
+  }
+  qi_signature_destroy(sig);
+  return ret;
+}
+
+//same as above but always return a tuple
+PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t *msg)
 {
   PyObject       *ret     = 0;
   qi_signature_t *sig     = 0;
@@ -157,10 +199,11 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     return 0;
   case QI_LIST:
     {
-      int size = PyList_Size(data);
+      PyObject *iter = PyObject_GetIter(data);
+      int       size = PyList_Size(iter);
       qi_message_write_int(msg, size);
 
-      PyObject *currentObj = PyIter_Next(data);
+      PyObject *currentObj = PyIter_Next(iter);
       int i = 0;
       //TODO: assert size = iter count
       while (currentObj) {
@@ -170,9 +213,12 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
           return retcode;
         qi_value_to_message(subsig->current, currentObj, msg);
         qi_signature_destroy(subsig);
-        currentObj = PyIter_Next(data);
+        Py_XDECREF(currentObj);
+        currentObj = PyIter_Next(iter);
         ++i;
       }
+      Py_XDECREF(currentObj);
+      Py_XDECREF(iter);
       if (i != size) {
         printf("aie aie aie\n");
         return 1;
@@ -229,6 +275,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
 
 int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data)
 {
+  PyObject       *iter;
   qi_signature_t *sig = qi_signature_create(signature);
   int             retcode;
 
@@ -237,26 +284,32 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
   {
     qi_signature_destroy(sig);
     if (strlen(signature)) {
-      printf("WTF?\n");
       return 2;
     }
     return 0;
   }
 
+  iter = PyObject_GetIter(data);
+  //we dont want the exception to be propagated if data is not iterable
+  PyErr_Clear();
   //if single type => convert and return
-  if (!PyIter_Check(data)) {
+  if (!iter || !PyIter_Check(iter)) {
     qi_value_to_message(signature, data, msg);
     qi_signature_destroy(sig);
+    Py_XDECREF(iter);
     return 0;
   }
 
-  PyObject *currentObj = PyIter_Next(data);
+  PyObject *currentObj = PyIter_Next(iter);
   retcode = qi_signature_next(sig);
   while(retcode == 0 && currentObj) {
     qi_value_to_message(sig->current, currentObj, msg);
-    currentObj = PyIter_Next(data);
+    Py_XDECREF(currentObj);
+    currentObj = PyIter_Next(iter);
     retcode = qi_signature_next(sig);
   };
+  Py_XDECREF(currentObj);
+  Py_XDECREF(iter);
   qi_signature_destroy(sig);
   return retcode;
 }
@@ -274,7 +327,7 @@ static void _qi_server_callback(const char *complete_sig, qi_message_t *params, 
     qi_signature_get_params(complete_sig, callsig, 100);
     qi_signature_get_return(complete_sig, retsig, 100);
 
-    PyObject *args = qi_message_to_python(callsig, params);
+    PyObject *args = qi_message_to_python_tuple(callsig, params);
     pyret = PyObject_CallObject(func, args);
     qi_python_to_message(retsig, ret, pyret);
 
@@ -297,4 +350,24 @@ void qi_server_advertise_python_service(qi_server_t *server, const char *name, P
   Py_XINCREF(func);
   qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
 }
+
+PyObject *qi_client_python_call(qi_client_t *client, const char *signature, PyObject *args) {
+  char      callsig[100];
+  char      retsig[100];
+  PyObject *pyret;
+  qi_message_t *params;
+  qi_message_t *ret;
+
+  qi_signature_get_params(signature, callsig, 100);
+  qi_signature_get_return(signature, retsig, 100);
+  params = qi_message_create();
+  qi_message_write_string(params, signature);
+  ret = qi_message_create();
+
+  qi_python_to_message(callsig, params, args);
+  qi_client_call(client, signature, params, ret);
+  pyret = qi_message_to_python(retsig, ret);
+  return pyret;
+}
+
 
