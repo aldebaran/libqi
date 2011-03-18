@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 
-void branle(qi_message_t *params, qi_message_t *ret, void *data)
+void branle(const char *signature, qi_message_t *params, qi_message_t *ret, void *data)
 {
   printf("paf la branle!\n");
 }

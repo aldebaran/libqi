@@ -15,7 +15,7 @@ extern "C"
 #endif
 
   typedef void qi_server_t;
-  typedef void (*BoundMethod)(qi_message_t *msg, qi_message_t *ret, void *data);
+  typedef void (*BoundMethod)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
 
   qi_server_t *qi_server_create(const char *name);
   void         qi_server_destroy(qi_server_t *server);

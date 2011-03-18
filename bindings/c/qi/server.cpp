@@ -29,8 +29,9 @@ void         qi_server_connect(qi_server_t *server, const char *address) {
 
 class CFunctor : public qi::Functor {
 public:
-  CFunctor(BoundMethod func, void *data = 0)
+  CFunctor(const char *complete_sig, BoundMethod func, void *data = 0)
     : _func(func),
+      _complete_sig(strdup(complete_sig)),
       _data(data)
   {
     ;
@@ -38,14 +39,16 @@ public:
 
   virtual void call(qi::serialization::Message &params, qi::serialization::Message& result)const {
     if (_func)
-      _func(static_cast<qi_message_t *>(&params), static_cast<qi_message_t *>(&result), _data);
+      _func(_complete_sig, static_cast<qi_message_t *>(&params), static_cast<qi_message_t *>(&result), _data);
   }
 
   virtual ~CFunctor() {
+    free(_complete_sig);
   }
 
 private:
   BoundMethod   _func;
+  char         *_complete_sig;
   void         *_data;
 
 };
@@ -53,7 +56,7 @@ private:
 
 void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BoundMethod func, void *data) {
   qi::detail::ServerImpl  *pserver  = static_cast<qi::detail::ServerImpl *>(server);
-  CFunctor *fun = new CFunctor(func, data);
+  CFunctor *fun = new CFunctor(methodSignature, func, data);
   pserver->advertiseService(methodSignature, fun);
 }
 
