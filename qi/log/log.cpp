@@ -3,7 +3,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 #include <qi/log/log.hpp>
@@ -40,18 +40,25 @@ namespace qi {
              const int         line,
              const char       *fmt, ...)
     {
+      va_list   vl;
+      va_start(vl, fmt);
+      log(verb, file, fct, line, fmt, vl);
+      va_end(vl);
+    }
+
+    void log(const LogLevel    verb,
+             const char       *file,
+             const char       *fct,
+             const int         line,
+             const char       *fmt,
+             va_list           vl)
+    {
       if (gLogHandler) {
-        va_list   vl;
-        va_start(vl, fmt);
         gLogHandler(verb, file, fct, line, fmt, vl);
-        va_end(vl);
       }
       else {
-        va_list   vl;
-        va_start(vl, fmt);
         printf("[MISSING Logger]: ");
         vprintf(fmt, vl);
-        va_end(vl);
       }
     }
 

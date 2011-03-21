@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 
@@ -92,6 +92,16 @@ namespace qi {
                    const char       *fct,
                    const int         line,
                    const char       *fmt, ...);
+
+    /**
+     * call this to make some log
+     */
+    QIAPI void log(const LogLevel    verb,
+                   const char       *file,
+                   const char       *fct,
+                   const int         line,
+                   const char       *fmt,
+                   va_list           vl);
 
 
     /** a very very basic log handler, this is not used
