@@ -44,7 +44,7 @@ extern "C"
    *
    *  \param client the client to destroy.
    *  \param address address of the master
-   * \return 0 on success, 1 on failure
+   *  \return 0 on success, 1 on failure
    *  \ingroup qiCapi
    */
   int qi_client_connect(qi_client_t *client, const char *address);
@@ -56,12 +56,17 @@ extern "C"
    *
    * \param client the client to destroy.
    * \param method the signature of the method to call
-   * \param message message to send
-   * \param response message returned in response
+   * \param request message to send
+   * \param reply message returned in response
    * \return 0 on success, 1 on failure
    * \ingroup qiCapi
    */
-  int qi_client_call(qi_client_t *client, const char *method, qi_message_t *message, qi_message_t *response);
+  int qi_client_call(qi_client_t *client, const char *method, qi_message_t *request, qi_message_t *reply);
+
+  typedef void (*SubscriberFunction)(const char *, qi_message_t *, void *);
+  int qi_client_subscribe(qi_client_t *client, const char *method_signature, SubscriberFunction func, void *data);
+  int qi_client_unsubscribe(const char *method_signature);
+
 
 #ifdef __cplusplus
 }
