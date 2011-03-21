@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 
@@ -98,10 +98,6 @@ namespace qi {
     }
 
     template<typename FUNCTION_TYPE>
-
-
-
-
     void unsubscribe(const std::string& topicName, FUNCTION_TYPE callback)
     {
       xUnsubscribe(makeFunctionSignature(topicName, callback));
