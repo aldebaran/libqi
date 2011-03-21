@@ -17,4 +17,6 @@ qi_submodule_create(qi-cbinding
                     qi/server.h
                     qi/server.cpp
                     qi/context.h
-                    qi/context.cpp)
+                    qi/context.cpp
+                    qi/log.h
+                    qi/log.cpp)
