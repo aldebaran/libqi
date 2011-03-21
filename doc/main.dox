@@ -122,7 +122,7 @@ This page is for advanced users.
 
 /**
 \defgroup Messaging Messaging
-The messaging classes provide the main entry point for users of qi::messaging. 
+The messaging classes provide the main entry point for users of qi::messaging.
 Each class registers with a master upon connection, and uses the master to
 advertise its capacities or discover the capacities of other classes in the qi
 network. The first lookup of a service will interogate the master for the location
@@ -134,7 +134,7 @@ of most POD and STL types. When protobuf support is compiled in, you can take
 the signature of protobuf messages too.
 
 \defgroup Serialization Serialization
-This module handles serialization or arguments and return types to and from messages. 
+This module handles serialization or arguments and return types to and from messages.
 The qi::serialization::Message is used by the transport layer to exchange information
 between messaging classes.
 
@@ -149,9 +149,12 @@ communication between two endpoints but do not require registration with a maste
 
 Two communication models are provided: standard client/server connection,
 or a publisher/subscriber pattern.
-
 Context management is explicit in the transport module. It is always prefered to have
 the same Context between differents transport, this allows more effective
 communication, by reusing tcp/ipc connections. ZeroMq inproc transport requires that
 the same context is shared between clients and the servers.
+
+\defgroup qiCapi qi C API
+simple C API for qi. This API is recommanded if you want extreme ABI compatibility.
+This include client, server, message and signature.
 */

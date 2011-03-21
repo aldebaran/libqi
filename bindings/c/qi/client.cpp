@@ -21,25 +21,29 @@ qi_client_t *qi_client_create_with_context(const char *name, qi_context_t *ctx) 
   return static_cast<qi_client_t *>(pclient);
 }
 
-void qi_client_connect(qi_client_t *client, const char *address)
+int qi_client_connect(qi_client_t *client, const char *address)
 {
   qi::detail::ClientImpl  *pclient  = static_cast<qi::detail::ClientImpl *>(client);
   pclient->connect(address);
+  //todo: try catch
+  return 0;
 }
 
-void      qi_client_destroy(qi_client_t *client)
+void qi_client_destroy(qi_client_t *client)
 {
   qi::detail::ClientImpl  *pclient  = static_cast<qi::detail::ClientImpl *>(client);
   delete pclient;
 }
 
-void      qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret)
+int qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret)
 {
   qi::detail::ClientImpl  *pclient  = static_cast<qi::detail::ClientImpl *>(client);
   qi::serialization::Message *preturn  = (qi::serialization::Message *)ret;
   qi::serialization::Message *pmessage = (qi::serialization::Message *)msg;
 
   pclient->call(std::string(method), *pmessage, *preturn);
+  //todo: try catch
+  return 0;
 }
 
 
