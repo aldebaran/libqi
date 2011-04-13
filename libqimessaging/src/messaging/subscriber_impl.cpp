@@ -3,7 +3,7 @@
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 #include <qi/messaging/src/subscriber_impl.hpp>
@@ -40,7 +40,8 @@ namespace qi {
 
     void SubscriberImpl::subscribe(const std::string& signature, qi::Functor* f) {
       if (!_isInitialized) {
-        qisError << "Subscriber:subscribe \"" << signature  << "\": Attempt to use uninitialized subscriber \"" << _endpointContext.name << "\"" << std::endl;
+        qisError << "Subscriber:subscribe \"" << signature  << "\": Attempt to use uninitialized subscriber \""
+                 << _endpointContext.name << "\"" << std::endl;
         return;
       }
       std::string endpoint = _masterClient.locateTopic(signature, _endpointContext);
@@ -79,7 +80,8 @@ namespace qi {
       ser.readString(targetTopic);
       const ServiceInfo& si = _subscriberCallBacks.get(targetTopic);
       if (si.methodName.empty() || si.functor == NULL) {
-        qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << " " << _endpointContext.endpointID << std::endl;
+        qisDebug << "SubscriberImpl::subscribeHandler: handler not found for \"" << targetTopic << "\"" << " "
+                 << _endpointContext.endpointID << std::endl;
       } else {
         //qisDebug << "SubscriberImpl::subscribeHandler: found handler for \"" << targetTopic << "\"" << std::endl;
         qi::serialization::Message sd;
