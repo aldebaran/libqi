@@ -4,17 +4,17 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
 
-#include <qi/core/runnable.hpp>
 #include <qi/transport/buffer.hpp>
 #include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/src/server_response_handler.hpp>
+#include "transport/runnable.hpp"
+#include <transport/server_response_handler.hpp"
 #include <string>
 
 namespace qi {

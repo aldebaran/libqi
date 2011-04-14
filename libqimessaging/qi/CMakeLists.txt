@@ -3,7 +3,7 @@
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
 ##
 
 
@@ -14,22 +14,11 @@ qi_submodule_create("qi-exceptions"      "exceptions/exceptions.hpp")
 qi_submodule_create("qi-messaging"       "messaging/*.h[px][px]" "messaging.hpp"
                                          "messaging/*.cpp" "messaging/src/*.[ch][px][px]")
 
-qi_submodule_create("qi-serialization"   "serialization/*.h[px][px]" "serialization.hpp"
-                                         "serialization/*.cpp")
-
 qi_submodule_create("qi-perf"            "perf/*.h[px][px]"
                                          "perf/*.cpp")
 
-qi_submodule_create("qi-log"             "log/*.h[px][px]" "log.hpp"
-                                         "log/*.cpp")
-
 qi_submodule_create("qi-transport"       "transport/*.[ch][px][px]")
 
-qi_submodule_create("qi-functors"        "functors/*.[ch][px][px]"
-                                         "functors/detail/*.[hc][px][px]")
-
-qi_submodule_create("qi-signature"       "signature/*.[ch][px][px]" "signature.hpp"
-                                         "signature/*.cpp" "signature/detail/*.[ch][px][px]")
 
 qi_submodule_add(qi-messaging "messaging/src/network/*.[ch][px][px]")
 

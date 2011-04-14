@@ -4,7 +4,7 @@
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 
@@ -13,9 +13,9 @@
 
 #include <string>
 #include <vector>
-#include <qi/core/runnable.hpp>
 #include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/src/server_response_handler.hpp>
+#include "transport/runnable.hpp"
+#include "transport/server_response_handler.hpp"
 
 namespace qi {
   namespace transport {
