@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/client_impl.hpp>
-#include <qi/exceptions/exceptions.hpp>
+#include "src/messaging/client_impl.hpp"
+#include <qimessaging/exceptions.hpp>
 #include <qi/log.hpp>
 
 using qi::transport::TransportClient;

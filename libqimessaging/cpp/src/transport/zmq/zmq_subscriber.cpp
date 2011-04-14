@@ -6,10 +6,10 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_subscriber.hpp>
-#include <qi/perf/sleep.hpp>
-#include <qi/exceptions/exceptions.hpp>
-#include <qi/log/log.hpp>
+#include "src/transport/zmq/zmq_subscriber.hpp"
+#include <qimessaging/exceptions.hpp>
+#include <qi/os.hpp>
+#include <qi/log.hpp>
 #include <iostream>
 
 namespace qi {
@@ -33,7 +33,7 @@ namespace qi {
 
       ZMQSubscriber::~ZMQSubscriber() {
         _isClosing = true;
-        sleep(1.0);
+        qi::os::sleep(1.0);
       }
 
       void ZMQSubscriber::connect(const std::string &publishAddress)

@@ -9,7 +9,7 @@
 #ifndef         QIPYTHON_H_
 # define        QIPYTHON_H_
 
-# include <qi/qi.h>
+# include <qimessaging/qi.h>
 # include <Python.h>
 
 extern "C" {

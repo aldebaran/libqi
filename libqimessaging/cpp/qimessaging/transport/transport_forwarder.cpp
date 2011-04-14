@@ -9,10 +9,10 @@
 
 #include <string>
 #include <qi/log.hpp>
-#include <qi/transport/transport_forwarder.hpp>
-#include <qi/transport/transport_context.hpp>
-#include <qi/transport/src/forwarder_backend.hpp>
-#include <qi/transport/src/zmq/zmq_forwarder_backend.hpp>
+#include <qimessaging/transport/transport_forwarder.hpp>
+#include <qimessaging/transport/transport_context.hpp>
+#include "src/transport/forwarder_backend.hpp"
+#include "src/transport/zmq/zmq_forwarder_backend.hpp"
 
 namespace qi {
   namespace transport {

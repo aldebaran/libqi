@@ -7,7 +7,7 @@
 */
 
 #include <cassert>
-#include <qi/transport/src/zmq/zmq_connection_handler.hpp>
+#include "src/transport/zmq/zmq_connection_handler.hpp"
 
 namespace qi {
   namespace transport {

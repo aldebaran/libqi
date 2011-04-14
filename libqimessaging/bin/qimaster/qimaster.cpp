@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <qi/messaging/master.hpp>
+#include <qimessaging/master.hpp>
 #include <qi/perf/sleep.hpp>
 #include <boost/program_options.hpp>
 

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/network/host_name.hpp>
+#include "src/messaging/network/host_name.hpp"
 
 #ifdef _WIN32
 #include <windows.h>

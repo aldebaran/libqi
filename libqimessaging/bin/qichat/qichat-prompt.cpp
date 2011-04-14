@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <iostream>
 #include <string>
-#include <qi/messaging/publisher.hpp>
+#include <qimessaging/publisher.hpp>
 #include <boost/program_options.hpp>
 
 

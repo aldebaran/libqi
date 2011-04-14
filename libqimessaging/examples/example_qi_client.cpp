@@ -2,7 +2,7 @@
  * First we will create a qi Client, then use it to call a method.
  */
 
-#include <qi/messaging/client.hpp>
+#include <qimessaging/client.hpp>
 
 int main(int argc, char *argv[])
 {

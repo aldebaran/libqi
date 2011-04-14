@@ -6,9 +6,9 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/client.hpp>
+#include <qimessaging/client.hpp>
 #include <string>
-#include <qi/messaging/src/client_impl.hpp>
+#include "src/messaging/client_impl.hpp"
 #include <qi/serialization.hpp>
 
 

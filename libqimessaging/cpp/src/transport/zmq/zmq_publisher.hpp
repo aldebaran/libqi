@@ -11,7 +11,7 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_PUBLISHER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_PUBLISHER_HPP_
 
-# include <qi/transport/src/publisher_backend.hpp>
+# include "src/transport/publisher_backend.hpp"
 # include <zmq.hpp>
 # include <boost/shared_ptr.hpp>
 

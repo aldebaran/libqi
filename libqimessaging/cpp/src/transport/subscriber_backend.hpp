@@ -12,7 +12,7 @@
 #define _QI_TRANSPORT_SRC_SUBSCRIBER_BACKEND_HPP_
 
 #include <string>
-#include <qi/transport/transport_subscribe_handler.hpp>
+#include <qimessaging/transport/transport_subscribe_handler.hpp>
 
 namespace qi {
   namespace transport {

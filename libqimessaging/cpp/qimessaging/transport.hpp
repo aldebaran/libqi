@@ -12,12 +12,12 @@
 #define _QI_TRANSPORT_HPP_
 
 // context that could be shared between nodes
-#include <qi/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_context.hpp>
 
 // base services
-#include <qi/transport/transport_server.hpp>
-#include <qi/transport/transport_client.hpp>
-#include <qi/transport/transport_publisher.hpp>
-#include <qi/transport/transport_subscriber.hpp>
+#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport/transport_client.hpp>
+#include <qimessaging/transport/transport_publisher.hpp>
+#include <qimessaging/transport/transport_subscriber.hpp>
 
 #endif  // _QI_TRANSPORT_HPP_

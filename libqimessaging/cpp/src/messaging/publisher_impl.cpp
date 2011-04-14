@@ -6,10 +6,10 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/publisher_impl.hpp>
-#include <qi/transport/transport_publisher.hpp>
-#include <qi/messaging/src/network/master_endpoint.hpp>
-#include <qi/messaging/src/network/endpoints.hpp>
+#include "src/messaging/publisher_impl.hpp"
+#include <qimessaging/transport/transport_publisher.hpp>
+#include "src/messaging/network/master_endpoint.hpp"
+#include "src/messaging/network/endpoints.hpp"
 #include <qi/log.hpp>
 
 namespace qi {

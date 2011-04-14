@@ -4,7 +4,7 @@
 #include <vector>
 #include <boost/timer.hpp>
 #include <qi/messaging.hpp>
-#include <qi/exceptions/exceptions.hpp>
+#include <qimessaging/exceptions.hpp>
 #include "alvalue.pb.h"
 #include <qi/perf/sleep.hpp>
 

@@ -1,4 +1,4 @@
-#include <qi/messaging/server.hpp>
+#include <qimessaging/server.hpp>
 
 // The handler for the service that you want to advertise
 int getMeaningOfLife() {

@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/network/endpoints.hpp>
-#include <qi/messaging/src/network/platform.hpp>
+#include "src/messaging/network/endpoints.hpp"
+#include "src/messaging/network/platform.hpp"
 #include <vector>
 #include <cstdio>
 

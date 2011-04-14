@@ -7,9 +7,9 @@
 */
 
 
-#include <qi/transport/transport_publisher.hpp>
-#include <qi/transport/src/zmq/zmq_publisher.hpp>
-#include <qi/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_publisher.hpp>
+#include "src/transport/zmq/zmq_publisher.hpp"
+#include <qimessaging/transport/transport_context.hpp>
 #include <string>
 #include <vector>
 

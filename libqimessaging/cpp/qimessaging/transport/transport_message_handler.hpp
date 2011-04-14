@@ -11,7 +11,7 @@
 #ifndef _QI_TRANSPORT_TRANSPORT_MESSAGE_HANDLER_HPP_
 #define _QI_TRANSPORT_TRANSPORT_MESSAGE_HANDLER_HPP_
 
-# include <qi/transport/buffer.hpp>
+# include <qimessaging/transport/buffer.hpp>
 
 namespace qi {
   namespace transport {

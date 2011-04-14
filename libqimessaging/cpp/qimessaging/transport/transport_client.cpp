@@ -6,11 +6,11 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/transport_client.hpp>
-#include <qi/transport/transport_context.hpp>
-#include <qi/transport/buffer.hpp>
-#include <qi/transport/src/client_backend.hpp>
-#include <qi/transport/src/zmq/zmq_client_backend.hpp>
+#include <qimessaging/transport/transport_client.hpp>
+#include <qimessaging/transport/transport_context.hpp>
+#include <qimessaging/transport/buffer.hpp>
+#include "src/transport/client_backend.hpp"
+#include "src/transport/zmq/zmq_client_backend.hpp"
 #include <qi/log.hpp>
 
 namespace qi {

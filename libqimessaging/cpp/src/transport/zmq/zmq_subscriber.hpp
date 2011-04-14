@@ -11,8 +11,8 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SUBSCRIBER_HPP_
 
-#include <qi/transport/src/subscriber_backend.hpp>
-#include <qi/transport/src/zmq/zmq_poll_client.hpp>
+#include "src/transport/subscriber_backend.hpp"
+#include "src/transport/zmq/zmq_poll_client.hpp"
 #include <boost/thread.hpp>
 #include <zmq.hpp>
 #include <boost/shared_ptr.hpp>

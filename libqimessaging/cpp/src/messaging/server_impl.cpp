@@ -6,16 +6,16 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/server_impl.hpp>
+#include "src/messaging/server_impl.hpp"
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <qi/serialization.hpp>
-#include <qi/transport/buffer.hpp>
-#include <qi/messaging/src/network/endpoints.hpp>
-#include <qi/messaging/src/network/master_endpoint.hpp>
+#include <qimessaging/transport/buffer.hpp>
+#include "src/messaging/network/endpoints.hpp"
+#include "src/messaging/network/master_endpoint.hpp"
 #include <qi/log.hpp>
-#include <qi/exceptions/exceptions.hpp>
+#include <qimessaging/exceptions.hpp>
 
 namespace qi {
   using qi::serialization::Message;

@@ -8,10 +8,10 @@
 
 
 #include <string>
-#include <qi/transport/transport_context.hpp>
-#include <qi/transport/transport_subscriber.hpp>
-#include <qi/transport/src/zmq/zmq_subscriber.hpp>
-#include <qi/transport/transport_subscribe_handler.hpp>
+#include <qimessaging/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_subscriber.hpp>
+#include "src/transport/zmq/zmq_subscriber.hpp"
+#include <qimessaging/transport/transport_subscribe_handler.hpp>
 
 namespace qi {
   namespace transport {

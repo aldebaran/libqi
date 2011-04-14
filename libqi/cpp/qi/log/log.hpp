@@ -63,7 +63,7 @@ namespace qi {
     /**
      * Log Verbosity
      */
-    enum QIAPI LogLevel {
+    enum QI_API LogLevel {
       silent = 0,
       fatal,
       error,
@@ -87,41 +87,41 @@ namespace qi {
     /**
      * call this to make some log
      */
-    QIAPI void log(const LogLevel    verb,
-                   const char       *file,
-                   const char       *fct,
-                   const int         line,
-                   const char       *fmt, ...);
+    QI_API void log(const LogLevel    verb,
+                    const char       *file,
+                    const char       *fct,
+                    const int         line,
+                    const char       *fmt, ...);
 
     /**
      * call this to make some log
      */
-    QIAPI void log(const LogLevel    verb,
-                   const char       *file,
-                   const char       *fct,
-                   const int         line,
-                   const char       *fmt,
-                   va_list           vl);
+    QI_API void log(const LogLevel    verb,
+                    const char       *file,
+                    const char       *fct,
+                    const int         line,
+                    const char       *fmt,
+                    va_list           vl);
 
 
     /** a very very basic log handler, this is not used
      *  and mostly for demo purpose but it's functionnal
      */
-    QIAPI void defaultLogHandler(const LogLevel verb,
-                                 const char    *file,
-                                 const char    *fct,
-                                 const int      line,
-                                 const char    *fmt,
-                                 va_list        vl);
+    QI_API void defaultLogHandler(const LogLevel verb,
+                                  const char    *file,
+                                  const char    *fct,
+                                  const int      line,
+                                  const char    *fmt,
+                                  va_list        vl);
 
     /**
      * set the function called when we need to log something
      */
-    QIAPI void setLogHandler(LogFunctionPtr p);
+    QI_API void setLogHandler(LogFunctionPtr p);
 
-    QIAPI const char *logLevelToString(const LogLevel verb);
+    QI_API const char *logLevelToString(const LogLevel verb);
 
-    class QIAPI LogStream: public std::stringstream
+    class QI_API LogStream: public std::stringstream
     {
     public:
 

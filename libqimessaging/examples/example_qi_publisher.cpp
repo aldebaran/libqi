@@ -1,4 +1,4 @@
-#include <qi/messaging/publisher.hpp>
+#include <qimessaging/publisher.hpp>
 
 int main(int argc, char *argv[])
 {

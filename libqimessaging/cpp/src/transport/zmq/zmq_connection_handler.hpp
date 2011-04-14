@@ -11,10 +11,10 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_CONNECTION_HANDLER_HPP_
 
-#include <qi/transport/buffer.hpp>
-#include <qi/transport/transport_message_handler.hpp>
-#include "transport/runnable.hpp"
-#include <transport/server_response_handler.hpp"
+#include <qimessaging/transport/buffer.hpp>
+#include <qimessaging/transport/transport_message_handler.hpp>
+#include "src/transport/runnable.hpp"
+#include "src/transport/server_response_handler.hpp"
 #include <string>
 
 namespace qi {

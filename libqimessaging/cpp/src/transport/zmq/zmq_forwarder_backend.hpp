@@ -10,7 +10,7 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_FORWARDER_BACKEND_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_FORWARDER_BACKEND_HPP_
 
-#include <qi/transport/src/forwarder_backend.hpp>
+#include "src/transport/forwarder_backend.hpp"
 #include <zmq.hpp>
 
 namespace qi {

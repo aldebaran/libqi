@@ -6,13 +6,13 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_simple_server_backend.hpp>
-#include <qi/transport/src/zmq/zmq_connection_handler.hpp>
-#include <qi/perf/sleep.hpp>
+#include "src/transport/zmq/zmq_simple_server_backend.hpp"
+#include "src/transport/zmq/zmq_connection_handler.hpp"
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <zmq.hpp>
 
+#include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -36,7 +36,7 @@ namespace qi {
 
       ZMQSimpleServerBackend::~ZMQSimpleServerBackend () {
         _running = false;
-        sleep(1); // allow the polling loop to terminate before killing the socket :(
+        qi::os::sleep(1); // allow the polling loop to terminate before killing the socket :(
       }
 
       void ZMQSimpleServerBackend::wait () {

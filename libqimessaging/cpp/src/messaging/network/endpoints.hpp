@@ -12,8 +12,8 @@
 #define _QI_MESSAGING_SRC_NETWORK_ENDPOINTS_HPP_
 
 #include <vector>
-#include <qi/messaging/src/network/endpoint_context.hpp>
-#include <qi/messaging/src/network/machine_context.hpp>
+#include "src/messaging/network/endpoint_context.hpp"
+#include "src/messaging/network/machine_context.hpp"
 
 namespace qi {
   namespace detail {

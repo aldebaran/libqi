@@ -127,5 +127,5 @@ namespace qi {
   };
 }
 
-#include <qi/messaging/client.hxx>
+#include <qimessaging/client.hxx>
 #endif  // _QI_MESSAGING_CLIENT_HPP_

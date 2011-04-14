@@ -7,7 +7,7 @@
 */
 
 #include <qi/log.hpp>
-#include <qi/transport/thrift/thriftserver.hpp>
+#include <qimessaging/transport/thrift/thriftserver.hpp>
 
 namespace qi {
   namespace transport {

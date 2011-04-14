@@ -9,11 +9,11 @@
 
 #include <string>
 #include <qi/log.hpp>
-#include <qi/transport/transport_server.hpp>
-#include <qi/transport/transport_context.hpp>
-#include <qi/transport/transport_message_handler.hpp>
-#include <qi/transport/src/server_backend.hpp>
-#include <qi/transport/src/zmq/zmq_simple_server_backend.hpp>
+#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_message_handler.hpp>
+#include "src/transport/server_backend.hpp"
+#include "src/transport/zmq/zmq_simple_server_backend.hpp"
 
 namespace qi {
   namespace transport {

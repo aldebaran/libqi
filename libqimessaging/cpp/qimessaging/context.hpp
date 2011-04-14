@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_CONTEXT_HPP_
 
 #include <string>
-#include <qi/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_context.hpp>
 
 namespace qi {
 

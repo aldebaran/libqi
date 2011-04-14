@@ -12,7 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
 
 #include <string>
-#include <qi/transport/buffer.hpp>
+#include <qimessaging/transport/buffer.hpp>
 
 namespace qi {
   namespace transport {

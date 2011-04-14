@@ -6,11 +6,9 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/master_impl.hpp>
-#include <qi/messaging/src/network/endpoints.hpp>
-#include <qi/messaging/src/network/platform.hpp>
-#include <qi/perf/to_string.hpp> // wrong place, sorry
-#include <qi/perf/sleep.hpp>
+#include "src/messaging/master_impl.hpp"
+#include "src/messaging/network/endpoints.hpp"
+#include "src/messaging/network/platform.hpp"
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
@@ -324,7 +322,6 @@ namespace qi {
         // start the forwarder in a new thread for now
         boost::thread forwarderThread(
           ::boost::bind(&qi::transport::TransportForwarder::run, forwarder));
-//        sleep(4.0);
 
         // finish and insert the Topic description
         Topic t;
@@ -384,14 +381,19 @@ namespace qi {
     const std::map<std::string, std::string> MasterImpl::getEndpoint(const std::string& endpointID) {
       const EndpointContext& e = _knownEndpoints.get(endpointID);
       std::map<std::string, std::string> ret;
+      std::stringstream ss;
+      ss << e.processID;
       ret.insert(std::make_pair("endpointID", e.endpointID));
       ret.insert(std::make_pair("contextID", e.contextID));
       ret.insert(std::make_pair("machineID", e.machineID));
-      ret.insert(std::make_pair("processID", toString(e.processID)));
+      ret.insert(std::make_pair("processID", ss.str()));
+
 
       ret.insert(std::make_pair("name", e.name));
       ret.insert(std::make_pair("type", endpointTypeAsString(e.type)));
-      ret.insert(std::make_pair("port", toString(e.port)));
+      ss.clear();
+      ss << e.port;
+      ret.insert(std::make_pair("port", ss.str()));
       return ret;
     }
 

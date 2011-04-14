@@ -11,10 +11,10 @@
 #ifndef _QI_MESSAGING_NODE_HPP_
 #define _QI_MESSAGING_NODE_HPP_
 
-#include <qi/messaging/server.hpp>
-#include <qi/messaging/client.hpp>
-#include <qi/messaging/publisher.hpp>
-#include <qi/messaging/subscriber.hpp>
+#include <qimessaging/server.hpp>
+#include <qimessaging/client.hpp>
+#include <qimessaging/publisher.hpp>
+#include <qimessaging/subscriber.hpp>
 
 namespace qi {
   /// <summary>

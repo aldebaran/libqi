@@ -7,7 +7,7 @@
 */
 
 #include <iostream>
-#include <qi/transport/thrift/thriftclient.hpp>
+#include <qimessaging/transport/thrift/thriftclient.hpp>
 #include <transport/TSocket.h>
 #include <transport/TBufferTransports.h>
 

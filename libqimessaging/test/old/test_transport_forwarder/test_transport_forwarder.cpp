@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/transport_context.hpp>
-#include <qi/transport/src/zmq/zmq_forwarder.hpp>
+#include <qimessaging/transport/transport_context.hpp>
+#include "src/transport/zmq/zmq_forwarder.hpp"
 
 int main(int argc, char **argv)
 {

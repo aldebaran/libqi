@@ -11,12 +11,12 @@
 #ifndef _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
 #define _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
 
-#include <qi/messaging/src/network/ip_address.hpp>
-#include <qi/messaging/src/network/mac_address.hpp>
-#include <qi/messaging/src/network/process_id.hpp>
-#include <qi/messaging/src/network/host_name.hpp>
-#include <qi/messaging/src/network/uuid.hpp>
-#include <qi/messaging/src/network/platform.hpp>
+#include "src/messaging/network/ip_address.hpp"
+#include "src/messaging/network/mac_address.hpp"
+#include "src/messaging/network/process_id.hpp"
+#include "src/messaging/network/host_name.hpp"
+#include "src/messaging/network/uuid.hpp"
+#include "src/messaging/network/platform.hpp"
 
 #endif  // _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
 

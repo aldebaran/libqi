@@ -11,8 +11,8 @@
 #ifndef _QI_TRANSPORT_SRC_THRIFT_THRIFT_SERVER_HPP_
 #define _QI_TRANSPORT_SRC_THRIFT_THRIFT_SERVER_HPP_
 
-# include <qi/transport/server.hpp>
-# include <qi/transport/common/handlers_pool.hpp>
+# include <qimessaging/transport/server.hpp>
+# include <qimessaging/transport/common/handlers_pool.hpp>
 
 namespace qi {
   namespace transport {

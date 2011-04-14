@@ -11,7 +11,7 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_SIMPLE_SERVER_HPP_
 
-#include <qi/transport/src/server_backend.hpp>
+#include "src/transport/server_backend.hpp"
 #include <string>
 #include <boost/thread/mutex.hpp>
 

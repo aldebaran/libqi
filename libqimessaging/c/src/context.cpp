@@ -5,9 +5,8 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#include <qi/qi.h>
-#include <qi/messaging.hpp>
-#include <qi/messaging/src/client_impl.hpp>
+#include <qimessaging/qi.h>
+#include "src/messaging/client_impl.hpp"
 
 qi_context_t *qi_context_create() {
   qi::Context *pctx = new qi::Context();

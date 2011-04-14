@@ -13,9 +13,9 @@
 
 #include <string>
 #include <vector>
-#include <qi/transport/transport_message_handler.hpp>
-#include "transport/runnable.hpp"
-#include "transport/server_response_handler.hpp"
+#include <qimessaging/transport/transport_message_handler.hpp>
+#include "src/transport/runnable.hpp"
+#include "src/transport/server_response_handler.hpp"
 
 namespace qi {
   namespace transport {

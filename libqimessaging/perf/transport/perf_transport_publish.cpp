@@ -6,8 +6,8 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include <qi/transport/src/zmq/zmq_publisher.hpp>
-#include <qi/transport/src/zmq/zmq_subscriber.hpp>
+#include "src/transport/zmq/zmq_publisher.hpp"
+#include "src/transport/zmq/zmq_subscriber.hpp"
 #include <qi/perf/sleep.hpp>
 #include <boost/timer.hpp>
 

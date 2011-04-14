@@ -3,8 +3,8 @@
 #include <qi/serialization/boost/boost_serializers.hpp>
 #include <qi/perf/dataperftimer.hpp>
 #include <string>
-#include <qi/messaging/call_definition.hpp>
-#include <qi/messaging/result_definition.hpp>
+#include <qimessaging/call_definition.hpp>
+#include <qimessaging/result_definition.hpp>
 
 using namespace qi::serialization;
 using qi::perf::DataPerfTimer;

@@ -7,7 +7,7 @@
 */
 
 #include <stdarg.h>
-#include <qi/log.h>
+#include <qimessaging/log.h>
 #include <qi/log.hpp>
 
 /**
@@ -24,4 +24,4 @@ void qi_log(const QiLogLevel  verb,
   qi::log::log(static_cast<qi::log::LogLevel>(verb), file, fct, line, fmt, vl);
   va_end(vl);
 }
-;
+

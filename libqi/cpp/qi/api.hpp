@@ -1,45 +1,74 @@
 #pragma once
 /*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
-*/
+ *  Copyright (C) 2011 Aldebaran Robotics
+ */
 
 
-#ifndef _QI_API_HPP_
-#define _QI_API_HPP_
+#ifndef _QI_API_H_
+#define _QI_API_H_
 
+// Deprecated
+#if defined(__GNUC__)
+#  define QI_API_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#  define QI_API_DEPRECATED __declspec(deprecated)
+#else
+#  define QI_API_DEPRECATED
+#endif
+
+// For shared library
 // qi_EXPORTS controls which symbols are exported when
 // compiled as a SHARED lib.
 #ifdef qi_EXPORTS
 # if defined _WIN32 || defined __CYGWIN__
-#   define QIAPI __declspec(dllexport)
+#   define QI_API __declspec(dllexport)
 # elif __GNUC__ >= 4
-#   define QIAPI __attribute__ ((visibility("default")))
+#   define QI_API __attribute__ ((visibility("default")))
 # else
-#   define QIAPI
+#   define QI_API
 # endif
 #else
 # if defined _WIN32 || defined __CYGWIN__
 #   if defined _WINDLL
-#     define QIAPI __declspec(dllimport)
+#     define QI_API __declspec(dllimport)
 #   else
-#     define QIAPI
+#     define QI_API
 #   endif
 # elif __GNUC__ >= 4
-#   define QIAPI __attribute__ ((visibility("default")))
+#   define QI_API __attribute__ ((visibility("default")))
 # else
-#   define QIAPI
+#   define QI_API
 # endif
 #endif
 
-// Deprecated
-#if defined(__GNUC__)
-#define QIAPI_DEPRECATED __attribute__((deprecated))
+
+
+// Macros adapted from opencv2.2
+#if defined(_MSC_VER)
+  #define QI_DO_PRAGMA(x) __pragma(x)
+  #define __ALSTR2__(x) #x
+  #define __ALSTR1__(x) __ALSTR2__(x)
+  #define _ALMSVCLOC_ __FILE__ "("__ALSTR1__(__LINE__)") : "
+  #define QI_MSG_PRAGMA(_msg) QI_DO_PRAGMA(message (_ALMSVCLOC_ _msg))
+#elif defined(__GNUC__)
+  #define QI_DO_PRAGMA(x) _Pragma (#x)
+  #define QI_MSG_PRAGMA(_msg) QI_DO_PRAGMA(message (_msg))
 #else
-#define QIAPI_DEPRECATED
+  #define QI_DO_PRAGMA(x)
+  #define QI_MSG_PRAGMA(_msg)
 #endif
 
-#endif  // _QI_API_HPP_
+// Use this macro to generate compiler warnings.
+#define QI_COMPILER_WARNING(x) QI_MSG_PRAGMA("Warning: " #x)
+
+
+/** \brief Deprecate a header, add a message to explain what user should do
+ */
+#define QI_DEPRECATED_HEADER(x) QI_MSG_PRAGMA("\
+This file includes at least one deprecated or antiquated ALDEBARAN header \
+which may be removed without further notice in the next version. \
+Please consult the changelog for details. " #x)
+
+
+#endif  // _LIB_ALCORE_ALCORE_ALAPI_H_
+

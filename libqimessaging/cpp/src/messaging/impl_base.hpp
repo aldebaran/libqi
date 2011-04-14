@@ -12,10 +12,10 @@
 #define _QI_MESSAGING_SRC_IMPL_BASE_HPP_
 
 #include <string>
-#include <qi/messaging/context.hpp>
-#include <qi/messaging/src/master_client.hpp>
-#include <qi/messaging/src/network/endpoint_context.hpp>
-#include <qi/messaging/src/network/machine_context.hpp>
+#include <qimessaging/context.hpp>
+#include "src/messaging/master_client.hpp"
+#include "src/messaging/network/endpoint_context.hpp"
+#include "src/messaging/network/machine_context.hpp"
 
 namespace qi {
   namespace detail {

@@ -1,7 +1,7 @@
 
 #include "test_boost_serializer.hxx"
-#include <qi/messaging/call_definition_serialization.hxx>
-#include <qi/messaging/result_definition_serialization.hxx>
+#include <qimessaging/call_definition_serialization.hxx>
+#include <qimessaging/result_definition_serialization.hxx>
 
 using namespace qi::serialization;
 

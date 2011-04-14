@@ -20,9 +20,8 @@ endif()
 
 qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp")
 
-#include_directories(bindings/c/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../c/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]")
 qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
@@ -48,7 +47,7 @@ qi_submodule_add("qi-messaging-src"
 qi_create_lib(qimessaging SRC ${CONFIG_H}
                  SUBMODULE qi-messaging qi-messaging-src qi-cbinding
                  #qi-cbinding
-                 DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD)
+                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)

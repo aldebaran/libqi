@@ -6,10 +6,10 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_poll_client.hpp>
-#include <qi/exceptions/exceptions.hpp>
-#include <qi/perf/sleep.hpp>
+#include "src/transport/zmq/zmq_poll_client.hpp"
+#include <qimessaging/exceptions.hpp>
 #include <iostream>
+#include <qi/os.hpp>
 #include <qi/log.hpp>
 
 namespace qi {
@@ -31,7 +31,7 @@ namespace qi {
         // hmmm, we must allow the current poll to terminate
         // before destroying the items array
         // This sleep is dodgy, but prevents a crash for now
-        sleep(1);
+        qi::os::sleep(1);
       }
 
       //return -1 on error, 0 for timeout, 1 otherwise

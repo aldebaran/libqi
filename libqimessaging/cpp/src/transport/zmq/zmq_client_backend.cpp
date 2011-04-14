@@ -6,12 +6,12 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_poll_client.hpp>
-#include <qi/transport/src/zmq/zmq_client_backend.hpp>
-#include <qi/exceptions/exceptions.hpp>
+#include "src/transport/zmq/zmq_poll_client.hpp"
+#include "src/transport/zmq/zmq_client_backend.hpp"
+#include <qimessaging/exceptions.hpp>
 #include <iostream>
 #include <qi/log.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qi/os.hpp>
 
 namespace qi {
   namespace transport {
@@ -48,7 +48,7 @@ namespace qi {
             qisDebug << "retrying.." << std::endl;
           }
           ++i;
-          msleep(100);
+          qi::os::msleep(100);
         }
         throw qi::transport::Exception("ZMQClientBackend cant connect.");
       }

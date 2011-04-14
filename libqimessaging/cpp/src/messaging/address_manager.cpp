@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/address_manager.hpp>
-#include <qi/messaging/src/network/constants.hpp>
+#include "src/messaging/address_manager.hpp"
+#include "src/messaging/network/constants.hpp"
 #include <cstdio>
 
 namespace qi {

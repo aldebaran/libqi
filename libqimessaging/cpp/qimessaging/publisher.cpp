@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/publisher.hpp>
-#include <qi/messaging/src/publisher_impl.hpp>
+#include <qimessaging/publisher.hpp>
+#include "src/messaging/publisher_impl.hpp"
 
 namespace qi {
 

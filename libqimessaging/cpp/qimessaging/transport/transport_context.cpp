@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_context.hpp>
 #include <zmq.hpp>
 #include <qi/log.hpp>
 

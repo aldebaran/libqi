@@ -8,11 +8,11 @@
 #ifndef         _QI_H_
 # define        _QI_H_
 
-#include <qi/context.h>
-#include <qi/signature.h>
-#include <qi/message.h>
-#include <qi/client.h>
-#include <qi/server.h>
+#include <qimessaging/context.h>
+#include <qimessaging/signature.h>
+#include <qimessaging/message.h>
+#include <qimessaging/client.h>
+#include <qimessaging/server.h>
 
 #ifdef __cplusplus
 extern "C"

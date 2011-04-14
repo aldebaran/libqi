@@ -11,13 +11,13 @@
 #ifndef _QI_MESSAGING_SRC_MASTER_IMPL_HPP_
 #define _QI_MESSAGING_SRC_MASTER_IMPL_HPP_
 
-#include <qi/messaging/src/server_impl.hpp>
-#include <qi/messaging/src/mutexednamelookup.hpp>
-#include <qi/messaging/src/address_manager.hpp>
-#include <qi/messaging/src/topic.hpp>
+#include "src/messaging/server_impl.hpp"
+#include "src/messaging/mutexednamelookup.hpp"
+#include "src/messaging/address_manager.hpp"
+#include "src/messaging/topic.hpp"
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
-#include <qi/transport/transport_forwarder.hpp> // TODO hide this
+#include <qimessaging/transport/transport_forwarder.hpp> // TODO hide this
 #include <boost/shared_ptr.hpp>
 
 namespace qi {

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/network/mac_address.hpp>
+#include "src/messaging/network/mac_address.hpp"
 
 #ifdef _WIN32
 #include <windows.h>

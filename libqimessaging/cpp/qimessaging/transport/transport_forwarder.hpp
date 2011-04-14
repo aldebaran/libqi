@@ -13,7 +13,7 @@
 
 #include <string>
 #include <vector>
-#include <qi/transport/transport_context.hpp>
+#include <qimessaging/transport/transport_context.hpp>
 
 namespace qi {
   namespace transport {

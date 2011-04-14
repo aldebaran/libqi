@@ -7,7 +7,7 @@
 
 #include <signal.h>
 #include <iostream>
-#include <qi/messaging/subscriber.hpp>
+#include <qimessaging/subscriber.hpp>
 #include <qi/perf/sleep.hpp>
 #include <boost/program_options.hpp>
 

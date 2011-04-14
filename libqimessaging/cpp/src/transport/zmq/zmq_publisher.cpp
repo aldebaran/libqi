@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/transport/src/zmq/zmq_publisher.hpp>
-#include <qi/perf/sleep.hpp>
+#include "src/transport/zmq/zmq_publisher.hpp"
+#include <qi/os.hpp>
 
 namespace qi {
   namespace transport {
@@ -32,7 +32,7 @@ namespace qi {
         // we can't allow publishing until the socket is warm
         // we might be able to detect this in publish instead of sleeping here
         // FIXME: push this responsibility to the user
-        sleep(1);
+        qi::os::sleep(1);
       }
 
       void ZMQPublisher::bind(const std::string& publishEndpoint)
@@ -52,7 +52,7 @@ namespace qi {
         // we can't allow publishing until the socket is warm
         // we might be able to detect this in publish instead of sleeping here
         // FIXME: push this responsibility to the user
-        sleep(1);
+        qi::os::sleep(1);
       }
 
       void ZMQPublisher::publish(const std::string &toSend)

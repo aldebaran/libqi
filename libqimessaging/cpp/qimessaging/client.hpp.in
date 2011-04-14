@@ -85,6 +85,6 @@ namespace qi {
 }
 
 #raw
-#include <qi/messaging/client.hxx>
+#include <qimessaging/client.hxx>
 #endif  // _QI_MESSAGING_CLIENT_HPP_
 #end raw

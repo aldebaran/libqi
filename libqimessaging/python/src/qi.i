@@ -1,14 +1,14 @@
 %module qi
 
 %{
-#include <qi/qi.h>
-#include <qipython.hpp>
+#include <qimessaging/qi.h>
+#include <src/qipython.hpp>
 %}
 
-%include <qi/qi.h>
-%include <qi/client.h>
-%include <qi/server.h>
-%include <qi/context.h>
-%include <qi/signature.h>
-%include <qi/message.h>
-%include <qipython.hpp>
+%include <qimessaging/qi.h>
+%include <qimessaging/client.h>
+%include <qimessaging/server.h>
+%include <qimessaging/context.h>
+%include <qimessaging/signature.h>
+%include <qimessaging/message.h>
+%include <src/qipython.hpp>

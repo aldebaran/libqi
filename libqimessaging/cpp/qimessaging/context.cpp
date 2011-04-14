@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/context.hpp>
-#include <qi/messaging/src/network/uuid.hpp>
+#include <qimessaging/context.hpp>
+#include "src/messaging/network/uuid.hpp"
 
 namespace qi {
   Context::Context() :

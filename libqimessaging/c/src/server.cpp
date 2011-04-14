@@ -6,9 +6,8 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#include <qi/qi.h>
-#include <qi/messaging.hpp>
-#include <qi/messaging/src/server_impl.hpp>
+#include <qimessaging/qi.h>
+#include "src/messaging/server_impl.hpp"
 
 
 qi_server_t *qi_server_create(const char *name) {

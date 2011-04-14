@@ -12,11 +12,11 @@
 #define _QI_MESSAGING_SRC_SUBSCRIBER_IMPL_HPP_
 
 #include <string>
-#include <qi/transport/transport_subscriber.hpp>
-#include <qi/transport/transport_subscribe_handler.hpp>
-#include <qi/messaging/src/serviceinfo.hpp>
-#include <qi/messaging/src/mutexednamelookup.hpp>
-#include <qi/messaging/src/impl_base.hpp>
+#include <qimessaging/transport/transport_subscriber.hpp>
+#include <qimessaging/transport/transport_subscribe_handler.hpp>
+#include "src/messaging/serviceinfo.hpp"
+#include "src/messaging/mutexednamelookup.hpp"
+#include "src/messaging/impl_base.hpp"
 
 namespace qi {
   namespace detail {

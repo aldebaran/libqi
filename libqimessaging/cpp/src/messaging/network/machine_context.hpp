@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
 
 #include <string>
-#include <qi/messaging/src/network/platform.hpp>
+#include "src/messaging/network/platform.hpp"
 
 namespace qi {
   namespace detail {

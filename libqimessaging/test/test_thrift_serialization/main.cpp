@@ -19,7 +19,7 @@
 */
 #include <iostream>
 #include <cmath>
-#include <qi/messaging/call_definition.hpp>
+#include <qimessaging/call_definition.hpp>
 #include <qi/serialization/thrift/serialize.hpp>
 
 #include <transport/TTransportUtils.h>

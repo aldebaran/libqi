@@ -1,4 +1,4 @@
-#include <qi/messaging/subscriber.hpp>
+#include <qimessaging/subscriber.hpp>
 
 // The handler for the topic data
 void hourCallback(const int& hour) {

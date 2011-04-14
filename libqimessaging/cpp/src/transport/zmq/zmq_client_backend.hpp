@@ -11,9 +11,9 @@
 #ifndef _QI_TRANSPORT_SRC_ZMQ_ZMQ_CLIENT_BACKEND_HPP_
 #define _QI_TRANSPORT_SRC_ZMQ_ZMQ_CLIENT_BACKEND_HPP_
 
-# include <qi/transport/buffer.hpp>
-# include <qi/transport/src/client_backend.hpp>
-# include <qi/transport/src/zmq/zmq_poll_client.hpp>
+# include <qimessaging/transport/buffer.hpp>
+# include "src/transport/client_backend.hpp"
+# include "src/transport/zmq/zmq_poll_client.hpp"
 # include <zmq.hpp>
 
 namespace qi {

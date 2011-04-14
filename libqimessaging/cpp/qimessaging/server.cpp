@@ -6,9 +6,9 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/server.hpp>
-#include <qi/messaging/context.hpp>
-#include <qi/messaging/src/server_impl.hpp>
+#include <qimessaging/server.hpp>
+#include <qimessaging/context.hpp>
+#include "src/messaging/server_impl.hpp"
 
 namespace qi {
   Server::~Server()

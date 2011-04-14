@@ -13,7 +13,7 @@
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
-#include <qi/messaging/context.hpp>
+#include <qimessaging/context.hpp>
 
 namespace qi {
   namespace detail {

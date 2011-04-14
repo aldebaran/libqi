@@ -13,8 +13,8 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <qi/messaging/src/mutexednamelookup.hpp>
-#include <qi/messaging/src/impl_base.hpp>
+#include "src/messaging/mutexednamelookup.hpp"
+#include "src/messaging/impl_base.hpp"
 #include <qi/serialization/message.hpp>
 
 

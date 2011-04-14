@@ -6,8 +6,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/node.hpp>
-#include <qi/messaging/context.hpp>
+#include <qimessaging/node.hpp>
+#include <qimessaging/context.hpp>
 
 namespace qi {
   Node::~Node() {}

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/messaging/src/network/process_id.hpp>
+#include "src/messaging/network/process_id.hpp"
 
 #ifdef _WIN32
 # include <windows.h>
