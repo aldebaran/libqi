@@ -11,4 +11,4 @@ project(qi-framework)
 include("qibuild.cmake")
 
 add_subdirectory("libqi")
-#add_subdirectory("libqimessaging")
+add_subdirectory("libqimessaging")

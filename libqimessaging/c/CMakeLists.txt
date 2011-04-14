@@ -6,17 +6,16 @@
 ##
 
 qi_submodule_create(qi-cbinding
-                    qi/qi.h
-                    qi/qi.cpp
-                    qi/signature.h
-                    qi/signature.cpp
-                    qi/message.h
-                    qi/message.cpp
-                    qi/client.h
-                    qi/client.cpp
-                    qi/server.h
-                    qi/server.cpp
-                    qi/context.h
-                    qi/context.cpp
-                    qi/log.h
-                    qi/log.cpp)
+                    qimessaging/signature.h
+                    qimessaging/message.h
+                    qimessaging/client.h
+                    qimessaging/server.h
+                    qimessaging/context.h
+                    qimessaging/log.h
+                    src/qi.cpp
+                    src/signature.cpp
+                    src/message.cpp
+                    src/client.cpp
+                    src/server.cpp
+                    src/context.cpp
+                    src/log.cpp)
