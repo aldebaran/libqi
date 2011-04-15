@@ -22,20 +22,120 @@ TODO: use uuid from boost 1.44
 */
 
 #include "uuid.hpp"
-#include <iostream>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/random_generator.hpp>
+#include "assert.h"
 
 namespace qi {
   namespace detail {
 
+#if defined _WIN32
+    uuid_t::uuid_t ()
+    {
+      RPC_STATUS ret = UuidCreate (&uuid);
+      assert (ret == RPC_S_OK);
+      ret = UuidToString (&uuid, &string_buf);
+      assert (ret == RPC_S_OK);
+
+      create_blob ();
+    }
+
+    uuid_t::~uuid_t ()
+    {
+      if (string_buf)
+        RpcStringFree (&string_buf);
+    }
+
+    const char *uuid_t::to_string ()
+    {
+      return (char*) string_buf;
+    }
+
+#else
+
+#include <uuid/uuid.h>
+
+    uuid_t::uuid_t ()
+    {
+      uuid_generate (uuid);
+      uuid_unparse (uuid, string_buf);
+
+      create_blob ();
+    }
+
+    uuid_t::~uuid_t ()
+    {
+    }
+
+    const char *uuid_t::to_string ()
+    {
+      return string_buf;
+    }
+
+#endif
+
+    const unsigned char *uuid_t::to_blob ()
+    {
+      return blob_buf;
+    }
+
+    unsigned char uuid_t::convert_byte (const char *hexa_)
+    {
+      unsigned char byte;
+
+      if (*hexa_ >= '0' && *hexa_ <= '9')
+        byte = *hexa_ - '0';
+      else if (*hexa_ >= 'A' && *hexa_ <= 'F')
+        byte = *hexa_ - 'A' + 10;
+      else if (*hexa_ >= 'a' && *hexa_ <= 'f')
+        byte = *hexa_ - 'a' + 10;
+      else {
+        byte = 0;
+      }
+
+      byte *= 16;
+
+      hexa_++;
+      if (*hexa_ >= '0' && *hexa_ <= '9')
+        byte += *hexa_ - '0';
+      else if (*hexa_ >= 'A' && *hexa_ <= 'F')
+        byte += *hexa_ - 'A' + 10;
+      else if (*hexa_ >= 'a' && *hexa_ <= 'f')
+        byte += *hexa_ - 'a' + 10;
+
+
+      return byte;
+    }
+
+    void uuid_t::create_blob ()
+    {
+      const char *buf = (const char*) string_buf;
+
+      blob_buf [0] = convert_byte (buf + 0);
+      blob_buf [1] = convert_byte (buf + 2);
+      blob_buf [2] = convert_byte (buf + 4);
+      blob_buf [3] = convert_byte (buf + 6);
+
+      blob_buf [4] = convert_byte (buf + 9);
+      blob_buf [5] = convert_byte (buf + 11);
+
+      blob_buf [6] = convert_byte (buf + 14);
+      blob_buf [7] = convert_byte (buf + 16);
+
+      blob_buf [8] = convert_byte (buf + 19);
+      blob_buf [9] = convert_byte (buf + 21);
+
+      blob_buf [10] = convert_byte (buf + 24);
+      blob_buf [11] = convert_byte (buf + 26);
+      blob_buf [12] = convert_byte (buf + 28);
+      blob_buf [13] = convert_byte (buf + 30);
+      blob_buf [14] = convert_byte (buf + 32);
+      blob_buf [15] = convert_byte (buf + 34);
+    }
+
+
+
     std::string getUUID() {
-      boost::uuids::basic_random_generator gen();
-      boost::uuids::uuid u = gen();
-      std::stringstream ss;
-      ss << u;
-      return s.str();
+      uuid_t u;
+      return std::string(u.to_string());
     }
 
   }
