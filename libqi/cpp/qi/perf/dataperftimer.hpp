@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 
@@ -16,6 +16,7 @@
 
 namespace qi {
   namespace perf {
+
 
     /// <summary>
     /// This class is a utility to calculate the msg/sec
