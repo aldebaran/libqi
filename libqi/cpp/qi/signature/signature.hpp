@@ -13,21 +13,9 @@
 #ifndef _QI_SIGNATURE_SIGNATURE_HPP_
 #define _QI_SIGNATURE_SIGNATURE_HPP_
 
-// runtime signature compiles faster
-// compile time signature execute faster  (this one needs boost::mpl::string that is not available in boost < 40)
-// but runtime signature may be good enough in most cases
-#define _QI_USE_RUNTIME_SIGNATURE
-
-#ifdef _QI_USE_RUNTIME_SIGNATURE
+#include <qi/api.hpp>
 #include <qi/signature/detail/type_signature.hpp>
 #include <qi/signature/detail/function_signature.hpp>
-#ifdef WITH_PROTOBUF
-# include <qi/signature/detail/protobuf_signature.hpp>
-#endif
-#else
-#include <qi/signature/detail/typesignaturecompiletime.hpp>
-#include <qi/signature/detail/functionsignaturecompiletime.hpp>
-#endif
 
 namespace qi {
 
@@ -40,11 +28,7 @@ namespace qi {
   template <typename T>
   struct QI_API signature {
     static std::string &value(std::string &valueRef) {
-#ifdef _QI_USE_RUNTIME_SIGNATURE
       ::qi::detail::signature<T>::value(valueRef);
-#else
-      valueRef += ::boost::mpl::c_str< typename ::qi::detail::signature<T>::value >::value;
-#endif
       return valueRef;
     }
 
