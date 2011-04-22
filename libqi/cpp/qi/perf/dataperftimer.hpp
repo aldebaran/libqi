@@ -11,6 +11,7 @@
 #ifndef _QI_PERF_DATAPERFTIMER_HPP_
 #define _QI_PERF_DATAPERFTIMER_HPP_
 
+#include <qi/api.hpp>
 #include <boost/timer.hpp>
 #include <string>
 
@@ -34,7 +35,7 @@ namespace qi {
     /// dpt.stop();
     /// @endcode
     /// </summary>
-    class DataPerfTimer
+    class QI_API DataPerfTimer
     {
     public:
 
