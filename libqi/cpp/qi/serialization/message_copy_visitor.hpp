@@ -47,4 +47,4 @@ namespace qi {
 
 #include <qi/serialization/message_copy_visitor.hxx>
 
-#endif  // _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
+#endif  // _QI_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_

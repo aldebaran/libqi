@@ -4,8 +4,8 @@
  */
 
 
-#ifndef _QI_API_H_
-#define _QI_API_H_
+#ifndef _QI_API_HPP_
+#define _QI_API_HPP_
 
 // Deprecated
 #if defined(__GNUC__)
@@ -68,5 +68,5 @@ which may be removed without further notice in the next version. \
 Please consult the changelog for details. " #x)
 
 
-#endif  // _LIB_ALCORE_ALCORE_ALAPI_H_
+#endif  // _QI_API_HPP_
 

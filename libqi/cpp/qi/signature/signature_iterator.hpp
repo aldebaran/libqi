@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_SIGNATURE_SIGNATURE_LEXER_HPP_
-#define _QI_SIGNATURE_SIGNATURE_LEXER_HPP_
+#ifndef _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
+#define _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
 
 #include <exception>
 
@@ -165,4 +165,4 @@ namespace qi {
 
 }
 
-#endif  // _QI_SIGNATURE_SIGNATURE_LEXER_HPP_
+#endif  // _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
