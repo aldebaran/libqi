@@ -10,15 +10,14 @@ cmake_minimum_required(VERSION 2.6.4)
 project(libqi-cpp)
 
 qi_submodule_create("qi-log"             "qi/log/*.h[px][px]" "qi/log.hpp"
-                                         "qi/log/*.cpp")
-qi_submodule_create("qi-functors"        "qi/functors/*.[ch][px][px]"
-                                         "qi/functors/detail/*.[hc][px][px]")
+                                         "src/log/*.cpp")
+qi_submodule_create("qi-functors"        "qi/functors/*.h[px][px]" "qi/functors/detail/*.h[px][px]")
 
-qi_submodule_create("qi-signature"       "qi/signature/*.[ch][px][px]" "qi/signature.hpp"
-                                         "qi/signature/*.cpp" "qi/signature/detail/*.[ch][px][px]")
+qi_submodule_create("qi-signature"       "qi/signature/*.h[px][px]" "qi/signature.hpp" "qi/signature/detail/*.h[px][px]"
+                                         "src/signature/*.cpp")
 
 qi_submodule_create("qi-serialization"   "qi/serialization/*.h[px][px]" "qi/serialization.hpp"
-                                         "qi/serialization/*.cpp")
+                                         "src/serialization/*.cpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
