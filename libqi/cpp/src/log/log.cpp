@@ -6,8 +6,8 @@
 *  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#include <qi/log/log.hpp>
-#include <qi/log/consoleloghandler.hpp>
+#include <qi/log.hpp>
+#include "src/log/consoleloghandler.hpp"
 
 #include <boost/bind.hpp>
 
@@ -18,20 +18,33 @@
 namespace qi {
   namespace log {
 
-    static LogFunctionPtr    gLogHandler = 0;
+    static LogFunctionPtr    gLogHandler     = 0;
+    static void             *gLogHandlerData = 0;
     static ConsoleLogHandler gConsoleLogHandler;
+
+
+    void consoleLogHandler(const LogLevel    verb,
+                           const char       *file,
+                           const char       *fct,
+                           const int         line,
+                           const char       *fmt,
+                           va_list           vl,
+                           void             *data) {
+      gConsoleLogHandler.log(verb, file, fct, line, fmt, vl);
+    }
 
     static class LogHandlerInit {
     public:
       LogHandlerInit() {
-        //setLogHandler(defaultLogHandler);
-        setLogHandler(boost::bind<void>(&ConsoleLogHandler::log, &gConsoleLogHandler, _1, _2, _3, _4, _5, _6));
+        setLogHandler(consoleLogHandler, 0);
+        //setLogHandler(boost::bind<void>(&ConsoleLogHandler::log, &gConsoleLogHandler, _1, _2, _3, _4, _5, _6));
       }
     } gLogHandlerInit;
 
 
-    void setLogHandler(LogFunctionPtr p) {
-      gLogHandler = p;
+    void setLogHandler(LogFunctionPtr p, void *data) {
+      gLogHandler     = p;
+      gLogHandlerData = data;
     }
 
     void log(const LogLevel    verb,
@@ -54,7 +67,7 @@ namespace qi {
              va_list           vl)
     {
       if (gLogHandler) {
-        gLogHandler(verb, file, fct, line, fmt, vl);
+        gLogHandler(verb, file, fct, line, fmt, vl, gLogHandlerData);
       }
       else {
         printf("[MISSING Logger]: ");
@@ -62,17 +75,6 @@ namespace qi {
       }
     }
 
-    void defaultLogHandler(const LogLevel    verb,
-                           const char       *file,
-                           const char       *fct,
-                           const int         line,
-                           const char       *fmt,
-                           va_list           vl)
-    {
-      printf(logLevelToString(verb));
-      printf("%s:%s:%d:", file, fct, line);
-      vprintf(fmt, vl);
-    }
 
     const char *logLevelToString(const LogLevel verb) {
       static const char *sverb[] = {
@@ -86,21 +88,13 @@ namespace qi {
       return sverb[verb];
     }
 
-    LogStream::LogStream(const LogLevel     level,
-                         const char        *file,
-                         const char        *function,
-                         int                line)
-      : _logLevel(level),
-        _file(file),
-        _function(function),
-        _line(line)
-    {
-    }
+    class PrivateLogStream {
+      LogLevel    _logLevel;
+      const char *_file;
+      const char *_function;
+      int         _line;
+    };
 
-    LogStream::~LogStream()
-    {
-      log(_logLevel, _file, _function, _line, this->str().c_str());
-    }
 
   }
 }

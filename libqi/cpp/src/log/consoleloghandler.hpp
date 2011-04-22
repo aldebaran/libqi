@@ -12,7 +12,7 @@
 #define _QI_LOG_CONSOLELOGHANDLER_HPP_
 
 #include <cstdarg>
-#include <qi/log/log.hpp>
+#include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 
 namespace qi {

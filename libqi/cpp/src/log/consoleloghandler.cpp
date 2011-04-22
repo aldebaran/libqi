@@ -11,7 +11,7 @@
 #include <cstdio>
 
 
-#include <qi/log/consoleloghandler.hpp>
+#include "consoleloghandler.hpp"
 
 #ifdef _WIN32
 # include <windows.h>
