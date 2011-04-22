@@ -17,31 +17,29 @@
 #endif
 
 // For shared library
-// qi_EXPORTS controls which symbols are exported when
-// compiled as a SHARED lib.
-#ifdef qi_EXPORTS
-# if defined _WIN32 || defined __CYGWIN__
-#   define QI_API __declspec(dllexport)
-# elif __GNUC__ >= 4
-#   define QI_API __attribute__ ((visibility("default")))
-# else
-#   define QI_API
-# endif
+#if defined _WIN32 || defined __CYGWIN__
+#  define QI_EXPORT_API __declspec(dllexport)
+#  if defined _WINDLL
+#    define QI_IMPORT_API __declspec(dllimport)
+#  else
+#    define QI_IMPORT_API
+#  endif
+#elif __GNUC__ >= 4
+#  define QI_EXPORT_API __attribute__ ((visibility("default")))
+#  define QI_IMPORT_API __attribute__ ((visibility("default")))
 #else
-# if defined _WIN32 || defined __CYGWIN__
-#   if defined _WINDLL
-#     define QI_API __declspec(dllimport)
-#   else
-#     define QI_API
-#   endif
-# elif __GNUC__ >= 4
-#   define QI_API __attribute__ ((visibility("default")))
-# else
-#   define QI_API
-# endif
+#  define QI_EXPORT_API
+#  define QI_IMPORT_API
 #endif
 
-
+// qi_EXPORTS controls which symbols are exported when libqi
+// is compiled as a SHARED lib.
+// DO NOT USE OUTSIDE LIBQI
+#ifdef qi_EXPORTS
+# define QI_API QI_EXPORT_API
+#else
+# define QI_API QI_IMPORT_API
+#endif
 
 // Macros adapted from opencv2.2
 #if defined(_MSC_VER)
