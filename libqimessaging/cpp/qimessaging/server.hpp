@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SERVER_HPP_
-#define _QI_MESSAGING_SERVER_HPP_
+#ifndef _QIMESSAGING_SERVER_HPP_
+#define _QIMESSAGING_SERVER_HPP_
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
@@ -132,4 +132,4 @@ namespace qi {
   };
 }
 
-#endif  // _QI_MESSAGING_SERVER_HPP_
+#endif  // _QIMESSAGING_SERVER_HPP_

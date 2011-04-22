@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_PUBLISHER_HPP_
-#define _QI_MESSAGING_PUBLISHER_HPP_
+#ifndef _QIMESSAGING_PUBLISHER_HPP_
+#define _QIMESSAGING_PUBLISHER_HPP_
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -124,4 +124,4 @@ namespace qi {
   };
 }
 
-#endif  // _QI_MESSAGING_PUBLISHER_HPP_
+#endif  // _QIMESSAGING_PUBLISHER_HPP_

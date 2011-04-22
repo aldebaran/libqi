@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_NODE_HPP_
-#define _QI_MESSAGING_NODE_HPP_
+#ifndef _QIMESSAGING_NODE_HPP_
+#define _QIMESSAGING_NODE_HPP_
 
 #include <qimessaging/server.hpp>
 #include <qimessaging/client.hpp>
@@ -49,5 +49,5 @@ namespace qi {
   };
 }
 
-#endif  // _QI_MESSAGING_NODE_HPP_
+#endif  // _QIMESSAGING_NODE_HPP_
 

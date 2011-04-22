@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_MASTER_HPP_
-#define _QI_MESSAGING_MASTER_HPP_
+#ifndef _QIMESSAGING_MASTER_HPP_
+#define _QIMESSAGING_MASTER_HPP_
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
@@ -54,5 +54,5 @@ namespace qi {
 
 }
 
-#endif  // _QI_MESSAGING_MASTER_HPP_
+#endif  // _QIMESSAGING_MASTER_HPP_
 

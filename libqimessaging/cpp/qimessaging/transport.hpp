@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_HPP_
-#define _QI_TRANSPORT_HPP_
+#ifndef _QIMESSAGING_TRANSPORT_HPP_
+#define _QIMESSAGING_TRANSPORT_HPP_
 
 // context that could be shared between nodes
 #include <qimessaging/transport/transport_context.hpp>
@@ -20,4 +20,4 @@
 #include <qimessaging/transport/transport_publisher.hpp>
 #include <qimessaging/transport/transport_subscriber.hpp>
 
-#endif  // _QI_TRANSPORT_HPP_
+#endif  // _QIMESSAGING_TRANSPORT_HPP_

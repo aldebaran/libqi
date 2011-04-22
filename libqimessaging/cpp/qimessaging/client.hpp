@@ -11,8 +11,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_CLIENT_HPP_
-#define _QI_MESSAGING_CLIENT_HPP_
+#ifndef _QIMESSAGING_CLIENT_HPP_
+#define _QIMESSAGING_CLIENT_HPP_
 
 #include <string>
 #include <qi/signature.hpp>
@@ -129,4 +129,4 @@ namespace qi {
 }
 
 #include <qimessaging/client.hxx>
-#endif  // _QI_MESSAGING_CLIENT_HPP_
+#endif  // _QIMESSAGING_CLIENT_HPP_

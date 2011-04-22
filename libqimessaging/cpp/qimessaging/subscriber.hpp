@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SUBSCRIBER_HPP_
-#define _QI_MESSAGING_SUBSCRIBER_HPP_
+#ifndef _QIMESSAGING_SUBSCRIBER_HPP_
+#define _QIMESSAGING_SUBSCRIBER_HPP_
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
@@ -117,4 +117,4 @@ namespace qi {
   };
 }
 
-#endif  // _QI_MESSAGING_SUBSCRIBER_HPP_
+#endif  // _QIMESSAGING_SUBSCRIBER_HPP_

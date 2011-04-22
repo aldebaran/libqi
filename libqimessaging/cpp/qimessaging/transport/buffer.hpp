@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_BUFFER_HPP_
-#define _QI_TRANSPORT_BUFFER_HPP_
+#ifndef _QIMESSAGING_TRANSPORT_BUFFER_HPP_
+#define _QIMESSAGING_TRANSPORT_BUFFER_HPP_
 
 #include <string>
 
@@ -20,4 +20,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_BUFFER_HPP_
+#endif  // _QIMESSAGING_TRANSPORT_BUFFER_HPP_

@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_EXCEPTIONS_EXCEPTIONS_HPP_
-#define _QI_EXCEPTIONS_EXCEPTIONS_HPP_
+#ifndef _QIMESSAGING_EXCEPTIONS_HPP_
+#define _QIMESSAGING_EXCEPTIONS_HPP_
 
 #include <exception>
 #include <string>
@@ -144,4 +144,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_EXCEPTIONS_EXCEPTIONS_HPP_
+#endif  // _QIMESSAGING_EXCEPTIONS_HPP_

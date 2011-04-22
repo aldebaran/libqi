@@ -3,8 +3,8 @@
  *  Copyright (C) 2011 Aldebaran Robotics
  */
 
-#ifndef _QIMESSAGING_API_H_
-#define _QIMESSAGING_API_H_
+#ifndef _QIMESSAGING_API_HPP_
+#define _QIMESSAGING_API_HPP_
 
 #include <qi/api.hpp>
 
@@ -14,5 +14,5 @@
 # define QIMESSAGING_API QI_IMPORT_API
 #endif
 
-#endif  // _LIB_ALCORE_ALCORE_ALAPI_H_
+#endif  // _QIMESSAGING_API_HPP_
 

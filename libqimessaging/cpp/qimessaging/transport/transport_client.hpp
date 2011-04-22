@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
-#define _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
+#ifndef _QIMESSAGING_TRANSPORT_TRANSPORT_CLIENT_HPP_
+#define _QIMESSAGING_TRANSPORT_TRANSPORT_CLIENT_HPP_
 
 #include <string>
 #include <qimessaging/api.hpp>
@@ -59,4 +59,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
+#endif  // _QIMESSAGING_TRANSPORT_TRANSPORT_CLIENT_HPP_

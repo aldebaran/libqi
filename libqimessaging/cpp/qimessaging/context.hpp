@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_CONTEXT_HPP_
-#define _QI_MESSAGING_CONTEXT_HPP_
+#ifndef _QIMESSAGING_CONTEXT_HPP_
+#define _QIMESSAGING_CONTEXT_HPP_
 
 #include <string>
 #include <qimessaging/transport/transport_context.hpp>
@@ -65,4 +65,4 @@ namespace qi {
   extern qi::Context* getDefaultQiContextPtr();
 }
 
-#endif  // _QI_MESSAGING_CONTEXT_HPP_
+#endif  // _QIMESSAGING_CONTEXT_HPP_
