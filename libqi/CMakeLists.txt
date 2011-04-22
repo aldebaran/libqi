@@ -12,3 +12,4 @@ include("qibuild.cmake")
 
 add_subdirectory("cpp")
 add_subdirectory("tests")
+add_subdirectory("perfs")
