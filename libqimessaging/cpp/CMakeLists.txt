@@ -24,6 +24,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../c/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]")
+qi_submodule_add("qi-messaging"     "qimessaging/transport/*.h[px][px]")
+
 qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"    "src/messaging/network/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"
