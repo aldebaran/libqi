@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010 Aldebaran Robotics
+** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 #include <gtest/gtest.h>
@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-#include "alvalue.pb.h"
+//#include "alvalue.pb.h"
 
 static const int gLoopCount   = 1000000;
 
@@ -92,9 +92,9 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("UNKNOWN", qi::signature<short>::value());
 }
 
-TEST(TestSignature, ProtobufSignature) {
-  EXPECT_EQ("@ALCompat.ALValue@", qi::signature<ALCompat::ALValue>::value());
-}
+// TEST(TestSignature, ProtobufSignature) {
+//   EXPECT_EQ("@ALCompat.ALValue@", qi::signature<ALCompat::ALValue>::value());
+// }
 
 TEST(TestSignature, ComplexTypeSignature) {
   //{ii}
