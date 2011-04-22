@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -27,7 +28,7 @@ namespace qi {
     /// <summary> TransportServer, you need to register a TransportMessageHandler object,
     /// that will handle each message.</summary>
     /// \ingroup Transport
-    class TransportServer
+    class QIMESSAGING_API TransportServer
     {
     public:
       virtual ~TransportServer();

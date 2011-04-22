@@ -18,6 +18,7 @@
 #include <qi/signature.hpp>
 #include <qi/serialization.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace detail {
@@ -33,7 +34,7 @@ namespace qi {
   /// </summary>
   /// \include example_qi_client.cpp
   /// \ingroup Messaging
-  class Client {
+  class QIMESSAGING_API Client {
   public:
     /// <summary>
     /// Used to call services that have been added to a server.

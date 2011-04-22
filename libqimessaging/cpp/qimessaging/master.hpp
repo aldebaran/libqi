@@ -14,6 +14,7 @@
 #include <string>
 #include <boost/scoped_ptr.hpp>
 #include <qimessaging/context.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace detail {
@@ -24,7 +25,7 @@ namespace qi {
   /// be discovered.
   /// </summary>
   /// \ingroup Messaging
-  class Master {
+  class QIMESSAGING_API Master {
   public:
 
     /// <summary> Constructor. </summary>

@@ -11,6 +11,7 @@
 #ifndef _QI_TRANSPORT_TRANSPORT_MESSAGE_HANDLER_HPP_
 #define _QI_TRANSPORT_TRANSPORT_MESSAGE_HANDLER_HPP_
 
+# include <qimessaging/api.hpp>
 # include <qimessaging/transport/buffer.hpp>
 
 namespace qi {
@@ -20,7 +21,7 @@ namespace qi {
     /// and implement messageHandler. Each time a server receive a request, it will call messageHandler
     /// with a request, you should then complete the reply.</summary>
     /// \ingroup Transport
-    class TransportMessageHandler {
+    class QIMESSAGING_API TransportMessageHandler {
     public:
       /// <summary> Generic message handler. </summary>
       /// <param name="request"> The request </param>

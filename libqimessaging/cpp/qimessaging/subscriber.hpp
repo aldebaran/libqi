@@ -15,6 +15,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <qi/signature.hpp>
 #include <qi/functors/makefunctor.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace detail {
@@ -30,7 +31,7 @@ namespace qi {
   /// \b Subscribe to a Topic
   /// \include example_qi_subscriber.cpp
   /// \ingroup Messaging
-  class Subscriber {
+  class QIMESSAGING_API Subscriber {
   public:
     /// <summary>
     /// Creates a subscriber that can subscribe to names Topics.

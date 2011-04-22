@@ -12,6 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_CLIENT_HPP_
 
 #include <string>
+#include <qimessaging/api.hpp>
 #include <qimessaging/transport/buffer.hpp>
 
 namespace qi {
@@ -25,7 +26,7 @@ namespace qi {
     class TransportContext;
 
     /// \ingroup Transport
-    class TransportClient {
+    class QIMESSAGING_API TransportClient {
     public:
       virtual ~TransportClient();
 

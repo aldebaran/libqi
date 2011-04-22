@@ -12,6 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_SUBSCRIBER_HPP_
 
 #include <string>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -24,7 +25,7 @@ namespace qi {
     class TransportSubscribeHandler;
 
     /// \ingroup Transport
-    class TransportSubscriber {
+    class QIMESSAGING_API TransportSubscriber {
     public:
 
       /// <summary>Constructor. </summary>

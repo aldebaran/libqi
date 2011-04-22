@@ -13,6 +13,7 @@
 
 #include <exception>
 #include <string>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -20,7 +21,7 @@ namespace qi {
     /// <summary>
     /// Base class for exceptions
     /// </summary>
-    class Exception : public std::exception {
+    class QIMESSAGING_API Exception : public std::exception {
     public:
 
       /// <summary>Default constructor. </summary>
@@ -45,7 +46,7 @@ namespace qi {
     /// <summary>
     /// Exception thrown when creating/opening shared memory segments.
     /// </summary>
-    class SharedSegmentInitializationException : public Exception {
+    class QIMESSAGING_API SharedSegmentInitializationException : public Exception {
     public:
       /// <summary>Default constructor. </summary>
       SharedSegmentInitializationException () {}
@@ -61,7 +62,7 @@ namespace qi {
     /// <summary>
     /// Exception thrown when the connection to the server fails.
     /// </summary>
-    class ConnectionException : public Exception {
+    class QIMESSAGING_API ConnectionException : public Exception {
     public:
 
       /// <summary>Default constructor. </summary>
@@ -78,7 +79,7 @@ namespace qi {
     /// <summary>
     /// Exception thrown when the server encountered a problem.
     /// </summary>
-    class ServerException : public Exception {
+    class QIMESSAGING_API ServerException : public Exception {
     public:
       /// <summary>Default constructor. </summary>
       ServerException () {}
@@ -94,7 +95,7 @@ namespace qi {
     /// <summary>
     ///Exception thrown when the server encountered a problem when reading.
     /// </summary>
-    class ReadException : public Exception {
+    class QIMESSAGING_API ReadException : public Exception {
     public:
       /// <summary>Default constructor. </summary>
       ReadException () {}
@@ -110,7 +111,7 @@ namespace qi {
     /// <summary>
     /// Exception thrown when the client encountered a problem when writing.
     /// </summary>
-    class WriteException : public Exception {
+    class QIMESSAGING_API WriteException : public Exception {
     public:
       /// <summary>Default constructor. </summary>
       WriteException () {}
@@ -126,7 +127,7 @@ namespace qi {
     /// <summary>
     /// Exception thrown when the client can't find a service
     /// </summary>
-    class ServiceNotFoundException : public Exception {
+    class QIMESSAGING_API ServiceNotFoundException : public Exception {
     public:
       /// <summary>Default constructor. </summary>
       ServiceNotFoundException () {}

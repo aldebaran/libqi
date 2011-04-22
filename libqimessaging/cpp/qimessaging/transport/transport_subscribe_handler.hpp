@@ -12,6 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_SUBSCRIBE_HANDLER_HPP_
 
 #include <qimessaging/transport/buffer.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -22,7 +23,7 @@ namespace qi {
     /// and implement subscribeHandler. Each time the subscriber receive a request, it will call subscribeHandler
     /// with the message received.</summary>
     /// \ingroup Transport
-    class TransportSubscribeHandler {
+    class QIMESSAGING_API TransportSubscribeHandler {
     public:
       /// <summary> Generic subscribe handler. </summary>
       /// <param name="requestMessage"> The request </param>

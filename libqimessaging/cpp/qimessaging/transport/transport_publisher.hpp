@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -24,7 +25,7 @@ namespace qi {
 
     /// <summary>Transport Publisher. </summary>
     /// \ingroup Transport
-    class TransportPublisher {
+    class QIMESSAGING_API TransportPublisher {
     public:
 
       /// <summary>Constructor. </summary>

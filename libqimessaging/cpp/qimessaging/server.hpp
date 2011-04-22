@@ -15,6 +15,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <qi/functors/makefunctor.hpp>
 #include <qi/signature.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace detail {
@@ -30,7 +31,7 @@ namespace qi {
   /// \b Advertise a Service
   /// \include example_qi_server.cpp
   /// \ingroup Messaging
-  class Server {
+  class QIMESSAGING_API Server {
   public:
 
     /// <summary> Finaliser. </summary>

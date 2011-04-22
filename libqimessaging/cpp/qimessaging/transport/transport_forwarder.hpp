@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include <qimessaging/api.hpp>
 #include <qimessaging/transport/transport_context.hpp>
 
 namespace qi {
@@ -24,7 +25,7 @@ namespace qi {
 
     /// <summary> TransportForwarder</summary>
     /// \ingroup Transport
-    class TransportForwarder
+    class QIMESSAGING_API TransportForwarder
     {
     public:
       virtual ~TransportForwarder();

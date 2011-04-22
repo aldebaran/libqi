@@ -15,6 +15,7 @@
 #include <qimessaging/client.hpp>
 #include <qimessaging/publisher.hpp>
 #include <qimessaging/subscriber.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   /// <summary>
@@ -22,7 +23,7 @@ namespace qi {
   /// exposes all their methods.
   /// </summary>
   /// \ingroup Messaging
-  class Node :
+  class QIMESSAGING_API Node :
     public Server,
     public Client,
     public Publisher,

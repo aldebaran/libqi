@@ -14,6 +14,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <qi/serialization.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace detail {
@@ -27,7 +28,7 @@ namespace qi {
   /// \b Advertise a Topic
   /// \include example_qi_publisher.cpp
   /// \ingroup Messaging
-  class Publisher {
+  class QIMESSAGING_API Publisher {
   public:
 
     /// <summary> Create a Publisher that can be used to distribute data

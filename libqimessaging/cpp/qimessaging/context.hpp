@@ -13,6 +13,7 @@
 
 #include <string>
 #include <qimessaging/transport/transport_context.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi {
 
@@ -20,7 +21,7 @@ namespace qi {
   /// resources used by Servers, Clients, Publishers and Subscribers
   /// </summary>
   /// \ingroup Messaging
-  class Context {
+  class QIMESSAGING_API Context {
   public:
 
     /// <summary>Default constructor. </summary>

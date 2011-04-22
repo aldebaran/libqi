@@ -12,6 +12,7 @@
 #define _QI_TRANSPORT_TRANSPORT_CONTEXT_HPP_
 
 #include <string>
+#include <qimessaging/api.hpp>
 
 namespace qi {
   namespace transport {
@@ -19,7 +20,7 @@ namespace qi {
     /// <summary> The context used for Transport. This is typically a
     /// shared resources such as io threads</summary>
     /// \ingroup Transport
-    class TransportContext {
+    class QIMESSAGING_API TransportContext {
     public:
       TransportContext();
       ~TransportContext();
