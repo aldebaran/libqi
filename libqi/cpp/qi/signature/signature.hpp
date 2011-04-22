@@ -38,7 +38,7 @@ namespace qi {
   /// \ingroup Signature
   /// \include example_qi_signature_type.cpp
   template <typename T>
-  struct signature {
+  struct QI_API signature {
     static std::string &value(std::string &valueRef) {
 #ifdef _QI_USE_RUNTIME_SIGNATURE
       ::qi::detail::signature<T>::value(valueRef);
@@ -57,7 +57,7 @@ namespace qi {
   /// Take the signature of an instanciated Object, it could be a references or a pointer.
   /// \ingroup Signature
   /// \include example_qi_signature_instance.cpp
-  struct signatureFromObject {
+  struct QI_API signatureFromObject {
     template<typename T>
     static std::string &value(const T *t, std::string &valueRef) {
       (void) t;
@@ -92,7 +92,7 @@ namespace qi {
   /// \ingroup Signature
   /// \include example_qi_signature_function.cpp
   template<typename F>
-  std::string makeFunctionSignature(const std::string name, F f) {
+  std::string QI_API makeFunctionSignature(const std::string name, F f) {
     std::string value(name);
     value += "::";
     signatureFromObject::value(f, value);

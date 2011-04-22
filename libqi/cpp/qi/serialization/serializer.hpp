@@ -11,6 +11,7 @@
 #ifndef _QI_SERIALIZATION_SERIALIZER_HPP_
 #define _QI_SERIALIZATION_SERIALIZER_HPP_
 
+#include <qi/api.hpp>
 #include <qi/serialization/message.hpp>
 
 namespace qi {
@@ -29,7 +30,7 @@ namespace qi {
     /// the constructor. Supports recursive POD types, vectors, maps and classes derived
     /// from Serializable.
     /// </summary>
-    class Serializer {
+    class QI_API Serializer {
     private:
       qi::serialization::SerializeAction _action;
       qi::serialization::Message& _message;

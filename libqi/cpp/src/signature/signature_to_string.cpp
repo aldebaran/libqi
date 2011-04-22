@@ -6,6 +6,9 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+
+#include <string>
+#include <qi/signature/signature_to_string.hpp>
 #include <qi/signature/detail/pretty_print_signature_visitor.hpp>
 
 namespace qi {

@@ -12,6 +12,7 @@
 #define _QI_SERIALIZATION_MESSAGE_HPP_
 
 #include <iostream>
+#include <qi/api.hpp>
 #include <qi/signature.hpp>
 
 namespace qi {
@@ -20,7 +21,7 @@ namespace qi {
 
     /// <summary>A serialized message</summary>
     /// \ingroup Serialization
-    class Message {
+    class QI_API Message {
     public:
 
       /// <summary>Default constructor. </summary>
