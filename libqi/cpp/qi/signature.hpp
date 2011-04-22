@@ -11,8 +11,95 @@
 #ifndef _QI_SIGNATURE_HPP_
 #define _QI_SIGNATURE_HPP_
 
-#include <qi/signature/signature.hpp>
-#include <qi/signature/signature_to_string.hpp>
+
+#include <qi/api.hpp>
 #include <qi/signature/signature_iterator.hpp>
+#include <qi/signature/detail/type_signature.hpp>
+#include <qi/signature/detail/function_signature.hpp>
+
+namespace qi {
+
+    //this is the entry point of all the signature machinery
+
+  /// Return a signature based on the templated type T, provided in parameter to the struct.
+  /// Ref and const are not computed, those qualifiers are compiler details.
+  /// \ingroup Signature
+  /// \include example_qi_signature_type.cpp
+  template <typename T>
+  struct QI_API signature {
+    static std::string &value(std::string &valueRef) {
+      ::qi::detail::signature<T>::value(valueRef);
+      return valueRef;
+    }
+
+    static std::string value() {
+      std::string valueRef;
+      return value(valueRef);
+    }
+  };
+
+  /// Take the signature of an instanciated Object, it could be a references or a pointer.
+  /// \ingroup Signature
+  /// \include example_qi_signature_instance.cpp
+  struct QI_API signatureFromObject {
+
+    //POINTER
+    template<typename T>
+    static std::string &value(const T *t, std::string &valueRef) {
+      (void) t;
+      return signature<T*>::value(valueRef);
+    }
+
+    template<typename T>
+    static std::string value(const T *t) {
+      (void) t;
+      std::string valueRef;
+      return signature<T*>::value(valueRef);
+    }
+
+
+    //REF
+    template<typename T>
+    static std::string &value(const T &t, std::string &valueRef) {
+      (void) t;
+      return signature<T>::value(valueRef);
+    }
+
+    template<typename T>
+    static std::string value(const T &t) {
+      (void) t;
+      std::string valueRef;
+      return signature<T>::value(valueRef);
+    }
+  };
+
+
+  /// Take the signature of a function with it's name. This is a simple wrapper arround qi::signatureFromObject.
+  /// <param name="name"> the function name </param>
+  /// <param name="f"> a function pointer to take the signature of </param>
+  /// \ingroup Signature
+  /// \include example_qi_signature_function.cpp
+  template<typename F>
+  std::string QI_API makeFunctionSignature(const std::string name, F f) {
+    std::string value(name);
+    value += "::";
+    signatureFromObject::value(f, value);
+    return value;
+  }
+
+  /// return a pretty printed a signature.
+  /// \ingroup Signature
+  /// \include example_qi_signature_pp.cpp
+  QI_API void signatureToString(const char *signature, std::string &result);
+
+  /// return a pretty printed a signature.
+  /// \ingroup Signature
+  QI_API std::string signatureToString(const char *signature);
+
+  /// return a pretty printed a signature.
+  /// \ingroup Signature
+  QI_API std::string signatureToString(const std::string& signature);
+
+}
 
 #endif  // _QI_SIGNATURE_HPP_

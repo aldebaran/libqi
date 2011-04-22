@@ -9,6 +9,7 @@
 #define _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
 
 #include <qi/api.hpp>
+#include <cstring>
 #include <exception>
 
 namespace qi {
