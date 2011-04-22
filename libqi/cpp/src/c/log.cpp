@@ -7,7 +7,7 @@
 */
 
 #include <stdarg.h>
-#include <qimessaging/log.h>
+#include <qi/log.h>
 #include <qi/log.hpp>
 
 /**

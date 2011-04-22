@@ -9,6 +9,8 @@
 #ifndef _QI_SIGNATURE_H_
 #define _QI_SIGNATURE_H_
 
+#include <qi/api.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -43,30 +45,30 @@ extern "C"
   } qi_signature_t;
 
 
-  qi_signature_t *qi_signature_create(const char *signature);
-  qi_signature_t *qi_signature_create_subsignature(const char *signature);
-  void            qi_signature_destroy(qi_signature_t *sig);
+  QI_API qi_signature_t *qi_signature_create(const char *signature);
+  QI_API qi_signature_t *qi_signature_create_subsignature(const char *signature);
+  QI_API void            qi_signature_destroy(qi_signature_t *sig);
 
   //return the number of first level element in the signature
-  int qi_signature_count(qi_signature_t *sig);
+  QI_API int qi_signature_count(qi_signature_t *sig);
 
   //return:
   // 0 on success
   // 1 on EOL
   // 2 on error
-  int qi_signature_next(qi_signature_t *sig);
+  QI_API int qi_signature_next(qi_signature_t *sig);
 
   //return:
   // 0 if the current type is not a pointer or on error
   // 1 if the current type is a pointer
-  int qi_signature_is_pointer(const qi_signature_t *sig);
+  QI_API int qi_signature_is_pointer(const qi_signature_t *sig);
 
   // copy the name to buffer
   // return the size copied
   // -1 on error
-  int qi_signature_get_name(const char *complete_sig, char *buffer, int size);
-  int qi_signature_get_return(const char *complete_sig, char *buffer, int size);
-  int qi_signature_get_params(const char *complete_sig, char *buffer, int size);
+  QI_API int qi_signature_get_name(const char *complete_sig, char *buffer, int size);
+  QI_API int qi_signature_get_return(const char *complete_sig, char *buffer, int size);
+  QI_API int qi_signature_get_params(const char *complete_sig, char *buffer, int size);
 
 
 #ifdef __cplusplus

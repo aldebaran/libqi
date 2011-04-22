@@ -6,7 +6,7 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#include <qimessaging/signature.h>
+#include <qi/signature.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

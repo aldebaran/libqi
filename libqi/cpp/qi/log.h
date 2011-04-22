@@ -9,6 +9,7 @@
 #ifndef         _C_QI_LOG_H_
 # define        _C_QI_LOG_H_
 
+#include <qi/api.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -59,11 +60,11 @@ typedef enum e_qi_log_level {
 /**
  * call this to make some log
  */
-void qi_log(const QiLogLevel  verb,
-            const char       *file,
-            const char       *fct,
-            const int         line,
-            const char       *fmt, ...);
+QI_API void qi_log(const QiLogLevel  verb,
+                   const char       *file,
+                   const char       *fct,
+                   const int         line,
+                   const char       *fmt, ...);
 
 #ifdef __cplusplus
 }
