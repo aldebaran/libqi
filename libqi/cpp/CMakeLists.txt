@@ -21,6 +21,10 @@ qi_submodule_create("qi-serialization"   "qi/serialization/*.h[px][px]" "qi/seri
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+if (UNIX)
+  add_definitions(" -fvisibility=hidden ")
+endif()
+
 qi_create_lib(qi SRC ${CONFIG_H}
                  SUBMODULE qi-log qi-functors qi-serialization qi-signature
                  DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD)
