@@ -40,7 +40,7 @@ qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp"
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]")
-qi_submodule_add("qi-messaging"        "qimessaging/transport/*.h[px][px]")
+qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
 
 qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
 
@@ -72,7 +72,7 @@ qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"
                                          "src/serialization/*.[hc][px][px]")
 
 qi_create_lib(qimessaging SRC ${CONFIG_H}
-                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization
+                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport
                  #qi-cbinding
                  DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qimessaging)
