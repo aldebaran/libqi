@@ -9,6 +9,8 @@
 #ifndef         _QI_SERVER_H_
 # define        _QI_SERVER_H_
 
+#include <qimessaging/message.h>
+
 #ifdef __cplusplus
 extern "C"
 {

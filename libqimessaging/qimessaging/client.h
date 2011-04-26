@@ -9,7 +9,7 @@
 #ifndef         _QI_CLIENT_H_
 # define        _QI_CLIENT_H_
 
-
+#include <qimessaging/context.h>
 
 #ifdef __cplusplus
 extern "C"
