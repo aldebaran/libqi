@@ -36,7 +36,8 @@ namespace qi
 //# define QI_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
 //  if(params.size() != nbrparamsrequired)
 //  {
-//    throw ALERROR("ALFunctor", "call", std::string( "Wrong number of parameters for this call requiring: " #nbrparamsrequired " and received: " ) + std::string(atoi( params.size())) + " (total params is: " + params.toString( VerbosityMini ) );
+//    throw ALERROR("ALFunctor", "call", std::string( "Wrong number of parameters for this call requiring: " #nbrparamsrequired
+//                  " and received: " ) + std::string(atoi( params.size())) + " (total params is: " + params.toString( VerbosityMini ) );
 //  }
 #else
 # define QI_FUNCTOR_ASSUME_NBR_PARAMS(params, nbrparamsrequired)
