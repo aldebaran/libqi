@@ -30,4 +30,3 @@ qi_stage_lib(qi)
 
 
 add_subdirectory("tests")
-add_subdirectory("perfs")

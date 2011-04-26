@@ -9,7 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include <qi/log.hpp>
-#include <qi/signature/detail/pretty_print_signature_visitor.hpp>
+#include <qimessaging/signature/detail/pretty_print_signature_visitor.hpp>
 
 namespace qi {
   namespace detail {

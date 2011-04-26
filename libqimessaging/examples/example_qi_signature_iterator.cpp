@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include <qi/signature.hpp>
+#include <qimessaging/signature.hpp>
 
 typedef std::vector<std::string>          StringVect;
 typedef std::vector<StringVect>           StringVectVect;

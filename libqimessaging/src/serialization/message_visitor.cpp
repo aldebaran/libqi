@@ -5,7 +5,7 @@
 *
 *  Copyright (C) 2010 Aldebaran Robotics
 */
-#include <qi/serialization/message_visitor.hpp>
+#include <qimessaging/serialization/message_visitor.hpp>
 
 namespace qi {
   namespace serialization {

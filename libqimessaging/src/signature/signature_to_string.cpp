@@ -8,8 +8,8 @@
 
 
 #include <string>
-#include <qi/signature.hpp>
-#include <qi/signature/detail/pretty_print_signature_visitor.hpp>
+#include <qimessaging/signature.hpp>
+#include <qimessaging/signature/detail/pretty_print_signature_visitor.hpp>
 
 namespace qi {
 

@@ -12,10 +12,10 @@
 #define _QI_SIGNATURE_HPP_
 
 
-#include <qi/api.hpp>
-#include <qi/signature/signature_iterator.hpp>
-#include <qi/signature/detail/type_signature.hpp>
-#include <qi/signature/detail/function_signature.hpp>
+#include <qimessaging/api.hpp>
+#include <qimessaging/signature/signature_iterator.hpp>
+#include <qimessaging/signature/detail/type_signature.hpp>
+#include <qimessaging/signature/detail/function_signature.hpp>
 
 namespace qi {
 
@@ -26,7 +26,7 @@ namespace qi {
   /// \ingroup Signature
   /// \include example_qi_signature_type.cpp
   template <typename T>
-  struct QI_API signature {
+  struct QIMESSAGING_API signature {
     static std::string &value(std::string &valueRef) {
       ::qi::detail::signature<T>::value(valueRef);
       return valueRef;
@@ -41,7 +41,7 @@ namespace qi {
   /// Take the signature of an instanciated Object, it could be a references or a pointer.
   /// \ingroup Signature
   /// \include example_qi_signature_instance.cpp
-  struct QI_API signatureFromObject {
+  struct QIMESSAGING_API signatureFromObject {
 
     //POINTER
     template<typename T>
@@ -80,7 +80,7 @@ namespace qi {
   /// \ingroup Signature
   /// \include example_qi_signature_function.cpp
   template<typename F>
-  std::string QI_API makeFunctionSignature(const std::string name, F f) {
+  std::string QIMESSAGING_API makeFunctionSignature(const std::string name, F f) {
     std::string value(name);
     value += "::";
     signatureFromObject::value(f, value);
@@ -90,15 +90,15 @@ namespace qi {
   /// return a pretty printed a signature.
   /// \ingroup Signature
   /// \include example_qi_signature_pp.cpp
-  QI_API void signatureToString(const char *signature, std::string &result);
+  QIMESSAGING_API void signatureToString(const char *signature, std::string &result);
 
   /// return a pretty printed a signature.
   /// \ingroup Signature
-  QI_API std::string signatureToString(const char *signature);
+  QIMESSAGING_API std::string signatureToString(const char *signature);
 
   /// return a pretty printed a signature.
   /// \ingroup Signature
-  QI_API std::string signatureToString(const std::string& signature);
+  QIMESSAGING_API std::string signatureToString(const std::string& signature);
 
 }
 

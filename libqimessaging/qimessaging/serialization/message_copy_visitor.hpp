@@ -9,8 +9,8 @@
 #ifndef _QI_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_
 #define _QI_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_
 
-#include <qi/serialization/message.hpp>
-#include <qi/signature/signature_iterator.hpp>
+#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/signature/signature_iterator.hpp>
 
 namespace qi {
   namespace serialization {
@@ -45,6 +45,6 @@ namespace qi {
   }
 }
 
-#include <qi/serialization/message_copy_visitor.hxx>
+#include <qimessaging/serialization/message_copy_visitor.hxx>
 
 #endif  // _QI_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_

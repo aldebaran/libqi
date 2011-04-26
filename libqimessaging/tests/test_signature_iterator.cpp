@@ -6,8 +6,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/signature.hpp>
-#include <qi/signature/signature_iterator.hpp>
+#include <qimessaging/signature.hpp>
+#include <qimessaging/signature/signature_iterator.hpp>
 
 #include <vector>
 #include <map>

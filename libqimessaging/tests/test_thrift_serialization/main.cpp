@@ -20,7 +20,7 @@
 #include <iostream>
 #include <cmath>
 #include <qimessaging/call_definition.hpp>
-#include <qi/serialization/thrift/serialize.hpp>
+#include <qimessaging/serialization/thrift/serialize.hpp>
 
 #include <transport/TTransportUtils.h>
 #include <protocol/TJSONProtocol.h>

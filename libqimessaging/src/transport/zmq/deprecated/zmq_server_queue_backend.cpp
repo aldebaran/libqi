@@ -11,7 +11,7 @@
 
 #include <boost/interprocess/streams/bufferstream.hpp>
 
-//#include <qi/serialization/definition_type.hpp>
+//#include <qimessaging/serialization/definition_type.hpp>
 
 #include <zmq.hpp>
 

@@ -5,8 +5,8 @@
 ** Copyright (C) 2010, 2011 Aldebararan Robotics
 */
 
-#include <qi/message.h>
-#include <qi/serialization.hpp>
+#include <qimessaging/message.h>
+#include <qimessaging/serialization.hpp>
 
 /// Message
 qi_message_t *qi_message_create()

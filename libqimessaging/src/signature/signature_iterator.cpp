@@ -8,7 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
-#include <qi/signature/signature_iterator.hpp>
+#include <qimessaging/signature/signature_iterator.hpp>
 
 
 namespace qi {

@@ -3,7 +3,7 @@
 #include <map>
 #include <iostream>
 
-#include <qi/signature.hpp>
+#include <qimessaging/signature.hpp>
 
 //sample foo function to take the signature from
 int foo(int a, int b)

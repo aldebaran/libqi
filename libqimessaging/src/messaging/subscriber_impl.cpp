@@ -9,7 +9,7 @@
 #include "src/messaging/subscriber_impl.hpp"
 #include <qimessaging/transport/transport_subscriber.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
-#include <qi/serialization/message.hpp>
+#include <qimessaging/serialization/message.hpp>
 #include <qi/log.hpp>
 
 namespace qi {

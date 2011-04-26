@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qi/serialization/serializable.hpp>
-#include <qi/serialization/serializer.hpp>
+#include <qimessaging/serialization/serializable.hpp>
+#include <qimessaging/serialization/serializer.hpp>
 
 using namespace qi::serialization;
 

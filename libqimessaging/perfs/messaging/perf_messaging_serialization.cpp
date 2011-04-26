@@ -5,10 +5,10 @@
 #include <qi/perf/sleep.hpp>
 #include <qi/perf/dataperftimer.hpp>
 
-#include <qi/serialization.hpp>
-#include <qi/serialization/serializable.hpp>
-#include <qi/serialization/serializer.hpp>
-#include <qi/serialization/boost/boost_serializers.hpp>
+#include <qimessaging/serialization.hpp>
+#include <qimessaging/serialization/serializable.hpp>
+#include <qimessaging/serialization/serializer.hpp>
+#include <qimessaging/serialization/boost/boost_serializers.hpp>
 #include <math.h>
 
 using namespace qi;

@@ -7,9 +7,9 @@
 
 #include <gtest/gtest.h>
 #include <map>
-#include <qi/functors/functor.hpp>
-#include <qi/functors/makefunctor.hpp>
-#include <qi/functors/callfunctor.hpp>
+#include <qimessaging/functors/functor.hpp>
+#include <qimessaging/functors/makefunctor.hpp>
+#include <qimessaging/functors/callfunctor.hpp>
 #include <cmath>
 
 static int gGlobalResult = 0;

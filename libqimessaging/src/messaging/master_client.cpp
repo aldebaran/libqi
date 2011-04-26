@@ -8,7 +8,7 @@
 
 #include <qi/log.hpp>
 #include "src/messaging/master_client.hpp"
-#include <qi/serialization.hpp>
+#include <qimessaging/serialization.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
 
 namespace qi {

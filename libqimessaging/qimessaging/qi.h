@@ -8,8 +8,8 @@
 #ifndef         _QI_H_
 # define        _QI_H_
 
-#include <qi/signature.h>
-#include <qi/message.h>
+#include <qimessaging/signature.h>
+#include <qimessaging/message.h>
 #include <qi/log.h>
 #include <qimessaging/context.h>
 #include <qimessaging/client.h>

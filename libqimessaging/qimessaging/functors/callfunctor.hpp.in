@@ -19,7 +19,7 @@ def generate_argpush_list(count):
 #ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_
 #define _QI_FUNCTORS_CALLFUNCTOR_HPP_
 
-#include <qi/functors/functor.hpp>
+#include <qimessaging/functors/functor.hpp>
 #end raw
 
 namespace qi

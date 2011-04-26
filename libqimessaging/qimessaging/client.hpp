@@ -15,8 +15,8 @@
 #define _QIMESSAGING_CLIENT_HPP_
 
 #include <string>
-#include <qi/signature.hpp>
-#include <qi/serialization.hpp>
+#include <qimessaging/signature.hpp>
+#include <qimessaging/serialization.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <qimessaging/api.hpp>
 

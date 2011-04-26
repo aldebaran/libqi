@@ -15,8 +15,8 @@
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/address_manager.hpp"
 #include "src/messaging/topic.hpp"
-#include <qi/functors/makefunctor.hpp>
-#include <qi/signature.hpp>
+#include <qimessaging/functors/makefunctor.hpp>
+#include <qimessaging/signature.hpp>
 #include <qimessaging/transport/transport_forwarder.hpp> // TODO hide this
 #include <boost/shared_ptr.hpp>
 

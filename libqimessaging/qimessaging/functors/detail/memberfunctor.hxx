@@ -11,7 +11,7 @@
 #ifndef _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
 #define _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
 
-#include <qi/functors/functor.hpp>
+#include <qimessaging/functors/functor.hpp>
 
 namespace qi {
 namespace detail {

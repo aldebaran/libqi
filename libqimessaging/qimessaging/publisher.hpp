@@ -13,7 +13,7 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <qi/serialization.hpp>
+#include <qimessaging/serialization.hpp>
 #include <qimessaging/api.hpp>
 
 namespace qi {

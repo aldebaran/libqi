@@ -13,7 +13,7 @@
 
 #include <iostream>
 #include <typeinfo>
-#include <qi/signature.hpp>
+#include <qimessaging/signature.hpp>
 
 namespace qi {
   namespace serialization {
@@ -37,6 +37,6 @@ namespace qi {
   }
 }
 
-#include <qi/serialization/serialize.hxx>
+#include <qimessaging/serialization/serialize.hxx>
 
 #endif  // _QI_SERIALIZATION_SERIALIZE_HPP_

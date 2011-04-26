@@ -11,8 +11,8 @@
 #ifndef _QI_SERIALIZATION_HPP_
 #define _QI_SERIALIZATION_HPP_
 
-#include <qi/serialization/message.hpp>
-#include <qi/serialization/serializer.hpp>
-#include <qi/serialization/serialize.hpp>
+#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/serialization/serializer.hpp>
+#include <qimessaging/serialization/serialize.hpp>
 
 #endif  // _QI_SERIALIZATION_HPP_

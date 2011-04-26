@@ -10,7 +10,7 @@
 #ifndef _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_
 #define _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_
 
-# include <qi/functors/functor.hpp>
+# include <qimessaging/functors/functor.hpp>
 
 namespace qi {
 namespace detail {

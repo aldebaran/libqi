@@ -8,7 +8,7 @@
 #ifndef _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
 #define _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
 
-#include <qi/api.hpp>
+#include <qimessaging/api.hpp>
 #include <cstring>
 #include <exception>
 
@@ -19,7 +19,7 @@ namespace qi {
   /// Signature container. This class provide a useful iterator.
   /// \ingroup Signature
   /// \include example_qi_signature_iterator.cpp
-  class QI_API Signature {
+  class QIMESSAGING_API Signature {
   public:
     Signature(const char *signature)
       : _signature(signature)
@@ -52,7 +52,7 @@ namespace qi {
     };
 
     /// Bad signature format
-    class QI_API BadFormatException : public std::exception {
+    class QIMESSAGING_API BadFormatException : public std::exception {
     public:
       BadFormatException () {}
       /// Constructor
@@ -71,7 +71,7 @@ namespace qi {
     /// <summary>
     /// Signature iterator, this will return type composing a signature one by one.
     /// </summary>
-    class QI_API iterator {
+    class QIMESSAGING_API iterator {
     public:
       friend class qi::Signature;
       iterator &operator++() {

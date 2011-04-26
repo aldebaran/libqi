@@ -13,8 +13,8 @@
 
 #include <string>
 #include <boost/scoped_ptr.hpp>
-#include <qi/functors/makefunctor.hpp>
-#include <qi/signature.hpp>
+#include <qimessaging/functors/makefunctor.hpp>
+#include <qimessaging/signature.hpp>
 #include <qimessaging/api.hpp>
 
 namespace qi {

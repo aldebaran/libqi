@@ -21,8 +21,8 @@ def generate_argpush_list(count):
 #define _QI_MESSAGING_CLIENT_HPP_
 
 #include <string>
-#include <qi/signature.hpp>
-#include <qi/serialization.hpp>
+#include <qimessaging/signature.hpp>
+#include <qimessaging/serialization.hpp>
 #include <boost/scoped_ptr.hpp>
 
 namespace qi {

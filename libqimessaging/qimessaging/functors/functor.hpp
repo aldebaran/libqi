@@ -15,7 +15,7 @@
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
 #define QI_FUNCTOR_DEBUG(...)
 
-#include <qi/serialization.hpp>
+#include <qimessaging/serialization.hpp>
 
 namespace qi
 {
@@ -45,9 +45,9 @@ namespace qi
 
 }
 
-#include <qi/functors/detail/functor.hxx>
-#include <qi/functors/detail/voidfunctor.hxx>
-#include <qi/functors/detail/memberfunctor.hxx>
-#include <qi/functors/detail/voidmemberfunctor.hxx>
+#include <qimessaging/functors/detail/functor.hxx>
+#include <qimessaging/functors/detail/voidfunctor.hxx>
+#include <qimessaging/functors/detail/memberfunctor.hxx>
+#include <qimessaging/functors/detail/voidmemberfunctor.hxx>
 
 #endif  // _QI_FUNCTORS_FUNCTOR_HPP_

@@ -11,7 +11,7 @@
 #ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 #define _QI_FUNCTORS_MAKEFUNCTOR_HPP_
 
-#include <qi/functors/functor.hpp>
+#include <qimessaging/functors/functor.hpp>
 
 namespace qi
 {

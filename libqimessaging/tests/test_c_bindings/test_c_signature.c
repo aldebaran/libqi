@@ -1,7 +1,7 @@
 
 
 //#include <gtest/gtest.h>
-#include <qi/signature.h>
+#include <qimessaging/signature.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

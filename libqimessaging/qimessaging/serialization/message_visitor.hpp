@@ -9,14 +9,14 @@
 #ifndef _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 #define _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
-#include <qi/api.hpp>
-#include <qi/serialization/message.hpp>
-#include <qi/signature/signature_iterator.hpp>
+#include <qimessaging/api.hpp>
+#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/signature/signature_iterator.hpp>
 
 namespace qi {
   namespace serialization {
 
-    class QI_API MessageVisitor
+    class QIMESSAGING_API MessageVisitor
     {
     public:
       MessageVisitor(Message &msg, const char *signature);

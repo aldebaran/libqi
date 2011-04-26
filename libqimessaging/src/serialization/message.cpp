@@ -6,7 +6,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#include <qi/serialization/message.hpp>
+#include <qimessaging/serialization/message.hpp>
 #include <vector>
 
 namespace qi {

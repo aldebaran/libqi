@@ -15,7 +15,7 @@
 #include <boost/shared_ptr.hpp>
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/impl_base.hpp"
-#include <qi/serialization/message.hpp>
+#include <qimessaging/serialization/message.hpp>
 
 
 namespace qi {

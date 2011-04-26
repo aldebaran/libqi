@@ -41,8 +41,8 @@
 #ifdef WITH_PROTOBUF
 # include <google/protobuf/message.h>
 #endif
-#include <qi/serialization/serializer.hpp>
-#include <qi/serialization/serializable.hpp>
+#include <qimessaging/serialization/serializer.hpp>
+#include <qimessaging/serialization/serializable.hpp>
 #include <iostream>
 
 namespace qi {

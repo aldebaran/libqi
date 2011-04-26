@@ -3,7 +3,7 @@
 #include <map>
 #include <iostream>
 
-#include <qi/signature.hpp>
+#include <qimessaging/signature.hpp>
 
 int main(int argc, char *argv[])
 {

@@ -12,7 +12,7 @@
 #define _QI_MESSAGING_SRC_SERVICEINFO_HPP_
 
 #include <string>
-#include <qi/functors/functor.hpp>
+#include <qimessaging/functors/functor.hpp>
 
 namespace qi {
   namespace detail {
