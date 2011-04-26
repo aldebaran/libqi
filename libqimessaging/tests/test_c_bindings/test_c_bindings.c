@@ -5,7 +5,9 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#include <qi/qi.h>
+#include <qimessaging/server.h>
+#include <qimessaging/client.h>
+#include <qimessaging/message.h>
 #include <stdio.h>
 
 

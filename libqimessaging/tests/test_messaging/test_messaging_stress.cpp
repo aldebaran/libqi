@@ -2,8 +2,10 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <boost/timer.hpp>
-#include <qi/messaging.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qimessaging/client.hpp>
+#include <qimessaging/master.hpp>
+#include <qimessaging/server.hpp>
+#include <qi/os.hpp>
 
 using namespace qi;
 

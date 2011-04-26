@@ -10,19 +10,19 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 qi_create_gtest(test_messaging
  SRC test_messaging.cpp ${PROTO_SRC} ${PROTO_H}
- DEPENDS QI GTEST
+ DEPENDS QI QIMESSAGING GTEST
  TIMEOUT 120)
 
 qi_create_gtest(test_messaging_signatures
  SRC test_messaging_signatures.cpp ${PROTO_SRC} ${PROTO_H}
- DEPENDS QI GTEST
+ DEPENDS QI QIMESSAGING GTEST
  TIMEOUT 120)
 endif()
- 
- 
+
+
 qi_create_gtest(test_messaging_stress
  SRC test_messaging_stress.cpp
- DEPENDS QI GTEST
+ DEPENDS QI QIMESSAGING GTEST
  TIMEOUT 120)
 
 #qi_create_gtest(test_messaging_naoqi

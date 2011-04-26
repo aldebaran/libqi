@@ -6,9 +6,11 @@
 */
 
 #include <gtest/gtest.h>
-#include <qi/messaging.hpp>
+#include <qimessaging/master.hpp>
+#include <qimessaging/publisher.hpp>
+#include <qimessaging/subscriber.hpp>
 #include <qi/perf/dataperftimer.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qi/os.hpp>
 #include <string>
 
 using namespace qi;
