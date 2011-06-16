@@ -1,0 +1,12 @@
+/** \page OS OS abstraction
+This namespace provide abstracted OS functions working on three operatrion system (Linux, MacOS, Windows) with the same behavior.
+
+You will find functions to:
+ - environment manipulation (setenv/getenv)
+ - dynamic library manipulation (dlopen, dlclose, dlsym, dlerror)
+ - few general path manipulation (home, tmp)
+ - open and get the status of files with support for Windows widestring filename (open, fopen, stat)
+ - sleep and msleep
+ - launch & wait process (spawn, system, waitpid)
+
+*/

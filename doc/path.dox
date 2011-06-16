@@ -1,0 +1,66 @@
+/** \page QiPath Reading and writing configuration files using qi::path
+
+\section Using Using Namespace path
+\subsection Notes Notes & Requirement
+
+The \ref qi::path "API of qi::path" always make sure that:
+
+- returned path are absolute, native paths. (with "/" on UNIX and "\" on windows)
+- path always MUST be in UTF-8 encoding (every methods who need UTF-8
+charset is specified in qi::path "API of qi::path"),
+- return path will be in UTF-8 charset.
+
+For this to work, we must make sure that
+
+- qi::init has been called.
+
+Have a look on the \ref qi::path "API of qi::path" for more details
+
+\subsection Configs Reading and writing configuration files
+
+Writing a configuration file is very different from reading one.
+
+Let's assume the \c foo executable want to make sure that
+<tt> SPAM=42 </tt> in \c foo.cfg.
+
+Here is how it works:
+
+ - First, ask for a \b list of possible paths for \c foo.cfg
+
+ - Iterate through this list and stop when the first possible \c foo.cfg is found
+
+ - Read and update the \c foo.cfg file
+
+ - Write the \c foo.cfg file.
+
+
+You can see that we ask for a \b list of paths when reading, but that we
+always write to \b one file.
+
+
+Let's go through these steps again, assuming \c foo is installed in
+\c /usr/bin/foo, and \c foo.cfg in \c /usr/share/foo/foo.cfg, and that there
+is nothing else on the machine where \c foo is running.
+
+  - First step: ask for a list of possible paths for \c foo.cfg
+  using qi::path::getConfigurationPaths \n
+  This gives a list looking like : \n
+  <tt> [~/.config/foo/foo.cfg, /usr/share/foo/foo.cfg] </tt>
+
+  - Since \c .config/foo/foo.cfg does not exist, we read \c /usr/share/foo/foo.cfg
+
+  - Then we ask for a location to write: using qi::path::getConfigurationPaths \n
+  In this case it's ~/.config/foo/foo.cfg \n
+  So we write <tt> SPAM=42 </tt> to \c ~/.config/foo/foo.cfg
+
+
+Then each time a piece of code will ask for the \c foo.cfg path, it will
+get a list starting with \c ~/.config/foo/foo.cfg, so we are sure the setting
+<tt> SPAM=42 </tt> will be used.
+
+\subsection Example
+
+\include qipath_example.cpp
+
+*/
+

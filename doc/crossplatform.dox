@@ -1,0 +1,19 @@
+/** \page CrossPlatform Cross-platform issue
+\section Overview
+\subsection Problems
+Since we use cross-platform development, we need to take care of different charsets and localizations (UTF-8, UTF-16).
+- Apple OS X always use UTF-8 path.
+- Windows (including Cygwin and MinGW) have both 8 bits functions using
+  various charsets depending on the Windows localization setup, and 16
+  bits functions using UTF-16. To support internationalization we need
+  to always use UTF-16 functions. (_wfopen, _wopen, _wsystem, ...).
+- Linux distributions use UTF-8 locales by default, it's may not always the case
+  but by simplicity we will assume that the locale is in UTF-8.
+
+\subsection Solutions
+We will always consider path to be encoded in UTF-8, when we open files,
+or call Windows functions, we will convert from UTF-8 to UTF-16.
+
+We use boost::filesystem::path with methods string() to get UTF-8
+string and wstring() to get UTF-16 string (Windows only).
+ */
