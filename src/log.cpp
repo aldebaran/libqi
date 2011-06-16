@@ -85,10 +85,6 @@ namespace qi {
                          pl->_log);
           }
         }
-        else
-        {
-          printf("[MISSING Logger]: %s\n", pl->_log);
-        }
       }
     }
 
