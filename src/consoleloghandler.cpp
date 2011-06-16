@@ -44,6 +44,21 @@ namespace qi {
         _color = 0;
     }
 
+    char* cutCat(const char* category, char* res, size_t size)
+    {
+      if (strlen(category) < size)
+      {
+        memset(res, ' ', size);
+        strncpy(res, category, strlen(category));
+      }
+      else
+      {
+        memset(res, '.', size);
+        strncpy(res, category, size - 3);
+      }
+      res[size] = '\0';
+    }
+
     void ConsoleLogHandler::log(const LogLevel    verb,
                                 const char       *file,
                                 const char       *fct,
@@ -58,14 +73,17 @@ namespace qi {
       else
       {
         header(verb);
-        if (verb == qi::log::debug)
+        int catSize = 16;
+        char fixedCategory[catSize + 1];
+        cutCat(category, fixedCategory, catSize);
+        if (qi::log::getContext() != 0)
         {
-          printf("%s: %s(%d) %s %s", category, file, line, fct, msg);
+          printf("%s: %s(%d) %s %s", fixedCategory, file, line, fct, msg);
           fflush (stdout);
         }
         else
         {
-          printf("%s: ", category);
+          printf("%s: ", fixedCategory);
           if (qi::log::getContext())
           {
             textColorAttr(reset);
