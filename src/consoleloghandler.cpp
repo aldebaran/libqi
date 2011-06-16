@@ -46,17 +46,25 @@ namespace qi {
         _color = 0;
     }
 
-    char* cutCat(const char* category, char* res)
+    void cutCat(const char* category, char* res)
     {
       if (strlen(category) < CATSIZEMAX)
       {
         memset(res, ' ', CATSIZEMAX);
+#ifndef _MSC_VER
         strncpy(res, category, strlen(category));
+#else
+        strcpy_s(res, strlen(category), category);
+#endif
       }
       else
       {
         memset(res, '.', CATSIZEMAX);
+#ifndef _MSC_VER
         strncpy(res, category, CATSIZEMAX - 3);
+#else
+        strcpy_s(res, CATSIZEMAX - 3, category);
+#endif
       }
       res[CATSIZEMAX] = '\0';
     }
