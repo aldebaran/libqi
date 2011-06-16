@@ -21,6 +21,8 @@
 # include <unistd.h>
 #endif
 
+#define CATSIZEMAX 16
+
 namespace qi {
   namespace log {
     ConsoleLogHandler::ConsoleLogHandler()
@@ -44,19 +46,19 @@ namespace qi {
         _color = 0;
     }
 
-    char* cutCat(const char* category, char* res, int size)
+    char* cutCat(const char* category, char* res)
     {
-      if (strlen(category) < size)
+      if (strlen(category) < CATSIZEMAX)
       {
-        memset(res, ' ', size);
+        memset(res, ' ', CATSIZEMAX);
         strncpy(res, category, strlen(category));
       }
       else
       {
-        memset(res, '.', size);
-        strncpy(res, category, size - 3);
+        memset(res, '.', CATSIZEMAX);
+        strncpy(res, category, CATSIZEMAX - 3);
       }
-      res[size] = '\0';
+      res[CATSIZEMAX] = '\0';
     }
 
     void ConsoleLogHandler::log(const LogLevel    verb,
@@ -73,9 +75,8 @@ namespace qi {
       else
       {
         header(verb);
-        int catSize = 16;
-        char fixedCategory[catSize + 1];
-        cutCat(category, fixedCategory, catSize);
+        char fixedCategory[CATSIZEMAX + 1];
+        cutCat(category, fixedCategory);
         if (qi::log::getContext() != 0)
         {
           printf("%s: %s(%d) %s %s", fixedCategory, file, line, fct, msg);
