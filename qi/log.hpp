@@ -106,11 +106,9 @@ namespace qi {
     QI_API const LogLevel stringToLogLevel(const char* verb);
 
 
-    static LogLevel _glVerbosity = qi::log::info;
     QI_API void setVerbosity(const LogLevel lv);
     QI_API LogLevel getVerbosity();
 
-    static bool _glContext = 0;
     QI_API void setContext(bool ctx);
     QI_API bool getContext();
 
@@ -136,10 +134,10 @@ namespace qi {
                 const int          line,
                 const char        *category)
         : _logLevel(level)
+        , _category(category)
         , _file(file)
         , _function(function)
         , _line(line)
-        , _category(category)
       {
       }
 
@@ -155,10 +153,10 @@ namespace qi {
       const LogStream &operator=(const LogStream &rhs)
       {
         _logLevel = rhs._logLevel;
+        _category = rhs._category;
         _file     = rhs._file;
         _function = rhs._function;
         _line     = rhs._line;
-        _category = rhs._category;
       }
 
       LogStream(const LogLevel     level,

@@ -27,6 +27,8 @@
 
 namespace qi {
   namespace log {
+    static LogLevel _glVerbosity;
+    static bool _glContext;
 
     typedef struct sPrivateLog
     {
