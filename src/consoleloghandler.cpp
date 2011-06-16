@@ -44,7 +44,7 @@ namespace qi {
         _color = 0;
     }
 
-    char* cutCat(const char* category, char* res, size_t size)
+    char* cutCat(const char* category, char* res, int size)
     {
       if (strlen(category) < size)
       {
