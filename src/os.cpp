@@ -67,7 +67,7 @@ namespace qi {
         pStat->st_uid   = buffer.st_uid;
         return result;
       }
-      catch (boost::filesystem::filesystem_error &e) {
+      catch (boost::filesystem::filesystem_error &) {
         return -1;
       }
     #else
