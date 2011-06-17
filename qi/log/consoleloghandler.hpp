@@ -32,6 +32,7 @@ namespace qi {
                const char       *msg);
 
       enum ConsoleAttr {
+#ifndef _WIN32
         reset      = 0,
         bright,
         dim,
@@ -39,6 +40,13 @@ namespace qi {
         underline,
         reverse    = 7,
         hidden
+#else
+        reset      = 0,
+        dim        = 0,
+        reverse    = 7,
+        bright,
+        hidden
+#endif
       };
 
       enum ConsoleColor {

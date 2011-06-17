@@ -134,7 +134,7 @@ namespace qi {
 
 #ifdef _WIN32
       if (attr == reset) {
-        SetConsoleTextAttribute(_winScreenHandle, white);
+        SetConsoleTextAttribute(_winScreenHandle, gray);
       }
       return;
 #endif
@@ -151,6 +151,8 @@ namespace qi {
         textColor(red);
       if (verb == warning)
         textColor(yellow);
+	  if (verb == info)
+        textColor(white);
       if (verb == verbose)
         textColor(green);
       if (verb == debug)
