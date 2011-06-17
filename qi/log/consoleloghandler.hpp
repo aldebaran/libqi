@@ -52,14 +52,20 @@ namespace qi {
       enum ConsoleColor {
 #ifdef _WIN32
         black   = 0,
-        gray    = 8,
-        blue    = 9,
-        green   = 10,
-        cyan    = 11,
-        red     = 12,
-        magenta = 13,
-        yellow  = 14,
-        white   = 15
+        darkblue,
+        green,
+        bluegray,
+        brown,
+        purple,
+        whitegray = 7,
+        gray,
+        whiteblue,
+        whitegreen,
+        cyan,
+        red,
+        magenta,
+        yellow,
+        white
 #else
         black   = 0,
         red,

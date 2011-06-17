@@ -89,10 +89,7 @@ namespace qi {
           printf("%s: ", fixedCategory);
           if (qi::log::getContext())
           {
-            textColorAttr(reset);
-            textColor(gray);
             printf("%s(%d) %s ", file, line, fct);
-            textColorAttr(reset);
           }
           printf("%s", msg);
           fflush (stdout);
@@ -106,7 +103,14 @@ namespace qi {
       if (!_color)
         return;
 #ifdef _WIN32
-      SetConsoleTextAttribute(_winScreenHandle, fg);
+      if (fg == reset) 
+      {
+        SetConsoleTextAttribute(_winScreenHandle, whitegray);
+      }
+      else
+      {
+        SetConsoleTextAttribute(_winScreenHandle, fg);
+      }
       return;
 #endif
       if (attr != -1 && bg != -1)
@@ -133,8 +137,13 @@ namespace qi {
         return;
 
 #ifdef _WIN32
-      if (attr == reset) {
-        SetConsoleTextAttribute(_winScreenHandle, gray);
+      if (attr == reset) 
+      {
+        SetConsoleTextAttribute(_winScreenHandle, whitegray);
+      }
+      else
+      {
+        SetConsoleTextAttribute(_winScreenHandle, attr);
       }
       return;
 #endif
@@ -151,14 +160,15 @@ namespace qi {
         textColor(red);
       if (verb == warning)
         textColor(yellow);
-	  if (verb == info)
+      if (verb == info)
         textColor(white);
       if (verb == verbose)
-        textColor(green);
+        textColorAttr(dim);
       if (verb == debug)
         textColorAttr(dim);
       printf("%s ", logLevelToString(verb));
       textColorAttr(reset);
+      textColor(reset);
     }
 
   }
