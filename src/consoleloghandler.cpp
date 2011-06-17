@@ -28,7 +28,7 @@ namespace qi {
     ConsoleLogHandler::ConsoleLogHandler()
       : _color(1)
     {
-#ifdef WIN32
+#ifdef _WIN32
       _winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
       const char *verbose = std::getenv("VERBOSE");
@@ -48,8 +48,8 @@ namespace qi {
 
     void cutCat(const char* category, char* res)
     {
-	  int categorySize = strlen(category); 
-	  if (categorySize < CATSIZEMAX)
+      int categorySize = strlen(category);
+      if (categorySize < CATSIZEMAX)
       {
         memset(res, ' ', CATSIZEMAX);
         memcpy(res, category, strlen(category));
@@ -77,7 +77,7 @@ namespace qi {
       {
         header(verb);
         char fixedCategory[CATSIZEMAX + 1];
-		fixedCategory[CATSIZEMAX] = '\0';
+        fixedCategory[CATSIZEMAX] = '\0';
         cutCat(category, fixedCategory);
         if (qi::log::getContext() != 0)
         {
@@ -86,6 +86,11 @@ namespace qi {
         }
         else
         {
+
+#ifndef WIN32
+          textColorAttr(reset);
+          textColor(gray);
+#endif
           printf("%s: ", fixedCategory);
           if (qi::log::getContext())
           {
@@ -103,7 +108,7 @@ namespace qi {
       if (!_color)
         return;
 #ifdef _WIN32
-      if (fg == reset) 
+      if (fg == reset)
       {
         SetConsoleTextAttribute(_winScreenHandle, whitegray);
       }
@@ -137,7 +142,7 @@ namespace qi {
         return;
 
 #ifdef _WIN32
-      if (attr == reset) 
+      if (attr == reset)
       {
         SetConsoleTextAttribute(_winScreenHandle, whitegray);
       }
