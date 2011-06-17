@@ -232,26 +232,17 @@ namespace qi {
         char fixedCategory[CATSIZEMAX + 1];
         fixedCategory[CATSIZEMAX] = '\0';
         cutCat(category, fixedCategory);
-        if (qi::log::getContext() != 0)
-        {
-          printf("%s: %s(%d) %s %s", fixedCategory, file, line, fct, msg);
-          fflush (stdout);
-        }
-        else
-        {
-
 #ifndef WIN32
-          _private->textColorAttr(_private->reset);
-          _private->textColor(_private->gray);
+        _private->textColorAttr(_private->reset);
+        _private->textColor(_private->gray);
 #endif
-          printf("%s: ", fixedCategory);
-          if (qi::log::getContext())
-          {
-            printf("%s(%d) %s ", file, line, fct);
-          }
-          printf("%s", msg);
-          fflush (stdout);
+        printf("%s: ", fixedCategory);
+        if (qi::log::getContext())
+        {
+          printf("%s(%d) %s ", file, line, fct);
         }
+        printf("%s", msg);
+        fflush (stdout);
       }
       fflush (stdout);
     }
