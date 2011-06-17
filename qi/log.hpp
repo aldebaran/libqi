@@ -23,7 +23,7 @@
 # include <cstdarg>
 # include <cstdio>
 
-#include <boost/function.hpp>
+#include <boost/function/function_fwd.hpp>
 
 #include <qi/api.hpp>
 
@@ -88,18 +88,18 @@ namespace qi {
                              const char*,
                              const char*,
                              const char*,
-                             int,
-                             const char*> logFuncHandler;
+                             const char*,
+                             int> logFuncHandler;
 
     /**
      * call this to make some log
      */
-    QI_API void log(const LogLevel    verb,
-                    const char       *file,
-                    const char       *fct,
+    QI_API void log(const LogLevel   verb,
                     const char       *category,
-                    const int         line,
-                    const char       *msg);
+                    const char       *msg,
+                    const char       *file = "",
+                    const char       *fct = "",
+                    const int        line = 0);
 
 
     QI_API const char* logLevelToString(const LogLevel verb);
@@ -128,10 +128,10 @@ namespace qi {
        * @param line __LINE__
        * @param category log category
        */
-      LogStream(const LogLevel     level,
+      LogStream(const LogLevel    level,
                 const char        *file,
                 const char        *function,
-                const int          line,
+                const int         line,
                 const char        *category)
         : _logLevel(level)
         , _category(category)
@@ -159,10 +159,10 @@ namespace qi {
         _line     = rhs._line;
       }
 
-      LogStream(const LogLevel     level,
+      LogStream(const LogLevel    level,
                 const char        *file,
                 const char        *function,
-                const int          line,
+                const int         line,
                 const char        *category,
                 const char        *fmt, ...)
         : _logLevel(level)
@@ -186,7 +186,7 @@ namespace qi {
 
       ~LogStream()
       {
-        qi::log::log(_logLevel, _file, _function, _category, _line, this->str().c_str());
+        qi::log::log(_logLevel, _category, this->str().c_str(), _file, _function, _line);
       }
 
       // necessary to have sinfo et al. work with an anonymous object

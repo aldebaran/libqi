@@ -22,12 +22,16 @@ namespace qi {
       FileLogHandler(const std::string& filePath);
       virtual ~FileLogHandler();
 
+
+      FileLogHandler(const FileLogHandler &rhs);
+      const FileLogHandler &operator=(const FileLogHandler &rhs);
+
       void log(const qi::log::LogLevel verb,
+               const char              *category,
+               const char              *msg,
                const char              *file,
                const char              *fct,
-               const char              *category,
-               const int                line,
-               const char              *msg);
+               const int               line);
 
     private:
       FileLogHandler() {};

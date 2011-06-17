@@ -25,85 +25,72 @@
 
 namespace qi {
   namespace log {
-    ConsoleLogHandler::ConsoleLogHandler()
-      : _color(1)
+
+    class PrivateConsoleLogHandler
     {
+    public:
+      enum ConsoleAttr {
+#ifndef _WIN32
+        reset      = 0,
+        bright,
+        dim,
+        blink,
+        underline,
+        reverse    = 7,
+        hidden
+#else
+        reset      = 0,
+        dim        = 0,
+        reverse    = 7,
+        bright,
+        hidden
+#endif
+      };
+
+      enum ConsoleColor {
 #ifdef _WIN32
-      _winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+        black   = 0,
+        darkblue,
+        green,
+        bluegray,
+        brown,
+        purple,
+        whitegray = 7,
+        gray,
+        whiteblue,
+        whitegreen,
+        cyan,
+        red,
+        magenta,
+        yellow,
+        white
+#else
+        black   = 0,
+        red,
+        green,
+        yellow,
+        blue,
+        magenta,
+        cyan,
+        white,
+        gray
 #endif
-      const char *verbose = std::getenv("VERBOSE");
-      const char *context = std::getenv("CONTEXT");
-      const char *color   = std::getenv("CLICOLOR");
+      };
 
 
-      if (verbose)
-        qi::log::setVerbosity((LogLevel)atoi(verbose));
-      if (context)
-        qi::log::setContext(atoi(context) > 0 ? true: false);
-      if (color)
-        _color = atoi(color) > 0 ? true: false;
-      if (!isatty(1))
-        _color = 0;
-    }
+      void textColor(char fg, char bg = -1, char attr = -1) const;
+      void textColorBG(char bg) const;
+      void textColorAttr(char attr) const;
+      void header(const LogLevel verb) const;
 
-    void cutCat(const char* category, char* res)
-    {
-      int categorySize = strlen(category);
-      if (categorySize < CATSIZEMAX)
-      {
-        memset(res, ' ', CATSIZEMAX);
-        memcpy(res, category, strlen(category));
-      }
-      else
-      {
-        memset(res, '.', CATSIZEMAX);
-        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
-      }
-      res[CATSIZEMAX] = '\0';
-    }
+      bool _color;
 
-    void ConsoleLogHandler::log(const LogLevel    verb,
-                                const char       *file,
-                                const char       *fct,
-                                const char       *category,
-                                const int         line,
-                                const char       *msg)
-    {
-      if (verb > qi::log::getVerbosity())
-      {
-        return;
-      }
-      else
-      {
-        header(verb);
-        char fixedCategory[CATSIZEMAX + 1];
-        fixedCategory[CATSIZEMAX] = '\0';
-        cutCat(category, fixedCategory);
-        if (qi::log::getContext() != 0)
-        {
-          printf("%s: %s(%d) %s %s", fixedCategory, file, line, fct, msg);
-          fflush (stdout);
-        }
-        else
-        {
-
-#ifndef WIN32
-          textColorAttr(reset);
-          textColor(gray);
+#ifdef _WIN32
+      void* _winScreenHandle;
 #endif
-          printf("%s: ", fixedCategory);
-          if (qi::log::getContext())
-          {
-            printf("%s(%d) %s ", file, line, fct);
-          }
-          printf("%s", msg);
-          fflush (stdout);
-        }
-      }
-      fflush (stdout);
-    }
+    };
 
-    void ConsoleLogHandler::textColor(char fg, char bg, char attr) const
+    void PrivateConsoleLogHandler::textColor(char fg, char bg, char attr) const
     {
       if (!_color)
         return;
@@ -126,7 +113,7 @@ namespace qi {
         printf("%c[%dm", 0x1B, fg + 30);
     }
 
-    void ConsoleLogHandler::textColorBG(char bg) const
+    void PrivateConsoleLogHandler::textColorBG(char bg) const
     {
       if (!_color)
         return;
@@ -136,7 +123,7 @@ namespace qi {
       printf("%c[%dm", 0x1B, bg + 40);
     }
 
-    void ConsoleLogHandler::textColorAttr(char attr) const
+    void PrivateConsoleLogHandler::textColorAttr(char attr) const
     {
       if (!_color)
         return;
@@ -155,7 +142,7 @@ namespace qi {
       printf("%c[%dm", 0x1B, attr);
     }
 
-    void ConsoleLogHandler::header(const LogLevel verb) const
+    void PrivateConsoleLogHandler::header(const LogLevel verb) const
     {
       //display log level
       textColorAttr(bright);
@@ -176,6 +163,98 @@ namespace qi {
       textColor(reset);
     }
 
+    ConsoleLogHandler::ConsoleLogHandler(const ConsoleLogHandler &rhs)
+      : _private(new PrivateConsoleLogHandler)
+    {
+      *_private = *rhs._private;
+    }
+
+    const ConsoleLogHandler & ConsoleLogHandler::operator=(const ConsoleLogHandler &rhs)
+    {
+      *_private = *rhs._private;
+      return *this;
+    }
+
+    ConsoleLogHandler::ConsoleLogHandler()
+      : _private(new PrivateConsoleLogHandler)
+    {
+      const char *verbose = std::getenv("VERBOSE");
+      const char *context = std::getenv("CONTEXT");
+      const char *color   = std::getenv("CLICOLOR");
+
+
+      if (verbose)
+        qi::log::setVerbosity((LogLevel)atoi(verbose));
+      if (context)
+        qi::log::setContext(atoi(context) > 0 ? true: false);
+
+#ifdef _WIN32
+      _private->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+      _private->_color = 1;
+
+      if (color)
+        _private->_color = atoi(color) > 0 ? true: false;
+      if (!isatty(1))
+        _private->_color = 0;
+    }
+
+    void cutCat(const char* category, char* res)
+    {
+      int categorySize = strlen(category);
+      if (categorySize < CATSIZEMAX)
+      {
+        memset(res, ' ', CATSIZEMAX);
+        memcpy(res, category, strlen(category));
+      }
+      else
+      {
+        memset(res, '.', CATSIZEMAX);
+        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
+      }
+      res[CATSIZEMAX] = '\0';
+    }
+
+    void ConsoleLogHandler::log(const LogLevel    verb,
+                                const char       *category,
+                                const char       *msg,
+                                const char       *file,
+                                const char       *fct,
+                                const int         line)
+    {
+      if (verb > qi::log::getVerbosity())
+      {
+        return;
+      }
+      else
+      {
+        _private->header(verb);
+        char fixedCategory[CATSIZEMAX + 1];
+        fixedCategory[CATSIZEMAX] = '\0';
+        cutCat(category, fixedCategory);
+        if (qi::log::getContext() != 0)
+        {
+          printf("%s: %s(%d) %s %s", fixedCategory, file, line, fct, msg);
+          fflush (stdout);
+        }
+        else
+        {
+
+#ifndef WIN32
+          _private->textColorAttr(_private->reset);
+          _private->textColor(_private->gray);
+#endif
+          printf("%s: ", fixedCategory);
+          if (qi::log::getContext())
+          {
+            printf("%s(%d) %s ", file, line, fct);
+          }
+          printf("%s", msg);
+          fflush (stdout);
+        }
+      }
+      fflush (stdout);
+    }
   }
 }
 

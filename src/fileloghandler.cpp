@@ -10,6 +10,7 @@
 
 #include <qi/log/fileloghandler.hpp>
 
+#include <boost/function.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 #include <string>
@@ -34,6 +35,19 @@ namespace qi {
       }
     }
 
+
+    FileLogHandler::FileLogHandler(const FileLogHandler &rhs)
+      : fFile(new FILE)
+    {
+      *fFile = *rhs.fFile;
+    }
+
+    const FileLogHandler & FileLogHandler::operator=(const FileLogHandler &rhs)
+    {
+      *fFile = *rhs.fFile;
+      return *this;
+    }
+
     FileLogHandler::~FileLogHandler()
     {
       if (fFile != NULL)
@@ -43,11 +57,11 @@ namespace qi {
     }
 
     void FileLogHandler::log(const qi::log::LogLevel verb,
+                             const char              *category,
+                             const char              *msg,
                              const char              *file,
                              const char              *fct,
-                             const char              *category,
-                             const int                line,
-                             const char              *msg)
+                             const int               line)
     {
       if (verb > qi::log::getVerbosity() || fFile == NULL)
       {

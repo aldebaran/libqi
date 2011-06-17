@@ -78,11 +78,11 @@ namespace qi {
                it != logHandlers.end(); ++it)
           {
             (*it).second(pl->_logLevel,
+                         pl->_category,
+                         pl->_log,
                          pl->_file,
                          pl->_function,
-                         pl->_category,
-                         pl->_line,
-                         pl->_log);
+                         pl->_line);
           }
         }
       }
@@ -124,11 +124,11 @@ namespace qi {
     }
 
     void log(const LogLevel    verb,
+             const char       *category,
+             const char       *msg,
              const char       *file,
              const char       *fct,
-             const char       *category,
-             const int         line,
-             const char       *msg)
+             const int         line)
 
     {
       if (!rtLogInstance.rtLogInit)
@@ -186,13 +186,13 @@ namespace qi {
     }
 
     void consoleLogHandler(const LogLevel    verb,
+                           const char       *category,
+                           const char       *msg,
                            const char       *file,
                            const char       *fct,
-                           const char       *category,
-                           const int         line,
-                           const char       *msg)
+                           const int         line)
     {
-      gConsoleLogHandler.log(verb, file, fct, category, line, msg);
+      gConsoleLogHandler.log(verb, category, msg, file, fct, line);
     }
 
 

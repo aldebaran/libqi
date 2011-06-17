@@ -18,79 +18,27 @@
 namespace qi {
   namespace log {
 
+    class PrivateConsoleLogHandler;
 
     /// <summary> Can print colored logs to the console </summary>
-    class QI_API ConsoleLogHandler {
+    class QI_API ConsoleLogHandler
+    {
     public:
       ConsoleLogHandler();
 
+      ConsoleLogHandler(const ConsoleLogHandler &rhs);
+      const ConsoleLogHandler &operator=(const ConsoleLogHandler &rhs);
+
       void log(const LogLevel    verb,
+               const char       *category,
+               const char       *msg,
                const char       *file,
                const char       *fct,
-               const char       *category,
-               const int         line,
-               const char       *msg);
+               const int         line);
 
-      enum ConsoleAttr {
-#ifndef _WIN32
-        reset      = 0,
-        bright,
-        dim,
-        blink,
-        underline,
-        reverse    = 7,
-        hidden
-#else
-        reset      = 0,
-        dim        = 0,
-        reverse    = 7,
-        bright,
-        hidden
-#endif
-      };
-
-      enum ConsoleColor {
-#ifdef _WIN32
-        black   = 0,
-        darkblue,
-        green,
-        bluegray,
-        brown,
-        purple,
-        whitegray = 7,
-        gray,
-        whiteblue,
-        whitegreen,
-        cyan,
-        red,
-        magenta,
-        yellow,
-        white
-#else
-        black   = 0,
-        red,
-        green,
-        yellow,
-        blue,
-        magenta,
-        cyan,
-        white,
-        gray
-#endif
-      };
-
-
-      void textColor(char fg, char bg = -1, char attr = -1) const;
-      void textColorBG(char bg) const;
-      void textColorAttr(char attr) const;
-      void header(const LogLevel verb) const;
 
     protected:
-      bool              _color;
-
-#ifdef _WIN32
-      void* _winScreenHandle;
-#endif
+      PrivateConsoleLogHandler* _private;
     };
   }
 }
