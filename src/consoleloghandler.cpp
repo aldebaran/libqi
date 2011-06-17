@@ -48,23 +48,16 @@ namespace qi {
 
     void cutCat(const char* category, char* res)
     {
-      if (strlen(category) < CATSIZEMAX)
+	  int categorySize = strlen(category); 
+	  if (categorySize < CATSIZEMAX)
       {
         memset(res, ' ', CATSIZEMAX);
-#ifndef _MSC_VER
-        strncpy(res, category, strlen(category));
-#else
-        strcpy_s(res, strlen(category), category);
-#endif
+        memcpy(res, category, strlen(category));
       }
       else
       {
         memset(res, '.', CATSIZEMAX);
-#ifndef _MSC_VER
-        strncpy(res, category, CATSIZEMAX - 3);
-#else
-        strcpy_s(res, CATSIZEMAX - 3, category);
-#endif
+        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
       }
       res[CATSIZEMAX] = '\0';
     }
@@ -84,6 +77,7 @@ namespace qi {
       {
         header(verb);
         char fixedCategory[CATSIZEMAX + 1];
+		fixedCategory[CATSIZEMAX] = '\0';
         cutCat(category, fixedCategory);
         if (qi::log::getContext() != 0)
         {
