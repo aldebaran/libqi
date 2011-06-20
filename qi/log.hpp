@@ -9,7 +9,7 @@
  */
 
 /** @file
- *  @brief convenient log macro
+ *  @brief Convenient log macro
  */
 
 
@@ -27,50 +27,75 @@
 
 #include <qi/api.hpp>
 
-//should not be compiled in release. Not useful for user.
+
+/**
+ * \def qiLogDebug
+ *  Log in debug mode. Not compile on release.
+ */
 #ifdef NO_QI_DEBUG
 # define qiLogDebug(...)
 #else
 # define qiLogDebug(...)        qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \def qiLogVerbose
+ *  Log in verbose mode. This mode isn't show by default but always compile.
+ */
 #ifdef NO_QI_VERBOSE
 # define qiLogVerbose(...)
 #else
 # define qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \def qiLogInfo
+ *  Log in info mode.
+ */
 #ifdef NO_QI_INFO
 # define qiLogInfo(...)
 #else
 # define qiLogInfo(...)         qi::log::LogStream(qi::log::info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \def qiLogWarning
+ *  Log in warning mode.
+ */
 #ifdef NO_QI_WARNING
 # define qiLogWarning(...)
 #else
 # define qiLogWarning(...)      qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \def qiLogError
+ *  Log in error mode.
+ */
 #ifdef NO_QI_ERROR
 # define qiLogError(...)
 #else
 # define qiLogError(...)        qi::log::LogStream(qi::log::error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \def qiLogFatal
+ *  Log in fatal mode.
+ */
 #ifdef NO_QI_FATAL
 # define qiLogFatal(...)
 #else
 # define qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
+/**
+ * \namespace log
+ * \brief log implementation.
+ */
 namespace qi {
   namespace log {
     class LogStream;
 
-    /**
-     * Log Verbosity
-     */
     enum QI_API LogLevel {
         silent = 0,
         fatal,
@@ -81,8 +106,11 @@ namespace qi {
         debug,
         };
 
-
-
+    /**
+     * \typedef logFuncHandler
+     * \brief Boost delegate to log function (verb, category,
+     *        message, file, function, line).
+     */
     typedef boost::function6<void,
                              const qi::log::LogLevel,
                              const char*,
@@ -92,7 +120,16 @@ namespace qi {
                              int> logFuncHandler;
 
     /**
-     * call this to make some log
+     * \brief Log function
+     *
+     * You should call qiLog* macro.
+     *
+     * @param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+     * @param category Log category.
+     * @param msg Log message.
+     * @param file __FILE__
+     * @param function __FUNCTION__
+     * @param line __LINE__
      */
     QI_API void log(const LogLevel   verb,
                     const char       *category,
@@ -102,26 +139,110 @@ namespace qi {
                     const int        line = 0);
 
 
+    /**
+     * \brief Convert log verbosity to char*
+     * @param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+     *
+     * \return [SILENT], [FATAL], [ERROR],
+     *         [WARN ], [INFO ], [VERB ],
+     *         [DEBUG]
+     */
     QI_API const char* logLevelToString(const LogLevel verb);
+
+    /**
+     * \brief Convert string to log verbosity
+     * @param verb debug, verbose, info,
+     *             warning, error, fatal,
+     *             silent
+     *
+     * \return Log level verbosity
+     */
     QI_API const LogLevel stringToLogLevel(const char* verb);
 
 
+    /**
+     * \brief Set log verbosity.
+     *
+     * If you don't want any log use silent mode.
+     *
+     * @param lv maximal verbosity shown
+     */
     QI_API void setVerbosity(const LogLevel lv);
+
+    /**
+     * \brief Get log verbosity.
+     * @return Maximal verbosity display.
+     */
     QI_API LogLevel getVerbosity();
 
+
+
+    /**
+     * \brief Set log context.
+     *
+     * Display log context (line, function, file).
+     *
+     * @param ctx Value to set context.
+     */
     QI_API void setContext(bool ctx);
+
+    /**
+     * \brief Get log context.
+     * @return true if active, false otherwise.
+     */
     QI_API bool getContext();
 
+
+
+    /**
+     * \brief Add log handler.
+     *
+     * @param fct Boost delegate to log handler function.
+     * @param name name of the handler, this is the one used to remove handler (prefer lowcase).
+     */
     QI_API void addLogHandler(logFuncHandler fct, const std::string& name);
+
+    /**
+     * \brief remove log handler.
+     *
+     * @param name name of the handler.
+     */
     QI_API void removeLogHandler(const std::string& name);
 
-    // HEADER Only. (no pimpl)
+    /** \class LogStream log.hpp "qi/log.hpp"
+     */
     class LogStream: public std::stringstream
     {
     public:
 
       /**
-       * LogStream. Will log at object destruction
+       * \brief LogStream. Copy Ctor.
+       * @param rhs LogStream.
+       */
+      LogStream(const LogStream &rhs)
+        : _logLevel(rhs._logLevel)
+        , _category(rhs._category)
+        , _file(rhs._file)
+        , _function(rhs._function)
+        , _line(rhs._line)
+      {
+      }
+
+      /**
+       * \brief LogStream assignment operator.
+       * @param rhs LogStream.
+       */
+      const LogStream &operator=(const LogStream &rhs)
+      {
+        _logLevel = rhs._logLevel;
+        _category = rhs._category;
+        _file     = rhs._file;
+        _function = rhs._function;
+        _line     = rhs._line;
+      }
+
+      /**
+       * \brief LogStream. Will log at object destruction
        * @param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
        * @param file __FILE__
        * @param function __FUNCTION__
@@ -141,24 +262,15 @@ namespace qi {
       {
       }
 
-      LogStream(const LogStream &rhs)
-        : _logLevel(rhs._logLevel)
-        , _category(rhs._category)
-        , _file(rhs._file)
-        , _function(rhs._function)
-        , _line(rhs._line)
-      {
-      }
-
-      const LogStream &operator=(const LogStream &rhs)
-      {
-        _logLevel = rhs._logLevel;
-        _category = rhs._category;
-        _file     = rhs._file;
-        _function = rhs._function;
-        _line     = rhs._line;
-      }
-
+      /**
+       * \brief LogStream. Will log at object destruction
+       * @param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+       * @param file __FILE__
+       * @param function __FUNCTION__
+       * @param line __LINE__
+       * @param category log category
+       * @param fmt message format.
+       */
       LogStream(const LogLevel    level,
                 const char        *file,
                 const char        *function,
@@ -184,12 +296,13 @@ namespace qi {
         *this << buffer;
       }
 
+      /** \brief Destructor */
       ~LogStream()
       {
         qi::log::log(_logLevel, _category, this->str().c_str(), _file, _function, _line);
       }
 
-      // necessary to have sinfo et al. work with an anonymous object
+      /** \brief Necessary to work with an anonymous object */
       LogStream& self() {
         return *this;
       }
