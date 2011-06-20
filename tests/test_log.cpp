@@ -2,7 +2,7 @@
 
 // { process  : "naoqi",
 //   pid      : "1242",
-//   category : "qi.audio",
+//   category : "core.log.test",
 //   file     : "",
 //   function : "",
 //   lineno   : "",
@@ -13,36 +13,36 @@ int main(int argc, char **argv)
 {
   //  qi::log::init("myprogramname", argc, argv);
 
-  qiLogFatal("qi.audio", "%d\n", 41);
-  qiLogError("qi.audio", "%d\n", 42);
-  qiLogWarning("qi.audio", "%d\n", 43);
-  qiLogInfo("qi.audio", "%d\n", 44);
-  qiLogVerbose("qi.audio", "%d\n", 45);
-  qiLogDebug("qi.audio", "%d\n", 46);
+  qiLogFatal("core.log.test1", "%d\n", 41);
+  qiLogError("core.log.test1", "%d\n", 42);
+  qiLogWarning("core.log.test1", "%d\n", 43);
+  qiLogInfo("core.log.test1", "%d\n", 44);
+  qiLogVerbose("core.log.test1", "%d\n", 45);
+  qiLogDebug("core.log.test1", "%d\n", 46);
 
-  qiLogFatal("qi.audio")   << "f" << 4 << std::endl;
-  qiLogError("qi.audio")   << "e" << 4 << std::endl;
-  qiLogWarning("qi.audio") << "w" << 4 << std::endl;
-  qiLogInfo("qi.audio")    << "i" << 4 << std::endl;
-  qiLogVerbose("qi.audio") << "v" << 4 << std::endl;
-  qiLogDebug("qi.audio")   << "d" << 4 << std::endl;
+  qiLogFatal("core.log.test2")   << "f" << 4 << std::endl;
+  qiLogError("core.log.test2")   << "e" << 4 << std::endl;
+  qiLogWarning("core.log.test2") << "w" << 4 << std::endl;
+  qiLogInfo("core.log.test2")    << "i" << 4 << std::endl;
+  qiLogVerbose("core.log.test2") << "v" << 4 << std::endl;
+  qiLogDebug("core.log.test2")   << "d" << 4 << std::endl;
 
-  qiLogFatal("qi.audio", "%d", 21)   << "f" << 4 << std::endl;
-  qiLogError("qi.audio", "%d", 21)   << "e" << 4 << std::endl;
-  qiLogWarning("qi.audio", "%d", 21) << "w" << 4 << std::endl;
-  qiLogInfo("qi.audio", "%d", 21)    << "i" << 4 << std::endl;
-  qiLogVerbose("qi.audio", "%d", 21) << "v" << 4 << std::endl;
-  qiLogDebug("qi.audio", "%d", 21)   << "d" << 4 << std::endl;
+  qiLogFatal("core.log.test3", "%d", 21)   << "f" << 4 << std::endl;
+  qiLogError("core.log.test3", "%d", 21)   << "e" << 4 << std::endl;
+  qiLogWarning("core.log.test3", "%d", 21) << "w" << 4 << std::endl;
+  qiLogInfo("core.log.test3", "%d", 21)    << "i" << 4 << std::endl;
+  qiLogVerbose("core.log.test3", "%d", 21) << "v" << 4 << std::endl;
+  qiLogDebug("core.log.test3", "%d", 21)   << "d" << 4 << std::endl;
 
   //c style
-  qiLogWarning("qi.audio", "oups my buffer is too bad: %x\n", 0x0BADCAFE);
+  qiLogWarning("core.log.test4", "oups my buffer is too bad: %x\n", 0x0BADCAFE);
 
   //c++ style
-  qiLogError("qi.audio") << "dont drink and drive, just smoke and fly"
+  qiLogError("core.log.test4") << "dont drink and drive, just smoke and fly"
                          << "- what? " << 42 << "- oh.. I prefer!" << std::endl;
 
   //mixup style
-  qiLogInfo("qi.audio", "%d %d", 41, 42) << 43 << 44 << std::endl;
+  qiLogInfo("core.log.test4", "%d %d", 41, 42) << 43 << 44 << std::endl;
 
   std::cout << "I've just finished to log!" << std::endl;
 }
