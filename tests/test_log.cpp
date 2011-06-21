@@ -16,6 +16,49 @@ class MyThread: public RtThread
   virtual void* execute();
 };
 
+#if 0
+void *MyThread::execute()
+{
+  periodInit();
+  int i = 0;
+  while (1) {
+    periodWait();
+
+    printf("core.log.test1 %d\n", 41);
+    printf("core.log.test1", "%d\n", 42);
+    printf("core.log.test1", "%d\n", 43);
+    printf("core.log.test1", "%d\n", 44);
+    printf("core.log.test1", "%d\n", 45);
+    printf("core.log.test1", "%d\n", 46);
+
+    std::cout << "core.log.test2"  << "f" << 4 << std::endl;
+    std::cout << "core.log.test2"    << "e" << 4 << std::endl;
+    std::cout << "core.log.test2"  << "w" << 4 << std::endl;
+    std::cout << "core.log.test2"     << "i" << 4 << std::endl;
+    std::cout << "core.log.test2"  << "v" << 4 << std::endl;
+    std::cout << "core.log.test2"    << "d" << 4 << std::endl;
+
+    std::cout << "core.log.test3" << "%d"<< 21   << "f" << 4 << std::endl;
+    std::cout << "core.log.test3" << "%d"<< 21   << "e" << 4 << std::endl;
+    std::cout << "core.log.test3" << "%d"<< 21 << "w" << 4 << std::endl;
+    std::cout << "core.log.test3" << "%d"<< 21    << "i" << 4 << std::endl;
+    std::cout << "core.log.test3" << "%d"<< 21 << "v" << 4 << std::endl;
+    std::cout << "core.log.test3" << "%d"<< 21   << "d" << 4 << std::endl;
+
+    //c style
+    printf("core.log.test4 oups my buffer is too bad: %x\n", 0x0BADCAFE);
+
+    //c++ style
+    std::cout << "core.log.test4" << "dont drink and drive, just smoke and fly"
+        << "- what? " << 42 << "- oh.. I prefer!" << std::endl;
+
+    //mixup style
+    printf("core.log.test4 %d %d", 41, 42);
+    std::cout << 43 << 44 << std::endl;
+    ++i;
+  }
+}
+#else
 void *MyThread::execute()
 {
   periodInit();
@@ -57,15 +100,19 @@ void *MyThread::execute()
   }
 }
 
+#endif
+
+#include <allogremote/allogremotehandler.h>
 
 int main(int argc, char **argv)
 {
-  qi::log::setVerbosity(qi::log::debug);
   int ret = 0;
   //qi::log::setVerbosity(qi::log::fatal);
+  AL::ALLogRemoteHandler::getInstance()->logToForwarder("tcp://127.0.0.1:5566");
 
   MyThread* myThread = new MyThread();
   ret = myThread->setRealtime(SCHED_FIFO, 35);
+  std::cout << "RT?" << std::endl;
   if (!ret)
     std::cout << "Warning: thread is not realtime" << std::endl;
   //10ms like the dcm
