@@ -259,7 +259,12 @@ namespace qi {
 
     void setVerbosity(const LogLevel lv)
     {
-      _glVerbosity = lv;
+      const char *verbose = std::getenv("VERBOSE");
+
+      if (verbose)
+        _glVerbosity = (LogLevel)atoi(verbose);
+      else
+        _glVerbosity = lv;
     };
 
     LogLevel getVerbosity()
@@ -269,7 +274,12 @@ namespace qi {
 
     void setContext(bool ctx)
     {
-      _glContext = ctx;
+      const char *context = std::getenv("CONTEXT");
+
+      if (context)
+        _glContext = (atoi(context) > 0 ? true : false);
+      else
+        _glContext = ctx;
     };
 
     bool getContext()
