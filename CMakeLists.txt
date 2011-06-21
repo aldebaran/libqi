@@ -86,5 +86,4 @@ endif()
 install_header(qi SUBFOLDER qi ${H})
 stage_lib(qi QI)
 
-add_subdirectory(tests)
 add_subdirectory(examples)
