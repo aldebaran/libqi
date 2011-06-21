@@ -61,10 +61,13 @@ void *MyThread::execute()
 int main(int argc, char **argv)
 {
   qi::log::setVerbosity(qi::log::debug);
+  int ret = 0;
+  //qi::log::setVerbosity(qi::log::fatal);
 
   MyThread* myThread = new MyThread();
-  myThread->setRealtime(SCHED_FIFO, 35);
-
+  ret = myThread->setRealtime(SCHED_FIFO, 35);
+  if (!ret)
+    std::cout << "Warning: thread is not realtime" << std::endl;
   //10ms like the dcm
   myThread->setPeriod(10000);
   myThread->create();
