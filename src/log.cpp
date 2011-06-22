@@ -21,11 +21,7 @@
 #define RTLOG_BUFFERS (128)
 
 
-// Choregraphe need the full name category to change the color box
-// 64 char isn't enough to get all the name
-// FIXME: Change the system in choregraphe to get the full path
-//        of the error box
-#define CAT_SIZE 1024
+#define CAT_SIZE 64
 #define FILE_SIZE 128
 #define FUNC_SIZE 64
 #define LOG_SIZE 2048
