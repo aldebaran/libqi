@@ -28,8 +28,9 @@
 
 namespace qi {
   namespace log {
-    static LogLevel _glVerbosity;
-    static bool _glContext;
+    static LogLevel _glVerbosity = qi::log::info;
+    static bool _glContext = false;
+    static bool _glSyncLog = false;
 
     typedef struct sPrivateLog
     {
@@ -182,8 +183,15 @@ namespace qi {
       pl->_function[FUNC_SIZE - 1] = '\0';
       pl->_log[LOG_SIZE - 1] = '\0';
 
-      rtLogInstance.logs.enqueue(pl);
-      rtLogInstance.rtLogReadyCond.notify_one();
+      if (_glSyncLog)
+      {
+        gConsoleLogHandler.log(pl->_logLevel, pl->_category, pl->_log, pl->_file, pl->_function, pl->_line);
+      }
+      else
+      {
+        rtLogInstance.logs.enqueue(pl);
+        rtLogInstance.rtLogReadyCond.notify_one();
+      }
     }
 
     void consoleLogHandler(const LogLevel    verb,
@@ -287,6 +295,12 @@ namespace qi {
     {
       return _glContext;
     };
+
+    void setSyncLog(bool sync)
+    {
+      _glSyncLog = sync;
+    };
+
   } // namespace log
 } // namespace qi
 

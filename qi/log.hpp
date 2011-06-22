@@ -193,6 +193,14 @@ namespace qi {
     QI_API bool getContext();
 
 
+    /**
+     * \brief Set synchronous logs.
+     *
+     * @param sync Value to set context.
+     */
+    QI_API void setSyncLog(bool sync);
+
+
 
     /**
      * \brief Add log handler.
