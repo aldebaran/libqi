@@ -185,7 +185,20 @@ namespace qi {
 
       if (_glSyncLog)
       {
-        gConsoleLogHandler.log(pl->_logLevel, pl->_category, pl->_log, pl->_file, pl->_function, pl->_line);
+        if (!rtLogInstance.logHandlers.empty())
+        {
+          std::map<std::string, logFuncHandler >::iterator it;
+          for (it = rtLogInstance.logHandlers.begin();
+               it != rtLogInstance.logHandlers.end(); ++it)
+          {
+            (*it).second(pl->_logLevel,
+                         pl->_category,
+                         pl->_log,
+                         pl->_file,
+                         pl->_function,
+                         pl->_line);
+          }
+        }
       }
       else
       {
