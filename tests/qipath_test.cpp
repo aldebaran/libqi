@@ -131,7 +131,7 @@ TEST(qiPath, FindBin)
   expected = expected.make_preferred();
 
   std::string binPath1 = sdkl.findBinary("test_qipath");
-  std::string binPath2 = sdkl.findBinary("qi");
+  std::string binPath2 = sdkl.findBinary("qithatreallydoesnotexistsplease");
 
   exp = expected.string(qi::utf8facet());
   boost::to_lower(exp);
