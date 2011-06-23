@@ -43,8 +43,10 @@
 // DO NOT USE OUTSIDE LIBQI
 #ifdef qi_EXPORTS
 # define QI_API QI_EXPORT_API
-#else
+#elif defined(qi_IMPORTS)
 # define QI_API QI_IMPORT_API
+#else
+# define QI_API
 #endif
 
 
