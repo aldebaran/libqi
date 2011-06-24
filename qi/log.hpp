@@ -247,6 +247,7 @@ namespace qi {
         _file     = rhs._file;
         _function = rhs._function;
         _line     = rhs._line;
+        return *this;
       }
 
       /**
