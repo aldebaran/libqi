@@ -1,0 +1,67 @@
+/** \page Logs Logs
+
+\section Overview
+
+\subsection OverviewLog New logs system
+
+New logs goals are to improve and simplify how to use and read them.
+
+\subsection hierarchicalcategory Hierarchical Category
+There is hierarchical category like in python.
+for example:
+    - qi.core.client
+    - qi.audio.tts
+    - qi.audio.asr
+    - ...
+This allow easy log filtering. Add improve the readablilty into logs GUI.
+
+\subsection handlers Handlers
+The default handler log to console. The color is enable on tty.
+The handler can be added or deleted. You just need to give a boost delegate to a log function with the following prototype:
+
+TODO CODE
+
+Then you can add the handler with addLogHandler(fctLog, name), and remove it with removeLogHandler(name).
+
+TODO CODE
+
+\subsection verbosity Verbosity
+There is now 7 logs levels in order:
+      - silent: hide logs.
+      - fatal: This one is used before exit the program if a fatal error occured,
+      - error: classical error,
+      - warning: useful to warn user,
+      - info: useful to user informations, logs level by default (also show all lower log level).
+      - verbose: not mandatory but useful to user informations, not show by default. If you want them you need to use --verbose (-v) option on naoqi command line.
+      - debug: useful to developer informations. Not compile on release. Show on debug comilaption using --debug (-d) option on naoqi command line.
+
+\subsection codelocation Code Location
+Code location is supported. You can get some information where is the logs call:
+     - line,
+     - function,
+     - file.
+
+This is an option. You can get the location using --context (-c) on noaqi command line.
+
+TODO: Output example
+
+\subsection asynchronouslog Asynchronous log
+Log are asynchronous, we dont want to waste time in log, furthermore log can do networking. The handling of the log output is in a separated thread.
+
+There is a way to disable asynchronous. Start naoqi with --synchronous-log command line option. Becarefull, it will slow down naoqi if you have lots of handlers.
+
+Logs may be asynchronous, but they are actually being displayed in their request order.
+
+\subsection compat Compat
+- allog should continue working.
+- allog API should remain identical.
+
+\subsection options Options
+- --log-level (-L) [log_level_number]: change verbosity of logs (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug),
+- --verbose (-v): show verbose logs level and lower,
+- --debug (-d): show debug logs level and lower,
+- --quiet (-q): does not show any logs.
+- --context (-c): show code location, file(line) function,
+- --synchronous-log: make synchronous logs.
+
+*/

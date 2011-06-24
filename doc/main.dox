@@ -11,6 +11,7 @@ Basic logging facilities are provided. You will also find convenient functions i
 - \subpage CrossPlatform
 - \subpage SDKLayout
 - \subpage OS
+- \subpage Logs
 
 \section Tutorials
 - \subpage UTF8Path
