@@ -13,20 +13,33 @@ for example:
     - qi.audio.tts
     - qi.audio.asr
     - ...
+
 This allow easy log filtering. Add improve the readablilty into logs GUI.
 
 \subsection handlers Handlers
 The default handler log to console. The color is enable on tty.
-The handler can be added or deleted. You just need to give a boost delegate to a log function with the following prototype:
+The handler can be added or deleted. You just need to give a delegate to a log function with the following prototype:
+\verbatim
+void logfct(const qi::log::LogLevel verb,
+            const char              *category,
+            const char              *msg,
+            const char              *file = "",
+            const char              *fct = "",
+            const int               line = 0);
+\endverbatim
+Then you can add the handler with addLogHandler(fctLog, name)
+\verbatim
+addLogHandler(logfct, "nameofloghandler");
+\endverbatim
 
-TODO CODE
+and remove it with removeLogHandler(name).
 
-Then you can add the handler with addLogHandler(fctLog, name), and remove it with removeLogHandler(name).
-
-TODO CODE
+\verbatim
+addLogHandler("nameofloghandler");
+\endverbatim
 
 \subsection verbosity Verbosity
-There is now 7 logs levels in order:
+There is now 7 logs levels that you can change using --log-level (-L) [log_level_number] option in order form 0 to 6:
       - silent: hide logs.
       - fatal: This one is used before exit the program if a fatal error occured,
       - error: classical error,
@@ -34,6 +47,23 @@ There is now 7 logs levels in order:
       - info: useful to user informations, logs level by default (also show all lower log level).
       - verbose: not mandatory but useful to user informations, not show by default. If you want them you need to use --verbose (-v) option on naoqi command line.
       - debug: useful to developer informations. Not compile on release. Show on debug comilaption using --debug (-d) option on naoqi command line.
+
+Example printing only error and lower log levels:
+\verbatim
+$ ./a.out -L 2
+\endverbatim
+
+Output:
+\verbatim
+I've just finished to log!
+[FATAL] ...log.example.1: 41
+[ERROR] ...log.example.1: 42
+[FATAL] ...log.example.2: f4
+[ERROR] ...log.example.2: e4
+[FATAL] ...log.example.3: 21f4
+[ERROR] ...log.example.3: 21e4
+[ERROR] ...log.example.4: Where is nao? - Nao is in the kitchen. - How many are they? 42
+\endverbatim
 
 \subsection codelocation Code Location
 Code location is supported. You can get some information where is the logs call:
@@ -43,7 +73,31 @@ Code location is supported. You can get some information where is the logs call:
 
 This is an option. You can get the location using --context (-c) on noaqi command line.
 
-TODO: Output example
+Example printing context logs:
+\verbatim
+$ ./a.out -c
+\endverbatim
+
+Output:
+
+\verbatim
+I've just finished to log!
+[FATAL] ...log.example.1: log_example.cpp(91) main 41
+[ERROR] ...log.example.1: log_example.cpp(92) main 42
+[WARN ] ...log.example.1: log_example.cpp(93) main 43
+[INFO ] ...log.example.1: log_example.cpp(94) main 44
+[FATAL] ...log.example.2: log_example.cpp(98) main f4
+[ERROR] ...log.example.2: log_example.cpp(99) main e4
+[WARN ] ...log.example.2: log_example.cpp(100) main w4
+[INFO ] ...log.example.2: log_example.cpp(101) main i4
+[FATAL] ...log.example.3: log_example.cpp(105) main 21f4
+[ERROR] ...log.example.3: log_example.cpp(106) main 21e4
+[WARN ] ...log.example.3: log_example.cpp(107) main 21w4
+[INFO ] ...log.example.3: log_example.cpp(108) main 21i4
+[WARN ] ...log.example.4: log_example.cpp(115) main Oups my buffer is too bad: badcafe
+[ERROR] ...log.example.4: log_example.cpp(118) main Where is nao? - Nao is in the kitchen. - How many are they? 42
+[INFO ] ...log.example.4: log_example.cpp(124) main 41 42 43 44
+\endverbatim
 
 \subsection asynchronouslog Asynchronous log
 Log are asynchronous, we dont want to waste time in log, furthermore log can do networking. The handling of the log output is in a separated thread.
@@ -51,6 +105,35 @@ Log are asynchronous, we dont want to waste time in log, furthermore log can do 
 There is a way to disable asynchronous. Start naoqi with --synchronous-log command line option. Becarefull, it will slow down naoqi if you have lots of handlers.
 
 Logs may be asynchronous, but they are actually being displayed in their request order.
+
+Example printing synchronous logs:
+\verbatim
+$ ./a.out --synchronous-log
+\endverbatim
+
+Output:
+
+\verbatim
+[FATAL] ...log.example.1: 41
+[ERROR] ...log.example.1: 42
+[WARN ] ...log.example.1: 43
+[INFO ] ...log.example.1: 44
+[FATAL] ...log.example.2: f4
+[ERROR] ...log.example.2: e4
+[WARN ] ...log.example.2: w4
+[INFO ] ...log.example.2: i4
+[FATAL] ...log.example.3: 21f4
+[ERROR] ...log.example.3: 21e4
+[WARN ] ...log.example.3: 21w4
+[INFO ] ...log.example.3: 21i4
+[WARN ] ...log.example.4: Oups my buffer is too bad: badcafe
+[ERROR] ...log.example.4: Where is nao? - Nao is in the kitchen. - How many are they? 42
+[INFO ] ...log.example.4: 41 42 43 44
+I've just finished to log!
+\endverbatim
+
+\a "I've just finished to log!" is print after everything else.
+
 
 \subsection compat Compat
 - allog should continue working.
@@ -63,5 +146,10 @@ Logs may be asynchronous, but they are actually being displayed in their request
 - --quiet (-q): does not show any logs.
 - --context (-c): show code location, file(line) function,
 - --synchronous-log: make synchronous logs.
+
+\subsection example Example
+\include log_example.cpp
+
+
 
 */
