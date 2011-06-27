@@ -62,5 +62,8 @@ get a list starting with \c ~/.config/foo/foo.cfg, so we are sure the setting
 
 \include qipath_example.cpp
 
+\subsection link Link
+qi::path documentation.
+
 */
 

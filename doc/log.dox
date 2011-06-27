@@ -147,9 +147,9 @@ I've just finished to log!
 - --context (-c): show code location, file(line) function,
 - --synchronous-log: make synchronous logs.
 
+\subsection link Link
+qi::log documentation.
+
 \subsection example Example
 \include log_example.cpp
-
-
-
 */

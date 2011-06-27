@@ -9,4 +9,7 @@ You will find functions to:
  - sleep and msleep
  - launch & wait process (spawn, system, waitpid)
 
+\section link Link
+qi::os documentation.
+
 */

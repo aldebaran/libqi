@@ -89,4 +89,7 @@ Here is how it works:
   For instance, if \c argv0 is \c /path/to/build/sdk/bin/foo, we can assume
   the prefix is \c /path/to/build/sdk.
 
+\section link Link
+qi::path documentation.
+
 */
