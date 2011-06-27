@@ -89,13 +89,17 @@
 #endif
 
 /**
- * \namespace log
+ * \namespace qi::log
  * \brief log implementation.
  */
 namespace qi {
   namespace log {
     class LogStream;
 
+    /**
+     * \enum LogLevel
+     * \brief seven log levels display.
+     */
     enum QI_API LogLevel {
         silent = 0,
         fatal,
@@ -131,12 +135,12 @@ namespace qi {
      * @param function __FUNCTION__
      * @param line __LINE__
      */
-    QI_API void log(const LogLevel   verb,
-                    const char       *category,
-                    const char       *msg,
-                    const char       *file = "",
-                    const char       *fct = "",
-                    const int        line = 0);
+    QI_API void log(const qi::log::LogLevel verb,
+                    const char              *category,
+                    const char              *msg,
+                    const char              *file = "",
+                    const char              *fct = "",
+                    const int               line = 0);
 
 
     /**
@@ -147,7 +151,7 @@ namespace qi {
      *         [WARN ], [INFO ], [VERB ],
      *         [DEBUG]
      */
-    QI_API const char* logLevelToString(const LogLevel verb);
+    QI_API const char* logLevelToString(const qi::log::LogLevel verb);
 
     /**
      * \brief Convert string to log verbosity
@@ -157,7 +161,7 @@ namespace qi {
      *
      * \return Log level verbosity
      */
-    QI_API const LogLevel stringToLogLevel(const char* verb);
+    QI_API const qi::log::LogLevel stringToLogLevel(const char* verb);
 
 
     /**
@@ -167,13 +171,13 @@ namespace qi {
      *
      * @param lv maximal verbosity shown
      */
-    QI_API void setVerbosity(const LogLevel lv);
+    QI_API void setVerbosity(const qi::log::LogLevel lv);
 
     /**
      * \brief Get log verbosity.
      * @return Maximal verbosity display.
      */
-    QI_API LogLevel getVerbosity();
+    QI_API qi::log::LogLevel getVerbosity();
 
 
 
@@ -208,7 +212,8 @@ namespace qi {
      * @param fct Boost delegate to log handler function.
      * @param name name of the handler, this is the one used to remove handler (prefer lowcase).
      */
-    QI_API void addLogHandler(logFuncHandler fct, const std::string& name);
+    QI_API void addLogHandler(qi::log::logFuncHandler fct,
+                              const std::string& name);
 
     /**
      * \brief remove log handler.
