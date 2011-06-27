@@ -10,6 +10,10 @@ create_bin(sharedlibrary_example sharedlibrary_example.cpp NO_INSTALL)
 use_lib(sharedlibrary_example QI)
 set_target_properties(sharedlibrary_example PROPERTIES FOLDER "examples")
 
+create_bin(log_example log_example.cpp NO_INSTALL)
+use_lib(log_example QI BOOST_PROGRAM_OPTIONS)
+set_target_properties(log_example PROPERTIES FOLDER "examples")
+
 if (UNIX AND WITH_BOOST_LOCALE)
 	create_bin(qiconvloc_example qiconvloc_example.cpp NO_INSTALL)
 	use_lib(qiconvloc_example QI BOOST_LOCALE)
