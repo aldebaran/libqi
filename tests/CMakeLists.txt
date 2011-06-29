@@ -10,6 +10,8 @@ create_gtest(test_qios        SRC qios_test.cpp        DEPENDENCIES QI GTEST)
 create_bin(testlaunch NO_INSTALL testlaunch.cpp)
 set_target_properties(testlaunch PROPERTIES FOLDER tests)
 create_gtest(test_qilaunch    SRC qilaunch_test.cpp DEPENDENCIES QI GTEST)
+create_gtest(test_qilog       SRC test_log.cpp DEPENDENCIES QI GTEST)
+
 #create_gtest(test_qilog       SRC test_log.cpp      DEPENDENCIES QI GTEST RTTOOLS ALLOGREMOTE)
 
 #should it work?
