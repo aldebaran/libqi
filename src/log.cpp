@@ -125,6 +125,17 @@ namespace qi {
       printLog();
     }
 
+    static void my_strcpy(char *dst, const char *src, int len) {
+      if (!src)
+        src = "(null)";
+     #ifdef _MSV_VER
+      strncpy_s(dst, len, src, _TRUNCATE);
+     #else
+      strncpy(dst, src, len);
+      dst[len - 1] = 0;
+     #endif
+    }
+
     void log(const LogLevel    verb,
              const char       *category,
              const char       *msg,
@@ -142,46 +153,10 @@ namespace qi {
       pl->_logLevel = verb;
       pl->_line = line;
 
-#ifdef _MSC_VER
-      if (category != NULL)
-        strcpy_s(pl->_category, CAT_SIZE, category);
-      else
-        strcpy_s(pl->_category, CAT_SIZE, "(null)");
-      if (file != NULL)
-        strcpy_s(pl->_file, FILE_SIZE, file);
-      else
-        strcpy_s(pl->_file, CAT_SIZE, "(null)");
-      if (fct != NULL)
-        strcpy_s(pl->_function, FUNC_SIZE, fct);
-      else
-        strcpy_s(pl->_function, CAT_SIZE, "(null)");
-      if (msg != NULL)
-        strcpy_s(pl->_log, LOG_SIZE, msg);
-      else
-        strcpy_s(pl->_log, CAT_SIZE, "(null)");
-#else
-      if (category != NULL)
-        strncpy(pl->_category, category, CAT_SIZE);
-      else
-        strncpy(pl->_category, "(null)", CAT_SIZE);
-      if (file != NULL)
-        strncpy(pl->_file, file, FILE_SIZE);
-      else
-        strncpy(pl->_file, "(null)", FILE_SIZE);
-      if (fct != NULL)
-        strncpy(pl->_function, fct, FUNC_SIZE);
-      else
-        strncpy(pl->_function, "(null)", FUNC_SIZE);
-      if (msg != NULL)
-        strncpy(pl->_log, msg, LOG_SIZE);
-      else
-        strncpy(pl->_log, "(null)", LOG_SIZE);
-#endif
-
-      pl->_category[CAT_SIZE - 1] = '\0';
-      pl->_file[FILE_SIZE - 1] = '\0';
-      pl->_function[FUNC_SIZE - 1] = '\0';
-      pl->_log[LOG_SIZE - 1] = '\0';
+      my_strcpy(pl->_category, category, CAT_SIZE);
+      my_strcpy(pl->_file, file, FILE_SIZE);
+      my_strcpy(pl->_function, fct, FUNC_SIZE);
+      my_strcpy(pl->_log, msg, LOG_SIZE);
 
       if (_glSyncLog)
       {
