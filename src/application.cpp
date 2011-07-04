@@ -128,10 +128,15 @@ namespace qi {
       fname[0] = 0;
       int ret;
       ret = _NSGetExecutablePath(fname, &sz);
-      if (!ret)
+      if (ret == 0)
+      {
         globalProgram = fname;
+        globalProgram = detail::normalizePath(globalProgram);
+      }
       else
+      {
         globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+    }
       free(fname);
     }
 #elif __linux__
