@@ -62,7 +62,7 @@ static void init_timer()
  * to give accurate timing, otherwise the accuracy is only +/- 16ms
  * @return Always zero
  */
-int gettimeofday(qi::os::timeval *t, void *)
+int gettimeofday(qi::os::timeval *t)
 {
   if (!gTimeStorage)
     init_timer();

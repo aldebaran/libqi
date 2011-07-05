@@ -230,7 +230,14 @@ namespace qi {
       long tv_usec;
     };
 
-    QI_API int gettimeofday(qi::os::timeval *tp, void *tzp);
+    /** \brief The gettimeofday() function shall obtain the current time, expressed as seconds and microseconds
+     *         since the Epoch, and store it in the timeval structure pointed to by tp. The resolution of the
+     *         system clock is unspecified.
+     *
+     *  \param tp the timeval structure used to return the current time
+     *  \return should return 0 on success
+     */
+    QI_API int gettimeofday(qi::os::timeval *tp);
 
   };
 };

@@ -190,9 +190,9 @@ namespace qi {
 
 
     #ifndef _WIN32
-    int gettimeofday(qi::os::timeval *tp, void *tzp) {
+    int gettimeofday(qi::os::timeval *tp) {
       struct ::timeval tv;
-      int ret = ::gettimeofday(&tv, (struct timezone *)tzp);
+      int ret = ::gettimeofday(&tv, 0);
       tp->tv_sec = tv.tv_sec;
       tp->tv_usec = tv.tv_usec;
       return ret;
