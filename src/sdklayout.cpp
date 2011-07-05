@@ -15,7 +15,7 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/sdklayout.hpp>
+#include <qi/path/sdklayout.hpp>
 #include <qi/application.hpp>
 
 #include <boost/filesystem.hpp>

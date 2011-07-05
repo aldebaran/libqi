@@ -27,7 +27,7 @@
  */
 namespace qi
 {
-  /** \class PathException sdklayout.hpp "qi/sdklayout.hpp"
+  /** \class PathException sdklayout.hpp "qi/path/sdklayout.hpp"
    *  \brief Custom exception that may be thrown by these methods.
    */
 #ifdef _MSC_VER
@@ -76,7 +76,7 @@ namespace qi
 
   class PrivateSDKLayout;
 
-  /** \class SDKLayout sdklayout.hpp "qi/sdklayout.hpp"
+  /** \class SDKLayout sdklayout.hpp "qi/path/sdklayout.hpp"
    *  \brief A class to handle SDK Layouts.
    *
    *  This class allow to get various path information:

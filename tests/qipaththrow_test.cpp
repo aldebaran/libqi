@@ -11,7 +11,7 @@
 
 #include <gtest/gtest.h>
 
-#include <qi/sdklayout.hpp>
+#include <qi/path/sdklayout.hpp>
 #include <qi/path.hpp>
 
 

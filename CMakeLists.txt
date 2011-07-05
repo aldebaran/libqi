@@ -24,8 +24,8 @@ endif()
 set(H qi/os.hpp
       qi/api.hpp
       qi/path.hpp
+      qi/path/sdklayout.hpp
       qi/application.hpp
-      qi/sdklayout.hpp
       qi/log.hpp
       qi/locale.hpp
       qi/noncopyable.hpp
@@ -83,7 +83,9 @@ if(UNIX AND NOT APPLE)
   use_lib(qi DL)
 endif()
 
-install_header(qi SUBFOLDER qi ${H})
+if (QI_SDK_DIR)
+qi_install_header(KEEP_RELATIVE_PATHS ${H})
+endif()
 stage_lib(qi QI)
 
 add_subdirectory(examples)
