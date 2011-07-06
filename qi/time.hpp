@@ -2,15 +2,52 @@
 #define RT_HPP
 
 #include <ctime>
+#include <iosfwd>
+
+int mythread(int toto) {
+  qi::time::period  period;
+  qi::time::counter counter;
+
+  period.init();
+  while (true) {
+    counter.start();
+    std::cout << "c:" << counter << std::endl;
+    counter.stop();
+    //do the fucking work
+    period.wait(true);
+    std::cout << "p:" << period << std::endl;
+  }
+  return 32;
+}
+
+
+int main() {
+  pthread_t *thd;
+
+  int ret = qi::rt::realtime_thread_create(thd, qi::rt::SCHED_FIFO, 45, &mythread, 0);
+  if (!ret) {
+    ret = pthread_create(thd, 0, 0, mythread, 0);
+    if (!ret)
+      return 2;
+  }
+  thd.join();
+}
 
 namespace qi {
 
 namespace time {
 
-unsigned long long second(     const struct timespec &ts);
-unsigned long long millisecond(const struct timespec &ts);
-unsigned long long nanosecond( const struct timespec &ts);
-unsigned long long microsecond(const struct timespec &ts);
+qi::os::timeval toTimeval(struct timespec &ts);
+
+unsigned long long second(     const qi::os::timeval &ts);
+unsigned long long millisecond(const qi::os::timeval &ts);
+unsigned long long nanosecond( const qi::os::timeval &ts);
+unsigned long long microsecond(const qi::os::timeval &ts);
+
+qi::os::timeval second(     unsigned long long sec);
+qi::os::timeval millisecond(unsigned long long ms);
+qi::os::timeval microsecond(unsigned long long us);
+qi::os::timeval nanosecond( unsigned long long ns);
 
 class clock {
 public:
@@ -68,16 +105,20 @@ public:
   unsigned long long currentdiffms() const;
 };
 
-class period : public timer {
+class period : public counter {
 public:
   period();
   period(const clock &default_clock);
-  set_period(struct timespec *ts);
+  set_period(qi::os::timeval *ts);
   init();
   wait(bool allow_drifting = true);
 };
 
 }
+}
+
+std::ostream &operator<<(std::ostream &os) {
+  //os << "sec:" <<
 }
 
 #endif // RT_HPP
