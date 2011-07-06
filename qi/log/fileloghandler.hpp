@@ -1,12 +1,8 @@
 /*
-** fileloghandler.h
-** Login : <hcuche@hcuche-de>
-** Started on  Mon Jun 13 12:48:36 2011 Herve Cuche
-** $Id$
-**
-** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
-*/
+ * fileloghandler.h
+ * Author(s):
+ *  - Herve Cuche <hcuche@aldebaran-robotics.com>
+ */
 
 #ifndef FILELOGHANDLER_HPP_
 # define FILELOGHANDLER_HPP_
@@ -34,6 +30,7 @@ namespace qi {
                const int               line);
 
     private:
+      void cutCat(const char* category, char* res);
       FileLogHandler() {};
 
       FILE* fFile;
