@@ -29,8 +29,9 @@ set(H qi/os.hpp
       qi/log.hpp
       qi/locale.hpp
       qi/noncopyable.hpp
-      qi/log/fileloghandler.hpp
       qi/log/consoleloghandler.hpp
+      qi/log/fileloghandler.hpp
+      qi/log/headfileloghandler.hpp
       )
 
 set(C src/os.cpp
@@ -43,6 +44,7 @@ set(C src/os.cpp
       src/log.cpp
       src/consoleloghandler.cpp
       src/fileloghandler.cpp
+      src/headfileloghandler.cpp
       )
 
 if (WIN32)
