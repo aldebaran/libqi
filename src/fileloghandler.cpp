@@ -102,6 +102,7 @@ namespace qi {
         {
           fprintf(fFile,"%s %s: %s", head, fixedCategory, msg);
         }
+        fflush(fFile);
       }
     }
   }

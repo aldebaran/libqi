@@ -113,6 +113,7 @@ namespace qi {
           }
         }
         nbLog++;
+        fflush(fFile);
       }
       else if (fFile != NULL)
       {
