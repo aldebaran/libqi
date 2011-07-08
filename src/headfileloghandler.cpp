@@ -35,7 +35,7 @@ namespace qi {
         qiLogWarning("qi.log.headfileloghandler") << e.what() << std::endl;
       }
       // Open the file.
-      FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w");
+      FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
       if(file)
       {
