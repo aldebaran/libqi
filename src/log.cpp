@@ -116,11 +116,8 @@ namespace qi {
 
       rtLogInit = false;
 
-      rtLogReadyCond.notify_one();
-      if (rtLogThread.joinable())
-      {
-        rtLogThread.join();
-      }
+      rtLogThread.interrupt();
+      rtLogThread.join();
 
       printLog();
     }
