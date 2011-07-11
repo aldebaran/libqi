@@ -20,7 +20,7 @@ namespace qi {
   namespace log {
     FileLogHandler::FileLogHandler(const std::string& filePath)
     {
-      fFile = NULL;
+      _file = NULL;
       boost::filesystem::path fPath(filePath);
       // Create the directory!
       try
@@ -36,28 +36,15 @@ namespace qi {
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
       if(file)
-        fFile = file;
+        _file = file;
       else
         qiLogWarning("qi.log.fileloghandler") << "Cannot open " << filePath << std::endl;
     }
 
-
-    FileLogHandler::FileLogHandler(const FileLogHandler &rhs)
-      : fFile(new FILE)
-    {
-      *fFile = *rhs.fFile;
-    }
-
-    const FileLogHandler & FileLogHandler::operator=(const FileLogHandler &rhs)
-    {
-      *fFile = *rhs.fFile;
-      return *this;
-    }
-
     FileLogHandler::~FileLogHandler()
     {
-      if (fFile != NULL)
-        fclose(fFile);
+      if (_file != NULL)
+        fclose(_file);
     }
 
     void FileLogHandler::cutCat(const char* category, char* res)
@@ -84,7 +71,7 @@ namespace qi {
                              const char              *fct,
                              const int               line)
     {
-      if (verb > qi::log::getVerbosity() || fFile == NULL)
+      if (verb > qi::log::getVerbosity() || _file == NULL)
       {
         return;
       }
@@ -96,13 +83,13 @@ namespace qi {
         cutCat(category, fixedCategory);
         if (qi::log::getContext())
         {
-          fprintf(fFile, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
+          fprintf(_file, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
         }
         else
         {
-          fprintf(fFile,"%s %s: %s", head, fixedCategory, msg);
+          fprintf(_file,"%s %s: %s", head, fixedCategory, msg);
         }
-        fflush(fFile);
+        fflush(_file);
       }
     }
   }

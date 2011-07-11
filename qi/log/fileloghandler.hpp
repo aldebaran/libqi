@@ -8,19 +8,16 @@
 # define FILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
+# include <qi/noncopyable.hpp>
 # include <string>
 
 namespace qi {
   namespace log {
-    class QI_API FileLogHandler
+    class QI_API FileLogHandler : qi::noncopyable
     {
     public:
-      FileLogHandler(const std::string& filePath);
+      explicit FileLogHandler(const std::string& filePath);
       virtual ~FileLogHandler();
-
-
-      FileLogHandler(const FileLogHandler &rhs);
-      const FileLogHandler &operator=(const FileLogHandler &rhs);
 
       void log(const qi::log::LogLevel verb,
                const char              *category,
@@ -33,7 +30,7 @@ namespace qi {
       void cutCat(const char* category, char* res);
       FileLogHandler() {};
 
-      FILE* fFile;
+      FILE* _file;
     }; // !FileLogHandler
   }; // !log
 }; // !qi

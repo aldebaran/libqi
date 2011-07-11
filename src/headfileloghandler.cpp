@@ -14,15 +14,16 @@
 #include <qi/os.hpp>
 #include <cstdio>
 
-#define HEAD_SIZE 200
 #define CATSIZEMAX 16
 
 namespace qi {
   namespace log {
-    HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath)
+    HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath, int length)
     {
-      fFile = NULL;
-      nbLog = HEAD_SIZE + 1;
+      _max = length;
+      _file = NULL;
+      _count = _max + 1;
+
       boost::filesystem::path fPath(filePath);
       // Create the directory!
       try
@@ -39,8 +40,8 @@ namespace qi {
 
       if(file)
       {
-        fFile = file;
-        nbLog = 0;
+        _file = file;
+        _count = 0;
       }
       else
       {
@@ -49,22 +50,10 @@ namespace qi {
     }
 
 
-    HeadFileLogHandler::HeadFileLogHandler(const HeadFileLogHandler &rhs)
-      : fFile(new FILE)
-    {
-      *fFile = *rhs.fFile;
-    }
-
-    const HeadFileLogHandler& HeadFileLogHandler::operator=(const HeadFileLogHandler &rhs)
-    {
-      *fFile = *rhs.fFile;
-      return *this;
-    }
-
     HeadFileLogHandler::~HeadFileLogHandler()
     {
-      if (fFile != NULL)
-        fclose(fFile);
+      if (_file != NULL)
+        fclose(_file);
     }
 
     void HeadFileLogHandler::cutCat(const char* category, char* res)
@@ -91,9 +80,9 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-      if (nbLog < HEAD_SIZE)
+      if (_count < _max)
       {
-        if (verb > qi::log::getVerbosity() || fFile == NULL)
+        if (verb > qi::log::getVerbosity() || _file == NULL)
         {
           return;
         }
@@ -105,20 +94,20 @@ namespace qi {
           cutCat(category, fixedCategory);
           if (qi::log::getContext())
           {
-            fprintf(fFile, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
+            fprintf(_file, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
           }
           else
           {
-            fprintf(fFile,"%s %s: %s", head, fixedCategory, msg);
+            fprintf(_file,"%s %s: %s", head, fixedCategory, msg);
           }
         }
-        nbLog++;
-        fflush(fFile);
+        _count++;
+        fflush(_file);
       }
-      else if (fFile != NULL)
+      else if (_file != NULL)
       {
-        fclose(fFile);
-        fFile = NULL;
+        fclose(_file);
+        _file = NULL;
       }
     }
   }
