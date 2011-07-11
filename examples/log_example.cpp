@@ -88,6 +88,24 @@ int main(int argc, char **argv)
   qiLogVerbose("core.log.example.2") << "v" << 4 << std::endl;
   qiLogDebug("core.log.example.2")   << "d" << 4 << std::endl;
 
+  qiLogFatal("core.log.example.1", "without '\\n': %d", 41);
+  qiLogError("core.log.example.1", "without '\\n': %d", 42);
+  qiLogWarning("core.log.example.1", "without '\\n': %d", 43);
+  qiLogInfo("core.log.example.1", "without '\\n': %d", 44);
+  qiLogVerbose("core.log.example.1", "without '\\n': %d", 45);
+  qiLogDebug("core.log.example.1", "without '\\n': %d", 46);
+  qiLogFatal("core.log.example.1", "");
+  qiLogFatal("core.log.example.1", "\n");
+
+  qiLogFatal("core.log.example.2")   << "f " << "without '\\n'";
+  qiLogError("core.log.example.2")   << "e " << "without '\\n'";
+  qiLogWarning("core.log.example.2") << "w " << "without '\\n'";
+  qiLogInfo("core.log.example.2")    << "i " << "without '\\n'";
+  qiLogVerbose("core.log.example.2") << "v " << "without '\\n'";
+  qiLogDebug("core.log.example.2")   << "d " << "without '\\n'";
+  qiLogFatal("core.log.example.2")   << "";
+  qiLogFatal("core.log.example.2")   << std::endl;
+
   qiLogFatal("core.log.example.3", "%d", 21)   << "f" << 4 << std::endl;
   qiLogError("core.log.example.3", "%d", 21)   << "e" << 4 << std::endl;
   qiLogWarning("core.log.example.3", "%d", 21) << "w" << 4 << std::endl;
