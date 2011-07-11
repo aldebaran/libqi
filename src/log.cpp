@@ -10,6 +10,7 @@
 #include <qi/os.hpp>
 #include <list>
 #include <map>
+#include <cstring>
 
 #include <qi/log/consoleloghandler.hpp>
 
@@ -122,6 +123,41 @@ namespace qi {
       printLog();
     }
 
+    static void my_strcpy_log(char *dst, const char *src, int len) {
+      if (!src)
+        src = "(null)";
+
+      int messSize = strlen(src);
+      // check if the last char is a \n
+      if (src[messSize - 1] == '\n')
+      {
+        // Get the size to memcpy (don't forget we need 1 space more for \0)
+        int strSize = messSize < len  ? messSize : len - 1;
+       #ifndef _WIN32
+        memcpy(dst, src, strSize);
+       #else
+        memcpy_s(dst, len,  src, strSize);
+       #endif
+        dst[strSize] = 0;
+        return;
+      }
+
+     #ifndef _WIN32
+      // Get the size to memcpy (we need 2 spaces more for \n\0)
+      int strSize = messSize < len - 1  ? messSize : len - 2;
+      memcpy(dst, src, strSize);
+      dst[strSize] = '\n';
+      dst[strSize + 1] = '\0';
+     #else
+      // Get the size to memcpy (we need 3 spaces more for \r\n\0)
+      int strSize = messSize < len - 2  ? messSize : len - 3;
+      memcpy_s(dst, len,  src, strSize);
+      dst[strSize] = '\r';
+      dst[strSize + 1] = '\n';
+      dst[strSize + 2] = '\0';
+     #endif
+    }
+
     static void my_strcpy(char *dst, const char *src, int len) {
       if (!src)
         src = "(null)";
@@ -153,7 +189,7 @@ namespace qi {
       my_strcpy(pl->_category, category, CAT_SIZE);
       my_strcpy(pl->_file, file, FILE_SIZE);
       my_strcpy(pl->_function, fct, FUNC_SIZE);
-      my_strcpy(pl->_log, msg, LOG_SIZE);
+      my_strcpy_log(pl->_log, msg, LOG_SIZE);
 
       if (_glSyncLog)
       {
