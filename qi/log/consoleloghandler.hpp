@@ -13,6 +13,7 @@
 # define CONSOLELOGHANDLER_HPP_
 
 # include <cstdarg>
+# include <qi/noncopyable.hpp>
 # include <qi/log.hpp>
 
 namespace qi {
@@ -21,13 +22,10 @@ namespace qi {
     class PrivateConsoleLogHandler;
 
     /// <summary> Can print colored logs to the console </summary>
-    class QI_API ConsoleLogHandler
+    class QI_API ConsoleLogHandler : qi::noncopyable
     {
     public:
       ConsoleLogHandler();
-
-      ConsoleLogHandler(const ConsoleLogHandler &rhs);
-      const ConsoleLogHandler &operator=(const ConsoleLogHandler &rhs);
 
       void log(const LogLevel    verb,
                const char       *category,

@@ -163,18 +163,6 @@ namespace qi {
       textColor(reset);
     }
 
-    ConsoleLogHandler::ConsoleLogHandler(const ConsoleLogHandler &rhs)
-      : _private(new PrivateConsoleLogHandler)
-    {
-      *_private = *rhs._private;
-    }
-
-    const ConsoleLogHandler & ConsoleLogHandler::operator=(const ConsoleLogHandler &rhs)
-    {
-      *_private = *rhs._private;
-      return *this;
-    }
-
     ConsoleLogHandler::ConsoleLogHandler()
       : _private(new PrivateConsoleLogHandler)
     {
