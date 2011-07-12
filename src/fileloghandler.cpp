@@ -18,9 +18,19 @@
 
 namespace qi {
   namespace log {
-    FileLogHandler::FileLogHandler(const std::string& filePath)
+    class PrivateFileLogHandler
     {
-      _file = NULL;
+    public:
+      void cutCat(const char* category, char* res);
+
+      FILE* _file;
+    };
+
+
+    FileLogHandler::FileLogHandler(const std::string& filePath)
+      : _private(new PrivateFileLogHandler)
+    {
+      _private->_file = NULL;
       boost::filesystem::path fPath(filePath);
       // Create the directory!
       try
@@ -32,22 +42,24 @@ namespace qi {
       {
         qiLogWarning("qi.log.fileloghandler") << e.what() << std::endl;
       }
+
       // Open the file.
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
-      if(file)
-        _file = file;
+      if (file)
+        _private->_file = file;
       else
-        qiLogWarning("qi.log.fileloghandler") << "Cannot open " << filePath << std::endl;
+        qiLogWarning("qi.log.fileloghandler") << "Cannot open "
+                                              << filePath << std::endl;
     }
 
     FileLogHandler::~FileLogHandler()
     {
-      if (_file != NULL)
-        fclose(_file);
+      if (_private->_file != NULL)
+        fclose(_private->_file);
     }
 
-    void FileLogHandler::cutCat(const char* category, char* res)
+    void PrivateFileLogHandler::cutCat(const char* category, char* res)
     {
       int categorySize = strlen(category);
       if (categorySize < CATSIZEMAX)
@@ -71,7 +83,7 @@ namespace qi {
                              const char              *fct,
                              const int               line)
     {
-      if (verb > qi::log::getVerbosity() || _file == NULL)
+      if (verb > qi::log::getVerbosity() || _private->_file == NULL)
       {
         return;
       }
@@ -80,16 +92,17 @@ namespace qi {
         const char* head = logLevelToString(verb);
         char fixedCategory[CATSIZEMAX + 1];
         fixedCategory[CATSIZEMAX] = '\0';
-        cutCat(category, fixedCategory);
+        _private->cutCat(category, fixedCategory);
         if (qi::log::getContext())
         {
-          fprintf(_file, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
+          fprintf(_private->_file, "%s %s: %s(%d) %s %s",
+                  head, fixedCategory, file, line, fct, msg);
         }
         else
         {
-          fprintf(_file,"%s %s: %s", head, fixedCategory, msg);
+          fprintf(_private->_file,"%s %s: %s", head, fixedCategory, msg);
         }
-        fflush(_file);
+        fflush(_private->_file);
       }
     }
   }

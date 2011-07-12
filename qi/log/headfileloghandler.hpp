@@ -13,10 +13,13 @@
 
 namespace qi {
   namespace log {
+    class PrivateHeadFileLogHandler;
+
     class QI_API HeadFileLogHandler : qi::noncopyable
     {
     public:
-      HeadFileLogHandler(const std::string& filePath, int length = 2000);
+      HeadFileLogHandler(const std::string &filePath,
+                         int length = 2000);
       virtual ~HeadFileLogHandler();
 
       void log(const qi::log::LogLevel verb,
@@ -25,14 +28,11 @@ namespace qi {
                const char              *file,
                const char              *fct,
                const int               line);
+
     private:
-      void cutCat(const char* category, char* res);
       HeadFileLogHandler() {};
 
-      FILE* _file;
-      int   _count;
-      int   _max;
-
+      PrivateHeadFileLogHandler* _private;
     }; // !HeadFileLogHandler
   }; // !log
 }; // !qi

@@ -18,11 +18,24 @@
 
 namespace qi {
   namespace log {
-    HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath, int length)
+
+    class PrivateHeadFileLogHandler
     {
-      _max = length;
-      _file = NULL;
-      _count = _max + 1;
+    public:
+      void cutCat(const char* category, char* res);
+
+      FILE* _file;
+      int   _count;
+      int   _max;
+    };
+
+    HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath,
+                                           int length)
+      : _private(new PrivateHeadFileLogHandler)
+    {
+      _private->_max = length;
+      _private->_file = NULL;
+      _private->_count = _private->_max + 1;
 
       boost::filesystem::path fPath(filePath);
       // Create the directory!
@@ -38,25 +51,26 @@ namespace qi {
       // Open the file.
       FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
 
-      if(file)
+      if (file)
       {
-        _file = file;
-        _count = 0;
+        _private->_file = file;
+        _private->_count = 0;
       }
       else
       {
-        qiLogWarning("qi.log.headfileloghandler") << "Cannot open " << filePath << std::endl;
+        qiLogWarning("qi.log.headfileloghandler") << "Cannot open "
+                                                  << filePath << std::endl;
       }
     }
 
 
     HeadFileLogHandler::~HeadFileLogHandler()
     {
-      if (_file != NULL)
-        fclose(_file);
+      if (_private->_file != NULL)
+        fclose(_private->_file);
     }
 
-    void HeadFileLogHandler::cutCat(const char* category, char* res)
+    void PrivateHeadFileLogHandler::cutCat(const char* category, char* res)
     {
       int categorySize = strlen(category);
       if (categorySize < CATSIZEMAX)
@@ -80,9 +94,9 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-      if (_count < _max)
+      if (_private->_count < _private->_max)
       {
-        if (verb > qi::log::getVerbosity() || _file == NULL)
+        if (verb > qi::log::getVerbosity() || _private->_file == NULL)
         {
           return;
         }
@@ -91,23 +105,24 @@ namespace qi {
           const char* head = logLevelToString(verb);
           char fixedCategory[CATSIZEMAX + 1];
           fixedCategory[CATSIZEMAX] = '\0';
-          cutCat(category, fixedCategory);
+          _private->cutCat(category, fixedCategory);
           if (qi::log::getContext())
           {
-            fprintf(_file, "%s %s: %s(%d) %s %s", head, fixedCategory, file, line, fct, msg);
+            fprintf(_private->_file, "%s %s: %s(%d) %s %s",
+                    head, fixedCategory, file, line, fct, msg);
           }
           else
           {
-            fprintf(_file,"%s %s: %s", head, fixedCategory, msg);
+            fprintf(_private->_file,"%s %s: %s", head, fixedCategory, msg);
           }
         }
-        _count++;
-        fflush(_file);
+        _private->_count++;
+        fflush(_private->_file);
       }
-      else if (_file != NULL)
+      else if (_private->_file != NULL)
       {
-        fclose(_file);
-        _file = NULL;
+        fclose(_private->_file);
+        _private->_file = NULL;
       }
     }
   }

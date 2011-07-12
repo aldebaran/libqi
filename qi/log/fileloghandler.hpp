@@ -13,6 +13,8 @@
 
 namespace qi {
   namespace log {
+    class PrivateFileLogHandler;
+
     class QI_API FileLogHandler : qi::noncopyable
     {
     public:
@@ -27,10 +29,9 @@ namespace qi {
                const int               line);
 
     private:
-      void cutCat(const char* category, char* res);
       FileLogHandler() {};
 
-      FILE* _file;
+      PrivateFileLogHandler* _private;
     }; // !FileLogHandler
   }; // !log
 }; // !qi
