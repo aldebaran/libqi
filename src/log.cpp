@@ -317,7 +317,7 @@ namespace qi {
       return _glContext;
     };
 
-    void setSyncLog(bool sync)
+    void setSynchronousLog(bool sync)
     {
       _glSyncLog = sync;
     };

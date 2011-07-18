@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     qi::log::setContext(true);
 
   if (vm.count("synchronous-log"))
-    qi::log::setSyncLog(true);
+    qi::log::setSynchronousLog(true);
 
   qiLogFatal("core.log.example.1", "%d\n", 41);
   qiLogError("core.log.example.1", "%d\n", 42);

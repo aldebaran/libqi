@@ -202,7 +202,7 @@ namespace qi {
      *
      * @param sync Value to set context.
      */
-    QI_API void setSyncLog(bool sync);
+    QI_API void setSynchronousLog(bool sync);
 
 
 
