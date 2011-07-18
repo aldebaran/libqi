@@ -86,7 +86,7 @@ namespace qi {
      *  \warning Not implement for windows.
      *  \return -1 on error, 1 if the program is currently being debugged, 0 otherwize.
      */
-    QI_API int check_debugger();
+    QI_API int checkdbg();
 
     /** \brief Sleep for the specified number of seconds.
      *
