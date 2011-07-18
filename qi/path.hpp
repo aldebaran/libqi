@@ -21,7 +21,7 @@
  *  @namespace qi::path
  *  @brief Set of tools to handle SDK layouts.
  *
- * \warning Every string MUST be encoded in UTF8 and return UTF-8.
+ * \warning Every string MUST be encoded in UTF8. Every returned string are encoded in UTF-8.
  *
  */
 namespace qi
