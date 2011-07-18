@@ -34,31 +34,35 @@ namespace qi
      */
     QI_API std::string getSdkPrefix();
 
-    /**
-     * \brief Return the SDK prefixes list.
-     * It's always complete, native paths.
-     */
-    QI_API std::vector<std::string> getSdkPrefixes();
+    // not thread-safe, must be kept internal
+    namespace detail {
 
-    /** \brief Add a new SDK prefix to the list of searchable prefixes.
-     *
-     * A default SDK prefix is computed using argc, argv when calling
-     * qi::init().
-     *
-     * After calling this function, the new SDK prefix will be taken
-     * into account by the other methods.
-     * \param prefix The new prefix to add (in UTF-8).
-     */
-    QI_API void addOptionalSdkPrefix(const char* prefix);
+      /**
+       * \brief Return the SDK prefixes list.
+       * It's always complete, native paths.
+       */
+      QI_API std::vector<std::string> getSdkPrefixes();
 
-    /** \brief Reset the list of additional SDK prefixes.
-     *
-     * Reset all the SDK added with qi::path::addOptionalSdkPrefix.
-     * The list of SDK prefixes will only contain the default SDK
-     * prefix.
-     */
-    QI_API void clearOptionalSdkPrefix();
+      /** \brief Add a new SDK prefix to the list of searchable prefixes.
+       *
+       * A default SDK prefix is computed using argc, argv when calling
+       * qi::init().
+       *
+       * After calling this function, the new SDK prefix will be taken
+       * into account by the other methods.
+       * \param prefix The new prefix to add (in UTF-8).
+       */
+      QI_API void addOptionalSdkPrefix(const char* prefix);
 
+      /** \brief Reset the list of additional SDK prefixes.
+       *
+       * Reset all the SDK added with qi::path::addOptionalSdkPrefix.
+       * The list of SDK prefixes will only contain the default SDK
+       * prefix.
+       */
+      QI_API void clearOptionalSdkPrefix();
+
+    }
 
 
     /** \brief Look for a binary.
