@@ -27,7 +27,7 @@
 namespace qi {
   namespace os {
 
-    int check_debugger()
+    int checkdbg()
     {
       int pid = fork();
       int status;
