@@ -38,18 +38,6 @@
 #  define QI_IMPORT_API
 #endif
 
-// qi_EXPORTS controls which symbols are exported when libqi
-// is compiled as a SHARED lib.
-// DO NOT USE OUTSIDE LIBQI
-#ifdef qi_EXPORTS
-# define QI_API QI_EXPORT_API
-#elif defined(qi_IMPORTS)
-# define QI_API QI_IMPORT_API
-#else
-# define QI_API
-#endif
-
-
 // Macros adapted from opencv2.2
 #if defined(_MSC_VER)
   #define QI_DO_PRAGMA(x) __pragma(x)

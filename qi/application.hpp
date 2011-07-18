@@ -14,7 +14,7 @@
 #ifndef _QI_APPLICATION_HPP_
 #define _QI_APPLICATION_HPP_
 
-# include <qi/api.hpp>
+# include <qi/config.hpp>
 
 /**
  *  @namespace qi

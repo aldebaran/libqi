@@ -15,7 +15,7 @@
 #define _QI_OS_HPP_
 
 # include <string>
-# include <qi/api.hpp>
+# include <qi/config.hpp>
 
 struct stat;
 

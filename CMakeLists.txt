@@ -21,7 +21,8 @@ else()
   message(STATUS "UTF8: Using embedded fallback implementation")
 endif()
 
-set(H qi/os.hpp
+set(H qi/config.hpp
+      qi/os.hpp
       qi/api.hpp
       qi/path.hpp
       qi/path/sdklayout.hpp

@@ -14,7 +14,7 @@
 # define   	LOCALE_HPP_
 
 #include <locale>
-#include <qi/api.hpp>
+#include <qi/config.hpp>
 
 namespace qi {
 

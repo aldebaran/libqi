@@ -25,7 +25,7 @@
 
 #include <boost/function/function_fwd.hpp>
 
-#include <qi/api.hpp>
+#include <qi/config.hpp>
 
 
 /**
