@@ -21,24 +21,28 @@ namespace qi
     }
 
 
-    void addOptionalSdkPrefix(const char *prefix)
-    {
-      return getInstance()->addOptionalSdkPrefix(prefix);
-    }
+    namespace detail {
 
-    void clearOptionalSdkPrefix()
-    {
-      return getInstance()->clearOptionalSdkPrefix();
+      void addOptionalSdkPrefix(const char *prefix)
+      {
+        return getInstance()->addOptionalSdkPrefix(prefix);
+      }
+
+      void clearOptionalSdkPrefix()
+      {
+        return getInstance()->clearOptionalSdkPrefix();
+      }
+
+
+      std::vector<std::string> getSdkPrefixes()
+      {
+        return getInstance()->getSdkPrefixes();
+      }
     }
 
     std::string getSdkPrefix()
     {
       return getInstance()->getSdkPrefix();
-    }
-
-    std::vector<std::string> getSdkPrefixes()
-    {
-      return getInstance()->getSdkPrefixes();
     }
 
     std::string findBinary(const std::string &name)
