@@ -11,7 +11,7 @@ if (EFFECTIVE_CPP)
 endif()
 
 enable_testing()
-find_package(BOOST_LOCALE QUIET)
+#find_package(BOOST_LOCALE QUIET)
 include(CMakeDependentOption)
 cmake_dependent_option(WITH_BOOST_LOCALE "Use boost.locale to have an utf-8 locale" ON "BOOST_LOCALE_PACKAGE_FOUND" OFF)
 
