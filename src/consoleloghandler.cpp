@@ -6,6 +6,7 @@
  *  Copyright (C) 2010, 2011 Aldebaran Robotics
  */
 
+#include <sstream>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -195,12 +196,13 @@ namespace qi {
       res[CATSIZEMAX] = '\0';
     }
 
-    void ConsoleLogHandler::log(const LogLevel    verb,
-                                const char       *category,
-                                const char       *msg,
-                                const char       *file,
-                                const char       *fct,
-                                const int         line)
+    void ConsoleLogHandler::log(const LogLevel        verb,
+                                const qi::os::timeval date,
+                                const char            *category,
+                                const char            *msg,
+                                const char            *file,
+                                const char            *fct,
+                                const int             line)
     {
       if (verb > qi::log::getVerbosity())
       {
@@ -216,10 +218,36 @@ namespace qi {
         _private->textColorAttr(_private->reset);
         _private->textColor(_private->gray);
 #endif
-        printf("%s: ", fixedCategory);
-        if (qi::log::getContext())
+
+        std::stringstream ss;
+        ss << date.tv_sec << "." << date.tv_usec;
+
+        int ctx = qi::log::getContext();
+        switch (ctx)
         {
-          printf("%s(%d) %s ", file, line, fct);
+        case 1:
+          printf("%s: ", fixedCategory);
+          break;
+        case 2:
+          printf("%s ", ss.str().c_str());
+          break;
+        case 3:
+          printf("%s(%d) ", file, line);
+          break;
+        case 4:
+          printf("%s %s: ", ss.str().c_str(), fixedCategory);
+          break;
+        case 5:
+          printf("%s %s(%d) ", ss.str().c_str(), file, line);
+          break;
+        case 6:
+          printf("%s: %s(%d) ", fixedCategory, file, line);
+          break;
+        case 7:
+          printf("%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
+          break;
+        default:
+          break;
         }
         printf("%s", msg);
         fflush (stdout);

@@ -26,7 +26,7 @@
 #include <boost/function/function_fwd.hpp>
 
 #include <qi/config.hpp>
-
+#include <qi/os.hpp>
 
 /**
  * \def qiLogDebug
@@ -113,10 +113,11 @@ namespace qi {
     /**
      * \typedef logFuncHandler
      * \brief Boost delegate to log function (verb, category,
-     *        message, file, function, line).
+     *        message, file, function, line, date).
      */
-    typedef boost::function6<void,
+    typedef boost::function7<void,
                              const qi::log::LogLevel,
+                             const qi::os::timeval,
                              const char*,
                              const char*,
                              const char*,

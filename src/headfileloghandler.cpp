@@ -9,6 +9,8 @@
 #include <boost/function.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
+
+#include <sstream>
 #include <string>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
@@ -18,7 +20,6 @@
 
 namespace qi {
   namespace log {
-
     class PrivateHeadFileLogHandler
     {
     public:
@@ -88,6 +89,7 @@ namespace qi {
 
 
     void HeadFileLogHandler::log(const qi::log::LogLevel verb,
+                                 const qi::os::timeval   date,
                                  const char              *category,
                                  const char              *msg,
                                  const char              *file,
@@ -106,18 +108,42 @@ namespace qi {
           char fixedCategory[CATSIZEMAX + 1];
           fixedCategory[CATSIZEMAX] = '\0';
           _private->cutCat(category, fixedCategory);
-          if (qi::log::getContext())
+
+          std::stringstream ss;
+          ss << date.tv_sec << "." << date.tv_usec;
+
+          int ctx = qi::log::getContext();
+          switch (ctx)
           {
-            fprintf(_private->_file, "%s %s: %s(%d) %s %s",
-                    head, fixedCategory, file, line, fct, msg);
+          case 1:
+            fprintf(_private->_file, "%s: ", fixedCategory);
+            break;
+          case 2:
+            fprintf(_private->_file, "%s ", ss.str().c_str());
+            break;
+          case 3:
+            fprintf(_private->_file, "%s(%d) ", file, line);
+            break;
+          case 4:
+            fprintf(_private->_file, "%s %s: ", ss.str().c_str(), fixedCategory);
+            break;
+          case 5:
+            fprintf(_private->_file, "%s %s(%d) ", ss.str().c_str(), file, line);
+            break;
+          case 6:
+            fprintf(_private->_file, "%s: %s(%d) ", fixedCategory, file, line);
+            break;
+          case 7:
+            fprintf(_private->_file, "%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
+            break;
+          default:
+            break;
           }
-          else
-          {
-            fprintf(_private->_file,"%s %s: %s", head, fixedCategory, msg);
-          }
+          fprintf(_private->_file,"%s", msg);
+          _private->_count++;
+
+          fflush(_private->_file);
         }
-        _private->_count++;
-        fflush(_private->_file);
       }
       else if (_private->_file != NULL)
       {

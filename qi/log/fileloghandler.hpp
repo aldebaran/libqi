@@ -22,6 +22,7 @@ namespace qi {
       virtual ~FileLogHandler();
 
       void log(const qi::log::LogLevel verb,
+               const qi::os::timeval   date,
                const char              *category,
                const char              *msg,
                const char              *file,

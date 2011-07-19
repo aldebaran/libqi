@@ -30,17 +30,18 @@
 namespace qi {
   namespace log {
     static LogLevel _glVerbosity = qi::log::info;
-    static bool _glContext = false;
-    static bool _glSyncLog = false;
+    static int      _glContext = false;
+    static bool     _glSyncLog = false;
 
     typedef struct sPrivateLog
     {
-      LogLevel _logLevel;
-      char     _category[CAT_SIZE];
-      char     _file[FILE_SIZE];
-      char     _function[FUNC_SIZE];
-      int      _line;
-      char     _log[LOG_SIZE];
+      LogLevel        _logLevel;
+      char            _category[CAT_SIZE];
+      char            _file[FILE_SIZE];
+      char            _function[FUNC_SIZE];
+      int             _line;
+      char            _log[LOG_SIZE];
+      qi::os::timeval _date;
     } privateLog;
 
     static privateLog             rtLogBuffer[RTLOG_BUFFERS];
@@ -81,6 +82,7 @@ namespace qi {
                it != logHandlers.end(); ++it)
           {
             (*it).second(pl->_logLevel,
+                         pl->_date,
                          pl->_category,
                          pl->_log,
                          pl->_file,
@@ -169,12 +171,12 @@ namespace qi {
      #endif
     }
 
-    void log(const LogLevel    verb,
-             const char       *category,
-             const char       *msg,
-             const char       *file,
-             const char       *fct,
-             const int         line)
+    void log(const LogLevel        verb,
+             const char           *category,
+             const char           *msg,
+             const char           *file,
+             const char           *fct,
+             const int             line)
 
     {
       if (!rtLogInstance.rtLogInit)
@@ -183,8 +185,13 @@ namespace qi {
       int tmpRtLogPush = ++rtLogPush % RTLOG_BUFFERS;
       privateLog* pl = &(rtLogBuffer[tmpRtLogPush]);
 
+      qi::os::timeval tv;
+      qi::os::gettimeofday(&tv);
+
       pl->_logLevel = verb;
       pl->_line = line;
+      pl->_date.tv_sec = tv.tv_sec;
+      pl->_date.tv_usec = tv.tv_usec;
 
       my_strcpy(pl->_category, category, CAT_SIZE);
       my_strcpy(pl->_file, file, FILE_SIZE);
@@ -200,6 +207,7 @@ namespace qi {
                it != rtLogInstance.logHandlers.end(); ++it)
           {
             (*it).second(pl->_logLevel,
+                         pl->_date,
                          pl->_category,
                          pl->_log,
                          pl->_file,
@@ -215,14 +223,15 @@ namespace qi {
       }
     }
 
-    void consoleLogHandler(const LogLevel    verb,
-                           const char       *category,
-                           const char       *msg,
-                           const char       *file,
-                           const char       *fct,
-                           const int         line)
+    void consoleLogHandler(const LogLevel        verb,
+                           const qi::os::timeval date,
+                           const char            *category,
+                           const char            *msg,
+                           const char            *file,
+                           const char            *fct,
+                           const int             line)
     {
-      gConsoleLogHandler.log(verb, category, msg, file, fct, line);
+      gConsoleLogHandler.log(verb, date, category, msg, file, fct, line);
     }
 
 

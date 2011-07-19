@@ -27,12 +27,13 @@ namespace qi {
     public:
       ConsoleLogHandler();
 
-      void log(const LogLevel    verb,
-               const char       *category,
-               const char       *msg,
-               const char       *file,
-               const char       *fct,
-               const int         line);
+      void log(const qi::log::LogLevel verb,
+               const qi::os::timeval   date,
+               const char              *category,
+               const char              *msg,
+               const char              *file,
+               const char              *fct,
+               const int               line);
 
 
     protected:
