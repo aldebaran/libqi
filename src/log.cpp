@@ -302,17 +302,17 @@ namespace qi {
       return _glVerbosity;
     };
 
-    void setContext(bool ctx)
+    void setContext(int ctx)
     {
       const char *context = std::getenv("CONTEXT");
 
       if (context)
-        _glContext = (atoi(context) > 0 ? true : false);
+        _glContext = (atoi(context));
       else
         _glContext = ctx;
     };
 
-    bool getContext()
+    int getContext()
     {
       return _glContext;
     };

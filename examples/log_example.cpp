@@ -16,7 +16,7 @@ int main(int argc, char **argv)
           ("verbose,v", "Set verbose verbosity.")
           ("debug,d", "Set debug verbosity.")
           ("quiet,q", "Do not show logs on console.")
-          ("context,c", "Show context logs (e.g. line, file, function).")
+          ("context,c", po::value<int>(), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
           ("synchronous-log", "Activate synchronous logs.")
           ("log-level,L", po::value<int>(&globalVerbosity)->default_value(4), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
     ;
@@ -69,7 +69,22 @@ int main(int argc, char **argv)
     qi::log::setVerbosity(qi::log::verbose);
 
   if (vm.count("context"))
-    qi::log::setContext(true);
+  {
+    int globalContext = vm["context"].as<int>();
+
+    if (globalContext < 0)
+    {
+      qi::log::setContext(0);
+    }
+    else if (globalContext > 7)
+    {
+      qi::log::setContext(7);
+    }
+    else
+    {
+      qi::log::setContext(globalContext);
+    }
+  }
 
   if (vm.count("synchronous-log"))
     qi::log::setSynchronousLog(true);

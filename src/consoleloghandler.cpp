@@ -166,15 +166,7 @@ namespace qi {
     ConsoleLogHandler::ConsoleLogHandler()
       : _private(new PrivateConsoleLogHandler)
     {
-      const char *verbose = std::getenv("VERBOSE");
-      const char *context = std::getenv("CONTEXT");
       const char *color   = std::getenv("CLICOLOR");
-
-
-      if (verbose)
-        qi::log::setVerbosity((LogLevel)atoi(verbose));
-      if (context)
-        qi::log::setContext(atoi(context) > 0 ? true: false);
 
 #ifdef _WIN32
       _private->_winScreenHandle = GetStdHandle(STD_OUTPUT_HANDLE);

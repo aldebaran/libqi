@@ -187,14 +187,18 @@ namespace qi {
      * Display log context (line, function, file).
      *
      * @param ctx Value to set context.
+     *            0: none, 1: categories, 2: date, 3: file+line,
+     *            4: date+categories, 5: date+line+file,
+     *            6: categories+line+file,
+     *            7: all (date+categories+line+file+function)
      */
-    QI_API void setContext(bool ctx);
+    QI_API void setContext(int ctx);
 
     /**
      * \brief Get log context.
      * @return true if active, false otherwise.
      */
-    QI_API bool getContext();
+    QI_API int getContext();
 
 
     /**
