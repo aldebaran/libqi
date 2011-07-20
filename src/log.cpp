@@ -21,7 +21,6 @@
 
 #define RTLOG_BUFFERS (128)
 
-
 #define CAT_SIZE 64
 #define FILE_SIZE 128
 #define FUNC_SIZE 64
@@ -29,9 +28,6 @@
 
 namespace qi {
   namespace log {
-    static LogLevel _glVerbosity = qi::log::info;
-    static int      _glContext = false;
-    static bool     _glSyncLog = false;
 
     typedef struct sPrivateLog
     {
@@ -44,12 +40,7 @@ namespace qi {
       qi::os::timeval _date;
     } privateLog;
 
-    static privateLog             rtLogBuffer[RTLOG_BUFFERS];
-    static volatile unsigned long rtLogPush = 0;
-
-    static ConsoleLogHandler gConsoleLogHandler;
-
-    static class rtLog
+    class rtLog
     {
     public:
       inline rtLog();
@@ -62,11 +53,40 @@ namespace qi {
       bool                       rtLogInit;
       boost::thread              rtLogThread;
       boost::mutex               rtLogWriteLock;
+      boost::mutex               rtLogHandlerLock;
       boost::condition_variable  rtLogReadyCond;
 
       boost::lockfree::fifo<privateLog*>     logs;
       std::map<std::string, logFuncHandler > logHandlers;
-    } rtLogInstance;
+    };
+
+    static LogLevel               _glVerbosity = qi::log::info;
+    static int                    _glContext = false;
+    static bool                   _glSyncLog = false;
+    static ConsoleLogHandler      *_glConsoleLogHandler;
+
+    static rtLog                  *rtLogInstance;
+    static privateLog             rtLogBuffer[RTLOG_BUFFERS];
+    static volatile unsigned long rtLogPush = 0;
+
+
+    static class LogGlobalInit
+    {
+    public:
+      inline LogGlobalInit()
+      {
+        _glConsoleLogHandler = new ConsoleLogHandler;
+        rtLogInstance = new rtLog;
+        addLogHandler(boost::bind(&ConsoleLogHandler::log, _glConsoleLogHandler, _1, _2, _3, _4, _5, _6, _7), "consoleloghandler");
+      }
+
+      inline ~LogGlobalInit() {
+        delete rtLogInstance;
+        delete _glConsoleLogHandler;
+      };
+
+    } gLogHandlerInit;
+
 
 
     void rtLog::printLog()
@@ -74,7 +94,7 @@ namespace qi {
       privateLog* pl;
       while (logs.dequeue(&pl))
       {
-        boost::mutex::scoped_lock lock(rtLogWriteLock);
+        boost::mutex::scoped_lock lock(rtLogHandlerLock);
         if (!logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
@@ -109,7 +129,7 @@ namespace qi {
     inline rtLog::rtLog()
     {
       rtLogInit = true;
-      rtLogThread = boost::thread(&rtLog::run, &rtLogInstance);
+      rtLogThread = boost::thread(&rtLog::run, this);
     };
 
     inline rtLog::~rtLog()
@@ -122,7 +142,12 @@ namespace qi {
       rtLogThread.interrupt();
       rtLogThread.join();
 
+#ifndef _WIN32
+      // Windows does not allow to print something on standard output
+      // after the main thread is kill (after an exit for exemple)
+      // so we do not show the log remain in the fifo (we lost them).
       printLog();
+#endif
     }
 
     static void my_strcpy_log(char *dst, const char *src, int len) {
@@ -179,7 +204,7 @@ namespace qi {
              const int             line)
 
     {
-      if (!rtLogInstance.rtLogInit)
+      if (!rtLogInstance->rtLogInit)
         return;
 
       int tmpRtLogPush = ++rtLogPush % RTLOG_BUFFERS;
@@ -200,11 +225,11 @@ namespace qi {
 
       if (_glSyncLog)
       {
-        if (!rtLogInstance.logHandlers.empty())
+        if (!rtLogInstance->logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
-          for (it = rtLogInstance.logHandlers.begin();
-               it != rtLogInstance.logHandlers.end(); ++it)
+          for (it = rtLogInstance->logHandlers.begin();
+               it != rtLogInstance->logHandlers.end(); ++it)
           {
             (*it).second(pl->_logLevel,
                          pl->_date,
@@ -218,48 +243,21 @@ namespace qi {
       }
       else
       {
-        rtLogInstance.logs.enqueue(pl);
-        rtLogInstance.rtLogReadyCond.notify_one();
+        rtLogInstance->logs.enqueue(pl);
+        rtLogInstance->rtLogReadyCond.notify_one();
       }
     }
-
-    void consoleLogHandler(const LogLevel        verb,
-                           const qi::os::timeval date,
-                           const char            *category,
-                           const char            *msg,
-                           const char            *file,
-                           const char            *fct,
-                           const int             line)
-    {
-      gConsoleLogHandler.log(verb, date, category, msg, file, fct, line);
-    }
-
-
-
-    static class LogHandlerInit
-    {
-    public:
-      LogHandlerInit()
-      {
-        addLogHandler(consoleLogHandler, "consoleloghandler");
-      }
-    } gLogHandlerInit;
-
 
     void addLogHandler(logFuncHandler fct, const std::string& name)
     {
-      {
-        boost::mutex::scoped_lock l(rtLogInstance.rtLogWriteLock);
-        rtLogInstance.logHandlers[name] = fct;
-      }
+      boost::mutex::scoped_lock l(rtLogInstance->rtLogHandlerLock);
+      rtLogInstance->logHandlers[name] = fct;
     }
 
     void removeLogHandler(const std::string& name)
     {
-      {
-        boost::mutex::scoped_lock l(rtLogInstance.rtLogWriteLock);
-        rtLogInstance.logHandlers.erase(name);
-      }
+      boost::mutex::scoped_lock l(rtLogInstance->rtLogHandlerLock);
+      rtLogInstance->logHandlers.erase(name);
     }
 
     const LogLevel stringToLogLevel(const char* verb)
