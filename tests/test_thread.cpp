@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 
+#include <qi/os.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 
@@ -15,7 +16,7 @@ public:
     while (_glInit)
     {
       printTest();
-      sleep(1);
+      qi::os::sleep(1);
     }
 
     std::cout << "Stop running" << std::endl;
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
   std::cout << "Entering main function" << std::endl;
   fflush(stdout);
 
-  sleep(5);
+  qi::os::sleep(5);
 
   std::cout << "Leaving main function" << std::endl;
   fflush(stdout);
