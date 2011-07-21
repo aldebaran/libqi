@@ -18,19 +18,11 @@ namespace qi {
   //this is initialized once.. and will be reported to leak memory.
   //but that okay for a global to be freed by the program termination
   static const detail::utf8_codecvt_facet *gUtf8CodecvtFacet = new detail::utf8_codecvt_facet();
-  static const std::locale        gLocale(std::locale(), gUtf8CodecvtFacet);
 
-  static const std::codecvt<wchar_t, char, std::mbstate_t>& gUtf8Facet = \
-    std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> > (gLocale);
-
-  const std::locale                                 &utf8locale()
+  const codecvt_type &unicodeFacet()
   {
-    return gLocale;
-  }
-
-  const std::codecvt<wchar_t, char, std::mbstate_t> &utf8facet()
-  {
-    return gUtf8Facet;
+    const codecvt_type *ret = gUtf8CodecvtFacet;
+    return *ret;
   }
 
 }

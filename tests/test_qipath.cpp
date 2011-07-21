@@ -38,26 +38,26 @@ boost::filesystem::path normalize(boost::filesystem::path path1,
 
 std::string normalizePath(const std::string& path)
 {
-  boost::filesystem::path p(path, qi::utf8facet());
+  boost::filesystem::path p(path, qi::unicodeFacet());
 
   p = std::accumulate(p.begin(), p.end(), boost::filesystem::path(), normalize);
 
-  return p.make_preferred().string(qi::utf8facet());
+  return p.make_preferred().string(qi::unicodeFacet());
 }
 
 boost::filesystem::path getHomePath()
 {
-  std::string p = bfs::absolute(qi::os::home()).string(qi::utf8facet());
+  std::string p = bfs::absolute(qi::os::home()).string(qi::unicodeFacet());
   boost::to_lower(p);
-  return bfs::path(p, qi::utf8facet());
+  return bfs::path(p, qi::unicodeFacet());
 }
 
 TEST(qiPath, callingInit)
 {
-  bfs::path expected(normalizePath(absPath(std::string(::testing::internal::GetArgvs()[0])).string(qi::utf8facet())), qi::utf8facet());
+  bfs::path expected(normalizePath(absPath(std::string(::testing::internal::GetArgvs()[0])).string(qi::unicodeFacet())), qi::unicodeFacet());
   expected = expected.parent_path().parent_path();
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::path::sdkPrefix());
+  ASSERT_EQ(expected.string(qi::unicodeFacet()), qi::path::sdkPrefix());
 }
 
 TEST(qiPath, callingInit2)
@@ -65,7 +65,7 @@ TEST(qiPath, callingInit2)
   const char *pgm = "build/sdk";
   bfs::path expected(absPath("build/sdk"));
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout(pgm).sdkPrefix());
+  ASSERT_EQ(expected.string(qi::unicodeFacet()), qi::SDKLayout(pgm).sdkPrefix());
 }
 
 #ifdef __linux__
@@ -73,7 +73,7 @@ TEST(qiPath, callingInit3)
 {
   bfs::path expected(absPath("build/sdk"));
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout("build/sdk").sdkPrefix());
+  ASSERT_EQ(expected.string(qi::unicodeFacet()), qi::SDKLayout("build/sdk").sdkPrefix());
 }
 #endif
 
@@ -89,8 +89,8 @@ TEST(qiPath, AddPrefixesPath)
   std::vector<std::string> expected;
 
   expected.push_back(sdkl.sdkPrefix());
-  expected.push_back(absPath("build/sdk").string(qi::utf8facet()));
-  expected.push_back(absPath("debug").string(qi::utf8facet()));
+  expected.push_back(absPath("build/sdk").string(qi::unicodeFacet()));
+  expected.push_back(absPath("debug").string(qi::unicodeFacet()));
 
   ASSERT_TRUE(expected == prefixes);
 }
@@ -106,8 +106,8 @@ TEST(qiPath, ClearPrefixesPath)
   std::vector<std::string> expected;
 
   expected.push_back(sdkl.sdkPrefix());
-  expected.push_back(absPath("build/sdk").string(qi::utf8facet()));
-  expected.push_back(absPath("debug").string(qi::utf8facet()));
+  expected.push_back(absPath("build/sdk").string(qi::unicodeFacet()));
+  expected.push_back(absPath("debug").string(qi::unicodeFacet()));
 
   ASSERT_TRUE(expected == prefixes);
 
@@ -124,7 +124,7 @@ TEST(qiPath, FindBin)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
 
-  bfs::path expected(sdkl.sdkPrefix(), qi::utf8facet());
+  bfs::path expected(sdkl.sdkPrefix(), qi::unicodeFacet());
   std::string exp;
 
   expected = expected / "bin/test_qipath";
@@ -133,7 +133,7 @@ TEST(qiPath, FindBin)
   std::string binPath1 = sdkl.findBin("test_qipath");
   std::string binPath2 = sdkl.findBin("qithatreallydoesnotexistsplease");
 
-  exp = expected.string(qi::utf8facet());
+  exp = expected.string(qi::unicodeFacet());
   boost::to_lower(exp);
   boost::to_lower(binPath1);
   boost::to_lower(binPath2);
@@ -147,7 +147,7 @@ TEST(qiPath, FindBin)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
 
-//   bfs::path expected(sdkl.sdkPrefix(), qi::utf8facet());
+//   bfs::path expected(sdkl.sdkPrefix(), qi::unicodeFacet());
 //   std::string exp;
 
 // #ifdef REALLY_MSVC
@@ -155,7 +155,7 @@ TEST(qiPath, FindBin)
 //   expected = expected.make_preferred();
 //   std::string binPath1 = sdkl.findBin("test_qipath");
 //   std::string binPath2 = sdkl.findBin("qi");
-//   exp = expected.string(qi::utf8facet());
+//   exp = expected.string(qi::unicodeFacet());
 //   boost::to_lower(exp);
 //   boost::to_lower(binPath1);
 //   boost::to_lower(binPath2);
@@ -181,7 +181,7 @@ TEST(qiPath, FindBin)
 //   std::string binPath2 = sdkl.findBin("qi");
 // #endif
 
-//   exp = expected.string(qi::utf8facet());
+//   exp = expected.string(qi::unicodeFacet());
 //   boost::to_lower(exp);
 //   boost::to_lower(binPath1);
 //   boost::to_lower(binPath2);
@@ -194,12 +194,12 @@ TEST(qiPath, FindBin)
 TEST(qiPath, GetLinuxBinPaths)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
-  bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl.sdkPrefix(), qi::unicodeFacet());
 
   std::vector<std::string> expected;
   std::vector<std::string> binPaths = sdkl.binPaths();
 
-  expected.push_back((prefix / "bin").make_preferred().string(qi::utf8facet()));
+  expected.push_back((prefix / "bin").make_preferred().string(qi::unicodeFacet()));
 
   ASSERT_TRUE(expected == binPaths);
 }
@@ -207,12 +207,12 @@ TEST(qiPath, GetLinuxBinPaths)
 TEST(qiPath, GetLinuxlibPaths)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
-  bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl.sdkPrefix(), qi::unicodeFacet());
 
   std::vector<std::string> expected;
   std::vector<std::string> binPaths = sdkl.libPaths();
 
-  expected.push_back((prefix / "lib").make_preferred().string(qi::utf8facet()));
+  expected.push_back((prefix / "lib").make_preferred().string(qi::unicodeFacet()));
 
   ASSERT_TRUE(expected == binPaths);
 }
@@ -220,13 +220,13 @@ TEST(qiPath, GetLinuxlibPaths)
 // TEST(qiPath, GetVisualBinPaths)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
-//   bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
+//   bfs::path prefix(sdkl.sdkPrefix(), qi::unicodeFacet());
 
 //   std::vector<std::string> expected;
 //   std::vector<std::string> binPaths = sdkl.binPaths();
 
-//   expected.push_back((prefix / "debug").make_preferred().string(qi::utf8facet()));
-//   expected.push_back((prefix / "bin").make_preferred().string(qi::utf8facet()));
+//   expected.push_back((prefix / "debug").make_preferred().string(qi::unicodeFacet()));
+//   expected.push_back((prefix / "bin").make_preferred().string(qi::unicodeFacet()));
 
 //   for (int i = 0; i < binPaths.size(); ++i)
 //   {
@@ -237,8 +237,8 @@ TEST(qiPath, GetLinuxlibPaths)
 //   if (binPaths != expected)
 //   {
 //     expected.clear();
-//     expected.push_back((prefix / "release").make_preferred().string(qi::utf8facet()));
-//     expected.push_back((prefix / "bin").make_preferred().string(qi::utf8facet()));
+//     expected.push_back((prefix / "release").make_preferred().string(qi::unicodeFacet()));
+//     expected.push_back((prefix / "bin").make_preferred().string(qi::unicodeFacet()));
 //   }
 
 //   for (int i = 0; i < binPaths.size(); ++i)
@@ -254,13 +254,13 @@ TEST(qiPath, GetLinuxlibPaths)
 // TEST(qiPath, GetVisualLibPaths)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
-//   bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
+//   bfs::path prefix(sdkl.sdkPrefix(), qi::unicodeFacet());
 
 //   std::vector<std::string> expected;
 //   std::vector<std::string> libPaths = sdkl.libPaths();
 
-//   expected.push_back((prefix / "debug").make_preferred().string(qi::utf8facet()));
-//   expected.push_back((prefix / "lib").make_preferred().string(qi::utf8facet()));
+//   expected.push_back((prefix / "debug").make_preferred().string(qi::unicodeFacet()));
+//   expected.push_back((prefix / "lib").make_preferred().string(qi::unicodeFacet()));
 //   for (int i = 0; i < libPaths.size(); ++i)
 //   {
 //     boost::to_lower(libPaths[i]);
@@ -270,8 +270,8 @@ TEST(qiPath, GetLinuxlibPaths)
 //   if (libPaths != expected)
 //   {
 //     expected.clear();
-//     expected.push_back((prefix / "release").make_preferred().string(qi::utf8facet()));
-//     expected.push_back((prefix / "lib").make_preferred().string(qi::utf8facet()));
+//     expected.push_back((prefix / "release").make_preferred().string(qi::unicodeFacet()));
+//     expected.push_back((prefix / "lib").make_preferred().string(qi::unicodeFacet()));
 //   }
 
 //   for (int i = 0; i < libPaths.size(); ++i)
@@ -291,7 +291,7 @@ TEST(qiPath, callingGetUserDataPath)
   std::string actual = qi::path::userWritableDataPath("foo", "foo.data");
   boost::to_lower(actual);
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), actual);
+  ASSERT_EQ(expected.string(qi::unicodeFacet()), actual);
 }
 
 #ifndef _WIN32
@@ -299,18 +299,18 @@ TEST(qiPath, LinuxConfigPaths)
 {
   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-  bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
+  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
   std::vector<std::string> actualPrefsPaths = sdkl->confPaths("foo");
 
   bfs::path writeablePath(getHomePath() / ".config" / "foo") ;
 
   std::vector<std::string> expectedPrefPaths;
-  expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::utf8facet()));
-  expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::utf8facet()));
-  expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::utf8facet()));
-  expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::utf8facet()));
-  expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
-  expectedPrefPaths.push_back(absPath("/etc/foo").string(qi::utf8facet()));
+  expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back(absPath("/etc/foo").string(qi::unicodeFacet()));
 
   for (int i = 0; i < actualPrefsPaths.size() || i < expectedPrefPaths.size(); ++i)
   {
@@ -321,7 +321,7 @@ TEST(qiPath, LinuxConfigPaths)
   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
   std::string actual = sdkl->userWritableConfPath("foo", "");
   boost::to_lower(actual);
-  ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
+  ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), actual);
 
   delete sdkl;
 }
@@ -330,29 +330,29 @@ TEST(qiPath, LinuxConfigPaths)
 // {
 //   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-//   bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
+//   bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
 //   std::vector<std::string> actualPrefsPaths = sdkl->confPaths("foo");
 
 //   bfs::path writeablePath(getHomePath() / ".config" / "foo") ;
 
 // #ifndef REALLY_MSVC
 //   std::vector<std::string> expectedPrefPaths;
-//   expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
+//   expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 // #else
 //   std::vector<std::string> expectedPrefPaths;
-//   expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "debug/preferences/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "debug/preferences").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "debug/etc/foo").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back((expected / "debug/etc").make_preferred().string(qi::utf8facet()));
-//   expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
+//   expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "debug/preferences/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "debug/preferences").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "debug/etc/foo").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back((expected / "debug/etc").make_preferred().string(qi::unicodeFacet()));
+//   expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 
 //   for (int i = 0; i < actualPrefsPaths.size(); ++i)
 //   {
@@ -363,15 +363,15 @@ TEST(qiPath, LinuxConfigPaths)
 //   if (expectedPrefPaths != actualPrefsPaths)
 //   {
 //     expectedPrefPaths.clear();
-//     expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "release/preferences/foo").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "release/preferences").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "release/etc/foo").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back((expected / "release/etc").make_preferred().string(qi::utf8facet()));
-//     expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
+//     expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "release/preferences/foo").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "release/preferences").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "release/etc/foo").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back((expected / "release/etc").make_preferred().string(qi::unicodeFacet()));
+//     expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 //   }
 // #endif
 
@@ -384,7 +384,7 @@ TEST(qiPath, LinuxConfigPaths)
 //   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
 //   std::string actual = sdkl->userWritableConfPath("foo", "");
 //   boost::to_lower(actual);
-//   ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
+//   ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), actual);
 
 //   delete sdkl;
 // }
@@ -397,10 +397,10 @@ TEST(qiPath, dataPaths)
   std::vector<std::string> expectedPrefPaths;
 
   bfs::path writeablePath(getHomePath() / ".local" / "share" / "foo");
-  bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
+  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
 
-  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::utf8facet()));
-  expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
+  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 
   std::vector<std::string> actualPrefsPaths = sdkl->dataPaths("foo");
 
@@ -413,7 +413,7 @@ TEST(qiPath, dataPaths)
   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
   std::string actual = sdkl->userWritableDataPath("foo", "");
   boost::to_lower(actual);
-  ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
+  ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), actual);
 
   delete sdkl;
 }
@@ -432,7 +432,7 @@ TEST(qiPath, readingWritingfindConfigs)
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
   fooCfg = sdkl->findConf("foo", "foo.cfg");
-  ASSERT_EQ(writeablePath.string(qi::utf8facet()), fooCfg);
+  ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), fooCfg);
   std::cout << "removing: " << fooCfg << std::endl;
   remove(fooCfg.c_str());
 
@@ -456,7 +456,7 @@ TEST(qiPath, readingWritingFindData)
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
   fooDat = sdkl->findData("foo", "foo.dat");
-  ASSERT_EQ(writeablePath.string(qi::utf8facet()), fooDat);
+  ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), fooDat);
   std::cout << "removing: " << fooDat << std::endl;
   remove(fooDat.c_str());
 
@@ -474,10 +474,10 @@ TEST(qiPath, dataInSubfolder)
   //const char* args = { (char *) binary.c_str() };
   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-  bfs::path prefix(sdkl->sdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl->sdkPrefix(), qi::unicodeFacet());
   bfs::path fooShare(prefix / "share" / "foo");
   boost::filesystem::create_directories(fooShare / "bar");
-  std::string bazData = (fooShare / "bar" / "baz.dat").string(qi::utf8facet());
+  std::string bazData = (fooShare / "bar" / "baz.dat").string(qi::unicodeFacet());
   std::ofstream ofs;
   ofs.open(bazData.c_str(), std::fstream::out | std::fstream::trunc);
   ofs << "This is baz data";
@@ -501,9 +501,9 @@ TEST(qiPathTests, pathUTF8)
   std::string utf8xx(utf8);
   std::wstring utf16xx(utf16);
 
-  boost::filesystem::path path(utf8xx, qi::utf8facet());
-  ASSERT_EQ(utf16xx, path.wstring(qi::utf8facet()));
-  ASSERT_EQ(utf8xx, path.string(qi::utf8facet()));
+  boost::filesystem::path path(utf8xx, qi::unicodeFacet());
+  ASSERT_EQ(utf16xx, path.wstring(qi::unicodeFacet()));
+  ASSERT_EQ(utf8xx, path.string(qi::unicodeFacet()));
 }
 
 TEST(qiPathTests, pathUTF8Too)
@@ -515,9 +515,9 @@ TEST(qiPathTests, pathUTF8Too)
   std::string utf8xx(utf8);
   std::wstring utf16xx(utf16);
 
-  boost::filesystem::path path(utf8xx, qi::utf8facet());
-  ASSERT_EQ(utf16xx, path.wstring(qi::utf8facet()));
-  ASSERT_EQ(utf8xx, path.string(qi::utf8facet()));
+  boost::filesystem::path path(utf8xx, qi::unicodeFacet());
+  ASSERT_EQ(utf16xx, path.wstring(qi::unicodeFacet()));
+  ASSERT_EQ(utf8xx, path.string(qi::unicodeFacet()));
 }
 
 TEST(qiPathTests, pathUTF16)
@@ -528,10 +528,10 @@ TEST(qiPathTests, pathUTF16)
 
   std::wstring utf16xx(utf16);
   std::string utf8xx(utf8);
-  boost::filesystem::path path(utf16xx, qi::utf8facet());
+  boost::filesystem::path path(utf16xx, qi::unicodeFacet());
 
-  ASSERT_EQ(utf16xx, path.wstring(qi::utf8facet()));
-  ASSERT_EQ(utf8xx, path.string(qi::utf8facet()));
+  ASSERT_EQ(utf16xx, path.wstring(qi::unicodeFacet()));
+  ASSERT_EQ(utf8xx, path.string(qi::unicodeFacet()));
 }
 #endif
 

@@ -18,17 +18,6 @@
 
 namespace qi {
 
-  /** \brief utf8 std::locale implementation
-   *
-   *  return an std::locale object that can be used by stl (iostream, locale, ..)
-   *  and std::locale compliant library like boost::filesystem.
-   *
-   *  this class allow convertion between utf8 and utf16.
-   *
-   *  \return utf8 implementation for std::locale
-   */
-  QI_API const std::locale                                 &utf8locale();
-
 
   /** \brief standard std::codecvt accept by STL and boost.
    * typedef for std::codecvt<wchar_t, char, std::mbstate_t>
@@ -41,11 +30,12 @@ namespace qi {
    *  return a facet object that can be used by stl (iostream, locale, ..)
    *  and std::locale compliant library like boost::filesystem.
    *
-   *  this class allow convertion between utf8 and utf16.
+   *  this class allow convertion between utf8(char) and utf16/32(wchar).
    *
    *  \return utf8 implementation for std::codecvt<wchar_t, char, std::mbstate_t>
    */
-  QI_API const codecvt_type &utf8facet();
+  QI_API const codecvt_type &unicodeFacet();
+
 }
 
 #endif	    /* !LOCALE_PP_ */

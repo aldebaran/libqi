@@ -47,14 +47,14 @@ namespace qi {
 
     void *dlopen(const char *filename, int flag) {
       void *handle = NULL;
-      boost::filesystem::path fname(libNameToFileName(filename), qi::utf8facet());
+      boost::filesystem::path fname(libNameToFileName(filename), qi::unicodeFacet());
 
      #ifdef WIN32
-      handle = LoadLibraryW(fname.wstring(qi::utf8facet()).c_str());
+      handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
      #else
       if (flag == -1)
         flag = RTLD_NOW;
-      handle = ::dlopen(fname.string(qi::utf8facet()).c_str(), flag);
+      handle = ::dlopen(fname.string(qi::unicodeFacet()).c_str(), flag);
      #endif
       return handle;
     }

@@ -29,9 +29,9 @@ namespace qi
 
     std::string normalizePath(const std::string& path)
     {
-      boost::filesystem::path p(path, qi::utf8facet());
+      boost::filesystem::path p(path, qi::unicodeFacet());
       p = std::accumulate(p.begin(), p.end(), boost::filesystem::path(), normalize);
-      return p.make_preferred().string(qi::utf8facet());
+      return p.make_preferred().string(qi::unicodeFacet());
     }
 
 

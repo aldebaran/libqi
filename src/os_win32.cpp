@@ -121,7 +121,7 @@ namespace qi {
         std::string  amode(mode);
         std::wstring wmode;
         std::copy(amode.begin(), amode.end(), std::back_inserter(wmode));
-        return ::_wfopen(dest.wstring(qi::utf8facet()).c_str(), wmode.c_str());
+        return ::_wfopen(dest.wstring(qi::unicodeFacet()).c_str(), wmode.c_str());
       }
       catch (boost::filesystem::filesystem_error &) {
         return 0;
@@ -131,7 +131,7 @@ namespace qi {
     int stat(const char *pFilename, struct ::stat* pStat) {
       try {
         struct _stat buffer;
-        int result = ::_wstat(boost::filesystem::path(pFilename, qi::utf8facet()).wstring(qi::utf8facet()).c_str(), &buffer);
+        int result = ::_wstat(boost::filesystem::path(pFilename, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(), &buffer);
         pStat->st_gid   = buffer.st_gid;
         pStat->st_atime = buffer.st_atime;
         pStat->st_ctime = buffer.st_ctime;
@@ -188,7 +188,7 @@ namespace qi {
       std::string envHome = qi::os::getenv("HOME");
       if (envHome != "")
       {
-        return boost::filesystem::path(envHome, qi::utf8facet()).make_preferred().string(qi::utf8facet());
+        return boost::filesystem::path(envHome, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
       }
 
       // $HOME environment variable not defined:
@@ -206,9 +206,9 @@ namespace qi {
         // Give up:
         return "";
       }
-      boost::filesystem::path res(envHomeDrive, qi::utf8facet());
+      boost::filesystem::path res(envHomeDrive, qi::unicodeFacet());
       res /= envHomePath;
-      return res.make_preferred().string(qi::utf8facet());
+      return res.make_preferred().string(qi::unicodeFacet());
     }
 
     std::string tmp(const char *prefix) {
@@ -223,7 +223,7 @@ namespace qi {
       if (!boost::filesystem::exists(path)) {
         boost::filesystem::create_directories(path);
       }
-      return path.string(qi::utf8facet());
+      return path.string(qi::unicodeFacet());
     }
   }
 }

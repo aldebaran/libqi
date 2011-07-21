@@ -56,8 +56,8 @@ namespace qi
 
     int system(const char *command)
     {
-      boost::filesystem::path fname(command, qi::utf8facet());
-      return _wsystem(fname.wstring(qi::utf8facet()).c_str());
+      boost::filesystem::path fname(command, qi::unicodeFacet());
+      return _wsystem(fname.wstring(qi::unicodeFacet()).c_str());
     }
 
     int waitpid(int pid, int* status)

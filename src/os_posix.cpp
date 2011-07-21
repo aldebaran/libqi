@@ -70,7 +70,7 @@ namespace qi {
       std::string envHome = qi::os::getenv("HOME");
       if (envHome != "")
       {
-        return boost::filesystem::path(envHome, qi::utf8facet()).make_preferred().string(qi::utf8facet());
+        return boost::filesystem::path(envHome, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
       }
 
       // $HOME environment variable not defined:
@@ -78,7 +78,7 @@ namespace qi {
       struct passwd *pw;
       if ((lgn = getlogin()) == NULL || (pw = getpwnam(lgn)) == NULL)
       {
-        return boost::filesystem::path(pw->pw_dir, qi::utf8facet()).make_preferred().string(qi::utf8facet());
+        return boost::filesystem::path(pw->pw_dir, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
       }
       // Give up:
       return "";
@@ -90,10 +90,10 @@ namespace qi {
       if (cache.empty()) {
        #ifdef __APPLE__
         path = boost::filesystem::path(::qi::os::home(),
-                                       qi::utf8facet()) / "Cache";
+                                       qi::unicodeFacet()) / "Cache";
        #else
         path = boost::filesystem::path(::qi::os::home(),
-                                       qi::utf8facet()) / ".cache";
+                                       qi::unicodeFacet()) / ".cache";
        #endif
       } else
         path = cache;
@@ -102,7 +102,7 @@ namespace qi {
       if (!boost::filesystem::exists(path)) {
         boost::filesystem::create_directories(path);
       }
-      return path.string(qi::utf8facet());
+      return path.string(qi::unicodeFacet());
     }
 
     int gettimeofday(qi::os::timeval *tp) {

@@ -29,14 +29,14 @@ namespace qi {
 
   static std::string guess_app_from_path(int argc, const char *argv[])
   {
-    boost::filesystem::path execPath(argv[0], qi::utf8facet());
+    boost::filesystem::path execPath(argv[0], qi::unicodeFacet());
     execPath = boost::filesystem::system_complete(execPath).make_preferred();
-    execPath = boost::filesystem::path(detail::normalizePath(execPath.string(qi::utf8facet())), qi::utf8facet());
+    execPath = boost::filesystem::path(detail::normalizePath(execPath.string(qi::unicodeFacet())), qi::unicodeFacet());
 
     //arg0 does not exists, or is not a program (directory)
     if (!boost::filesystem::exists(execPath) || boost::filesystem::is_directory(execPath))
     {
-      std::string filename = execPath.filename().string(qi::utf8facet());
+      std::string filename = execPath.filename().string(qi::unicodeFacet());
       std::string envPath = qi::os::getenv("PATH");
       size_t begin = 0;
      #ifndef _WIN32
@@ -49,13 +49,13 @@ namespace qi {
         std::string realPath = "";
 
         realPath = envPath.substr(begin, end - begin);
-        boost::filesystem::path p(realPath, qi::utf8facet());
+        boost::filesystem::path p(realPath, qi::unicodeFacet());
         p /= filename;
         p = boost::filesystem::system_complete(p).make_preferred();
-        p = boost::filesystem::path(detail::normalizePath(p.string(qi::utf8facet())), qi::utf8facet());
+        p = boost::filesystem::path(detail::normalizePath(p.string(qi::unicodeFacet())), qi::unicodeFacet());
 
         if (boost::filesystem::exists(p) && !boost::filesystem::is_directory(p))
-          return p.string(qi::utf8facet());
+          return p.string(qi::unicodeFacet());
 
         begin = end + 1;
        #ifndef _WIN32
@@ -66,7 +66,7 @@ namespace qi {
       }
     }
     else
-      return execPath.string(qi::utf8facet());
+      return execPath.string(qi::unicodeFacet());
     return std::string();
   }
 

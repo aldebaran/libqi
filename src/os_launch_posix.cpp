@@ -50,7 +50,7 @@ namespace qi
       pid = ss.str();
 
       // get path of the current pid
-      boost::filesystem::path path("/proc", qi::utf8facet());
+      boost::filesystem::path path("/proc", qi::unicodeFacet());
       path = path / pid / "fd";
 
       // foreach fd set FD_CLOEXEC flag
@@ -65,7 +65,7 @@ namespace qi
         {
           // get file descriptor
           int fd;
-          std::istringstream iss(itr->path().filename().string(qi::utf8facet()));
+          std::istringstream iss(itr->path().filename().string(qi::unicodeFacet()));
           iss >> fd;
 
           // get flags

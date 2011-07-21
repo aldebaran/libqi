@@ -16,7 +16,7 @@ namespace qi
 
     boost::filesystem::path absPath(const std::string &pathString)
     {
-      boost::filesystem::path path(pathString, qi::utf8facet());
+      boost::filesystem::path path(pathString, qi::unicodeFacet());
       return boost::filesystem::system_complete(path).make_preferred();
     }
 
@@ -113,11 +113,11 @@ namespace qi
         mode = "error";
       }
 
-      boost::filesystem::path execPath(program, qi::utf8facet());
+      boost::filesystem::path execPath(program, qi::unicodeFacet());
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      prefix = execPath.parent_path().parent_path().string(qi::utf8facet());
-      if (execPath.parent_path().filename().string(qi::utf8facet()) != "bin")
-        mode = execPath.parent_path().filename().string(qi::utf8facet());
+      prefix = execPath.parent_path().parent_path().string(qi::unicodeFacet());
+      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
+        mode = execPath.parent_path().filename().string(qi::unicodeFacet());
       else
         mode = "";
 

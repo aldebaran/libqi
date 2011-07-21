@@ -49,11 +49,11 @@ namespace qi {
 
       // We may use argc, argv to elaborate command line parsing, but,
       // right now only argv[0] is used.
-      boost::filesystem::path execPath(program, qi::utf8facet());
+      boost::filesystem::path execPath(program, qi::unicodeFacet());
       execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::utf8facet()));
-      if (execPath.parent_path().filename().string(qi::utf8facet()) != "bin")
-        _mode = execPath.parent_path().filename().string(qi::utf8facet());
+      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
+      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
+        _mode = execPath.parent_path().filename().string(qi::unicodeFacet());
       else
         _mode = "";
     }
@@ -92,19 +92,19 @@ namespace qi {
   SDKLayout::SDKLayout(const std::string &prefix, const std::string &mode)
     : _private(new PrivateSDKLayout)
   {
-    boost::filesystem::path prefixPath(prefix, qi::utf8facet());
+    boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
     prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::utf8facet()));
+    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
     _private->_mode = mode;
   }
 
   void SDKLayout::addOptionalSdkPrefix(const char *prefix)
   {
     _private->checkInit();
-    boost::filesystem::path prefixPath(prefix, qi::utf8facet());
+    boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
     prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
 
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::utf8facet()));
+    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
 
   void SDKLayout::clearOptionalSdkPrefix()
@@ -134,30 +134,30 @@ namespace qi {
   {
     _private->checkInit();
 
-    boost::filesystem::path bin(name, qi::utf8facet());
+    boost::filesystem::path bin(name, qi::unicodeFacet());
     if (boost::filesystem::exists(bin)
         && !boost::filesystem::is_directory(bin))
-      return bin.string(qi::utf8facet());
+      return bin.string(qi::unicodeFacet());
 
     std::vector<std::string>::const_iterator it;
     for (it = _private->_sdkPrefixes.begin();
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
      #ifdef _MSC_VER
       p = p / _private->_mode / name;
       p = p.make_preferred();
 
       if (boost::filesystem::exists(p))
-        return p.string(qi::utf8facet());
+        return p.string(qi::unicodeFacet());
 //find _d, fallback on release stuff
 #ifndef NDEBUG
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::utf8facet()) + "_d.exe", qi::utf8facet())))
-        return (p.string(qi::utf8facet()) + "_d.exe");
+      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
+        return (p.string(qi::unicodeFacet()) + "_d.exe");
 #endif
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::utf8facet()) + ".exe", qi::utf8facet())))
-        return (p.string(qi::utf8facet()) + ".exe");
+      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
+        return (p.string(qi::unicodeFacet()) + ".exe");
      #endif
 
       p = *it;
@@ -167,13 +167,13 @@ namespace qi {
 
       if (boost::filesystem::exists(p)
           && !boost::filesystem::is_directory(p))
-        return p.string(qi::utf8facet());
+        return p.string(qi::unicodeFacet());
 #ifndef NDEBUG
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::utf8facet()) + "_d.exe", qi::utf8facet())))
-        return (p.string(qi::utf8facet()) + "_d.exe");
+      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
+        return (p.string(qi::unicodeFacet()) + "_d.exe");
 #endif
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::utf8facet()) + ".exe", qi::utf8facet())))
-        return (p.string(qi::utf8facet()) + ".exe");
+      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
+        return (p.string(qi::unicodeFacet()) + ".exe");
     }
 
     return std::string();
@@ -182,11 +182,11 @@ namespace qi {
   static std::string existsLib(boost::filesystem::path prefix,
                                const std::string& libName)
   {
-      boost::filesystem::path lib(libName, qi::utf8facet());
+      boost::filesystem::path lib(libName, qi::unicodeFacet());
 
       if (boost::filesystem::exists((prefix / lib).make_preferred())
           && !boost::filesystem::is_directory((prefix / lib).make_preferred()))
-        return ((prefix / lib).make_preferred().string(qi::utf8facet()));
+        return ((prefix / lib).make_preferred().string(qi::unicodeFacet()));
 
       return std::string();
   }
@@ -195,12 +195,12 @@ namespace qi {
   {
     _private->checkInit();
 
-    boost::filesystem::path module = boost::filesystem::path(name, qi::utf8facet());
+    boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
     boost::filesystem::path prefix = module.parent_path().make_preferred();
-    std::string libName = module.filename().make_preferred().string(qi::utf8facet());
+    std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
     std::string res;
 
-    res = existsLib(prefix.string(qi::utf8facet()), libName);
+    res = existsLib(prefix.string(qi::unicodeFacet()), libName);
     if (res != std::string())
       return res;
 
@@ -210,7 +210,7 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
      #ifdef _MSC_VER
       p = p / _private->_mode / prefix;
       p = p.make_preferred();
@@ -308,11 +308,11 @@ namespace qi {
     std::vector<std::string>::const_iterator it;
     for (it = paths.begin(); it != paths.end(); ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
       p /= filename;
       p = p.make_preferred();
       if (boost::filesystem::exists(p))
-        return p.string(qi::utf8facet());
+        return p.string(qi::unicodeFacet());
     }
 
     return std::string();
@@ -327,12 +327,12 @@ namespace qi {
     std::vector<std::string>::const_iterator it;
     for (it = paths.begin(); it != paths.end(); ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
 
       p /= filename;
       p = p.make_preferred();
       if (boost::filesystem::exists(p))
-        return p.string(qi::utf8facet());
+        return p.string(qi::unicodeFacet());
     }
     return std::string();
   }
@@ -345,20 +345,20 @@ namespace qi {
     std::vector<std::string>::const_iterator it;
     for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
     {
-      boost::filesystem::path prefix(*it, qi::utf8facet());
-      res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::utf8facet()));
-      res.push_back((prefix / "preferences").make_preferred().string(qi::utf8facet()));
-      res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::utf8facet()));
-      res.push_back((prefix / "etc").make_preferred().string(qi::utf8facet()));
+      boost::filesystem::path prefix(*it, qi::unicodeFacet());
+      res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+      res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
+      res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
+      res.push_back((prefix / "etc").make_preferred().string(qi::unicodeFacet()));
 
      #ifdef _MSC_VER
-      boost::filesystem::path multiConfigPrefPath(*it, qi::utf8facet());
+      boost::filesystem::path multiConfigPrefPath(*it, qi::unicodeFacet());
       multiConfigPrefPath = multiConfigPrefPath / _private->_mode;
       multiConfigPrefPath = multiConfigPrefPath.make_preferred();
-      res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::utf8facet()));
-      res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::utf8facet()));
-      res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::utf8facet()));
-      res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::utf8facet()));
+      res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+      res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
+      res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
+      res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::unicodeFacet()));
      #endif
     }
 
@@ -366,8 +366,8 @@ namespace qi {
     res.push_back(userWritableConfPath(applicationName, ""));
 
    #ifndef _WIN32
-    boost::filesystem::path systemPath("/etc", qi::utf8facet());
-    res.push_back((systemPath / applicationName).make_preferred().string(qi::utf8facet()));
+    boost::filesystem::path systemPath("/etc", qi::unicodeFacet());
+    res.push_back((systemPath / applicationName).make_preferred().string(qi::unicodeFacet()));
    #endif
     return res;
   }
@@ -383,8 +383,8 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      boost::filesystem::path prefix(*it, qi::utf8facet());
-      res.push_back((prefix / "share" / applicationName).make_preferred().string(qi::utf8facet()));
+      boost::filesystem::path prefix(*it, qi::unicodeFacet());
+      res.push_back((prefix / "share" / applicationName).make_preferred().string(qi::unicodeFacet()));
     }
 
     // Pass an empty string to get the directory:
@@ -404,11 +404,11 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
       if (_private->_mode != "")
-        binPaths.push_back((p / _private->_mode).make_preferred().string(qi::utf8facet()));
+        binPaths.push_back((p / _private->_mode).make_preferred().string(qi::unicodeFacet()));
 
-      binPaths.push_back((p / "bin").make_preferred().string(qi::utf8facet()));
+      binPaths.push_back((p / "bin").make_preferred().string(qi::unicodeFacet()));
     }
 
     return binPaths;
@@ -424,12 +424,12 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      boost::filesystem::path p(*it, qi::utf8facet());
+      boost::filesystem::path p(*it, qi::unicodeFacet());
 
       if (_private->_mode != "")
-        libPaths.push_back((p / _private->_mode).make_preferred().string(qi::utf8facet()));
+        libPaths.push_back((p / _private->_mode).make_preferred().string(qi::unicodeFacet()));
 
-      libPaths.push_back((p / "lib").make_preferred().string(qi::utf8facet()));
+      libPaths.push_back((p / "lib").make_preferred().string(qi::unicodeFacet()));
     }
 
     return libPaths;
@@ -440,7 +440,7 @@ namespace qi {
                                                  const std::string &filename) const
   {
     _private->checkInit();
-    boost::filesystem::path path(::qi::os::home(), qi::utf8facet());
+    boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
 
     path = path / ".local" / "share" / applicationName / filename;
     path = path.make_preferred();
@@ -456,7 +456,7 @@ namespace qi {
       catch (boost::filesystem::filesystem_error) {
       }
     }
-    return path.string(qi::utf8facet());
+    return path.string(qi::unicodeFacet());
   }
 
 
@@ -464,7 +464,7 @@ namespace qi {
                                                           const std::string &filename) const
   {
     _private->checkInit();
-    boost::filesystem::path path(::qi::os::home(), qi::utf8facet());
+    boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
 
     path = path / ".config" / applicationName / filename;
     path = path.make_preferred();
@@ -480,6 +480,6 @@ namespace qi {
       catch (boost::filesystem::filesystem_error) {
       }
     }
-    return path.string(qi::utf8facet());
+    return path.string(qi::unicodeFacet());
   }
 }; // qi
