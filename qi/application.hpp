@@ -18,6 +18,7 @@
 
 /**
  *  @namespace qi
+ *  \brief qi global namespace
  */
 namespace qi
 {
@@ -37,8 +38,11 @@ namespace qi
 
   /** \brief Return the current program.
    * Computed using specific OS API:
+   *
    * Apple  : _NSGetExecutablePath
+   *
    * Linux  : reading "/proc/self/exe"
+   *
    * Windows: GetModuleFileName
    *
    * If the former API fail it will try to guess the value from argv[0].
