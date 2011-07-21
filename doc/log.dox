@@ -27,9 +27,9 @@ void logfct(const qi::log::LogLevel verb,
             const char              *fct = "",
             const int               line = 0);
 \endverbatim
-Then you can add the handler with addLogHandler(fctLog, name)
+Then you can add the handler with addLogHandler(name, fctLog)
 \verbatim
-addLogHandler(logfct, "nameofloghandler");
+addLogHandler("nameofloghandler", logfct);
 \endverbatim
 
 and remove it with removeLogHandler(name).
