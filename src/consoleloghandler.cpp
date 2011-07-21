@@ -204,7 +204,7 @@ namespace qi {
                                 const char            *fct,
                                 const int             line)
     {
-      if (verb > qi::log::getVerbosity())
+      if (verb > qi::log::verbosity())
       {
         return;
       }
@@ -222,7 +222,7 @@ namespace qi {
         std::stringstream ss;
         ss << date.tv_sec << "." << date.tv_usec;
 
-        int ctx = qi::log::getContext();
+        int ctx = qi::log::context();
         switch (ctx)
         {
         case 1:

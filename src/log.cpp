@@ -304,7 +304,7 @@ namespace qi {
         _glVerbosity = lv;
     };
 
-    LogLevel getVerbosity()
+    LogLevel verbosity()
     {
       return _glVerbosity;
     };
@@ -319,7 +319,7 @@ namespace qi {
         _glContext = ctx;
     };
 
-    int getContext()
+    int context()
     {
       return _glContext;
     };

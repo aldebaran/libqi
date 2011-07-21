@@ -98,7 +98,7 @@ namespace qi {
     {
       if (_private->_count < _private->_max)
       {
-        if (verb > qi::log::getVerbosity() || _private->_file == NULL)
+        if (verb > qi::log::verbosity() || _private->_file == NULL)
         {
           return;
         }
@@ -112,7 +112,7 @@ namespace qi {
           std::stringstream ss;
           ss << date.tv_sec << "." << date.tv_usec;
 
-          int ctx = qi::log::getContext();
+          int ctx = qi::log::context();
           switch (ctx)
           {
           case 1:

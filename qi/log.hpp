@@ -178,7 +178,7 @@ namespace qi {
      * \brief Get log verbosity.
      * @return Maximal verbosity display.
      */
-    QI_API qi::log::LogLevel getVerbosity();
+    QI_API qi::log::LogLevel verbosity();
 
 
 
@@ -199,7 +199,7 @@ namespace qi {
      * \brief Get log context.
      * @return true if active, false otherwise.
      */
-    QI_API int getContext();
+    QI_API int context();
 
 
     /**
