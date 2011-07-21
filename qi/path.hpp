@@ -28,11 +28,12 @@ namespace qi
 {
   namespace path
   {
+
     /**
      * \brief Return the default SDK prefix path.
      * It's always a complete, native path.
      */
-    QI_API std::string getSdkPrefix();
+    QI_API std::string sdkPrefix();
 
     // not thread-safe, must be kept internal
     namespace detail {
@@ -74,7 +75,7 @@ namespace qi
      * \return The complete, native path to the file found,
      * an empty string otherwise.
      */
-    QI_API std::string findBinary(const std::string& name);
+    QI_API std::string findBin(const std::string& name);
 
     /** \brief Look for a library.
      *
@@ -89,7 +90,7 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
      */
-    QI_API std::string findLibrary(const std::string& name);
+    QI_API std::string findLib(const std::string& name);
 
     /**
      * \brief Look for a configuration file.
@@ -110,8 +111,8 @@ namespace qi
      * @return The complete, native path of the file if it was found,
      * an empty string otherwise.
      */
-    QI_API std::string findConfiguration(const std::string& applicationName,
-                                         const std::string& filename);
+    QI_API std::string findConf(const std::string& applicationName,
+                                const std::string& filename);
 
     /**
      * \brief Look for a data file.
@@ -148,7 +149,7 @@ namespace qi
      * Warning: you should not assume those directories exist, nor that they are
      * writeable.
      */
-    QI_API std::vector<std::string> getConfigurationPaths(const std::string& applicationName="");
+    QI_API std::vector<std::string> confPaths(const std::string& applicationName="");
 
     /**
      * \brief Get the list of directories used when searching for data files
@@ -161,7 +162,7 @@ namespace qi
      * Warning: you should not assume those directories exist, nor that they are
      * writeable.
      */
-    QI_API std::vector<std::string> getDataPaths(const std::string& applicationName="");
+    QI_API std::vector<std::string> dataPaths(const std::string& applicationName="");
 
     /**
      * \brief Get the list of directories used when searching for
@@ -173,7 +174,7 @@ namespace qi
      * Warning: you should not assume those directories exist, nor that they are
      * writeable.
      */
-    QI_API std::vector<std::string> getBinaryPaths();
+    QI_API std::vector<std::string> binPaths();
 
     /**
      * \brief Get the list of directories used when searching for
@@ -185,7 +186,7 @@ namespace qi
      * Warning: you should not assume those directories exist, nor that they are
      * writeable.
      */
-    QI_API std::vector<std::string> getLibraryPaths();
+    QI_API std::vector<std::string> libPaths();
 
 
     /**
@@ -198,8 +199,8 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
      */
-    QI_API std::string getUserWritableDataPath(const std::string& applicationName,
-                                               const std::string& filename);
+    QI_API std::string userWritableDataPath(const std::string& applicationName,
+                                            const std::string& filename);
 
     /**
      * \brief Get the writable configuration files path for users.
@@ -211,8 +212,10 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
      */
-    QI_API std::string getUserWritableConfigurationPath(const std::string& applicationName,
-                                                        const std::string& filename="");
+    QI_API std::string userWritableConfPath(const std::string& applicationName,
+                                            const std::string& filename="");
+
+
   };
 };
 
