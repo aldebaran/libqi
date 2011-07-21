@@ -217,8 +217,8 @@ namespace qi {
      * @param fct Boost delegate to log handler function.
      * @param name name of the handler, this is the one used to remove handler (prefer lowcase).
      */
-    QI_API void addLogHandler(qi::log::logFuncHandler fct,
-                              const std::string& name);
+    QI_API void addLogHandler(const std::string& name,
+                              qi::log::logFuncHandler fct);
 
     /**
      * \brief remove log handler.

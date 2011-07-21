@@ -248,7 +248,7 @@ namespace qi {
       }
     }
 
-    void addLogHandler(logFuncHandler fct, const std::string& name)
+    void addLogHandler(const std::string& name, logFuncHandler fct)
     {
       boost::mutex::scoped_lock l(rtLogInstance->rtLogHandlerLock);
       rtLogInstance->logHandlers[name] = fct;
