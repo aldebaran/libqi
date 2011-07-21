@@ -42,23 +42,23 @@ namespace qi
 
     std::string sdkPrefix()
     {
-      return getInstance()->getSdkPrefix();
+      return getInstance()->sdkPrefix();
     }
 
     std::string findBin(const std::string &name)
     {
-      return getInstance()->findBinary(name);
+      return getInstance()->findBin(name);
     }
 
     std::string findLib(const std::string &name)
     {
-      return getInstance()->findLibrary(name);
+      return getInstance()->findLib(name);
     }
 
     std::string findConf(const std::string &applicationName,
                          const std::string &filename)
     {
-      return getInstance()->findConfiguration(applicationName, filename);
+      return getInstance()->findConf(applicationName, filename);
     }
 
     std::string findData(const std::string &applicationName,
@@ -69,34 +69,34 @@ namespace qi
 
     std::vector<std::string> confPaths(const std::string &applicationName)
     {
-      return getInstance()->getConfigurationPaths(applicationName);
+      return getInstance()->confPaths(applicationName);
     }
 
     std::vector<std::string> dataPaths(const std::string &applicationName)
     {
-      return getInstance()->getDataPaths(applicationName);
+      return getInstance()->dataPaths(applicationName);
     }
 
     std::vector<std::string> binPaths()
     {
-      return getInstance()->getBinaryPaths();
+      return getInstance()->binPaths();
     }
 
     std::vector<std::string> libPaths()
     {
-      return getInstance()->getLibraryPaths();
+      return getInstance()->libPaths();
     }
 
     std::string userWritableDataPath(const std::string &applicationName,
                                      const std::string &filename)
     {
-      return getInstance()->getUserWritableDataPath(applicationName, filename);
+      return getInstance()->userWritableDataPath(applicationName, filename);
     }
 
     std::string userWritableConfPath(const std::string &applicationName,
                                      const std::string &filename)
     {
-      return qi::getInstance()->getUserWritableConfigurationPath(applicationName, filename);
+      return qi::getInstance()->userWritableConfPath(applicationName, filename);
     }
   };
 

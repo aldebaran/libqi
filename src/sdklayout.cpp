@@ -118,7 +118,7 @@ namespace qi {
     }
   }
 
-  std::string SDKLayout::getSdkPrefix() const
+  std::string SDKLayout::sdkPrefix() const
   {
     _private->checkInit();
     return _private->_sdkPrefixes[0];
@@ -130,7 +130,7 @@ namespace qi {
     return _private->_sdkPrefixes;
   }
 
-  std::string SDKLayout::findBinary(const std::string &name) const
+  std::string SDKLayout::findBin(const std::string &name) const
   {
     _private->checkInit();
 
@@ -191,7 +191,7 @@ namespace qi {
       return std::string();
   }
 
-  std::string SDKLayout::findLibrary(const std::string &name) const
+  std::string SDKLayout::findLib(const std::string &name) const
   {
     _private->checkInit();
 
@@ -299,11 +299,11 @@ namespace qi {
     return std::string();
   }
 
-  std::string SDKLayout::findConfiguration(const std::string &applicationName,
+  std::string SDKLayout::findConf(const std::string &applicationName,
                                            const std::string &filename) const
   {
     _private->checkInit();
-    std::vector<std::string> paths = getConfigurationPaths(applicationName);
+    std::vector<std::string> paths = confPaths(applicationName);
 
     std::vector<std::string>::const_iterator it;
     for (it = paths.begin(); it != paths.end(); ++it)
@@ -322,7 +322,7 @@ namespace qi {
                                   const std::string &filename) const
   {
     _private->checkInit();
-    std::vector<std::string> paths = getDataPaths(applicationName);
+    std::vector<std::string> paths = dataPaths(applicationName);
 
     std::vector<std::string>::const_iterator it;
     for (it = paths.begin(); it != paths.end(); ++it)
@@ -337,7 +337,7 @@ namespace qi {
     return std::string();
   }
 
-  std::vector<std::string> SDKLayout::getConfigurationPaths(const std::string &applicationName) const
+  std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
   {
     _private->checkInit();
     std::vector<std::string> res;
@@ -363,7 +363,7 @@ namespace qi {
     }
 
     // Pass an empty string to get the directory:
-    res.push_back(getUserWritableConfigurationPath(applicationName, ""));
+    res.push_back(userWritableConfPath(applicationName, ""));
 
    #ifndef _WIN32
     boost::filesystem::path systemPath("/etc", qi::utf8facet());
@@ -373,7 +373,7 @@ namespace qi {
   }
 
   // FIXME: Auto-test needed
-  std::vector<std::string> SDKLayout::getDataPaths(const std::string &applicationName) const
+  std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
   {
     _private->checkInit();
     std::vector<std::string> res;
@@ -388,13 +388,13 @@ namespace qi {
     }
 
     // Pass an empty string to get the directory:
-    res.push_back(getUserWritableDataPath(applicationName, ""));
+    res.push_back(userWritableDataPath(applicationName, ""));
 
     return res;
   }
 
 
-  std::vector<std::string> SDKLayout::getBinaryPaths() const
+  std::vector<std::string> SDKLayout::binPaths() const
   {
     _private->checkInit();
     std::vector<std::string> binPaths;
@@ -414,7 +414,7 @@ namespace qi {
     return binPaths;
   }
 
-  std::vector<std::string> SDKLayout::getLibraryPaths() const
+  std::vector<std::string> SDKLayout::libPaths() const
   {
     _private->checkInit();
     std::vector<std::string> libPaths;
@@ -436,7 +436,7 @@ namespace qi {
   }
 
 
-  std::string SDKLayout::getUserWritableDataPath(const std::string &applicationName,
+  std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
                                                  const std::string &filename) const
   {
     _private->checkInit();
@@ -460,7 +460,7 @@ namespace qi {
   }
 
 
-  std::string SDKLayout::getUserWritableConfigurationPath(const std::string &applicationName,
+  std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
                                                           const std::string &filename) const
   {
     _private->checkInit();

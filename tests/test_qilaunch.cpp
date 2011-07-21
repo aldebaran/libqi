@@ -167,7 +167,7 @@ TEST(system, InvalidBin)
 int main(int argc, char* argv[])
 {
   qi::init(argc, (char**)argv);
-  binDir = qi::path::findBinary("testlaunch");
+  binDir = qi::path::findBin("testlaunch");
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

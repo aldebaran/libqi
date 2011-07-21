@@ -9,7 +9,7 @@ class SDKLayout:
     def __init__(self, sdk_prefix):
         self.sdk_prefix = sdk_prefix
 
-    def getSdkPrefix(self):
+    def sdkPrefix(self):
         return self.sdk_prefix
 
     def getBinariesPath(self):

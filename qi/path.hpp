@@ -168,7 +168,7 @@ namespace qi
      * \brief Get the list of directories used when searching for
      *  binaries.
      *
-     * This is used by the qi::path::findBinary() method.
+     * This is used by the qi::path::findBin() method.
      * @return A list of directories.
      *
      * Warning: you should not assume those directories exist, nor that they are
@@ -180,7 +180,7 @@ namespace qi
      * \brief Get the list of directories used when searching for
      *  libraries.
      *
-     * This is used by the qi::path::findLibrary() method.
+     * This is used by the qi::path::findLib() method.
      * @return A list of directories.
      *
      * Warning: you should not assume those directories exist, nor that they are

@@ -110,7 +110,7 @@ namespace qi
 
 
     /** @copydoc qi::path::getSdkPrefix */
-    std::string getSdkPrefix() const;
+    std::string sdkPrefix() const;
 
     /** @copydoc qi::path::getSdkPrefixes */
     std::vector<std::string> getSdkPrefixes() const;
@@ -124,13 +124,13 @@ namespace qi
 
 
     /** @copydoc qi::path::findBinary */
-    std::string findBinary(const std::string &name) const;
+    std::string findBin(const std::string &name) const;
 
     /** @copydoc qi::path::findLibrary */
-    std::string findLibrary(const std::string &name) const;
+    std::string findLib(const std::string &name) const;
 
     /** @copydoc qi::path::findConfiguration */
-    std::string findConfiguration(const std::string &applicationName,
+    std::string findConf(const std::string &applicationName,
                                   const std::string &filename) const;
 
     /** @copydoc qi::path::findData */
@@ -140,25 +140,25 @@ namespace qi
 
 
     /** @copydoc qi::path::getConfigurationPaths */
-    std::vector<std::string> getConfigurationPaths(const std::string &applicationName="") const;
+    std::vector<std::string> confPaths(const std::string &applicationName="") const;
 
     /** @copydoc qi::path::getDataPaths */
-    std::vector<std::string> getDataPaths(const std::string &applicationName="") const;
+    std::vector<std::string> dataPaths(const std::string &applicationName="") const;
 
     /** @copydoc qi::path::getBinaryPaths */
-    std::vector<std::string> getBinaryPaths() const;
+    std::vector<std::string> binPaths() const;
 
     /** @copydoc qi::path::getLibraryPaths */
-    std::vector<std::string> getLibraryPaths() const;
+    std::vector<std::string> libPaths() const;
 
 
 
     /** @copydoc qi::path::getUserWritableDataPath */
-    std::string getUserWritableDataPath(const std::string &applicationName,
+    std::string userWritableDataPath(const std::string &applicationName,
                                         const std::string &filename) const;
 
     /** @copydoc qi::path::getUserWritableConfigurationPath */
-    std::string getUserWritableConfigurationPath(const std::string &applicationName,
+    std::string userWritableConfPath(const std::string &applicationName,
                                                  const std::string &filename="") const;
 
   private:

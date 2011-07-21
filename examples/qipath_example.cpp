@@ -25,16 +25,16 @@ int main(int argc, char *argv[])
   qi::init(argc, argv);
 
   // Get sdk prefix
-  std::cout << "SDK prefix is: " << qi::path::getSdkPrefix() << std::endl;
+  std::cout << "SDK prefix is: " << qi::path::sdkPrefix() << std::endl;
 
   // First argument is the name of the application, used
   // to build various paths later.
-  std::string fooCfgPath = qi::path::findConfiguration("foo", "foo.cfg");
+  std::string fooCfgPath = qi::path::findConf("foo", "foo.cfg");
   if (fooCfgPath == "")
   {
     std::cerr << "Could not find foo.cfg" << std::endl;
     std::cerr << "Looked in: " << std::endl;
-    std::vector<std::string > configPaths = qi::path::getConfigurationPaths("foo");
+    std::vector<std::string > configPaths = qi::path::confPaths("foo");
     std::vector<std::string>::const_iterator it;
     for (it = configPaths.begin(); it != configPaths.end(); ++it)
     {
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
 
   // ... Write back the configuration to userCfgPath
-  std::string userCfgPath = qi::path::getUserWritableConfigurationPath("foo", "foo.cfg");
+  std::string userCfgPath = qi::path::userWritableConfPath("foo", "foo.cfg");
   std::cout << "Writing config file to: " << userCfgPath << std::endl;
   std::ofstream ofs(userCfgPath.c_str(), std::fstream::out | std::fstream::trunc);
   ofs << "Hi, this is foo.cfg" << std::endl;

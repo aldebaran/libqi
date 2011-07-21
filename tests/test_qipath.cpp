@@ -57,7 +57,7 @@ TEST(qiPath, callingInit)
   bfs::path expected(normalizePath(absPath(std::string(::testing::internal::GetArgvs()[0])).string(qi::utf8facet())), qi::utf8facet());
   expected = expected.parent_path().parent_path();
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::path::getSdkPrefix());
+  ASSERT_EQ(expected.string(qi::utf8facet()), qi::path::sdkPrefix());
 }
 
 TEST(qiPath, callingInit2)
@@ -65,7 +65,7 @@ TEST(qiPath, callingInit2)
   const char *pgm = "build/sdk";
   bfs::path expected(absPath("build/sdk"));
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout(pgm).getSdkPrefix());
+  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout(pgm).sdkPrefix());
 }
 
 #ifdef __linux__
@@ -73,7 +73,7 @@ TEST(qiPath, callingInit3)
 {
   bfs::path expected(absPath("build/sdk"));
 
-  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout("build/sdk").getSdkPrefix());
+  ASSERT_EQ(expected.string(qi::utf8facet()), qi::SDKLayout("build/sdk").sdkPrefix());
 }
 #endif
 
@@ -88,7 +88,7 @@ TEST(qiPath, AddPrefixesPath)
   std::vector<std::string> prefixes = sdkl.getSdkPrefixes();
   std::vector<std::string> expected;
 
-  expected.push_back(sdkl.getSdkPrefix());
+  expected.push_back(sdkl.sdkPrefix());
   expected.push_back(absPath("build/sdk").string(qi::utf8facet()));
   expected.push_back(absPath("debug").string(qi::utf8facet()));
 
@@ -105,7 +105,7 @@ TEST(qiPath, ClearPrefixesPath)
   std::vector<std::string> prefixes = sdkl.getSdkPrefixes();
   std::vector<std::string> expected;
 
-  expected.push_back(sdkl.getSdkPrefix());
+  expected.push_back(sdkl.sdkPrefix());
   expected.push_back(absPath("build/sdk").string(qi::utf8facet()));
   expected.push_back(absPath("debug").string(qi::utf8facet()));
 
@@ -113,7 +113,7 @@ TEST(qiPath, ClearPrefixesPath)
 
   sdkl.clearOptionalSdkPrefix();
   expected.clear();
-  expected.push_back(sdkl.getSdkPrefix());
+  expected.push_back(sdkl.sdkPrefix());
 
   prefixes = sdkl.getSdkPrefixes();
 
@@ -124,14 +124,14 @@ TEST(qiPath, FindBin)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
 
-  bfs::path expected(sdkl.getSdkPrefix(), qi::utf8facet());
+  bfs::path expected(sdkl.sdkPrefix(), qi::utf8facet());
   std::string exp;
 
   expected = expected / "bin/test_qipath";
   expected = expected.make_preferred();
 
-  std::string binPath1 = sdkl.findBinary("test_qipath");
-  std::string binPath2 = sdkl.findBinary("qithatreallydoesnotexistsplease");
+  std::string binPath1 = sdkl.findBin("test_qipath");
+  std::string binPath2 = sdkl.findBin("qithatreallydoesnotexistsplease");
 
   exp = expected.string(qi::utf8facet());
   boost::to_lower(exp);
@@ -147,38 +147,38 @@ TEST(qiPath, FindBin)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
 
-//   bfs::path expected(sdkl.getSdkPrefix(), qi::utf8facet());
+//   bfs::path expected(sdkl.sdkPrefix(), qi::utf8facet());
 //   std::string exp;
 
 // #ifdef REALLY_MSVC
 //   expected = expected / "debug/test_qipath_d.exe";
 //   expected = expected.make_preferred();
-//   std::string binPath1 = sdkl.findBinary("test_qipath");
-//   std::string binPath2 = sdkl.findBinary("qi");
+//   std::string binPath1 = sdkl.findBin("test_qipath");
+//   std::string binPath2 = sdkl.findBin("qi");
 //   exp = expected.string(qi::utf8facet());
 //   boost::to_lower(exp);
 //   boost::to_lower(binPath1);
 //   boost::to_lower(binPath2);
 //   if (binPath1 != exp)
 //   {
-//     expected = sdkl.getSdkPrefix();
+//     expected = sdkl.sdkPrefix();
 //     expected = expected / "release/test_qipath.exe";
 //     expected = expected.make_preferred();
-//     binPath1 = sdkl.findBinary("test_qipath");
-//     binPath2 = sdkl.findBinary("qi");
+//     binPath1 = sdkl.findBin("test_qipath");
+//     binPath2 = sdkl.findBin("qi");
 //   }
 // #elif _WIN32
 //   expected = expected / "bin/test_qipath.exe";
 //   expected = expected.make_preferred();
 
-//   std::string binPath1 = sdkl.findBinary("test_qipath");
-//   std::string binPath2 = sdkl.findBinary("qi");
+//   std::string binPath1 = sdkl.findBin("test_qipath");
+//   std::string binPath2 = sdkl.findBin("qi");
 // #else
 //   expected = expected / "bin/test_qipath";
 //   expected = expected.make_preferred();
 
-//   std::string binPath1 = sdkl.findBinary("test_qipath");
-//   std::string binPath2 = sdkl.findBinary("qi");
+//   std::string binPath1 = sdkl.findBin("test_qipath");
+//   std::string binPath2 = sdkl.findBin("qi");
 // #endif
 
 //   exp = expected.string(qi::utf8facet());
@@ -194,10 +194,10 @@ TEST(qiPath, FindBin)
 TEST(qiPath, GetLinuxBinPaths)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
-  bfs::path prefix(sdkl.getSdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
 
   std::vector<std::string> expected;
-  std::vector<std::string> binPaths = sdkl.getBinaryPaths();
+  std::vector<std::string> binPaths = sdkl.binPaths();
 
   expected.push_back((prefix / "bin").make_preferred().string(qi::utf8facet()));
 
@@ -207,10 +207,10 @@ TEST(qiPath, GetLinuxBinPaths)
 TEST(qiPath, GetLinuxlibPaths)
 {
   qi::SDKLayout sdkl = qi::SDKLayout();
-  bfs::path prefix(sdkl.getSdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
 
   std::vector<std::string> expected;
-  std::vector<std::string> binPaths = sdkl.getLibraryPaths();
+  std::vector<std::string> binPaths = sdkl.libPaths();
 
   expected.push_back((prefix / "lib").make_preferred().string(qi::utf8facet()));
 
@@ -220,10 +220,10 @@ TEST(qiPath, GetLinuxlibPaths)
 // TEST(qiPath, GetVisualBinPaths)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
-//   bfs::path prefix(sdkl.getSdkPrefix(), qi::utf8facet());
+//   bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
 
 //   std::vector<std::string> expected;
-//   std::vector<std::string> binPaths = sdkl.getBinaryPaths();
+//   std::vector<std::string> binPaths = sdkl.binPaths();
 
 //   expected.push_back((prefix / "debug").make_preferred().string(qi::utf8facet()));
 //   expected.push_back((prefix / "bin").make_preferred().string(qi::utf8facet()));
@@ -254,10 +254,10 @@ TEST(qiPath, GetLinuxlibPaths)
 // TEST(qiPath, GetVisualLibPaths)
 // {
 //   qi::SDKLayout sdkl = qi::SDKLayout();
-//   bfs::path prefix(sdkl.getSdkPrefix(), qi::utf8facet());
+//   bfs::path prefix(sdkl.sdkPrefix(), qi::utf8facet());
 
 //   std::vector<std::string> expected;
-//   std::vector<std::string> libPaths = sdkl.getLibraryPaths();
+//   std::vector<std::string> libPaths = sdkl.libPaths();
 
 //   expected.push_back((prefix / "debug").make_preferred().string(qi::utf8facet()));
 //   expected.push_back((prefix / "lib").make_preferred().string(qi::utf8facet()));
@@ -288,7 +288,7 @@ TEST(qiPath, callingGetUserDataPath)
 {
   bfs::path expected(getHomePath() / ".local" / "share" / "foo" / "foo.data");
 
-  std::string actual = qi::path::getUserWritableDataPath("foo", "foo.data");
+  std::string actual = qi::path::userWritableDataPath("foo", "foo.data");
   boost::to_lower(actual);
 
   ASSERT_EQ(expected.string(qi::utf8facet()), actual);
@@ -299,8 +299,8 @@ TEST(qiPath, LinuxConfigPaths)
 {
   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-  bfs::path expected(sdkl->getSdkPrefix(), qi::utf8facet());
-  std::vector<std::string> actualPrefsPaths = sdkl->getConfigurationPaths("foo");
+  bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
+  std::vector<std::string> actualPrefsPaths = sdkl->confPaths("foo");
 
   bfs::path writeablePath(getHomePath() / ".config" / "foo") ;
 
@@ -319,7 +319,7 @@ TEST(qiPath, LinuxConfigPaths)
   }
 
   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
-  std::string actual = sdkl->getUserWritableConfigurationPath("foo", "");
+  std::string actual = sdkl->userWritableConfPath("foo", "");
   boost::to_lower(actual);
   ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
 
@@ -330,8 +330,8 @@ TEST(qiPath, LinuxConfigPaths)
 // {
 //   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-//   bfs::path expected(sdkl->getSdkPrefix(), qi::utf8facet());
-//   std::vector<std::string> actualPrefsPaths = sdkl->getConfigurationPaths("foo");
+//   bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
+//   std::vector<std::string> actualPrefsPaths = sdkl->confPaths("foo");
 
 //   bfs::path writeablePath(getHomePath() / ".config" / "foo") ;
 
@@ -382,7 +382,7 @@ TEST(qiPath, LinuxConfigPaths)
 //   }
 
 //   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
-//   std::string actual = sdkl->getUserWritableConfigurationPath("foo", "");
+//   std::string actual = sdkl->userWritableConfPath("foo", "");
 //   boost::to_lower(actual);
 //   ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
 
@@ -397,12 +397,12 @@ TEST(qiPath, dataPaths)
   std::vector<std::string> expectedPrefPaths;
 
   bfs::path writeablePath(getHomePath() / ".local" / "share" / "foo");
-  bfs::path expected(sdkl->getSdkPrefix(), qi::utf8facet());
+  bfs::path expected(sdkl->sdkPrefix(), qi::utf8facet());
 
   expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::utf8facet()));
   expectedPrefPaths.push_back(writeablePath.string(qi::utf8facet()));
 
-  std::vector<std::string> actualPrefsPaths = sdkl->getDataPaths("foo");
+  std::vector<std::string> actualPrefsPaths = sdkl->dataPaths("foo");
 
   for (int i = 0; i < actualPrefsPaths.size(); ++i)
   {
@@ -411,7 +411,7 @@ TEST(qiPath, dataPaths)
   }
 
   ASSERT_TRUE(expectedPrefPaths == actualPrefsPaths);
-  std::string actual = sdkl->getUserWritableDataPath("foo", "");
+  std::string actual = sdkl->userWritableDataPath("foo", "");
   boost::to_lower(actual);
   ASSERT_EQ(writeablePath.string(qi::utf8facet()), actual);
 
@@ -425,18 +425,18 @@ TEST(qiPath, readingWritingfindConfigs)
   qi::SDKLayout* sdkl = new qi::SDKLayout(args);
   bfs::path writeablePath(bfs::absolute(qi::os::home()) / ".config" / "foo" / "foo.cfg");
 
-  std::string fooCfg = sdkl->getUserWritableConfigurationPath("foo", "foo.cfg");
+  std::string fooCfg = sdkl->userWritableConfPath("foo", "foo.cfg");
   std::ofstream ofs;
   ofs.open(fooCfg.c_str(), std::fstream::out | std::fstream::trunc);
   ASSERT_FALSE (ofs.bad()) << "could not open" << fooCfg;
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
-  fooCfg = sdkl->findConfiguration("foo", "foo.cfg");
+  fooCfg = sdkl->findConf("foo", "foo.cfg");
   ASSERT_EQ(writeablePath.string(qi::utf8facet()), fooCfg);
   std::cout << "removing: " << fooCfg << std::endl;
   remove(fooCfg.c_str());
 
-  std::string noCfgExisting = sdkl->findConfiguration("foo", "bar.cfg");
+  std::string noCfgExisting = sdkl->findConf("foo", "bar.cfg");
   ASSERT_EQ(std::string(), noCfgExisting);
 
   delete sdkl;
@@ -449,7 +449,7 @@ TEST(qiPath, readingWritingFindData)
   qi::SDKLayout* sdkl = new qi::SDKLayout(args);
   bfs::path writeablePath(bfs::absolute(qi::os::home()) / ".local" / "share" / "foo" / "foo.dat");
 
-  std::string fooDat = sdkl->getUserWritableDataPath("foo", "foo.dat");
+  std::string fooDat = sdkl->userWritableDataPath("foo", "foo.dat");
   std::ofstream ofs;
   ofs.open(fooDat.c_str(), std::fstream::out | std::fstream::trunc);
   ASSERT_FALSE (ofs.bad()) << "could not open" << fooDat;
@@ -474,7 +474,7 @@ TEST(qiPath, dataInSubfolder)
   //const char* args = { (char *) binary.c_str() };
   qi::SDKLayout* sdkl = new qi::SDKLayout();
 
-  bfs::path prefix(sdkl->getSdkPrefix(), qi::utf8facet());
+  bfs::path prefix(sdkl->sdkPrefix(), qi::utf8facet());
   bfs::path fooShare(prefix / "share" / "foo");
   boost::filesystem::create_directories(fooShare / "bar");
   std::string bazData = (fooShare / "bar" / "baz.dat").string(qi::utf8facet());
