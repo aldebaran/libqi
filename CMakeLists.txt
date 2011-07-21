@@ -35,8 +35,7 @@ set(H qi/config.hpp
       qi/log/headfileloghandler.hpp
       )
 
-set(C src/os.cpp
-      src/dlfcn.cpp
+set(C src/dlfcn.cpp
       src/path.cpp
       src/application.cpp
       src/sdklayout.cpp
@@ -51,7 +50,7 @@ set(C src/os.cpp
 if (WIN32)
   list(APPEND C src/os_debugger_win32.cpp src/os_launch_win32.cpp src/os_win32.cpp)
 else()
-  list(APPEND C src/os_debugger_linux.cpp src/os_launch_posix_spawn.cpp)
+  list(APPEND C src/os_debugger_posix.cpp src/os_launch_posix.cpp src/os_posix.cpp)
 endif()
 
 if (WITH_BOOST_LOCALE)

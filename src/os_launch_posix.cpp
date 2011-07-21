@@ -1,10 +1,12 @@
 /*
+** os_launch.cpp
+** Login : <hcuche@hcuche-de>
+** Started on  Mon Apr 11 10:07:22 2011 Herve Cuche
+** $Id$
+**
 ** Author(s):
 **  - Herve Cuche <hcuche@aldebaran-robotics.com>
 **  - David Coz <dcoz@aldebaran-robotics.com>
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2011 Aldebaran Robotics
 */
 
 #include <iostream>
@@ -13,7 +15,9 @@
 #include <fcntl.h>
 
 #include <sys/wait.h>
-#include <spawn.h>
+#ifndef __ANDROID__
+#  include <spawn.h>
+#endif
 #include <stdarg.h>
 
 #include <sstream>
@@ -26,12 +30,13 @@
 #include <qi/locale.hpp>
 #include "src/filesystem.hpp"
 
-//posix implementation
+
 namespace qi
 {
   namespace os
   {
 
+   #ifdef __linux__
     /**
      * Set cloexec flag to close all FD on exec process
      * @param pID pid of the process.
@@ -79,6 +84,8 @@ namespace qi
       }
       return 0;
     }
+   #endif
+
 
     int spawnvp(char *const argv[])
     {
@@ -91,7 +98,7 @@ namespace qi
       int err;
       posix_spawnattr_t* pSpawnattr = NULL;
 
-     #ifndef __APPLE__
+     #ifdef __linux__
       posix_spawnattr_t spawnattr;
       spawnattr.__flags = POSIX_SPAWN_USEVFORK;
       pSpawnattr = &spawnattr;
@@ -145,7 +152,7 @@ namespace qi
 
       posix_spawnattr_t* pSpawnattr = NULL;
 
-     #ifndef __APPLE__
+     #ifdef __linux__
       posix_spawnattr_t spawnattr;
       spawnattr.__flags = POSIX_SPAWN_USEVFORK;
       pSpawnattr = &spawnattr;
@@ -213,9 +220,8 @@ namespace qi
     int waitpid(int pid, int* status)
     {
       int result = 0;
-      errno = 0;
-
       int st = 0;
+      errno = 0;
 
       ::waitpid(pid, &st, 0);
 
