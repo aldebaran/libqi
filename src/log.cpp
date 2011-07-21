@@ -77,7 +77,10 @@ namespace qi {
       {
         _glConsoleLogHandler = new ConsoleLogHandler;
         rtLogInstance = new rtLog;
-        addLogHandler(boost::bind(&ConsoleLogHandler::log, _glConsoleLogHandler, _1, _2, _3, _4, _5, _6, _7), "consoleloghandler");
+        addLogHandler("consoleloghandler",
+                      boost::bind(&ConsoleLogHandler::log,
+                                  _glConsoleLogHandler,
+                                  _1, _2, _3, _4, _5, _6, _7));
       }
 
       inline ~LogGlobalInit() {
