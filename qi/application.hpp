@@ -35,12 +35,14 @@ namespace qi
    */
   QI_API const char** argv();
 
-  /** \brief Return the current prefix. (based on argv[0])
-   *  \return full path to the current prefix
-   */
-  QI_API const char *prefix();
-
-  /** \brief Return the current program. (based on argv[0])
+  /** \brief Return the current program.
+   * Computed using specific OS API:
+   * Apple  : _NSGetExecutablePath
+   * Linux  : reading "/proc/self/exe"
+   * Windows: GetModuleFileName
+   *
+   * If the former API fail it will try to guess the value from argv[0].
+   * For this method to work qi::init(argc, argv) should have been called in the main.
    *  \return full path to the current running program
    */
   QI_API const char *program();

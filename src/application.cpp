@@ -86,15 +86,6 @@ namespace qi {
     return (const char**)globalArgv;
   }
 
-  const char *prefix()
-  {
-    if (!globalPrefix.empty())
-      return globalPrefix.c_str();
-    globalPrefix = boost::filesystem::path(::qi::program(), qi::utf8facet()).parent_path().string(qi::utf8facet());
-    return globalPrefix.c_str();
-  }
-
-
 /*
   http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
   Some OS-specific interfaces:
