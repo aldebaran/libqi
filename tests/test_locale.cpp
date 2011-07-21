@@ -50,8 +50,8 @@ TEST(qiLocale, utf8_utf16_3)
 int main(int argc, char* argv[])
 {
   qi::init(argc, argv);
-
-  std::locale::global(qi::utf8locale());
+  std::locale loc(std::locale(), &qi::unicodeFacet());
+  std::locale::global(loc);
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
