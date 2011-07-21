@@ -13,13 +13,6 @@ endif()
 enable_testing()
 #find_package(BOOST_LOCALE QUIET)
 include(CMakeDependentOption)
-cmake_dependent_option(WITH_BOOST_LOCALE "Use boost.locale to have an utf-8 locale" ON "BOOST_LOCALE_PACKAGE_FOUND" OFF)
-
-if (WITH_BOOST_LOCALE)
-  message(STATUS "UTF8: Using boost.locale")
-else()
-  message(STATUS "UTF8: Using embedded fallback implementation")
-endif()
 
 set(H qi/config.hpp
       qi/os.hpp
@@ -45,18 +38,13 @@ set(C src/dlfcn.cpp
       src/consoleloghandler.cpp
       src/fileloghandler.cpp
       src/headfileloghandler.cpp
+      src/locale-light.cpp
       )
 
 if (WIN32)
   list(APPEND C src/os_debugger_win32.cpp src/os_launch_win32.cpp src/os_win32.cpp)
 else()
   list(APPEND C src/os_debugger_posix.cpp src/os_launch_posix.cpp src/os_posix.cpp)
-endif()
-
-if (WITH_BOOST_LOCALE)
-  set(C ${C} src/locale-boost-locale.cpp)
-else()
-  set(C ${C} src/locale-light.cpp)
 endif()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -70,10 +58,6 @@ endif()
 
 use_lib(qi BOOST_FILESYSTEM)
 use_lib(qi BOOST_THREAD)
-
-if (WITH_BOOST_LOCALE)
-  use_lib(qi BOOST_LOCALE)
-endif()
 
 if(MSVC)
 # Temporary ugly hack: we can't find out
