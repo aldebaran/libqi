@@ -28,22 +28,24 @@
 #include <qi/config.hpp>
 #include <qi/os.hpp>
 
+
 /**
  * \def qiLogDebug
  *  Log in debug mode. Not compile on release.
  */
-#ifdef NO_QI_DEBUG
-# define qiLogDebug(...)
+#if defined(NO_QI_DEBUG) || defined(NDEBUG)
+# define qiLogDebug(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogDebug(...)        qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
+
 
 /**
  * \def qiLogVerbose
  *  Log in verbose mode. This mode isn't show by default but always compile.
  */
 #ifdef NO_QI_VERBOSE
-# define qiLogVerbose(...)
+# define qiLogVerbose(...)      qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -53,7 +55,7 @@
  *  Log in info mode.
  */
 #ifdef NO_QI_INFO
-# define qiLogInfo(...)
+# define qiLogInfo(...)         qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogInfo(...)         qi::log::LogStream(qi::log::info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -63,7 +65,7 @@
  *  Log in warning mode.
  */
 #ifdef NO_QI_WARNING
-# define qiLogWarning(...)
+# define qiLogWarning(...)      qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogWarning(...)      qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -73,7 +75,7 @@
  *  Log in error mode.
  */
 #ifdef NO_QI_ERROR
-# define qiLogError(...)
+# define qiLogError(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogError(...)        qi::log::LogStream(qi::log::error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -83,7 +85,7 @@
  *  Log in fatal mode.
  */
 #ifdef NO_QI_FATAL
-# define qiLogFatal(...)
+# define qiLogFatal(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -94,7 +96,35 @@
  */
 namespace qi {
   namespace log {
-    class LogStream;
+
+    namespace detail {
+
+      // simple NullStream that do nothing
+      class NullStream {
+      public:
+        NullStream(char *, ...)
+        {
+        }
+
+        NullStream &self()
+        {
+          return *this;
+        }
+
+        template <typename T>
+        NullStream& operator<<(const T& val)
+        {
+          return self();
+        }
+
+        NullStream& operator<<(std::ostream& (*f)(std::ostream&))
+        {
+          return self();
+        }
+
+      };
+    };
+
 
     /**
      * \enum LogLevel
