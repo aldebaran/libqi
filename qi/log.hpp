@@ -1,4 +1,3 @@
-#pragma once
 /*
  *  Author(s):
  *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
@@ -13,8 +12,9 @@
  */
 
 
-#ifndef LOG_HPP_
-# define LOG_HPP_
+#pragma once
+#ifndef _LIBQI_QI_LOG_HPP_
+#define _LIBQI_QI_LOG_HPP_
 
 # include <map>
 # include <string>
@@ -366,4 +366,4 @@ namespace qi {
   }
 }
 
-#endif // !LOG_HPP_
+#endif  // _LIBQI_QI_LOG_HPP_

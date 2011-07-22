@@ -5,8 +5,9 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 
-#ifndef   	NONCOPYABLE_HPP_
-# define   	NONCOPYABLE_HPP_
+#pragma once
+#ifndef _LIBQI_QI_NONCOPYABLE_HPP_
+#define _LIBQI_QI_NONCOPYABLE_HPP_
 
 namespace qi {
 
@@ -24,4 +25,4 @@ namespace qi {
   };
 }
 
-#endif	    /* !NONCOPYABLE_PP_ */
+#endif  // _LIBQI_QI_NONCOPYABLE_HPP_

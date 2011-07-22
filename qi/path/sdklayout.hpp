@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Herve CUCHE <hcuche@aldebaran-robotics.com>
@@ -11,8 +10,9 @@
  *  @brief find bin/lib/data/conf in a 'qi' standard sdk layout
  */
 
-#ifndef _QI_SDKLAYOUT_HPP_
-#define _QI_SDKLAYOUT_HPP_
+#pragma once
+#ifndef _LIBQI_QI_PATH_SDKLAYOUT_HPP_
+#define _LIBQI_QI_PATH_SDKLAYOUT_HPP_
 
 # include <vector>
 # include <string>
@@ -168,4 +168,4 @@ namespace qi
 
 }
 
-#endif  // _QI_SDKLAYOUT_HPP_
+#endif  // _LIBQI_QI_PATH_SDKLAYOUT_HPP_

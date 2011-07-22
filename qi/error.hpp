@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Herve CUCHE <hcuche@aldebaran-robotics.com>
@@ -10,8 +9,9 @@
  *  @brief
  */
 
-#ifndef _QI_ERROR_HPP_
-# define _QI_ERROR_HPP_
+#pragma once
+#ifndef _LIBQI_QI_ERROR_HPP_
+#define _LIBQI_QI_ERROR_HPP_
 
 # include <qi/api.hpp>
 
@@ -79,4 +79,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_ERROR_HPP_
+#endif  // _LIBQI_QI_ERROR_HPP_

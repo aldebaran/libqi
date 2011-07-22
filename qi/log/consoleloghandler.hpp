@@ -1,4 +1,3 @@
-#pragma once
 /*
  *  Author(s):
  *  - Cedric Gestes <gestes@aldebaran-robotics.com>
@@ -9,8 +8,9 @@
  */
 
 
-#ifndef CONSOLELOGHANDLER_HPP_
-# define CONSOLELOGHANDLER_HPP_
+#pragma once
+#ifndef _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
+#define _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
 
 # include <cstdarg>
 # include <qi/noncopyable.hpp>
@@ -43,4 +43,4 @@ namespace qi {
 }
 
 
-#endif  // !CONSOLELOGHANDLER_HPP_
+#endif  // _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_

@@ -4,8 +4,9 @@
  *  - Herve Cuche <hcuche@aldebaran-robotics.com>
  */
 
-#ifndef FILELOGHANDLER_HPP_
-# define FILELOGHANDLER_HPP_
+#pragma once
+#ifndef _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
+#define _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
 # include <qi/noncopyable.hpp>
@@ -37,4 +38,4 @@ namespace qi {
   }; // !log
 }; // !qi
 
-#endif // !FILELOGHANDLER_HPP_
+#endif  // _LIBQI_QI_LOG_FILELOGHANDLER_HPP_

@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Herve CUCHE <hcuche@aldebaran-robotics.com>
@@ -11,8 +10,9 @@
  *  @brief Tools to init SDK layouts & path.
  */
 
-#ifndef _QI_APPLICATION_HPP_
-#define _QI_APPLICATION_HPP_
+#pragma once
+#ifndef _LIBQI_QI_APPLICATION_HPP_
+#define _LIBQI_QI_APPLICATION_HPP_
 
 # include <qi/config.hpp>
 
@@ -52,4 +52,4 @@ namespace qi
   QI_API const char *program();
 };
 
-#endif  // _QI_APPLICATION_HPP_
+#endif  // _LIBQI_QI_APPLICATION_HPP_

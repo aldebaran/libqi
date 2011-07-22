@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Cedric GESTES <gestes@aldebaran-robotics.com>
@@ -10,8 +9,9 @@
  *  @brief standard utf8 locale and codecvt
  */
 
-#ifndef   	LOCALE_HPP_
-# define   	LOCALE_HPP_
+#pragma once
+#ifndef _LIBQI_QI_LOCALE_HPP_
+#define _LIBQI_QI_LOCALE_HPP_
 
 #include <locale>
 #include <qi/config.hpp>
@@ -38,4 +38,4 @@ namespace qi {
 
 }
 
-#endif	    /* !LOCALE_PP_ */
+#endif  // _LIBQI_QI_LOCALE_HPP_

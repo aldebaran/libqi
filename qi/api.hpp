@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Cedric GESTES <gestes@aldebaran-robotics.com>
@@ -10,8 +9,9 @@
  *  @brief dll import/export and compiler message
  */
 
-#ifndef _QI_API_HPP_
-#define _QI_API_HPP_
+#pragma once
+#ifndef _LIBQI_QI_API_HPP_
+#define _LIBQI_QI_API_HPP_
 
 // Deprecated
 #if defined(__GNUC__) && defined(WITH_DEPRECATED) && !defined(QI_NO_API_DEPRECATED)
@@ -87,5 +87,5 @@ Please consult the changelog for details. " #x)
   \brief compiler flags to export a function or a class
 */
 
-#endif  // _QI_API_HPP_
+#endif  // _LIBQI_QI_API_HPP_
 

@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Cedric GESTES <gestes@aldebaran-robotics.com>
@@ -10,8 +9,9 @@
  *  @brief dll import/export and compiler message
  */
 
-#ifndef _QI_CONFIG_HPP_
-#define _QI_CONFIG_HPP_
+#pragma once
+#ifndef _LIBQI_QI_CONFIG_HPP_
+#define _LIBQI_QI_CONFIG_HPP_
 
 #include <qi/api.hpp>
 
@@ -26,5 +26,5 @@
 # define QI_API
 #endif
 
-#endif  // _QI_CONFIG_HPP_
+#endif  // _LIBQI_QI_CONFIG_HPP_
 

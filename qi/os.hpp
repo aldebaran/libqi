@@ -1,4 +1,3 @@
-#pragma once
 /**
  * Author(s):
  *  - Herve CUCHE <hcuche@aldebaran-robotics.com>
@@ -11,8 +10,9 @@
  *  @brief os related cross platform functions
  */
 
-#ifndef _QI_OS_HPP_
-#define _QI_OS_HPP_
+#pragma once
+#ifndef _LIBQI_QI_OS_HPP_
+#define _LIBQI_QI_OS_HPP_
 
 # include <string>
 # include <qi/config.hpp>
@@ -243,4 +243,4 @@ namespace qi {
 };
 
 
-#endif  // _QI_OS_HPP_
+#endif  // _LIBQI_QI_OS_HPP_
