@@ -38,6 +38,8 @@
 #  define QI_IMPORT_API
 #endif
 
+
+//! \cond internal
 // Macros adapted from opencv2.2
 #if defined(_MSC_VER)
   #define QI_DO_PRAGMA(x) __pragma(x)
@@ -52,6 +54,7 @@
   #define QI_DO_PRAGMA(x)
   #define QI_MSG_PRAGMA(_msg)
 #endif
+//! \endcond
 
 
 // Use this macro to generate compiler warnings.
@@ -61,8 +64,7 @@
 # define QI_COMPILER_WARNING(x) QI_MSG_PRAGMA("Warning: " #x)
 #endif
 
-/** \brief Deprecate a header, add a message to explain what user should do
- */
+// Deprecate a header, add a message to explain what user should do
 #if !defined(WITH_DEPRECATED) || defined(QI_NO_DEPRECATED_HEADER)
 # define QI_DEPRECATED_HEADER(x)
 #else
@@ -79,6 +81,9 @@ Please consult the changelog for details. " #x)
 
   \def QI_COMPILER_WARNING(x)
   \brief generate a compiler warning
+
+  \def QI_API_DEPRECATED
+  \brief compiler flags to mark a function as deprecated. It will generate a compiler warning.
 
   \def QI_IMPORT_API
   \brief compiler flags to import a function or a class
