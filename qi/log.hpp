@@ -102,7 +102,7 @@ namespace qi {
       // simple NullStream that do nothing
       class NullStream {
       public:
-        NullStream(char *, ...)
+        NullStream(const char *, ...)
         {
         }
 
