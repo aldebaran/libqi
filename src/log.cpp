@@ -40,21 +40,21 @@ namespace qi {
       qi::os::timeval _date;
     } privateLog;
 
-    class rtLog
+    class Log
     {
     public:
-      inline rtLog();
-      inline ~rtLog();
+      inline Log();
+      inline ~Log();
 
       void run();
       void printLog();
 
     public:
-      bool                       rtLogInit;
-      boost::thread              rtLogThread;
-      boost::mutex               rtLogWriteLock;
-      boost::mutex               rtLogHandlerLock;
-      boost::condition_variable  rtLogReadyCond;
+      bool                       LogInit;
+      boost::thread              LogThread;
+      boost::mutex               LogWriteLock;
+      boost::mutex               LogHandlerLock;
+      boost::condition_variable  LogReadyCond;
 
       boost::lockfree::fifo<privateLog*>     logs;
       std::map<std::string, logFuncHandler > logHandlers;
@@ -65,9 +65,9 @@ namespace qi {
     static bool                   _glSyncLog = false;
     static ConsoleLogHandler      *_glConsoleLogHandler;
 
-    static rtLog                  *rtLogInstance;
-    static privateLog             rtLogBuffer[RTLOG_BUFFERS];
-    static volatile unsigned long rtLogPush = 0;
+    static Log                    *LogInstance;
+    static privateLog             LogBuffer[RTLOG_BUFFERS];
+    static volatile unsigned long LogPush = 0;
 
 
     static class LogGlobalInit
@@ -92,12 +92,12 @@ namespace qi {
 
 
 
-    void rtLog::printLog()
+    void Log::printLog()
     {
       privateLog* pl;
       while (logs.dequeue(&pl))
       {
-        boost::mutex::scoped_lock lock(rtLogHandlerLock);
+        boost::mutex::scoped_lock lock(LogHandlerLock);
         if (!logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
@@ -116,31 +116,31 @@ namespace qi {
       }
     }
 
-    void rtLog::run()
+    void Log::run()
     {
-      while (rtLogInit)
+      while (LogInit)
       {
         {
-          boost::mutex::scoped_lock lock(rtLogWriteLock);
-          rtLogReadyCond.wait(lock);
+          boost::mutex::scoped_lock lock(LogWriteLock);
+          LogReadyCond.wait(lock);
         }
 
         printLog();
       }
     };
 
-    inline rtLog::rtLog()
+    inline Log::Log()
     {
-      rtLogInit = true;
-      rtLogThread = boost::thread(&rtLog::run, this);
+      LogInit = true;
+        LogThread = boost::thread(&Log::run, this);
     };
 
-    inline rtLog::~rtLog()
+    inline Log::~Log()
     {
-      if (!rtLogInit)
+      if (!LogInit)
         return;
 
-      rtLogInit = false;
+      LogInit = false;
 
       rtLogThread.interrupt();
       rtLogThread.join();
@@ -207,11 +207,11 @@ namespace qi {
              const int             line)
 
     {
-      if (!rtLogInstance->rtLogInit)
+      if (!LogInstance->LogInit)
         return;
 
-      int tmpRtLogPush = ++rtLogPush % RTLOG_BUFFERS;
-      privateLog* pl = &(rtLogBuffer[tmpRtLogPush]);
+      int tmpRtLogPush = ++LogPush % RTLOG_BUFFERS;
+      privateLog* pl = &(LogBuffer[tmpRtLogPush]);
 
       qi::os::timeval tv;
       qi::os::gettimeofday(&tv);
@@ -228,11 +228,11 @@ namespace qi {
 
       if (_glSyncLog)
       {
-        if (!rtLogInstance->logHandlers.empty())
+        if (!LogInstance->logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
-          for (it = rtLogInstance->logHandlers.begin();
-               it != rtLogInstance->logHandlers.end(); ++it)
+          for (it = LogInstance->logHandlers.begin();
+               it != LogInstance->logHandlers.end(); ++it)
           {
             (*it).second(pl->_logLevel,
                          pl->_date,
@@ -246,21 +246,21 @@ namespace qi {
       }
       else
       {
-        rtLogInstance->logs.enqueue(pl);
-        rtLogInstance->rtLogReadyCond.notify_one();
+        LogInstance->logs.enqueue(pl);
+        LogInstance->LogReadyCond.notify_one();
       }
     }
 
     void addLogHandler(const std::string& name, logFuncHandler fct)
     {
-      boost::mutex::scoped_lock l(rtLogInstance->rtLogHandlerLock);
-      rtLogInstance->logHandlers[name] = fct;
+      boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
+      LogInstance->logHandlers[name] = fct;
     }
 
     void removeLogHandler(const std::string& name)
     {
-      boost::mutex::scoped_lock l(rtLogInstance->rtLogHandlerLock);
-      rtLogInstance->logHandlers.erase(name);
+      boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
+      LogInstance->logHandlers.erase(name);
     }
 
     const LogLevel stringToLogLevel(const char* verb)
