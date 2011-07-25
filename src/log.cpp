@@ -63,11 +63,29 @@ namespace qi {
     static LogLevel               _glVerbosity = qi::log::info;
     static int                    _glContext = false;
     static bool                   _glSyncLog = false;
+    static bool                   _glInit    = false;
     static ConsoleLogHandler      *_glConsoleLogHandler;
 
     static Log                    *LogInstance;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
+
+    static class SyncLog
+    {
+    public:
+      SyncLog()
+      {
+        _glInit = false;
+        qi::log::init();
+      }
+
+      ~SyncLog()
+      {
+        _glInit = false;
+        delete _glConsoleLogHandler;
+        delete LogInstance;
+      };
+    } synchLog;
 
     void Log::printLog()
     {
@@ -125,13 +143,7 @@ namespace qi {
         LogThread.interrupt();
         LogThread.join();
 
-
-#ifndef _WIN32
-      // Windows does not allow to print something on standard output
-      // after the main thread is kill (after an exit for exemple)
-      // so we do not show the log remain in the fifo (we lost them).
-      printLog();
-#endif
+        printLog();
       }
     }
 
@@ -189,6 +201,11 @@ namespace qi {
       setContext(ctx);
       setSynchronousLog(synchronous);
 
+      if (_glInit)
+      {
+        delete _glConsoleLogHandler;
+        delete LogInstance;
+      }
 
       _glConsoleLogHandler = new ConsoleLogHandler;
       LogInstance = new Log;
@@ -196,9 +213,14 @@ namespace qi {
                     boost::bind(&ConsoleLogHandler::log,
                                 _glConsoleLogHandler,
                                 _1, _2, _3, _4, _5, _6, _7));
-
+      _glInit = true;
     }
 
+    void flush()
+    {
+      if (_glInit)
+        LogInstance->printLog();
+    }
 
     void log(const LogLevel        verb,
              const char           *category,

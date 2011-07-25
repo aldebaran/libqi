@@ -217,7 +217,6 @@ namespace qi {
     QI_API qi::log::LogLevel verbosity();
 
 
-
     /**
      * \brief Set log context.
      *
@@ -262,6 +261,11 @@ namespace qi {
      * @param name name of the handler.
      */
     QI_API void removeLogHandler(const std::string& name);
+
+    /**
+     * \brief flush asynchronous log.
+     */
+    QI_API void flush();
 
     /** \class LogStream log.hpp "qi/log.hpp"
      */
