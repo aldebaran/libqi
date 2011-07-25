@@ -154,6 +154,12 @@ namespace qi {
                              const char*,
                              int> logFuncHandler;
 
+
+    QI_API void init(qi::log::LogLevel verb = qi::log::info,
+                     int ctx = 0,
+                     bool synchronous = true);
+
+
     /**
      * \brief Log function
      *

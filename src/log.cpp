@@ -69,29 +69,6 @@ namespace qi {
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
 
-
-    static class LogGlobalInit
-    {
-    public:
-      inline LogGlobalInit()
-      {
-        _glConsoleLogHandler = new ConsoleLogHandler;
-        rtLogInstance = new rtLog;
-        addLogHandler("consoleloghandler",
-                      boost::bind(&ConsoleLogHandler::log,
-                                  _glConsoleLogHandler,
-                                  _1, _2, _3, _4, _5, _6, _7));
-      }
-
-      inline ~LogGlobalInit() {
-        delete rtLogInstance;
-        delete _glConsoleLogHandler;
-      };
-
-    } gLogHandlerInit;
-
-
-
     void Log::printLog()
     {
       privateLog* pl;
@@ -132,6 +109,7 @@ namespace qi {
     inline Log::Log()
     {
       LogInit = true;
+      if (!_glSyncLog)
         LogThread = boost::thread(&Log::run, this);
     };
 
@@ -142,8 +120,11 @@ namespace qi {
 
       LogInit = false;
 
-      rtLogThread.interrupt();
-      rtLogThread.join();
+      if (!_glSyncLog)
+      {
+        LogThread.interrupt();
+        LogThread.join();
+
 
 #ifndef _WIN32
       // Windows does not allow to print something on standard output
@@ -151,6 +132,7 @@ namespace qi {
       // so we do not show the log remain in the fifo (we lost them).
       printLog();
 #endif
+      }
     }
 
     static void my_strcpy_log(char *dst, const char *src, int len) {
@@ -198,6 +180,25 @@ namespace qi {
       dst[len - 1] = 0;
      #endif
     }
+
+    void init(qi::log::LogLevel verb,
+              int ctx,
+              bool synchronous)
+    {
+      setVerbosity(verb);
+      setContext(ctx);
+      setSynchronousLog(synchronous);
+
+
+      _glConsoleLogHandler = new ConsoleLogHandler;
+      LogInstance = new Log;
+      addLogHandler("consoleloghandler",
+                    boost::bind(&ConsoleLogHandler::log,
+                                _glConsoleLogHandler,
+                                _1, _2, _3, _4, _5, _6, _7));
+
+    }
+
 
     void log(const LogLevel        verb,
              const char           *category,
