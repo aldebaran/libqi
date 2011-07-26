@@ -90,9 +90,9 @@ namespace qi {
     void Log::printLog()
     {
       privateLog* pl;
+      boost::mutex::scoped_lock lock(LogHandlerLock);
       while (logs.dequeue(&pl))
       {
-        boost::mutex::scoped_lock lock(LogHandlerLock);
         if (!logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
