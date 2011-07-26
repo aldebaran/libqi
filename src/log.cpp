@@ -64,6 +64,7 @@ namespace qi {
     static int                    _glContext = false;
     static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
+    static bool                   _glAtExit  = false;
     static ConsoleLogHandler      *_glConsoleLogHandler;
 
     static Log                    *LogInstance;
@@ -201,10 +202,19 @@ namespace qi {
       setContext(ctx);
       setSynchronousLog(synchronous);
 
+      if (_glAtExit)
+      {
+        atexit(qi::log::flush);
+      }
+
       if (_glInit)
       {
         delete _glConsoleLogHandler;
         delete LogInstance;
+      }
+      else
+      {
+        _glAtExit = true;
       }
 
       _glConsoleLogHandler = new ConsoleLogHandler;
