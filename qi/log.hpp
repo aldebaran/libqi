@@ -34,18 +34,17 @@
  *  Log in debug mode. Not compile on release.
  */
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
-# define qiLogDebug(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogDebug(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogDebug(...)        qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
-
 
 /**
  * \def qiLogVerbose
  *  Log in verbose mode. This mode isn't show by default but always compile.
  */
 #ifdef NO_QI_VERBOSE
-# define qiLogVerbose(...)      qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogVerbose(...)      if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -55,7 +54,7 @@
  *  Log in info mode.
  */
 #ifdef NO_QI_INFO
-# define qiLogInfo(...)         qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogInfo(...)         if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogInfo(...)         qi::log::LogStream(qi::log::info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -65,7 +64,7 @@
  *  Log in warning mode.
  */
 #ifdef NO_QI_WARNING
-# define qiLogWarning(...)      qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogWarning(...)      if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogWarning(...)      qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -75,7 +74,7 @@
  *  Log in error mode.
  */
 #ifdef NO_QI_ERROR
-# define qiLogError(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogError(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogError(...)        qi::log::LogStream(qi::log::error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
@@ -85,7 +84,7 @@
  *  Log in fatal mode.
  */
 #ifdef NO_QI_FATAL
-# define qiLogFatal(...)        qi::log::detail::NullStream(__VA_ARGS__).self()
+# define qiLogFatal(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
 #else
 # define qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
