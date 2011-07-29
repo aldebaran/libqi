@@ -23,7 +23,7 @@ HEADER_REGEXP = re.compile(r'^#\s*include\s*[<"](.*?)[">]')
 def is_header(filename):
     """ Is this file a header? """
     ext = os.path.splitext(filename)[-1]
-    return ext in [".h", ".hpp", ".hxx"]
+    return ext in [".h", ".hh", ".hpp", ".hxx"]
 
 def is_source(filename):
     """ If the file a source? """
@@ -32,7 +32,8 @@ def is_source(filename):
     for exclude in [".git", ".hg", ".svn", ".cvs"]:
         if exclude in filename:
             return False
-    return ext in [".h", ".hpp", ".hxx", ".c", ".cxx", ".cpp"]
+    return ext in [".h", ".hh", ".hpp", ".hxx",
+                   ".c", ".cc", ".cpp", ".cxx"]
 
 
 def parse_headers(naoqi_sdk):
