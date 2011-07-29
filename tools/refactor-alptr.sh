@@ -1,10 +1,8 @@
 #!/bin/sh
 ##
-## Author(s):
-##  - Cedric GESTES <gestes@aldebaran-robotics.com>
-##
 ## Copyright (C) 2011 Aldebaran Robotics
-##
+
+# Replace AL::ALPtr* by their boost equivalent
 
 replacer $@ "(\s*#\s*include\s+)[\"<]\s*alcore/alptr.h[\">]" "\1<boost/shared_ptr.hpp>"
 replacer $@ "AL::ALPtr" "boost::shared_ptr"

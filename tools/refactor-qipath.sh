@@ -1,10 +1,10 @@
 #!/bin/sh
 ##
-## Author(s):
-##  - Cedric GESTES <gestes@aldebaran-robotics.com>
-##
 ## Copyright (C) 2011 Aldebaran Robotics
 ##
+
+# Temporary fix for qi::path API changes
+# findConfiguration -> findConf and so on
 
 replacer $@ 'findConfiguration[ \t]*\('                'findConf('
 replacer $@ 'findBinary[ \t]*\('                       'findBin('
