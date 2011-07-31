@@ -13,15 +13,28 @@
 /**
  * call this to make some log
  */
-void qi_log(const QiLogLevel  verb,
-            const char       *file,
-            const char       *fct,
-            const int         line,
-            const char       *fmt, ...)
+void qi_log_context(const QiLogLevel  verb,
+                    const char       *file,
+                    const char       *fct,
+                    const int         line,
+                    const char       *cat,
+                    const char       *fmt, ...)
 {
-  va_list vl;
-  va_start(vl, fmt);
-  qi::log::log(static_cast<qi::log::LogLevel>(verb), file, fct, line, fmt, vl);
-  va_end(vl);
+//TODO
+//  va_list vl;
+//  va_start(vl, fmt);
+//  qi::log::log(static_cast<qi::log::LogLevel>(verb), cat, file, fct, line, fmt, vl);
+//  va_end(vl);
+}
+
+void qi_log_context(const QiLogLevel  verb,
+                    const char       *cat,
+                    const char       *fmt, ...)
+{
+//TODO
+//  va_list vl;
+//  va_start(vl, fmt);
+//  qi::log::log(static_cast<qi::log::LogLevel>(verb), cat, 0, 0, 0, fmt, vl);
+//  va_end(vl);
 }
 
