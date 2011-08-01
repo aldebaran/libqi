@@ -71,20 +71,18 @@ namespace qi {
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
 
-    static class SyncLog
+    static class DefaultLogInit
     {
     public:
-      SyncLog()
+      DefaultLogInit()
       {
         _glInit = false;
         qi::log::init();
       }
 
-      ~SyncLog()
+      ~DefaultLogInit()
       {
-        _glInit = false;
-        delete _glConsoleLogHandler;
-        delete LogInstance;
+        qi::log::destroy();
       };
     } synchLog;
 
@@ -202,28 +200,28 @@ namespace qi {
       setContext(ctx);
       setSynchronousLog(synchronous);
 
-      if (_glAtExit)
-      {
-        atexit(qi::log::flush);
-      }
-
       if (_glInit)
-      {
-        delete _glConsoleLogHandler;
-        delete LogInstance;
-      }
-      else
-      {
-        _glAtExit = true;
-      }
+        destroy();
 
       _glConsoleLogHandler = new ConsoleLogHandler;
-      LogInstance = new Log;
+      LogInstance          = new Log;
       addLogHandler("consoleloghandler",
                     boost::bind(&ConsoleLogHandler::log,
                                 _glConsoleLogHandler,
                                 _1, _2, _3, _4, _5, _6, _7));
       _glInit = true;
+    }
+
+    void destroy()
+    {
+      if (!_glInit)
+        return;
+      _glInit = false;
+      LogInstance->printLog();
+      delete _glConsoleLogHandler;
+      _glConsoleLogHandler = 0;
+      delete LogInstance;
+      LogInstance = 0;
     }
 
     void flush()
@@ -286,12 +284,16 @@ namespace qi {
 
     void addLogHandler(const std::string& name, logFuncHandler fct)
     {
+      if (!LogInstance)
+        return;
       boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
       LogInstance->logHandlers[name] = fct;
     }
 
     void removeLogHandler(const std::string& name)
     {
+      if (!LogInstance)
+        return;
       boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
       LogInstance->logHandlers.erase(name);
     }

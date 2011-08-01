@@ -153,11 +153,22 @@ namespace qi {
                              const char*,
                              int> logFuncHandler;
 
-
+    /**
+     * \brief init the logging system (could be avoided)
+     * \param verb Log verbosity
+     * \param ctx Display Context
+     * \param synchronous Synchronous log?
+     */
     QI_API void init(qi::log::LogLevel verb = qi::log::info,
                      int ctx = 0,
                      bool synchronous = true);
 
+    /** \brief stop and flush the logging system
+     * should be called in the main of program using atexit.
+     * for example: atexit(qi::log::destroy)
+     * This is useful only for asynchronous log.
+     */
+    QI_API void destroy();
 
     /**
      * \brief Log function
