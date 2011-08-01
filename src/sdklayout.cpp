@@ -83,7 +83,7 @@ namespace qi {
     *_private = *rhs._private;
   }
 
-  const SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
+  SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
     *_private = *rhs._private;
     return *this;
   }
