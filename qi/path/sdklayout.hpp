@@ -103,7 +103,7 @@ namespace qi
     explicit SDKLayout(const std::string &prefix, const std::string &mode = "");
 
     SDKLayout(const SDKLayout &rhs);
-    const SDKLayout &operator=(const SDKLayout &rhs);
+    SDKLayout &operator=(const SDKLayout &rhs);
 
     virtual ~SDKLayout();
 

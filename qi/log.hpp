@@ -289,7 +289,7 @@ namespace qi {
        * \brief LogStream assignment operator.
        * @param rhs LogStream.
        */
-      const LogStream &operator=(const LogStream &rhs)
+      LogStream &operator=(const LogStream &rhs)
       {
         _logLevel = rhs._logLevel;
         _category = rhs._category;
