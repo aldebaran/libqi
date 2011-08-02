@@ -396,10 +396,17 @@ TEST(qiPath, dataPaths)
 
   std::vector<std::string> expectedPrefPaths;
 
+ #ifndef _WIN32
   bfs::path writeablePath(getHomePath() / ".local" / "share" / "foo");
   bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
-
   expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
+ #else
+  std::string envUserAppData = qi::os::getenv("AppData");
+  bfs::path writeablePath(envUserAppData / "foo");
+  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
+  expectedPrefPaths.push_back((expected / "foo").make_preferred().string(qi::unicodeFacet()));
+ #endif
+
   expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 
   std::vector<std::string> actualPrefsPaths = sdkl->dataPaths("foo");
