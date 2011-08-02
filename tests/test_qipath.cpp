@@ -284,6 +284,7 @@ TEST(qiPath, GetLinuxlibPaths)
 // }
 #endif
 
+#ifndef _WIN32
 TEST(qiPath, callingGetUserDataPath)
 {
   bfs::path expected(getHomePath() / ".local" / "share" / "foo" / "foo.data");
@@ -293,6 +294,20 @@ TEST(qiPath, callingGetUserDataPath)
 
   ASSERT_EQ(expected.string(qi::unicodeFacet()), actual);
 }
+#else
+TEST(qiPath, callingGetUserDataPath)
+{
+  std::string appdata = qi::os::getenv("AppData");
+  boost::to_lower(appdata);
+  bfs::path envUserAppData(appdata, qi::unicodeFacet());
+  bfs::path expected = envUserAppData / "foo" / "foo.data";
+
+  std::string actual = qi::path::userWritableDataPath("foo", "foo.data");
+  boost::to_lower(actual);
+
+  ASSERT_EQ(expected.string(qi::unicodeFacet()), actual);
+}
+#endif
 
 #ifndef _WIN32
 TEST(qiPath, LinuxConfigPaths)
@@ -398,15 +413,15 @@ TEST(qiPath, dataPaths)
 
  #ifndef _WIN32
   bfs::path writeablePath(getHomePath() / ".local" / "share" / "foo");
-  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
-  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
  #else
   std::string envUserAppData = qi::os::getenv("AppData");
-  bfs::path writeablePath(envUserAppData / "foo");
-  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
-  expectedPrefPaths.push_back((expected / "foo").make_preferred().string(qi::unicodeFacet()));
+  boost::to_lower(envUserAppData );
+  bfs::path writeablePath(envUserAppData, qi::unicodeFacet());
+  writeablePath = writeablePath / "foo";
  #endif
 
+  bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
+  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
   expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
 
   std::vector<std::string> actualPrefsPaths = sdkl->dataPaths("foo");
@@ -454,7 +469,14 @@ TEST(qiPath, readingWritingFindData)
 {
   const char* args = { (char *) "build/sdk/bin/foo" };
   qi::SDKLayout* sdkl = new qi::SDKLayout(args);
+
+ #ifndef _WIN32
   bfs::path writeablePath(bfs::absolute(qi::os::home()) / ".local" / "share" / "foo" / "foo.dat");
+ #else
+  std::string userAppData = qi::os::getenv("AppData");
+  boost::to_lower(userAppData);
+  bfs::path writeablePath(bfs::absolute(userAppData) / "foo" / "foo.dat");
+ #endif
 
   std::string fooDat = sdkl->userWritableDataPath("foo", "foo.dat");
   std::ofstream ofs;
@@ -463,6 +485,7 @@ TEST(qiPath, readingWritingFindData)
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
   fooDat = sdkl->findData("foo", "foo.dat");
+  boost::to_lower(fooDat);
   ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), fooDat);
   std::cout << "removing: " << fooDat << std::endl;
   remove(fooDat.c_str());
