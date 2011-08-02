@@ -98,7 +98,9 @@ namespace qi {
 
     namespace detail {
 
-      // simple NullStream that do nothing
+      /**
+       * \class NullStream log.hpp "qi/log.hpp"
+       */
       class NullStream {
       public:
         NullStream(const char *, ...)
@@ -141,8 +143,9 @@ namespace qi {
 
     /**
      * \typedef logFuncHandler
-     * \brief Boost delegate to log function (verb, category,
-     *        message, file, function, line, date).
+     * \brief Boost delegate to log function (verbosity lv, date of log,
+     *        category, message, file, function, line).
+     *        e.g.
      */
     typedef boost::function7<void,
                              const qi::log::LogLevel,
@@ -175,12 +178,12 @@ namespace qi {
      *
      * You should call qiLog* macro.
      *
-     * @param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
-     * @param category Log category.
-     * @param msg Log message.
-     * @param file __FILE__
-     * @param function __FUNCTION__
-     * @param line __LINE__
+     * \param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+     * \param category Log category.
+     * \param msg Log message.
+     * \param file __FILE__
+     * \param function __FUNCTION__
+     * \param line __LINE__
      */
     QI_API void log(const qi::log::LogLevel verb,
                     const char              *category,
@@ -192,7 +195,7 @@ namespace qi {
 
     /**
      * \brief Convert log verbosity to char*
-     * @param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+     * \param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
      *
      * \return [SILENT], [FATAL], [ERROR],
      *         [WARN ], [INFO ], [VERB ],
@@ -202,7 +205,7 @@ namespace qi {
 
     /**
      * \brief Convert string to log verbosity
-     * @param verb debug, verbose, info,
+     * \param verb debug, verbose, info,
      *             warning, error, fatal,
      *             silent
      *
@@ -216,13 +219,13 @@ namespace qi {
      *
      * If you don't want any log use silent mode.
      *
-     * @param lv maximal verbosity shown
+     * \param lv maximal verbosity shown
      */
     QI_API void setVerbosity(const qi::log::LogLevel lv);
 
     /**
      * \brief Get log verbosity.
-     * @return Maximal verbosity display.
+     * \return Maximal verbosity display.
      */
     QI_API qi::log::LogLevel verbosity();
 
@@ -232,7 +235,7 @@ namespace qi {
      *
      * Display log context (line, function, file).
      *
-     * @param ctx Value to set context.
+     * \param ctx Value to set context.
      *            0: none, 1: categories, 2: date, 3: file+line,
      *            4: date+categories, 5: date+line+file,
      *            6: categories+line+file,
@@ -242,7 +245,7 @@ namespace qi {
 
     /**
      * \brief Get log context.
-     * @return true if active, false otherwise.
+     * \return true if active, false otherwise.
      */
     QI_API int context();
 
@@ -250,7 +253,7 @@ namespace qi {
     /**
      * \brief Set synchronous logs.
      *
-     * @param sync Value to set context.
+     * \param sync Value to set context.
      */
     QI_API void setSynchronousLog(bool sync);
 
@@ -259,8 +262,8 @@ namespace qi {
     /**
      * \brief Add log handler.
      *
-     * @param fct Boost delegate to log handler function.
-     * @param name name of the handler, this is the one used to remove handler (prefer lowcase).
+     * \param fct Boost delegate to log handler function.
+     * \param name name of the handler, this is the one used to remove handler (prefer lowcase).
      */
     QI_API void addLogHandler(const std::string& name,
                               qi::log::logFuncHandler fct);
@@ -268,7 +271,7 @@ namespace qi {
     /**
      * \brief remove log handler.
      *
-     * @param name name of the handler.
+     * \param name name of the handler.
      */
     QI_API void removeLogHandler(const std::string& name);
 
@@ -277,7 +280,8 @@ namespace qi {
      */
     QI_API void flush();
 
-    /** \class LogStream log.hpp "qi/log.hpp"
+    /**
+     * \class LogStream log.hpp "qi/log.hpp"
      */
     class LogStream: public std::stringstream
     {
@@ -285,7 +289,7 @@ namespace qi {
 
       /**
        * \brief LogStream. Copy Ctor.
-       * @param rhs LogStream.
+       * \param rhs LogStream.
        */
       LogStream(const LogStream &rhs)
         : _logLevel(rhs._logLevel)
@@ -298,7 +302,7 @@ namespace qi {
 
       /**
        * \brief LogStream assignment operator.
-       * @param rhs LogStream.
+       * \param rhs LogStream.
        */
       LogStream &operator=(const LogStream &rhs)
       {
@@ -312,11 +316,11 @@ namespace qi {
 
       /**
        * \brief LogStream. Will log at object destruction
-       * @param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
-       * @param file __FILE__
-       * @param function __FUNCTION__
-       * @param line __LINE__
-       * @param category log category
+       * \param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+       * \param file __FILE__
+       * \param function __FUNCTION__
+       * \param line __LINE__
+       * \param category log category
        */
       LogStream(const LogLevel    level,
                 const char        *file,
@@ -333,12 +337,12 @@ namespace qi {
 
       /**
        * \brief LogStream. Will log at object destruction
-       * @param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
-       * @param file __FILE__
-       * @param function __FUNCTION__
-       * @param line __LINE__
-       * @param category log category
-       * @param fmt message format.
+       * \param level { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
+       * \param file __FILE__
+       * \param function __FUNCTION__
+       * \param line __LINE__
+       * \param category log category
+       * \param fmt message format.
        */
       LogStream(const LogLevel    level,
                 const char        *file,
