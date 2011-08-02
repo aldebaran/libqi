@@ -446,7 +446,8 @@ namespace qi {
     path = path / ".local" / "share" / applicationName / filename;
     path = path.make_preferred();
    #else
-    std::string envUserAppData = qi::os::getenv("AppData");
+    boost::filesystem::path envUserAppData(qi::os::getenv("AppData"),
+                                           qi::unicodeFacet());
     path = envUserAppData / applicationName / filename;
     path = path.make_preferred();
    #endif
