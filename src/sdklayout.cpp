@@ -437,13 +437,19 @@ namespace qi {
 
 
   std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
-                                                 const std::string &filename) const
+                                              const std::string &filename) const
   {
     _private->checkInit();
     boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
 
+   #ifndef _WIN32
     path = path / ".local" / "share" / applicationName / filename;
     path = path.make_preferred();
+   #else
+    std::string envUserAppData = qi::os::getenv("AppData");
+    path = envUserAppData / applicationName / filename;
+    path = path.make_preferred();
+   #endif
 
     boost::filesystem::path dest = path;
     if (!filename.empty())

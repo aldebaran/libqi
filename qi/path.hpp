@@ -195,7 +195,8 @@ namespace qi
      * @param applicationName The name of the application (in UTF-8).
      * @param filename If filename is empty, return the directory
      * in which to write. Otherwise the path is constructed like this:
-     * <home>/.local/share/<applicatioName>/<filename>
+     * <home>/.local/share/<applicatioName>/<filename> (on linux)
+     * %AppData%\<applicatioName>\<filename> (windows)
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
      */
