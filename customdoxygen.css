@@ -838,16 +838,10 @@ dl.bug
  * css for to-ald-doc header
  */
 
-.al-doc a {
-    font-size : 16px;
-    color:#000F2A;
-    text-decoration: underline;
-  }
-
-.al-doc a:hover {
-    color:#007EC3;
-  }
-
-.al-doc li {
-    padding-right: 20px;
-  }
+#back {
+    margin-right: 12px;
+    text-align: right;
+    display: block;
+    float: right;
+	font: 40% Tahoma, Arial,sans-serif;
+}
