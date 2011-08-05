@@ -19,6 +19,7 @@
 
 /**
  *  @namespace qi::path
+ * \ingroup qipath
  *  @brief Set of tools to handle SDK layouts.
  *
  * \warning Every string MUST be encoded in UTF8. Every returned string are encoded in UTF-8.
@@ -31,6 +32,7 @@ namespace qi
 
     /**
      * \brief Return the default SDK prefix path.
+     * \ingroup qipath
      * It's always a complete, native path.
      */
     QI_API std::string sdkPrefix();
@@ -67,7 +69,7 @@ namespace qi
 
 
     /** \brief Look for a binary.
-
+     * \ingroup qipath
      * This will search in all SDK prefixes for a file named 'name'.
      * It will then add '.exe' suffix if needed.
      * \param name The full name of the binary, or just the name
@@ -78,6 +80,7 @@ namespace qi
     QI_API std::string findBin(const std::string& name);
 
     /** \brief Look for a library.
+     * \ingroup qipath
      *
      * This will search in all SDK prefixes for a file named 'name'.
      * It will then add 'lib' prefix, and appropriated suffixes
@@ -94,9 +97,11 @@ namespace qi
 
     /**
      * \brief Look for a configuration file.
+     * \ingroup qipath
      *
      * The file is searched in a list of possible directories,
      * the first match is returned.
+     * \verbatim
      * The list of paths is constructed like this:
      * - first, a standard path in the home directory (like
      *  ~/.config/<applicationName>/<filename>)
@@ -105,6 +110,7 @@ namespace qi
      *     for each known SDK prefix
      * - then a standard path in the system. (like
      *   /etc/<applicationName>/<filename>)
+     * \endverbatim
      * @param applicationName Name of the application (in UTF-8).
      * @param filename Name of the file to look for (in UTF-8).
      * You can specify subdirectories using "/" as directory separator.
@@ -116,10 +122,12 @@ namespace qi
 
     /**
      * \brief Look for a data file.
+     * \ingroup qipath
      *
      * The file is search in a list of possible directories,
      * the first match is returned.
      * The list of paths is constructed like this:
+     * \verbatim
      * - first, a standard path in the home directory (like
      *  ~/.local/share/<applicationName>/<filename>)
      * - then
@@ -127,6 +135,7 @@ namespace qi
      *     for each known SDK prefix
      * - then a standard path in the system. (like
      *   /usr/share/<applicationName>/<filename>)
+     * \endverbatim
      *
      * @param applicationName Name of the application (in UTF-8).
      * @param filename Name of the file to look for (in UTF-8).
@@ -141,6 +150,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for
      *  configuration files for the given application name.
+     * \ingroup qipath
      *
      * This is used by the qi::path::findConfigurationPath method.
      * @param applicationName Name of the application (in UTF-8).
@@ -154,6 +164,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for data files
      * for the given application name.
+     * \ingroup qipath
      *
      * This is used by the qi::path::findDataPath method.
      * @param applicationName Name of the application (in UTF-8).
@@ -167,6 +178,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for
      *  binaries.
+     * \ingroup qipath
      *
      * This is used by the qi::path::findBin() method.
      * @return A list of directories.
@@ -179,6 +191,7 @@ namespace qi
     /**
      * \brief Get the list of directories used when searching for
      *  libraries.
+     * \ingroup qipath
      *
      * This is used by the qi::path::findLib() method.
      * @return A list of directories.
@@ -191,27 +204,33 @@ namespace qi
 
     /**
      * \brief Get the writable data files path for users.
+     * \ingroup qipath
      *
      * @param applicationName The name of the application (in UTF-8).
      * @param filename If filename is empty, return the directory
      * in which to write. Otherwise the path is constructed like this:
+     * \verbatim
      * <home>/.local/share/<applicatioName>/<filename> (on linux)
      * %AppData%\<applicatioName>\<filename> (windows)
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
+     * \endverbatim
      */
     QI_API std::string userWritableDataPath(const std::string& applicationName,
                                             const std::string& filename);
 
     /**
      * \brief Get the writable configuration files path for users.
+     * \ingroup qipath
      *
      * @param applicationName The name of the application.
      * @param filename If filename is empty, return the directory
      * in which to write. Otherwise the path is constructed like this:
+     * \verbatim
      * <home>/.config/<applicatioName>/<filename>
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
+     * \endverbatim
      */
     QI_API std::string userWritableConfPath(const std::string& applicationName,
                                             const std::string& filename="");

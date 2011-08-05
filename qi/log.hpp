@@ -7,7 +7,7 @@
  *  Copyright (C) 2010, 2011 Aldebaran Robotics
  */
 
-/** @file
+/** @file qi/log.hpp
  *  @brief Convenient log macro
  */
 
@@ -28,10 +28,21 @@
 #include <qi/config.hpp>
 #include <qi/os.hpp>
 
+/** \file qi/log.hpp
+ *
+ * \ingroup qilog
+ */
 
 /**
  * \def qiLogDebug
+ * \ingroup qilog
  *  Log in debug mode. Not compile on release.
+ * use as follow:
+ * \code
+ * qiLogDebug("foo.bar", "my foo is %d bar", 42);
+ * or
+ * qiLogDebug("foo.bar") << "my foo is " << 42 << "bar";
+ * \endcode
  */
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define qiLogDebug(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
@@ -41,6 +52,7 @@
 
 /**
  * \def qiLogVerbose
+ * \ingroup qilog
  *  Log in verbose mode. This mode isn't show by default but always compile.
  */
 #ifdef NO_QI_VERBOSE
@@ -51,6 +63,7 @@
 
 /**
  * \def qiLogInfo
+ * \ingroup qilog
  *  Log in info mode.
  */
 #ifdef NO_QI_INFO
@@ -61,6 +74,7 @@
 
 /**
  * \def qiLogWarning
+ * \ingroup qilog
  *  Log in warning mode.
  */
 #ifdef NO_QI_WARNING
@@ -71,6 +85,7 @@
 
 /**
  * \def qiLogError
+ * \ingroup qilog
  *  Log in error mode.
  */
 #ifdef NO_QI_ERROR
@@ -81,6 +96,7 @@
 
 /**
  * \def qiLogFatal
+ * \ingroup qilog
  *  Log in fatal mode.
  */
 #ifdef NO_QI_FATAL
@@ -91,6 +107,7 @@
 
 /**
  * \namespace qi::log
+ * \ingroup qilog
  * \brief log implementation.
  */
 namespace qi {
@@ -98,9 +115,6 @@ namespace qi {
 
     namespace detail {
 
-      /**
-       * \class NullStream log.hpp "qi/log.hpp"
-       */
       class NullStream {
       public:
         NullStream(const char *, ...)
@@ -127,8 +141,10 @@ namespace qi {
     };
 
 
+
     /**
      * \enum LogLevel
+     * \ingroup qilog
      * \brief seven log levels display.
      */
     enum QI_API LogLevel {
@@ -143,6 +159,7 @@ namespace qi {
 
     /**
      * \typedef logFuncHandler
+     * \ingroup qilog
      * \brief Boost delegate to log function (verbosity lv, date of log,
      *        category, message, file, function, line).
      *        e.g.
@@ -158,6 +175,7 @@ namespace qi {
 
     /**
      * \brief init the logging system (could be avoided)
+     * \ingroup qilog
      * \param verb Log verbosity
      * \param ctx Display Context
      * \param synchronous Synchronous log?
@@ -167,6 +185,7 @@ namespace qi {
                      bool synchronous = true);
 
     /** \brief stop and flush the logging system
+     * \ingroup qilog
      * should be called in the main of program using atexit.
      * for example: atexit(qi::log::destroy)
      * This is useful only for asynchronous log.
@@ -175,6 +194,7 @@ namespace qi {
 
     /**
      * \brief Log function
+     * \ingroup qilog
      *
      * You should call qiLog* macro.
      *
@@ -195,6 +215,7 @@ namespace qi {
 
     /**
      * \brief Convert log verbosity to char*
+     * \ingroup qilog
      * \param verb { debug = 6, verbose=5, info = 4, warning = 3, error = 2, fatal = 1, silent = 0 }
      *
      * \return [SILENT], [FATAL], [ERROR],
@@ -205,6 +226,7 @@ namespace qi {
 
     /**
      * \brief Convert string to log verbosity
+     * \ingroup qilog
      * \param verb debug, verbose, info,
      *             warning, error, fatal,
      *             silent
@@ -216,6 +238,7 @@ namespace qi {
 
     /**
      * \brief Set log verbosity.
+     * \ingroup qilog
      *
      * If you don't want any log use silent mode.
      *
@@ -225,6 +248,7 @@ namespace qi {
 
     /**
      * \brief Get log verbosity.
+     * \ingroup qilog
      * \return Maximal verbosity display.
      */
     QI_API qi::log::LogLevel verbosity();
@@ -232,6 +256,7 @@ namespace qi {
 
     /**
      * \brief Set log context.
+     * \ingroup qilog
      *
      * Display log context (line, function, file).
      *
@@ -245,6 +270,7 @@ namespace qi {
 
     /**
      * \brief Get log context.
+     * \ingroup qilog
      * \return true if active, false otherwise.
      */
     QI_API int context();
@@ -252,6 +278,7 @@ namespace qi {
 
     /**
      * \brief Set synchronous logs.
+     * \ingroup qilog
      *
      * \param sync Value to set context.
      */
@@ -261,6 +288,7 @@ namespace qi {
 
     /**
      * \brief Add log handler.
+     * \ingroup qilog
      *
      * \param fct Boost delegate to log handler function.
      * \param name name of the handler, this is the one used to remove handler (prefer lowcase).
@@ -270,6 +298,7 @@ namespace qi {
 
     /**
      * \brief remove log handler.
+     * \ingroup qilog
      *
      * \param name name of the handler.
      */
@@ -277,11 +306,14 @@ namespace qi {
 
     /**
      * \brief flush asynchronous log.
+     * \ingroup qilog
      */
     QI_API void flush();
 
     /**
-     * \class LogStream log.hpp "qi/log.hpp"
+     * \class LogStream qi/log.hpp
+     * \ingroup qilog
+     * \brief Each log macro create a LogStream object.
      */
     class LogStream: public std::stringstream
     {

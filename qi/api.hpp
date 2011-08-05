@@ -77,18 +77,23 @@ Please consult the changelog for details. " #x)
 
 /**
   \def QI_DEPRECATED_HEADER(x)
+  \ingroup qiapi
   \brief generate a compiler warning stating a header is deprecated.
 
   \def QI_COMPILER_WARNING(x)
+  \ingroup qiapi
   \brief generate a compiler warning
 
   \def QI_API_DEPRECATED
+  \ingroup qiapi
   \brief compiler flags to mark a function as deprecated. It will generate a compiler warning.
 
   \def QI_IMPORT_API
+  \ingroup qiapi
   \brief compiler flags to import a function or a class
 
   \def QI_EXPORT_API
+  \ingroup qiapi
   \brief compiler flags to export a function or a class
 */
 

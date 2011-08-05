@@ -22,6 +22,7 @@ struct stat;
 /**
  * \namespace qi::os
  * \brief OS abstraction layer.
+ * \ingroup qios
  *
  * Include posix compatibility support for OS not following posix.
  *
@@ -35,7 +36,7 @@ namespace qi {
   namespace os {
 
 
-    /** \brief Stream open a file.
+    /** \brief Open a file.
      *
      * Nothing special under posix systems, it's only useful for Windows,
      * where files should be open using a widestring.
@@ -44,6 +45,8 @@ namespace qi {
      * \param filename Path to the file (in UTF-8).
      * \param mode The mode.
      * \return A FILE* handle, 0 on error.
+     * \ingroup qios
+     * \since 1.12
      */
     QI_API FILE* fopen(const char *filename, const char *mode);
 
@@ -55,6 +58,8 @@ namespace qi {
      *  by the function.
      *  You need to include <sys/stat.h> to get access to struct stat.
      *  \return 0 on success, -1 on error
+     *  \ingroup qios
+     *  \since 1.12
      */
     // FIXME: explain how to use stat on windows !
     // (it's definitely NOT in <sys/stat.h> ...
@@ -68,6 +73,9 @@ namespace qi {
      *  \param var The environment variable to search for.
      *  \return A pointer to the value in the environment,
      *  or an empty string if there is no match.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::setenv
      */
     QI_API std::string getenv(const char *var);
 
@@ -79,12 +87,18 @@ namespace qi {
      *  \param var The variable name.
      *  \param value The value of the variable.
      *  \return 0 on success, or -1 on error.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::getenv
      */
     QI_API int setenv(const char *var, const char *value);
 
     /** \brief Check if the current program is running under a debugger.
+
      *  \warning Not implement for windows.
      *  \return -1 on error, 1 if the program is currently being debugged, 0 otherwize.
+     *  \ingroup qios
+     *  \since 1.12
      */
     QI_API int checkdbg();
 
@@ -94,6 +108,9 @@ namespace qi {
      *  Makes the calling thread sleep until seconds have elapsed
      *  or a signal arrives which is not ignored.
      *  \param seconds Number of second to sleep for
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::msleep
      */
     QI_API void sleep(unsigned int seconds);
 
@@ -103,6 +120,10 @@ namespace qi {
      *  Makes the calling thread sleep until millliseconds have elapsed
      *  or a signal arrives which is not ignored.
      *  \param milliseconds Number of milliseconds to sleep for
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::sleep
+     *  \file qi/os.hpp
      */
     QI_API void msleep(unsigned int milliseconds);
 
@@ -117,6 +138,9 @@ namespace qi {
      *
      *  \param filename Name of the dynamic library.
      *  \param flag Flags to load the dynamic library.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::dlsym qi::os::dlerror qi::os::dlclose
      */
     QI_API void *dlopen(const char *filename, int flag = -1);
 
@@ -128,6 +152,9 @@ namespace qi {
      *
      *  \param handle The dynamic library handle.
      *  \return 0 on success, and nonzero on error.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::dlopen qi::os::dlsym qi::os::dlerror
      */
     QI_API int dlclose(void *handle);
 
@@ -139,6 +166,9 @@ namespace qi {
      *
      *  \param handle Handle of a dynamic library returned by dlopen().
      *  \param symbol The null-terminated symbol name.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::dlopen qi::os::dlerror qi::os::dlclose
      */
     QI_API void *dlsym(void *handle, const char *symbol);
 
@@ -151,6 +181,9 @@ namespace qi {
      *  \return It returns NULL if no errors have occurred since
      *  initialization or since it was last called or the human
      *  readable string.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::dlopen qi::os::dlsym qi::os::dlclose
      */
     QI_API const char *dlerror(void);
 
@@ -163,6 +196,9 @@ namespace qi {
      *  \param argv The command line arguments of the new process
      *              as an array (NULL terminated).
      *  \return -1 on error, child pid otherwise.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::waitpid qi::os::spawnlp qi::os::system
      */
     QI_API int spawnvp(char *const argv[]);
 
@@ -174,6 +210,9 @@ namespace qi {
      *  \param ... The command line arguments of the new process
      *             as var args.
      *  \return -1 on error, child pid otherwise.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::waitpid qi::os::spawnvp qi::os::system
      */
     QI_API int spawnlp(const char* argv, ...);
 
@@ -185,6 +224,9 @@ namespace qi {
      *  \param command Command to execute.
      *  \return The value returned is -1 on error, and the return status
      *   of the command otherwise.
+     *  \ingroup qios
+     *  \since 1.12
+     *  \see qi::os::spawnlp qi::os::spawnvp
      */
     QI_API int system(const char *command);
 
@@ -203,16 +245,21 @@ namespace qi {
      *           found). The exact value is an errno code.
      *    rc < 0 means that the child was killed by a signal.
      *           The value of the signal is -rc.
+     * \ingroup qios
+     * \since 1.12
+     * \see qi::os::spawnlp qi::os::spawnvp
      */
     QI_API int waitpid(int pid, int* status);
 
     /**
      * \brief Return path to the current user's HOME.
+     * \ingroup qios
      */
     QI_API std::string home();
 
     /**
      * \brief Return a temporary directory
+     * \ingroup qios
      *        The directory is writeable and exits.
      *        The caller is responsible of destroying the temporary
      *        directory.
@@ -223,6 +270,7 @@ namespace qi {
 
 
     /** \brief qi::os::timeval struct similar to POSIX timeval
+     * \ingroup qios
      *
      */
     struct QI_API timeval {
@@ -233,9 +281,10 @@ namespace qi {
     /** \brief The gettimeofday() function shall obtain the current time, expressed as seconds and microseconds
      *         since the Epoch, and store it in the timeval structure pointed to by tp. The resolution of the
      *         system clock is unspecified. This clock is subject to NTP adjustments.
+     * \ingroup qios
      *
-     *  \param tp the timeval structure used to return the current time
-     *  \return should return 0 on success
+     * \param tp the timeval structure used to return the current time
+     * \return should return 0 on success
      */
     QI_API int gettimeofday(qi::os::timeval *tp);
 

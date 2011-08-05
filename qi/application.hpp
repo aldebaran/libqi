@@ -18,25 +18,30 @@
 
 /**
  *  @namespace qi
+ * \ingroup qiapp
  *  \brief qi global namespace
  */
 namespace qi
 {
   /** \brief Store argc and argv
+   * \ingroup qiapp
    */
   QI_API void init(int argc, char *argv[]);
 
   /** \brief Get argc
+   * \ingroup qiapp
    * \return return argc if qi::init is call, -1 otherwise
    */
   QI_API int argc();
 
   /** \brief Get argv
+   * \ingroup qiapp
    * \return return argv if qi::init is call, NULL otherwise
    */
   QI_API const char** argv();
 
   /** \brief Return the current program.
+   * \ingroup qiapp
    * Computed using specific OS API:
    *
    * Apple  : _NSGetExecutablePath

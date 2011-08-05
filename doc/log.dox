@@ -1,4 +1,36 @@
-/** \page Logs Logs
+/**
+\defgroup qilog qi::log
+  \brief logging facilities (with rt support)
+
+  go to \ref qilogref to have a global overview of the logging system.
+
+  How to use log:
+  \code
+  #include <cstdlib>  //for atexit
+  #include <qi/log.hpp>
+  void main() {
+    // first init the log system
+    qi::log::init();
+    atexit(qi::log::destroy);
+
+    // c syntax
+    qiLogInfo("foo.bar", "%s kick %s" , "foo", "bar");
+    qiLogInfo("foo.bar", "%s punch %s", "bar", "foo");
+    qiLogWarning("pif.paf", "pif kiss paf %d time", 42);
+
+    // c++ syntax
+    qiLogInfo("tic.tac") << "tic, " << "tac " << 42 << " times";
+    qiLogVerbose("foo.bar") << "bar punch " << "foo";
+  }
+  \endcode
+
+  \warning You should call qi::log::init at the start of your program
+           and register a handler when the program exit to destroy the logger.
+
+
+\page qilogref qi::log Description
+
+go to the \ref qilog API reference.
 
 \section Overview
 
