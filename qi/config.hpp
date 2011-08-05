@@ -13,7 +13,7 @@
 #ifndef _LIBQI_QI_CONFIG_HPP_
 #define _LIBQI_QI_CONFIG_HPP_
 
-#include <qi/api.hpp>
+#include <qi/macro.hpp>
 
 // qi_EXPORTS controls which symbols are exported when libqi
 // is compiled as a SHARED lib.

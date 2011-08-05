@@ -13,7 +13,6 @@
 #define _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
 
 # include <cstdarg>
-# include <qi/noncopyable.hpp>
 # include <qi/log.hpp>
 
 namespace qi {
@@ -21,8 +20,11 @@ namespace qi {
 
     class PrivateConsoleLogHandler;
 
-    /// <summary> Can print colored logs to the console </summary>
-    class QI_API ConsoleLogHandler : qi::noncopyable
+    /** \class qi/log/consoleloghandler.hpp
+     *  \ingroup qilog
+     *  Print colored logs to the console
+     */
+    class QI_API ConsoleLogHandler
     {
     public:
       ConsoleLogHandler();
@@ -37,6 +39,7 @@ namespace qi {
 
 
     protected:
+      QI_DISALLOW_COPY_AND_ASSIGN(ConsoleLogHandler);
       PrivateConsoleLogHandler* _private;
     };
   }

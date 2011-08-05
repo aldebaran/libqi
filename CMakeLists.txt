@@ -16,13 +16,12 @@ include(CMakeDependentOption)
 
 set(H qi/config.hpp
       qi/os.hpp
-      qi/api.hpp
+      qi/macro.hpp
       qi/path.hpp
       qi/path/sdklayout.hpp
       qi/application.hpp
       qi/log.hpp
       qi/locale.hpp
-      qi/noncopyable.hpp
       qi/log/consoleloghandler.hpp
       qi/log/fileloghandler.hpp
       qi/log/headfileloghandler.hpp

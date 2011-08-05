@@ -9,14 +9,17 @@
 #define _LIBQI_QI_LOG_HEADFILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
-# include <qi/noncopyable.hpp>
 # include <string>
 
 namespace qi {
   namespace log {
     class PrivateHeadFileLogHandler;
 
-    class QI_API HeadFileLogHandler : qi::noncopyable
+    /** \class qi/log/headfileloghandler.hpp
+     *  \ingroup qilog
+     *  Log the \a length first lines to file.
+     */
+    class QI_API HeadFileLogHandler
     {
     public:
       HeadFileLogHandler(const std::string &filePath,
@@ -32,10 +35,10 @@ namespace qi {
                const int               line);
 
     private:
-      HeadFileLogHandler() {};
-
+      QI_DISALLOW_COPY_AND_ASSIGN(HeadFileLogHandler);
       PrivateHeadFileLogHandler* _private;
     }; // !HeadFileLogHandler
+
   }; // !log
 }; // !qi
 

@@ -9,14 +9,17 @@
 #define _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
-# include <qi/noncopyable.hpp>
 # include <string>
 
 namespace qi {
   namespace log {
     class PrivateFileLogHandler;
 
-    class QI_API FileLogHandler : qi::noncopyable
+    /** \class qi/log/fileloghandler.hpp
+     *  \ingroup qilog
+     *  Log to file.
+     */
+    class QI_API FileLogHandler
     {
     public:
       explicit FileLogHandler(const std::string& filePath);
@@ -31,10 +34,10 @@ namespace qi {
                const int               line);
 
     private:
-      FileLogHandler() {};
-
+      QI_DISALLOW_COPY_AND_ASSIGN(FileLogHandler);
       PrivateFileLogHandler* _private;
     }; // !FileLogHandler
+
   }; // !log
 }; // !qi
 
