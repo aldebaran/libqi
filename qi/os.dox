@@ -1,17 +1,9 @@
-/**
 
+
+/**
 \namespace qi::os
   \brief OS abstraction layer.
   \ingroup qios
-
-  Include posix compatibility support for OS not following posix.
-
-  \warning Every string MUST be encoded in UTF8 and return UTF-8.
-
-*/
-
-
-/**
 
 \fn int qi::os::fopen(const char *, const char *)
   \brief Open a file.
@@ -294,3 +286,27 @@
 */
 ///@}
 
+
+
+
+/**
+\defgroup qios  qi::os
+\brief cross-platform os related function. (mostly following POSIX convention) \n
+
+\code
+#include <qi/os.hpp>
+\endcode
+
+  Include POSIX compatibility support for OS not following POSIX.
+  This namespace provide abstracted OS functions working on three operatrion system (Linux, MacOS, Windows) with the same behavior.
+
+  \warning Every string MUST be encoded in UTF8 and return UTF-8.
+
+Features:
+  - change environment variables (qi::os::setenv, qi::os::getenv)
+  - loading shared libraries (qi::os::dlopen, qi::os::dlsym, qi::os::dyerror, qi::os::dlclose)
+  - file operations (qi::os::fopen, qi::os::stat)
+  - manage processes (qi::os::spawnvp, qi::os::spawnlp, qi::os::system, qi::os::wait)
+  - time (qi::os::sleep, qi::os::msleep, qi::gettimeofday)
+
+*/

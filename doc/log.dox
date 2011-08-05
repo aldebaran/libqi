@@ -1,8 +1,7 @@
 /**
 \defgroup qilog qi::log
-  \brief logging facilities (with rt support)
-
-  go to \ref qilogref to have a global overview of the logging system.
+  \brief logging facilities (with rt support) \n
+         See \ref qilogguide for a global overview of the logging system. \n
 
   How to use log:
   \code
@@ -28,7 +27,7 @@
            and register a handler when the program exit to destroy the logger.
 
 
-\page qilogref qi::log Description
+\page qilogguide qi::log Developer Guide
 
 go to the \ref qilog API reference.
 

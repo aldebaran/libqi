@@ -1,7 +1,8 @@
 /**
 \defgroup qipath qi::path
-  \brief Provide access to application's path, this include \n
-         configuration, data, executable and library paths. \n
+  \brief Provide access to application's path, this include configuration, data, executable and library paths. \n
+         See \ref qipathguide for a global overview of path related functions \n
+
 
   Provide access to various path including:
   - executables, qi::path::findBin
@@ -37,7 +38,7 @@
   std::locale::global(loc);
   \endcode
 
-\page qipathref qi::path Description
+\page qipathguide qi::path Developer Guide
 
 go to the \ref qipath API reference.
 
