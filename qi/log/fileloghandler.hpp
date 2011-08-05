@@ -15,9 +15,8 @@ namespace qi {
   namespace log {
     class PrivateFileLogHandler;
 
-    /** \class qi/log/fileloghandler.hpp
+    /** \brief log to file handler
      *  \ingroup qilog
-     *  Log to file.
      */
     class QI_API FileLogHandler
     {

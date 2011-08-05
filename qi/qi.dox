@@ -1,7 +1,7 @@
 
 /**
 \defgroup qi qi general
-  various macro
+  Various functions.
 */
 
 /**
@@ -20,7 +20,7 @@
  */
 
 /**
- * \fn const codecvt_type &unicodeFacet()
+ * \fn const codecvt_type &qi::unicodeFacet()
  * \brief utf8 facet
  *
  *  return a facet object that can be used by stl (iostream, locale, ..)
@@ -32,9 +32,6 @@
  *  \ingroup qi
  */
 
-
-///\name Arguments Functions
-///@{
 
 /**
  * \fn void qi::init(int, char *[])
@@ -50,7 +47,7 @@
  */
 
 /**
- * \fn const char** argv()
+ * \fn const char** qi::argv()
  * \brief Get argv
  * \ingroup qi
  * \return return argv if qi::init is call, NULL otherwise
@@ -62,18 +59,14 @@
  * \ingroup qi
  * Computed using specific OS API:
  *
- * Apple  : _NSGetExecutablePath
- *
- * Linux  : reading "/proc/self/exe"
- *
- * Windows: GetModuleFileName
+ * - Apple  : _NSGetExecutablePath
+ * - Linux  : reading "/proc/self/exe"
+ * - Windows: GetModuleFileName
  *
  * If the former API fail it will try to guess the value from argv[0].
  * For this method to work qi::init(argc, argv) should have been called in the main.
  *  \return full path to the current running program
  */
 
-///@}
 
 
-}

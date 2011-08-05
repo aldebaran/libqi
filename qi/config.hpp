@@ -27,21 +27,6 @@
 #endif
 
 
-/**
- * \def QI_API_LEVEL
- * \brief Define the API version of the Platform
- *
- * <b>Version Mapping</b>
- * <table border>
- * <tr>
- *    <td><b> API Level </b></td>
- *    <td><b> Version   </b></td>
- * </tr>
- * <tr><td> 0 / undefined </td> <td> Pre 1.12 release   </td></tr>
- * <tr><td> 1             </td> <td> NAOqi release 1.12 </td></tr>
- * </table>
- * \ingroup qi
- */
 #define QI_API_LEVEL 1
 
 

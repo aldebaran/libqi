@@ -1,25 +1,28 @@
-
+// -*- mode:c++; -*-
 
 /**
-\namespace qi::os
-  \brief OS abstraction layer.
-  \ingroup qios
+ * \namespace qi::os
+ * \brief OS abstraction layer.
+ * \ingroup qios
+ */
 
-\fn int qi::os::fopen(const char *, const char *)
-  \brief Open a file.
+/**
+ * \fn int qi::os::fopen(const char *, const char *)
+ * \brief Open a file.
+ *
+ * Nothing special under posix systems, it's only useful for Windows,
+ * where files should be open using a widestring.
+ * Refer to 'man 3 fopen' for more informations, and to the documentation of
+ * _wfopen on MSDN to understand the Windows behaviors.
+ *
+ * \param filename Path to the file (in UTF-8).
+ * \param mode The mode.
+ * \return A FILE* handle, 0 on error.
+ * \ingroup qios
+ * \since 1.12
+ */
 
-  Nothing special under posix systems, it's only useful for Windows,
-  where files should be open using a widestring.
-  Refer to 'man 3 fopen' for more informations, and to the documentation of
-  _wfopen on MSDN to understand the Windows behaviors.
-
-  \param filename Path to the file (in UTF-8).
-  \param mode The mode.
-  \return A FILE* handle, 0 on error.
-  \ingroup qios
-  \since 1.12
-
-
+/**
 \fn int qi::os::stat(const char *, struct stat *)
   \brief Get file status.
 

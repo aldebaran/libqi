@@ -5,8 +5,8 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 
-#ifndef   	QI_HPP_
-# define   	QI_HPP_
+#ifndef   	LIBQI_QI_HPP_
+# define   	LIBQI_QI_HPP_
 
 #include <qi/config.hpp>
 #include <locale>

@@ -81,40 +81,5 @@ Please consult the changelog for details. " #x)
   void operator=(type const &)
 
 
-/**
-  \def QI_DEPRECATED_HEADER(x)
-  \ingroup qimacro
-  \brief generate a compiler warning stating a header is deprecated.
-
-  \def QI_COMPILER_WARNING(x)
-  \ingroup qimacro
-  \brief generate a compiler warning
-
-  \def QI_API_DEPRECATED
-  \ingroup qimacro
-  \brief compiler flags to mark a function as deprecated. It will generate a compiler warning.
-
-  \def QI_IMPORT_API
-  \ingroup qimacro
-  \brief compiler flags to import a function or a class
-
-  \def QI_EXPORT_API
-  \ingroup qimacro
-  \brief compiler flags to export a function or a class
-
-  \def QI_DISALLOW_COPY_AND_ASSIGN(type)
-  \ingroup qimacro
-  \brief A macro to disallow copy constructor and operator=
-  \note This macro should always be in the private (or protected) section
-        of a class
-  \code
-  class Foo {
-    Foo();
-  private:
-    QI_DISALLOW_COPY_AND_ASSIGN(type);
-  }
-  \endcode
-*/
-
 #endif  // _LIBQI_QI_API_HPP_
 

@@ -1,0 +1,48 @@
+// -*- mode:c++; -*-
+
+/**
+ * \defgroup qimacro qi macro
+ * \brief Various macro for qi. (deprecated, export API, disallow copy, ..)
+ *
+ * - import/export symbol (\ref QI_IMPORT_API, \ref QI_EXPORT_API)
+ * - mark function and header as deprecated (\ref QI_DEPRECATED_HEADER, \ref QI_API_DEPRECATED)
+ * - generate compiler warning (\ref QI_COMPILER_WARNING)
+ * - disallow copy and assign (\ref QI_DISALLOW_COPY_AND_ASSIGN)
+ */
+
+/**
+ * \def QI_DEPRECATED_HEADER(x)
+ * \ingroup qimacro
+ * \brief generate a compiler warning stating a header is deprecated.
+ *
+ * \def QI_COMPILER_WARNING(x)
+ * \ingroup qimacro
+ * \brief generate a compiler warning
+ *
+ * \def QI_API_DEPRECATED
+ * \ingroup qimacro
+ * \brief compiler flags to mark a function as deprecated. It will generate a compiler warning.
+ *
+ * \def QI_IMPORT_API
+ * \ingroup qimacro
+ * \brief compiler flags to import a function or a class
+ *
+ * \def QI_EXPORT_API
+ * \ingroup qimacro
+ * \brief compiler flags to export a function or a class
+ *
+ * \def QI_DISALLOW_COPY_AND_ASSIGN(type)
+ * \ingroup qimacro
+ * \brief A macro to disallow copy constructor and operator=
+ * \note This macro should always be in the private (or protected) section
+ *       of a class
+ * \code
+ * class Foo {
+ *   Foo();
+ * private:
+ *   QI_DISALLOW_COPY_AND_ASSIGN(type);
+ * }
+ * \endcode
+ */
+
+

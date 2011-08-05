@@ -15,9 +15,9 @@ namespace qi {
   namespace log {
     class PrivateHeadFileLogHandler;
 
-    /** \class qi/log/headfileloghandler.hpp
+    /** \brief Log the \a length first lines to file.
      *  \ingroup qilog
-     *  Log the \a length first lines to file.
+     *
      */
     class QI_API HeadFileLogHandler
     {

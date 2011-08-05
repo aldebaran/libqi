@@ -20,9 +20,9 @@ namespace qi {
 
     class PrivateConsoleLogHandler;
 
-    /** \class qi/log/consoleloghandler.hpp
+    /** \brief Print colored logs to the console
      *  \ingroup qilog
-     *  Print colored logs to the console
+     *  Color will be enable only when the output is a tty.
      */
     class QI_API ConsoleLogHandler
     {
