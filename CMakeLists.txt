@@ -19,9 +19,8 @@ set(H qi/config.hpp
       qi/macro.hpp
       qi/path.hpp
       qi/path/sdklayout.hpp
-      qi/application.hpp
+      qi/qi.hpp
       qi/log.hpp
-      qi/locale.hpp
       qi/log/consoleloghandler.hpp
       qi/log/fileloghandler.hpp
       qi/log/headfileloghandler.hpp

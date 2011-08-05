@@ -4,7 +4,7 @@
 
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include <qi/application.hpp>
+#include <qi/qi.hpp>
 
 #include <boost/locale.hpp>
 #include <boost/filesystem.hpp>

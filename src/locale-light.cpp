@@ -5,7 +5,7 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 #include <qi/macro.hpp>
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 
 #define BOOST_UTF8_BEGIN_NAMESPACE  namespace qi { namespace detail {
 #define BOOST_UTF8_END_NAMESPACE    }}

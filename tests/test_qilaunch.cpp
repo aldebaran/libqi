@@ -2,7 +2,7 @@
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include <qi/path/sdklayout.hpp>
-#include <qi/application.hpp>
+#include <qi/qi.hpp>
 
 
 #ifdef _WIN32

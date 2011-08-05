@@ -22,7 +22,7 @@
 #include <locale>
 
 #include <qi/os.hpp>
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 #include "src/filesystem.hpp"
 
 //posix implementation

@@ -7,12 +7,11 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 
-#include <qi/application.hpp>
+#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <numeric>
 #include <boost/filesystem.hpp>
 #include "src/filesystem.hpp"
-#include <qi/locale.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

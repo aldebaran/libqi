@@ -8,8 +8,9 @@
 #ifndef   	QI_HPP_
 # define   	QI_HPP_
 
+#include <qi/config.hpp>
+#include <locale>
 
-///toto
 namespace qi {
 
   QI_API void init(int argc, char *argv[]);

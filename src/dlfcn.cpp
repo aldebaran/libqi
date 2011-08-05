@@ -19,7 +19,7 @@
 #  include <dlfcn.h>
 # endif
 
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 #include "src/filesystem.hpp"
 
 namespace qi {

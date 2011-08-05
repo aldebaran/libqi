@@ -8,7 +8,7 @@
 #include <iostream>
 #include <numeric>
 #include <boost/filesystem.hpp>
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 #include "filesystem.hpp"
 
 namespace qi

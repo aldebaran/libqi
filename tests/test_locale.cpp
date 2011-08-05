@@ -6,8 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <locale>
 
-#include <qi/application.hpp>
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 
 TEST(qiLocale, utf8_utf16_1)
 {

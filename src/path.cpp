@@ -1,8 +1,7 @@
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/path/sdklayout.hpp>
-#include <qi/locale.hpp>
-#include <qi/application.hpp>
+#include <qi/qi.hpp>
 #include <boost/filesystem.hpp>
 #include "src/filesystem.hpp"
 

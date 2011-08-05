@@ -12,10 +12,9 @@
 #include <locale>
 
 #include <qi/path/sdklayout.hpp>
-#include <qi/application.hpp>
+#include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include <qi/locale.hpp>
 
 namespace bfs = boost::filesystem;
 

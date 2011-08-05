@@ -5,7 +5,7 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 
-#include <qi/locale.hpp>
+#include <qi/qi.hpp>
 #include <boost/locale.hpp>
 
 namespace qi {
