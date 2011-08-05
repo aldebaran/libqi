@@ -84,7 +84,7 @@ namespace qi
    *   - library and binary path
    *   - static readonly configuration and data files
    */
-  class QI_API SDKLayout //: qi::noncopyable
+  class QI_API SDKLayout //: boost::noncopyable
   {
   public:
 
