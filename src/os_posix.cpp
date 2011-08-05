@@ -85,12 +85,9 @@ namespace qi {
     }
 
     std::string tmp(const char *prefix) {
-      char buffer [L_tmpnam];
-      tmpnam(buffer);
-
+      std::string             cache = qi::os::getenv("XDG_CACHE_HOME");
       boost::filesystem::path path;
-      if (buffer == NULL)
-      {
+      if (cache.empty()) {
        #ifdef __APPLE__
         path = boost::filesystem::path(::qi::os::home(),
                                        qi::unicodeFacet()) / "Cache";
@@ -98,9 +95,8 @@ namespace qi {
         path = boost::filesystem::path(::qi::os::home(),
                                        qi::unicodeFacet()) / ".cache";
        #endif
-      }
-      else
-        path = boost::filesystem::path(buffer);
+      } else
+        path = cache;
 
       path /= prefix;
       if (!boost::filesystem::exists(path)) {
