@@ -30,7 +30,7 @@ namespace qi {
     QI_API int stat(const char *filename, struct stat *pstat);
     QI_API int checkdbg();
     QI_API std::string home();
-    QI_API std::string tmp(const char *prefix = "");
+    QI_API std::string tmpdir(const char *prefix = "");
 
     // env
     QI_API std::string getenv(const char *var);

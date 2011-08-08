@@ -51,7 +51,7 @@
   \brief Return path to the current user's HOME.
   \ingroup qios
 
-\fn std::string qi::os::tmp(const char *prefix = "");
+\fn std::string qi::os::tmpdir(const char *prefix = "");
   \brief Return a temporary directory
   \ingroup qios
          The directory is writeable and exits.

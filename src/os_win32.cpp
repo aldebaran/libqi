@@ -211,18 +211,18 @@ namespace qi {
       return res.make_preferred().string(qi::unicodeFacet());
     }
 
-    std::string tmp(const char *prefix) {
-      std::string             cache = qi::os::getenv("XDG_CACHE_HOME");
+    std::string tmpdir(const char *prefix)
+    {
       boost::filesystem::path path;
-      if (cache.empty()) {
-        path = qi::os::getenv("TMP");
-      } else
-        path = cache;
+      path = qi::os::getenv("TMP");
 
-      path /= prefix;
-      if (!boost::filesystem::exists(path)) {
+      std::string filename(prefix);
+      filename += path.filename().string();
+      path = path.parent_path() / filename;
+
+      if (!boost::filesystem::exists(path))
         boost::filesystem::create_directories(path);
-      }
+
       return path.string(qi::unicodeFacet());
     }
   }
