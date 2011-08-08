@@ -28,7 +28,7 @@ namespace qi {
 # pragma warning( disable : 4251 )
 #endif
 
-    class QI_API QiException : public std::runtime_error
+    QI_API class QiException : public std::runtime_error
     {
     public:
       /**
