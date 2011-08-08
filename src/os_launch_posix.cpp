@@ -36,7 +36,7 @@ namespace qi
   namespace os
   {
 
-   #ifdef __linux__
+#ifdef __linux__
     /**
      * Set cloexec flag to close all FD on exec process
      * @param pID pid of the process.
@@ -53,56 +53,64 @@ namespace qi
       boost::filesystem::path path("/proc", qi::unicodeFacet());
       path = path / pid / "fd";
 
-      // foreach fd set FD_CLOEXEC flag
-      for (boost::filesystem::directory_iterator itr(path);
-           itr != boost::filesystem::directory_iterator();
-           ++itr)
+      try
       {
-        // do not close stdin, stdout, stderr
-        if (itr->path().filename() != "0"
-            && itr->path().filename() != "1"
-            && itr->path().filename() != "2")
+        // foreach fd set FD_CLOEXEC flag
+        for (boost::filesystem::directory_iterator itr(path);
+             itr != boost::filesystem::directory_iterator();
+             ++itr)
         {
-          // get file descriptor
-          int fd;
-          std::istringstream iss(itr->path().filename().string(qi::unicodeFacet()));
-          iss >> fd;
+          // do not close stdin, stdout, stderr
+          if (itr->path().filename() != "0"
+              && itr->path().filename() != "1"
+              && itr->path().filename() != "2")
+          {
+            // get file descriptor
+            int fd;
+            std::istringstream iss(itr->path().filename().string(qi::unicodeFacet()));
+            iss >> fd;
 
-          // get flags
-          int oldflags = fcntl(fd, F_GETFD, 0);
+            // get flags
+            int oldflags = fcntl(fd, F_GETFD, 0);
 
-          // If reading the flags failed, return error indication now.
-          if (oldflags < 0)
-            return oldflags;
+            // If reading the flags failed, return error indication now.
+            if (oldflags < 0)
+              return oldflags;
 
-          // Set just the flag we want to set.
-          oldflags |= FD_CLOEXEC;
+            // Set just the flag we want to set.
+            oldflags |= FD_CLOEXEC;
 
-          // Store modified flag word in the descriptor.
-          return fcntl(fd, F_SETFD, oldflags);
+            // Store modified flag word in the descriptor.
+            return fcntl(fd, F_SETFD, oldflags);
+          }
         }
       }
+      catch (...)
+      {
+        return 0;
+      }
+
       return 0;
     }
-   #endif
+#endif
 
 
     int spawnvp(char *const argv[])
     {
-     #ifdef __linux__
+#ifdef __linux__
       // Set all parent FD to close them when exec
       setCloexecFlag(getpid());
-     #endif
+#endif
 
       pid_t pID;
       int err;
       posix_spawnattr_t* pSpawnattr = NULL;
 
-     #ifdef __linux__
+#ifdef __linux__
       posix_spawnattr_t spawnattr;
       spawnattr.__flags = POSIX_SPAWN_USEVFORK;
       pSpawnattr = &spawnattr;
-     #endif
+#endif
 
       // Err != 0 means vfork failed.
       // If exec() fails, then err = 0 and we have to get the status of the child
@@ -144,19 +152,19 @@ namespace qi
       pid_t pID;
       int err;
 
-     #ifdef __linux__
+#ifdef __linux__
       // Set all parent FD to close them when exec
       setCloexecFlag(getpid());
-     #endif
+#endif
 
 
       posix_spawnattr_t* pSpawnattr = NULL;
 
-     #ifdef __linux__
+#ifdef __linux__
       posix_spawnattr_t spawnattr;
       spawnattr.__flags = POSIX_SPAWN_USEVFORK;
       pSpawnattr = &spawnattr;
-     #endif
+#endif
 
       // Err != 0 means vfork failed.
       // If exec() fails, then err = 0 and we have to get the status of the child
@@ -182,10 +190,10 @@ namespace qi
 
     int system(const char *command)
     {
-     #ifdef __linux__
+#ifdef __linux__
       // Set all parent FD to close them when exec
       setCloexecFlag(getpid());
-     #endif
+#endif
 
       int status = 0;
       pid_t pID = vfork();
@@ -236,14 +244,14 @@ namespace qi
         *status = WEXITSTATUS(st);
       }
 
-     #ifdef __APPLE__
+#ifdef __APPLE__
       if (errno == ECHILD)
       {
         result = 0;
         *status = 127;
         return result;
       }
-     #endif
+#endif
 
       return result;
     }

@@ -17,9 +17,9 @@
 #include <qi/os.hpp>
 #include <qi/path/sdklayout.hpp>
 #include <qi/qi.hpp>
+#include <qi/error.hpp>
 
 #include <boost/filesystem.hpp>
-#include <qi/qi.hpp>
 #include <locale>
 #include "src/filesystem.hpp"
 
@@ -61,8 +61,7 @@ namespace qi {
     void checkInit()
     {
       if (_mode == "error" || _sdkPrefixes.size() == 0)
-        throw PathException("qipath not initialized\n"
-                            "Please call qipath::init first");
+        throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
     }
   };
 
@@ -101,8 +100,16 @@ namespace qi {
   void SDKLayout::addOptionalSdkPrefix(const char *prefix)
   {
     _private->checkInit();
+
     boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
-    prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
+    try
+    {
+      prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
+    }
 
     _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
@@ -135,184 +142,211 @@ namespace qi {
     _private->checkInit();
 
     boost::filesystem::path bin(name, qi::unicodeFacet());
-    if (boost::filesystem::exists(bin)
-        && !boost::filesystem::is_directory(bin))
-      return bin.string(qi::unicodeFacet());
 
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
-         ++it)
+    try
     {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
-     #ifdef _MSC_VER
-      p = p / _private->_mode / name;
-      p = p.make_preferred();
+      if (boost::filesystem::exists(bin)
+          && !boost::filesystem::is_directory(bin))
+        return bin.string(qi::unicodeFacet());
 
-      if (boost::filesystem::exists(p))
-        return p.string(qi::unicodeFacet());
+      std::vector<std::string>::const_iterator it;
+      for (it = _private->_sdkPrefixes.begin();
+           it != _private->_sdkPrefixes.end();
+           ++it)
+      {
+        boost::filesystem::path p(*it, qi::unicodeFacet());
+#ifdef _MSC_VER
+        p = p / _private->_mode / name;
+        p = p.make_preferred();
+
+        if (boost::filesystem::exists(p))
+          return p.string(qi::unicodeFacet());
 //find _d, fallback on release stuff
 #ifndef NDEBUG
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-        return (p.string(qi::unicodeFacet()) + "_d.exe");
+        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
+          return (p.string(qi::unicodeFacet()) + "_d.exe");
 #endif
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-        return (p.string(qi::unicodeFacet()) + ".exe");
-     #endif
+        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
+          return (p.string(qi::unicodeFacet()) + ".exe");
+#endif
 
-      p = *it;
-      p = p / "bin" / name;
-      p = p.make_preferred();
+        p = *it;
+        p = p / "bin" / name;
+        p = p.make_preferred();
 
 
-      if (boost::filesystem::exists(p)
-          && !boost::filesystem::is_directory(p))
-        return p.string(qi::unicodeFacet());
+        if (boost::filesystem::exists(p)
+            && !boost::filesystem::is_directory(p))
+          return p.string(qi::unicodeFacet());
 #ifndef NDEBUG
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-        return (p.string(qi::unicodeFacet()) + "_d.exe");
+        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
+          return (p.string(qi::unicodeFacet()) + "_d.exe");
 #endif
-      if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-        return (p.string(qi::unicodeFacet()) + ".exe");
+        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
+          return (p.string(qi::unicodeFacet()) + ".exe");
+      }
     }
-
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
+    }
     return std::string();
   }
 
   static std::string existsLib(boost::filesystem::path prefix,
                                const std::string& libName)
   {
-      boost::filesystem::path lib(libName, qi::unicodeFacet());
+    boost::filesystem::path lib(libName, qi::unicodeFacet());
 
+    try
+    {
       if (boost::filesystem::exists((prefix / lib).make_preferred())
           && !boost::filesystem::is_directory((prefix / lib).make_preferred()))
         return ((prefix / lib).make_preferred().string(qi::unicodeFacet()));
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
+    }
 
-      return std::string();
+    return std::string();
   }
 
   std::string SDKLayout::findLib(const std::string &name) const
   {
     _private->checkInit();
 
-    boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
-    boost::filesystem::path prefix = module.parent_path().make_preferred();
-    std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
-    std::string res;
-
-    res = existsLib(prefix.string(qi::unicodeFacet()), libName);
-    if (res != std::string())
-      return res;
-
-
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
-         ++it)
+    try
     {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
-     #ifdef _MSC_VER
-      p = p / _private->_mode / prefix;
-      p = p.make_preferred();
+      boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
+      boost::filesystem::path prefix = module.parent_path().make_preferred();
+      std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
+      std::string res;
 
-      res = existsLib(p, libName);
+      res = existsLib(prefix.string(qi::unicodeFacet()), libName);
       if (res != std::string())
         return res;
+
+
+      std::vector<std::string>::const_iterator it;
+      for (it = _private->_sdkPrefixes.begin();
+           it != _private->_sdkPrefixes.end();
+           ++it)
+      {
+        boost::filesystem::path p(*it, qi::unicodeFacet());
+#ifdef _MSC_VER
+        p = p / _private->_mode / prefix;
+        p = p.make_preferred();
+
+        res = existsLib(p, libName);
+        if (res != std::string())
+          return res;
 
 //DEBUG
 #ifndef NDEBUG
-      res = existsLib(p, libName + "_d.dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + "_d.dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
+        res = existsLib(p, libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
 #endif
 
-      res = existsLib(p, libName + ".dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + ".dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
-      #endif
+        res = existsLib(p, libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+#endif
 
-      p = *it;
-      p = p / "lib" / prefix;
-      p = p.make_preferred();
+        p = *it;
+        p = p / "lib" / prefix;
+        p = p.make_preferred();
 
-      res = existsLib(p, libName);
-      if (res != std::string())
-        return res;
-      res = existsLib(p, libName + ".so");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + ".so");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
-     #ifdef __APPLE__
-      res = existsLib(p, libName + ".dylib");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + ".dylib");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
-     #endif
-     #ifdef _WIN32
+        res = existsLib(p, libName);
+        if (res != std::string())
+          return res;
+        res = existsLib(p, libName + ".so");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".so");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+#ifdef __APPLE__
+        res = existsLib(p, libName + ".dylib");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".dylib");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+#endif
+#ifdef _WIN32
 //DEBUG
 #ifndef NDEBUG
-      res = existsLib(p, libName + "_d.dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + "_d.dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
+        res = existsLib(p, libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + "_d.dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
 #endif
 
-      res = existsLib(p, libName + ".dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName + ".dll");
-      if (res != std::string())
-        return res;
-      res = existsLib(p, "lib" + libName);
-      if (res != std::string())
-        return res;
-     #endif
+        res = existsLib(p, libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName + ".dll");
+        if (res != std::string())
+          return res;
+        res = existsLib(p, "lib" + libName);
+        if (res != std::string())
+          return res;
+#endif
+      }
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
     }
 
     return std::string();
   }
 
   std::string SDKLayout::findConf(const std::string &applicationName,
-                                           const std::string &filename) const
+                                  const std::string &filename) const
   {
     _private->checkInit();
     std::vector<std::string> paths = confPaths(applicationName);
-
-    std::vector<std::string>::const_iterator it;
-    for (it = paths.begin(); it != paths.end(); ++it)
+    try
     {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
-      p /= filename;
-      p = p.make_preferred();
-      if (boost::filesystem::exists(p))
-        return p.string(qi::unicodeFacet());
+      std::vector<std::string>::const_iterator it;
+      for (it = paths.begin(); it != paths.end(); ++it)
+      {
+        boost::filesystem::path p(*it, qi::unicodeFacet());
+        p /= filename;
+        p = p.make_preferred();
+        if (boost::filesystem::exists(p))
+          return p.string(qi::unicodeFacet());
+      }
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
     }
 
     return std::string();
@@ -323,16 +357,22 @@ namespace qi {
   {
     _private->checkInit();
     std::vector<std::string> paths = dataPaths(applicationName);
-
-    std::vector<std::string>::const_iterator it;
-    for (it = paths.begin(); it != paths.end(); ++it)
+    try
     {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
+      std::vector<std::string>::const_iterator it;
+      for (it = paths.begin(); it != paths.end(); ++it)
+      {
+        boost::filesystem::path p(*it, qi::unicodeFacet());
 
-      p /= filename;
-      p = p.make_preferred();
-      if (boost::filesystem::exists(p))
-        return p.string(qi::unicodeFacet());
+        p /= filename;
+        p = p.make_preferred();
+        if (boost::filesystem::exists(p))
+          return p.string(qi::unicodeFacet());
+      }
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
     }
     return std::string();
   }
@@ -342,33 +382,41 @@ namespace qi {
     _private->checkInit();
     std::vector<std::string> res;
 
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
+    try
     {
-      boost::filesystem::path prefix(*it, qi::unicodeFacet());
-      res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-      res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
-      res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
-      res.push_back((prefix / "etc").make_preferred().string(qi::unicodeFacet()));
+      std::vector<std::string>::const_iterator it;
+      for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
+      {
+        boost::filesystem::path prefix(*it, qi::unicodeFacet());
+        res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
+        res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((prefix / "etc").make_preferred().string(qi::unicodeFacet()));
 
-     #ifdef _MSC_VER
-      boost::filesystem::path multiConfigPrefPath(*it, qi::unicodeFacet());
-      multiConfigPrefPath = multiConfigPrefPath / _private->_mode;
-      multiConfigPrefPath = multiConfigPrefPath.make_preferred();
-      res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-      res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
-      res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
-      res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::unicodeFacet()));
-     #endif
+#ifdef _MSC_VER
+        boost::filesystem::path multiConfigPrefPath(*it, qi::unicodeFacet());
+        multiConfigPrefPath = multiConfigPrefPath / _private->_mode;
+        multiConfigPrefPath = multiConfigPrefPath.make_preferred();
+        res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
+        res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::unicodeFacet()));
+#endif
+      }
+
+      // Pass an empty string to get the directory:
+      res.push_back(userWritableConfPath(applicationName, ""));
+
+#ifndef _WIN32
+      boost::filesystem::path systemPath("/etc", qi::unicodeFacet());
+      res.push_back((systemPath / applicationName).make_preferred().string(qi::unicodeFacet()));
+#endif
+    }
+    catch (const boost::filesystem::filesystem_error &e)
+    {
+      throw qi::os::QiException(e.what());
     }
 
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableConfPath(applicationName, ""));
-
-   #ifndef _WIN32
-    boost::filesystem::path systemPath("/etc", qi::unicodeFacet());
-    res.push_back((systemPath / applicationName).make_preferred().string(qi::unicodeFacet()));
-   #endif
     return res;
   }
 
@@ -441,16 +489,15 @@ namespace qi {
   {
     _private->checkInit();
     boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
-
-   #ifndef _WIN32
+#ifndef _WIN32
     path = path / ".local" / "share" / applicationName / filename;
     path = path.make_preferred();
-   #else
+#else
     boost::filesystem::path envUserAppData(qi::os::getenv("AppData"),
                                            qi::unicodeFacet());
     path = envUserAppData / applicationName / filename;
     path = path.make_preferred();
-   #endif
+#endif
 
     boost::filesystem::path dest = path;
     if (!filename.empty())
@@ -460,7 +507,9 @@ namespace qi {
       try {
         boost::filesystem::create_directories(dest);
       }
-      catch (boost::filesystem::filesystem_error) {
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        throw qi::os::QiException(e.what());
       }
     }
     return path.string(qi::unicodeFacet());
@@ -468,7 +517,7 @@ namespace qi {
 
 
   std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
-                                                          const std::string &filename) const
+                                              const std::string &filename) const
   {
     _private->checkInit();
     boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
@@ -484,7 +533,9 @@ namespace qi {
       try {
         boost::filesystem::create_directories(dest);
       }
-      catch (boost::filesystem::filesystem_error) {
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        throw qi::os::QiException(e.what());
       }
     }
     return path.string(qi::unicodeFacet());

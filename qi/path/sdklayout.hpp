@@ -27,52 +27,6 @@
  */
 namespace qi
 {
-  /** \class PathException sdklayout.hpp "qi/path/sdklayout.hpp"
-   *  \brief Custom exception that may be thrown by these methods.
-   */
-#ifdef _MSC_VER
-# pragma warning( push )
-# pragma warning( disable : 4251 )
-#endif
-
-  class QI_API PathException : public std::exception
-  {
-  public:
-    /** \brief Constructor
-     *
-     *  Create a message exception.
-     *
-     *  \param message Exception message.
-     */
-    explicit PathException(const std::string &message)
-      : _message(message)
-    {}
-
-    /** \brief Destructor */
-    virtual ~PathException() throw()
-    {}
-
-    /** \brief Get the error message. */
-    inline virtual const char* what() const throw ()
-    {
-      return _message.c_str();
-    }
-
-  private:
-    /** \brief No default constructor */
-    PathException()
-     : _message()
-    {}
-
-    /** \var _message
-     *  \brief Exception message.
-     */
-    std::string _message;
-#ifdef _MSC_VER
-# pragma warning( pop )
-#endif
-  };
-
 
   class PrivateSDKLayout;
 

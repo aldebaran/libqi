@@ -40,7 +40,7 @@ namespace qi {
         if (!boost::filesystem::exists(fPath.make_preferred().parent_path()))
           boost::filesystem::create_directories(fPath.make_preferred().parent_path());
       }
-      catch (boost::filesystem::filesystem_error &e)
+      catch (const boost::filesystem::filesystem_error &e)
       {
         qiLogWarning("qi.log.fileloghandler") << e.what() << std::endl;
       }

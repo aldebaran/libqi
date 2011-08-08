@@ -62,11 +62,6 @@ namespace qi {
       }
 
     private:
-      /** \brief No default constructor */
-      QiException()
-        : _message()
-      {}
-
       /**
        * \var _message
        * \brief Exception message.

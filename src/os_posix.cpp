@@ -24,6 +24,7 @@
 #endif
 
 #include <qi/os.hpp>
+#include <qi/error.hpp>
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
 
@@ -80,6 +81,7 @@ namespace qi {
       {
         return boost::filesystem::path(pw->pw_dir, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
       }
+
       // Give up:
       return "";
     }
@@ -108,8 +110,15 @@ namespace qi {
       filename += path.filename().string();
       path = path.parent_path() / filename;
 
+      try
+      {
       if (!boost::filesystem::exists(path))
         boost::filesystem::create_directories(path);
+      }
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        throw qi::os::QiException(e.what());
+      }
 
       return path.string(qi::unicodeFacet());
     }

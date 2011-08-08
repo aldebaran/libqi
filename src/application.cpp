@@ -38,11 +38,11 @@ namespace qi {
       std::string filename = execPath.filename().string(qi::unicodeFacet());
       std::string envPath = qi::os::getenv("PATH");
       size_t begin = 0;
-     #ifndef _WIN32
+#ifndef _WIN32
       size_t end = envPath.find(":", begin);
-     #else
+#else
       size_t end = envPath.find(";", begin);
-     #endif
+#endif
       while (end != std::string::npos)
       {
         std::string realPath = "";
@@ -57,11 +57,11 @@ namespace qi {
           return p.string(qi::unicodeFacet());
 
         begin = end + 1;
-       #ifndef _WIN32
+#ifndef _WIN32
         end = envPath.find(":", begin);
-       #else
+#else
         end = envPath.find(";", begin);
-       #endif
+#endif
       }
     }
     else
@@ -88,68 +88,74 @@ namespace qi {
 /*
   http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
   Some OS-specific interfaces:
-    Mac OS X: _NSGetExecutablePath() (man 3 dyld)
-    Linux   : readlink /proc/self/exe
-    Solaris : getexecname()
-    FreeBSD : sysctl CTL_KERN KERN_PROC KERN_PROC_PATHNAME -1
-    BSD with procfs: readlink /proc/curproc/file
-    Windows : GetModuleFileName() with hModule = NULL
+  Mac OS X: _NSGetExecutablePath() (man 3 dyld)
+  Linux   : readlink /proc/self/exe
+  Solaris : getexecname()
+  FreeBSD : sysctl CTL_KERN KERN_PROC KERN_PROC_PATHNAME -1
+  BSD with procfs: readlink /proc/curproc/file
+  Windows : GetModuleFileName() with hModule = NULL
 
-    The portable (but less reliable) method is to use argv[0].
-    Although it could be set to anything by the calling program,
-    by convention it is set to either a path name of the executable
-    or a name that was found using $PATH.
+  The portable (but less reliable) method is to use argv[0].
+  Although it could be set to anything by the calling program,
+  by convention it is set to either a path name of the executable
+  or a name that was found using $PATH.
 
-    Some shells, including bash and ksh, set the environment variable "_"
-    to the full path of the executable before it is executed. In that case
-    you can use getenv("_") to get it. However this is unreliable because
-    not all shells do this, and it could be set to anything or be left over
-    from a parent process which did not change it before executing your program.
+  Some shells, including bash and ksh, set the environment variable "_"
+  to the full path of the executable before it is executed. In that case
+  you can use getenv("_") to get it. However this is unreliable because
+  not all shells do this, and it could be set to anything or be left over
+  from a parent process which did not change it before executing your program.
 */
   const char *program()
   {
-    if (!globalProgram.empty())
-      return globalProgram.c_str();
+    try
+    {
+      if (!globalProgram.empty())
+        return globalProgram.c_str();
 
 #ifdef __APPLE__
-    {
-      char *fname = (char *)malloc(PATH_MAX);
-      uint32_t sz = PATH_MAX;
-      fname[0] = 0;
-      int ret;
-      ret = _NSGetExecutablePath(fname, &sz);
-      if (ret == 0)
       {
-        globalProgram = fname;
-        globalProgram = detail::normalizePath(globalProgram);
+        char *fname = (char *)malloc(PATH_MAX);
+        uint32_t sz = PATH_MAX;
+        fname[0] = 0;
+        int ret;
+        ret = _NSGetExecutablePath(fname, &sz);
+        if (ret == 0)
+        {
+          globalProgram = fname;
+          globalProgram = detail::normalizePath(globalProgram);
+        }
+        else
+        {
+          globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+        }
+        free(fname);
       }
-      else
-      {
-        globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
-    }
-      free(fname);
-    }
 #elif __linux__
-    boost::filesystem::path p("/proc/self/exe");
-    boost::filesystem::path fname = boost::filesystem::read_symlink(p);
+      boost::filesystem::path p("/proc/self/exe");
+      boost::filesystem::path fname = boost::filesystem::read_symlink(p);
 
-    if (!boost::filesystem::is_empty(fname))
-      globalProgram = fname.string().c_str();
-    else
-      globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+      if (!boost::filesystem::is_empty(fname))
+        globalProgram = fname.string().c_str();
+      else
+        globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
 #elif _WIN32
-    char *fname = (char *)malloc(MAX_PATH); //always use MAX_PATH for filepaths
-    int ret = GetModuleFileName(NULL, fname, MAX_PATH);
-    if (ret != 0)
-      globalProgram = fname;
-    else
-      globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
-    free(fname);
+      char *fname = (char *)malloc(MAX_PATH); //always use MAX_PATH for filepaths
+      int ret = GetModuleFileName(NULL, fname, MAX_PATH);
+      if (ret != 0)
+        globalProgram = fname;
+      else
+        globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+      free(fname);
 #else
-    globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+      globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
 #endif
-    return globalProgram.c_str();
-
+      return globalProgram.c_str();
+    }
+    catch (...)
+    {
+      return NULL;
+    }
   }
 
 };

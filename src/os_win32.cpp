@@ -6,7 +6,6 @@
 ** Copyright (C) 2011 Aldebaran Robotics
 */
 
-
 #include <boost/filesystem.hpp>
 #include <locale>
 #include <cstdio>
@@ -20,6 +19,7 @@
 #include <windows.h>  //Sleep
 #include <winsock2.h>
 
+#include <qi/error.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
@@ -220,8 +220,15 @@ namespace qi {
       filename += path.filename().string();
       path = path.parent_path() / filename;
 
-      if (!boost::filesystem::exists(path))
-        boost::filesystem::create_directories(path);
+      try
+      {
+        if (!boost::filesystem::exists(path))
+          boost::filesystem::create_directories(path);
+      }
+      catch (const boost::filesystem::filesystem_error &e)
+      {
+        throw qi::os::QiException(e.what());
+      }
 
       return path.string(qi::unicodeFacet());
     }
