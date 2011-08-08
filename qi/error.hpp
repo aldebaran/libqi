@@ -14,6 +14,7 @@
 #define _LIBQI_QI_ERROR_HPP_
 
 # include <qi/macro.hpp>
+# include <qi/config.hpp>
 
 # include <stdexcept>
 # include <string>
@@ -28,7 +29,7 @@ namespace qi {
 # pragma warning( disable : 4251 )
 #endif
 
-    QI_API class QiException : public std::runtime_error
+    class QI_API QiException : public std::runtime_error
     {
     public:
       /**
