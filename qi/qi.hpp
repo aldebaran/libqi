@@ -20,7 +20,6 @@ namespace qi {
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
   QI_API const codecvt_type &unicodeFacet();
-
 }
 
 #endif	    /* !QI_PP_ */

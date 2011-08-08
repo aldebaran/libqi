@@ -19,7 +19,7 @@ public:
 
 protected:
   void SetUp() {
-    a_newPath = qi::os::tmp("QiOsTest");
+    a_newPath = qi::os::tmpdir("QiOsTest");
     a_newPath /= a_accent;
     FILE* fileHandle = qi::os::fopen(a_newPath.string().c_str(), "w");
     fclose(fileHandle);
