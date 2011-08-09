@@ -388,19 +388,19 @@ namespace qi {
       for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
       {
         boost::filesystem::path prefix(*it, qi::unicodeFacet());
-        res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
         res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
         res.push_back((prefix / "etc").make_preferred().string(qi::unicodeFacet()));
+        res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
 
 #ifdef _MSC_VER
         boost::filesystem::path multiConfigPrefPath(*it, qi::unicodeFacet());
         multiConfigPrefPath = multiConfigPrefPath / _private->_mode;
         multiConfigPrefPath = multiConfigPrefPath.make_preferred();
-        res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
         res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
         res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::unicodeFacet()));
+        res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
+        res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
 #endif
       }
 
