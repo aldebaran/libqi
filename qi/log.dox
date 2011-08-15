@@ -1,3 +1,10 @@
+// -*- mode:c++; -*-
+
+/**
+ * \namespace qi::log
+ * \brief Log functions
+ * \ingroup qilog
+ */
 
 /**
  * \def qiLogDebug
