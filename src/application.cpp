@@ -140,13 +140,19 @@ namespace qi {
       else
         globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
 #elif _WIN32
-      char *fname = (char *)malloc(MAX_PATH); //always use MAX_PATH for filepaths
-      int ret = GetModuleFileName(NULL, fname, MAX_PATH);
+      WCHAR *fname = (WCHAR *) malloc(MAX_PATH);
+      int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
       if (ret != 0)
-        globalProgram = fname;
+      {
+        boost::filesystem::path programPath(fname, qi::unicodeFacet());
+        globalProgram = programPath.string(qi::unicodeFacet());
+        free(fname);
+      }
       else
+      {
+        // GetModuleFileName failed, trying to guess from argc, argv...
         globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
-      free(fname);
+      }
 #else
       globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
 #endif
