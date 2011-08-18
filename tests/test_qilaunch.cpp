@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include <qi/path/sdklayout.hpp>
 #include <qi/qi.hpp>
 
 

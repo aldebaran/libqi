@@ -18,7 +18,6 @@ set(H qi/config.hpp
       qi/os.hpp
       qi/macro.hpp
       qi/path.hpp
-      qi/path/sdklayout.hpp
       qi/qi.hpp
       qi/log.hpp
       qi/log/consoleloghandler.hpp
@@ -29,6 +28,7 @@ set(H qi/config.hpp
 set(C src/dlfcn.cpp
       src/path.cpp
       src/application.cpp
+      src/sdklayout.hpp
       src/sdklayout.cpp
       src/filesystem.hpp
       src/filesystem.cpp

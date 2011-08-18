@@ -15,12 +15,12 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/path/sdklayout.hpp>
 #include <qi/qi.hpp>
 #include <qi/error.hpp>
 
 #include <boost/filesystem.hpp>
 #include <locale>
+#include "src/sdklayout.hpp"
 #include "src/filesystem.hpp"
 
 namespace qi {

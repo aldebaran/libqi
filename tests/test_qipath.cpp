@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <locale>
 
-#include <qi/path/sdklayout.hpp>
+#include "../src/sdklayout.hpp"
 #include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
