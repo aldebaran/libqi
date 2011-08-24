@@ -112,6 +112,7 @@ namespace qi {
           std::stringstream ss;
           ss << date.tv_sec << "." << date.tv_usec;
 
+          fprintf(_private->_file,"%s ", head);
           int ctx = qi::log::context();
           switch (ctx)
           {
