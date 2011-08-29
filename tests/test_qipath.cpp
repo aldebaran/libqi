@@ -308,8 +308,10 @@ TEST(qiPath, readingWritingFindData)
   ofs << "Hi, this is foo" << std::endl;
   ofs.close();
   fooDat = sdkl->findData("foo", "foo.dat");
+  std::string wp = writeablePath.string(qi::unicodeFacet());
   boost::to_lower(fooDat);
-  ASSERT_EQ(writeablePath.string(qi::unicodeFacet()), fooDat);
+  boost::to_lower(wp);
+  ASSERT_EQ(wp, fooDat);
   std::cout << "removing: " << fooDat << std::endl;
   remove(fooDat.c_str());
 
