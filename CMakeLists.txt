@@ -68,7 +68,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if (QI_SDK_DIR)
-qi_install_header(KEEP_RELATIVE_PATHS ${H})
+  qi_install_header(qi HEADERS ${H} KEEP_RELATIVE_PATHS)
 endif()
 stage_lib(qi QI)
 
