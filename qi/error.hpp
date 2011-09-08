@@ -21,6 +21,7 @@
 
 namespace qi {
   namespace os {
+
     /** \class QiException error.hpp "qi/error.hpp"
      *  \brief Custom exception that may be thrown by QI methods.
      */
@@ -32,6 +33,7 @@ namespace qi {
     class QI_API QiException : public std::runtime_error
     {
     public:
+
       /**
        * \brief Constructor
        *
@@ -41,7 +43,6 @@ namespace qi {
        */
       explicit QiException(const std::string &message)
         : std::runtime_error(message)
-        , _message(message)
       {}
 
       /**
@@ -56,18 +57,6 @@ namespace qi {
       virtual ~QiException() throw()
       {}
 
-      /** \brief Get the error message. */
-      inline virtual const char* what() const throw ()
-      {
-        return _message.c_str();
-      }
-
-    private:
-      /**
-       * \var _message
-       * \brief Exception message.
-       */
-      std::string _message;
 #ifdef _MSC_VER
 # pragma warning( pop )
 #endif
