@@ -206,11 +206,11 @@ TEST(qiPath, LinuxConfigPaths)
   bfs::path writeablePath(getHomePath() / ".config" / "foo") ;
 
   std::vector<std::string> expectedPrefPaths;
+  expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
   expectedPrefPaths.push_back((expected / "etc/foo").make_preferred().string(qi::unicodeFacet()));
   expectedPrefPaths.push_back((expected / "etc").make_preferred().string(qi::unicodeFacet()));
   expectedPrefPaths.push_back((expected / "preferences/foo").make_preferred().string(qi::unicodeFacet()));
   expectedPrefPaths.push_back((expected / "preferences").make_preferred().string(qi::unicodeFacet()));
-  expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
   expectedPrefPaths.push_back(absPath("/etc/foo").string(qi::unicodeFacet()));
 
   for (int i = 0; i < actualPrefsPaths.size() || i < expectedPrefPaths.size(); ++i)
@@ -244,8 +244,8 @@ TEST(qiPath, dataPaths)
  #endif
 
   bfs::path expected(sdkl->sdkPrefix(), qi::unicodeFacet());
-  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
   expectedPrefPaths.push_back(writeablePath.string(qi::unicodeFacet()));
+  expectedPrefPaths.push_back((expected / "share/foo").make_preferred().string(qi::unicodeFacet()));
 
   std::vector<std::string> actualPrefsPaths = sdkl->dataPaths("foo");
 

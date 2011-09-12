@@ -382,6 +382,9 @@ namespace qi {
     _private->checkInit();
     std::vector<std::string> res;
 
+    // Pass an empty string to get the directory:
+    res.push_back(userWritableConfPath(applicationName, ""));
+
     try
     {
       std::vector<std::string>::const_iterator it;
@@ -404,8 +407,7 @@ namespace qi {
 #endif
       }
 
-      // Pass an empty string to get the directory:
-      res.push_back(userWritableConfPath(applicationName, ""));
+
 
 #ifndef _WIN32
       boost::filesystem::path systemPath("/etc", qi::unicodeFacet());
@@ -426,6 +428,9 @@ namespace qi {
     _private->checkInit();
     std::vector<std::string> res;
 
+    // Pass an empty string to get the directory:
+    res.push_back(userWritableDataPath(applicationName, ""));
+
     std::vector<std::string>::const_iterator it;
     for (it = _private->_sdkPrefixes.begin();
          it != _private->_sdkPrefixes.end();
@@ -434,9 +439,6 @@ namespace qi {
       boost::filesystem::path prefix(*it, qi::unicodeFacet());
       res.push_back((prefix / "share" / applicationName).make_preferred().string(qi::unicodeFacet()));
     }
-
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableDataPath(applicationName, ""));
 
     return res;
   }
