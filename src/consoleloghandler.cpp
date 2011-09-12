@@ -30,26 +30,26 @@ namespace qi {
     class PrivateConsoleLogHandler
     {
     public:
-      enum ConsoleAttr {
 #ifndef _WIN32
+      enum ConsoleAttr {
         reset      = 0,
         bright,
         dim,
+        underline  = 4,
         blink,
-        underline,
-        reverse    = 7,
-        hidden
+        reverse    = 7
+      };
 #else
+      enum ConsoleAttr {
         reset      = 0,
         dim        = 0,
         reverse    = 7,
-        bright,
-        hidden
-#endif
+        bright
       };
+#endif
 
-      enum ConsoleColor {
 #ifdef _WIN32
+      enum ConsoleColor {
         black   = 0,
         darkblue,
         green,
@@ -65,7 +65,9 @@ namespace qi {
         magenta,
         yellow,
         white
+      };
 #else
+      enum ConsoleColor {
         black   = 0,
         red,
         green,
@@ -75,12 +77,12 @@ namespace qi {
         cyan,
         white,
         gray
-#endif
       };
+#endif
 
 
-      void textColor(char fg, char bg = -1, char attr = -1) const;
       void textColorBG(char bg) const;
+      void textColorFG(char fg) const;
       void textColorAttr(char attr) const;
       void header(const LogLevel verb) const;
 
@@ -91,11 +93,49 @@ namespace qi {
 #endif
     };
 
-    void PrivateConsoleLogHandler::textColor(char fg, char bg, char attr) const
+
+#ifndef _WIN32
+    void PrivateConsoleLogHandler::textColorAttr(char attr) const
     {
       if (!_color)
         return;
-#ifdef _WIN32
+
+      printf("%c[%dm", 0x1B, attr);
+    }
+
+    void PrivateConsoleLogHandler::textColorBG(char bg) const
+    {
+      if (!_color)
+        return;
+
+      printf("%c[%dm", 0x1B, bg + 40);
+    }
+
+    void PrivateConsoleLogHandler::textColorFG(char fg) const
+    {
+      if (!_color)
+        return;
+
+      printf("%c[%dm", 0x1B, fg + 30);
+    }
+
+#else
+    void PrivateConsoleLogHandler::textColorBG(char bg) const
+    {
+      return;
+    }
+
+    void PrivateConsoleLogHandler::textColorAttr(char attr) const
+    {
+      textColorFG(attr);
+      return;
+    }
+
+    void PrivateConsoleLogHandler::textColorFG(char fg) const
+    {
+      if (!_color)
+        return;
+
       if (fg == reset)
       {
         SetConsoleTextAttribute(_winScreenHandle, whitegray);
@@ -105,63 +145,27 @@ namespace qi {
         SetConsoleTextAttribute(_winScreenHandle, fg);
       }
       return;
-#endif
-      if (attr != -1 && bg != -1)
-        printf("%c[%d;%d;%dm", 0x1B, attr, fg + 30, bg + 40);
-      else if (bg != -1)
-        printf("%c[%d;%dm", 0x1B, fg + 30, bg + 40);
-      else
-        printf("%c[%dm", 0x1B, fg + 30);
     }
-
-    void PrivateConsoleLogHandler::textColorBG(char bg) const
-    {
-      if (!_color)
-        return;
-#ifdef _WIN32
-      return;
 #endif
-      printf("%c[%dm", 0x1B, bg + 40);
-    }
-
-    void PrivateConsoleLogHandler::textColorAttr(char attr) const
-    {
-      if (!_color)
-        return;
-
-#ifdef _WIN32
-      if (attr == reset)
-      {
-        SetConsoleTextAttribute(_winScreenHandle, whitegray);
-      }
-      else
-      {
-        SetConsoleTextAttribute(_winScreenHandle, attr);
-      }
-      return;
-#endif
-      printf("%c[%dm", 0x1B, attr);
-    }
 
     void PrivateConsoleLogHandler::header(const LogLevel verb) const
     {
       //display log level
-      textColorAttr(bright);
+      textColorAttr(reset);
       if (verb == fatal)
-        textColor(magenta);
+        textColorFG(magenta);
       if (verb == error)
-        textColor(red);
+        textColorFG(red);
       if (verb == warning)
-        textColor(yellow);
+        textColorFG(yellow);
       if (verb == info)
-        textColor(white);
+        textColorAttr(reset);
       if (verb == verbose)
         textColorAttr(dim);
       if (verb == debug)
         textColorAttr(dim);
       printf("%s ", logLevelToString(verb));
       textColorAttr(reset);
-      textColor(reset);
     }
 
     ConsoleLogHandler::ConsoleLogHandler()
@@ -216,7 +220,7 @@ namespace qi {
         cutCat(category, fixedCategory);
 #ifndef WIN32
         _private->textColorAttr(_private->reset);
-        _private->textColor(_private->gray);
+        _private->textColorFG(_private->gray);
 #endif
 
         std::stringstream ss;
