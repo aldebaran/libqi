@@ -116,6 +116,8 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator.
      * @return The complete, native path of the file if it was found,
      * an empty string otherwise.
+     *
+     * \throw std::invalid_argument if filename was empty
      */
     QI_API std::string findConf(const std::string& applicationName,
                                 const std::string& filename);
@@ -142,6 +144,8 @@ namespace qi
      * You can specify subdirectories using "/" as directory separator.
      * @return The complete, native path of the file if it was found,
      * an empty string otherwise.
+     *
+     * \throw std::invalid_argument if filename was empty
      */
     QI_API std::string findData(const std::string& applicationName,
                                 const std::string& filename);

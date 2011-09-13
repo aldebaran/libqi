@@ -390,6 +390,13 @@ TEST(qiPathTests, pathUTF16)
 }
 #endif
 
+TEST(qiPathTests, badInput)
+{
+  ASSERT_THROW({qi::path::findData("foo", "");}, std::invalid_argument);
+  ASSERT_THROW({qi::path::findConf("foo", "");}, std::invalid_argument);
+}
+
+
 int main(int argc, char* argv[])
 {
   qi::init(argc, argv);

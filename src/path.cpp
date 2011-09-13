@@ -57,12 +57,16 @@ namespace qi
     std::string findConf(const std::string &applicationName,
                          const std::string &filename)
     {
+      if(filename == "")
+        throw std::invalid_argument("Filename cannot be empty!");
       return getInstance()->findConf(applicationName, filename);
     }
 
     std::string findData(const std::string &applicationName,
                          const std::string &filename)
     {
+      if(filename == "")
+        throw std::invalid_argument("Filename cannot be empty!");
       return getInstance()->findData(applicationName, filename);
     }
 
