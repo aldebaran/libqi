@@ -135,8 +135,6 @@ namespace qi
      * - then
      *   <sdk_prefix>/share/<applicationName>/<filename>
      *     for each known SDK prefix
-     * - then a standard path in the system. (like
-     *   /usr/share/<applicationName>/<filename>)
      * \endverbatim
      *
      * @param applicationName Name of the application (in UTF-8).
