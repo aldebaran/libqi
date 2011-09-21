@@ -238,6 +238,8 @@ namespace qi {
              const int             line)
 
     {
+      if (!LogInstance)
+        return;
       if (!LogInstance->LogInit)
         return;
 
