@@ -16,10 +16,12 @@
 #include <qimessaging/signature/signature_iterator.hpp>
 #include <qimessaging/signature/detail/type_signature.hpp>
 #include <qimessaging/signature/detail/function_signature.hpp>
+#include <qimessaging/signature/error.hpp>
 
 namespace qi {
 
-    //this is the entry point of all the signature machinery
+
+  //this is the entry point of all the signature machinery
 
   /// Return a signature based on the templated type T, provided in parameter to the struct.
   /// Ref and const are not computed, those qualifiers are compiler details.

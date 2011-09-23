@@ -29,8 +29,8 @@ namespace qi {
       void visitList();
       void visitMap();
       void visitProtobuf();
-      void visitFunctionArguments();
-      void visitFunction();
+      void visitTuple(bool param = false);
+      bool visitFunction();
 
       std::string &_result;
       const char  *_current;

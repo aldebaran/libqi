@@ -17,6 +17,7 @@
 # include <boost/utility.hpp>
 # include <boost/function_types/is_function_pointer.hpp>
 # include <boost/function_types/is_function.hpp>
+# include <qimessaging/serialization/message.hpp>
 
 namespace qi {
   namespace detail {
@@ -45,6 +46,7 @@ namespace qi {
     _QI_SIMPLE_SIGNATURE(float      , "f");
     _QI_SIMPLE_SIGNATURE(double     , "d");
     _QI_SIMPLE_SIGNATURE(std::string, "s");
+    _QI_SIMPLE_SIGNATURE(qi::serialization::Message, "m");
 
     //pointer
     template <typename T>

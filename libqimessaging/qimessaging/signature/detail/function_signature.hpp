@@ -45,10 +45,10 @@ namespace qi {
       static std::string &value(std::string &val) {
         typedef typename boost::function_types::parameter_types<F>::type ArgsType;
         ::qi::detail::signature< typename boost::function_types::result_type<F>::type >::value(val);
-        val += ":";
+        val += "(";
         boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(signature_function_arg_apply(val));
+        val += ")";
         //        for (i = 0; i < boost::function_types::function_arity<F>::value; ++i) {
-
         //          qi::detail::signature<typename boost::mpl::at<ArgsType, boost::mpl::int_<i> >::type>::value(val);
         //        }
         return val;

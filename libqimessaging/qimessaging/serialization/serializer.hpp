@@ -14,6 +14,9 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/serialization/message.hpp>
 
+#include <vector>
+#include <map>
+
 namespace qi {
   namespace serialization {
 

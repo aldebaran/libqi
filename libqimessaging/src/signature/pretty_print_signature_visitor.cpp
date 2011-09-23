@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include <qi/log.hpp>
+#include <qimessaging/signature/error.hpp>
 #include <qimessaging/signature/detail/pretty_print_signature_visitor.hpp>
 
 namespace qi {
@@ -22,53 +23,68 @@ namespace qi {
     {}
 
     void PrettyPrintSignatureVisitor::visit(const char *sep) {
+
+      //do we have name::sig ?
       if (_current == _signature)
-        visitFunction();
+        if (visitFunction())
+          return;
 
-      char first = 1;
-      while(*_current != 0)
-      {
-        const char *prev = _current;
-        if (!first)
-          _result += sep;
-        first = 0;
+      //eat an element
+      visitSingle();
 
-        visitSingle();
+      //this is a function pointer
+      if (*_current == '(') {
+        _result += " ";
+        visitTuple(true);
+      }
 
-        //verify something has been eaten
-        if (prev == _current) {
-          qisWarning << "SignatureVisitor parser error" << std::endl;
-          break;
-        }
+      //verify something has been eaten
+      if (*_current != 0) {
+        std::stringstream ss;
+        ss << "trailing garbage(" << *_current << ") at index " << _current - _signature;
+        ss << ", signature: " << _signature;
+        throw qi::BadSignatureError(ss.str());
       }
     }
 
-    void PrettyPrintSignatureVisitor::visitFunction() {
+    //true if match
+    bool PrettyPrintSignatureVisitor::visitFunction() {
       const char* sep = "::";
       const char* delimiter = strstr(_signature, sep);
       if (delimiter == NULL)
-        return;
+        return false;
       _method  = std::string(_signature, delimiter - _signature);
       _current = delimiter + 2;
+      //return type
+      visitSingle();
+
+      _result += " ";
+      _result += _method;
+      visitTuple(true);
+      //_result += "(";
+      //_current++;
+      //visit(", ");
+      //_result += ")";
+      return true;
     }
 
     void PrettyPrintSignatureVisitor::visitSingle() {
       switch(*_current) {
-      case '[':
-        visitList();
-        break;
-      case '{':
-        visitMap();
-        break;
-      case ':':
-        visitFunctionArguments();
-        break;
-      case '@':
-        visitProtobuf();
-        break;
-      default:
-        visitSimple();
-        break;
+        case '[':
+          visitList();
+          break;
+        case '{':
+          visitMap();
+          break;
+        case '(':
+          visitTuple();
+          break;
+        case '@':
+          visitProtobuf();
+          break;
+        default:
+          visitSimple();
+          break;
       }
 
       //pointer is just an extra qualifier over a single type
@@ -105,12 +121,26 @@ namespace qi {
       _current++;
     }
 
-    void PrettyPrintSignatureVisitor::visitFunctionArguments() {
-      _result += _method;
-      _result += "(";
+    void PrettyPrintSignatureVisitor::visitTuple(bool param) {
+      int first = 1;
+      if (param)
+        _result += "(";
+      else
+        _result += "tuple<";
       _current++;
-      visit(", ");
-      _result += ")";
+      while (*_current != 0 && *_current != ')') {
+        if (first)
+          first = 0;
+        else
+          _result += ", ";
+        visitSingle();
+      }
+      //visit(", ");
+      if (param)
+        _result += ")";
+      else
+        _result += ">";
+      _current++;
     }
 
     void PrettyPrintSignatureVisitor::visitList() {
