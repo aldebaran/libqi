@@ -10,5 +10,6 @@ cmake_minimum_required(VERSION 2.6.4)
 project(qi-framework)
 include("qibuild.cmake")
 
+enable_testing()
 add_subdirectory("libqi")
 add_subdirectory("libqimessaging")
