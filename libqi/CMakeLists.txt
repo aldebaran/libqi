@@ -1,32 +1,75 @@
 ##
-## Author(s):
-##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
-##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
-##
-## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
+## Copyright (C) 2011 Aldebaran Robotics
 ##
 
 cmake_minimum_required(VERSION 2.6.4)
-project(libqi)
-include("qibuild.cmake")
+project(LibQi)
+include("bootstrap.cmake")
 
-qi_submodule_create("qi-log"             "qi/log.hpp"
-                                         "src/log/*.[hc][px][px]")
-
-qi_submodule_create("qi-perf"            "qi/perf/*.*")
-
-qi_submodule_create("qi-c"               "qi/*.h" "src/c/*.[hc][px][px]")
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-if (UNIX)
-  add_definitions(" -fvisibility=hidden ")
+if (EFFECTIVE_CPP)
+  add_definitions(" -Weffc++ ")
 endif()
 
-qi_create_lib(qi SRC ${CONFIG_H}
-                 SUBMODULE qi-log qi-c qi-perf
-                 DEPENDS BOOST BOOST_DATE_TIME BOOST_THREAD)
-qi_stage_lib(qi)
+enable_testing()
+#find_package(BOOST_LOCALE QUIET)
+include(CMakeDependentOption)
 
+set(H qi/config.hpp
+      qi/os.hpp
+      qi/macro.hpp
+      qi/path.hpp
+      qi/qi.hpp
+      qi/log.hpp
+      qi/log/consoleloghandler.hpp
+      qi/log/fileloghandler.hpp
+      qi/log/headfileloghandler.hpp
+      )
 
-add_subdirectory("tests")
+set(C src/dlfcn.cpp
+      src/path.cpp
+      src/application.cpp
+      src/sdklayout.hpp
+      src/sdklayout.cpp
+      src/filesystem.hpp
+      src/filesystem.cpp
+      src/log.cpp
+      src/consoleloghandler.cpp
+      src/fileloghandler.cpp
+      src/headfileloghandler.cpp
+      src/locale-light.cpp
+      )
+
+if (WIN32)
+  list(APPEND C src/os_debugger_win32.cpp src/os_launch_win32.cpp src/os_win32.cpp)
+else()
+  list(APPEND C src/os_debugger_posix.cpp src/os_launch_posix.cpp src/os_posix.cpp)
+endif()
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories("src/")
+
+if("${BUILDCONFIG}" STREQUAL "python-sdk")
+  create_lib(qi STATIC ${H} ${C})
+else()
+  create_lib(qi SHARED ${H} ${C})
+endif()
+
+use_lib(qi BOOST_FILESYSTEM)
+use_lib(qi BOOST_THREAD)
+
+if(MSVC)
+# Temporary ugly hack: we can't find out
+# where the boost_date_time dependency comes from:
+  use_lib(qi BOOST_DATE_TIME)
+endif()
+
+if(UNIX AND NOT APPLE)
+  use_lib(qi DL)
+endif()
+
+if (QI_SDK_DIR)
+  qi_install_header(qi HEADERS ${H} KEEP_RELATIVE_PATHS)
+endif()
+stage_lib(qi QI)
+
+add_subdirectory(examples)

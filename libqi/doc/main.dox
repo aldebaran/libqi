@@ -1,0 +1,27 @@
+// -*- mode:c++; -*-
+
+/**
+\mainpage libqi library
+
+
+\section libqi What is qi library?
+libqi is a shared library providing access to OS and system level functionnalities.
+You will find cross-platform method to access the environment, to start process, to open
+files with UTF-8 path, to open shared library and more in qi::os.
+Basic logging facilities are provided. You will also find convenient functions in qi::path to access and search files related to your project.
+
+\section API
+- \ref qi
+- \ref qimacro
+- \ref qilog
+- \ref qipath
+- \ref qios
+
+\section Developer Guide
+- \ref qilogguide
+- \ref qipathguide
+
+*/
+
+
+// vim:filetype=doxygen

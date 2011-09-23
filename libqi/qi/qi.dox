@@ -1,0 +1,72 @@
+
+/**
+\defgroup qi qi general
+  Various functions.
+*/
+
+/**
+ * \namespace qi
+ * \brief qi general namespace
+ * \ingroup qi
+ */
+
+
+/**
+ * \typedef qi::codecvt_type
+ * \brief standard std::codecvt accept by STL and boost.
+ * typedef for std::codecvt<wchar_t, char, std::mbstate_t>
+ * could be used with boost::filesystem::path or std::locale.
+ * \ingroup qi
+ */
+
+/**
+ * \fn const codecvt_type &qi::unicodeFacet()
+ * \brief utf8 facet
+ *
+ *  return a facet object that can be used by stl (iostream, locale, ..)
+ *  and std::locale compliant library like boost::filesystem.
+ *
+ *  this class allow convertion between utf8(char) and utf16/32(wchar).
+ *
+ *  \return utf8 implementation for std::codecvt<wchar_t, char, std::mbstate_t>
+ *  \ingroup qi
+ */
+
+
+/**
+ * \fn void qi::init(int, char *[])
+ * \brief Store argc and argv
+ * \ingroup qi
+ */
+
+/**
+ * \fn QI_API int qi::argc()
+ * \brief Get argc
+ * \ingroup qi
+ * \return return argc if qi::init is call, -1 otherwise
+ */
+
+/**
+ * \fn const char** qi::argv()
+ * \brief Get argv
+ * \ingroup qi
+ * \return return argv if qi::init is call, NULL otherwise
+ */
+
+/**
+ * \fn const char *qi::program()
+ * \brief Return the current program.
+ * \ingroup qi
+ * Computed using specific OS API:
+ *
+ * - Apple  : _NSGetExecutablePath
+ * - Linux  : reading "/proc/self/exe"
+ * - Windows: GetModuleFileName
+ *
+ * If the former API fail it will try to guess the value from argv[0].
+ * For this method to work qi::init(argc, argv) should have been called in the main.
+ *  \return full path to the current running program
+ */
+
+
+

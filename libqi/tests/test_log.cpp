@@ -12,8 +12,8 @@ int main(int argc, char **argv)
   qiDebug("%d\n", 42);
 
   qisFatal   << "f" << 42 << std::endl;
-  qisError   << "e" << 42 << std::endl;
-  qisWarning << "w" << 42 << std::endl;
+  qiLogError("qimessaging")   << "e" << 42 << std::endl;
+  qiLogWarning("qimessaging") << "w" << 42 << std::endl;
   qisInfo    << "i" << 42 << std::endl;
-  qisDebug   << "d" << 42 << std::endl;
+  qiLogDebug("qimessaging")   << "d" << 42 << std::endl;
 }
