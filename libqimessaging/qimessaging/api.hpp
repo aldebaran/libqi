@@ -6,7 +6,7 @@
 #ifndef _QIMESSAGING_API_HPP_
 #define _QIMESSAGING_API_HPP_
 
-#include <qi/api.hpp>
+#include <qi/macro.hpp>
 
 #ifdef qimessaging_EXPORTS
 # define QIMESSAGING_API QI_EXPORT_API
