@@ -68,7 +68,7 @@ namespace qi {
 
       void ZMQServerQueueBackend::run() {
         for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
-          qisDebug << "Start ZMQServer on: " << _serverAddresses[i] << std::endl;
+          qiLogDebug("qimessaging") << "Start ZMQServer on: " << _serverAddresses[i] << std::endl;
           _zsocket.bind(_serverAddresses[i].c_str());
         }
         _zsocketworkers.bind(gWorkersAddress);

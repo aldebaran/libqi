@@ -43,9 +43,9 @@ namespace qi {
             _zsocket.connect(_serverAddress.c_str());
             return;
           } catch(const std::exception& e) {
-            qisDebug << "ZMQClientBackend failed to create client for address \""
+            qiLogDebug("qimessaging") << "ZMQClientBackend failed to create client for address \""
                 << _serverAddress << "\" Reason: " << e.what() << std::endl;
-            qisDebug << "retrying.." << std::endl;
+            qiLogDebug("qimessaging") << "retrying.." << std::endl;
           }
           ++i;
           qi::os::msleep(100);

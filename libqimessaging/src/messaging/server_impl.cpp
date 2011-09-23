@@ -45,7 +45,7 @@ namespace qi {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "\"" << _endpointContext.name << "\" initialized with invalid master "
+        qiLogError("qimessaging") << "\"" << _endpointContext.name << "\" initialized with invalid master "
           "address: \"" << masterAddress << "\" All calls will fail."
           << std::endl;
         return;
@@ -83,7 +83,7 @@ namespace qi {
       def.readString(methodSignature);
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
-        qisError << "Server Error: Method not found: " << qi::signatureToString(methodSignature) << std::endl;
+        qiLogError("qimessaging") << "Server Error: Method not found: " << qi::signatureToString(methodSignature) << std::endl;
         return;
       }
       si.functor->call(def, result);
@@ -95,7 +95,7 @@ namespace qi {
       qi::Functor* functor)
     {
       if (! _isInitialized ) {
-        qisError << "Attempt to use uninitialized server: \"" << _endpointContext.name <<
+        qiLogError("qimessaging") << "Attempt to use uninitialized server: \"" << _endpointContext.name <<
           "\". Service \"" << qi::signatureToString(methodSignature) << "\" not added."
           << std::endl;
         throw qi::transport::ServerException(

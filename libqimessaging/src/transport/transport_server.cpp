@@ -52,11 +52,11 @@ namespace qi {
         _transportServer = new detail::ZMQSimpleServerBackend(endpoints, _transportContext.getContext<zmq::context_t>(endpoints[0]));
         _isInitialized = true;
       } catch(const std::exception& e) {
-        qisError << "Failed to create transport server for endpoints:";
+        qiLogError("qimessaging") << "Failed to create transport server for endpoints:";
         for(unsigned int i = 0 ; i< endpoints.size(); ++i) {
-          qisError << " " << endpoints[i] << std::endl;
+          qiLogError("qimessaging") << " " << endpoints[i] << std::endl;
         }
-        qisError << " Reason:" << e.what() << std::endl;
+        qiLogError("qimessaging") << " Reason:" << e.what() << std::endl;
         throw(e);
       }
     }
@@ -67,7 +67,7 @@ namespace qi {
         try {
           _transportServer->run();
         } catch(const std::exception& e) {
-          qisError << "TransportServer::run exception " << e.what() << std::endl;
+          qiLogError("qimessaging") << "TransportServer::run exception " << e.what() << std::endl;
         }
       }
     }

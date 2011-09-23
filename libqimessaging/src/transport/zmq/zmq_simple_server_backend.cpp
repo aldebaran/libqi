@@ -65,11 +65,11 @@ namespace qi {
         try {
           for(unsigned int i = 0; i < _serverAddresses.size(); ++i) {
             currentAddress = _serverAddresses[i];
-            qisDebug << "Binding Server to: " << currentAddress << std::endl;
+            qiLogDebug("qimessaging") << "Binding Server to: " << currentAddress << std::endl;
             _zsocket.bind(currentAddress.c_str());
           }
         } catch(const std::exception& e) {
-          qisError << "Bind Server Failed to: " << currentAddress <<
+          qiLogError("qimessaging") << "Bind Server Failed to: " << currentAddress <<
             " Reason: " << e.what() << std::endl;
           // TODO throw here ?
           return;
@@ -78,7 +78,7 @@ namespace qi {
 #ifdef ZMQ_FULL_ASYNC
         alsdebug << "ZMQ: entering the loop (REP + growing thread mode)";
 #else
-        qisDebug << "ZMQ: entering the loop (REP)" << std::endl;
+        qiLogDebug("qimessaging") << "ZMQ: entering the loop (REP)" << std::endl;
 #endif
         _running = true;
         while (_running) {
@@ -103,7 +103,7 @@ namespace qi {
 #endif
           } catch(const zmq::error_t& e) {
             _running = false;
-            qisError << "ZMQSimpleServerBackend::run Fatal error, stopping. Reason: " << e.what() << std::endl;
+            qiLogError("qimessaging") << "ZMQSimpleServerBackend::run Fatal error, stopping. Reason: " << e.what() << std::endl;
           }
         }
       }

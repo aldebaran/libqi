@@ -99,7 +99,7 @@ namespace qi {
       //use only the number of thread we need
       void ZMQServerBackend::run() {
         for(unsigned int i=0; i< _serverAddresses.size(); ++i) {
-          qisDebug << "Start ZMQServer on: " << _serverAddresses[i];
+          qiLogDebug("qimessaging") << "Start ZMQServer on: " << _serverAddresses[i];
           _zsocket.bind(_serverAddresses[i].c_str());
         }
 

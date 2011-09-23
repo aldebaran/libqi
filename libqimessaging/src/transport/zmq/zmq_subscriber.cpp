@@ -57,12 +57,12 @@ namespace qi {
         }
         catch(const zmq::error_t& e) {
           if (!_isClosing) {
-            qisError << "ZMQSubscriber::receive zmq exception. Reason: " << e.what() << std::endl;
+            qiLogError("qimessaging") << "ZMQSubscriber::receive zmq exception. Reason: " << e.what() << std::endl;
           }
         }
         catch(const qi::transport::Exception& e) {
           if (!_isClosing) {
-            qisError << "ZMQSubscriber::receive transport exception. Reason: " << e.what() << std::endl;
+            qiLogError("qimessaging") << "ZMQSubscriber::receive transport exception. Reason: " << e.what() << std::endl;
           }
         }
       }

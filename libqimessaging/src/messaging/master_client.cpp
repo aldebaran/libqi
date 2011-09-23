@@ -45,13 +45,13 @@ namespace qi {
       std::pair<std::string, int> masterEndpointAndPort;
       if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
         _isInitialized = false;
-        qisError << "Initialized with invalid master address: \""
+        qiLogError("qimessaging") << "Initialized with invalid master address: \""
             << _masterAddress << "\" All calls will fail." << std::endl;
         return;
       }
       _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
       if (! _isInitialized ) {
-        qisError << "Could not connect to master "
+        qiLogError("qimessaging") << "Could not connect to master "
             "at address \"" << masterEndpointAndPort.first << "\""
             << std::endl;
         return;

@@ -8,6 +8,7 @@
 
 #include "src/messaging/client_impl.hpp"
 #include <qimessaging/exceptions.hpp>
+#include <qimessaging/signature.hpp>
 #include <qi/log.hpp>
 
 using qi::transport::TransportClient;
@@ -66,7 +67,7 @@ namespace qi {
         tc = _serverClients.get(serverEndpoint);
       }
       if (!ok || tc == NULL) {
-        qisError << "Could not create client for server \"" << serverEndpoint
+        qiLogError("qimessaging") << "Could not create client for server \"" << serverEndpoint
                  << "\" Probable connection error. " << std::endl;
         throw( qi::transport::ConnectionException(
           "Could not create client for server. Probable connection error."));
@@ -79,7 +80,7 @@ namespace qi {
       bool ok = client->connect(serverEndpoint);
       if (ok) {
         _serverClients.insert(serverEndpoint, client);
-        qisDebug << "Client \"" << _endpointContext.name
+        qiLogDebug("qimessaging") << "Client \"" << _endpointContext.name
                  << "\" connected to " << serverEndpoint << std::endl;
       }
       return ok;
@@ -95,7 +96,7 @@ namespace qi {
         try {
           tmpEndpoint = _masterClient.locateService(methodSignature, _endpointContext);
         } catch(const std::exception&) {
-          qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
+          qiLogWarning("qimessaging") << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Unable to contact master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Unable to contact master."));
@@ -107,7 +108,7 @@ namespace qi {
           // return a const string ref address
           return _serviceCache.get(methodSignature);
         } else {
-          qisWarning << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
+          qiLogWarning("qimessaging") << "ServiceNotFoundException \"" << qi::signatureToString(methodSignature)
                      << "\" Method not known to master." << std::endl;
           throw( qi::transport::ServiceNotFoundException(
             "Method not known to master."));

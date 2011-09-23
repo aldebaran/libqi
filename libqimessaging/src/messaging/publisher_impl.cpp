@@ -34,13 +34,13 @@ namespace qi {
       void PublisherImpl::advertiseTopic(const std::string& topicSignature,
         const bool& isManyToMany) {
         if (!_isInitialized) {
-          qisError << "Publisher::advertiseTopic \"" << topicSignature
+          qiLogError("qimessaging") << "Publisher::advertiseTopic \"" << topicSignature
             << "\" Attempt to use uninitialized publisher." << std::endl;
           return;
         }
         if (! _publisherInitialized) {
           if (! xInitOneToManyPublisher()) {
-            qisError << "Publisher::advertiseTopic \"" << topicSignature
+            qiLogError("qimessaging") << "Publisher::advertiseTopic \"" << topicSignature
               << "\" Failed to initialize oneToMany publisher." << std::endl;
             return;
           }
@@ -57,14 +57,14 @@ namespace qi {
           // get the publish address of the forwarder
           std::string endpoint = _masterClient.locateTopic(topicSignature, _endpointContext);
           if (endpoint.empty()) {
-            qisError << "Publisher::advertiseTopic \"" << topicSignature
+            qiLogError("qimessaging") << "Publisher::advertiseTopic \"" << topicSignature
               << "\" Failed to locate endpoint for manyToMany publisher" << std::endl;
             // TODO throw
             return;
           }
           // This will thow if the endpoint is invalid
           if (! xCreateManyToManyPublisher(endpoint)) {
-            qisError << "Publisher::advertiseTopic \"" << topicSignature
+            qiLogError("qimessaging") << "Publisher::advertiseTopic \"" << topicSignature
               << "\" Failed to initialize manyToMany publisher" << std::endl;
             // TODO throw
             return;
@@ -78,7 +78,7 @@ namespace qi {
 
         // One to Many
         if (exists) {
-          qisError << "Attempt to publish on an existing topic \""
+          qiLogError("qimessaging") << "Attempt to publish on an existing topic \""
             << topicSignature << "\" with isManyToMany = false: " << std::endl;
           return;
         }
@@ -107,13 +107,13 @@ namespace qi {
       } catch(const std::exception & e) {
         _publisherInitialized = false;
 
-        qisDebug << "Publisher failed to create publisher for addresses" << std::endl;
+        qiLogDebug("qimessaging") << "Publisher failed to create publisher for addresses" << std::endl;
         std::vector<std::string>::const_iterator it =  publishAddresses.begin();
         std::vector<std::string>::const_iterator end = publishAddresses.end();
         for(; it != end; ++it) {
-          qisDebug << *it << std::endl;
+          qiLogDebug("qimessaging") << *it << std::endl;
         }
-        qisDebug << "Reason: " << e.what() << std::endl;
+        qiLogDebug("qimessaging") << "Reason: " << e.what() << std::endl;
       }
       return _publisherInitialized;
     }
@@ -127,7 +127,7 @@ namespace qi {
         pub->connect(connectEndpoint);
         _transportPublishers.insert(connectEndpoint, pub);
       } catch(const std::exception& e) {
-        qisDebug << "Publisher failed to connect to address: \"" <<
+        qiLogDebug("qimessaging") << "Publisher failed to connect to address: \"" <<
           connectEndpoint << "\" Reason: " << e.what() << std::endl;
         return false;
       }
@@ -137,7 +137,7 @@ namespace qi {
     void PublisherImpl::publish(const std::string& topicSignature, const std::string& data)
     {
       if (! _isInitialized) {
-        qisError << "Publisher::publish Attempt to use an "
+        qiLogError("qimessaging") << "Publisher::publish Attempt to use an "
           << "uninitialized publisher." << std::endl;
         return;
       }
@@ -145,7 +145,7 @@ namespace qi {
       // find the endpoint for this topic
       const std::string& endpointID = _knownTopics.get(topicSignature);
       if (endpointID.empty()) {
-        qisError << "Publisher::publish Attempt to publish to "
+        qiLogError("qimessaging") << "Publisher::publish Attempt to publish to "
           << "unadvertised topic: " << topicSignature << std::endl;
         return;
       }
@@ -153,7 +153,7 @@ namespace qi {
       // find the transport publisher for this endpoint
       const TPubPtr& pub = _transportPublishers.get(endpointID);
       if (pub == NULL) {
-        qisError << "Publisher::publish Unable to find transport for "
+        qiLogError("qimessaging") << "Publisher::publish Unable to find transport for "
           << endpointID << std::endl;
         return;
       }

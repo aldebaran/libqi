@@ -12,25 +12,25 @@
 #include <qi/log.hpp>
 
 #define MASTERIMPL_DEBUG_ENDPOINT_CONTEXT(msg, endpoint)            \
-  qisDebug << "===" << msg << " ===" << std::endl;                  \
-  qisDebug << "type      : " << endpointTypeAsString(endpoint.type) \
+  qiLogDebug("qimessaging") << "===" << msg << " ===" << std::endl;                  \
+  qiLogDebug("qimessaging") << "type      : " << endpointTypeAsString(endpoint.type) \
   << std::endl;  \
-  qisDebug << "endpointID: " << endpoint.endpointID << std::endl;   \
-  qisDebug << "machineID : " << endpoint.machineID  << std::endl;   \
-  qisDebug << "name      : " << endpoint.name       << std::endl;   \
-  qisDebug << "contextID : " << endpoint.contextID  << std::endl;   \
-  qisDebug << "processID : " << endpoint.processID  << std::endl;   \
-  qisDebug << "port      : " << endpoint.port       << std::endl;   \
-  qisDebug << "============================"        << std::endl;   \
+  qiLogDebug("qimessaging") << "endpointID: " << endpoint.endpointID << std::endl;   \
+  qiLogDebug("qimessaging") << "machineID : " << endpoint.machineID  << std::endl;   \
+  qiLogDebug("qimessaging") << "name      : " << endpoint.name       << std::endl;   \
+  qiLogDebug("qimessaging") << "contextID : " << endpoint.contextID  << std::endl;   \
+  qiLogDebug("qimessaging") << "processID : " << endpoint.processID  << std::endl;   \
+  qiLogDebug("qimessaging") << "port      : " << endpoint.port       << std::endl;   \
+  qiLogDebug("qimessaging") << "============================"        << std::endl;   \
 
 #define MASTERIMPL_DEBUG_MACHINE_CONTEXT(msg, machine)               \
-  qisDebug << "===" << msg << " ===" << std::endl;                   \
-  qisDebug << "machineID : " << machine.machineID  << std::endl;     \
-  qisDebug << "hostName  : " << machine.hostName   << std::endl;     \
-  qisDebug << "platformID: " << platformAsString(machine.platformID) \
+  qiLogDebug("qimessaging") << "===" << msg << " ===" << std::endl;                   \
+  qiLogDebug("qimessaging") << "machineID : " << machine.machineID  << std::endl;     \
+  qiLogDebug("qimessaging") << "hostName  : " << machine.hostName   << std::endl;     \
+  qiLogDebug("qimessaging") << "platformID: " << platformAsString(machine.platformID) \
   << std::endl;  \
-  qisDebug << "publicIP  : " << machine.publicIP   << std::endl;     \
-  qisDebug << "============================"        << std::endl;    \
+  qiLogDebug("qimessaging") << "publicIP  : " << machine.publicIP   << std::endl;     \
+  qiLogDebug("qimessaging") << "============================"        << std::endl;    \
 
 namespace qi {
   namespace detail {
@@ -95,20 +95,20 @@ namespace qi {
 
         const EndpointContext& serverContext = _knownEndpoints.get(serverID);
         if(serverContext.name.empty()) {
-          qisError << "Master::registerService Attempt to register the "
+          qiLogError("qimessaging") << "Master::registerService Attempt to register the "
             "method of an unknown server, Please call registerService first"
             ": signature: " << qi::signatureToString(methodSignature) << " serverID " <<
             serverID << std::endl;
           return;
         }
-        qisDebug << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
+        qiLogDebug("qimessaging") << "Master::registerService " << serverContext.name << " " << qi::signatureToString(methodSignature) << std::endl;
 
         _knownServices.insert(methodSignature, serverID);
     }
 
     void MasterImpl::unregisterService(const std::string& methodSignature) {
       _knownServices.remove(methodSignature);
-      qisDebug << "Master::unregisterService " << qi::signatureToString(methodSignature) << std::endl;
+      qiLogDebug("qimessaging") << "Master::unregisterService " << qi::signatureToString(methodSignature) << std::endl;
     }
 
     void MasterImpl::registerMachine(const std::string& hostName,
@@ -139,7 +139,7 @@ namespace qi {
       MASTERIMPL_DEBUG_ENDPOINT_CONTEXT("Master::registerEndpoint", endpoint);
 
       if ( ! _knownMachines.exists(endpoint.machineID)) {
-        qisError << "Master::registerServer: Attempt to register a "
+        qiLogError("qimessaging") << "Master::registerServer: Attempt to register a "
           "server for a machine that has not been registered. machineID: " <<
           endpoint.machineID <<
           " Please call registerMachine first." << std::endl;
@@ -177,18 +177,18 @@ namespace qi {
     {
       const std::string& serverID = _knownServices.get(methodSignature);
       if (serverID.empty()) {
-        qisWarning << "Master::locateService: Could not find server for method: " << qi::signatureToString(methodSignature) << std::endl;
+        qiLogWarning("qimessaging") << "Master::locateService: Could not find server for method: " << qi::signatureToString(methodSignature) << std::endl;
         return "";
       }
       std::string endpoint = xNegotiateEndpoint(clientID, serverID);
-      qisDebug << "Master::locateService: Resolved: " << qi::signatureToString(methodSignature) << " to " << endpoint << std::endl;
+      qiLogDebug("qimessaging") << "Master::locateService: Resolved: " << qi::signatureToString(methodSignature) << " to " << endpoint << std::endl;
       return endpoint;
     }
 
     void MasterImpl::registerTopicParticipant(const std::string& topicName, const std::string& endpointID) {
       Topic& t = _knownTopics.getEditable(topicName);
       if (t.topicName.empty()) {
-        qisWarning << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
+        qiLogWarning("qimessaging") << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
         return;
       }
 
@@ -196,18 +196,18 @@ namespace qi {
       switch(e.type) {
         case PUBLISHER_ENDPOINT:
           t.publisherIDs.push_back(e.endpointID);
-          qisDebug << "Master::registerTopicParticipant: Added " <<
+          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
             "Publisher for \"" <<
             topicName << "\" : " << e.endpointID << std::endl;
           break;
         case SUBSCRIBER_ENDPOINT:
           t.subscriberIDs.push_back(e.endpointID);
-          qisDebug << "Master::registerTopicParticipant: Added " <<
+          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
             "Subscriber for \"" <<
             topicName << "\" : " << e.endpointID << std::endl;
           break;
         default:
-          qisWarning << "Master::registerTopicParticipant: Invalid " <<
+          qiLogWarning("qimessaging") << "Master::registerTopicParticipant: Invalid " <<
             "attempt to register a topic participant for \"" <<
             topicName << "\" that is neither a publisher, nor " <<
             "a subscriber: " << e.endpointID << std::endl;
@@ -218,7 +218,7 @@ namespace qi {
     std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
       const Topic& t = _knownTopics.get(topicName);
       if (t.subscribeEndpointID.empty()) {
-        qisDebug << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
+        qiLogDebug("qimessaging") << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
         return "";
       }
       std::string ret;
@@ -228,24 +228,24 @@ namespace qi {
       } else {
           ret = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
       }
-      qisDebug << "Master::locateTopic: Resolved: " << topicName << " to " << ret << std::endl;
+      qiLogDebug("qimessaging") << "Master::locateTopic: Resolved: " << topicName << " to " << ret << std::endl;
       return ret;
     }
 
     std::string MasterImpl::xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID) {
       const EndpointContext& serverContext = _knownEndpoints.get(serverEndpointID);
       if (serverContext.name.empty()) {
-        qisDebug << "Master::xNegotiateEndpoint: Could not find server for serverID: " << serverEndpointID << std::endl;
+        qiLogDebug("qimessaging") << "Master::xNegotiateEndpoint: Could not find server for serverID: " << serverEndpointID << std::endl;
         return "";
       }
       const EndpointContext& clientContext = _knownEndpoints.get(clientEndpointID);
       if (clientContext.name.empty()) {
-        qisDebug << "Master::xNegotiateEndpoint: Could not find client for clientID: " << clientEndpointID << std::endl;
+        qiLogDebug("qimessaging") << "Master::xNegotiateEndpoint: Could not find client for clientID: " << clientEndpointID << std::endl;
         return "";
       }
       const MachineContext& serverMachineContext = _knownMachines.get(serverContext.machineID);
       if (serverMachineContext.machineID.empty()) {
-        qisDebug << "Master::xNegotiateEndpoint: Could not find machine for serverID: " << serverEndpointID << std::endl;
+        qiLogDebug("qimessaging") << "Master::xNegotiateEndpoint: Could not find machine for serverID: " << serverEndpointID << std::endl;
         return "";
       }
       std::string endpoint = negotiateEndpoint(clientContext, serverContext, serverMachineContext);
@@ -256,14 +256,14 @@ namespace qi {
       const Topic& existingTopic = _knownTopics.get(topicName);
       if (! existingTopic.topicName.empty()) {
         if (isManyToMany) {
-          qisDebug << "Master::registerTopic for existing topic \"" << topicName << "\"" << std::endl;
+          qiLogDebug("qimessaging") << "Master::registerTopic for existing topic \"" << topicName << "\"" << std::endl;
           return;
         }
-        qisWarning << "Master::registerTopic \"" << topicName << "\" already exists. Not registering again." << std::endl;
+        qiLogWarning("qimessaging") << "Master::registerTopic \"" << topicName << "\" already exists. Not registering again." << std::endl;
         return;
       }
 
-      qisDebug << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
+      qiLogDebug("qimessaging") << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
 
       if (isManyToMany) {
         // create forwarder
@@ -333,7 +333,7 @@ namespace qi {
     }
 
     void MasterImpl::unregisterTopic(const std::string& topicName) {
-      qisDebug << "Master::unregisterTopic " << topicName << std::endl;
+      qiLogDebug("qimessaging") << "Master::unregisterTopic " << topicName << std::endl;
       _knownTopics.remove(topicName);
     }
 

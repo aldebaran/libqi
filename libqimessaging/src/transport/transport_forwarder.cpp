@@ -50,7 +50,7 @@ namespace qi {
 
         _isInitialized = true;
       } catch(const zmq::error_t& e) {
-        qisError << "Failed to bind the transport forwarder. Reason: "
+        qiLogError("qimessaging") << "Failed to bind the transport forwarder. Reason: "
           << e.what() << std::endl;
         throw(e);
       }

@@ -35,7 +35,7 @@ namespace qi {
         _client = new qi::transport::detail::ZMQClientBackend(endpoint, _transportContext.getContext<zmq::context_t>(endpoint));
         _isInitialized = true;
       } catch(const std::exception& e) {
-        qisDebug << "GenericClient failed to create client for address \""
+        qiLogDebug("qimessaging") << "GenericClient failed to create client for address \""
             << endpoint << "\" Reason: " << e.what() << std::endl;
         _isInitialized = false;
       }
@@ -45,7 +45,7 @@ namespace qi {
     void TransportClient::send(const qi::transport::Buffer &request, qi::transport::Buffer &reply)
     {
       if (!_isInitialized) {
-        qisError << "Attempt to use an uninitialized client." << std::endl;
+        qiLogError("qimessaging") << "Attempt to use an uninitialized client." << std::endl;
         return;
       }
       _client->send(request, reply);
