@@ -1,11 +1,111 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qimessaging/serialization/serializable.hpp>
-#include <qimessaging/serialization/serializer.hpp>
+#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/serialization/serialize.hpp>
+//#include <qimessaging/serialization/serializable.hpp>
+//#include <qimessaging/serialization/serializer.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/seq/seq.hpp>
+
+#include <boost/preprocessor/facilities/empty.hpp>
 
 using namespace qi::serialization;
 
+//(ii)
+struct Point2D {
+public:
+  //friend class qi::serialization::serialize<Point2D>;
+  Point2D(int x = 0, int y = 0)
+    : x(x), y(y)
+  {}
 
+//private:
+  int x;
+  int y;
+};
+
+//(ii)
+struct TimeStamp {
+  int i;
+  int j;
+};
+
+
+//((ii)(ii))
+struct TimeStampedPoint2D {
+  Point2D p;
+  TimeStamp t;
+};
+
+
+//namespace qi {
+//  namespace serialization {
+
+//  template <>
+//  struct serialize<Point2D>  {
+//    static inline void write(Message &sd, const Point2D &val) {
+//      qi::serialization::serialize<int>::write(val.x);
+//      qi::serialization::serialize<int>::write(val.y);
+//    }
+
+//    static inline void read(Message &sd, Point2D &val) {
+//      qi::serialization::serialize<int>::read(val.x);
+//      qi::serialization::serialize<int>::read(val.y);
+//    }
+
+//    static inline void signature(std::string &sign) {
+//      qi::signatureFromObject::value(val.x, sign);
+//      qi::signatureFromObject::value(val.y, sign);
+//    }
+//  };
+
+//  }
+//};
+
+
+
+
+
+
+QI_REFLECT(Point2D, ((int, x)) ((int, y)))
+QI_REFLECT(TimeStamp, ((int, i)) ((int, j)))
+QI_REFLECT(TimeStampedPoint2D, ((Point2D, p)) ((TimeStamp, t)))
+
+
+
+TEST(testSerializable, Point2D) {
+  Point2D      in(4, 3);
+  Point2D      out;
+  qi::Message  m;
+   qi::Message m2;
+  TimeStampedPoint2D ti;
+  TimeStampedPoint2D to;
+
+  ti.p.x = 1;
+  ti.p.y = 2;
+  ti.t.i = 3;
+  ti.t.j = 4;
+
+  qi::serialization::serialize<Point2D>::write(m, in);
+  qi::serialization::serialize<Point2D>::read(m, out);
+
+  qi::serialization::serialize<TimeStampedPoint2D>::write(m2, ti);
+  qi::serialization::serialize<TimeStampedPoint2D>::read(m2, to);
+
+  EXPECT_EQ(4, out.x);
+  EXPECT_EQ(3, out.y);
+
+  EXPECT_EQ(1, to.p.x);
+  EXPECT_EQ(2, to.p.y);
+  EXPECT_EQ(3, to.t.i);
+  EXPECT_EQ(4, to.t.j);
+  EXPECT_STREQ("((ii)(ii))", qi::signatureFromObject::value(ti).c_str());
+}
+
+
+
+#if 0
 struct Inner : Serializable {
   Inner() : text("hello"), number(42) {}
 
@@ -198,3 +298,5 @@ TEST(testSerializable, points) {
   ASSERT_EQ(timestamp.seconds, resultStampedPoint.time.seconds);
   ASSERT_EQ(timestamp.nanoseconds, resultStampedPoint.time.nanoseconds);
 }
+
+#endif
