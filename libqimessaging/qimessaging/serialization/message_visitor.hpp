@@ -32,7 +32,7 @@ namespace qi {
 
     protected:
       qi::Signature               _sig;
-      qi::serialization::Message &_message;
+      qi::Message &_message;
     };
 
   }

@@ -23,8 +23,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R>
   R Client::call(const std::string& methodName) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)()  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -41,8 +41,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0>
   void Client::callVoid(const std::string& methodName, const P0 &p0) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -55,8 +55,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0>
   R Client::call(const std::string& methodName, const P0 &p0) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -74,8 +74,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -89,8 +89,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -109,8 +109,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -125,8 +125,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -146,8 +146,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -163,8 +163,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -185,8 +185,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -203,8 +203,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -226,8 +226,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -245,8 +245,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -269,8 +269,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -289,8 +289,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -314,8 +314,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -335,8 +335,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -361,8 +361,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   void Client::callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -383,8 +383,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   R Client::call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::serialization::Message request;
-    qi::serialization::Message reply;
+    qi::Message request;
+    qi::Message reply;
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);

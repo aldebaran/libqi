@@ -94,7 +94,7 @@ TEST(TestSignature, BasicTypeSignature) {
 }
 
 TEST(TestSignature, OpaqueMessage) {
-  EXPECT_EQ("m", qi::signature<qi::serialization::Message >::value());
+  EXPECT_EQ("m", qi::signature<qi::Message >::value());
 }
 
 // TEST(TestSignature, ProtobufSignature) {

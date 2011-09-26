@@ -97,7 +97,7 @@ namespace qi {
     void publish(const std::string& topicName, const PUBLISH_TYPE& publishData)
     {
       void (*f)(const PUBLISH_TYPE &p0)  = 0;
-      qi::serialization::Message ser;
+      qi::Message ser;
       std::string topicSignature = makeFunctionSignature(topicName, f);
       qi::serialization::serialize<std::string>::write(ser, topicSignature);
       qi::serialization::serialize<PUBLISH_TYPE>::write(ser, publishData);

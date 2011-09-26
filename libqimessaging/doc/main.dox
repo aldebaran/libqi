@@ -135,7 +135,7 @@ the signature of protobuf messages too.
 
 \defgroup Serialization Serialization
 This module handles serialization or arguments and return types to and from messages.
-The qi::serialization::Message is used by the transport layer to exchange information
+The qi::Message is used by the transport layer to exchange information
 between messaging classes.
 
 \defgroup Functors Functors

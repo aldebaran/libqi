@@ -20,8 +20,8 @@ namespace qi
 
   template <typename R>
   R callFunctor(Functor *f) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     f->call(args, ret);
     R r;
@@ -30,8 +30,8 @@ namespace qi
   }
 
   void callVoidFunctor(Functor *f) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     f->call(args, ret);
   }
@@ -39,8 +39,8 @@ namespace qi
 
   template <typename R, typename P0>
   R callFunctor(Functor *f, const P0 &p0) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     f->call(args, ret);
@@ -51,8 +51,8 @@ namespace qi
 
   template <typename P0>
   void callVoidFunctor(Functor *f, const P0 &p0) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     f->call(args, ret);
@@ -61,8 +61,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -74,8 +74,8 @@ namespace qi
 
   template <typename P0, typename P1>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -85,8 +85,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -99,8 +99,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -111,8 +111,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -126,8 +126,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -139,8 +139,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -155,8 +155,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -169,8 +169,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -186,8 +186,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -201,8 +201,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -219,8 +219,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -235,8 +235,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -254,8 +254,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -271,8 +271,8 @@ namespace qi
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);
@@ -291,8 +291,8 @@ namespace qi
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::serialization::Message args;
-    qi::serialization::Message ret;
+    qi::Message args;
+    qi::Message ret;
 
     qi::serialization::serialize<P0>::write(args, p0);
     qi::serialization::serialize<P1>::write(args, p1);

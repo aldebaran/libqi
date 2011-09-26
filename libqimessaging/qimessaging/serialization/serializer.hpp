@@ -36,13 +36,13 @@ namespace qi {
     class QIMESSAGING_API Serializer {
     private:
       qi::serialization::SerializeAction _action;
-      qi::serialization::Message& _message;
+      qi::Message& _message;
     public:
 
       /// <summary> Constructs a Serializer object </summary>
       /// <param name="action"> The SerializeAction, either ACTION_SERIALIZE or ACTION_DESERIALIZE. </param>
       /// <param name="message"> [in,out] A reference to the message to serialize to or from </param>
-      Serializer(SerializeAction action, qi::serialization::Message& message);
+      Serializer(SerializeAction action, qi::Message& message);
 
       /// <summary> Visits a bool </summary>
       /// <param name="b"> [in,out] The bool </param>

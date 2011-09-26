@@ -14,7 +14,6 @@
 using qi::transport::TransportClient;
 
 namespace qi {
-  using serialization::Message;
 
   namespace detail {
 
@@ -38,8 +37,8 @@ namespace qi {
     }
 
     void ClientImpl::call(const std::string &signature,
-      const qi::serialization::Message& callDef,
-            qi::serialization::Message& result) {
+      const qi::Message& callDef,
+            qi::Message& result) {
         if (!_isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));

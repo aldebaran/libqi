@@ -18,7 +18,7 @@
 #include <qimessaging/exceptions.hpp>
 
 namespace qi {
-  using qi::serialization::Message;
+  using qi::Message;
 
   namespace detail {
 

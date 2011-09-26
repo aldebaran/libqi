@@ -36,7 +36,7 @@ public:
     ;
   }
 
-  virtual void call(qi::serialization::Message &params, qi::serialization::Message& result)const {
+  virtual void call(qi::Message &params, qi::Message& result)const {
     if (_func)
       _func(_complete_sig, static_cast<qi_message_t *>(&params), static_cast<qi_message_t *>(&result), _data);
   }

@@ -15,7 +15,7 @@ namespace qi {
     /// <summary> Constructs a serializer or deserializer with a reference to the message </summary>
     /// <param name="action"> The action: defines if we should serialize or desiralize</param>
     /// <param name="message"> [in,out] The message to serialize to / deserialize from </param>
-    Serializer::Serializer(SerializeAction action, qi::serialization::Message& message) :
+    Serializer::Serializer(SerializeAction action, qi::Message& message) :
       _action(action), _message(message) {}
 
     /// <summary> Visits a boolean </summary>

@@ -53,7 +53,7 @@ TEST(testSerializable, simpleStruct) {
   t.number = 1;
   t.text = "hello world";
 
-  qi::serialization::Message m;
+  qi::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -68,7 +68,7 @@ TEST(testSerializable, multiLayer) {
   t.inner.number = 1;
   t.inner.text = "shtuff";
 
-  qi::serialization::Message m;
+  qi::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -86,7 +86,7 @@ TEST(testSerializable, hard) {
   shtuff.push_back(map);
   t.content = shtuff;
 
-  qi::serialization::Message m;
+  qi::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -109,7 +109,7 @@ TEST(testSerializable, harder) {
   shtuff.push_back(map);
   t.content = shtuff;
 
-  qi::serialization::Message m;
+  qi::Message m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -160,15 +160,15 @@ TEST(testSerializable, points) {
   stampedPoint.time = timestamp;
 
   // ---- code that will never be seen, and needs a little clearup
-  qi::serialization::Message pointMessage;
+  qi::Message pointMessage;
   Serializer s1(ACTION_SERIALIZE, pointMessage);
   point.serialize(s1);
 
-  qi::serialization::Message stampedPointMessage;
+  qi::Message stampedPointMessage;
   Serializer s2(ACTION_SERIALIZE, stampedPointMessage);
   stampedPoint.serialize(s2);
 
-  qi::serialization::Message stampedPointMessageAgain;
+  qi::Message stampedPointMessageAgain;
   Serializer s3(ACTION_SERIALIZE, stampedPointMessageAgain);
   stampedPoint.serialize(s3);
 

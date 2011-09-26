@@ -25,7 +25,7 @@ namespace qi
   */
   class Functor {
   public:
-    virtual void call(qi::serialization::Message &params, qi::serialization::Message& result)const = 0;
+    virtual void call(qi::Message &params, qi::Message& result)const = 0;
     virtual ~Functor() {}
   };
 

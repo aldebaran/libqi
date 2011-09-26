@@ -46,7 +46,7 @@ namespace qi {
     _QI_SIMPLE_SIGNATURE(float      , "f");
     _QI_SIMPLE_SIGNATURE(double     , "d");
     _QI_SIMPLE_SIGNATURE(std::string, "s");
-    _QI_SIMPLE_SIGNATURE(qi::serialization::Message, "m");
+    _QI_SIMPLE_SIGNATURE(qi::Message, "m");
 
     //pointer
     template <typename T>

@@ -28,8 +28,8 @@ namespace qi {
       void connect(const std::string &masterAddress = "127.0.0.1:5555");
 
       void call(const std::string &signature,
-                const qi::serialization::Message& callDef,
-                qi::serialization::Message &result);
+                const qi::Message& callDef,
+                qi::Message &result);
 
       std::string endpointId() { return _endpointContext.endpointID; }
 
