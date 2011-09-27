@@ -13,10 +13,11 @@
 
 
 #include <qimessaging/api.hpp>
+#include <qimessaging/signature/error.hpp>
 #include <qimessaging/signature/signature_iterator.hpp>
 #include <qimessaging/signature/detail/type_signature.hpp>
 #include <qimessaging/signature/detail/function_signature.hpp>
-#include <qimessaging/signature/error.hpp>
+#include <qimessaging/signature/detail/qt_signature.hpp>
 
 namespace qi {
 

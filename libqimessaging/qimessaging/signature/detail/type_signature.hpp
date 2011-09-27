@@ -24,12 +24,36 @@ namespace qi {
 
 #define _QI_SIMPLE_SIGNATURE(THETYPE, THENAME)                  \
   template <>                                                   \
-    struct signature<THETYPE>  {                                \
+  struct signature<THETYPE>  {                                  \
     static std::string &value(std::string &val) {               \
-    val += THENAME;                                             \
-    return val;                                                 \
-  }                                                             \
-    };
+      val += THENAME;                                           \
+      return val;                                               \
+    }                                                           \
+  };
+
+#define _QI_LIST_SIGNATURE(TYPE)                       \
+  template <typename U>                                \
+  struct signature< TYPE<U> > {                        \
+    static std::string &value(std::string &val) {      \
+      val += "[";                                      \
+      qi::detail::signature<U>::value(val);            \
+      val += "]";                                      \
+      return val;                                      \
+    }                                                  \
+  };
+
+#define _QI_MAP_SIGNATURE(TYPE)                        \
+  template <typename T1, typename T2>                  \
+  struct signature< TYPE<T1, T2> > {                   \
+    static std::string &value(std::string &val) {      \
+      val += "{";                                      \
+      qi::detail::signature<T1>::value(val);           \
+      qi::detail::signature<T2>::value(val);           \
+      val += "}";                                      \
+      return val;                                      \
+    }                                                  \
+  };
+
 
     template <typename T, class Enable = void>
     struct signature {
@@ -45,7 +69,6 @@ namespace qi {
     _QI_SIMPLE_SIGNATURE(int        , "i");
     _QI_SIMPLE_SIGNATURE(float      , "f");
     _QI_SIMPLE_SIGNATURE(double     , "d");
-    _QI_SIMPLE_SIGNATURE(std::string, "s");
     _QI_SIMPLE_SIGNATURE(qi::Message, "m");
 
     //pointer
@@ -72,27 +95,6 @@ namespace qi {
       }
     };
 
-    //STL
-    template <typename U>
-    struct signature< std::vector<U> > {
-      static std::string &value(std::string &val) {
-        val += "[";
-        qi::detail::signature<U>::value(val);
-        val += "]";
-        return val;
-      }
-    };
-
-    template <typename T1, typename T2>
-    struct signature< std::map<T1, T2> > {
-      static std::string &value(std::string &val) {
-        val += "{";
-        qi::detail::signature<T1>::value(val);
-        qi::detail::signature<T2>::value(val);
-        val += "}";
-        return val;
-      }
-    };
   }
 }
 
