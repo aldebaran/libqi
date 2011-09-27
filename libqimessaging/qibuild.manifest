@@ -1,3 +1,0 @@
-[project qimessaging]
-depends = "zeromq pthread zlib gtest boost python uuid"
-rdepends = "zeromq boost"
