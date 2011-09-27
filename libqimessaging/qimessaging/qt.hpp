@@ -18,4 +18,7 @@
 #include <qimessaging/signature.hpp>
 #include <qimessaging/signature/detail/qt_signature.hpp>
 
+#include <qimessaging/serialization.hpp>
+#include <qimessaging/serialization/serialize_qt.hxx>
+
 #endif  // _QIMESSAGING_QT_HPP_

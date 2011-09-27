@@ -36,34 +36,63 @@ namespace qi { namespace serialization {                                        
 #define QI_SERIALIZATION_ALLOW_VISITOR(TYPE)                                        \
  friend class qi::serialization::serialize<TYPE>;
 
+//Inline this function => they do nothing, they just call Message method
+//we keep vector/map not inlined at the moment because they take space.
+#define QI_SIMPLE_SERIALIZER(Name, Type)                                 \
+  template <>                                                         \
+  struct serialize<Type>  {                                           \
+    static inline void write(Message &sd, const Type &val) {   \
+      sd.write##Name(val);                                            \
+    }                                                                 \
+    static inline void read(Message &sd, Type &val) {          \
+      sd.read##Name(val);                                             \
+    }                                                                 \
+  };
+
 
 namespace qi {
   namespace serialization {
 
     /// serialize a c++ type to a message
     /// \ingroup Serialization
-    //Enable is need for protobuf (for conditional template specialization)
+    // Enable is need for conditional template specialization
     template <typename T, class Enable = void>
     struct serialize {
-
-      //static void read(Message &sd, T &t) = 0;
-
-      //static void write(Message &sd, const T &t) = 0;
-
-//      static void read(Message &sd, T &t){
-//        std::cout << "ERROR: The type \"" << typeid(T).name() << "\" is not serializable." << std::endl;
-//        //#error "This type is not serializable"
-//      }
-
-//      static void write(Message &sd, const T &t) {
-//        std::cout << "ERROR: The type \"" << typeid(T).name() << "\" is not serializable." << std::endl;
-//        //#error "This type is not serializable"
-//      }
+      //empty to crash a compile time when the type cant be serialized
     };
 
   }
 }
 
-#include <qimessaging/serialization/serialize.hxx>
+#if 0
+#include <iostream>
+#define __QI_DEBUG_SERIALIZATION_W(x, extra) {                \
+  std::string sig = qi::signature< x >::value();              \
+  std::cout << "write(" << sig << ")" << extra << std::endl;  \
+}
+
+#define __QI_DEBUG_SERIALIZATION_R(x, extra) {                \
+  std::string sig = qi::signature< x >::value();              \
+  std::cout << "read (" << sig << ")" << extra << std::endl;  \
+}
+
+#define __QI_DEBUG_SERIALIZATION_CONTAINER_W(x, c) {                   \
+  std::string sig = qi::signature< x >::value();                       \
+  std::cout << "write(" << sig << ") size: " << c.size() << std::endl; \
+}
+
+#define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c) {                  \
+  std::string sig = qi::signature< x >::value();                      \
+  std::cout << "read (" << sig << ") size: " << c.size() << std::endl; \
+}
+#else
+# define __QI_DEBUG_SERIALIZATION_W(x, extra)
+# define __QI_DEBUG_SERIALIZATION_R(x, extra)
+# define __QI_DEBUG_SERIALIZATION_CONTAINER_W(x, c)
+# define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
+#endif
+
+#include <qimessaging/serialization/serialize_pod.hxx>
+#include <qimessaging/serialization/serialize_stl.hxx>
 
 #endif  // _QI_SERIALIZATION_SERIALIZE_HPP_
