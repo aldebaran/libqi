@@ -17,7 +17,7 @@
 #include <qimessaging/signature/signature_iterator.hpp>
 #include <qimessaging/signature/detail/type_signature.hpp>
 #include <qimessaging/signature/detail/function_signature.hpp>
-#include <qimessaging/signature/detail/qt_signature.hpp>
+#include <qimessaging/signature/detail/stl_signature.hpp>
 
 namespace qi {
 
