@@ -17,18 +17,18 @@
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 
-#define _QI_REFLECT_SERIALIZE_ELEM(r, data, elem)  \
+#define _QI_SERIALIZATION_REFLECT_ELEM(r, data, elem)  \
   qi::serialization::serialize<BOOST_PP_TUPLE_ELEM(2, 0, elem)>::data(sd, val.BOOST_PP_TUPLE_ELEM(2, 1, elem));
 
-#define QI_REFLECT_SERIALIZATION(TYPE, MEMBERS)                                     \
+#define QI_SERIALIZATION_REFLECT(TYPE, MEMBERS)                                     \
 namespace qi { namespace serialization {                                            \
   template<> struct serialize<TYPE> {                                               \
     static inline void write(qi::Message &sd, const TYPE &val) {                    \
-      BOOST_PP_SEQ_FOR_EACH(_QI_REFLECT_SERIALIZE_ELEM, write, MEMBERS)             \
+      BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, write, MEMBERS)         \
     }                                                                               \
                                                                                     \
     static inline void read(qi::Message &sd, TYPE &val) {                           \
-      BOOST_PP_SEQ_FOR_EACH(_QI_REFLECT_SERIALIZE_ELEM, read, MEMBERS)              \
+      BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, read, MEMBERS)          \
     }                                                                               \
   };                                                                                \
 }}

@@ -4,7 +4,7 @@
 #include <qimessaging/serialization/serialize.hpp>
 #include <qimessaging/reflect.hpp>
 
-using namespace qi::serialization;
+//using namespace qi::serialization;
 
 //(ii)
 struct Point2D {
@@ -62,9 +62,9 @@ struct TimeStampedPoint2D {
 
 
 
-QI_REFLECT(Point2D, ((int, x)) ((int, y)))
-QI_REFLECT(TimeStamp, ((int, i)) ((int, j)))
-QI_REFLECT(TimeStampedPoint2D, ((Point2D, p)) ((TimeStamp, t)))
+QI_REFLECT(Point2D, ((int, x)) ((int, y)));
+QI_REFLECT(TimeStamp, ((int, i)) ((int, j)));
+QI_REFLECT(TimeStampedPoint2D, ((Point2D, p)) ((TimeStamp, t)));
 
 
 

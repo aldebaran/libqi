@@ -16,8 +16,8 @@
 #include <qimessaging/serialization/message.hpp>
 
 #define QI_REFLECT(TYPE, MEMBERS)                                                   \
-  QI_REFLECT_SIGNATURE(TYPE, MEMBERS);                                              \
-  QI_REFLECT_SERIALIZATION(TYPE, MEMBERS);
+  QI_SIGNATURE_REFLECT(TYPE, MEMBERS);                                              \
+  QI_SERIALIZATION_REFLECT(TYPE, MEMBERS);
 
 
 #endif  // _QI_REFLECT_HPP_
