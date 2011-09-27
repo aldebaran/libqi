@@ -47,6 +47,24 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(Double, double);
 
   // string
+  const char *Message::readString(size_t &len)
+  {
+    int sz;
+    readInt(sz);
+    len = sz;
+    return _data.data();
+  }
+
+  void Message::writeString(const char *str, size_t len)
+  {
+    writeInt(len);
+    if (len) {
+      _data.append(str, len);
+      __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
+    }
+  }
+
+  // string
   void Message::readString(std::string& s)
   {
     int sz;

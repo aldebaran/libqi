@@ -74,6 +74,10 @@ namespace qi {
     /// <param name="t">The string.</param>
     void writeString(const std::string& t);
 
+    const char *readString(size_t &len);
+    void writeString(const char *str, size_t len);
+
+
     /// <summary>Reads a double. </summary>
     /// <param name="d">The result</param>
     void readDouble(double& d);
