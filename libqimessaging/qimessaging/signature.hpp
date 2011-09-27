@@ -19,8 +19,26 @@
 #include <qimessaging/signature/detail/function_signature.hpp>
 #include <qimessaging/signature/detail/stl_signature.hpp>
 
-namespace qi {
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
 
+#define _QI_REFLECT_SIGNATURE_ELEM(r, data, elem)  \
+  qi::detail::signature<BOOST_PP_TUPLE_ELEM(2, 0, elem)>::value(val);
+
+#define QI_REFLECT_SIGNATURE(TYPE, MEMBERS)                                           \
+  namespace qi { namespace detail {                                                   \
+    template <>                                                                       \
+      struct signature<TYPE>  {                                                       \
+      static std::string &value(std::string &val) {                                   \
+        val += "(";                                                                   \
+        BOOST_PP_SEQ_FOR_EACH(_QI_REFLECT_SIGNATURE_ELEM, none, MEMBERS)              \
+        val += ")";                                                                   \
+        return val;                                                                   \
+      }                                                                               \
+    };                                                                                \
+  }}                                                                                  \
+
+namespace qi {
 
   //this is the entry point of all the signature machinery
 

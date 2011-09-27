@@ -2,13 +2,7 @@
 #include <string>
 #include <qimessaging/serialization/message.hpp>
 #include <qimessaging/serialization/serialize.hpp>
-//#include <qimessaging/serialization/serializable.hpp>
-//#include <qimessaging/serialization/serializer.hpp>
-#include <boost/preprocessor/seq/for_each.hpp>
-#include <boost/preprocessor/seq/for_each_i.hpp>
-#include <boost/preprocessor/seq/seq.hpp>
-
-#include <boost/preprocessor/facilities/empty.hpp>
+#include <qimessaging/reflect.hpp>
 
 using namespace qi::serialization;
 
