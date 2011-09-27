@@ -41,8 +41,6 @@
 #ifdef WITH_PROTOBUF
 # include <google/protobuf/message.h>
 #endif
-#include <qimessaging/serialization/serializer.hpp>
-#include <qimessaging/serialization/serializable.hpp>
 #include <iostream>
 
 namespace qi {
@@ -111,23 +109,6 @@ namespace qi {
       }
     };
 #endif
-
-    template <typename T>
-    struct serialize<T, typename boost::enable_if< typename boost::is_base_of<qi::serialization::Serializable , T>::type >::type > {
-      static void write(Message &sd, T &val) {
-        //__QI_DEBUG_SERIALIZATION_W(T, "Serializable");
-        //std::cout << "Serialize, Serializable" << std::end;
-        Serializer s(ACTION_SERIALIZE, sd);
-        val.serialize(s);
-      }
-
-      static void read(Message &sd, T &val) {
-        Serializer s(ACTION_DESERIALIZE, sd);
-        val.serialize(s);
-        //__QI_DEBUG_SERIALIZATION_R(T, "Serializable");
-        //std::cout << "DeSerialize, Serializable" << std::end;
-      }
-    };
 
     template<typename U>
     struct serialize< std::vector<U> >  {
