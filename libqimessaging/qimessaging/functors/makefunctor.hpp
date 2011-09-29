@@ -8,8 +8,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_
-#define _QI_FUNCTORS_MAKEFUNCTOR_HPP_
+#ifndef _QIMESSAGING_FUNCTORS_MAKEFUNCTOR_HPP_
+#define _QIMESSAGING_FUNCTORS_MAKEFUNCTOR_HPP_
 
 #include <qimessaging/functors/functor.hpp>
 
@@ -126,4 +126,4 @@ namespace qi
   }
 
 }
-#endif  // _QI_FUNCTORS_MAKEFUNCTOR_HPP_
+#endif  // _QIMESSAGING_FUNCTORS_MAKEFUNCTOR_HPP_

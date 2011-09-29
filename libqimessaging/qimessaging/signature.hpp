@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SIGNATURE_HPP_
-#define _QI_SIGNATURE_HPP_
+#ifndef _QIMESSAGING_SIGNATURE_HPP_
+#define _QIMESSAGING_SIGNATURE_HPP_
 
 
 #include <qimessaging/api.hpp>
@@ -123,4 +123,4 @@ namespace qi {
 
 }
 
-#endif  // _QI_SIGNATURE_HPP_
+#endif  // _QIMESSAGING_SIGNATURE_HPP_

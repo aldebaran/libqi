@@ -5,8 +5,8 @@
 ** Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
-#define _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
+#ifndef _QIMESSAGING_SIGNATURE_SIGNATURE_ITERATOR_HPP_
+#define _QIMESSAGING_SIGNATURE_SIGNATURE_ITERATOR_HPP_
 
 #include <qimessaging/api.hpp>
 #include <cstring>
@@ -167,4 +167,4 @@ namespace qi {
 
 }
 
-#endif  // _QI_SIGNATURE_SIGNATURE_ITERATOR_HPP_
+#endif  // _QIMESSAGING_SIGNATURE_SIGNATURE_ITERATOR_HPP_

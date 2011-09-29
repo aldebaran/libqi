@@ -8,10 +8,10 @@
 */
 
 
-#ifndef _QI_SERIALIZATION_HPP_
-#define _QI_SERIALIZATION_HPP_
+#ifndef _QIMESSAGING_SERIALIZATION_HPP_
+#define _QIMESSAGING_SERIALIZATION_HPP_
 
 #include <qimessaging/serialization/message.hpp>
 #include <qimessaging/serialization/serialize.hpp>
 
-#endif  // _QI_SERIALIZATION_HPP_
+#endif  // _QIMESSAGING_SERIALIZATION_HPP_

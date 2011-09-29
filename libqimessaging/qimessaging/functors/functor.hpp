@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_FUNCTORS_FUNCTOR_HPP_
-#define _QI_FUNCTORS_FUNCTOR_HPP_
+#ifndef _QIMESSAGING_FUNCTORS_FUNCTOR_HPP_
+#define _QIMESSAGING_FUNCTORS_FUNCTOR_HPP_
 
 // Activate or disactivate log
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
@@ -50,4 +50,4 @@ namespace qi
 #include <qimessaging/functors/detail/memberfunctor.hxx>
 #include <qimessaging/functors/detail/voidmemberfunctor.hxx>
 
-#endif  // _QI_FUNCTORS_FUNCTOR_HPP_
+#endif  // _QIMESSAGING_FUNCTORS_FUNCTOR_HPP_

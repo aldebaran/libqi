@@ -6,8 +6,8 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#ifndef         _QI_CLIENT_H_
-# define        _QI_CLIENT_H_
+#ifndef _QIMESSAGING_CLIENT_H_
+#define _QIMESSAGING_CLIENT_H_
 
 #include <qimessaging/context.h>
 
@@ -72,4 +72,4 @@ extern "C"
 }
 #endif
 
-#endif /* !_QI_H_ */
+#endif  // _QIMESSAGING_CLIENT_H_

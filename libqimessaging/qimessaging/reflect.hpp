@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_REFLECT_HPP_
-#define _QI_REFLECT_HPP_
+#ifndef _QIMESSAGING_REFLECT_HPP_
+#define _QIMESSAGING_REFLECT_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/signature.hpp>
@@ -20,4 +20,4 @@
   QI_SERIALIZATION_REFLECT(TYPE, MEMBERS);
 
 
-#endif  // _QI_REFLECT_HPP_
+#endif  // _QIMESSAGING_REFLECT_HPP_

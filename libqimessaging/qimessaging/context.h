@@ -5,8 +5,8 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#ifndef         _QI_CONTEXT_H_
-# define        _QI_CONTEXT_H_
+#ifndef _QIMESSAGING_CONTEXT_H_
+#define _QIMESSAGING_CONTEXT_H_
 
 #ifdef __cplusplus
 extern "C"
@@ -22,4 +22,4 @@ extern "C"
 }
 #endif
 
-#endif /* !_QI_H_ */
+#endif  // _QIMESSAGING_CONTEXT_H_

@@ -10,8 +10,8 @@
 */
 
 
-#ifndef _QI_FUNCTORS_DETAIL_FUNCTOR_HXX_
-#define _QI_FUNCTORS_DETAIL_FUNCTOR_HXX_
+#ifndef _QIMESSAGING_FUNCTORS_DETAIL_FUNCTOR_HXX_
+#define _QIMESSAGING_FUNCTORS_DETAIL_FUNCTOR_HXX_
 
 # include <qimessaging/functors/functor.hpp>
 
@@ -359,4 +359,4 @@ namespace detail {
 
 }
 }
-#endif  // _QI_FUNCTORS_DETAIL_FUNCTOR_HXX_
+#endif  // _QIMESSAGING_FUNCTORS_DETAIL_FUNCTOR_HXX_

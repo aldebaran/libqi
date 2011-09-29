@@ -6,8 +6,8 @@
 *
 *  Copyright (C) 2010 Aldebaran Robotics
 */
-#ifndef _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
-#define _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
+#ifndef _QIMESSAGING_SERIALIZATION_MESSAGE_VISITOR_HPP_
+#define _QIMESSAGING_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/serialization/message.hpp>
@@ -40,4 +40,4 @@ namespace qi {
 
 
 
-#endif  // _QI_SERIALIZATION_MESSAGE_VISITOR_HPP_
+#endif  // _QIMESSAGING_SERIALIZATION_MESSAGE_VISITOR_HPP_

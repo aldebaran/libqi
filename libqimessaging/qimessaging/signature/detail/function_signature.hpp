@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
-#define _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
+#ifndef _QIMESSAGING_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
+#define _QIMESSAGING_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
 
 #include <boost/utility.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -107,5 +107,5 @@ struct newFunctionSignature {
     boost::mpl::back_inserter< returnValueColon >
   >::type value;
 };
-#endif  // _QI_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
+#endif  // _QIMESSAGING_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
 

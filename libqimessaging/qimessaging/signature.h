@@ -6,8 +6,8 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#ifndef _QI_SIGNATURE_H_
-#define _QI_SIGNATURE_H_
+#ifndef _QIMESSAGING_SIGNATURE_H_
+#define _QIMESSAGING_SIGNATURE_H_
 
 #include <qimessaging/api.h>
 
@@ -75,4 +75,4 @@ extern "C"
 }
 #endif
 
-#endif // SIGNATURE_H
+#endif  // _QIMESSAGING_SIGNATURE_H_

@@ -7,8 +7,8 @@
 *  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
-#ifndef _QI_SERIALIZATION_SERIALIZE_QT_HXX_
-#define _QI_SERIALIZATION_SERIALIZE_QT_HXX_
+#ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_QT_HXX_
+#define _QIMESSAGING_SERIALIZATION_SERIALIZE_QT_HXX_
 
 #include <QVector>
 #include <QList>
@@ -39,4 +39,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_SERIALIZATION_SERIALIZE_HXX_
+#endif  // _QIMESSAGING_SERIALIZATION_SERIALIZE_QT_HXX_

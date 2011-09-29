@@ -7,8 +7,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QI_SERIALIZATION_SERIALIZE_POD_HXX_
-#define _QI_SERIALIZATION_SERIALIZE_POD_HXX_
+#ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
+#define _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
 
 namespace qi {
   namespace serialization {
@@ -45,4 +45,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_SERIALIZATION_SERIALIZE_HXX_
+#endif  // _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_

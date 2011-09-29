@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SIGNATURE_ERROR_HPP_
-#define _QI_SIGNATURE_ERROR_HPP_
+#ifndef _QIMESSAGING_SIGNATURE_ERROR_HPP_
+#define _QIMESSAGING_SIGNATURE_ERROR_HPP_
 
 #include <qimessaging/api.hpp>
 #include <stdexcept>
@@ -37,4 +37,4 @@ namespace qi {
   };
 }
 
-#endif  // _QI_SIGNATURE_ERROR_HPP_
+#endif  // _QIMESSAGING_SIGNATURE_ERROR_HPP_

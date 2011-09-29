@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_SERIALIZATION_SERIALIZE_HPP_
-#define _QI_SERIALIZATION_SERIALIZE_HPP_
+#ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_HPP_
+#define _QIMESSAGING_SERIALIZATION_SERIALIZE_HPP_
 
 #include <iostream>
 #include <typeinfo>
@@ -192,4 +192,4 @@ namespace qi {
 #include <qimessaging/serialization/serialize_pod.hxx>
 #include <qimessaging/serialization/serialize_stl.hxx>
 
-#endif  // _QI_SERIALIZATION_SERIALIZE_HPP_
+#endif  // _QIMESSAGING_SERIALIZATION_SERIALIZE_HPP_

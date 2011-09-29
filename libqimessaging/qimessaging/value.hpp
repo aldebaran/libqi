@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_VALUE_HPP_
-#define _QI_VALUE_HPP_
+#ifndef _QIMESSAGING_VALUE_HPP_
+#define _QIMESSAGING_VALUE_HPP_
 
 #include <iostream>
 #include <qimessaging/api.hpp>
@@ -109,4 +109,4 @@ namespace qi {
 
 };
 
-#endif  // _QI_SERIALIZATION_MESSAGE_HPP_
+#endif  // _QIMESSAGING_VALUE_HPP_
