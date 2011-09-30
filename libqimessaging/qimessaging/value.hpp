@@ -11,11 +11,36 @@
 #ifndef _QIMESSAGING_VALUE_HPP_
 #define _QIMESSAGING_VALUE_HPP_
 
-#include <iostream>
 #include <qimessaging/api.hpp>
-//#include <qimessaging/signature.hpp>
+
+#include <stdexcept>
+#include <string>
+#include <list>
+#include <vector>
+#include <map>
 
 namespace qi {
+
+  /** \class ValueError value.hpp "qi/value.hpp"
+   *  \brief Thrown when an operation on a value fail
+   */
+  class QIMESSAGING_API ValueError : public std::runtime_error
+  {
+  public:
+    /**
+     * \brief Constructor
+     * Create a message exception.
+     * \param message Exception message.
+     */
+    explicit ValueError(const std::string &message)
+      : std::runtime_error(message)
+    {}
+
+    /** \brief Destructor */
+    virtual ~ValueError() throw()
+    {}
+  };
+
 
   class QIMESSAGING_API Value {
   public:
@@ -31,11 +56,16 @@ namespace qi {
       Double,
       String,
       List,
-      Map
+      Vector,
+      Map,
+      QString,
+      QList,
+      QVector,
+      QMap
     };
 
     Value();
-    Value(Type t);
+    explicit Value(Type t);
     Value(bool b);
     Value(char c);
     Value(int i);
@@ -74,8 +104,6 @@ namespace qi {
     QMap<QString, Value>         toQMap();
 #endif
 
-    static Value fromMessage(const qi::Message &msg);
-
     void clear();
     Type type() const;
 
@@ -86,7 +114,7 @@ namespace qi {
     T value() const;
 
     struct ValuePrivate {
-      union Data {
+      union {
         bool               b;
         int                i;
         unsigned int       ui;
@@ -95,7 +123,7 @@ namespace qi {
         float              f;
         double             d;
         void              *ptr;
-      };
+      } data;
       unsigned int type;
     };
 
@@ -106,6 +134,16 @@ namespace qi {
 
   typedef std::list<Value>             ValueList;
   typedef std::map<std::string, Value> ValueMap;
+
+  template <typename T>
+  void Value::setValue(const T &value) {
+  }
+
+  template <typename T>
+  T Value::value() const {
+
+  }
+
 
 };
 

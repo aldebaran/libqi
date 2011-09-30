@@ -39,7 +39,7 @@ qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp"
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]")
+qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp")
 qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
 
 qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
