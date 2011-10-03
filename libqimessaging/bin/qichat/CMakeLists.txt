@@ -7,7 +7,7 @@
 ##
 
 qi_create_bin(qichat-display qichat-display.cpp
-              DEPENDS QI BOOST_PROGRAM_OPTIONS)
+              DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
 
 qi_create_bin(qichat-prompt qichat-prompt.cpp
-              DEPENDS QI BOOST_PROGRAM_OPTIONS)
+              DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)

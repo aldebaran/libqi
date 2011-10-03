@@ -3,12 +3,12 @@
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
 ##
 
 
 function(_qimessaging_create_example name)
-  qi_create_bin(${name} ${name}.cpp NO_INSTALL DEPENDS QI)
+  qi_create_bin(${name} ${name}.cpp NO_INSTALL DEPENDS QI QIMESSAGING)
   set_target_properties(${name}
     PROPERTIES
       FOLDER "examples")

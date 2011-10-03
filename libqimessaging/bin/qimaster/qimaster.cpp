@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <qimessaging/master.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qi/os.hpp>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;

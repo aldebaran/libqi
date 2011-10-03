@@ -78,7 +78,7 @@ qi_create_lib(qimessaging SRC ${CONFIG_H}
 qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)
-#qi_add_subdirectory(examples WITH_EXAMPLES)
+qi_add_subdirectory(examples WITH_EXAMPLES)
 #qi_add_subdirectory(perf     WITH_PERF)
 #add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
@@ -95,6 +95,7 @@ message(STATUS "WITH_PERF    : ${WITH_PERF}")
 message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 
+add_subdirectory("bin")
 add_subdirectory("python")
 add_subdirectory("tests")
 
