@@ -74,6 +74,7 @@ namespace qi {
     Value(unsigned long long l);
     Value(float f);
     Value(double d);
+    Value(const char *str);
     Value(const std::string &str);
     Value(const std::list<Value> &l);
     Value(const std::vector<Value> &l);
@@ -111,11 +112,12 @@ namespace qi {
     void setValue(const T &value);
 
     template <typename T>
-    T value() const;
+    T &value();
 
     struct ValuePrivate {
       union {
         bool               b;
+        char               c;
         int                i;
         unsigned int       ui;
         long long          l;
@@ -127,24 +129,19 @@ namespace qi {
       unsigned int type;
     };
 
-  private:
+  public:
     ValuePrivate _private;
   };
 
 
   typedef std::list<Value>             ValueList;
+  typedef std::vector<Value>           ValueVector;
   typedef std::map<std::string, Value> ValueMap;
 
-  template <typename T>
-  void Value::setValue(const T &value) {
-  }
-
-  template <typename T>
-  T Value::value() const {
-
-  }
 
 
 };
+
+#include <qimessaging/value.hxx>
 
 #endif  // _QIMESSAGING_VALUE_HPP_
