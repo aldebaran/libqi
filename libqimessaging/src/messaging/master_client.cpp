@@ -17,18 +17,18 @@ namespace qi {
     using qi::transport::Buffer;
     using qi::Message;
 
-    static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v:s");
-    static const std::string methodRegisterTopic("master.registerTopic::v:sbs");
-    static const std::string methodUnregisterTopic("master.unregisterTopic::v:ss");
-    static const std::string methodGetNewPort("master.getNewPort::i:s");
-    static const std::string methodRegisterMachine("master.registerMachine::v:sssi");
-    static const std::string methodRegisterEndpoint("master.registerEndpoint::v:issssii");
-    static const std::string methodTopicExists("master.topicExists::b:s");
-    static const std::string methodLocateService("master.locateService::s:ss");
-    static const std::string methodRegisterService("master.registerService::v:ss");
-    static const std::string methodUnregisterService("master.unregisterService::v:s");
-    static const std::string methodLocateTopic("master.locateTopic::s:ss");
-    static const std::string methodRegisterTopicParticipant("master.registerTopicParticipant::v:ss");
+    static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v(s)");
+    static const std::string methodRegisterTopic("master.registerTopic::v(sbs)");
+    static const std::string methodUnregisterTopic("master.unregisterTopic::v(ss)");
+    static const std::string methodGetNewPort("master.getNewPort::i(s)");
+    static const std::string methodRegisterMachine("master.registerMachine::v(sssi)");
+    static const std::string methodRegisterEndpoint("master.registerEndpoint::v(issssii)");
+    static const std::string methodTopicExists("master.topicExists::b(s)");
+    static const std::string methodLocateService("master.locateService::s(ss)");
+    static const std::string methodRegisterService("master.registerService::v(ss)");
+    static const std::string methodUnregisterService("master.unregisterService::v(s)");
+    static const std::string methodLocateTopic("master.locateTopic::s(ss)");
+    static const std::string methodRegisterTopicParticipant("master.registerTopicParticipant::v(ss)");
 
     MasterClient::~MasterClient() {
     }
