@@ -10,10 +10,8 @@
 #ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_QT_HXX_
 #define _QIMESSAGING_SERIALIZATION_SERIALIZE_QT_HXX_
 
-#include <QVector>
-#include <QList>
-#include <QMap>
 #include <QString>
+#include <QtCore/QtContainerFwd>
 #include <qimessaging/serialization/message.hpp>
 
 namespace qi {

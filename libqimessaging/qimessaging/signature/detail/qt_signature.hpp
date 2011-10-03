@@ -13,9 +13,7 @@
 
 # include <qimessaging/signature/detail/type_signature.hpp>
 # include <string>
-# include <QString>
-# include <QVector>
-# include <QMap>
+# include <QtCore/QtContainerFwd>
 
 namespace qi {
   namespace detail {
