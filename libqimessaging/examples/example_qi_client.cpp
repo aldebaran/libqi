@@ -15,5 +15,7 @@ int main(int argc, char *argv[])
 
   // call a method, expecting an int return type
   int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
+
+  std::cout << "meaning of life:" << theMeaningOfLife << std::endl;
   return 0;
 }

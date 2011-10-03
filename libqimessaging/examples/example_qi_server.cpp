@@ -1,3 +1,4 @@
+#include <qi/os.hpp>
 #include <qimessaging/server.hpp>
 
 // The handler for the service that you want to advertise
@@ -16,5 +17,8 @@ int main(int argc, char *argv[])
 
   // Advertise the service, giving it a name.
   server.advertiseService("deepThought.getMeaningOfLife", &getMeaningOfLife);
+
+  while(1)
+    qi::os::sleep(1);
   // FIXME: need a nice way to sleep
 }
