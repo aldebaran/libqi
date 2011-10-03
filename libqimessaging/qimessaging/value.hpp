@@ -109,10 +109,10 @@ namespace qi {
     Type type() const;
 
     template <typename T>
-    void setValue(const T &value);
+    inline void setValue(const T &value);
 
     template <typename T>
-    T &value();
+    inline T &value();
 
     struct ValuePrivate {
       union {
