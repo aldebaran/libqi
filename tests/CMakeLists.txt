@@ -1,8 +1,3 @@
-if (MSVC)
-  if (NOT CMAKE_BUILD_TOOL STREQUAL "nmake")
-    set_source_files_properties(qipath_test.cpp PROPERTIES COMPILE_DEFINITIONS "REALLY_MSVC")
-  endif()
-endif()
 
 create_gtest(test_qipath      SRC test_qipath.cpp      DEPENDENCIES QI GTEST)
 create_gtest(test_qipaththrow SRC test_qipaththrow.cpp DEPENDENCIES QI GTEST)
