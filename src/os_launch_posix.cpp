@@ -13,7 +13,14 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h> // for environ
+#ifdef __linux__
+# include <unistd.h> // for environ
+#endif
+#ifdef __APPLE__
+// See man 3 environ (PROGRAMMING)
+# include <crt_externs.h> // ofr _NSGetEnviron
+#endif
+
 
 #include <sys/wait.h>
 #ifndef __ANDROID__
@@ -118,12 +125,18 @@ namespace qi
       // process to know what happened.
       // Note: child process environment will be the same as parent process.
       // TODO: maybe we should have a way of setting child process env?
+#ifdef __linux__
+      child_env = environ;
+#else
+      char*** environ_ptr = _NSGetEnviron();
+      char** child_env = *environ_ptr;
+#endif
       err = posix_spawnp(&pID,
                          argv[0],
                          NULL,
                          pSpawnattr,
                          (char* const*)argv,
-                         environ);
+                         child_env);
 
       if (err == EINVAL || err == ENOENT)
       {
@@ -174,12 +187,18 @@ namespace qi
       // process to know what happened.
       // Note: child process environment will be the same as parent process.
       // TODO: maybe we should have a way of setting child process env?
+#ifdef __linux__
+      child_env = environ;
+#else
+      char*** environ_ptr = _NSGetEnviron();
+      char** child_env = *environ_ptr;
+#endif
       err = posix_spawnp(&pID,
                          cmd[0],
                          NULL,
                          pSpawnattr,
                          (char* const*)cmd,
-                         environ);
+                         child_env);
 
       if (err == EINVAL || err == ENOENT)
       {
