@@ -126,7 +126,7 @@ namespace qi
       // Note: child process environment will be the same as parent process.
       // TODO: maybe we should have a way of setting child process env?
 #ifdef __linux__
-      child_env = environ;
+      char** child_env = environ;
 #else
       char*** environ_ptr = _NSGetEnviron();
       char** child_env = *environ_ptr;
@@ -188,7 +188,7 @@ namespace qi
       // Note: child process environment will be the same as parent process.
       // TODO: maybe we should have a way of setting child process env?
 #ifdef __linux__
-      child_env = environ;
+      char** child_env = environ;
 #else
       char*** environ_ptr = _NSGetEnviron();
       char** child_env = *environ_ptr;
