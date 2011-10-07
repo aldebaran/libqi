@@ -110,6 +110,22 @@ TEST(spawnlp, CmdWithMultiArgs)
   EXPECT_TRUE(status == 22) << "status: " << status;
 }
 
+TEST(spawnlp, Environment)
+{
+  // The check_env executable exits with rectode 1 if
+  // the FOO environment var is not equal to BAR.
+  std::string checkEnv = qi::path::findBin("check_env");
+  int status = 0;
+  qi::os::setenv("FOO", "BAR");
+  int childPid = qi::os::spawnlp(checkEnv.c_str(), NULL);
+  int error = qi::os::waitpid(childPid, &status);
+
+  EXPECT_EQ(0, status) << "waitpid failed with retcode:   " << error;
+  EXPECT_EQ(0, status) << "check_env failed with rectode: " << status;
+}
+
+
+
 TEST(spawnlp, InvalidBin)
 {
   std::string bin = "test42";

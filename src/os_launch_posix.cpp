@@ -13,6 +13,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h> // for environ
 
 #include <sys/wait.h>
 #ifndef __ANDROID__
@@ -115,12 +116,14 @@ namespace qi
       // Err != 0 means vfork failed.
       // If exec() fails, then err = 0 and we have to get the status of the child
       // process to know what happened.
+      // Note: child process environment will be the same as parent process.
+      // TODO: maybe we should have a way of setting child process env?
       err = posix_spawnp(&pID,
                          argv[0],
                          NULL,
                          pSpawnattr,
                          (char* const*)argv,
-                         NULL);
+                         environ);
 
       if (err == EINVAL || err == ENOENT)
       {
@@ -169,12 +172,14 @@ namespace qi
       // Err != 0 means vfork failed.
       // If exec() fails, then err = 0 and we have to get the status of the child
       // process to know what happened.
+      // Note: child process environment will be the same as parent process.
+      // TODO: maybe we should have a way of setting child process env?
       err = posix_spawnp(&pID,
                          cmd[0],
                          NULL,
                          pSpawnattr,
                          (char* const*)cmd,
-                         NULL);
+                         environ);
 
       if (err == EINVAL || err == ENOENT)
       {
