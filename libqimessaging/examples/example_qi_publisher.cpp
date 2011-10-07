@@ -1,6 +1,6 @@
 #include <qimessaging/publisher.hpp>
 
-int main(int argc, char *argv[])
+int main()
 {
   // Create the publisher, giving it a name that helps to track it
   qi::Publisher publisher("time");
@@ -14,4 +14,6 @@ int main(int argc, char *argv[])
 
   // Publish the hour to the Topic, sending an int
   publisher.publish("time/hour", 10);
+
+  return 0;
 }

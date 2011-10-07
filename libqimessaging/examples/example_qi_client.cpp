@@ -4,7 +4,7 @@
 
 #include <qimessaging/client.hpp>
 
-int main(int argc, char *argv[])
+int main()
 {
   // create a client
   qi::Client client("myClient");
@@ -17,5 +17,6 @@ int main(int argc, char *argv[])
   int theMeaningOfLife = client.call<int>("deepThought.getMeaningOfLife");
 
   std::cout << "meaning of life:" << theMeaningOfLife << std::endl;
+
   return 0;
 }

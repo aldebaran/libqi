@@ -5,7 +5,7 @@ void hourCallback(const int& hour) {
   // do something with the hour
 }
 
-int main(int argc, char *argv[])
+int main()
 {
   // Create the subscriber, giving it a name that helps to track it
   qi::Subscriber subscriber("hourSubscriber");

@@ -5,7 +5,7 @@
 
 #include <qimessaging/signature.hpp>
 
-int main(int argc, char *argv[])
+int main()
 {
   typedef std::map<std::string , std::string> StringMap;
 
@@ -19,5 +19,6 @@ int main(int argc, char *argv[])
 
   //take the signature of a function
   std::cout << "qi::signature< (void *)(int, int) >                 :" << qi::signature< void(int, int)>::value() << std::endl;
+
   return 0;
 }

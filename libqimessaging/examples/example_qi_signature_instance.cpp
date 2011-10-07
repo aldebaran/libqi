@@ -11,7 +11,7 @@ int foo(int a, int b)
   return a + b + 42;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
   typedef std::map<std::string , std::string> StringMap;
   typedef std::vector<int>                    IntVector;
@@ -31,5 +31,6 @@ int main(int argc, char *argv[])
 
   //take the signature of a function
   std::cout << "qi::signature< int(int, int) >                      :" << qi::signatureFromObject::value(&foo) << std::endl;
+
   return 0;
 }

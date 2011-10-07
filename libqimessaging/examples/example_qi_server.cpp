@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   // Create the server, giving it a name that helps to track it
   qi::Server server("deepThought");
 
-  // Connect the client to the master
+  // Connect the server to the master
   const std::string masterAddress = "127.0.0.1:5555";
   server.connect(masterAddress);
 

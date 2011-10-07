@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <qimessaging/signature.hpp>
 
@@ -17,7 +16,7 @@ void create_a_signature(std::string &raw_signature)
   std::cout << "actual signature   : " << raw_signature << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
   std::string raw_signature;
 
@@ -32,10 +31,11 @@ int main(int argc, char *argv[])
     std::cout << "child_1  : " << it.child_1()    << std::endl;
     std::cout << "child_2  : " << it.child_2()    << std::endl;
   }
+
   return 0;
 }
 
-/* the output we be:
+/* the output would be:
 
 signature should be: is[s][[s]]{s[s]}
 actual signature   : is[s][[s]]{s[s]}

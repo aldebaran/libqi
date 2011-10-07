@@ -1,11 +1,8 @@
-#include <string>
-#include <vector>
-#include <map>
 #include <iostream>
 
 #include <qimessaging/signature.hpp>
 
-int main(int argc, char *argv[])
+int main()
 {
   //pretty print representation of a signature
 
@@ -22,5 +19,6 @@ int main(int argc, char *argv[])
   //STL types
   std::cout << "[i]                  : " <<  qi::signatureToString("[i]") << std::endl;
   std::cout << "{is}                 : " <<  qi::signatureToString("{is}") << std::endl;
+
   return 0;
 }
