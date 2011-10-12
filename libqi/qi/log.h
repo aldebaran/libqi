@@ -9,7 +9,7 @@
 #ifndef         _C_QI_LOG_H_
 # define        _C_QI_LOG_H_
 
-#include <qi/api.h>
+#include <qi/config.hpp>
 #include <stdarg.h>
 
 #ifdef __cplusplus

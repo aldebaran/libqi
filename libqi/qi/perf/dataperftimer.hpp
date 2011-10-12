@@ -11,7 +11,7 @@
 #ifndef _QI_PERF_DATAPERFTIMER_HPP_
 #define _QI_PERF_DATAPERFTIMER_HPP_
 
-#include <qi/api.hpp>
+#include <qi/config.hpp>
 #include <boost/timer.hpp>
 #include <string>
 

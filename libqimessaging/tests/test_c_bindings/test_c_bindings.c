@@ -9,6 +9,7 @@
 #include <qimessaging/client.h>
 #include <qimessaging/message.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 void brandade(const char *signature, qi_message_t *params, qi_message_t *ret, void *data)
