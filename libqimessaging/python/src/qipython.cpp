@@ -350,7 +350,7 @@ static void _qi_server_callback(const char *complete_sig, qi_message_t *params, 
     qi_python_to_message(retsig, ret, pyret);
 
   } else {
-    printf("NOT Callable baby %x\n", func);
+    printf("NOT Callable baby %p\n", func);
   }
 }
 
@@ -363,7 +363,7 @@ void qi_server_advertise_python_service(qi_server_t *server, const char *name, P
     printf("Fail... func is not callable\n");
     return;
   }
-  printf("register callback %x\n", func);
+  printf("register callback %p\n", func);
   //increase the ref, because we store the object
   Py_XINCREF(func);
   qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
