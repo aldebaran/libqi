@@ -25,6 +25,10 @@ void Server::run()
   bind();
   listen();
 
+  int client = accept();
+  write(client, "Hello world!\n", 13);
+  close(client);
+
   destroy();
 }
 

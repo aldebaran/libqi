@@ -11,6 +11,7 @@ project (QiGateway)
 qi_create_bin(qi-gateway
   qigateway.cpp
   server.cpp server.hpp
+  daemon.cpp daemon.h
   DEPENDS
     QI
     BOOST_PROGRAM_OPTIONS

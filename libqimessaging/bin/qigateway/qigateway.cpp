@@ -7,19 +7,12 @@
 
 #include <iostream>
 #include <boost/program_options.hpp>
-#include <sys/select.h>
 
+#include "daemon.h"
 #include "server.hpp"
 
 namespace po = boost::program_options;
 
-static
-void serve(const char* host, unsigned short port)
-{
-  qi::gateway::Server server(host, port);
-
-  server.run();
-}
 
 int main(int argc, char *argv[])
 {
@@ -53,10 +46,16 @@ int main(int argc, char *argv[])
       return 0;
     }
 
+    if (vm.count("daemon"))
+      if (!daemonize())
+        throw std::runtime_error("Could not daemonize");
+
     if (vm.count("listen") && vm.count("port"))
     {
-      serve(vm["listen"].as<std::string>().c_str(),
+      qi::gateway::Server server(vm["listen"].as<std::string>().c_str(),
           vm["port"].as<unsigned short>());
+
+      server.run();
     }
     else
       std::cerr << desc << "\n";
