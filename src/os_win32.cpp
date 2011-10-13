@@ -153,7 +153,6 @@ namespace qi {
     std::string getenv(const char *var) {
      #ifdef _MSC_VER
       char        *envDir = NULL;
-      std::string  result;
       size_t       bufSize;
       _dupenv_s(&envDir, &bufSize, var);
       if (envDir == NULL)

@@ -62,16 +62,14 @@ namespace qi
 
     int waitpid(int pid, int* status)
     {
-      int result = 0;
       errno = 0;
 
       _cwait(status, pid, 0);
 
       if (errno == ECHILD)
       {
-        result = 0;
         *status = 127;
-        return result;
+        return 0;
       }
 
       return errno;

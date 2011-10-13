@@ -60,7 +60,7 @@ namespace qi {
 
     void checkInit()
     {
-      if (_mode == "error" || _sdkPrefixes.size() == 0)
+      if (_mode == "error" || _sdkPrefixes.empty())
         throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
     }
   };
