@@ -6,7 +6,13 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
-add_subdirectory("qimaster")
-add_subdirectory("qi")
-add_subdirectory("qigateway")
-add_subdirectory("qichat")
+project (QiGateway)
+
+qi_create_bin(qi-gateway
+  qigateway.cpp
+  server.cpp server.hpp
+  DEPENDS
+    QI
+    BOOST_PROGRAM_OPTIONS
+)
+
