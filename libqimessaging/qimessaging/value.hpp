@@ -61,7 +61,8 @@ namespace qi {
       QString,
       QList,
       QVector,
-      QMap
+      QMap,
+      Struct,
     };
 
     Value();
@@ -108,13 +109,23 @@ namespace qi {
     void clear();
     Type type() const;
 
+    void setType(const Type &t);
+
     template <typename T>
     inline void setValue(const T &value);
 
     template <typename T>
-    inline T &value();
+    inline const T &constValue() const;
+
+    template <typename T>
+    inline T &value() {
+      return const_cast<T &>(constValue<T>());
+    }
+
 
     struct ValuePrivate {
+      ValuePrivate() : type(Invalid) { data.ptr = 0; }
+
       union {
         bool               b;
         char               c;

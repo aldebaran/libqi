@@ -12,6 +12,7 @@
 #include <QMap>
 #include <QList>
 #include <QString>
+#include <QVariant>
 
 //#include "alvalue.pb.h"
 

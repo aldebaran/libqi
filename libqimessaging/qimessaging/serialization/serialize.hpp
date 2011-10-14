@@ -71,9 +71,11 @@ namespace qi { namespace serialization {                                        
   struct serialize<Type>  {                                                \
     static inline void write(Message &sd, const Type &val) {               \
       sd.write##Name(val);                                                 \
+      __QI_DEBUG_SERIALIZATION_W(Type, val)                                \
     }                                                                      \
     static inline void read(Message &sd, Type &val) {                      \
       sd.read##Name(val);                                                  \
+      __QI_DEBUG_SERIALIZATION_R(Type, val)                                \
     }                                                                      \
   };
 
@@ -176,6 +178,16 @@ namespace qi { namespace serialization {                                        
 namespace qi {
   namespace serialization {
 
+    /** \class SerializationError serialization.hpp "qi/serialization.hpp"
+     *  \brief Thrown when serialization fail
+     */
+    class QIMESSAGING_API SerializationError : public std::runtime_error
+    {
+    public:
+      explicit SerializationError(const std::string &message) : std::runtime_error(message) {}
+      virtual ~SerializationError() throw() {}
+    };
+
     /// serialize a c++ type to a message
     /// \ingroup Serialization
     // Enable is need for conditional template specialization
@@ -191,5 +203,6 @@ namespace qi {
 
 #include <qimessaging/serialization/serialize_pod.hxx>
 #include <qimessaging/serialization/serialize_stl.hxx>
+#include <qimessaging/serialization/serialize_value.hxx>
 
 #endif  // _QIMESSAGING_SERIALIZATION_SERIALIZE_HPP_

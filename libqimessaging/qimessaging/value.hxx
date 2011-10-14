@@ -84,73 +84,72 @@ namespace qi {
   }
 
   template <typename T>
-  T &Value::value()  {
+  const T &Value::constValue() const {
     throw ValueError("Not Implemented");
   }
 
   template <>
-  inline bool &Value::value() {
+  inline const bool &Value::constValue() const {
     if (_private.type == Value::Bool)
       return _private.data.b;
     throw ValueError("value can't be converted to bool");
   }
 
   template <>
-  inline char &Value::value() {
+  inline const char &Value::constValue() const {
     if (_private.type == Value::Char)
       return _private.data.c;
     throw ValueError("value can't be converted to char");
   }
 
   template <>
-  inline int &Value::value() {
+  inline const int &Value::constValue() const {
     if (_private.type == Value::Int32)
       return _private.data.i;
     throw ValueError("value can't be converted to int");
   }
 
   template <>
-  inline float &Value::value() {
+  inline const float &Value::constValue() const {
     if (_private.type == Value::Float)
       return _private.data.f;
     throw ValueError("value can't be converted to float");
   }
 
   template <>
-  inline double &Value::value() {
+  inline const double &Value::constValue() const {
     if (_private.type == Value::Double)
       return _private.data.d;
     throw ValueError("value can't be converted to double");
   }
 
   template <>
-  inline std::string &Value::value() {
+  inline const std::string &Value::constValue() const {
     if (_private.type == Value::String)
       return *reinterpret_cast<std::string *>(_private.data.ptr);
     throw ValueError("value can't be converted to vector");
   }
 
   template <>
-  inline std::list<qi::Value> &Value::value() {
+  inline const std::list<qi::Value> &Value::constValue() const {
     if (_private.type == Value::List)
       return *reinterpret_cast< std::list<Value> *>(_private.data.ptr);
     throw ValueError("value can't be converted to list");
   }
 
   template <>
-  inline std::vector<qi::Value> &Value::value() {
+  inline const std::vector<qi::Value> &Value::constValue() const {
     if (_private.type == Value::Vector)
       return *reinterpret_cast< std::vector<Value> *>(_private.data.ptr);
     throw ValueError("value can't be converted to vector");
   }
 
   template <>
-  inline std::map<std::string, qi::Value> &Value::value() {
+  inline const std::map<std::string, qi::Value> &Value::constValue() const {
     if (_private.type == Value::Map)
       return *reinterpret_cast< std::map<std::string, Value> *>(_private.data.ptr);
     throw ValueError("value can't be converted to map");
   }
-
 
 };
 

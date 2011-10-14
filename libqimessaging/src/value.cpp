@@ -12,25 +12,12 @@ namespace qi {
 
 
   Value::Value() {
+    clear();
+    _private.type = Invalid;
   }
 
   Value::Value(Type t) {
-    clear();
-    _private.type = t;
-    switch (t) {
-      case Value::String:
-        _private.data.ptr = new std::string();
-        break;
-      case Value::List:
-        _private.data.ptr = new ValueList();
-        break;
-      case Value::Vector:
-        _private.data.ptr = new ValueVector();
-        break;
-      case Value::Map:
-        _private.data.ptr = new ValueMap();
-        break;
-    }
+    setType(t);
   }
 
   Value::Value(bool b) {
@@ -117,6 +104,24 @@ namespace qi {
   Value::Value(const QMap<QString, Value> &l);
 #endif
 
+  void Value::setType(const Type &t) {
+    clear();
+    _private.type = t;
+    switch (t) {
+      case Value::String:
+        _private.data.ptr = new std::string();
+        break;
+      case Value::List:
+        _private.data.ptr = new ValueList();
+        break;
+      case Value::Vector:
+        _private.data.ptr = new ValueVector();
+        break;
+      case Value::Map:
+        _private.data.ptr = new ValueMap();
+        break;
+    }
+  }
 
   bool                         Value::toBool() {
     if (_private.type == Value::Bool)
