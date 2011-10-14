@@ -17,3 +17,4 @@ qi_create_bin(qi-gateway
     BOOST_PROGRAM_OPTIONS
 )
 
+set_target_properties(qi-gateway PROPERTIES LINK_FLAGS -levent_core)

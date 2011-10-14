@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
       po::value<std::string>()->default_value(std::string("127.0.0.1")),
       "Address to listen to")
     ("port,p",
-      po::value<unsigned short>()->default_value(4242), "Port to listen on")
+      po::value<unsigned short>()->default_value(12890), "Port to listen on")
     ("daemon,d", "Daemonize the server");
 
   // allow listen address to be specified as the first arg
