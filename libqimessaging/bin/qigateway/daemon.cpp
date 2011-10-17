@@ -47,7 +47,7 @@ int daemonize()
   close(STDERR_FILENO);
 
   int nullfd;
-  
+
   if ((nullfd = open("/dev/null", O_RDWR)) == -1)
     return FALSE;
 

@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <stdexcept>
+#include <iostream>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -12,6 +13,8 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/util.h>
+
+#include <qi/log.hpp>
 
 #define MAX_LINE 16384
 #define BUFFER_SIZE 4096
@@ -29,8 +32,9 @@ Server::~Server()
 
 void Server::run()
 {
-  setvbuf(stdout, NULL, _IONBF, 0);
+  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
 
+  setvbuf(stdout, NULL, _IONBF, 0);
   init();
   socket();
   bind();
@@ -85,6 +89,7 @@ void Server::errorcb(struct bufferevent* bev,
 
 void Server::init()
 {
+  qiLogDebug("qigateway", "Init");
   if (!(base_ = event_base_new()))
     std::runtime_error("Could not init libevent");
 }

@@ -31,7 +31,6 @@ private:
   void listen();
   void destroy();
 
-
 private:
   const char* host_;
   unsigned short port_;
