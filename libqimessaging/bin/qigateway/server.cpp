@@ -3,11 +3,13 @@
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <ctime>
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 #include <event2/event.h>
 #include <event2/buffer.h>
@@ -32,31 +34,41 @@ Server::~Server()
 
 void Server::run()
 {
-  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
+  try
+  {
+    qiLogInfo("qigateway", "Launching QiMessaging Gateway");
 
-  setvbuf(stdout, NULL, _IONBF, 0);
-  init();
-  socket();
-  bind();
-  listen();
+    setvbuf(stdout, NULL, _IONBF, 0);
+    init();
+    socket();
+    bind();
+    listen();
 
-  sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
-      Server::accept, (void*)base_);
+    qiLogInfo("qigateway", "Listening on %s:%i", host_, port_);
 
-  event_add(sockEvent_, NULL);
-  event_base_dispatch(base_);
+    sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
+        Server::accept, (void*)base_);
+
+    event_add(sockEvent_, NULL);
+    event_base_dispatch(base_);
+  }
+  catch (const std::exception& e)
+  {
+    qiLogFatal("qigateway", "%s", e.what());
+    exit(1);
+  }
 }
 
 void Server::accept(evutil_socket_t sock, short events, void* arg)
 {
   struct event_base* base = (struct event_base*)arg;
-  struct sockaddr_storage addr;
+  struct sockaddr addr;
   socklen_t slen = sizeof (addr);
 
-  int client = ::accept(sock, (struct sockaddr*)&addr, &slen);
+  int client = ::accept(sock, &addr, &slen);
 
   if (client < 0)
-    throw std::runtime_error("Could not accept client");
+    qiLogError("Could not accept client");
   else if (client > FD_SETSIZE)
     ::close(client);
   else
@@ -67,6 +79,13 @@ void Server::accept(evutil_socket_t sock, short events, void* arg)
     bufferevent_setcb(bev, readcb, NULL, errorcb, NULL);
     bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ | EV_WRITE);
+
+    char host[128];
+    time_t time = ::time(NULL);
+    if (getnameinfo(&addr, slen, host, 128, NULL, 0, 0) == 0)
+      qiLogInfo("qigateway", "%i - Accepted connection from %s", time, host);
+    else
+      qiLogInfo("qigateway", "%i - Accepted connection", time);
   }
 }
 

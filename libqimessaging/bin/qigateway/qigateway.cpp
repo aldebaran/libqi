@@ -6,13 +6,27 @@
 */
 
 #include <iostream>
+#include <cstring>
 #include <boost/program_options.hpp>
+#include <qi/log.hpp>
+
+#include <signal.h>
+#include <ucontext.h>
 
 #include "daemon.h"
 #include "server.hpp"
 
 namespace po = boost::program_options;
 
+static
+void sigint_handler(int signum, siginfo_t* info, void* vctx)
+{
+  ucontext_t* ctx = (ucontext_t*)vctx;
+
+  qiLogInfo("qigateway", "Stopping QiMessaging Gateway");
+
+  exit(0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -52,17 +66,28 @@ int main(int argc, char *argv[])
 
     if (vm.count("listen") && vm.count("port"))
     {
+      struct sigaction sigact;
+      memset(&sigact, 0, sizeof (sigact));
+      sigact.sa_sigaction = sigint_handler;
+
+      if (sigaction(SIGINT, &sigact, NULL) == -1)
+        throw std::runtime_error("Could not set SIG handler");
+
       qi::gateway::Server server(vm["listen"].as<std::string>().c_str(),
           vm["port"].as<unsigned short>());
 
       server.run();
     }
     else
+    {
       std::cerr << desc << "\n";
+      return 1;
+    }
   }
-  catch (const boost::program_options::error&)
+  catch (const std::exception& e)
   {
-    std::cerr << desc << "\n";
+    qiLogFatal("qigateway", "%s", e.what());
+    return 1;
   }
 
   return 0;
