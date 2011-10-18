@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ModulePreference name="aldebaran-robotics.com@Danceconfig" xmlns="http://www.aldebaran-robotics.com/ns/ALPreference" schemaLocation="ModulePreference.xsd">
+  <!-- robot config -->
+  <Preference name="Dancer" description="Description of a dancer" type="array">
+    <Preference name="id" description="id of dancer" value="0" type="int" />
+    <Preference name="role" description="role of dancer" value="0" type="int" />
+    <Preference name="ip" description="ip of naoqi's dancer" value="127.0.0.1" type="string" />
+    <Preference name="port" description="port of naoqi's dancer" value="9559" type="int" />
+  </Preference>
+  <Preference name="Dancer" description="Description of a dancer" type="array">
+    <Preference name="id" description="id of dancer" value="1" type="int" />
+    <Preference name="role" description="role of dancer" value="2" type="int" />
+    <Preference name="ip" description="ip of naoqi's dancer" value="127.0.0.1" type="string" />
+    <Preference name="port" description="port of naoqi's dancer" value="9560" type="int" />
+  </Preference>
+  <Preference name="Dancer" description="Description of a dancer" type="array">
+    <Preference name="id" description="id of dancer" value="2" type="int" />
+    <Preference name="role" description="role of dancer" value="1" type="int" />
+    <Preference name="ip" description="ip of naoqi's dancer" value="127.0.0.1" type="string" />
+    <Preference name="port" description="port of naoqi's dancer" value="9561" type="int" />
+  </Preference>
+  <Preference name="Dancer" description="Description of a dancer" type="array">
+    <Preference name="id" description="id of dancer" value="3" type="int" />
+    <Preference name="role" description="role of dancer" value="2" type="int" />
+    <Preference name="ip" description="ip of naoqi's dancer" value="127.0.0.1" type="string" />
+    <Preference name="port" description="port of naoqi's dancer" value="9562" type="int" />
+  </Preference>
+  <Preference name="Dancer" description="Description of a dancer" type="array">
+    <Preference name="id" description="id of dancer" value="4" type="int" />
+    <Preference name="role" description="role of dancer" value="1" type="int" />
+    <Preference name="ip" description="ip of naoqi's dancer" value="127.0.0.1" type="string" />
+    <Preference name="port" description="port of naoqi's dancer" value="9563" type="int" />
+  </Preference>
+</ModulePreference>

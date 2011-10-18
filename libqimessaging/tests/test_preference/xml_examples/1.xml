@@ -1,0 +1,4 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<ModulePreference xmlns="http://www.aldebaran-robotics.com/ns/ALPreference" schemaLocation="ModulePreference.xsd" name="aldebaran-robotics.com@ALTextToSpeech" >
+  <Preference xmlns="http://www.aldebaran-robotics.com/ns/ALPreference" value="NaoOfficialVoiceEnglish" type="string" name="defaultVoicePreference" description="Pitch shifting speed-up option" />
+</ModulePreference>

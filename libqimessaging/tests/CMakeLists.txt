@@ -7,6 +7,7 @@ add_subdirectory(test_messaging_publish)
 # This is not a test
 add_subdirectory(test_c_bindings)
 #add_subdirectory(test_endpoint_context)
+add_subdirectory(test_preference)
 
 qi_create_gtest(test_functor            SRC test_functor.cpp            DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 qi_create_gtest(test_message_visitor    SRC test_message_visitor.cpp    DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ModulePreference name="aldebaran-robotics.com@BestParams" xmlns="http://www.aldebaran-robotics.com/ns/ALPreference" schemaLocation="ModulePreference.xsd">
+    <Preference name="GENETICS_ACTION_MODULE_NAME" description="" value="ALRealWalkGeneticsAction" type="string" />
+    <Preference name="FITNESS_MODULE_NAME" description="" value="ALRealWalkFitness" type="string" />
+    <Preference name="Individual" description="Good one" type="array">
+        <Preference name="param #0" description="" value="0.0364567" type="float" />
+        <Preference name="param #1" description="" value="0.0199213" type="float" />
+        <Preference name="param #2" description="" value="0.0275591" type="float" />
+        <Preference name="param #3" description="" value="0.0177165" type="float" />
+        <Preference name="param #4" description="" value="6.61417" type="float" />
+        <Preference name="param #5" description="" value="0.184787" type="float" />
+        <Preference name="param #6" description="" value="17.4803" type="float" />
+        <Preference name="param #7" description="" value="26.2992" type="float" />
+    </Preference>
+    <Preference name="Individual2" description="Very good" type="array">
+        <Preference name="param #0" description="" value="0.0358268" type="float" />
+        <Preference name="param #1" description="" value="0.0243307" type="float" />
+        <Preference name="param #2" description="" value="0.0307087" type="float" />
+        <Preference name="param #3" description="" value="0.0019685" type="float" />
+        <Preference name="param #4" description="" value="5.7874" type="float" />
+        <Preference name="param #5" description="" value="0.206252" type="float" />
+        <Preference name="param #6" description="" value="10.2362" type="float" />
+        <Preference name="param #7" description="" value="112.913" type="float" />
+    </Preference>
+</ModulePreference>

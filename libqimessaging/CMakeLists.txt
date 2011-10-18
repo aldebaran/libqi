@@ -43,7 +43,7 @@ qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp")
 qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
 
 qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
-
+qi_submodule_create("qi-preference"    qipreference/preference.hpp src/preference/preference.cpp)
 qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"    "src/messaging/network/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"
@@ -72,9 +72,9 @@ qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"
                                          "src/serialization/*.[hc][px][px]")
 
 qi_create_lib(qimessaging SRC ${CONFIG_H}
-                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport
+                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport qi-preference
                  #qi-cbinding
-                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
+                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML)
 qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)
