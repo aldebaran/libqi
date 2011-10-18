@@ -21,6 +21,8 @@ namespace po = boost::program_options;
 static
 void sigint_handler(int signum, siginfo_t* info, void* vctx)
 {
+  (void) signum;
+  (void) info;
   ucontext_t* ctx = (ucontext_t*)vctx;
 
   qiLogInfo("qigateway", "Stopping QiMessaging Gateway");

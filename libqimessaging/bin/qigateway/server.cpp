@@ -34,29 +34,21 @@ Server::~Server()
 
 void Server::run()
 {
-  try
-  {
-    qiLogInfo("qigateway", "Launching QiMessaging Gateway");
+  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
 
-    setvbuf(stdout, NULL, _IONBF, 0);
-    init();
-    socket();
-    bind();
-    listen();
+  setvbuf(stdout, NULL, _IONBF, 0);
+  init();
+  socket();
+  bind();
+  listen();
 
-    qiLogInfo("qigateway", "Listening on %s:%i", host_, port_);
+  qiLogInfo("qigateway", "Listening on %s:%i", host_, port_);
 
-    sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
-        Server::accept, (void*)base_);
+  sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
+      Server::accept, (void*)base_);
 
-    event_add(sockEvent_, NULL);
-    event_base_dispatch(base_);
-  }
-  catch (const std::exception& e)
-  {
-    qiLogFatal("qigateway", "%s", e.what());
-    exit(1);
-  }
+  event_add(sockEvent_, NULL);
+  event_base_dispatch(base_);
 }
 
 void Server::accept(evutil_socket_t sock, short events, void* arg)
