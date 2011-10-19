@@ -14,7 +14,8 @@
 #include <ucontext.h>
 
 #include "daemon.h"
-#include "server.hpp"
+#include "gateway.hpp"
+#include "master.hpp"
 
 namespace po = boost::program_options;
 
@@ -75,10 +76,10 @@ int main(int argc, char *argv[])
       if (sigaction(SIGINT, &sigact, NULL) == -1)
         throw std::runtime_error("Could not set SIG handler");
 
-      qi::gateway::Server server(vm["listen"].as<std::string>().c_str(),
+      qi::gateway::Gateway gateway(vm["listen"].as<std::string>().c_str(),
           vm["port"].as<unsigned short>());
 
-      server.run();
+      gateway.run();
     }
     else
     {

@@ -1,4 +1,4 @@
-#include "server.hpp"
+#include "gateway.hpp"
 
 #include <cstring>
 #include <stdexcept>
@@ -24,15 +24,27 @@
 namespace qi {
 namespace gateway {
 
-Server::Server(const char* host, unsigned short port)
+struct ConnectionInfo
+{
+  unsigned long id;
+  boost::unordered_map<unsigned int, ConnectionInfo*>* conns;
+};
+
+struct AcceptInfo
+{
+  struct event_base* base;
+  ConnectionInfo* ci;
+};
+
+Gateway::Gateway(const char* host, unsigned short port)
   : host_(host),
     port_(port)
 {}
 
-Server::~Server()
+Gateway::~Gateway()
 {}
 
-void Server::run()
+void Gateway::run()
 {
   qiLogInfo("qigateway", "Launching QiMessaging Gateway");
 
@@ -44,16 +56,26 @@ void Server::run()
 
   qiLogInfo("qigateway", "Listening on %s:%i", host_, port_);
 
+  boost::unordered_map<unsigned int, ConnectionInfo*>* conns =
+    new boost::unordered_map<unsigned int, ConnectionInfo*>();
+  ConnectionInfo gConnsInfo;
+  gConnsInfo.conns = conns;
+  gConnsInfo.id = 0;
+
+  AcceptInfo globalInfo;
+  globalInfo.ci = &gConnsInfo;
+  globalInfo.base = base_;
+
   sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
-      Server::accept, (void*)base_);
+      Gateway::accept, (void*)&globalInfo);
 
   event_add(sockEvent_, NULL);
   event_base_dispatch(base_);
 }
 
-void Server::accept(evutil_socket_t sock, short events, void* arg)
+void Gateway::accept(evutil_socket_t sock, short events, void* arg)
 {
-  struct event_base* base = (struct event_base*)arg;
+  AcceptInfo* globalInfo = (AcceptInfo*)arg;
   struct sockaddr addr;
   socklen_t slen = sizeof (addr);
 
@@ -65,23 +87,36 @@ void Server::accept(evutil_socket_t sock, short events, void* arg)
     ::close(client);
   else
   {
+//ConnectionInfo* info = new ConnectionInfo();
+//    info->conns = globalInfo->ci->conns;
+//
+//    /* Find an ID */
+//    info->id = globalInfo->ci->id < ULONG_MAX ? ++globalInfo->ci->id : 0;
+//    while (infos->id != ULONG_MAX &&
+//           info->conns->find(info->id) != infos->conns->end())
+//      ++info->id;
+
+    /* Init socket, callbacks */
     evutil_make_socket_nonblocking(client);
-    struct bufferevent* bev = bufferevent_socket_new(base,
+    struct bufferevent* bev = bufferevent_socket_new(globalInfo->base,
         client, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(bev, readcb, NULL, errorcb, NULL);
+    bufferevent_setcb(bev, readcb, NULL, eventcb, NULL);
     bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ | EV_WRITE);
 
-    char host[128];
-    time_t time = ::time(NULL);
-    if (getnameinfo(&addr, slen, host, 128, NULL, 0, 0) == 0)
-      qiLogInfo("qigateway", "%i - Accepted connection from %s", time, host);
+    /* Logging */
+    char host[128] = {0};
+    char time[128] = {0};
+    time_t t = ::time(NULL);
+    strftime(time, 127, "%T", localtime(&t));
+    if (getnameinfo(&addr, slen, host, 127, NULL, 0, 0) == 0)
+      qiLogInfo("qigateway", "%s - Accepted connection from %s", time, host);
     else
-      qiLogInfo("qigateway", "%i - Accepted connection", time);
+      qiLogInfo("qigateway", "%s - Accepted connection", time);
   }
 }
 
-void Server::readcb(struct bufferevent* bev, void* context)
+void Gateway::readcb(struct bufferevent* bev, void* context)
 {
   char buf[BUFFER_SIZE];
   size_t len;
@@ -93,26 +128,26 @@ void Server::readcb(struct bufferevent* bev, void* context)
     evbuffer_add(output, buf, len);
 }
 
-void Server::errorcb(struct bufferevent* bev,
-    short error, void* context)
+void Gateway::eventcb(struct bufferevent* bev,
+    short event, void* context)
 {
 }
 
-void Server::init()
+void Gateway::init()
 {
   qiLogDebug("qigateway", "Init");
   if (!(base_ = event_base_new()))
     std::runtime_error("Could not init libevent");
 }
 
-void Server::socket()
+void Gateway::socket()
 {
   if ((sock_ = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
     throw std::runtime_error("Could not get socket");
   evutil_make_socket_nonblocking(sock_);
 }
 
-void Server::bind()
+void Gateway::bind()
 {
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -125,13 +160,13 @@ void Server::bind()
     throw std::runtime_error("Could not bind socket");
 }
 
-void Server::listen()
+void Gateway::listen()
 {
   if (::listen(sock_, SOMAXCONN) == -1)
     throw std::runtime_error("Could not listen on socket");
 }
 
-void Server::destroy()
+void Gateway::destroy()
 {
   ::close(sock_);
 }

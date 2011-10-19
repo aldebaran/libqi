@@ -1,7 +1,8 @@
-#ifndef QIMESSAGING_BIN_QIGATEWAY_SERVER_HPP
-#define QIMESSAGING_BIN_QIGATEWAY_SERVER_HPP
+#ifndef QIMESSAGING_BIN_QIGATEWAY_GATEWAY_HPP
+#define QIMESSAGING_BIN_QIGATEWAY_GATEWAY_HPP
 
 #include <qi/macro.hpp>
+#include <boost/unordered_map.hpp>
 
 #include <event2/event.h>
 #include <event2/bufferevent.h>
@@ -10,20 +11,20 @@
 namespace qi {
 namespace gateway {
 
-class Server
+class Gateway
 {
-  QI_DISALLOW_COPY_AND_ASSIGN(Server);
+  QI_DISALLOW_COPY_AND_ASSIGN(Gateway);
 
 public:
-  Server(const char* host, unsigned short port);
-  virtual ~Server();
+  Gateway(const char* host, unsigned short port);
+  virtual ~Gateway();
 
   void run();
 
 private:
   static void accept(evutil_socket_t fd, short events, void* arg);
   static void readcb(struct bufferevent* bev, void* context);
-  static void errorcb(struct bufferevent* bev, short error, void* context);
+  static void eventcb(struct bufferevent* bev, short event, void* context);
 
   void init();
   void socket();
@@ -43,4 +44,4 @@ private:
 } // namespace gateway
 } // namespace qi
 
-#endif // QIMESSAGING_BIN_QIGATEWAY_SERVER_HPP
+#endif // QIMESSAGING_BIN_QIGATEWAY_GATEWAY_HPP

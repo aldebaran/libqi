@@ -10,10 +10,12 @@ project (QiGateway)
 
 qi_create_bin(qi-gateway
   qigateway.cpp
-  server.cpp server.hpp
+  gateway.cpp gateway.hpp
+  master.cpp master.hpp
   daemon.cpp daemon.h
   DEPENDS
     QI
+    QIMESSAGING
     BOOST_PROGRAM_OPTIONS
 )
 
