@@ -24,18 +24,6 @@
 namespace qi {
 namespace gateway {
 
-struct ConnectionInfo
-{
-  unsigned long id;
-  boost::unordered_map<unsigned int, ConnectionInfo*>* conns;
-};
-
-struct AcceptInfo
-{
-  struct event_base* base;
-  ConnectionInfo* ci;
-};
-
 Gateway::Gateway(const char* host, unsigned short port)
   : host_(host),
     port_(port)
@@ -46,43 +34,54 @@ Gateway::~Gateway()
 
 void Gateway::run()
 {
-  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
-
   setvbuf(stdout, NULL, _IONBF, 0);
   init();
   socket();
   bind();
   listen();
 
-  qiLogInfo("qigateway", "Listening on %s:%i", host_, port_);
+  qiLogInfo("qigateway", "Gateway: Listening on %s:%i", host_, port_);
 
-  boost::unordered_map<unsigned int, ConnectionInfo*>* conns =
-    new boost::unordered_map<unsigned int, ConnectionInfo*>();
-  ConnectionInfo gConnsInfo;
-  gConnsInfo.conns = conns;
-  gConnsInfo.id = 0;
-
-  AcceptInfo globalInfo;
-  globalInfo.ci = &gConnsInfo;
-  globalInfo.base = base_;
+  //boost::unordered_map<unsigned int, ConnectionInfo*>* conns =
+  //  new boost::unordered_map<unsigned int, ConnectionInfo*>();
+  //ConnectionInfo gConnsInfo;
+  //gConnsInfo.conns = conns;
+  //gConnsInfo.id = 0;
+//
+  //AcceptInfo globalInfo;
+  //globalInfo.ci = &gConnsInfo;
+  //globalInfo.base = base_;
 
   sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
-      Gateway::accept, (void*)&globalInfo);
+      Gateway::accept, (void*)NULL);
 
   event_add(sockEvent_, NULL);
   event_base_dispatch(base_);
 }
 
+void Gateway::launch(const char* host, unsigned short port)
+{
+  try
+  {
+    Gateway gateway(host, port);
+    gateway.run();
+  }
+  catch (const std::exception& e)
+  {
+    qiLogError("qigateway", "Gateway: %s", e.what());
+  }
+}
+
 void Gateway::accept(evutil_socket_t sock, short events, void* arg)
 {
-  AcceptInfo* globalInfo = (AcceptInfo*)arg;
+  //AcceptInfo* globalInfo = (AcceptInfo*)arg;
   struct sockaddr addr;
   socklen_t slen = sizeof (addr);
 
   int client = ::accept(sock, &addr, &slen);
 
   if (client < 0)
-    qiLogError("Could not accept client");
+    qiLogError("Gateway: Could not accept client");
   else if (client > FD_SETSIZE)
     ::close(client);
   else
@@ -98,7 +97,7 @@ void Gateway::accept(evutil_socket_t sock, short events, void* arg)
 
     /* Init socket, callbacks */
     evutil_make_socket_nonblocking(client);
-    struct bufferevent* bev = bufferevent_socket_new(globalInfo->base,
+    struct bufferevent* bev = bufferevent_socket_new(NULL/*globalInfo->base*/,
         client, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(bev, readcb, NULL, eventcb, NULL);
     bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
@@ -110,9 +109,10 @@ void Gateway::accept(evutil_socket_t sock, short events, void* arg)
     time_t t = ::time(NULL);
     strftime(time, 127, "%T", localtime(&t));
     if (getnameinfo(&addr, slen, host, 127, NULL, 0, 0) == 0)
-      qiLogInfo("qigateway", "%s - Accepted connection from %s", time, host);
+      qiLogInfo("qigateway", "Gateway: %s - Accepted connection from %s",
+          time, host);
     else
-      qiLogInfo("qigateway", "%s - Accepted connection", time);
+      qiLogInfo("qigateway", "Gateway: %s - Accepted connection", time);
   }
 }
 
@@ -135,7 +135,7 @@ void Gateway::eventcb(struct bufferevent* bev,
 
 void Gateway::init()
 {
-  qiLogDebug("qigateway", "Init");
+  qiLogDebug("qigateway", "Gateway: Init");
   if (!(base_ = event_base_new()))
     std::runtime_error("Could not init libevent");
 }

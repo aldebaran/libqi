@@ -16,10 +16,12 @@ class Gateway
   QI_DISALLOW_COPY_AND_ASSIGN(Gateway);
 
 public:
-  Gateway(const char* host, unsigned short port);
+  explicit Gateway(const char* host, unsigned short port);
   virtual ~Gateway();
 
   void run();
+
+  static void launch(const char* host, unsigned short port);
 
 private:
   static void accept(evutil_socket_t fd, short events, void* arg);

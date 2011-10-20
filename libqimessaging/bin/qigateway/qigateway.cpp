@@ -6,8 +6,12 @@
 */
 
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <boost/program_options.hpp>
+#include <boost/thread.hpp>
+#include <boost/date_time.hpp>
+
 #include <qi/log.hpp>
 
 #include <signal.h>
@@ -20,16 +24,10 @@
 namespace po = boost::program_options;
 
 static
-void sigint_handler(int signum, siginfo_t* info, void* vctx)
-{
-  (void) signum;
-  (void) info;
-  ucontext_t* ctx = (ucontext_t*)vctx;
-
-  qiLogInfo("qigateway", "Stopping QiMessaging Gateway");
-
-  exit(0);
-}
+void launch(const char* gatewayHost, unsigned short gatewayPort,
+            const std::string& masterAddress);
+static
+void sig_handler(int signum, siginfo_t* info, void* vctx);
 
 int main(int argc, char *argv[])
 {
@@ -38,11 +36,18 @@ int main(int argc, char *argv[])
                                 " [options]\nOptions").c_str());
   desc.add_options()
     ("help,h", "Print this help.")
-    ("listen,l",
+    ("gateway-listen,l",
       po::value<std::string>()->default_value(std::string("127.0.0.1")),
-      "Address to listen to")
-    ("port,p",
-      po::value<unsigned short>()->default_value(12890), "Port to listen on")
+      "Address to listen to (Gateway)")
+    ("gateway-port,p",
+      po::value<unsigned short>()->default_value(12890),
+      "Port to listen on (Gateway)")
+    ("master-listen,a",
+      po::value<std::string>()->default_value(std::string("127.0.0.1")),
+      "Address to listen to (Master)")
+    ("master-port,o",
+      po::value<unsigned short>()->default_value(5555),
+      "Port to listen on (Master)")
     ("daemon,d", "Daemonize the server");
 
   // allow listen address to be specified as the first arg
@@ -67,19 +72,23 @@ int main(int argc, char *argv[])
       if (!daemonize())
         throw std::runtime_error("Could not daemonize");
 
-    if (vm.count("listen") && vm.count("port"))
+    if (vm.count("gateway-listen") && vm.count("gateway-port") &&
+        vm.count("master-listen") && vm.count("master-port"))
     {
       struct sigaction sigact;
       memset(&sigact, 0, sizeof (sigact));
-      sigact.sa_sigaction = sigint_handler;
+      sigact.sa_sigaction = sig_handler;
 
       if (sigaction(SIGINT, &sigact, NULL) == -1)
         throw std::runtime_error("Could not set SIG handler");
 
-      qi::gateway::Gateway gateway(vm["listen"].as<std::string>().c_str(),
-          vm["port"].as<unsigned short>());
+      std::stringstream masterAddress;
+      masterAddress << vm["master-listen"].as<std::string>() << ":"
+                    << vm["master-port"].as<unsigned short>();
 
-      gateway.run();
+      launch(vm["gateway-listen"].as<std::string>().c_str(),
+             vm["gateway-port"].as<unsigned short>(),
+             masterAddress.str());
     }
     else
     {
@@ -94,4 +103,47 @@ int main(int argc, char *argv[])
   }
 
   return 0;
+}
+
+static
+void launch(const char* gatewayHost, unsigned short gatewayPort,
+            const std::string& masterAddress)
+{
+  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
+  boost::thread gatewayThread(qi::gateway::Gateway::launch,
+      gatewayHost, gatewayPort);
+
+  qiLogInfo("qigateway", "Launching QiMessaging Master");
+  boost::thread masterThread(qi::gateway::Master::launch,
+      masterAddress);
+
+  for (;;)
+  {
+    if (gatewayThread.timed_join(boost::posix_time::milliseconds(10)))
+    {
+      gatewayThread = boost::move(boost::thread(qi::gateway::Gateway::launch,
+            gatewayHost, gatewayPort));
+    }
+
+    if (masterThread.timed_join(boost::posix_time::milliseconds(10)))
+    {
+      masterThread = boost::move(boost::thread(qi::gateway::Master::launch,
+            masterAddress));
+    }
+
+    qi::os::sleep(1);
+  }
+}
+
+static
+void sig_handler(int signum, siginfo_t* info, void* vctx)
+{
+  (void) signum;
+  (void) info;
+  (void) vctx;
+  /* ucontext_t* ctx = (ucontext_t*)vctx; */
+
+  qiLogInfo("qigateway", "Stopping QiMessaging Gateway + Master");
+
+  exit(0);
 }

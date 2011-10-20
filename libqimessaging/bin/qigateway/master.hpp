@@ -12,15 +12,9 @@ class Master
   QI_DISALLOW_COPY_AND_ASSIGN(Master);
 
 public:
-  explicit Master(const std::string& address);
-  virtual ~Master();
-
-  void run();
-
   static void launch(const std::string& address);
 
 private:
-  std::string address_;
 };
 
 } // namespace gateway
