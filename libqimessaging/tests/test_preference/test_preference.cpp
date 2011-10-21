@@ -432,4 +432,18 @@ TEST(qipreference, removeValue)
 }
 
 
+TEST(qipreference, getKeys)
+{
+  qi::pref::PreferenceMap pm;
+  pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/advanceValue.xml");
+
+  std::vector<std::string> k = pm.keys("/aldebaran-robotics.com@ALTextToSpeech/sim");
+  for (int i = 0; i < k.size(); ++i)
+    std::cout << k[i] << std::endl;
+
+  k = pm.keys("/");
+  k = pm.keys("erw");
+}
+
+
 }

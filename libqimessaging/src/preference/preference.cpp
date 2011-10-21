@@ -31,6 +31,10 @@ namespace qi {
                         std::map<std::string, std::string> &attribs);
       std::map<std::string, qi::Value> parse(TiXmlNode* parent);
 
+      void getKeys(std::vector<std::string> &key,
+                   qi::Value values,
+                   const std::string &prefix);
+
       std::map<std::string, qi::Value> _values;
     protected:
     private:
@@ -456,15 +460,60 @@ namespace qi {
       return;
     }
 
+    void PreferenceMapPrivate::getKeys(std::vector<std::string> &key,
+                                       qi::Value values,
+                                       const std::string &prefix)
+    {
+      qi::ValueMap vm = values.toMap();
+      qi::ValueMap::iterator it = vm.begin();
+      for (; it != vm.end(); ++it)
+      {
+        std::string s = prefix + "/" + it->first;
+        key.push_back(s);
+        if (it->second._private.type == qi::Value::Map)
+          getKeys(key, it->second, s);
+      }
+      return;
     }
 
     // find existing keys, which names start with `prefix'
     std::vector<std::string> PreferenceMap::keys(const std::string &prefix)
     {
+      std::vector<std::string> k;
+      qi::ValueMap::iterator it = _private->_values.begin();
+      std::string s = it->first;
+      k.push_back(s);
+      if (it->second._private.type == qi::Value::Map)
+        _private->getKeys(k, it->second, s);
+
+      if (prefix.empty())
+        return k;
+      else
+      {
+        std::vector<std::string> res;
+        for (int i = 0; i < k.size(); ++i)
+        {
+          if (prefix[0] == '/')
+          {
+            if (k[i].find(&prefix[1]) == 0)
+            {
+              res.push_back("/" + k[i]);
+            }
+          }
+          else
+          {
+            if (k[i].find(prefix) == 0)
+            {
+              res.push_back(k[i]);
+            }
+          }
+        }
+        return res;
+      }
     }
 
 
-    //return all values
+    // return all values
     std::map<std::string, qi::Value> PreferenceMap::values()
     {
       return _private->_values;
