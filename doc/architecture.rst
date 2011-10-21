@@ -25,19 +25,25 @@ It would be great to have a unified way to connect to the robot, that would allo
 
 ROS/YARP/..: other robotics framework can allow to connect to NAO too. If bridge between NAOqi and thouse frameworks are added to the NAOStore they will be very easy to use.
 
+:ref:`connectivity`
+
+
 Applications
 ------------
 
- - embedded application: Application loaded on the robot. They are made of services and behaviors.
+Many types of application, should be easy to distribute application for each supported platform. (Windows, Linux, OSX, NAO, ...)
 
+ - embedded application: Application loaded on the robot. They are made of services and behaviors.
 
  - remote application: application that interact with the robot. Could be using a thirdparty server to connect to the robot, or using a direct connection to the robot.
    They can be architectured like the client want, because they do not need to be integrated/launched by NAO's life.
    This include scripts.
 
+see :ref:`service` and :ref:`behavior`.
 
-Basic patterns
---------------
+
+Applications components
+-----------------------
 
 Behavior:
 Most behaviors are asynchronous, basically a behavior is sequence of action. It's a graph of connected objects. Object can receive and send events. They react on event by doing computation and sending other events. It's the concept behind choregraphe boxes. It's also how one would like to write behaviors in others languages. Could be integrated in the NAO's life.
@@ -55,47 +61,3 @@ It should be easy to write service too.
 
 
 What is needed?
-
-Service:
---------
-They expose our APIs to the outside and to behaviors.
-
-interacting with others:
-  - raise global events
-  - receive and handle orders/commands
-  - receive and send streams
-  - be configurable (have a set of properties)
-  - have settings (accessible from the PreferenceManager)
-
-APIs:
-
-apis for a service should provide a way to
-  - call methods
-  - connect streams to signals/slots
-  - call remote actions
-  - instanciate local object corresponding to command. (local or not)
-
-
-Behavior:
----------
-should be easy to use behavior from choregraphe, python, c++, etc.. togethers.
-If we want behaviors to be used inside others behaviors, we need them to have a single format. It should be binary if we want to support compiled languages. It should be easy to group them into a single place.
-It seems logical to choose library as the standard format.
-If it's a python module then the library will load a python interpreter and load the needed code. A library by external language should be enough. For python we could always reuse the same library for example. This library will enumerate all objects and allow to instanciate them. For behaviors a default object should be set. We could optimize a little for python and choregraphe behaviors by providing the support library by default.
-
-interacting with others:
-  - slot: receive an event (typed or not)
-  - signal: send an event (typed or not)
-  - properties: (configurations)
-
-store, life, etc..
-  - metadata for NAO's life
-  - xar that describe objects and connections between them
-
-
-Xar can be edited using Choregraphe. Choregraphe basically loads boxes and connect them using the FrameManager.
-
-Some standard "boxes"/"commands"/"actions" are provided by the system. For example: say, walk, move, look. When used in choregraphe or more generally in behavior they are represented by a remote action. "a remote command".
-
-
-
