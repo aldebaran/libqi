@@ -78,14 +78,16 @@ namespace qi {
     {
       if (type == "bool")
       {
-        std::stringstream ss;
-        ss << value;
-
-        bool res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
+        if (value == "true")
+        {
+          qi::Value v(true);
+          return v;
+        }
+        else if (value == "false")
+        {
+          qi::Value v(false);
+          return v;
+        }
       }
       if (type == "char")
       {
@@ -176,7 +178,7 @@ namespace qi {
       if (!parent)
       {
         std::cerr << "Invalid node!" << std::endl;
-        return std::map<std::string, qi::Value>();
+        return qi::ValueMap();
       }
 
       TiXmlNode* child;
@@ -213,7 +215,7 @@ namespace qi {
           attribs.find("type") != attribs.end() &&
           attribs.find("value") != attribs.end())
       {
-        std::map<std::string, qi::Value> mValue;
+        qi::ValueMap mValue;
         qi::Value v = xmlToValue(attribs.find("type")->second,
                                  attribs.find("value")->second);
 
@@ -226,11 +228,11 @@ namespace qi {
         if (attribs.find("type")->second == "array")
         {
           qi::Value v(qi::Value::Map);
-          std::map<std::string, qi::Value> mValue;
+          qi::ValueMap mValue;
 
           for (child = parent->FirstChild(); child != 0; child = child->NextSibling())
           {
-            std::map<std::string, qi::Value> mTmpValue;
+            qi::ValueMap mTmpValue;
             mTmpValue = parse(child);
             v.value<qi::ValueMap>()[(mTmpValue.begin())->first] = (mTmpValue.begin())->second;
           }
@@ -242,11 +244,11 @@ namespace qi {
       else if (attribs.find("name") != attribs.end())
       {
         qi::Value v(qi::Value::Map);
-        std::map<std::string, qi::Value> mValue;
+        qi::ValueMap mValue;
 
         for (child = parent->FirstChild(); child != 0; child = child->NextSibling())
         {
-          std::map<std::string, qi::Value> mTmpValue;
+          qi::ValueMap mTmpValue;
           mTmpValue = parse(child);
           v.value<qi::ValueMap>()[(mTmpValue.begin())->first] = (mTmpValue.begin())->second;
         }
@@ -255,7 +257,7 @@ namespace qi {
         return mValue;
       }
 
-      std::map<std::string, qi::Value> mTmpValue;
+      qi::ValueMap mTmpValue;
       for (child = parent->FirstChild(); child != 0; child = child->NextSibling())
       {
         mTmpValue = parse(child);
@@ -271,6 +273,7 @@ namespace qi {
 
     PreferenceMap::~PreferenceMap()
     {
+      delete _private;
     }
 
 
