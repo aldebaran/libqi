@@ -12,6 +12,8 @@
 #include <map>
 #include <vector>
 
+#include <fstream>
+
 #include <tinyxml/tinyxml.h>
 
 #include <qimessaging/value.hpp>
@@ -35,11 +37,24 @@ namespace qi {
                    qi::Value values,
                    const std::string &prefix);
 
+      void saveKeys(const std::string &tag,
+                    const qi::Value &value,
+                    int indent);
+
+    public:
       std::map<std::string, qi::Value> _values;
+
+
+      std::stringstream _ss;
+
     protected:
     private:
       qi::Value xmlToValue(const std::string &type,
                            const std::string &value);
+
+      std::string getType(const qi::Value &value);
+      std::string getValue(const std::string &type,
+                           qi::Value value);
 
     };
 
@@ -284,28 +299,135 @@ namespace qi {
     {
       TiXmlDocument doc(file.c_str());
       if(doc.LoadFile())
-      {
-        printf("\n%s:\n", file.c_str());
         _private->_values = _private->parse(&doc);
-
-        // qi::ValueMap &vm = (_private->_values.begin()->second).value<qi::ValueMap>();
-        // qi::ValueMap::iterator it;
-
-        // it = vm.find("Individual");
-        // std::cout << it->first.c_str();
-        // std::cout << " " << it->second.value<qi::ValueMap>().size() << std::endl;
-        // it = vm.find("Individual2");
-        // std::cout << it->first.c_str();
-        // std::cout << " " << it->second.value<qi::ValueMap>().size() << std::endl;
-      }
       else
-      {
         printf("Cannot open file!\n");
-      }
     }
 
+    std::string PreferenceMapPrivate::getType(const qi::Value &value)
+    {
+      if (value._private.type == qi::Value::Bool)
+        return "bool";
+      if (value._private.type == qi::Value::Char)
+        return "char";
+      if (value._private.type == qi::Value::Int32)
+        return "int";
+      if (value._private.type == qi::Value::UInt32)
+        return "unsigned int";
+      if (value._private.type == qi::Value::Int64)
+        return "long long";
+      if (value._private.type == qi::Value::UInt64)
+        return "unsigned long long";
+      if (value._private.type == qi::Value::Float)
+        return "float";
+      if (value._private.type == qi::Value::Double)
+        return "double";
+      if (value._private.type == qi::Value::String)
+        return "string";
+      if (value._private.type == qi::Value::Map)
+        return "array";
+
+      return "";
+    }
+
+    std::string PreferenceMapPrivate::getValue(const std::string &type,
+                                               qi::Value value)
+    {
+      std::stringstream ss;
+
+      if (type == "bool")
+      {
+        if (value.toBool())
+          ss << "true";
+        else
+          ss << "false";
+      }
+
+      if (type == "char")
+        ss << value.toChar();
+
+      if (type == "int")
+        ss << value.toInt32();
+
+      if (type == "unsigned int")
+        ss << value.toUInt32();
+
+      if (type == "long long")
+        ss << value.toInt64();
+
+      if (type == "unsigned long long")
+        ss << value.toUInt64();
+
+      if (type == "float")
+        ss << value.toFloat();
+
+      if (type == "double")
+        ss << value.toDouble();
+
+      if (type == "string")
+        ss << value.toString();
+
+      return ss.str();
+    }
+
+
+    void PreferenceMapPrivate::saveKeys(const std::string &tag,
+                                        const qi::Value &value,
+                                        int indent)
+    {
+      qi::Value v = value;
+      qi::ValueMap vm = v.toMap();
+      qi::ValueMap::iterator it = vm.begin();
+      for (; it != vm.end(); ++it)
+      {
+        for (int i = 0; i < indent; ++i)
+          _ss << "\t";
+
+        std::string type = getType(it->second);
+        _ss << "<" << tag
+            << " type=\"" << type << "\" "
+            << "name=\"" << it->first << "\" ";
+
+        if (type == "array")
+        {
+          _ss << ">" << std::endl;
+          saveKeys(tag, it->second, indent + 1);
+          for (int i = 0; i < indent; ++i)
+            _ss << "\t";
+
+          _ss << "</" << tag << ">" << std::endl;
+        }
+        else
+        {
+          _ss << "value=\"" << getValue(type, it->second) << "\" />" << std::endl;
+        }
+
+      }
+      return;
+    }
+
+    // FIXME
     void PreferenceMap::save(const std::string &file)
     {
+      std::filebuf fb;
+      fb.open(file.c_str(), std::ios::out);
+      std::ostream _os(&fb);
+
+      qi::ValueMap::iterator it = _private->_values.begin();
+      std::string s = it->first;
+
+      _private->_ss << "<?xml version = '1.0' encoding = 'UTF-8'?>" << std::endl;
+      _private->_ss << "<ModulePreference xmlns=" << "\"\" "
+                    << "schemaLocation=" << "\"\" "
+                    << "name=\"" << s << "\" >" << std::endl;
+
+      if (it->second._private.type == qi::Value::Map)
+        _private->saveKeys("Preference", it->second, 1);
+
+      _private->_ss << "</ModulePreference>" << std::endl;
+      _os << _private->_ss.str();
+
+      fb.close();
     }
 
 

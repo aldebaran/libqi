@@ -446,4 +446,11 @@ TEST(qipreference, getKeys)
 }
 
 
+
+TEST(qipreference, saveKeys)
+{
+  qi::pref::PreferenceMap pm;
+  pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/advanceValue.xml");
+
+  pm.save("/home/hcuche/test.xml");
 }
