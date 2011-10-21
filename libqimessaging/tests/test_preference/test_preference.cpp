@@ -417,4 +417,19 @@ TEST(qipreference, setValue)
 }
 
 
+
+TEST(qipreference, removeValue)
+{
+  qi::pref::PreferenceMap pm;
+  pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/basicValue.xml");
+
+  qi::Value vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  EXPECT_EQ(-2147483648, vi.toInt32());
+
+  pm.remove("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  EXPECT_EQ(vi._private.type, qi::Value::Invalid);
+}
+
+
 }
