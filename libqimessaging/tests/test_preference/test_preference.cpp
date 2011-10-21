@@ -391,8 +391,30 @@ TEST(qipreference, getAdvanceValue)
   vi = pm.get("aldebaran-robotics.com@ALTextToSpeech/before array/");
   EXPECT_EQ(-21, vi.toInt32());
 }
+
+TEST(qipreference, setValue)
 {
   qi::pref::PreferenceMap pm;
+  pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/basicValue.xml");
+
+  qi::Value vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  EXPECT_EQ(-2147483648, vi.toInt32());
+
+  int i = 42;
+  qi::Value v(i);
+  pm.set("/aldebaran-robotics.com@ALTextToSpeech/int value/", v);
+
+  vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  EXPECT_EQ(42, vi.toInt32());
+
+
+  std::string s = "42";
+  qi::Value vs(s);
+  pm.set("/aldebaran-robotics.com@ALTextToSpeech/int value/", vs);
+
+  vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
+  EXPECT_EQ("42", vi.toString());
+}
 
 
 }

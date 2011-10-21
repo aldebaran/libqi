@@ -356,8 +356,54 @@ namespace qi {
     void PreferenceMap::set(const std::string &name,
                             const qi::Value &val)
     {
-    }
+      int start = 0;
+      int end = name.find("/");
+      qi::Value v = val;
 
+      if (end == 0)
+      {
+        start++;
+        end = name.find("/", start);
+      }
+
+      std::vector<std::string> vect;
+      for (; end != std::string::npos ; start = end + 1, end = name.find("/", start))
+        vect.push_back(name.substr(start, end - start));
+
+      if (start < name.size())
+        vect.push_back(name.substr(start, end));
+
+      if (vect.empty())
+        return;
+
+      qi::ValueMap *vm = &_private->_values;
+      qi::ValueMap::iterator it;
+      for (int i = 0; i < vect.size(); ++i)
+      {
+        it = vm->find(vect[i]);
+        if (it == vm->end())
+          break;
+        else if (i != vect.size() - 1)
+        {
+          qi::Value v = (it->second);
+          if (v._private.type == qi::Value::Map)
+          {
+            vm = &(it->second).value<qi::ValueMap>();
+          }
+          else
+          {
+            break;
+          }
+        }
+        else
+        {
+          (*vm)[it->first] = v;
+          break;
+        }
+      }
+
+      return;
+    }
 
     // delete a preference entry
     void PreferenceMap::remove(const std::string &name)
