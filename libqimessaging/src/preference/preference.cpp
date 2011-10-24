@@ -29,13 +29,14 @@ namespace qi {
       PreferenceMapPrivate();
       ~PreferenceMapPrivate();
 
-      int parse_attribs(TiXmlElement* element,
-                        std::map<std::string, std::string> &attribs);
+      void parse_attribs(TiXmlElement* element,
+                         std::map<std::string, std::string> &attribs);
+
       std::map<std::string, qi::Value> parse(TiXmlNode* parent);
 
-      void getKeys(std::vector<std::string> &key,
-                   qi::Value values,
-                   const std::string &prefix);
+      void getAllKeys(std::vector<std::string> &key,
+                      const qi::Value &values,
+                      const std::string &prefix);
 
       void saveKeys(const std::string &tag,
                     const qi::Value &value,
@@ -53,9 +54,11 @@ namespace qi {
                            const std::string &value);
 
       std::string getType(const qi::Value &value);
-      std::string getValue(const std::string &type,
-                           qi::Value value);
+      std::string getValueToString(const std::string &type,
+                                   const qi::Value &value);
 
+      template <typename T>
+      qi::Value typeToValue(const std::string &value);
     };
 
     PreferenceMapPrivate::PreferenceMapPrivate()
@@ -66,29 +69,28 @@ namespace qi {
     {
     }
 
-    int PreferenceMapPrivate::parse_attribs(TiXmlElement* element,
-                                            std::map<std::string, std::string> &attribs)
+    void PreferenceMapPrivate::parse_attribs(TiXmlElement* element,
+                                             std::map<std::string, std::string> &attribs)
     {
       if (!element)
-        return 0;
+        return;
 
       TiXmlAttribute* attrib = element->FirstAttribute();
       std::map<std::string, std::string> att;
-      int i = 0;
-      while (attrib)
-      {
-        std::stringstream ss;
-        ss << attrib->Name();
-        std::stringstream ss1;
-        ss1 << attrib->Value();
+      for (; attrib != NULL; attrib = attrib->Next())
+        attribs[std::string(attrib->Name())] = std::string(attrib->Value());
+    }
 
-        attribs[ss.str()] = ss1.str();
+    template <typename T>
+    qi::Value PreferenceMapPrivate::typeToValue(const std::string &value)
+    {
+      std::stringstream ss;
+      ss << value;
 
-        attrib = attrib->Next();
-        ++i;
-      }
+      T res;
+      ss >> res;
 
-      return i;
+      return qi::Value(res);
     }
 
     qi::Value PreferenceMapPrivate::xmlToValue(const std::string &type,
@@ -97,98 +99,26 @@ namespace qi {
       if (type == "bool")
       {
         if (value == "true")
-        {
-          qi::Value v(true);
-          return v;
-        }
-        else if (value == "false")
-        {
-          qi::Value v(false);
-          return v;
-        }
+          return qi::Value(true);
+        else
+          return qi::Value(false);
       }
       if (type == "char")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        char res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<char>(value);
       if (type == "int")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        int res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<int>(value);
       if (type == "unsigned int")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        unsigned int res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<unsigned int>(value);
       if (type == "long long")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        long long res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<long long>(value);
       if (type == "unsigned long long")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        unsigned long long res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<unsigned long long>(value);
       if (type == "float")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        float res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<float>(value);
       if (type == "double")
-      {
-        std::stringstream ss;
-        ss << value;
-
-        double res;
-        ss >> res;
-
-        qi::Value v(res);
-        return v;
-      }
+        return typeToValue<double>(value);
       if (type == "string")
-      {
-        qi::Value v(value);
-        return v;
-      }
+        return qi::Value(value);
     }
 
     std::map<std::string, qi::Value> PreferenceMapPrivate::parse(TiXmlNode* parent)
@@ -200,7 +130,6 @@ namespace qi {
       }
 
       TiXmlNode* child;
-      int num = 0;
       std::map<std::string, std::string> attribs;
 
       int t = parent->Type();
@@ -210,7 +139,7 @@ namespace qi {
         break;
 
       case TiXmlNode::ELEMENT:
-        num = parse_attribs(parent->ToElement(), attribs);
+        parse_attribs(parent->ToElement(), attribs);
         break;
 
       case TiXmlNode::COMMENT:
@@ -229,21 +158,23 @@ namespace qi {
         break;
       }
 
-      if (attribs.find("name") != attribs.end() &&
-          attribs.find("type") != attribs.end() &&
-          attribs.find("value") != attribs.end())
+      std::map<std::string, std::string>::iterator name = attribs.find("name");
+      std::map<std::string, std::string>::iterator type = attribs.find("type");
+      std::map<std::string, std::string>::iterator value = attribs.find("value");
+
+      if (name != attribs.end() &&
+          type != attribs.end() &&
+          value != attribs.end())
       {
         qi::ValueMap mValue;
-        qi::Value v = xmlToValue(attribs.find("type")->second,
-                                 attribs.find("value")->second);
+        mValue[name->second] = xmlToValue(type->second, value->second);
 
-        mValue[attribs.find("name")->second] = v;
         return mValue;
       }
-      else if (attribs.find("name") != attribs.end() &&
-               attribs.find("type") != attribs.end())
+      else if (name != attribs.end() &&
+               type != attribs.end())
       {
-        if (attribs.find("type")->second == "array")
+        if (type->second == "array")
         {
           qi::Value v(qi::Value::Map);
           qi::ValueMap mValue;
@@ -255,11 +186,11 @@ namespace qi {
             v.value<qi::ValueMap>()[(mTmpValue.begin())->first] = (mTmpValue.begin())->second;
           }
 
-          mValue[attribs.find("name")->second] = v;
+          mValue[name->second] = v;
           return mValue;
         }
       }
-      else if (attribs.find("name") != attribs.end())
+      else if (name != attribs.end())
       {
         qi::Value v(qi::Value::Map);
         qi::ValueMap mValue;
@@ -271,7 +202,7 @@ namespace qi {
           v.value<qi::ValueMap>()[(mTmpValue.begin())->first] = (mTmpValue.begin())->second;
         }
 
-        mValue[attribs.find("name")->second] = v;
+        mValue[name->second] = v;
         return mValue;
       }
 
@@ -306,32 +237,32 @@ namespace qi {
 
     std::string PreferenceMapPrivate::getType(const qi::Value &value)
     {
-      if (value._private.type == qi::Value::Bool)
+      if (value.type() == qi::Value::Bool)
         return "bool";
-      if (value._private.type == qi::Value::Char)
+      if (value.type() == qi::Value::Char)
         return "char";
-      if (value._private.type == qi::Value::Int32)
+      if (value.type() == qi::Value::Int32)
         return "int";
-      if (value._private.type == qi::Value::UInt32)
+      if (value.type() == qi::Value::UInt32)
         return "unsigned int";
-      if (value._private.type == qi::Value::Int64)
+      if (value.type() == qi::Value::Int64)
         return "long long";
-      if (value._private.type == qi::Value::UInt64)
+      if (value.type() == qi::Value::UInt64)
         return "unsigned long long";
-      if (value._private.type == qi::Value::Float)
+      if (value.type() == qi::Value::Float)
         return "float";
-      if (value._private.type == qi::Value::Double)
+      if (value.type() == qi::Value::Double)
         return "double";
-      if (value._private.type == qi::Value::String)
+      if (value.type() == qi::Value::String)
         return "string";
-      if (value._private.type == qi::Value::Map)
+      if (value.type() == qi::Value::Map)
         return "array";
 
       return "";
     }
 
-    std::string PreferenceMapPrivate::getValue(const std::string &type,
-                                               qi::Value value)
+    std::string PreferenceMapPrivate::getValueToString(const std::string &type,
+                                                       const qi::Value &value)
     {
       std::stringstream ss;
 
@@ -345,25 +276,18 @@ namespace qi {
 
       if (type == "char")
         ss << value.toChar();
-
       if (type == "int")
         ss << value.toInt32();
-
       if (type == "unsigned int")
         ss << value.toUInt32();
-
       if (type == "long long")
         ss << value.toInt64();
-
       if (type == "unsigned long long")
         ss << value.toUInt64();
-
       if (type == "float")
         ss << value.toFloat();
-
       if (type == "double")
         ss << value.toDouble();
-
       if (type == "string")
         ss << value.toString();
 
@@ -375,10 +299,8 @@ namespace qi {
                                         const qi::Value &value,
                                         int indent)
     {
-      qi::Value v = value;
-      qi::ValueMap vm = v.toMap();
-      qi::ValueMap::iterator it = vm.begin();
-      for (; it != vm.end(); ++it)
+      qi::ValueMap vm = value.toMap();
+      for (qi::ValueMap::iterator it = vm.begin(); it != vm.end(); ++it)
       {
         for (int i = 0; i < indent; ++i)
           _ss << "\t";
@@ -399,19 +321,16 @@ namespace qi {
         }
         else
         {
-          _ss << "value=\"" << getValue(type, it->second) << "\" />" << std::endl;
+          _ss << "value=\"" << getValueToString(type, it->second) << "\" />" << std::endl;
         }
-
       }
-      return;
     }
 
-    // FIXME
     void PreferenceMap::save(const std::string &file)
     {
-      std::filebuf fb;
-      fb.open(file.c_str(), std::ios::out);
-      std::ostream _os(&fb);
+      std::ofstream f;
+      f.open(file.c_str());
+      _private->_ss.clear();
 
       qi::ValueMap::iterator it = _private->_values.begin();
       std::string s = it->first;
@@ -421,34 +340,40 @@ namespace qi {
                     << "schemaLocation=" << "\"\" "
                     << "name=\"" << s << "\" >" << std::endl;
 
-      if (it->second._private.type == qi::Value::Map)
+      if (it->second.type() == qi::Value::Map)
         _private->saveKeys("Preference", it->second, 1);
 
       _private->_ss << "</ModulePreference>" << std::endl;
-      _os << _private->_ss.str();
 
-      fb.close();
+      f << _private->_ss.str();
+      f.close();
     }
 
-
-    // get a value
-    const qi::Value &PreferenceMap::get(const std::string &name)
+    std::vector<std::string> getVectorPath(const std::string& path)
     {
       int start = 0;
-      int end = name.find("/");
+      int end = path.find("/");
 
       if (end == 0)
       {
         start++;
-        end = name.find("/", start);
+        end = path.find("/", start);
       }
 
       std::vector<std::string> vect;
-      for (; end != std::string::npos ; start = end + 1, end = name.find("/", start))
-        vect.push_back(name.substr(start, end - start));
+      for (; end != std::string::npos ; start = end + 1, end = path.find("/", start))
+        vect.push_back(path.substr(start, end - start));
 
-      if (start < name.size())
-        vect.push_back(name.substr(start, end));
+      if (start < path.size())
+        vect.push_back(path.substr(start, end));
+
+      return vect;
+    }
+
+    const qi::Value &PreferenceMap::get(const std::string &name)
+    {
+
+      std::vector<std::string> vect = getVectorPath(name);
 
       if (vect.empty())
         return qi::Value();
@@ -462,8 +387,7 @@ namespace qi {
           break;
         else if (i != vect.size() - 1)
         {
-          qi::Value v = (it->second);
-          if (v._private.type == qi::Value::Map)
+          if ((it->second).type() == qi::Value::Map)
           {
             vm = (it->second).value<qi::ValueMap>();
           }
@@ -482,22 +406,7 @@ namespace qi {
     void PreferenceMap::set(const std::string &name,
                             const qi::Value &val)
     {
-      int start = 0;
-      int end = name.find("/");
-      qi::Value v = val;
-
-      if (end == 0)
-      {
-        start++;
-        end = name.find("/", start);
-      }
-
-      std::vector<std::string> vect;
-      for (; end != std::string::npos ; start = end + 1, end = name.find("/", start))
-        vect.push_back(name.substr(start, end - start));
-
-      if (start < name.size())
-        vect.push_back(name.substr(start, end));
+      std::vector<std::string> vect = getVectorPath(name);
 
       if (vect.empty())
         return;
@@ -511,8 +420,7 @@ namespace qi {
           break;
         else if (i != vect.size() - 1)
         {
-          qi::Value v = (it->second);
-          if (v._private.type == qi::Value::Map)
+          if ((it->second).type() == qi::Value::Map)
           {
             vm = &(it->second).value<qi::ValueMap>();
           }
@@ -523,7 +431,7 @@ namespace qi {
         }
         else
         {
-          (*vm)[it->first] = v;
+          (*vm)[it->first] = val;
           break;
         }
       }
@@ -531,24 +439,9 @@ namespace qi {
       return;
     }
 
-    // delete a preference entry
     void PreferenceMap::remove(const std::string &name)
     {
-      int start = 0;
-      int end = name.find("/");
-
-      if (end == 0)
-      {
-        start++;
-        end = name.find("/", start);
-      }
-
-      std::vector<std::string> vect;
-      for (; end != std::string::npos ; start = end + 1, end = name.find("/", start))
-        vect.push_back(name.substr(start, end - start));
-
-      if (start < name.size())
-        vect.push_back(name.substr(start, end));
+      std::vector<std::string> vect = getVectorPath(name);
 
       if (vect.empty())
         return;
@@ -562,8 +455,7 @@ namespace qi {
           break;
         else if (i != vect.size() - 1)
         {
-          qi::Value v = (it->second);
-          if (v._private.type == qi::Value::Map)
+          if ((it->second).type() == qi::Value::Map)
           {
             vm = &(it->second).value<qi::ValueMap>();
           }
@@ -582,9 +474,9 @@ namespace qi {
       return;
     }
 
-    void PreferenceMapPrivate::getKeys(std::vector<std::string> &key,
-                                       qi::Value values,
-                                       const std::string &prefix)
+    void PreferenceMapPrivate::getAllKeys(std::vector<std::string> &key,
+                                          const qi::Value &values,
+                                          const std::string &prefix)
     {
       qi::ValueMap vm = values.toMap();
       qi::ValueMap::iterator it = vm.begin();
@@ -592,50 +484,43 @@ namespace qi {
       {
         std::string s = prefix + "/" + it->first;
         key.push_back(s);
-        if (it->second._private.type == qi::Value::Map)
-          getKeys(key, it->second, s);
+        if (it->second.type() == qi::Value::Map)
+          getAllKeys(key, it->second, s);
       }
       return;
     }
 
-    // find existing keys, which names start with `prefix'
     std::vector<std::string> PreferenceMap::keys(const std::string &prefix)
     {
-      std::vector<std::string> k;
+      std::vector<std::string> allKeys;
+      std::vector<std::string> key;
       qi::ValueMap::iterator it = _private->_values.begin();
-      std::string s = it->first;
-      k.push_back(s);
-      if (it->second._private.type == qi::Value::Map)
-        _private->getKeys(k, it->second, s);
+
+      // Get all keys for the map
+      allKeys.push_back(it->first);
+      if (it->second.type() == qi::Value::Map)
+        _private->getAllKeys(allKeys, it->second, it->first);
+
 
       if (prefix.empty())
-        return k;
+        return allKeys;
       else
       {
-        std::vector<std::string> res;
-        for (int i = 0; i < k.size(); ++i)
+        // Only return keys with prefix
+        for (int i = 0; i < allKeys.size(); ++i)
         {
-          if (prefix[0] == '/')
-          {
-            if (k[i].find(&prefix[1]) == 0)
-            {
-              res.push_back("/" + k[i]);
-            }
-          }
-          else
-          {
-            if (k[i].find(prefix) == 0)
-            {
-              res.push_back(k[i]);
-            }
-          }
+          // Check first char
+          if (prefix[0] == '/' && allKeys[i].find(&prefix[1]) == 0)
+            key.push_back("/" + allKeys[i]);
+          else if (allKeys[i].find(prefix) == 0)
+            key.push_back(allKeys[i]);
         }
-        return res;
       }
+
+      return key;
     }
 
 
-    // return all values
     std::map<std::string, qi::Value> PreferenceMap::values()
     {
       return _private->_values;
