@@ -87,23 +87,23 @@ namespace qi {
 #endif
 
 
-    bool                         toBool();
-    char                         toChar();
-    int                          toInt32();
-    unsigned int                 toUInt32();
-    long long                    toInt64();
-    unsigned long long           toUInt64();
-    float                        toFloat();
-    double                       toDouble();
-    std::string                  toString();
-    std::list<Value>             toList();
-    std::vector<Value>           toVector();
-    std::map<std::string, Value> toMap();
+    bool                         toBool()    const;
+    char                         toChar()    const;
+    int                          toInt32()   const;
+    unsigned int                 toUInt32()  const;
+    long long                    toInt64()   const;
+    unsigned long long           toUInt64()  const;
+    float                        toFloat()   const;
+    double                       toDouble()  const;
+    std::string                  toString()  const;
+    std::list<Value>             toList()    const;
+    std::vector<Value>           toVector()  const;
+    std::map<std::string, Value> toMap()     const;
 #ifdef QI_QT
-    QString                      toQString();
-    QList<Value>                 toQList();
-    QVector<Value>               toQVector();
-    QMap<QString, Value>         toQMap();
+    QString                      toQString() const;
+    QList<Value>                 toQList()   const;
+    QVector<Value>               toQVector() const;
+    QMap<QString, Value>         toQMap()    const;
 #endif
 
     void clear();
