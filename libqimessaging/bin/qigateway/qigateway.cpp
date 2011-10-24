@@ -15,7 +15,6 @@
 #include <qi/log.hpp>
 
 #include <signal.h>
-#include <ucontext.h>
 
 #include "daemon.h"
 #include "gateway.hpp"
@@ -141,7 +140,6 @@ void sig_handler(int signum, siginfo_t* info, void* vctx)
   (void) signum;
   (void) info;
   (void) vctx;
-  /* ucontext_t* ctx = (ucontext_t*)vctx; */
 
   qiLogInfo("qigateway", "Stopping QiMessaging Gateway + Master");
 

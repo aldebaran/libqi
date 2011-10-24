@@ -42,16 +42,6 @@ void Gateway::run()
 
   qiLogInfo("qigateway", "Gateway: Listening on %s:%i", host_, port_);
 
-  //boost::unordered_map<unsigned int, ConnectionInfo*>* conns =
-  //  new boost::unordered_map<unsigned int, ConnectionInfo*>();
-  //ConnectionInfo gConnsInfo;
-  //gConnsInfo.conns = conns;
-  //gConnsInfo.id = 0;
-//
-  //AcceptInfo globalInfo;
-  //globalInfo.ci = &gConnsInfo;
-  //globalInfo.base = base_;
-
   sockEvent_ = event_new(base_, sock_, EV_READ | EV_PERSIST,
       Gateway::accept, (void*)NULL);
 
@@ -74,7 +64,6 @@ void Gateway::launch(const char* host, unsigned short port)
 
 void Gateway::accept(evutil_socket_t sock, short events, void* arg)
 {
-  //AcceptInfo* globalInfo = (AcceptInfo*)arg;
   struct sockaddr addr;
   socklen_t slen = sizeof (addr);
 
@@ -86,15 +75,6 @@ void Gateway::accept(evutil_socket_t sock, short events, void* arg)
     ::close(client);
   else
   {
-//ConnectionInfo* info = new ConnectionInfo();
-//    info->conns = globalInfo->ci->conns;
-//
-//    /* Find an ID */
-//    info->id = globalInfo->ci->id < ULONG_MAX ? ++globalInfo->ci->id : 0;
-//    while (infos->id != ULONG_MAX &&
-//           info->conns->find(info->id) != infos->conns->end())
-//      ++info->id;
-
     /* Init socket, callbacks */
     evutil_make_socket_nonblocking(client);
     struct bufferevent* bev = bufferevent_socket_new(NULL/*globalInfo->base*/,
@@ -118,6 +98,7 @@ void Gateway::accept(evutil_socket_t sock, short events, void* arg)
 
 void Gateway::readcb(struct bufferevent* bev, void* context)
 {
+  (void) context;
   char buf[BUFFER_SIZE];
   size_t len;
 
@@ -131,6 +112,9 @@ void Gateway::readcb(struct bufferevent* bev, void* context)
 void Gateway::eventcb(struct bufferevent* bev,
     short event, void* context)
 {
+  (void) bev;
+  (void) event;
+  (void) context;
 }
 
 void Gateway::init()
