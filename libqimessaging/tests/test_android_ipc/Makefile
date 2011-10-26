@@ -26,9 +26,9 @@
 ##############################
 # Complete this to make it ! #
 ##############################
-NAME 	= binder		# Name of executable file
-SRC	= binder.c bctest.c		# List of *.c
-INCL  	= binder.h		# List of *.h
+NAME 	= simple	
+SRC	= binder.c simple.c 
+INCL  	= binder.h
 
 ################
 # Optional add #
@@ -36,8 +36,8 @@ INCL  	= binder.h		# List of *.h
 DESTDIR ?= /usr/local
 IPATH    = -I.                                  # path of include file
 LPATH    = -L.                                  # path for librairies ...
-OBJOPT   = -O2 -Wall -g                           # option for obj
-EXEOPT   = -O2 -Wall -g                           # option for exe (-lefence ...)
+OBJOPT   = -Wall -g -ggdb                     # option for obj
+EXEOPT   = -Wall -g -ggdb                     # option for exe (-lefence ...)
 
 #######################
 # OPTIONAL PKG-CONFIG #
@@ -74,7 +74,7 @@ MYLDFLAGS = $(LDFLAGS) $(EXEOPT) $(LPATH) $(PKG_LIBS)   $(GENDEP)
 # Basic Compile Instructions #
 ##############################
 
-all:	$(NAME) svcmgr
+all:	$(NAME) server_simple
 
 $(NAME): $(OBJS) $(SRC) $(INCL)
 	$(CXX) $(OBJS) $(MYLDFLAGS) -o $(NAME)
@@ -82,6 +82,9 @@ $(NAME): $(OBJS) $(SRC) $(INCL)
 
 svcmgr: service_manager.o
 	$(CXX) service_manager.o binder.o $(MYLDFLAGS) -o svcmgr
+
+server_simple: simple_server.o
+	$(CXX) simple_server.o binder.o $(MYLDFLAGS) -o server_simple
 
 depend:
 	$(CXX) $(IPATH) -MM $(SRC)

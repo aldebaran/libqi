@@ -27,11 +27,12 @@ void hexdump(void *_data, unsigned len)
     unsigned char *data = _data;
     unsigned count;
 
-    for (count = 0; count < len; count++) {
-        if ((count & 15) == 0)
+    for (count = 0; count < len; count++)
+    {
+        if ((count % 0x10) == 0)
             fprintf(stderr,"%04x:", count);
-        fprintf(stderr," %02x %c", *data,
-                (*data < 32) || (*data > 126) ? '.' : *data);
+        fprintf(stderr," %c",
+                (*data < 32) || (*data > 126) ? ' ' : *data);
         data++;
         if ((count & 15) == 15)
             fprintf(stderr,"\n");

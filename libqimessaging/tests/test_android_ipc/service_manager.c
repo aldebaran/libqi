@@ -229,7 +229,7 @@ int svcmgr_handler(struct binder_state *bs,
     switch(txn->code) {
     case SVC_MGR_GET_SERVICE:
     case SVC_MGR_CHECK_SERVICE:
-      //printf("ici baba\n");
+        printf("CHECK\n");
         bio_put_string16(reply, "bite");
         break;
         s = bio_get_string16(msg, &len);
@@ -242,26 +242,38 @@ int svcmgr_handler(struct binder_state *bs,
 
     case SVC_MGR_ADD_SERVICE:
         s = bio_get_string16(msg, &len);
+        printf("ADD: %s\n", s);
         ptr = bio_get_ref(msg);
         if (do_add_service(bs, s, len, ptr, txn->sender_euid))
             return -1;
         break;
 
     case SVC_MGR_LIST_SERVICES: {
+        printf("LIST\n");
         unsigned n = bio_get_uint32(msg);
+        printf("==>%d\n", n);
 
         si = svclist;
-        while ((n-- > 0) && si)
+        while (si)
+        {
+            printf("name=%s\n", si->name);
             si = si->next;
-        if (si) {
+        }
+
+        if (si)
+        {
             bio_put_string16(reply, si->name);
             return 0;
         }
         return -1;
     }
     default:
-        LOGE("unknown code %d\n", txn->code);
-        return -1;
+				s = bio_get_string16(msg, &len);
+				int x = 0;
+				for (; x < len; printf("%c", *(s+x++)));
+				printf("\n");
+				bio_put_uint32(reply, 123456);
+				return 0;
     }
 
     bio_put_uint32(reply, 0);
