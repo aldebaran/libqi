@@ -1,3 +1,8 @@
+/**
+ * This is a simple QiMessaging example
+ */
+
+#include <iostream>
 #include <qimessaging/publisher.hpp>
 
 int main()
