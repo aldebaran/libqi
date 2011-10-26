@@ -154,8 +154,7 @@ namespace qi {
       size_t       bufSize;
 
       std::string  avar(var);
-      std::wstring wvar;
-      std::copy(avar.begin(), avar.end(), std::back_inserter(wvar));
+      std::wstring wvar = boost::filesystem::path(avar).wstring();
 
      #ifdef _MSC_VER
       wchar_t     *envDir = NULL;
@@ -188,12 +187,10 @@ namespace qi {
 
     int setenv(const char *var, const char *value) {
       std::string  avar(var);
-      std::wstring wvar;
-      std::copy(avar.begin(), avar.end(), std::back_inserter(wvar));
+      std::wstring wvar = boost::filesystem::path(avar).wstring();
 
       std::string  avalue(value);
-      std::wstring wvalue;
-      std::copy(avalue.begin(), avalue.end(), std::back_inserter(wvalue));
+      std::wstring wvalue = boost::filesystem::path(avalue).wstring();
 
       return _wputenv_s(wvar.c_str(), wvalue.c_str());
     }
