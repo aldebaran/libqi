@@ -151,26 +151,51 @@ namespace qi {
     }
 
     std::string getenv(const char *var) {
-     #ifdef _MSC_VER
-      char        *envDir = NULL;
       size_t       bufSize;
-      _dupenv_s(&envDir, &bufSize, var);
+
+      std::string  avar(var);
+      std::wstring wvar;
+      std::copy(avar.begin(), avar.end(), std::back_inserter(wvar));
+
+     #ifdef _MSC_VER
+      wchar_t     *envDir = NULL;
+      _wdupenv_s(&envDir, &bufSize, wvar.c_str());
       if (envDir == NULL)
         return "";
-      std::string ret(envDir);
+
+      boost::filesystem::path dest(envDir, qi::unicodeFacet());
+      std::string ret(dest.string(qi::unicodeFacet()).c_str());
       free(envDir);
       return ret;
-     #else
-      char *res = ::getenv(var);
-      if (res == NULL)
+
+
+
+    #else
+      _wgetenv_s(&bufSize, NULL, 0,  wvar.c_str());
+
+      wchar_t *envDir = (wchar_t *) malloc(bufSize * sizeof(wchar_t));
+      _wgetenv_s(&bufSize, envDir, bufSize, wvar.c_str());
+
+      if (envDir == NULL)
         return "";
-      return std::string(res);
+
+      boost::filesystem::path dest(envDir, qi::unicodeFacet());
+      std::string ret(dest.string(qi::unicodeFacet()).c_str());
+      free(envDir);
+      return ret;
      #endif
     }
 
     int setenv(const char *var, const char *value) {
-      std::string env = std::string(var) + std::string("=") + std::string(value);
-      return _putenv(env.c_str());
+      std::string  avar(var);
+      std::wstring wvar;
+      std::copy(avar.begin(), avar.end(), std::back_inserter(wvar));
+
+      std::string  avalue(value);
+      std::wstring wvalue;
+      std::copy(avalue.begin(), avalue.end(), std::back_inserter(wvalue));
+
+      return _wputenv_s(wvar.c_str(), wvalue.c_str());
     }
 
     void sleep(unsigned int seconds) {
