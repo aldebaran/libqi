@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <map>
+#include <climits>
 #include <qipreference/preference.hpp>
 
 
@@ -27,25 +28,25 @@ TEST(qipreference, basicValue)
 
   it = vm.find("int value");
   if (it != vm.end())
-    EXPECT_EQ(-2147483648, (it->second).toInt32());
+    EXPECT_EQ(-2147483647, (it->second).toInt32());
   else
     std::cerr << "Error cannot find 'int value' value!" << std::endl;
 
   it = vm.find("uint value");
   if (it != vm.end())
-    EXPECT_EQ(4294967295, (it->second).toUInt32());
+    EXPECT_EQ(2147483647, (it->second).toUInt32());
   else
     std::cerr << "Error cannot find 'uint value' value!" << std::endl;
 
   it = vm.find("long long value");
   if (it != vm.end())
-    EXPECT_EQ(-9223372036854775808, (it->second).toInt64());
+    EXPECT_EQ(-2147483647, (it->second).toInt64());
   else
     std::cerr << "Error cannot find 'long long value' value!" << std::endl;
 
   it = vm.find("ulong long value");
   if (it != vm.end())
-    EXPECT_EQ(18446744073709551615, (it->second).toUInt64());
+    EXPECT_EQ(2147483647, (it->second).toUInt64());
   else
     std::cerr << "Error cannot find 'ulong long value' value!" << std::endl;
 
@@ -97,25 +98,25 @@ TEST(qipreference, simpleArray)
 
     it1 = vm1.find("int value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-2147483648, (it1->second).toInt32());
+      EXPECT_EQ(-2147483647, (it1->second).toInt32());
     else
       std::cerr << "Error cannot find 'int value' value!" << std::endl;
 
     it1 = vm1.find("uint value");
     if (it1 != vm1.end())
-      EXPECT_EQ(4294967295, (it1->second).toUInt32());
+      EXPECT_EQ(2147483647, (it1->second).toUInt32());
     else
       std::cerr << "Error cannot find 'uint value' value!" << std::endl;
 
     it1 = vm1.find("long long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-9223372036854775808, (it1->second).toInt64());
+      EXPECT_EQ(-2147483647, (it1->second).toInt64());
     else
       std::cerr << "Error cannot find 'long long value' value!" << std::endl;
 
     it1 = vm1.find("ulong long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(18446744073709551615, (it1->second).toUInt64());
+      EXPECT_EQ(2147483647, (it1->second).toUInt64());
     else
       std::cerr << "Error cannot find 'ulong long value' value!" << std::endl;
 
@@ -172,25 +173,25 @@ TEST(qipreference, advanceValue)
 
     it1 = vm1.find("int value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-2147483648, (it1->second).toInt32());
+      EXPECT_EQ(-2147483647, (it1->second).toInt32());
     else
       std::cerr << "Error cannot find 'int value' value!" << std::endl;
 
     it1 = vm1.find("uint value");
     if (it1 != vm1.end())
-      EXPECT_EQ(4294967295, (it1->second).toUInt32());
+      EXPECT_EQ(2147483647, (it1->second).toUInt32());
     else
       std::cerr << "Error cannot find 'uint value' value!" << std::endl;
 
     it1 = vm1.find("long long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-9223372036854775808, (it1->second).toInt64());
+      EXPECT_EQ(-2147483647, (it1->second).toInt64());
     else
       std::cerr << "Error cannot find 'long long value' value!" << std::endl;
 
     it1 = vm1.find("ulong long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(18446744073709551615, (it1->second).toUInt64());
+      EXPECT_EQ(2147483647, (it1->second).toUInt64());
     else
       std::cerr << "Error cannot find 'ulong long value' value!" << std::endl;
 
@@ -237,25 +238,25 @@ TEST(qipreference, advanceValue)
 
     it1 = vm1.find("int value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-2147483648, (it1->second).toInt32());
+      EXPECT_EQ(-2147483647, (it1->second).toInt32());
     else
       std::cerr << "Error cannot find 'int value' value!" << std::endl;
 
     it1 = vm1.find("uint value");
     if (it1 != vm1.end())
-      EXPECT_EQ(4294967295, (it1->second).toUInt32());
+      EXPECT_EQ(2147483647, (it1->second).toUInt32());
     else
       std::cerr << "Error cannot find 'uint value' value!" << std::endl;
 
     it1 = vm1.find("long long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(-9223372036854775808, (it1->second).toInt64());
+      EXPECT_EQ(-2147483647, (it1->second).toInt64());
     else
       std::cerr << "Error cannot find 'long long value' value!" << std::endl;
 
     it1 = vm1.find("ulong long value");
     if (it1 != vm1.end())
-      EXPECT_EQ(18446744073709551615, (it1->second).toUInt64());
+      EXPECT_EQ(2147483647, (it1->second).toUInt64());
     else
       std::cerr << "Error cannot find 'ulong long value' value!" << std::endl;
 
@@ -329,16 +330,16 @@ TEST(qipreference, getAdvanceValue)
   EXPECT_EQ('d', vi.toChar());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 2/int value/");
-  EXPECT_EQ(-2147483648, vi.toInt32());
+  EXPECT_EQ(-2147483647, vi.toInt32());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 2/uint value/");
-  EXPECT_EQ(4294967295, vi.toUInt32());
+  EXPECT_EQ(2147483647, vi.toUInt32());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 2/long long value/");
-  EXPECT_EQ(-9223372036854775808, vi.toInt64());
+  EXPECT_EQ(-2147483647, vi.toInt64());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 2/ulong long value/");
-  EXPECT_EQ(18446744073709551615, vi.toUInt64());
+  EXPECT_EQ(2147483647, vi.toUInt64());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 2/string value/");
   EXPECT_EQ("test string", vi.toString());
@@ -351,16 +352,16 @@ TEST(qipreference, getAdvanceValue)
   EXPECT_EQ('d', vi.toChar());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 1/int value/");
-  EXPECT_EQ(-2147483648, vi.toInt32());
+  EXPECT_EQ(-2147483647, vi.toInt32());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 1/uint value/");
-  EXPECT_EQ(4294967295, vi.toUInt32());
+  EXPECT_EQ(2147483647, vi.toUInt32());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 1/long long value/");
-  EXPECT_EQ(-9223372036854775808, vi.toInt64());
+  EXPECT_EQ(-2147483647, vi.toInt64());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 1/ulong long value/");
-  EXPECT_EQ(18446744073709551615, vi.toUInt64());
+  EXPECT_EQ(2147483647, vi.toUInt64());
 
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/simple array 1/string value/");
   EXPECT_EQ("test string", vi.toString());
@@ -398,7 +399,7 @@ TEST(qipreference, setValue)
   pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/basicValue.xml");
 
   qi::Value vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
-  EXPECT_EQ(-2147483648, vi.toInt32());
+  EXPECT_EQ(-2147483647, vi.toInt32());
 
   int i = 42;
   qi::Value v(i);
@@ -424,7 +425,7 @@ TEST(qipreference, removeValue)
   pm.load("/home/hcuche/src/qi/qimessaging/libqimessaging/tests/test_preference/xml_examples/basicValue.xml");
 
   qi::Value vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");
-  EXPECT_EQ(-2147483648, vi.toInt32());
+  EXPECT_EQ(-2147483647, vi.toInt32());
 
   pm.remove("/aldebaran-robotics.com@ALTextToSpeech/int value/");
   vi = pm.get("/aldebaran-robotics.com@ALTextToSpeech/int value/");

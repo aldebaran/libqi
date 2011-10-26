@@ -4,24 +4,24 @@
   <Preference type="array" name="simple array 1" >
     <Preference type="bool"               name="bool value"       value="true" />
     <Preference type="char"               name="char value"       value="d" />
-    <Preference type="int"                name="int value"        value="-2147483648"  />
-    <Preference type="unsigned int"       name="uint value"       value="4294967295" />
-    <Preference type="long long"          name="long long value"  value="-9223372036854775808" />
-    <Preference type="unsigned long long" name="ulong long value" value="18446744073709551615"  />
+    <Preference type="int"                name="int value"        value="-2147483647"  />
+    <Preference type="unsigned int"       name="uint value"       value="2147483647" />
+    <Preference type="long long"          name="long long value"  value="-2147483647" />
+    <Preference type="unsigned long long" name="ulong long value" value="2147483647"  />
     <Preference type="float"              name="float value"      value="-1.42"  />
-    <Preference type="double"             name="double value"     value="-170141183460469231731687303715884105728" />
+    <Preference type="double"             name="double value"     value="-2147483647" />
     <Preference type="string"             name="string value"     value="test string" />
   </Preference>
   <Preference name="simple array 2" type="array">
-    <Preference type="bool"               value="true"                                      name="bool value"       />
-    <Preference type="char"               value="d"                                         name="char value"       />
-    <Preference type="int"                value="-2147483648"                               name="int value"       />
-    <Preference type="unsigned int"       value="4294967295"                                name="uint value"       />
-    <Preference type="long long"          value="-9223372036854775808"                      name="long long value"  />
-    <Preference type="unsigned long long" value="18446744073709551615"                      name="ulong long value" />
-    <Preference type="float"              value="-1.42"                                     name="float value"      />
-    <Preference type="double"             value="-170141183460469231731687303715884105728"  name="double value"     />
-    <Preference type="string"             value="test string"                               name="string value"     />
+    <Preference type="bool"               value="true"        name="bool value"       />
+    <Preference type="char"               value="d"           name="char value"       />
+    <Preference type="int"                value="-2147483647" name="int value"       />
+    <Preference type="unsigned int"       value="2147483647"  name="uint value"       />
+    <Preference type="long long"          value="-2147483647" name="long long value"  />
+    <Preference type="unsigned long long" value="2147483647"  name="ulong long value" />
+    <Preference type="float"              value="-1.42"       name="float value"      />
+    <Preference type="double"             value="-2147483647" name="double value"     />
+    <Preference type="string"             value="test string" name="string value"     />
   </Preference>
   <Preference type="string" name="after array" value="This is a string" />
 </ModulePreference>
