@@ -49,6 +49,15 @@ bool isValidAddress(const std::string& userHostString,
   std::vector<std::string> parts;
   boost::split(parts, userHostString, boost::is_any_of(":/"));
 
+  std::vector<std::string>::iterator i = parts.begin();
+  while (i != parts.end())
+  {
+    if (i->empty())
+      parts.erase(i);
+    else
+      ++i;
+  }
+
   if (parts.size() <= 2)
     parts.insert(parts.begin(), "tcp");
 
