@@ -8,15 +8,18 @@
 
 project (QiGateway)
 
-qi_create_bin(qi-gateway
-  qigateway.cpp
-  gateway.cpp gateway.hpp
-  master.cpp master.hpp
-  daemon.cpp daemon.h
-  DEPENDS
-    QI
-    QIMESSAGING
-    BOOST_PROGRAM_OPTIONS
-)
+qi_add_optional_package(LIBEVENT)
 
-target_link_libraries(qi-gateway event_core)
+if (WITH_LIBEVENT)
+  qi_create_bin(qi-gateway
+    qigateway.cpp
+    gateway.cpp gateway.hpp
+    master.cpp master.hpp
+    daemon.cpp daemon.h
+    DEPENDS
+      QI
+      QIMESSAGING
+      BOOST_PROGRAM_OPTIONS
+      LIBEVENT
+  )
+endif ()
