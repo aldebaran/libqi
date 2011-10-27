@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "src/messaging/network/ip_address.hpp"
+
 namespace qi {
   namespace detail {
 

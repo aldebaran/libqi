@@ -7,6 +7,7 @@
 */
 
 #include <qi/log.hpp>
+#include "src/messaging/network/ip_address.hpp"
 #include "src/messaging/master_client.hpp"
 #include <qimessaging/serialization.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
@@ -40,15 +41,18 @@ namespace qi {
     {
     }
 
-    void MasterClient::connect(const std::string masterAddress) {
+    void MasterClient::connect(const std::string masterAddress)
+    {
       _masterAddress = masterAddress;
       std::pair<std::string, int> masterEndpointAndPort;
-      if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort)) {
+      if (!qi::detail::validateMasterEndpoint(_masterAddress, masterEndpointAndPort))
+      {
         _isInitialized = false;
         qiLogError("qimessaging") << "Initialized with invalid master address: \""
             << _masterAddress << "\" All calls will fail." << std::endl;
         return;
       }
+
       _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
       if (! _isInitialized ) {
         qiLogError("qimessaging") << "Could not connect to master "

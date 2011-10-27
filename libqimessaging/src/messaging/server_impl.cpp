@@ -41,9 +41,9 @@ namespace qi {
 
     void ServerImpl::connect(const std::string &masterAddress)
     {
-      //TODO
       std::pair<std::string, int> masterEndpointAndPort;
-      if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort)) {
+      if (!qi::detail::validateMasterEndpoint(masterAddress, masterEndpointAndPort))
+      {
         _isInitialized = false;
         qiLogError("qimessaging") << "\"" << _endpointContext.name << "\" initialized with invalid master "
           "address: \"" << masterAddress << "\" All calls will fail."
