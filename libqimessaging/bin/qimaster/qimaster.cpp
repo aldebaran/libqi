@@ -6,7 +6,6 @@
 */
 
 #include <iostream>
-#include <cstdlib>
 #include <qimessaging/master.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>

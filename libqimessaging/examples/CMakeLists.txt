@@ -8,7 +8,14 @@
 
 
 function(_qimessaging_create_example name)
-  qi_create_bin(${name} ${name}.cpp NO_INSTALL DEPENDS QI QIMESSAGING)
+  qi_create_bin(${name}
+    ${name}.cpp
+    NO_INSTALL
+    DEPENDS
+      QI
+      QIMESSAGING
+      BOOST_PROGRAM_OPTIONS
+  )
   set_target_properties(${name}
     PROPERTIES
       FOLDER "examples")
