@@ -63,6 +63,11 @@ qi_submodule_add("qi-messaging-src"
                  src/transport/zmq/zmq_subscriber.hpp
                  IF WITH_ZEROMQ
                  DEPENDS ZEROMQ)
+qi_submodule_add("qi-messaging-src"
+                 src/transport/ssh/ssh_client_backend.cpp
+                 src/transport/ssh/ssh_client_backend.hpp
+                 #IF WITH_QISSH
+                 DEPENDS QISSH)
 qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
 
 qi_submodule_create("qi-signature"       "qimessaging/signature/*.h[px][px]" "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"

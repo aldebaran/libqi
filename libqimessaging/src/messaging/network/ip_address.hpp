@@ -28,9 +28,14 @@ namespace qi {
 
     std::vector<std::string> getIPAddresses();
 
-    bool isValidAddress(const std::string& userHostString, Address& hostAndPort);
+    bool splitAddress(const std::string& userHostString, Address& hostAndPort,
+        std::vector<std::string>& parts);
 
-    bool isValidHostAndPort(const std::string& literalHostName, std::string& numericHostName);
+    bool isValidAddress(const std::string& userHostString,
+        Address& hostAndPort);
+
+    bool isValidHostAndPort(const std::string& literalHostName,
+        std::string& numericHostName);
   }
 }
 #endif  // _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
