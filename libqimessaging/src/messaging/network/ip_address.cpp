@@ -40,13 +40,12 @@ std::string getPrimaryPublicIPAddress()
   return "";
 }
 
-bool isValidAddress(const std::string& userHostString,
-  Address& outAddress)
+bool splitAddress(const std::string& userHostString,
+    Address& outAddress, std::vector<std::string>& parts)
 {
   if (userHostString.empty())
     return false;
 
-  std::vector<std::string> parts;
   boost::split(parts, userHostString, boost::is_any_of(":/"));
 
   std::vector<std::string>::iterator i = parts.begin();
@@ -77,8 +76,19 @@ bool isValidAddress(const std::string& userHostString,
   else
   {
     outAddress.port = 0;
-    parts.push_back("0"); // hmmm
+    parts.push_back("0"); // Hmm... shameless hack!
   }
+
+  return true;
+}
+
+bool isValidAddress(const std::string& userHostString,
+    Address& outAddress)
+{
+  std::vector<std::string> parts;
+
+  if (!splitAddress(userHostString, outAddress, parts))
+    return false;
 
   return isValidHostAndPort(outAddress.address, parts[2]);
 }
