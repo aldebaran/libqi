@@ -23,6 +23,7 @@ set(H qi/config.hpp
       qi/log/consoleloghandler.hpp
       qi/log/fileloghandler.hpp
       qi/log/headfileloghandler.hpp
+      qi/log/tailfileloghandler.hpp
       )
 
 set(C src/dlfcn.cpp
@@ -36,6 +37,7 @@ set(C src/dlfcn.cpp
       src/consoleloghandler.cpp
       src/fileloghandler.cpp
       src/headfileloghandler.cpp
+      src/tailfileloghandler.cpp
       src/locale-light.cpp
       )
 
