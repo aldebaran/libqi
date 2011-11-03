@@ -2,14 +2,22 @@ Architecture
 ============
 
 Goals:
- - solid in the long term
- - unified architecture for naoqi and choregraphe
- - APIs that can be maitained for a long time
+ - solid/stable in the long term
+ - unified architecture for NAOqi and Choregraphe
+ - APIs that can be maintained for a long time
+ - general enough to allow high level construct we dont need at the moment
+ - fast prototyping: separated components (classes, widgets, ...)
+
+High level goals:
+ - be connected (to smartphone, tablet, computer, ... from everywhere)
+ - be generic : basic bulding block could be used everywhere
+ - be reusable : support NAO, Romeo, whatever...
+ - be smart
+ - be secure
 
 Communications
 --------------
 
-Multiples communications vectors:
 Multiple way to connect to the robot:
 
  - secure : default local network connection. Choregraphe, etc...
@@ -18,7 +26,7 @@ Multiple way to connect to the robot:
  - tcp : choregraphe, "realtime" apps
    disable by default. Could be enable to allow direct not secure tcp access to the robot. This should improve performance a little compared to a secure connection. This extra performance may be needed for very specific applications.
 
- - using a thirdparty : allow to communicate with a NAO from everywhere once both you and NAO are connected to the Internet.
+ - using a thirdparty server: allow to communicate with a NAO from everywhere once both you and NAO are connected to the Internet.
    may be used by most remote application that could run everywhere. For example application on phones, tablets, laptops..
 
 It would be great to have a unified way to connect to the robot, that would allow to connect all our sotware using (fast) secure connection when local and xmpp otherwize.
@@ -27,36 +35,22 @@ ROS/YARP/..: other robotics framework can allow to connect to NAO too. If bridge
 
 :ref:`connectivity`
 
-
 Applications
 ------------
 
-Many types of application, should be easy to distribute application for each supported platform. (Windows, Linux, OSX, NAO, ...)
+The whole point of the NAOqi framework is to write applications. Application can run on the robot or be remote. We support both workflow.
 
- - embedded application: Application loaded on the robot. They are made of services and behaviors.
+see :ref:`application`.
 
- - remote application: application that interact with the robot. Could be using a thirdparty server to connect to the robot, or using a direct connection to the robot.
-   They can be architectured like the client want, because they do not need to be integrated/launched by NAO's life.
-   This include scripts.
+Security
+--------
 
-see :ref:`service` and :ref:`behavior`.
+Security is an integral part of our platform, we dont want robot to become evil,
+Remote Application must use a sessionId to authenticate on the robot. This sessionId should be configured on the robot, could be revoked at any time.
+
+see :ref:`security`
 
 
-Applications components
------------------------
-
-Behavior:
-Most behaviors are asynchronous, basically a behavior is sequence of action. It's a graph of connected objects. Object can receive and send events. They react on event by doing computation and sending other events. It's the concept behind choregraphe boxes. It's also how one would like to write behaviors in others languages. Could be integrated in the NAO's life.
-
-Service:
-Service expose functionnality to behaviors and outside applications. They respond to request and publish data. They may not be multithreaded if they only have one task to do. A task queue could be added to enqueue orders.
-
-Scripts:
-Should be easy to write. It's mostly for testing purpose. Motion want to test the new walk, someone want to test a specific API.
-
-We should concentrate on writing behaviors instead of scripts, it's what we will have the most, and it's integrated with NAO's life.
-
-It should be easy to write service too.
 
 
 
