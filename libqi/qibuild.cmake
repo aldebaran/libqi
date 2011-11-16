@@ -6,13 +6,13 @@
 # This file is part of the qibuild project    #
 ###############################################
 
-set(QIBUILD_BOOTSTRAP_VERSION 9)
+set(QIBUILD_BOOTSTRAP_VERSION 10)
 
 # Someone used qibuild and generated a dependencies.cmake
 # file (for the dependencies and where to find qibuild/cmake file),
 # so just use it.
-if(EXISTS ${CMAKE_BINARY_DIR}/dependencies.cmake)
-  include(${CMAKE_BINARY_DIR}/dependencies.cmake)
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake)
+  include(${CMAKE_CURRENT_BINARY_DIR}/dependencies.cmake)
 endif()
 
 # Someone called cmake with a toolchain file that is
