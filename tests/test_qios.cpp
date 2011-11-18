@@ -28,7 +28,7 @@ protected:
   void TearDown() {
     if(boost::filesystem::exists(a_newPath)) {
       try {
-        boost::filesystem::remove(a_newPath);
+        boost::filesystem::remove_all(a_newPath.parent_path());
       } catch (std::exception &) {
       }
     }
