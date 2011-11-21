@@ -40,7 +40,6 @@ int svcmgr_handler(struct binder_state *bs,
   if (binder_call(bs, msg, reply, BINDER_SERVICE_MANAGER, 0))
     std::cerr << "Could not send reply: binder_call failed\n" << std::endl;
 
-
   return 0;
 }
 
