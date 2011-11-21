@@ -15,6 +15,7 @@ enable_testing()
 include(CMakeDependentOption)
 find_package(ZEROMQ)
 find_package(PYTHON)
+qi_add_optional_package(QISSH)
 
 cmake_dependent_option(WITH_PYTHON   "Build python bindings" OFF "PYTHON_FOUND" ON)
 cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
@@ -67,7 +68,9 @@ qi_submodule_add("qi-messaging-src"
 qi_submodule_add("qi-messaging-src"
                  src/transport/ssh/ssh_client_backend.cpp
                  src/transport/ssh/ssh_client_backend.hpp
-                 #IF WITH_QISSH
+                 #src/transport/ssh/ssh_poll_client.cpp
+                 #src/transport/ssh/ssh_poll_client.hpp
+                 IF WITH_QISSH
                  DEPENDS QISSH)
 
 # Needs the Binder Kernel driver

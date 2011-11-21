@@ -16,8 +16,10 @@ namespace qi {
 namespace transport {
 namespace detail {
 
-SSHClientBackend::SSHClientBackend(const std::string &serverAddress)
-  : ClientBackend(serverAddress)
+//SSHClientBackend::SSHClientBackend(const std::string &serverAddress)
+SSHClientBackend::SSHClientBackend(const std::string &serverAddress, zmq::context_t& ctx)
+  : ClientBackend(serverAddress),
+    _zcontext(ctx)
 {
   connect();
 }
@@ -55,7 +57,10 @@ void SSHClientBackend::connect()
 
 void SSHClientBackend::send(const std::string &tosend, std::string &result)
 {
+  //Message msg;
+
   /* TODO: send message */
+  _ssh.writeRemote(tosend.c_str(), tosend.size());
 
   // we leave the possibility to timeout, pollRecv will throw and avoid the call to recv
   //_poller.recv(&msg, 60 * 1000 * 1000);

@@ -13,6 +13,7 @@
 #include "src/transport/client_backend.hpp"
 
 #include <qissh/tunnel.hpp>
+#include <zmq.hpp>
 
 namespace qi {
 namespace transport {
@@ -25,10 +26,11 @@ public:
    * Creates a ZMQClientBackend for a server
    *
    * \param serverAddress The protocol-qualified address of the server
-   * e.g. ipc:///tmp/naoqi/paf or tcp://127.0.0.1:5555
+   *                      e.g. ipc:///tmp/naoqi/paf or tcp://127.0.0.1:5555
    * \param context A zmq context
    */
-  explicit SSHClientBackend(const std::string &servername);
+  //explicit SSHClientBackend(const std::string &serverAddress);
+  SSHClientBackend(const std::string &serverAddress, zmq::context_t &context);
 
   /**
    * Sends data
@@ -47,6 +49,7 @@ protected:
   void connect();
 
 protected:
+  zmq::context_t& _zcontext; // Unused
   qi::ssh::Tunnel _ssh;
 };
 

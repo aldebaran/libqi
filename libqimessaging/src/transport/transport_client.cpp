@@ -11,6 +11,7 @@
 #include <qimessaging/transport/buffer.hpp>
 #include "src/transport/client_backend.hpp"
 #include "src/transport/zmq/zmq_client_backend.hpp"
+#include "src/transport/ssh/ssh_client_backend.hpp"
 #include <qi/log.hpp>
 
 namespace qi {
