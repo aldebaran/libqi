@@ -3,7 +3,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
 #include <qimessaging/transport/transport_client.hpp>
@@ -11,7 +11,7 @@
 #include <qimessaging/transport/buffer.hpp>
 #include "src/transport/client_backend.hpp"
 #include "src/transport/zmq/zmq_client_backend.hpp"
-#include "src/transport/ssh/ssh_client_backend.hpp"
+//#include "src/transport/ssh/ssh_client_backend.hpp"
 #include <qi/log.hpp>
 
 namespace qi {

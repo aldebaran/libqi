@@ -22,6 +22,8 @@ cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
 cmake_dependent_option(WITH_PROTOBUF "Use protobuf" OFF "PROTOBUF_FOUND" OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
+option(WITH_BINDER   "Support Android IPC binder" OFF)
+option(WITH_SSH      "Support libssh" OFF)
 
 
 project(libqimessaging)
@@ -82,6 +84,7 @@ qi_submodule_add("qi-messaging-src"
                  src/transport/binder/binder_client_backend.hpp
                  src/transport/binder/binder_server_backend.cpp
                  src/transport/binder/binder_server_backend.hpp
+                 IF WITH_BINDER
                 )
 
 qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
