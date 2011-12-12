@@ -112,7 +112,7 @@ namespace qi
 
   std::string Project::projectPath() const throw()
   {
-    return fImpl->projectPath.native();
+    return fImpl->projectPath.generic_string();
   }
 
   Project* Project::create(
@@ -207,7 +207,7 @@ namespace qi
       bfs::path lPath = destPath;
       if(!bfs::exists(lPath.parent_path()))
       {
-        throw PathNotFound(lPath.native());
+        throw PathNotFound(lPath.generic_string());
       }
       bfs::create_directory(destPath);
       destExisted = false;
@@ -336,7 +336,7 @@ namespace qi
       format = ArchiveFormat_Directory;
     else if (bfs::is_regular_file(projectPath))
     {
-      string extension = bfs::path(projectPath).extension().native();
+      string extension = bfs::path(projectPath).extension().generic_string();
       std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
       if(extension == ".tar")
         format = ArchiveFormat_TAR;
@@ -355,7 +355,7 @@ namespace qi
       else if(extension == ".gz")
       {
         bfs::path unzipped = bfs::path(projectPath).parent_path() / bfs::path(projectPath).stem();
-        string extension2 = unzipped.extension().native();
+        string extension2 = unzipped.extension().generic_string();
         std::transform(extension2.begin(), extension2.end(), extension2.begin(), ::tolower);
         if (extension2==".tar")
           format = ArchiveFormat_TAR_GZ;
@@ -452,7 +452,7 @@ namespace qi
     // Check file existence
     if(!bfs::exists(metaPath))
     {
-      throw Project::PathNotFound(metaPath.native());
+      throw Project::PathNotFound(metaPath.generic_string());
     }
 
     // Read file content
@@ -470,7 +470,7 @@ namespace qi
     }
     else
     {
-      throw ioreaderror(metaPath.native());
+      throw ioreaderror(metaPath.generic_string());
     }
 
     // Parse file content
@@ -504,12 +504,12 @@ namespace qi
   {
     if(!bfs::exists(metaPath.parent_path()))
     {
-      throw Project::PathNotFound(metaPath.native());
+      throw Project::PathNotFound(metaPath.generic_string());
     }
 
     FILE* metaDataFile = qi::os::fopen(metaPath.c_str(), "wb");
     if(!metaDataFile)
-      throw iowriteerror(metaPath.native());
+      throw iowriteerror(metaPath.generic_string());
 
     for(map<string, string>::const_iterator it = metadata.begin();
         it != metadata.end(); ++it)
@@ -540,7 +540,7 @@ namespace qi
     if (openResult != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open archive " << destPath.generic_string() << ": " << archive_error_string(a);
       archive_write_finish(a);
       throw iowriteerror(msg.str());
     }
@@ -563,7 +563,7 @@ namespace qi
         break;
   #endif
       default:
-        throw Project::UnsupportedFormat(destPath.native(), format);
+        throw Project::UnsupportedFormat(destPath.generic_string(), format);
     }
 
     // set compression
@@ -581,7 +581,7 @@ namespace qi
         break;
   #endif
       default:
-        throw Project::UnsupportedFormat(destPath.native(), format);
+        throw Project::UnsupportedFormat(destPath.generic_string(), format);
     }
 
     // open archive for writing
@@ -589,7 +589,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open archive " << destPath.generic_string() << ": " << archive_error_string(a);
       archive_write_finish(a);
       throw iowriteerror(msg.str());
     }
@@ -606,9 +606,9 @@ namespace qi
       {
         int err = errno;
         stringstream msg;
-        msg << "could not open file " << lPath.native() << " for read while saving project: " << strerror(err);
+        msg << "could not open file " << lPath.generic_string() << " for read while saving project: " << strerror(err);
         archive_write_finish(a);
-        throw ioreaderror(lPath.native() + ": " + msg.str());
+        throw ioreaderror(lPath.generic_string() + ": " + msg.str());
       }
 
       // create archive entry
@@ -656,7 +656,7 @@ namespace qi
       {
         int err = errno;
         stringstream msg;
-        msg << "error while reading entry " << lPath.native() << " file: " << strerror(err);
+        msg << "error while reading entry " << lPath.generic_string() << " file: " << strerror(err);
         fclose(fentry);
         archive_entry_free(entry);
         archive_write_finish(a);
@@ -684,7 +684,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while closing project archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while closing project archive " << destPath.generic_string() << ": " << archive_error_string(a);
       throw iowriteerror(msg.str());
     }
   }
@@ -706,7 +706,7 @@ namespace qi
     if (openResult != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open archive " << destPath.generic_string() << ": " << archive_error_string(a);
       archive_write_finish(a);
       throw iowriteerror(msg.str());
     }
@@ -724,7 +724,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open archive " << destPath.generic_string() << ": " << archive_error_string(a);
       archive_write_finish(a);
       throw iowriteerror(msg.str());
     }
@@ -798,7 +798,7 @@ namespace qi
         if (openResult != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while trying to open CRG control.tar.gz sub-archive " << destPath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while trying to open CRG control.tar.gz sub-archive " << destPath.generic_string() << ": " << archive_error_string(sub_a);
           archive_write_finish(sub_a);
           archive_write_finish(a);
           throw iowriteerror(msg.str());
@@ -820,7 +820,7 @@ namespace qi
         if (result != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while trying to open CRG control.tar.gz sub-archive " << destPath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while trying to open CRG control.tar.gz sub-archive " << destPath.generic_string() << ": " << archive_error_string(sub_a);
           archive_write_finish(sub_a);
           archive_write_finish(a);
           throw iowriteerror(msg.str());
@@ -942,7 +942,7 @@ namespace qi
       if (openResult != ARCHIVE_OK)
       {
         stringstream msg;
-        msg << "error while trying to open CRG data.tar.gz sub-archive " << destPath.native() << ": " << archive_error_string(sub_a);
+        msg << "error while trying to open CRG data.tar.gz sub-archive " << destPath.generic_string() << ": " << archive_error_string(sub_a);
         archive_write_finish(sub_a);
         archive_write_finish(a);
         throw iowriteerror(msg.str());
@@ -961,7 +961,7 @@ namespace qi
       if (result != ARCHIVE_OK)
       {
         stringstream msg;
-        msg << "error while trying to open CRG data.tar.gz sub-archive " << destPath.native() << ": " << archive_error_string(sub_a);
+        msg << "error while trying to open CRG data.tar.gz sub-archive " << destPath.generic_string() << ": " << archive_error_string(sub_a);
         archive_write_finish(sub_a);
         archive_write_finish(a);
         throw iowriteerror(msg.str());
@@ -983,7 +983,7 @@ namespace qi
         {
           int err = errno;
           stringstream msg;
-          msg << "could not open file " << filePath.native() << " for read while saving project: " << strerror(err);
+          msg << "could not open file " << filePath.generic_string() << " for read while saving project: " << strerror(err);
           archive_write_finish(a);
           throw ioreaderror(msg.str());
         }
@@ -1035,7 +1035,7 @@ namespace qi
         {
           int err = errno;
           stringstream msg;
-          msg << "error while reading entry " << filePath.native() << " file: " << strerror(err);
+          msg << "error while reading entry " << filePath.generic_string() << " file: " << strerror(err);
           fclose(fentry);
           archive_entry_free(sub_entry);
           archive_write_finish(sub_a);
@@ -1054,7 +1054,7 @@ namespace qi
         {
           int err = errno;
           stringstream msg;
-          msg << "error while closing entry " << filePath.native() << " file: " << strerror(err);
+          msg << "error while closing entry " << filePath.generic_string() << " file: " << strerror(err);
           archive_write_finish(sub_a);
           archive_write_finish(a);
           throw ioreaderror(msg.str());
@@ -1165,7 +1165,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while closing project archive " << destPath.native() << ": " << archive_error_string(a);
+      msg << "error while closing project archive " << destPath.generic_string() << ": " << archive_error_string(a);
       throw iowriteerror(msg.str());
     }
   }
@@ -1198,7 +1198,7 @@ namespace qi
           qiLogWarning("behavior.Project") << "error while adding support for zip format: " << archive_error_string(a) << std::endl;
         break;
       default:
-        throw Project::UnsupportedFormat(sourcePath.native(), format);
+        throw Project::UnsupportedFormat(sourcePath.generic_string(), format);
     }
 
     // load compression handler
@@ -1215,7 +1215,7 @@ namespace qi
         break;
   #endif
       default:
-        throw Project::UnsupportedFormat(sourcePath.native(), format);
+        throw Project::UnsupportedFormat(sourcePath.generic_string(), format);
     }
 
     // open archive file for reading
@@ -1224,7 +1224,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open project archive " << sourcePath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open project archive " << sourcePath.generic_string() << ": " << archive_error_string(a);
       archive_read_finish(a);
       throw ioreaderror(msg.str());
     }
@@ -1260,7 +1260,7 @@ namespace qi
         {
           int err = errno;
           stringstream msg;
-          msg << "could not open file " << path.native() << " for write while loading project: " << strerror(err);
+          msg << "could not open file " << path.generic_string() << " for write while loading project: " << strerror(err);
           archive_read_finish(a);
           throw iowriteerror(msg.str());
         }
@@ -1276,7 +1276,7 @@ namespace qi
           {
             int err = errno;
             stringstream msg;
-            msg << "error while writing project member " << path.native() << " to disk: " << strerror(err);
+            msg << "error while writing project member " << path.generic_string() << " to disk: " << strerror(err);
             fclose(fentry);
             archive_read_finish(a);
             throw iowriteerror(msg.str());
@@ -1286,7 +1286,7 @@ namespace qi
         if (len < 0)
         {
           stringstream msg;
-          msg << "error while reading project member " << relative.native() << " from archive: " << archive_error_string(a);
+          msg << "error while reading project member " << relative.generic_string() << " from archive: " << archive_error_string(a);
           fclose(fentry);
           archive_read_finish(a);
           throw ioreaderror(msg.str());
@@ -1298,7 +1298,7 @@ namespace qi
         {
           int err = errno;
           stringstream msg;
-          msg << "error while closing project member " << path.native() << " on disk: " << strerror(err);
+          msg << "error while closing project member " << path.generic_string() << " on disk: " << strerror(err);
           archive_read_finish(a);
           throw ioerror(msg.str());
         }
@@ -1309,7 +1309,7 @@ namespace qi
     if (result != ARCHIVE_EOF)
     {
       stringstream msg;
-      msg << "error while reading archive " << sourcePath.native() << " entry: " << archive_error_string(a);
+      msg << "error while reading archive " << sourcePath.generic_string() << " entry: " << archive_error_string(a);
       archive_read_finish(a);
       throw ioreaderror(msg.str());
     }
@@ -1321,7 +1321,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while closing project archive " << sourcePath.native() << ": " << archive_error_string(a);
+      msg << "error while closing project archive " << sourcePath.generic_string() << ": " << archive_error_string(a);
       throw ioerror(msg.str());
     }
   }
@@ -1347,7 +1347,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while trying to open project archive " << sourcePath.native() << ": " << archive_error_string(a);
+      msg << "error while trying to open project archive " << sourcePath.generic_string() << ": " << archive_error_string(a);
       archive_read_finish(a);
       throw ioerror(msg.str());
     }
@@ -1377,7 +1377,7 @@ namespace qi
         if (result != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while trying to open project archive " << sourcePath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while trying to open project archive " << sourcePath.generic_string() << ": " << archive_error_string(sub_a);
           archive_read_finish(sub_a);
           archive_read_finish(a);
           throw ioerror(msg.str());
@@ -1413,7 +1413,7 @@ namespace qi
             FILE* f = qi::os::fopen(metaPath.c_str(), "wb");
             if(!f)
             {
-              throw iowriteerror(metaPath.native());
+              throw iowriteerror(metaPath.generic_string());
             }
             fprintf(f, "%s", content.c_str());
             fclose(f);
@@ -1429,7 +1429,7 @@ namespace qi
         if (result != ARCHIVE_EOF)
         {
           stringstream msg;
-          msg << "error while reading archive " << sourcePath.native() << " entry: " << archive_error_string(sub_a);
+          msg << "error while reading archive " << sourcePath.generic_string() << " entry: " << archive_error_string(sub_a);
           archive_read_finish(sub_a);
           archive_read_finish(a);
           throw ioreaderror(msg.str());
@@ -1440,7 +1440,7 @@ namespace qi
         if (result != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while closing project archive " << sourcePath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while closing project archive " << sourcePath.generic_string() << ": " << archive_error_string(sub_a);
           archive_read_finish(a);
           throw ioerror(msg.str());
         }
@@ -1464,7 +1464,7 @@ namespace qi
         if (result != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while trying to open project archive " << sourcePath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while trying to open project archive " << sourcePath.generic_string() << ": " << archive_error_string(sub_a);
           archive_read_finish(sub_a);
           archive_read_finish(a);
           throw ioerror(msg.str());
@@ -1502,7 +1502,7 @@ namespace qi
             {
               int err = errno;
               stringstream msg;
-              msg << "could not open file " << path.native() << " for write while loading project: " << strerror(err);
+              msg << "could not open file " << path.generic_string() << " for write while loading project: " << strerror(err);
               archive_read_finish(sub_a);
               archive_read_finish(a);
               throw ioerror(msg.str());
@@ -1519,7 +1519,7 @@ namespace qi
               {
                 int err = errno;
                 stringstream msg;
-                msg << "error while writing project member " << path.native() << " to disk: " << strerror(err);
+                msg << "error while writing project member " << path.generic_string() << " to disk: " << strerror(err);
                 fclose(fentry);
                 archive_read_finish(sub_a);
                 archive_read_finish(a);
@@ -1530,7 +1530,7 @@ namespace qi
             if (len < 0)
             {
               stringstream msg;
-              msg << "error while reading project member " << relative.native() << " from archive: " << archive_error_string(sub_a);
+              msg << "error while reading project member " << relative.generic_string() << " from archive: " << archive_error_string(sub_a);
               fclose(fentry);
               archive_read_finish(sub_a);
               archive_read_finish(a);
@@ -1543,7 +1543,7 @@ namespace qi
             {
               int err = errno;
               stringstream msg;
-              msg << "error while closing project member " << path.native() << " on disk: " << strerror(err);
+              msg << "error while closing project member " << path.generic_string() << " on disk: " << strerror(err);
               archive_read_finish(sub_a);
               archive_read_finish(a);
               throw ioerror(msg.str());
@@ -1555,7 +1555,7 @@ namespace qi
         if (result != ARCHIVE_EOF)
         {
           stringstream msg;
-          msg << "error while reading archive " << sourcePath.native() << " entry: " << archive_error_string(sub_a);
+          msg << "error while reading archive " << sourcePath.generic_string() << " entry: " << archive_error_string(sub_a);
           archive_read_finish(sub_a);
           archive_read_finish(a);
           throw ioreaderror(msg.str());
@@ -1566,7 +1566,7 @@ namespace qi
         if (result != ARCHIVE_OK)
         {
           stringstream msg;
-          msg << "error while closing project archive " << sourcePath.native() << ": " << archive_error_string(sub_a);
+          msg << "error while closing project archive " << sourcePath.generic_string() << ": " << archive_error_string(sub_a);
           archive_read_finish(a);
           throw ioerror(msg.str());
         }
@@ -1582,7 +1582,7 @@ namespace qi
     if (result != ARCHIVE_EOF)
     {
       stringstream msg;
-      msg << "error while reading archive " << sourcePath.native() << " entry: " << archive_error_string(a);
+      msg << "error while reading archive " << sourcePath.generic_string() << " entry: " << archive_error_string(a);
       archive_read_finish(a);
       throw ioreaderror(msg.str());
     }
@@ -1592,7 +1592,7 @@ namespace qi
     if (result != ARCHIVE_OK)
     {
       stringstream msg;
-      msg << "error while closing project archive " << sourcePath.native() << ": " << archive_error_string(a);
+      msg << "error while closing project archive " << sourcePath.generic_string() << ": " << archive_error_string(a);
       throw ioerror(msg.str());
     }
   }
@@ -1617,7 +1617,7 @@ namespace qi
       }
       else
       {
-        fileList.insert((prefix / lPath.filename()).native());
+        fileList.insert((prefix / lPath.filename()).generic_string());
       }
     }
   }
@@ -1629,11 +1629,11 @@ namespace qi
   {
     if(!bfs::exists(directory))
     {
-      throw Project::PathNotFound(directory.native());
+      throw Project::PathNotFound(directory.generic_string());
     }
     if(!bfs::is_directory(directory))
     {
-      throw Project::PathNotFound(directory.native() + " is not a directory");
+      throw Project::PathNotFound(directory.generic_string() + " is not a directory");
     }
 
     std::set<std::string> fileList;

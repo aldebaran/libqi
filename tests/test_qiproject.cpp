@@ -19,7 +19,7 @@ protected:
   virtual void SetUp()
   {
     fPath = bfs::path(os::tmpdir()).parent_path() / bfs::unique_path();
-    fProject = Project::create(fPath.native());
+    fProject = Project::create(fPath.generic_string());
   }
   virtual void TearDown()
   {
@@ -162,7 +162,7 @@ private:
       }
       else
       {
-        contentSummary[(prefix / lPath.filename()).native()] =
+        contentSummary[(prefix / lPath.filename()).generic_string()] =
           bfs::file_size(lPath);
       }
     }
@@ -190,7 +190,7 @@ protected:
   virtual void SetUp()
   {
     ALProjectTests_Existing::SetUp();
-    fProject = new Project(fPath.native());
+    fProject = new Project(fPath.generic_string());
   }
   virtual void TearDown()
   {
@@ -215,8 +215,8 @@ TEST_F(ALProjectTests_Load, exportImportDir)
   ASSERT_FALSE(bfs::exists(tmpPath1));
 
   ASSERT_NO_THROW(Project::exportProject(
-    fPath.native()
-  , tmpPath1.native()
+    fPath.generic_string()
+  , tmpPath1.generic_string()
   , Project::ArchiveFormat_Directory));
   ASSERT_TRUE(bfs::exists(tmpPath1));
   fToRemove.insert(tmpPath1);
@@ -224,8 +224,8 @@ TEST_F(ALProjectTests_Load, exportImportDir)
   try
   {
     ASSERT_THROW(Project::importProject(
-      fPath.native()
-    , tmpPath1.native()
+      fPath.generic_string()
+    , tmpPath1.generic_string()
     , Project::ArchiveFormat_AutoDetect), qi::iowriteerror);
   }
   catch(const Project::UnsupportedFormat&) { }
@@ -237,16 +237,16 @@ TEST_F(ALProjectTests_Load, exportImportDir)
   try
   {
     ASSERT_THROW(Project::importProject(
-      tmpPath1.native()
-    , tmpPath2.native()
+      tmpPath1.generic_string()
+    , tmpPath2.generic_string()
     , (Project::ArchiveFormat)42), Project::UnsupportedFormat);
   }
   catch(const Project::UnsupportedFormat&) { }
   ASSERT_FALSE(bfs::exists(tmpPath2));
 
   Project::importProject(
-    tmpPath1.native()
-  , tmpPath2.native()
+    tmpPath1.generic_string()
+  , tmpPath2.generic_string()
   , Project::ArchiveFormat_Directory);
   ASSERT_TRUE(bfs::exists(tmpPath2));
   fToRemove.insert(tmpPath2);
@@ -254,7 +254,7 @@ TEST_F(ALProjectTests_Load, exportImportDir)
   map<string, size_t> contentSummary = summarizeContent(tmpPath2);
   ASSERT_TRUE(fContentSummary == contentSummary);
 
-  Project tmpProj(tmpPath2.native());
+  Project tmpProj(tmpPath2.generic_string());
   ASSERT_TRUE(fMetadata == tmpProj.getMetadata());
 }
 
@@ -266,8 +266,8 @@ TEST_F(ALProjectTests_Load, exportImportCRG)
   ASSERT_FALSE(bfs::exists(tmpPath1));
 
   ASSERT_NO_THROW(Project::exportProject(
-    fPath.native()
-  , tmpPath1.native()
+    fPath.generic_string()
+  , tmpPath1.generic_string()
   , Project::ArchiveFormat_DEB));
   ASSERT_TRUE(bfs::exists(tmpPath1));
   fToRemove.insert(tmpPath1);
@@ -276,8 +276,8 @@ TEST_F(ALProjectTests_Load, exportImportCRG)
   ASSERT_GT(bfs::file_size(tmpPath1), 0);
 
   // Can we open a project at the CRG file location?
-  Project tmpProj1(tmpPath1.native());
-  ASSERT_NO_THROW(tmpProj1 = Project(tmpPath1.native()));
+  Project tmpProj1(tmpPath1.generic_string());
+  ASSERT_NO_THROW(tmpProj1 = Project(tmpPath1.generic_string()));
   ASSERT_FALSE(tmpProj1.valid());
   ASSERT_FALSE(bfs::is_directory(tmpPath1));
 
@@ -285,8 +285,8 @@ TEST_F(ALProjectTests_Load, exportImportCRG)
     bfs::path(os::tmpdir()).parent_path() / bfs::unique_path();
   ASSERT_FALSE(bfs::exists(tmpPath2));
   ASSERT_NO_THROW(Project::importProject(
-    tmpPath1.native()
-  , tmpPath2.native()
+    tmpPath1.generic_string()
+  , tmpPath2.generic_string()
   , Project::ArchiveFormat_AutoDetect));
   ASSERT_TRUE(bfs::exists(tmpPath2));
   fToRemove.insert(tmpPath2);
@@ -294,7 +294,7 @@ TEST_F(ALProjectTests_Load, exportImportCRG)
   map<string, size_t> contentSummary = summarizeContent(tmpPath2);
   ASSERT_TRUE(fContentSummary == contentSummary);
 
-  Project tmpProj(tmpPath2.native());
+  Project tmpProj(tmpPath2.generic_string());
   ASSERT_TRUE(fMetadata == tmpProj.getMetadata());
 }
 
@@ -306,8 +306,8 @@ TEST_F(ALProjectTests_Load, exportImportTGZ)
   ASSERT_FALSE(bfs::exists(tmpPath1));
 
   ASSERT_NO_THROW(Project::exportProject(
-    fPath.native()
-  , tmpPath1.native()
+    fPath.generic_string()
+  , tmpPath1.generic_string()
   , Project::ArchiveFormat_TAR_GZ));
   ASSERT_TRUE(bfs::exists(tmpPath1));
   fToRemove.insert(tmpPath1);
@@ -316,8 +316,8 @@ TEST_F(ALProjectTests_Load, exportImportTGZ)
   ASSERT_GT(bfs::file_size(tmpPath1), 0);
 
   // Can we open a project at the TGZ file location?
-  Project tmpProj1(tmpPath1.native());
-  ASSERT_NO_THROW(tmpProj1 = Project(tmpPath1.native()));
+  Project tmpProj1(tmpPath1.generic_string());
+  ASSERT_NO_THROW(tmpProj1 = Project(tmpPath1.generic_string()));
   ASSERT_FALSE(tmpProj1.valid());
   ASSERT_FALSE(bfs::is_directory(tmpPath1));
 
@@ -325,8 +325,8 @@ TEST_F(ALProjectTests_Load, exportImportTGZ)
     bfs::path(os::tmpdir()).parent_path() / bfs::unique_path();
   ASSERT_FALSE(bfs::exists(tmpPath2));
   ASSERT_NO_THROW(Project::importProject(
-    tmpPath1.native()
-  , tmpPath2.native()
+    tmpPath1.generic_string()
+  , tmpPath2.generic_string()
   , Project::ArchiveFormat_AutoDetect));
   ASSERT_TRUE(bfs::exists(tmpPath2));
   fToRemove.insert(tmpPath2);
@@ -334,6 +334,6 @@ TEST_F(ALProjectTests_Load, exportImportTGZ)
   map<string, size_t> contentSummary = summarizeContent(tmpPath2);
   ASSERT_TRUE(fContentSummary == contentSummary);
 
-  Project tmpProj2(tmpPath2.native());
+  Project tmpProj2(tmpPath2.generic_string());
   ASSERT_TRUE(fMetadata == tmpProj2.getMetadata());
 }
