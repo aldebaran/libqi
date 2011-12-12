@@ -6,6 +6,7 @@ set_target_properties(check_env  PROPERTIES FOLDER tests)
 
 create_gtest(test_qipath      SRC test_qipath.cpp      DEPENDENCIES QI GTEST)
 #create_gtest(test_qipaththrow SRC test_qipaththrow.cpp DEPENDENCIES QI GTEST)
+create_gtest(test_qiproject   SRC test_qiproject.cpp   DEPENDENCIES QI GTEST BOOST_FILESYSTEM)
 create_gtest(test_qios        SRC test_qios.cpp        DEPENDENCIES QI GTEST)
 create_gtest(test_thread      SRC test_thread.cpp      DEPENDENCIES QI BOOST_THREAD)
 create_gtest(test_qilaunch    SRC test_qilaunch.cpp DEPENDENCIES QI GTEST)

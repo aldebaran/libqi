@@ -18,6 +18,7 @@ set(H qi/config.hpp
       qi/os.hpp
       qi/macro.hpp
       qi/path.hpp
+      qi/project.hpp
       qi/exception.hpp
       qi/qi.hpp
       qi/log.hpp
@@ -34,6 +35,14 @@ set(C src/dlfcn.cpp
       src/sdklayout.cpp
       src/filesystem.hpp
       src/filesystem.cpp
+      src/project_boost.hpp
+      src/project_boost.cpp
+      src/archiveentryhelper.cpp
+      src/archiveentryhelper.h
+      src/filehelper.cpp
+      src/filehelper.h
+      src/memoryhelper.cpp
+      src/memoryhelper.h
       src/log.cpp
       src/consoleloghandler.cpp
       src/fileloghandler.cpp
@@ -59,6 +68,7 @@ endif()
 
 use_lib(qi BOOST_FILESYSTEM)
 use_lib(qi BOOST_THREAD)
+use_lib(qi ARCHIVE)
 
 if(MSVC)
 # Temporary ugly hack: we can't find out
