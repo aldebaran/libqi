@@ -60,6 +60,11 @@ namespace qi
       return _wsystem(fname.wstring(qi::unicodeFacet()).c_str());
     }
 
+    int getpid()
+    {
+      return getpid()
+    }
+
     int waitpid(int pid, int* status)
     {
       errno = 0;

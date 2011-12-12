@@ -18,9 +18,8 @@
 #endif
 #ifdef __APPLE__
 // See man 3 environ (PROGRAMMING)
-# include <crt_externs.h> // ofr _NSGetEnviron
+# include <crt_externs.h> // for _NSGetEnviron
 #endif
-
 
 #include <sys/wait.h>
 #ifndef __ANDROID__
@@ -247,6 +246,11 @@ namespace qi
       }
 
       return -1;
+    }
+
+    int getpid()
+    {
+      return getpid();
     }
 
     int waitpid(int pid, int* status)

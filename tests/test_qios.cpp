@@ -3,6 +3,12 @@
 * Copyright (c) 2011 Aldebaran Robotics  All Rights Reserved
 */
 
+#ifdef WIN32
+# include <process.h>  // for getpid
+#else
+# include <unistd.h> // for getpid
+#endif
+
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 
@@ -70,4 +76,9 @@ TEST(QiOs, env)
   int ret = qi::os::setenv("TITI", "TUTU");
   ASSERT_FALSE(ret);
   EXPECT_EQ("TUTU", qi::os::getenv("TITI"));
+}
+
+TEST(QiOs, getpid)
+{
+  ASSERT_EQ(getpid(), qi::os::getpid());
 }
