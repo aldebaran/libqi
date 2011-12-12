@@ -18,6 +18,7 @@ set(H qi/config.hpp
       qi/os.hpp
       qi/macro.hpp
       qi/path.hpp
+      qi/exception.hpp
       qi/qi.hpp
       qi/log.hpp
       qi/log/consoleloghandler.hpp
