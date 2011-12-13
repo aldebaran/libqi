@@ -250,7 +250,7 @@ namespace qi
 
     int getpid()
     {
-      return getpid();
+      return ::getpid();
     }
 
     int waitpid(int pid, int* status)
