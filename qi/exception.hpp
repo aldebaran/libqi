@@ -33,11 +33,11 @@ namespace qi
     iowriteerror(const std::string& what) : ioerror(what) { }
   };
 
-  /// @brief Thrown on critical data format mismatch.
-  class corruptionerror : public std::runtime_error
+  /// @brief Thrown on expected / observed format mismatch.
+  class corrupted : public std::runtime_error
   {
   public:
-    corruptionerror(const std::string& what) : std::runtime_error(what) { }
+    corrupted(const std::string& what) : std::runtime_error(what) { }
   };
 }
 
