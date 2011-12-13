@@ -400,7 +400,6 @@ TEST(qiPathTests, badInput)
 int main(int argc, char* argv[])
 {
   qi::init(argc, argv);
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
