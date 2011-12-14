@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 2.6.4)
 project(LibQi)
-include("bootstrap.cmake")
+include("qibuild.cmake")
 
 if (EFFECTIVE_CPP)
   add_definitions(" -Weffc++ ")
@@ -51,27 +51,25 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("src/")
 
 if("${BUILDCONFIG}" STREQUAL "python-sdk")
-  create_lib(qi STATIC ${H} ${C})
+  qi_create_lib(qi STATIC ${H} ${C})
 else()
-  create_lib(qi SHARED ${H} ${C})
+  qi_create_lib(qi SHARED ${H} ${C})
 endif()
 
-use_lib(qi BOOST_FILESYSTEM)
-use_lib(qi BOOST_THREAD)
+qi_use_lib(qi BOOST_FILESYSTEM)
+qi_use_lib(qi BOOST_THREAD)
 
 if(MSVC)
 # Temporary ugly hack: we can't find out
 # where the boost_date_time dependency comes from:
-  use_lib(qi BOOST_DATE_TIME)
+  qi_use_lib(qi BOOST_DATE_TIME)
 endif()
 
 if(UNIX AND NOT APPLE)
-  use_lib(qi DL)
+  qi_use_lib(qi DL)
 endif()
 
-if (QI_SDK_DIR)
-  qi_install_header(${H} KEEP_RELATIVE_PATHS)
-endif()
-stage_lib(qi QI)
+qi_install_header(${H} KEEP_RELATIVE_PATHS)
+qi_stage_lib(qi QI)
 
 add_subdirectory(examples)
