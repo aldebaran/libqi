@@ -18,17 +18,21 @@ endif()
 enable_testing()
 include(CMakeDependentOption)
 
-set(H qi/config.hpp
-      qi/os.hpp
-      qi/macro.hpp
-      qi/path.hpp
-      qi/qi.hpp
-      qi/log.hpp
-      qi/log/consoleloghandler.hpp
-      qi/log/fileloghandler.hpp
-      qi/log/headfileloghandler.hpp
-      qi/log/tailfileloghandler.hpp
-      )
+set(H
+  qi/config.hpp
+  qi/error.hpp
+  qi/exception.hpp
+  qi/log/consoleloghandler.hpp
+  qi/log/fileloghandler.hpp
+  qi/log/headfileloghandler.hpp
+  qi/log.hpp
+  qi/log/tailfileloghandler.hpp
+  qi/macro.hpp
+  qi/os.hpp
+  qi/path.hpp
+  qi/project.hpp
+  qi/qi.hpp
+)
 
 set(C src/dlfcn.cpp
       src/path.cpp
