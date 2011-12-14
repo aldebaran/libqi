@@ -11,9 +11,11 @@ if (EFFECTIVE_CPP)
 endif()
 
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
+if(MSVC)
+  add_definitions(" -DWIN32_LEAN_AND_MEAN ")
+endif()
 
 enable_testing()
-#find_package(BOOST_LOCALE QUIET)
 include(CMakeDependentOption)
 
 set(H qi/config.hpp
