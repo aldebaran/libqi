@@ -10,6 +10,8 @@ if (EFFECTIVE_CPP)
   add_definitions(" -Weffc++ ")
 endif()
 
+add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
+
 enable_testing()
 #find_package(BOOST_LOCALE QUIET)
 include(CMakeDependentOption)
