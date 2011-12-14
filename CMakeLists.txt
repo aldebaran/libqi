@@ -77,3 +77,5 @@ qi_install_header(${H} KEEP_RELATIVE_PATHS)
 qi_stage_lib(qi QI)
 
 add_subdirectory(examples)
+
+add_subdirectory(tests)
