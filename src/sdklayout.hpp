@@ -52,7 +52,7 @@ namespace qi
 
     /** \brief Construct a SDKLayout using prefix as the sdk prefix.
      *  \param prefix a valid sdk prefix.
-     *  \param mode "" by default, could be DEBUG or RELEASE when running in the build folder under MSVC.
+     *  \param mode "" by default, use to check sdk initialization.
      */
     explicit SDKLayout(const std::string &prefix, const std::string &mode = "");
 

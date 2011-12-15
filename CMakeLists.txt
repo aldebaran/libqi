@@ -15,6 +15,8 @@ if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
+option(WITH_QT "Enable QT" ON)
+
 enable_testing()
 include(CMakeDependentOption)
 
@@ -38,7 +40,6 @@ set(C src/dlfcn.cpp
       src/path.cpp
       src/application.cpp
       src/sdklayout.hpp
-      src/sdklayout.cpp
       src/filesystem.hpp
       src/filesystem.cpp
       src/log.cpp
@@ -55,6 +56,12 @@ else()
   list(APPEND C src/os_debugger_posix.cpp src/os_launch_posix.cpp src/os_posix.cpp)
 endif()
 
+if (WITH_QT)
+  list(APPEND C src/sdklayout-qt.cpp)
+else()
+  list(APPEND C src/sdklayout-boost.cpp)
+endif()
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("src/")
 
@@ -64,8 +71,11 @@ else()
   qi_create_lib(qi SHARED ${H} ${C})
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM)
-qi_use_lib(qi BOOST_THREAD)
+
+if (WITH_QT)
+  qi_use_lib(qi QT_QTCORE)
+endif()
+qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD)
 
 if(MSVC)
 # Temporary ugly hack: we can't find out

@@ -18,528 +18,472 @@
 #include <qi/qi.hpp>
 #include <qi/error.hpp>
 
-#include <boost/filesystem.hpp>
-#include <locale>
 #include "src/sdklayout.hpp"
-#include "src/filesystem.hpp"
+
+#include <QDir>
+#include <QFile>
+#include <QString>
+#include <QList>
+
+#include <QDebug>
 
 namespace qi {
 
+class PrivateSDKLayout
+{
+public:
+  QStringList _sdkPrefixes;
+  QString     _mode;
 
-  class PrivateSDKLayout
+  PrivateSDKLayout()
+    : _sdkPrefixes()
+    , _mode()
   {
-  public:
-    std::vector<std::string> _sdkPrefixes;
-    std::string _mode;
+  }
 
-    PrivateSDKLayout()
-      : _sdkPrefixes(),
-        _mode()
+  void initSDKlayout()
+  {
+    const char *program = qi::program();
+
+    if (!QFile::exists(program))
     {
+      _mode = "error";
+      return;
     }
 
-    void initSDKlayout()
-    {
-      const char *program = qi::program();
 
-      if (!boost::filesystem::exists(program)) {
-        _mode = "error";
-        return;
-      }
+    QString   absoluteExecPath = QString::fromUtf8(program);
+    QDir      execDir(absoluteExecPath);
+    absoluteExecPath = execDir.absolutePath();
+    execDir.setCurrent(absoluteExecPath);
 
-      // We may use argc, argv to elaborate command line parsing, but,
-      // right now only argv[0] is used.
-      boost::filesystem::path execPath(program, qi::unicodeFacet());
-      execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      _sdkPrefixes.push_back(execPath.parent_path().parent_path().string(qi::unicodeFacet()));
-      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-        _mode = execPath.parent_path().filename().string(qi::unicodeFacet());
-      else
-        _mode = "";
-    }
+    execDir.cdUp();
+    QFileInfo execPathInfo(execDir.absolutePath());
+    if (execPathInfo.fileName() != "bin")
+      _mode = execPathInfo.fileName();
+    else
+      _mode = "";
 
-    void checkInit()
-    {
-      if (_mode == "error" || _sdkPrefixes.empty())
-        throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
-    }
-  };
-
-  SDKLayout::~SDKLayout()
-  {
-    delete _private;
+    execDir.cdUp();
+    _sdkPrefixes << execDir.absolutePath();
   }
 
-  SDKLayout::SDKLayout()
-    : _private(new PrivateSDKLayout)
+  void checkInit()
   {
-    _private->initSDKlayout();
+    if (_mode == "error" || _sdkPrefixes.empty())
+      throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
   }
+};
 
-  SDKLayout::SDKLayout(const SDKLayout &rhs)
-    : _private(new PrivateSDKLayout)
+SDKLayout::~SDKLayout()
+{
+  delete _private;
+}
+
+SDKLayout::SDKLayout()
+  : _private(new PrivateSDKLayout)
+{
+  _private->initSDKlayout();
+}
+
+SDKLayout::SDKLayout(const SDKLayout &rhs)
+  : _private(new PrivateSDKLayout)
+{
+  *_private = *rhs._private;
+}
+
+SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
+  *_private = *rhs._private;
+  return *this;
+}
+
+// FIXME: Add exception if prefix == ""
+SDKLayout::SDKLayout(const std::string &prefix, const std::string &mode)
+  : _private(new PrivateSDKLayout)
+{
+  QString   absolutePrefixPath = QString::fromUtf8(prefix.c_str());
+  QDir      execDir(absolutePrefixPath);
+  absolutePrefixPath = execDir.absolutePath();
+  _private->_sdkPrefixes << absolutePrefixPath;
+  _private->_mode = QString::fromUtf8(mode.c_str());
+}
+
+void SDKLayout::addOptionalSdkPrefix(const char *prefix)
+{
+  _private->checkInit();
+
+  QString   absolutePrefixPath = QString::fromUtf8(prefix);
+  QDir      execDir(absolutePrefixPath);
+  absolutePrefixPath = execDir.absolutePath();
+
+  _private->_sdkPrefixes << absolutePrefixPath;
+}
+
+void SDKLayout::clearOptionalSdkPrefix()
+{
+  _private->checkInit();
+  if (_private->_sdkPrefixes.size() > 0)
   {
-    *_private = *rhs._private;
+    QString sdkPrefixPath = _private->_sdkPrefixes.at(0);
+    _private->_sdkPrefixes.clear();
+    _private->_sdkPrefixes << sdkPrefixPath;
   }
+}
 
-  SDKLayout & SDKLayout::operator=(const SDKLayout &rhs) {
-    *_private = *rhs._private;
-    return *this;
-  }
+std::string SDKLayout::sdkPrefix() const
+{
+  _private->checkInit();
+  return std::string(QDir::toNativeSeparators(_private->_sdkPrefixes.at(0)).toUtf8().constData());
+}
 
-  // FIXME: Add exception if prefix == ""
-  SDKLayout::SDKLayout(const std::string &prefix, const std::string &mode)
-    : _private(new PrivateSDKLayout)
+std::vector<std::string> SDKLayout::getSdkPrefixes() const
+{
+  _private->checkInit();
+  std::vector<std::string> sdks;
+
+  QListIterator<QString> it(_private->_sdkPrefixes);
+  while (it.hasNext())
+    sdks.push_back(std::string(QDir::toNativeSeparators(it.next()).toUtf8().constData()));
+
+  return sdks;
+}
+
+std::string SDKLayout::findBin(const std::string &name) const
+{
+  _private->checkInit();
+
+  // check if name is a full path
+  QString   binFullPath = QString::fromUtf8(name.c_str());
+  QFileInfo binFileInfo(binFullPath);
+  binFileInfo.setFile(binFileInfo.canonicalFilePath());
+  if (binFileInfo.exists() && binFileInfo.isFile())
+    return std::string(QDir::toNativeSeparators(binFileInfo.canonicalFilePath()).toUtf8().constData());
+
+  // Name is not a full path search into sdk.
+  // Set search path
+  QStringList binDirs;
+  QFile       binPath;
+  QString     searchPath;
+  std::vector<std::string> paths = binPaths();
+  std::vector<std::string>::iterator it;
+  for (it = paths.begin(); it != paths.end(); ++it)
   {
-    boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
-    prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
-    _private->_mode = mode;
+    QDir binDir;
+    binDir.setPath(QString::fromUtf8((*it).c_str()));
+    binDirs << binDir.absolutePath();
   }
+  QDir::setSearchPaths("bin", binDirs);
 
-  void SDKLayout::addOptionalSdkPrefix(const char *prefix)
-  {
-    _private->checkInit();
+  // Search binary
+  searchPath = "bin:" + QString::fromUtf8(name.c_str());
+  binPath.setFileName(searchPath);
+  if (binPath.exists())
+    return std::string(QDir::toNativeSeparators(binPath.fileName()).toUtf8().constData());
 
-    boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
-    try
-    {
-      prefixPath = boost::filesystem::system_complete(prefixPath).make_preferred();
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
-
-    _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
-  }
-
-  void SDKLayout::clearOptionalSdkPrefix()
-  {
-    _private->checkInit();
-    if (_private->_sdkPrefixes.size() > 0)
-    {
-      std::string sdkPrefixPath = _private->_sdkPrefixes[0];
-      _private->_sdkPrefixes.clear();
-      _private->_sdkPrefixes.push_back(sdkPrefixPath);
-    }
-  }
-
-  std::string SDKLayout::sdkPrefix() const
-  {
-    _private->checkInit();
-    return _private->_sdkPrefixes[0];
-  }
-
-  std::vector<std::string> SDKLayout::getSdkPrefixes() const
-  {
-    _private->checkInit();
-    return _private->_sdkPrefixes;
-  }
-
-  std::string SDKLayout::findBin(const std::string &name) const
-  {
-    _private->checkInit();
-
-    boost::filesystem::path bin(name, qi::unicodeFacet());
-
-    try
-    {
-      if (boost::filesystem::exists(bin)
-          && !boost::filesystem::is_directory(bin))
-        return bin.string(qi::unicodeFacet());
-
-      std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin();
-           it != _private->_sdkPrefixes.end();
-           ++it)
-      {
-        boost::filesystem::path p(*it, qi::unicodeFacet());
-#ifdef _MSC_VER
-        p = p / _private->_mode / name;
-        p = p.make_preferred();
-
-        if (boost::filesystem::exists(p))
-          return p.string(qi::unicodeFacet());
-//find _d, fallback on release stuff
 #ifndef NDEBUG
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + "_d.exe");
+  searchPath = "bin:" + QString::fromUtf8(name.c_str()) + "_d.exe";
+  binPath.setFileName(searchPath);
+  if (binPath.exists())
+    return std::string(QDir::toNativeSeparators(binPath.fileName()).toUtf8().constData());
 #endif
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + ".exe");
-#endif
 
-        p = *it;
-        p = p / "bin" / name;
-        p = p.make_preferred();
+  searchPath = "bin:" + QString::fromUtf8(name.c_str()) + ".exe";
+  binPath.setFileName(searchPath);
+  if (binPath.exists())
+    return std::string(QDir::toNativeSeparators(binPath.fileName()).toUtf8().constData());
+
+  return std::string();
+}
 
 
-        if (boost::filesystem::exists(p)
-            && !boost::filesystem::is_directory(p))
-          return p.string(qi::unicodeFacet());
-#ifndef NDEBUG
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + "_d.exe");
-#endif
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + ".exe");
-      }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
-    return std::string();
-  }
+std::string SDKLayout::findLib(const std::string &name) const
+{
+  _private->checkInit();
 
-  static std::string existsLib(boost::filesystem::path prefix,
-                               const std::string& libName)
+  // Check if name is a full path to the library
+  QString   libFullPath = QString::fromUtf8(name.c_str());
+  QFileInfo libFileInfo(libFullPath);
+  libFileInfo.setFile(libFileInfo.canonicalFilePath());
+  if (libFileInfo.exists() && libFileInfo.isFile())
+    return std::string(QDir::toNativeSeparators(libFileInfo.canonicalFilePath()).toUtf8().constData());
+
+  // Name is not a full path search into sdk.
+  libFileInfo.setFile(libFullPath);
+  QDir    prefix  = libFileInfo.dir();
+  QString libName = libFileInfo.fileName();
+
+  QStringList libDirs;
+  QFile       libPath;
+  QString     searchPath;
+  std::vector<std::string> paths = libPaths();
+  std::vector<std::string>::iterator it;
+  for (it = paths.begin(); it != paths.end(); ++it)
   {
-    boost::filesystem::path lib(libName, qi::unicodeFacet());
-
-    try
-    {
-      if (boost::filesystem::exists((prefix / lib).make_preferred())
-          && !boost::filesystem::is_directory((prefix / lib).make_preferred()))
-        return ((prefix / lib).make_preferred().string(qi::unicodeFacet()));
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
-
-    return std::string();
+    QDir libDir;
+    libDir.setPath(QString::fromUtf8((*it).c_str()) + "/" + prefix.path());
+    libDirs << libDir.absolutePath();
   }
-
-  std::string SDKLayout::findLib(const std::string &name) const
-  {
-    _private->checkInit();
-
-    try
-    {
-      boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
-      boost::filesystem::path prefix = module.parent_path().make_preferred();
-      std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
-      std::string res;
-
-      res = existsLib(prefix.string(qi::unicodeFacet()), libName);
-      if (res != std::string())
-        return res;
+  QDir::setSearchPaths("lib", libDirs);
 
 
-      std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin();
-           it != _private->_sdkPrefixes.end();
-           ++it)
-      {
-        boost::filesystem::path p(*it, qi::unicodeFacet());
-#ifdef _MSC_VER
-        p = p / _private->_mode / prefix;
-        p = p.make_preferred();
+  // libname libmylib.so / libmylib.dylib / libmylib_d.dll / libmylib.dll
+  searchPath = "lib:" + libName;
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 
-        res = existsLib(p, libName);
-        if (res != std::string())
-          return res;
+  // libname mylib.so / mylib.dylib / mylib_d.dll / mylib.dll
+  searchPath = "lib:lib" + libName;
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 
-//DEBUG
-#ifndef NDEBUG
-        res = existsLib(p, libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-#endif
+  // libname libmylib
+  searchPath = "lib:" + libName + ".so";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 
-        res = existsLib(p, libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-#endif
+  // libname mylib
+  searchPath = "lib:lib" + libName + ".so";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 
-        p = *it;
-        p = p / "lib" / prefix;
-        p = p.make_preferred();
 
-        res = existsLib(p, libName);
-        if (res != std::string())
-          return res;
-        res = existsLib(p, libName + ".so");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".so");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
 #ifdef __APPLE__
-        res = existsLib(p, libName + ".dylib");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".dylib");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
+  // libname libmylib
+  searchPath = "lib:" + libName + ".dylib";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
+
+  // libname mylib
+  searchPath = "lib:lib" + libName + ".dylib";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 #endif
+
 #ifdef _WIN32
-//DEBUG
-#ifndef NDEBUG
-        res = existsLib(p, libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
+#  ifndef NDEBUG
+  // libname libmylib
+  searchPath = "lib:" + libName + "_d.dll";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
+
+  // libname mylib
+  searchPath = "lib:lib" + libName + "_d.dll";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
+#  endif
+  // libname libmylib
+  searchPath = "lib:" + libName + ".dll";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
+
+  // libname mylib
+  searchPath = "lib:lib" + libName + ".dll";
+  libPath.setFileName(searchPath);
+  if (libPath.exists())
+    return std::string(QDir::toNativeSeparators(libPath.fileName()).toUtf8().constData());
 #endif
 
-        res = existsLib(p, libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-#endif
-      }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
+  return std::string();
+}
 
-    return std::string();
-  }
+std::string SDKLayout::findConf(const std::string &applicationName,
+                                const std::string &filename) const
+{
+  _private->checkInit();
 
-  std::string SDKLayout::findConf(const std::string &applicationName,
-                                  const std::string &filename) const
+  QStringList confDirs;
+  QFile       confPath;
+  QString     searchPath;
+
+  std::vector<std::string> paths = confPaths(applicationName);
+  std::vector<std::string>::iterator it;
+  for (it = paths.begin(); it != paths.end(); ++it)
   {
-    _private->checkInit();
-    std::vector<std::string> paths = confPaths(applicationName);
-    try
-    {
-      std::vector<std::string>::const_iterator it;
-      for (it = paths.begin(); it != paths.end(); ++it)
-      {
-        boost::filesystem::path p(*it, qi::unicodeFacet());
-        p /= filename;
-        p = p.make_preferred();
-        if (boost::filesystem::exists(p))
-          return p.string(qi::unicodeFacet());
-      }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
-
-    return std::string();
+    QDir confDir;
+    confDir.setPath(QString::fromUtf8((*it).c_str()));
+    confDirs <<  confDir.absolutePath();
   }
+  QDir::setSearchPaths("conf", confDirs);
 
-  std::string SDKLayout::findData(const std::string &applicationName,
-                                  const std::string &filename) const
+  searchPath = "conf:" + QString::fromUtf8(filename.c_str());
+  confPath.setFileName(searchPath);
+  if (confPath.exists())
+    return std::string(QDir::toNativeSeparators(confPath.fileName()).toUtf8().constData());
+
+  return std::string();
+}
+
+std::string SDKLayout::findData(const std::string &applicationName,
+                                const std::string &filename) const
+{
+  _private->checkInit();
+
+  QStringList dataDirs;
+  QFile       dataPath;
+  QString     searchPath;
+
+  std::vector<std::string> paths = dataPaths(applicationName);
+  std::vector<std::string>::iterator it;
+  for (it = paths.begin(); it != paths.end(); ++it)
   {
-    _private->checkInit();
-    std::vector<std::string> paths = dataPaths(applicationName);
-    try
-    {
-      std::vector<std::string>::const_iterator it;
-      for (it = paths.begin(); it != paths.end(); ++it)
-      {
-        boost::filesystem::path p(*it, qi::unicodeFacet());
-
-        p /= filename;
-        p = p.make_preferred();
-        if (boost::filesystem::exists(p))
-          return p.string(qi::unicodeFacet());
-      }
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
-    return std::string();
+    QDir dataDir;
+    dataDir.setPath(QString::fromUtf8((*it).c_str()));
+    dataDirs << dataDir.absolutePath();
   }
+  QDir::setSearchPaths("data", dataDirs);
 
-  std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
+  searchPath = "data:" + QString::fromUtf8(filename.c_str());
+  dataPath.setFileName(searchPath);
+  if (dataPath.exists())
+    return std::string(QDir::toNativeSeparators(dataPath.fileName()).toUtf8().constData());
+
+  return std::string();
+}
+
+std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
+{
+  _private->checkInit();
+  std::vector<std::string> cPath;
+
+  cPath.push_back(std::string(
+                    QDir::toNativeSeparators(userWritableConfPath(applicationName, "").c_str()).toUtf8().constData()));
+
+
+  QDir confDir;
+  foreach (QString sdk, _private->_sdkPrefixes)
   {
-    _private->checkInit();
-    std::vector<std::string> res;
+    confDir.setPath(sdk + "/etc/" + QString::fromUtf8(applicationName.c_str()));
+    cPath.push_back(std::string(QDir::toNativeSeparators(confDir.absolutePath()).toUtf8().constData()));
 
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableConfPath(applicationName, ""));
+    confDir.setPath(sdk + "/etc");
+    cPath.push_back(std::string(QDir::toNativeSeparators(confDir.absolutePath()).toUtf8().constData()));
 
-    try
-    {
-      std::vector<std::string>::const_iterator it;
-      for (it = _private->_sdkPrefixes.begin(); it != _private->_sdkPrefixes.end(); ++it)
-      {
-        boost::filesystem::path prefix(*it, qi::unicodeFacet());
-        res.push_back((prefix / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((prefix / "etc").make_preferred().string(qi::unicodeFacet()));
-        res.push_back((prefix / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((prefix / "preferences").make_preferred().string(qi::unicodeFacet()));
+    confDir.setPath(sdk + "/preferences/" + QString::fromUtf8(applicationName.c_str()));
+    cPath.push_back(std::string(QDir::toNativeSeparators(confDir.absolutePath()).toUtf8().constData()));
 
-#ifdef _MSC_VER
-        boost::filesystem::path multiConfigPrefPath(*it, qi::unicodeFacet());
-        multiConfigPrefPath = multiConfigPrefPath / _private->_mode;
-        multiConfigPrefPath = multiConfigPrefPath.make_preferred();
-        res.push_back((multiConfigPrefPath / "etc" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((multiConfigPrefPath / "etc").make_preferred().string(qi::unicodeFacet()));
-        res.push_back((multiConfigPrefPath / "preferences" / applicationName).make_preferred().string(qi::unicodeFacet()));
-        res.push_back((multiConfigPrefPath / "preferences").make_preferred().string(qi::unicodeFacet()));
-#endif
-      }
-
-
+    confDir.setPath(sdk + "/preferences");
+    cPath.push_back(std::string(QDir::toNativeSeparators(confDir.absolutePath()).toUtf8().constData()));
+  }
 
 #ifndef _WIN32
-      boost::filesystem::path systemPath("/etc", qi::unicodeFacet());
-      res.push_back((systemPath / applicationName).make_preferred().string(qi::unicodeFacet()));
+  confDir.setPath("/etc/" + QString::fromUtf8(applicationName.c_str()));
+  cPath.push_back(std::string(QDir::toNativeSeparators(confDir.absolutePath()).toUtf8().constData()));
 #endif
-    }
-    catch (const boost::filesystem::filesystem_error &e)
-    {
-      throw qi::os::QiException(e.what());
-    }
 
-    return res;
+  return cPath;
+}
+
+
+std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
+{
+  _private->checkInit();
+  std::vector<std::string> dPaths;
+
+  // Pass an empty string to get the directory:
+  dPaths.push_back(std::string(
+                     QDir::toNativeSeparators(userWritableDataPath(applicationName, "").c_str()).toUtf8().constData()));
+
+  foreach (QString sdk, _private->_sdkPrefixes)
+  {
+    QDir dataDir;
+    dataDir.setPath(sdk + "/" + "share" + "/" + QString::fromUtf8(applicationName.c_str()));
+    dPaths.push_back(std::string(QDir::toNativeSeparators(dataDir.absolutePath()).toUtf8().constData()));
   }
 
-  // FIXME: Auto-test needed
-  std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
+  return dPaths;
+}
+
+
+std::vector<std::string> SDKLayout::binPaths() const
+{
+  _private->checkInit();
+  std::vector<std::string> binPaths;
+
+  foreach (QString sdk, _private->_sdkPrefixes)
   {
-    _private->checkInit();
-    std::vector<std::string> res;
-
-    // Pass an empty string to get the directory:
-    res.push_back(userWritableDataPath(applicationName, ""));
-
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
-         ++it)
-    {
-      boost::filesystem::path prefix(*it, qi::unicodeFacet());
-      res.push_back((prefix / "share" / applicationName).make_preferred().string(qi::unicodeFacet()));
-    }
-
-    return res;
+    QDir binDir;
+    binDir.setPath(sdk + "/" + "bin");
+    binPaths.push_back(std::string(QDir::toNativeSeparators(binDir.absolutePath()).toUtf8().constData()));
   }
 
+  return binPaths;
+}
 
-  std::vector<std::string> SDKLayout::binPaths() const
+std::vector<std::string> SDKLayout::libPaths() const
+{
+  _private->checkInit();
+  std::vector<std::string> libPaths;
+
+  foreach (QString sdk, _private->_sdkPrefixes)
   {
-    _private->checkInit();
-    std::vector<std::string> binPaths;
-
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
-         ++it)
-    {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
-      if (_private->_mode != "")
-        binPaths.push_back((p / _private->_mode).make_preferred().string(qi::unicodeFacet()));
-
-      binPaths.push_back((p / "bin").make_preferred().string(qi::unicodeFacet()));
-    }
-
-    return binPaths;
+    QDir libDir;
+    libDir.setPath(sdk + "/" + "lib");
+    libPaths.push_back(std::string(QDir::toNativeSeparators(libDir.absolutePath()).toUtf8().constData()));
   }
 
-  std::vector<std::string> SDKLayout::libPaths() const
-  {
-    _private->checkInit();
-    std::vector<std::string> libPaths;
-
-    std::vector<std::string>::const_iterator it;
-    for (it = _private->_sdkPrefixes.begin();
-         it != _private->_sdkPrefixes.end();
-         ++it)
-    {
-      boost::filesystem::path p(*it, qi::unicodeFacet());
-
-      if (_private->_mode != "")
-        libPaths.push_back((p / _private->_mode).make_preferred().string(qi::unicodeFacet()));
-
-      libPaths.push_back((p / "lib").make_preferred().string(qi::unicodeFacet()));
-    }
-
-    return libPaths;
-  }
+  return libPaths;
+}
 
 
-  std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
-                                              const std::string &filename) const
-  {
-    _private->checkInit();
-    boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
+std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
+                                            const std::string &filename) const
+{
+  _private->checkInit();
+
+  QString userDataPath;
 #ifndef _WIN32
-    path = path / ".local" / "share" / applicationName / filename;
-    path = path.make_preferred();
+  userDataPath = QDir::home().absolutePath() + "/.local/share"
+      + "/" + QString::fromUtf8(applicationName.c_str());
+  if (!filename.empty())
+    userDataPath += "/" + QString::fromUtf8(filename.c_str());
 #else
-    boost::filesystem::path envUserAppData(qi::os::getenv("AppData"),
-                                           qi::unicodeFacet());
-    path = envUserAppData / applicationName / filename;
-    path = path.make_preferred();
+  userDataPath = QString::fromUtf8(qi::os::getenv("AppData").c_str())
+      + "/" + QString::fromUtf8(applicationName.c_str());
+  if (!filename.empty())
+    userDataPath += "/" + QString::fromUtf8(filename.c_str());
 #endif
 
-    boost::filesystem::path dest = path;
-    if (!filename.empty())
-      dest = path.parent_path();
+  QFileInfo userDataFileInfo(userDataPath);
+  QDir dest(userDataFileInfo.absolutePath());
+  if (!dest.exists())
+    QDir::root().mkpath(userDataFileInfo.absolutePath());
 
-    if (!boost::filesystem::exists(dest)) {
-      try {
-        boost::filesystem::create_directories(dest);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        throw qi::os::QiException(e.what());
-      }
-    }
-    return path.string(qi::unicodeFacet());
-  }
+  return std::string(QDir::toNativeSeparators(userDataPath).toUtf8().constData());
+}
 
 
-  std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
-                                              const std::string &filename) const
-  {
-    _private->checkInit();
-    boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
+std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
+                                            const std::string &filename) const
+{
+  _private->checkInit();
 
-    path = path / ".config" / applicationName / filename;
-    path = path.make_preferred();
+  QString userConfPath;
+#ifndef _WIN32
+  userConfPath = QDir::home().absolutePath() + "/.config"
+      + "/" + QString::fromUtf8(applicationName.c_str());
+  if (!filename.empty())
+    userConfPath += "/" + QString::fromUtf8(filename.c_str());
+#else
+  userConfPath = QString::fromUtf8(qi::os::getenv("AppData").c_str())
+      + "/" + QString::fromUtf8(applicationName.c_str());
+  if (!filename.empty())
+    userConfPath += "/" + QString::fromUtf8(filename.c_str());
+#endif
 
-    boost::filesystem::path dest = path;
-    if (!filename.empty())
-      dest = path.parent_path();
+  QFileInfo userConfFileInfo(userConfPath);
+  QDir dest(userConfFileInfo.absolutePath());
+  if (!dest.exists())
+    QDir::root().mkpath(userConfFileInfo.absolutePath());
 
-    if (!boost::filesystem::exists(dest)) {
-      try {
-        boost::filesystem::create_directories(dest);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        throw qi::os::QiException(e.what());
-      }
-    }
-    return path.string(qi::unicodeFacet());
-  }
+  return std::string(QDir::toNativeSeparators(userConfPath).toUtf8().constData());
+}
 }; // qi
