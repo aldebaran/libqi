@@ -117,11 +117,8 @@ namespace qi {
 
     FILE* fopen(const char *filename, const char *mode) {
       try {
-        boost::filesystem::path dest(filename);
-        std::string  amode(mode);
-        std::wstring wmode;
-        std::copy(amode.begin(), amode.end(), std::back_inserter(wmode));
-        return ::_wfopen(dest.wstring(qi::unicodeFacet()).c_str(), wmode.c_str());
+        return ::_wfopen(boost::filesystem::path(filename, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(),
+                         boost::filesystem::path(mode, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str());
       }
       catch (boost::filesystem::filesystem_error &) {
         return 0;
@@ -152,9 +149,7 @@ namespace qi {
 
     std::string getenv(const char *var) {
       size_t       bufSize;
-
-      std::string  avar(var);
-      std::wstring wvar = boost::filesystem::path(avar).wstring();
+      std::wstring wvar = boost::filesystem::path(var, qi::unicodeFacet()).wstring(qi::unicodeFacet());
 
      #ifdef _MSC_VER
       wchar_t     *envDir = NULL;
@@ -166,9 +161,6 @@ namespace qi {
       std::string ret(dest.string(qi::unicodeFacet()).c_str());
       free(envDir);
       return ret;
-
-
-
     #else
       _wgetenv_s(&bufSize, NULL, 0,  wvar.c_str());
 
@@ -186,13 +178,8 @@ namespace qi {
     }
 
     int setenv(const char *var, const char *value) {
-      std::string  avar(var);
-      std::wstring wvar = boost::filesystem::path(avar).wstring();
-
-      std::string  avalue(value);
-      std::wstring wvalue = boost::filesystem::path(avalue).wstring();
-
-      return _wputenv_s(wvar.c_str(), wvalue.c_str());
+      return _wputenv_s(boost::filesystem::path(var, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str(),
+                        boost::filesystem::path(value, qi::unicodeFacet()).wstring(qi::unicodeFacet()).c_str());
     }
 
     void sleep(unsigned int seconds) {

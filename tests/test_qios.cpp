@@ -14,6 +14,7 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
+#include <qi/qi.hpp>
 
 class QiOSTests: public ::testing::Test
 {
@@ -26,8 +27,8 @@ public:
 protected:
   void SetUp() {
     a_newPath = qi::os::tmpdir("QiOsTest");
-    a_newPath /= a_accent;
-    FILE* fileHandle = qi::os::fopen(a_newPath.string().c_str(), "w");
+    a_newPath.append(a_accent, qi::unicodeFacet());
+    FILE* fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
     fclose(fileHandle);
   }
 
@@ -52,11 +53,8 @@ TEST_F(QiOSTests, LowLevelAccent)
 {
   // Try to retrieve the file.
   // The name must be in utf-8 to be retrieved on unix.
-  //boost::filesystem::path localPath = mkdtemp("QiOsTestLLAccent");
-  //localPath /= a_accent;
   ASSERT_TRUE(boost::filesystem::exists(a_newPath))
-    << a_newPath.string() << std::endl
-    << a_newPath.string();
+    << a_newPath.string() << std::endl;
 }
 
 
