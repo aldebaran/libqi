@@ -229,7 +229,8 @@ namespace qi
      * @param filename If filename is empty, return the directory
      * in which to write. Otherwise the path is constructed like this:
      * \verbatim
-     * <home>/.config/<applicatioName>/<filename>
+     * <home>/.config/<applicatioName>/<filename> (on linux)
+     * %AppData%\<applicatioName>\<filename> (windows)
      * You can specify subdirectories using "/" as directory separator
      * (in UTF-8).
      * \endverbatim
