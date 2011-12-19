@@ -524,8 +524,15 @@ namespace qi {
     _private->checkInit();
     boost::filesystem::path path(::qi::os::home(), qi::unicodeFacet());
 
+#ifndef _WIN32
     path = path / ".config" / applicationName / filename;
     path = path.make_preferred();
+#else
+    boost::filesystem::path envUserAppData(qi::os::getenv("AppData"),
+                                           qi::unicodeFacet());
+    path = envUserAppData / applicationName / filename;
+    path = path.make_preferred();
+#endif
 
     boost::filesystem::path dest = path;
     if (!filename.empty())
