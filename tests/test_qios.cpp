@@ -30,6 +30,9 @@ protected:
     a_newPath.append(a_accent, qi::unicodeFacet());
     FILE* fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
     fclose(fileHandle);
+//    QString pouet = QDir::tempPath() + "/" + QString::fromUtf8(a_accent);
+//    FILE* fileHandle = qi::os::fopen(pouet.toUtf8().data(), "w");
+//    fclose(fileHandle);
   }
 
   void TearDown() {

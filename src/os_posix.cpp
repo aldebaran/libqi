@@ -32,22 +32,25 @@ namespace qi {
   namespace os {
 
     FILE* fopen(const char *filename, const char *mode) {
-      return ::fopen(filename, mode);
+      return ::fopen(boost::filesystem::path(filename, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(),
+                     boost::filesystem::path(mode, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str());
+
     }
 
-    int stat(const char *pFilename, struct ::stat* pStat) {
-      return ::stat(pFilename, pStat);
+    int stat(const char *filename, struct ::stat* status) {
+      return ::stat(boost::filesystem::path(filename, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(), status);
     }
 
     std::string getenv(const char *var) {
-      char *res = ::getenv(var);
+      char *res = ::getenv(boost::filesystem::path(var, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str());
       if (res == NULL)
         return "";
       return std::string(res);
     }
 
     int setenv(const char *var, const char *value) {
-      return ::setenv(var, value, 1);
+      return ::setenv(boost::filesystem::path(var, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(),
+                      boost::filesystem::path(value, qi::unicodeFacet()).string(qi::unicodeFacet()).c_str(), 1);
     }
 
     void sleep(unsigned int seconds) {
@@ -96,10 +99,10 @@ namespace qi {
       {
        #ifdef __APPLE__
         path = boost::filesystem::path(::qi::os::home(),
-                                       qi::unicodeFacet()) / "Cache";
+                                       qi::unicodeFacet()).append("Cache", qi::unicodeFacet());
        #else
         path = boost::filesystem::path(::qi::os::home(),
-                                       qi::unicodeFacet()) / ".cache";
+                                       qi::unicodeFacet()).append(".cache", qi::unicodeFacet());
        #endif
       }
       else
@@ -108,8 +111,8 @@ namespace qi {
       }
 
       std::string filename(prefix);
-      filename += path.filename().string();
-      path = path.parent_path() / filename;
+      filename += path.filename().string(qi::unicodeFacet());
+      path = path.parent_path().append(filename, qi::unicodeFacet());
 
       try
       {
