@@ -15,7 +15,7 @@ if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
-qi_add_optional_package(QT "Enable QT")
+#qi_add_optional_package(QT_QTCORE "Enable QT")
 
 enable_testing()
 include(CMakeDependentOption)
@@ -56,7 +56,7 @@ else()
   list(APPEND C src/os_debugger_posix.cpp src/os_launch_posix.cpp src/os_posix.cpp)
 endif()
 
-if (WITH_QT)
+if (WITH_QT_QTCORE)
   list(APPEND C src/sdklayout-qt.cpp)
 else()
   list(APPEND C src/sdklayout-boost.cpp)
@@ -72,7 +72,7 @@ else()
 endif()
 
 
-if (WITH_QT)
+if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD)
