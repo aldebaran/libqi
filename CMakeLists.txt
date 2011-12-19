@@ -15,7 +15,7 @@ if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
-option(WITH_QT "Enable QT" ON)
+qi_add_optional_package(QT "Enable QT")
 
 enable_testing()
 include(CMakeDependentOption)
