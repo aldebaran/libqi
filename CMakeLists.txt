@@ -12,6 +12,5 @@ include("qibuild.cmake")
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
 enable_testing()
-add_subdirectory("libqi")
 add_subdirectory("tinyxml")
 add_subdirectory("libqimessaging")
