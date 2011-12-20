@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 2008 Aldebaran Robotics
+## Copyright (C) 2008, 2011 Aldebaran Robotics
 ##
 
 project(tinyxml)
@@ -17,7 +17,7 @@ set( TINYXML_SRCS
  )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-create_lib(tinyxml ${TINYXML_SRCS} ${TINYXML_H})
-install_header(TINYXML SUBFOLDER tinyxml ${TINYXML_H})
-stage_lib(tinyxml TINYXML)
+qi_create_lib(tinyxml ${TINYXML_SRCS} ${TINYXML_H})
+qi_install_header(SUBFOLDER tinyxml ${TINYXML_H})
+qi_stage_lib(tinyxml)
 
