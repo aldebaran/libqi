@@ -463,6 +463,26 @@ TEST(qiPathTests, pathUTF16)
 }
 #endif
 
+#if 0
+#include <QString>
+TEST(qiPathTests, conversionFromUTF16)
+{
+  // 中文 -> china
+  wchar_t utf16c[] = {'/', 't', 'm', 'p', '/', 0x4E2D, 0x6587, 0};
+  QChar utf16cc[] = {'/', 't', 'm', 'p', '/', 0x4E2D, 0x6587, 0};
+
+  boost::filesystem::path bUtf16(utf16c, qi::unicodeFacet());
+  const char *bUtf8char = bUtf16.string(qi::unicodeFacet()).c_str();
+  std::string bUtf8String(bUtf8char);
+
+  QString qUtf16 = QString((QChar*)utf16cc, 7);
+  const char *qUtf8char = qUtf16.toUtf8().constData();
+  std::string qUtf8String(qUtf8char);
+
+  ASSERT_EQ(bUtf8String, qUtf8String);
+}
+#endif
+
 int main(int argc, char* argv[])
 {
   qi::init(argc, argv);
