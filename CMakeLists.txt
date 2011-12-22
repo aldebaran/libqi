@@ -32,7 +32,6 @@ set(H
   qi/macro.hpp
   qi/os.hpp
   qi/path.hpp
-  qi/project.hpp
   qi/qi.hpp
 )
 
