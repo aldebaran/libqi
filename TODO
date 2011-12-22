@@ -1,7 +1,10 @@
+TODO
+====
+* Python API
+
+log:
+* Improve RT compliant log to do not discard (sometime) last meesage's logs
+  (multiple fifo with thread...)
+
 path:
-  getTmpPath should suffix a random string to the returned string. (except if param is empty)
-
-os:
-  could we just provide a posix layer for windows?
-
-sharedlibrary: => convert to qi::os::dlopen, qi::os::dlsym, qi::os::dlclose, qi::os::dlerror
+* Use QT everywhere?

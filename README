@@ -1,0 +1,19 @@
+libqi
+=====
+
+libqi is a shared library providing access to OS and system level
+functionnalities. You will find cross-platform method to access the environment,
+to start process, to open files with UTF-8 path, to open shared library and more.
+
+git repository:
+http://github.com/aldebaran/libqi
+
+Mailing list:
+naoqi-dev@aldebaran-robotics.com
+
+Documentation:
+http://www.aldebaran-robotics.com/documentation/ref/libqi/index.html
+
+Maintainers:
+Herve Cuche <hcuche@aldebaran-robotics.com>
+Cedric GESTES <gestes@aldebaran-robotics.com>
