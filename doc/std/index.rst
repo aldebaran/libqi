@@ -1,6 +1,7 @@
 
 .. toctree::
   aml
+  network
 
 ..
 
