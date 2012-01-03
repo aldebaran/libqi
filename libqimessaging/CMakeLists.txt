@@ -3,7 +3,7 @@
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011, 2012 Aldebaran Robotics
 ##
 
 cmake_minimum_required(VERSION 2.6.4)
@@ -42,7 +42,7 @@ qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp"
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp")
+qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp" "qimessaging/perf/*.hpp" "src/perf/*.*pp")
 qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
 
 qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
