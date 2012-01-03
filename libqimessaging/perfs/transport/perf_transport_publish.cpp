@@ -8,7 +8,6 @@
 #include <cmath>
 #include "src/transport/zmq/zmq_publisher.hpp"
 #include "src/transport/zmq/zmq_subscriber.hpp"
-#include <qi/perf/sleep.hpp>
 #include <boost/timer.hpp>
 
 struct SubscribePerfHandler : qi::transport::TransportSubscribeHandler {

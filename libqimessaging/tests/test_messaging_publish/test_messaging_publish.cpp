@@ -9,7 +9,7 @@
 #include <qimessaging/master.hpp>
 #include <qimessaging/publisher.hpp>
 #include <qimessaging/subscriber.hpp>
-#include <qi/perf/dataperftimer.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 #include <qi/os.hpp>
 #include <string>
 

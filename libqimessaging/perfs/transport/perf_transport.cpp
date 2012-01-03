@@ -20,9 +20,8 @@
 #include "src/transport/zmq/zmq_client_backend.hpp"
 
 #include <boost/shared_ptr.hpp>
-#include <qi/perf/dataperftimer.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 
-#include <qi/perf/sleep.hpp>
 
 //#define TEST_TRANSPORT_ZMQ_SINGLE
 //#define TEST_TRANSPORT_ZMQ_QUEUE

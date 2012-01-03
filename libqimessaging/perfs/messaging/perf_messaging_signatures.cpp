@@ -6,7 +6,6 @@
 #include <qi/messaging.hpp>
 #include <qimessaging/exceptions.hpp>
 #include "alvalue.pb.h"
-#include <qi/perf/sleep.hpp>
 
 using namespace qi;
 

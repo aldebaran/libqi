@@ -13,8 +13,7 @@
 
 #include <qi/messaging.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qi/perf/dataperftimer.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 
 using namespace qi::messaging;
 using qi::perf::DataPerfTimer;

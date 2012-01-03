@@ -2,8 +2,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <qi/messaging.hpp>
-#include <qi/perf/sleep.hpp>
-#include <qi/perf/dataperftimer.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 
 #include <qimessaging/serialization.hpp>
 #include <qimessaging/serialization/serializable.hpp>

@@ -5,8 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include <qi/perf/dataperftimer.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 #include <zmq.hpp>
 
 using qi::perf::DataPerfTimer;

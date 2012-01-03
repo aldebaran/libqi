@@ -1,8 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/messaging.hpp>
-#include <qi/perf/dataperftimer.hpp>
-#include <qi/perf/sleep.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 #include <string>
 #include <alvalue.pb.h>
 

@@ -26,7 +26,7 @@
 #include <protocol/TJSONProtocol.h>
 #include <protocol/TBinaryProtocol.h>
 
-#include <qi/perf/dataperftimer.hpp>
+#include <qimessaging/perf/dataperftimer.hpp>
 
 using qi::perf::DataPerfTimer;
 
