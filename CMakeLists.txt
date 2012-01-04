@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 project(LibQi)
-include("qibuild.cmake")
+find_package(qibuild)
 
 if (EFFECTIVE_CPP)
   add_definitions(" -Weffc++ ")
