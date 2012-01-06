@@ -1,0 +1,3 @@
+<project name="libqi">
+  <doxydoc name="libqi" src="." dest="ref/libqi" />
+</project>
