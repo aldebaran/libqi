@@ -42,13 +42,17 @@ public:
   RemoteService() {
     tc = new TransportClient("127.0.0.1", 12345);
     tc->setDelegate(this);
+    thd = boost::thread(TransportClient::launch, tc);
+  }
 
-    boost::thread transportThread(TransportClient::launch, tc);
-    sleep(5);
-
-    tc->send("totot\n");
-    transportThread.join();
+  ~RemoteService() {
     delete tc;
+  }
+
+  void call() {
+    sleep(1);
+    tc->send("totot\n");
+    //thd.join();
   }
 
   virtual void onConnected()
@@ -68,11 +72,13 @@ public:
 
 private:
   TransportClient *tc;
+  boost::thread    thd;
 };
 
 int main(int argc, char *argv[])
 {
   RemoteService rs;
+  rs.call();
   return 0;
 
 }
