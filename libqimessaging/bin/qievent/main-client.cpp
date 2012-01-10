@@ -54,9 +54,8 @@ public:
     nthd = n;
   }
 
-  void call() {
-    sleep(2);
-    tc->send("totot\n", nthd->getEventBase());
+  void call(const std::string &msg) {
+    tc->send(msg + "\n", nthd->getEventBase());
   }
 
   virtual void onConnected()
@@ -77,21 +76,21 @@ public:
 private:
   NetworkThread   *nthd;
   TransportClient *tc;
-  boost::thread    thd;
 };
 
 int main(int argc, char *argv[])
 {
   NetworkThread *nthd = new NetworkThread();
+  sleep(1);
   RemoteService rs;
   rs.setThread(nthd);
-  rs.call();
+  rs.call("first");
   RemoteService rs1;
   rs1.setThread(nthd);
-  rs1.call();
+  rs1.call("second");
   RemoteService rs2;
   rs2.setThread(nthd);
-  rs2.call();
+  rs2.call("third");
   sleep(1);
   return 0;
 

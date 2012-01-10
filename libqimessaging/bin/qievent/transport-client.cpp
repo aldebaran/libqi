@@ -91,6 +91,8 @@ bool TransportClient::send(const std::string &msg,
     return false;
   }
 
+  _tcd->onConnected();
+
   if (!bufferevent_write(bev, msg.c_str(), msg.size()))
     return true;
   return false;
