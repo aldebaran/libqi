@@ -29,9 +29,8 @@
 # include <string>
 # include <qi/macro.hpp>
 
-//# include <event2/util.h>
+
 # include <event2/event.h>
-//# include <event2/buffer.h>
 # include <event2/bufferevent.h>
 
 class TransportClientDelegate
@@ -47,26 +46,19 @@ class TransportClient
   QI_DISALLOW_COPY_AND_ASSIGN(TransportClient);
 
 public:
-  explicit TransportClient(const char* host,
+  explicit TransportClient(const std::string &adress,
                            unsigned short port);
   virtual ~TransportClient();
 
-  static void launch(TransportClient *t);
-  bool send(const std::string &msg);
+  bool send(const std::string &msg,
+            struct event_base *base);
 
   void setDelegate(TransportClientDelegate *delegate);
   TransportClientDelegate *_tcd;
-private:
-  void run();
-  void init();
 
 private:
-
-  std::string         _host;
+  std::string         _adress;
   unsigned short      _port;
-
-  struct event_base  *_base;
-  struct bufferevent *_bev;
 };
 
 #endif	    /* !TRANSPORT_CLIENT_PP_ */

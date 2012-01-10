@@ -36,23 +36,27 @@
 #include <boost/thread.hpp>
 
 #include "transport-client.hpp"
+#include "network-thread.hpp"
 
 class RemoteService : public TransportClientDelegate {
 public:
   RemoteService() {
     tc = new TransportClient("127.0.0.1", 12345);
     tc->setDelegate(this);
-    thd = boost::thread(TransportClient::launch, tc);
   }
 
   ~RemoteService() {
     delete tc;
   }
 
+  void setThread(NetworkThread *n)
+  {
+    nthd = n;
+  }
+
   void call() {
-    sleep(1);
-    tc->send("totot\n");
-    //thd.join();
+    sleep(2);
+    tc->send("totot\n", nthd->getEventBase());
   }
 
   virtual void onConnected()
@@ -71,14 +75,24 @@ public:
   }
 
 private:
+  NetworkThread   *nthd;
   TransportClient *tc;
   boost::thread    thd;
 };
 
 int main(int argc, char *argv[])
 {
+  NetworkThread *nthd = new NetworkThread();
   RemoteService rs;
+  rs.setThread(nthd);
   rs.call();
+  RemoteService rs1;
+  rs1.setThread(nthd);
+  rs1.call();
+  RemoteService rs2;
+  rs2.setThread(nthd);
+  rs2.call();
+  sleep(1);
   return 0;
 
 }

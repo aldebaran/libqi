@@ -18,11 +18,13 @@
 #include <stdexcept>
 
 #include "transport-client.hpp"
+#include "network-thread.hpp"
 
 #define MAX_LINE 16384
 
-TransportClient::TransportClient(const char* host, unsigned short port)
-  : _host(host)
+TransportClient::TransportClient(const std::string &adress,
+                                 unsigned short port)
+  : _adress(adress)
   , _port(port)
 {
 }
@@ -75,56 +77,26 @@ static void errorcb(struct bufferevent *bev,
 
 
 
-void TransportClient::run()
+bool TransportClient::send(const std::string &msg,
+                           struct event_base *base)
 {
-  init();
+  struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent_setcb(bev, readcb, writecb, errorcb, this);
+  bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
+  bufferevent_enable(bev, EV_READ|EV_WRITE);
 
-  _base = event_base_new();
-
-  _bev = bufferevent_socket_new(_base, -1, BEV_OPT_CLOSE_ON_FREE);
-  bufferevent_setcb(_bev, readcb, writecb, errorcb, this);
-  bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
-  bufferevent_enable(_bev, EV_READ|EV_WRITE);
-
-  if (bufferevent_socket_connect_hostname(_bev, NULL, AF_INET, _host.c_str(), _port) < 0)
+  if (bufferevent_socket_connect_hostname(bev, NULL, AF_INET, _adress.c_str(), _port) < 0)
   {
-    /* Error starting connection */
-    bufferevent_free(_bev);
+    bufferevent_free(bev);
+    return false;
   }
 
-  event_base_dispatch(_base);
-
-//  while (true)
-//    ;
-}
-
-
-void TransportClient::launch(TransportClient *t)
-{
-  try
-  {
-    t->run();
-  }
-  catch (const std::exception& e)
-  {
-    qiLogError("qimessaging.TransportClient", "Gateway: %s", e.what());
-  }
-}
-
-void TransportClient::init()
-{
-  qiLogDebug("qimessaging.TransportClient", "Gateway: Init");
-  if (!(_base = event_base_new()))
-    throw std::runtime_error("Could not init libevent");
+  if (!bufferevent_write(bev, msg.c_str(), msg.size()))
+    return true;
+  return false;
 }
 
 void TransportClient::setDelegate(TransportClientDelegate *delegate)
 {
   _tcd = delegate;
-}
-
-bool TransportClient::send(const std::string &msg)
-{
-  bufferevent_write(_bev, msg.c_str(), msg.size());
-  return true;
 }

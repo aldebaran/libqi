@@ -12,10 +12,12 @@ qi_add_optional_package(LIBEVENT)
 
 if (WITH_LIBEVENT)
   set(C_CLIENT
+    network-thread.cpp
     transport-client.cpp
     main-client.cpp
     )
   set(H_CLIENT
+    network-thread.hpp
     transport-client.hpp
     )
 
