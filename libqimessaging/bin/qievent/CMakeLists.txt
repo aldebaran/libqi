@@ -28,5 +28,5 @@ if (WITH_LIBEVENT)
   qi_create_bin(qi-event-tcp-client ${H_CLIENT} ${C_CLIENT})
 
   qi_use_lib(qi-event-tcp-server QI BOOST_PROGRAM_OPTIONS LIBEVENT)
-  qi_use_lib(qi-event-tcp-client BOOST_PROGRAM_OPTIONS LIBEVENT)
+  qi_use_lib(qi-event-tcp-client BOOST_PROGRAM_OPTIONS BOOST_THREAD QI LIBEVENT)
 endif ()

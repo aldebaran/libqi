@@ -33,24 +33,41 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <boost/thread.hpp>
 
 #include "transport-client.hpp"
 
 class RemoteService : public TransportClientDelegate {
 public:
   RemoteService() {
-    tc.setDelegate(this);
+    tc = new TransportClient("127.0.0.1", 12345);
+    tc->setDelegate(this);
 
-    tc.setconnection("127.0.0.1", 12345);
-    tc.send("totot\n");
+    boost::thread transportThread(TransportClient::launch, tc);
+    sleep(5);
+
+    tc->send("totot\n");
+    transportThread.join();
+    delete tc;
   }
 
-  virtual void onConnected() { std::cout << "connected" << std::endl;};
-  virtual void onWrite() { std::cout << "wroten" << std::endl;};
-  virtual void onRead() { std::cout << "read" << std::endl;};
+  virtual void onConnected()
+  {
+    std::cout << "connected" << std::endl;
+  }
+
+  virtual void onWrite()
+  {
+    std::cout << "written" << std::endl;
+  }
+
+  virtual void onRead()
+  {
+    std::cout << "read" << std::endl;
+  }
 
 private:
-  TransportClient tc;
+  TransportClient *tc;
 };
 
 int main(int argc, char *argv[])
@@ -59,65 +76,3 @@ int main(int argc, char *argv[])
   return 0;
 
 }
-
-//#define MAX_LINE 16384
-
-//void errorcb(struct bufferevent *bev,
-//             short error,
-//             void *ctx)
-//{
-
-
-
-//  if (error & BEV_EVENT_EOF)
-//  {
-//    // connection has been closed, do any clean up here
-//  }
-//  else if (error & BEV_EVENT_ERROR)
-//  {
-//    // check errno to see what error occurred
-//  }
-//  else if (error & BEV_EVENT_TIMEOUT)
-//  {
-//    // must be a timeout event handle, handle it
-//  }
-
-//  std::string lol("toto ");
-//  std::string lol1("toto\n");
-//  bufferevent_write(bev, lol.c_str(), lol.size());
-//  bufferevent_write(bev, lol1.c_str(), lol1.size());
-
-//  bufferevent_free(bev);
-//}
-
-//void run(void)
-//{
-//  struct event_base *base;
-//  struct bufferevent *bev;
-
-//  base = event_base_new();
-
-//  bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-//  bufferevent_setcb(bev, NULL, NULL, errorcb, NULL);
-//  bufferevent_enable(bev, EV_WRITE);
-//  bufferevent_disable(bev, EV_READ);
-
-//  if (bufferevent_socket_connect_hostname(bev, NULL, AF_INET, "127.0.0.1", 12345) < 0)
-//  {
-//    /* Error starting connection */
-//    bufferevent_free(bev);
-//    return;
-//  }
-
-//  event_base_dispatch(base);
-//  return;
-//}
-
-//int main(int argc, char *argv[])
-//{
-//  setvbuf(stdout, NULL, _IONBF, 0);
-
-//  run();
-//  return 0;
-//}
-
