@@ -41,7 +41,7 @@
 class RemoteService : public TransportClientDelegate {
 public:
   RemoteService() {
-    tc = new TransportClient("127.0.0.1", 12345);
+    tc = new TransportClient("127.0.0.1", 9559);
     tc->setDelegate(this);
   }
 

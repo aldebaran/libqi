@@ -22,13 +22,18 @@ if (WITH_LIBEVENT)
     )
 
   set(C_SERVER
+    network-thread.cpp
+    transport-server.cpp
     main-server.cpp
     )
-  set(H_SERVER)
+  set(H_SERVER
+    network-thread.hpp
+    transport-server.hpp
+    )
 
   qi_create_bin(qi-event-tcp-server ${H_SERVER} ${C_SERVER})
   qi_create_bin(qi-event-tcp-client ${H_CLIENT} ${C_CLIENT})
 
-  qi_use_lib(qi-event-tcp-server QI BOOST_PROGRAM_OPTIONS LIBEVENT)
-  qi_use_lib(qi-event-tcp-client BOOST_PROGRAM_OPTIONS BOOST_THREAD QI LIBEVENT)
+  qi_use_lib(qi-event-tcp-server BOOST_THREAD QI LIBEVENT)
+  qi_use_lib(qi-event-tcp-client BOOST_THREAD QI LIBEVENT)
 endif ()
