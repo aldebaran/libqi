@@ -22,9 +22,9 @@
 
 #define MAX_LINE 16384
 
-TransportClient::TransportClient(const std::string &adress,
+TransportClient::TransportClient(const std::string &address,
                                  unsigned short port)
-  : _adress(adress)
+  : _address(address)
   , _port(port)
 {
 }
@@ -85,7 +85,7 @@ bool TransportClient::send(const std::string &msg,
   bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
   bufferevent_enable(bev, EV_READ|EV_WRITE);
 
-  if (bufferevent_socket_connect_hostname(bev, NULL, AF_INET, _adress.c_str(), _port) < 0)
+  if (bufferevent_socket_connect_hostname(bev, NULL, AF_INET, _address.c_str(), _port) < 0)
   {
     bufferevent_free(bev);
     return false;
@@ -95,6 +95,7 @@ bool TransportClient::send(const std::string &msg,
 
   if (!bufferevent_write(bev, msg.c_str(), msg.size()))
     return true;
+
   return false;
 }
 

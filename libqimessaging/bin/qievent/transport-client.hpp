@@ -46,7 +46,7 @@ class TransportClient
   QI_DISALLOW_COPY_AND_ASSIGN(TransportClient);
 
 public:
-  explicit TransportClient(const std::string &adress,
+  explicit TransportClient(const std::string &address,
                            unsigned short port);
   virtual ~TransportClient();
 
@@ -57,7 +57,7 @@ public:
   TransportClientDelegate *_tcd;
 
 private:
-  std::string         _adress;
+  std::string         _address;
   unsigned short      _port;
 };
 

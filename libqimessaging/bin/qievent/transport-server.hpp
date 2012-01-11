@@ -24,7 +24,7 @@ class TransportServer
   QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
 
 public:
-  explicit TransportServer(const std::string &adress,
+  explicit TransportServer(const std::string &address,
                            unsigned short port);
   virtual ~TransportServer();
 
@@ -32,7 +32,7 @@ public:
 
 protected:
 private:
-  std::string    _adress;
+  std::string    _address;
   unsigned short _port;
 };
 

@@ -28,10 +28,16 @@ static void readcb(struct bufferevent *bev,
                    void *ctx)
 {
   char buf[1024];
-  int n;
+  size_t n;
   struct evbuffer *input = bufferevent_get_input(bev);
+
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
+  {
     fwrite(buf, 1, n, stdout);
+    fflush(stdout);
+  }
+
+  bufferevent_free(bev);
 }
 
 static void errorcb(struct bufferevent *bev,
@@ -86,9 +92,9 @@ static void accept(evutil_socket_t listener,
   }
 }
 
-TransportServer::TransportServer(const std::string &adress,
+TransportServer::TransportServer(const std::string &address,
                                  unsigned short port)
-  : _adress(adress)
+  : _address(address)
   , _port(port)
 {
 }
@@ -115,7 +121,7 @@ void TransportServer::run(struct event_base *base)
   addr.sin_family = AF_INET;
   addr.sin_port = htons(_port);
 
-  if ((addr.sin_addr.s_addr = inet_addr(_adress.c_str())) == INADDR_NONE)
+  if ((addr.sin_addr.s_addr = inet_addr(_address.c_str())) == INADDR_NONE)
   {
     qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
     return;
