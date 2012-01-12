@@ -13,12 +13,54 @@
 #include "network-thread.hpp"
 #include "transport-server.hpp"
 
+
+class RemoteServer : public TransportServerDelegate {
+public:
+  RemoteServer() {
+    ts = new TransportServer("127.0.0.1", 9559);
+    ts->setDelegate(this);
+  }
+
+  ~RemoteServer() {
+    delete ts;
+  }
+
+  void setThread(NetworkThread *n)
+  {
+    nthd = n;
+  }
+
+  void call() {
+    ts->run(nthd->getEventBase());
+  }
+
+  virtual void onConnected(const std::string &msg)
+  {
+    std::cout << "connected: " << msg << std::endl;
+  }
+
+  virtual void onWrite(const std::string &msg)
+  {
+    std::cout << "written: " << msg << std::endl;
+  }
+
+  virtual void onRead(const std::string &msg)
+  {
+    std::cout << "read: " << msg << std::endl;
+  }
+
+private:
+  NetworkThread   *nthd;
+  TransportServer *ts;
+};
+
 int main(int argc, char *argv[])
 {
   NetworkThread *nthd = new NetworkThread();
   sleep(1);
-  TransportServer *ts = new TransportServer("127.0.0.1", 9559);
-  ts->run(nthd->getEventBase());
+  RemoteServer rs;
+  rs.setThread(nthd);
+  rs.call();
 
   while (true)
     ;

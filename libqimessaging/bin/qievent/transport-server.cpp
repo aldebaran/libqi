@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <qi/log.hpp>
 
 #include <event2/util.h>
@@ -25,17 +26,29 @@
 #define MAX_LINE 16384
 
 static void readcb(struct bufferevent *bev,
-                   void *ctx)
+                   void *context)
 {
   char buf[1024];
+  memset(buf, '\0', 1024);
   size_t n;
   struct evbuffer *input = bufferevent_get_input(bev);
 
+  TransportServer *ts = static_cast<TransportServer*>(context);
+
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    fwrite(buf, 1, n, stdout);
-    fflush(stdout);
+    ts->_tsd->onRead(std::string(buf));
   }
+
+  bufferevent_free(bev);
+}
+
+static void writecb(struct bufferevent* bev, void* context)
+{
+  (void) bev;
+
+  TransportServer *ts = static_cast<TransportServer*>(context);
+  ts->_tsd->onWrite();
 
   bufferevent_free(bev);
 }
@@ -67,7 +80,8 @@ static void accept(evutil_socket_t listener,
                    short ev,
                    void *arg)
 {
-  struct event_base *base = static_cast<struct event_base *>(arg);
+  TransportServer *ts = static_cast<TransportServer*>(arg);
+  struct event_base *base = ts->_base;
   struct sockaddr_storage ss;
   socklen_t slen = sizeof(ss);
 
@@ -86,7 +100,7 @@ static void accept(evutil_socket_t listener,
     struct bufferevent *bev;
     evutil_make_socket_nonblocking(fd);
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(bev, readcb, NULL, errorcb, NULL);
+    bufferevent_setcb(bev, readcb, writecb, errorcb, ts);
     bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ|EV_WRITE);
   }
@@ -141,8 +155,15 @@ void TransportServer::run(struct event_base *base)
     return;
   }
 
-  sockEvent = event_new(base, sock, EV_READ | EV_PERSIST,
-                        accept, base);
+  _base = base;
+  sockEvent = event_new(_base, sock, EV_READ | EV_PERSIST,
+                        accept, this);
 
   event_add(sockEvent, NULL);
 }
+
+void TransportServer::setDelegate(TransportServerDelegate *delegate)
+{
+  _tsd = delegate;
+}
+

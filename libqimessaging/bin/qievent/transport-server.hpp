@@ -14,9 +14,17 @@
 # define   	TRANSPORT_SERVER_HPP_
 
 # include <string>
-
 # include <qi/macro.hpp>
+
 # include <event2/event.h>
+
+class TransportServerDelegate
+{
+public:
+  virtual void onConnected(const std::string &msg = "") = 0;
+  virtual void onWrite(const std::string &msg = "")     = 0;
+  virtual void onRead(const std::string &msg = "")      = 0;
+};
 
 
 class TransportServer
@@ -30,10 +38,14 @@ public:
 
   void run(struct event_base *base);
 
-protected:
+  void setDelegate(TransportServerDelegate *delegate);
+  TransportServerDelegate *_tsd;
+
+  struct event_base *_base;
 private:
   std::string    _address;
   unsigned short _port;
+
 };
 
 
