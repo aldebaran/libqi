@@ -29,16 +29,14 @@
 # include <string>
 # include <qi/macro.hpp>
 
-
 # include <event2/event.h>
-# include <event2/bufferevent.h>
 
 class TransportClientDelegate
 {
 public:
-  virtual void onConnected() = 0;
-  virtual void onWrite()     = 0;
-  virtual void onRead()      = 0;
+  virtual void onConnected(const std::string &msg = "") = 0;
+  virtual void onWrite(const std::string &msg = "")     = 0;
+  virtual void onRead(const std::string &msg = "")      = 0;
 };
 
 class TransportClient
@@ -61,4 +59,4 @@ private:
   unsigned short      _port;
 };
 
-#endif	    /* !TRANSPORT_CLIENT_PP_ */
+#endif	    /* !TRANSPORT_CLIENT_HPP_ */

@@ -29,12 +29,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <event2/util.h>
-#include <event2/event.h>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <boost/thread.hpp>
-
 #include "transport-client.hpp"
 #include "network-thread.hpp"
 
@@ -55,22 +49,22 @@ public:
   }
 
   void call(const std::string &msg) {
-    tc->send(msg + "\n", nthd->getEventBase());
+    tc->send(msg, nthd->getEventBase());
   }
 
-  virtual void onConnected()
+  virtual void onConnected(const std::string &msg)
   {
-    std::cout << "connected" << std::endl;
+    std::cout << "connected: " << msg << std::endl;
   }
 
-  virtual void onWrite()
+  virtual void onWrite(const std::string &msg)
   {
-    std::cout << "written" << std::endl;
+    std::cout << "written: " << msg << std::endl;
   }
 
-  virtual void onRead()
+  virtual void onRead(const std::string &msg)
   {
-    std::cout << "read" << std::endl;
+    std::cout << "read: " << msg << std::endl;
   }
 
 private:

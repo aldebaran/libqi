@@ -11,28 +11,39 @@
 */
 
 #include <iostream>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <qi/log.hpp>
-#include <stdexcept>
+
+#include <event2/util.h>
+#include <event2/event.h>
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
 
 #include "transport-client.hpp"
 #include "network-thread.hpp"
 
 #define MAX_LINE 16384
 
-TransportClient::TransportClient(const std::string &address,
-                                 unsigned short port)
-  : _address(address)
-  , _port(port)
+
+static void readcb(struct bufferevent *bev,
+                   void *context)
 {
+
+  char buf[1024];
+  memset(buf, '\0', 1024);
+  size_t n;
+  struct evbuffer *input = bufferevent_get_input(bev);
+
+  TransportClient *tc = static_cast<TransportClient*>(context);
+
+  while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
+  {
+    tc->_tcd->onRead(std::string(buf));
+  }
+
+  bufferevent_free(bev);
 }
 
-
-TransportClient::~TransportClient()
-{
-}
 
 static void writecb(struct bufferevent* bev, void* context)
 {
@@ -40,16 +51,6 @@ static void writecb(struct bufferevent* bev, void* context)
 
   TransportClient *tc = static_cast<TransportClient*>(context);
   tc->_tcd->onWrite();
-
-  bufferevent_free(bev);
-}
-
-static void readcb(struct bufferevent* bev, void* context)
-{
-  (void) bev;
-
-  TransportClient *tc = static_cast<TransportClient*>(context);
-  tc->_tcd->onRead();
 
   bufferevent_free(bev);
 }
@@ -75,7 +76,17 @@ static void errorcb(struct bufferevent *bev,
   }
 }
 
+TransportClient::TransportClient(const std::string &address,
+                                 unsigned short port)
+  : _address(address)
+  , _port(port)
+{
+}
 
+
+TransportClient::~TransportClient()
+{
+}
 
 bool TransportClient::send(const std::string &msg,
                            struct event_base *base)
