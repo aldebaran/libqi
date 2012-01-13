@@ -12,11 +12,17 @@
 
 #include <iostream>
 #include "gateway.hpp"
+#include "network-thread.hpp"
 
 int main(int argc, char *argv[])
 {
+  NetworkThread *n = new NetworkThread();
+  sleep(1);
   Gateway g;
-  g.onRead("call.12.audio.say.hello world!");
+  g.run(n);
+
+  while (true)
+    ;
 
   return 0;
 }

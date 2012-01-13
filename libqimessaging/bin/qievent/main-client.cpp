@@ -78,13 +78,13 @@ int main(int argc, char *argv[])
   sleep(1);
   RemoteService rs;
   rs.setThread(nthd);
-  rs.call("first");
-  RemoteService rs1;
-  rs1.setThread(nthd);
-  rs1.call("second");
-  RemoteService rs2;
-  rs2.setThread(nthd);
-  rs2.call("third");
+  rs.call("call.12.audio.say.hello world!");
+//  RemoteService rs1;
+//  rs1.setThread(nthd);
+//  rs1.call("second");
+//  RemoteService rs2;
+//  rs2.setThread(nthd);
+//  rs2.call("third");
   sleep(1);
   return 0;
 

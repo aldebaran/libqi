@@ -18,6 +18,7 @@
 
 # include "transport-client.hpp"
 # include "transport-server.hpp"
+# include "network-thread.hpp"
 
 class Message
 {
@@ -67,6 +68,12 @@ public:
   void onWrite(const std::string &msg = "");
   void onRead(const std::string &msg = "");
 
+  void run(NetworkThread *n)
+  {
+    _nthd = n;
+    _ts->run(_nthd->getEventBase());
+  }
+
 private:
   void* call(const std::string &msg);
   void* answer(const std::string &msg);
@@ -76,6 +83,7 @@ private:
   Message parseMessage(const std::string &msg);
 
 private:
+  NetworkThread   *_nthd;
   TransportServer *_ts;
   std::map<std::string, TransportClient*> _clientMap;
 };

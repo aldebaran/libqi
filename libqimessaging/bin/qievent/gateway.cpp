@@ -28,10 +28,12 @@ Gateway::~Gateway()
 
 void Gateway::onConnected(const std::string &msg)
 {
+  std::cout << "onConnect: " << msg << std::endl;
 }
 
 void Gateway::onWrite(const std::string &msg)
 {
+  std::cout << "onWrite: " << msg << std::endl;
 }
 
 void Gateway::onRead(const std::string &msg)
