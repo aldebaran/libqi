@@ -90,7 +90,7 @@ namespace qi {
     std::string tmpdir(const char *prefix) {
       char buffer[L_tmpnam];
       memset(buffer, 0, L_tmpnam);
-      mkstemp(buffer);
+      tmpnam(buffer);
 
       boost::filesystem::path path;
       if (buffer == NULL)
