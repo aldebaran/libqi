@@ -223,8 +223,7 @@ namespace qi {
       path = qi::os::getenv("TMP");
 
       std::string filename(prefix);
-      filename += path.filename().string();
-      path = path.parent_path() / filename;
+      path.append(filename, qi::unicodeFacet());
 
       try
       {
