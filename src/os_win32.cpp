@@ -240,19 +240,20 @@ namespace qi {
 
     std::string tmp()
     {
-      wchar_t tempPath[MAX_PATH];
+      wchar_t* tempPath = (wchar_t*)malloc(sizeof(wchar_t) * MAX_PATH);
       DWORD len = ::GetTempPathW(MAX_PATH, tempPath);
       boost::filesystem::path dest;
 
       if (len > 0)
       {
         tempPath[len] = 0;
-        dest = boost::filesystem::path((wchar_t *)tempPath, qi::unicodeFacet());
+        dest = boost::filesystem::path(tempPath, qi::unicodeFacet());
       }
 
       if (dest.empty())
         return boost::filesystem::path("C:/tmp", qi::unicodeFacet()).string(qi::unicodeFacet());
 
+      free(tempPath);
       return  dest.make_preferred().string(qi::unicodeFacet());
     }
   }
