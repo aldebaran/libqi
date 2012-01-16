@@ -102,15 +102,17 @@ namespace qi {
         path = boost::filesystem::path(::qi::os::home(),
                                        qi::unicodeFacet()).append(".cache", qi::unicodeFacet());
        #endif
+        path.append(prefix, qi::unicodeFacet());
+
+        // FIXME Add random value for unique dir name.
       }
       else
       {
         path = buffer;
+        std::string filename = prefix;
+        filename += path.filename().string(qi::unicodeFacet());
+        path = path.parent_path().append(filename, qi::unicodeFacet());
       }
-
-      std::string filename(prefix);
-      filename += path.filename().string(qi::unicodeFacet());
-      path = path.parent_path().append(filename, qi::unicodeFacet());
 
       try
       {
