@@ -240,27 +240,18 @@ namespace qi {
 
     std::string tmp()
     {
-      std::string ret;
       wchar_t tempPath[MAX_PATH];
-      DWORD len = ::GetTempPath(MAX_PATH, tempPath);
+      DWORD len = ::GetTempPathW(MAX_PATH, tempPath);
 
-      boost::filesystem::path dest
-      std::string ret
+      boost::filesystem::path dest;
 
       if (len)
-      {
         dest = boost::filesystem::path(tempPath, qi::unicodeFacet());
-        ret = dest.string(qi::unicodeFacet());
-      }
 
-      if (ret.isEmpty())
-      {
-        ret = boost::filesystem::path("C:/tmp", qi::unicodeFacet()).string(qi::unicodeFacet());
-      }
-      else if (ret.length() >= 2 && ret[1] == ':')
-        return toupper(ret[0]) + &ret[1]; // Force uppercase drive letters.
+      if (dest.empty())
+        return boost::filesystem::path("C:/tmp", qi::unicodeFacet()).string(qi::unicodeFacet());
 
-      return ret;
+      return  dest.make_preferred().string(qi::unicodeFacet());
     }
   }
 }
