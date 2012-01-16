@@ -242,11 +242,13 @@ namespace qi {
     {
       wchar_t tempPath[MAX_PATH];
       DWORD len = ::GetTempPathW(MAX_PATH, tempPath);
-
       boost::filesystem::path dest;
 
-      if (len)
-        dest = boost::filesystem::path(tempPath, qi::unicodeFacet());
+      if (len > 0)
+      {
+        tempPath[len] = 0;
+        dest = boost::filesystem::path((wchar_t *)tempPath, qi::unicodeFacet());
+      }
 
       if (dest.empty())
         return boost::filesystem::path("C:/tmp", qi::unicodeFacet()).string(qi::unicodeFacet());
