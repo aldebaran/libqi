@@ -60,6 +60,14 @@
   \param prefix Prefix of the tmp file (in UTF-8).
   \return The path to the temporary directory.
 
+\fn std::string qi::os::tmp();
+  \brief Return the system's temporary directory
+  \ingroup qios
+         The directory is writeable and exits.
+         The caller is responsible of destroying the temporary
+         file create.
+  \return The path to the system's temporary directory.
+
 */
 
 

@@ -9,6 +9,7 @@
 #else
 # include <unistd.h> // for getpid
 #endif
+#include <cstdio>
 
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
@@ -83,4 +84,22 @@ TEST(QiOs, env)
 TEST(QiOs, getpid)
 {
   ASSERT_EQ(getpid(), qi::os::getpid());
+}
+
+TEST(QiOs, tmp)
+{
+  std::string temp = qi::os::tmp();
+  temp += "tmpfile";
+  FILE *f = qi::os::fopen(temp.c_str(), "w+");
+  fclose(f);
+
+  ASSERT_TRUE(boost::filesystem::exists(temp))
+      << temp << std::endl;
+
+  if(boost::filesystem::exists(temp)) {
+    try {
+      boost::filesystem::remove_all(temp);
+    } catch (std::exception &) {
+    }
+  }
 }

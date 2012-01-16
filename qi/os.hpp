@@ -29,6 +29,7 @@ namespace qi {
     QI_API int checkdbg();
     QI_API std::string home();
     QI_API std::string tmpdir(const char *prefix = "");
+    QI_API std::string tmp();
 
     // env
     QI_API std::string getenv(const char *var);

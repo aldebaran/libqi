@@ -125,6 +125,17 @@ namespace qi {
       return path.string(qi::unicodeFacet());
     }
 
+    std::string tmp()
+    {
+      std::string temp = ::qi::os::getenv("TMPDIR");
+      if (temp.empty())
+        temp = "/tmp/";
+
+      boost::filesystem::path p = boost::filesystem::path(temp, qi::unicodeFacet());
+
+      return p.string(qi::unicodeFacet());
+    }
+
     int gettimeofday(qi::os::timeval *tp) {
       struct ::timeval tv;
       int ret = ::gettimeofday(&tv, 0);
