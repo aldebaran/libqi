@@ -234,11 +234,12 @@ namespace qi {
         memset(p, 'X', len);
         p[len - 1] = '\0';
 
-       #ifdef _MSV_VER
+       #ifdef _MSC_VER
         strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
        #else
         strncpy(p, prefix, strlen(prefix));
-       #endif      }
+       #endif      
+      }
       else
       {
         len = 6 + 1;
