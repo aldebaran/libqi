@@ -222,7 +222,7 @@ namespace qi {
 
 
 
-    std::string tmpdir(const char *prefix)
+    std::string mktmpdir(const char *prefix)
     {
       int len;
       char* p;
@@ -280,5 +280,10 @@ namespace qi {
       free(tempPath);
       return  dest.make_preferred().string(qi::unicodeFacet());
     }
+
+    std::string tmpdir(const char *prefix) {
+      return mktmpdir(prefix);
+    }
+
   }
 }

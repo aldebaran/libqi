@@ -88,7 +88,7 @@ namespace qi {
       return "";
     }
 
-    std::string tmpdir(const char *prefix)
+    std::string mktmpdir(const char *prefix)
     {
       char* tmpdir = 0;
       int len;
@@ -142,5 +142,11 @@ namespace qi {
       tp->tv_usec = tv.tv_usec;
       return ret;
     }
+
+    std::string tmpdir(const char *prefix)
+    {
+      return mktmpdir(prefix);
+    }
+
   };
 };
