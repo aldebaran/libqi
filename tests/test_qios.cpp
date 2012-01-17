@@ -28,7 +28,7 @@ public:
 
 protected:
   void SetUp() {
-    a_newPath = qi::os::tmpdir("QiOsTest");
+    a_newPath = qi::os::mktmpdir("QiOsTest");
     a_newPath.append(a_accent, qi::unicodeFacet());
     FILE* fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
     fclose(fileHandle);
@@ -89,17 +89,109 @@ TEST(QiOs, getpid)
 TEST(QiOs, tmp)
 {
   std::string temp = qi::os::tmp();
-  temp += "tmpfile";
-  FILE *f = qi::os::fopen(temp.c_str(), "w+");
+
+  ASSERT_NE(temp, std::string(""));
+
+  EXPECT_TRUE(boost::filesystem::exists(temp));
+  EXPECT_TRUE(boost::filesystem::is_directory(temp));
+}
+
+
+//check if the folder exists and is writable
+void test_writable_and_empty(std::string fdir) {
+  std::string             tempfile;
+  boost::filesystem::path p(fdir, qi::unicodeFacet());
+  boost::filesystem::path pp(fdir, qi::unicodeFacet());
+
+  EXPECT_TRUE(boost::filesystem::exists(fdir));
+  EXPECT_TRUE(boost::filesystem::is_directory(fdir));
+
+  pp.append("tmpfile", qi::unicodeFacet());
+  tempfile = pp.string(qi::unicodeFacet());
+
+  FILE *f = qi::os::fopen(tempfile.c_str(), "w+");
+  EXPECT_TRUE((void *)f);
   fclose(f);
 
-  ASSERT_TRUE(boost::filesystem::exists(temp))
-      << temp << std::endl;
+  EXPECT_TRUE(boost::filesystem::exists(tempfile));
+  EXPECT_TRUE(boost::filesystem::is_regular_file(tempfile));
 
-  if(boost::filesystem::exists(temp)) {
-    try {
-      boost::filesystem::remove_all(temp);
-    } catch (std::exception &) {
-    }
+  boost::filesystem::directory_iterator it(p);
+
+  EXPECT_EQ(pp, it->path());
+  it++;
+
+  EXPECT_EQ(boost::filesystem::directory_iterator(), it);
+
+}
+
+
+void clean_dir(std::string fdir) {
+  if(boost::filesystem::exists(fdir)) {
+    //fail is dir is not removable => dir should be removable
+    boost::filesystem::remove_all(fdir);
   }
+}
+
+TEST(QiOs, tmpdir_noprefix)
+{
+  std::string temp = qi::os::mktmpdir();
+  test_writable_and_empty(temp);
+  clean_dir(temp);
+}
+
+TEST(QiOs, tmpdir_tmpdir)
+{
+  std::string temp1 = qi::os::mktmpdir();
+  std::string temp2 = qi::os::mktmpdir();
+  EXPECT_NE(temp1, temp2);
+  clean_dir(temp1);
+  clean_dir(temp2);
+}
+
+TEST(QiOs, tmpdir_parent)
+{
+  std::string temp = qi::os::mktmpdir("plaf");
+
+  boost::filesystem::path ppa(temp, qi::unicodeFacet());
+  ppa = ppa.parent_path();
+
+  boost::filesystem::path ppatmp(qi::os::tmp(), qi::unicodeFacet());
+  EXPECT_TRUE(boost::filesystem::equivalent(ppa, ppatmp));
+
+  clean_dir(temp);
+}
+
+TEST(QiOs, tmpdir_prefix)
+{
+  std::string temp = qi::os::mktmpdir("plaf");
+
+  test_writable_and_empty(temp);
+
+  boost::filesystem::path pp(temp, qi::unicodeFacet());
+  std::string tempfname = pp.filename().string(qi::unicodeFacet());
+
+  EXPECT_EQ(tempfname[0], 'p');
+  EXPECT_EQ(tempfname[1], 'l');
+  EXPECT_EQ(tempfname[2], 'a');
+  EXPECT_EQ(tempfname[3], 'f');
+
+  clean_dir(temp);
+}
+
+TEST(QiOs, tmpdir_prefix_accentuated)
+{
+  char utf8[]     = { 0xC5, 0xAA, 0x6E, 0xC4, 0xAD, 0x63, 0xC5, 0x8D, 0x64, 0x65, 0xCC, 0xBD, 0 };
+
+  std::string temp = qi::os::mktmpdir(utf8);
+
+  test_writable_and_empty(temp);
+  clean_dir(temp);
+}
+
+TEST(QiOs, tmpdir_prefix_zero)
+{
+  std::string temp = qi::os::mktmpdir(0);
+  test_writable_and_empty(temp);
+  clean_dir(temp);
 }
