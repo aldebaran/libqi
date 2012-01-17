@@ -103,8 +103,8 @@ void test_writable_and_empty(std::string fdir) {
   boost::filesystem::path p(fdir, qi::unicodeFacet());
   boost::filesystem::path pp(fdir, qi::unicodeFacet());
 
-  EXPECT_TRUE(boost::filesystem::exists(fdir));
-  EXPECT_TRUE(boost::filesystem::is_directory(fdir));
+  EXPECT_TRUE(boost::filesystem::exists(p));
+  EXPECT_TRUE(boost::filesystem::is_directory(p));
 
   pp.append("tmpfile", qi::unicodeFacet());
   tempfile = pp.string(qi::unicodeFacet());
@@ -113,8 +113,8 @@ void test_writable_and_empty(std::string fdir) {
   EXPECT_TRUE((void *)f);
   fclose(f);
 
-  EXPECT_TRUE(boost::filesystem::exists(tempfile));
-  EXPECT_TRUE(boost::filesystem::is_regular_file(tempfile));
+  EXPECT_TRUE(boost::filesystem::exists(pp));
+  EXPECT_TRUE(boost::filesystem::is_regular_file(pp));
 
   boost::filesystem::directory_iterator it(p);
 
