@@ -91,11 +91,24 @@ namespace qi {
     std::string tmpdir(const char *prefix)
     {
       char* tmpdir = 0;
-      int len = strlen(prefix) + 6 + 1;
-      char* p = (char*)malloc(sizeof(char) * len);
-      memset(p, 'X', len);
-      p[len - 1] = '\0';
-      strncpy(p, prefix, strlen(prefix));
+      int len;
+      char* p;
+
+      if (prefix != NULL)
+      {
+        len = strlen(prefix) + 6 + 1;
+        p = (char*)malloc(sizeof(char) * len);
+        memset(p, 'X', len);
+        p[len - 1] = '\0';
+        strncpy(p, prefix, strlen(prefix));
+      }
+      else
+      {
+        len = 6 + 1;
+        p = (char*)malloc(sizeof(char) * len);
+        memset(p, 'X', len);
+        p[len - 1] = '\0';
+      }
 
       std::string path;
       int i = 0;

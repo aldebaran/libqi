@@ -224,17 +224,28 @@ namespace qi {
 
     std::string tmpdir(const char *prefix)
     {
-      int len = strlen(prefix) + 6 + 1;
-      char *p = (char*)malloc(sizeof(char) * len);
+      int len;
+      char* p;
 
-      memset(p, 'X', len);
-      p[len - 1] = '\0';
+      if (prefix != NULL)
+      {
+        len = strlen(prefix) + 6 + 1;
+        p = (char*)malloc(sizeof(char) * len);
+        memset(p, 'X', len);
+        p[len - 1] = '\0';
 
-     #ifdef _MSV_VER
-      strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
-     #else
-      strncpy(p, prefix, strlen(prefix));
-     #endif
+       #ifdef _MSV_VER
+        strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
+       #else
+        strncpy(p, prefix, strlen(prefix));
+       #endif      }
+      else
+      {
+        len = 6 + 1;
+        p = (char*)malloc(sizeof(char) * len);
+        memset(p, 'X', len);
+        p[len - 1] = '\0';
+      }
 
       std::string path;
       int i = 0;
