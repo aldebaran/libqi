@@ -48,6 +48,8 @@ set(C
   src/headfileloghandler.cpp
   src/tailfileloghandler.cpp
   src/locale-light.cpp
+  src/utils.hpp
+  src/utils.cpp
   )
 
 if (WIN32)
