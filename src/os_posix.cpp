@@ -108,7 +108,7 @@ namespace qi {
       while (mkdir(path.c_str(), S_IRWXU) == -1 && i < TMP_MAX);
 
       free(p);
-      return path;
+      return boost::filesystem::path(path, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
     }
 
     std::string tmp()
