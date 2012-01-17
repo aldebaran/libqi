@@ -52,9 +52,8 @@
   \ingroup qios
 
 \fn std::string qi::os::mktmpdir(const char *prefix = "");
-  \brief Return a temporary directory
+  \brief Return a writable temporary directory.
   \ingroup qios
-         The directory is writeable and exits.
          The caller is responsible of destroying the returned directory.
          This will create a unique directory in the temporary directory returned by qi::os::tmp().
          The specified prefix will be prefixed to a generated unique name.
