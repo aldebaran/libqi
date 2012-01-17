@@ -55,8 +55,9 @@
   \brief Return a temporary directory
   \ingroup qios
          The directory is writeable and exits.
-         The caller is responsible of destroying the temporary
-         directory.
+         The caller is responsible of destroying the returned directory.
+         This will create a unique directory in the temporary directory returned by qi::os::tmp().
+         The specified prefix will be prefixed to a generated unique name.
   \param prefix Prefix of the tmp file (in UTF-8).
   \return The path to the temporary directory.
 
