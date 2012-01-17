@@ -13,9 +13,11 @@
 #include <sys/stat.h>
 #include <sys/timeb.h>
 
+#include <iostream>
 #include <io.h>       //_wopen
 #include <windows.h>  //Sleep
 #include <winsock2.h>
+#include <direct.h> // _mkdir
 
 #include <qi/error.hpp>
 #include <qi/os.hpp>
@@ -219,19 +221,14 @@ namespace qi {
 
 
 
-#define TMP_MAX 10
 
     std::string tmpdir(const char *prefix)
     {
-      char *tmpdir = 0;
-
       int len = strlen(prefix) + 6 + 1;
       char *p = (char*)malloc(sizeof(char) * len);
 
       memset(p, 'X', len);
       p[len - 1] = '\0';
-
-      strncpy(p, prefix, strlen(prefix));
 
      #ifdef _MSV_VER
       strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
@@ -240,38 +237,17 @@ namespace qi {
      #endif
 
       std::string path;
+      int i = 0;
       do
       {
-        tmpdir = _mktemp_s(p, len);
-        path = qi::os::tmp() + tmpdir;
-        std::cout << path << std::endl;
+        _mktemp_s(p, len);
+        path = qi::os::tmp() + p;
+        ++i;
       }
-      while (_mkdir(path.c_str(), S_IRWXU) == -1 || i < TMP_MAX);
+      while (_mkdir(path.c_str()) == -1 && i < TMP_MAX);
 
       free(p);
       return path;
-    }
-
-
-    std::string tmpdir(const char *prefix)
-    {
-      boost::filesystem::path path;
-      path = qi::os::getenv("TMP");
-
-      std::string filename(prefix);
-      path.append(filename, qi::unicodeFacet());
-
-      try
-      {
-        if (!boost::filesystem::exists(path))
-          boost::filesystem::create_directories(path);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        throw qi::os::QiException(e.what());
-      }
-
-      return path.string(qi::unicodeFacet());
     }
 
     std::string tmp()
