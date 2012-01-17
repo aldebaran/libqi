@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef _WIN32
 # include <io.h>      //_wopen
@@ -87,44 +88,27 @@ namespace qi {
       return "";
     }
 
-    std::string tmpdir(const char *prefix) {
-      char buffer[L_tmpnam];
-      memset(buffer, 0, L_tmpnam);
-      tmpnam(buffer);
+    std::string tmpdir(const char *prefix)
+    {
+      char* tmpdir = 0;
+      int len = strlen(prefix) + 6 + 1;
+      char* p = (char*)malloc(sizeof(char) * len);
+      memset(p, 'X', len);
+      p[len - 1] = '\0';
+      strncpy(p, prefix, strlen(prefix));
 
-      boost::filesystem::path path;
-      if (buffer == NULL)
+      std::string path;
+      int i = 0;
+      do
       {
-       #ifdef __APPLE__
-        path = boost::filesystem::path(::qi::os::home(),
-                                       qi::unicodeFacet()).append("Cache", qi::unicodeFacet());
-       #else
-        path = boost::filesystem::path(::qi::os::home(),
-                                       qi::unicodeFacet()).append(".cache", qi::unicodeFacet());
-       #endif
-        path.append(prefix, qi::unicodeFacet());
+        tmpdir = mktemp(p);
+        path = qi::os::tmp() + tmpdir;
+        ++i;
+      }
+      while (mkdir(path.c_str(), S_IRWXU) == -1 && i < TMP_MAX);
 
-        // FIXME Add random value for unique dir name.
-      }
-      else
-      {
-        path = buffer;
-        std::string filename = prefix;
-        filename += path.filename().string(qi::unicodeFacet());
-        path = path.parent_path().append(filename, qi::unicodeFacet());
-      }
-
-      try
-      {
-      if (!boost::filesystem::exists(path))
-        boost::filesystem::create_directories(path);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        throw qi::os::QiException(e.what());
-      }
-
-      return path.string(qi::unicodeFacet());
+      free(p);
+      return path;
     }
 
     std::string tmp()

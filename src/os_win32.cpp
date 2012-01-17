@@ -217,6 +217,42 @@ namespace qi {
       return res.make_preferred().string(qi::unicodeFacet());
     }
 
+
+
+#define TMP_MAX 10
+
+    std::string tmpdir(const char *prefix)
+    {
+      char *tmpdir = 0;
+
+      int len = strlen(prefix) + 6 + 1;
+      char *p = (char*)malloc(sizeof(char) * len);
+
+      memset(p, 'X', len);
+      p[len - 1] = '\0';
+
+      strncpy(p, prefix, strlen(prefix));
+
+     #ifdef _MSV_VER
+      strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
+     #else
+      strncpy(p, prefix, strlen(prefix));
+     #endif
+
+      std::string path;
+      do
+      {
+        tmpdir = _mktemp_s(p, len);
+        path = qi::os::tmp() + tmpdir;
+        std::cout << path << std::endl;
+      }
+      while (_mkdir(path.c_str(), S_IRWXU) == -1 || i < TMP_MAX);
+
+      free(p);
+      return path;
+    }
+
+
     std::string tmpdir(const char *prefix)
     {
       boost::filesystem::path path;
