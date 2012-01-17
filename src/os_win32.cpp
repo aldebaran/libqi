@@ -24,6 +24,7 @@
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
 
+#include "utils.hpp"
 
 namespace qi {
   namespace os {
@@ -219,47 +220,28 @@ namespace qi {
       return res.make_preferred().string(qi::unicodeFacet());
     }
 
-
-
-
     std::string mktmpdir(const char *prefix)
     {
-      int len;
-      char* p;
+      std::string  sprefix;
+      std::wstring tmpdir;
+      std::string  path;
+      int          i = 0;
 
-      if (prefix != NULL)
-      {
-        len = strlen(prefix) + 6 + 1;
-        p = (char*)malloc(sizeof(char) * len);
-        memset(p, 'X', len);
-        p[len - 1] = '\0';
-
-       #ifdef _MSC_VER
-        strncpy_s(p, strlen(prefix), prefix, _TRUNCATE);
-       #else
-        strncpy(p, prefix, strlen(prefix));
-       #endif      
-      }
-      else
-      {
-        len = 6 + 1;
-        p = (char*)malloc(sizeof(char) * len);
-        memset(p, 'X', len);
-        p[len - 1] = '\0';
-      }
-
-      std::string path;
-      int i = 0;
+      if (prefix)
+        sprefix = prefix;
+      boost::filesystem::path pp;
       do
       {
-        _mktemp_s(p, len);
-        path = qi::os::tmp() + p;
+        tmpdir = boost::filesystem::path(sprefix, qi::unicodeFacet()).wstring(qi::unicodeFacet());
+        tmpdir += wrandomstr(7);
+        pp = boost::filesystem::path(qi::os::tmp(), qi::unicodeFacet());
+        pp.append(tmpdir, qi::unicodeFacet());
+        path = pp.make_preferred().string(qi::unicodeFacet());
         ++i;
       }
-      while (_mkdir(path.c_str()) == -1 && i < TMP_MAX);
+      while (_wmkdir(pp.wstring(qi::unicodeFacet()).c_str()) == -1 && i < TMP_MAX);
 
-      free(p);
-      return boost::filesystem::path(path, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
+      return path;
     }
 
     std::string tmp()

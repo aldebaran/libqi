@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string>
 
 #ifdef _WIN32
 # include <io.h>      //_wopen
@@ -26,6 +27,7 @@
 #include <qi/error.hpp>
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
+#include "utils.hpp"
 
 namespace qi {
   namespace os {
@@ -90,40 +92,25 @@ namespace qi {
 
     std::string mktmpdir(const char *prefix)
     {
-      char* tmpdir = 0;
-      int len;
-      char* p;
-
-      if (prefix != NULL)
-      {
-        len = strlen(prefix) + 6 + 1;
-        p = (char*)malloc(sizeof(char) * len);
-        memset(p, 'X', len);
-        p[len - 1] = '\0';
-        strncpy(p, prefix, strlen(prefix));
-      }
-      else
-      {
-        len = 6 + 1;
-        p = (char*)malloc(sizeof(char) * len);
-        memset(p, 'X', len);
-        p[len - 1] = '\0';
-      }
-
+      std::string sprefix;
+      std::string tmpdir;
       std::string path;
-      int i = 0;
+      int         i = 0;
+
+      if (prefix)
+        sprefix = prefix;
+
       do
       {
-        tmpdir = mktemp(p);
+        tmpdir = sprefix;
+        tmpdir += randomstr(7);
         boost::filesystem::path pp(qi::os::tmp(), qi::unicodeFacet());
-        //boost::filesystem::path pp(path, qi::unicodeFacet());
         pp.append(tmpdir, qi::unicodeFacet());
         path = pp.make_preferred().string(qi::unicodeFacet());
         ++i;
       }
       while (mkdir(path.c_str(), S_IRWXU) == -1 && i < TMP_MAX);
 
-      free(p);
       return path;
     }
 
