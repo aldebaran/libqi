@@ -115,13 +115,16 @@ namespace qi {
       do
       {
         tmpdir = mktemp(p);
-        path = qi::os::tmp() + tmpdir;
+        boost::filesystem::path pp(qi::os::tmp(), qi::unicodeFacet());
+        //boost::filesystem::path pp(path, qi::unicodeFacet());
+        pp.append(tmpdir, qi::unicodeFacet());
+        path = pp.make_preferred().string(qi::unicodeFacet());
         ++i;
       }
       while (mkdir(path.c_str(), S_IRWXU) == -1 && i < TMP_MAX);
 
       free(p);
-      return boost::filesystem::path(path, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
+      return path;
     }
 
     std::string tmp()
