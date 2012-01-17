@@ -51,7 +51,7 @@
   \brief Return path to the current user's HOME.
   \ingroup qios
 
-\fn std::string qi::os::tmpdir(const char *prefix = "");
+\fn std::string qi::os::mktmpdir(const char *prefix = "");
   \brief Return a temporary directory
   \ingroup qios
          The directory is writeable and exits.
@@ -59,6 +59,15 @@
          This will create a unique directory in the temporary directory returned by qi::os::tmp().
          The specified prefix will be prefixed to a generated unique name.
   \param prefix Prefix of the tmp file (in UTF-8).
+  \since 1.12.1
+  \return The path to the temporary directory.
+
+\fn std::string qi::os::tmpdir(const char *prefix = "");
+  \brief Return a temporary directory
+  \ingroup qios
+         look at qi::os::mktmpdir
+  \param prefix Prefix of the tmp file (in UTF-8).
+  \deprecated 1.12.1
   \return The path to the temporary directory.
 
 \fn std::string qi::os::tmp();
