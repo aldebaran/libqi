@@ -65,7 +65,7 @@ else()
 endif()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("src/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 
 if("${BUILDCONFIG}" STREQUAL "python-sdk")
   qi_create_lib(qi STATIC ${H} ${C})
