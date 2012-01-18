@@ -15,6 +15,10 @@ if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
+# We always want boost
+# Remove this line to use QT if usable
+set(WITH_QT_QTCORE OFF)
+
 qi_add_optional_package(QT_QTCORE "Enable QT")
 
 enable_testing()
@@ -57,6 +61,8 @@ if (WIN32)
 else()
   list(APPEND C src/os_launch_posix.cpp src/os_posix.cpp)
 endif()
+
+
 
 if (WITH_QT_QTCORE)
   list(APPEND C src/sdklayout-qt.cpp)
