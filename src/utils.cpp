@@ -6,11 +6,13 @@
 
 #include "utils.hpp"
 
+#include <boost/filesystem.hpp>
 #include <cctype>
 #include <algorithm>
 #include <iterator>
 #include <ctime>
 #include <qi/os.hpp>
+#include <qi/qi.hpp>
 
 static char rand_alnum()
 {
@@ -49,4 +51,21 @@ std::wstring wrandomstr(std::wstring::size_type sz) {
   srand(tv.tv_sec + tv.tv_usec);
   generate_n(std::back_inserter(s), sz, rand_alnum);
   return s;
+}
+
+std::string fsconcat(const std::string &p0,
+                     const std::string &p1,
+                     const std::string &p2,
+                     const std::string &p3,
+                     const std::string &p4,
+                     const std::string &p5)
+{
+  boost::filesystem::path p(p0, qi::unicodeFacet());
+  p.append(p1, qi::unicodeFacet());
+  p.append(p2, qi::unicodeFacet());
+  p.append(p3, qi::unicodeFacet());
+  p.append(p4, qi::unicodeFacet());
+  p.append(p5, qi::unicodeFacet());
+
+  return p.make_preferred().string(qi::unicodeFacet());
 }

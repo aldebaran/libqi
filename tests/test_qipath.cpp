@@ -17,6 +17,7 @@
 #include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include "../src/utils.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -427,4 +428,28 @@ int main(int argc, char* argv[])
   qi::init(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+TEST(qiPath, filesystemConcat)
+{
+  std::string s0 = fsconcat("/toto", "tata");
+  ASSERT_EQ(boost::filesystem::path("/toto/tata").make_preferred().string(qi::unicodeFacet()), s0);
+  std::string s1 = fsconcat("/toto/", "tata");
+  ASSERT_EQ(boost::filesystem::path("/toto/tata").make_preferred().string(qi::unicodeFacet()), s1);
+  std::string s2 = fsconcat("toto/", "tata");
+  ASSERT_EQ(boost::filesystem::path("toto/tata").make_preferred().string(qi::unicodeFacet()), s2);
+  std::string s3 = fsconcat("toto", "tata");
+  ASSERT_EQ(boost::filesystem::path("toto/tata").make_preferred().string(qi::unicodeFacet()), s3);
+
+  std::string s4 = fsconcat("/toto", "/tata");
+  ASSERT_EQ(boost::filesystem::path("/toto/tata").make_preferred().string(qi::unicodeFacet()), s4);
+  std::string s5 = fsconcat("/toto/", "/tata/");
+  ASSERT_EQ(boost::filesystem::path("/toto//tata/").make_preferred().string(qi::unicodeFacet()), s5);
+  std::string s6 = fsconcat("toto/", "tata/");
+  ASSERT_EQ(boost::filesystem::path("toto/tata/").make_preferred().string(qi::unicodeFacet()), s6);
+  std::string s7 = fsconcat("toto", "tata");
+  ASSERT_EQ(boost::filesystem::path("toto/tata").make_preferred().string(qi::unicodeFacet()), s7);
+
+  std::string s8 = fsconcat("toto", "tata", "tutu", "titi", "tete", "tyty");
+  ASSERT_EQ(boost::filesystem::path("toto/tata/tutu/titi/tete/tyty").make_preferred().string(qi::unicodeFacet()), s8);
 }
