@@ -149,19 +149,6 @@ namespace qi {
            ++it)
       {
         boost::filesystem::path p;
-#ifdef _MSC_VER
-        p = boost::filesystem::path(fsconcat(*it, _private->_mode, name), qi::unicodeFacet());
-
-        if (boost::filesystem::exists(p))
-          return p.string(qi::unicodeFacet());
-//find _d, fallback on release stuff
-#ifndef NDEBUG
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + "_d.exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + "_d.exe");
-#endif
-        if (boost::filesystem::exists(boost::filesystem::path(p.string(qi::unicodeFacet()) + ".exe", qi::unicodeFacet())))
-          return (p.string(qi::unicodeFacet()) + ".exe");
-#endif
         p = boost::filesystem::path(fsconcat(*it, "bin", name), qi::unicodeFacet());
 
         if (boost::filesystem::exists(p)
@@ -226,36 +213,6 @@ namespace qi {
            ++it)
       {
         boost::filesystem::path p;
-#ifdef _MSC_VER
-        p = boost::filesystem::path(fsconcat(*it, _private->_mode, prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
-
-        res = existsLib(p, libName);
-        if (res != std::string())
-          return res;
-
-//DEBUG
-#ifndef NDEBUG
-        res = existsLib(p, libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + "_d.dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-#endif
-
-        res = existsLib(p, libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName + ".dll");
-        if (res != std::string())
-          return res;
-        res = existsLib(p, "lib" + libName);
-        if (res != std::string())
-          return res;
-#endif
         p = boost::filesystem::path(fsconcat(*it, "lib", prefix.string(qi::unicodeFacet())), qi::unicodeFacet());
 
         res = existsLib(p, libName);
@@ -379,13 +336,6 @@ namespace qi {
         res.push_back(fsconcat(*it, "etc"));
         res.push_back(fsconcat(*it, "preferences", applicationName));
         res.push_back(fsconcat(*it, "preferences"));
-
-#ifdef _MSC_VER
-        res.push_back(fsconcat(*it, _private->_mode, "etc", applicationName));
-        res.push_back(fsconcat(*it, _private->_mode, "etc"));
-        res.push_back(fsconcat(*it, _private->_mode, "preferences", applicationName));
-        res.push_back(fsconcat(*it, _private->_mode, "preferences"));
-#endif
       }
 
 #ifndef _WIN32
@@ -431,9 +381,6 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      if (_private->_mode != "")
-        binPaths.push_back(fsconcat(*it, _private->_mode));
-
       binPaths.push_back(fsconcat(*it, "bin"));
     }
 
@@ -450,9 +397,6 @@ namespace qi {
          it != _private->_sdkPrefixes.end();
          ++it)
     {
-      if (_private->_mode != "")
-        libPaths.push_back(fsconcat(*it, _private->_mode));
-
       libPaths.push_back(fsconcat(*it, "lib"));
     }
 
