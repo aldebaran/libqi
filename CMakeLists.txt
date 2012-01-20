@@ -57,12 +57,18 @@ set(C
   )
 
 if (WIN32)
-  list(APPEND C src/os_launch_win32.cpp src/os_win32.cpp)
+  list(APPEND C
+    src/os_launch_win32.cpp
+    src/os_win32.cpp
+    src/os_debugger_win32.cpp
+  )
 else()
-  list(APPEND C src/os_launch_posix.cpp src/os_posix.cpp)
+  list(APPEND C
+    src/os_launch_posix.cpp
+    src/os_posix.cpp
+    src/os_debugger_posix.cpp
+  )
 endif()
-
-
 
 if (WITH_QT_QTCORE)
   list(APPEND C src/sdklayout-qt.cpp)
