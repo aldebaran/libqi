@@ -8,7 +8,6 @@
 
 cmake_minimum_required(VERSION 2.6.4)
 project(libqimessaging)
-include("qibuild.cmake")
 
 enable_testing()
 
@@ -25,10 +24,6 @@ option(WITH_PERF     "Performances test" ON)
 option(WITH_BINDER   "Support Android IPC binder" OFF)
 option(WITH_SSH      "Support libssh" OFF)
 
-
-project(libqimessaging)
-cmake_minimum_required(VERSION 2.6.4)
-include("qibuild.cmake")
 
 if (WIN32)
   add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")

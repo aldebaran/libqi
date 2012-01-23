@@ -1,3 +1,0 @@
-[project qi-framework]
-depends = "zeromq pthread zlib gtest boost python uuid qissh libqi"
-rdepends = "zeromq boost qissh libqi"
