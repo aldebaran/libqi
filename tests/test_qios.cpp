@@ -121,7 +121,7 @@ void test_writable_and_empty(std::string fdir) {
   EXPECT_EQ(pp, it->path());
   it++;
 
-  EXPECT_EQ(boost::filesystem::directory_iterator(), it);
+  EXPECT_TRUE((boost::filesystem::directory_iterator() == it));
 
 }
 
