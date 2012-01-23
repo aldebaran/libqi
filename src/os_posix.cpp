@@ -9,11 +9,13 @@
 #include <locale>
 #include <cstdio>
 #include <cstdlib>
+#include <unistd.h> //gethostname
 #include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string>
+#include <limits.h>
 
 #ifdef _WIN32
 # include <io.h>      //_wopen
@@ -136,6 +138,15 @@ namespace qi {
     std::string tmpdir(const char *prefix)
     {
       return mktmpdir(prefix);
+    }
+
+    std::string gethostname()
+    {
+      char szHostName[HOST_NAME_MAX] = "";
+      if (::gethostname(szHostName, sizeof(szHostName) - 1) == 0) {
+        return std::string(szHostName);
+      }
+      return std::string();
     }
 
   };

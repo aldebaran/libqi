@@ -30,6 +30,7 @@ namespace qi {
     QI_API std::string home();
     QI_API std::string mktmpdir(const char *prefix = "");
     QI_API std::string tmp();
+    QI_API std::string gethostname();
 
     // env
     QI_API std::string getenv(const char *var);

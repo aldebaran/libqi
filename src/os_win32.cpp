@@ -17,7 +17,8 @@
 #include <io.h>       //_wopen
 #include <windows.h>  //Sleep
 #include <winsock2.h>
-#include <direct.h> // _mkdir
+#include <direct.h>   // _mkdir
+#include <iphlpapi.h> // GetComputerName
 
 #include <qi/error.hpp>
 #include <qi/os.hpp>
@@ -265,6 +266,16 @@ namespace qi {
 
     std::string tmpdir(const char *prefix) {
       return mktmpdir(prefix);
+    }
+
+    std::string gethostname()
+    {
+      DWORD dwBufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+      WCHAR chrComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+      if (GetComputerNameW(chrComputerName, &dwBufferSize)) {
+        return boost::filesystem::path((WCHAR *)chrComputerName, qi::unicodeFacet()).string(qi::unicodeFacet());
+      }
+      return std::string();
     }
 
   }

@@ -77,6 +77,12 @@
          file create.
   \return The path to the system's temporary directory.
 
+
+\fn std::string qi::os::gethostname();
+  \brief Get the system's hostname.
+  \ingroup qios
+        An empty string is returned on failure.
+  \return The system's hostname
 */
 
 
