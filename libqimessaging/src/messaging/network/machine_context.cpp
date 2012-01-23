@@ -8,11 +8,12 @@
 
 #include "src/messaging/network/machine_context.hpp"
 #include "src/messaging/network/network.hpp"
+#include <qi/os.hpp>
 
 namespace qi {
   namespace detail {
     MachineContext::MachineContext():
-      hostName(getHostName()),
+      hostName(qi::os::gethostname()),
       machineID(getFirstMacAddress()),
       publicIP(getPrimaryPublicIPAddress()),
       platformID(getPlatform()) {}

@@ -8,6 +8,7 @@
 
 #include "src/messaging/network/endpoint_context.hpp"
 #include "src/messaging/network/network.hpp"
+#include <qi/os.hpp>
 
 namespace qi {
   namespace detail {
@@ -39,7 +40,7 @@ namespace qi {
       endpointID(getUUID()),
       contextID(""),
       machineID(getFirstMacAddress()),
-      processID(getProcessID()),
+      processID(qi::os::getpid()),
       port(0) {}
 
       EndpointContext::EndpointContext(
