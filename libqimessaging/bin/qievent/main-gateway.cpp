@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
   NetworkThread *n = new NetworkThread();
   sleep(1);
   Gateway g;
-  g.run(n);
+  g.start("127.0.0.1", 9559, n);
 
   while (true)
     ;

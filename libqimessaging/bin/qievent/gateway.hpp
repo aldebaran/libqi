@@ -20,43 +20,39 @@
 # include "transport-server.hpp"
 # include "network-thread.hpp"
 
-class Message
+struct Message
 {
-public:
   enum MessageType
-    {
-      call,
-      answer,
-      event,
-      error,
-      none
-    };
-
+  {
+    call,
+    answer,
+    event,
+    error,
+    none
+  };
 
   Message()
   {
     type = none;
     size = 0;
+    idCaller = "";
     idModule = "";
     idObject = "";
     msg = "";
-  };
-
-  Message(const Message &m)
-  {
-    type = m.type;
-    size = m.size;
-    idModule = m.idModule;
-    idObject = m.idObject;
-    msg = m.msg;
-  };
+  }
 
   MessageType  type;
   unsigned int size;
+  std::string  idCaller;
   std::string  idModule;
   std::string  idObject;
   std::string  msg;
 };
+
+typedef std::map<std::string, TransportClient*>           TransportClientMap;
+typedef std::map<std::string, TransportClient*>::iterator TransportClientMapIterator;
+
+class GatewayPrivate;
 
 class Gateway: public TransportServerDelegate
 {
@@ -68,24 +64,12 @@ public:
   void onWrite(const std::string &msg = "");
   void onRead(const std::string &msg = "");
 
-  void run(NetworkThread *n)
-  {
-    _nthd = n;
-    _ts->run(_nthd->getEventBase());
-  }
+  void start(const std::string &address,
+             unsigned short port,
+             NetworkThread *n);
 
 private:
-  void* call(const std::string &msg);
-  void* answer(const std::string &msg);
-  void* error(const std::string &msg);
-  void* event(const std::string &msg);
-
-  Message parseMessage(const std::string &msg);
-
-private:
-  NetworkThread   *_nthd;
-  TransportServer *_ts;
-  std::map<std::string, TransportClient*> _clientMap;
+  GatewayPrivate *_p;
 };
 
 
