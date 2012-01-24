@@ -142,18 +142,22 @@ namespace qi {
 
     std::string gethostname()
     {
+      long hostNameMax;
 #ifdef HAVE_SC_HOST_NAME_MAX
-      char *szHostName = (char*) malloc(sysconf(_SC_HOST_NAME_MAX) * sizeof(char));
+      hostNameMax = sysconf(_SC_HOST_NAME_MAX) + 1;
 #else
-      char *szHostName = (char*) malloc(HOST_NAME_MAX * sizeof(char));
+      hostNameMax = HOST_NAME_MAX + 1;
 #endif
-      if (::gethostname(szHostName, sizeof(szHostName) - 1) == 0) {
+      char *szHostName = (char*) malloc(hostNameMax * sizeof(char));
+      memset(szHostName, 0, hostNameMax);
+      if (::gethostname(szHostName, hostNameMax) == 0) {
         std::string hostname(szHostName);
         free(szHostName);
         return hostname;
       }
+
+      free(szHostName);
       return std::string();
     }
-
   };
 };
