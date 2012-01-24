@@ -35,12 +35,20 @@
 class RemoteService : public TransportClientDelegate {
 public:
   RemoteService() {
-    tc = new TransportClient("127.0.0.1", 9559);
+    tc = new TransportClient();
     tc->setDelegate(this);
   }
 
   ~RemoteService() {
+    tc->disconnect();
     delete tc;
+  }
+
+  void connect(const std::string &address,
+               unsigned short port)
+  {
+    tc->connect(address, port, nthd->getEventBase());
+    tc->waitForConnected(300);
   }
 
   void setThread(NetworkThread *n)
@@ -49,7 +57,7 @@ public:
   }
 
   void call(const std::string &msg) {
-    tc->send(msg, nthd->getEventBase());
+    tc->send(msg);
   }
 
   virtual void onConnected(const std::string &msg)
@@ -72,20 +80,31 @@ private:
   TransportClient *tc;
 };
 
+
 int main(int argc, char *argv[])
 {
   NetworkThread *nthd = new NetworkThread();
   sleep(1);
   RemoteService rs;
   rs.setThread(nthd);
-  rs.call("call.12.audio.say.hello world!");
-//  RemoteService rs1;
-//  rs1.setThread(nthd);
-//  rs1.call("second");
-//  RemoteService rs2;
-//  rs2.setThread(nthd);
-//  rs2.call("third");
+  rs.connect("127.0.0.1", 9559);
+  rs.call("call.20.audio.say.hello world!");
   sleep(1);
+  rs.call("answer.21.audio.say.what's up!");
+  RemoteService rs1;
+  rs1.setThread(nthd);
+  rs1.connect("127.0.0.1", 9559);
+  rs1.call("answer.40.audio.say.hello world!");
+  RemoteService rs2;
+  rs2.setThread(nthd);
+  rs2.connect("127.0.0.1", 9559);
+  rs2.call("error.50.audio.say.hello world!");
+  rs2.call("event.51.audio.say.hello world!");
+
+  sleep(3);
+
+  delete nthd;
+
   return 0;
 
 }

@@ -30,6 +30,7 @@
 # include <qi/macro.hpp>
 
 # include <event2/event.h>
+# include <event2/bufferevent.h>
 
 class TransportClientDelegate
 {
@@ -39,24 +40,38 @@ public:
   virtual void onRead(const std::string &msg = "")      = 0;
 };
 
+struct TransportClientPrivate;
+
 class TransportClient
 {
   QI_DISALLOW_COPY_AND_ASSIGN(TransportClient);
 
 public:
-  explicit TransportClient(const std::string &address,
-                           unsigned short port);
+  TransportClient();
   virtual ~TransportClient();
 
-  bool send(const std::string &msg,
-            struct event_base *base);
+  bool connect(const std::string &address,
+               unsigned short port,
+               struct event_base *base);
+  void disconnect();
+
+  // if msecs < 0 no timeout
+  bool waitForConnected(int msecs = 30000);
+  bool waitForDisconnected(int msecs = 30000);
+
+  bool send(const std::string &msg);
 
   void setDelegate(TransportClientDelegate *delegate);
-  TransportClientDelegate *_tcd;
 
+  void readcb(struct bufferevent *bev,
+              void *context);
+  void writecb(struct bufferevent* bev,
+               void* context);
+  void eventcb(struct bufferevent *bev,
+               short error,
+               void *context);
 private:
-  std::string         _address;
-  unsigned short      _port;
+  TransportClientPrivate  *_p;
 };
 
 #endif	    /* !TRANSPORT_CLIENT_HPP_ */
