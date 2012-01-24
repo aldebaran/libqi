@@ -14,14 +14,17 @@
 #include "transport-server.hpp"
 
 
-class RemoteServer : public TransportServerDelegate {
+class RemoteServer : public TransportServerDelegate
+{
 public:
-  RemoteServer() {
-    ts = new TransportServer("127.0.0.1", 9559);
+  RemoteServer()
+  {
+    ts = new TransportServer();
     ts->setDelegate(this);
   }
 
-  ~RemoteServer() {
+  ~RemoteServer()
+  {
     delete ts;
   }
 
@@ -30,8 +33,10 @@ public:
     nthd = n;
   }
 
-  void call() {
-    ts->run(nthd->getEventBase());
+  void start(const std::string &address,
+             unsigned short port)
+  {
+    ts->start(address, port, nthd->getEventBase());
   }
 
   virtual void onConnected(const std::string &msg)
@@ -60,10 +65,12 @@ int main(int argc, char *argv[])
   sleep(1);
   RemoteServer rs;
   rs.setThread(nthd);
-  rs.call();
+  rs.start("127.0.0.1", 9559);
 
   while (true)
     ;
+
+  delete nthd;
 
   return 0;
 }
