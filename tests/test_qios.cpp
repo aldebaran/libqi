@@ -195,3 +195,9 @@ TEST(QiOs, tmpdir_prefix_zero)
   test_writable_and_empty(temp);
   clean_dir(temp);
 }
+
+TEST(QiOs, get_host_name)
+{
+  std::string temp = qi::os::gethostname();
+  EXPECT_NE(std::string(), temp);
+}

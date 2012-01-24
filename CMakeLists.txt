@@ -6,6 +6,12 @@ cmake_minimum_required(VERSION 2.8)
 project(LibQi)
 find_package(qibuild)
 
+include(CheckSymbolExists)
+check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
+set_source_files_properties(src/os_posix.cpp
+  PROPERTIES
+    COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
+
 if (EFFECTIVE_CPP)
   add_definitions(" -Weffc++ ")
 endif()
