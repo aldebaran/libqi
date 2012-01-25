@@ -39,13 +39,20 @@ IPC:
 ^^^^
 When: same machineId
 
+.. image:: /medias/network_without_gateway.png
+
 RPC:
 ^^^^
 When: different machineId
 
+Same diagram than IPC.
+
 GateWay:
 ^^^^^^^^
 When: different machineId
+
+.. image:: /medias/network_with_gateway.png
+
 
 XMPP:
 ^^^^^
@@ -56,37 +63,37 @@ How client work:
 // ip/port of the master
 qi::Client(ip, port)
 
-=> connect to the gw/master
-=> getServiceEndpoint
-  => lpc/ipc are obvious
-  => same subnet: rpc
-  => client connected though gw (using external address): continue using the gw
+* connect to the gw/master
+* getServiceEndpoint
+    * lpc/ipc are obvious
+    * same subnet: rpc
+    * client connected though gw (using external address): continue using the gw
 
 
 Basic brick
 -----------
 
 MethodCall
-++++++++++
+^^^^^^^^^^
 one input (onStart), two output (onStopped, onError), no parameters
 executed by a thread pool. method should not take too long to process or they are killed.
 Method cant be stopped. Synchronous by essence. (could be used asynchronous by choregraphe (represented by a box))
 
 Streams
-+++++++
+^^^^^^^
 one input, or one output.
 multipublisher/multisubscriber?
 
 Message (shm)
-+++++++++++++
+^^^^^^^^^^^^^
 Message can be allocated in shm to avoid copy. This is very important for audio/video stream.
 
 FD passing
-++++++++++
+^^^^^^^^^^
 we can pass fd between process to allow then to share memory block and files?
 
 ThreadQueue
-+++++++++++
+^^^^^^^^^^^
 
 Internal Machinery
 ------------------
@@ -95,18 +102,20 @@ A TransportClient can connect to a remote Service. he create two streams (one in
 This is how he communicate with a service.
 Message are send through one pipe and receive though the other. Messages are typed "methodcall", "stream"
 
+.. image:: /medias/network_machinery.png
+
 
 
 Complex brick
 -------------
 
 Command
-+++++++
+^^^^^^^
 command are represented by a thread on the server, command receive input and emit output.
 One running command = One thread.
 
 Events
-++++++
+^^^^^^
 
 event are broadcasted to all subscribers. Events are global.
 
