@@ -1,3 +1,5 @@
+.. _qimessaging-index:
+
 qiMessaging documentation
 -------------------------
 
@@ -12,4 +14,7 @@ qiMessaging documentation
   network
   gateway
   directory
-  message
+  object
+  stl-api
+  qt-api
+

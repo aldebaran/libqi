@@ -1,5 +1,5 @@
-NAO's life
-==========
+Autonomous Life
+===============
 
 Sentinel
 --------

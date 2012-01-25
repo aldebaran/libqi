@@ -1,19 +1,16 @@
-Architecture
-============
+.. _architecture:
+
+NAOqi 2.0 - Architecture
+========================
 
 Goals:
- - solid/stable in the long term
- - unified architecture for NAOqi and Choregraphe
- - APIs that can be maintained for a long time
- - general enough to allow high level construct we dont need at the moment
- - fast prototyping: separated components (classes, widgets, ...)
-
-High level goals:
  - be connected (to smartphone, tablet, computer, ... from everywhere)
  - be generic : basic bulding block could be used everywhere
  - be reusable : support NAO, Romeo, whatever...
- - be smart
- - be secure
+ - be smart when applicable
+ - be secure, solid, stable
+ - boxes/c++ API unification
+ - maintainable APIs
 
 Communications
 --------------
@@ -33,7 +30,7 @@ It would be great to have a unified way to connect to the robot, that would allo
 
 ROS/YARP/..: other robotics framework can allow to connect to NAO too. If bridge between NAOqi and thouse frameworks are added to the NAOStore they will be very easy to use.
 
-:ref:`connectivity`
+:ref:`qimessaging-index`
 
 Applications
 ------------
@@ -51,7 +48,15 @@ Remote Application must use a sessionId to authenticate on the robot. This sessi
 see :ref:`security`
 
 
+Tracing
+-------
 
+We need a tracing infrastructure to understand what's going on in the system.
 
+We need to be able to display current running task, bandwith used for each services, frequency of calls for each methods.
+
+It should be possible to activate the debug mode without too much performance penality.
+
+We need a gui to follow what's going on. Choregraphe can display objects it seems pretty adapted to display activity between services/behaviors. We could support an inspect mode, where we can see what's going on the wire, what current task are being run, what function take time (time of execution of a slot).
 
 What is needed?

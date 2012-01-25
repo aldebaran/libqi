@@ -39,7 +39,7 @@ It should be easy to write service too.
 Embedded Application
 --------------------
 
-Embedded application are made of services and behaviors. An application that crash should not bring the whole systeme down, only the application should be impacted. To do that we need to isolate each application, see :ref:`local-security` for more details. Application could pack services and behaviors in the same process or use differents processes. Embedded application should provide a manifest to be integrated with other services (NAO's life, NAOStore, ..). see :ref:`manifest` for more information.
+Embedded application are made of services and behaviors. An application that crash should not bring the whole systeme down, only the application should be impacted. To do that we need to isolate each application, see :ref:`local-security` for more details. Application could pack services and behaviors in the same process or use differents processes. Embedded application should provide a manifest to be integrated with other services (NAO's life, NAOStore, ..).
 
 
 Remote Application

@@ -1,5 +1,18 @@
-Generator
-=========
+Object reflection
+=================
+
+Object reflection
+-----------------
+
+what do we expect from an object?
+
+QObject
+-------
+
+
+
+AML
+---
 
 The AML can be read and used by many tools.
 

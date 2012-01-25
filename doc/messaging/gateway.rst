@@ -28,3 +28,18 @@ Message are send through one pipe and receive though the other. Messages are typ
 .. image:: /medias/network_machinery.png
 
 
+third party gateway
+-------------------
+
+ROS, YARP, ...
+
+We can support other robotics framework using insecure gateway.
+Should not be enable by default.
+
+Pro:
+  - give access to NAO for others robotics framework.
+
+Cons:
+  - insecure
+  - no control over permission
+

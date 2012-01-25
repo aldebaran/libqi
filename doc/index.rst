@@ -13,6 +13,8 @@ Overview
 This documentation is a work in progress. Please comments, modify :)
 
 
+Take a look at the :ref:`global architecture overview <architecture>`
+
 Standards
 ---------
 
@@ -22,21 +24,26 @@ Standards
 Topics
 ------
 
- - :ref:`qiMessaging Networking <qimessaging-networking>`: describe how clients, servers and gateway connect together.
+ - :ref:`qiMessaging <qimessaging-index>`
+ - :ref:`NAOqi 2.0 - Core <core-index>`
+
+Software Stack
+--------------
+
+.. image:: /medias/NAOqi2.0-Softwarestack.png
 
 
-Contents
---------
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
+   architecture
    std/index
    messaging/index
+   core/index
 
 ..
-   architecture
    connectivity
    application
    choregraphe
