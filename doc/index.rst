@@ -6,24 +6,72 @@
 Welcome to qi Framework's documentation!
 ========================================
 
+
 Overview
 --------
 
-This documentation is a RFC. Please comments, modify :)
-
-We will start by describing the ecosystem of Applications around NAO. We will then dig into the system step by step.
-
-we will look at
-  - interaction with other devices
-  - Remote Application
-  - Application
-  - Underlying framework (overview with all "design pattern")
-  - Developement Tools:
-    - GUI, tracing, debug, tml editor, ...
+This documentation is a work in progress. Please comments, modify :)
 
 
 Standards
 ---------
+
+ - :ref:`Binary Message <std-binary-message>`:  describe the network binary network protocol used in qiMessaging.
+
+
+Topics
+------
+
+ - :ref:`qiMessaging Networking <qimessaging-networking>`: describe how clients, servers and gateway connect together.
+
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   std/index
+   messaging/index
+
+..
+   architecture
+   connectivity
+   application
+   choregraphe
+   core
+   tracing
+   xar
+   security
+   threading
+   messaging
+   life
+   animation
+   manifest
+   generator
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+..
    std/xar
      Describe connection between objects
 
@@ -42,8 +90,8 @@ Standards
      (can be edited online)
 
 
-Plan
-====
+..
+  Plan
 
   global overview
     architecture
@@ -86,45 +134,16 @@ Plan
   tracing
 
 
-TODO:
+  TODO:
   - how to support simple method call in choregraphe? (support threaded slot?)
 
   a method call is a threaded slot?
 
 
-Graph:
-  - Application ecosystem (computer, tablet, embedded)
-  - connectivity
-  - core overview: basic services
-  - application architecture: service, behavior, threads, shared memory
+  Graph:
+    - Application ecosystem (computer, tablet, embedded)
+    - connectivity
+    - core overview: basic services
+    - application architecture: service, behavior, threads, shared memory
 
-
-Contents:
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   architecture
-   connectivity
-   application
-   choregraphe
-   core
-   tracing
-   xar
-   security
-   threading
-   messaging
-   life
-   animation
-   manifest
-   std/index
-   generator
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

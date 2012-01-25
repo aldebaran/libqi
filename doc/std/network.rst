@@ -1,3 +1,5 @@
+.. _std-binary-message:
+
 Network Binary Protocol
 =======================
 
