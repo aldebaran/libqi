@@ -22,6 +22,15 @@ When external clients connect to a gateway, it's the gateway role to handle all 
   - which services can be registered
   - one by board? one by robot?
 
+  What we must do if the master is down ?
 
+    - Ping from ressource then auto reconnection
+    - Send signal to say "i'm down you must reconnect"
+    - Have a back up using a local data base with all informations of enable ressource
 
+  What if users request ressource cannot be reach ?
+
+    - Before/after connection
+    - Send back an error
+    - Filter to avoid vulnerabilty by requesting an unreachable ressource (DoS or DDoS - Distributed/Denial-of-service attack)
 

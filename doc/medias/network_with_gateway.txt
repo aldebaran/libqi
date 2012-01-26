@@ -1,0 +1,41 @@
+http://www.websequencediagrams.com/?lz=Q2xpZW50LT5HYXRld2F5OiBycGMgY2FsbChzZXJ2aWNlLCBtZXNzYWdlKQoKYWN0aXZhdGUgACcHCm9wdAogAAYILT5TAC0GRGlyZWN0b3J5OiBpcGMvAEIQKQogIGRlADsRCm5vdGUgcmlnaHQgb2YgAIETBjoKICBJZiBnAIEYBiBkb3NuJ3QgaGF2ZSAAgRkHX2FkZHJlc3MsCiAgYXNrIHRvIHRoZSAAgQQHIACBAwkgACEHCmVuZCBub3RlCgogIACBSAkAgSoQCiAAAhEtAIIaCwCBTwhhbnN3ZXIAgiMIAIEDCACBUg8ASxFlbmQAgWcHbGVmAIFoBQCCdggKICBDb25uZWN0aW9uIHRvCiAAgVcQAIE0CwCCfREAgngQAIJwD2MAg2YFAINFCwCCYyIAQQgKICBleGVjdHVlAIQGCACEHwUKICBhbmQAgX8HAIJOCwCEHwoAhAsHCgCEEwcAgikbAIECHAA-CACBWRotPgCEKQcAhTsFADAjAIU6CA&s=earth
+
+Client->Gateway: rpc call(service, message)
+
+activate Gateway
+opt
+  Gateway->ServiceDirectory: ipc/rpc call(service)
+  deactivate Gateway
+
+note right of Client:
+  If gateway dosn't have service_address,
+  ask to the Service Directory address
+end note
+
+  activate ServiceDirectory
+  ServiceDirectory-->Gateway: ipc/rpc answer(service_address)
+  deactivate ServiceDirectory
+end
+
+note left of Gateway:
+  Connection to
+  service_address
+end note
+
+activate Gateway
+Gateway->Service: ipc/rpc call(client, message)
+deactivate Gateway
+
+note right of Service:
+  exectue message call
+  and answer
+end note
+
+
+activate Service
+Service-->Gateway: ipc/rpc answer(client, message)
+deactivate Service
+
+activate Gateway
+Gateway-->Client: rpc answer(client, message)
+deactivate Gateway

@@ -1,0 +1,23 @@
+http://www.websequencediagrams.com/?lz=Q2xpZW50LT5TZXJ2aWNlRGlyZWN0b3J5OiBBc2tpbmcgcmVzc291cmNlIGFkZHJlc3NfcwAlBgoKbm90ZSByaWdodCBvZiAAMhAKICBzZWFyY2gKIAA7CgogADYRZW5kIG5vdGUKCmFjdGl2YXRlADkSAIEOEC0tPgCBMwY6AIEFEWRlAC0aAIEsBmxlZgCBLAUAgXUGCiAgT3BlbiBjb25uZWN0aW9uIHRvAIEBJgA6BwCCOwhSAIIiCDogAIJBBgBJCwCCJgZvdmVyAHAHLCAAJAtBbGwgY29tbXVuaWNhdGlvbnMgYmV0d2VlbgCBHgcgYW5kACcKAIFYDACBPgc&s=earth
+
+Client->ServiceDirectory: Asking ressource address_service
+
+note right of ServiceDirectory
+  search
+  ressource
+  address_service
+end note
+
+activate ServiceDirectory
+ServiceDirectory-->Client: address_service
+deactivate ServiceDirectory
+
+note left of Client
+  Open connection to
+  address_service
+end note
+
+activate Client
+Client->Ressource: Direct connection
+note over Client, Ressource: All communications between Client and Ressource
+deactivate Client

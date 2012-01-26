@@ -1,0 +1,23 @@
+http://www.websequencediagrams.com/?lz=Q2xpZW50LT5TZXJ2aWNlRGlyZWN0b3J5OiBjYWxsKHMAEQYpCmFjdGl2YXRlIAAZEAoAKhAtLT4ATwY6IGFuc3dlcgA9CF9hZGRyZXNzKQpkZQA1Ggpub3RlIGxlZnQgb2YgAEMHCiAgQ29ubmVjdGlvbiB0bwogIABGDwplbmQgbm90ZQoAgSEKAIFWBgoAgVQPAIFTB21lc3NhZ2UAgQANACoHAIFcEQCBXAgAgUkSADIUAC0IAIFEBm92ZXIAgUAHLAB6CAogIEFsbCBjb21tdW5pY2F0aW9ucyBkb25lIHRocm91Z2ggcnBjL2lwYyBwcm90b2NvbACBVgo&s=earth
+
+Client->ServiceDirectory: call(service)
+activate ServiceDirectory
+ServiceDirectory-->Client: answer(service_address)
+deactivate ServiceDirectory
+
+note left of Client:
+  Connection to
+  service_address
+end note
+
+activate Client
+Client->Service: call(message)
+deactivate Client
+
+activate Service
+Service-->Client: answer(message)
+deactivate Service
+
+note over Client,Service:
+  All communications done through rpc/ipc protocol
+end note
