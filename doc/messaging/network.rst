@@ -6,6 +6,32 @@ qiMessaging - Networking
 Use Case
 --------
 
+* Single Computer Robot
+
+  .. image:: /medias/NAOqi2.0-singleboardrobot.png
+
+  Robot have a single computer with only an external address. All services use internal networking to communicate. External clients use gateways.
+
+* Multiple Computer Robot
+
+  .. image:: /medias/distributed-naoqi.png
+
+  Robot can have multiple computer with differents IP addresses that communicate together to from a single robot.
+  In that case it's particularly important to differenciate between internal and external busses.
+  They do not need the same security level and do not have the same constraint. We want the internal network to never change, to be a DMZ.
+  We want the external network to be very controled, external network can have address that change according to the desire of the client. (for example from one hotspot to another).
+
+  To easily support Choregraphe and external PC tools, only one public address have to be used to connect to the robot. So we need to have a public gateway, that forward request from/to services.
+  The public gateway (the program that forward the data), need to run on the computer that have both internal and external address.
+
+* Remote Device / Cloud
+
+  .. image:: /medias/NAOqi2.0-remotedevice.png
+
+  We want to connect multiple devices together.
+
+Specific network issues
+
 .. warning::
 
   schema from http://doc/continuous/specification/spec/romeo/network.html
@@ -14,7 +40,7 @@ Use Case
   nat traversal and proxy traversal issues
 
 
-We need to respond to two major differents communication type with differents capabilites (security level, acces points, ...):
+We need to respond to three major differents communication typse with differents capabilites (security level, acces points, ...):
 
 **Internal: Direct connection protocol**
 
@@ -27,12 +53,11 @@ Communications are done inside the robot, this implies few things:
   * IPC (Inter Process Communication): communication are done on 1 machine but between multiple processes,
   * RPC (Remote Process Communication): communication are done between multiple machines (multiple computers robots).
 
+**External: Connection from local network**
 
-**External: Remote connection protocol**
 
-* Remote Device
+**External: Connection from internet**
 
-  * Remote device that could be used by a robot.
 
 
 Networking
