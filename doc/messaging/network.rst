@@ -6,13 +6,13 @@ qiMessaging - Networking
 Use Case
 --------
 
-* Single Computer Robot
+* **Single Computer Robot**
 
   .. image:: /medias/NAOqi2.0-singleboardrobot.png
 
   Robot have a single computer with only an external address. All services use internal networking to communicate. External clients use gateways.
 
-* Multiple Computer Robot
+* **Multiple Computer Robot**
 
   .. image:: /medias/distributed-naoqi.png
 
@@ -24,44 +24,38 @@ Use Case
   To easily support Choregraphe and external PC tools, only one public address have to be used to connect to the robot. So we need to have a public gateway, that forward request from/to services.
   The public gateway (the program that forward the data), need to run on the computer that have both internal and external address.
 
-* Remote Device / Cloud
+* **Remote Device / Cloud**
 
   .. image:: /medias/NAOqi2.0-remotedevice.png
 
   We want to connect multiple devices together.
 
 Specific network issues
+-----------------------
 
-.. warning::
+This is only applicable for external connection. There is no restriction on internal networking that can be considered like a DMZ.
 
-  schema from http://doc/continuous/specification/spec/romeo/network.html
+**NAT and Proxy support for local network**
 
-  explain differences between external and internal networking
-  nat traversal and proxy traversal issues
+.. image:: /medias/NAOqi2.0-NATissues.png
 
+The solution is to use a gateway with a single address and port.
 
-We need to respond to three major differents communication typse with differents capabilites (security level, acces points, ...):
+**direct connection by internet**
 
-**Internal: Direct connection protocol**
+To send audio/video between two device using internet, we can use a third party server where each device connect to. But we can try to use a more
+efficient connection mean by using STUN and similar techniques.
 
-Communications are done inside the robot, this implies few things:
+.. image:: /medias/NAOqi2.0-clouddirectconnection.png
 
-* do not need a lot of security level, all communications are known and we assure they are safe,
-* they can be some acces points to connect to:
-
-  * LPC (Local Procedure Call): communication are done on 1 machine (single computer robots) and 1 process,
-  * IPC (Inter Process Communication): communication are done on 1 machine but between multiple processes,
-  * RPC (Remote Process Communication): communication are done between multiple machines (multiple computers robots).
-
-**External: Connection from local network**
-
-
-**External: Connection from internet**
+see also http://en.wikipedia.org/wiki/STUN and http://en.wikipedia.org/wiki/NAT_traversal
 
 
 
 Networking
 ----------
+
+We need to respond to three major differents communication typse with differents capabilites (security level, acces points, ...):
 
 We support multiple communications ways. We need a way to select which
 communication's means we should use.
@@ -96,8 +90,20 @@ to connect to it.
 more information on :ref:`qimessaging-servicedirectory`.
 
 
+
+
+
 Direct connection protocol
 --------------------------
+
+Communications are done inside the robot, this implies few things:
+
+* do not need a lot of security level, all communications are known and we assure they are safe,
+* they can be some acces points to connect to:
+
+  * LPC (Local Procedure Call): communication are done on 1 machine (single computer robots) and 1 process,
+  * IPC (Inter Process Communication): communication are done on 1 machine but between multiple processes,
+  * RPC (Remote Process Communication): communication are done between multiple machines (multiple computers robots).
 
 Those endpoint's protocols are only used on the same device. A device can be an
 agregation of multiples computers. But they are connected on the same internal
