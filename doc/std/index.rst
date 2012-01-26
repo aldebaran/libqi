@@ -2,6 +2,7 @@ Standard protocol
 -----------------
 
 .. toctree::
+
   aml
   network
 
