@@ -4,43 +4,63 @@ NAOqi 2.0 - Architecture
 ========================
 
 Goals:
+ - application oriented
  - be connected (to smartphone, tablet, computer, ... from everywhere)
- - be generic : basic bulding block could be used everywhere
+ - be generic : basic building block could be used everywhere
  - be reusable : support NAO, Romeo, whatever...
  - be smart when applicable
  - be secure, solid, stable
  - boxes/c++ API unification
  - maintainable APIs
+ - easy to understand and to debug
 
-Communications
---------------
-
-Multiple way to connect to the robot:
-
- - secure : default local network connection. Choregraphe, etc...
-   The secure connection is used to connect from a local network.
-
- - tcp : choregraphe, "realtime" apps
-   disable by default. Could be enable to allow direct not secure tcp access to the robot. This should improve performance a little compared to a secure connection. This extra performance may be needed for very specific applications.
-
- - using a thirdparty server: allow to communicate with a NAO from everywhere once both you and NAO are connected to the Internet.
-   may be used by most remote application that could run everywhere. For example application on phones, tablets, laptops..
-
-It would be great to have a unified way to connect to the robot, that would allow to connect all our sotware using (fast) secure connection when local and xmpp otherwize.
-
-ROS/YARP/..: other robotics framework can allow to connect to NAO too. If bridge between NAOqi and thouse frameworks are added to the NAOStore they will be very easy to use.
-
-:ref:`qimessaging-index`
-
-Applications
-------------
+Application oriented
+--------------------
 
 The whole point of the NAOqi framework is to write applications. Application can run on the robot or be remote. We support both workflow.
 
 see :ref:`application`.
 
-Security
+Connected
+---------
+
+We need to support modern networking, we have multiple use case:
+
+ - we need fast communication between applications on the robot
+ - we want to connect multiple devices together in a secure way
+
+Researcher want very fast networking to transfer audio/video/events and process them on a deported computer.
+Researcher want to use differents robotics frameworks.
+Application on the robot (maybe on multiple board) need fast communication between them.
+Device need to be connected to each others and exchange informations.
+
+To that matter we need fast internal communication method, and a simple way to create secure gateway between the robot and the outside.
+
+Gateway will allow to set specific permissions, will support a secure connection (for tools running on computers), will support connection
+to a third party server (to support tablet and access from internet) and allow implementing support for others robotics frameworks.
+
+:ref:`qimessaging-index`
+
+Generic
+-------
+
+We dont know what the future is made of, so we need generic building blocks that we will be able to reuse to construct more advanced blocks.
+The core of the framework should be generic enough to support all robotics and embedded devies use case.
+
+Reusable
 --------
+
+The framework should provide API that are generic enough to be adapted to differents types of robots, we have no good reason to taillor
+our interface to a specific robots, thinking generic and reusable will improve the quality of the whole software stack.
+
+Smart
+-----
+
+Secure/Solid/Stable
+-------------------
+
+The framework should never be an issue. If failure occur, that should always restart and return in a good running state.
+
 
 Security is an integral part of our platform, we dont want robot to become evil,
 Remote Application must use a sessionId to authenticate on the robot. This sessionId should be configured on the robot, could be revoked at any time.
@@ -48,8 +68,8 @@ Remote Application must use a sessionId to authenticate on the robot. This sessi
 see :ref:`security`
 
 
-Tracing
--------
+Tracing / debuggable
+--------------------
 
 We need a tracing infrastructure to understand what's going on in the system.
 
