@@ -13,24 +13,32 @@ Use Case
   explain differences between external and internal networking
   nat traversal and proxy traversal issues
 
-multiple computer robots
 
-  - internal busses
-  -
+We need to respond to two major differents communication type with differents capabilites (security level, acces points, ...):
 
-Single computer robots
+**Internal: Direct connection protocol**
 
-  single ATOM board
+Communications are done inside the robot, this implies few things:
 
-Remote Device
+* do not need a lot of security level, all communications are known and we assure they are safe,
+* they can be some acces points to connect to:
 
-  Remote device that could be used by a robot.
+  * LPC (Local Procedure Call): communication are done on 1 machine (single computer robots) and 1 process,
+  * IPC (Inter Process Communication): communication are done on 1 machine but between multiple processes,
+  * RPC (Remote Process Communication): communication are done between multiple machines (multiple computers robots).
+
+
+**External: Remote connection protocol**
+
+* Remote Device
+
+  * Remote device that could be used by a robot.
 
 
 Networking
 ----------
 
-We support multiple communications way. We have need a way to select which communication means we should use.
+We support multiple communications ways. We have need a way to select which communication means we should use.
 
 .. image:: /medias/qimessaging-networking.png
 
