@@ -11,6 +11,7 @@ qiMessaging documentation
 .. toctree::
   :maxdepth: 2
 
+  usecase
   network
   gateway
   directory
