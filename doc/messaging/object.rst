@@ -6,9 +6,10 @@ Object reflection
 
 what do we expect from an object?
 
-QObject
--------
-
+ - properties
+ - methods
+ - signals
+ - slots
 
 
 AML
