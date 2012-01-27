@@ -102,26 +102,53 @@ We need to manage multiple computer, with multiple addresses, inside one robot.
 We must dispatch each message comming from external network though one address
 using gateway and :ref:`Service Directory <qimessaging-servicedirectory>`.
 
-.. image:: /medias/network_with_gateway.png
-
 more information on :ref:`qimessaging-gateway`.
 
 
 TCP/IP Gateway
 ^^^^^^^^^^^^^^
 
+The Transmission Control Protocol (TCP) and Internet Protocol (IP) is used for
+LAN connection:
+* Choreagraphe to Robot
+* Remote devices on the same subnet than the robot
+* Internal connection
+
 Have a look at :ref:`qimessaging-gateway` for more technical details.
+
+.. image:: /medias/network_with_tcp_gateway.png
 
 XMPP:
 ^^^^^
-When:
+
+To acces to the robot from everywhere, we use Extensible Messaging and Presence Protocol (XMPP). The XMPP network uses a client-server architecture (clients do not talk directly to one another). However, it is decentralized-by design, there is no central authoritative server. Every user on the network has a unique ID.
+
+Another useful feature of the XMPP system is that of transports, also known as gateways, which allow users to access networks using other protocols. XMPP provides this access at the server level by communicating via special gateway services running on a remote computer. Any user can "register" with one of these gateways by providing the information needed to log on to that network, and can then communicate with users of that network as though they were XMPP users. This means any client that fully supports XMPP can access any network with a gateway without extra code in the client, and without the need for the client to have direct access to the Internet.
+
+* Weaknesses
+
+  * *In-band binary data transfer is inefficient*
+    Because XMPP is not yet encoded as Efficient XML Interchange but as a single long XML document, binary data must be first base64 encoded before it can be transmitted in-band. Therefore any significant amount of binary data (e.g., file transfers) is best transmitted out-of-band, using in-band messages to coordinate.
+
+
+* Strengths
+
+  * Decentralization
+  * Open standards
+  * Security:
+
+    XMPP servers may be isolated from the public XMPP network (e.g., on a company intranet), and robust security (via SASL and TLS) has been built into the core XMPP specifications. To encourage use of channel encryption, the XMPP Standards Foundation currently runs an intermediate certification authority at StartSSL (formerly at xmpp.net) offering free digital certificates to XMPP server administrators under the auspices of the StartCom Certification Authority (which is the root CA for the intermediate CA).
+
+  * Flexibility:
+
+    Custom functionality can be built on top of XMPP; to maintain interoperability, common extensions are managed by the XMPP Software Foundation. XMPP applications, network management, content syndication, collaboration tools, file sharing, remote systems control and monitoring, geolocation, middleware and cloud computing, VoIP and Identity services.
+
+.. image:: /medias/xmpp_gateway.png
 
 .. warning::
 
-  XMPP gateway
-  schema (herve)
-  and blabla. talk about presence. each device announce their device presence on the xmpp server.
-  token to identify robots?
+  * Server performance for lots of client?
+  * Token to identify robots?
 
 
 
