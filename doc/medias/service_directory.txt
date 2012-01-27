@@ -1,6 +1,6 @@
-http://www.websequencediagrams.com/?lz=Q2xpZW50LT5TZXJ2aWNlRGlyZWN0b3J5OiBBc2tpbmcgcmVzc291cmNlIGFkZHJlc3NfcwAlBgoKbm90ZSByaWdodCBvZiAAMhAKICBzZWFyY2gKIAA7CgogADYRZW5kIG5vdGUKCmFjdGl2YXRlADkSAIEOEC0tPgCBMwY6AIEFEWRlAC0aAIEsBmxlZgCBLAUAgXUGCiAgT3BlbiBjb25uZWN0aW9uIHRvAIEBJgA6BwCCOwhSAIIiCDogAIJBBgBJCwCCJgZvdmVyAHAHLCAAJAtBbGwgY29tbXVuaWNhdGlvbnMgYmV0d2VlbgCBHgcgYW5kACcKAIFYDACBPgc&s=earth
+http://www.websequencediagrams.com/?lz=Q2xpZW50LT5TZXJ2aWNlRGlyZWN0b3J5OiBBc2tpbmcgABIHIGFkZHJlc3NfcwAjBgoKbm90ZSByaWdodCBvZgAfCAA3CQogIHNlYXJjaAogIHJlc3NvdXJjZQogADYRZW5kIG5vdGUKCmFjdGl2YXRlADkSAIEMEC0tPgCBMQY6AIEFEWRlAC0aAIEsBmxlZgCBLAUAgXMGCiAgT3BlbiBjb25uZWN0aW9uIHRvAIEBJgA6BwCCMg86IEMAQgkAgh0Gb3ZlcgBnBywAgkYIOiBBbGwgY29tbXVuaWNhdGlvbnMgYmV0d2VlbgCBEwcgYW5kAIJ1CACBSwwAgTEH&s=earth
 
-Client->ServiceDirectory: Asking ressource address_service
+Client->ServiceDirectory: Asking Service address_service
 
 note right of ServiceDirectory
   search
@@ -18,6 +18,6 @@ note left of Client
 end note
 
 activate Client
-Client->Ressource: Direct connection
-note over Client, Ressource: All communications between Client and Ressource
+Client->Service: Connection
+note over Client, Service: All communications between Client and Service
 deactivate Client

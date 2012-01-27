@@ -3,12 +3,14 @@
 qiMessaging - Networking
 ========================
 
-Please read the :ref:`use case <qimessaging-usecase>` to understand the requirement we have.
+Please read the :ref:`use case <qimessaging-usecase>` to understand the
+requirement we have.
 
 Networking
 ----------
 
-We need to respond to three major differents communication typse with differents capabilites (security level, acces points, ...):
+We need to respond to three major differents communication typse with differents
+capabilites (security level, acces points, ...):
 
 We support multiple communications ways. We need a way to select which
 communication's means we should use.
@@ -51,12 +53,16 @@ Direct connection protocol
 
 Communications are done inside the robot, this implies few things:
 
-* do not need a lot of security level, all communications are known and we assure they are safe,
+* do not need a lot of security level, all communications are known and we
+  assure they are safe,
 * they can be some acces points to connect to:
 
-  * LPC (Local Procedure Call): communication are done on 1 machine (single computer robots) and 1 process,
-  * IPC (Inter Process Communication): communication are done on 1 machine but between multiple processes,
-  * RPC (Remote Process Communication): communication are done between multiple machines (multiple computers robots).
+  * LPC (Local Procedure Call): communication are done on 1 machine (single
+    computer robots) and 1 process,
+  * IPC (Inter Process Communication): communication are done on 1 machine but
+    between multiple processes,
+  * RPC (Remote Process Communication): communication are done between multiple
+    machines (multiple computers robots).
 
 Those endpoint's protocols are only used on the same device. A device can be an
 agregation of multiples computers. But they are connected on the same internal
@@ -84,7 +90,8 @@ address then a direct connection to the service is established.
 
 * RPC (Remote Process Communication):
 
-  * communication are done between multiple machines (multiple computers robots).
+  * communication are done between multiple machines
+    (multiple computers robots).
   * There is the differents machineID and processID.
   * Communication through tcp/ip, ssl (not really usefull since we manage
     those connections), any other backend that allow remote connection.
@@ -110,6 +117,7 @@ TCP/IP Gateway
 
 The Transmission Control Protocol (TCP) and Internet Protocol (IP) is used for
 LAN connection:
+
 * Choreagraphe to Robot
 * Remote devices on the same subnet than the robot
 * Internal connection
@@ -121,14 +129,32 @@ Have a look at :ref:`qimessaging-gateway` for more technical details.
 XMPP:
 ^^^^^
 
-To acces to the robot from everywhere, we use Extensible Messaging and Presence Protocol (XMPP). The XMPP network uses a client-server architecture (clients do not talk directly to one another). However, it is decentralized-by design, there is no central authoritative server. Every user on the network has a unique ID.
+To acces to the robot from everywhere, we use Extensible Messaging and Presence
+Protocol (XMPP). The XMPP network uses a client-server architecture (clients do
+not talk directly to one another). However, it is decentralized-by design, there
+is no central authoritative server. Every user on the network has a unique ID.
 
-Another useful feature of the XMPP system is that of transports, also known as gateways, which allow users to access networks using other protocols. XMPP provides this access at the server level by communicating via special gateway services running on a remote computer. Any user can "register" with one of these gateways by providing the information needed to log on to that network, and can then communicate with users of that network as though they were XMPP users. This means any client that fully supports XMPP can access any network with a gateway without extra code in the client, and without the need for the client to have direct access to the Internet.
+Another useful feature of the XMPP system is that gateways allow users to access
+networks using other protocols. XMPP provides this access at the server level
+by communicating via special gateway services running on a remote computer. Any
+user can "register" with one of these gateways by providing the information
+needed to log on to that network, and can then communicate with users of that
+network as though they were XMPP users. This means any client that fully
+supports XMPP can access any network with a gateway without extra code in the
+client, and without the need for the client to have direct access to the
+Internet.
+
 
 * Weaknesses
 
   * *In-band binary data transfer is inefficient*
-    Because XMPP is not yet encoded as Efficient XML Interchange but as a single long XML document, binary data must be first base64 encoded before it can be transmitted in-band. Therefore any significant amount of binary data (e.g., file transfers) is best transmitted out-of-band, using in-band messages to coordinate.
+    Because XMPP is not yet encoded as `Efficient XML Interchange`_  but as a
+    single long XML document, binary data must be first base64 encoded before it
+    can be transmitted in-band. Therefore any significant amount of binary data
+    (e.g., file transfers) is best transmitted out-of-band, using in-band
+    messages to coordinate.
+
+    .. _Efficient XML Interchange: http://en.wikipedia.org/wiki/Efficient_XML_Interchange
 
 
 * Strengths
@@ -137,11 +163,22 @@ Another useful feature of the XMPP system is that of transports, also known as g
   * Open standards
   * Security:
 
-    XMPP servers may be isolated from the public XMPP network (e.g., on a company intranet), and robust security (via SASL and TLS) has been built into the core XMPP specifications. To encourage use of channel encryption, the XMPP Standards Foundation currently runs an intermediate certification authority at StartSSL (formerly at xmpp.net) offering free digital certificates to XMPP server administrators under the auspices of the StartCom Certification Authority (which is the root CA for the intermediate CA).
+    XMPP servers may be isolated from the public XMPP network (e.g., on a
+    company intranet), and robust security (via SASL and TLS) has been built
+    into the core XMPP specifications. To encourage use of channel encryption,
+    the XMPP Standards Foundation currently runs an intermediate certification
+    authority at StartSSL (formerly at xmpp.net) offering free digital
+    certificates to XMPP server administrators under the auspices of the
+    StartCom Certification Authority (which is the root CA for the intermediate
+    CA).
 
   * Flexibility:
 
-    Custom functionality can be built on top of XMPP; to maintain interoperability, common extensions are managed by the XMPP Software Foundation. XMPP applications, network management, content syndication, collaboration tools, file sharing, remote systems control and monitoring, geolocation, middleware and cloud computing, VoIP and Identity services.
+    Custom functionality can be built on top of XMPP; to maintain
+    interoperability, common extensions are managed by the XMPP Software
+    Foundation. XMPP applications, network management, content syndication,
+    collaboration tools, file sharing, remote systems control and monitoring,
+    geolocation, middleware and cloud computing, VoIP and Identity services.
 
 .. image:: /medias/xmpp_gateway.png
 
