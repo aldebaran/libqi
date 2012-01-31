@@ -14,9 +14,7 @@ namespace qi {
 
   Node::Node(const std::string& name, Context *ctx)
     : Server(name, ctx),
-      Client(name, ctx),
-      Publisher(name, ctx),
-      Subscriber(name, ctx)
+      Client(name, ctx)
   {
   }
 
