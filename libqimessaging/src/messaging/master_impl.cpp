@@ -186,50 +186,50 @@ namespace qi {
     }
 
     void MasterImpl::registerTopicParticipant(const std::string& topicName, const std::string& endpointID) {
-      Topic& t = _knownTopics.getEditable(topicName);
-      if (t.topicName.empty()) {
-        qiLogWarning("qimessaging") << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
-        return;
-      }
+//      Topic& t = _knownTopics.getEditable(topicName);
+//      if (t.topicName.empty()) {
+//        qiLogWarning("qimessaging") << "MasterImpl::registerTopicParticipant Could not find topic \"" << topicName << "\"" << std::endl;
+//        return;
+//      }
 
-      const EndpointContext& e = _knownEndpoints.get(endpointID);
-      switch(e.type) {
-        case PUBLISHER_ENDPOINT:
-          t.publisherIDs.push_back(e.endpointID);
-          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
-            "Publisher for \"" <<
-            topicName << "\" : " << e.endpointID << std::endl;
-          break;
-        case SUBSCRIBER_ENDPOINT:
-          t.subscriberIDs.push_back(e.endpointID);
-          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
-            "Subscriber for \"" <<
-            topicName << "\" : " << e.endpointID << std::endl;
-          break;
-        default:
-          qiLogWarning("qimessaging") << "Master::registerTopicParticipant: Invalid " <<
-            "attempt to register a topic participant for \"" <<
-            topicName << "\" that is neither a publisher, nor " <<
-            "a subscriber: " << e.endpointID << std::endl;
-          break;
-      }
+//      const EndpointContext& e = _knownEndpoints.get(endpointID);
+//      switch(e.type) {
+//        case PUBLISHER_ENDPOINT:
+//          t.publisherIDs.push_back(e.endpointID);
+//          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
+//            "Publisher for \"" <<
+//            topicName << "\" : " << e.endpointID << std::endl;
+//          break;
+//        case SUBSCRIBER_ENDPOINT:
+//          t.subscriberIDs.push_back(e.endpointID);
+//          qiLogDebug("qimessaging") << "Master::registerTopicParticipant: Added " <<
+//            "Subscriber for \"" <<
+//            topicName << "\" : " << e.endpointID << std::endl;
+//          break;
+//        default:
+//          qiLogWarning("qimessaging") << "Master::registerTopicParticipant: Invalid " <<
+//            "attempt to register a topic participant for \"" <<
+//            topicName << "\" that is neither a publisher, nor " <<
+//            "a subscriber: " << e.endpointID << std::endl;
+//          break;
+//      }
     }
 
     std::string MasterImpl::locateTopic(const std::string& topicName, const std::string& endpointID) {
-      const Topic& t = _knownTopics.get(topicName);
-      if (t.subscribeEndpointID.empty()) {
-        qiLogDebug("qimessaging") << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
-        return "";
-      }
-      std::string ret;
-      const EndpointContext& e = _knownEndpoints.get(endpointID);
-      if (e.type == PUBLISHER_ENDPOINT) {
-          ret = xNegotiateEndpoint(endpointID, t.publishEndpointID);
-      } else {
-          ret = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
-      }
-      qiLogDebug("qimessaging") << "Master::locateTopic: Resolved: " << topicName << " to " << ret << std::endl;
-      return ret;
+//      const Topic& t = _knownTopics.get(topicName);
+//      if (t.subscribeEndpointID.empty()) {
+//        qiLogDebug("qimessaging") << "MasterImpl::locateTopic Could not find topic \"" << topicName << "\"" << std::endl;
+//        return "";
+//      }
+//      std::string ret;
+//      const EndpointContext& e = _knownEndpoints.get(endpointID);
+//      if (e.type == PUBLISHER_ENDPOINT) {
+//          ret = xNegotiateEndpoint(endpointID, t.publishEndpointID);
+//      } else {
+//          ret = xNegotiateEndpoint(endpointID, t.subscribeEndpointID);
+//      }
+//      qiLogDebug("qimessaging") << "Master::locateTopic: Resolved: " << topicName << " to " << ret << std::endl;
+//      return ret;
     }
 
     std::string MasterImpl::xNegotiateEndpoint(const std::string& clientEndpointID, const std::string& serverEndpointID) {
@@ -253,93 +253,93 @@ namespace qi {
     }
 
     void MasterImpl::registerTopic(const std::string& topicName, const bool& isManyToMany, const std::string& endpointID) {
-      const Topic& existingTopic = _knownTopics.get(topicName);
-      if (! existingTopic.topicName.empty()) {
-        if (isManyToMany) {
-          qiLogDebug("qimessaging") << "Master::registerTopic for existing topic \"" << topicName << "\"" << std::endl;
-          return;
-        }
-        qiLogWarning("qimessaging") << "Master::registerTopic \"" << topicName << "\" already exists. Not registering again." << std::endl;
-        return;
-      }
+//      const Topic& existingTopic = _knownTopics.get(topicName);
+//      if (! existingTopic.topicName.empty()) {
+//        if (isManyToMany) {
+//          qiLogDebug("qimessaging") << "Master::registerTopic for existing topic \"" << topicName << "\"" << std::endl;
+//          return;
+//        }
+//        qiLogWarning("qimessaging") << "Master::registerTopic \"" << topicName << "\" already exists. Not registering again." << std::endl;
+//        return;
+//      }
 
-      qiLogDebug("qimessaging") << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
+//      qiLogDebug("qimessaging") << "Master::registerTopic " << topicName << " isManyToMany: " << isManyToMany << " endpointID: " << endpointID << std::endl;
 
-      if (isManyToMany) {
-        // create forwarder
-        xCreateManyToManyTopicForwarder(topicName, endpointID);
-      } else {
-        Topic t;
-        t.topicName = topicName;
-        t.publishEndpointID = endpointID;
-        t.subscribeEndpointID = endpointID;
-        t.publisherIDs.push_back(endpointID);
-        _knownTopics.insert(topicName, t);
-      }
+//      if (isManyToMany) {
+//        // create forwarder
+//        xCreateManyToManyTopicForwarder(topicName, endpointID);
+//      } else {
+//        Topic t;
+//        t.topicName = topicName;
+//        t.publishEndpointID = endpointID;
+//        t.subscribeEndpointID = endpointID;
+//        t.publisherIDs.push_back(endpointID);
+//        _knownTopics.insert(topicName, t);
+//      }
     }
 
     void MasterImpl::xCreateManyToManyTopicForwarder(
       const std::string& topicName,
       const std::string& originalPublisherEndpointID)
     {
-        // Use the master transport context
-        qi::Context* c = _server.getQiContextPtr();
+//        // Use the master transport context
+//        qi::Context* c = _server.getQiContextPtr();
 
-        qi::transport::TransportForwarder* forwarder =
-          new qi::transport::TransportForwarder(
-          c->getTransportContext());
+//        qi::transport::TransportForwarder* forwarder =
+//          new qi::transport::TransportForwarder(
+//          c->getTransportContext());
 
-        //TForwarderPtr forwarder(
-        //  new qi::transport::TransportForwarder(
-        //  c->getTransportContext()));
+//        //TForwarderPtr forwarder(
+//        //  new qi::transport::TransportForwarder(
+//        //  c->getTransportContext()));
 
-        // Use the server's machine context ( we know it is the same machine )
-        const MachineContext& m = _server.getMachineContext();
+//        // Use the server's machine context ( we know it is the same machine )
+//        const MachineContext& m = _server.getMachineContext();
 
-        // Create the in context and endpoints for publishers to connect to
-        EndpointContext inContext;
-        inContext.type = FORWARDER_IN_ENDPOINT;
-        inContext.machineID = m.machineID;
-        inContext.port = _addressManager.getNewPort(m.machineID);
-        inContext.name = topicName + " Topic Forwarder In";
-        inContext.contextID = c->getID();
-        std::vector<std::string> inAddresses  = getEndpoints(inContext, m);
-        xRegisterEndpoint(inContext);
+//        // Create the in context and endpoints for publishers to connect to
+//        EndpointContext inContext;
+//        inContext.type = FORWARDER_IN_ENDPOINT;
+//        inContext.machineID = m.machineID;
+//        inContext.port = _addressManager.getNewPort(m.machineID);
+//        inContext.name = topicName + " Topic Forwarder In";
+//        inContext.contextID = c->getID();
+//        std::vector<std::string> inAddresses  = getEndpoints(inContext, m);
+//        xRegisterEndpoint(inContext);
 
-        // Create the out context for subscribers to connect to
-        EndpointContext outContext;
-        outContext.type = FORWARDER_OUT_ENDPOINT;
-        outContext.machineID = m.machineID;
-        outContext.port = _addressManager.getNewPort(m.machineID);
-        outContext.name = topicName + " Topic Forwarder Out";
-        outContext.contextID = inContext.contextID;
-        std::vector<std::string> outAddresses = getEndpoints(outContext, m);
-        xRegisterEndpoint(outContext);
+//        // Create the out context for subscribers to connect to
+//        EndpointContext outContext;
+//        outContext.type = FORWARDER_OUT_ENDPOINT;
+//        outContext.machineID = m.machineID;
+//        outContext.port = _addressManager.getNewPort(m.machineID);
+//        outContext.name = topicName + " Topic Forwarder Out";
+//        outContext.contextID = inContext.contextID;
+//        std::vector<std::string> outAddresses = getEndpoints(outContext, m);
+//        xRegisterEndpoint(outContext);
 
-        // tell the forwarder to bind all these addresses
-        forwarder->bind(inAddresses, outAddresses);
+//        // tell the forwarder to bind all these addresses
+//        forwarder->bind(inAddresses, outAddresses);
 
-        // start the forwarder in a new thread for now
-        boost::thread forwarderThread(
-          ::boost::bind(&qi::transport::TransportForwarder::run, forwarder));
+//        // start the forwarder in a new thread for now
+//        boost::thread forwarderThread(
+//          ::boost::bind(&qi::transport::TransportForwarder::run, forwarder));
 
-        // finish and insert the Topic description
-        Topic t;
-        t.topicName = topicName;
-        t.publishEndpointID   = inContext.endpointID;
-        t.subscribeEndpointID = outContext.endpointID;
-        t.publisherIDs.push_back(originalPublisherEndpointID);
-        _knownTopics.insert(topicName, t);
+//        // finish and insert the Topic description
+//        Topic t;
+//        t.topicName = topicName;
+//        t.publishEndpointID   = inContext.endpointID;
+//        t.subscribeEndpointID = outContext.endpointID;
+//        t.publisherIDs.push_back(originalPublisherEndpointID);
+//        _knownTopics.insert(topicName, t);
     }
 
     void MasterImpl::unregisterTopic(const std::string& topicName) {
-      qiLogDebug("qimessaging") << "Master::unregisterTopic " << topicName << std::endl;
-      _knownTopics.remove(topicName);
+//      qiLogDebug("qimessaging") << "Master::unregisterTopic " << topicName << std::endl;
+//      _knownTopics.remove(topicName);
     }
 
 
     bool MasterImpl::topicExists(const std::string& topicName) {
-      return _knownTopics.exists(topicName);
+      //return _knownTopics.exists(topicName);
     }
 
     const std::map<std::string, std::string>& MasterImpl::listServices() {
@@ -347,16 +347,16 @@ namespace qi {
     }
 
     std::vector<std::string> MasterImpl::listTopics() {
-      return _knownTopics.getKeys();
+      //return _knownTopics.getKeys();
     }
 
     std::map<std::string, std::string> MasterImpl::getTopic(const std::string& topicID) {
       std::map<std::string, std::string> result;
-      const Topic& t = _knownTopics.get(topicID);
-      result.insert(std::make_pair("topicName", t.topicName));
-      result.insert(std::make_pair("publishEndpointID", t.publishEndpointID));
-      result.insert(std::make_pair("subscribeEndpointID", t.subscribeEndpointID));
-      // FIXME ignore publishers and subscribers for now
+//      const Topic& t = _knownTopics.get(topicID);
+//      result.insert(std::make_pair("topicName", t.topicName));
+//      result.insert(std::make_pair("publishEndpointID", t.publishEndpointID));
+//      result.insert(std::make_pair("subscribeEndpointID", t.subscribeEndpointID));
+//      // FIXME ignore publishers and subscribers for now
       return result;
     }
 
@@ -403,15 +403,15 @@ namespace qi {
 
     std::vector<std::string> MasterImpl::xListTopicsForEndpoint(const std::string& endpointID) {
       std::vector<std::string> result;
-      const TopicMap& topics = _knownTopics.getMap();
-      TopicMapCIT it = topics.begin();
-      TopicMapCIT end = topics.end();
-      for (; it != end; ++it) {
-        if (((it->second).publishEndpointID == endpointID) ||
-          ((it->second).subscribeEndpointID == endpointID)) {
-            result.push_back(it->first);
-        }
-      }
+//      const TopicMap& topics = _knownTopics.getMap();
+//      TopicMapCIT it = topics.begin();
+//      TopicMapCIT end = topics.end();
+//      for (; it != end; ++it) {
+//        if (((it->second).publishEndpointID == endpointID) ||
+//          ((it->second).subscribeEndpointID == endpointID)) {
+//            result.push_back(it->first);
+//        }
+//      }
       return result;
     }
 

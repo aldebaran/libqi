@@ -10,6 +10,7 @@
 #include "src/messaging/network/ip_address.hpp"
 #include "src/messaging/master_client.hpp"
 #include <qimessaging/serialization.hpp>
+#include <qimessaging/transport/buffer.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
 
 namespace qi {
@@ -37,7 +38,7 @@ namespace qi {
     MasterClient::MasterClient(qi::Context *ctx)
       : _isInitialized(false),
         _qiContextPtr( (ctx == NULL)? getDefaultQiContextPtr() : ctx),
-        _transportClient(_qiContextPtr->getTransportContext())
+        _transportClient()
     {
     }
 
@@ -53,7 +54,8 @@ namespace qi {
         return;
       }
 
-      _isInitialized = _transportClient.connect(masterEndpointAndPort.first);
+      //CTAF: todo
+      //_isInitialized = _transportClient.connect(masterEndpointAndPort.first);
       if (! _isInitialized ) {
         qiLogError("qimessaging") << "Could not connect to master "
             "at address \"" << masterEndpointAndPort.first << "\""
@@ -79,7 +81,9 @@ namespace qi {
 
       msg.writeString(methodGetNewPort);
       msg.writeString(machineID);
-      _transportClient.send(msg.str(), ret);
+
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
       Message retSer(ret);
       int port;
       retSer.readInt(port);
@@ -97,7 +101,8 @@ namespace qi {
       msg.writeString(m.machineID);
       msg.writeString(m.publicIP);
       msg.writeInt(   m.platformID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     void MasterClient::registerEndpoint(const qi::detail::EndpointContext& e) {
@@ -115,7 +120,9 @@ namespace qi {
       msg.writeString(e.machineID);
       msg.writeInt(   e.processID);
       msg.writeInt(   e.port);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+
+      //_transportClient.send(msg.str(), ret);
     }
 
     void MasterClient::unregisterEndpoint(const qi::detail::EndpointContext& e) {
@@ -126,7 +133,8 @@ namespace qi {
       Message msg;
       msg.writeString(methodUnregisterEndpoint);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     std::string MasterClient::locateService(const std::string& methodSignature, const qi::detail::EndpointContext& e) {
@@ -138,7 +146,8 @@ namespace qi {
       msg.writeString(methodLocateService);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
       Message retSer(ret);
       std::string endpoint;
       retSer.readString(endpoint);
@@ -157,7 +166,8 @@ namespace qi {
       msg.writeString(methodRegisterService);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     void MasterClient::unregisterService(const std::string& methodSignature)
@@ -170,7 +180,8 @@ namespace qi {
 
       msg.writeString(methodUnregisterService);
       msg.writeString(methodSignature);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     std::string MasterClient::locateTopic(const std::string& methodSignature, const qi::detail::EndpointContext& e) {
@@ -183,7 +194,8 @@ namespace qi {
       msg.writeString(methodLocateTopic);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
       Message retSer(ret);
       std::string endpoint;
       retSer.readString(endpoint);
@@ -200,7 +212,8 @@ namespace qi {
 
       msg.writeString(methodTopicExists);
       msg.writeString(signature);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
       Message retSer(ret);
       bool exists;
       retSer.readBool(exists);
@@ -221,7 +234,8 @@ namespace qi {
       msg.writeString(signature);
       msg.writeBool(isManyToMany);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     void MasterClient::registerTopicParticipant(
@@ -237,7 +251,8 @@ namespace qi {
       msg.writeString(methodRegisterTopicParticipant);
       msg.writeString(signature);
       msg.writeString(endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+      //_transportClient.send(msg.str(), ret);
     }
 
     void MasterClient::unregisterTopic(
@@ -253,7 +268,8 @@ namespace qi {
       msg.writeString(methodUnregisterTopic);
       msg.writeString(signature);
       msg.writeString(e.endpointID);
-      _transportClient.send(msg.str(), ret);
+      //CTAF:todo
+//      _transportClient.send(msg.str(), ret);
     }
   }
 }

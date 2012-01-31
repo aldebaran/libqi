@@ -17,7 +17,7 @@
 #include "src/messaging/topic.hpp"
 #include <qimessaging/functors/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/transport/transport_forwarder.hpp> // TODO hide this
+//#include <qimessaging/transport/transport_forwarder.hpp> // TODO hide this
 #include <boost/shared_ptr.hpp>
 
 namespace qi {
@@ -146,10 +146,10 @@ namespace qi {
       MutexedNameLookup<qi::detail::EndpointContext> _knownEndpoints;
 
       /// <summary> A map from topic signatures to their Topic structure </summary>
-      MutexedNameLookup<qi::detail::Topic>           _knownTopics;
+      //MutexedNameLookup<qi::detail::Topic>           _knownTopics;
 
-      typedef boost::shared_ptr<qi::transport::TransportForwarder> TForwarderPtr;
-      MutexedNameLookup<TForwarderPtr> _topicForwarders;
+      //typedef boost::shared_ptr<qi::transport::TransportForwarder> TForwarderPtr;
+      //MutexedNameLookup<TForwarderPtr> _topicForwarders;
 
       AddressManager _addressManager;
 
@@ -158,8 +158,8 @@ namespace qi {
       typedef std::map<std::string, MachineContext>::const_iterator  MachineMapCIT;
       typedef std::map<std::string, EndpointContext>                 EndpointMap;
       typedef std::map<std::string, EndpointContext>::const_iterator EndpointMapCIT;
-      typedef std::map<std::string, Topic>                           TopicMap;
-      typedef std::map<std::string, Topic>::const_iterator           TopicMapCIT;
+      //typedef std::map<std::string, Topic>                           TopicMap;
+      //typedef std::map<std::string, Topic>::const_iterator           TopicMapCIT;
     };
   }
 }
