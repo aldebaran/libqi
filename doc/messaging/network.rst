@@ -46,7 +46,7 @@ more information on :ref:`qimessaging-servicedirectory`.
 
 
 
-
+.. _qimessaging-internal_network:
 
 Direct connection protocol
 --------------------------
@@ -95,6 +95,8 @@ address then a direct connection to the service is established.
   * There is the differents machineID and processID.
   * Communication through tcp/ip, ssl (not really usefull since we manage
     those connections), any other backend that allow remote connection.
+
+.. _qimessaging-external_network:
 
 Remote connection protocol (Gateway)
 ------------------------------------
