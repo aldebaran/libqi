@@ -14,7 +14,7 @@
 #include "src/messaging/serviceinfo.hpp"
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/impl_base.hpp"
-#include <qimessaging/transport/transport_message_handler.hpp>
+//#include <qimessaging/transport/transport_message_handler.hpp>
 #include <qimessaging/transport/transport_server.hpp>
 
 namespace qi {
@@ -23,7 +23,7 @@ namespace qi {
 
     class ServerImpl :
       public qi::detail::ImplBase,
-      public qi::transport::TransportMessageHandler {
+      public qi::TransportServerDelegate {
     public:
       virtual ~ServerImpl();
 
@@ -47,12 +47,17 @@ namespace qi {
       void messageHandler(std::string& request, std::string& reply);
       // -----------------------------------------------
 
+      virtual void onConnected(const std::string &msg = "") {};
+      virtual void onWrite(const std::string &msg = "") {};
+      virtual void onRead(const std::string &msg = "") {};
+
+
     protected:
       /// <summary> true if this server belongs to the master </summary>
       bool _isMasterServer;
 
       /// <summary> The underlying transport server </summary>
-      qi::transport::TransportServer _transportServer;
+      qi::TransportServer _transportServer;
 
       /// <summary> A map from methodSignature to ServiceInfo </summary>
       MutexedNameLookup<ServiceInfo> _localServices;

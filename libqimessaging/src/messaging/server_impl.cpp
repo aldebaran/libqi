@@ -31,7 +31,7 @@ namespace qi {
     ServerImpl::ServerImpl(const std::string& name, Context *ctx)
       : ImplBase(ctx),
         _isMasterServer(false),
-        _transportServer(_masterClient.getQiContextPtr()->getTransportContext())
+        _transportServer()
 
     {
       _endpointContext.type = SERVER_ENDPOINT;
@@ -68,11 +68,14 @@ namespace qi {
         _isInitialized = _masterClient.isInitialized();
       }
 
-      _transportServer.serve(qi::detail::getEndpoints(_endpointContext, _machineContext));
+      //CTAF: todo
+      //_transportServer.serve(qi::detail::getEndpoints(_endpointContext, _machineContext));
 
-      _transportServer.setMessageHandler(this);
-      boost::thread serverThread(
-        ::boost::bind(&qi::transport::TransportServer::run, &_transportServer));
+      _transportServer.setDelegate(this);
+
+      //CTAF: todo
+      //boost::thread serverThread(
+      //  ::boost::bind(&qi::TransportServer::run, &_transportServer));
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {

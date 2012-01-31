@@ -34,13 +34,12 @@ namespace qi {
       std::string endpointId() { return _endpointContext.endpointID; }
 
     private:
-      MutexedNameLookup<std::string> _serviceCache;
+      //MutexedNameLookup<std::string> _serviceCache;
 
       // map from address to Client
-      MutexedNameLookup< boost::shared_ptr<qi::transport::TransportClient> > _serverClients;
+      //MutexedNameLookup< boost::shared_ptr<qi::transport::TransportSocket> > _serverClients;
 
-      boost::shared_ptr<qi::transport::TransportClient> xGetServerClient(
-        const std::string& serverAddress);
+      //boost::shared_ptr<qi::transport::TransportSocket> xGetServerClient(const std::string& serverAddress);
 
       bool xCreateServerClient(const std::string& address);
       const std::string& xLocateService(const std::string& methodHash);
