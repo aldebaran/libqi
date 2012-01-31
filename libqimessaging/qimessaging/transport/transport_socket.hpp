@@ -32,7 +32,9 @@
 # include <event2/event.h>
 # include <event2/bufferevent.h>
 
-class TransportClientDelegate
+namespace qi {
+
+class TransportSocketDelegate
 {
 public:
   virtual void onConnected(const std::string &msg = "") = 0;
@@ -40,15 +42,15 @@ public:
   virtual void onRead(const std::string &msg = "")      = 0;
 };
 
-struct TransportClientPrivate;
+struct TransportSocketPrivate;
 
-class TransportClient
+class TransportSocket
 {
-  QI_DISALLOW_COPY_AND_ASSIGN(TransportClient);
+  QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
 public:
-  TransportClient();
-  virtual ~TransportClient();
+  TransportSocket();
+  virtual ~TransportSocket();
 
   bool connect(const std::string &address,
                unsigned short port,
@@ -61,7 +63,7 @@ public:
 
   bool send(const std::string &msg);
 
-  void setDelegate(TransportClientDelegate *delegate);
+  void setDelegate(TransportSocketDelegate *delegate);
 
   void readcb(struct bufferevent *bev,
               void *context);
@@ -71,7 +73,9 @@ public:
                short error,
                void *context);
 private:
-  TransportClientPrivate  *_p;
+  TransportSocketPrivate  *_p;
 };
+
+}
 
 #endif	    /* !TRANSPORT_CLIENT_HPP_ */

@@ -14,7 +14,7 @@
 
 #include <qi/log.hpp>
 
-#include "network-thread.hpp"
+#include <qimessaging/transport/network_thread.hpp>
 
 static void errorcb(struct bufferevent *bev,
                     short error,
@@ -23,17 +23,17 @@ static void errorcb(struct bufferevent *bev,
   if (error & BEV_EVENT_EOF)
   {
     // connection has been closed, do any clean up here
-    qiLogError("qimessaging.TransportClient") << "connection has been closed, do any clean up here" << std::endl;
+    qiLogError("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (error & BEV_EVENT_ERROR)
   {
     // check errno to see what error occurred
-    qiLogError("qimessaging.TransportClient")  << "check errno to see what error occurred" << std::endl;
+    qiLogError("qimessaging.TransportSocket")  << "check errno to see what error occurred" << std::endl;
   }
   else if (error & BEV_EVENT_TIMEOUT)
   {
     // must be a timeout event handle, handle it
-    qiLogError("qimessaging.TransportClient")  << "must be a timeout event handle, handle it" << std::endl;
+    qiLogError("qimessaging.TransportSocket")  << "must be a timeout event handle, handle it" << std::endl;
   }
 }
 

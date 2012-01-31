@@ -1,84 +1,96 @@
-#pragma once
 /*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
+** transport-server.hpp
+** Login : <hcuche@hcuche-de>
+** Started on  Wed Jan 11 10:19:42 2012 Herve Cuche
+** $Id$
+**
+** Author(s):
+**  - Herve Cuche <hcuche@aldebaran-robotics.com>
+**
+** Copyright (C) 2012 Herve Cuche
 */
 
+#ifndef   	TRANSPORT_SERVER_HPP_
+# define   	TRANSPORT_SERVER_HPP_
 
-#ifndef _QIMESSAGING_TRANSPORT_TRANSPORT_SERVER_HPP_
-#define _QIMESSAGING_TRANSPORT_TRANSPORT_SERVER_HPP_
+# include <string>
+# include <map>
+# include <qi/macro.hpp>
 
-#include <string>
-#include <vector>
-#include <qimessaging/api.hpp>
+# include <event2/event.h>
+# include <event2/bufferevent.h>
 
 namespace qi {
-  namespace transport {
 
-    namespace detail {
-      class ServerBackend;
-    };
+class TransportServer;
+class TransportServerPrivate;
 
-    class TransportMessageHandler;
-    class TransportContext;
-
-    /// <summary> TransportServer, you need to register a TransportMessageHandler object,
-    /// that will handle each message.</summary>
-    /// \ingroup Transport
-    class QIMESSAGING_API TransportServer
-    {
-    public:
-      virtual ~TransportServer();
-
-      TransportServer(const TransportServer& rhs);
-
-      /// <summary>Constructor. </summary>
-      /// <param name="context"> The context.</param>
-      TransportServer(TransportContext &context);
-
-      /// <summary>Serves</summary>
-      /// <param name="endpoint">The endpoint.</param>
-      void serve(const std::string &endpoint);
-
-      /// <summary>Serves.</summary>
-      /// <param name="endpoints">The endpoints.</param>
-      void serve(const std::vector<std::string> &endpoints);
-
-      /// <summary>Runs this object. </summary>
-      virtual void run();
-
-      /// <summary>Sets a message handler. </summary>
-      /// <param name="dataHandler">A pointer to a class derived from
-      /// TransportMessageHandler.</param>
-      virtual void setMessageHandler(TransportMessageHandler* dataHandler);
-
-      /// <summary>Gets the message handler. </summary>
-      /// <returns>
-      /// null if it fails, otherwise a pointer to a class derived from
-      /// TransportMessageHandler.
-      /// </returns>
-      virtual TransportMessageHandler* getMessageHandler();
-
-      /// <summary>Query if this object is initialized. </summary>
-      /// <returns>true if initialized, false if not.</returns>
-      bool isInitialized();
-
-    protected:
-      /// <summary> true if is initialized </summary>
-      bool                                  _isInitialized;
-
-      /// <summary> Context for the transport </summary>
-      qi::transport::TransportContext      &_transportContext;
-
-      /// <summary> The transport server </summary>
-      qi::transport::detail::ServerBackend *_transportServer;
-    };
-
+struct ClientConnection
+{
+  explicit ClientConnection(const std::string &id,
+                            struct bufferevent *bev,
+                            TransportServer *parent)
+    : _id(id)
+    , _bev(bev)
+    , _parent(parent)
+  {
   }
+
+  ~ClientConnection()
+  {
+    bufferevent_free(_bev);
+  }
+
+  std::string         _id;
+  struct bufferevent *_bev;
+  // We need the parent to call the differents callback
+  // with the right client connnection ID
+  // (we don't want to loose some connected client)
+  TransportServer    *_parent;
+};
+
+typedef std::map<std::string, ClientConnection*>           ClientConnectionMap;
+typedef std::map<std::string, ClientConnection*>::iterator ClientConnectionMapIterator;
+
+class TransportServerDelegate
+{
+public:
+  virtual void onConnected(const std::string &msg = "") = 0;
+  virtual void onWrite(const std::string &msg = "")     = 0;
+  virtual void onRead(const std::string &msg = "")      = 0;
+};
+
+class TransportServer
+{
+  QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
+
+public:
+  TransportServer();
+  virtual ~TransportServer();
+
+  void start(const std::string &address,
+             unsigned short port,
+             struct event_base *base);
+  void setDelegate(TransportServerDelegate *delegate);
+
+  void accept(evutil_socket_t listener,
+              short events,
+              void *context);
+  void readcb(struct bufferevent *bev,
+              void *context);
+  void writecb(struct bufferevent* bev,
+               void* context);
+  void eventcb(struct bufferevent *bev,
+               short events,
+               void *context);
+
+  // Map of connected client
+  ClientConnectionMap  clientConnected;
+
+private:
+  TransportServerPrivate *_p;
+};
 
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_TRANSPORT_SERVER_HPP_
+#endif	    /* !TRANSPORT_SERVER_HPP_ */

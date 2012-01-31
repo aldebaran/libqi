@@ -19,24 +19,27 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include "transport-client.hpp"
-#include "network-thread.hpp"
+#include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
 #define MAX_LINE 16384
 
-struct TransportClientPrivate
+namespace qi {
+
+
+struct TransportSocketPrivate
 {
-  TransportClientPrivate()
+  TransportSocketPrivate()
     : connected(false)
     , bev(NULL)
   {
   }
 
-  ~TransportClientPrivate()
+  ~TransportSocketPrivate()
   {
   }
 
-  TransportClientDelegate *tcd;
+  TransportSocketDelegate *tcd;
   struct bufferevent      *bev;
   bool                     connected;
 };
@@ -46,14 +49,14 @@ struct TransportClientPrivate
 static void readcb(struct bufferevent *bev,
                    void *context)
 {
-  TransportClient *tc = static_cast<TransportClient*>(context);
+  TransportSocket *tc = static_cast<TransportSocket*>(context);
   tc->readcb(bev, context);
 }
 
 static void writecb(struct bufferevent* bev,
                     void* context)
 {
-  TransportClient *tc = static_cast<TransportClient*>(context);
+  TransportSocket *tc = static_cast<TransportSocket*>(context);
   tc->writecb(bev, context);
 }
 
@@ -62,12 +65,12 @@ static void eventcb(struct bufferevent *bev,
                     short error,
                     void *context)
 {
-  TransportClient *tc = static_cast<TransportClient*>(context);
+  TransportSocket *tc = static_cast<TransportSocket*>(context);
   tc->eventcb(bev, error, context);
 }
 
 
-void TransportClient::readcb(struct bufferevent *bev,
+void TransportSocket::readcb(struct bufferevent *bev,
                              void *context)
 {
   char buf[1024];
@@ -81,13 +84,13 @@ void TransportClient::readcb(struct bufferevent *bev,
   }
 }
 
-void TransportClient::writecb(struct bufferevent* bev,
+void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
 {
   _p->tcd->onWrite();
 }
 
-void TransportClient::eventcb(struct bufferevent *bev,
+void TransportSocket::eventcb(struct bufferevent *bev,
                               short events,
                               void *context)
 {
@@ -99,41 +102,41 @@ void TransportClient::eventcb(struct bufferevent *bev,
   else if (events & BEV_EVENT_EOF)
   {
     // connection has been closed, do any clean up here
-    qiLogError("qimessaging.TransportClient") << "connection has been closed, do any clean up here" << std::endl;
+    qiLogError("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (events & BEV_EVENT_ERROR)
   {
     bufferevent_free(_p->bev);
     // check errno to see what error occurred
-    qiLogError("qimessaging.TransportClient")  << "Cannnot connect" << std::endl;
+    qiLogError("qimessaging.TransportSocket")  << "Cannnot connect" << std::endl;
   }
   else if (events & BEV_EVENT_TIMEOUT)
   {
     // must be a timeout event handle, handle it
-    qiLogError("qimessaging.TransportClient")  << "must be a timeout event handle, handle it" << std::endl;
+    qiLogError("qimessaging.TransportSocket")  << "must be a timeout event handle, handle it" << std::endl;
   }
 }
 
-TransportClient::TransportClient()
+TransportSocket::TransportSocket()
 {
-  _p = new TransportClientPrivate();
+  _p = new TransportSocketPrivate();
 }
 
 
-TransportClient::~TransportClient()
+TransportSocket::~TransportSocket()
 {
   disconnect();
   delete _p;
 }
 
-bool TransportClient::connect(const std::string &address,
+bool TransportSocket::connect(const std::string &address,
                               unsigned short port,
                               struct event_base *base)
 {
   if (!_p->connected)
   {
     _p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(_p->bev, ::readcb, ::writecb, ::eventcb, this);
+    bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
     bufferevent_setwatermark(_p->bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(_p->bev, EV_READ|EV_WRITE);
 
@@ -146,7 +149,7 @@ bool TransportClient::connect(const std::string &address,
   return false;
 }
 
-bool TransportClient::waitForConnected(int msecs)
+bool TransportSocket::waitForConnected(int msecs)
 {
   // no timeout
   if (msecs < 0)
@@ -170,7 +173,7 @@ bool TransportClient::waitForConnected(int msecs)
   return true;
 }
 
-void TransportClient::disconnect()
+void TransportSocket::disconnect()
 {
   if (_p->connected)
   {
@@ -180,7 +183,7 @@ void TransportClient::disconnect()
   }
 }
 
-bool TransportClient::waitForDisconnected(int msecs)
+bool TransportSocket::waitForDisconnected(int msecs)
 {
   // no timeout
   if (msecs < 0)
@@ -204,7 +207,7 @@ bool TransportClient::waitForDisconnected(int msecs)
   return true;
 }
 
-bool TransportClient::send(const std::string &msg)
+bool TransportSocket::send(const std::string &msg)
 {
   if (_p->connected && !bufferevent_write(_p->bev, msg.c_str(), msg.size()))
     return true;
@@ -212,7 +215,9 @@ bool TransportClient::send(const std::string &msg)
   return false;
 }
 
-void TransportClient::setDelegate(TransportClientDelegate *delegate)
+void TransportSocket::setDelegate(TransportSocketDelegate *delegate)
 {
   _p->tcd = delegate;
+}
+
 }

@@ -16,9 +16,10 @@
 
 #include <event2/bufferevent.h>
 
-#include "gateway.hpp"
-#include "transport-client.hpp"
+#include <qimessaging/transport/gateway.hpp>
+#include <qimessaging/transport/transport_socket.hpp>
 
+namespace qi {
 
 class GatewayPrivate
 {
@@ -39,7 +40,7 @@ public:
 
   NetworkThread     *nthd;
   TransportServer   *ts;
-  TransportClientMap clientMap;
+  TransportSocketMap clientMap;
 };
 
 Gateway::Gateway()
@@ -149,11 +150,11 @@ Message GatewayPrivate::parseMessage(const std::string &msg)
 void* GatewayPrivate::callMessage(const Message &msg,
                                   const std::string &origMsg)
 {
-  TransportClientMapIterator it;
+  TransportSocketMapIterator it;
   it = clientMap.find(msg.idModule);
   if (it != clientMap.end())
   {
-    TransportClient* tc = it->second;
+    TransportSocket* tc = it->second;
     tc->send(origMsg);
   }
   else
@@ -187,3 +188,4 @@ void* GatewayPrivate::eventMessage(const Message &msg,
 {
 }
 
+}

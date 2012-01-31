@@ -16,9 +16,11 @@
 # include <string>
 # include <map>
 
-# include "transport-client.hpp"
-# include "transport-server.hpp"
-# include "network-thread.hpp"
+# include <qimessaging/transport/transport_socket.hpp>
+# include <qimessaging/transport/transport_server.hpp>
+# include <qimessaging/transport/network_thread.hpp>
+
+namespace qi {
 
 struct Message
 {
@@ -49,8 +51,8 @@ struct Message
   std::string  msg;
 };
 
-typedef std::map<std::string, TransportClient*>           TransportClientMap;
-typedef std::map<std::string, TransportClient*>::iterator TransportClientMapIterator;
+typedef std::map<std::string, TransportSocket*>           TransportSocketMap;
+typedef std::map<std::string, TransportSocket*>::iterator TransportSocketMapIterator;
 
 class GatewayPrivate;
 
@@ -72,5 +74,6 @@ private:
   GatewayPrivate *_p;
 };
 
+}
 
 #endif	    /* !GATEWAY_HPP_ */
