@@ -29,13 +29,13 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "transport-client.hpp"
-#include "network-thread.hpp"
+#include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
-class RemoteService : public TransportClientDelegate {
+class RemoteService : public qi::TransportSocketDelegate {
 public:
   RemoteService() {
-    tc = new TransportClient();
+    tc = new qi::TransportSocket();
     tc->setDelegate(this);
   }
 
@@ -77,7 +77,7 @@ public:
 
 private:
   NetworkThread   *nthd;
-  TransportClient *tc;
+  qi::TransportSocket *tc;
 };
 
 

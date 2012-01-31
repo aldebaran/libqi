@@ -10,16 +10,15 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
-#include "network-thread.hpp"
-#include "transport-server.hpp"
+#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
-
-class RemoteServer : public TransportServerDelegate
+class RemoteServer : public qi::TransportServerDelegate
 {
 public:
   RemoteServer()
   {
-    ts = new TransportServer();
+    ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
 
@@ -56,7 +55,7 @@ public:
 
 private:
   NetworkThread   *nthd;
-  TransportServer *ts;
+  qi::TransportServer *ts;
 };
 
 int main(int argc, char *argv[])

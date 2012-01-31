@@ -11,14 +11,14 @@
 */
 
 #include <iostream>
-#include "gateway.hpp"
-#include "network-thread.hpp"
+#include <qimessaging/transport/gateway.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
 int main(int argc, char *argv[])
 {
   NetworkThread *n = new NetworkThread();
   sleep(1);
-  Gateway g;
+  qi::Gateway g;
   g.start("127.0.0.1", 9559, n);
 
   while (true)
