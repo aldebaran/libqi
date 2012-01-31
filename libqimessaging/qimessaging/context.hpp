@@ -12,7 +12,6 @@
 #define _QIMESSAGING_CONTEXT_HPP_
 
 #include <string>
-#include <qimessaging/transport/transport_context.hpp>
 #include <qimessaging/api.hpp>
 
 namespace qi {
@@ -40,17 +39,17 @@ namespace qi {
 
     /// <summary>Gets the transport context. </summary>
     /// <returns>The transport context.</returns>
-    transport::TransportContext &getTransportContext();
+    //transport::TransportContext &getTransportContext();
 
     /// <summary>Sets a transport context. </summary>
     /// <param name="ctx">The transport context.</param>
-    void setTransportContext(transport::TransportContext* ctx);
+    //void setTransportContext(transport::TransportContext* ctx);
 
   protected:
     /// <summary> Identifier for the context </summary>
     std::string                      _contextID;
     /// <summary> Context for the transport </summary>
-    qi::transport::TransportContext *_transportContext;
+    //qi::transport::TransportContext *_transportContext;
 
   private:
     // no copy constructor allowed

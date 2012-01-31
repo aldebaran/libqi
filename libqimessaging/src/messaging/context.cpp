@@ -11,11 +11,10 @@
 
 namespace qi {
   Context::Context() :
-      _contextID(qi::detail::getUUID()),
-      _transportContext(new transport::TransportContext()) {}
+      _contextID(qi::detail::getUUID())
+  {}
 
   Context::~Context() {
-    delete(_transportContext);
   }
 
   const std::string& Context::getID() const {
@@ -26,15 +25,15 @@ namespace qi {
     _contextID = contextID;
   }
 
-  void Context::setTransportContext(transport::TransportContext *ctx)
-  {
-    _transportContext = ctx;
-  }
+//  void Context::setTransportContext(transport::TransportContext *ctx)
+//  {
+//    _transportContext = ctx;
+//  }
 
-  transport::TransportContext &Context::getTransportContext()
-  {
-    return *_transportContext;
-  }
+//  transport::TransportContext &Context::getTransportContext()
+//  {
+//    return *_transportContext;
+//  }
 
   // Access to a static global context -----
   static qi::Context* gQiContextPtr;
