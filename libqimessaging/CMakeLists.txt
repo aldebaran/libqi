@@ -17,12 +17,14 @@ find_package(PYTHON)
 qi_add_optional_package(QISSH)
 
 cmake_dependent_option(WITH_PYTHON   "Build python bindings" OFF "PYTHON_FOUND" ON)
-cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
-cmake_dependent_option(WITH_PROTOBUF "Use protobuf" OFF "PROTOBUF_FOUND" OFF)
+#cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
+#cmake_dependent_option(WITH_PROTOBUF "Use protobuf" OFF "PROTOBUF_FOUND" OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 option(WITH_BINDER   "Support Android IPC binder" OFF)
 option(WITH_SSH      "Support libssh" OFF)
+option(WITH_ZEROMQ   "Support zmq" OFF)
+
 
 
 if (WIN32)
@@ -44,6 +46,7 @@ qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
 qi_submodule_create("qi-preference"    qipreference/preference.hpp src/preference/preference.cpp)
 qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"    "src/messaging/network/*.[ch][px][px]")
+
 qi_submodule_add("qi-messaging-src"
                  src/transport/zmq/zmq_client_backend.cpp
                  src/transport/zmq/zmq_client_backend.hpp
@@ -82,6 +85,8 @@ qi_submodule_add("qi-messaging-src"
                  IF WITH_BINDER
                 )
 
+
+
 qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
 
 qi_submodule_create("qi-signature"       "qimessaging/signature/*.h[px][px]" "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"
@@ -93,7 +98,7 @@ qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"
 qi_create_lib(qimessaging SRC ${CONFIG_H}
                  SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport qi-preference
                  #qi-cbinding
-                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML)
+                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
 qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)

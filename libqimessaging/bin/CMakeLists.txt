@@ -9,5 +9,5 @@
 add_subdirectory("qimaster")
 add_subdirectory("qi")
 add_subdirectory("qigateway")
-add_subdirectory("qichat")
+#add_subdirectory("qichat")
 add_subdirectory("qievent")
