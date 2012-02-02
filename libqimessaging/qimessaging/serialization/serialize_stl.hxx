@@ -14,7 +14,7 @@
 namespace qi {
   namespace serialization {
 
-    QI_SIMPLE_SERIALIZER(String, std::string);
+    QI_SIMPLE_SERIALIZER(std::string);
     QI_LIST_SERIALIZER(std::vector);
     QI_LIST_SERIALIZER(std::list);
     QI_MAP_SERIALIZER(std::map);

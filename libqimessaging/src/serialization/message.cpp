@@ -7,6 +7,7 @@
 */
 
 #include <qimessaging/serialization/message.hpp>
+#include <qimessaging/serialization/datastream.hpp>
 #include <vector>
 
 namespace qi {
@@ -26,38 +27,40 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_DATA_W(x, d)
 #endif
 
-#define QI_SIMPLE_SERIALIZER_IMPL(Name, Type)              \
-  void DataStream::read##Name(Type& b)                        \
+#define QI_SIMPLE_SERIALIZER_IMPL(Type)                    \
+  DataStream& DataStream::operator<<(Type b)               \
   {                                                        \
     b = *((Type *) (_data.data() + _index));               \
     _index += sizeof(Type);                                \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
+    return *this;                                          \
   }                                                        \
                                                            \
-  void DataStream::write##Name(const Type& b)                 \
+  DataStream& DataStream::operator>>(const Type& b)        \
   {                                                        \
     _data.append((char *)&b, sizeof(b));                   \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
+    return *this;                                          \
   }
 
-  QI_SIMPLE_SERIALIZER_IMPL(Bool,   bool);
-  QI_SIMPLE_SERIALIZER_IMPL(Char,   char);
-  QI_SIMPLE_SERIALIZER_IMPL(Int,    int);
-  QI_SIMPLE_SERIALIZER_IMPL(Float,  float);
-  QI_SIMPLE_SERIALIZER_IMPL(Double, double);
+  QI_SIMPLE_SERIALIZER_IMPL(bool);
+  QI_SIMPLE_SERIALIZER_IMPL(char);
+  QI_SIMPLE_SERIALIZER_IMPL(int);
+  QI_SIMPLE_SERIALIZER_IMPL(float);
+  QI_SIMPLE_SERIALIZER_IMPL(double);
 
   // string
   const char *DataStream::readString(size_t &len)
   {
     int sz;
-    readInt(sz);
+    *this >> sz;
     len = sz;
     return _data.data();
   }
 
   void DataStream::writeString(const char *str, size_t len)
   {
-    writeInt(len);
+    *this << (int)len;
     if (len) {
       _data.append(str, len);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
@@ -65,25 +68,29 @@ namespace qi {
   }
 
   // string
-  void DataStream::readString(std::string& s)
+  DataStream& DataStream::operator<<(std::string s)
   {
     int sz;
-    readInt(sz);
+    *this >> sz;
     s.clear();
     if (sz) {
       s.append(_data.data() + _index, sz);
       _index += sz;
       __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
     }
+
+    return *this;
   }
 
-  void DataStream::writeString(const std::string &s)
+  DataStream& DataStream::operator>>(const std::string &s)
   {
-    writeInt(s.size());
+    *this << (int)s.size();
     if (!s.empty()) {
       _data.append(s.data(), s.size());
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
     }
+
+    return *this;
   }
 
 }

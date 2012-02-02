@@ -51,11 +51,11 @@
 #define QI_SERIALIZATION_REFLECT(TYPE, MEMBERS)                                     \
 namespace qi { namespace serialization {                                            \
   template<> struct serialize<TYPE> {                                               \
-    static inline void write(qi::DataStream &sd, const TYPE &val) {                    \
+    static inline void write(qi::DataStream &sd, const TYPE &val) {                 \
       BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, write, MEMBERS)         \
     }                                                                               \
                                                                                     \
-    static inline void read(qi::DataStream &sd, TYPE &val) {                           \
+    static inline void read(qi::DataStream &sd, TYPE &val) {                        \
       BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, read, MEMBERS)          \
     }                                                                               \
   };                                                                                \
@@ -66,15 +66,15 @@ namespace qi { namespace serialization {                                        
 
 //Inline this function => they do nothing, they just call DataStream method
 //we keep vector/map not inlined at the moment because they take space.
-#define QI_SIMPLE_SERIALIZER(Name, Type)                                   \
+#define QI_SIMPLE_SERIALIZER(Type)                                         \
   template <>                                                              \
   struct serialize<Type>  {                                                \
-    static inline void write(qi::DataStream &sd, const Type &val) {               \
-      sd.write##Name(val);                                                 \
+    static inline void write(qi::DataStream &sd, const Type &val) {        \
+      sd << val;                                                           \
       __QI_DEBUG_SERIALIZATION_W(Type, val)                                \
     }                                                                      \
-    static inline void read(qi::DataStream &sd, Type &val) {                      \
-      sd.read##Name(val);                                                  \
+    static inline void read(qi::DataStream &sd, Type &val) {               \
+      sd >> val;                                                           \
       __QI_DEBUG_SERIALIZATION_R(Type, val)                                \
     }                                                                      \
   };
@@ -85,8 +85,8 @@ namespace qi { namespace serialization {                                        
   struct serialize< TYPE<U> >  {                                           \
     typedef TYPE<U> _typefordebug;                                         \
                                                                            \
-    static void write(qi::DataStream &sd, const TYPE<U> &v) {                     \
-      sd.writeInt(v.size());                                               \
+    static void write(qi::DataStream &sd, const TYPE<U> &v) {              \
+      sd << (int)v.size();                                                      \
       if (v.size()) {                                                      \
         typename TYPE<U>::const_iterator it = v.begin();                   \
         typename TYPE<U>::const_iterator end = v.end();                    \
@@ -96,8 +96,8 @@ namespace qi { namespace serialization {                                        
       }                                                                    \
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v)               \
     }                                                                      \
-    static void write(qi::DataStream &sd, TYPE<U> &v) {                           \
-      sd.writeInt(v.size());                                               \
+    static void write(qi::DataStream &sd, TYPE<U> &v) {                    \
+      sd << (int)v.size();                                                      \
       if (v.size()) {                                                      \
         typename TYPE<U>::iterator it = v.begin();                         \
         typename TYPE<U>::iterator end = v.end();                          \
@@ -107,9 +107,9 @@ namespace qi { namespace serialization {                                        
       }                                                                    \
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);              \
     }                                                                      \
-    static void read(qi::DataStream &sd, TYPE<U> &v) {                            \
+    static void read(qi::DataStream &sd, TYPE<U> &v) {                     \
       int sz;                                                              \
-      sd.readInt(sz);                                                      \
+      sd >> sz;                                                            \
       v.clear();                                                           \
       if (sz) {                                                            \
         v.resize(sz);                                                      \
@@ -129,8 +129,8 @@ namespace qi { namespace serialization {                                        
   struct serialize< TYPE<K, V> >  {                                      \
     typedef TYPE<K, V> _typefordebug;                                    \
                                                                          \
-    static void write(qi::DataStream &sd, const TYPE<K, V> &m) {                \
-      sd.writeInt(m.size());                                             \
+    static void write(qi::DataStream &sd, const TYPE<K, V> &m) {         \
+      sd << (int)m.size();                                               \
       if (m.size()) {                                                    \
         typename TYPE<K,V>::const_iterator it = m.begin();               \
         typename TYPE<K,V>::const_iterator end = m.end();                \
@@ -142,8 +142,8 @@ namespace qi { namespace serialization {                                        
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);            \
     }                                                                    \
                                                                          \
-    static void write(qi::DataStream &sd, TYPE<K, V> &m) {                      \
-      sd.writeInt(m.size());                                             \
+    static void write(qi::DataStream &sd, TYPE<K, V> &m) {               \
+      sd << (int)m.size();                                               \
       if (m.size()) {                                                    \
         typename TYPE<K,V>::iterator it = m.begin();                     \
         typename TYPE<K,V>::iterator end = m.end();                      \
@@ -155,9 +155,9 @@ namespace qi { namespace serialization {                                        
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);            \
     }                                                                    \
                                                                          \
-    static void read(qi::DataStream &sd, TYPE<K, V>  &m) {              \
+    static void read(qi::DataStream &sd, TYPE<K, V>  &m) {               \
       int sz;                                                            \
-      sd.readInt(sz);                                                    \
+      sd >> sz;                                                          \
       m.clear();                                                         \
                                                                          \
       if (sz) {                                                          \
@@ -193,7 +193,7 @@ namespace qi {
     // Enable is need for conditional template specialization
     template <typename T, class Enable = void>
     struct serialize {
-      //empty to crash a compile time when the type cant be serialized
+      //empty to crash at compile time when the type cant be serialized
     };
 
   }

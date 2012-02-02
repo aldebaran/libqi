@@ -25,43 +25,43 @@ void qi_message_destroy(qi_message_t *msg)
 void qi_message_write_bool(qi_message_t *msg, const char b)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeBool(b);
+  *pmsg << b;
 }
 
 void qi_message_write_char(qi_message_t *msg, const char c)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeChar(c);
+  *pmsg << c;
 }
 
 void qi_message_write_int(qi_message_t *msg, const int i)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeInt(i);
+  *pmsg << i;
 }
 
 void qi_message_write_float(qi_message_t *msg, const float f)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeFloat(f);
+  *pmsg << f;
 }
 
 void qi_message_write_double(qi_message_t *msg, const double d)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeDouble(d);
+  *pmsg << d;
 }
 
 void qi_message_write_string(qi_message_t *msg, const char *s)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeString(std::string(s));
+  *pmsg << std::string(s);
 }
 
 void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
-  pmsg->writeString(std::string(s, size));
+  *pmsg << std::string(s, size);
 }
 
 
@@ -70,7 +70,7 @@ void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
 char  qi_message_read_bool(qi_message_t *msg) {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
   bool b;
-  pmsg->readBool(b);
+  *pmsg >> b;
   return b;
 
 }
@@ -78,7 +78,7 @@ char  qi_message_read_bool(qi_message_t *msg) {
 char  qi_message_read_char(qi_message_t *msg) {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
   char c;
-  pmsg->readChar(c);
+  *pmsg >> c;
   return c;
 }
 
@@ -86,34 +86,34 @@ int qi_message_read_int(qi_message_t *msg)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
   int i;
-  pmsg->readInt(i);
+  *pmsg >> i;
   return i;
 }
 
 float qi_message_read_float(qi_message_t *msg) {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
   float f;
-  pmsg->readFloat(f);
+  *pmsg >> f;
   return f;
 }
 
 double qi_message_read_double(qi_message_t *msg) {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
   double d;
-  pmsg->readDouble(d);
+  *pmsg >> d;
   return d;
 }
 
 char *qi_message_read_string(qi_message_t *msg)
 {
   qi::DataStream *pmsg = static_cast<qi::DataStream *>(msg);
- std::string s;
- pmsg->readString(s);
- //TODO: buffer overflow
+  std::string s;
+  *pmsg >> s;
+  //TODO: buffer overflow
 #ifdef _WIN32
- return _strdup(s.c_str());
+  return _strdup(s.c_str());
 #else
- return strdup(s.c_str());
+  return strdup(s.c_str());
 #endif
 }
 

@@ -28,7 +28,7 @@ namespace qi {
 
     R (*f)()  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
@@ -46,7 +46,7 @@ namespace qi {
 
     void (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     xCall(signature, request, reply);
   }
@@ -60,7 +60,7 @@ namespace qi {
 
     R (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     xCall(signature, request, reply);
 
@@ -79,7 +79,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     xCall(signature, request, reply);
@@ -94,7 +94,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     xCall(signature, request, reply);
@@ -114,7 +114,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -130,7 +130,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -151,7 +151,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -168,7 +168,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -190,7 +190,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -208,7 +208,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -231,7 +231,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -250,7 +250,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -274,7 +274,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -294,7 +294,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -319,7 +319,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -340,7 +340,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -366,7 +366,7 @@ namespace qi {
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);
@@ -388,7 +388,7 @@ namespace qi {
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
-    request.writeString(signature);
+    request << (signature);
     qi::serialization::serialize<P0>::write(request, p0);
     qi::serialization::serialize<P1>::write(request, p1);
     qi::serialization::serialize<P2>::write(request, p2);

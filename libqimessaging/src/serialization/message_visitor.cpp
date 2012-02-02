@@ -55,7 +55,7 @@ namespace qi {
     void MessageVisitor::onList(const char *elementType)
     {
       int count, i;
-      _message.readInt(count);
+      _message >> count;
       std::cout << "list with " << count << "elements." << std::endl;
       MessageVisitor mv(_message, elementType);
       for (i = 0; i < count; ++i)
@@ -67,7 +67,7 @@ namespace qi {
     void MessageVisitor::onMap(const char *keyType, const char *valueType)
     {
       int count, i;
-      _message.readInt(count);
+      _message >> count;
       std::cout << "map with " << count << "elements." << std::endl;
       MessageVisitor mv1(_message, keyType);
       MessageVisitor mv2(_message, valueType);

@@ -77,14 +77,14 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodGetNewPort);
-      msg.writeString(machineID);
+      msg << methodGetNewPort;
+      msg << machineID;
 
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
       qi::DataStream retSer(ret);
       int port;
-      retSer.readInt(port);
+      retSer >> port;
       return port;
     }
 
@@ -94,11 +94,11 @@ namespace qi {
       }
       qi::transport::Buffer ret;
       qi::DataStream msg;
-      msg.writeString(methodRegisterMachine);
-      msg.writeString(m.hostName);
-      msg.writeString(m.machineID);
-      msg.writeString(m.publicIP);
-      msg.writeInt(   m.platformID);
+      msg << methodRegisterMachine;
+      msg << m.hostName;
+      msg << m.machineID;
+      msg << m.publicIP;
+      msg << m.platformID;
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -110,14 +110,14 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodRegisterEndpoint);
-      msg.writeInt((int)e.type);
-      msg.writeString(e.name);
-      msg.writeString(e.endpointID);
-      msg.writeString(e.contextID);
-      msg.writeString(e.machineID);
-      msg.writeInt(   e.processID);
-      msg.writeInt(   e.port);
+      msg << (methodRegisterEndpoint);
+      msg << ((int)e.type);
+      msg << (e.name);
+      msg << (e.endpointID);
+      msg << (e.contextID);
+      msg << (e.machineID);
+      msg << (e.processID);
+      msg << (e.port);
       //CTAF:todo
 
       //_transportClient.send(msg.str(), ret);
@@ -129,8 +129,8 @@ namespace qi {
       }
       qi::transport::Buffer ret;
       qi::DataStream msg;
-      msg.writeString(methodUnregisterEndpoint);
-      msg.writeString(e.endpointID);
+      msg << (methodUnregisterEndpoint);
+      msg << (e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -141,14 +141,14 @@ namespace qi {
       }
       qi::transport::Buffer ret;
       qi::DataStream msg;
-      msg.writeString(methodLocateService);
-      msg.writeString(methodSignature);
-      msg.writeString(e.endpointID);
+      msg << (methodLocateService);
+      msg << (methodSignature);
+      msg << (e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
       qi::DataStream retSer(ret);
       std::string endpoint;
-      retSer.readString(endpoint);
+      retSer >> (endpoint);
       return endpoint;
     }
 
@@ -161,9 +161,9 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodRegisterService);
-      msg.writeString(methodSignature);
-      msg.writeString(e.endpointID);
+      msg << (methodRegisterService);
+      msg << (methodSignature);
+      msg << (e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -176,8 +176,8 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodUnregisterService);
-      msg.writeString(methodSignature);
+      msg << (methodUnregisterService);
+      msg << (methodSignature);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -189,14 +189,14 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodLocateTopic);
-      msg.writeString(methodSignature);
-      msg.writeString(e.endpointID);
+      msg << (methodLocateTopic);
+      msg << (methodSignature);
+      msg << (e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
       qi::DataStream retSer(ret);
       std::string endpoint;
-      retSer.readString(endpoint);
+      retSer >> (endpoint);
       return endpoint;
     }
 
@@ -208,13 +208,13 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodTopicExists);
-      msg.writeString(signature);
+      msg << (methodTopicExists);
+      msg << (signature);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
       qi::DataStream retSer(ret);
       bool exists;
-      retSer.readBool(exists);
+      retSer >> (exists);
       return exists;
     }
 
@@ -228,10 +228,10 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodRegisterTopic);
-      msg.writeString(signature);
-      msg.writeBool(isManyToMany);
-      msg.writeString(e.endpointID);
+      msg << (methodRegisterTopic);
+      msg << (signature);
+      msg << (isManyToMany);
+      msg << (e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -246,9 +246,9 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodRegisterTopicParticipant);
-      msg.writeString(signature);
-      msg.writeString(endpointID);
+      msg << (methodRegisterTopicParticipant);
+      msg << (signature);
+      msg << (endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
     }
@@ -263,9 +263,9 @@ namespace qi {
       qi::transport::Buffer ret;
       qi::DataStream msg;
 
-      msg.writeString(methodUnregisterTopic);
-      msg.writeString(signature);
-      msg.writeString(e.endpointID);
+      msg << (methodUnregisterTopic);
+      msg << (signature);
+      msg << (e.endpointID);
       //CTAF:todo
 //      _transportClient.send(msg.str(), ret);
     }

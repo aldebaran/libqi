@@ -16,19 +16,19 @@ namespace qi { namespace serialization {
 template <>
 struct serialize<qi::Value> {
   static inline void write(qi::DataStream &sd, const qi::Value &val) {
-    sd.writeInt(val.type());
+    sd << val.type();
     switch(val.type()) {
       case qi::Value::Bool:
-        sd.writeString("b");
-        sd.writeBool(val._private.data.b);
+        sd << "b";
+        sd << val._private.data.b;
         return;
       case qi::Value::Char:
-        sd.writeString("c");
-        sd.writeChar(val._private.data.c);
+        sd << "c";
+        sd << val._private.data.c;
         return;
       case qi::Value::Int32:
-        sd.writeString("i");
-        sd.writeInt(val._private.data.i);
+        sd << "i";
+        sd<< val._private.data.i;
         return;
       case Value::UInt32:
       case Value::Int64:
@@ -36,32 +36,32 @@ struct serialize<qi::Value> {
         throw SerializationError("not implemented");
         return;
       case qi::Value::Float:
-        sd.writeString("f");
-        sd.writeFloat(val._private.data.f);
+        sd << "f";
+        sd << val._private.data.f;
         return;
       case qi::Value::Double:
-        sd.writeString("d");
-        sd.writeDouble(val._private.data.d);
+        sd << "d";
+        sd << val._private.data.d;
         return;
       case qi::Value::String:{
-        sd.writeString("s");
-        sd.writeString(val.constValue< std::string >());
+        sd << "s";
+        sd << val.constValue< std::string >();
         return;
       }
       case qi::Value::List:{
-        sd.writeString("[m]");
+        sd << "[m]";
         const std::list<qi::Value> &le = val.constValue< std::list<qi::Value> >();
         serialize< std::list<qi::Value> >::write(sd, le);
         return;
       }
       case qi::Value::Vector: {
-        sd.writeString("[m]");
+        sd << "[m]";
         const std::vector<qi::Value> &ve = val.constValue< std::vector<qi::Value> >();
         serialize< std::vector<qi::Value> >::write(sd, ve);
         return;
       }
       case qi::Value::Map: {
-        sd.writeString("{sm}");
+        sd << "{sm}";
         const std::map<std::string, qi::Value> &me = val.constValue< std::map<std::string, qi::Value> >();
         serialize< std::map<std::string, qi::Value> >::write(sd, me);
         return;
@@ -73,20 +73,20 @@ struct serialize<qi::Value> {
     std::string sig;
     int type;
     val.clear();
-    sd.readInt(type);
-    sd.readString(sig);
+    sd >> type;
+    sd >> sig;
     switch(type) {
       case qi::Value::Bool:
         val._private.type = qi::Value::Bool;
-        sd.readBool(val._private.data.b);
+        sd >> val._private.data.b;
         return;
       case qi::Value::Char:
         val._private.type = qi::Value::Char;
-        sd.readChar(val._private.data.c);
+        sd >> val._private.data.c;
         return;
       case qi::Value::Int32:
         val._private.type = qi::Value::Int32;
-        sd.readInt(val._private.data.i);
+        sd >> val._private.data.i;
         return;
       case Value::UInt32:
       case Value::Int64:
@@ -95,15 +95,15 @@ struct serialize<qi::Value> {
         return;
       case qi::Value::Float:
         val._private.type = qi::Value::Float;
-        sd.readFloat(val._private.data.f);
+        sd >> val._private.data.f;
         return;
       case qi::Value::Double:
         val._private.type = qi::Value::Double;
-        sd.readDouble(val._private.data.d);
+        sd >> val._private.data.d;
         return;
       case qi::Value::String:
         val.setType(qi::Value::String);
-        sd.readString(val.value<std::string>());
+        sd >> val.value<std::string>();
         return;
       case qi::Value::List:
         val.setType(qi::Value::List);

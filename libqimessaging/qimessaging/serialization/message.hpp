@@ -13,8 +13,6 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
-#include <qimessaging/serialization/datastream.hpp>
-//#include <qimessaging/signature.hpp>
 
 namespace qi {
 

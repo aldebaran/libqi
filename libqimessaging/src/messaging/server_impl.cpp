@@ -82,7 +82,7 @@ namespace qi {
       qi::DataStream def(defData);
       qi::DataStream result(resultData);
       std::string methodSignature;
-      def.readString(methodSignature);
+      def >> methodSignature;
       const ServiceInfo& si = xGetService(methodSignature);
       if (si.methodName.empty() || !si.functor) {
         qiLogError("qimessaging") << "Server Error: Method not found(" << methodSignature << "): " << qi::signatureToString(methodSignature) << std::endl;

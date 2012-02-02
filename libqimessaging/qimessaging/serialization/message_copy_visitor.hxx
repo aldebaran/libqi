@@ -60,33 +60,33 @@ namespace qi {
       switch(*simpleType) {
       case qi::Signature::Bool:
         bool b;
-        _msgSrc.readBool(b);
-        _msgDest.writeBool(b);
+        _msgSrc >> b;
+        _msgDest << b;
         break;
       case qi::Signature::Char:
         char c;
-        _msgSrc.readChar(c);
-        _msgDest.writeChar(c);
+        _msgSrc >> c;
+        _msgDest << c;
         break;
       case qi::Signature::Int:
         int i;
-        _msgSrc.readInt(i);
-        _msgDest.writeInt(i);
+        _msgSrc >> i;
+        _msgDest << i;
         break;
       case qi::Signature::Float:
         float f;
-        _msgSrc.readFloat(f);
-        _msgDest.writeFloat(f);
+        _msgSrc >> f;
+        _msgDest << f;
         break;
       case qi::Signature::Double:
         double d;
-        _msgSrc.readDouble(d);
-        _msgDest.writeDouble(d);
+        _msgSrc >> d;
+        _msgDest << d;
         break;
       case qi::Signature::String:
         std::string s;
-        _msgSrc.readString(s);
-        _msgDest.writeString(s);
+        _msgSrc >> s;
+        _msgDest << s;
         break;
 
       }
@@ -96,8 +96,8 @@ namespace qi {
     void MessageCopyVisitor<MessageSrc, MessageDest>::onList(const char *elementType)
     {
       int count, i;
-      _msgSrc.readInt(count);
-      _msgDest.writeInt(count);
+      _msgSrc >> count;
+      _msgDest << count;
       qi::Signature           sig(elementType);
       qi::Signature::iterator it;
       it = sig.begin();
@@ -112,8 +112,8 @@ namespace qi {
     void MessageCopyVisitor<MessageSrc, MessageDest>::onMap(const char *keyType, const char *valueType)
     {
       int count, i;
-      _msgSrc.readInt(count);
-      _msgDest.writeInt(count);
+      _msgSrc >> count;
+      _msgDest << count;
       qi::Signature           sigk(keyType);
       qi::Signature::iterator itk = sigk.begin();
       qi::Signature           sigv(valueType);

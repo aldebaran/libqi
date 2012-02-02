@@ -11,6 +11,7 @@
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/serialization/message.hpp>
+#include <qimessaging/serialization/datastream.hpp>
 #include <qimessaging/signature/signature_iterator.hpp>
 
 namespace qi {

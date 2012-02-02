@@ -32,7 +32,7 @@ namespace qi {
     void (*f)()  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
 
-    msg.writeString(signature);
+    msg << (signature);
     xCall(signature, msg, result);
   }
 

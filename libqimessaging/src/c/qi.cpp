@@ -17,13 +17,13 @@ char *qi_master_locate_service(qi_client_t *client, const char *signature)
   qi::DataStream  message;
   qi::DataStream  ret;
 
-  message.writeString("master.locateService::s:ss");
-  message.writeString(signature);
-  message.writeString(pclient->endpointId());
+  message << ("master.locateService::s:ss");
+  message << (signature);
+  message << (pclient->endpointId());
 
   pclient->call(std::string("master.locateService::s:ss"), message, ret);
   std::string addr;
-  ret.readString(addr);
+  ret >> addr;
   return strdup(addr.c_str());
 }
 

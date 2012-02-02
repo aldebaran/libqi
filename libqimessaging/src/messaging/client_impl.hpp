@@ -16,6 +16,7 @@
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/impl_base.hpp"
 #include <qimessaging/serialization/message.hpp>
+#include <qimessaging/serialization/datastream.hpp>
 
 
 namespace qi {

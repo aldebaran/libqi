@@ -21,11 +21,11 @@ namespace qi {
     struct serialize<QString>  {
       static inline void write(qi::DataStream &sd, const QString &val) {
         std::string hack = val.toStdString();
-        sd.writeString(hack);
+        sd << hack;
       }
       static inline void read(qi::DataStream &sd, QString &val) {
         std::string hack;
-        sd.readString(hack);
+        sd >> hack;
         val = QString::fromStdString(hack);
       }
     };

@@ -10,13 +10,15 @@
 #ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
 #define _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
 
+#include <qimessaging/serialization/datastream.hpp>
+
 namespace qi {
   namespace serialization {
 
-    QI_SIMPLE_SERIALIZER(Bool, bool);
-    QI_SIMPLE_SERIALIZER(Char, char);
-    QI_SIMPLE_SERIALIZER(Int, int);
-    QI_SIMPLE_SERIALIZER(Float, float);
+    QI_SIMPLE_SERIALIZER(bool);
+    QI_SIMPLE_SERIALIZER(char);
+    QI_SIMPLE_SERIALIZER(int);
+    QI_SIMPLE_SERIALIZER(float);
 
     template <typename T>
     struct serialize<T&> {
