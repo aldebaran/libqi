@@ -47,9 +47,9 @@ namespace qi {
       void messageHandler(std::string& request, std::string& reply);
       // -----------------------------------------------
 
-      virtual void onConnected(const qi::DataStream &msg) {};
-      virtual void onWrite(const qi::DataStream &msg) {};
-      virtual void onRead(const qi::DataStream &msg) {};
+      virtual void onConnected(const qi::Message &msg) {};
+      virtual void onWrite(const qi::Message &msg) {};
+      virtual void onRead(const qi::Message &msg) {};
 
 
     protected:

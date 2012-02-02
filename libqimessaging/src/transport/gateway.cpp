@@ -142,7 +142,7 @@ Message GatewayPrivate::parseMessage(const std::string &msg)
   m.idObject = res;
 
   res = msg.substr(begin, std::string::npos);
-  m.msg = res;
+  m._data = res;
 
   return m;
 }
