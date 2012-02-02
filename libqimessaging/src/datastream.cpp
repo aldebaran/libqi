@@ -3,11 +3,11 @@
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #include <qimessaging/serialization/message.hpp>
-#include <qimessaging/serialization/datastream.hpp>
+#include <qimessaging/datastream.hpp>
 #include <vector>
 
 namespace qi {

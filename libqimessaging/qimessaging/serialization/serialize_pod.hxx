@@ -10,7 +10,7 @@
 #ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
 #define _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
 
-#include <qimessaging/serialization/datastream.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi {
   namespace serialization {

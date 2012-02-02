@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 
@@ -16,7 +16,7 @@
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/impl_base.hpp"
 #include <qimessaging/serialization/message.hpp>
-#include <qimessaging/serialization/datastream.hpp>
+#include <qimessaging/datastream.hpp>
 
 
 namespace qi {
