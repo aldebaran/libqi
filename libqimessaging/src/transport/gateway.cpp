@@ -72,7 +72,7 @@ void Gateway::onRead(const qi::Message &msg)
   std::cout << "onRead: " << msg.str() << std::endl;
   Message m = _p->parseMessage(msg.str());
 
-  switch (m.type)
+  switch (m.type())
   {
   case Message::Call:
     _p->callMessage(m, msg.str());
@@ -107,42 +107,42 @@ Message GatewayPrivate::parseMessage(const std::string &msg)
 
   Message m;
 
-  end = msg.find(".", begin);
-  res = msg.substr(begin, end - begin);
-  begin = end + 1;
-  m.idCaller = res;
+//  end = msg.find(".", begin);
+//  res = msg.substr(begin, end - begin);
+//  begin = end + 1;
+//  m.idCaller = res;
 
-  end = msg.find(".", begin);
-  res = msg.substr(begin, end - begin);
-  begin = end + 1;
-  if (res == "call")
-    m.type = Message::Call;
-  else if (res == "answer")
-    m.type = Message::Answer;
-  else if (res == "event")
-    m.type = Message::Event;
-  else if (res == "error")
-    m.type = Message::Error;
-  else
-    return m;
+//  end = msg.find(".", begin);
+//  res = msg.substr(begin, end - begin);
+//  begin = end + 1;
+//  if (res == "call")
+//    m.type = Message::Call;
+//  else if (res == "answer")
+//    m.type = Message::Answer;
+//  else if (res == "event")
+//    m.type = Message::Event;
+//  else if (res == "error")
+//    m.type = Message::Error;
+//  else
+//    return m;
 
-  end = msg.find(".", begin);
-  res = msg.substr(begin, end - begin);
-  begin = end + 1;
-  m.size = atoi(res.c_str());
+//  end = msg.find(".", begin);
+//  res = msg.substr(begin, end - begin);
+//  begin = end + 1;
+//  m.size = atoi(res.c_str());
 
-  end = msg.find(".", begin);
-  res = msg.substr(begin, end - begin);
-  begin = end + 1;
-  m.idModule = res;
+//  end = msg.find(".", begin);
+//  res = msg.substr(begin, end - begin);
+//  begin = end + 1;
+//  m.idModule = res;
 
-  end = msg.find(".", begin);
-  res = msg.substr(begin, end - begin);
-  begin = end + 1;
-  m.idObject = res;
+//  end = msg.find(".", begin);
+//  res = msg.substr(begin, end - begin);
+//  begin = end + 1;
+//  m.idObject = res;
 
-  res = msg.substr(begin, std::string::npos);
-  m._data = res;
+//  res = msg.substr(begin, std::string::npos);
+//  m._data = res;
 
   return m;
 }
@@ -151,30 +151,30 @@ void* GatewayPrivate::callMessage(const Message &msg,
                                   const std::string &origMsg)
 {
   TransportSocketMapIterator it;
-  it = clientMap.find(msg.idModule);
-  if (it != clientMap.end())
-  {
-    TransportSocket* tc = it->second;
-    tc->send(origMsg);
-  }
-  else
-  {
-    // Get the module server from the master.
-  }
+//  it = clientMap.find(msg.idModule);
+//  if (it != clientMap.end())
+//  {
+//    TransportSocket* tc = it->second;
+//    tc->send(origMsg);
+//  }
+//  else
+//  {
+//    // Get the module server from the master.
+//  }
 }
 
 void* GatewayPrivate::answerMessage(const Message &msg,
                                     const std::string &origMsg)
 {
-  // Get client id to send back call answer
-  ClientConnectionMapIterator it;
-  it = ts->clientConnected.find(msg.idCaller);
-  if (it != ts->clientConnected.end())
-  {
-    ClientConnection* cc = it->second;
-    if (!bufferevent_write(cc->_bev, origMsg.c_str(), origMsg.size()))
-      return NULL;
-  }
+//  // Get client id to send back call answer
+//  ClientConnectionMapIterator it;
+//  it = ts->clientConnected.find(msg.idCaller);
+//  if (it != ts->clientConnected.end())
+//  {
+//    ClientConnection* cc = it->second;
+//    if (!bufferevent_write(cc->_bev, origMsg.c_str(), origMsg.size()))
+//      return NULL;
+//  }
   return NULL;
 }
 

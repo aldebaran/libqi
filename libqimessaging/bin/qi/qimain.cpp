@@ -112,7 +112,6 @@ typedef std::vector<std::string>  StringVector;
 
 void qi_call(std::string addr) {
   qi::NetworkClient nc;
-
   qi::NetworkThread nt;
 
   nc.setThread(&nt);
@@ -126,6 +125,8 @@ void qi_call(std::string addr) {
 
   for (it = sm.begin(); it != sm.end(); ++it)
     std::cout << "machine" << *it << std::endl;
+
+  qi::os::sleep(3);
 }
 
 

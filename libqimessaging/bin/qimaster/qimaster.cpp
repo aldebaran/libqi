@@ -48,7 +48,13 @@ public:
 
   virtual void onRead(const qi::Message &msg)
   {
-    std::cout << "read: " << msg.str() << std::endl;
+    std::cout << "read: " << std::endl;
+    std::cout << "msg.type: " << (char)msg.type() + '0' << std::endl;
+    std::cout << "msg.id  : " << msg.id() << std::endl;
+    std::cout << "msg.src : " << msg.source() << std::endl;
+    std::cout << "msg.dest: " << msg.destination() << std::endl;
+    std::cout << "msg.path: " << msg.path() << std::endl;
+    //std::cout << "msg.data: " << msg.data() << std::endl;
   }
 
 private:
@@ -100,6 +106,7 @@ int main(int argc, char *argv[])
       sds.setThread(&nt);
       sleep(1);
       sds.start("127.0.0.1", 5555);
+      std::cout << "ready." << std::endl;
       //sds.
       //qi::ServiceDirectory sd(masterAddress);
       //sd.exec();

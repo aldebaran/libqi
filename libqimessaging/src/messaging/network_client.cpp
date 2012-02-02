@@ -67,30 +67,28 @@ std::vector<std::string> NetworkClient::machines() {
 
   qi::Message msg;
 
-  msg._data = "machines";
-  msg.idCaller = 42;
-  msg.idModule = "qi.servicedirectorymanager";
-  msg.idObject = "obj";
-
+  msg.setId(0);
+  msg.setSource("moi");
+  msg.setDestination("qi.servicedirectorymanager");
+  msg.setPath("machines");
   tc->send(msg);
-
 
   return result;
 }
 
 void NetworkClient::onConnected(const qi::Message &msg)
 {
-  std::cout << "connected: " << msg.str() << std::endl;
+  std::cout << "connected: " << std::endl;
 }
 
 void NetworkClient::onWrite(const qi::Message &msg)
 {
-  std::cout << "written: " << msg.str() << std::endl;
+  std::cout << "written: " << std::endl;
 }
 
 void NetworkClient::onRead(const qi::Message &msg)
 {
-  std::cout << "read: " << msg.str() << std::endl;
+  std::cout << "read: " << std::endl;
 }
 
 

@@ -133,9 +133,11 @@ void TransportServer::readcb(struct bufferevent *bev,
 
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    std::stringstream newMsg;
-    newMsg << cc->_id << "." << buf;
-    _p->tsd->onRead(newMsg.str());
+    //std::stringstream newMsg;
+    //newMsg << cc->_id << "." << buf;
+    std::string ss(buf, n);
+    qi::Message msg(ss);
+    _p->tsd->onRead(msg);
   }
 }
 
