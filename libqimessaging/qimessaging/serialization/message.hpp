@@ -16,8 +16,9 @@
 
 namespace qi {
 
-  /// <summary>A serialized message</summary>
-  /// \ingroup Serialization
+  /** \class qi::Message
+    * This class represent a network message
+    */
   class QIMESSAGING_API Message {
   public:
 
@@ -29,22 +30,12 @@ namespace qi {
       None
     };
 
-    /// <summary>Default constructor. </summary>
     Message()
     {}
 
-    /// <summary>Default constructor.</summary>
-    /// <param name="data">The data.</param>
-    Message(const std::string &data)
-      : _data(data)
-    {}
+    Message(const std::string &data);
 
-
-    /// <summary>Gets the string. </summary>
-    /// <returns> The string representation of the serialized message</returns>
-    std::string str()const {
-      return _data;
-    }
+    std::string str()const;
 
     /// <summary>Gets the string.</summary>
     /// <param name="str">The result string.</param>
@@ -52,13 +43,27 @@ namespace qi {
       _data = str;
     }
 
-  public:
-    //TODO: temporary: need cleanup
-    MessageType  type;
-    unsigned int size;
-    std::string  idCaller;
-    std::string  idModule;
-    std::string  idObject;
+    inline void setType(MessageType type) { _type = type; }
+    inline MessageType type()  const      { return _type; }
+
+    inline void setId(unsigned int id)    { _id = id; }
+    inline unsigned int id() const        { return _id; }
+
+    inline void setSource(const std::string &src) { _src = src; }
+    inline std::string source() const             { return _src; }
+
+    inline void setDestination(const std::string &dest) { _dest = dest; }
+    inline std::string destination() const              { return _dest; }
+
+    inline void setPath(const std::string &path) { _path = path; }
+    inline std::string path() const              { return _path; }
+
+  protected:
+    MessageType  _type;
+    unsigned int _id;
+    std::string  _src;
+    std::string  _dest;
+    std::string  _path;
     std::string  _data;
   };
 

@@ -66,6 +66,8 @@ struct serialize<qi::Value> {
         serialize< std::map<std::string, qi::Value> >::write(sd, me);
         return;
       }
+      default:
+        return;
     };
   }
 

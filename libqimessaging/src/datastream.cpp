@@ -12,6 +12,37 @@
 
 namespace qi {
 
+  Message::Message(const std::string &data)
+  {
+    qi::DataStream ds(data);
+    char c;
+    int  i;
+
+    ds >> c;
+    _type = (MessageType)c;
+    ds >> i;
+    _id = i;
+    ds >> _src;
+    ds >> _dest;
+    ds >> _path;
+    ds >> _data;
+  }
+
+  std::string Message::str()const {
+    std::string data;
+
+    qi::DataStream ds(data);
+
+    ds << (char)_type;
+    ds << (int)_id;
+    ds << _src;
+    ds << _dest;
+    ds << _path;
+    ds << _data;
+    return ds.str();
+  }
+
+
 #if 0
 #define __QI_DEBUG_SERIALIZATION_DATA_R(x, d) {            \
   std::string sig = qi::signature< x >::value();           \
@@ -28,7 +59,7 @@ namespace qi {
 #endif
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                    \
-  DataStream& DataStream::operator<<(Type b)               \
+  DataStream& DataStream::operator>>(Type &b)               \
   {                                                        \
     b = *((Type *) (_data.data() + _index));               \
     _index += sizeof(Type);                                \
@@ -36,7 +67,7 @@ namespace qi {
     return *this;                                          \
   }                                                        \
                                                            \
-  DataStream& DataStream::operator>>(const Type& b)        \
+  DataStream& DataStream::operator<<(Type b)        \
   {                                                        \
     _data.append((char *)&b, sizeof(b));                   \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
@@ -68,7 +99,7 @@ namespace qi {
   }
 
   // string
-  DataStream& DataStream::operator<<(std::string s)
+  DataStream& DataStream::operator>>(std::string &s)
   {
     int sz;
     *this >> sz;
@@ -82,7 +113,7 @@ namespace qi {
     return *this;
   }
 
-  DataStream& DataStream::operator>>(const std::string &s)
+  DataStream& DataStream::operator<<(const std::string &s)
   {
     *this << (int)s.size();
     if (!s.empty()) {

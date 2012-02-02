@@ -34,19 +34,19 @@ public:
   const char *readString(size_t &len);
   void writeString(const char *str, size_t len);
 
-  DataStream& operator<<(bool i);
-  DataStream& operator<<(char i);
-  DataStream& operator<<(int i);
-  DataStream& operator<<(float i);
+  DataStream& operator<<(bool   i);
+  DataStream& operator<<(char   i);
+  DataStream& operator<<(int    i);
+  DataStream& operator<<(float  i);
   DataStream& operator<<(double i);
-  DataStream& operator<<(std::string i);
+  DataStream& operator<<(const std::string& i);
 
-  DataStream& operator>>(const bool& i);
-  DataStream& operator>>(const char& i);
-  DataStream& operator>>(const int& i);
-  DataStream& operator>>(const float& i);
-  DataStream& operator>>(const double& i);
-  DataStream& operator>>(const std::string& i);
+  DataStream& operator>>(bool   &i);
+  DataStream& operator>>(char   &i);
+  DataStream& operator>>(int    &i);
+  DataStream& operator>>(float  &i);
+  DataStream& operator>>(double &i);
+  DataStream& operator>>(std::string& i);
 
   /// <summary>Gets the string. </summary>
   /// <returns> The string representation of the serialized message</returns>
