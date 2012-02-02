@@ -12,7 +12,7 @@ namespace qi {
 
 
 
-    MessageVisitor::MessageVisitor(Message &msg, const char *signature)
+    MessageVisitor::MessageVisitor(qi::DataStream &msg, const char *signature)
       : _sig(signature),
         _message(msg)
     {

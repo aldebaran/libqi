@@ -27,14 +27,14 @@ namespace qi {
 #endif
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Name, Type)              \
-  void Message::read##Name(Type& b)                        \
+  void DataStream::read##Name(Type& b)                        \
   {                                                        \
     b = *((Type *) (_data.data() + _index));               \
     _index += sizeof(Type);                                \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
   }                                                        \
                                                            \
-  void Message::write##Name(const Type& b)                 \
+  void DataStream::write##Name(const Type& b)                 \
   {                                                        \
     _data.append((char *)&b, sizeof(b));                   \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
@@ -47,7 +47,7 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(Double, double);
 
   // string
-  const char *Message::readString(size_t &len)
+  const char *DataStream::readString(size_t &len)
   {
     int sz;
     readInt(sz);
@@ -55,7 +55,7 @@ namespace qi {
     return _data.data();
   }
 
-  void Message::writeString(const char *str, size_t len)
+  void DataStream::writeString(const char *str, size_t len)
   {
     writeInt(len);
     if (len) {
@@ -65,7 +65,7 @@ namespace qi {
   }
 
   // string
-  void Message::readString(std::string& s)
+  void DataStream::readString(std::string& s)
   {
     int sz;
     readInt(sz);
@@ -77,7 +77,7 @@ namespace qi {
     }
   }
 
-  void Message::writeString(const std::string &s)
+  void DataStream::writeString(const std::string &s)
   {
     writeInt(s.size());
     if (!s.empty()) {

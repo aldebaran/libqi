@@ -19,7 +19,7 @@ namespace qi {
     class QIMESSAGING_API MessageVisitor
     {
     public:
-      MessageVisitor(Message &msg, const char *signature);
+      MessageVisitor(qi::DataStream &msg, const char *signature);
       virtual ~MessageVisitor() {;}
 
       void visit();

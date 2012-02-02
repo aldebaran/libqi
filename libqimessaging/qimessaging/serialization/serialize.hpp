@@ -184,7 +184,7 @@ namespace qi {
     class QIMESSAGING_API SerializationError : public std::runtime_error
     {
     public:
-      explicit SerializationError(const std::string &mmsg) : std::runtime_error(msg) {}
+      explicit SerializationError(const std::string &msg) : std::runtime_error(msg) {}
       virtual ~SerializationError() throw() {}
     };
 

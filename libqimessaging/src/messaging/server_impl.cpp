@@ -18,7 +18,6 @@
 #include <qimessaging/exceptions.hpp>
 
 namespace qi {
-  using qi::DataStream;
 
   namespace detail {
 
@@ -79,9 +78,9 @@ namespace qi {
     }
 
     void ServerImpl::messageHandler(std::string& defData, std::string& resultData) {
-      // handle message
-      Message def(defData);
-      Message result(resultData);
+      // handle qi::DataStream
+      qi::DataStream def(defData);
+      qi::DataStream result(resultData);
       std::string methodSignature;
       def.readString(methodSignature);
       const ServiceInfo& si = xGetService(methodSignature);

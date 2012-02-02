@@ -13,11 +13,9 @@
 #include <qimessaging/transport/buffer.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
 
+
 namespace qi {
   namespace detail {
-
-    using qi::transport::Buffer;
-    using qi::DataStream;
 
     static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v(s)");
     static const std::string methodRegisterTopic("master.registerTopic::v(sbs)");
@@ -76,15 +74,15 @@ namespace qi {
       if (!_isInitialized) {
         return 0;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodGetNewPort);
       msg.writeString(machineID);
 
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
-      Message retSer(ret);
+      qi::DataStream retSer(ret);
       int port;
       retSer.readInt(port);
       return port;
@@ -94,8 +92,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
       msg.writeString(methodRegisterMachine);
       msg.writeString(m.hostName);
       msg.writeString(m.machineID);
@@ -109,8 +107,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodRegisterEndpoint);
       msg.writeInt((int)e.type);
@@ -129,8 +127,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
       msg.writeString(methodUnregisterEndpoint);
       msg.writeString(e.endpointID);
       //CTAF:todo
@@ -141,14 +139,14 @@ namespace qi {
       if (!_isInitialized) {
         return "";
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
       msg.writeString(methodLocateService);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
-      Message retSer(ret);
+      qi::DataStream retSer(ret);
       std::string endpoint;
       retSer.readString(endpoint);
       return endpoint;
@@ -160,8 +158,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodRegisterService);
       msg.writeString(methodSignature);
@@ -175,8 +173,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodUnregisterService);
       msg.writeString(methodSignature);
@@ -188,15 +186,15 @@ namespace qi {
       if (!_isInitialized) {
         return "";
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodLocateTopic);
       msg.writeString(methodSignature);
       msg.writeString(e.endpointID);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
-      Message retSer(ret);
+      qi::DataStream retSer(ret);
       std::string endpoint;
       retSer.readString(endpoint);
       return endpoint;
@@ -207,14 +205,14 @@ namespace qi {
       if (!_isInitialized) {
         return false;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodTopicExists);
       msg.writeString(signature);
       //CTAF:todo
       //_transportClient.send(msg.str(), ret);
-      Message retSer(ret);
+      qi::DataStream retSer(ret);
       bool exists;
       retSer.readBool(exists);
       return exists;
@@ -227,8 +225,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodRegisterTopic);
       msg.writeString(signature);
@@ -245,8 +243,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodRegisterTopicParticipant);
       msg.writeString(signature);
@@ -262,8 +260,8 @@ namespace qi {
       if (!_isInitialized) {
         return;
       }
-      Buffer ret;
-      Message msg;
+      qi::transport::Buffer ret;
+      qi::DataStream msg;
 
       msg.writeString(methodUnregisterTopic);
       msg.writeString(signature);

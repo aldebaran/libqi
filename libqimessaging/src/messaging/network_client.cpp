@@ -65,26 +65,30 @@ bool NetworkClient::isInitialized() const
 std::vector<std::string> NetworkClient::machines() {
   std::vector<std::string> result;
 
-  std::string msg;
+  qi::Message msg;
 
-  msg = "caca";
+  msg._data = "machines";
+  msg.idCaller = 42;
+  msg.idModule = "qi.servicedirectorymanager";
+  msg.idObject = "obj";
+
   tc->send(msg);
-  result.push_back("bim");
-  result.push_back("bam");
+
+
   return result;
 }
 
-void NetworkClient::onConnected(const Message &msg)
+void NetworkClient::onConnected(const qi::Message &msg)
 {
   std::cout << "connected: " << msg.str() << std::endl;
 }
 
-void NetworkClient::onWrite(const Message &msg)
+void NetworkClient::onWrite(const qi::Message &msg)
 {
   std::cout << "written: " << msg.str() << std::endl;
 }
 
-void NetworkClient::onRead(const Message &msg)
+void NetworkClient::onRead(const qi::Message &msg)
 {
   std::cout << "read: " << msg.str() << std::endl;
 }
