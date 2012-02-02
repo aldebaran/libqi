@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2011 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
 
@@ -51,11 +51,11 @@
 #define QI_SERIALIZATION_REFLECT(TYPE, MEMBERS)                                     \
 namespace qi { namespace serialization {                                            \
   template<> struct serialize<TYPE> {                                               \
-    static inline void write(qi::Message &sd, const TYPE &val) {                    \
+    static inline void write(qi::DataStream &sd, const TYPE &val) {                    \
       BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, write, MEMBERS)         \
     }                                                                               \
                                                                                     \
-    static inline void read(qi::Message &sd, TYPE &val) {                           \
+    static inline void read(qi::DataStream &sd, TYPE &val) {                           \
       BOOST_PP_SEQ_FOR_EACH(_QI_SERIALIZATION_REFLECT_ELEM, read, MEMBERS)          \
     }                                                                               \
   };                                                                                \
@@ -64,16 +64,16 @@ namespace qi { namespace serialization {                                        
 #define QI_SERIALIZATION_ALLOW_VISITOR(TYPE)                                        \
  friend class qi::serialization::serialize<TYPE>;
 
-//Inline this function => they do nothing, they just call Message method
+//Inline this function => they do nothing, they just call DataStream method
 //we keep vector/map not inlined at the moment because they take space.
 #define QI_SIMPLE_SERIALIZER(Name, Type)                                   \
   template <>                                                              \
   struct serialize<Type>  {                                                \
-    static inline void write(Message &sd, const Type &val) {               \
+    static inline void write(qi::DataStream &sd, const Type &val) {               \
       sd.write##Name(val);                                                 \
       __QI_DEBUG_SERIALIZATION_W(Type, val)                                \
     }                                                                      \
-    static inline void read(Message &sd, Type &val) {                      \
+    static inline void read(qi::DataStream &sd, Type &val) {                      \
       sd.read##Name(val);                                                  \
       __QI_DEBUG_SERIALIZATION_R(Type, val)                                \
     }                                                                      \
@@ -85,7 +85,7 @@ namespace qi { namespace serialization {                                        
   struct serialize< TYPE<U> >  {                                           \
     typedef TYPE<U> _typefordebug;                                         \
                                                                            \
-    static void write(Message &sd, const TYPE<U> &v) {                     \
+    static void write(qi::DataStream &sd, const TYPE<U> &v) {                     \
       sd.writeInt(v.size());                                               \
       if (v.size()) {                                                      \
         typename TYPE<U>::const_iterator it = v.begin();                   \
@@ -96,7 +96,7 @@ namespace qi { namespace serialization {                                        
       }                                                                    \
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v)               \
     }                                                                      \
-    static void write(Message &sd, TYPE<U> &v) {                           \
+    static void write(qi::DataStream &sd, TYPE<U> &v) {                           \
       sd.writeInt(v.size());                                               \
       if (v.size()) {                                                      \
         typename TYPE<U>::iterator it = v.begin();                         \
@@ -107,7 +107,7 @@ namespace qi { namespace serialization {                                        
       }                                                                    \
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);              \
     }                                                                      \
-    static void read(Message &sd, TYPE<U> &v) {                            \
+    static void read(qi::DataStream &sd, TYPE<U> &v) {                            \
       int sz;                                                              \
       sd.readInt(sz);                                                      \
       v.clear();                                                           \
@@ -129,7 +129,7 @@ namespace qi { namespace serialization {                                        
   struct serialize< TYPE<K, V> >  {                                      \
     typedef TYPE<K, V> _typefordebug;                                    \
                                                                          \
-    static void write(Message &sd, const TYPE<K, V> &m) {                \
+    static void write(qi::DataStream &sd, const TYPE<K, V> &m) {                \
       sd.writeInt(m.size());                                             \
       if (m.size()) {                                                    \
         typename TYPE<K,V>::const_iterator it = m.begin();               \
@@ -142,7 +142,7 @@ namespace qi { namespace serialization {                                        
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);            \
     }                                                                    \
                                                                          \
-    static void write(Message &sd, TYPE<K, V> &m) {                      \
+    static void write(qi::DataStream &sd, TYPE<K, V> &m) {                      \
       sd.writeInt(m.size());                                             \
       if (m.size()) {                                                    \
         typename TYPE<K,V>::iterator it = m.begin();                     \
@@ -155,7 +155,7 @@ namespace qi { namespace serialization {                                        
       __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);            \
     }                                                                    \
                                                                          \
-    static void read(Message &sd, TYPE<K, V>  &m) {                      \
+    static void read(qi::DataStream &sd, TYPE<K, V>  &m) {              \
       int sz;                                                            \
       sd.readInt(sz);                                                    \
       m.clear();                                                         \
@@ -184,7 +184,7 @@ namespace qi {
     class QIMESSAGING_API SerializationError : public std::runtime_error
     {
     public:
-      explicit SerializationError(const std::string &message) : std::runtime_error(message) {}
+      explicit SerializationError(const std::string &mmsg) : std::runtime_error(msg) {}
       virtual ~SerializationError() throw() {}
     };
 

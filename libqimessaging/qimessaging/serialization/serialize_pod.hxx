@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_POD_HXX_
@@ -20,11 +20,11 @@ namespace qi {
 
     template <typename T>
     struct serialize<T&> {
-      static inline void write(Message &sd, const T &val) {
+      static inline void write(qi::DataStream &sd, const T &val) {
         __QI_DEBUG_SERIALIZATION_W(T, "&");
         serialize<T>::write(sd, val);
       }
-      static inline void read(Message &sd, T &val) {
+      static inline void read(qi::DataStream &sd, T &val) {
         __QI_DEBUG_SERIALIZATION_R(T, "&");
         serialize<T>::read(sd, val);
       }
@@ -32,11 +32,11 @@ namespace qi {
 
     template <typename T>
     struct serialize<const T> {
-      static inline void write(Message &sd, const T &val) {
+      static inline void write(qi::DataStream &sd, const T &val) {
         __QI_DEBUG_SERIALIZATION_W(T, "Const");
         serialize<T>::write(sd, val);
       }
-      static inline void read(Message &sd, T &val) {
+      static inline void read(qi::DataStream &sd, T &val) {
         __QI_DEBUG_SERIALIZATION_R(T, "Const");
         serialize<T>::read(sd, val);
       }

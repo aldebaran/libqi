@@ -36,7 +36,7 @@ public:
     ;
   }
 
-  virtual void call(qi::Message &params, qi::Message& result)const {
+  virtual void call(qi::DataStream &params, qi::DataStream& result)const {
     if (_func)
       _func(_complete_sig, reinterpret_cast<qi_message_t *>(&params), reinterpret_cast<qi_message_t *>(&result), _data);
   }

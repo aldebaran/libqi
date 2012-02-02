@@ -165,8 +165,8 @@ TEST(TestBind, MultiArgVoidFun) {
 TEST(TestBind, VoidCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  qi::Message   res;
-  qi::Message  cd;
+  qi::DataStream   res;
+  qi::DataStream  cd;
 
   qi::perf::DataPerfTimer dp;
   qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::voidCall);
@@ -190,7 +190,7 @@ TEST(TestBind, VoidCallPerf) {
 TEST(TestBind, IntStringCallPerf) {
   Foo           chiche;
   Foo          *p = &chiche;
-  qi::Message res;
+  qi::DataStream res;
 
   qi::perf::DataPerfTimer dp;
 
@@ -200,7 +200,7 @@ TEST(TestBind, IntStringCallPerf) {
   {
     unsigned int    numBytes = (unsigned int)pow(2.0f,(int)i);
     std::string     request = std::string(numBytes, 'B');
-    qi::Message  cd;
+    qi::DataStream  cd;
     qi::Functor    *functor = qi::makeFunctor(&chiche, &Foo::intStringCall);
 
     cd.writeString(request);

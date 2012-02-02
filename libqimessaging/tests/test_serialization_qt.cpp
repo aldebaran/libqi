@@ -8,7 +8,7 @@
 TEST(testSerializationQt, QString) {
   QString     ti;
   QString     to;
-  qi::Message m;
+  qi::DataStream m;
 
   ti = QString::fromAscii("tic");
 
@@ -23,7 +23,7 @@ TEST(testSerializationQt, QString) {
 TEST(testSerializationQt, QVectorInt) {
   QVector<int> ti;
   QVector<int> to;
-  qi::Message  m;
+  qi::DataStream  m;
 
   ti << 1;
   ti << 2;
@@ -45,7 +45,7 @@ TEST(testSerializationQt, QVectorQString) {
   QVector<QString> ti;
   QVector<QString> to;
   QVector<QString>::iterator it;
-  qi::Message      m;
+  qi::DataStream      m;
 
   ti << QString::fromAscii("tic");
   ti << QString::fromAscii("tac");
@@ -83,7 +83,7 @@ TEST(testSerializationQt, StructAndVectorAndStruct) {
   Test1        t12;
   Test2        t2;
   Test2        to;
-  qi::Message  m;
+  qi::DataStream  m;
 
   t11.x << 1;
   t11.x << 2;

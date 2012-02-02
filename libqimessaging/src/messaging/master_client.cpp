@@ -17,7 +17,7 @@ namespace qi {
   namespace detail {
 
     using qi::transport::Buffer;
-    using qi::Message;
+    using qi::DataStream;
 
     static const std::string methodUnregisterEndpoint("master.unregisterEndpoint::v(s)");
     static const std::string methodRegisterTopic("master.registerTopic::v(sbs)");

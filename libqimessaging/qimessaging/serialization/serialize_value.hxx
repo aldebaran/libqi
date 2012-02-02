@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #ifndef _QIMESSAGING_SERIALIZATION_SERIALIZE_VALUE_HXX_
@@ -15,7 +15,7 @@
 namespace qi { namespace serialization {
 template <>
 struct serialize<qi::Value> {
-  static inline void write(Message &sd, const qi::Value &val) {
+  static inline void write(qi::DataStream &sd, const qi::Value &val) {
     sd.writeInt(val.type());
     switch(val.type()) {
       case qi::Value::Bool:
@@ -69,7 +69,7 @@ struct serialize<qi::Value> {
     };
   }
 
-  static inline void read(Message &sd, qi::Value &val) {
+  static inline void read(qi::DataStream &sd, qi::Value &val) {
     std::string sig;
     int type;
     val.clear();

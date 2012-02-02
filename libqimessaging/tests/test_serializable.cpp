@@ -71,8 +71,8 @@ QI_REFLECT(TimeStampedPoint2D, ((Point2D, p)) ((TimeStamp, t)));
 TEST(testSerializable, Point2D) {
   Point2D      in(4, 3);
   Point2D      out;
-  qi::Message  m;
-   qi::Message m2;
+  qi::DataStream  m;
+   qi::DataStream m2;
   TimeStampedPoint2D ti;
   TimeStampedPoint2D to;
 
@@ -147,7 +147,7 @@ TEST(testSerializable, simpleStruct) {
   t.number = 1;
   t.text = "hello world";
 
-  qi::Message m;
+  qi::DataStream m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -162,7 +162,7 @@ TEST(testSerializable, multiLayer) {
   t.inner.number = 1;
   t.inner.text = "shtuff";
 
-  qi::Message m;
+  qi::DataStream m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -180,7 +180,7 @@ TEST(testSerializable, hard) {
   shtuff.push_back(map);
   t.content = shtuff;
 
-  qi::Message m;
+  qi::DataStream m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -203,7 +203,7 @@ TEST(testSerializable, harder) {
   shtuff.push_back(map);
   t.content = shtuff;
 
-  qi::Message m;
+  qi::DataStream m;
   Serializer serializer(ACTION_SERIALIZE, m);
   t.serialize(serializer);
 
@@ -254,15 +254,15 @@ TEST(testSerializable, points) {
   stampedPoint.time = timestamp;
 
   // ---- code that will never be seen, and needs a little clearup
-  qi::Message pointMessage;
+  qi::DataStream pointMessage;
   Serializer s1(ACTION_SERIALIZE, pointMessage);
   point.serialize(s1);
 
-  qi::Message stampedPointMessage;
+  qi::DataStream stampedPointMessage;
   Serializer s2(ACTION_SERIALIZE, stampedPointMessage);
   stampedPoint.serialize(s2);
 
-  qi::Message stampedPointMessageAgain;
+  qi::DataStream stampedPointMessageAgain;
   Serializer s3(ACTION_SERIALIZE, stampedPointMessageAgain);
   stampedPoint.serialize(s3);
 

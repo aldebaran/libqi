@@ -35,8 +35,8 @@ namespace qi {
     }
 
     void ClientImpl::call(const std::string &signature,
-      const qi::Message& callDef,
-            qi::Message& result) {
+      const qi::DataStream& callDef,
+            qi::DataStream& result) {
         if (!_isInitialized) {
           throw( qi::transport::ConnectionException(
             "Initialization failed. All calls will fail."));

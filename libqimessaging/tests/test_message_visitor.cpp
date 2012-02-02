@@ -35,7 +35,7 @@ typedef std::map<std::string, StringVect> StringVectMap;
 
 TEST(TestMessageVisitor, Basic)
 {
-  qi::Message msg;
+  qi::DataStream msg;
   int           i = 0;
   std::string   s = "paf";
   StringVectMap m;
@@ -60,8 +60,8 @@ TEST(TestMessageVisitor, Basic)
 
 TEST(TestMessageCopyVisitor, Basic)
 {
-  qi::Message msg1;
-  qi::Message msg2;
+  qi::DataStream msg1;
+  qi::DataStream msg2;
 
   int           i = 42;
   std::string   s = "paf";
@@ -81,7 +81,7 @@ TEST(TestMessageCopyVisitor, Basic)
   qi::serialization::serialize<std::string>::write(msg1, s);
   qi::serialization::serialize<StringVectMap>::write(msg1, m);
 
-  qi::serialization::MessageCopyVisitor<qi::Message, qi::Message> mv(msg1, msg2, sig.c_str());
+  qi::serialization::MessageCopyVisitor<qi::DataStream, qi::DataStream> mv(msg1, msg2, sig.c_str());
   mv.visit();
 
   std::cout << "finished visit" << std::endl;

@@ -31,8 +31,8 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <${generate_typename_list($i)}>
   void Client::callVoid(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::Message request;
-    qi::Message reply;
+    qi::DataStream request;
+    qi::DataStream reply;
 
     void (*f)(${generate_param_list($i)})  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -48,8 +48,8 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R${generate_typename_list($i, begin=True)}>
   R Client::call(const std::string& methodName${generate_param_list($i, begin=True)}) {
-    qi::Message request;
-    qi::Message reply;
+    qi::DataStream request;
+    qi::DataStream reply;
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature = makeFunctionSignature(methodName, f);

@@ -14,8 +14,8 @@
 char *qi_master_locate_service(qi_client_t *client, const char *signature)
 {
   qi::detail::ClientImpl     *pclient = static_cast<qi::detail::ClientImpl *>(client);
-  qi::Message  message;
-  qi::Message  ret;
+  qi::DataStream  message;
+  qi::DataStream  ret;
 
   message.writeString("master.locateService::s:ss");
   message.writeString(signature);

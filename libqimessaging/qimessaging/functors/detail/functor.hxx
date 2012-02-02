@@ -32,7 +32,7 @@ namespace detail {
       return (R)(*fFunction)();
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
       qi::serialization::serialize<R>::write(result, (*fFunction)());
@@ -57,7 +57,7 @@ namespace detail {
       return (R)(*fFunction)(p0);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       P0 p0;
 
@@ -84,7 +84,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       P0 p0;
       P1 p1;
@@ -113,7 +113,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       P0 p0;
       P1 p1;
@@ -144,7 +144,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       P0 p0;
       P1 p1;
@@ -177,7 +177,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       P0 p0;
       P1 p1;
@@ -212,7 +212,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       P0 p0;
       P1 p1;
@@ -249,7 +249,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
       P0 p0;
       P1 p1;
@@ -288,7 +288,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
       P0 p0;
       P1 p1;
@@ -329,7 +329,7 @@ namespace detail {
       return (R)(*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     }
 
-    void call(qi::Message &params, qi::Message& result)const {
+    void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
       P0 p0;
       P1 p1;

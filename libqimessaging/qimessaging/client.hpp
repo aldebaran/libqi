@@ -122,8 +122,8 @@ namespace qi {
 
   private:
     void xCall(const std::string& signature,
-      const qi::Message& request,
-            qi::Message& result);
+      const qi::DataStream& request,
+            qi::DataStream& result);
     boost::scoped_ptr<qi::detail::ClientImpl> _impl;
   };
 }

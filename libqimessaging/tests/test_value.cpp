@@ -65,7 +65,7 @@ TEST(TestValue, TestSerialize) {
   v.value<qi::ValueMap>()["toto"] = qi::Value("coco");
   v.value<qi::ValueMap>()["tata"] = qi::Value("caca");
 
-  qi::Message ms;
+  qi::DataStream ms;
 
   qi::serialization::serialize<qi::Value>::write(ms, v);
   qi::serialization::serialize<qi::Value>::read(ms, v2);
@@ -89,7 +89,7 @@ TEST(TestValue, TestSerializeVector) {
   v.value<qi::ValueVector>().push_back(qi::Value("coco"));
   v.value<qi::ValueVector>().push_back(qi::Value("caca"));
 
-  qi::Message ms;
+  qi::DataStream ms;
 
   qi::serialization::serialize<qi::Value>::write(ms, v);
   qi::serialization::serialize<qi::Value>::read(ms, v2);

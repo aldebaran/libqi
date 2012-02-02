@@ -37,8 +37,8 @@ void qi_client_destroy(qi_client_t *client)
 int qi_client_call(qi_client_t *client, const char *method, qi_message_t *msg, qi_message_t *ret)
 {
   qi::detail::ClientImpl  *pclient  = static_cast<qi::detail::ClientImpl *>(client);
-  qi::Message *preturn  = (qi::Message *)ret;
-  qi::Message *pmessage = (qi::Message *)msg;
+  qi::DataStream *preturn  = (qi::DataStream *)ret;
+  qi::DataStream *pmessage = (qi::DataStream *)msg;
 
   pclient->call(std::string(method), *pmessage, *preturn);
   //todo: try catch

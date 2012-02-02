@@ -37,7 +37,7 @@ namespace detail {
       (fObject->*fFunction)($generate_arg_list($i));
     }
 
-    void call(qi::Message &params, qi::Message& result) const{
+    void call(qi::DataStream &params, qi::DataStream& result) const{
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       #for $j in range($i)
       P$j p$j;

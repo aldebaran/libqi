@@ -26,8 +26,8 @@ namespace qi {
   }
 
   void Client::callVoid(const std::string& methodName) {
-    qi::Message msg;
-    qi::Message result;
+    qi::DataStream msg;
+    qi::DataStream result;
 
     void (*f)()  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
@@ -37,8 +37,8 @@ namespace qi {
   }
 
   void Client::xCall(const std::string& signature,
-    const qi::Message& msg,
-          qi::Message& result)
+    const qi::DataStream& msg,
+          qi::DataStream& result)
   {
     return _impl->call(signature, msg, result);
   }

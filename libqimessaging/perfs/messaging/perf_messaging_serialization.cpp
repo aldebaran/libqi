@@ -24,7 +24,7 @@ TEST(Serialization, qiVectorFloat)
     f.assign( kNumFloats, 1.1111098340f);
     dt.start(kNumLoops, kNumFloats * sizeof(float));
     for (unsigned int i=0; i<kNumLoops; i++) {
-      qi::Message m;
+      qi::DataStream m;
       qi::serialization::serialize<std::vector<float> >::write(m, f);
       //std::cout << m.str().size() << "---" << m.str() << std::endl;
     }

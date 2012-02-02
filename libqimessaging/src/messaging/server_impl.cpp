@@ -18,7 +18,7 @@
 #include <qimessaging/exceptions.hpp>
 
 namespace qi {
-  using qi::Message;
+  using qi::DataStream;
 
   namespace detail {
 
