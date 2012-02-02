@@ -21,12 +21,12 @@ public:
     ts->setDelegate(this);
   }
 
-  ~RemoteServer()
+  ~ServiceDirectoryServer()
   {
     delete ts;
   }
 
-  void setThread(NetworkThread *n)
+  void setThread(qi::NetworkThread *n)
   {
     nthd = n;
   }
@@ -52,7 +52,7 @@ public:
   }
 
 private:
-  NetworkThread       *nthd;
+  qi::NetworkThread   *nthd;
   qi::TransportServer *ts;
 };
 
@@ -94,9 +94,17 @@ int main(int argc, char *argv[])
       //   while (1)
       //     sleep(1);
       // }
+      qi::NetworkThread nt;
+      ServiceDirectoryServer sds;
 
-      qi::ServiceDirectory sd(masterAddress);
-      sd.exec();
+      sds.setThread(&nt);
+      sleep(1);
+      sds.start("127.0.0.1", 5555);
+      //sds.
+      //qi::ServiceDirectory sd(masterAddress);
+      //sd.exec();
+      while (1)
+        qi::os::sleep(1);
       //qi::Service svc(masterAddress);
 
       //svc.advertise("qi.servicedirectory",

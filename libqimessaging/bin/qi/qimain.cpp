@@ -8,8 +8,9 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <qimessaging/master.hpp>
+#include <qimessaging/network_client.hpp>
 #include <qimessaging/client.hpp>
+#include <qimessaging/transport.hpp>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -105,17 +106,21 @@ namespace po = boost::program_options;
 //   //  std::cout << "result:" << result << std::endl;
 // }
 
-typedef std::map<std::string, std::string>  StringMap;
+typedef std::vector<std::string>  StringVector;
 
 
 void qi_call(std::string addr) {
   qi::NetworkClient nc;
 
+  qi::NetworkThread nt;
+
+  nc.setThread(&nt);
   nc.connect(addr);
   nc.waitForConnected();
 
-  StringMap           sm = nc.machines();
-  StringMap::iterator it;
+  StringVector           sm = nc.machines();
+  StringVector::iterator it;
+
 
   for (it = sm.begin(); it != sm.end(); ++it)
     std::cout << "machine" << *it << std::endl;

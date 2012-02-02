@@ -18,6 +18,8 @@
 
 # include <boost/thread.hpp>
 
+namespace qi {
+
 class NetworkThread
 {
 public:
@@ -33,5 +35,6 @@ private:
   struct event_base *_base;
   boost::thread      _thd;
 };
+}
 
 #endif /* !NETWORK_THREAD_PP_ */

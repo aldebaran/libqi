@@ -16,6 +16,8 @@
 
 #include <qimessaging/transport/network_thread.hpp>
 
+namespace qi {
+
 static void errorcb(struct bufferevent *bev,
                     short error,
                     void *ctx)
@@ -54,7 +56,7 @@ void NetworkThread::run()
     return;
 
   struct bufferevent *bev = bufferevent_socket_new(_base, -1, BEV_OPT_CLOSE_ON_FREE);
-  bufferevent_setcb(bev, NULL, NULL, errorcb, this);
+  bufferevent_setcb(bev, NULL, NULL, ::qi::errorcb, this);
   bufferevent_enable(bev, EV_READ|EV_WRITE);
 
   event_base_dispatch(_base);
@@ -63,4 +65,6 @@ void NetworkThread::run()
 struct event_base* NetworkThread::getEventBase()
 {
   return _base;
+}
+
 }

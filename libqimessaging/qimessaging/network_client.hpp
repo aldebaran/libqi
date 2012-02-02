@@ -26,17 +26,32 @@
 #ifndef   	NETWORK_CLIENT_HPP_
 # define   	NETWORK_CLIENT_HPP_
 
+#include <qimessaging/transport/transport_socket.hpp>
+
+#include <vector>
+#include <string>
+
 namespace qi {
+
+  class NetworkThread;
 
   class MachineInfo {
   public:
     std::string uuid;
   };
 
-  class NetworkClient {
+  class NetworkClient : public qi::TransportSocketDelegate {
   public:
     NetworkClient();
     virtual ~NetworkClient();
+
+    void setThread(qi::NetworkThread *n);
+
+
+    void onConnected(const std::string &msg);
+    void onWrite(const std::string &msg);
+    void onRead(const std::string &msg);
+
 
     void connect(const std::string masterAddress);
     bool disconnect();
@@ -47,18 +62,16 @@ namespace qi {
     void registerMachine(const qi::MachineInfo& m);
     void unregisterMachine(const qi::MachineInfo& m);
 
+    std::vector<std::string> machines();
+
     bool isInitialized() const;
 
   protected:
     std::string _masterAddress;
 
     bool _isInitialized;
-
-    /// <summary> The qi Context</summary>
-    qi::Context*                _qiContextPtr;
-
-    /// <summary> The transport client used to talk with the master </summary>
-    qi::TransportSocket _transportClient;
+    qi::NetworkThread   *nthd;
+    qi::TransportSocket *tc;
   };
 }
 
