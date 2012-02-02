@@ -2,15 +2,60 @@
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010 Aldebaran Robotics
+** Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #include <iostream>
-#include <qimessaging/master.hpp>
+#include <qimessaging/transport.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
+
+class ServiceDirectoryServer : public qi::TransportServerDelegate
+{
+public:
+  ServiceDirectoryServer()
+  {
+    ts = new qi::TransportServer();
+    ts->setDelegate(this);
+  }
+
+  ~RemoteServer()
+  {
+    delete ts;
+  }
+
+  void setThread(NetworkThread *n)
+  {
+    nthd = n;
+  }
+
+  void start(const std::string &address, unsigned short port)
+  {
+    ts->start(address, port, nthd->getEventBase());
+  }
+
+  virtual void onConnected(const std::string &msg)
+  {
+    std::cout << "connected: " << msg << std::endl;
+  }
+
+  virtual void onWrite(const std::string &msg)
+  {
+    std::cout << "written: " << msg << std::endl;
+  }
+
+  virtual void onRead(const std::string &msg)
+  {
+    std::cout << "read: " << msg << std::endl;
+  }
+
+private:
+  NetworkThread       *nthd;
+  qi::TransportServer *ts;
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -42,12 +87,21 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
       //qi::Context* context = new qi::Context();
       //qi::Master master(masterAddress, context);
-      qi::Master master(masterAddress);
-      master.run();
-      if (master.isInitialized()) {
-        while (1)
-          sleep(1);
-      }
+
+      // qi::Master master(masterAddress);
+      // master.run();
+      // if (master.isInitialized()) {
+      //   while (1)
+      //     sleep(1);
+      // }
+
+      qi::ServiceDirectory sd(masterAddress);
+      sd.exec();
+      //qi::Service svc(masterAddress);
+
+      //svc.advertise("qi.servicedirectory",
+
+
     } else {
       std::cout << desc << "\n";
     }

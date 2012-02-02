@@ -12,12 +12,11 @@
 #define _QIMESSAGING_TRANSPORT_HPP_
 
 // context that could be shared between nodes
-#include <qimessaging/transport/transport_context.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
 // base services
 #include <qimessaging/transport/transport_server.hpp>
-#include <qimessaging/transport/transport_client.hpp>
-#include <qimessaging/transport/transport_publisher.hpp>
-#include <qimessaging/transport/transport_subscriber.hpp>
+#include <qimessaging/transport/transport_socket.hpp>
+
 
 #endif  // _QIMESSAGING_TRANSPORT_HPP_
