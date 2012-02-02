@@ -27,7 +27,7 @@ public:
     delete ts;
   }
 
-  void setThread(NetworkThread *n)
+  void setThread(qi::NetworkThread *n)
   {
     nthd = n;
   }
@@ -54,13 +54,13 @@ public:
   }
 
 private:
-  NetworkThread   *nthd;
+  qi::NetworkThread   *nthd;
   qi::TransportServer *ts;
 };
 
 int main(int argc, char *argv[])
 {
-  NetworkThread *nthd = new NetworkThread();
+  qi::NetworkThread *nthd = new qi::NetworkThread();
   sleep(1);
   RemoteServer rs;
   rs.setThread(nthd);

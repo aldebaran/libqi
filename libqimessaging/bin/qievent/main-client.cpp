@@ -51,7 +51,7 @@ public:
     tc->waitForConnected(300);
   }
 
-  void setThread(NetworkThread *n)
+  void setThread(qi::NetworkThread *n)
   {
     nthd = n;
   }
@@ -76,14 +76,14 @@ public:
   }
 
 private:
-  NetworkThread   *nthd;
+  qi::NetworkThread   *nthd;
   qi::TransportSocket *tc;
 };
 
 
 int main(int argc, char *argv[])
 {
-  NetworkThread *nthd = new NetworkThread();
+  qi::NetworkThread *nthd = new qi::NetworkThread();
   sleep(1);
   RemoteService rs;
   rs.setThread(nthd);

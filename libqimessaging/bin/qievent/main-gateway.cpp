@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-  NetworkThread *n = new NetworkThread();
+  qi::NetworkThread *n = new qi::NetworkThread();
   sleep(1);
   qi::Gateway g;
   g.start("127.0.0.1", 9559, n);
