@@ -366,7 +366,8 @@ void qi_server_advertise_python_service(qi_server_t *server, const char *name, P
   printf("register callback %p\n", func);
   //increase the ref, because we store the object
   Py_XINCREF(func);
-  qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
+  //TODO: ctaf
+  //qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
 }
 
 PyObject *qi_client_python_call(qi_client_t *client, const char *signature, PyObject *args) {

@@ -14,7 +14,7 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_object_t;
+  typedef struct {} qi_object_t;
 
   typedef void (*BoundMethod)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
 
@@ -22,13 +22,13 @@ extern "C"
   void         qi_object_destroy(qi_object_t *object);
   void         qi_object_connect(qi_object_t *object, const char *address);
 
-  bool         qi_object_register_method(qi_object_t *object, const char *name, BoundMethod func, void *data);
-  bool         qi_object_register_signal(qi_object_t *object, const char *name);
-  bool         qi_object_register_slot(qi_object_t *object, const char *name);
-  bool         qi_object_register_property(qi_object_t *object, const char *name);
+  int          qi_object_register_method(qi_object_t *object, const char *name, BoundMethod func, void *data);
+  int          qi_object_register_signal(qi_object_t *object, const char *name);
+  int          qi_object_register_slot(qi_object_t *object, const char *name);
+  int          qi_object_register_property(qi_object_t *object, const char *name);
 
-  bool         qi_object_set_property(qi_object_t *object, const char *name);
-  bool         qi_object_get_property(qi_object_t *object, const char *name);
+  int          qi_object_set_property(qi_object_t *object, const char *name);
+  int          qi_object_get_property(qi_object_t *object, const char *name);
 
 #ifdef __cplusplus
 }

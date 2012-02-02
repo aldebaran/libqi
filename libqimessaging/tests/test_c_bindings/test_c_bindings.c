@@ -46,7 +46,8 @@ int main(int argc, char **argv)
 
   qi_server_t *server = qi_server_create("serv");
   qi_server_connect(server, argv[1]);
-  qi_server_advertise_service(server, "brandade:::", &brandade, 0);
+  //CTAF:TODO
+  //qi_server_advertise_service(server, "brandade:::", &brandade, 0);
   sleep(1);
 
   qi_message_t *message = qi_message_create();
