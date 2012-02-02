@@ -61,6 +61,8 @@ public:
   // if msecs < 0 no timeout
   bool waitForConnected(int msecs = 30000);
   bool waitForDisconnected(int msecs = 30000);
+  bool waitForId(int id, int msecs = 30000);
+  void read(qi::Message *msg);
 
   bool send(const qi::Message &msg);
 

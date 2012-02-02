@@ -209,6 +209,15 @@ bool TransportSocket::waitForDisconnected(int msecs)
   return true;
 }
 
+bool TransportSocket::waitForId(int id, int msecs)
+{
+
+}
+
+void TransportSocket::read(qi::Message *msg)
+{
+}
+
 bool TransportSocket::send(const qi::Message &msg)
 {
   if (_p->connected && !bufferevent_write(_p->bev, msg.str().c_str(), msg.str().size()))

@@ -55,6 +55,15 @@ public:
     std::cout << "msg.dest: " << msg.destination() << std::endl;
     std::cout << "msg.path: " << msg.path() << std::endl;
     //std::cout << "msg.data: " << msg.data() << std::endl;
+
+    qi::Message retval;
+
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    ts->send(retval);
   }
 
 private:

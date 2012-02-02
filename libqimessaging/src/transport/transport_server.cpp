@@ -220,6 +220,11 @@ void TransportServer::start(const std::string &address,
   event_add(sockEvent, NULL);
 }
 
+bool TransportServer::send(const qi::Message &msg)
+{
+
+}
+
 void TransportServer::setDelegate(TransportServerDelegate *delegate)
 {
   _p->tsd = delegate;

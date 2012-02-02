@@ -84,6 +84,7 @@ public:
                short events,
                void *context);
 
+  bool send(const qi::Message &msg);
   // Map of connected client
   ClientConnectionMap  clientConnected;
 

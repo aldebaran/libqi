@@ -72,7 +72,9 @@ std::vector<std::string> NetworkClient::machines() {
   msg.setDestination("qi.servicedirectorymanager");
   msg.setPath("machines");
   tc->send(msg);
-
+  tc->waitForId(msg.id());
+  qi::Message ans;
+  tc->read(&msg);
   return result;
 }
 
