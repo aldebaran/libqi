@@ -10,38 +10,8 @@
 #include <qimessaging/datastream.hpp>
 #include <vector>
 
+
 namespace qi {
-
-  Message::Message(const std::string &data)
-  {
-    qi::DataStream ds(data);
-    char c;
-    int  i;
-
-    ds >> c;
-    _type = (MessageType)c;
-    ds >> i;
-    _id = i;
-    ds >> _src;
-    ds >> _dest;
-    ds >> _path;
-    ds >> _data;
-  }
-
-  std::string Message::str()const {
-    std::string data;
-
-    qi::DataStream ds(data);
-
-    ds << (char)_type;
-    ds << (int)_id;
-    ds << _src;
-    ds << _dest;
-    ds << _path;
-    ds << _data;
-    return ds.str();
-  }
-
 
 #if 0
 #define __QI_DEBUG_SERIALIZATION_DATA_R(x, d) {            \

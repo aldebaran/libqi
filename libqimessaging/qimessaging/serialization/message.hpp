@@ -58,6 +58,10 @@ namespace qi {
     inline void setPath(const std::string &path) { _path = path; }
     inline std::string path() const              { return _path; }
 
+    inline void setData(const std::string &data) { _data = data; }
+    inline std::string data() const              { return _data; }
+
+
   protected:
     MessageType  _type;
     unsigned int _id;
@@ -68,5 +72,8 @@ namespace qi {
   };
 
 }
+
+std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
+
 
 #endif  // _QIMESSAGING_SERIALIZATION_MESSAGE_HPP_
