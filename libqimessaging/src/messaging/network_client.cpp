@@ -74,19 +74,19 @@ std::vector<std::string> NetworkClient::machines() {
   return result;
 }
 
-void NetworkClient::onConnected(const std::string &msg)
+void NetworkClient::onConnected(const Message &msg)
 {
-  std::cout << "connected: " << msg << std::endl;
+  std::cout << "connected: " << msg.str() << std::endl;
 }
 
-void NetworkClient::onWrite(const std::string &msg)
+void NetworkClient::onWrite(const Message &msg)
 {
-  std::cout << "written: " << msg << std::endl;
+  std::cout << "written: " << msg.str() << std::endl;
 }
 
-void NetworkClient::onRead(const std::string &msg)
+void NetworkClient::onRead(const Message &msg)
 {
-  std::cout << "read: " << msg << std::endl;
+  std::cout << "read: " << msg.str() << std::endl;
 }
 
 

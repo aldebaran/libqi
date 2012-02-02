@@ -31,15 +31,16 @@
 
 # include <event2/event.h>
 # include <event2/bufferevent.h>
+# include <qimessaging/serialization/message.hpp>
 
 namespace qi {
 
 class TransportSocketDelegate
 {
 public:
-  virtual void onConnected(const std::string &msg = "") = 0;
-  virtual void onWrite(const std::string &msg = "")     = 0;
-  virtual void onRead(const std::string &msg = "")      = 0;
+  virtual void onConnected(const qi::Message &msg) = 0;
+  virtual void onWrite(const qi::Message &msg)     = 0;
+  virtual void onRead(const qi::Message &msg)      = 0;
 };
 
 struct TransportSocketPrivate;
@@ -61,7 +62,7 @@ public:
   bool waitForConnected(int msecs = 30000);
   bool waitForDisconnected(int msecs = 30000);
 
-  bool send(const std::string &msg);
+  bool send(const qi::Message &msg);
 
   void setDelegate(TransportSocketDelegate *delegate);
 

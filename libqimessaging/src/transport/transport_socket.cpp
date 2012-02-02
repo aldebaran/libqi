@@ -87,7 +87,8 @@ void TransportSocket::readcb(struct bufferevent *bev,
 void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
 {
-  _p->tcd->onWrite();
+  qi::Message msg;
+  _p->tcd->onWrite(msg);
 }
 
 void TransportSocket::eventcb(struct bufferevent *bev,
@@ -96,7 +97,8 @@ void TransportSocket::eventcb(struct bufferevent *bev,
 {
   if (events & BEV_EVENT_CONNECTED)
   {
-    _p->tcd->onConnected();
+    qi::Message msg;
+    _p->tcd->onConnected(msg);
     _p->connected = true;
   }
   else if (events & BEV_EVENT_EOF)
@@ -207,9 +209,9 @@ bool TransportSocket::waitForDisconnected(int msecs)
   return true;
 }
 
-bool TransportSocket::send(const std::string &msg)
+bool TransportSocket::send(const qi::Message &msg)
 {
-  if (_p->connected && !bufferevent_write(_p->bev, msg.c_str(), msg.size()))
+  if (_p->connected && !bufferevent_write(_p->bev, msg.str().c_str(), msg.str().size()))
     return true;
 
   return false;

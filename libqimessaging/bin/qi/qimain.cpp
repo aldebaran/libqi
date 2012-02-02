@@ -12,6 +12,7 @@
 #include <qimessaging/client.hpp>
 #include <qimessaging/transport.hpp>
 #include <boost/program_options.hpp>
+#include <qi/os.hpp>
 
 namespace po = boost::program_options;
 
@@ -115,6 +116,7 @@ void qi_call(std::string addr) {
   qi::NetworkThread nt;
 
   nc.setThread(&nt);
+  qi::os::sleep(1);
   nc.connect(addr);
   nc.waitForConnected();
 

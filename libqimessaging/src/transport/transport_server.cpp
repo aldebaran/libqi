@@ -144,7 +144,8 @@ void TransportServer::writecb(struct bufferevent* bev, void* context)
   (void) bev;
 
   ClientConnection *cc = static_cast<ClientConnection*>(context);
-  _p->tsd->onWrite();
+  qi::Message msg;
+  _p->tsd->onWrite(msg);
 }
 
 void TransportServer::eventcb(struct bufferevent *bev,

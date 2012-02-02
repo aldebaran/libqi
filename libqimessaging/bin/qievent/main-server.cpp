@@ -38,19 +38,19 @@ public:
     ts->start(address, port, nthd->getEventBase());
   }
 
-  virtual void onConnected(const std::string &msg)
+  virtual void onConnected(const qi::Message &msg)
   {
-    std::cout << "connected: " << msg << std::endl;
+    std::cout << "connected: " << msg.str() << std::endl;
   }
 
-  virtual void onWrite(const std::string &msg)
+  virtual void onWrite(const qi::Message &msg)
   {
-    std::cout << "written: " << msg << std::endl;
+    std::cout << "written: " << msg.str() << std::endl;
   }
 
-  virtual void onRead(const std::string &msg)
+  virtual void onRead(const qi::Message &msg)
   {
-    std::cout << "read: " << msg << std::endl;
+    std::cout << "read: " << msg.str() << std::endl;
   }
 
 private:

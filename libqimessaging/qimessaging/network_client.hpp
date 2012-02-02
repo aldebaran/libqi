@@ -48,9 +48,9 @@ namespace qi {
     void setThread(qi::NetworkThread *n);
 
 
-    void onConnected(const std::string &msg);
-    void onWrite(const std::string &msg);
-    void onRead(const std::string &msg);
+    void onConnected(const qi::Message &msg);
+    void onWrite(const qi::Message &msg);
+    void onRead(const qi::Message &msg);
 
 
     void connect(const std::string masterAddress);

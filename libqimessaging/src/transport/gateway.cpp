@@ -56,35 +56,35 @@ Gateway::~Gateway()
   delete _p;
 }
 
-void Gateway::onConnected(const std::string &msg)
+void Gateway::onConnected(const qi::Message &msg)
 {
-  std::cout << "onConnect: " << msg << std::endl;
+  std::cout << "onConnect: " << msg.str() << std::endl;
 }
 
-void Gateway::onWrite(const std::string &msg)
+void Gateway::onWrite(const qi::Message &msg)
 {
-  std::cout << "onWrite: " << msg << std::endl;
+  std::cout << "onWrite: " << msg.str() << std::endl;
 }
 
-void Gateway::onRead(const std::string &msg)
+void Gateway::onRead(const qi::Message &msg)
 {
   // Parse msg
-  std::cout << "onRead: " << msg << std::endl;
-  Message m = _p->parseMessage(msg);
+  std::cout << "onRead: " << msg.str() << std::endl;
+  Message m = _p->parseMessage(msg.str());
 
   switch (m.type)
   {
-  case Message::call:
-    _p->callMessage(m, msg);
+  case Message::Call:
+    _p->callMessage(m, msg.str());
     break;
-  case Message::answer:
-    _p->answerMessage(m, msg);
+  case Message::Answer:
+    _p->answerMessage(m, msg.str());
     break;
-  case Message::event:
-    _p->eventMessage(m, msg);
+  case Message::Event:
+    _p->eventMessage(m, msg.str());
     break;
-  case Message::error:
-    _p->errorMessage(m, msg);
+  case Message::Error:
+    _p->errorMessage(m, msg.str());
   default:
     break;
   }
@@ -116,13 +116,13 @@ Message GatewayPrivate::parseMessage(const std::string &msg)
   res = msg.substr(begin, end - begin);
   begin = end + 1;
   if (res == "call")
-    m.type = Message::call;
+    m.type = Message::Call;
   else if (res == "answer")
-    m.type = Message::answer;
+    m.type = Message::Answer;
   else if (res == "event")
-    m.type = Message::event;
+    m.type = Message::Event;
   else if (res == "error")
-    m.type = Message::error;
+    m.type = Message::Error;
   else
     return m;
 

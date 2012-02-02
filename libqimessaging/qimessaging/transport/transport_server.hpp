@@ -16,7 +16,7 @@
 # include <string>
 # include <map>
 # include <qi/macro.hpp>
-
+# include <qimessaging/serialization/message.hpp>
 # include <event2/event.h>
 # include <event2/bufferevent.h>
 
@@ -55,9 +55,9 @@ typedef std::map<std::string, ClientConnection*>::iterator ClientConnectionMapIt
 class TransportServerDelegate
 {
 public:
-  virtual void onConnected(const std::string &msg = "") = 0;
-  virtual void onWrite(const std::string &msg = "")     = 0;
-  virtual void onRead(const std::string &msg = "")      = 0;
+  virtual void onConnected(const qi::Message &msg) = 0;
+  virtual void onWrite(const qi::Message &msg)     = 0;
+  virtual void onRead(const qi::Message &msg)      = 0;
 };
 
 class TransportServer
