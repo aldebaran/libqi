@@ -3,6 +3,7 @@
 TODO
 ====
 
+- TEST TEST TEST (auto and perf)
 - remove serializer => use qi::DataStream instead (for map,list, ...)
 - implement qimaster,networkclient, MachineInfo, EndpointInfo, ServiceInfo
 - write qi::Object
