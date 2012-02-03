@@ -14,7 +14,6 @@
 #include "src/messaging/server_impl.hpp"
 #include "src/messaging/mutexednamelookup.hpp"
 #include "src/messaging/address_manager.hpp"
-#include "src/messaging/topic.hpp"
 #include <qimessaging/functors/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 //#include <qimessaging/transport/transport_forwarder.hpp> // TODO hide this
