@@ -38,11 +38,12 @@ endif()
 qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
 qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp" "qimessaging/perf/*.hpp" "src/perf/*.*pp")
 qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
 
-qi_submodule_create("qi-messaging-c"   "qimessaging/*.h" "src/c/*.[hc][px][px]")
+qi_submodule_create("qi-messaging-c"   "c/qimessaging/*.h" "c/src/*.[hc][px][px]")
 qi_submodule_create("qi-preference"    qipreference/preference.hpp src/preference/preference.cpp)
 qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
 qi_submodule_add("qi-messaging-src"    "src/messaging/network/*.[ch][px][px]")
