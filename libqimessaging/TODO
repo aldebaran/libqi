@@ -7,5 +7,7 @@ TODO
 - remove serializer => use qi::DataStream instead (for map,list, ...)
 - implement qimaster,networkclient, MachineInfo, EndpointInfo, ServiceInfo
 - write qi::Object
+- remove Master/MasterImpl.
+- remove Client (they just are qi::Object)
 - allow getting and binding services (qi::Object) (networkclient.service(name))
 - abstract transport
