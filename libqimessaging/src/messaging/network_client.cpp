@@ -77,6 +77,9 @@ std::vector<std::string> NetworkClient::machines()
   tc->waitForId(msg.id());
   qi::Message ans;
   tc->read(msg.id(), &ans);
+
+  std::cout << ans << std::endl;
+
   return result;
 }
 

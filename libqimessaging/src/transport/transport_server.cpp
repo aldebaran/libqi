@@ -26,9 +26,6 @@
 namespace qi {
 #define MAX_LINE 16384
 
-// Fake unique ID for client
-static int uniqueId = 0;
-
 
 static void readcb(struct bufferevent *bev,
                    void *context)
@@ -109,8 +106,7 @@ void TransportServer::accept(evutil_socket_t listener,
     evutil_make_socket_nonblocking(fd);
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
 
-    ClientConnection *cc = new ClientConnection(uniqueId++, bev, this);
-    clientConnected[cc->_id] = cc;
+    ClientConnection *cc = new ClientConnection(std::string(), bev, this);
     bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, cc);
 
     bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
@@ -134,7 +130,13 @@ void TransportServer::readcb(struct bufferevent *bev,
     std::string ss(buf, n);
     qi::Message msg(ss);
 
-    msg.setId(cc->_id);
+    ClientConnectionMap::iterator it;
+    it = clientConnected.find(msg.source());
+    if (it == clientConnected.end())
+    {
+      cc->_id = msg.source();
+      clientConnected[msg.source()] = cc;
+    }
     _p->tsd->onRead(msg);
   }
 }
@@ -221,7 +223,7 @@ void TransportServer::start(const std::string &address,
 bool TransportServer::send(const qi::Message &msg)
 {
   ClientConnectionMap::iterator it;
-  it = clientConnected.find(msg.id());
+  it = clientConnected.find(msg.destination());
   if (it != clientConnected.end())
   {
     ClientConnection* cc = it->second;
