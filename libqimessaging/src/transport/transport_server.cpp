@@ -109,9 +109,7 @@ void TransportServer::accept(evutil_socket_t listener,
     evutil_make_socket_nonblocking(fd);
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
 
-    std::stringstream ss;
-    ss << uniqueId++;
-    ClientConnection *cc = new ClientConnection(ss.str(), bev, this);
+    ClientConnection *cc = new ClientConnection(uniqueId++, bev, this);
     clientConnected[cc->_id] = cc;
     bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, cc);
 
@@ -133,10 +131,10 @@ void TransportServer::readcb(struct bufferevent *bev,
 
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    //std::stringstream newMsg;
-    //newMsg << cc->_id << "." << buf;
     std::string ss(buf, n);
     qi::Message msg(ss);
+
+    msg.setId(cc->_id);
     _p->tsd->onRead(msg);
   }
 }
@@ -222,7 +220,15 @@ void TransportServer::start(const std::string &address,
 
 bool TransportServer::send(const qi::Message &msg)
 {
-
+  ClientConnectionMap::iterator it;
+  it = clientConnected.find(msg.id());
+  if (it != clientConnected.end())
+  {
+    ClientConnection* cc = it->second;
+    if (!bufferevent_write(cc->_bev, msg.str().c_str(), msg.str().size()))
+      return true;
+  }
+  return false;
 }
 
 void TransportServer::setDelegate(TransportServerDelegate *delegate)

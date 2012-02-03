@@ -27,7 +27,7 @@ class TransportServerPrivate;
 
 struct ClientConnection
 {
-  explicit ClientConnection(const std::string &id,
+  explicit ClientConnection(unsigned int id,
                             struct bufferevent *bev,
                             TransportServer *parent)
     : _id(id)
@@ -41,7 +41,7 @@ struct ClientConnection
     bufferevent_free(_bev);
   }
 
-  std::string         _id;
+  unsigned int        _id;
   struct bufferevent *_bev;
   // We need the parent to call the differents callback
   // with the right client connnection ID
@@ -49,8 +49,7 @@ struct ClientConnection
   TransportServer    *_parent;
 };
 
-typedef std::map<std::string, ClientConnection*>           ClientConnectionMap;
-typedef std::map<std::string, ClientConnection*>::iterator ClientConnectionMapIterator;
+typedef std::map<unsigned int, ClientConnection*>           ClientConnectionMap;
 
 class TransportServerDelegate
 {
