@@ -62,7 +62,8 @@ bool NetworkClient::isInitialized() const
 {
 }
 
-std::vector<std::string> NetworkClient::machines() {
+std::vector<std::string> NetworkClient::machines()
+{
   std::vector<std::string> result;
 
   qi::Message msg;
@@ -71,10 +72,11 @@ std::vector<std::string> NetworkClient::machines() {
   msg.setSource("moi");
   msg.setDestination("qi.servicedirectorymanager");
   msg.setPath("machines");
+
   tc->send(msg);
   tc->waitForId(msg.id());
   qi::Message ans;
-  tc->read(&msg);
+  tc->read(msg.id(), &ans);
   return result;
 }
 

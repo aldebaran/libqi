@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <cstring>
+#include <map>
+
 #include <qi/log.hpp>
 
 #include <event2/util.h>
@@ -39,9 +41,11 @@ struct TransportSocketPrivate
   {
   }
 
-  TransportSocketDelegate *tcd;
-  struct bufferevent      *bev;
-  bool                     connected;
+  TransportSocketDelegate             *tcd;
+  struct bufferevent                  *bev;
+  bool                                 connected;
+  std::map<unsigned int, qi::Message*> msgSend;
+
 };
 
 
@@ -80,7 +84,10 @@ void TransportSocket::readcb(struct bufferevent *bev,
 
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    _p->tcd->onRead(std::string(buf));
+    std::string m(buf, n);
+    qi::Message *ans = new qi::Message(m);
+    _p->msgSend[ans->id()] = ans;
+    _p->tcd->onRead(*ans);
   }
 }
 
@@ -211,7 +218,32 @@ bool TransportSocket::waitForDisconnected(int msecs)
 
 bool TransportSocket::waitForId(int id, int msecs)
 {
+  std::map<unsigned int, qi::Message*>::iterator it;
+  // no timeout
+  if (msecs < 0)
+  {
+    do
+    {
+      it = _p->msgSend.find(id);
+    }
+    while (it == _p->msgSend.end());
 
+    return true;
+  }
+
+  do
+  {
+    qi::os::msleep(1);
+    msecs--;
+    it = _p->msgSend.find(id);
+  }
+  while (it == _p->msgSend.end() && msecs > 0);
+
+  // timeout
+  if (msecs == 0)
+    return false;
+
+  return true;
 }
 
 void TransportSocket::read(qi::Message *msg)
@@ -221,8 +253,9 @@ void TransportSocket::read(qi::Message *msg)
 bool TransportSocket::send(const qi::Message &msg)
 {
   if (_p->connected && !bufferevent_write(_p->bev, msg.str().c_str(), msg.str().size()))
+  {
     return true;
-
+  }
   return false;
 }
 
