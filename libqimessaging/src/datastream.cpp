@@ -94,5 +94,14 @@ namespace qi {
     return *this;
   }
 
+  qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &value)
+  {
+  }
+
+  qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &value)
+  {
+
+  }
+
 }
 
