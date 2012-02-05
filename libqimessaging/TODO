@@ -4,7 +4,6 @@ TODO
 ====
 
 - TEST TEST TEST (auto and perf)
-- remove serializer => use qi::DataStream instead (for map,list, ...)
 - serialization: support unsigned everywhere
 - implement qimaster,networkclient, MachineInfo, EndpointInfo, ServiceInfo
 - write qi::Object
