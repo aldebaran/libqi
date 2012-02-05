@@ -19,7 +19,7 @@
 # include <qimessaging/transport/transport_socket.hpp>
 # include <qimessaging/transport/transport_server.hpp>
 # include <qimessaging/transport/network_thread.hpp>
-# include <qimessaging/serialization/message.hpp>
+# include <qimessaging/message.hpp>
 
 namespace qi {
 

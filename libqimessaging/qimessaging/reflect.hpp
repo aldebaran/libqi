@@ -13,7 +13,7 @@
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/message.hpp>
 
 #define QI_REFLECT(TYPE, MEMBERS)                                                   \
   QI_SIGNATURE_REFLECT(TYPE, MEMBERS);                                              \

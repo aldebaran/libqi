@@ -16,7 +16,7 @@
 # include <string>
 # include <map>
 # include <qi/macro.hpp>
-# include <qimessaging/serialization/message.hpp>
+# include <qimessaging/message.hpp>
 # include <event2/event.h>
 # include <event2/bufferevent.h>
 

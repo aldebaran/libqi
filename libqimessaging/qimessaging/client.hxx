@@ -14,7 +14,6 @@
 #ifndef _QIMESSAGING_CLIENT_HXX_
 #define _QIMESSAGING_CLIENT_HXX_
 
-#include <qimessaging/serialization.hpp>
 
 namespace qi {
 

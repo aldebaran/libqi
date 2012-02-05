@@ -9,7 +9,7 @@
 #ifndef _QIMESSAGING_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_
 #define _QIMESSAGING_SERIALIZATION_MESSAGE_COPY_VISITOR_HPP_
 
-#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/message.hpp>
 #include <qimessaging/signature/signature_iterator.hpp>
 
 namespace qi {

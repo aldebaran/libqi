@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include <qimessaging/signature.hpp>
-#include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
 #include <qimessaging/serialization/message_visitor.hpp>
 #include <qimessaging/serialization/message_copy_visitor.hpp>
 #include <gtest/gtest.h>

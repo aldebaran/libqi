@@ -6,7 +6,7 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/exceptions.hpp>
 #include <vector>

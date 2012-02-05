@@ -6,7 +6,8 @@
 */
 
 #include <qimessaging/message.h>
-#include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
+#include <cstring>
 
 /// Message
 qi_message_t *qi_message_create()

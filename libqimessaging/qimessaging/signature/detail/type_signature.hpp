@@ -18,7 +18,7 @@
 # include <boost/function_types/is_function_pointer.hpp>
 # include <boost/function_types/is_function.hpp>
 # include <qimessaging/value.hpp>
-//# include <qimessaging/serialization/message.hpp>
+//# include <qimessaging/message.hpp>
 
 namespace qi {
   namespace detail {

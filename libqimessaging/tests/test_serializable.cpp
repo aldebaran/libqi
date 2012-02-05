@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/reflect.hpp>
 

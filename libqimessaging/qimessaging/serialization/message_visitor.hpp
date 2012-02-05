@@ -10,7 +10,7 @@
 #define _QIMESSAGING_SERIALIZATION_MESSAGE_VISITOR_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/serialization/message.hpp>
+#include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/signature/signature_iterator.hpp>
 
