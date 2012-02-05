@@ -16,6 +16,7 @@
 #define QI_FUNCTOR_DEBUG(...)
 
 #include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi
 {

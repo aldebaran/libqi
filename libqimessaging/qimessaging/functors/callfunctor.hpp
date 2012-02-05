@@ -25,7 +25,7 @@ namespace qi
 
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -42,10 +42,10 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
+    args << p0;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -54,7 +54,7 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
+    args << p0;
     f->call(args, ret);
   }
 
@@ -64,11 +64,11 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
+    args << p0;
+    args << p1;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -77,8 +77,8 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
+    args << p0;
+    args << p1;
     f->call(args, ret);
   }
 
@@ -88,12 +88,12 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
+    args << p0;
+    args << p1;
+    args << p2;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -102,9 +102,9 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
+    args << p0;
+    args << p1;
+    args << p2;
     f->call(args, ret);
   }
 
@@ -114,13 +114,13 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -129,10 +129,10 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
     f->call(args, ret);
   }
 
@@ -142,14 +142,14 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -158,11 +158,11 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
     f->call(args, ret);
   }
 
@@ -172,15 +172,15 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -189,12 +189,12 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
     f->call(args, ret);
   }
 
@@ -204,16 +204,16 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -222,13 +222,13 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
     f->call(args, ret);
   }
 
@@ -238,17 +238,17 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
-    qi::serialization::serialize<P7>::write(args, p7);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
+    args << p7;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -257,14 +257,14 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
-    qi::serialization::serialize<P7>::write(args, p7);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
+    args << p7;
     f->call(args, ret);
   }
 
@@ -274,18 +274,18 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
-    qi::serialization::serialize<P7>::write(args, p7);
-    qi::serialization::serialize<P8>::write(args, p8);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
+    args << p7;
+    args << p8;
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 
@@ -294,15 +294,15 @@ namespace qi
     qi::DataStream args;
     qi::DataStream ret;
 
-    qi::serialization::serialize<P0>::write(args, p0);
-    qi::serialization::serialize<P1>::write(args, p1);
-    qi::serialization::serialize<P2>::write(args, p2);
-    qi::serialization::serialize<P3>::write(args, p3);
-    qi::serialization::serialize<P4>::write(args, p4);
-    qi::serialization::serialize<P5>::write(args, p5);
-    qi::serialization::serialize<P6>::write(args, p6);
-    qi::serialization::serialize<P7>::write(args, p7);
-    qi::serialization::serialize<P8>::write(args, p8);
+    args << p0;
+    args << p1;
+    args << p2;
+    args << p3;
+    args << p4;
+    args << p5;
+    args << p6;
+    args << p7;
+    args << p8;
     f->call(args, ret);
   }
 

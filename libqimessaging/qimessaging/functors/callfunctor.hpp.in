@@ -36,7 +36,7 @@ namespace qi
     #end for
     f->call(args, ret);
     R r;
-    qi::serialization::serialize<R>::read(ret, r);
+    ret >> r;
     return r;
   }
 

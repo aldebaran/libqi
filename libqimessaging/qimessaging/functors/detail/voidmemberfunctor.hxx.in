@@ -6,7 +6,7 @@
 *  Author(s):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #raw
@@ -43,8 +43,9 @@ namespace detail {
       P$j p$j;
       #end for
 
+
       #for $j in range($i)
-      qi::serialization::serialize<P$j>::read(params, p$j);
+        params >> p$j;
       #end for
       (fObject->*fFunction)($generate_callparam_list($i));
     };

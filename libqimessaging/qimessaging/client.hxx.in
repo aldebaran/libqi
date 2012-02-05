@@ -61,7 +61,7 @@ namespace qi {
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 #end for

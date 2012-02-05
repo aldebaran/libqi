@@ -16,7 +16,7 @@
 
 #include <string>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <qimessaging/api.hpp>
 

@@ -9,7 +9,7 @@
 #include <qi/log.hpp>
 #include "src/messaging/network/ip_address.hpp"
 #include "src/messaging/master_client.hpp"
-#include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
 #include <qimessaging/transport/buffer.hpp>
 #include "src/messaging/network/master_endpoint.hpp"
 

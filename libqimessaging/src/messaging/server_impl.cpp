@@ -16,6 +16,7 @@
 #include "src/messaging/network/master_endpoint.hpp"
 #include <qi/log.hpp>
 #include <qimessaging/exceptions.hpp>
+#include <qimessaging/signature.hpp>
 
 namespace qi {
 

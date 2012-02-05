@@ -7,7 +7,7 @@
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #raw
@@ -43,9 +43,9 @@ namespace detail {
       #end for
 
       #for $j in range($i)
-      qi::serialization::serialize<P$j>::read(params, p$j);
+        params >> p$j;
       #end for
-      qi::serialization::serialize<R>::write(result, (*fFunction)($generate_callparam_list($i)));
+        result << (*fFunction)($generate_callparam_list($i));
     };
 
   private:

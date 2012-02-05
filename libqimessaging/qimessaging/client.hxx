@@ -33,7 +33,7 @@ namespace qi {
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -47,7 +47,7 @@ namespace qi {
     void (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
+    request << p0;
     xCall(signature, request, reply);
   }
 
@@ -61,12 +61,12 @@ namespace qi {
     R (*f)(const P0 &p0)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
+    request << p0;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -80,8 +80,8 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
+    request << p0;
+    request << p1;
     xCall(signature, request, reply);
   }
 
@@ -95,13 +95,13 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
+    request << p0;
+    request << p1;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -115,9 +115,9 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
+    request << p0;
+    request << p1;
+    request << p2;
     xCall(signature, request, reply);
   }
 
@@ -131,14 +131,14 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
+    request << p0;
+    request << p1;
+    request << p2;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -152,10 +152,10 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
     xCall(signature, request, reply);
   }
 
@@ -169,15 +169,15 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -191,11 +191,11 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
     xCall(signature, request, reply);
   }
 
@@ -209,16 +209,16 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -232,12 +232,12 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
     xCall(signature, request, reply);
   }
 
@@ -251,17 +251,17 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -275,13 +275,13 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
     xCall(signature, request, reply);
   }
 
@@ -295,18 +295,18 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -320,14 +320,14 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
-    qi::serialization::serialize<P7>::write(request, p7);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
+    request << p7;
     xCall(signature, request, reply);
   }
 
@@ -341,19 +341,19 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
-    qi::serialization::serialize<P7>::write(request, p7);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
+    request << p7;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
@@ -367,15 +367,15 @@ namespace qi {
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
-    qi::serialization::serialize<P7>::write(request, p7);
-    qi::serialization::serialize<P8>::write(request, p8);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
+    request << p7;
+    request << p8;
     xCall(signature, request, reply);
   }
 
@@ -389,20 +389,20 @@ namespace qi {
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature = makeFunctionSignature(methodName, f);
     request << (signature);
-    qi::serialization::serialize<P0>::write(request, p0);
-    qi::serialization::serialize<P1>::write(request, p1);
-    qi::serialization::serialize<P2>::write(request, p2);
-    qi::serialization::serialize<P3>::write(request, p3);
-    qi::serialization::serialize<P4>::write(request, p4);
-    qi::serialization::serialize<P5>::write(request, p5);
-    qi::serialization::serialize<P6>::write(request, p6);
-    qi::serialization::serialize<P7>::write(request, p7);
-    qi::serialization::serialize<P8>::write(request, p8);
+    request << p0;
+    request << p1;
+    request << p2;
+    request << p3;
+    request << p4;
+    request << p5;
+    request << p6;
+    request << p7;
+    request << p8;
     xCall(signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    qi::serialization::serialize<R>::read(reply, ret);
+    request >> ret;
     return ret;
   }
 
