@@ -93,7 +93,7 @@ qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qim
 qi_submodule_create("qi-signature"       "qimessaging/signature/*.h[px][px]" "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"
                                          "src/signature/*.[hc][px][px]")
 
-qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]" "qimessaging/serialization.hpp"
+qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"
                                          "src/serialization/*.[hc][px][px]")
 
 qi_create_lib(qimessaging SRC ${CONFIG_H}
