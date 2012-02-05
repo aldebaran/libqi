@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
 #include <qimessaging/serialization/message.hpp>
-#include <qimessaging/serialization/serialize.hpp>
+#include <qimessaging/datastream.hpp>
 #include <qimessaging/reflect.hpp>
 
 //using namespace qi::serialization;
+
 
 //(ii)
 struct Point2D {
@@ -59,9 +60,20 @@ struct TimeStampedPoint2D {
 
 
 
+TEST(testSerializable, POD) {
+  qi::DataStream  m;
+  int i1, i2;
+
+  i1 = 42;
+
+  m << i1;
+  m >> i2;
+
+  EXPECT_EQ(i1, i2);
+}
 
 
-
+#if 0
 QI_REFLECT(Point2D, ((int, x)) ((int, y)));
 QI_REFLECT(TimeStamp, ((int, i)) ((int, j)));
 QI_REFLECT(TimeStampedPoint2D, ((Point2D, p)) ((TimeStamp, t)));
@@ -72,7 +84,7 @@ TEST(testSerializable, Point2D) {
   Point2D      in(4, 3);
   Point2D      out;
   qi::DataStream  m;
-   qi::DataStream m2;
+  qi::DataStream m2;
   TimeStampedPoint2D ti;
   TimeStampedPoint2D to;
 
@@ -97,7 +109,7 @@ TEST(testSerializable, Point2D) {
   EXPECT_STREQ("((ii)(ii))", qi::signatureFromObject::value(ti).c_str());
 }
 
-
+#endif
 
 #if 0
 struct Inner : Serializable {

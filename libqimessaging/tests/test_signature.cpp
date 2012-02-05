@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/serialization.hpp>
+#include <qimessaging/datastream.hpp>
 
 #include <vector>
 #include <map>

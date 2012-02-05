@@ -25,6 +25,7 @@
 
 #include <iostream>
 
+#include <qimessaging/signature.hpp>
 #include <qimessaging/serialization.hpp>
 #include <qimessaging/serialization/message_visitor.hpp>
 #include <qimessaging/serialization/message_copy_visitor.hpp>
@@ -49,9 +50,9 @@ TEST(TestMessageVisitor, Basic)
   vs.push_back(std::string("titi"));
   m["titi"] = vs;
 
-  qi::serialization::serialize<int>::write(msg, i);
-  qi::serialization::serialize<std::string>::write(msg, s);
-  qi::serialization::serialize< std::map<std::string, std::vector<std::string> > >::write(msg, m);
+  msg << i;
+  msg << s;
+  msg << m;
 
   qi::serialization::MessageVisitor mv(msg, sig.c_str());
   mv.visit();
@@ -77,9 +78,9 @@ TEST(TestMessageCopyVisitor, Basic)
   vs.push_back(std::string("bar1"));
   vs.push_back(std::string("bar2"));
   m["foo"] = vs;
-  qi::serialization::serialize<int>::write(msg1, i);
-  qi::serialization::serialize<std::string>::write(msg1, s);
-  qi::serialization::serialize<StringVectMap>::write(msg1, m);
+  msg1 << i;
+  msg1 << s;
+  msg1 << m;
 
   qi::serialization::MessageCopyVisitor<qi::DataStream, qi::DataStream> mv(msg1, msg2, sig.c_str());
   mv.visit();
@@ -89,9 +90,9 @@ TEST(TestMessageCopyVisitor, Basic)
   std::string s2;
   std::map<std::string, std::vector<std::string> > m2;
 
-  qi::serialization::serialize<int>::read(msg2, i2);
-  qi::serialization::serialize<std::string>::read(msg2, s2);
-  qi::serialization::serialize<StringVectMap>::read(msg2, m2);
+  msg2 >> i2;
+  msg2 >> s2;
+  msg2 >> m2;
 
   EXPECT_EQ(42, i2);
   EXPECT_EQ("paf", s2);
