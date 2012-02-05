@@ -48,6 +48,16 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
+  /** \class SerializationError serialization.hpp "qi/serialization.hpp"
+   *  \brief Thrown when serialization fail
+   */
+  class QIMESSAGING_API SerializationError : public std::runtime_error
+  {
+  public:
+    explicit SerializationError(const std::string &msg) : std::runtime_error(msg) {}
+    virtual ~SerializationError() throw() {}
+  };
+
 
   class QIMESSAGING_API DataStream {
   public:
@@ -72,6 +82,7 @@ namespace qi {
     DataStream& operator<<(int    i);
     DataStream& operator<<(float  i);
     DataStream& operator<<(double i);
+    DataStream& operator<<(const char *);
     DataStream& operator<<(const std::string& i);
 
     DataStream& operator>>(bool   &i);
