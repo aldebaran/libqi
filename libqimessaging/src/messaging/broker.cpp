@@ -6,63 +6,63 @@
 *  Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/network_client.hpp>
+#include <qimessaging/broker.hpp>
 #include <qimessaging/transport.hpp>
 
 namespace qi {
 
-NetworkClient::NetworkClient()
+Broker::Broker()
 {
   tc = new qi::TransportSocket();
   tc->setDelegate(this);
 }
 
-NetworkClient::~NetworkClient()
+Broker::~Broker()
 {
   tc->disconnect();
   delete tc;
 }
 
-void NetworkClient::connect(const std::string masterAddress)
+void Broker::connect(const std::string masterAddress)
 {
   tc->connect("127.0.0.1", 5555, nthd->getEventBase());
 }
 
-void NetworkClient::setThread(qi::NetworkThread *n)
+void Broker::setThread(qi::NetworkThread *n)
 {
   nthd = n;
 }
 
-bool NetworkClient::disconnect()
+bool Broker::disconnect()
 {
 }
 
 
-bool NetworkClient::waitForConnected(int msecs)
+bool Broker::waitForConnected(int msecs)
 {
   return tc->waitForConnected(msecs);
 }
 
-bool NetworkClient::waitForDisconnected(int msecs)
+bool Broker::waitForDisconnected(int msecs)
 {
   return tc->waitForDisconnected(msecs);
 }
 
 
-void NetworkClient::registerMachine(const qi::MachineInfo& m)
+void Broker::registerMachine(const qi::MachineInfo& m)
 {
 }
 
-void NetworkClient::unregisterMachine(const qi::MachineInfo& m)
+void Broker::unregisterMachine(const qi::MachineInfo& m)
 {
 }
 
 
-bool NetworkClient::isInitialized() const
+bool Broker::isInitialized() const
 {
 }
 
-std::vector<std::string> NetworkClient::machines()
+std::vector<std::string> Broker::machines()
 {
   std::vector<std::string> result;
 
@@ -83,17 +83,17 @@ std::vector<std::string> NetworkClient::machines()
   return result;
 }
 
-void NetworkClient::onConnected(const qi::Message &msg)
+void Broker::onConnected(const qi::Message &msg)
 {
   std::cout << "connected: " << std::endl;
 }
 
-void NetworkClient::onWrite(const qi::Message &msg)
+void Broker::onWrite(const qi::Message &msg)
 {
   std::cout << "written: " << std::endl;
 }
 
-void NetworkClient::onRead(const qi::Message &msg)
+void Broker::onRead(const qi::Message &msg)
 {
   std::cout << "read: " << std::endl;
 }

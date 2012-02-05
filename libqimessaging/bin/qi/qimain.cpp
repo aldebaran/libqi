@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <qimessaging/network_client.hpp>
+#include <qimessaging/broker.hpp>
 #include <qimessaging/client.hpp>
 #include <qimessaging/transport.hpp>
 #include <boost/program_options.hpp>
@@ -111,7 +111,7 @@ typedef std::vector<std::string>  StringVector;
 
 
 void qi_call(std::string addr) {
-  qi::NetworkClient nc;
+  qi::Broker nc;
   qi::NetworkThread nt;
 
   nc.setThread(&nt);

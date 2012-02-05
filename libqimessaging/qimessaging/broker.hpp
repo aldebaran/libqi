@@ -40,10 +40,10 @@ namespace qi {
     std::string uuid;
   };
 
-  class NetworkClient : public qi::TransportSocketDelegate {
+  class Broker : public qi::TransportSocketDelegate {
   public:
-    NetworkClient();
-    virtual ~NetworkClient();
+    Broker();
+    virtual ~Broker();
 
     void setThread(qi::NetworkThread *n);
 
