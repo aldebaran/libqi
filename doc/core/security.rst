@@ -39,3 +39,19 @@ Remote Application should be "installed" on the robot. Installation is a simple 
 When remote clients connect using that sessionID they are given only the permission defined in the manifest.
 
 
+Implementation (WIP)
+--------------------
+
+ApplicationManager know permissions of applications. A token is associated to a set of permissions. A token can be associated to a local or remote apps.
+
+Remote Application should be "installed" on the robot, before being able to communication with a robot.
+
+Each services ask (and cache) ApplicationManager about application who connect to know if they have specific permissions...
+
+Broker authenticate to a ServiceDirectoryManager using an authentication token.
+
+this auth token represent a remote client with a specific set of permissions (only known by the robot). this token is used everywhere to identify the client.
+
+some permissions are "remote", handled by servers. some permissions are "local", handled by the system. (write access, ...)
+
+
