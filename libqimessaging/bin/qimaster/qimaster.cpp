@@ -50,8 +50,12 @@ public:
   {
     std::cout << msg << std::endl;
 
-    qi::Message retval;
+    if (msg.path() == "machines")
+      machines(msg);
+  }
 
+  void machines(const qi::Message &msg) {
+    qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
