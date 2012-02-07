@@ -106,6 +106,9 @@ namespace qi {
     void registerMachine(const qi::MachineInfo& m);
     void unregisterMachine(const qi::MachineInfo& m);
 
+    void registerEndpoint(const qi::EndpointInfo& e);
+    void unregisterEndpoint(const qi::EndpointInfo& e);
+
     std::vector<std::string> machines();
     void setName(const std::string &name) { _name = name; }
     std::string name()                    { return _name; }

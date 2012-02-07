@@ -6,7 +6,11 @@
 */
 
 #include <iostream>
+#include <vector>
+#include <map>
 #include <qimessaging/transport.hpp>
+#include <qimessaging/datastream.hpp>
+#include <qimessaging/broker.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
 
@@ -61,6 +65,13 @@ public:
   {
     std::cout << msg << std::endl;
 
+    if (msg.path() == "registerEndpoint")
+      registerEndpoint(msg);
+
+    if (msg.path() == "unregisterEndpoint")
+      unregisterEndpoint(msg);
+
+
     if (msg.path() == "machines")
       machines(msg);
   }
@@ -75,9 +86,83 @@ public:
     ts->send(retval);
   }
 
+
+  void registerEndpoint(const qi::Message &msg)
+  {
+    qi::EndpointInfo e;
+    qi::DataStream d(msg.data());
+    d >> e;
+
+    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
+    servicesIt = connectedServices.find(msg.source());
+    if (servicesIt != connectedServices.end())
+    {
+      qi::ServiceInfo *si = &servicesIt->second;
+      std::vector<qi::EndpointInfo> *ei = &si->endpoint;
+      ei->push_back(e);
+    }
+    else
+    {
+      qi::ServiceInfo si;
+      si.name = msg.source();
+      si.endpoint.push_back(e);
+      connectedServices[msg.source()] = si;
+    }
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(msg.source() + " register.");
+    ts->send(retval);
+  }
+
+  void unregisterEndpoint(const qi::Message &msg)
+  {
+    qi::EndpointInfo e;
+    qi::DataStream d(msg.data());
+    d >> e;
+
+    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
+    servicesIt = connectedServices.find(msg.source());
+    if (servicesIt != connectedServices.end())
+    {
+      qi::ServiceInfo *si = &servicesIt->second;
+      std::vector<qi::EndpointInfo> *ei = &si->endpoint;
+      std::vector<qi::EndpointInfo>::iterator endpointIt = ei->begin();
+
+      // fixme
+      for (int i = 0; i < ei->size(); ++i, ++endpointIt)
+      {
+        if (*endpointIt == e)
+        {
+          ei->erase(endpointIt);
+          break;
+        }
+      }
+
+      if (ei->empty())
+        connectedServices.erase(servicesIt);
+    }
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(msg.id() + " unregister.");
+    ts->send(retval);
+  }
+
+
 private:
   qi::NetworkThread   *nthd;
   qi::TransportServer *ts;
+
+  std::map<std::string, qi::ServiceInfo> connectedServices;
 };
 
 

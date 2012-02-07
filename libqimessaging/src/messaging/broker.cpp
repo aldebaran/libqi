@@ -63,15 +63,41 @@ bool Broker::waitForDisconnected(int msecs)
   return tc->waitForDisconnected(msecs);
 }
 
-
-void Broker::registerMachine(const qi::MachineInfo& m)
+void Broker::registerEndpoint(const qi::EndpointInfo &e)
 {
+  qi::DataStream d;
+  d << e;
+
+  qi::Message msg;
+  msg.setId(uniqueRequestId++);
+  msg.setSource(_name);
+  msg.setDestination("qi.servicedirectorymanager");
+  msg.setPath("registerEndpoint");
+  msg.setData(d.str());
+
+  tc->send(msg);
+  tc->waitForId(msg.id());
+  qi::Message ans;
+  tc->read(msg.id(), &ans);
 }
 
-void Broker::unregisterMachine(const qi::MachineInfo& m)
+void Broker::unregisterEndpoint(const qi::EndpointInfo& e)
 {
-}
+  qi::DataStream d;
+  d << e;
 
+  qi::Message msg;
+  msg.setId(uniqueRequestId++);
+  msg.setSource(_name);
+  msg.setDestination("qi.servicedirectorymanager");
+  msg.setPath("unregisterEndpoint");
+  msg.setData(d.str());
+
+  tc->send(msg);
+  tc->waitForId(msg.id());
+  qi::Message ans;
+  tc->read(msg.id(), &ans);
+}
 
 bool Broker::isInitialized() const
 {
