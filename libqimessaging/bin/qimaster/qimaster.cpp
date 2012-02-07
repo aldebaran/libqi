@@ -65,15 +65,38 @@ public:
   {
     std::cout << msg << std::endl;
 
+    if (msg.path() == "services")
+      services(msg);
+
+
     if (msg.path() == "registerEndpoint")
       registerEndpoint(msg);
 
     if (msg.path() == "unregisterEndpoint")
       unregisterEndpoint(msg);
 
+  }
 
-    if (msg.path() == "machines")
-      machines(msg);
+  void services(const qi::Message &msg)
+  {
+    std::vector<std::string> servs;
+
+    std::map<std::string, qi::ServiceInfo>::iterator it;
+    for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
+      servs.push_back(it->first);
+
+    qi::DataStream d;
+    d << servs;
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(d.str());
+
+    ts->send(retval);
   }
 
   void machines(const qi::Message &msg) {

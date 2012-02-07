@@ -110,6 +110,7 @@ namespace qi {
     void unregisterEndpoint(const qi::EndpointInfo& e);
 
     std::vector<std::string> machines();
+    std::vector<std::string> services();
     void setName(const std::string &name) { _name = name; }
     std::string name()                    { return _name; }
 

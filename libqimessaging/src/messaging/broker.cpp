@@ -122,6 +122,24 @@ std::vector<std::string> Broker::machines()
   return result;
 }
 
+std::vector<std::string> Broker::services()
+{
+  std::vector<std::string> result;
+
+  qi::Message msg;
+  msg.setId(uniqueRequestId++);
+  msg.setSource(_name);
+  msg.setDestination("qi.servicedirectorymanager");
+  msg.setPath("services");
+
+  tc->send(msg);
+
+  tc->waitForId(msg.id());
+  qi::Message ans;
+  tc->read(msg.id(), &ans);
+
+  qi::DataStream d(ans.data());
+  d >> result;
 
   return result;
 }
