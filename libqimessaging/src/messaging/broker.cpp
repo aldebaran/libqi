@@ -7,7 +7,10 @@
 */
 
 #include <qimessaging/broker.hpp>
+#include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
+
+static int uniqueRequestId = 0;
 
 namespace qi {
 
@@ -35,6 +38,7 @@ void Broker::setThread(qi::NetworkThread *n)
 
 bool Broker::disconnect()
 {
+  return true;
 }
 
 
@@ -60,6 +64,7 @@ void Broker::unregisterMachine(const qi::MachineInfo& m)
 
 bool Broker::isInitialized() const
 {
+  return true;
 }
 
 std::vector<std::string> Broker::machines()
@@ -67,9 +72,8 @@ std::vector<std::string> Broker::machines()
   std::vector<std::string> result;
 
   qi::Message msg;
-
-  msg.setId(0);
-  msg.setSource("moi");
+  msg.setId(uniqueRequestId++);
+  msg.setSource(_name);
   msg.setDestination("qi.servicedirectorymanager");
   msg.setPath("machines");
 
@@ -78,24 +82,28 @@ std::vector<std::string> Broker::machines()
   qi::Message ans;
   tc->read(msg.id(), &ans);
 
-  std::cout << ans << std::endl;
+  return result;
+}
+
 
   return result;
 }
 
+
+
 void Broker::onConnected(const qi::Message &msg)
 {
-  std::cout << "connected: " << std::endl;
+//  std::cout << "connected broker: " << std::endl;
 }
 
 void Broker::onWrite(const qi::Message &msg)
 {
-  std::cout << "written: " << std::endl;
+//  std::cout << "written broker: " << std::endl;
 }
 
 void Broker::onRead(const qi::Message &msg)
 {
-  std::cout << "read: " << std::endl;
+//  std::cout << "read broker: " << std::endl;
 }
 
 
