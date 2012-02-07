@@ -27,6 +27,7 @@
 # define   	NETWORK_CLIENT_HPP_
 
 #include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/datastream.hpp>
 
 #include <vector>
 #include <string>
@@ -39,6 +40,49 @@ namespace qi {
   public:
     std::string uuid;
   };
+
+  class EndpointInfo {
+  public:
+    int port;
+    std::string  ip;
+    std::string  type;
+
+    bool operator==(const EndpointInfo &b) const
+    {
+      if (port == b.port &&
+          ip == b.ip &&
+          type == b.type)
+        return true;
+
+      return false;
+    }
+
+  };
+
+  static DataStream& operator<<(DataStream &d, const EndpointInfo &e)
+  {
+    d << e.ip;
+    d << e.port;
+    d << e.type;
+
+    return d;
+  }
+
+  static DataStream& operator>>(DataStream &d, EndpointInfo &e)
+  {
+    d >> e.ip;
+    d >> e.port;
+    d >> e.type;
+
+    return d;
+  }
+
+  class ServiceInfo {
+  public:
+    std::string name;
+    std::vector<qi::EndpointInfo> endpoint;
+  };
+
 
   class Broker : public qi::TransportSocketDelegate {
   public:
