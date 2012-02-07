@@ -144,6 +144,43 @@ std::vector<std::string> Broker::services()
   return result;
 }
 
+qi::TransportSocket* Broker::service(const std::string &name,
+                                     const std::string &type)
+{
+  std::vector<qi::EndpointInfo> result;
+
+  qi::Message msg;
+
+  msg.setId(uniqueRequestId++);
+  msg.setSource(_name);
+  msg.setDestination("qi.servicedirectorymanager");
+  msg.setPath("service");
+  msg.setData(name);
+
+  tc->send(msg);
+
+  tc->waitForId(msg.id());
+  qi::Message ans;
+  tc->read(msg.id(), &ans);
+
+  qi::DataStream d(ans.data());
+  d >> result;
+
+  qi::TransportSocket* ts = NULL;
+  std::vector<qi::EndpointInfo>::iterator endpointIt;
+  for (endpointIt = result.begin(); endpointIt != result.end(); ++endpointIt)
+  {
+    if (endpointIt->type == type)
+    {
+      ts = new qi::TransportSocket();
+      ts->setDelegate(this);
+      ts->connect(endpointIt->ip, endpointIt->port, nthd->getEventBase());
+      ts->waitForConnected();
+    }
+  }
+
+  return ts;
+}
 
 
 void Broker::onConnected(const qi::Message &msg)

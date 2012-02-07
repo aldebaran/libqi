@@ -68,6 +68,8 @@ public:
     if (msg.path() == "services")
       services(msg);
 
+    if (msg.path() == "service")
+      service(msg);
 
     if (msg.path() == "registerEndpoint")
       registerEndpoint(msg);
@@ -99,13 +101,26 @@ public:
     ts->send(retval);
   }
 
-  void machines(const qi::Message &msg) {
+
+  void service(const qi::Message &msg)
+  {
+    qi::DataStream d;
+    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
+    servicesIt = connectedServices.find(msg.data());
+    if (servicesIt != connectedServices.end())
+    {
+      qi::ServiceInfo si = servicesIt->second;
+      d << si.endpoint;
+    }
+
     qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
+    retval.setData(d.str());
+
     ts->send(retval);
   }
 
