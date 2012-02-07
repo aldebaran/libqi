@@ -107,11 +107,14 @@ namespace qi {
     void unregisterMachine(const qi::MachineInfo& m);
 
     std::vector<std::string> machines();
+    void setName(const std::string &name) { _name = name; }
+    std::string name()                    { return _name; }
 
     bool isInitialized() const;
 
   protected:
     std::string _masterAddress;
+    std::string _name;
 
     bool _isInitialized;
     qi::NetworkThread   *nthd;
