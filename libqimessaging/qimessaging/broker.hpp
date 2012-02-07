@@ -97,7 +97,7 @@ namespace qi {
     void onRead(const qi::Message &msg);
 
 
-    void connect(const std::string masterAddress);
+    void connect(const std::string &masterAddress);
     bool disconnect();
 
     bool waitForConnected(int msecs = 30000);

@@ -26,9 +26,20 @@ Broker::~Broker()
   delete tc;
 }
 
-void Broker::connect(const std::string masterAddress)
+void Broker::connect(const std::string &masterAddress)
 {
-  tc->connect("127.0.0.1", 5555, nthd->getEventBase());
+  size_t begin = 0;
+  size_t end = 0;
+  end = masterAddress.find(":");
+
+  std::string ip = masterAddress.substr(begin, end);
+  begin = end + 1;
+
+  unsigned int port;
+  std::stringstream ss(masterAddress.substr(begin));
+  ss >> port;
+
+  tc->connect(ip, port, nthd->getEventBase());
 }
 
 void Broker::setThread(qi::NetworkThread *n)

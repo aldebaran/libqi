@@ -31,9 +31,20 @@ public:
     nthd = n;
   }
 
-  void start(const std::string &address, unsigned short port)
+  void start(const std::string &address)
   {
-    ts->start(address, port, nthd->getEventBase());
+    size_t begin = 0;
+    size_t end = 0;
+    end = address.find(":");
+
+    std::string ip = address.substr(begin, end);
+    begin = end + 1;
+
+    unsigned int port;
+    std::stringstream ss(address.substr(begin));
+    ss >> port;
+
+    ts->start(ip, port, nthd->getEventBase());
   }
 
   virtual void onConnected(const qi::Message &msg)
