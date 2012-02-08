@@ -115,10 +115,13 @@ namespace qi {
     void setName(const std::string &name) { _name = name; }
     std::string name()                    { return _name; }
 
+    void setDestination(const std::string &destination) { _destination = destination; }
+    std::string destination()                           { return _destination; }
+
     bool isInitialized() const;
 
   protected:
-    std::string _masterAddress;
+    std::string _destination;
     std::string _name;
 
     qi::TransportSocket *tc;

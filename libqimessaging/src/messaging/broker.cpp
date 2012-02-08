@@ -68,7 +68,7 @@ void Broker::registerEndpoint(const qi::EndpointInfo &e)
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination("qi.servicedirectorymanager");
+  msg.setDestination(_destination);
   msg.setPath("registerEndpoint");
   msg.setData(d.str());
 
@@ -86,7 +86,7 @@ void Broker::unregisterEndpoint(const qi::EndpointInfo& e)
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination("qi.servicedirectorymanager");
+  msg.setDestination(_destination);
   msg.setPath("unregisterEndpoint");
   msg.setData(d.str());
 
@@ -108,7 +108,7 @@ std::vector<std::string> Broker::machines()
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination("qi.servicedirectorymanager");
+  msg.setDestination(_destination);
   msg.setPath("machines");
 
   tc->send(msg);
@@ -126,7 +126,7 @@ std::vector<std::string> Broker::services()
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination("qi.servicedirectorymanager");
+  msg.setDestination(_destination);
   msg.setPath("services");
 
   tc->send(msg);
@@ -150,7 +150,7 @@ qi::TransportSocket* Broker::service(const std::string &name,
 
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination("qi.servicedirectorymanager");
+  msg.setDestination(_destination);
   msg.setPath("service");
   msg.setData(name);
 
@@ -171,7 +171,7 @@ qi::TransportSocket* Broker::service(const std::string &name,
     {
       ts = new qi::TransportSocket();
       ts->setDelegate(this);
-      ts->connect(endpointIt->ip, endpointIt->port, nthd->getEventBase());
+      ts->connect(endpointIt->ip, endpointIt->port, _nthd->getEventBase());
       ts->waitForConnected();
     }
   }
@@ -182,18 +182,17 @@ qi::TransportSocket* Broker::service(const std::string &name,
 
 void Broker::onConnected(const qi::Message &msg)
 {
-//  std::cout << "connected broker: " << std::endl;
+  //  std::cout << "connected broker: " << std::endl;
 }
 
 void Broker::onWrite(const qi::Message &msg)
 {
-//  std::cout << "written broker: " << std::endl;
+  //  std::cout << "written broker: " << std::endl;
 }
 
 void Broker::onRead(const qi::Message &msg)
 {
-//  std::cout << "read broker: " << std::endl;
+  //  std::cout << "read broker: " << std::endl;
 }
-
 
 }
