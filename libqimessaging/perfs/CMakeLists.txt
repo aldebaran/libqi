@@ -8,6 +8,6 @@
 #qi_create_gtest(perf_maps    SRC perf_maps.cpp    DEPENDS QI GTEST TIMEOUT 120)
 #add_subdirectory(functors)
 #add_subdirectory(maps)
-add_subdirectory(messaging)
+#add_subdirectory(messaging)
 add_subdirectory(transport)
-qi_create_gtest(perf_functor SRC perf_functor.cpp DEPENDS QI GTEST TIMEOUT 120)
+#qi_create_gtest(perf_functor SRC perf_functor.cpp DEPENDS QI GTEST TIMEOUT 120)

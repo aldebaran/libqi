@@ -12,168 +12,70 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-
-#include <qi/transport.hpp>
-#include "src/transport/zmq/zmq_server_backend.hpp"
-#include "src/transport/zmq/zmq_server_queue_backend.hpp"
-#include "src/transport/zmq/zmq_simple_server_backend.hpp"
-#include "src/transport/zmq/zmq_client_backend.hpp"
-
-#include <boost/shared_ptr.hpp>
+#include <qimessaging/transport.hpp>
+#include <qimessaging/broker.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>
 
-
-//#define TEST_TRANSPORT_ZMQ_SINGLE
-//#define TEST_TRANSPORT_ZMQ_QUEUE
-//#define TEST_TRANSPORT_ZMQ_POLL
-
-
-
-
-#if TEST_TRANSPORT_ZMQ_SINGLE || TEST_TRANSPORT_ZMQ_QUEUE || TEST_TRANSPORT_ZMQ_POLL
-# define TEST_TRANSPORT_ZMQ
-//# define TEST_TRANSPORT_TCP
-//#define TEST_TRANSPORT_IPC
-#define TEST_TRANSPORT_INPROC
-#endif
-
-#if not (defined(TEST_TRANSPORT_ZMQ_SINGLE) || defined(TEST_TRANSPORT_ZMQ_QUEUE) || defined(TEST_TRANSPORT_ZMQ_POLL))
-# error "please define a transport"
-#endif
-
-using qi::perf::DataPerfTimer;
-//using AL::ALPtr;
-
+static int gLoopCount = 1000;
 static const int gThreadCount = 1;
-static const int gLoopCount   = 100000;
 
-
-class DataPerf
+int main_client()
 {
-public:
-  DataPerf()
-  {}
-  int begin() { return 0; }
-  int end() { return _count; }
+  qi::perf::DataPerfTimer dp;
+  qi::Broker nc;
 
-  std::string &buffer(unsigned int iter, std::string &data) {
-    _bytes = (unsigned long)pow(2.0f,(int)iter);
-    data = std::string(_bytes, 'B');
-    return data;
-  }
+  nc.connect("127.0.0.1:9559");
+  nc.waitForConnected();
+  nc.setName("remote");
+  nc.setDestination("serviceTest");
 
-  std::string buffer(int iter) {
-    std::string data;
-    return buffer(iter, data);
-  }
-
-  void start(unsigned long count) {
-    _dt.start(count, _bytes);
-  }
-  void stop() {
-    _dt.stop();
-  }
-  void save(const char *filename) {
-    ;
-  }
-
-protected:
-  unsigned long _count;
-  DataPerfTimer _dt;
-  unsigned int  _bytes;
-};
-
-#ifdef TEST_TRANSPORT_TCP
-static const std::string gServerAddress = "tcp://127.0.0.1:5555";
-#endif
-#ifdef TEST_TRANSPORT_IPC
-static const std::string gServerAddress = "ipc:///tmp/toto-test";
-#endif
-#ifdef TEST_TRANSPORT_INPROC
-static const std::string gServerAddress = "inproc:///toto-workers";
-#endif
-
-
-static const std::string gClientAddress = gServerAddress;
-
-class TestServer : public qi::transport::TransportMessageHandler
-{
-public:
-  TestServer(qi::transport::detail::ServerBackend *server)
-    : _server(server)
+  for (int i = 5; i < 6; ++i)
   {
-    _server->setMessageHandler(this);
-  }
-
-  virtual void run()
-  {
-    _server->run();
-  }
-
-protected:
-  void messageHandler(qi::transport::Buffer &request, qi::transport::Buffer &reply)
-  {
-    //simple for test
-    reply = request;
-  }
-
-protected:
-  qi::transport::detail::ServerBackend *_server;
-};
-
-
-int main_client(qi::transport::detail::ClientBackend *client)
-{
-  DataPerf               dp;
-  std::string            tosend;
-  std::string            torecv;
-
-  for (int i = 0; i < 12; ++i)
-  {
-    tosend = dp.buffer(i);
-    dp.start(gLoopCount);
-    for (int j = 0; j< gLoopCount; ++j)
+    char character = 'c';
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    std::string requeststr = std::string(numBytes, character);
+    dp.start(gLoopCount, numBytes);
+    qi::Message request;
+    qi::Message reply;
+    for (int j = 0; j < gLoopCount; ++j)
     {
-      torecv = "";
-      client->send(tosend, torecv);
+      static int id = 1;
+      id++;
+      char c = 1;
+      c++;
+      if (c == 0)
+        c++;
+      requeststr[2] = c;
+
+      request.setId(id);
+      request.setSource("remote");
+      request.setDestination("serviceTest");
+      request.setPath("reply");
+      request.setData(requeststr);
+      nc.tc->send(request);
+      nc.tc->waitForId(request.id());
+      nc.tc->read(request.id(), &reply);
+      if (request.id() != reply.id() || reply.id() <= 0) {
+        std::cout << "error id" << std::endl;
+      }
+
+      if (request.data().size() != reply.data().size() || reply.data().size() != numBytes) {
+        std::cout << "error sz" << std::endl;
+      }
+      if (reply.data()[2] != c)
+      {
+        std::cout << "error content" << std::endl;
+      }
+
     }
     dp.stop();
-    dp.save("test_transport_zmq_sinple.test");
+    dp.print();
   }
   return 0;
 }
 
 
-qi::transport::detail::ClientBackend *makeClient(int i, zmq::context_t &ctx)
-{
-  qi::transport::detail::ClientBackend *client = 0;
-//TODO: generate client address
-
-#ifdef TEST_TRANSPORT_ZMQ
-  return new qi::transport::detail::ZMQClientBackend(gClientAddress, ctx);
-#endif
-  return client;
-}
-
-qi::transport::detail::ServerBackend *makeServer(zmq::context_t &ctx)
-{
-  std::vector<std::string> addresses;
-  addresses.push_back(gServerAddress);
-
-#ifdef TEST_TRANSPORT_ZMQ_SINGLE
-  return new qi::transport::detail::ZMQSimpleServerBackend(addresses, ctx);
-#endif
-#ifdef TEST_TRANSPORT_ZMQ_QUEUE
-  return new qi::transport::detail::ZMQServerQueueBackend(addresses, ctx);
-#endif
-#ifdef TEST_TRANSPORT_ZMQ_POLL
-  return new qi::transport::detail::ZMQServerBackend(addresses, ctx);
-#endif
-  return 0;
-
-}
-
-void start_client(int count, zmq::context_t *ctx)
+void start_client(int count)
 {
     boost::thread thd[100];
 
@@ -181,46 +83,114 @@ void start_client(int count, zmq::context_t *ctx)
 
     for (int i = 0; i < count; ++i)
     {
-      qi::transport::detail::ClientBackend *client = 0;
       std::cout << "starting thread: " << i << std::endl;
       sleep(1);
-      client = makeClient(i, *ctx);
-      thd[i] = boost::thread(boost::bind(&main_client, client));
+      thd[i] = boost::thread(boost::bind(&main_client));
     }
 
     for (int i = 0; i < count; ++i)
       thd[i].join();
+
     std::cout << "end client" << std::endl;
 }
 
-int main_server(zmq::context_t *ctx)
+
+
+class ServiceTestPerf : public qi::TransportServerDelegate
 {
-  qi::transport::detail::ServerBackend    *st;
-  st = makeServer(*ctx);
-  TestServer                testserver(st);
-  testserver.run();
+public:
+  ServiceTestPerf()
+  {
+    nthd = new qi::NetworkThread();
+
+    ts = new qi::TransportServer();
+    ts->setDelegate(this);
+  }
+
+  ~ServiceTestPerf()
+  {
+    delete ts;
+  }
+
+  void start(const std::string &address)
+  {
+    size_t begin = 0;
+    size_t end = 0;
+    end = address.find(":");
+
+    std::string ip = address.substr(begin, end);
+    begin = end + 1;
+
+    unsigned int port;
+    std::stringstream ss(address.substr(begin));
+    ss >> port;
+
+    ts->start(ip, port, nthd->getEventBase());
+  }
+
+  virtual void onConnected(const qi::Message &msg)
+  {
+  }
+
+  virtual void onWrite(const qi::Message &msg)
+  {
+  }
+
+  virtual void onRead(const qi::Message &msg)
+  {
+    if (msg.path() == "reply")
+      reply(msg);
+
+  }
+
+  void reply(const qi::Message &msg)
+  {
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(msg.data());
+    ts->send(retval);
+  }
+
+private:
+  qi::NetworkThread   *nthd;
+  qi::TransportServer *ts;
+};
+
+#include <qi/os.hpp>
+
+int main_server()
+{
+  ServiceTestPerf stp;
+  stp.start("127.0.0.1:9559");
+
+  while(1) {
+    qi::os::sleep(1);
+  }
+
   return 0;
 }
 
-//class that handle :
-// - client and server args
-// - loop count
-// - perf saving
-//
-// - add multithreading support to DataPerf
 
 int main(int argc, char **argv)
 {
-  zmq::context_t *ctx = new zmq::context_t(1);
-  if (argc > 1 && !strcmp(argv[1], "--client")) {
-    start_client(1, ctx);
-  } else if (argc > 1 && !strcmp(argv[1], "--server")) {
-    return main_server(ctx);
-  } else {
+  if (argc > 1 && !strcmp(argv[1], "--client"))
+  {
+    start_client(1);
+  }
+  else if (argc > 1 && !strcmp(argv[1], "--server"))
+  {
+    return main_server();
+  }
+  else
+  {
     //start the server
-    boost::thread threadServer(boost::bind(&main_server, ctx));
+    boost::thread threadServer(boost::bind(&main_server));
     sleep(1);
-    start_client(gThreadCount, ctx);
+    start_client(gThreadCount);
   }
   return 0;
 }
