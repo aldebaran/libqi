@@ -160,6 +160,7 @@ namespace qi {
         sd >> val.value< std::map<std::string, qi::Value> >();
         return sd;
     };
+    return sd;
   }
 
   qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &val)
@@ -217,7 +218,7 @@ namespace qi {
       default:
         return sd;
     };
-
+    return sd;
   }
 
 

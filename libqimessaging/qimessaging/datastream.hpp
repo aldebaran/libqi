@@ -122,8 +122,9 @@ namespace qi {
     for (; it != end; ++it) {
       sd << *it;
     }
-    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v)
-      }
+    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
+    return sd;
+  }
 
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::list<T> &v) {
@@ -140,6 +141,7 @@ namespace qi {
       }
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
+    return sd;
   }
 
 
@@ -153,8 +155,9 @@ namespace qi {
     for (; it != end; ++it) {
       sd << *it;
     }
-    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v)
-      }
+    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
+    return sd;
+  }
 
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::vector<T> &v) {
@@ -171,6 +174,7 @@ namespace qi {
       }
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
+    return sd;
   }
 
   template<typename K, typename V>
