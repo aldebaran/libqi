@@ -39,9 +39,10 @@ static void errorcb(struct bufferevent *bev,
   }
 }
 
-
 NetworkThread::NetworkThread()
 {
+  if (!(_base = event_base_new()))
+    return;
   _thd = boost::thread(&NetworkThread::run, this);
 }
 
@@ -52,8 +53,6 @@ NetworkThread::~NetworkThread()
 
 void NetworkThread::run()
 {
-  if (!(_base = event_base_new()))
-    return;
 
   struct bufferevent *bev = bufferevent_socket_new(_base, -1, BEV_OPT_CLOSE_ON_FREE);
   bufferevent_setcb(bev, NULL, NULL, ::qi::errorcb, this);

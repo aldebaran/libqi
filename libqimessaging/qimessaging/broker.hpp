@@ -89,9 +89,6 @@ namespace qi {
     Broker();
     virtual ~Broker();
 
-    void setThread(qi::NetworkThread *n);
-
-
     void onConnected(const qi::Message &msg);
     void onWrite(const qi::Message &msg);
     void onRead(const qi::Message &msg);
@@ -124,9 +121,9 @@ namespace qi {
     std::string _masterAddress;
     std::string _name;
 
-    bool _isInitialized;
-    qi::NetworkThread   *nthd;
     qi::TransportSocket *tc;
+    bool                 _isInitialized;
+    qi::NetworkThread   *_nthd;
   };
 }
 

@@ -16,6 +16,8 @@ namespace qi {
 
 Broker::Broker()
 {
+  _nthd = new qi::NetworkThread();
+
   tc = new qi::TransportSocket();
   tc->setDelegate(this);
 }
@@ -39,12 +41,7 @@ void Broker::connect(const std::string &masterAddress)
   std::stringstream ss(masterAddress.substr(begin));
   ss >> port;
 
-  tc->connect(ip, port, nthd->getEventBase());
-}
-
-void Broker::setThread(qi::NetworkThread *n)
-{
-  nthd = n;
+  tc->connect(ip, port, _nthd->getEventBase());
 }
 
 bool Broker::disconnect()

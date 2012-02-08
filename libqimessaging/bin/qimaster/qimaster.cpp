@@ -9,8 +9,8 @@
 #include <vector>
 #include <map>
 #include <qimessaging/transport.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/broker.hpp>
+#include <qimessaging/datastream.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
 
@@ -21,6 +21,8 @@ class ServiceDirectoryServer : public qi::TransportServerDelegate
 public:
   ServiceDirectoryServer()
   {
+    nthd = new qi::NetworkThread();
+
     ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
@@ -234,13 +236,9 @@ int main(int argc, char *argv[])
     {
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      qi::NetworkThread nt;
       ServiceDirectoryServer sds;
-
-      sds.setThread(&nt);
-      qi::os::sleep(1);
-
       sds.start(masterAddress);
+
       std::cout << "ready." << std::endl;
 
       while (1)

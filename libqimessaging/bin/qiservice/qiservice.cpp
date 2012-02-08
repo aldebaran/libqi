@@ -21,6 +21,8 @@ class ServiceTest : public qi::TransportServerDelegate
 public:
   ServiceTest()
   {
+    nthd = new qi::NetworkThread();
+
     ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
@@ -28,11 +30,6 @@ public:
   ~ServiceTest()
   {
     delete ts;
-  }
-
-  void setThread(qi::NetworkThread *n)
-  {
-    nthd = n;
   }
 
   void start(const std::string &address)
@@ -102,12 +99,9 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      qi::NetworkThread nt;
       qi::Broker        broker;
       ServiceTest       st;
 
-      st.setThread(&nt);
-      qi::os::sleep(1);
       st.start("127.0.0.1:9571");
       std::cout << "ready." << std::endl;
 
@@ -118,11 +112,10 @@ int main(int argc, char *argv[])
 
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      broker.setThread(&nt);
-      qi::os::sleep(1);
       broker.connect(masterAddress);
       broker.waitForConnected();
       broker.setName("serviceTest");
+      broker.setDestination("qi.master");
       broker.registerEndpoint(e);
 
       while (1)

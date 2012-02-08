@@ -21,10 +21,7 @@ static int uniqueReqId = 200;
 void qi_call(const std::string &addr)
 {
   qi::Broker nc;
-  qi::NetworkThread nt;
 
-  nc.setThread(&nt);
-  qi::os::sleep(1);
   nc.connect(addr);
   nc.waitForConnected();
   nc.setName("moi");
