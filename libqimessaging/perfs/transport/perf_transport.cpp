@@ -19,15 +19,35 @@
 static int gLoopCount = 1000;
 static const int gThreadCount = 1;
 
+class ClientPerf : public qi::TransportSocketDelegate {
+public:
+  ClientPerf()
+  {
+    nt = new qi::NetworkThread();
+    ts = new qi::TransportSocket();
+    ts->setDelegate(this);
+
+    ts->connect("127.0.0.1", 9559, nt->getEventBase());
+    ts->waitForConnected();
+  }
+
+  virtual ~ClientPerf() {};
+
+  void onConnected(const qi::Message &msg) {}
+  void onWrite(const qi::Message &msg) {}
+  void onRead(const qi::Message &msg) {}
+
+  qi::TransportSocket* transportSocket() {return ts;}
+
+private:
+  qi::TransportSocket *ts;
+  qi::NetworkThread   *nt;
+};
+
 int main_client()
 {
   qi::perf::DataPerfTimer dp;
-  qi::Broker nc;
-
-  nc.connect("127.0.0.1:9559");
-  nc.waitForConnected();
-  nc.setName("remote");
-  nc.setDestination("serviceTest");
+  ClientPerf cp;
 
   for (int i = 5; i < 6; ++i)
   {
@@ -39,6 +59,7 @@ int main_client()
     qi::Message reply;
     for (int j = 0; j < gLoopCount; ++j)
     {
+      qi::TransportSocket *transport = cp.transportSocket();
       static int id = 1;
       id++;
       char c = 1;
@@ -48,13 +69,13 @@ int main_client()
       requeststr[2] = c;
 
       request.setId(id);
-      request.setSource("remote");
-      request.setDestination("serviceTest");
       request.setPath("reply");
       request.setData(requeststr);
-      nc.tc->send(request);
-      nc.tc->waitForId(request.id());
-      nc.tc->read(request.id(), &reply);
+
+      transport->send(request);
+      transport->waitForId(request.id());
+      transport->read(request.id(), &reply);
+
       if (request.id() != reply.id() || reply.id() <= 0) {
         std::cout << "error id" << std::endl;
       }
