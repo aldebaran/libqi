@@ -38,14 +38,25 @@ namespace qi {
       const unsigned long msgSize) {
       fLoopCount = loopCount;
       fMsgSize = msgSize;
-      rt.restart();
+      //rt.restart();
+      qi::os::gettimeofday(&_start);
     }
 
     void DataPerfTimer::stop(bool shouldPrint) {
+      qi::os::timeval tv;
+
+      qi::os::gettimeofday(&tv);
+
+      //milli/usec/ns
+      unsigned long long usec = (tv.tv_sec - _start.tv_sec) * 1000 * 1000;
+
+      usec += (tv.tv_usec - _start.tv_usec) ;
       //rt.stop();
       //fElapsed = rt.diffUs() / 1000.0 / 1000.0;
-      boost::timer t;
-      fElapsed = rt.elapsed();
+     //  boost::timer t;
+      //fElapsed = rt.elapsed();
+      fElapsed = (double)usec / 1000 / 1000;
+      std::cout << "elapsed: " << fElapsed << std::endl;
       fMsgPs = 1.0 / (fElapsed / (1.0 * fLoopCount) );
       if (fMsgSize > 0) {
         fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);

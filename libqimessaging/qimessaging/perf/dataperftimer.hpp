@@ -12,6 +12,7 @@
 #define _QI_PERF_DATAPERFTIMER_HPP_
 
 #include <qi/config.hpp>
+#include <qi/os.hpp>
 #include <boost/timer.hpp>
 #include <string>
 
@@ -63,7 +64,7 @@ namespace qi {
     protected:
 
       /// <summary> The timer </summary>
-      boost::timer  rt;
+      qi::os::timeval _start;
 
       /// <summary> Number of loops </summary>
       unsigned long fLoopCount;
