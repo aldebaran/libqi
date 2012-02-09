@@ -41,9 +41,7 @@ namespace qi {
   }
 
   std::string Message::str()const {
-    std::string data;
-
-    qi::DataStream ds(data);
+    qi::DataStream ds;
 
     ds << (char)_type;
     ds << (int)_id;
