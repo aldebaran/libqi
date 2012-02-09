@@ -163,7 +163,13 @@ void TransportServer::eventcb(struct bufferevent *bev,
     // connection has been closed, do any clean up here
     ClientConnection *cc = static_cast<ClientConnection*>(context);
     qiLogInfo("qimessaging.TransportServer") << "Client ID " << cc->_id << " has closed connection." << std::endl;
-    clientConnected.erase(clientConnected.find(cc->_id));
+
+    ClientConnectionMap::iterator it;
+    it = clientConnected.find(cc->_id);
+    if (it != clientConnected.end())
+    {
+      clientConnected.erase(clientConnected.find(cc->_id));
+    }
   }
   else if (events & BEV_EVENT_ERROR)
   {
