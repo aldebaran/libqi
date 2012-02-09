@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <qimessaging/transport.hpp>
-#include <qimessaging/broker.hpp>
+#include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>

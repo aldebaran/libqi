@@ -10,7 +10,7 @@
 #include <map>
 #include <qimessaging/transport.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/broker.hpp>
+#include <qimessaging/session.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
 

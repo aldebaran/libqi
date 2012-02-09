@@ -6,7 +6,7 @@
 *  Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/broker.hpp>
+#include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
 

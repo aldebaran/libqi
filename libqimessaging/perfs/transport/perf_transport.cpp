@@ -13,7 +13,7 @@
 #include <boost/bind.hpp>
 
 #include <qimessaging/transport.hpp>
-#include <qimessaging/broker.hpp>
+#include <qimessaging/session.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>
 
 static int gLoopCount = 10000;
