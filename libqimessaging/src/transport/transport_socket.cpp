@@ -251,12 +251,17 @@ bool TransportSocket::waitForId(int id, int msecs)
 void TransportSocket::read(int id, qi::Message *msg)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
-  it = _p->msgSend.find(id);
-  if (it != _p->msgSend.end())
   {
-    qi::Message ans = *(it->second);
-    *msg = ans;
-    _p->msgSend.erase(it);
+    boost::mutex::scoped_lock l(_p->mtx);
+    {
+      it = _p->msgSend.find(id);
+      if (it != _p->msgSend.end())
+      {
+        qi::Message ans = *(it->second);
+        *msg = ans;
+        _p->msgSend.erase(it);
+      }
+    }
   }
 }
 
