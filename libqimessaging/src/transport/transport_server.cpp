@@ -118,9 +118,9 @@ void TransportServer::accept(evutil_socket_t listener,
 void TransportServer::readcb(struct bufferevent *bev,
                              void *context)
 {
-  char buf[1024];
-  memset(buf, '\0', 1024);
+  char   buf[1024];
   size_t n;
+
   struct evbuffer *input = bufferevent_get_input(bev);
 
   ClientConnection *cc = static_cast<ClientConnection*>(context);
@@ -128,10 +128,7 @@ void TransportServer::readcb(struct bufferevent *bev,
   std::string msgRecv;
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    std::string m(buf, n);
-    msgRecv += m;
-    memset(buf, '\0', 1024);
-
+    msgRecv.append(buf, n);
   }
 
   qi::Message msg(msgRecv);

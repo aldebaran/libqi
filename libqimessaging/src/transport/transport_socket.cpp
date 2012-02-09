@@ -80,17 +80,14 @@ static void eventcb(struct bufferevent *bev,
 void TransportSocket::readcb(struct bufferevent *bev,
                              void *context)
 {
-  char buf[1024];
-  memset(buf, '\0', 1024);
+  char   buf[1024];
   size_t n;
   struct evbuffer *input = bufferevent_get_input(bev);
 
   std::string msgRecv;
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    std::string m(buf, n);
-    msgRecv += m;
-    memset(buf, '\0', 1024);
+    msgRecv.append(buf, n);
   }
 
   boost::mutex::scoped_lock l(_p->mtx);
