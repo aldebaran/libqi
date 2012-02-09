@@ -20,6 +20,8 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <boost/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <qimessaging/transport/transport_socket.hpp>
 #include <qimessaging/transport/network_thread.hpp>
@@ -45,7 +47,8 @@ struct TransportSocketPrivate
   struct bufferevent                  *bev;
   bool                                 connected;
   std::map<unsigned int, qi::Message*> msgSend;
-
+  boost::mutex                         mtx;
+  boost::condition_variable            cond;
 };
 
 
@@ -82,12 +85,17 @@ void TransportSocket::readcb(struct bufferevent *bev,
   size_t n;
   struct evbuffer *input = bufferevent_get_input(bev);
 
+
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    std::string m(buf, n);
-    qi::Message *ans = new qi::Message(m);
-    _p->msgSend[ans->id()] = ans;
-    _p->tcd->onRead(*ans);
+    boost::mutex::scoped_lock l(_p->mtx);
+    {
+      std::string m(buf, n);
+      qi::Message *ans = new qi::Message(m);
+      _p->msgSend[ans->id()] = ans;
+      _p->tcd->onRead(*ans);
+      _p->cond.notify_all();
+    }
   }
 }
 
@@ -219,31 +227,22 @@ bool TransportSocket::waitForDisconnected(int msecs)
 bool TransportSocket::waitForId(int id, int msecs)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
-  // no timeout
-  if (msecs < 0)
   {
-    do
+    boost::mutex::scoped_lock l(_p->mtx);
     {
       it = _p->msgSend.find(id);
+      if (it != _p->msgSend.end())
+        return true;
+      if (msecs > 0)
+        _p->cond.timed_wait(l, boost::posix_time::milliseconds(msecs));
+      else
+        _p->cond.wait(l);
+      it = _p->msgSend.find(id);
+      if (it != _p->msgSend.end())
+        return true;
     }
-    while (it == _p->msgSend.end());
-
-    return true;
   }
-
-  do
-  {
-    qi::os::msleep(1);
-    msecs--;
-    it = _p->msgSend.find(id);
-  }
-  while (it == _p->msgSend.end() && msecs > 0);
-
-  // timeout
-  if (msecs == 0)
-    return false;
-
-  return true;
+  return false;
 }
 
 void TransportSocket::read(int id, qi::Message *msg)
