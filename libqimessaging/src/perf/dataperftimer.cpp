@@ -57,7 +57,7 @@ namespace qi {
       if (fMsgSize > 0) {
         fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
       }
-      fPeriod = (double)cpuElapsed * 1000.0 * 1000.0 / fLoopCount;
+      fPeriod = (double)wallClockElapsed * 1000.0 * 1000.0 / fLoopCount;
       if (shouldPrint)
         print(false);
 
