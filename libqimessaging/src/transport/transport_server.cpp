@@ -193,7 +193,10 @@ void TransportServer::start(const std::string &address,
     qiLogError("qimessaging.transportserver") << "Could not get socket" << std::endl;
     return;
   }
+
   evutil_make_socket_nonblocking(sock);
+  evutil_make_listen_socket_reuseable(sock);
+  evutil_make_socket_closeonexec(sock);
 
   // get valid IP
   struct sockaddr_in addr;
