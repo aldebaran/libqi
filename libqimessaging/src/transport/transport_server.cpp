@@ -125,20 +125,24 @@ void TransportServer::readcb(struct bufferevent *bev,
 
   ClientConnection *cc = static_cast<ClientConnection*>(context);
 
+  std::string msgRecv;
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    std::string ss(buf, n);
-    qi::Message msg(ss);
+    std::string m(buf, n);
+    msgRecv += m;
+    memset(buf, '\0', 1024);
 
-    ClientConnectionMap::iterator it;
-    it = clientConnected.find(msg.source());
-    if (it == clientConnected.end())
-    {
-      cc->_id = msg.source();
-      clientConnected[msg.source()] = cc;
-    }
-    _p->tsd->onRead(msg);
   }
+
+  qi::Message msg(msgRecv);
+  ClientConnectionMap::iterator it;
+  it = clientConnected.find(msg.source());
+  if (it == clientConnected.end())
+  {
+    cc->_id = msg.source();
+    clientConnected[msg.source()] = cc;
+  }
+  _p->tsd->onRead(msg);
 }
 
 void TransportServer::writecb(struct bufferevent* bev, void* context)

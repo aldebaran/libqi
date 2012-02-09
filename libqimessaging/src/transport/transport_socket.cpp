@@ -85,17 +85,20 @@ void TransportSocket::readcb(struct bufferevent *bev,
   size_t n;
   struct evbuffer *input = bufferevent_get_input(bev);
 
-
+  std::string msgRecv;
   while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
   {
-    boost::mutex::scoped_lock l(_p->mtx);
-    {
-      std::string m(buf, n);
-      qi::Message *ans = new qi::Message(m);
-      _p->msgSend[ans->id()] = ans;
-      _p->tcd->onRead(*ans);
-      _p->cond.notify_all();
-    }
+    std::string m(buf, n);
+    msgRecv += m;
+    memset(buf, '\0', 1024);
+  }
+
+  boost::mutex::scoped_lock l(_p->mtx);
+  {
+    qi::Message *ans = new qi::Message(msgRecv);
+    _p->msgSend[ans->id()] = ans;
+    _p->tcd->onRead(*ans);
+    _p->cond.notify_all();
   }
 }
 
