@@ -16,7 +16,7 @@
 #include <qimessaging/broker.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>
 
-static int gLoopCount = 1000;
+static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 
 class ClientPerf : public qi::TransportSocketDelegate {
@@ -46,17 +46,18 @@ private:
 
 int main_client()
 {
-  qi::perf::DataPerfTimer dp;
+  qi::perf::DataPerfTimer dp ("Transport synchronous call");
   ClientPerf cp;
 
-  for (int i = 5; i < 6; ++i)
+  for (int i = 0; i < 12; ++i)
   {
     char character = 'c';
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string requeststr = std::string(numBytes, character);
-    dp.start(gLoopCount, numBytes);
     qi::Message request;
     qi::Message reply;
+
+    dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j)
     {
       qi::TransportSocket *transport = cp.transportSocket();
@@ -69,11 +70,13 @@ int main_client()
       requeststr[2] = c;
 
       request.setId(id);
+      request.setSource("remote");
+      request.setDestination("serviceTest");
       request.setPath("reply");
       request.setData(requeststr);
 
       transport->send(request);
-      transport->waitForId(request.id());
+      transport->waitForId(request.id(), -1);
       transport->read(request.id(), &reply);
 
       if (request.id() != reply.id() || reply.id() <= 0) {
@@ -83,14 +86,13 @@ int main_client()
       if (request.data().size() != reply.data().size() || reply.data().size() != numBytes) {
         std::cout << "error sz" << std::endl;
       }
-      if (reply.data()[2] != c)
+      if (numBytes > 2 && reply.data()[2] != c)
       {
         std::cout << "error content" << std::endl;
       }
 
     }
-    dp.stop();
-    dp.print();
+    dp.stop(1);
   }
   return 0;
 }
@@ -105,14 +107,11 @@ void start_client(int count)
     for (int i = 0; i < count; ++i)
     {
       std::cout << "starting thread: " << i << std::endl;
-      sleep(1);
       thd[i] = boost::thread(boost::bind(&main_client));
     }
 
     for (int i = 0; i < count; ++i)
       thd[i].join();
-
-    std::cout << "end client" << std::endl;
 }
 
 
