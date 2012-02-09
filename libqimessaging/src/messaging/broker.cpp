@@ -14,7 +14,7 @@ static int uniqueRequestId = 0;
 
 namespace qi {
 
-Broker::Broker()
+Session::Session()
 {
   _nthd = new qi::NetworkThread();
 
@@ -22,13 +22,13 @@ Broker::Broker()
   tc->setDelegate(this);
 }
 
-Broker::~Broker()
+Session::~Session()
 {
   tc->disconnect();
   delete tc;
 }
 
-void Broker::connect(const std::string &masterAddress)
+void Session::connect(const std::string &masterAddress)
 {
   size_t begin = 0;
   size_t end = 0;
@@ -44,23 +44,23 @@ void Broker::connect(const std::string &masterAddress)
   tc->connect(ip, port, _nthd->getEventBase());
 }
 
-bool Broker::disconnect()
+bool Session::disconnect()
 {
   return true;
 }
 
 
-bool Broker::waitForConnected(int msecs)
+bool Session::waitForConnected(int msecs)
 {
   return tc->waitForConnected(msecs);
 }
 
-bool Broker::waitForDisconnected(int msecs)
+bool Session::waitForDisconnected(int msecs)
 {
   return tc->waitForDisconnected(msecs);
 }
 
-void Broker::registerEndpoint(const qi::EndpointInfo &e)
+void Session::registerEndpoint(const qi::EndpointInfo &e)
 {
   qi::DataStream d;
   d << e;
@@ -78,7 +78,7 @@ void Broker::registerEndpoint(const qi::EndpointInfo &e)
   tc->read(msg.id(), &ans);
 }
 
-void Broker::unregisterEndpoint(const qi::EndpointInfo& e)
+void Session::unregisterEndpoint(const qi::EndpointInfo& e)
 {
   qi::DataStream d;
   d << e;
@@ -96,12 +96,12 @@ void Broker::unregisterEndpoint(const qi::EndpointInfo& e)
   tc->read(msg.id(), &ans);
 }
 
-bool Broker::isInitialized() const
+bool Session::isInitialized() const
 {
   return true;
 }
 
-std::vector<std::string> Broker::machines()
+std::vector<std::string> Session::machines()
 {
   std::vector<std::string> result;
 
@@ -119,7 +119,7 @@ std::vector<std::string> Broker::machines()
   return result;
 }
 
-std::vector<std::string> Broker::services()
+std::vector<std::string> Session::services()
 {
   std::vector<std::string> result;
 
@@ -141,7 +141,7 @@ std::vector<std::string> Broker::services()
   return result;
 }
 
-qi::TransportSocket* Broker::service(const std::string &name,
+qi::TransportSocket* Session::service(const std::string &name,
                                      const std::string &type)
 {
   std::vector<qi::EndpointInfo> result;
@@ -180,17 +180,17 @@ qi::TransportSocket* Broker::service(const std::string &name,
 }
 
 
-void Broker::onConnected(const qi::Message &msg)
+void Session::onConnected(const qi::Message &msg)
 {
   //  std::cout << "connected broker: " << std::endl;
 }
 
-void Broker::onWrite(const qi::Message &msg)
+void Session::onWrite(const qi::Message &msg)
 {
   //  std::cout << "written broker: " << std::endl;
 }
 
-void Broker::onRead(const qi::Message &msg)
+void Session::onRead(const qi::Message &msg)
 {
   //  std::cout << "read broker: " << std::endl;
 }

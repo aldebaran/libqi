@@ -48,7 +48,7 @@ Remote Application should be "installed" on the robot, before being able to comm
 
 Each services ask (and cache) ApplicationManager about application who connect to know if they have specific permissions...
 
-Broker authenticate to a ServiceDirectoryManager using an authentication token.
+Session authenticate to a ServiceDirectoryManager using an authentication token.
 
 this auth token represent a remote client with a specific set of permissions (only known by the robot). this token is used everywhere to identify the client.
 

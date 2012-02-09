@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      qi::Broker        broker;
+      qi::Session        broker;
       ServiceTest       st;
 
       st.start("127.0.0.1:9571");

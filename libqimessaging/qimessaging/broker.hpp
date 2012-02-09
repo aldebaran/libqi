@@ -84,10 +84,10 @@ namespace qi {
   };
 
 
-  class Broker : public qi::TransportSocketDelegate {
+  class Session : public qi::TransportSocketDelegate {
   public:
-    Broker();
-    virtual ~Broker();
+    Session();
+    virtual ~Session();
 
     void onConnected(const qi::Message &msg);
     void onWrite(const qi::Message &msg);

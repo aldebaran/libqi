@@ -20,7 +20,7 @@ static int uniqueReqId = 200;
 
 void qi_call(const std::string &addr)
 {
-  qi::Broker nc;
+  qi::Session nc;
 
   nc.connect(addr);
   nc.waitForConnected();
