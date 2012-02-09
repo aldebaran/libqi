@@ -18,25 +18,38 @@ namespace po = boost::program_options;
 
 static int uniqueReqId = 200;
 
-void qi_call(const std::string &addr)
+
+void call(const std::string &addr)
 {
-  qi::Session nc;
+  qi::Session session;
+  session.setName("client.session");
+  session.setDestination("qi.master");
+  session.connect(addr);
+  session.waitForConnected();
 
-  nc.connect(addr);
-  nc.waitForConnected();
-  nc.setName("moi");
+  std::vector<std::string> servs = session.services();
+  for (int i = 0; i < servs.size(); ++i)
+    std::cout << "service named " << servs[i] << std::endl;
 
-  qi::TransportSocket* ts = nc.service("serviceTest");
+
+  qi::TransportSocket* servConnection = session.service("serviceTest");
 
   qi::Message msg;
   msg.setId(uniqueReqId++);
-  msg.setSource("moi");
-  msg.setDestination("qi.serviceTest");
+  msg.setSource("client");
+  msg.setDestination("serviceTest");
+  msg.setPath("toto");
 
-  ts->send(msg);
+  servConnection->send(msg);
+  servConnection->waitForId(msg.id());
+  qi::Message ans;
+  servConnection->read(msg.id(), &ans);
+
+  std::cout << ans << std::endl;
 
   qi::os::sleep(2);
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -46,7 +59,10 @@ int main(int argc, char *argv[])
       ("help", "Print this help.")
       ("master-address",
        po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),
-       "The master address");
+       "The master address")
+      ("gateway-address",
+       po::value<std::string>()->default_value(std::string("127.0.0.1:12345")),
+       "The gateway address");
 
   // allow master address to be specified as the first arg
   po::positional_options_description pos;
@@ -66,10 +82,14 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    if (vm.count("master-address") == 1)
+    if (vm.count("master-address") == 1 &&
+        vm.count("gateway-address") == 1)
     {
-      std::string address = vm["master-address"].as<std::string>();
-      qi_call(address);
+//      std::string masteraddr = vm["master-address"].as<std::string>();
+//      call(masteraddr);
+
+      std::string gatewayaddr = vm["gateway-address"].as<std::string>();
+      call(gatewayaddr);
     }
     else
     {
