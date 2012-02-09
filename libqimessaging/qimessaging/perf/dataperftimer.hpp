@@ -4,7 +4,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2011 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
 
@@ -45,10 +45,6 @@ namespace qi {
       /// <param name="showHeader"> true to show, false to hide the header. </param>
       DataPerfTimer(const std::string& testDescription = "", bool showHeader = true);
 
-      /// <summary> Print header. </summary>
-      /// <param name="testDescription"> Information describing the test. </param>
-      void printHeader(const std::string& testDescription = "");
-
       /// <summary> Starts the timer </summary>
       /// <param name="loopCount"> Number of loops. </param>
       /// <param name="msgSize"> Size of the message. </param>
@@ -58,28 +54,21 @@ namespace qi {
       /// <param name="shouldPrint"> true if should print. </param>
       void stop(bool shouldPrint = true);
 
-      /// <summary> Prints this object. </summary>
-      void print();
 
     protected:
+      void printHeader(const std::string& testDescription = "");
+      void print(bool cpu);
 
-      /// <summary> The timer </summary>
-      qi::os::timeval _start;
+      //cpu time
+      boost::timer    fRt;
+      //wallclock time
+      qi::os::timeval fStartTime;
 
-      /// <summary> Number of loops </summary>
-      unsigned long fLoopCount;
-
-      /// <summary> Size of the message </summary>
-      unsigned long fMsgSize;
-
-      /// <summary> The elapsed </summary>
-      double        fElapsed;
-
-      /// <summary> The message ps </summary>
-      double        fMsgPs;
-
-      /// <summary> The mgb ps </summary>
-      double        fMgbPs;
+      unsigned long   fLoopCount;
+      unsigned long   fMsgSize;
+      double          fMsgPs;
+      double          fMgbPs;
+      double          fPeriod;
     };
   }
 }

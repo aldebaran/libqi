@@ -17,9 +17,9 @@ namespace qi {
     DataPerfTimer::DataPerfTimer(const std::string& testDescription, bool showHeader)
       : fLoopCount(1),
         fMsgSize(2),
-        fElapsed(0.0),
         fMsgPs(0.0),
-        fMgbPs(0.0)
+        fMgbPs(0.0),
+        fPeriod(0.0)
     {
       if (showHeader) {
         printHeader(testDescription);
@@ -30,7 +30,7 @@ namespace qi {
       if (! testDescription.empty()) {
         std::cout << testDescription << std::endl;
       }
-      std::cout << "bytes, msg/s, Mb/s" << std::endl;
+      std::cout << "bytes, msg/s, Mb/s, period (us)" << std::endl;
     }
 
     void DataPerfTimer::start(
@@ -38,39 +38,51 @@ namespace qi {
       const unsigned long msgSize) {
       fLoopCount = loopCount;
       fMsgSize = msgSize;
-      //rt.restart();
-      qi::os::gettimeofday(&_start);
+      fRt.restart();
+      qi::os::gettimeofday(&fStartTime);
     }
 
     void DataPerfTimer::stop(bool shouldPrint) {
+      double          wallClockElapsed;
+      double          cpuElapsed;
       qi::os::timeval tv;
 
       qi::os::gettimeofday(&tv);
+      cpuElapsed = fRt.elapsed();
 
-      //milli/usec/ns
-      unsigned long long usec = (tv.tv_sec - _start.tv_sec) * 1000 * 1000;
+      wallClockElapsed  = (tv.tv_sec - fStartTime.tv_sec);
+      wallClockElapsed += (double)(tv.tv_usec - fStartTime.tv_usec) / 1000 / 1000;
 
-      usec += (tv.tv_usec - _start.tv_usec) ;
-      //rt.stop();
-      //fElapsed = rt.diffUs() / 1000.0 / 1000.0;
-     //  boost::timer t;
-      //fElapsed = rt.elapsed();
-      fElapsed = (double)usec / 1000 / 1000;
-      std::cout << "elapsed: " << fElapsed << std::endl;
-      fMsgPs = 1.0 / (fElapsed / (1.0 * fLoopCount) );
+      fMsgPs = 1.0 / (wallClockElapsed / (1.0 * fLoopCount));
       if (fMsgSize > 0) {
         fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
       }
+      fPeriod = (double)cpuElapsed * 1000.0 * 1000.0 / fLoopCount;
       if (shouldPrint)
-        print();
+        print(false);
+
+      fMsgPs = 1.0 / (cpuElapsed / (1.0 * fLoopCount));
+      if (fMsgSize > 0) {
+        fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
+      }
+      fPeriod = (double)cpuElapsed * 1000.0 / fLoopCount * 1000.0;
+      if (shouldPrint)
+        print(true);
     }
 
-    void DataPerfTimer::print()
+    void DataPerfTimer::print(bool cpu)
     {
+      std::string str = "wallclock: ";
+      if (cpu)
+        str = "cpu      : ";
       if (fMsgSize > 0) {
-        std::cout << std::setprecision(12) << fMsgSize << ", " << fMsgPs << ", " << fMgbPs << std::endl;
+        std::cout << str
+                  << std::fixed << std::setprecision(2) << fMsgSize << " b, "
+                  << fMsgPs << " msg/s, "
+                  << std::setprecision(12) << fMgbPs << " MB/s, "
+                  << std::setprecision(0) << fPeriod << " us" << std::endl;
       } else {
-        std::cout << std::setprecision(12) << fMsgPs  << " msg/s" << std::endl;
+        std::cout << str << std::setprecision(12) << fMsgPs  << " msg/s" << std::endl;
       }
     }
   }
