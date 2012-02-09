@@ -61,6 +61,23 @@ public:
   virtual void onRead(const qi::Message &msg)
   {
     std::cout << "read  qiservice: " << msg << std::endl;
+
+    if (msg.path() == "toto")
+      toto(msg);
+
+  }
+
+  void toto(const qi::Message &msg)
+  {
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData("msg.data()");
+
+    ts->send(retval);
   }
 
 private:
@@ -99,7 +116,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      qi::Session        broker;
+      qi::Session       session;
       ServiceTest       st;
 
       st.start("127.0.0.1:9571");
@@ -112,16 +129,16 @@ int main(int argc, char *argv[])
 
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      broker.connect(masterAddress);
-      broker.waitForConnected();
-      broker.setName("serviceTest");
-      broker.setDestination("qi.master");
-      broker.registerEndpoint(e);
+      session.setName("serviceTest");
+      session.setDestination("qi.master");
+      session.connect(masterAddress);
+      session.waitForConnected();
+      session.registerEndpoint(e);
 
       while (1)
         qi::os::sleep(1);
 
-      broker.unregisterEndpoint(e);
+      session.unregisterEndpoint(e);
     }
     else
     {
