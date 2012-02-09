@@ -1,64 +1,218 @@
 /*
 ** Author(s):
-**  - Nicolas HUREAU <nhureau@aldebaran-robotics.com>
+**  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2011 Aldebaran Robotics
+** Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #include <iostream>
-#include <sstream>
-#include <cstring>
+#include <vector>
+#include <map>
+#include <qimessaging/transport.hpp>
+#include <qimessaging/datastream.hpp>
+#include <qimessaging/session.hpp>
+#include <qi/os.hpp>
 #include <boost/program_options.hpp>
-#include <boost/thread.hpp>
-#include <boost/date_time.hpp>
-
-#include <qi/log.hpp>
-
-#include <signal.h>
-
-#include "daemon.h"
-#include "gateway.hpp"
-#include "master.hpp"
 
 namespace po = boost::program_options;
 
-static
-void launch(const char* gatewayHost, unsigned short gatewayPort,
-            const std::string& masterAddress);
-static
-void sig_handler(int signum, siginfo_t* info, void* vctx);
+static int id = 300;
+
+
+class Gateway : public qi::TransportServerDelegate
+{
+public:
+  Gateway()
+  {
+    _nthd = new qi::NetworkThread();
+
+    _ts = new qi::TransportServer();
+    _ts->setDelegate(this);
+  }
+
+  ~Gateway()
+  {
+    delete _ts;
+  }
+
+  void start(const std::string &address)
+  {
+    qi::EndpointInfo e;
+    size_t begin = 0;
+    size_t end = 0;
+    end = address.find(":");
+
+    e.type = "tcp";
+    e.ip = address.substr(begin, end);
+    begin = end + 1;
+
+    std::stringstream ss(address.substr(begin));
+    ss >> e.port;
+
+    _endpoints.push_back(e);
+    _ts->start(e.ip, e.port, _nthd->getEventBase());
+  }
+
+  virtual void onConnected(const qi::Message &msg)
+  {
+    //    std::cout << "connected qiservice: " << msg << std::endl;
+  }
+
+  virtual void onWrite(const qi::Message &msg)
+  {
+    //    std::cout << "written qiservice: " << msg << std::endl;
+  }
+
+  virtual void onRead(const qi::Message &msg)
+  {
+    std::cout << "read qigateway: " << msg << std::endl;
+
+    if (msg.path() == "services")
+    {
+      services(msg);
+      return;
+    }
+
+    if (msg.path() == "service")
+    {
+      service(msg);
+      return;
+    }
+
+    qi::TransportSocket* ts;
+    std::map<std::string, qi::TransportSocket*>::iterator it = _serviceConnection.find(msg.destination());
+    // no connection to service
+    if (it == _serviceConnection.end())
+    {
+      ts = _session.service(msg.destination());
+      _serviceConnection[msg.destination()] = ts;
+    }
+    else
+    {
+      ts = it->second;
+    }
+
+    qi::Message fwd(msg);
+    fwd.setId(id++);
+    fwd.setSource("gateway");
+    ts->send(fwd);
+    ts->waitForId(fwd.id());
+    qi::Message ans;
+    ts->read(fwd.id(), &ans);
+    ans.setId(msg.id());
+    ans.setDestination(msg.source());
+
+    _ts->send(ans);
+  }
+
+  void services(const qi::Message &msg)
+  {
+    std::vector<std::string> result = _session.services();
+
+    qi::DataStream d;
+    d << result;
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(d.str());
+
+    _ts->send(retval);
+  }
+
+
+  void service(const qi::Message &msg)
+  {
+    qi::DataStream d;
+    d << _endpoints;
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(d.str());
+
+    _ts->send(retval);
+  }
+
+  void registerGateway(const std::string &masterAddress,
+                       const std::string &gatewayAddress)
+  {
+    qi::EndpointInfo e;
+
+    size_t begin = 0;
+    size_t end = 0;
+    end = gatewayAddress.find(":");
+
+    e.ip = gatewayAddress.substr(begin, end);
+    begin = end + 1;
+
+    std::stringstream ss(gatewayAddress.substr(begin));
+    ss >> e.port;
+    e.type = "tcp";
+
+    _session.connect(masterAddress);
+    _session.waitForConnected();
+    _session.setName("gateway");
+    _session.setDestination("qi.master");
+    _session.registerEndpoint(e);
+  }
+
+  void unregisterGateway(const std::string &gatewayAddress)
+  {
+    qi::EndpointInfo e;
+
+    size_t begin = 0;
+    size_t end = 0;
+    end = gatewayAddress.find(":");
+
+    e.ip = gatewayAddress.substr(begin, end);
+    begin = end + 1;
+
+    std::stringstream ss(gatewayAddress.substr(begin));
+    ss >> e.port;
+    e.type = "tcp";
+
+    _session.unregisterEndpoint(e);
+  }
+
+private:
+  qi::Session          _session;
+  qi::NetworkThread   *_nthd;
+  qi::TransportServer *_ts;
+  std::vector<qi::EndpointInfo>               _endpoints;
+  std::map<std::string, qi::TransportSocket*> _serviceConnection;
+};
+
 
 int main(int argc, char *argv[])
 {
   // declare the program options
-  po::options_description desc(("Usage:\n  " + std::string(argv[0]) +
-                                " [options]\nOptions").c_str());
+  po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
   desc.add_options()
-    ("help,h", "Print this help.")
-    ("gateway-listen,l",
-      po::value<std::string>()->default_value(std::string("127.0.0.1")),
-      "Address to listen to (Gateway)")
-    ("gateway-port,p",
-      po::value<unsigned short>()->default_value(12890),
-      "Port to listen on (Gateway)")
-    ("master-listen,a",
-      po::value<std::string>()->default_value(std::string("127.0.0.1")),
-      "Address to listen to (Master)")
-    ("master-port,o",
-      po::value<unsigned short>()->default_value(5555),
-      "Port to listen on (Master)")
-    ("daemon,d", "Daemonize the server");
+      ("help", "Print this help.")
+      ("master-address",
+       po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),
+       "The master address")
+      ("gateway-address",
+       po::value<std::string>()->default_value(std::string("127.0.0.1:12345")),
+       "The gateway address");
 
-  // allow listen address to be specified as the first arg
+  // allow master address to be specified as the first arg
   po::positional_options_description pos;
-  pos.add("listen", 1);
+  pos.add("master-address", 1);
 
   // parse and store
   po::variables_map vm;
   try
   {
     po::store(po::command_line_parser(argc, argv).
-      options(desc).positional(pos).run(), vm);
+              options(desc).positional(pos).run(), vm);
     po::notify(vm);
 
     if (vm.count("help"))
@@ -67,81 +221,40 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    if (vm.count("daemon"))
-      if (!daemonize())
-        throw std::runtime_error("Could not daemonize");
-
-    if (vm.count("gateway-listen") && vm.count("gateway-port") &&
-        vm.count("master-listen") && vm.count("master-port"))
+    if (vm.count("master-address") == 1 &&
+        vm.count("gateway-address") == 1 )
     {
-      struct sigaction sigact;
-      memset(&sigact, 0, sizeof (sigact));
-      sigact.sa_sigaction = sig_handler;
+      std::string gatewayAddress = vm["gateway-address"].as<std::string>();
+      std::string masterAddress = vm["master-address"].as<std::string>();
 
-      if (sigaction(SIGINT, &sigact, NULL) == -1)
-        throw std::runtime_error("Could not set SIG handler");
+      Gateway           gate;
+      gate.start(gatewayAddress);
+      std::cout << "ready." << std::endl;
 
-      std::stringstream masterAddress;
-      masterAddress << vm["master-listen"].as<std::string>() << ":"
-                    << vm["master-port"].as<unsigned short>();
+      gate.registerGateway(masterAddress, gatewayAddress);
 
-      launch(vm["gateway-listen"].as<std::string>().c_str(),
-             vm["gateway-port"].as<unsigned short>(),
-             masterAddress.str());
+//      qi::Message msg;
+//      msg.setId(1000);
+//      msg.setSource("gateway");
+//      msg.setDestination("qi.master");
+//      msg.setPath("services");
+//      msg.setType(qi::Message::Call);
+//      gate.services(msg);
+
+      while (1)
+        qi::os::sleep(1);
+
+      gate.unregisterGateway(gatewayAddress);
     }
     else
     {
-      std::cerr << desc << "\n";
-      return 1;
+      std::cout << desc << "\n";
     }
   }
-  catch (const std::exception& e)
+  catch (const boost::program_options::error&)
   {
-    qiLogFatal("qigateway", "%s", e.what());
-    return 1;
+    std::cout << desc << "\n";
   }
 
   return 0;
-}
-
-static
-void launch(const char* gatewayHost, unsigned short gatewayPort,
-            const std::string& masterAddress)
-{
-  qiLogInfo("qigateway", "Launching QiMessaging Gateway");
-  boost::thread gatewayThread(qi::gateway::Gateway::launch,
-      gatewayHost, gatewayPort);
-
-  qiLogInfo("qigateway", "Launching QiMessaging Master");
-  boost::thread masterThread(qi::gateway::Master::launch,
-      masterAddress);
-
-  for (;;)
-  {
-    if (gatewayThread.timed_join(boost::posix_time::milliseconds(10)))
-    {
-      gatewayThread = boost::move(boost::thread(qi::gateway::Gateway::launch,
-            gatewayHost, gatewayPort));
-    }
-
-    if (masterThread.timed_join(boost::posix_time::milliseconds(10)))
-    {
-      masterThread = boost::move(boost::thread(qi::gateway::Master::launch,
-            masterAddress));
-    }
-
-    qi::os::sleep(1);
-  }
-}
-
-static
-void sig_handler(int signum, siginfo_t* info, void* vctx)
-{
-  (void) signum;
-  (void) info;
-  (void) vctx;
-
-  qiLogInfo("qigateway", "Stopping QiMessaging Gateway + Master");
-
-  exit(0);
 }
