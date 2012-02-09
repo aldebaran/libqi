@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -44,7 +45,7 @@ private:
   qi::NetworkThread   *nt;
 };
 
-int main_client()
+int main_client(std::string src)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   ClientPerf cp;
@@ -70,7 +71,7 @@ int main_client()
       requeststr[2] = c;
 
       request.setId(id);
-      request.setSource("remote");
+      request.setSource(src);
       request.setDestination("serviceTest");
       request.setPath("reply");
       request.setData(requeststr);
@@ -98,6 +99,7 @@ int main_client()
 }
 
 
+
 void start_client(int count)
 {
     boost::thread thd[100];
@@ -106,8 +108,10 @@ void start_client(int count)
 
     for (int i = 0; i < count; ++i)
     {
-      std::cout << "starting thread: " << i << std::endl;
-      thd[i] = boost::thread(boost::bind(&main_client));
+      std::stringstream ss;
+      ss << "remte" << i;
+      std::cout << "starting thread: " << ss.str() << std::endl;
+      thd[i] = boost::thread(boost::bind(&main_client, ss.str()));
     }
 
     for (int i = 0; i < count; ++i)
@@ -190,7 +194,6 @@ int main_server()
   while(1) {
     qi::os::sleep(1);
   }
-
   return 0;
 }
 
@@ -199,7 +202,10 @@ int main(int argc, char **argv)
 {
   if (argc > 1 && !strcmp(argv[1], "--client"))
   {
-    start_client(1);
+    int threadc = 1;
+    if (argc > 2)
+      threadc = atoi(argv[2]);
+    start_client(threadc);
   }
   else if (argc > 1 && !strcmp(argv[1], "--server"))
   {
