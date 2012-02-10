@@ -71,9 +71,9 @@ namespace qi {
     std::string  _data;
   };
 
+  std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
-std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 
 
 #endif  // _QIMESSAGING_SERIALIZATION_MESSAGE_HPP_

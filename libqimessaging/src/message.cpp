@@ -9,20 +9,20 @@
 #include <qimessaging/datastream.hpp>
 #include <iostream>
 
-
-std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
-  os << "message {"
-     << "id=" << msg.id()
-     << ", type=" << (char)msg.type() + '0'
-     << ", src=" << msg.source()
-     << ", dest=" << msg.destination()
-     << ", path=" << msg.path()
-     << ", data_size=" << msg.data().size()
-     << "}";
-  return os;
-}
-
 namespace qi {
+
+  std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
+    os << "message {"
+       << "id=" << msg.id()
+       << ", type=" << (char)msg.type() + '0'
+       << ", src=" << msg.source()
+       << ", dest=" << msg.destination()
+       << ", path=" << msg.path()
+       << ", data_size=" << msg.data().size()
+       << "}";
+    return os;
+  }
+
 
   Message::Message(const std::string &data)
   {
