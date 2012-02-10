@@ -12,6 +12,7 @@
 #include <qi/os.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport.hpp>
+#include <qimessaging/object.hpp>
 
 #include <boost/program_options.hpp>
 
@@ -32,20 +33,24 @@ void call(const std::string &addr)
     std::cout << "service named " << servs[i] << std::endl;
 
 
-  qi::TransportSocket* servConnection = session.service("serviceTest");
+  qi::Object *obj = session.serviceObject("serviceTest");
 
-  qi::Message msg;
-  msg.setId(uniqueReqId++);
-  msg.setSource("client");
-  msg.setDestination("serviceTest");
-  msg.setPath("reply");
+  std::string result = obj->call<std::string>("reply", "plaf");
 
-  servConnection->send(msg);
-  servConnection->waitForId(msg.id());
-  qi::Message ans;
-  servConnection->read(msg.id(), &ans);
+  std::cout << "answer:" << result << std::endl;
+//  qi::TransportSocket* servConnection = session.service("serviceTest");
 
-  std::cout << ans << std::endl;
+//  qi::Message msg;
+//  msg.setId(uniqueReqId++);
+//  msg.setSource("client");
+//  msg.setDestination("serviceTest");
+//  msg.setPath("reply");
+
+//  servConnection->send(msg);
+//  servConnection->waitForId(msg.id());
+//  qi::Message ans;
+//  servConnection->read(msg.id(), &ans);
+
 
   qi::os::sleep(2);
 }
