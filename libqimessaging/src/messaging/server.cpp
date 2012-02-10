@@ -6,34 +6,64 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+#include <qimessaging/object.hpp>
 #include <qimessaging/server.hpp>
-#include <qimessaging/context.hpp>
-#include "src/messaging/server_impl.hpp"
+#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport/network_thread.hpp>
 
 namespace qi {
+
+  class ServerPrivate {
+  public:
+    std::map<std::string, qi::Object*> _services;
+    TransportServer                    _ts;
+  };
+
+  Server::Server()
+    : _p(new ServerPrivate())
+  {
+    _p->_ts.setDelegate(this);
+  }
+
   Server::~Server()
   {
+    delete _p;
   }
 
-  Server::Server(const std::string& serverName, Context *ctx)
-    : _impl(new detail::ServerImpl(serverName, ctx))
-  {
-    // TODO prevent the name "master"
-  }
 
-  void Server::connect(const std::string& masterAddress) {
-    _impl->connect(masterAddress);
-  }
+  void Server::start(const std::string &addr, unsigned short port, qi::NetworkThread *base) {
 
-  void Server::xAdvertiseService(const std::string& methodSignature, qi::Functor* functor) {
-    _impl->advertiseService(methodSignature, functor);
-  }
+    _p->_ts.start(addr, port, base->getEventBase());
+  };
 
-  void Server::xUnadvertiseService(const std::string& methodSignature) {
-    _impl->unadvertiseService(methodSignature);
-  }
+  void Server::advertiseService(const std::string &name, qi::Object *obj) {
+    _p->_services[name] = obj;
+  };
 
-  bool Server::isInitialized() const {
-    return _impl->isInitialized();
-  }
+  void Server::onConnected(const qi::Message &msg) {
+  };
+
+  void Server::onWrite(const qi::Message &msg) {
+
+  };
+
+  void Server::onRead(const qi::Message &msg) {
+    qi::Object *obj;
+
+    obj = _p->_services[msg.destination()];
+    qi::DataStream ds(msg.data());
+    qi::DataStream rs;
+
+    obj->metaCall(msg.path(), "", ds, rs);
+
+    qi::Message retval;
+    retval.setType(qi::Message::Answer);
+    retval.setId(msg.id());
+    retval.setSource(msg.destination());
+    retval.setDestination(msg.source());
+    retval.setPath(msg.path());
+    retval.setData(rs.str());
+    _p->_ts.send(retval);
+  };
+
 }
