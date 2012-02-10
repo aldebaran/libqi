@@ -11,7 +11,6 @@
 
 #include <qi/os.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/client.hpp>
 #include <qimessaging/transport.hpp>
 
 #include <boost/program_options.hpp>
