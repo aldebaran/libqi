@@ -6,7 +6,6 @@
 */
 
 #include <qimessaging/server.h>
-#include <qimessaging/client.h>
 #include <qimessaging/message.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -10,7 +10,6 @@
 #ifndef _QIMESSAGING_BROKER_H_
 #define _QIMESSAGING_BROKER_H_
 
-#include <qimessaging/context.h>
 #include <stdlib.h>
 #include <strings.h>
 
