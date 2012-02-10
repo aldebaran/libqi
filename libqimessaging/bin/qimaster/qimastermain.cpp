@@ -10,7 +10,7 @@
 #include <map>
 
 #include <qi/os.hpp>
-#include "qimaster.hpp"
+#include <qimessaging/transport/qimaster.hpp>
 
 #include <boost/program_options.hpp>
 

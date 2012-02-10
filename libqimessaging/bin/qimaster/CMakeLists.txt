@@ -9,8 +9,6 @@
 project (QiMaster)
 
 qi_create_bin(qi-master
-  qimaster.cpp
   qimastermain.cpp
-  qimaster.hpp
   DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
 

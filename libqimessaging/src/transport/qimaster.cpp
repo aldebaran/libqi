@@ -10,11 +10,11 @@
 #include <map>
 
 #include <qimessaging/transport.hpp>
+#include <qimessaging/transport/qimaster.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/os.hpp>
 
-#include "qimaster.hpp"
 
 namespace qi
 {
@@ -58,8 +58,6 @@ namespace qi
 
   void ServiceDirectoryServer::onRead(const qi::Message &msg)
   {
-    std::cout << "qimaster read: " << msg << std::endl;
-
     if (msg.path() == "services")
       services(msg);
 
