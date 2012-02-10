@@ -3,7 +3,7 @@
 ## Author(s):
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010 Aldebaran Robotics
+## Copyright (C) 2010, 2012 Aldebaran Robotics
 ##
 
 import os
@@ -54,11 +54,12 @@ if __name__ == "__main__":
     #print "cd", os.path.dirname(__file__)
     #os.chdir(os.path.dirname(__file__))
     numArgs = 10 # This results in n-1 arguments
-    generate_file("../qi/functors/detail/memberfunctor.hxx.in"    , "../qi/functors/detail/memberfunctor.hxx"    , numArgs)
-    generate_file("../qi/functors/detail/voidmemberfunctor.hxx.in", "../qi/functors/detail/voidmemberfunctor.hxx", numArgs)
-    generate_file("../qi/functors/detail/functor.hxx.in"          , "../qi/functors/detail/functor.hxx"          , numArgs)
-    generate_file("../qi/functors/detail/voidfunctor.hxx.in"      , "../qi/functors/detail/voidfunctor.hxx"      , numArgs)
-    generate_file("../qi/functors/makefunctor.hpp.in"             , "../qi/functors/makefunctor.hpp"             , numArgs)
-    generate_file("../qi/functors/callfunctor.hpp.in"             , "../qi/functors/callfunctor.hpp"             , numArgs)
-    generate_file("../qi/messaging/client.hpp.in"                 , "../qi/messaging/client.hpp"                 , numArgs)
-    generate_file("../qi/messaging/client.hxx.in"                 , "../qi/messaging/client.hxx"                 , numArgs)
+    # generate_file("qimessaging/functors/detail/memberfunctor.hxx.in"    , "qimessaging/functors/detail/memberfunctor.hxx"    , numArgs)
+    # generate_file("qimessaging/functors/detail/voidmemberfunctor.hxx.in", "qimessaging/functors/detail/voidmemberfunctor.hxx", numArgs)
+    # generate_file("qimessaging/functors/detail/functor.hxx.in"          , "qimessaging/functors/detail/functor.hxx"          , numArgs)
+    # generate_file("qimessaging/functors/detail/voidfunctor.hxx.in"      , "qimessaging/functors/detail/voidfunctor.hxx"      , numArgs)
+    # generate_file("qimessaging/functors/makefunctor.hpp.in"             , "qimessaging/functors/makefunctor.hpp"             , numArgs)
+    # generate_file("qimessaging/functors/callfunctor.hpp.in"             , "qimessaging/functors/callfunctor.hpp"             , numArgs)
+    # generate_file("qimessaging/messaging/client.hpp.in"                 , "qimessaging/messaging/client.hpp"                 , numArgs)
+    # generate_file("qimessaging/messaging/client.hxx.in"                 , "qimessaging/messaging/client.hxx"                 , numArgs)
+    generate_file("qimessaging/object.hxx.in"                 , "qimessaging/object.hxx"                 , numArgs)
