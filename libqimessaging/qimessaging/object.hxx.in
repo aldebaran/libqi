@@ -1,0 +1,67 @@
+#from qibuild_code_generator import *
+<%
+def generate_argpush_list(count):
+    t = "args.push_back(p%(count)d);"
+    return generate_list(t, count, sep=" ")
+%>
+#raw
+#pragma once
+/*
+* $autogen
+*
+*  Author(s):
+*  - Chris Kilner  <ckilner@aldebaran-robotics.com>
+*  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
+*/
+
+#ifndef _QI_MESSAGING_OBJECT_HXX_
+#define _QI_MESSAGING_OBJECT_HXX_
+
+namespace qi {
+#end raw
+#for $i in $count
+
+#if $i != 0
+
+  /// <summary> Calls a void method </summary>
+  template <${generate_typename_list($i)}>
+  void Object::callVoid(const std::string& method${generate_param_list($i, begin=True)}) {
+    qi::DataStream request;
+    qi::DataStream reply;
+
+    void (*f)(${generate_param_list($i)})  = 0;
+    std::string signature = makeFunctionSignature(method, f);
+    #for $j in range($i)
+    request << p${j};
+    #end for
+    metaCall(method, signature, request, reply);
+  }
+#end if
+
+  /// <summary> Calls a method </summary>
+  /// <returns> The response </returns>
+  template <typename R${generate_typename_list($i, begin=True)}>
+  R Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
+    qi::DataStream request;
+    qi::DataStream reply;
+
+    R (*f)(${generate_param_list($i)})  = 0;
+    std::string signature = makeFunctionSignature(method, f);
+    #for $j in range($i)
+    request << p${j};
+    #end for
+    metaCall(method, signature, request, reply);
+
+    // Optimise? I think compiler is smart enough to inline the returned object
+    R ret;
+    reply >> ret;
+    return ret;
+  }
+#end for
+
+}
+#raw
+#endif  // _QI_MESSAGING_OBJECT_HXX_
+#end raw
