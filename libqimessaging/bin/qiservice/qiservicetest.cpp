@@ -57,7 +57,7 @@ namespace qi
 
   void ServiceTest::onRead(const qi::Message &msg)
   {
-    std::cout << "read  qiservice" << std::endl;
+    std::cout << "read qiservice: " << msg <<  std::endl;
 
     if (msg.path() == "reply")
       reply(msg);

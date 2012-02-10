@@ -58,7 +58,7 @@ namespace qi
 
   void ServiceDirectoryServer::onRead(const qi::Message &msg)
   {
-    std::cout << "qimaster read" << std::endl;
+    std::cout << "qimaster read: " << msg << std::endl;
 
     if (msg.path() == "services")
       services(msg);

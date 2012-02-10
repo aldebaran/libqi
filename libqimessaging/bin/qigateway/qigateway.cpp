@@ -61,7 +61,7 @@ namespace qi
 
   void Gateway::onRead(const qi::Message &msg)
   {
-    std::cout << "qigateway read" << std::endl;
+    std::cout << "qigateway read: " << msg << std::endl;
 
     if (msg.path() == "services")
     {
