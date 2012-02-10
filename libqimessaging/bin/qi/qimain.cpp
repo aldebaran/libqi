@@ -8,16 +8,17 @@
 #include <iostream>
 #include <string>
 #include <map>
+
+#include <qi/os.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/client.hpp>
 #include <qimessaging/transport.hpp>
+
 #include <boost/program_options.hpp>
-#include <qi/os.hpp>
 
 namespace po = boost::program_options;
 
 static int uniqueReqId = 200;
-
 
 void call(const std::string &addr)
 {
@@ -38,7 +39,7 @@ void call(const std::string &addr)
   msg.setId(uniqueReqId++);
   msg.setSource("client");
   msg.setDestination("serviceTest");
-  msg.setPath("toto");
+  msg.setPath("reply");
 
   servConnection->send(msg);
   servConnection->waitForId(msg.id());
@@ -85,8 +86,8 @@ int main(int argc, char *argv[])
     if (vm.count("master-address") == 1 &&
         vm.count("gateway-address") == 1)
     {
-//      std::string masteraddr = vm["master-address"].as<std::string>();
-//      call(masteraddr);
+      std::string masteraddr = vm["master-address"].as<std::string>();
+      call(masteraddr);
 
       std::string gatewayaddr = vm["gateway-address"].as<std::string>();
       call(gatewayaddr);
