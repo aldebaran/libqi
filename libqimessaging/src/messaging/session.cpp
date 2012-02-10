@@ -9,10 +9,40 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
+#include <qimessaging/object.hpp>
 
 static int uniqueRequestId = 0;
 
 namespace qi {
+
+class RemoteObject : public qi::Object {
+public:
+  explicit RemoteObject(qi::TransportSocket *ts, const std::string &dest)
+    : _ts(ts),
+      _dest(dest)
+  {
+  }
+
+  virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out) {
+    qi::Message msg;
+    msg.setId(uniqueRequestId++);
+    msg.setSource("ouame");
+    msg.setDestination(_dest);
+    msg.setPath(method);
+    msg.setData(in.str());
+    _ts->send(msg);
+    _ts->waitForId(msg.id());
+
+    qi::Message ret;
+    _ts->read(msg.id(), &ret);
+    out.str(ret.data());
+  }
+
+protected:
+  qi::TransportSocket *_ts;
+  std::string _dest;
+};
+
 
 Session::Session()
 {
@@ -179,6 +209,17 @@ qi::TransportSocket* Session::service(const std::string &name,
   return ts;
 }
 
+
+qi::Object* Session::serviceObject(const std::string &name,
+                                   const std::string &type)
+{
+  qi::Object          *obj;
+  qi::TransportSocket *ts = service(name, type);
+
+  qi::RemoteObject *robj = new qi::RemoteObject(ts, name);
+  obj = robj;
+  return obj;
+}
 
 void Session::onConnected(const qi::Message &msg)
 {

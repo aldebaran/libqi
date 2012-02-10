@@ -35,6 +35,7 @@
 namespace qi {
 
   class NetworkThread;
+  class Object;
 
   class MachineInfo {
   public:
@@ -111,6 +112,9 @@ namespace qi {
 
     qi::TransportSocket* service(const std::string &name,
                                  const std::string &type = "tcp");
+
+    qi::Object* serviceObject(const std::string &name,
+                              const std::string &type = "tcp");
 
     void setName(const std::string &name) { _name = name; }
     std::string name()                    { return _name; }
