@@ -10,11 +10,10 @@
 #include <map>
 
 #include <qimessaging/transport.hpp>
+#include <qimessaging/transport/qigateway.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/session.hpp>
 #include <qi/os.hpp>
-
-#include "qigateway.hpp"
 
 static int id = 300;
 
@@ -61,8 +60,6 @@ namespace qi
 
   void Gateway::onRead(const qi::Message &msg)
   {
-    std::cout << "qigateway read: " << msg << std::endl;
-
     if (msg.path() == "services")
     {
       services(msg);

@@ -11,7 +11,7 @@
 #include <boost/program_options.hpp>
 
 #include <qi/os.hpp>
-#include "qigateway.hpp"
+#include <qimessaging/transport/qigateway.hpp>
 
 
 namespace po = boost::program_options;
