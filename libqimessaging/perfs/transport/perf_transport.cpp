@@ -17,38 +17,26 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>
 
+#include <qimessaging/transport/qimaster.hpp>
+#include <qimessaging/transport/qigateway.hpp>
+
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
-
-class ClientPerf : public qi::TransportSocketDelegate {
-public:
-  ClientPerf()
-  {
-    nt = new qi::NetworkThread();
-    ts = new qi::TransportSocket();
-    ts->setDelegate(this);
-
-    ts->connect("127.0.0.1", 9559, nt->getEventBase());
-    ts->waitForConnected();
-  }
-
-  virtual ~ClientPerf() {};
-
-  void onConnected(const qi::Message &msg) {}
-  void onWrite(const qi::Message &msg) {}
-  void onRead(const qi::Message &msg) {}
-
-  qi::TransportSocket* transportSocket() {return ts;}
-
-private:
-  qi::TransportSocket *ts;
-  qi::NetworkThread   *nt;
-};
 
 int main_client(std::string src)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
-  ClientPerf cp;
+  qi::Session session;
+
+  static int sessionId = 0;
+
+  std::stringstream ss;
+  ss << src << sessionId++;
+  session.setName(ss.str());
+  session.setDestination("qi.master");
+  session.connect("127.0.0.1:5555");
+  session.waitForConnected();
+  qi::TransportSocket* transport = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -61,7 +49,6 @@ int main_client(std::string src)
     dp.start(gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j)
     {
-      qi::TransportSocket *transport = cp.transportSocket();
       static int id = 1;
       id++;
       char c = 1;
@@ -91,14 +78,12 @@ int main_client(std::string src)
       {
         std::cout << "error content" << std::endl;
       }
-
     }
     dp.stop(1);
   }
+  delete transport;
   return 0;
 }
-
-
 
 void start_client(int count)
 {
@@ -109,7 +94,7 @@ void start_client(int count)
     for (int i = 0; i < count; ++i)
     {
       std::stringstream ss;
-      ss << "remte" << i;
+      ss << "remote" << i;
       std::cout << "starting thread: " << ss.str() << std::endl;
       thd[i] = boost::thread(boost::bind(&main_client, ss.str()));
     }
@@ -164,7 +149,6 @@ public:
   {
     if (msg.path() == "reply")
       reply(msg);
-
   }
 
   void reply(const qi::Message &msg)
@@ -186,14 +170,45 @@ private:
 
 #include <qi/os.hpp>
 
+int main_gateway()
+{
+  qi::Gateway gate;
+  gate.start("127.0.0.1:12345");
+  std::cout << "ready." << std::endl;
+
+  gate.registerGateway("127.0.0.1:5555", "127.0.0.1:12345");
+
+  while (1)
+    qi::os::sleep(1);
+
+  gate.unregisterGateway("127.0.0.1:12345");
+}
+
 int main_server()
 {
+  qi::ServiceDirectoryServer sds;
+  sds.start("127.0.0.1:5555");
+
+
+  qi::Session session;
   ServiceTestPerf stp;
   stp.start("127.0.0.1:9559");
+
+  qi::EndpointInfo e;
+  e.ip = "127.0.0.1";
+  e.port = 9559;
+  e.type = "tcp";
+
+  session.setName("serviceTest");
+  session.setDestination("qi.master");
+  session.connect("127.0.0.1:5555");
+  session.waitForConnected();
+  session.registerEndpoint(e);
 
   while(1) {
     qi::os::sleep(1);
   }
+
   return 0;
 }
 
@@ -211,10 +226,15 @@ int main(int argc, char **argv)
   {
     return main_server();
   }
+  else if (argc > 1 && !strcmp(argv[1], "--gateway"))
+  {
+    return main_gateway();
+  }
   else
   {
     //start the server
-    boost::thread threadServer(boost::bind(&main_server));
+    boost::thread threadServer1(boost::bind(&main_server));
+    boost::thread threadServer2(boost::bind(&main_gateway));
     sleep(1);
     start_client(gThreadCount);
   }
