@@ -11,7 +11,15 @@
 #include <boost/program_options.hpp>
 
 #include <qi/os.hpp>
-#include "qiservicetest.hpp"
+#include <qimessaging/session.hpp>
+#include <qimessaging/server.hpp>
+#include <qimessaging/object.hpp>
+
+//#include "qiservicetest.hpp"
+
+std::string reply(const std::string &msg) {
+  return msg + "bim";
+}
 
 namespace po = boost::program_options;
 
@@ -46,9 +54,17 @@ int main(int argc, char *argv[])
     if (vm.count("master-address") == 1)
     {
       qi::Session       session;
-      qi::ServiceTest       st;
+      qi::Object        obj;
+      qi::Server        srv;
+      obj.advertiseMethod("reply", &reply);
 
-      st.start("127.0.0.1:9571");
+      srv.advertiseService("serviceTest", &obj);
+      srv.start("127.0.0.1", 9571, session._nthd);
+
+
+      //qi::ServiceTest       st;
+
+      //st.start("127.0.0.1:9571");
       std::cout << "ready." << std::endl;
 
       qi::EndpointInfo e;
