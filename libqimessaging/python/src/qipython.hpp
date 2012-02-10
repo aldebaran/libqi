@@ -14,6 +14,8 @@
 
 extern "C" {
 
+  typedef struct {} qi_client_t;
+
   void      qi_server_advertise_python_service(qi_server_t *server, const char *name, PyObject *func);
   PyObject *qi_client_python_call(qi_client_t *client, const char *signature, PyObject *args);
 

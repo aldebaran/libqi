@@ -384,7 +384,8 @@ PyObject *qi_client_python_call(qi_client_t *client, const char *signature, PyOb
   ret = qi_message_create();
 
   qi_python_to_message(callsig, params, args);
-  qi_client_call(client, signature, params, ret);
+  //TODO: ctaf
+  //qi_client_call(client, signature, params, ret);
   pyret = qi_message_to_python(retsig, ret);
   return pyret;
 }
