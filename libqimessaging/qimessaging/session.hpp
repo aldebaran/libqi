@@ -121,12 +121,12 @@ namespace qi {
     bool isInitialized() const;
 
     qi::TransportSocket *tc;
+    qi::NetworkThread   *_nthd;
+
   protected:
     std::string _destination;
     std::string _name;
-
     bool                 _isInitialized;
-    qi::NetworkThread   *_nthd;
   };
 }
 
