@@ -8,36 +8,31 @@
 #include <iostream>
 #include <vector>
 #include <map>
+
 #include <qimessaging/transport.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/os.hpp>
-#include <boost/program_options.hpp>
 
-namespace po = boost::program_options;
+#include "qimaster.hpp"
 
-class ServiceDirectoryServer : public qi::TransportServerDelegate
+namespace qi
 {
-public:
-  ServiceDirectoryServer()
+
+  ServiceDirectoryServer::ServiceDirectoryServer()
   {
     nthd = new qi::NetworkThread();
-
     ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
 
-  ~ServiceDirectoryServer()
+  ServiceDirectoryServer::~ServiceDirectoryServer()
   {
     delete ts;
+    delete nthd;
   }
 
-  void setThread(qi::NetworkThread *n)
-  {
-    nthd = n;
-  }
-
-  void start(const std::string &address)
+  void ServiceDirectoryServer::start(const std::string &address)
   {
     size_t begin = 0;
     size_t end = 0;
@@ -53,17 +48,17 @@ public:
     ts->start(ip, port, nthd->getEventBase());
   }
 
-  virtual void onConnected(const qi::Message &msg)
+  void ServiceDirectoryServer::onConnected(const qi::Message &msg)
   {
   }
 
-  virtual void onWrite(const qi::Message &msg)
+  void ServiceDirectoryServer::onWrite(const qi::Message &msg)
   {
   }
 
-  virtual void onRead(const qi::Message &msg)
+  void ServiceDirectoryServer::onRead(const qi::Message &msg)
   {
-    std::cout << "read qimaster: " << msg << std::endl;
+    std::cout << "qimaster read" << std::endl;
 
     if (msg.path() == "services")
       services(msg);
@@ -76,10 +71,9 @@ public:
 
     if (msg.path() == "unregisterEndpoint")
       unregisterEndpoint(msg);
-
   }
 
-  void services(const qi::Message &msg)
+  void ServiceDirectoryServer::services(const qi::Message &msg)
   {
     std::vector<std::string> servs;
 
@@ -102,7 +96,7 @@ public:
   }
 
 
-  void service(const qi::Message &msg)
+  void ServiceDirectoryServer::service(const qi::Message &msg)
   {
     qi::DataStream d;
     std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
@@ -125,7 +119,7 @@ public:
   }
 
 
-  void registerEndpoint(const qi::Message &msg)
+  void ServiceDirectoryServer::registerEndpoint(const qi::Message &msg)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -157,7 +151,7 @@ public:
     ts->send(retval);
   }
 
-  void unregisterEndpoint(const qi::Message &msg)
+  void ServiceDirectoryServer::unregisterEndpoint(const qi::Message &msg)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -196,63 +190,4 @@ public:
   }
 
 
-private:
-  qi::NetworkThread   *nthd;
-  qi::TransportServer *ts;
-
-  std::map<std::string, qi::ServiceInfo> connectedServices;
-};
-
-
-int main(int argc, char *argv[])
-{
-  // declare the program options
-  po::options_description desc("Usage:\n  qi-master masterAddress [options]\nOptions");
-  desc.add_options()
-      ("help", "Print this help.")
-      ("master-address",
-       po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),
-       "The master address");
-
-  // allow master address to be specified as the first arg
-  po::positional_options_description pos;
-  pos.add("master-address", 1);
-
-  // parse and store
-  po::variables_map vm;
-  try
-  {
-    po::store(po::command_line_parser(argc, argv).
-              options(desc).positional(pos).run(), vm);
-    po::notify(vm);
-
-    if (vm.count("help"))
-    {
-      std::cout << desc << "\n";
-      return 0;
-    }
-
-    if (vm.count("master-address") == 1)
-    {
-      std::string masterAddress = vm["master-address"].as<std::string>();
-
-      ServiceDirectoryServer sds;
-      sds.start(masterAddress);
-
-      std::cout << "ready." << std::endl;
-
-      while (1)
-        qi::os::sleep(1);
-    }
-    else
-    {
-      std::cout << desc << "\n";
-    }
-  }
-  catch (const boost::program_options::error&)
-  {
-    std::cout << desc << "\n";
-  }
-
-  return 0;
-}
+}; // !qi
