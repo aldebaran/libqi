@@ -35,7 +35,7 @@ namespace detail {
     void call(qi::DataStream &params, qi::DataStream& result)const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
-      params << (*fFunction)();
+      result << (*fFunction)();
     };
 
   private:
@@ -62,7 +62,7 @@ namespace detail {
       P0 p0;
 
       params >> p0;
-      params << (*fFunction)(p0);
+      result << (*fFunction)(p0);
     };
 
   private:
@@ -91,7 +91,7 @@ namespace detail {
 
       params >> p0;
       params >> p1;
-      params << (*fFunction)(p0, p1);
+      result << (*fFunction)(p0, p1);
     };
 
   private:
@@ -122,7 +122,7 @@ namespace detail {
       params >> p0;
       params >> p1;
       params >> p2;
-      params << (*fFunction)(p0, p1, p2);
+      result << (*fFunction)(p0, p1, p2);
     };
 
   private:
@@ -155,7 +155,7 @@ namespace detail {
       params >> p1;
       params >> p2;
       params >> p3;
-      params << (*fFunction)(p0, p1, p2, p3);
+      result << (*fFunction)(p0, p1, p2, p3);
     };
 
   private:
@@ -190,7 +190,7 @@ namespace detail {
       params >> p2;
       params >> p3;
       params >> p4;
-      params << (*fFunction)(p0, p1, p2, p3, p4);
+      result << (*fFunction)(p0, p1, p2, p3, p4);
     };
 
   private:
@@ -227,7 +227,7 @@ namespace detail {
       params >> p3;
       params >> p4;
       params >> p5;
-      params << (*fFunction)(p0, p1, p2, p3, p4, p5);
+      result << (*fFunction)(p0, p1, p2, p3, p4, p5);
     };
 
   private:
@@ -266,7 +266,7 @@ namespace detail {
       params >> p4;
       params >> p5;
       params >> p6;
-      params << (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
+      result << (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     };
 
   private:
@@ -307,7 +307,7 @@ namespace detail {
       params >> p5;
       params >> p6;
       params >> p7;
-      params << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
+      result << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     };
 
   private:
@@ -350,7 +350,7 @@ namespace detail {
       params >> p6;
       params >> p7;
       params >> p8;
-      params << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+      result << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     };
 
   private:
