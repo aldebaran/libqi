@@ -8,5 +8,9 @@
 
 project (QiService)
 
-qi_create_bin(qi-service qiservice.cpp DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qi-service
+  qiservicetest.cpp
+  qiservicetest.hpp
+  qiservicetestmain.cpp
+  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
 
