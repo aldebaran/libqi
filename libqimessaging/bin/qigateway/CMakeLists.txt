@@ -9,7 +9,9 @@
 project (QiGateway)
 
 qi_create_bin(qi-gateway
+  qigateway.hpp
   qigateway.cpp
+  qigatewaymain.cpp
   DEPENDS
   QI
   QIMESSAGING
