@@ -7,24 +7,23 @@
 
 #include <qimessaging/qi.h>
 //#include <qimessaging/messaging.hpp>
-#include "src/messaging/client_impl.hpp"
 
 
 // MASTER API
 char *qi_master_locate_service(qi_client_t *client, const char *signature)
 {
-  qi::detail::ClientImpl     *pclient = static_cast<qi::detail::ClientImpl *>(client);
-  qi::DataStream  message;
-  qi::DataStream  ret;
+//  qi::detail::ClientImpl     *pclient = static_cast<qi::detail::ClientImpl *>(client);
+//  qi::DataStream  message;
+//  qi::DataStream  ret;
 
-  message << ("master.locateService::s:ss");
-  message << (signature);
-  message << (pclient->endpointId());
+//  message << ("master.locateService::s:ss");
+//  message << (signature);
+//  message << (pclient->endpointId());
 
-  pclient->call(std::string("master.locateService::s:ss"), message, ret);
-  std::string addr;
-  ret >> addr;
-  return strdup(addr.c_str());
+//  pclient->call(std::string("master.locateService::s:ss"), message, ret);
+//  std::string addr;
+//  ret >> addr;
+//  return strdup(addr.c_str());
 }
 
 

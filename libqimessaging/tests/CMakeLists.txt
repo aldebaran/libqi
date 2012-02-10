@@ -1,5 +1,5 @@
 
-add_subdirectory(test_messaging)
+#add_subdirectory(test_messaging)
 #add_subdirectory(test_messaging_publish)
 add_subdirectory(test_transport)
 #add_subdirectory(test_transport_publish)

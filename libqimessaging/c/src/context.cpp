@@ -6,7 +6,8 @@
 */
 
 #include <qimessaging/qi.h>
-#include "src/messaging/client_impl.hpp"
+#include <qimessaging/context.h>
+#include <qimessaging/context.hpp>
 
 qi_context_t *qi_context_create() {
   qi::Context *pctx = new qi::Context();

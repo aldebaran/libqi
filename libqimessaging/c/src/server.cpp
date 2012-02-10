@@ -7,22 +7,24 @@
 */
 
 #include <qimessaging/qi.h>
-#include "src/messaging/server_impl.hpp"
+#include <qimessaging/functors/functor.hpp>
 
+#include <cstring>
+#include <cstdlib>
 
 qi_server_t *qi_server_create(const char *name) {
-  qi::detail::ServerImpl *pserver = new qi::detail::ServerImpl(name);
-  return reinterpret_cast<qi_server_t *>(pserver);
+//  qi::Server *pserver = new qi::ServerImpl(name);
+//  return reinterpret_cast<qi_server_t *>(pserver);
 }
 
 void         qi_server_destroy(qi_server_t *server) {
-  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
-  delete pserver;
+//  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
+//  delete pserver;
 }
 
 void         qi_server_connect(qi_server_t *server, const char *address) {
-  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
-  pserver->connect(address);
+//  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
+//  pserver->connect(address);
 }
 
 
@@ -54,12 +56,12 @@ private:
 
 
 void         qi_server_advertise_service(qi_server_t *server, const char *methodSignature, BoundMethod func, void *data) {
-  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
-  CFunctor *fun = new CFunctor(methodSignature, func, data);
-  pserver->advertiseService(methodSignature, fun);
+//  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
+//  CFunctor *fun = new CFunctor(methodSignature, func, data);
+//  pserver->advertiseService(methodSignature, fun);
 }
 
 void         qi_server_unadvertise_service(qi_server_t *server, const char *methodSignature) {
-  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
-  pserver->unadvertiseService(methodSignature);
+//  qi::detail::ServerImpl  *pserver  = reinterpret_cast<qi::detail::ServerImpl *>(server);
+//  pserver->unadvertiseService(methodSignature);
 }
