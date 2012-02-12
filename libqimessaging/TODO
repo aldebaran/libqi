@@ -5,9 +5,10 @@ TODO
 
 - TEST TEST TEST (auto and perf)
 - serialization: support unsigned everywhere
-- implement qimaster,networkclient, MachineInfo, EndpointInfo, ServiceInfo
-- write qi::Object
-- remove Master/MasterImpl.
-- remove Client (they just are qi::Object)
-- allow getting and binding services (qi::Object) (networkclient.service(name))
+- qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
+- ServiceDirectory: use good UUID
 - abstract transport
+- remove qi::Transport*Delegate inherit from public interface (server, session), use *Private
+- *Delegate: rename to Interface, remove useless method, add an Interface for Session
+- python bindings
+- qt bindings
