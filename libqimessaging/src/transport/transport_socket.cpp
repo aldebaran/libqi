@@ -36,6 +36,14 @@ struct TransportSocketPrivate
   TransportSocketPrivate()
     : connected(false)
     , bev(NULL)
+    , fd(-1)
+  {
+  }
+
+  TransportSocketPrivate(int fileDesc)
+    : connected(false)
+    , bev(NULL)
+    , fd(fileDesc)
   {
   }
 
@@ -49,6 +57,7 @@ struct TransportSocketPrivate
   std::map<unsigned int, qi::Message*> msgSend;
   boost::mutex                         mtx;
   boost::condition_variable            cond;
+  int                                  fd;
 };
 
 
@@ -139,6 +148,18 @@ TransportSocket::TransportSocket()
   _p = new TransportSocketPrivate();
 }
 
+TransportSocket::TransportSocket(int fd,
+                                 struct event_base *base)
+{
+  _p = new TransportSocketPrivate(fd);
+
+  _p->bev = bufferevent_socket_new(base, _p->fd, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
+  bufferevent_setwatermark(_p->bev, EV_WRITE, 0, MAX_LINE);
+  bufferevent_enable(_p->bev, EV_READ|EV_WRITE);
+
+  _p->connected = true;
+}
 
 TransportSocket::~TransportSocket()
 {

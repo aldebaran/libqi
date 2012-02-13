@@ -51,6 +51,7 @@ class TransportSocket
 
 public:
   TransportSocket();
+  TransportSocket(int fd, struct event_base *base);
   virtual ~TransportSocket();
 
   bool connect(const std::string &address,
