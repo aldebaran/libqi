@@ -34,12 +34,12 @@ void QiSession::connect(const QString &masterAddress)
 
 bool QiSession::waitForConnected(int msecs)
 {
-  _p.session.connect(masterAddress::toUtf8());
+  return _p.session.connect(masterAddress::toUtf8());
 }
 
 bool QiSession::waitForDisconnected(int msecs)
 {
-  _p.session.connect(masterAddress::toUtf8());
+  return _p.session.connect(masterAddress::toUtf8());
 }
 
 
@@ -55,5 +55,5 @@ QiTransportSocket *QiSession::serviceSocket(const QString &name, const QString &
 
 QVector<QString> services()
 {
-    return QVector<QString>::fromStdVector(_p.session.services());
+  return QVector<QString>::fromStdVector(_p.session.services());
 }
