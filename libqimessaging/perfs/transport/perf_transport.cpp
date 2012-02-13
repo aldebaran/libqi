@@ -36,7 +36,7 @@ int main_client(std::string src)
   session.setDestination("qi.master");
   session.connect("127.0.0.1:5555");
   session.waitForConnected();
-  qi::TransportSocket* transport = session.service("serviceTest");
+  qi::TransportSocket* transport = session.serviceSocket("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {

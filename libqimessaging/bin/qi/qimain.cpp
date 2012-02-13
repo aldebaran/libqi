@@ -33,7 +33,7 @@ void call(const std::string &addr)
     std::cout << "service named " << servs[i] << std::endl;
 
 
-  qi::Object *obj = session.serviceObject("serviceTest");
+  qi::Object *obj = session.service("serviceTest");
 
   std::string result = obj->call<std::string>("reply", "plaf");
 

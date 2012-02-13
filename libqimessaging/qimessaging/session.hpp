@@ -110,11 +110,11 @@ namespace qi {
     std::vector<std::string> machines();
     std::vector<std::string> services();
 
-    qi::TransportSocket* service(const std::string &name,
-                                 const std::string &type = "tcp");
+    qi::TransportSocket* serviceSocket(const std::string &name,
+                                       const std::string &type = "tcp");
 
-    qi::Object* serviceObject(const std::string &name,
-                              const std::string &type = "tcp");
+    qi::Object* service(const std::string &name,
+                        const std::string &type = "tcp");
 
     void setName(const std::string &name) { _name = name; }
     std::string name()                    { return _name; }

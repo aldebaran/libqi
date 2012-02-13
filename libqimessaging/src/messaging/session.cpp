@@ -171,8 +171,8 @@ std::vector<std::string> Session::services()
   return result;
 }
 
-qi::TransportSocket* Session::service(const std::string &name,
-                                     const std::string &type)
+qi::TransportSocket* Session::serviceSocket(const std::string &name,
+                                            const std::string &type)
 {
   std::vector<qi::EndpointInfo> result;
 
@@ -210,11 +210,11 @@ qi::TransportSocket* Session::service(const std::string &name,
 }
 
 
-qi::Object* Session::serviceObject(const std::string &name,
-                                   const std::string &type)
+qi::Object* Session::service(const std::string &name,
+                             const std::string &type)
 {
   qi::Object          *obj;
-  qi::TransportSocket *ts = service(name, type);
+  qi::TransportSocket *ts = serviceSocket(name, type);
 
   qi::RemoteObject *robj = new qi::RemoteObject(ts, name);
   obj = robj;

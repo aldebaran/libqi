@@ -37,7 +37,7 @@ void qi_session_wait_for_connected(qi_session_t *session, int msecs)
 qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
 {
     qi::Session *s = reinterpret_cast<qi::Session*>(session);
-    qi::TransportSocket *socket = s->service(name);
+    qi::TransportSocket *socket = s->serviceSocket(name);
 
     return reinterpret_cast<qi_object_t*>(s->service(name));
 }

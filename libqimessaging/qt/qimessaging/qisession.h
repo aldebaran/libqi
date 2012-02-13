@@ -25,8 +25,8 @@ public:
   bool waitForConnected(int msecs = 30000);
   bool waitForDisconnected(int msecs = 30000);
 
-  QObject *serviceObject(const QString &name, const QString &type = "tcp");
-  QiTransportSocket *service(const QString &name, const QString &type = "tcp");
+  QObject           *service(const QString &name, const QString &type = "tcp");
+  QiTransportSocket *serviceSocket(const QString &name, const QString &type = "tcp");
 
 
 signals:

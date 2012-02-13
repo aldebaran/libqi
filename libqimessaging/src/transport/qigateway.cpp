@@ -75,7 +75,7 @@ namespace qi
       // no connection to service
       if (it == _serviceConnection.end())
       {
-        ts = _session.service(msg.destination());
+        ts = _session.serviceSocket(msg.destination());
         _serviceConnection[msg.destination()] = ts;
       }
       else
