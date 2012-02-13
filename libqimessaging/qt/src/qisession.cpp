@@ -48,11 +48,6 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
 }
 
-
-QiTransportSocket *QiSession::serviceSocket(const QString &name, const QString &type)
-{
-}
-
 QVector<QString> services()
 {
   return QVector<QString>::fromStdVector(_p.session.services());
