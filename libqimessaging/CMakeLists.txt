@@ -120,8 +120,8 @@ message(STATUS "WITH_PERF    : ${WITH_PERF}")
 message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 
+add_subdirectory("qt")
 add_subdirectory("bin")
 add_subdirectory("python")
-add_subdirectory("qt")
 add_subdirectory("tests")
 

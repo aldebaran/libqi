@@ -4,6 +4,8 @@ project(QtQiMessaging)
 
 include(qibuild/modules/qt-tools)
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+
 qt4_wrap_cpp(MOC_G qimessaging/qisession.h)
 
 qi_create_lib(qimessaging-qt src/qisession.cpp qimessaging/*.h ${MOC_G})
