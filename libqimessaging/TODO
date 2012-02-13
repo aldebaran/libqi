@@ -8,7 +8,9 @@ TODO
 - qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
 - ServiceDirectory: use good UUID
 - abstract transport
+- TransportSocket => QIODevice
+- Buffer => QIODevice
 - remove qi::Transport*Delegate inherit from public interface (server, session), use *Private
-- *Delegate: rename to Interface, remove useless method, add an Interface for Session
+- Interface: remove useless method, add an Interface for Session
 - python bindings
 - qt bindings
