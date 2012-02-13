@@ -42,8 +42,9 @@ namespace qi {
       client->send(retval);
     };
 
-    virtual void onWrite(TransportSocket *client, const qi::Message &msg) {
-    };
+    virtual void onWrite(TransportSocket *client, const qi::Message &msg)
+    {
+    }
 
     virtual void onConnected(TransportSocket *client, const Message &msg)
     {

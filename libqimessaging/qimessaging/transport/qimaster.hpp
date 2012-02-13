@@ -18,7 +18,7 @@
 
 namespace qi
 {
-  class ServiceDirectoryServer : public qi::TransportServer
+  class ServiceDirectoryServer : public qi::TransportServerInterface, public qi::TransportSocketInterface
   {
   public:
     ServiceDirectoryServer();
@@ -26,16 +26,21 @@ namespace qi
 
     void start(const std::string &address);
 
-    virtual void onConnected(const qi::Message &msg);
-    virtual void onWrite(const qi::Message &msg);
-    virtual void onRead(const qi::Message &msg);
+  protected:
+    virtual void newConnection();
+    virtual void onDisconnected(TransportSocket *client, const qi::Message &msg);
+    virtual void onConnected(TransportSocket *client, const qi::Message &msg);
+    virtual void onWrite(TransportSocket *client, const qi::Message &msg);
+    virtual void onRead(TransportSocket *client, const qi::Message &msg);
 
   private:
-    void services(const qi::Message &msg);
-    void service(const qi::Message &msg);
+    void services(const qi::Message &msg, qi::Message &retval);
+    void service(const qi::Message &msg, qi::Message &retval);
 
-    void registerEndpoint(const qi::Message &msg);
-    void unregisterEndpoint(const qi::Message &msg);
+    void registerEndpoint(const qi::Message &msg, qi::Message &retval);
+    void unregisterEndpoint(const qi::Message &msg, qi::Message &retval);
+
+
 
   private:
     qi::NetworkThread                     *nthd;

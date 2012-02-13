@@ -23,7 +23,7 @@ namespace qi
   {
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
-//    ts->setDelegate(this);
+    ts->setDelegate(this);
   }
 
   ServiceDirectoryServer::~ServiceDirectoryServer()
@@ -31,6 +31,14 @@ namespace qi
     delete ts;
     delete nthd;
   }
+
+  void ServiceDirectoryServer::newConnection() {
+    TransportSocket *socket = ts->nextPendingConnection();
+    if (!socket)
+      return;
+    socket->setDelegate(this);
+  };
+
 
   void ServiceDirectoryServer::start(const std::string &address)
   {
@@ -48,30 +56,35 @@ namespace qi
     ts->start(ip, port, nthd->getEventBase());
   }
 
-  void ServiceDirectoryServer::onConnected(const qi::Message &msg)
+  void ServiceDirectoryServer::onConnected(TransportSocket *socket, const qi::Message &msg)
   {
   }
 
-  void ServiceDirectoryServer::onWrite(const qi::Message &msg)
+  void ServiceDirectoryServer::onDisconnected(TransportSocket *socket, const qi::Message &msg)
   {
   }
 
-  void ServiceDirectoryServer::onRead(const qi::Message &msg)
+  void ServiceDirectoryServer::onWrite(TransportSocket *socket, const qi::Message &msg)
   {
+  }
+
+  void ServiceDirectoryServer::onRead(TransportSocket *socket, const qi::Message &msg)
+  {
+    qi::Message retval;
     if (msg.path() == "services")
-      services(msg);
-
-    if (msg.path() == "service")
-      service(msg);
-
-    if (msg.path() == "registerEndpoint")
-      registerEndpoint(msg);
-
-    if (msg.path() == "unregisterEndpoint")
-      unregisterEndpoint(msg);
+      services(msg, retval);
+    else if (msg.path() == "service")
+      service(msg, retval);
+    else if (msg.path() == "registerEndpoint")
+      registerEndpoint(msg, retval);
+    else if (msg.path() == "unregisterEndpoint")
+      unregisterEndpoint(msg, retval);
+    else
+      return;
+    socket->send(retval);
   }
 
-  void ServiceDirectoryServer::services(const qi::Message &msg)
+  void ServiceDirectoryServer::services(const qi::Message &msg, qi::Message &retval)
   {
     std::vector<std::string> servs;
 
@@ -82,19 +95,16 @@ namespace qi
     qi::DataStream d;
     d << servs;
 
-    qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(d.str());
-
-//    ts->send(retval);
   }
 
 
-  void ServiceDirectoryServer::service(const qi::Message &msg)
+  void ServiceDirectoryServer::service(const qi::Message &msg, qi::Message &retval)
   {
     qi::DataStream d;
     std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
@@ -105,19 +115,16 @@ namespace qi
       d << si.endpoint;
     }
 
-    qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(d.str());
-
-//    ts->send(retval);
   }
 
 
-  void ServiceDirectoryServer::registerEndpoint(const qi::Message &msg)
+  void ServiceDirectoryServer::registerEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -139,17 +146,15 @@ namespace qi
       connectedServices[msg.source()] = si;
     }
 
-    qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.source() + " register.");
-//    ts->send(retval);
   }
 
-  void ServiceDirectoryServer::unregisterEndpoint(const qi::Message &msg)
+  void ServiceDirectoryServer::unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -177,14 +182,12 @@ namespace qi
         connectedServices.erase(servicesIt);
     }
 
-    qi::Message retval;
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.id() + " unregister.");
-//    ts->send(retval);
   }
 
 
