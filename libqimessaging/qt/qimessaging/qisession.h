@@ -9,6 +9,8 @@
 # define   	QITRANSPORTSESSION_H_
 
 #include <QtCore/QObject>
+#include <QVector>
+#include <QString>
 
 class QiSessionPrivate;
 
@@ -27,7 +29,7 @@ public:
 
   QObject           *service(const QString &name, const QString &type = "tcp");
   QiTransportSocket *serviceSocket(const QString &name, const QString &type = "tcp");
-
+  QVector<QString>   services();
 
 signals:
   void OnConnected();
