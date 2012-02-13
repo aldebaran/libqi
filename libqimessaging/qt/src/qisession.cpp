@@ -6,6 +6,7 @@
 */
 
 #include <iostream>
+#include <QString>
 #include <qimessaging/qisession.h>
 
 #include <qimessaging/session.hpp>
@@ -29,17 +30,17 @@ QiSession::~QiSession()
 
 void QiSession::connect(const QString &masterAddress)
 {
-  _p.session.connect(masterAddress::toUtf8());
+  _p->session.connect(masterAddress.toUtf8().constData());
 }
 
 bool QiSession::waitForConnected(int msecs)
 {
-  return _p.session.connect(masterAddress::toUtf8());
+  return _p->session.waitForConnected(msecs);
 }
 
 bool QiSession::waitForDisconnected(int msecs)
 {
-  return _p.session.connect(masterAddress::toUtf8());
+  return _p->session.waitForDisconnected(msecs);
 }
 
 
@@ -48,7 +49,7 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
 }
 
-QVector<QString> services()
+QVector<QString> QiSession::services()
 {
-  return QVector<QString>::fromStdVector(_p.session.services());
+  //return QVector<QString>::fromStdVector(_p->session.services());
 }
