@@ -35,12 +35,15 @@
 
 namespace qi {
 
-class TransportSocketDelegate
+class TransportSocket;
+
+class TransportSocketInterface
 {
 public:
-  virtual void onConnected(const qi::Message &msg) = 0;
-  virtual void onWrite(const qi::Message &msg)     = 0;
-  virtual void onRead(const qi::Message &msg)      = 0;
+  virtual void onConnected(TransportSocket *client, const qi::Message &msg)    = 0;
+  virtual void onDisconnected(TransportSocket *client, const qi::Message &msg) = 0;
+  virtual void onWrite(TransportSocket *client, const qi::Message &msg)        = 0;
+  virtual void onRead(TransportSocket *client, const qi::Message &msg)         = 0;
 };
 
 struct TransportSocketPrivate;
@@ -68,7 +71,7 @@ public:
 
   bool send(const qi::Message &msg);
 
-  void setDelegate(TransportSocketDelegate *delegate);
+  void setDelegate(TransportSocketInterface *delegate);
 
   void readcb(struct bufferevent *bev,
               void *context);

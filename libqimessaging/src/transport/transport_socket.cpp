@@ -51,7 +51,7 @@ struct TransportSocketPrivate
   {
   }
 
-  TransportSocketDelegate             *tcd;
+  TransportSocketInterface             *tcd;
   struct bufferevent                  *bev;
   bool                                 connected;
   std::map<unsigned int, qi::Message*> msgSend;
@@ -103,7 +103,7 @@ void TransportSocket::readcb(struct bufferevent *bev,
   {
     qi::Message *ans = new qi::Message(msgRecv);
     _p->msgSend[ans->id()] = ans;
-    _p->tcd->onRead(*ans);
+    _p->tcd->onRead(this, *ans);
     _p->cond.notify_all();
   }
 }
@@ -112,7 +112,7 @@ void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
 {
   qi::Message msg;
-  _p->tcd->onWrite(msg);
+  _p->tcd->onWrite(this, msg);
 }
 
 void TransportSocket::eventcb(struct bufferevent *bev,
@@ -122,11 +122,14 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   if (events & BEV_EVENT_CONNECTED)
   {
     qi::Message msg;
-    _p->tcd->onConnected(msg);
+    _p->tcd->onConnected(this, msg);
     _p->connected = true;
   }
   else if (events & BEV_EVENT_EOF)
   {
+    qi::Message msg;
+    _p->tcd->onDisconnected(this, msg);
+    _p->connected = false;
     // connection has been closed, do any clean up here
     qiLogError("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
@@ -292,7 +295,7 @@ bool TransportSocket::send(const qi::Message &msg)
   return false;
 }
 
-void TransportSocket::setDelegate(TransportSocketDelegate *delegate)
+void TransportSocket::setDelegate(TransportSocketInterface *delegate)
 {
   _p->tcd = delegate;
 }
