@@ -32,7 +32,7 @@
 #include <qimessaging/transport/transport_socket.hpp>
 #include <qimessaging/transport/network_thread.hpp>
 
-class RemoteService : public qi::TransportSocketDelegate {
+class RemoteService : public qi::TransportSocketInterface {
 public:
   RemoteService() {
     tc = new qi::TransportSocket();

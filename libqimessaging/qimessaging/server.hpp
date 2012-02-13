@@ -28,7 +28,7 @@ namespace qi {
   /// \b Advertise a Service
   /// \include example_qi_server.cpp
   /// \ingroup Messaging
-  class QIMESSAGING_API Server  : qi::TransportServer {
+  class QIMESSAGING_API Server {
   public:
 
     /// <summary> Constructs a Server object that can be used to
@@ -43,10 +43,6 @@ namespace qi {
 
     void start(const std::string &addr, unsigned short port, NetworkThread *base);
     void advertiseService(const std::string &name, qi::Object *obj);
-
-    void onConnected(const qi::Message &msg);
-    void onWrite(const qi::Message &msg);
-    void onRead(const qi::Message &msg);
 
   private:
     ServerPrivate *_p;

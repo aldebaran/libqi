@@ -79,6 +79,10 @@ bool Session::disconnect()
   return true;
 }
 
+void Session::onDisconnected(TransportSocket *client, const Message &msg)
+{
+}
+
 
 bool Session::waitForConnected(int msecs)
 {
@@ -221,17 +225,17 @@ qi::Object* Session::service(const std::string &name,
   return obj;
 }
 
-void Session::onConnected(const qi::Message &msg)
+void Session::onConnected(TransportSocket *client, const Message &msg)
 {
   //  std::cout << "connected broker: " << std::endl;
 }
 
-void Session::onWrite(const qi::Message &msg)
+void Session::onWrite(TransportSocket *client, const qi::Message &msg)
 {
   //  std::cout << "written broker: " << std::endl;
 }
 
-void Session::onRead(const qi::Message &msg)
+void Session::onRead(TransportSocket *client, const Message &msg)
 {
   //  std::cout << "read broker: " << std::endl;
 }

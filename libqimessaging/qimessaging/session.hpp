@@ -85,14 +85,15 @@ namespace qi {
   };
 
 
-  class Session : public qi::TransportSocketDelegate {
+  class Session : public qi::TransportSocketInterface {
   public:
     Session();
     virtual ~Session();
 
-    void onConnected(const qi::Message &msg);
-    void onWrite(const qi::Message &msg);
-    void onRead(const qi::Message &msg);
+    void onConnected(TransportSocket *client, const qi::Message &msg);
+    void onDisconnected(TransportSocket *client, const Message &msg);
+    void onWrite(TransportSocket *client, const qi::Message &msg);
+    void onRead(TransportSocket *client, const qi::Message &msg);
 
 
     void connect(const std::string &masterAddress);

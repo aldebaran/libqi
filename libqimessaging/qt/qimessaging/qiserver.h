@@ -11,6 +11,7 @@
 #include <QtCore/QObject>
 
 class QiServerPrivate;
+
 class QiServer {
 public:
   QiServer();
