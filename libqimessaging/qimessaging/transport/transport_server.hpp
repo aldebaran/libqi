@@ -20,45 +20,16 @@
 # include <event2/event.h>
 # include <event2/bufferevent.h>
 
+# include <qimessaging/transport/transport_socket.hpp>
+
 namespace qi {
 
-class TransportServer;
-class TransportServerPrivate;
-
-struct ClientConnection
-{
-  explicit ClientConnection(const std::string &id,
-                            struct bufferevent *bev,
-                            TransportServer *parent)
-    : _id(id)
-    , _bev(bev)
-    , _parent(parent)
-  {
-  }
-
-  ~ClientConnection()
-  {
-    bufferevent_free(_bev);
-  }
-
-  std::string         _id;
-  struct bufferevent *_bev;
-  // We need the parent to call the differents callback
-  // with the right client connnection ID
-  // (we don't want to loose some connected client)
-  TransportServer    *_parent;
-};
-
-typedef std::map<std::string, ClientConnection*>           ClientConnectionMap;
-
-class TransportServerDelegate
-{
+class TransportServerInterface {
 public:
-  virtual void onConnected(const qi::Message &msg) = 0;
-  virtual void onWrite(const qi::Message &msg)     = 0;
-  virtual void onRead(const qi::Message &msg)      = 0;
+  virtual void newConnection() = 0;
 };
 
+class TransportServerPrivate;
 class TransportServer
 {
   QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
@@ -67,27 +38,15 @@ public:
   TransportServer();
   virtual ~TransportServer();
 
+  void setDelegate(TransportServerInterface *delegate);
+
   void start(const std::string &address,
              unsigned short port,
              struct event_base *base);
-  void setDelegate(TransportServerDelegate *delegate);
 
-  void accept(evutil_socket_t listener,
-              short events,
-              void *context);
-  void readcb(struct bufferevent *bev,
-              void *context);
-  void writecb(struct bufferevent* bev,
-               void* context);
-  void eventcb(struct bufferevent *bev,
-               short events,
-               void *context);
 
-  bool send(const qi::Message &msg);
-  // Map of connected client
-  ClientConnectionMap  clientConnected;
+  TransportSocket *nextPendingConnection();
 
-private:
   TransportServerPrivate *_p;
 };
 

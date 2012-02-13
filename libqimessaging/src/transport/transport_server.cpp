@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <queue>
 #include <qi/log.hpp>
 
 #include <event2/util.h>
@@ -22,31 +23,10 @@
 #include <arpa/inet.h>
 
 #include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport/transport_socket.hpp>
 
 namespace qi {
 #define MAX_LINE 16384
-
-
-static void readcb(struct bufferevent *bev,
-                   void *context)
-{
-  ClientConnection *cc = static_cast<ClientConnection*>(context);
-  cc->_parent->readcb(bev, context);
-}
-
-static void writecb(struct bufferevent* bev, void* context)
-{
-  ClientConnection *cc = static_cast<ClientConnection*>(context);
-  cc->_parent->writecb(bev, context);
-}
-
-static void eventcb(struct bufferevent *bev,
-                    short events,
-                    void *context)
-{
-  ClientConnection *cc = static_cast<ClientConnection*>(context);
-  cc->_parent->eventcb(bev, events, context);
-}
 
 
 class TransportServerPrivate
@@ -59,8 +39,14 @@ public:
     event_base_free(base);
   }
 
-  TransportServerDelegate *tsd;
-  struct event_base       *base;
+  void accept(evutil_socket_t listener,
+              short events,
+              void *context);
+
+
+  std::queue<qi::TransportSocket*>  connection;
+  TransportServerInterface          *tsi;
+  struct event_base                 *base;
 };
 
 void accept(evutil_socket_t listener,
@@ -68,25 +54,13 @@ void accept(evutil_socket_t listener,
             void *context)
 {
   TransportServer *ts = static_cast<TransportServer*>(context);
-  ts->accept(listener, events, context);
+  ts->_p->accept(listener, events, context);
 }
 
-
-TransportServer::TransportServer()
+void TransportServerPrivate::accept(evutil_socket_t listener,
+                                    short events,
+                                    void *context)
 {
-  _p = new TransportServerPrivate();
-}
-
-TransportServer::~TransportServer()
-{
-  delete _p;
-}
-
-void TransportServer::accept(evutil_socket_t listener,
-                             short events,
-                             void *context)
-{
-  struct event_base *base = _p->base;
   struct sockaddr_storage ss;
   socklen_t slen = sizeof(ss);
 
@@ -102,82 +76,21 @@ void TransportServer::accept(evutil_socket_t listener,
   }
   else
   {
-    struct bufferevent *bev;
     evutil_make_socket_nonblocking(fd);
-    bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
-
-    ClientConnection *cc = new ClientConnection(std::string(), bev, this);
-    bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, cc);
-
-    bufferevent_setwatermark(bev, EV_READ, 0, MAX_LINE);
-    bufferevent_enable(bev, EV_READ|EV_WRITE);
+    connection.push(new qi::TransportSocket(fd, base));
+    tsi->newConnection();
   }
 }
 
 
-void TransportServer::readcb(struct bufferevent *bev,
-                             void *context)
+TransportServer::TransportServer()
 {
-  char   buf[1024];
-  size_t n;
-
-  struct evbuffer *input = bufferevent_get_input(bev);
-
-  ClientConnection *cc = static_cast<ClientConnection*>(context);
-
-  std::string msgRecv;
-  while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
-  {
-    msgRecv.append(buf, n);
-  }
-
-  qi::Message msg(msgRecv);
-  ClientConnectionMap::iterator it;
-  it = clientConnected.find(msg.source());
-  if (it == clientConnected.end())
-  {
-    cc->_id = msg.source();
-    clientConnected[msg.source()] = cc;
-  }
-  _p->tsd->onRead(msg);
+  _p = new TransportServerPrivate();
 }
 
-void TransportServer::writecb(struct bufferevent* bev, void* context)
+TransportServer::~TransportServer()
 {
-  (void) bev;
-
-  ClientConnection *cc = static_cast<ClientConnection*>(context);
-  qi::Message msg;
-  _p->tsd->onWrite(msg);
-}
-
-void TransportServer::eventcb(struct bufferevent *bev,
-                              short events,
-                              void *context)
-{
-  if (events & BEV_EVENT_EOF)
-  {
-    // connection has been closed, do any clean up here
-    ClientConnection *cc = static_cast<ClientConnection*>(context);
-    qiLogInfo("qimessaging.TransportServer") << "Client ID " << cc->_id << " has closed connection." << std::endl;
-
-    ClientConnectionMap::iterator it;
-    it = clientConnected.find(cc->_id);
-    if (it != clientConnected.end())
-    {
-      clientConnected.erase(clientConnected.find(cc->_id));
-    }
-  }
-  else if (events & BEV_EVENT_ERROR)
-  {
-    // check errno to see what error occurred
-    qiLogInfo("qimessaging.TransportServer")  << "check errno to see what error occurred" << std::endl;
-  }
-  else if (events & BEV_EVENT_TIMEOUT)
-  {
-    // must be a timeout event handle, handle it
-    qiLogInfo("qimessaging.TransportServer")  << "must be a timeout event handle, handle it" << std::endl;
-  }
+  delete _p;
 }
 
 void TransportServer::start(const std::string &address,
@@ -230,23 +143,21 @@ void TransportServer::start(const std::string &address,
   event_add(sockEvent, NULL);
 }
 
-bool TransportServer::send(const qi::Message &msg)
+TransportSocket *TransportServer::nextPendingConnection()
 {
-  ClientConnectionMap::iterator it;
-  it = clientConnected.find(msg.destination());
-  if (it != clientConnected.end())
+  if (!_p->connection.empty())
   {
-    ClientConnection* cc = it->second;
-    if (!bufferevent_write(cc->_bev, msg.str().c_str(), msg.str().size()))
-      return true;
+    qi::TransportSocket *front = _p->connection.front();
+    _p->connection.pop();
+    return front;
   }
-  return false;
+
+  return NULL;
 }
 
-void TransportServer::setDelegate(TransportServerDelegate *delegate)
+void TransportServer::setDelegate(TransportServerInterface *delegate)
 {
-  _p->tsd = delegate;
+  _p->tsi = delegate;
 }
-
 
 }
