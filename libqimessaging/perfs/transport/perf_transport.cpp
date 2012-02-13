@@ -34,7 +34,7 @@ int main_client(std::string src)
   ss << src << sessionId++;
   session.setName(ss.str());
   session.setDestination("qi.master");
-  session.connect("127.0.0.1:5555");
+  session.connect("127.0.0.1:12345");
   session.waitForConnected();
   qi::TransportSocket* transport = session.serviceSocket("serviceTest");
 
@@ -105,7 +105,7 @@ void start_client(int count)
 
 
 
-class ServiceTestPerf : public qi::TransportServerDelegate
+class ServiceTestPerf : public qi::TransportServer
 {
 public:
   ServiceTestPerf()
@@ -113,7 +113,7 @@ public:
     nthd = new qi::NetworkThread();
 
     ts = new qi::TransportServer();
-    ts->setDelegate(this);
+//    ts->setDelegate(this);
   }
 
   ~ServiceTestPerf()
@@ -160,7 +160,7 @@ public:
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.data());
-    ts->send(retval);
+//    ts->send(retval);
   }
 
 private:
@@ -173,7 +173,7 @@ private:
 int main_gateway()
 {
   qi::Gateway gate;
-  gate.start("127.0.0.1:12345");
+//  gate.start("127.0.0.1:12345");
   std::cout << "ready." << std::endl;
 
   gate.registerGateway("127.0.0.1:5555", "127.0.0.1:12345");

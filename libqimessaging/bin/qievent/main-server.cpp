@@ -13,13 +13,13 @@
 #include <qimessaging/transport/transport_server.hpp>
 #include <qimessaging/transport/network_thread.hpp>
 
-class RemoteServer : public qi::TransportServerDelegate
+class RemoteServer : public qi::TransportServer
 {
 public:
   RemoteServer()
   {
     ts = new qi::TransportServer();
-    ts->setDelegate(this);
+//    ts->setDelegate(this);
   }
 
   ~RemoteServer()

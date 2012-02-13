@@ -19,7 +19,7 @@
 
 namespace qi
 {
-  class ServiceTest : public qi::TransportServerDelegate
+  class ServiceTest : public qi::TransportServer
   {
   public:
     ServiceTest();

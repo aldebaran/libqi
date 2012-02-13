@@ -23,7 +23,7 @@ namespace qi
   {
     _nthd = new qi::NetworkThread();
     _ts = new qi::TransportServer();
-    _ts->setDelegate(this);
+//    _ts->setDelegate(this);
   }
 
   Gateway::~Gateway()
@@ -32,19 +32,16 @@ namespace qi
     delete _nthd;
   }
 
-  void Gateway::start(const std::string &address)
+  void Gateway::start(const std::string &address,
+                      unsigned short port,
+                      struct event_base *base)
   {
     qi::EndpointInfo e;
-    size_t begin = 0;
-    size_t end = 0;
-    end = address.find(":");
 
     e.type = "tcp";
-    e.ip = address.substr(begin, end);
-    begin = end + 1;
+    e.ip = address;
+    e.port = port;
 
-    std::stringstream ss(address.substr(begin));
-    ss >> e.port;
 
     _endpoints.push_back(e);
     _ts->start(e.ip, e.port, _nthd->getEventBase());
@@ -93,7 +90,7 @@ namespace qi
       ans.setId(msg.id());
       ans.setDestination(msg.source());
 
-      _ts->send(ans);
+//      _ts->send(ans);
     }
   }
 
@@ -112,7 +109,7 @@ namespace qi
     retval.setPath(msg.path());
     retval.setData(d.str());
 
-    _ts->send(retval);
+//    _ts->send(retval);
   }
 
 
@@ -129,7 +126,7 @@ namespace qi
     retval.setPath(msg.path());
     retval.setData(d.str());
 
-    _ts->send(retval);
+//    _ts->send(retval);
   }
 
   void Gateway::registerGateway(const std::string &masterAddress,

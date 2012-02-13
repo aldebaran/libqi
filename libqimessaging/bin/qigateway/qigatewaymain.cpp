@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
 
       qi::Gateway gate;
-      gate.start(gatewayAddress);
+//      gate.start(gatewayAddress);
       std::cout << "ready." << std::endl;
 
       gate.registerGateway(masterAddress, gatewayAddress);

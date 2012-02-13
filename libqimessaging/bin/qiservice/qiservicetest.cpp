@@ -22,7 +22,7 @@ namespace qi
   {
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
-    ts->setDelegate(this);
+//    ts->setDelegate(this);
   }
 
   ServiceTest::~ServiceTest()
@@ -74,6 +74,6 @@ namespace qi
     retval.setPath(msg.path());
     retval.setData("msg.data()");
 
-    ts->send(retval);
+//    ts->send(retval);
   }
 }; // !qi

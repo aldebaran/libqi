@@ -18,7 +18,7 @@
 
 namespace qi
 {
-  class ServiceDirectoryServer : public qi::TransportServerDelegate
+  class ServiceDirectoryServer : public qi::TransportServer
   {
   public:
     ServiceDirectoryServer();

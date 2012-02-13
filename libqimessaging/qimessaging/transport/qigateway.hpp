@@ -18,7 +18,7 @@
 
 namespace qi
 {
-  class Gateway : public qi::TransportServerDelegate
+  class Gateway : public qi::TransportServer
   {
   public:
     Gateway();
@@ -28,7 +28,9 @@ namespace qi
     virtual void onWrite(const qi::Message &msg);
     virtual void onRead(const qi::Message &msg);
 
-    void start(const std::string &address);
+    void start(const std::string &address,
+               unsigned short port,
+               struct event_base *base);
 
     void registerGateway(const std::string &masterAddress,
                          const std::string &gatewayAddress);

@@ -22,7 +22,7 @@ namespace qi {
   Server::Server()
     : _p(new ServerPrivate())
   {
-    _p->_ts.setDelegate(this);
+//    _p->_ts.setDelegate(this);
   }
 
   Server::~Server()
@@ -63,7 +63,7 @@ namespace qi {
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(rs.str());
-    _p->_ts.send(retval);
+    //_p->_ts.send(retval);
   };
 
 }

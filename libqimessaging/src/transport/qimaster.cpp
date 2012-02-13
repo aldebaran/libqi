@@ -23,7 +23,7 @@ namespace qi
   {
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
-    ts->setDelegate(this);
+//    ts->setDelegate(this);
   }
 
   ServiceDirectoryServer::~ServiceDirectoryServer()
@@ -90,7 +90,7 @@ namespace qi
     retval.setPath(msg.path());
     retval.setData(d.str());
 
-    ts->send(retval);
+//    ts->send(retval);
   }
 
 
@@ -113,7 +113,7 @@ namespace qi
     retval.setPath(msg.path());
     retval.setData(d.str());
 
-    ts->send(retval);
+//    ts->send(retval);
   }
 
 
@@ -146,7 +146,7 @@ namespace qi
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.source() + " register.");
-    ts->send(retval);
+//    ts->send(retval);
   }
 
   void ServiceDirectoryServer::unregisterEndpoint(const qi::Message &msg)
@@ -184,7 +184,7 @@ namespace qi
     retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.id() + " unregister.");
-    ts->send(retval);
+//    ts->send(retval);
   }
 
 

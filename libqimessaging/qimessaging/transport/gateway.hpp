@@ -30,7 +30,7 @@ typedef std::map<std::string, TransportSocket*>::iterator TransportSocketMapIter
 
 class GatewayPrivate;
 
-class Gateway: public TransportServerDelegate
+class Gateway: public TransportServer
 {
 public:
   Gateway();

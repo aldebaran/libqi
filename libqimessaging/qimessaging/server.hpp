@@ -28,7 +28,7 @@ namespace qi {
   /// \b Advertise a Service
   /// \include example_qi_server.cpp
   /// \ingroup Messaging
-  class QIMESSAGING_API Server  : qi::TransportServerDelegate {
+  class QIMESSAGING_API Server  : qi::TransportServer {
   public:
 
     /// <summary> Constructs a Server object that can be used to
