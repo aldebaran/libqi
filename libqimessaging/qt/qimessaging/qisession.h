@@ -5,10 +5,11 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	QITRANSPORTSESSION_H_
-# define   	QITRANSPORTSESSION_H_
+#ifndef   	QT_QITRANSPORTSESSION_H_
+# define   	QT_QITRANSPORTSESSION_H_
 
 #include <QtCore/QObject>
+#include <QtCore/QMetaObject>
 #include <QVector>
 #include <QString>
 

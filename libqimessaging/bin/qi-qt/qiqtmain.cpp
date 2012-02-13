@@ -16,7 +16,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <qt/qimessaging/qisession.h>
+#include <qimessaging/qisession.h>
 
 namespace po = boost::program_options;
 
@@ -32,11 +32,14 @@ void call(const std::string &addr)
   foreach (QString service, services)
     std::cout << "service named " << qPrintable(service) << std::endl;
 
-  QObject *obj = session.service("serviceTest");
 
-  std::string result = obj->call<std::string>("reply", "plaf");
+  QObject *obj = session.service("ServiceTest");
+  std::string ret;
+  QMetaObject::invokeMethod(obj, "reply", Qt::DirectConnection,
+                            Q_RETURN_ARG(std::string, ret),
+                            Q_ARG(const char*, "plaf"));
 
-  std::cout << "answer:" << result << std::endl;
+  std::cout << "answer:" << ret << std::endl;
 
   qi::os::sleep(2);
 }

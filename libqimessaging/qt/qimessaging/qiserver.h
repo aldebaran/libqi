@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	QISERVER_H_
-# define   	QISERVER_H_
+#ifndef   	QT_QISERVER_H_
+# define   	QT_QISERVER_H_
 
 #include <QtCore/QObject>
 
