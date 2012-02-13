@@ -51,5 +51,10 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
 QVector<QString> QiSession::services()
 {
-  //return QVector<QString>::fromStdVector(_p->session.services());
+  QVector<QString> ret;
+
+  foreach (std::string str, _p->session.services())
+    ret.push_back(QString::fromStdString(str));
+
+  return ret;
 }
