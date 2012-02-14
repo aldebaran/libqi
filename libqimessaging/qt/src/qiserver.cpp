@@ -11,6 +11,7 @@
 
 class QiServerPrivate
 {
+public:
   qi::Server server;
 };
 
@@ -28,7 +29,7 @@ QiServer::~QiServer()
 
 void QiServer::start(const QString &addr, unsigned short port, NetworkThread *base)
 {
-  _p.server.start(addr, port, base);
+  //_p->server.start(addr, port, base);
 }
 
 void QiServer::advertiseService(const QString &name, QObject *obj)
