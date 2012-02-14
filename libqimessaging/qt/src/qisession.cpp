@@ -74,10 +74,9 @@ bool QiSession::waitForDisconnected(int msecs)
 
 QObject *QiSession::service(const QString &name, const QString &type)
 {
-  QObject *obj = 0;
   qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), type.toUtf8().constData());
-  QRemoteObject *robj = new QRemoteObject(ts, name.toStdString());
-  obj = robj;
+  QRemoteObject *robj = new QRemoteObject(ts, name.toUtf8().constData());
+  QObject *obj = robj;
   return obj;
 }
 
