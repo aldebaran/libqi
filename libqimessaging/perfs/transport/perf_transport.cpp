@@ -18,7 +18,7 @@
 #include <qimessaging/perf/dataperftimer.hpp>
 
 #include <qimessaging/service_directory.hpp>
-#include <qimessaging/transport/qigateway.hpp>
+#include <qimessaging/gateway.hpp>
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;

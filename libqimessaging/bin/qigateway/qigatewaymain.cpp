@@ -11,7 +11,7 @@
 #include <boost/program_options.hpp>
 
 #include <qi/os.hpp>
-#include <qimessaging/transport/qigateway.hpp>
+#include <qimessaging/gateway.hpp>
 
 
 namespace po = boost::program_options;
@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
 //      gate.start(gatewayAddress);
       std::cout << "ready." << std::endl;
 
-      gate.registerGateway(masterAddress, gatewayAddress);
+//      gate.registerGateway(masterAddress, gatewayAddress);
 
       while (1)
         qi::os::sleep(1);
 
-      gate.unregisterGateway(gatewayAddress);
+//      gate.unregisterGateway(gatewayAddress);
     }
     else
     {
