@@ -38,19 +38,6 @@ void call(const std::string &addr)
   std::string result = obj->call<std::string>("reply", "plaf");
 
   std::cout << "answer:" << result << std::endl;
-//  qi::TransportSocket* servConnection = session.service("serviceTest");
-
-//  qi::Message msg;
-//  msg.setId(uniqueReqId++);
-//  msg.setSource("client");
-//  msg.setDestination("serviceTest");
-//  msg.setPath("reply");
-
-//  servConnection->send(msg);
-//  servConnection->waitForId(msg.id());
-//  qi::Message ans;
-//  servConnection->read(msg.id(), &ans);
-
 
   qi::os::sleep(2);
 }

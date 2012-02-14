@@ -62,10 +62,6 @@ int main(int argc, char *argv[])
       srv.advertiseService("serviceTest", &obj);
       srv.start("127.0.0.1", 9571, session._nthd);
 
-
-      //qi::ServiceTest       st;
-
-      //st.start("127.0.0.1:9571");
       std::cout << "ready." << std::endl;
 
       std::string e = "tcp://127.0.0.1:9571";
