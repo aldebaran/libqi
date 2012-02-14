@@ -10,7 +10,7 @@
 #include <map>
 
 #include <qi/os.hpp>
-#include <qimessaging/transport/qimaster.hpp>
+#include <qimessaging/service_directory.hpp>
 
 #include <boost/program_options.hpp>
 
@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
     {
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      qi::ServiceDirectoryServer sds;
-      sds.start(masterAddress);
+      qi::ServiceDirectory sd;
+      sd.start(masterAddress);
 
       std::cout << "ready." << std::endl;
 

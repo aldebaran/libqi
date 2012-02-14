@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
 **
-** Copyright (C) 2010 Aldebaran Robotics
+** Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 
@@ -17,7 +17,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>
 
-#include <qimessaging/transport/qimaster.hpp>
+#include <qimessaging/service_directory.hpp>
 #include <qimessaging/transport/qigateway.hpp>
 
 static int gLoopCount = 10000;
@@ -176,18 +176,18 @@ int main_gateway()
 //  gate.start("127.0.0.1:12345");
   std::cout << "ready." << std::endl;
 
-  gate.registerGateway("127.0.0.1:5555", "127.0.0.1:12345");
+//  gate.registerGateway("127.0.0.1:5555", "127.0.0.1:12345");
 
   while (1)
     qi::os::sleep(1);
 
-  gate.unregisterGateway("127.0.0.1:12345");
+//  gate.unregisterGateway("127.0.0.1:12345");
 }
 
 int main_server()
 {
-  qi::ServiceDirectoryServer sds;
-  sds.start("127.0.0.1:5555");
+  qi::ServiceDirectory sd;
+  sd.start("127.0.0.1:5555");
 
 
   qi::Session session;

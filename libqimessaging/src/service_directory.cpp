@@ -10,7 +10,7 @@
 #include <map>
 
 #include <qimessaging/transport.hpp>
-#include <qimessaging/transport/qimaster.hpp>
+#include <qimessaging/service_directory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/os.hpp>
@@ -19,20 +19,20 @@
 namespace qi
 {
 
-  ServiceDirectoryServer::ServiceDirectoryServer()
+  ServiceDirectory::ServiceDirectory()
   {
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
 
-  ServiceDirectoryServer::~ServiceDirectoryServer()
+  ServiceDirectory::~ServiceDirectory()
   {
     delete ts;
     delete nthd;
   }
 
-  void ServiceDirectoryServer::newConnection() {
+  void ServiceDirectory::newConnection() {
     TransportSocket *socket = ts->nextPendingConnection();
     if (!socket)
       return;
@@ -40,7 +40,7 @@ namespace qi
   };
 
 
-  void ServiceDirectoryServer::start(const std::string &address)
+  void ServiceDirectory::start(const std::string &address)
   {
     size_t begin = 0;
     size_t end = 0;
@@ -56,19 +56,19 @@ namespace qi
     ts->start(ip, port, nthd->getEventBase());
   }
 
-  void ServiceDirectoryServer::onConnected(TransportSocket *socket)
+  void ServiceDirectory::onConnected(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onDisconnected(TransportSocket *socket)
+  void ServiceDirectory::onDisconnected(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onWriteDone(TransportSocket *socket)
+  void ServiceDirectory::onWriteDone(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onReadyRead(TransportSocket *socket, const qi::Message &msg)
+  void ServiceDirectory::onReadyRead(TransportSocket *socket, const qi::Message &msg)
   {
     qi::Message retval;
     if (msg.path() == "services")
@@ -84,7 +84,7 @@ namespace qi
     socket->send(retval);
   }
 
-  void ServiceDirectoryServer::services(const qi::Message &msg, qi::Message &retval)
+  void ServiceDirectory::services(const qi::Message &msg, qi::Message &retval)
   {
     std::vector<std::string> servs;
 
@@ -104,7 +104,7 @@ namespace qi
   }
 
 
-  void ServiceDirectoryServer::service(const qi::Message &msg, qi::Message &retval)
+  void ServiceDirectory::service(const qi::Message &msg, qi::Message &retval)
   {
     qi::DataStream d;
     std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
@@ -124,7 +124,7 @@ namespace qi
   }
 
 
-  void ServiceDirectoryServer::registerEndpoint(const qi::Message &msg, qi::Message &retval)
+  void ServiceDirectory::registerEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -154,7 +154,7 @@ namespace qi
     retval.setData(msg.source() + " register.");
   }
 
-  void ServiceDirectoryServer::unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
+  void ServiceDirectory::unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());

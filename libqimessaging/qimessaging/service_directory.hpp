@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef QIMASTER_HPP_
-# define QIMASTER_HPP_
+#ifndef SERVICE_DIRECTORY_HPP_
+# define SERVICE_DIRECTORY_HPP_
 
 #include <iostream>
 #include <vector>
@@ -18,11 +18,11 @@
 
 namespace qi
 {
-  class ServiceDirectoryServer : public qi::TransportServerInterface, public qi::TransportSocketInterface
+  class ServiceDirectory : public qi::TransportServerInterface, public qi::TransportSocketInterface
   {
   public:
-    ServiceDirectoryServer();
-    virtual ~ServiceDirectoryServer();
+    ServiceDirectory();
+    virtual ~ServiceDirectory();
 
     void start(const std::string &address);
 
@@ -40,14 +40,12 @@ namespace qi
     void registerEndpoint(const qi::Message &msg, qi::Message &retval);
     void unregisterEndpoint(const qi::Message &msg, qi::Message &retval);
 
-
-
   private:
     qi::NetworkThread                     *nthd;
     qi::TransportServer                   *ts;
     std::map<std::string, qi::ServiceInfo> connectedServices;
 
-  }; // !ServiceDirectoryServer
+  }; // !ServiceDirectory
 }; // !qi
 
-#endif // !QIMASTER_HPP_
+#endif // !SERVICE_DIRECTORY_HPP_
