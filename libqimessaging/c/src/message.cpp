@@ -108,7 +108,12 @@ char *qi_message_get_src(qi_message_t *msg)
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string r = m->msg->source();
 
+#ifdef _WIN32
+  return _strdup(r.c_str());
+#else
   return strdup(r.c_str());
+#endif
+
 }
 
 void qi_message_set_dst(qi_message_t *msg, char *dst)
@@ -123,7 +128,11 @@ char *qi_message_get_dst(qi_message_t *msg)
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string r = m->msg->destination();
 
+#ifdef _WIN32
+  return _strdup(r.c_str());
+#else
   return strdup(r.c_str());
+#endif
 }
 
 void qi_message_set_path(qi_message_t *msg, char *path)
@@ -138,7 +147,11 @@ char *qi_message_get_path(qi_message_t *msg)
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string r = m->msg->path();
 
+#ifdef _WIN32
+  return _strdup(r.c_str());
+#else
   return strdup(r.c_str());
+#endif
 }
 
 void qi_message_set_data(qi_message_t *msg, char *data)
@@ -153,7 +166,11 @@ char *qi_message_get_data(qi_message_t *msg)
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string r = m->msg->data();
 
+#ifdef _WIN32
+  return _strdup(r.c_str());
+#else
   return strdup(r.c_str());
+#endif
 }
 
 void qi_message_write_bool(qi_message_t *msg, char b)
