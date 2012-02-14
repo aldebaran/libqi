@@ -96,10 +96,21 @@ bool Session::waitForDisconnected(int msecs)
   return tc->waitForDisconnected(msecs);
 }
 
-void Session::registerEndpoint(const qi::EndpointInfo &e)
+void Session::registerEndpoint(const std::string &e)
 {
   qi::DataStream d;
-  d << e;
+  qi::EndpointInfo endpoint;
+  size_t begin = 0;
+  size_t end = 0;
+  end = e.find(":");
+  endpoint.type = e.substr(begin, end);
+  begin = end + 3;
+  end = e.find(":", begin);
+  endpoint.ip = e.substr(begin, end - begin);
+  begin = end + 1;
+  std::stringstream ss(e.substr(begin));
+  ss >> endpoint.port;
+  d << endpoint;
 
   qi::Message msg;
   msg.setId(uniqueRequestId++);
@@ -114,10 +125,21 @@ void Session::registerEndpoint(const qi::EndpointInfo &e)
   tc->read(msg.id(), &ans);
 }
 
-void Session::unregisterEndpoint(const qi::EndpointInfo& e)
+void Session::unregisterEndpoint(const std::string &e)
 {
   qi::DataStream d;
-  d << e;
+  qi::EndpointInfo endpoint;
+  size_t begin = 0;
+  size_t end = 0;
+  end = e.find(":");
+  endpoint.type = e.substr(begin, end);
+  begin = end + 3;
+  end = e.find(":", begin);
+  endpoint.ip = e.substr(begin, end - begin);
+  begin = end + 1;
+  std::stringstream ss(e.substr(begin));
+  ss >> endpoint.port;
+  d << endpoint;
 
   qi::Message msg;
   msg.setId(uniqueRequestId++);

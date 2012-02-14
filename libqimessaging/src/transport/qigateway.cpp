@@ -132,42 +132,16 @@ namespace qi
   void Gateway::registerGateway(const std::string &masterAddress,
                                 const std::string &gatewayAddress)
   {
-    qi::EndpointInfo e;
-
-    size_t begin = 0;
-    size_t end = 0;
-    end = gatewayAddress.find(":");
-
-    e.ip = gatewayAddress.substr(begin, end);
-    begin = end + 1;
-
-    std::stringstream ss(gatewayAddress.substr(begin));
-    ss >> e.port;
-    e.type = "tcp";
-
     _session.connect(masterAddress);
     _session.waitForConnected();
     _session.setName("gateway");
     _session.setDestination("qi.master");
-    _session.registerEndpoint(e);
+    _session.registerEndpoint(gatewayAddress);
   }
 
   void Gateway::unregisterGateway(const std::string &gatewayAddress)
   {
-    qi::EndpointInfo e;
-
-    size_t begin = 0;
-    size_t end = 0;
-    end = gatewayAddress.find(":");
-
-    e.ip = gatewayAddress.substr(begin, end);
-    begin = end + 1;
-
-    std::stringstream ss(gatewayAddress.substr(begin));
-    ss >> e.port;
-    e.type = "tcp";
-
-    _session.unregisterEndpoint(e);
+    _session.unregisterEndpoint(gatewayAddress);
   }
 
 } // !qi

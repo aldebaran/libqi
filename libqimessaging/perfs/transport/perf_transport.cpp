@@ -194,10 +194,7 @@ int main_server()
   ServiceTestPerf stp;
   stp.start("127.0.0.1:9559");
 
-  qi::EndpointInfo e;
-  e.ip = "127.0.0.1";
-  e.port = 9559;
-  e.type = "tcp";
+  std::string e = "tcp://127.0.0.1:9559";
 
   session.setName("serviceTest");
   session.setDestination("qi.master");

@@ -68,10 +68,7 @@ int main(int argc, char *argv[])
       //st.start("127.0.0.1:9571");
       std::cout << "ready." << std::endl;
 
-      qi::EndpointInfo e;
-      e.ip = "127.0.0.1";
-      e.port = 9571;
-      e.type = "tcp";
+      std::string e = "tcp://127.0.0.1:9571";
 
       std::string masterAddress = vm["master-address"].as<std::string>();
 

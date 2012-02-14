@@ -105,8 +105,8 @@ namespace qi {
     void registerMachine(const qi::MachineInfo& m);
     void unregisterMachine(const qi::MachineInfo& m);
 
-    void registerEndpoint(const qi::EndpointInfo& e);
-    void unregisterEndpoint(const qi::EndpointInfo& e);
+    void registerEndpoint(const std::string &e);
+    void unregisterEndpoint(const std::string &e);
 
     std::vector<std::string> machines();
     std::vector<std::string> services();
