@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Laurent LEC   <llec@aldebaran-robotics.com>
 **
 ** Copyright (C) 2012 Aldebaran Robotics
 */
@@ -30,6 +31,8 @@ public:
 
   QObject           *service(const QString &name, const QString &type = "tcp");
   QVector<QString>   services();
+  void               registerEndPoint(const QString &endpoint);
+  void               unregisterEndPoint(const QString &endpoint);
 
 signals:
   void OnConnected();
