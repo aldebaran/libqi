@@ -33,6 +33,8 @@ static int _qi_signature_find_end(qi_signature_t *sig, char **pcurrent, const ch
   }
   *pcurrent   = current;
   *psignature = signature;
+
+  return 0;
 }
 
 // go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
