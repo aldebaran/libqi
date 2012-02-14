@@ -15,7 +15,10 @@ namespace qi {
 };
 
 class QiRemoteObjectPrivate;
+
 class QiRemoteObject : public QObject {
+  //DO NOT ADD Q_OBJECT HERE
+
 public:
   explicit QiRemoteObject(qi::TransportSocket *ts, const std::string &dest);
   virtual ~QiRemoteObject();

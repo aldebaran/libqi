@@ -37,7 +37,7 @@ void call(const std::string &addr)
   std::string ret;
   QMetaObject::invokeMethod(obj, "reply", Qt::DirectConnection,
                             Q_RETURN_ARG(std::string, ret),
-                            Q_ARG(const char*, "plaf"));
+                            Q_ARG(std::string, "plaf"));
 
   std::cout << "answer:" << ret << std::endl;
 
