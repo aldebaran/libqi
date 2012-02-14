@@ -41,6 +41,13 @@ static void errorcb(struct bufferevent *bev,
 
 NetworkThread::NetworkThread()
 {
+#ifdef _WIN32
+  // libevent does not call WSAStartup
+  WSADATA WSAData;
+  // TODO: handle return code
+  ::WSAStartup(MAKEWORD(1, 0), &WSAData);
+#endif
+
   if (!(_base = event_base_new()))
     return;
   _thd = boost::thread(&NetworkThread::run, this);
@@ -49,6 +56,10 @@ NetworkThread::NetworkThread()
 NetworkThread::~NetworkThread()
 {
   event_base_free(_base);
+#ifdef _WIN32
+  // TODO handle return code
+  ::WSACleanup();
+#endif
 }
 
 void NetworkThread::run()
