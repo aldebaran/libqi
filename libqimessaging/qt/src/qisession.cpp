@@ -16,6 +16,35 @@ public:
   qi::Session session;
 };
 
+class QRemoteObject : public QObject {
+public:
+  explicit QRemoteObject(qi::TransportSocket *ts, const std::string &dest)
+    : _ts(ts),
+      _dest(dest)
+  {
+  }
+
+  virtual void metaCall(const std::string &method, const std::string &sig, qi::DataStream &in, qi::DataStream &out) {
+    qi::Message msg;
+    msg.setId(200);
+    msg.setSource("ouame");
+    msg.setDestination(_dest);
+    msg.setPath(method);
+    msg.setData(in.str());
+    _ts->send(msg);
+    _ts->waitForId(msg.id());
+
+    qi::Message ret;
+    _ts->read(msg.id(), &ret);
+    out.str(ret.data());
+  }
+
+protected:
+  qi::TransportSocket *_ts;
+  std::string _dest;
+};
+
+
 
 QiSession::QiSession()
   : _p(new QiSessionPrivate)
@@ -43,10 +72,13 @@ bool QiSession::waitForDisconnected(int msecs)
   return _p->session.waitForDisconnected(msecs);
 }
 
-
 QObject *QiSession::service(const QString &name, const QString &type)
 {
-
+  QObject *obj = 0;
+  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), type.toUtf8().constData());
+  QRemoteObject *robj = new QRemoteObject(ts, name.toStdString());
+  obj = robj;
+  return obj;
 }
 
 QVector<QString> QiSession::services()
