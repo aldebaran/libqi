@@ -20,7 +20,13 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
-#include <arpa/inet.h>
+
+#ifdef _WIN32
+ #include <winsock2.h> // for socket
+ #include <WS2tcpip.h> // for socklen_t
+#else
+ #include <arpa/inet.h>
+#endif
 
 #include <qimessaging/transport/transport_server.hpp>
 #include <qimessaging/transport/transport_socket.hpp>
@@ -72,7 +78,11 @@ void TransportServerPrivate::accept(evutil_socket_t listener,
   }
   else if (fd > FD_SETSIZE)
   {
+#ifdef _WIN32
+    ::closesocket(fd);
+#else
     ::close(fd);
+#endif
   }
   else
   {
