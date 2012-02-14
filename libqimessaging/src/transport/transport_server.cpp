@@ -78,11 +78,7 @@ void TransportServerPrivate::accept(evutil_socket_t listener,
   }
   else if (fd > FD_SETSIZE)
   {
-#ifdef _WIN32
-    ::closesocket(fd);
-#else
-    ::close(fd);
-#endif
+    evutil_closesocket(fd);
   }
   else
   {
