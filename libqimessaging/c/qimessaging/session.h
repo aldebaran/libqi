@@ -11,7 +11,6 @@
 #define _QIMESSAGING_BROKER_H_
 
 #include <stdlib.h>
-#include <strings.h>
 
 #ifdef __cplusplus
 extern "C"
