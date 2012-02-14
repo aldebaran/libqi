@@ -24,7 +24,7 @@ QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest)
   mob.setClassName("QiRemoteObject");
   //QMetaMethodBuilder b = sup.addSignal("errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)");
   //d->ipcfailure = b.index();
-  _p->meta = sup.toMetaObject();
+  //_p->meta = sup.toMetaObject();
 }
 
 QiRemoteObject::~QiRemoteObject()
