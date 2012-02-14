@@ -12,6 +12,8 @@
 
 #include <qi/os.hpp>
 #include <qimessaging/gateway.hpp>
+#include <qimessaging/session.hpp>
+#include <qimessaging/object.hpp>
 
 
 namespace po = boost::program_options;
@@ -53,16 +55,25 @@ int main(int argc, char *argv[])
       std::string gatewayAddress = vm["gateway-address"].as<std::string>();
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      qi::Gateway gate;
-//      gate.start(gatewayAddress);
+      qi::Session       session;
+      qi::Object        obj;
+      qi::Gateway       gate;
+
+
+      session.setName("gateway");
+      session.setDestination("qi.master");
+      session.connect(masterAddress);
+      session.waitForConnected();
+
+      gate.advertiseService("gateway", &obj);
+      gate.start("127.0.0.1", 12345, &session);
       std::cout << "ready." << std::endl;
 
-//      gate.registerGateway(masterAddress, gatewayAddress);
+      std::vector<std::string> result = session.services();
 
       while (1)
         qi::os::sleep(1);
 
-//      gate.unregisterGateway(gatewayAddress);
     }
     else
     {
