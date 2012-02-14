@@ -15,6 +15,7 @@
 qi_server_t *qi_server_create(const char *name) {
 //  qi::Server *pserver = new qi::ServerImpl(name);
 //  return reinterpret_cast<qi_server_t *>(pserver);
+  return NULL;
 }
 
 void         qi_server_destroy(qi_server_t *server) {
