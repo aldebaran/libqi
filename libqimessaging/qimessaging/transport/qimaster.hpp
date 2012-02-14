@@ -28,10 +28,10 @@ namespace qi
 
   protected:
     virtual void newConnection();
-    virtual void onDisconnected(TransportSocket *client, const qi::Message &msg);
-    virtual void onConnected(TransportSocket *client, const qi::Message &msg);
-    virtual void onWrite(TransportSocket *client, const qi::Message &msg);
-    virtual void onRead(TransportSocket *client, const qi::Message &msg);
+    virtual void onDisconnected(TransportSocket *client);
+    virtual void onConnected(TransportSocket *client);
+    virtual void onWriteDone(TransportSocket *client);
+    virtual void onReadyRead(TransportSocket *client, const qi::Message &msg);
 
   private:
     void services(const qi::Message &msg, qi::Message &retval);

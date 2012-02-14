@@ -40,10 +40,10 @@ class TransportSocket;
 class TransportSocketInterface
 {
 public:
-  virtual void onConnected(TransportSocket *client, const qi::Message &msg)    = 0;
-  virtual void onDisconnected(TransportSocket *client, const qi::Message &msg) = 0;
-  virtual void onWrite(TransportSocket *client, const qi::Message &msg)        = 0;
-  virtual void onRead(TransportSocket *client, const qi::Message &msg)         = 0;
+  virtual void onConnected(TransportSocket *client)    = 0;
+  virtual void onDisconnected(TransportSocket *client) = 0;
+  virtual void onWriteDone(TransportSocket *client)        = 0;
+  virtual void onReadyRead(TransportSocket *client, const qi::Message &msg)         = 0;
 };
 
 struct TransportSocketPrivate;

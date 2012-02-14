@@ -24,12 +24,14 @@ public:
   }
 
   virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out) {
+
     qi::Message msg;
     msg.setId(uniqueRequestId++);
     msg.setSource("ouame");
     msg.setDestination(_dest);
     msg.setPath(method);
     msg.setData(in.str());
+
     _ts->send(msg);
     _ts->waitForId(msg.id());
 
@@ -79,7 +81,7 @@ bool Session::disconnect()
   return true;
 }
 
-void Session::onDisconnected(TransportSocket *client, const Message &msg)
+void Session::onDisconnected(TransportSocket *client)
 {
 }
 
@@ -225,17 +227,17 @@ qi::Object* Session::service(const std::string &name,
   return obj;
 }
 
-void Session::onConnected(TransportSocket *client, const Message &msg)
+void Session::onConnected(TransportSocket *client)
 {
   //  std::cout << "connected broker: " << std::endl;
 }
 
-void Session::onWrite(TransportSocket *client, const qi::Message &msg)
+void Session::onWriteDone(TransportSocket *client)
 {
   //  std::cout << "written broker: " << std::endl;
 }
 
-void Session::onRead(TransportSocket *client, const Message &msg)
+void Session::onReadyRead(TransportSocket *client, const Message &msg)
 {
   //  std::cout << "read broker: " << std::endl;
 }

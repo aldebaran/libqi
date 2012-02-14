@@ -56,19 +56,19 @@ namespace qi
     ts->start(ip, port, nthd->getEventBase());
   }
 
-  void ServiceDirectoryServer::onConnected(TransportSocket *socket, const qi::Message &msg)
+  void ServiceDirectoryServer::onConnected(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onDisconnected(TransportSocket *socket, const qi::Message &msg)
+  void ServiceDirectoryServer::onDisconnected(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onWrite(TransportSocket *socket, const qi::Message &msg)
+  void ServiceDirectoryServer::onWriteDone(TransportSocket *socket)
   {
   }
 
-  void ServiceDirectoryServer::onRead(TransportSocket *socket, const qi::Message &msg)
+  void ServiceDirectoryServer::onReadyRead(TransportSocket *socket, const qi::Message &msg)
   {
     qi::Message retval;
     if (msg.path() == "services")

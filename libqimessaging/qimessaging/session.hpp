@@ -90,10 +90,10 @@ namespace qi {
     Session();
     virtual ~Session();
 
-    void onConnected(TransportSocket *client, const qi::Message &msg);
-    void onDisconnected(TransportSocket *client, const Message &msg);
-    void onWrite(TransportSocket *client, const qi::Message &msg);
-    void onRead(TransportSocket *client, const qi::Message &msg);
+    void onConnected(TransportSocket *client);
+    void onDisconnected(TransportSocket *client);
+    void onWriteDone(TransportSocket *client);
+    void onReadyRead(TransportSocket *client, const qi::Message &msg);
 
 
     void connect(const std::string &masterAddress);

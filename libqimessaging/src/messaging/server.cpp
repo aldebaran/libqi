@@ -23,7 +23,7 @@ namespace qi {
       socket->setDelegate(this);
     };
 
-    virtual void onRead(TransportSocket *client, const qi::Message &msg) {
+    virtual void onReadyRead(TransportSocket *client, const qi::Message &msg) {
       qi::Object *obj;
 
       obj = _services[msg.destination()];
@@ -42,15 +42,15 @@ namespace qi {
       client->send(retval);
     };
 
-    virtual void onWrite(TransportSocket *client, const qi::Message &msg)
+    virtual void onWriteDone(TransportSocket *client)
     {
     }
 
-    virtual void onConnected(TransportSocket *client, const Message &msg)
+    virtual void onConnected(TransportSocket *client)
     {
     }
 
-    virtual void onDisconnected(TransportSocket *client, const Message &msg)
+    virtual void onDisconnected(TransportSocket *client)
     {
     }
 
