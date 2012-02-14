@@ -14,7 +14,7 @@ enable_testing()
 include(CMakeDependentOption)
 find_package(ZEROMQ)
 find_package(PYTHON)
-qi_add_optional_package(QISSH)
+
 
 cmake_dependent_option(WITH_PYTHON   "Build python bindings" OFF "PYTHON_FOUND" ON)
 #cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
@@ -23,9 +23,10 @@ option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 option(WITH_BINDER   "Support Android IPC binder" OFF)
 option(WITH_SSH      "Support libssh" OFF)
-option(WITH_ZEROMQ   "Support zmq" OFF)
+option(WITH_ZEROMQ   "Support zmq"    OFF)
+option(WITH_QISSH    "Support qissh"  OFF)
 
-
+qi_add_optional_package(QISSH)
 
 if (WIN32)
   add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
@@ -100,6 +101,10 @@ qi_create_lib(qimessaging SRC ${CONFIG_H}
                  SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport qi-preference
                  #qi-cbinding
                  DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
+if(WIN32)
+  qi_use_lib(qimessaging WSA)
+endif(WIN32)
+
 qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)
@@ -117,6 +122,8 @@ message(STATUS "WITH_ZEROMQ  : ${WITH_ZEROMQ}")
 message(STATUS "WITH_PROTOBUF: ${WITH_PROTOBUF}")
 message(STATUS "WITH_EXAMPLES: ${WITH_EXAMPLES}")
 message(STATUS "WITH_PERF    : ${WITH_PERF}")
+message(STATUS "WITH_SSH     : ${WITH_SSH}")
+message(STATUS "WITH_QISSH   : ${WITH_QISSH}")
 message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 
