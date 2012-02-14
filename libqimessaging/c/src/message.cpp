@@ -80,6 +80,7 @@ qi_message_type_t qi_message_get_type(qi_message_t *msg)
     default:
       assert(false);
   }
+  return none;
 }
 
 void qi_message_set_id(qi_message_t *msg, unsigned int id)
