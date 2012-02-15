@@ -68,8 +68,6 @@ int main(int argc, char *argv[])
 
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      session.setName("serviceTest");
-      session.setDestination("qi.master");
       session.connect(masterAddress);
       session.waitForConnected();
       session.registerEndpoint(e);

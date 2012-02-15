@@ -59,9 +59,6 @@ int main(int argc, char *argv[])
       qi::Object        obj;
       qi::Gateway       gate;
 
-
-      session.setName("gateway");
-      session.setDestination("qi.master");
       session.connect(masterAddress);
       session.waitForConnected();
 

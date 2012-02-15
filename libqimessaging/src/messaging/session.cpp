@@ -154,11 +154,6 @@ void Session::unregisterEndpoint(const std::string &e)
   tc->read(msg.id(), &ans);
 }
 
-bool Session::isInitialized() const
-{
-  return true;
-}
-
 std::vector<std::string> Session::machines()
 {
   std::vector<std::string> result;
