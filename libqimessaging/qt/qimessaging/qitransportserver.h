@@ -9,9 +9,6 @@
 # define   	QT_QITRANSPORTSERVER_H_
 
 #include <QtCore/QObject>
-#include <QtCore/QMetaObject>
-#include <QVector>
-#include <QString>
 #include <qimessaging/qitransportsocket.h>
 
 class QiTransportServerPrivate;

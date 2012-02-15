@@ -30,6 +30,6 @@ qt4_wrap_cpp(H_MOC ${H_TO_MOC})
 
 qi_create_lib(qimessaging-qt ${H_P} ${H} ${SRC} ${H_MOC})
 
-qi_use_lib(qimessaging-qt qimessaging QT_QTCORE)
+qi_use_lib(qimessaging-qt qimessaging QT_QTCORE QT_QTNETWORK)
 
 qi_stage_lib(qimessaging-qt)

@@ -8,12 +8,12 @@
 #ifndef   	QT_QITRANSPORTSOCKET_H_
 # define   	QT_QITRANSPORTSOCKET_H_
 
-#include <QtCore/QObject>
+#include <QtNetwork/QAbstractSocket>
 #include <qimessaging/transport/transport_socket.hpp>
 
 class QiTransportSocketPrivate;
 
-class QiTransportSocket : public QObject {
+class QiTransportSocket : public QAbstractSocket {
 public:
   QiTransportSocket();
   QiTransportSocket(int fd, struct event_base *base);
