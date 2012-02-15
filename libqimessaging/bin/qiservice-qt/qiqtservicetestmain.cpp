@@ -66,12 +66,12 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
       session.connect(QString::fromStdString(masterAddress));
       session.waitForConnected();
-      session.registerEndPoint(QString::fromUtf8("tcp://127.0.0.1:9571/"));
+      session.registerEndPoint(QUrl::QUrl("tcp://127.0.0.1:9571/"));
 
       while (1)
         qi::os::sleep(1);
 
-      session.unregisterEndPoint(QString::fromUtf8("tcp://127.0.0.1:9571/"));
+      session.unregisterEndPoint(QUrl::QUrl("tcp://127.0.0.1:9571/"));
     }
     else
     {

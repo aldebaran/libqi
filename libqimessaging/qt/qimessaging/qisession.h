@@ -11,6 +11,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaObject>
+#include <QtCore/QUrl>
 #include <QVector>
 #include <QString>
 
@@ -31,8 +32,8 @@ public:
 
   QObject           *service(const QString &name, const QString &type = "tcp");
   QVector<QString>   services();
-  void               registerEndPoint(const QString &endpoint);
-  void               unregisterEndPoint(const QString &endpoint);
+  void               registerEndPoint(const QUrl &endpoint);
+  void               unregisterEndPoint(const QUrl &endpoint);
 
   // private implementation
   QiSessionPrivate *_p;
