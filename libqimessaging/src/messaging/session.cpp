@@ -115,7 +115,6 @@ void Session::registerEndpoint(const std::string &e)
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination(_destination);
   msg.setPath("registerEndpoint");
   msg.setData(d.str());
 
@@ -144,7 +143,6 @@ void Session::unregisterEndpoint(const std::string &e)
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination(_destination);
   msg.setPath("unregisterEndpoint");
   msg.setData(d.str());
 
@@ -154,11 +152,6 @@ void Session::unregisterEndpoint(const std::string &e)
   tc->read(msg.id(), &ans);
 }
 
-bool Session::isInitialized() const
-{
-  return true;
-}
-
 std::vector<std::string> Session::services()
 {
   std::vector<std::string> result;
@@ -166,7 +159,6 @@ std::vector<std::string> Session::services()
   qi::Message msg;
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination(_destination);
   msg.setPath("services");
 
   tc->send(msg);
@@ -190,7 +182,6 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
-  msg.setDestination(_destination);
   msg.setPath("service");
   msg.setData(name);
 

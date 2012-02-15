@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
 
 
       session.setName("gateway");
-      session.setDestination("qi.master");
       session.connect(masterAddress);
       session.waitForConnected();
 
