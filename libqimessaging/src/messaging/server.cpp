@@ -70,9 +70,9 @@ namespace qi {
     delete _p;
   }
 
-  void Server::start(const std::string &addr, unsigned short port, qi::NetworkThread *base) {
+  void Server::start(const std::string &addr, unsigned short port, qi::Session *session) {
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(addr, port, base->getEventBase());
+    _p->_ts.start(addr, port, session->_nthd->getEventBase());
   };
 
   void Server::advertiseService(const std::string &name, qi::Object *obj) {

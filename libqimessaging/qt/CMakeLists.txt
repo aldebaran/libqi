@@ -10,13 +10,18 @@ set(H_TO_MOC
         qimessaging/qisession.h)
 
 set(H   qimessaging/qiserver.h
+        qimessaging/qitransportserver.h
+        qimessaging/qitransportsocket.h
         qimessaging/qisession.h)
 
 set(H_P src/qiremoteobject_p.h
+        src/qisession_p.h
         src/qmetaobjectbuilder_p.h)
 
 set(SRC src/qisession.cpp
         src/qiserver.cpp
+        src/qitransportserver.cpp
+        src/qitransportsocket.cpp
         src/qiremoteobject.cpp
         src/qmetaobjectbuilder.cpp)
 

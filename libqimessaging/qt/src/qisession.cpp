@@ -10,11 +10,7 @@
 #include <qimessaging/qisession.h>
 #include <qimessaging/session.hpp>
 #include "src/qiremoteobject_p.h"
-
-class QiSessionPrivate {
-public:
-  qi::Session session;
-};
+#include "src/qisession_p.h"
 
 
 QiSession::QiSession()

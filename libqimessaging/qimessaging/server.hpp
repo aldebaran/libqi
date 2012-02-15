@@ -13,6 +13,7 @@
 
 #include <string>
 #include <qimessaging/api.hpp>
+#include <qimessaging/session.hpp>
 #include <qimessaging/transport/transport_server.hpp>
 
 namespace qi {
@@ -41,7 +42,7 @@ namespace qi {
     Server();
     virtual ~Server();
 
-    void start(const std::string &addr, unsigned short port, NetworkThread *base);
+    void start(const std::string &addr, unsigned short port, qi::Session *session);
     void advertiseService(const std::string &name, qi::Object *obj);
 
   private:

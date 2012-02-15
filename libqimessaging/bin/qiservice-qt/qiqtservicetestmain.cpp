@@ -1,6 +1,6 @@
 /*
 ** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
+**  - Laurent LEC        <llec@aldebaran-robotics.com>
 **
 ** Copyright (C) 2012 Aldebaran Robotics
 */
@@ -11,9 +11,8 @@
 #include <boost/program_options.hpp>
 
 #include <qi/os.hpp>
-#include <qimessaging/session.hpp>
-#include <qimessaging/server.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/qisession.h>
+#include <qimessaging/qiserver.h>
 
 //#include "qiservicetest.hpp"
 
@@ -54,30 +53,25 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      qi::Session       session;
-      qi::Object        obj;
-      qi::Server        srv;
-      obj.advertiseMethod("reply", &reply);
+      QiSession session;
+      QObject obj;
+      QiServer srv;
+      //obj.advertiseMethod("reply", &reply);
 
       srv.advertiseService("serviceTest", &obj);
       srv.start("127.0.0.1", 9571, &session);
 
       std::cout << "ready." << std::endl;
 
-      std::string e = "tcp://127.0.0.1:9571";
-
       std::string masterAddress = vm["master-address"].as<std::string>();
-
-      session.setName("serviceTest");
-      session.setDestination("qi.master");
-      session.connect(masterAddress);
+      session.connect(QString::fromStdString(masterAddress));
       session.waitForConnected();
-      session.registerEndpoint(e);
+      session.registerEndPoint(QString::fromUtf8("tcp://127.0.0.1:9571/"));
 
       while (1)
         qi::os::sleep(1);
 
-      session.unregisterEndpoint(e);
+      session.unregisterEndPoint(QString::fromUtf8("tcp://127.0.0.1:9571/"));
     }
     else
     {

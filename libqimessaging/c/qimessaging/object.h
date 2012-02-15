@@ -9,6 +9,8 @@
 #ifndef _QIMESSAGING_OBJECT_H_
 #define _QIMESSAGING_OBJECT_H_
 
+#include <c/qimessaging/message.h>
+
 #ifdef __cplusplus
 extern "C"
 {

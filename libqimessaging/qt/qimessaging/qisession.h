@@ -34,6 +34,9 @@ public:
   void               registerEndPoint(const QString &endpoint);
   void               unregisterEndPoint(const QString &endpoint);
 
+  // private implementation
+  QiSessionPrivate *_p;
+
 signals:
   void OnConnected();
   void OnDisconnected();
@@ -41,9 +44,6 @@ signals:
   //really?
   void writeReady();
   void readReady();
-
-protected:
-  QiSessionPrivate *_p;
 };
 
 

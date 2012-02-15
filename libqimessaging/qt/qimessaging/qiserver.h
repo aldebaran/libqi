@@ -9,6 +9,7 @@
 # define   	QT_QISERVER_H_
 
 #include <QtCore/QObject>
+#include <qimessaging/qisession.h>
 
 class QiServerPrivate;
 class NetworkThread;
@@ -18,7 +19,7 @@ public:
   QiServer();
   ~QiServer();
 
-  void start(const QString &addr, unsigned short port, NetworkThread *base);
+  void start(const QString &addr, unsigned short port, QiSession *session);
 
   void advertiseService(const QString &name, QObject *obj);
 

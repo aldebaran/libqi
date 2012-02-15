@@ -11,6 +11,7 @@
 #define _QIMESSAGING_BROKER_H_
 
 #include <stdlib.h>
+#include <c/qimessaging/object.h>
 
 #ifdef __cplusplus
 extern "C"

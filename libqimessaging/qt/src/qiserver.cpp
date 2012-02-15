@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <qimessaging/qiserver.h>
+#include <qimessaging/qisession.h>
 #include <qimessaging/server.hpp>
+#include "src/qisession_p.h"
 
 class QiServerPrivate
 {
@@ -27,14 +29,12 @@ QiServer::~QiServer()
 }
 
 
-void QiServer::start(const QString &addr, unsigned short port, NetworkThread *base)
+void QiServer::start(const QString &addr, unsigned short port, QiSession *session)
 {
-  //_p->server.start(addr, port, base);
+  _p->server.start(addr.toUtf8().constData(), port, &(session->_p->session));
 }
 
 void QiServer::advertiseService(const QString &name, QObject *obj)
 {
 
 }
-
-
