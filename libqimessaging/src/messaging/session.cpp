@@ -154,24 +154,6 @@ void Session::unregisterEndpoint(const std::string &e)
   tc->read(msg.id(), &ans);
 }
 
-std::vector<std::string> Session::machines()
-{
-  std::vector<std::string> result;
-
-  qi::Message msg;
-  msg.setId(uniqueRequestId++);
-  msg.setSource(_name);
-  msg.setDestination(_destination);
-  msg.setPath("machines");
-
-  tc->send(msg);
-  tc->waitForId(msg.id());
-  qi::Message ans;
-  tc->read(msg.id(), &ans);
-
-  return result;
-}
-
 std::vector<std::string> Session::services()
 {
   std::vector<std::string> result;
