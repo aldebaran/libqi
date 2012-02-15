@@ -168,7 +168,11 @@ public:
     int indexOfEnumerator(const QByteArray& name);
     int indexOfClassInfo(const QByteArray& name);
 
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 8, 0))
     typedef QMetaObjectExtraData::StaticMetacallFunction StaticMetacallFunction;
+#else
+    typedef int (*StaticMetacallFunction)(QMetaObject::Call, int, void **);
+#endif
 
     QMetaObjectBuilder::StaticMetacallFunction staticMetacallFunction() const;
     void setStaticMetacallFunction(QMetaObjectBuilder::StaticMetacallFunction value);

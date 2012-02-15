@@ -1207,7 +1207,11 @@ static int buildMetaObject(QMetaObjectBuilderPrivate *d, char *buf,
     QMetaObjectPrivate *pmeta
         = reinterpret_cast<QMetaObjectPrivate *>(buf + size);
     int pmetaSize = size;
+#if (QT_VERSION >= QT_VERSION_CHECK(4, 8, 0))
     dataIndex = 14;     // Number of fields in the QMetaObjectPrivate.
+#else
+    dataIndex = 13;
+#endif
     for (index = 0; index < d->properties.size(); ++index) {
         if (d->properties[index].notifySignal != -1) {
             hasNotifySignals = true;
