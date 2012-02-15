@@ -29,6 +29,11 @@ void QiSession::connect(const QString &masterAddress)
   _p->session.connect(masterAddress.toUtf8().constData());
 }
 
+void QiSession::disconnect()
+{
+  _p->session.disconnect();
+}
+
 bool QiSession::waitForConnected(int msecs)
 {
   return _p->session.waitForConnected(msecs);

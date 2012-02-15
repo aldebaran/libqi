@@ -25,11 +25,10 @@ public:
   ~QiSession();
 
 public:
-  void connect(const QString &masterAddress);
-
-  bool waitForConnected(int msecs = 30000);
-  bool waitForDisconnected(int msecs = 30000);
-
+  void               connect(const QString &masterAddress);
+  void               disconnect();
+  bool               waitForConnected(int msecs = 30000);
+  bool               waitForDisconnected(int msecs = 30000);
   QObject           *service(const QString &name, const QString &type = "tcp");
   QVector<QString>   services();
   void               registerEndPoint(const QUrl &endpoint);
@@ -39,12 +38,8 @@ public:
   QiSessionPrivate *_p;
 
 signals:
-  void OnConnected();
-  void OnDisconnected();
-
-  //really?
-  void writeReady();
-  void readReady();
+  void connected();
+  void disconnected();
 };
 
 
