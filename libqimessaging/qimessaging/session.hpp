@@ -117,8 +117,6 @@ namespace qi {
     qi::Object* service(const std::string &name,
                         const std::string &type = "tcp");
 
-    bool isInitialized() const;
-
     qi::TransportSocket *tc;
     qi::NetworkThread   *_nthd;
 
