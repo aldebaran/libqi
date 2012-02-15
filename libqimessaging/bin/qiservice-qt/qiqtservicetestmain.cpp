@@ -59,19 +59,18 @@ int main(int argc, char *argv[])
       //obj.advertiseMethod("reply", &reply);
 
       srv.advertiseService("serviceTest", &obj);
-      srv.start("127.0.0.1", 9571, &session);
+      srv.listen(&session, QUrl::QUrl("tcp://127.0.0.1:9571"));
 
       std::cout << "ready." << std::endl;
 
       std::string masterAddress = vm["master-address"].as<std::string>();
       session.connect(QString::fromStdString(masterAddress));
       session.waitForConnected();
-      session.registerEndPoint(QUrl::QUrl("tcp://127.0.0.1:9571/"));
 
       while (1)
         qi::os::sleep(1);
 
-      session.unregisterEndPoint(QUrl::QUrl("tcp://127.0.0.1:9571/"));
+      srv.stop();
     }
     else
     {

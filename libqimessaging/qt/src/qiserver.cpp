@@ -28,10 +28,13 @@ QiServer::~QiServer()
   delete _p;
 }
 
-
-void QiServer::start(const QString &addr, unsigned short port, QiSession *session)
+void QiServer::listen(QiSession *session, const QUrl &url)
 {
-  _p->server.start(addr.toUtf8().constData(), port, &(session->_p->session));
+  _p->server.listen(&(session->_p->session), url.toString().toUtf8().constData());
+}
+
+void QiServer::stop()
+{
 }
 
 void QiServer::advertiseService(const QString &name, QObject *obj)

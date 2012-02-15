@@ -70,10 +70,64 @@ namespace qi {
     delete _p;
   }
 
-  void Server::start(const std::string &addr, unsigned short port, qi::Session *session) {
+  void Server::listen(qi::Session *session, const std::string &url) {
+    qi::DataStream d;
+    qi::EndpointInfo endpoint;
+    size_t begin = 0;
+    size_t end = 0;
+    end = url.find(":");
+    endpoint.type = url.substr(begin, end);
+    begin = end + 3;
+    end = url.find(":", begin);
+    endpoint.ip = url.substr(begin, end - begin);
+    begin = end + 1;
+    std::stringstream ss(url.substr(begin));
+    ss >> endpoint.port;
+    d << endpoint;
+
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(addr, port, session->_nthd->getEventBase());
+    _p->_ts.start(endpoint.ip, endpoint.port, session->_nthd->getEventBase());
+
+    qi::Message msg;
+    msg.setId(0);
+    msg.setSource(session->name());
+    msg.setPath("registerEndpoint");
+    msg.setData(d.str());
+
+    session->tc->send(msg);
+    session->tc->waitForId(msg.id());
+    qi::Message ans;
+    session->tc->read(msg.id(), &ans);
   };
+
+  void Server::stop() {
+    /*
+    qi::DataStream d;
+    qi::EndpointInfo endpoint;
+    size_t begin = 0;
+    size_t end = 0;
+    end = e.find(":");
+    endpoint.type = e.substr(begin, end);
+    begin = end + 3;
+    end = e.find(":", begin);
+    endpoint.ip = e.substr(begin, end - begin);
+    begin = end + 1;
+    std::stringstream ss(e.substr(begin));
+    ss >> endpoint.port;
+    d << endpoint;
+
+    qi::Message msg;
+    msg.setId(uniqueRequestId++);
+    msg.setSource(_name);
+    msg.setPath("unregisterEndpoint");
+    msg.setData(d.str());
+
+    tc->send(msg);
+    tc->waitForId(msg.id());
+    qi::Message ans;
+    tc->read(msg.id(), &ans);
+    */
+  }
 
   void Server::advertiseService(const std::string &name, qi::Object *obj) {
     _p->_services[name] = obj;

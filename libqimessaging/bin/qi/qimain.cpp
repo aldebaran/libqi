@@ -34,11 +34,19 @@ void call(const std::string &addr)
 
   qi::Object *obj = session.service("serviceTest");
 
+  if (obj == 0)
+  {
+      std::cerr << "obj == 0" << std::endl;
+      return;
+  }
+
   std::string result = obj->call<std::string>("reply", "plaf");
 
   std::cout << "answer:" << result << std::endl;
 
   qi::os::sleep(2);
+
+  session.disconnect();
 }
 
 

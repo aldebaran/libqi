@@ -102,9 +102,6 @@ namespace qi {
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 
-    void registerEndpoint(const std::string &e);
-    void unregisterEndpoint(const std::string &e);
-
     std::vector<std::string> services();
 
     qi::TransportSocket* serviceSocket(const std::string &name,

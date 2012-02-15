@@ -31,8 +31,6 @@ public:
   bool               waitForDisconnected(int msecs = 30000);
   QObject           *service(const QString &name, const QString &type = "tcp");
   QVector<QString>   services();
-  void               registerEndPoint(const QUrl &endpoint);
-  void               unregisterEndPoint(const QUrl &endpoint);
 
   // private implementation
   QiSessionPrivate *_p;

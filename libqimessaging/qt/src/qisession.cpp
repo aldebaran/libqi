@@ -61,13 +61,3 @@ QVector<QString> QiSession::services()
 
   return ret;
 }
-
-void QiSession::registerEndPoint(const QUrl &endpoint)
-{
-  _p->session.registerEndpoint(endpoint.toString().toUtf8().constData());
-}
-
-void QiSession::unregisterEndPoint(const QUrl &endpoint)
-{
-  _p->session.unregisterEndpoint(endpoint.toString().toUtf8().constData());
-}

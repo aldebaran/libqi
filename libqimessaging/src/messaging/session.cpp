@@ -96,62 +96,6 @@ bool Session::waitForDisconnected(int msecs)
   return tc->waitForDisconnected(msecs);
 }
 
-void Session::registerEndpoint(const std::string &e)
-{
-  qi::DataStream d;
-  qi::EndpointInfo endpoint;
-  size_t begin = 0;
-  size_t end = 0;
-  end = e.find(":");
-  endpoint.type = e.substr(begin, end);
-  begin = end + 3;
-  end = e.find(":", begin);
-  endpoint.ip = e.substr(begin, end - begin);
-  begin = end + 1;
-  std::stringstream ss(e.substr(begin));
-  ss >> endpoint.port;
-  d << endpoint;
-
-  qi::Message msg;
-  msg.setId(uniqueRequestId++);
-  msg.setSource(_name);
-  msg.setPath("registerEndpoint");
-  msg.setData(d.str());
-
-  tc->send(msg);
-  tc->waitForId(msg.id());
-  qi::Message ans;
-  tc->read(msg.id(), &ans);
-}
-
-void Session::unregisterEndpoint(const std::string &e)
-{
-  qi::DataStream d;
-  qi::EndpointInfo endpoint;
-  size_t begin = 0;
-  size_t end = 0;
-  end = e.find(":");
-  endpoint.type = e.substr(begin, end);
-  begin = end + 3;
-  end = e.find(":", begin);
-  endpoint.ip = e.substr(begin, end - begin);
-  begin = end + 1;
-  std::stringstream ss(e.substr(begin));
-  ss >> endpoint.port;
-  d << endpoint;
-
-  qi::Message msg;
-  msg.setId(uniqueRequestId++);
-  msg.setSource(_name);
-  msg.setPath("unregisterEndpoint");
-  msg.setData(d.str());
-
-  tc->send(msg);
-  tc->waitForId(msg.id());
-  qi::Message ans;
-  tc->read(msg.id(), &ans);
-}
-
 std::vector<std::string> Session::services()
 {
   std::vector<std::string> result;
@@ -216,6 +160,11 @@ qi::Object* Session::service(const std::string &name,
 {
   qi::Object          *obj;
   qi::TransportSocket *ts = serviceSocket(name, type);
+
+  if (ts == 0)
+  {
+    return 0;
+  }
 
   qi::RemoteObject *robj = new qi::RemoteObject(ts, name);
   obj = robj;

@@ -19,7 +19,8 @@ public:
   QiServer();
   ~QiServer();
 
-  void start(const QString &addr, unsigned short port, QiSession *session);
+  void listen(QiSession *session, const QUrl &url);
+  void stop();
 
   void advertiseService(const QString &name, QObject *obj);
 

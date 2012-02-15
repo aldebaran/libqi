@@ -54,29 +54,26 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
+      std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
       qi::Object        obj;
       qi::Server        srv;
       obj.advertiseMethod("reply", &reply);
 
-      srv.advertiseService("serviceTest", &obj);
-      srv.start("127.0.0.1", 9571, &session);
-
-      std::cout << "ready." << std::endl;
-
-      std::string e = "tcp://127.0.0.1:9571";
-
-      std::string masterAddress = vm["master-address"].as<std::string>();
-
       session.setName("serviceTest");
       session.connect(masterAddress);
       session.waitForConnected();
-      session.registerEndpoint(e);
+
+      srv.advertiseService("serviceTest", &obj);
+      srv.listen(&session, "tcp://127.0.0.1:9571");
+
+      std::cout << "ready." << std::endl;
 
       while (1)
         qi::os::sleep(1);
 
-      session.unregisterEndpoint(e);
+      srv.stop();
+      session.disconnect();
     }
     else
     {

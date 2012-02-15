@@ -42,7 +42,8 @@ namespace qi {
     Server();
     virtual ~Server();
 
-    void start(const std::string &addr, unsigned short port, qi::Session *session);
+    void listen(qi::Session *session, const std::string &url);
+    void stop();
     void advertiseService(const std::string &name, qi::Object *obj);
 
   private:

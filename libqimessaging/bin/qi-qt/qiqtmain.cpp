@@ -26,7 +26,7 @@ void call(const std::string &addr)
 {
   QiSession session;
   session.connect(QString::fromStdString(addr));
-  session.waitForConnected(3000);
+  session.waitForConnected();
 
   QVector<QString> services = session.services();
   foreach (QString service, services)

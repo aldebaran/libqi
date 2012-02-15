@@ -198,7 +198,6 @@ int main_server()
   session.setName("serviceTest");
   session.connect("127.0.0.1:5555");
   session.waitForConnected();
-  session.registerEndpoint(e);
 
   while(1) {
     qi::os::sleep(1);
