@@ -32,6 +32,8 @@ int main_client(std::string src)
 
   std::stringstream ss;
   ss << src << sessionId++;
+  session.setName(ss.str());
+  session.setDestination("qi.master");
   session.connect("127.0.0.1:12345");
   session.waitForConnected();
   qi::TransportSocket* transport = session.serviceSocket("serviceTest");
@@ -194,6 +196,8 @@ int main_server()
 
   std::string e = "tcp://127.0.0.1:9559";
 
+  session.setName("serviceTest");
+  session.setDestination("qi.master");
   session.connect("127.0.0.1:5555");
   session.waitForConnected();
   session.registerEndpoint(e);
