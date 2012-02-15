@@ -18,57 +18,31 @@
 
 namespace qi
 {
-
-  ServiceDirectory::ServiceDirectory()
+class ServiceDirectoryPrivate : public TransportServerInterface, public TransportSocketInterface
+{
+public:
+  ServiceDirectoryPrivate()
   {
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
     ts->setDelegate(this);
   }
 
-  ServiceDirectory::~ServiceDirectory()
+  ~ServiceDirectoryPrivate()
   {
     delete ts;
     delete nthd;
   }
 
-  void ServiceDirectory::newConnection() {
+  virtual void newConnection()
+  {
     TransportSocket *socket = ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setDelegate(this);
-  };
-
-
-  void ServiceDirectory::start(const std::string &address)
-  {
-    size_t begin = 0;
-    size_t end = 0;
-    end = address.find(":");
-
-    std::string ip = address.substr(begin, end);
-    begin = end + 1;
-
-    unsigned int port;
-    std::stringstream ss(address.substr(begin));
-    ss >> port;
-
-    ts->start(ip, port, nthd->getEventBase());
   }
 
-  void ServiceDirectory::onConnected(TransportSocket *socket)
-  {
-  }
-
-  void ServiceDirectory::onDisconnected(TransportSocket *socket)
-  {
-  }
-
-  void ServiceDirectory::onWriteDone(TransportSocket *socket)
-  {
-  }
-
-  void ServiceDirectory::onReadyRead(TransportSocket *socket, const qi::Message &msg)
+  virtual void onReadyRead(TransportSocket *socket, const qi::Message &msg)
   {
     qi::Message retval;
     if (msg.path() == "services")
@@ -84,16 +58,29 @@ namespace qi
     socket->send(retval);
   }
 
-  void ServiceDirectory::services(const qi::Message &msg, qi::Message &retval)
+  virtual void onWriteDone(TransportSocket *client)
   {
-    std::vector<std::string> servs;
+  }
+
+  virtual void onConnected(TransportSocket *client)
+  {
+  }
+
+  virtual void onDisconnected(TransportSocket *client)
+  {
+  }
+
+
+  void services(const qi::Message &msg, qi::Message &retval)
+  {
+    std::vector<std::string> result;
 
     std::map<std::string, qi::ServiceInfo>::iterator it;
     for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
-      servs.push_back(it->first);
+      result.push_back(it->first);
 
     qi::DataStream d;
-    d << servs;
+    d << result;
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
@@ -104,7 +91,7 @@ namespace qi
   }
 
 
-  void ServiceDirectory::service(const qi::Message &msg, qi::Message &retval)
+  void service(const qi::Message &msg, qi::Message &retval)
   {
     qi::DataStream d;
     std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
@@ -123,8 +110,7 @@ namespace qi
     retval.setData(d.str());
   }
 
-
-  void ServiceDirectory::registerEndpoint(const qi::Message &msg, qi::Message &retval)
+  void registerEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -154,7 +140,7 @@ namespace qi
     retval.setData(msg.source() + " register.");
   }
 
-  void ServiceDirectory::unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
+  void unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
   {
     qi::EndpointInfo e;
     qi::DataStream d(msg.data());
@@ -190,5 +176,38 @@ namespace qi
     retval.setData(msg.id() + " unregister.");
   }
 
+public:
+  qi::NetworkThread                     *nthd;
+  qi::TransportServer                   *ts;
+  std::map<std::string, qi::ServiceInfo> connectedServices;
+
+}; // !ServiceDirectoryPrivate
+
+
+ServiceDirectory::ServiceDirectory()
+  : _p(new ServiceDirectoryPrivate())
+{
+}
+
+ServiceDirectory::~ServiceDirectory()
+{
+  delete _p;
+}
+
+void ServiceDirectory::start(const std::string &address)
+{
+  size_t begin = 0;
+  size_t end = 0;
+  end = address.find(":");
+
+  std::string ip = address.substr(begin, end);
+  begin = end + 1;
+
+  unsigned int port;
+  std::stringstream ss(address.substr(begin));
+  ss >> port;
+
+  _p->ts->start(ip, port, _p->nthd->getEventBase());
+}
 
 }; // !qi
