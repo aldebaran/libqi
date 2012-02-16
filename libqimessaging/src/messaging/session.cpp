@@ -101,6 +101,7 @@ std::vector<std::string> Session::services()
   std::vector<std::string> result;
 
   qi::Message msg;
+  msg.setType(qi::Message::Call);
   msg.setId(uniqueRequestId++);
   msg.setSource(_name);
   msg.setFunction("services");
@@ -124,6 +125,7 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::DataStream dr;
   qi::Message msg;
   dr << name;
+  msg.setType(qi::Message::Call);
   msg.setId(uniqueRequestId++);
   msg.setFunction("service");
   msg.setData(dr.str());
