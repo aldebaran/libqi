@@ -43,8 +43,6 @@ void call(const std::string &addr)
 
   std::cout << "answer:" << result << std::endl;
 
-  qi::os::sleep(2);
-
   session.disconnect();
 }
 

@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
       session.connect(masterAddress);
       session.waitForConnected();
 
-      gate.advertiseService("gateway", &obj);
+//      gate.advertiseService("gateway", &obj);
       gate.start("127.0.0.1", 12345, &session);
       std::cout << "ready." << std::endl;
 
-      std::vector<std::string> result = session.services();
+//      std::vector<std::string> result = session.services();
 
       while (1)
         qi::os::sleep(1);
