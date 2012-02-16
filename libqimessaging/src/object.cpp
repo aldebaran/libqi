@@ -13,6 +13,7 @@ namespace qi {
   Object::Object()
     : _meta(new MetaObject())
   {
+    advertiseMethod("__metaobject", this, &Object::metaObject);
   }
 
   Object::~Object() {
