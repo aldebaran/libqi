@@ -95,11 +95,15 @@ public:
     din >> name;
     qi::DataStream d;
     std::map<std::string, std::string>::iterator servicesIt;
+    std::vector<std::string> result;
+    result.push_back(name);
     servicesIt = connectedServices.find(name);
     if (servicesIt != connectedServices.end())
     {
-      d << servicesIt->second;
+      result.push_back(servicesIt->second);
     }
+
+    d << result;
 
     retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
