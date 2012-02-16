@@ -119,6 +119,7 @@ namespace qi {
         return typeToValue<double>(value);
       if (type == "string")
         return qi::Value(value);
+      return qi::Value();
     }
 
     std::map<std::string, qi::Value> PreferenceMapPrivate::parse(TiXmlNode* parent)
@@ -372,11 +373,11 @@ namespace qi {
 
     const qi::Value &PreferenceMap::get(const std::string &name)
     {
-
+      static const qi::Value def;
       std::vector<std::string> vect = getVectorPath(name);
 
       if (vect.empty())
-        return qi::Value();
+        return def;
 
       qi::ValueMap vm = _private->_values;
       qi::ValueMap::iterator it;
@@ -400,7 +401,7 @@ namespace qi {
           return (it->second);
       }
 
-      return qi::Value();
+      return def;
     }
 
     void PreferenceMap::set(const std::string &name,
