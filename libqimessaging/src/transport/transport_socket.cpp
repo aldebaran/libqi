@@ -121,8 +121,8 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   if (events & BEV_EVENT_CONNECTED)
   {
     qi::Message msg;
-    _p->tcd->onConnected(this);
     _p->connected = true;
+    _p->tcd->onConnected(this);
   }
   else if (events & BEV_EVENT_EOF)
   {
