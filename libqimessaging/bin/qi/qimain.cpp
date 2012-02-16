@@ -23,7 +23,6 @@ static int uniqueReqId = 200;
 void call(const std::string &addr)
 {
   qi::Session session;
-  session.setName("client.session");
   session.connect(addr);
   session.waitForConnected();
 
