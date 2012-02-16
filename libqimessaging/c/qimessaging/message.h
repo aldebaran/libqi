@@ -18,7 +18,7 @@ extern "C"
 #endif
 
   typedef struct {} qi_message_t;
-  typedef enum { call, answer, event, error, none } qi_message_type_t;
+  typedef enum { call, reply, event, error, none } qi_message_type_t;
 
   QIMESSAGING_API qi_message_t *qi_message_create();
   QIMESSAGING_API void          qi_message_destroy(qi_message_t *msg);

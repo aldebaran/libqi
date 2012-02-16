@@ -19,7 +19,7 @@ namespace qi {
        << ", type=" << (char)msg.type() + '0'
        << ", src=" << msg.source()
        << ", dest=" << msg.destination()
-       << ", path=" << msg.path()
+       << ", func=" << msg.function()
        << ", data_size=" << msg.data().size()
        << "}";
     return os;
@@ -39,7 +39,7 @@ namespace qi {
     _id = i;
     ds >> _src;
     ds >> _dest;
-    ds >> _path;
+    ds >> _func;
     ds >> _data;
   }
 
@@ -50,7 +50,7 @@ namespace qi {
     ds << (int)_id;
     ds << _src;
     ds << _dest;
-    ds << _path;
+    ds << _func;
     ds << _data;
     return ds.str();
   }

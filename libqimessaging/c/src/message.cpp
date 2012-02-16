@@ -48,8 +48,8 @@ void qi_message_set_type(qi_message_t *msg, qi_message_type_t type)
   {
     case call:
       m->msg->setType(qi::Message::Call);
-    case answer:
-      m->msg->setType(qi::Message::Answer);
+    case reply:
+      m->msg->setType(qi::Message::Reply);
     case event:
       m->msg->setType(qi::Message::Event);
     case error:
@@ -69,8 +69,8 @@ qi_message_type_t qi_message_get_type(qi_message_t *msg)
   {
     case qi::Message::Call:
       return call;
-    case qi::Message::Answer:
-      return answer;
+    case qi::Message::Reply:
+      return reply;
     case qi::Message::Event:
       return event;
     case qi::Message::Error:
@@ -136,17 +136,17 @@ char *qi_message_get_dst(qi_message_t *msg)
 #endif
 }
 
-void qi_message_set_path(qi_message_t *msg, char *path)
+void qi_message_set_function(qi_message_t *msg, char *func)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  m->msg->setPath(path);
+  m->msg->setFunction(func);
 }
 
-char *qi_message_get_path(qi_message_t *msg)
+char *qi_message_get_function(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  std::string r = m->msg->path();
+  std::string r = m->msg->function();
 
 #ifdef _WIN32
   return _strdup(r.c_str());

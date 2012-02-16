@@ -59,7 +59,7 @@ int main_client(std::string src)
       request.setId(id);
       request.setSource(src);
       request.setDestination("serviceTest");
-      request.setPath("reply");
+      request.setFunction("reply");
       request.setData(requeststr);
 
       transport->send(request);
@@ -146,18 +146,17 @@ public:
 
   virtual void onRead(const qi::Message &msg)
   {
-    if (msg.path() == "reply")
+    if (msg.function() == "reply")
       reply(msg);
   }
 
   void reply(const qi::Message &msg)
   {
     qi::Message retval;
-    retval.setType(qi::Message::Answer);
+    retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
     retval.setSource(msg.destination());
     retval.setDestination(msg.source());
-    retval.setPath(msg.path());
     retval.setData(msg.data());
 //    ts->send(retval);
   }

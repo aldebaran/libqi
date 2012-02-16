@@ -23,11 +23,11 @@ namespace qi {
   public:
 
     enum MessageType {
-      Call,
-      Answer,
-      Event,
-      Error,
-      None
+      None   = 0,
+      Call   = 1,
+      Reply  = 2,
+      Event  = 3,
+      Error  = 4,
     };
 
     Message()
@@ -57,8 +57,8 @@ namespace qi {
     inline void setDestination(const std::string &dest) { _dest = dest; }
     inline std::string destination() const              { return _dest; }
 
-    inline void setPath(const std::string &path) { _path = path; }
-    inline std::string path() const              { return _path; }
+    inline void setFunction(const std::string &func) { _func = func; }
+    inline std::string function() const              { return _func; }
 
     inline void setData(const std::string &data) { _data = data; }
     inline std::string data() const              { return _data; }
@@ -69,7 +69,7 @@ namespace qi {
     unsigned int _id;
     std::string  _src;
     std::string  _dest;
-    std::string  _path;
+    std::string  _func;
     std::string  _data;
   private:
     static unsigned int _id_seq;

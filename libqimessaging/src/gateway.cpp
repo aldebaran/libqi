@@ -31,9 +31,9 @@ namespace qi
     void run(TransportSocket *client, const qi::Message &msg)
     {
       qi::Message retval;
-      if (msg.path() == "services")
+      if (msg.function() == "services")
         services(msg, retval);
-      else if (msg.path() == "service")
+      else if (msg.function() == "service")
         service(msg, retval);
       else
       {
@@ -53,13 +53,12 @@ namespace qi
         qi::DataStream ds(msg.data());
         qi::DataStream rs;
 
-        obj->metaCall(msg.path(), "", ds, rs);
+        obj->metaCall(msg.function(), "", ds, rs);
 
-        retval.setType(qi::Message::Answer);
+        retval.setType(qi::Message::Reply);
         retval.setId(msg.id());
         retval.setSource(msg.destination());
         retval.setDestination(msg.source());
-        retval.setPath(msg.path());
         retval.setData(rs.str());
       }
 
@@ -92,11 +91,10 @@ namespace qi
       qi::DataStream d;
       d << result;
 
-      retval.setType(qi::Message::Answer);
+      retval.setType(qi::Message::Reply);
       retval.setId(msg.id());
       retval.setSource(msg.destination());
       retval.setDestination(msg.source());
-      retval.setPath(msg.path());
       retval.setData(d.str());
     }
 
@@ -106,11 +104,10 @@ namespace qi
       qi::DataStream d;
       d << _endpoints;
 
-      retval.setType(qi::Message::Answer);
+      retval.setType(qi::Message::Reply);
       retval.setId(msg.id());
       retval.setSource(msg.destination());
       retval.setDestination(msg.source());
-      retval.setPath(msg.path());
       retval.setData(d.str());
     }
 

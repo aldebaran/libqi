@@ -30,14 +30,13 @@ namespace qi {
       qi::DataStream ds(msg.data());
       qi::DataStream rs;
 
-      obj->metaCall(msg.path(), "", ds, rs);
+      obj->metaCall(msg.function(), "", ds, rs);
 
       qi::Message retval;
-      retval.setType(qi::Message::Answer);
+      retval.setType(qi::Message::Reply);
       retval.setId(msg.id());
       retval.setSource(msg.destination());
       retval.setDestination(msg.source());
-      retval.setPath(msg.path());
       retval.setData(rs.str());
       client->send(retval);
     };
@@ -97,9 +96,9 @@ namespace qi {
     _p->_services[name] = obj;
 
     qi::Message msg;
-    msg.setDestination("qi.master");
     msg.setType(qi::Message::Call);
-    msg.setPath("registerService");
+    msg.setDestination("qi.master");
+    msg.setFunction("registerService");
 
     qi::DataStream d;
     d << name;

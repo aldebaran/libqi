@@ -287,6 +287,12 @@ void TransportSocket::read(int id, qi::Message *msg)
 
 bool TransportSocket::send(const qi::Message &msg)
 {
+  if (msg.type() != qi::Message::None)
+  {
+    qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
+    return false;
+  }
+
   if (_p->connected && !bufferevent_write(_p->bev, msg.str().c_str(), msg.str().size()))
   {
     return true;

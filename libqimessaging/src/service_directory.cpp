@@ -44,13 +44,13 @@ public:
 
   virtual void onReadyRead(TransportSocket *socket, const qi::Message &msg)
   {
-    std::cout << msg.path() << std::endl;
+    std::cout << msg.function() << std::endl;
     qi::Message retval;
-    if (msg.path() == "services")
+    if (msg.function() == "services")
       services(msg, retval);
-    else if (msg.path() == "service")
+    else if (msg.function() == "service")
       service(msg, retval);
-    else if (msg.path() == "registerService")
+    else if (msg.function() == "registerService")
       registerService(msg, retval);
     else
       return;
@@ -81,9 +81,8 @@ public:
     qi::DataStream d;
     d << result;
 
-    retval.setType(qi::Message::Answer);
+    retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
-    retval.setPath(msg.path());
     retval.setData(d.str());
   }
 
@@ -102,7 +101,7 @@ public:
       d << servicesIt->second;
     }
 
-    retval.setType(qi::Message::Answer);
+    retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
     retval.setData(d.str());
   }
@@ -118,9 +117,8 @@ public:
 
     connectedServices[name] = url;
 
-    retval.setType(qi::Message::Answer);
+    retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
-    retval.setPath(msg.path());
     retval.setData(msg.source() + " register.");
   }
 
