@@ -69,7 +69,7 @@ public:
   {
   }
 
-
+  // signature: services()
   void services(const qi::Message &msg, qi::Message &retval)
   {
     std::vector<std::string> result;
@@ -83,13 +83,12 @@ public:
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
-    retval.setSource(msg.destination());
-    retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(d.str());
   }
 
 
+  // signature: service(name)
   void service(const qi::Message &msg, qi::Message &retval)
   {
     qi::DataStream din(msg.data());
@@ -105,10 +104,10 @@ public:
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
-    retval.setDestination(msg.source());
     retval.setData(d.str());
   }
 
+  // signature: registerService(string name, string url)
   void registerService(const qi::Message &msg, qi::Message &retval)
   {
     std::string name;
@@ -121,8 +120,6 @@ public:
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
-    retval.setSource(msg.destination());
-    retval.setDestination(msg.source());
     retval.setPath(msg.path());
     retval.setData(msg.source() + " register.");
   }
