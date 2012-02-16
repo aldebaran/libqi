@@ -10,40 +10,12 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
 #include <qimessaging/object.hpp>
+#include "src/remoteobject_p.hpp"
 
 static int uniqueRequestId = 0;
 
 namespace qi {
 
-class RemoteObject : public qi::Object {
-public:
-  explicit RemoteObject(qi::TransportSocket *ts, const std::string &dest)
-    : _ts(ts),
-      _dest(dest)
-  {
-  }
-
-  virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out) {
-
-    qi::Message msg;
-    msg.setId(uniqueRequestId++);
-    msg.setSource("ouame");
-    msg.setDestination(_dest);
-    msg.setFunction(method);
-    msg.setData(in.str());
-
-    _ts->send(msg);
-    _ts->waitForId(msg.id());
-
-    qi::Message ret;
-    _ts->read(msg.id(), &ret);
-    out.str(ret.data());
-  }
-
-protected:
-  qi::TransportSocket *_ts;
-  std::string _dest;
-};
 
 
 Session::Session()
@@ -102,7 +74,6 @@ std::vector<std::string> Session::services()
 
   qi::Message msg;
   msg.setType(qi::Message::Call);
-  msg.setId(uniqueRequestId++);
   msg.setSource(_name);
   msg.setFunction("services");
 
@@ -121,11 +92,10 @@ std::vector<std::string> Session::services()
 qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             const std::string &type)
 {
-  std::vector<std::string> result;
+  std::string result;
   qi::DataStream dr;
   qi::Message msg;
   dr << name;
-  msg.setType(qi::Message::Call);
   msg.setId(uniqueRequestId++);
   msg.setFunction("service");
   msg.setData(dr.str());
@@ -144,13 +114,13 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::EndpointInfo endpoint;
   size_t begin = 0;
   size_t end = 0;
-  end = result[1].find(":");
-  endpoint.type = result[1].substr(begin, end);
+  end = result.find(":");
+  endpoint.type = result.substr(begin, end);
   begin = end + 3;
-  end = result[1].find(":", begin);
-  endpoint.ip = result[1].substr(begin, end - begin);
+  end = result.find(":", begin);
+  endpoint.ip = result.substr(begin, end - begin);
   begin = end + 1;
-  std::stringstream ss(result[1].substr(begin));
+  std::stringstream ss(result.substr(begin));
   ss >> endpoint.port;
 
   ts = new qi::TransportSocket();
