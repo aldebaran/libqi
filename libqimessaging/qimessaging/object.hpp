@@ -20,12 +20,17 @@ namespace qi {
     MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor);
     MetaMethod() {};
 
+    const std::string &name() const { return _name; }
+    const std::string &signature() const { return _signature; }
+
   protected:
   public:
     std::string  _name;
     std::string  _signature;
     const qi::Functor *_functor;
   };
+  qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
+  qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
 
   class MetaObject {
   public:
@@ -34,6 +39,9 @@ namespace qi {
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
   };
+  qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta);
+  qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta);
+
 
   class Object {
   public:

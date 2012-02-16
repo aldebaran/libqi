@@ -41,4 +41,28 @@ namespace qi {
     mm._functor->call(in, out);
   }
 
+
+  qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
+    stream << meta._name;
+    stream << meta._signature;
+    return stream;
+  }
+
+  qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
+    stream >> meta._name;
+    stream >> meta._signature;
+    return stream;
+  }
+
+  qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta) {
+    stream << meta._methods;
+    return stream;
+  }
+
+  qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta) {
+    stream >> meta._methods;
+    return stream;
+  }
+
+
 };
