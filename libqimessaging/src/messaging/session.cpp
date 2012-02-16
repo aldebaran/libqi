@@ -120,14 +120,13 @@ std::vector<std::string> Session::services()
 qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             const std::string &type)
 {
-  std::vector<qi::EndpointInfo> result;
-
+  std::string result;
+  qi::DataStream dr;
   qi::Message msg;
-
+  dr << name;
   msg.setId(uniqueRequestId++);
-  msg.setSource(_name);
   msg.setPath("service");
-  msg.setData(name);
+  msg.setData(dr.str());
 
   tc->send(msg);
 
@@ -139,17 +138,23 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   d >> result;
 
   qi::TransportSocket* ts = NULL;
-  std::vector<qi::EndpointInfo>::iterator endpointIt;
-  for (endpointIt = result.begin(); endpointIt != result.end(); ++endpointIt)
-  {
-    if (endpointIt->type == type)
-    {
-      ts = new qi::TransportSocket();
-      ts->setDelegate(this);
-      ts->connect(endpointIt->ip, endpointIt->port, _nthd->getEventBase());
-      ts->waitForConnected();
-    }
-  }
+
+  qi::EndpointInfo endpoint;
+  size_t begin = 0;
+  size_t end = 0;
+  end = result.find(":");
+  endpoint.type = result.substr(begin, end);
+  begin = end + 3;
+  end = result.find(":", begin);
+  endpoint.ip = result.substr(begin, end - begin);
+  begin = end + 1;
+  std::stringstream ss(result.substr(begin));
+  ss >> endpoint.port;
+
+  ts = new qi::TransportSocket();
+  ts->setDelegate(this);
+  ts->connect(endpoint.ip, endpoint.port, _nthd->getEventBase());
+  ts->waitForConnected();
 
   return ts;
 }

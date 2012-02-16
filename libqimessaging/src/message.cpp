@@ -9,6 +9,8 @@
 #include <qimessaging/datastream.hpp>
 #include <iostream>
 
+unsigned int qi::Message::_id_seq = 0;
+
 namespace qi {
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
@@ -25,6 +27,7 @@ namespace qi {
 
 
   Message::Message(const std::string &data)
+    : _id (_id_seq++)
   {
     qi::DataStream ds(data);
     char c;

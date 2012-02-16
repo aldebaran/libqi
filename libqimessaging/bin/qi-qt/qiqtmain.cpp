@@ -34,13 +34,13 @@ void call(const std::string &addr)
 
 
   QObject *obj = session.service("ServiceTest");
-  std::string ret;
+/*  std::string ret;
   QMetaObject::invokeMethod(obj, "reply", Qt::DirectConnection,
                             Q_RETURN_ARG(std::string, ret),
                             Q_ARG(std::string, "plaf"));
 
   std::cout << "answer:" << ret << std::endl;
-
+*/
   qi::os::sleep(2);
 }
 

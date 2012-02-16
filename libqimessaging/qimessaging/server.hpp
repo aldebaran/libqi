@@ -44,7 +44,7 @@ namespace qi {
 
     void listen(qi::Session *session, const std::string &url);
     void stop();
-    void advertiseService(const std::string &name, qi::Object *obj);
+    void registerService(const std::string &name, qi::Object *obj);
 
   private:
     ServerPrivate *_p;

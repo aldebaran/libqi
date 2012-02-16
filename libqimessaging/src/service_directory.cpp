@@ -44,15 +44,14 @@ public:
 
   virtual void onReadyRead(TransportSocket *socket, const qi::Message &msg)
   {
+    std::cout << msg.path() << std::endl;
     qi::Message retval;
     if (msg.path() == "services")
       services(msg, retval);
     else if (msg.path() == "service")
       service(msg, retval);
-    else if (msg.path() == "registerEndpoint")
-      registerEndpoint(msg, retval);
-    else if (msg.path() == "unregisterEndpoint")
-      unregisterEndpoint(msg, retval);
+    else if (msg.path() == "registerService")
+      registerService(msg, retval);
     else
       return;
     socket->send(retval);
@@ -75,7 +74,7 @@ public:
   {
     std::vector<std::string> result;
 
-    std::map<std::string, qi::ServiceInfo>::iterator it;
+    std::map<std::string, std::string>::iterator it;
     for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
       result.push_back(it->first);
 
@@ -93,44 +92,32 @@ public:
 
   void service(const qi::Message &msg, qi::Message &retval)
   {
+    qi::DataStream din(msg.data());
+    std::string name;
+    din >> name;
     qi::DataStream d;
-    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
-    servicesIt = connectedServices.find(msg.data());
+    std::map<std::string, std::string>::iterator servicesIt;
+    servicesIt = connectedServices.find(name);
     if (servicesIt != connectedServices.end())
     {
-      qi::ServiceInfo si = servicesIt->second;
-      d << si.endpoint;
+      d << servicesIt->second;
     }
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
-    retval.setSource(msg.destination());
     retval.setDestination(msg.source());
-    retval.setPath(msg.path());
     retval.setData(d.str());
   }
 
-  void registerEndpoint(const qi::Message &msg, qi::Message &retval)
+  void registerService(const qi::Message &msg, qi::Message &retval)
   {
-    qi::EndpointInfo e;
+    std::string name;
+    std::string url;
     qi::DataStream d(msg.data());
-    d >> e;
+    d >> name;
+    d >> url;
 
-    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
-    servicesIt = connectedServices.find(msg.source());
-    if (servicesIt != connectedServices.end())
-    {
-      qi::ServiceInfo *si = &servicesIt->second;
-      std::vector<qi::EndpointInfo> *ei = &si->endpoint;
-      ei->push_back(e);
-    }
-    else
-    {
-      qi::ServiceInfo si;
-      si.name = msg.source();
-      si.endpoint.push_back(e);
-      connectedServices[msg.source()] = si;
-    }
+    connectedServices[name] = url;
 
     retval.setType(qi::Message::Answer);
     retval.setId(msg.id());
@@ -140,46 +127,10 @@ public:
     retval.setData(msg.source() + " register.");
   }
 
-  void unregisterEndpoint(const qi::Message &msg, qi::Message &retval)
-  {
-    qi::EndpointInfo e;
-    qi::DataStream d(msg.data());
-    d >> e;
-
-    std::map<std::string, qi::ServiceInfo>::iterator servicesIt;
-    servicesIt = connectedServices.find(msg.source());
-    if (servicesIt != connectedServices.end())
-    {
-      qi::ServiceInfo *si = &servicesIt->second;
-      std::vector<qi::EndpointInfo> *ei = &si->endpoint;
-      std::vector<qi::EndpointInfo>::iterator endpointIt = ei->begin();
-
-      // fixme
-      for (int i = 0; i < ei->size(); ++i, ++endpointIt)
-      {
-        if (*endpointIt == e)
-        {
-          ei->erase(endpointIt);
-          break;
-        }
-      }
-
-      if (ei->empty())
-        connectedServices.erase(servicesIt);
-    }
-
-    retval.setType(qi::Message::Answer);
-    retval.setId(msg.id());
-    retval.setSource(msg.destination());
-    retval.setDestination(msg.source());
-    retval.setPath(msg.path());
-    retval.setData(msg.id() + " unregister.");
-  }
-
 public:
   qi::NetworkThread                     *nthd;
   qi::TransportServer                   *ts;
-  std::map<std::string, qi::ServiceInfo> connectedServices;
+  std::map<std::string, std::string>     connectedServices;
 
 }; // !ServiceDirectoryPrivate
 

@@ -60,12 +60,11 @@ int main(int argc, char *argv[])
       qi::Server        srv;
       obj.advertiseMethod("reply", &reply);
 
-      session.setName("serviceTest");
       session.connect(masterAddress);
       session.waitForConnected();
 
-      srv.advertiseService("serviceTest", &obj);
       srv.listen(&session, "tcp://127.0.0.1:9571");
+      srv.registerService("serviceTest", &obj);
 
       std::cout << "ready." << std::endl;
 
