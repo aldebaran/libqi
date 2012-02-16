@@ -51,8 +51,8 @@ namespace qi {
     inline void setId(unsigned int id)    { _id = id; }
     inline unsigned int id() const        { return _id; }
 
-    inline void setSource(const std::string &src) { _src = src; }
-    inline std::string source() const             { return _src; }
+    inline void setSource(const std::string &src) { }
+    inline std::string source() const             { return ""; }
 
     inline void setDestination(const std::string &dest) { _dest = dest; }
     inline std::string destination() const              { return _dest; }
