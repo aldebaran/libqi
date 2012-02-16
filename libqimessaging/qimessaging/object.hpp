@@ -29,12 +29,14 @@ namespace qi {
     std::string  _signature;
     const qi::Functor *_functor;
   };
+  typedef std::map<std::string, MetaMethod> MetaMethodMap;
+
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
 
   class MetaObject {
   public:
-    std::map<std::string, MetaMethod>   _methods;
+    MetaMethodMap   _methods;
     // std::map<std::string, MethodInfo>   _signals;
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
