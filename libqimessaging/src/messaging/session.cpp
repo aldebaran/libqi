@@ -75,6 +75,7 @@ std::vector<std::string> Session::services()
   qi::Message msg;
   msg.setType(qi::Message::Call);
   msg.setSource(_name);
+  msg.setDestination("qi.master");
   msg.setFunction("services");
 
   tc->send(msg);
@@ -97,6 +98,7 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::Message msg;
   dr << name;
   msg.setType(qi::Message::Call);
+  msg.setDestination("qi.master");
   msg.setFunction("service");
   msg.setData(dr.str());
 
