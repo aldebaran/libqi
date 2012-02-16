@@ -92,11 +92,11 @@ std::vector<std::string> Session::services()
 qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             const std::string &type)
 {
-  std::string result;
+  std::vector<std::string> result;
   qi::DataStream dr;
   qi::Message msg;
   dr << name;
-  msg.setId(uniqueRequestId++);
+  msg.setType(qi::Message::Call);
   msg.setFunction("service");
   msg.setData(dr.str());
 
@@ -114,13 +114,13 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::EndpointInfo endpoint;
   size_t begin = 0;
   size_t end = 0;
-  end = result.find(":");
-  endpoint.type = result.substr(begin, end);
+  end = result[1].find(":");
+  endpoint.type = result[1].substr(begin, end);
   begin = end + 3;
-  end = result.find(":", begin);
-  endpoint.ip = result.substr(begin, end - begin);
+  end = result[1].find(":", begin);
+  endpoint.ip = result[1].substr(begin, end - begin);
   begin = end + 1;
-  std::stringstream ss(result.substr(begin));
+  std::stringstream ss(result[1].substr(begin));
   ss >> endpoint.port;
 
   ts = new qi::TransportSocket();
