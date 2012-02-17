@@ -99,7 +99,7 @@ int main_gateway()
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
-  gate.start(&session, "tcp://127.0.0.1:12345");
+  gate.listen(&session, "tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
 
   while (1)
@@ -116,7 +116,7 @@ std::string reply(const std::string &msg)
 int main_server()
 {
   qi::ServiceDirectory sd;
-  sd.start("tcp://127.0.0.1:5555");
+  sd.listen("tcp://127.0.0.1:5555");
   std::cout << "Service Directory ready." << std::endl;
 
   qi::Session       session;

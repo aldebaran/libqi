@@ -310,7 +310,7 @@ Gateway::~Gateway()
   delete _p;
 }
 
-void Gateway::start(qi::Session *session, const std::string &addr)
+void Gateway::listen(qi::Session *session, const std::string &addr)
 {
   qi::Url url(addr);
   _p->_endpoints.push_back(addr);

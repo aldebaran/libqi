@@ -59,13 +59,11 @@ int main(int argc, char *argv[])
       qi::Object        obj;
       qi::Gateway       gate;
 
-
-      session.setName("gateway");
       session.connect(masterAddress);
       session.waitForConnected();
 
 //      gate.advertiseService("gateway", &obj);
-      gate.start(&session, "tcp://127.0.0.1:12345");
+      gate.listen(&session, "tcp://127.0.0.1:12345");
       std::cout << "ready." << std::endl;
 
 //      std::vector<std::string> result = session.services();

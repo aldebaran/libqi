@@ -145,7 +145,7 @@ ServiceDirectory::~ServiceDirectory()
   delete _p;
 }
 
-void ServiceDirectory::start(const std::string &address)
+void ServiceDirectory::listen(const std::string &address)
 {
   qi::Url url(address);
 
