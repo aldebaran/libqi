@@ -9,26 +9,27 @@
 
 #include <string>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/signature/detail/pretty_print_signature_visitor.hpp>
+#include "pretty_print_signature_visitor.hpp"
 
 namespace qi {
 
   void signatureToString(const char *signature, std::string &result) {
-    detail::PrettyPrintSignatureVisitor(signature, result).visit();
+    PrettyPrintSignatureVisitor ppsv(signature);
+    result = ppsv.returnSignature() + " " + ppsv.functionSignature();
   }
 
   std::string signatureToString(const char *signature) {
     std::string result;
-    detail::PrettyPrintSignatureVisitor(signature, result).visit();
+    PrettyPrintSignatureVisitor ppsv(signature);
+    result = ppsv.returnSignature() + " " + ppsv.functionSignature();
     return result;
   }
 
   std::string signatureToString(const std::string& signature) {
     std::string result;
-    detail::PrettyPrintSignatureVisitor(signature.c_str(), result).visit();
+    PrettyPrintSignatureVisitor ppsv(signature.c_str());
+    result = ppsv.returnSignature() + " " + ppsv.functionSignature();
     return result;
   }
-
-
 
 };

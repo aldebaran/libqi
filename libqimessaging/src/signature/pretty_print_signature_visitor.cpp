@@ -13,89 +13,143 @@
 #include "pretty_print_signature_visitor.hpp"
 
 namespace qi {
-  namespace detail {
 
-    PrettyPrintSignatureVisitor::PrettyPrintSignatureVisitor(const char *signature, std::string &result)
-      : _result(result),
-        _current(signature),
-        _signature(signature),
-        _method("")
-    {}
+  enum PrivateQiSignatureType {
+    QI_STRING     = 0,
+    QI_LIST       = 1,
+    QI_LIST_END   = 2,
+    QI_MAP        = 3,
+    QI_MAP_END    = 4,
+  };
 
-    void PrettyPrintSignatureVisitor::visit(const char *sep) {
+  static const char *gStl[] = {
+    "string",
+    "std::vector<",
+    ">",
+    "std::map<",
+    ">"
+  };
 
-      //do we have name::sig ?
-      if (_current == _signature)
-        if (visitFunction())
-          return;
+  static const char *gStlConst[] = {
+    "const string &",
+    "const std::vector<",
+    "> &",
+    "const std::map<",
+    "> &"
+  };
 
-      //eat an element
-      visitSingle();
+  static const char *gQt[] = {
+    "QString",
+    "QList<",
+    ">",
+    "QMap<",
+    ">"
+  };
 
-      //this is a function pointer
-      if (*_current == '(') {
-        _result += " ";
-        visitTuple(true);
-      }
+  static const char *gQtConst[] = {
+    "const QString &",
+    "const QList<",
+    "> &",
+    "const QMap<",
+    "> &"
+  };
 
-      //verify something has been eaten
-      if (*_current != 0) {
-        std::stringstream ss;
-        ss << "trailing garbage(" << *_current << ") at index " << _current - _signature;
-        ss << ", signature: " << _signature;
-        throw qi::BadSignatureError(ss.str());
-      }
+
+  PrettyPrintSignatureVisitor::PrettyPrintSignatureVisitor(const char *signature, SignatureType type)
+    : _current(signature),
+      _signature(signature),
+      _method(""),
+      _type(type),
+      _done(false)
+  {}
+
+
+  const std::string &PrettyPrintSignatureVisitor::returnSignature() {
+    visit();
+    return _returnSig;
+  }
+
+  const std::string &PrettyPrintSignatureVisitor::functionSignature() {
+    visit();
+    return _result;
+  }
+
+  const char *PrettyPrintSignatureVisitor::elementTypeSTL(int idx)
+  {
+    if (_constify) {
+      if (_type == Qt)
+        return gQtConst[idx];
+      if (_type == STL)
+        return gStlConst[idx];
+    } else {
+      if (_type == Qt)
+        return gQt[idx];
+      if (_type == STL)
+        return gStl[idx];
     }
+    return 0;
+  }
 
-    //true if match
-    bool PrettyPrintSignatureVisitor::visitFunction() {
-      const char* sep = "::";
-      const char* delimiter = strstr(_signature, sep);
-      if (delimiter == NULL)
-        return false;
+  void PrettyPrintSignatureVisitor::visit() {
+    if (_done)
+      return;
+    _done = true;
+
+    //do we have name::sig ?
+    const char* sep = "::";
+    const char* delimiter = strstr(_signature, sep);
+
+    //not a func sig
+    if (delimiter != NULL) {
       _method  = std::string(_signature, delimiter - _signature);
       _current = delimiter + 2;
+      _constify = false;
       //return type
       visitSingle();
+      _returnSig = _result;
+      _constify = true;
 
-      _result += " ";
-      _result += _method;
-      visitTuple(true);
-      //_result += "(";
-      //_current++;
-      //visit(", ");
-      //_result += ")";
-      return true;
+      //reset result to old funcname and params
+      _result = _method;
     }
 
-    void PrettyPrintSignatureVisitor::visitSingle() {
-      switch(*_current) {
-        case '[':
-          visitList();
-          break;
-        case '{':
-          visitMap();
-          break;
-        case '(':
-          visitTuple();
-          break;
-        case '@':
-          visitProtobuf();
-          break;
-        default:
-          visitSimple();
-          break;
-      }
+    //eat an element
+    visitSingle();
 
-      //pointer is just an extra qualifier over a single type
-      if (*_current == '*') {
-        _result += "*";
-        _current++;
-      }
+    //verify something has been eaten
+    if (*_current != 0) {
+      std::stringstream ss;
+      ss << "trailing garbage(" << *_current << ") at index " << _current - _signature;
+      ss << ", signature: " << _signature;
+      throw qi::BadSignatureError(ss.str());
+    }
+  }
+
+  void PrettyPrintSignatureVisitor::visitSingle() {
+    switch(*_current) {
+      case '[':
+        visitList();
+        break;
+      case '{':
+        visitMap();
+        break;
+      case '(':
+        visitTuple();
+        break;
+      default:
+        visitSimple();
+        break;
     }
 
-    void PrettyPrintSignatureVisitor::visitSimple() {
-      switch(*_current) {
+    //pointer is just an extra qualifier over a single type
+    if (*_current == '*') {
+      _result += "*";
+      _current++;
+    }
+  }
+
+  void PrettyPrintSignatureVisitor::visitSimple() {
+    switch(*_current) {
       case 'b':
         _result += "bool";
         break;
@@ -112,68 +166,47 @@ namespace qi {
         _result += "void";
         break;
       case 's':
-        _result += "string";
+          _result += elementTypeSTL(QI_STRING);
         break;
       default:
         _result += "ERRR";
         break;
-      }
-      _current++;
     }
-
-    void PrettyPrintSignatureVisitor::visitTuple(bool param) {
-      int first = 1;
-      if (param)
-        _result += "(";
-      else
-        _result += "tuple<";
-      _current++;
-      while (*_current != 0 && *_current != ')') {
-        if (first)
-          first = 0;
-        else
-          _result += ", ";
-        visitSingle();
-      }
-      //visit(", ");
-      if (param)
-        _result += ")";
-      else
-        _result += ">";
-      _current++;
-    }
-
-    void PrettyPrintSignatureVisitor::visitList() {
-      _result += "vector<";
-      _current++;
-      visitSingle();
-      _result += ">";
-      _current++;
-    }
-
-    void PrettyPrintSignatureVisitor::visitMap() {
-      _result += "map<";
-      _current++;
-      visitSingle();
-      _result += ", ";
-      visitSingle();
-      _result += ">";
-      _current++;
-    }
-
-    void PrettyPrintSignatureVisitor::visitProtobuf() {
-      _result += "Protobuf(";
-      _current++;
-
-      const char *start = _current;
-      while (*_current != '@' && *_current != 0) {
-        _current++;
-      }
-
-      std::string name(start, _current - start);
-
-      _result += name + ")";
-      _current++;
-    }
+    _current++;
   }
+
+  void PrettyPrintSignatureVisitor::visitList() {
+    _result += elementTypeSTL(QI_LIST);
+    _current++;
+    visitSingle();
+    _result += elementTypeSTL(QI_LIST_END);
+    _current++;
+  }
+
+  void PrettyPrintSignatureVisitor::visitMap() {
+    _result += elementTypeSTL(QI_MAP);
+    _current++;
+    visitSingle();
+    _result += ", ";
+    visitSingle();
+    _result += elementTypeSTL(QI_MAP_END);
+    _current++;
+  }
+
+  void PrettyPrintSignatureVisitor::visitTuple() {
+    int first = 1;
+    _result += "(";
+    _current++;
+    while (*_current != 0 && *_current != ')') {
+      if (first)
+        first = 0;
+      else
+        _result += ", ";
+      visitSingle();
+    }
+    _result += ")";
+    _current++;
+  }
+
+
 };

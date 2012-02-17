@@ -15,29 +15,42 @@
 
 namespace qi {
 
-  namespace detail {
 
-    class PrettyPrintSignatureVisitor {
-    public:
-      PrettyPrintSignatureVisitor(const char *signature, std::string &result);
 
-      void visit(const char *sep = " ");
+  class PrettyPrintSignatureVisitor {
+  public:
+    typedef enum {
+      STL,
+      Qt
+    } SignatureType;
 
-    protected:
-      void visitSingle();
-      void visitSimple();
-      void visitList();
-      void visitMap();
-      void visitProtobuf();
-      void visitTuple(bool param = false);
-      bool visitFunction();
+    PrettyPrintSignatureVisitor(const char *signature, SignatureType type = STL);
 
-      std::string &_result;
-      const char  *_current;
-      const char  *_signature;
-      std::string _method;
-    };
 
+    const std::string &returnSignature();
+    const std::string &functionSignature();
+
+  protected:
+    void visit();
+    void visitSingle();
+    void visitSimple();
+    void visitList();
+    void visitMap();
+    void visitTuple();
+
+    const char *elementTypeSTL(int idx);
+
+    SignatureType _type;
+    bool          _done;
+    bool          _constify;
+
+    std::string   _returnSig;
+    std::string   _funcSig;
+
+    const char   *_current;
+    const char   *_signature;
+    std::string   _method;
+    std::string   _result;
   };
 
 };
