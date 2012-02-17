@@ -14,7 +14,8 @@ function("tc_add_target_definition" target property)
   set_target_properties(${target} PROPERTIES COMPILE_DEFINITIONS "${_prev_compdef} ${property}")
 endfunction()
 
-qi_create_gtest(perf_transport_event SRC perf_transport.cpp DEPENDS GTEST QI QIMESSAGING  )
+qi_create_gtest(perf_transport SRC perf_transport.cpp DEPENDS GTEST QI QIMESSAGING  )
+qi_create_gtest(perf_transport_event SRC perf_transport_event.cpp DEPENDS GTEST QI QIMESSAGING  )
 
 if (WITH_ZMQ)
   qi_create_gtest(perf_transport_zmqsingle SRC perf_transport.cpp DEPENDS GTEST QI)

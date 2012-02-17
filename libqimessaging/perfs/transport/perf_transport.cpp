@@ -50,18 +50,8 @@ int main_client(std::string src)
       requeststr[2] = c;
 
       std::string result = obj->call<std::string>("reply", requeststr);
-
-//      if (request.id() != reply.id() || reply.id() <= 0) {
-//        std::cout << "error id" << std::endl;
-//      }
-
-//      if (request.data().size() != reply.data().size() || reply.data().size() != numBytes) {
-//        std::cout << "error sz" << std::endl;
-//      }
-//      if (numBytes > 2 && reply.data()[2] != c)
-//      {
-//        std::cout << "error content" << std::endl;
-//      }
+      if (result != requeststr)
+        std::cout << "error content" << std::endl;
     }
     dp.stop(1);
   }
@@ -110,7 +100,7 @@ int main_gateway()
 
 std::string reply(const std::string &msg)
 {
-  return msg + "bim";
+  return msg;
 }
 
 int main_server()
