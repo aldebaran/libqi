@@ -8,6 +8,13 @@
 #include <iostream>
 #include "qiremoteobject_p.h"
 #include "qmetaobjectbuilder_p.h"
+#include "qimetatype_p.h"
+
+#include <qimessaging/datastream.hpp>
+#include <qimessaging/object.hpp>
+#include <QtCore/qdebug.h>
+#include <qimessaging/signature.hpp>
+#include <qimessaging/transport/transport_socket.hpp>
 
 class QiRemoteObjectPrivate {
 public:
@@ -17,16 +24,25 @@ public:
 };
 
 
-QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest)
+QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject *metaobject)
   : _p (new QiRemoteObjectPrivate)
 {
   QMetaObjectBuilder mob;
-  mob.setClassName("QiRemoteObject");
-  //QMetaMethodBuilder b = sup.addSignal("errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)");
-  //d->ipcfailure = b.index();
-  QMetaMethodBuilder qmb;
-  //qmb.
-  mob.addMethod("reply(const std::string &)", "std::string");
+  mob.setClassName(dest.c_str());
+
+  qi::MetaMethodMap::const_iterator it;
+  for (it = metaobject->_methods.begin(); it != metaobject->_methods.end(); ++it) {
+    const qi::MetaMethod &mm = it->second;
+    QString retSig;
+    QString funSig;
+    qi_SignatureToMetaMethod(mm.signature(), &retSig, &funSig);
+    //qDebug() << "Ret: " << retSig;
+    //qDebug() << "Fun: " << funSig;
+    mob.addMethod(funSig.toUtf8(), retSig.toUtf8());
+  }
+
+  _p->socket = ts;
+  _p->dest = dest;
   _p->meta = mob.toMetaObject();
 }
 
@@ -35,92 +51,48 @@ QiRemoteObject::~QiRemoteObject()
 }
 
 const QMetaObject* QiRemoteObject::metaObject() const {
-  std::cout << "metaObject" << std::endl;
   return _p->meta;
 };
 
 int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void **a) {
-  std::cout << "qt_metacall" << std::endl;
+  qi::DataStream args;
+  qi::DataStream retv;
+  qi::Message    msg;
+  qi::Message    retmsg;
 
-//  if (c == QMetaObject::InvokeMetaMethod) {
+  if (c != QMetaObject::InvokeMetaMethod)
+    return id;
 
-//    const int mcount = d->meta->methodCount() - d->meta->methodOffset();
-//    const int metaIndex = id + d->meta->methodOffset();
+  QMetaMethod method             = _p->meta->method(id);
+  const int returnType           = QMetaType::type(method.typeName());
+  const QList<QByteArray> pTypes = method.parameterTypes();
+  const int pTypesCount          = pTypes.count();
 
-//    QMetaMethod method = d->meta->method(metaIndex);
+  for (int i = 0; i < pTypesCount; i++) {
+    const QByteArray &t = pTypes[i];
+    const int ttype     = QMetaType::type(t);
+    qi_MetaTypeStore(args, ttype, a[i+1]);
+  }
 
-//    const int returnType = QMetaType::type(method.typeName());
+  QString methodname(method.signature());
+  methodname.truncate(methodname.indexOf('('));
 
-//    //process arguments
-//    const QList<QByteArray> pTypes = method.parameterTypes();
-//    const int pTypesCount = pTypes.count();
-//    QVariantList args ;
-//    if (pTypesCount > 10) {
-//      qWarning() << "Cannot call" << method.signature() << ". More than 10 parameter.";
-//      return id;
-//    }
-//    for (int i=0; i < pTypesCount; i++) {
-//      const QByteArray& t = pTypes[i];
+  msg.setType(qi::Message::Call);
+  msg.setService(_p->dest);
+  msg.setFunction(methodname.toStdString());
+  msg.setData(args.str());
+  _p->socket->send(msg);
 
-//      int variantType = QVariant::nameToType(t);
-//      if (variantType == QVariant::UserType)
-//        variantType = QMetaType::type(t);
+  _p->socket->waitForId(msg.id());
+  _p->socket->read(msg.id(), &retmsg);
+  retv.str(retmsg.data());
+  qi_MetaTypeLoad(retv, returnType, a[0]);
 
-//      if (t == "QVariant") {  //ignore whether QVariant is declared as metatype
-//        args << *reinterpret_cast<const QVariant(*)>(a[i+1]);
-//      } else if ( variantType == 0 ){
-//        qWarning("%s: argument %s has unknown type. Use qRegisterMetaType to register it.",
-//                 method.signature(), t.data());
-//        return id;
-//      } else {
-//        args << QVariant(variantType, a[i+1]);
-//      }
-//    }
-
-//    //QVariant looks the same as Void type. we need to distinguish them
-//    if (returnType == QMetaType::Void && strcmp(method.typeName(),"QVariant") ) {
-//      d->endPoint->invokeRemote(d->localToRemote[metaIndex], args, returnType);
-//    } else {
-//      //TODO: ugly but works
-//      //add +1 if we have a variant return type to avoid triggering of void
-//      //code path
-//      //invokeRemote() parameter list needs review
-//      QVariant result = d->endPoint->invokeRemote(d->localToRemote[metaIndex], args,
-//                                                  returnType==0 ? returnType+1: returnType);
-//      if (result.type() != QVariant::Invalid){
-//        if (returnType != 0 && strcmp(method.typeName(),"QVariant")) {
-//          QByteArray buffer;
-//          QDataStream stream(&buffer, QIODevice::ReadWrite);
-//          QMetaType::save(stream, returnType, result.constData());
-//          stream.device()->seek(0);
-//          QMetaType::load(stream, returnType, a[0]);
-//        } else {
-//          if (a[0]) *reinterpret_cast< QVariant*>(a[0]) = result;
-//        }
-//      }
-//    }
-//    id-=mcount;
-//  }
-//  return id;
+  return 0;
 };
 
 void              *QiRemoteObject::qt_metacast(const char* className) {
-  std::cout << "qt_metacast" << std::endl;
+  std::cout << "qt_metacast:" << className << std::endl;
+  return 0;
 }
-
-
-//virtual void metaCall(const std::string &method, const std::string &sig, qi::DataStream &in, qi::DataStream &out) {
-//  qi::Message msg;
-//  msg.setId(200);
-//  msg.setSource("ouame");
-//  msg.setDestination(_dest);
-//  msg.setPath(method);
-//  msg.setData(in.str());
-//  _ts->send(msg);
-//  _ts->waitForId(msg.id());
-
-//  qi::Message ret;
-//  _ts->read(msg.id(), &ret);
-//  out.str(ret.data());
-//}
 
