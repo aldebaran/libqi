@@ -59,7 +59,7 @@ namespace qi {
     template <typename T, class Enable = void>
     struct signature {
       static std::string &value(std::string &val) {
-        val += "UNKNOWN";
+        val += "X";
         return val;
       }
     };
