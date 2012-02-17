@@ -62,9 +62,6 @@ namespace qi {
     qi::Object* service(const std::string &name,
                         const std::string &type = "tcp");
 
-    void setName(const std::string &name) { _name = name; }
-    std::string name()                    { return _name; }
-
     qi::TransportSocket *tc;
     qi::NetworkThread   *_nthd;
 
