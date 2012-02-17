@@ -64,9 +64,6 @@ namespace qi {
 
     qi::TransportSocket *tc;
     qi::NetworkThread   *_nthd;
-
-  protected:
-    std::string _name;
   };
 }
 

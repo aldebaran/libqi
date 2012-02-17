@@ -17,7 +17,7 @@ namespace qi {
     os << "message {"
        << "id=" << msg.id()
        << ", type=" << (char)msg.type() + '0'
-       << ", dest=" << msg.destination()
+       << ", dest=" << msg.service()
        << ", func=" << msg.function()
        << ", data_size=" << msg.data().size()
        << "}";
@@ -36,8 +36,7 @@ namespace qi {
     _type = (MessageType)c;
     ds >> i;
     _id = i;
-    ds >> _src;
-    ds >> _dest;
+    ds >> _service;
     ds >> _func;
     ds >> _data;
   }
@@ -47,8 +46,7 @@ namespace qi {
 
     ds << (char)_type;
     ds << (int)_id;
-    ds << _src;
-    ds << _dest;
+    ds << _service;
     ds << _func;
     ds << _data;
     return ds.str();

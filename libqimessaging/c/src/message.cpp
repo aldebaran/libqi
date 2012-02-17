@@ -97,17 +97,17 @@ unsigned int qi_message_get_id(qi_message_t *msg)
   return m->msg->id();
 }
 
-void qi_message_set_dst(qi_message_t *msg, char *dst)
+void qi_message_set_service(qi_message_t *msg, char *dst)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  m->msg->setDestination(dst);
+  m->msg->setService(dst);
 }
 
-char *qi_message_get_dst(qi_message_t *msg)
+char *qi_message_get_service(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  std::string r = m->msg->destination();
+  std::string r = m->msg->service();
 
 #ifdef _WIN32
   return _strdup(r.c_str());

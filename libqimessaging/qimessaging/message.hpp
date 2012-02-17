@@ -51,8 +51,8 @@ namespace qi {
     inline void setId(unsigned int id)    { _id = id; }
     inline unsigned int id() const        { return _id; }
 
-    inline void setDestination(const std::string &dest) { _dest = dest; }
-    inline std::string destination() const              { return _dest; }
+    inline void setService(const std::string &service) { _service = service; }
+    inline std::string service() const                 { return _service; }
 
     inline void setFunction(const std::string &func) { _func = func; }
     inline std::string function() const              { return _func; }
@@ -64,7 +64,7 @@ namespace qi {
   protected:
     MessageType  _type;
     unsigned int _id;
-    std::string  _src;
+    std::string  _service;
     std::string  _dest;
     std::string  _func;
     std::string  _data;

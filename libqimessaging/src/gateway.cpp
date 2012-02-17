@@ -89,12 +89,12 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
 {
   // C.1/ We are the Master!
   // unique case: service always return gateway endpoint
-  if (msg.destination() == "qi.master" && msg.function() == "service")
+  if (msg.service() == "qi.master" && msg.function() == "service")
   {
     qi::Message retval;
     qi::DataStream d;
     std::vector<std::string> tmpEndPoint;
-    tmpEndPoint.push_back(msg.destination());
+    tmpEndPoint.push_back(msg.service());
     for (int i = 0; i < _endpoints.size(); ++i)
       tmpEndPoint.push_back(_endpoints[i]);
 
@@ -102,7 +102,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
 
     retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
-    retval.setDestination(msg.destination());
+    retval.setService(msg.service());
     retval.setFunction(msg.function());
     retval.setData(d.str());
     client->send(retval);
@@ -110,7 +110,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
   }
 
   std::map<std::string, qi::TransportSocket*>::iterator it;
-  it = _services.find(msg.destination());
+  it = _services.find(msg.service());
 
   //// C.3/
   if (it != _services.end())
@@ -123,12 +123,12 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
     //request to gateway to have the endpoint
     qi::Message masterMsg;
     qi::DataStream d;
-    d << msg.destination();
+    d << msg.service();
 
     //associate the transportSoket client = 0
     //this will allow S.1 to be handle correctly
     masterMsg.setType(qi::Message::Call);
-    masterMsg.setDestination("qi.master");
+    masterMsg.setService("qi.master");
     masterMsg.setFunction("service");
     masterMsg.setData(d.str());
 
@@ -138,12 +138,12 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
 
     //store the pending message
     PendingMessageMap::iterator itPending;
-    itPending = _pendingMessage.find(msg.destination());
+    itPending = _pendingMessage.find(msg.service());
     if (itPending == _pendingMessage.end())
     {
       PendingMessageVector pendingMsg;
       pendingMsg.push_back(std::make_pair(msg, client));
-      _pendingMessage[msg.destination()] = pendingMsg;
+      _pendingMessage[msg.service()] = pendingMsg;
     }
     else
     {

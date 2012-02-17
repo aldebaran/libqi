@@ -27,7 +27,7 @@ namespace qi {
     virtual void onReadyRead(TransportSocket *client, const qi::Message &msg) {
       qi::Object *obj;
 
-      obj = _services[msg.destination()];
+      obj = _services[msg.service()];
       qi::DataStream ds(msg.data());
       qi::DataStream rs;
 
@@ -36,7 +36,7 @@ namespace qi {
       qi::Message retval;
       retval.setType(qi::Message::Reply);
       retval.setId(msg.id());
-      retval.setDestination(msg.destination());
+      retval.setService(msg.service());
       retval.setData(rs.str());
       client->send(retval);
     };
@@ -87,7 +87,7 @@ namespace qi {
 
     qi::Message msg;
     msg.setType(qi::Message::Call);
-    msg.setDestination("qi.master");
+    msg.setService("qi.master");
     msg.setFunction("registerService");
 
     qi::DataStream d;

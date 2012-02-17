@@ -24,7 +24,7 @@ namespace qi {
 
   protected:
     qi::TransportSocket *_ts;
-    std::string _dest;
+    std::string          _service;
   };
 }
 
