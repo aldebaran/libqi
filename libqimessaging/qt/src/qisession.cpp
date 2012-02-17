@@ -9,6 +9,8 @@
 #include <QString>
 #include <qimessaging/qisession.h>
 #include <qimessaging/session.hpp>
+#include <qimessaging/object.hpp>
+#include <qimessaging/datastream.hpp>
 #include "src/qiremoteobject_p.h"
 #include "src/qisession_p.h"
 
@@ -46,10 +48,36 @@ bool QiSession::waitForDisconnected(int msecs)
 
 QObject *QiSession::service(const QString &name, const QString &type)
 {
-  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), type.toUtf8().constData());
-  QiRemoteObject *robj = new QiRemoteObject(ts, name.toUtf8().constData());
-  QObject *obj = robj;
-  return obj;
+  qi::TransportSocket   *ts = _p->session.serviceSocket(name.toUtf8().constData(), type.toUtf8().constData());
+
+  if (!ts)
+    return 0;
+  qi::Message msg;
+  msg.setType(qi::Message::Call);
+  msg.setService(name.toUtf8().constData());
+  msg.setFunction("__metaobject");
+  //msg.setData(in.str());
+
+  ts->send(msg);
+  ts->waitForId(msg.id());
+
+  qi::Message ret;
+  ts->read(msg.id(), &ret);
+
+  qi::MetaObject mo;
+
+  qi::DataStream ds(ret.data());
+
+  ds >> mo;
+
+  //std::cout << mo << std::endl;
+  //out.str(ret.data());
+
+
+
+  QiRemoteObject      *robj = new QiRemoteObject(ts, name.toUtf8().constData(), &mo);
+
+  return static_cast<QObject *>(robj);
 }
 
 QVector<QString> QiSession::services()

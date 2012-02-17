@@ -9,6 +9,7 @@
 # define   	QISESSION_P_H_
 
 #include <QtCore/qobject.h>
+#include <qimessaging/session.hpp>
 
 class QiSessionPrivate {
 public:
