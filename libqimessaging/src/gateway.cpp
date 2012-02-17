@@ -31,8 +31,6 @@ public:
 
   typedef std::map<std::string, qi::TransportSocket *>             ServiceSocketMap;
 
-  GatewayPrivate();
-
 protected:
 
   void handleClientRead(TransportSocket *client, const qi::Message &msg);
@@ -57,27 +55,12 @@ public:
   std::vector<std::string>                     _endpoints;
   TransportServer                              _ts;
   TransportSocket                             *_tso;
-  qi::NetworkThread                           *_nthd;
+  qi::Session                                 *_session;
 
   //for each service socket, associated if request to a client socket. 0 mean gateway
   ServiceRequestIdMap                         _serviceToClient;
   PendingMessageMap                           _pendingMessage;
 }; // !GatewayPrivate
-
-
-
-
-
-GatewayPrivate::GatewayPrivate()
-{
-  _nthd = new qi::NetworkThread();
-
-  _tso = new qi::TransportSocket();
-  _tso->setDelegate(this);
-  _tso->connect("127.0.0.1", 5555, _nthd->getEventBase());
-  _tso->waitForConnected();
-  _services["qi.master"] = _tso;
-}
 
 void GatewayPrivate::newConnection()
 {
@@ -198,7 +181,7 @@ void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi:
   qi::TransportSocket *servSocket = new qi::TransportSocket();
   servSocket->setDelegate(this);
   //call connect
-  servSocket->connect(url.host(), url.port(), _nthd->getEventBase());
+  servSocket->connect(url.host(), url.port(), _session->_nthd->getEventBase());
 
   //TODO: serviceName = endpointIt.name();
   std::string serviceName = result[0];
@@ -313,6 +296,12 @@ Gateway::~Gateway()
 void Gateway::listen(qi::Session *session, const std::string &addr)
 {
   qi::Url url(addr);
+  _p->_session = session;
+  _p->_tso = new qi::TransportSocket();
+  _p->_tso->setDelegate(_p);
+  _p->_tso->connect("127.0.0.1", 5555, _p->_session->_nthd->getEventBase());
+  _p->_tso->waitForConnected();
+  _p->_services["qi.master"] = _p->_tso;
   _p->_endpoints.push_back(addr);
   _p->_ts.setDelegate(_p);
   _p->_ts.start(url.host(), url.port(), session->_nthd->getEventBase());
