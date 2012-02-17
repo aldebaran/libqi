@@ -8,13 +8,15 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <iostream>
+#include <boost/atomic.hpp>
 
 namespace qi {
 
   unsigned int newMessageId()
   {
-    static unsigned int id = 0;
-    return id++;
+    static boost::atomic_uint32_t id(0);
+    id++;
+    return id;
   }
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
