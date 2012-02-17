@@ -17,7 +17,6 @@ namespace qi {
     os << "message {"
        << "id=" << msg.id()
        << ", type=" << (char)msg.type() + '0'
-       << ", src=" << msg.source()
        << ", dest=" << msg.destination()
        << ", func=" << msg.function()
        << ", data_size=" << msg.data().size()

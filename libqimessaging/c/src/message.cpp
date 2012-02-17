@@ -97,26 +97,6 @@ unsigned int qi_message_get_id(qi_message_t *msg)
   return m->msg->id();
 }
 
-void qi_message_set_src(qi_message_t *msg, char *src)
-{
-  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-
-  m->msg->setSource(src);
-}
-
-char *qi_message_get_src(qi_message_t *msg)
-{
-  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  std::string r = m->msg->source();
-
-#ifdef _WIN32
-  return _strdup(r.c_str());
-#else
-  return strdup(r.c_str());
-#endif
-
-}
-
 void qi_message_set_dst(qi_message_t *msg, char *dst)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);

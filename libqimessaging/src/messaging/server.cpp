@@ -36,8 +36,7 @@ namespace qi {
       qi::Message retval;
       retval.setType(qi::Message::Reply);
       retval.setId(msg.id());
-      retval.setSource(msg.destination());
-      retval.setDestination(msg.source());
+      retval.setDestination(msg.destination());
       retval.setData(rs.str());
       client->send(retval);
     };

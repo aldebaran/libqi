@@ -102,8 +102,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
 
     retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
-    retval.setSource(msg.destination());
-    retval.setDestination(msg.source());
+    retval.setDestination(msg.destination());
     retval.setFunction(msg.function());
     retval.setData(d.str());
     client->send(retval);

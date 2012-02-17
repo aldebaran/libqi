@@ -124,7 +124,7 @@ public:
 
     retval.setType(qi::Message::Reply);
     retval.setId(msg.id());
-    retval.setData(msg.source() + " register.");
+    retval.setData(msg.destination() + " register.");
   }
 
 public:

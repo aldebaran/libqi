@@ -66,7 +66,6 @@ std::vector<std::string> Session::services()
 
   qi::Message msg;
   msg.setType(qi::Message::Call);
-  msg.setSource(_name);
   msg.setDestination("qi.master");
   msg.setFunction("services");
 
