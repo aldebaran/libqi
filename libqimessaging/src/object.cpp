@@ -39,7 +39,9 @@ namespace qi {
   void Object::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
   {
     MetaMethod &mm = metaObject()._methods[method];
-    mm._functor->call(in, out);
+    if (mm._functor)
+      mm._functor->call(in, out);
+    //TODO: log error
   }
 
 
