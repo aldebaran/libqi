@@ -95,7 +95,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
     qi::DataStream d;
     std::vector<std::string> tmpEndPoint;
     tmpEndPoint.push_back(msg.service());
-    for (int i = 0; i < _endpoints.size(); ++i)
+    for (unsigned int i = 0; i < _endpoints.size(); ++i)
       tmpEndPoint.push_back(_endpoints[i]);
 
     d << tmpEndPoint;

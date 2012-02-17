@@ -27,7 +27,7 @@ void call(const std::string &addr)
   session.waitForConnected();
 
   std::vector<std::string> servs = session.services();
-  for (int i = 0; i < servs.size(); ++i)
+  for (unsigned int i = 0; i < servs.size(); ++i)
     std::cout << "service named " << servs[i] << std::endl;
 
 
