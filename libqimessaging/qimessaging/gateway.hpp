@@ -24,7 +24,7 @@ namespace qi
     Gateway();
     virtual ~Gateway();
 
-    void start(const std::string &addr, unsigned short port, qi::Session *session);
+    void start(qi::Session *session, const std::string &addr);
     void advertiseService(const std::string &name, qi::Object *obj);
 
   private:

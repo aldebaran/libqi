@@ -35,18 +35,9 @@ Session::~Session()
 
 void Session::connect(const std::string &masterAddress)
 {
-  size_t begin = 0;
-  size_t end = 0;
-  end = masterAddress.find(":");
+  qi::Url url(masterAddress);
 
-  std::string ip = masterAddress.substr(begin, end);
-  begin = end + 1;
-
-  unsigned int port;
-  std::stringstream ss(masterAddress.substr(begin));
-  ss >> port;
-
-  tc->connect(ip, port, _nthd->getEventBase());
+  tc->connect(url.host(), url.port(), _nthd->getEventBase());
 }
 
 bool Session::disconnect()

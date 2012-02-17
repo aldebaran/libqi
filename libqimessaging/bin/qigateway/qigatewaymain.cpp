@@ -25,10 +25,10 @@ int main(int argc, char *argv[])
   desc.add_options()
       ("help", "Print this help.")
       ("master-address",
-       po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),
+       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
        "The master address")
       ("gateway-address",
-       po::value<std::string>()->default_value(std::string("127.0.0.1:12345")),
+       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:12345")),
        "The gateway address");
 
   // allow master address to be specified as the first arg
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
       session.waitForConnected();
 
 //      gate.advertiseService("gateway", &obj);
-      gate.start("127.0.0.1", 12345, &session);
+      gate.start(&session, "tcp://127.0.0.1:12345");
       std::cout << "ready." << std::endl;
 
 //      std::vector<std::string> result = session.services();

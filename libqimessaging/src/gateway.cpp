@@ -310,13 +310,11 @@ Gateway::~Gateway()
   delete _p;
 }
 
-void Gateway::start(const std::string &addr, unsigned short port, qi::Session *session)
+void Gateway::start(qi::Session *session, const std::string &addr)
 {
-  std::stringstream ss;
-  ss << "tcp://" << addr << ":" << port;
-  _p->_endpoints.push_back(ss.str());
-
+  qi::Url url(addr);
+  _p->_endpoints.push_back(addr);
   _p->_ts.setDelegate(_p);
-  _p->_ts.start(addr, port, session->_nthd->getEventBase());
+  _p->_ts.start(url.host(), url.port(), session->_nthd->getEventBase());
 }
 } // !qi

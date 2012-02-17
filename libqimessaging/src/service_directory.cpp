@@ -13,6 +13,7 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/transport/url.hpp>
 #include <qi/os.hpp>
 
 
@@ -146,18 +147,9 @@ ServiceDirectory::~ServiceDirectory()
 
 void ServiceDirectory::start(const std::string &address)
 {
-  size_t begin = 0;
-  size_t end = 0;
-  end = address.find(":");
+  qi::Url url(address);
 
-  std::string ip = address.substr(begin, end);
-  begin = end + 1;
-
-  unsigned int port;
-  std::stringstream ss(address.substr(begin));
-  ss >> port;
-
-  _p->ts->start(ip, port, _p->nthd->getEventBase());
+  _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
 }
 
 }; // !qi
