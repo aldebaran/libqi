@@ -30,11 +30,7 @@ namespace qi {
       Error  = 4,
     };
 
-    Message()
-      : _id (_id_seq++)
-    {
-    }
-
+    Message();
     Message(const std::string &data);
 
     std::string str()const;
@@ -68,8 +64,6 @@ namespace qi {
     std::string  _dest;
     std::string  _func;
     std::string  _data;
-  private:
-    static unsigned int _id_seq;
   };
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
