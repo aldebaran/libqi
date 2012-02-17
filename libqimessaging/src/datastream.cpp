@@ -63,7 +63,7 @@ namespace qi {
     int sz;
     *this >> sz;
     len = sz;
-    return _data.data();
+    return _data.data() + _index;
   }
 
   void DataStream::writeString(const char *str, size_t len)
