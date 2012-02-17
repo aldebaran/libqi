@@ -10,6 +10,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/transport/url.hpp>
 #include "src/remoteobject_p.hpp"
 
 static int uniqueRequestId = 0;
@@ -113,21 +114,11 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 
   qi::TransportSocket* ts = NULL;
 
-  qi::EndpointInfo endpoint;
-  size_t begin = 0;
-  size_t end = 0;
-  end = result[1].find(":");
-  endpoint.type = result[1].substr(begin, end);
-  begin = end + 3;
-  end = result[1].find(":", begin);
-  endpoint.ip = result[1].substr(begin, end - begin);
-  begin = end + 1;
-  std::stringstream ss(result[1].substr(begin));
-  ss >> endpoint.port;
+  qi::Url url(result[1]);
 
   ts = new qi::TransportSocket();
   ts->setDelegate(this);
-  ts->connect(endpoint.ip, endpoint.port, _nthd->getEventBase());
+  ts->connect(url.host(), url.port(), _nthd->getEventBase());
   ts->waitForConnected();
 
   return ts;

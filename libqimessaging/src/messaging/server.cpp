@@ -10,6 +10,7 @@
 #include <qimessaging/server.hpp>
 #include <qimessaging/transport/transport_server.hpp>
 #include <qimessaging/transport/network_thread.hpp>
+#include <qimessaging/transport/url.hpp>
 
 namespace qi {
 
@@ -75,20 +76,10 @@ namespace qi {
     _p->_url = url;
     _p->_session = session;
 
-    qi::EndpointInfo endpoint;
-    size_t begin = 0;
-    size_t end = 0;
-    end = _p->_url.find(":");
-    endpoint.type = _p->_url.substr(begin, end);
-    begin = end + 3;
-    end = _p->_url.find(":", begin);
-    endpoint.ip = _p->_url.substr(begin, end - begin);
-    begin = end + 1;
-    std::stringstream ss(_p->_url.substr(begin));
-    ss >> endpoint.port;
+    qi::Url urlo(_p->_url);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(endpoint.ip, endpoint.port, _p->_session->_nthd->getEventBase());
+    _p->_ts.start(urlo.host(), urlo.port(), _p->_session->_nthd->getEventBase());
   }
 
 

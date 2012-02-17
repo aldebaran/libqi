@@ -10,6 +10,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport/transport_server.hpp>
 #include <qimessaging/transport/network_thread.hpp>
+#include <qimessaging/transport/url.hpp>
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 
@@ -191,24 +192,13 @@ void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi:
 
   d >> result;
 
-  qi::EndpointInfo endpoint;
-  size_t begin = 0;
-  size_t end = 0;
-  end = result[1].find(":");
-  endpoint.type = result[1].substr(begin, end);
-  begin = end + 3;
-  end = result[1].find(":", begin);
-  endpoint.ip = result[1].substr(begin, end - begin);
-  begin = end + 1;
-  std::stringstream ss(result[1].substr(begin));
-  ss >> endpoint.port;
-
+  qi::Url url(result[1]);
 
   //new socket
   qi::TransportSocket *servSocket = new qi::TransportSocket();
   servSocket->setDelegate(this);
   //call connect
-  servSocket->connect(endpoint.ip, endpoint.port, _nthd->getEventBase());
+  servSocket->connect(url.host(), url.port(), _nthd->getEventBase());
 
   //TODO: serviceName = endpointIt.name();
   std::string serviceName = result[0];
