@@ -36,7 +36,7 @@ struct SubscribePerfHandler : qi::transport::TransportSubscribeHandler {
     return fCount;
   }
 
-  SubscribePerfHandler() : fCount(0) {}
+  SubscribePerfHandler() : fCount(0), fExpectedMessages(0) {}
 
   SubscribePerfHandler(int expectedMessages) :
     fCount(0),
