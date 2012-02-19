@@ -41,7 +41,6 @@ static int _qi_signature_find_end(qi_signature_t *sig, char **pcurrent, const ch
 static int _qi_signature_split(qi_signature_t *sig, const char *signature, const char *end)
 {
   char *current = sig->_signature;
-  int   i       = 0;
 
   while(*signature) {
     if (end && signature >= end)
