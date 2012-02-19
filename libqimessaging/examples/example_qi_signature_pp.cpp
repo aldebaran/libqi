@@ -13,8 +13,8 @@ int main()
   std::cout << "d                    : " <<  qi::signatureToString("d") << std::endl;
   std::cout << "s                    : " <<  qi::signatureToString("s") << std::endl;
 
-  //protobuf
-  std::cout << "@ALCompat.ALValue@   : " <<  qi::signatureToString("@ALCompat.ALValue@") << std::endl;
+  //protobuf currently throws qi::BadSignatureError
+  //std::cout << "@ALCompat.ALValue@   : " <<  qi::signatureToString("@ALCompat.ALValue@") << std::endl;
 
   //STL types
   std::cout << "[i]                  : " <<  qi::signatureToString("[i]") << std::endl;
