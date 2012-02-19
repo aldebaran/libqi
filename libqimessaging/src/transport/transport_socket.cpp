@@ -34,8 +34,9 @@ namespace qi {
 struct TransportSocketPrivate
 {
   TransportSocketPrivate()
-    : connected(false)
+    : tcd(NULL)
     , bev(NULL)
+    , connected(false)
     , fd(-1)
   {
   }
@@ -51,7 +52,7 @@ struct TransportSocketPrivate
   {
   }
 
-  TransportSocketInterface             *tcd;
+  TransportSocketInterface            *tcd;
   struct bufferevent                  *bev;
   bool                                 connected;
   std::map<unsigned int, qi::Message*> msgSend;
