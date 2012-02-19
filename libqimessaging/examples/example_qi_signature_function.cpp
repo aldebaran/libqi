@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <qimessaging/signature.hpp>
 
 //sample foo function to take the signature from
@@ -14,7 +13,7 @@ int main()
   std::string signature;
 
   signature = qi::makeFunctionSignature("foo", &foo);
-  std::cout << "function signature should be      : foo::i:ii" << std::endl;
+  std::cout << "function signature should be      : foo::i(ii)" << std::endl;
   std::cout << "function signature                : " << signature << std::endl;
   std::cout << "Pretty printed function signature : " << qi::signatureToString(signature) << std::endl;
 
