@@ -16,8 +16,8 @@
 QString qi_MetatypeToNetworkType(const int metatype);
 QString qi_NetworkTypeToMetatype(const QString &metatype);
 
-void qi_MetaTypeStore(qi::DataStream &ds, int metatype, void *data);
-void qi_MetaTypeLoad(qi::DataStream &ds, int metatype, void *data);
+bool qi_MetaTypeStore(qi::DataStream &stream, int metatype, void *data);
+bool qi_MetaTypeLoad(qi::DataStream &ds, int metatype, void *data);
 
 void qi_SignatureToMetaMethod(const std::string &signature, QString *returnSig, QString *funcSig);
 
