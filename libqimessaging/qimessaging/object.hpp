@@ -36,7 +36,13 @@ namespace qi {
 
   class MetaObject {
   public:
+    MetaObject()
+      : _methodsNumber(0)
+    {
+    };
     MetaMethodMap   _methods;
+    std::vector<MetaMethod*> _methodsTable;
+    unsigned int             _methodsNumber;
     // std::map<std::string, MethodInfo>   _signals;
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
@@ -53,10 +59,10 @@ namespace qi {
     MetaObject &metaObject();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    inline void advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
+    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
 
     template <typename FUNCTION_TYPE>
-    inline void advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
 
 
     void callVoid(const std::string& methodName);
@@ -111,7 +117,7 @@ namespace qi {
     virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out);
 
   protected:
-    void xAdvertiseService(const std::string &name, const std::string& signature, const Functor *functor);
+    unsigned int xAdvertiseService(const std::string &name, const std::string& signature, const Functor *functor);
 
   protected:
     MetaObject *_meta;
@@ -120,15 +126,15 @@ namespace qi {
 
 
 template <typename OBJECT_TYPE, typename METHOD_TYPE>
-inline void Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
 {
-  xAdvertiseService(name, makeFunctionSignature(name, method), makeFunctor(object, method));
+  return xAdvertiseService(name, makeFunctionSignature(name, method), makeFunctor(object, method));
 }
 
 template <typename FUNCTION_TYPE>
-inline void Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
 {
-  xAdvertiseService(name, makeFunctionSignature(name, function), makeFunctor(function));
+  return xAdvertiseService(name, makeFunctionSignature(name, function), makeFunctor(function));
 }
 
 
