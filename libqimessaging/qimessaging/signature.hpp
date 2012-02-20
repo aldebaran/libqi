@@ -94,32 +94,6 @@ namespace qi {
   };
 
 
-  /// Take the signature of a function with it's name. This is a simple wrapper arround qi::signatureFromObject.
-  /// <param name="name"> the function name </param>
-  /// <param name="f"> a function pointer to take the signature of </param>
-  /// \ingroup Signature
-  /// \include example_qi_signature_function.cpp
-  template<typename F>
-  std::string QIMESSAGING_API makeFunctionSignature(const std::string name, F f) {
-    std::string value(name);
-    value += "::";
-    signatureFromObject::value(f, value);
-    return value;
-  }
-
-  /// return a pretty printed a signature.
-  /// \ingroup Signature
-  /// \include example_qi_signature_pp.cpp
-  QIMESSAGING_API void signatureToString(const char *signature, std::string &result);
-
-  /// return a pretty printed a signature.
-  /// \ingroup Signature
-  QIMESSAGING_API std::string signatureToString(const char *signature);
-
-  /// return a pretty printed a signature.
-  /// \ingroup Signature
-  QIMESSAGING_API std::string signatureToString(const std::string& signature);
-
 }
 
 #endif  // _QIMESSAGING_SIGNATURE_HPP_

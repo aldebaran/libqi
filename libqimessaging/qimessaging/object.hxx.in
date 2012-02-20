@@ -32,7 +32,9 @@ namespace qi {
     qi::DataStream reply;
 
     void (*f)(${generate_param_list($i)})  = 0;
-    std::string signature = makeFunctionSignature(method, f);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
     #for $j in range($i)
     request << p${j};
     #end for
@@ -48,7 +50,9 @@ namespace qi {
     qi::DataStream reply;
 
     R (*f)(${generate_param_list($i)})  = 0;
-    std::string signature = makeFunctionSignature(method, f);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
     #for $j in range($i)
     request << p${j};
     #end for

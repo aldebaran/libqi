@@ -128,13 +128,19 @@ namespace qi {
 template <typename OBJECT_TYPE, typename METHOD_TYPE>
 inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
 {
-  return xAdvertiseService(name, makeFunctionSignature(name, method), makeFunctor(object, method));
+  std::string signature(name);
+  signature += "::";
+  signatureFromObject::value(method, signature);
+  return xAdvertiseService(name, signature, makeFunctor(object, method));
 }
 
 template <typename FUNCTION_TYPE>
 inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
 {
-  return xAdvertiseService(name, makeFunctionSignature(name, function), makeFunctor(function));
+  std::string signature(name);
+  signature += "::";
+  signatureFromObject::value(function, signature);
+  return xAdvertiseService(name, signature, makeFunctor(function));
 }
 
 
