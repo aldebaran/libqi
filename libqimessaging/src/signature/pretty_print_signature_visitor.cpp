@@ -9,7 +9,6 @@
 #include <iostream>
 #include <cstring>
 #include <qi/log.hpp>
-#include <qimessaging/signature/error.hpp>
 #include "pretty_print_signature_visitor.hpp"
 
 namespace qi {
@@ -56,7 +55,8 @@ namespace qi {
 
 
   PrettyPrintSignatureVisitor::PrettyPrintSignatureVisitor(const char *signature, SignatureType type)
-    : _current(signature),
+    : _errno(0),
+      _current(signature),
       _signature(signature),
       _method(""),
       _type(type),
@@ -118,10 +118,11 @@ namespace qi {
 
     //verify something has been eaten
     if (*_current != 0) {
-      std::stringstream ss;
-      ss << "trailing garbage(" << *_current << ") at index " << _current - _signature;
-      ss << ", signature: " << _signature;
-      throw qi::BadSignatureError(ss.str());
+      qiLogDebug("qi.messaging.signature")
+          << "trailing garbage(" << *_current << ") at index "
+          << _current - _signature
+          << ", signature: " << _signature;
+      _errno = TrailingGarbage;
     }
   }
 

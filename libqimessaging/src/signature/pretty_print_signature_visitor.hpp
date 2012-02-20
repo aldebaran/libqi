@@ -24,11 +24,18 @@ namespace qi {
       Qt
     } SignatureType;
 
+    enum {
+      None = 0,
+      TrailingGarbage
+    };
+
     PrettyPrintSignatureVisitor(const char *signature, SignatureType type = STL);
 
 
     const std::string &returnSignature();
     const std::string &functionSignature();
+
+    int errno() const { return _errno; }
 
   protected:
     void visit();
@@ -39,6 +46,8 @@ namespace qi {
     void visitTuple();
 
     const char *elementTypeSTL(int idx);
+
+    int           _errno;
 
     SignatureType _type;
     bool          _done;
