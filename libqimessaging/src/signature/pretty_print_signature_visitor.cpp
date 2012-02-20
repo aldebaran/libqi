@@ -55,7 +55,7 @@ namespace qi {
 
 
   PrettyPrintSignatureVisitor::PrettyPrintSignatureVisitor(const char *signature, SignatureType type)
-    : _errno(0),
+    : _errno(ErrorNone),
       _current(signature),
       _signature(signature),
       _method(""),
@@ -122,7 +122,7 @@ namespace qi {
           << "trailing garbage(" << *_current << ") at index "
           << _current - _signature
           << ", signature: " << _signature;
-      _errno = TrailingGarbage;
+      _errno = ErrorTrailingGarbage;
     }
   }
 

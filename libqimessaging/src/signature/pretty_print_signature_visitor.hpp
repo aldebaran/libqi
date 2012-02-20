@@ -25,8 +25,8 @@ namespace qi {
     } SignatureType;
 
     enum {
-      None = 0,
-      TrailingGarbage
+      ErrorNone = 0,
+      ErrorTrailingGarbage = 1,
     };
 
     PrettyPrintSignatureVisitor(const char *signature, SignatureType type = STL);
