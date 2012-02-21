@@ -28,6 +28,7 @@ namespace qi {
     std::string  _name;
     std::string  _signature;
     const qi::Functor *_functor;
+    unsigned int _idx;
   };
   typedef std::map<std::string, MetaMethod> MetaMethodMap;
 

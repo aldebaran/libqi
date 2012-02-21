@@ -33,8 +33,9 @@ namespace qi {
 
   unsigned int Object::xAdvertiseService(const std::string &name, const std::string& signature, const qi::Functor* functor) {
     MetaMethod mm(name, signature, functor);
-    _meta->_methods[name] = mm;
     unsigned int idx = _meta->_methodsNumber++;
+    mm._idx = idx;
+    _meta->_methods[name] = mm;
     _meta->_methodsTable.push_back(&(_meta->_methods[name]));
     return idx;
   }
