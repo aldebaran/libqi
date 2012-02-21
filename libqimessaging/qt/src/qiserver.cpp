@@ -28,16 +28,16 @@ QiServer::~QiServer()
   delete _p;
 }
 
-void QiServer::listen(QiSession *session, const QUrl &url)
+void QiServer::listen(QiSession *session, const QVector<QUrl> &url)
 {
-  _p->server.listen(&(session->_p->session), url.toString().toUtf8().constData());
+  //_p->server.listen(&(session->_p->session), url.toString().toUtf8().constData());
 }
 
 void QiServer::stop()
 {
 }
 
-void QiServer::advertiseService(const QString &name, QObject *obj)
+void QiServer::registerService(const QString &name, QObject *obj)
 {
 
 }

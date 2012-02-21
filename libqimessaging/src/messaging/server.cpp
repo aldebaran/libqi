@@ -54,7 +54,7 @@ namespace qi {
   public:
     std::map<unsigned int, qi::Object*>_services;
     TransportServer                    _ts;
-    std::string                        _url;
+    std::vector<std::string>           _endpoints;
     qi::Session                       *_session;
   };
 
@@ -69,11 +69,11 @@ namespace qi {
     delete _p;
   }
 
-  void Server::listen(qi::Session *session, const std::string &url) {
-    _p->_url = url;
+  void Server::listen(qi::Session *session, const std::vector<std::string> &endpoints) {
+    _p->_endpoints = endpoints;
     _p->_session = session;
 
-    qi::Url urlo(_p->_url);
+    qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
     _p->_ts.start(urlo.host(), urlo.port(), _p->_session->_nthd->getEventBase());
@@ -90,10 +90,8 @@ namespace qi {
     msg.setFunction(qi::Message::RegisterService);
 
     qi::DataStream d(msg.buffer());
-    std::vector<std::string> endpoints;
-    endpoints.push_back(_p->_url);
     d << name;
-    d << endpoints;
+    d << _p->_endpoints;
 
     _p->_session->tc->send(msg);
     _p->_session->tc->waitForId(msg.id());

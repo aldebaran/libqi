@@ -19,10 +19,10 @@ public:
   QiServer();
   ~QiServer();
 
-  void listen(QiSession *session, const QUrl &url);
+  void listen(QiSession *session, const QVector<QUrl> &url);
   void stop();
 
-  void advertiseService(const QString &name, QObject *obj);
+  void registerService(const QString &name, QObject *obj);
 
 protected:
   QiServerPrivate *_p;

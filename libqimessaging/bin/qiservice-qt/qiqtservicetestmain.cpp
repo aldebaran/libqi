@@ -58,8 +58,10 @@ int main(int argc, char *argv[])
       QiServer srv;
       //obj.advertiseMethod("reply", &reply);
 
-      srv.advertiseService("serviceTest", &obj);
-      srv.listen(&session, QUrl::QUrl("tcp://127.0.0.1:9571"));
+      QVector<QUrl> endpoints;
+      endpoints.push_back(QUrl::QUrl("tcp://127.0.0.1:9571"));
+      srv.registerService("serviceTest", &obj);
+      srv.listen(&session, endpoints);
 
       std::cout << "ready." << std::endl;
 
