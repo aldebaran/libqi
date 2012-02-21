@@ -10,7 +10,7 @@
 #include <QtCore/qbytearray.h>
 #include "qimetatype_p.h"
 #include "qmetaobjectbuilder_p.h"
-#include "src/signature/pretty_print_signature_visitor.hpp"
+#include <qimessaging/signature.hpp>
 
 QString qi_MetatypeToNetworkType(const int metatype)
 {
@@ -195,9 +195,23 @@ bool qi_MetaTypeLoad(qi::DataStream &stream, int metatype, void *data)
 
 void qi_SignatureToMetaMethod(const std::string &signature, QString *returnSig, QString *funcSig)
 {
-  qi::PrettyPrintSignatureVisitor ppsv(signature.c_str(), qi::PrettyPrintSignatureVisitor::Qt);
+  std::string retSig;
+  std::string parSig;
+  std::string funcName;
 
-  *returnSig = QString::fromStdString(ppsv.returnSignature());
-  *funcSig = QString::fromStdString(ppsv.functionSignature());
+  int idx1 = signature.find("::");
+  if (idx1 != signature.npos)
+    funcName = signature.substr(0, idx1);
+  int idx2 = signature.find("(", idx1);
+  if (idx2 != signature.npos) {
+    retSig = signature.substr(idx1 + 2, idx2 - idx1 - 2);
+    parSig = signature.substr(idx2);
+  }
+
+
+  qi::Signature rets(retSig);
+  qi::Signature funs(parSig);
+  *returnSig = QString::fromStdString(rets.toQtSignature(false));
+  *funcSig = QString::fromStdString(funcName) + QString::fromStdString(funs.toQtSignature(true));
 }
 

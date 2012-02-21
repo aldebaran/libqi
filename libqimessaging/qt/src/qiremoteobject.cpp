@@ -74,18 +74,20 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
     qi_MetaTypeStore(args, ttype, a[i+1]);
   }
 
+
   QString methodname(method.signature());
   methodname.truncate(methodname.indexOf('('));
 
   msg.setType(qi::Message::Call);
-//  msg.setService(_p->dest);
+  //msg.setService(_p->dest);
+  msg.setFunction(id - _p->meta->methodOffset());
 //  msg.setFunction(methodname.toStdString());
 //  msg.setData(args.str());
   _p->socket->send(msg);
 
   _p->socket->waitForId(msg.id());
   _p->socket->read(msg.id(), &retmsg);
-  //retv.str(retmsg.data());
+
   qi_MetaTypeLoad(retv, returnType, a[0]);
 
   return 0;
