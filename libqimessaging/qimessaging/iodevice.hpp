@@ -20,14 +20,12 @@ namespace qi
     virtual int            write(const void *data, size_t size)   = 0;
     virtual int            prepend(const void *data, size_t size) = 0;
 
-    virtual void          *read(size_t size) = 0;
+    virtual int            read(void *data, size_t size) = 0;
 
     virtual void          *data() = 0;
     virtual void           setData(void *data) = 0;
 
-    virtual int            size() const = 0;
-
-
+    virtual size_t         size() const = 0;
   }; // !IODevice
 } // !qi
 

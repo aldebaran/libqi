@@ -69,14 +69,12 @@ namespace qi {
     /// <param name="data">The data.</param>
     explicit DataStream(qi::Buffer *buffer)
       : _buffer(buffer)
-      , _index(0)
-      , _data(NULL)
     {
       // may be a copy if linearize needed
       // need to add header size
     }
 
-    const char *readString(size_t &len);
+    size_t read(void *data, size_t len);
     void writeString(const char *str, size_t len);
 
     DataStream& operator<<(bool   i);
@@ -106,14 +104,8 @@ namespace qi {
   private:
     /// <summary>Default constructor. </summary>
     DataStream()
-      : _index(0)
-      , _data(NULL)
     {}
 
-  protected:
-    /// <summary> The underlying data </summary>
-    long        _index;
-    void       *_data;
   };
 
 

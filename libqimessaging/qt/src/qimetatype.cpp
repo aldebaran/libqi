@@ -31,10 +31,11 @@ QString qi_NetworkTypeToMetatype(const QString &nettype)
 // string
 qi::DataStream& operator>>(qi::DataStream &stream, QString &s)
 {
-  size_t len;
-  const char *ss = stream.readString(len);
-  QByteArray qba(ss, len);
-  s.append(qba);
+  int len;
+  stream >> len;
+  QByteArray qbb(len, '0');
+  stream.read(qbb.data(), len);
+  s.append(qbb);
   return stream;
 }
 

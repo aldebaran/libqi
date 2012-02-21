@@ -31,13 +31,10 @@
 # define __QI_DEBUG_SERIALIZATION_DATA_W(x, d)
 #endif
 
-#define QI_SIMPLE_SERIALIZER_IMPL(Type)                    \
-  DataStream& DataStream::operator>>(Type &b)              \
-  {                                                        \
-    if (_data == NULL)                                     \
-      _data = _buffer->read(_buffer->size());              \
-    b = *((Type *) ((char *)_data + _index));              \
-    _index += sizeof(Type);                                \
+#define QI_SIMPLE_SERIALIZER_IMPL(Type)                           \
+  DataStream& DataStream::operator>>(Type &b)                     \
+  {                                                               \
+    char *data = (char *)_buffer->read((void *)&b, sizeof(Type)); \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
     return *this;                                          \
   }                                                        \
@@ -61,19 +58,15 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(double);
 
   // string
-  const char *DataStream::readString(size_t &len)
+  size_t DataStream::read(void *data, size_t len)
   {
-    int sz;
-    *this >> sz;
-    len = sz;
-    return (char*)_data + _index;
+    return _buffer->read(data, len);
   }
 
   void DataStream::writeString(const char *str, size_t len)
   {
     *this << (int)len;
-    if (len)
-    {
+    if (len) {
       _buffer->write(str, len)
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
     }
@@ -82,17 +75,14 @@ namespace qi {
   // string
   DataStream& DataStream::operator>>(std::string &s)
   {
-    if (_data == NULL)
-    {
-     int i = _buffer->size();
-      _data = _buffer->read(_buffer->size());
-    }
     int sz;
     *this >> sz;
+
     s.clear();
     if (sz) {
-      s.append((char*)_data + _index, sz);
-      _index += sz;
+      char *data = static_cast<char *>(_buffer->peek(sz));
+      s.append(data, sz);
+      _buffer->drain(sz);
       __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
     }
 

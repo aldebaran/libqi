@@ -46,12 +46,22 @@ public:
     return evbuffer_prepend(_p->_bufev, data, size);
   }
 
-  void* Buffer::read(size_t size)
+  int Buffer::read(void *data, size_t size)
+  {
+    return evbuffer_remove(_p->_bufev, data, size);
+  }
+
+  void *Buffer::peek(size_t size)
   {
     return evbuffer_pullup(_p->_bufev, size);
   }
 
-  int Buffer::size() const
+  int Buffer::drain(size_t size)
+  {
+    return evbuffer_drain(_p->_bufev, size);
+  }
+
+  size_t Buffer::size() const
   {
     return evbuffer_get_length(_p->_bufev);
   }
