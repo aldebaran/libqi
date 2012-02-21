@@ -100,6 +100,7 @@ void TransportSocket::readcb(struct bufferevent *bev,
   // get the header
   evbuffer_remove(input, msg->_header, sizeof(qi::Message::MessageHeader));
   // get the data
+  //TODO check the return value
   evbuffer_remove_buffer(input, tmp, msg->_header->size);
   // set the data
   buf->setData(reinterpret_cast<void*>(tmp));

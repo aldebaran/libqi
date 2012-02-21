@@ -28,8 +28,10 @@ void RemoteObject::metaCall(const std::string &method, const std::string &sig, D
   _ts->send(msg);
   _ts->waitForId(msg.id());
 
-  qi::Message ret(out._buffer);
+  qi::Message ret;
   _ts->read(msg.id(), &ret);
+  //TODO: ret(out.buffer())
+  out._buffer = ret.buffer();
 }
 
 }
