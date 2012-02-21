@@ -34,7 +34,7 @@ namespace qi {
       retval.buildReplyFrom(msg);
       qi::DataStream rs(retval.buffer());
 
-      obj->metaCall("f", "", ds, rs);
+      obj->metaCall(msg.function(), "", ds, rs);
 
       client->send(retval);
     };
@@ -81,7 +81,7 @@ namespace qi {
 
 
   void Server::registerService(const std::string& name, qi::Object *obj) {
-//    _p->_services[service] = obj;
+      _p->_services[0] = obj;
 
     qi::Message msg;
     msg.setType(qi::Message::Call);

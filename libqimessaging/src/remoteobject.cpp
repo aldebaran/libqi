@@ -23,6 +23,7 @@ void RemoteObject::metaCall(const std::string &method, const std::string &sig, D
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);
+  msg.setFunction(1);
 
   _ts->send(msg);
   _ts->waitForId(msg.id());
