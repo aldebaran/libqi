@@ -78,34 +78,3 @@ namespace qi {
 
 #endif // QI_FUNCTORS_DETAIL_FUNCTIONSIGNATURE_HPP_
 
-
-
-
-
-
-//PLAYGROUND
-#if 0
-//this is my prefered solution, but impossible to get working (boost::mpl::_2 is not "detypified to the right simple type")
-template <typename F>
-struct newFunctionSignature {
-  typedef typename newTypeSignature< typename boost::function_types::result_type<F>::type >::value returnValue;
-
-  typedef typename boost::mpl::copy<boost::mpl::string<':'>::type,
-    boost::mpl::back_inserter< returnValue >
-  >::type returnValueColon;
-
-  typedef typename boost::function_types::parameter_types<F>::type ArgsType;
-
-
-  typedef typename boost::mpl::iter_fold<ArgsType,
-    typename boost::mpl::string<>,
-    typename boost::mpl::copy<newTypeSignature< typename boost::mpl::deref<boost::mpl::_2 > >::value,
-    boost::mpl::back_inserter< boost::mpl::_1 >
-    >
-  >::type argsValue;
-  typedef typename boost::mpl::copy<argsValue,
-    boost::mpl::back_inserter< returnValueColon >
-  >::type value;
-};
-#endif  // _QIMESSAGING_SIGNATURE_DETAIL_FUNCTION_SIGNATURE_HPP_
-

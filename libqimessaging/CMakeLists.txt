@@ -91,7 +91,7 @@ qi_submodule_add("qi-messaging-src"
 
 qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
 
-qi_submodule_create("qi-signature"       "qimessaging/signature/*.h[px][px]" "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"
+qi_submodule_create("qi-signature"       "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"
                                          "src/signature/*.[hc][px][px]")
 
 qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"

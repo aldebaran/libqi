@@ -34,6 +34,7 @@ namespace qi {
 
     const std::string &returnSignature();
     const std::string &functionSignature();
+    const std::string &fullSignature();
 
     int errno() const { return _errno; }
 

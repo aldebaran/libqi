@@ -7,14 +7,36 @@ typedef std::map<std::string, StringVect> StringVectMap;
 
 void create_a_signature(std::string &raw_signature)
 {
-  qi::signature<int>::value(raw_signature);
-  qi::signature<std::string>::value(raw_signature);
-  qi::signature<StringVect>::value(raw_signature);
-  qi::signature<StringVectVect>::value(raw_signature);
-  qi::signature<StringVectMap>::value(raw_signature);
+  qi::signatureFromType<int>::value(raw_signature);
+  qi::signatureFromType<std::string>::value(raw_signature);
+  qi::signatureFromType<StringVect>::value(raw_signature);
+  qi::signatureFromType<StringVectVect>::value(raw_signature);
+  qi::signatureFromType<StringVectMap>::value(raw_signature);
   std::cout << "signature should be: " << "is[s][[s]]{s[s]}" << std::endl;
   std::cout << "actual signature   : " << raw_signature << std::endl;
 }
+
+std::string space_i(int space) {
+  std::string ret;
+  for (int i = 0; i < space; ++i)
+    ret += " ";
+  return ret;
+};
+
+void sig_print(const qi::Signature &sig, int indent = 0) {
+  qi::Signature::iterator it;
+
+  for (it = sig.begin(); it != sig.end(); ++it) {
+    if (!it.hasChildren()) {
+      std::cout << space_i(indent) << "e:(" << it.type() << "): " << *it << std::endl;
+    }
+    else {
+      std::cout << space_i(indent) << "c:(" << it.type() << "): " << *it << std::endl;
+      qi::Signature subsig = it.children();
+      sig_print(subsig, indent + 1);
+    }
+  }
+};
 
 int main()
 {
@@ -23,14 +45,9 @@ int main()
   //get a signature
   create_a_signature(raw_signature);
 
-  qi::Signature           sig(raw_signature);
-  qi::Signature::iterator it;
+  qi::Signature           sig(raw_signature.c_str());
 
-  for (it = sig.begin(); it != sig.end(); ++it) {
-    std::cout << "signature: " << it.signature()  << std::endl;
-    std::cout << "child_1  : " << it.child_1()    << std::endl;
-    std::cout << "child_2  : " << it.child_2()    << std::endl;
-  }
+  sig_print(sig);
 
   return 0;
 }
@@ -39,20 +56,17 @@ int main()
 
 signature should be: is[s][[s]]{s[s]}
 actual signature   : is[s][[s]]{s[s]}
-signature: i
-child_1  :
-child_2  :
-signature: s
-child_1  :
-child_2  :
-signature: [s]
-child_1  : s
-child_2  :
-signature: [[s]]
-child_1  : [s]
-child_2  :
-signature: {s[s]}
-child_1  : s
-child_2  : [s]
+e:(105): i
+e:(115): s
+c:(91): [s]
+ e:(115): s
+c:(91): [[s]]
+ c:(91): [s]
+  e:(115): s
+c:(123): {s[s]}
+ e:(115): s
+ c:(91): [s]
+  e:(115): s
+
 
 */

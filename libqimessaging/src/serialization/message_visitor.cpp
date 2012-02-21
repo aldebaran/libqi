@@ -29,18 +29,18 @@ namespace qi {
 
         switch (it.type()) {
         case qi::Signature::List:
-          onList(it.raw_child_1);
+          //onList(it.raw_child_1);
           break;
         case qi::Signature::Map:
-          onMap(it.raw_child_1, it.raw_child_2);
+         // onMap(it.raw_child_1, it.raw_child_2);
           break;
-        case qi::Signature::Protobuf:
-          onProtobuf(it.raw_signature);
+        //case qi::Signature::Protobuf:
+//          onProtobuf(it.raw_signature);
           break;
         case 0:
           return;
         default:
-          onSimple(it.raw_signature);
+          //onSimple(it.raw_signature);
           break;
         }
       }

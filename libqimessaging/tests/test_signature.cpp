@@ -57,48 +57,48 @@ struct Foo {
 };
 
 TEST(TestSignature, BasicTypeSignature) {
-  EXPECT_EQ("b",    qi::signature<bool>::value());
-  EXPECT_EQ("i",    qi::signature<int>::value());
-  EXPECT_EQ("f",    qi::signature<float>::value());
-  EXPECT_EQ("d",    qi::signature<double>::value());
-  EXPECT_EQ("s",    qi::signature<std::string>::value());
-  EXPECT_EQ("[i]",  qi::signature< std::vector<int> >::value());
+  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("i",    qi::signatureFromType<int>::value());
+  EXPECT_EQ("f",    qi::signatureFromType<float>::value());
+  EXPECT_EQ("d",    qi::signatureFromType<double>::value());
+  EXPECT_EQ("s",    qi::signatureFromType<std::string>::value());
+  EXPECT_EQ("[i]",  qi::signatureFromType< std::vector<int> >::value());
   typedef std::map<int,int> MapInt;
-  EXPECT_EQ("{ii}", qi::signature< MapInt >::value() );
+  EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
 
-  EXPECT_EQ("b",    qi::signature<const bool>::value());
-  EXPECT_EQ("i",    qi::signature<const int>::value());
-  EXPECT_EQ("f",    qi::signature<const float>::value());
-  EXPECT_EQ("d",    qi::signature<const double>::value());
-  EXPECT_EQ("s",    qi::signature<const std::string>::value());
-  EXPECT_EQ("[i]",  qi::signature<const std::vector< int > >::value());
-  EXPECT_EQ("{ii}", qi::signature<const MapInt >::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
+  EXPECT_EQ("i",    qi::signatureFromType<const int>::value());
+  EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
+  EXPECT_EQ("d",    qi::signatureFromType<const double>::value());
+  EXPECT_EQ("s",    qi::signatureFromType<const std::string>::value());
+  EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int > >::value());
+  EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt >::value());
 
-  EXPECT_EQ("b*",   qi::signature<const bool*>::value());
-  EXPECT_EQ("i*",   qi::signature<const int*>::value());
-  EXPECT_EQ("f*",   qi::signature<const float*>::value());
-  EXPECT_EQ("d*",   qi::signature<const double*>::value());
-  EXPECT_EQ("s*",   qi::signature<const std::string*>::value());
-  EXPECT_EQ("[i]*", qi::signature<const std::vector< int >* >::value());
-  EXPECT_EQ("{ii}*",qi::signature<const MapInt* >::value());
+  EXPECT_EQ("b*",   qi::signatureFromType<const bool*>::value());
+  EXPECT_EQ("i*",   qi::signatureFromType<const int*>::value());
+  EXPECT_EQ("f*",   qi::signatureFromType<const float*>::value());
+  EXPECT_EQ("d*",   qi::signatureFromType<const double*>::value());
+  EXPECT_EQ("s*",   qi::signatureFromType<const std::string*>::value());
+  EXPECT_EQ("[i]*", qi::signatureFromType<const std::vector< int >* >::value());
+  EXPECT_EQ("{ii}*",qi::signatureFromType<const MapInt* >::value());
 
-  EXPECT_EQ("b",    qi::signature<const bool&>::value());
-  EXPECT_EQ("i",    qi::signature<const int&>::value());
-  EXPECT_EQ("f",    qi::signature<const float&>::value());
-  EXPECT_EQ("d",    qi::signature<const double&>::value());
-  EXPECT_EQ("s",    qi::signature<const std::string&>::value());
-  EXPECT_EQ("[i]",  qi::signature<const std::vector< int >& >::value());
-  EXPECT_EQ("{ii}", qi::signature<const MapInt& >::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
+  EXPECT_EQ("i",    qi::signatureFromType<const int&>::value());
+  EXPECT_EQ("f",    qi::signatureFromType<const float&>::value());
+  EXPECT_EQ("d",    qi::signatureFromType<const double&>::value());
+  EXPECT_EQ("s",    qi::signatureFromType<const std::string&>::value());
+  EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int >& >::value());
+  EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt& >::value());
   //ERROR
-  EXPECT_EQ("UNKNOWN", qi::signature<short>::value());
+  EXPECT_EQ("UNKNOWN", qi::signatureFromType<short>::value());
 }
 
 TEST(TestSignature, OpaqueMessage) {
-  EXPECT_EQ("m", qi::signature<qi::DataStream >::value());
+  EXPECT_EQ("m", qi::signatureFromType<qi::DataStream >::value());
 }
 
 // TEST(TestSignature, ProtobufSignature) {
-//   EXPECT_EQ("@ALCompat.ALValue@", qi::signature<ALCompat::ALValue>::value());
+//   EXPECT_EQ("@ALCompat.ALValue@", qi::signatureFromType<ALCompat::ALValue>::value());
 // }
 
 TEST(TestSignature, ComplexTypeSignature) {
@@ -122,19 +122,19 @@ TEST(TestSignature, ComplexTypeSignature) {
 
   //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
   //and obama said: Yes We Can!
-  EXPECT_EQ("{ii}"                        , qi::signature<MapInt>::value());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::signature<MapInt2>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectorMapInt2>::value());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::signature<MapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectMapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signature<VectMapInt2RefConst>::value());
-  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::signature<VectVectMapInt2ConstRef>::value());
-  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::signature<FuckinMap>::value());
+  EXPECT_EQ("{ii}"                        , qi::signatureFromType<MapInt>::value());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::signatureFromType<MapInt2>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectorMapInt2>::value());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::signatureFromType<MapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectMapInt2Ref>::value());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectMapInt2RefConst>::value());
+  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::signatureFromType<VectVectMapInt2ConstRef>::value());
+  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::signatureFromType<FuckinMap>::value());
 }
 
 TEST(TestSignature, FunctionType) {
-  EXPECT_EQ("v(ii)", qi::signature<void (int, int)>::value());
-  EXPECT_EQ("v(ii)", qi::signature<void (*)(int, int)>::value());
+  EXPECT_EQ("v(ii)", qi::signatureFromType<void (int, int)>::value());
+  EXPECT_EQ("v(ii)", qi::signatureFromType<void (*)(int, int)>::value());
 }
 
 TEST(TestSignature, BasicVoidFunctionSignature) {
@@ -153,7 +153,7 @@ TEST(TestSignature, BasicVoidFunctionSignature) {
   EXPECT_EQ("v(iiiii)" , qi::signatureFromObject::value(vfun5));
   EXPECT_EQ("v(iiiiii)", qi::signatureFromObject::value(vfun6));
 
-  EXPECT_EQ("v(ii)", qi::signature<void (int, int)>::value());
+  EXPECT_EQ("v(ii)", qi::signatureFromType<void (int, int)>::value());
 }
 
 TEST(TestSignature, FromObject) {
@@ -198,7 +198,11 @@ TEST(TestSignature, BasicMemberSignature) {
   EXPECT_EQ("i(iiiiii)", qi::signatureFromObject::value(&Foo::fun6));
 }
 
+
+#if 0
+// PrettyPrint
 TEST(TestSignature, MethodSignatureToString) {
+  qi::Pr
   EXPECT_EQ("int meth(int)"                                    , qi::signatureToString("meth::i(i)"));
   EXPECT_EQ("map<double, int> oink(vector<string>, int*, bool)", qi::signatureToString("oink::{di}([s]i*b)"));
   EXPECT_EQ("void oink(void)"                                  , qi::signatureToString("oink::v(v)"));
@@ -209,7 +213,7 @@ TEST(TestSignature, SimpleSignatureToString) {
   EXPECT_EQ("tuple<vector<int>, map<bool, string>>", qi::signatureToString("([i]{bs})"));
   EXPECT_EQ("map<vector<map<map<int, int>, map<int, int>>>, vector<vector<map<map<int, int>, map<int, int>>>>>", qi::signatureToString("{[{{ii}{ii}}][[{{ii}{ii}}]]}"));
 
-  EXPECT_THROW(qi::signatureToString("ii"), qi::BadSignatureError);
+  EXPECT_FALSE(qi::signatureToString("ii"), qi::BadSignatureError);
   EXPECT_EQ("tuple<int, int>"           , qi::signatureToString("(ii)"));
 
   EXPECT_EQ("Protobuf(ALCompat.ALValue)", qi::signatureToString("@ALCompat.ALValue@"));
@@ -249,3 +253,5 @@ TEST(TestSignature, ComplexSignatureToString) {
   EXPECT_EQ("void ()"                   , qi::signatureToString("v()"));
   //EXPECT_EQ("int ()"                    , qi::signatureToString("()"));
 }
+
+#endif

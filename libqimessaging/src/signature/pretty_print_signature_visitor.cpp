@@ -74,6 +74,11 @@ namespace qi {
     return _result;
   }
 
+  const std::string &PrettyPrintSignatureVisitor::fullSignature() {
+    visit();
+    return _result;
+  }
+
   const char *PrettyPrintSignatureVisitor::elementTypeSTL(int idx)
   {
     if (_constify) {
