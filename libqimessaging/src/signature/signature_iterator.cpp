@@ -59,6 +59,10 @@ namespace qi {
     {
     }
 
+    ~SignaturePrivate() {
+      delete(_signature);
+    }
+
     bool split(const char *, const char *);
     void init(const char *signature, size_t len);
 
@@ -78,7 +82,7 @@ namespace qi {
     if (_signature)
       free(_signature);
 
-    _signature = (char *)malloc(size);
+    _signature = new char[size];
     _end = _signature + size;
     _valid = split(signature, signature + size);
   }
@@ -188,7 +192,8 @@ namespace qi {
   }
 
   ::qi::Signature::iterator &Signature::iterator::operator++(int) {
-    this->operator ++();
+    this->operator++();
+    return *this;
   }
 
   Signature::Type Signature::iterator::type()const {
