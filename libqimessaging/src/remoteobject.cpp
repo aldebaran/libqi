@@ -19,7 +19,7 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service)
 
 void RemoteObject::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
 {
-  qi::Message msg;
+  qi::Message msg(in._buffer);
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);
@@ -28,7 +28,7 @@ void RemoteObject::metaCall(const std::string &method, const std::string &sig, D
   _ts->send(msg);
   _ts->waitForId(msg.id());
 
-  qi::Message ret(msg);
+  qi::Message ret(out._buffer);
   _ts->read(msg.id(), &ret);
 }
 

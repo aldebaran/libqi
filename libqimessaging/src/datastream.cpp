@@ -34,6 +34,8 @@
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                    \
   DataStream& DataStream::operator>>(Type &b)              \
   {                                                        \
+    if (_data == NULL)                                     \
+      _data = _buffer->read(_buffer->size());              \
     b = *((Type *) ((char *)_data + _index));              \
     _index += sizeof(Type);                                \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
@@ -80,6 +82,11 @@ namespace qi {
   // string
   DataStream& DataStream::operator>>(std::string &s)
   {
+    if (_data == NULL)
+    {
+     int i = _buffer->size();
+      _data = _buffer->read(_buffer->size());
+    }
     int sz;
     *this >> sz;
     s.clear();

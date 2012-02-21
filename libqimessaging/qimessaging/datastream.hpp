@@ -70,10 +70,10 @@ namespace qi {
     explicit DataStream(qi::Buffer *buffer)
       : _buffer(buffer)
       , _index(0)
+      , _data(NULL)
     {
       // may be a copy if linearize needed
       // need to add header size
-      _data = buffer->read(buffer->size());
     }
 
     const char *readString(size_t &len);
@@ -102,6 +102,7 @@ namespace qi {
     /// <returns> The string representation of the serialized message</returns>
     void *data() { return _buffer->data(); }
 
+    qi::Buffer *_buffer;
   private:
     /// <summary>Default constructor. </summary>
     DataStream()
@@ -111,7 +112,6 @@ namespace qi {
 
   protected:
     /// <summary> The underlying data </summary>
-    qi::Buffer *_buffer;
     long        _index;
     void       *_data;
   };
