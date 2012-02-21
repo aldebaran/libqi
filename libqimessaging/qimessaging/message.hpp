@@ -73,7 +73,7 @@ namespace qi {
     unsigned int path() const;
     void setFunction(uint32_t function);
     unsigned int function() const;
-    qi::Buffer* buffer();
+    Buffer *buffer() const;
 
     bool complete();
     void buildReplyFrom(const Message &call);

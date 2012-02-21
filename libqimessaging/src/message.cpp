@@ -29,7 +29,7 @@ namespace qi {
     memset(_header, 0, sizeof(MessageHeader));
   }
 
-  Message::Message(qi::Buffer *buf)
+  Message::Message(Buffer *buf)
   {
     _header = new qi::Message::MessageHeader();
     _header->id = newMessageId();
@@ -111,7 +111,7 @@ namespace qi {
     return _header->function;
   }
 
-  qi::Buffer *Message::buffer()
+  qi::Buffer *Message::buffer() const
   {
     return _buffer;
   }

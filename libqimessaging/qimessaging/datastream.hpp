@@ -67,7 +67,7 @@ namespace qi {
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    explicit DataStream(qi::Buffer *buffer)
+    explicit DataStream(qi::IODevice *buffer)
       : _buffer(buffer)
     {
       // may be a copy if linearize needed
@@ -98,10 +98,13 @@ namespace qi {
 
     /// <summary>Gets the string. </summary>
     /// <returns> The string representation of the serialized message</returns>
-    void *data() { return _buffer->data(); }
+    //void *data() { return _buffer->data(); }
 
-    qi::Buffer *_buffer;
+    void setIODevice(qi::IODevice *dev) { _buffer = dev; }
+    qi::IODevice *ioDevice() const      { return _buffer; }
   private:
+    qi::IODevice *_buffer;
+
     /// <summary>Default constructor. </summary>
     DataStream()
     {}
