@@ -21,7 +21,7 @@
 {\
   EXPECT_STREQ(_sig, _it.signature().c_str());\
   EXPECT_EQ(_hasChildren, _it.hasChildren()); \
-  EXPECT_EQ(_isPointer, _it.isPointer());\
+  EXPECT_EQ(_isPointer, _it.pointer());\
   EXPECT_EQ(qi::Signature::_type, _it.type());\
 }
 
@@ -33,7 +33,7 @@ void verif_bad(const qi::Signature::iterator it)
 
   EXPECT_STREQ("", it.signature().c_str());
   EXPECT_FALSE(it.hasChildren());
-  EXPECT_FALSE(it.isPointer());
+  EXPECT_FALSE(it.pointer());
   EXPECT_EQ(qi::Signature::None, it.type());
   EXPECT_TRUE(it == ite);
   EXPECT_TRUE(it == s.end());
@@ -75,7 +75,7 @@ TEST(TestSignatureIterator, STL) {
 
   qi::Signature sig4("{is}**");
   it = sig4.begin();
-  verif_iter(it, "{is}**", Map, true, true);
+  verif_iter(it, "{is}**", Map, true, 2);
 
 
   qi::Signature subsig = it.children();

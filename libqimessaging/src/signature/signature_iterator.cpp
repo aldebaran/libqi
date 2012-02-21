@@ -10,7 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <qimessaging/signature.hpp>
-#include "src/signature/pretty_print_signature_visitor.hpp"
+#include "src/signature/signature_convertor.hpp"
 
 namespace qi {
 
@@ -84,7 +84,7 @@ namespace qi {
 
     _signature = new char[size];
     _end = _signature + size;
-    _valid = split(signature, signature + size);
+    _valid = split(signature, signature + len);
   }
 
 
@@ -119,13 +119,16 @@ namespace qi {
           _find_end(&current, &signature, sig_end, '[', ']');
           break;
         case qi::Signature::Map:
-          _find_end(&current, &signature, sig_end, '[', ']');
+          _find_end(&current, &signature, sig_end, '{', '}');
+          break;
+        case qi::Signature::Tuple:
+          _find_end(&current, &signature, sig_end, '(', ')');
           break;
         default:
           return false;
       }
 
-      if (*signature == '*') {
+      while (*signature == '*') {
         *current = *signature;
         current++;
         signature++;
@@ -215,6 +218,7 @@ namespace qi {
     switch (*_current) {
       case '[':
       case '{':
+      case '(':
       case '@':
         return true;
       default:
@@ -222,7 +226,8 @@ namespace qi {
     };
   }
 
-  bool Signature::iterator::isPointer() const {
+  int Signature::iterator::pointer() const {
+    int count = 0;
     if (!_current)
       return false;
 
@@ -232,7 +237,13 @@ namespace qi {
       prev = next;
       next++;
     }
-    return *prev == '*';
+    while (*prev == '*') {
+      count++;
+      prev--;
+      if (prev < _current)
+        break;
+    }
+    return count;
   }
 
   Signature Signature::iterator::children() const {
@@ -246,25 +257,27 @@ namespace qi {
 
     size = strlen(fullSignature);
 
-    while (toremove < size) {
+    if (size < 2)
+      return sig;
+    while (toremove <= (size - 2)) {
       if (fullSignature[size - 1 - toremove] != '*')
         break;
       toremove++;
     }
-    sig._p->init(fullSignature + 1, size - toremove - 1);
+    sig._p->init(fullSignature + 1, size - toremove - 2);
     return sig;
   }
 
+  std::string Signature::toSTLSignature(bool constify) {
+    SignatureConvertor sc(this, SignatureConvertor::STL, constify);
+    return sc.signature();
+  }
 
-  //  std::string Signature::toSTL() {
-//    //PrettyPrintSignatureVisitor ppsv(_signature, PrettyPrintSignatureVisitor::STL);
-//    //return ppsv.fullSignature();
-//  }
+  std::string Signature::toQtSignature(bool constify) {
+    SignatureConvertor sc(this, SignatureConvertor::Qt, constify);
+    return sc.signature();
+  }
 
-//  std::string Signature::toQT() {
-//    //PrettyPrintSignatureVisitor ppsv(_signature, PrettyPrintSignatureVisitor::Qt);
-//    //return ppsv.fullSignature();
-//  }
 
 }
 

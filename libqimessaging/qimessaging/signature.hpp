@@ -109,11 +109,6 @@ namespace qi {
     ::qi::Signature::iterator begin() const;
     ::qi::Signature::iterator end() const;
 
-    enum SignatureError {
-      ErrorNone,
-      ErrorBadSignature = 1
-    };
-
     //TODO use the type than "network type"
     enum Type {
       None     = 0,
@@ -126,6 +121,7 @@ namespace qi {
       String   = 's',
       List     = '[',
       Map      = '{',
+      Tuple    = '(',
       Object   = '@'
     };
 
@@ -143,7 +139,7 @@ namespace qi {
       Type        type()const;
       std::string signature()const;
       bool        isValid()const;
-      bool        isPointer()const;
+      int         pointer()const;
 
       bool        hasChildren()const;
       Signature   children()const;
@@ -153,9 +149,13 @@ namespace qi {
       const char *_end;
     };
 
+    std::string toSTLSignature(bool constify = false);
+    std::string toQtSignature(bool constify = false);
+
   protected:
     boost::shared_ptr<SignaturePrivate> _p;
   };
+
 
 }
 
