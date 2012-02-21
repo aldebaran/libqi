@@ -14,7 +14,7 @@
 
 #include <qi/log.hpp>
 
-#include <qimessaging/transport/network_thread.hpp>
+#include "src/transport/network_thread.hpp"
 
 namespace qi {
 

@@ -14,9 +14,9 @@
 #include <qimessaging/api.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <qimessaging/signature/detail/type_signature.hpp>
-#include <qimessaging/signature/detail/function_signature.hpp>
-#include <qimessaging/signature/detail/stl_signature.hpp>
+#include <qimessaging/details/type_signature.hpp>
+#include <qimessaging/details/function_signature.hpp>
+#include <qimessaging/details/stl_signature.hpp>
 
 //#include <boost/preprocessor/seq/for_each.hpp>
 //#include <boost/preprocessor/tuple/elem.hpp>

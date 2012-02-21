@@ -13,7 +13,8 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/transport/url.hpp>
+#include "src/transport/url.hpp"
+#include "src/transport/network_thread.hpp"
 #include <qi/os.hpp>
 
 

@@ -9,8 +9,8 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/server.hpp>
 #include <qimessaging/transport/transport_server.hpp>
-#include <qimessaging/transport/network_thread.hpp>
-#include <qimessaging/transport/url.hpp>
+#include "src/transport/url.hpp"
+#include "src/transport/network_thread.hpp"
 
 namespace qi {
 

@@ -10,8 +10,9 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport.hpp>
 #include <qimessaging/object.hpp>
-#include <qimessaging/transport/url.hpp>
+#include "src/transport/url.hpp"
 #include "src/remoteobject_p.hpp"
+#include "src/transport/network_thread.hpp"
 
 static int uniqueRequestId = 0;
 

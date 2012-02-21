@@ -11,9 +11,6 @@
 #ifndef _QIMESSAGING_TRANSPORT_HPP_
 #define _QIMESSAGING_TRANSPORT_HPP_
 
-// context that could be shared between nodes
-#include <qimessaging/transport/network_thread.hpp>
-
 // base services
 #include <qimessaging/transport/transport_server.hpp>
 #include <qimessaging/transport/transport_socket.hpp>

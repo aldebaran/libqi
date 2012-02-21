@@ -91,14 +91,11 @@ qi_submodule_add("qi-messaging-src"
 
 qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
 
-qi_submodule_create("qi-signature"       "qimessaging/signature.hpp" "qimessaging/signature/detail/*.h[px][px]"
+qi_submodule_create("qi-signature"       "qimessaging/signature.hpp" "qimessaging/details/*.h[px][px]"
                                          "src/signature/*.[hc][px][px]")
 
-qi_submodule_create("qi-serialization"   "qimessaging/serialization/*.h[px][px]"
-                                         "src/serialization/*.[hc][px][px]")
-
 qi_create_lib(qimessaging SRC ${CONFIG_H}
-                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-serialization qi-messaging-transport qi-preference
+                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-messaging-transport qi-preference
                  #qi-cbinding
                  DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
 if(WIN32)

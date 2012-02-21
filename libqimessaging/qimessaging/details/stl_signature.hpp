@@ -11,7 +11,7 @@
 #ifndef _QIMESSAGING_SIGNATURE_DETAIL_STL_SIGNATURE_HPP_
 #define _QIMESSAGING_SIGNATURE_DETAIL_STL_SIGNATURE_HPP_
 
-# include <qimessaging/signature/detail/type_signature.hpp>
+# include <qimessaging/details/type_signature.hpp>
 # include <string>
 # include <list>
 # include <vector>

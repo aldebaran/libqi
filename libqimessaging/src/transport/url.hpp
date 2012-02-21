@@ -11,6 +11,7 @@
 #define _QIMESSAGING_TRANSPORT_URL_HPP_
 
 #include <string>
+#include <sstream>
 
 namespace qi {
   class Url

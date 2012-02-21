@@ -24,7 +24,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <qimessaging/transport/transport_socket.hpp>
-#include <qimessaging/transport/network_thread.hpp>
+#include "src/transport/network_thread.hpp"
 
 #define MAX_LINE 16384
 
