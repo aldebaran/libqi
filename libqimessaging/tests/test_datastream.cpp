@@ -172,7 +172,7 @@ TEST(TestBind, serializeUChars)
   qi::DataStream  d(buf);
   unsigned char ui1 = UCHAR_MAX;
   unsigned char ui2 = 0;
-  unsigned char ui3 = 456789;
+  unsigned char ui3 = 45;
   d << ui1;
   d << ui2;
   d << ui3;
