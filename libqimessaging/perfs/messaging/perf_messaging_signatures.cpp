@@ -4,7 +4,6 @@
 #include <vector>
 #include <boost/timer.hpp>
 #include <qi/messaging.hpp>
-#include <qimessaging/exceptions.hpp>
 #include "alvalue.pb.h"
 
 using namespace qi;

@@ -8,7 +8,6 @@
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/exceptions.hpp>
 #include <vector>
 #include <cstring>
 
