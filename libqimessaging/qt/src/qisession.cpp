@@ -54,9 +54,10 @@ QObject *QiSession::service(const QString &name, const QString &type)
     return 0;
   qi::Message msg;
   msg.setType(qi::Message::Call);
-  msg.setService(name.toUtf8().constData());
-  msg.setFunction("__metaobject");
-  //msg.setData(in.str());
+  msg.setPath(qi::Message::ServiceDirectory);
+  qi::DataStream dout(msg.buffer());
+  dout << "__metaobject";
+  dout << name.toUtf8().constData();
 
   ts->send(msg);
   ts->waitForId(msg.id());
@@ -66,18 +67,14 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
   qi::MetaObject mo;
 
-  qi::DataStream ds(ret.data());
+  qi::DataStream ds(ret.buffer());
 
   ds >> mo;
-
-  //std::cout << mo << std::endl;
-  //out.str(ret.data());
-
-
 
   QiRemoteObject      *robj = new QiRemoteObject(ts, name.toUtf8().constData(), &mo);
 
   return static_cast<QObject *>(robj);
+
 }
 
 QVector<QString> QiSession::services()

@@ -32,17 +32,17 @@
 #endif
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                    \
-  DataStream& DataStream::operator>>(Type &b)               \
+  DataStream& DataStream::operator>>(Type &b)              \
   {                                                        \
-    b = *((Type *) (_data.data() + _index));               \
+    b = *((Type *) ((char *)_data + _index));              \
     _index += sizeof(Type);                                \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
     return *this;                                          \
   }                                                        \
                                                            \
-  DataStream& DataStream::operator<<(Type b)        \
+  DataStream& DataStream::operator<<(Type b)               \
   {                                                        \
-    _data.append((char *)&b, sizeof(b));                   \
+    _buffer->write((Type *)&b, sizeof(b));                 \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
     return *this;                                          \
   }
@@ -53,6 +53,8 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(bool);
   QI_SIMPLE_SERIALIZER_IMPL(char);
   QI_SIMPLE_SERIALIZER_IMPL(int);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned char);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned int);
   QI_SIMPLE_SERIALIZER_IMPL(float);
   QI_SIMPLE_SERIALIZER_IMPL(double);
 
@@ -62,14 +64,15 @@ namespace qi {
     int sz;
     *this >> sz;
     len = sz;
-    return _data.data() + _index;
+    return (char*)_data + _index;
   }
 
   void DataStream::writeString(const char *str, size_t len)
   {
     *this << (int)len;
-    if (len) {
-      _data.append(str, len);
+    if (len)
+    {
+      _buffer->write(str, len)
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
     }
   }
@@ -81,7 +84,7 @@ namespace qi {
     *this >> sz;
     s.clear();
     if (sz) {
-      s.append(_data.data() + _index, sz);
+      s.append((char*)_data + _index, sz);
       _index += sz;
       __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
     }
@@ -93,7 +96,7 @@ namespace qi {
   {
     *this << (int)s.size();
     if (!s.empty()) {
-      _data.append(s.data(), s.size());
+      _buffer->write(s.data(), s.size());
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
     }
 

@@ -3,6 +3,7 @@
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
+*  - Laurent Lec   <llec@aldebaran-robotics.com>
 *
 *  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
@@ -13,6 +14,8 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
+#include <stdint.h>
+#include <qimessaging/buffer.hpp>
 
 namespace qi {
 
@@ -22,7 +25,31 @@ namespace qi {
   class QIMESSAGING_API Message {
   public:
 
-    enum MessageType {
+    typedef struct
+    {
+      uint32_t size;
+      uint32_t id;
+      uint32_t type;
+      uint32_t service;
+      uint32_t path;
+      uint32_t function;
+      uint64_t reserved;
+    } MessageHeader;
+
+    enum MessageServices
+    {
+      ServiceDirectory = 1,
+    };
+
+    enum MessagePathes
+    {
+      Service         = 1,
+      Services        = 2,
+      RegisterService = 3,
+    };
+
+    enum MessageType
+    {
       None   = 0,
       Call   = 1,
       Reply  = 2,
@@ -31,44 +58,36 @@ namespace qi {
     };
 
     Message();
-    Message(const std::string &data);
+    Message(qi::Buffer *buf);
 
-    std::string str()const;
+    ~Message();
 
-    /// <summary>Gets the string.</summary>
-    /// <param name="str">The result string.</param>
-    void str(const std::string &str) {
-      _data = str;
-    }
+    size_t size() const;
+    void setId(unsigned int id);
+    unsigned int id() const;
+    void setType(uint32_t type);
+    unsigned int type() const;
+    void setService(uint32_t service);
+    unsigned int service() const;
+    void setPath(uint32_t path);
+    unsigned int path() const;
+    void setFunction(uint32_t function);
+    unsigned int function() const;
+    qi::Buffer* buffer();
 
-    inline void setType(MessageType type) { _type = type; }
-    inline MessageType type()  const      { return _type; }
+    bool complete();
+    void buildReplyFrom(const Message &call);
 
-    inline void setId(unsigned int id)    { _id = id; }
-    inline unsigned int id() const        { return _id; }
-
-    inline void setService(const std::string &service) { _service = service; }
-    inline std::string service() const                 { return _service; }
-
-    inline void setFunction(const std::string &func) { _func = func; }
-    inline std::string function() const              { return _func; }
-
-    inline void setData(const std::string &data) { _data = data; }
-    inline std::string data() const              { return _data; }
-
+  public:
+    MessageHeader *_header;
 
   protected:
-    MessageType  _type;
-    unsigned int _id;
-    std::string  _service;
-    std::string  _dest;
-    std::string  _func;
-    std::string  _data;
+    qi::Buffer    *_buffer;
+    bool           _withBuffer;
   };
-
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
-}
 
+}
 
 
 #endif  // _QIMESSAGING_SERIALIZATION_MESSAGE_HPP_

@@ -27,7 +27,6 @@
 # define   	NETWORK_CLIENT_HPP_
 
 #include <qimessaging/transport/transport_socket.hpp>
-#include <qimessaging/datastream.hpp>
 
 #include <vector>
 #include <string>
@@ -45,7 +44,7 @@ namespace qi {
     void onConnected(TransportSocket *client);
     void onDisconnected(TransportSocket *client);
     void onWriteDone(TransportSocket *client);
-    void onReadyRead(TransportSocket *client, const qi::Message &msg);
+    void onReadyRead(TransportSocket *client, qi::Message &msg);
 
 
     void connect(const std::string &masterAddress);
@@ -59,7 +58,7 @@ namespace qi {
     qi::TransportSocket* serviceSocket(const std::string &name,
                                        const std::string &type = "tcp");
 
-    qi::Object* service(const std::string &name,
+    qi::Object* service(const std::string &service,
                         const std::string &type = "tcp");
 
     qi::TransportSocket *tc;

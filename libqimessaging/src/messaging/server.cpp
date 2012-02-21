@@ -24,20 +24,18 @@ namespace qi {
       socket->setDelegate(this);
     };
 
-    virtual void onReadyRead(TransportSocket *client, const qi::Message &msg) {
+    virtual void onReadyRead(TransportSocket *client, qi::Message &msg) {
       qi::Object *obj;
 
       obj = _services[msg.service()];
-      qi::DataStream ds(msg.data());
-      qi::DataStream rs;
-
-      obj->metaCall(msg.function(), "", ds, rs);
+      qi::DataStream ds(msg.buffer());
 
       qi::Message retval;
-      retval.setType(qi::Message::Reply);
-      retval.setId(msg.id());
-      retval.setService(msg.service());
-      retval.setData(rs.str());
+      retval.buildReplyFrom(msg);
+      qi::DataStream rs(retval.buffer());
+
+      obj->metaCall("f", "", ds, rs);
+
       client->send(retval);
     };
 
@@ -54,7 +52,7 @@ namespace qi {
     }
 
   public:
-    std::map<std::string, qi::Object*> _services;
+    std::map<unsigned int, qi::Object*>_services;
     TransportServer                    _ts;
     std::string                        _url;
     qi::Session                       *_session;
@@ -82,18 +80,20 @@ namespace qi {
   }
 
 
-  void Server::registerService(const std::string &name, qi::Object *obj) {
-    _p->_services[name] = obj;
+  void Server::registerService(const std::string& name, qi::Object *obj) {
+//    _p->_services[service] = obj;
 
     qi::Message msg;
     msg.setType(qi::Message::Call);
-    msg.setService("qi.master");
-    msg.setFunction("registerService");
+    msg.setService(qi::Message::ServiceDirectory);
+    msg.setPath(0);
+    msg.setFunction(qi::Message::RegisterService);
 
-    qi::DataStream d;
+    qi::DataStream d(msg.buffer());
+    std::vector<std::string> endpoints;
+    endpoints.push_back(_p->_url);
     d << name;
-    d << _p->_url;
-    msg.setData(d.str());
+    d << endpoints;
 
     _p->_session->tc->send(msg);
     _p->_session->tc->waitForId(msg.id());

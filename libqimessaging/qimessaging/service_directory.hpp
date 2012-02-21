@@ -12,9 +12,9 @@
 #include <vector>
 #include <map>
 
+#include <qimessaging/object.hpp>
 #include <qimessaging/transport.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/datastream.hpp>
 
 namespace qi
 {

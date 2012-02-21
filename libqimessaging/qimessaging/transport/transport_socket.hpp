@@ -43,7 +43,7 @@ public:
   virtual void onConnected(TransportSocket *client)    = 0;
   virtual void onDisconnected(TransportSocket *client) = 0;
   virtual void onWriteDone(TransportSocket *client)        = 0;
-  virtual void onReadyRead(TransportSocket *client, const qi::Message &msg)         = 0;
+  virtual void onReadyRead(TransportSocket *client, qi::Message &msg)         = 0;
 };
 
 struct TransportSocketPrivate;
@@ -69,7 +69,7 @@ public:
 
   void read(int id, qi::Message *msg);
 
-  bool send(const qi::Message &msg);
+  bool send(qi::Message &msg);
 
   void setDelegate(TransportSocketInterface *delegate);
 

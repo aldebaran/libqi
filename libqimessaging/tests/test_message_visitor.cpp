@@ -36,7 +36,8 @@ typedef std::map<std::string, StringVect> StringVectMap;
 
 TEST(TestMessageVisitor, Basic)
 {
-  qi::DataStream msg;
+  qi::Buffer     buf;
+  qi::DataStream msg(&buf);
   int           i = 0;
   std::string   s = "paf";
   StringVectMap m;
@@ -61,8 +62,10 @@ TEST(TestMessageVisitor, Basic)
 
 TEST(TestMessageCopyVisitor, Basic)
 {
-  qi::DataStream msg1;
-  qi::DataStream msg2;
+  qi::Buffer     buf1;
+  qi::Buffer     buf2;
+  qi::DataStream msg1(&buf1);
+  qi::DataStream msg2(&buf2);
 
   int           i = 42;
   std::string   s = "paf";

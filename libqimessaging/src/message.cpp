@@ -9,6 +9,7 @@
 #include <qimessaging/datastream.hpp>
 #include <iostream>
 #include <boost/atomic.hpp>
+#include <qi/log.hpp>
 
 namespace qi {
 
@@ -19,48 +20,123 @@ namespace qi {
     return id;
   }
 
+  Message::Message()
+  {
+    _header = new qi::Message::MessageHeader();
+    _header->id = newMessageId();
+    _buffer = new qi::Buffer();
+    _withBuffer = false;
+    memset(_header, 0, sizeof(MessageHeader));
+  }
+
+  Message::Message(qi::Buffer *buf)
+  {
+    _header = new qi::Message::MessageHeader();
+    _header->id = newMessageId();
+    _buffer = buf;
+    _withBuffer = true;
+    memset(_header, 0, sizeof(MessageHeader));
+  }
+
+  Message::~Message()
+  {
+    if (!_withBuffer)
+      delete _buffer;
+  }
+
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
     os << "message {"
-       << "id=" << msg.id()
-       << ", type=" << (char)msg.type() + '0'
-       << ", dest=" << msg.service()
+       << "size=" << msg.size()
+       << ", id=" << msg.id()
+       << ", type=" << msg.type()
+       << ", serv=" << msg.service()
+       << ", path=" << msg.path()
        << ", func=" << msg.function()
-       << ", data_size=" << msg.data().size()
        << "}";
     return os;
   }
 
-  Message::Message()
-    : _id(newMessageId())
+  size_t Message::size() const
   {
+    return _buffer->size();
   }
 
-
-  Message::Message(const std::string &data)
-    : _id(newMessageId())
+  void Message::setId(uint32_t id)
   {
-    qi::DataStream ds(data);
-    char c;
-    int  i;
-
-    ds >> c;
-    _type = (MessageType)c;
-    ds >> i;
-    _id = i;
-    ds >> _service;
-    ds >> _func;
-    ds >> _data;
+    _header->id = id;
   }
 
-  std::string Message::str()const {
-    qi::DataStream ds;
-
-    ds << (char)_type;
-    ds << (int)_id;
-    ds << _service;
-    ds << _func;
-    ds << _data;
-    return ds.str();
+  unsigned int Message::id() const
+  {
+    return _header->id;
   }
 
+  void Message::setType(uint32_t type)
+  {
+    _header->type = type;
+  }
+
+  unsigned int Message::type() const
+  {
+    return _header->type;
+  }
+
+  void Message::setService(uint32_t service)
+  {
+    _header->service = service;
+  }
+
+  unsigned int Message::service() const
+  {
+    return _header->service;
+  }
+
+  void Message::setPath(uint32_t path)
+  {
+    _header->path = path;
+  }
+
+  unsigned int Message::path() const
+  {
+    return _header->path;
+  }
+
+  void Message::setFunction(uint32_t function)
+  {
+    _header->function = function;
+  }
+
+  unsigned int Message::function() const
+  {
+    return _header->function;
+  }
+
+  qi::Buffer *Message::buffer()
+  {
+    return _buffer;
+  }
+
+  // write header into msg before send.
+  bool Message::complete()
+  {
+    if (type() == qi::Message::None)
+    {
+      qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
+      return false;
+    }
+
+    _header->size = _buffer->size();
+    _buffer->prepend(_header, sizeof(MessageHeader));
+
+    return true;
+  }
+
+  void Message::buildReplyFrom(const Message &call)
+  {
+    setId(call.id());
+    setType(qi::Message::Reply);
+    setService(call.service());
+    setPath(call.path());
+    setFunction(call.function());
+  }
 }

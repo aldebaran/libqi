@@ -24,26 +24,26 @@ class GatewayPrivate : public TransportServerInterface, public TransportSocketIn
 public:
 
   typedef std::vector< std::pair<qi::Message, TransportSocket *> > PendingMessageVector;
-  typedef std::map< std::string, PendingMessageVector>             PendingMessageMap;
+  typedef std::map<unsigned int, PendingMessageVector>             PendingMessageMap;
 
   typedef std::map< int, std::pair<int, TransportSocket *> >       RequestIdMap;
   typedef std::map<TransportSocket *, RequestIdMap>                ServiceRequestIdMap;
 
-  typedef std::map<std::string, qi::TransportSocket *>             ServiceSocketMap;
+  typedef std::map<unsigned int, qi::TransportSocket *>            ServiceSocketMap;
 
 protected:
 
-  void handleClientRead(TransportSocket *client, const qi::Message &msg);
-  void handleGatewayServiceRead(TransportSocket *master, const qi::Message &msg);
-  void handleServiceRead(TransportSocket *service, const qi::Message &msg);
+  void handleClientRead(TransportSocket *client, qi::Message &msg);
+  void handleGatewayServiceRead(TransportSocket *master, qi::Message &msg);
+  void handleServiceRead(TransportSocket *service, qi::Message &msg);
   void forwardClientMessage(TransportSocket *client,
                             TransportSocket *service,
-                            const qi::Message &msg);
+                            qi::Message &msg);
   //ServerInterface
   virtual void newConnection();
 
   //SocketInterface
-  virtual void onReadyRead(TransportSocket *client, const qi::Message &msg);
+  virtual void onReadyRead(TransportSocket *client, qi::Message &msg);
   virtual void onWriteDone(TransportSocket *client);
   virtual void onConnected(TransportSocket *client);
   virtual void onDisconnected(TransportSocket *client);
@@ -52,7 +52,7 @@ protected:
 public:
   ServiceSocketMap                             _services;
   std::vector<qi::TransportSocket *>           _clients;
-  std::vector<std::string>                     _endpoints;
+  std::vector<unsigned int>                    _endpoints;
   TransportServer                              _ts;
   TransportSocket                             *_tso;
   qi::Session                                 *_session;
@@ -71,7 +71,7 @@ void GatewayPrivate::newConnection()
   _clients.push_back(socket);
 }
 
-void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSocket *service, const qi::Message &msg)
+void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSocket *service, qi::Message &msg)
 {
   qi::Message   servMsg(msg);
   RequestIdMap &reqIdMap = _serviceToClient[service];
@@ -85,31 +85,27 @@ void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSock
 // C.1/ new client which ask master for a service        => return gateway endpoint, enter C.2 or C.3
 // C.2/ new message from client to unknown destination   => ask master, enter S.1
 // C.3/ new message from client to know services         => forward, enter S.3
-void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message &msg)
+void GatewayPrivate::handleClientRead(TransportSocket *client, qi::Message &msg)
 {
   // C.1/ We are the Master!
   // unique case: service always return gateway endpoint
-  if (msg.service() == "qi.master" && msg.function() == "service")
+  if (msg.service() == qi::Message::ServiceDirectory && msg.function() == qi::Message::Service)
   {
     qi::Message retval;
-    qi::DataStream d;
-    std::vector<std::string> tmpEndPoint;
+    retval.buildReplyFrom(msg);
+    qi::DataStream d(retval.buffer());
+    std::vector<unsigned int> tmpEndPoint;
     tmpEndPoint.push_back(msg.service());
     for (unsigned int i = 0; i < _endpoints.size(); ++i)
       tmpEndPoint.push_back(_endpoints[i]);
 
     d << tmpEndPoint;
 
-    retval.setType(qi::Message::Reply);
-    retval.setId(msg.id());
-    retval.setService(msg.service());
-    retval.setFunction(msg.function());
-    retval.setData(d.str());
     client->send(retval);
     return;
   }
 
-  std::map<std::string, qi::TransportSocket*>::iterator it;
+  std::map<unsigned int, qi::TransportSocket*>::iterator it;
   it = _services.find(msg.service());
 
   //// C.3/
@@ -122,16 +118,15 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
   {
     //request to gateway to have the endpoint
     qi::Message masterMsg;
-    qi::DataStream d;
+    qi::DataStream d(masterMsg.buffer());
     d << msg.service();
 
     //associate the transportSoket client = 0
     //this will allow S.1 to be handle correctly
     masterMsg.setType(qi::Message::Call);
-    masterMsg.setService("qi.master");
-    masterMsg.setFunction("service");
-    masterMsg.setData(d.str());
-
+    masterMsg.setService(qi::Message::ServiceDirectory);
+    masterMsg.setPath(0);
+    masterMsg.setFunction(qi::Message::Service);
 
     RequestIdMap &reqIdMap = _serviceToClient[_tso];
     reqIdMap[masterMsg.id()] = std::make_pair(0, (qi::TransportSocket*)NULL);
@@ -158,7 +153,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client, const qi::Message
 
 //Only be master request
 //S1 answer from master for us
-void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi::Message &msg)
+void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, qi::Message &msg)
 {
   ServiceRequestIdMap::iterator it;
   // get the map of request => client
@@ -170,7 +165,7 @@ void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi:
 
 
   std::vector<std::string>      result;
-  qi::DataStream                d(msg.data());
+  qi::DataStream                d(msg.buffer());
 
   d >> result;
 
@@ -183,7 +178,8 @@ void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi:
   servSocket->connect(url.host(), url.port(), _session->_nthd->getEventBase());
 
   //TODO: serviceName = endpointIt.name();
-  std::string serviceName = result[0];
+  //unsigned int serviceName = result[0];
+  unsigned int serviceName = 0;
   _services[serviceName] = servSocket;
   //   go to S.2
 }
@@ -192,7 +188,7 @@ void GatewayPrivate::handleGatewayServiceRead(TransportSocket *master, const qi:
 //From Service
 // S.1/ new message from master from us                  => create new service, enter S.2
 // S.3/ new message from service                         => forward, (end)
-void GatewayPrivate::handleServiceRead(TransportSocket *service, const qi::Message &msg)
+void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message &msg)
 {
   // get the map of request => client
   ServiceRequestIdMap::iterator it;
@@ -223,7 +219,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, const qi::Messa
   }
 }
 
-void GatewayPrivate::onReadyRead(TransportSocket *client, const qi::Message &msg)
+void GatewayPrivate::onReadyRead(TransportSocket *client, qi::Message &msg)
 {
   if (std::find(_clients.begin(), _clients.end(), client) != _clients.end())
   {
@@ -247,7 +243,7 @@ void GatewayPrivate::onConnected(TransportSocket *service)
   if (service == _tso)
     return;
 
-  std::string serviceName;
+  unsigned int serviceId;
   ServiceSocketMap::const_iterator it;
 
   //TODO: optimise?  O(log(n)) instead O(n)
@@ -255,19 +251,19 @@ void GatewayPrivate::onConnected(TransportSocket *service)
   {
     if ((TransportSocket *)it->second == service)
     {
-      serviceName = it->first;
+      serviceId = it->first;
       break;
     }
   }
 
-  if (serviceName.empty())
+  if (it == _services.end())
   {
     qiLogError("Gateway", "fail baby\n");
     return;
   }
 
   //handle pending message
-  PendingMessageVector &pmv = _pendingMessage[serviceName];
+  PendingMessageVector &pmv = _pendingMessage[serviceId];
   PendingMessageVector::iterator itPending;
 
   for (itPending = pmv.begin(); itPending != pmv.end(); ++itPending)
@@ -300,8 +296,8 @@ void Gateway::listen(qi::Session *session, const std::string &addr)
   _p->_tso->setDelegate(_p);
   _p->_tso->connect("127.0.0.1", 5555, _p->_session->_nthd->getEventBase());
   _p->_tso->waitForConnected();
-  _p->_services["qi.master"] = _p->_tso;
-  _p->_endpoints.push_back(addr);
+  _p->_services[qi::Message::ServiceDirectory] = _p->_tso;
+  _p->_endpoints.push_back(0);
   _p->_ts.setDelegate(_p);
   _p->_ts.start(url.host(), url.port(), session->_nthd->getEventBase());
 }

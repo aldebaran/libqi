@@ -18,6 +18,8 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
 
+#include <qimessaging/buffer.hpp>
+
 namespace qi {
 
 #if 0
@@ -62,17 +64,17 @@ namespace qi {
   class QIMESSAGING_API DataStream {
   public:
 
-    /// <summary>Default constructor. </summary>
-    DataStream()
-      : _index(0)
-    {}
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    DataStream(const std::string &data)
-      : _data(data),
-      _index(0)
-      {}
+    explicit DataStream(qi::Buffer *buffer)
+      : _buffer(buffer)
+      , _index(0)
+    {
+      // may be a copy if linearize needed
+      // need to add header size
+      _data = buffer->read(buffer->size());
+    }
 
     const char *readString(size_t &len);
     void writeString(const char *str, size_t len);
@@ -80,6 +82,8 @@ namespace qi {
     DataStream& operator<<(bool   i);
     DataStream& operator<<(char   i);
     DataStream& operator<<(int    i);
+    DataStream& operator<<(unsigned char   i);
+    DataStream& operator<<(unsigned int    i);
     DataStream& operator<<(float  i);
     DataStream& operator<<(double i);
     DataStream& operator<<(const char *);
@@ -88,27 +92,28 @@ namespace qi {
     DataStream& operator>>(bool   &i);
     DataStream& operator>>(char   &i);
     DataStream& operator>>(int    &i);
+    DataStream& operator>>(unsigned char   &i);
+    DataStream& operator>>(unsigned int    &i);
     DataStream& operator>>(float  &i);
     DataStream& operator>>(double &i);
     DataStream& operator>>(std::string& i);
 
     /// <summary>Gets the string. </summary>
     /// <returns> The string representation of the serialized message</returns>
-    std::string str()const {
-      return _data;
-    }
+    void *data() { return _buffer->data(); }
 
-    /// <summary>Gets the string.</summary>
-    /// <param name="str">The result string.</param>
-    void str(const std::string &str) {
-      _data = str;
-      _index = 0;
-    }
+  private:
+    /// <summary>Default constructor. </summary>
+    DataStream()
+      : _index(0)
+      , _data(NULL)
+    {}
 
   protected:
     /// <summary> The underlying data </summary>
-    std::string _data;
+    qi::Buffer *_buffer;
     long        _index;
+    void       *_data;
   };
 
 

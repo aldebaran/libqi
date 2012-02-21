@@ -30,7 +30,6 @@ void call(const std::string &addr)
   for (unsigned int i = 0; i < servs.size(); ++i)
     std::cout << "service named " << servs[i] << std::endl;
 
-
   qi::Object *obj = session.service("serviceTest");
 
   if (obj == 0)

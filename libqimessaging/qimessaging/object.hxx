@@ -13,6 +13,8 @@
 #ifndef _QI_MESSAGING_OBJECT_HXX_
 #define _QI_MESSAGING_OBJECT_HXX_
 
+#include <qimessaging/buffer.hpp>
+
 namespace qi {
 
 
@@ -20,8 +22,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R>
   R Object::call(const std::string& method) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)()  = 0;
     std::string signature(method);
@@ -39,8 +43,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0>
   void Object::callVoid(const std::string& method, const P0 &p0) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0)  = 0;
     std::string signature(method);
@@ -54,8 +60,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0>
   R Object::call(const std::string& method, const P0 &p0) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0)  = 0;
     std::string signature(method);
@@ -74,8 +82,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature(method);
@@ -90,8 +100,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature(method);
@@ -111,8 +123,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature(method);
@@ -128,8 +142,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature(method);
@@ -150,8 +166,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature(method);
@@ -168,8 +186,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature(method);
@@ -191,8 +211,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature(method);
@@ -210,8 +232,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature(method);
@@ -234,8 +258,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature(method);
@@ -254,8 +280,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature(method);
@@ -279,8 +307,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature(method);
@@ -300,8 +330,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature(method);
@@ -326,8 +358,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature(method);
@@ -348,8 +382,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature(method);
@@ -375,8 +411,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   void Object::callVoid(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature(method);
@@ -398,8 +436,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   R Object::call(const std::string& method, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature(method);

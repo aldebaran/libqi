@@ -24,7 +24,6 @@ typedef struct
 qi_message_t *qi_message_create()
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(malloc(sizeof(qi_message_data_t)));
-  m->ds = new qi::DataStream();
   m->msg = new qi::Message();
 
   return reinterpret_cast<qi_message_t*>(m);
@@ -97,26 +96,21 @@ unsigned int qi_message_get_id(qi_message_t *msg)
   return m->msg->id();
 }
 
-void qi_message_set_service(qi_message_t *msg, char *dst)
+void qi_message_set_service(qi_message_t *msg, unsigned int service)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  m->msg->setService(dst);
+  m->msg->setService(service);
 }
 
-char *qi_message_get_service(qi_message_t *msg)
+unsigned int qi_message_get_service(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  std::string r = m->msg->service();
-
-#ifdef _WIN32
-  return _strdup(r.c_str());
-#else
-  return strdup(r.c_str());
-#endif
+  return m->msg->service();
 }
 
-void qi_message_set_function(qi_message_t *msg, char *func)
+/*
+void qi_message_set_path(qi_message_t *msg, char *func)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
@@ -138,21 +132,21 @@ char *qi_message_get_function(qi_message_t *msg)
 void qi_message_set_data(qi_message_t *msg, char *data)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-
-  m->msg->setData(data);
 }
 
 char *qi_message_get_data(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  std::string r = m->msg->data();
-
+  std::string r;
 #ifdef _WIN32
   return _strdup(r.c_str());
 #else
   return strdup(r.c_str());
 #endif
 }
+
+*/
+
 
 void qi_message_write_bool(qi_message_t *msg, char b)
 {

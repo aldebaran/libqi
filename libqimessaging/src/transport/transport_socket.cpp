@@ -25,6 +25,7 @@
 
 #include <qimessaging/transport/transport_socket.hpp>
 #include "src/transport/network_thread.hpp"
+#include <qimessaging/message.hpp>
 
 #define MAX_LINE 16384
 
@@ -90,21 +91,23 @@ static void eventcb(struct bufferevent *bev,
 void TransportSocket::readcb(struct bufferevent *bev,
                              void *context)
 {
-  char   buf[1024];
-  size_t n;
+  // FIXME for multiple message & optimization
+  qi::Buffer      *buf = new qi::Buffer();
+  qi::Message     *msg = new qi::Message(buf);
   struct evbuffer *input = bufferevent_get_input(bev);
+  struct evbuffer *tmp = evbuffer_new();
 
-  std::string msgRecv;
-  while ((n = evbuffer_remove(input, buf, sizeof(buf))) > 0)
-  {
-    msgRecv.append(buf, n);
-  }
+  // get the header
+  evbuffer_remove(input, msg->_header, sizeof(qi::Message::MessageHeader));
+  // get the data
+  evbuffer_remove_buffer(input, tmp, msg->_header->size);
+  // set the data
+  buf->setData(reinterpret_cast<void*>(tmp));
 
   boost::mutex::scoped_lock l(_p->mtx);
   {
-    qi::Message *ans = new qi::Message(msgRecv);
-    _p->msgSend[ans->id()] = ans;
-    _p->tcd->onReadyRead(this, *ans);
+    _p->msgSend[msg->id()] = msg;
+    _p->tcd->onReadyRead(this, *msg);
     _p->cond.notify_all();
   }
 }
@@ -286,18 +289,16 @@ void TransportSocket::read(int id, qi::Message *msg)
   }
 }
 
-bool TransportSocket::send(const qi::Message &msg)
+bool TransportSocket::send(qi::Message &msg)
 {
-  if (msg.type() == qi::Message::None)
-  {
-    qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
-    return false;
-  }
+  msg.complete();
 
-  if (_p->connected && !bufferevent_write(_p->bev, msg.str().c_str(), msg.str().size()))
+  struct evbuffer *output = bufferevent_get_output(_p->bev);
+  if (_p->connected && !evbuffer_add_buffer(output, reinterpret_cast<struct evbuffer*>(msg.buffer()->data())))
   {
     return true;
   }
+
   return false;
 }
 

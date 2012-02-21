@@ -19,6 +19,8 @@ def generate_argpush_list(count):
 #ifndef _QI_MESSAGING_OBJECT_HXX_
 #define _QI_MESSAGING_OBJECT_HXX_
 
+#include <qimessaging/buffer.hpp>
+
 namespace qi {
 #end raw
 #for $i in $count
@@ -28,8 +30,10 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <${generate_typename_list($i)}>
   void Object::callVoid(const std::string& method${generate_param_list($i, begin=True)}) {
-    qi::DataStream request;
-    qi::DataStream reply;
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
 
     void (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);
@@ -46,8 +50,10 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R${generate_typename_list($i, begin=True)}>
   R Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
-    qi::DataStream request;
-    qi::DataStream reply;
+  qi::Buffer    bufReq;
+  qi::Buffer    bufRep;
+  qi::DataStream request(&bufReq);
+  qi::DataStream reply(&bufRep);
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);

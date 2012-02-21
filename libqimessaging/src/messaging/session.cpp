@@ -67,8 +67,9 @@ std::vector<std::string> Session::services()
 
   qi::Message msg;
   msg.setType(qi::Message::Call);
-  msg.setService("qi.master");
-  msg.setFunction("services");
+  msg.setService(qi::Message::ServiceDirectory);
+  msg.setPath(0);
+  msg.setFunction(qi::Message::Services);
 
   tc->send(msg);
 
@@ -76,7 +77,7 @@ std::vector<std::string> Session::services()
   qi::Message ans;
   tc->read(msg.id(), &ans);
 
-  qi::DataStream d(ans.data());
+  qi::DataStream d(ans.buffer());
   d >> result;
 
   return result;
@@ -86,21 +87,20 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             const std::string &type)
 {
   std::vector<std::string> result;
-  qi::DataStream dr;
   qi::Message msg;
+  qi::DataStream dr(msg.buffer());
   dr << name;
   msg.setType(qi::Message::Call);
-  msg.setService("qi.master");
-  msg.setFunction("service");
-  msg.setData(dr.str());
-
+  msg.setService(qi::Message::ServiceDirectory);
+  msg.setPath(0);
+  msg.setFunction(qi::Message::Service);
   tc->send(msg);
 
   tc->waitForId(msg.id());
   qi::Message ans;
   tc->read(msg.id(), &ans);
 
-  qi::DataStream d(ans.data());
+  qi::DataStream d(ans.buffer());
   d >> result;
 
   qi::TransportSocket* ts = NULL;
@@ -116,18 +116,19 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 }
 
 
-qi::Object* Session::service(const std::string &name,
+qi::Object* Session::service(const std::string &service,
                              const std::string &type)
 {
   qi::Object          *obj;
-  qi::TransportSocket *ts = serviceSocket(name, type);
+  qi::TransportSocket *ts = serviceSocket(service, type);
+  unsigned int serviceId = 0;
 
   if (ts == 0)
   {
     return 0;
   }
 
-  qi::RemoteObject *robj = new qi::RemoteObject(ts, name);
+  qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId);
   obj = robj;
   return obj;
 }
@@ -142,7 +143,7 @@ void Session::onWriteDone(TransportSocket *client)
   //  std::cout << "written broker: " << std::endl;
 }
 
-void Session::onReadyRead(TransportSocket *client, const Message &msg)
+void Session::onReadyRead(TransportSocket *client, Message &msg)
 {
   //  std::cout << "read broker: " << std::endl;
 }

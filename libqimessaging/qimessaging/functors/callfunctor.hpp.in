@@ -20,6 +20,7 @@ def generate_argpush_list(count):
 #define _QI_FUNCTORS_CALLFUNCTOR_HPP_
 
 #include <qimessaging/functors/functor.hpp>
+#include <qimessaging/buffer.hpp>
 #end raw
 
 namespace qi
@@ -28,8 +29,10 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::DataStream args;
-    qi::DataStream ret;
+    qi::Buffer  argsBuf;
+    qi::Buffer  retBuf;
+    qi::DataStream args(&argsBuf);
+    qi::DataStream ret(&retBuf);
 
     #for $j in range($i)
     qi::serialization::serialize<P$j>::write(args, p$j);
@@ -44,8 +47,10 @@ namespace qi
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::DataStream args;
-    qi::DataStream ret;
+    qi::Buffer  argsBuf;
+    qi::Buffer  retBuf;
+    qi::DataStream args(&argsBuf);
+    qi::DataStream ret(&retBuf);
 
     #for $j in range($i)
     qi::serialization::serialize<P$j>::write(args, p$j);

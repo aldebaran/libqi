@@ -55,10 +55,10 @@ const QMetaObject* QiRemoteObject::metaObject() const {
 };
 
 int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void **a) {
-  qi::DataStream args;
-  qi::DataStream retv;
   qi::Message    msg;
   qi::Message    retmsg;
+  qi::DataStream args(msg.buffer());
+  qi::DataStream retv(retmsg.buffer());
 
   if (c != QMetaObject::InvokeMetaMethod)
     return id;
@@ -78,14 +78,14 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   methodname.truncate(methodname.indexOf('('));
 
   msg.setType(qi::Message::Call);
-  msg.setService(_p->dest);
-  msg.setFunction(methodname.toStdString());
-  msg.setData(args.str());
+//  msg.setService(_p->dest);
+//  msg.setFunction(methodname.toStdString());
+//  msg.setData(args.str());
   _p->socket->send(msg);
 
   _p->socket->waitForId(msg.id());
   _p->socket->read(msg.id(), &retmsg);
-  retv.str(retmsg.data());
+  //retv.str(retmsg.data());
   qi_MetaTypeLoad(retv, returnType, a[0]);
 
   return 0;

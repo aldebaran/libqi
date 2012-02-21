@@ -45,10 +45,7 @@ public:
     socket->setDelegate(this);
   }
 
-  virtual void onReadyRead(qi::TransportSocket *client, const qi::Message &msg)
-  {
-//    qi::DataStream ds(msg.data());
-//    qi::DataStream rs;
+  virtual void onReadyRead(qi::TransportSocket *client, qi::Message &msg)  {
 
     if (_msgRecv == 0)
     {
@@ -74,10 +71,7 @@ public:
 //    obj->metaCall(msg.function(), "", ds, rs);
 
 //    qi::Message retval;
-//    retval.setType(qi::Message::Reply);
-//    retval.setId(msg.id());
-//    retval.setService(msg.service());
-//    retval.setData(rs.str());
+//    retval.buildReplyFrom(msg);
 //    client->send(retval);
   };
 
@@ -132,13 +126,13 @@ public:
 
     qi::Message msg;
     msg.setType(qi::Message::Call);
-    msg.setService("qi.master");
-    msg.setFunction("registerService");
+    msg.setService(qi::Message::ServiceDirectory);
+    msg.setPath(0);
+    msg.setFunction(qi::Message::RegisterService);
 
-    qi::DataStream d;
+    qi::DataStream d(msg.buffer());
     d << name;
     d << _p->_url;
-    msg.setData(d.str());
 
     _p->_session->tc->send(msg);
     _p->_session->tc->waitForId(msg.id());
@@ -178,18 +172,16 @@ int main_client(std::string src)
         c++;
       requeststr[2] = c;
 
-      std::cout << j << std::endl;
-
-      qi::DataStream d;
+      qi::Message msg;
+      qi::DataStream d(msg.buffer());
       d << requeststr;
 
-      qi::Message msg;
+      /* FIXME: what are we trying to do here? */
       msg.setType(qi::Message::Call);
-      msg.setService("serviceTest");
-      msg.setFunction("reply");
-      msg.setData(d.str());
+      msg.setService(1);
+      msg.setPath(0);
+      msg.setFunction(1);
       sock->send(msg);
-//      sock->waitForId(msg.id());
     }
   }
   return 0;
