@@ -148,4 +148,12 @@ namespace qi {
     setPath(call.path());
     setFunction(call.function());
   }
+
+  void Message::buildForwardFrom(const Message &msg)
+  {
+    setType(msg.type());
+    setService(msg.service());
+    setPath(msg.path());
+    setFunction(msg.function());
+  }
 }
