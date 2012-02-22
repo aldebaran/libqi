@@ -13,9 +13,9 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qimessaging/transport.hpp>
+#include <qimessaging/transport_socket.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/perf/dataperftimer.hpp>
+#include <qimessaging/details/dataperftimer.hpp>
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>

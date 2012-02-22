@@ -29,8 +29,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <qimessaging/transport/transport_socket.hpp>
-#include <qimessaging/transport/network_thread.hpp>
+#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/network_thread.hpp>
 
 class RemoteService : public qi::TransportSocketInterface {
 public:

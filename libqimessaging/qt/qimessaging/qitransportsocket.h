@@ -9,7 +9,7 @@
 # define   	QT_QITRANSPORTSOCKET_H_
 
 #include <QtNetwork/QAbstractSocket>
-#include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/transport_socket.hpp>
 
 class QiTransportSocketPrivate;
 

@@ -12,19 +12,11 @@ project(libqimessaging)
 enable_testing()
 
 include(CMakeDependentOption)
-find_package(ZEROMQ)
 find_package(PYTHON)
 
-
 cmake_dependent_option(WITH_PYTHON   "Build python bindings" OFF "PYTHON_FOUND" ON)
-#cmake_dependent_option(WITH_ZEROMQ   "Use zeromq"   ON "ZEROMQ_FOUND" OFF)
-#cmake_dependent_option(WITH_PROTOBUF "Use protobuf" OFF "PROTOBUF_FOUND" OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
-option(WITH_BINDER   "Support Android IPC binder" OFF)
-option(WITH_SSH      "Support libssh" OFF)
-option(WITH_ZEROMQ   "Support zmq"    OFF)
-option(WITH_QISSH    "Support qissh"  OFF)
 
 qi_add_optional_package(QISSH)
 
@@ -41,61 +33,63 @@ qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp"
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
-qi_submodule_create("qi-messaging"     "qimessaging/*.h[px][px]" "src/*.cpp" "qimessaging/perf/*.hpp" "src/perf/*.*pp")
-qi_submodule_create("qi-messaging-transport"        "qimessaging/transport/*.h[px][px]" "src/transport/*.[ch][px][px]")
+qi_submodule_create("qi-messaging" ${CONFIG_H}
+                                   qimessaging/api.hpp
+                                   qimessaging/buffer.hpp
+                                   qimessaging/config.hpp.in
+                                   qimessaging/datastream.hpp
+                                   qimessaging/functor.hpp
+                                   qimessaging/gateway.hpp
+                                   qimessaging/iodevice.hpp
+                                   qimessaging/message.hpp
+                                   qimessaging/object.hpp
+                                   qimessaging/object.hxx
+                                   qimessaging/qt.hpp
+                                   qimessaging/reflect.hpp
+                                   qimessaging/server.hpp
+                                   qimessaging/service_directory.hpp
+                                   qimessaging/session.hpp
+                                   qimessaging/signature.hpp
+                                   qimessaging/transport_server.hpp
+                                   qimessaging/transport_socket.hpp
+                                   qimessaging/value.hpp
+                                   qimessaging/details/callfunctor.hpp
+                                   qimessaging/details/dataperftimer.hpp
+                                   qimessaging/details/function_signature.hpp
+                                   qimessaging/details/functor.hxx
+                                   qimessaging/details/makefunctor.hpp
+                                   qimessaging/details/memberfunctor.hxx
+                                   qimessaging/details/qt_signature.hpp
+                                   qimessaging/details/stl_signature.hpp
+                                   qimessaging/details/type_signature.hpp
+                                   qimessaging/details/voidfunctor.hxx
+                                   qimessaging/details/voidmemberfunctor.hxx
 
-qi_submodule_create("qi-messaging-c"   "c/qimessaging/*.h" "c/src/*.[hc][px][px]")
-qi_submodule_create("qi-preference"    qipreference/preference.hpp src/preference/preference.cpp)
-qi_submodule_create("qi-messaging-src" "src/messaging/*.[ch][px][px]")
-qi_submodule_add("qi-messaging-src"    "src/messaging/network/*.[ch][px][px]")
-
-qi_submodule_add("qi-messaging-src"
-                 src/transport/zmq/zmq_client_backend.cpp
-                 src/transport/zmq/zmq_client_backend.hpp
-                 src/transport/zmq/zmq_connection_handler.cpp
-                 src/transport/zmq/zmq_connection_handler.hpp
-                 src/transport/zmq/zmq_forwarder_backend.cpp
-                 src/transport/zmq/zmq_forwarder_backend.hpp
-                 src/transport/zmq/zmq_poll_client.cpp
-                 src/transport/zmq/zmq_poll_client.hpp
-                 src/transport/zmq/zmq_publisher.cpp
-                 src/transport/zmq/zmq_publisher.hpp
-                 src/transport/zmq/zmq_simple_server_backend.cpp
-                 src/transport/zmq/zmq_simple_server_backend.hpp
-                 src/transport/zmq/zmq_subscriber.cpp
-                 src/transport/zmq/zmq_subscriber.hpp
-                 IF WITH_ZEROMQ
-                 DEPENDS ZEROMQ)
-
-qi_submodule_add("qi-messaging-src"
-                 src/transport/ssh/ssh_client_backend.cpp
-                 src/transport/ssh/ssh_client_backend.hpp
-                 #src/transport/ssh/ssh_poll_client.cpp
-                 #src/transport/ssh/ssh_poll_client.hpp
-                 IF WITH_QISSH
-                 DEPENDS QISSH)
-
-# Needs the Binder Kernel driver
-qi_submodule_add("qi-messaging-src"
-                 src/transport/binder/linux/binder.h
-                 src/transport/binder/binder.h
-                 src/transport/binder/binder.cpp
-                 src/transport/binder/binder_client_backend.cpp
-                 src/transport/binder/binder_client_backend.hpp
-                 src/transport/binder/binder_server_backend.cpp
-                 src/transport/binder/binder_server_backend.hpp
-                 IF WITH_BINDER
-                )
+                                   src/buffer.cpp
+                                   src/dataperftimer.cpp
+                                   src/datastream.cpp
+                                   src/gateway.cpp
+                                   src/message.cpp
+                                   src/network_thread.cpp
+                                   src/network_thread.hpp
+                                   src/object.cpp
+                                   src/remoteobject.cpp
+                                   src/remoteobject_p.hpp
+                                   src/server.cpp
+                                   src/service_directory.cpp
+                                   src/session.cpp
+                                   src/signature_convertor.cpp
+                                   src/signature_convertor.hpp
+                                   src/signature_iterator.cpp
+                                   src/transport_server.cpp
+                                   src/transport_socket.cpp
+                                   src/url.hpp
+                                   src/value.cpp)
 
 
+add_subdirectory(c)
 
-qi_submodule_create("qi-functors"        "qimessaging/functors/*.h[px][px]" "qimessaging/functors/detail/*.h[px][px]")
-
-qi_submodule_create("qi-signature"       "qimessaging/signature.hpp" "qimessaging/details/*.h[px][px]"
-                                         "src/signature/*.[hc][px][px]")
-
-qi_create_lib(qimessaging SRC ${CONFIG_H}
-                 SUBMODULE qi-messaging qi-messaging-src qi-messaging-c qi-functors qi-signature qi-messaging-transport qi-preference
+qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
                  #qi-cbinding
                  DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
 if(WIN32)
@@ -115,12 +109,8 @@ qi_add_subdirectory(perfs     WITH_PERF)
 
 message(STATUS "")
 message(STATUS "Build Options:")
-message(STATUS "WITH_ZEROMQ  : ${WITH_ZEROMQ}")
-message(STATUS "WITH_PROTOBUF: ${WITH_PROTOBUF}")
 message(STATUS "WITH_EXAMPLES: ${WITH_EXAMPLES}")
 message(STATUS "WITH_PERF    : ${WITH_PERF}")
-message(STATUS "WITH_SSH     : ${WITH_SSH}")
-message(STATUS "WITH_QISSH   : ${WITH_QISSH}")
 message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 

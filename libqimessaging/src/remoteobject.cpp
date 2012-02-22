@@ -7,7 +7,7 @@
 
 #include "remoteobject_p.hpp"
 #include <qimessaging/message.hpp>
-#include <qimessaging/transport.hpp>
+#include <qimessaging/transport_socket.hpp>
 
 namespace qi {
 
@@ -19,7 +19,7 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service)
 
 void RemoteObject::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
 {
-  qi::Message msg(in.ioDevice());
+  qi::Message msg((Buffer *)in.ioDevice());
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);

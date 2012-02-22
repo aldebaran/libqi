@@ -6,7 +6,7 @@
 */
 
 #include <qimessaging/qitransportserver.h>
-#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport_server.hpp>
 
 class QiTransportServerPrivate
 {

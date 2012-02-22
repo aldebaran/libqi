@@ -11,8 +11,8 @@
 */
 
 #include <iostream>
-#include <qimessaging/transport/gateway.hpp>
-#include <qimessaging/transport/network_thread.hpp>
+#include <qimessaging/gateway.hpp>
+#include <qimessaging/network_thread.hpp>
 
 int main(int argc, char *argv[])
 {

@@ -10,7 +10,7 @@
 
 #include <map>
 #include <string>
-#include <qimessaging/functors/makefunctor.hpp>
+#include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 
 namespace qi {

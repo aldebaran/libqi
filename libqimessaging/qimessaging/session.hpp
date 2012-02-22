@@ -26,7 +26,7 @@
 #ifndef   	NETWORK_CLIENT_HPP_
 # define   	NETWORK_CLIENT_HPP_
 
-#include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/transport_socket.hpp>
 
 #include <vector>
 #include <string>

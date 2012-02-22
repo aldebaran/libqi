@@ -1,0 +1,65 @@
+#from codegenerator import *
+<%
+def generate_argpush_list(count):
+    t = "args.push_back(p%(count)d);"
+    return generate_list(t, count, sep=" ")
+%>
+#pragma once
+/*
+*  $autogen
+*
+*  Author(s):
+*  - Cedric GESTES <gestes@aldebaran-robotics.com>
+*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010 Aldebaran Robotics
+*/
+
+#raw
+#ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_
+#define _QI_FUNCTORS_CALLFUNCTOR_HPP_
+
+#include <qimessaging/functor.hpp>
+#include <qimessaging/buffer.hpp>
+#end raw
+
+namespace qi
+{
+#for $i in $count
+
+  template <typename R$generate_typename_list($i, begin = True)>
+  R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
+    qi::Buffer  argsBuf;
+    qi::Buffer  retBuf;
+    qi::DataStream args(&argsBuf);
+    qi::DataStream ret(&retBuf);
+
+    #for $j in range($i)
+    qi::serialization::serialize<P$j>::write(args, p$j);
+    #end for
+    f->call(args, ret);
+    R r;
+    ret >> r;
+    return r;
+  }
+
+  #if $i != 0
+  template <$generate_typename_list($i)>
+  #end if
+  void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
+    qi::Buffer  argsBuf;
+    qi::Buffer  retBuf;
+    qi::DataStream args(&argsBuf);
+    qi::DataStream ret(&retBuf);
+
+    #for $j in range($i)
+    qi::serialization::serialize<P$j>::write(args, p$j);
+    #end for
+    f->call(args, ret);
+  }
+
+#end for
+#raw
+}
+#endif  // _QI_FUNCTORS_CALLFUNCTOR_HPP_
+#end raw

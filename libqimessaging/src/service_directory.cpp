@@ -9,12 +9,14 @@
 #include <vector>
 #include <map>
 
-#include <qimessaging/transport.hpp>
+#include <qimessaging/object.hpp>
+#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
-#include "src/transport/url.hpp"
-#include "src/transport/network_thread.hpp"
+#include "src/url.hpp"
+#include "src/network_thread.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 

@@ -8,13 +8,7 @@
 #ifndef SERVICE_DIRECTORY_HPP_
 # define SERVICE_DIRECTORY_HPP_
 
-#include <iostream>
-#include <vector>
-#include <map>
-
-#include <qimessaging/object.hpp>
-#include <qimessaging/transport.hpp>
-#include <qimessaging/session.hpp>
+#include <string>
 
 namespace qi
 {

@@ -14,7 +14,7 @@
 #include <string>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transport/transport_server.hpp>
+#include <qimessaging/transport_server.hpp>
 
 namespace qi {
 

@@ -14,7 +14,7 @@
 #include <qimessaging/object.hpp>
 #include <QtCore/qdebug.h>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/transport/transport_socket.hpp>
+#include <qimessaging/transport_socket.hpp>
 
 class QiRemoteObjectPrivate {
 public:

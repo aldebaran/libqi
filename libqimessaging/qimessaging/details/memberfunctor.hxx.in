@@ -1,0 +1,59 @@
+#from codegenerator import *
+/*
+* $autogen
+*
+*  Author(s):
+*  - Cedric GESTES <gestes@aldebaran-robotics.com>
+*
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
+*/
+
+#raw
+
+#ifndef _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
+#define _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
+
+#include <qimessaging/functor.hpp>
+
+namespace qi {
+namespace detail {
+
+#end raw
+#for $i in $count
+  template <$generate_typename_list($i, end = True) typename C, typename R>
+  class MemberFunctor_${i} : public Functor
+  {
+  public:
+    typedef R(C::*FunctionType) ($generate_param_list($i));
+
+    MemberFunctor_${i}(C *pObject, FunctionType pFunction)
+      : fObject(pObject),
+        fFunction(pFunction)
+    {}
+
+    R operator()($generate_param_list($i)) {
+      return (R)(fObject->*fFunction)($generate_arg_list($i));
+    }
+
+    void call(qi::DataStream &params, qi::DataStream& result) const {
+      QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
+      #for $j in range($i)
+      P$j p$j;
+      #end for
+
+      #for $j in range($i)
+        params >> p$j;
+      #end for
+        result << (fObject->*fFunction)($generate_callparam_list($i));
+    };
+  private:
+    C            *fObject;
+    FunctionType  fFunction;
+  };
+
+#end for
+#raw
+}
+}
+#endif  // _QI_FUNCTORS_DETAIL_MEMBERFUNCTOR_HXX_
+#end raw

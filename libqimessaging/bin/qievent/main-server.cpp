@@ -10,8 +10,8 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
-#include <qimessaging/transport/transport_server.hpp>
-#include <qimessaging/transport/network_thread.hpp>
+#include <qimessaging/transport_server.hpp>
+#include <qimessaging/network_thread.hpp>
 
 class RemoteServer : public qi::TransportServer
 {

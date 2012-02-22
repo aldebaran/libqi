@@ -13,16 +13,18 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qimessaging/transport.hpp>
+#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transport_socket.hpp>
+
 #include <qimessaging/session.hpp>
-#include <qimessaging/perf/dataperftimer.hpp>
+#include <qimessaging/details/dataperftimer.hpp>
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 
-#include <qimessaging/transport/transport_server.hpp>
-#include "../src/transport/url.hpp"
-#include "../src/transport/network_thread.hpp"
+#include <qimessaging/transport_server.hpp>
+#include "../src/url.hpp"
+#include "../src/network_thread.hpp"
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;

@@ -8,9 +8,9 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transport/transport_server.hpp>
-#include "src/transport/network_thread.hpp"
-#include "src/transport/url.hpp"
+#include <qimessaging/transport_server.hpp>
+#include "src/network_thread.hpp"
+#include "src/url.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 

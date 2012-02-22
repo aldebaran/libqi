@@ -5,7 +5,7 @@
 **
 ** Copyright (C) 2011 Aldebaran Robotics
 */
-#include <qimessaging/qi.h>
+#include <qimessaging/c/qi_c.h>
 #include "qipython.hpp"
 #include <Python.h>
 
