@@ -145,11 +145,11 @@ qi::Object* Session::service(const std::string &service,
   qi::Message ret;
   ts->read(msg.id(), &ret);
 
-  qi::MetaObject mo;
+  qi::MetaObject *mo = new qi::MetaObject;
 
   qi::DataStream ds(ret.buffer());
 
-  ds >> mo;
+  ds >> *mo;
 
   qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId, mo);
   obj = robj;

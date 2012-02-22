@@ -58,12 +58,14 @@ namespace qi {
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
     stream << meta._name;
     stream << meta._signature;
+    stream << meta._idx;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
     stream >> meta._name;
     stream >> meta._signature;
+    stream >> meta._idx;
     return stream;
   }
 

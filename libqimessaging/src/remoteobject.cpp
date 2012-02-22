@@ -11,9 +11,10 @@
 
 namespace qi {
 
-RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, const qi::MetaObject &mo)
-  : _ts(ts),
-    _service(service)
+RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject *mo)
+  : _ts(ts)
+  , _service(service)
+  , _mo(mo)
 {
 }
 
@@ -23,7 +24,7 @@ void RemoteObject::metaCall(const std::string &method, const std::string &sig, D
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);
-  msg.setFunction(1);
+  msg.setFunction(_mo->_methods[method]._idx);
 
   _ts->send(msg);
   _ts->waitForId(msg.id());
