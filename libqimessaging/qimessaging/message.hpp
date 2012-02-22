@@ -41,7 +41,7 @@ namespace qi {
       ServiceDirectory = 1,
     };
 
-    enum MessagePathes
+    enum ServiceDirectoryFunctions
     {
       Service         = 1,
       Services        = 2,

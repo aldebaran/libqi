@@ -30,10 +30,13 @@ public:
     nthd = new qi::NetworkThread();
     ts = new qi::TransportServer();
     ts->setDelegate(this);
+
+    /*
+     * Order is important. See qi::Message::ServiceDirectoryFunctions.
+     */
     advertiseMethod("service", this, &ServiceDirectoryPrivate::service);
     advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
     advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
-
   }
 
   ~ServiceDirectoryPrivate()
