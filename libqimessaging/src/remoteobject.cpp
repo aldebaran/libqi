@@ -18,6 +18,11 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::Me
 {
 }
 
+RemoteObject::~RemoteObject()
+{
+  delete _mo;
+}
+
 void RemoteObject::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
 {
   qi::Message msg((Buffer *)in.ioDevice());
