@@ -9,14 +9,12 @@
 
 
 QiTransportSocket::QiTransportSocket()
-  : QAbstractSocket(QAbstractSocket::TcpSocket, 0)
 {
   _p = new QiTransportSocketPrivate();
   _p->socket = new qi::TransportSocket();
 }
 
 QiTransportSocket::QiTransportSocket(int fd, struct event_base *base)
-  : QAbstractSocket(QAbstractSocket::TcpSocket, 0)
 {
   _p = new QiTransportSocketPrivate();
   _p->socket = new qi::TransportSocket(fd, base);

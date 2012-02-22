@@ -13,7 +13,7 @@
 
 class QiTransportSocketPrivate;
 
-class QiTransportSocket : public QAbstractSocket {
+class QiTransportSocket {
 public:
   QiTransportSocket();
   QiTransportSocket(int fd, struct event_base *base);

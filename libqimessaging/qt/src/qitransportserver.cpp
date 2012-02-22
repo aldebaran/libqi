@@ -19,7 +19,6 @@ void QiTransportServer::start(QString            address,
                               struct event_base *base)
 {
   _p->server.start(address.toUtf8().constData(), port, base);
-  //_p->setDelegate(delegate);
 }
 
 QiTransportSocket *QiTransportServer::nextPendingConnection()
