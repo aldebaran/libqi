@@ -1,7 +1,7 @@
 %module qi
 
 %{
-#include <qimessaging/c/qi.h>
+#include <qimessaging/c/qi_c.h>
 #include <src/qipython.hpp>
 %}
 
