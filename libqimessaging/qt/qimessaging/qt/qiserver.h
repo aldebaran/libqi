@@ -9,7 +9,7 @@
 # define   	QT_QISERVER_H_
 
 #include <QtCore/QObject>
-#include <qimessaging/qisession.h>
+#include <qimessaging/qt/qisession.h>
 
 class QiServerPrivate;
 class NetworkThread;

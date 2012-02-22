@@ -5,7 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/qitransportserver.h>
+#include <qimessaging/qt/qitransportserver.h>
 #include <qimessaging/transport_server.hpp>
 
 class QiTransportServerPrivate

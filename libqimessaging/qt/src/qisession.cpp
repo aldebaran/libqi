@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <QString>
-#include <qimessaging/qisession.h>
+#include <qimessaging/qt/qisession.h>
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/datastream.hpp>

@@ -5,7 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/qitransportsocket.h>
+#include <qimessaging/qt/qitransportsocket.h>
 
 
 QiTransportSocket::QiTransportSocket()

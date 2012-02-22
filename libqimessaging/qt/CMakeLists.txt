@@ -7,12 +7,12 @@ include(qibuild/modules/qt-tools)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(H_TO_MOC
-        qimessaging/qisession.h)
+        qimessaging/qt/qisession.h)
 
-set(H   qimessaging/qiserver.h
-        qimessaging/qitransportserver.h
-        qimessaging/qitransportsocket.h
-        qimessaging/qisession.h)
+set(H   qimessaging/qt/qiserver.h
+        qimessaging/qt/qitransportserver.h
+        qimessaging/qt/qitransportsocket.h
+        qimessaging/qt/qisession.h)
 
 set(H_P src/qiremoteobject_p.h
         src/qisession_p.h

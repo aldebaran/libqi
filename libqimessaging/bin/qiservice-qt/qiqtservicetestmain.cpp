@@ -11,8 +11,8 @@
 #include <boost/program_options.hpp>
 
 #include <qi/os.hpp>
-#include <qimessaging/qisession.h>
-#include <qimessaging/qiserver.h>
+#include <qimessaging/qt/qisession.h>
+#include <qimessaging/qt/qiserver.h>
 
 //#include "qiservicetest.hpp"
 

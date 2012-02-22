@@ -6,8 +6,8 @@
 */
 
 #include <iostream>
-#include <qimessaging/qiserver.h>
-#include <qimessaging/qisession.h>
+#include <qimessaging/qt/qiserver.h>
+#include <qimessaging/qt/qisession.h>
 #include <qimessaging/server.hpp>
 #include "src/qisession_p.h"
 

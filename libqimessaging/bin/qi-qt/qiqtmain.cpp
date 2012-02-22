@@ -16,7 +16,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <qimessaging/qisession.h>
+#include <qimessaging/qt/qisession.h>
 
 namespace po = boost::program_options;
 

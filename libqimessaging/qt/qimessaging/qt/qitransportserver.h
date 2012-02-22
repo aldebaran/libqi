@@ -9,7 +9,7 @@
 # define   	QT_QITRANSPORTSERVER_H_
 
 #include <QtCore/QObject>
-#include <qimessaging/qitransportsocket.h>
+#include <qimessaging/qt/qitransportsocket.h>
 
 class QiTransportServerPrivate;
 
