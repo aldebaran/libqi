@@ -49,7 +49,7 @@ namespace qi {
 
     void connect(const std::string &masterAddress);
     bool disconnect();
-
+    void join();
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 

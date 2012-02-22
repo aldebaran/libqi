@@ -72,6 +72,11 @@ void NetworkThread::run()
   event_base_dispatch(_base);
 }
 
+void NetworkThread::join()
+{
+  _thd.join();
+}
+
 struct event_base* NetworkThread::getEventBase()
 {
   return _base;

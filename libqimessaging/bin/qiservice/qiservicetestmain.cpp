@@ -70,8 +70,7 @@ int main(int argc, char *argv[])
 
       std::cout << "ready." << std::endl;
 
-      while (1)
-        qi::os::sleep(1);
+      session.join();
 
       srv.stop();
       session.disconnect();

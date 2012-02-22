@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
 
 //      std::vector<std::string> result = session.services();
 
-      while (1)
-        qi::os::sleep(1);
+      session.join();
 
     }
     else

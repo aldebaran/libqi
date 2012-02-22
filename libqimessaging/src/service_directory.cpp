@@ -143,4 +143,9 @@ void ServiceDirectory::listen(const std::string &address)
   _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
 }
 
+void ServiceDirectory::join()
+{
+  _p->nthd->join();
+}
+
 }; // !qi

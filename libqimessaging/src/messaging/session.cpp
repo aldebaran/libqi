@@ -133,6 +133,11 @@ qi::Object* Session::service(const std::string &service,
   return obj;
 }
 
+void Session::join()
+{
+  _nthd->join();
+}
+
 void Session::onConnected(TransportSocket *client)
 {
   //  std::cout << "connected broker: " << std::endl;

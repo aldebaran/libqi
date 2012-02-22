@@ -26,6 +26,7 @@ public:
   NetworkThread();
   ~NetworkThread();
 
+  void join();
   struct event_base* getEventBase();
 
 protected:

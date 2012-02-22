@@ -30,6 +30,7 @@ namespace qi
     virtual ~ServiceDirectory();
 
     void listen(const std::string &address);
+    void join();
 
   private:
     ServiceDirectoryPrivate *_p;
