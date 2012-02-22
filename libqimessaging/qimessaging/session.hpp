@@ -56,6 +56,7 @@ namespace qi {
     std::vector<std::string> services();
 
     qi::TransportSocket* serviceSocket(const std::string &name,
+                                       unsigned int      *idx,
                                        const std::string &type = "tcp");
 
     qi::Object* service(const std::string &service,

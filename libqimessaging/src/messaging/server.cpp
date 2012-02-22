@@ -81,8 +81,6 @@ namespace qi {
 
 
   void Server::registerService(const std::string& name, qi::Object *obj) {
-      _p->_services[0] = obj;
-
     qi::Message msg;
     msg.setType(qi::Message::Call);
     msg.setService(qi::Message::ServiceDirectory);
@@ -97,6 +95,10 @@ namespace qi {
     _p->_session->tc->waitForId(msg.id());
     qi::Message ans;
     _p->_session->tc->read(msg.id(), &ans);
+    qi::DataStream dout(ans.buffer());
+    unsigned int idx = 0;
+    dout >> idx;
+    _p->_services[idx] = obj;
   };
 
   void Server::stop() {

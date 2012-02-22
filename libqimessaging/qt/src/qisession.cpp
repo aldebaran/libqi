@@ -48,7 +48,8 @@ bool QiSession::waitForDisconnected(int msecs)
 
 QObject *QiSession::service(const QString &name, const QString &type)
 {
-  qi::TransportSocket   *ts = _p->session.serviceSocket(name.toUtf8().constData(), type.toUtf8().constData());
+  unsigned int idx = 0;
+  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), &idx, type.toUtf8().constData());
 
   if (!ts)
     return 0;

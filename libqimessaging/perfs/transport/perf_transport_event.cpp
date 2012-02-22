@@ -150,11 +150,12 @@ public:
 
 int main_client(std::string src)
 {
+  unsigned int serviceId;
   qi::Session session;
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
-  qi::TransportSocket *sock = session.serviceSocket("serviceTest");
+  qi::TransportSocket *sock = session.serviceSocket("serviceTest", &serviceId);
 
   for (int i = 0; i < 12; ++i)
   {

@@ -84,6 +84,7 @@ std::vector<std::string> Session::services()
 }
 
 qi::TransportSocket* Session::serviceSocket(const std::string &name,
+                                            unsigned int      *idx,
                                             const std::string &type)
 {
   std::vector<std::string> result;
@@ -102,6 +103,8 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 
   qi::DataStream d(ans.buffer());
   d >> result;
+  std::stringstream ss(result[0]);
+  ss >> *idx;
 
   qi::TransportSocket* ts = NULL;
 
@@ -120,8 +123,8 @@ qi::Object* Session::service(const std::string &service,
                              const std::string &type)
 {
   qi::Object          *obj;
-  qi::TransportSocket *ts = serviceSocket(service, type);
   unsigned int serviceId = 0;
+  qi::TransportSocket *ts = serviceSocket(service, &serviceId, type);
 
   if (ts == 0)
   {
