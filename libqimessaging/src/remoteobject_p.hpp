@@ -18,7 +18,7 @@ namespace qi {
 
   class RemoteObject : public qi::Object {
   public:
-    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service);
+    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, const qi::MetaObject &mo);
 
     virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out);
 

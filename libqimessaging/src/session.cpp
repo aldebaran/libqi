@@ -131,7 +131,27 @@ qi::Object* Session::service(const std::string &service,
     return 0;
   }
 
-  qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId);
+  qi::Message msg;
+  msg.setType(qi::Message::Call);
+  msg.setService(serviceId);
+  msg.setPath(qi::Message::ServiceDirectory);
+  qi::DataStream dout(msg.buffer());
+  dout << "__metaobject";
+  dout << service;
+
+  ts->send(msg);
+  ts->waitForId(msg.id());
+
+  qi::Message ret;
+  ts->read(msg.id(), &ret);
+
+  qi::MetaObject mo;
+
+  qi::DataStream ds(ret.buffer());
+
+  ds >> mo;
+
+  qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId, mo);
   obj = robj;
   return obj;
 }

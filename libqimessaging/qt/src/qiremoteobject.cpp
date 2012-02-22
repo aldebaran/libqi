@@ -24,14 +24,14 @@ public:
 };
 
 
-QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject *metaobject)
+QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject &metaobject)
   : _p (new QiRemoteObjectPrivate)
 {
   QMetaObjectBuilder mob;
   mob.setClassName(dest.c_str());
 
   qi::MetaMethodMap::const_iterator it;
-  for (it = metaobject->_methods.begin(); it != metaobject->_methods.end(); ++it) {
+  for (it = metaobject._methods.begin(); it != metaobject._methods.end(); ++it) {
     const qi::MetaMethod &mm = it->second;
     QString retSig;
     QString funSig;

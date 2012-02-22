@@ -21,7 +21,7 @@ class QiRemoteObject : public QObject {
   //DO NOT ADD Q_OBJECT HERE
 
 public:
-  explicit QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject *metaobject);
+  explicit QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject &metaobject);
   virtual ~QiRemoteObject();
 
   // provide custom Q_OBJECT implementation

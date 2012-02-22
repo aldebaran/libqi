@@ -72,7 +72,7 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
   ds >> mo;
 
-  QiRemoteObject      *robj = new QiRemoteObject(ts, name.toUtf8().constData(), &mo);
+  QiRemoteObject      *robj = new QiRemoteObject(ts, name.toUtf8().constData(), mo);
 
   return static_cast<QObject *>(robj);
 

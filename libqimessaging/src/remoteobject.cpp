@@ -11,7 +11,7 @@
 
 namespace qi {
 
-RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service)
+RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, const qi::MetaObject &mo)
   : _ts(ts),
     _service(service)
 {
