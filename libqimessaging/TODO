@@ -3,14 +3,18 @@
 TODO
 ====
 
-- TEST TEST TEST (auto and perf)
-- serialization: support unsigned everywhere
-- qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
-- ServiceDirectory: use good UUID
-- abstract transport
-- TransportSocket => QIODevice
-- Buffer => QIODevice
-- remove qi::Transport*Delegate inherit from public interface (server, session), use *Private
-- Interface: remove useless method, add an Interface for Session
-- python bindings
-- qt bindings
+xx - alcommon
+
+HX - TEST TEST TEST (auto and perf)
+XX - serialization: support unsigned everywhere
+LX - qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
+XX - ServiceDirectory: use good UUID
+XX - abstract transport
+XX - c/python bindings
+CX - qt bindings (server side, complex struct, signal/slot, events)
+XX - message: events/error
+XX - error handling (be rock solid)
+XX - asynchronous call for Object and for Session
+XX - private service objects (path)
+CX - object/struct serialization/signature
+LX - remove metacall with string
