@@ -9,6 +9,7 @@
 #ifndef   	QT_QITRANSPORTSESSION_H_
 # define   	QT_QITRANSPORTSESSION_H_
 
+#include <qimessaging/api.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QMetaObject>
 #include <QtCore/QUrl>
@@ -17,7 +18,7 @@
 
 class QiSessionPrivate;
 
-class QiSession : public QObject {
+class QIMESSAGING_API QiSession : public QObject {
   Q_OBJECT
 
 public:

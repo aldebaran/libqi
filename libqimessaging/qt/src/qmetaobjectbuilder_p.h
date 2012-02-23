@@ -69,6 +69,12 @@ class QMetaPropertyBuilderPrivate;
 class QMetaEnumBuilder;
 class QMetaEnumBuilderPrivate;
 
+#include <qimessaging/api.hpp>
+#ifdef Q_CORE_EXPORT
+# undef Q_CORE_EXPORT
+#endif
+#define Q_CORE_EXPORT QIMESSAGING_API
+
 class Q_CORE_EXPORT QMetaObjectBuilder
 {
 public:
