@@ -10,6 +10,7 @@
 #include <iostream>
 #include <boost/atomic.hpp>
 #include <qi/log.hpp>
+#include <cassert>
 
 namespace qi {
 
@@ -122,6 +123,14 @@ namespace qi {
     if (type() == qi::Message::None)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
+      assert(type() != qi::Message::None);
+      return false;
+    }
+
+    if (service() == 0)
+    {
+      qiLogError("qimessaging.TransportSocket")  << "Message dropped (service is 0)" << std::endl;
+      assert(service() != 0);
       return false;
     }
 
