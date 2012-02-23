@@ -21,6 +21,12 @@ if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
+# Because CMake automatically qi_EXPORTS, we can do:
+if (UNIX OR MINGW)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+endif()
+
 # We always want boost
 # Remove this line to use QT if usable
 set(WITH_QT_QTCORE OFF)
