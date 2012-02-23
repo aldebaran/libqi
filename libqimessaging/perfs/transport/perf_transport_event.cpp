@@ -225,6 +225,8 @@ int main_gateway()
   std::cout << "ready." << std::endl;
 
   session.join();
+
+  return 0;
 }
 
 #include <qimessaging/server.hpp>
@@ -256,6 +258,8 @@ int main_server()
 
   srv.stop();
   session.disconnect();
+
+  return 0;
 }
 
 int main(int argc, char **argv)
