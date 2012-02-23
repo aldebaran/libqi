@@ -224,8 +224,7 @@ int main_gateway()
   gate.listen(&session, "tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
 
-  while (1)
-    qi::os::sleep(1);
+  session.join();
 }
 
 #include <qimessaging/server.hpp>
@@ -253,8 +252,7 @@ int main_server()
   srv.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
-  while (1)
-    qi::os::sleep(1);
+  session.join();
 
   srv.stop();
   session.disconnect();
