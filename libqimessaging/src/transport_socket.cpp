@@ -135,7 +135,7 @@ void TransportSocket::eventcb(struct bufferevent *bev,
     _p->tcd->onDisconnected(this);
     _p->connected = false;
     // connection has been closed, do any clean up here
-    qiLogError("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
+    qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (events & BEV_EVENT_ERROR)
   {
