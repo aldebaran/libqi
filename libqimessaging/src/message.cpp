@@ -24,19 +24,19 @@ namespace qi {
   Message::Message()
   {
     _header = new qi::Message::MessageHeader();
+    memset(_header, 0, sizeof(MessageHeader));
     _header->id = newMessageId();
     _buffer = new qi::Buffer();
     _withBuffer = false;
-    memset(_header, 0, sizeof(MessageHeader));
   }
 
   Message::Message(Buffer *buf)
   {
     _header = new qi::Message::MessageHeader();
+    memset(_header, 0, sizeof(MessageHeader));
     _header->id = newMessageId();
     _buffer = buf;
     _withBuffer = true;
-    memset(_header, 0, sizeof(MessageHeader));
   }
 
   Message::~Message()
