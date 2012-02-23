@@ -41,6 +41,12 @@ public:
     advertiseMethod("service", this, &ServiceDirectoryPrivate::service);
     advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
     advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
+
+    /*
+     * Note: serviceDirectory will be service #1.
+     */
+    std::vector<std::string> sdEndpoints;
+    registerService("serviceDirectory", sdEndpoints);
   }
 
   ~ServiceDirectoryPrivate()
