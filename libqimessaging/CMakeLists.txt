@@ -11,10 +11,8 @@ project(libqimessaging)
 
 enable_testing()
 
-include(CMakeDependentOption)
-find_package(PYTHON)
-
-cmake_dependent_option(WITH_PYTHON   "Build python bindings" OFF "PYTHON_FOUND" ON)
+qi_add_optional_package(PYTHON)
+set(WITH_PYTHON OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 
@@ -104,8 +102,6 @@ qi_add_subdirectory(perfs     WITH_PERF)
 #add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
-#qi_add_subdirectory(bindings/python WITH_PYTHON)
-#add_subdirectory(bindings/ruby)
 
 message(STATUS "")
 message(STATUS "Build Options:")
@@ -116,6 +112,8 @@ message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 add_subdirectory("qt")
 add_subdirectory("bin")
-add_subdirectory("python")
+if(WITH_PYTHON)
+  add_subdirectory("python")
+endif()
 add_subdirectory("tests")
 
