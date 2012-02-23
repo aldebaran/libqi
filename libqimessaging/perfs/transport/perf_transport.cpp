@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     //start the server
     boost::thread threadServer1(boost::bind(&main_server));
     boost::thread threadServer2(boost::bind(&main_gateway));
-    sleep(1);
+    qi::os::sleep(1);
     start_client(gThreadCount);
   }
   return 0;
