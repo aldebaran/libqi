@@ -61,7 +61,7 @@ namespace qi {
     }
 
     ~SignaturePrivate() {
-      delete(_signature);
+      delete [] _signature;
     }
 
     bool split(const char *, const char *);
