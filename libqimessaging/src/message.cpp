@@ -14,6 +14,8 @@
 
 namespace qi {
 
+  const unsigned int messageMagic = 0x42adde42;
+
   unsigned int newMessageId()
   {
     static boost::atomic_uint32_t id(0);
@@ -26,6 +28,7 @@ namespace qi {
     _header = new qi::Message::MessageHeader();
     memset(_header, 0, sizeof(MessageHeader));
     _header->id = newMessageId();
+    _header->magic = messageMagic;
     _buffer = new qi::Buffer();
     _withBuffer = false;
   }
@@ -35,6 +38,7 @@ namespace qi {
     _header = new qi::Message::MessageHeader();
     memset(_header, 0, sizeof(MessageHeader));
     _header->id = newMessageId();
+    _header->magic = messageMagic;
     _buffer = buf;
     _withBuffer = true;
   }

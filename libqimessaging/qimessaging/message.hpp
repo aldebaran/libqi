@@ -27,13 +27,14 @@ namespace qi {
 
     typedef struct
     {
-      uint32_t size;
+      uint32_t magic;
       uint32_t id;
+      uint32_t size;
       uint32_t type;
       uint32_t service;
       uint32_t path;
       uint32_t function;
-      uint64_t reserved;
+      uint32_t reserved;
     } MessageHeader;
 
     enum MessageServices
