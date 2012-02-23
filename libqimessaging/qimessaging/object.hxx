@@ -39,6 +39,19 @@ namespace qi {
     return ret;
   }
 
+  /// <summary> Calls a void method </summary>
+  inline void Object::callVoid(const std::string& method) {
+    qi::Buffer    bufReq;
+    qi::Buffer    bufRep;
+    qi::DataStream request(&bufReq);
+    qi::DataStream reply(&bufRep);
+
+    void (*f)()  = 0;
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    metaCall(method, signature, request, reply);
+  }
 
   /// <summary> Calls a void method </summary>
   template <typename P0>
