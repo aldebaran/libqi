@@ -62,6 +62,8 @@ public:
                struct event_base *base);
   void disconnect();
 
+  bool isConnected();
+
   // if msecs < 0 no timeout
   bool waitForConnected(int msecs = 30000);
   bool waitForDisconnected(int msecs = 30000);

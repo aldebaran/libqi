@@ -308,4 +308,9 @@ void TransportSocket::setDelegate(TransportSocketInterface *delegate)
   _p->tcd = delegate;
 }
 
+bool TransportSocket::isConnected()
+{
+  return _p->connected;
+}
+
 }
