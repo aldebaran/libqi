@@ -47,6 +47,8 @@ namespace qi {
 
   void Object::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
   {
+    //TODO: correctly handle failure
+    assert(method < metaObject()._methodsTable.size());
     MetaMethod *mm = metaObject()._methodsTable[method];
     if (mm->_functor)
       mm->_functor->call(in, out);

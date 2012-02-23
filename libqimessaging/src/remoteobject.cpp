@@ -29,6 +29,7 @@ void RemoteObject::metaCall(const std::string &method, const std::string &sig, D
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);
+  //todo handle failure
   msg.setFunction(_mo->_methods[method]._idx);
 
   _ts->send(msg);
