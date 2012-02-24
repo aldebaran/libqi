@@ -248,7 +248,7 @@ void GatewayPrivate::onConnected(TransportSocket *service)
   //TODO: optimise?  O(log(n)) instead O(n)
   for (it = _services.begin(); it != _services.end(); ++it)
   {
-    if ((TransportSocket *)it->second == service)
+    if (static_cast<TransportSocket *>(it->second) == service)
     {
       serviceId = it->first;
       break;
