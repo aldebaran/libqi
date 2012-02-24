@@ -46,6 +46,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/reflect.hpp
                                    qimessaging/server.hpp
                                    qimessaging/service_directory.hpp
+                                   qimessaging/service_info.hpp
                                    qimessaging/session.hpp
                                    qimessaging/signature.hpp
                                    qimessaging/transport_server.hpp
@@ -75,6 +76,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/remoteobject_p.hpp
                                    src/server.cpp
                                    src/service_directory.cpp
+                                   src/service_info.cpp
                                    src/session.cpp
                                    src/signature_convertor.cpp
                                    src/signature_convertor.hpp
