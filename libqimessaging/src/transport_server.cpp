@@ -38,7 +38,11 @@ namespace qi {
 class TransportServerPrivate
 {
 public:
-  TransportServerPrivate() {}
+  TransportServerPrivate()
+    : tsi(0)
+    , base(0)
+  {
+  }
 
   ~TransportServerPrivate()
   {

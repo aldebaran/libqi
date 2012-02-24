@@ -43,8 +43,9 @@ struct TransportSocketPrivate
   }
 
   TransportSocketPrivate(int fileDesc)
-    : connected(false)
+    : tcd(NULL)
     , bev(NULL)
+    , connected(false)
     , fd(fileDesc)
   {
   }
