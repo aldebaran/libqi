@@ -34,7 +34,7 @@
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                           \
   DataStream& DataStream::operator>>(Type &b)                     \
   {                                                               \
-    char *data = (char *)_buffer->read((void *)&b, sizeof(Type)); \
+    _buffer->read((void *)&b, sizeof(Type));               \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);              \
     return *this;                                          \
   }                                                        \
