@@ -120,7 +120,7 @@ public:
     servicesIt = connectedServices.find(idx);
     for (std::vector<std::string>::const_iterator endpointsIt = servicesIt->second.begin();
          endpointsIt != servicesIt->second.end();
-         endpointsIt++)
+         ++endpointsIt)
     {
       result.push_back(*endpointsIt);
     }
@@ -135,7 +135,7 @@ public:
 
     for (std::vector<std::string>::const_iterator endpointsIt = endpoints.begin();
          endpointsIt != endpoints.end();
-         endpointsIt++)
+         ++endpointsIt)
     {
       connectedServices[idx].push_back(*endpointsIt);
     }

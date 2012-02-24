@@ -177,7 +177,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message &ms
       reply.push_back(result[0]);
 
       std::vector<std::string>::const_iterator endpointIt;
-      for (endpointIt = _endpoints.begin(); endpointIt != _endpoints.end(); endpointIt++)
+      for (endpointIt = _endpoints.begin(); endpointIt != _endpoints.end(); ++endpointIt)
         reply.push_back(*endpointIt);
 
       // create new message for the client
