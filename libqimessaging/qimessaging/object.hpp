@@ -18,7 +18,7 @@ namespace qi {
   class MetaMethod {
   public:
     MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor);
-    MetaMethod() {};
+    MetaMethod();
 
     const std::string &name() const { return _name; }
     const std::string &signature() const { return _signature; }

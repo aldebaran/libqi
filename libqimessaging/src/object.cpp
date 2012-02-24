@@ -24,10 +24,19 @@ namespace qi {
     return *_meta;
   }
 
+  MetaMethod::MetaMethod()
+    : _name("")
+    , _signature("")
+    , _functor(0)
+    , _idx(0)
+  {
+  }
+
   MetaMethod::MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor)
-    : _name(name),
-      _signature(sig),
-      _functor(functor)
+    : _name(name)
+    , _signature(sig)
+    , _functor(functor)
+    , _idx(0)
   {
   }
 
