@@ -47,7 +47,6 @@ namespace qi {
   {
     if (!_withBuffer)
       delete _buffer;
-    delete _header;
   }
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
