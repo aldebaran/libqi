@@ -6,7 +6,8 @@
 */
 
 #include <iostream>
-#include <QString>
+#include <QtCore/qstring.h>
+#include <QtCore/qvector.h>
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
@@ -78,12 +79,7 @@ QObject *QiSession::service(const QString &name, const QString &type)
 
 }
 
-QVector<QString> QiSession::services()
+QVector<qi::ServiceInfo> QiSession::services()
 {
-  QVector<QString> ret;
-
-  foreach (std::string str, _p->session.services())
-    ret.push_back(QString::fromStdString(str));
-
-  return ret;
+  return QVector<qi::ServiceInfo>::fromStdVector(_p->session.services());
 }

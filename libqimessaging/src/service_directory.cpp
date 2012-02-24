@@ -15,6 +15,7 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/service_info.hpp>
 #include "src/url.hpp"
 #include "src/network_thread.hpp"
 #include <qi/os.hpp>
@@ -23,17 +24,49 @@
 
 namespace qi
 {
-class ServiceDirectoryPrivate : public TransportServerInterface,
-                                public TransportSocketInterface,
-                                public Object
-{
-public:
-  ServiceDirectoryPrivate()
+
+  class ServiceDirectoryPrivate : public TransportServerInterface,
+      public TransportSocketInterface,
+      public Object
+  {
+  public:
+    ServiceDirectoryPrivate();
+    ~ServiceDirectoryPrivate();
+
+    virtual void newConnection();
+    virtual void onReadyRead(TransportSocket *socket, qi::Message &msg);
+    virtual void onWriteDone(TransportSocket *client);
+    virtual void onConnected(TransportSocket *client);
+    virtual void onDisconnected(TransportSocket *client);
+
+    std::vector<ServiceInfo> services();
+    ServiceInfo              service(const std::string &name);
+    unsigned int             registerService(const ServiceInfo &svcinfo);
+
+  public:
+    qi::NetworkThread                                 *nthd;
+    qi::TransportServer                               *ts;
+    std::map<unsigned int, ServiceInfo>                connectedServices;
+    std::map<std::string, unsigned int>                nameToIdx;
+    unsigned int                                       servicesCount;
+  }; // !ServiceDirectoryPrivate
+
+
+
+
+  ServiceDirectoryPrivate::ServiceDirectoryPrivate()
     : nthd(new qi::NetworkThread())
     , ts(new qi::TransportServer())
     , servicesCount(0)
   {
     ts->setDelegate(this);
+
+    ServiceInfo si;
+    si.setName("serviceDirectory");
+    si.setServiceId(1);
+    unsigned int regid = registerService(si);
+    //serviceDirectory must have id '1'
+    assert(regid == 1);
 
     /*
      * Order is important. See qi::Message::ServiceDirectoryFunctions.
@@ -41,21 +74,15 @@ public:
     advertiseMethod("service", this, &ServiceDirectoryPrivate::service);
     advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
     advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
-
-    /*
-     * Note: serviceDirectory will be service #1.
-     */
-    std::vector<std::string> sdEndpoints;
-    registerService("serviceDirectory", sdEndpoints);
   }
 
-  ~ServiceDirectoryPrivate()
+  ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
   {
     delete ts;
     delete nthd;
   }
 
-  virtual void newConnection()
+  void ServiceDirectoryPrivate::newConnection()
   {
     TransportSocket *socket = ts->nextPendingConnection();
     if (!socket)
@@ -63,7 +90,7 @@ public:
     socket->setDelegate(this);
   }
 
-  virtual void onReadyRead(TransportSocket *socket, qi::Message &msg)
+  void ServiceDirectoryPrivate::onReadyRead(TransportSocket *socket, qi::Message &msg)
   {
     DataStream din(msg.buffer());
 
@@ -75,84 +102,56 @@ public:
     socket->send(out);
   }
 
-  virtual void onWriteDone(TransportSocket *client)
+  void ServiceDirectoryPrivate::onWriteDone(TransportSocket *client)
   {
   }
 
-  virtual void onConnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onConnected(TransportSocket *client)
   {
   }
 
-  virtual void onDisconnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onDisconnected(TransportSocket *client)
   {
   }
 
-  std::vector<std::string> services()
+  std::vector<ServiceInfo> ServiceDirectoryPrivate::services()
   {
-    std::vector<std::string> result;
-    std::map<std::string, unsigned int>::const_iterator it;
+    std::vector<ServiceInfo> result;
+    std::map<unsigned int, ServiceInfo>::const_iterator it;
 
-    for (it = nameToIdx.begin(); it != nameToIdx.end(); ++it)
-      result.push_back(it->first);
+    for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
+      result.push_back(it->second);
 
     return result;
   }
 
-  std::vector<std::string> service(const std::string &name)
+  ServiceInfo ServiceDirectoryPrivate::service(const std::string &name)
   {
-    std::vector<std::string> result;
-    std::map<unsigned int, std::vector<std::string> >::const_iterator servicesIt;
-    std::stringstream ss;
-
+    std::map<unsigned int, ServiceInfo>::const_iterator servicesIt;
     std::map<std::string, unsigned int>::const_iterator it;
+
     it = nameToIdx.find(name);
     if (it == nameToIdx.end())
-    {
-      return result;
-    }
+      return ServiceInfo();
 
     unsigned int idx = it->second;
 
-    // store id to string in the first slot
-    ss << idx;
-    result.push_back(ss.str());
-
     servicesIt = connectedServices.find(idx);
-    for (std::vector<std::string>::const_iterator endpointsIt = servicesIt->second.begin();
-         endpointsIt != servicesIt->second.end();
-         ++endpointsIt)
-    {
-      result.push_back(*endpointsIt);
-    }
+    if (servicesIt == connectedServices.end())
+      return ServiceInfo();
 
-    return result;
+    return servicesIt->second;
   }
 
-  unsigned int registerService(const std::string &name, const std::vector<std::string> &endpoints)
+  unsigned int ServiceDirectoryPrivate::registerService(const ServiceInfo &svcinfo)
   {
     unsigned int idx = ++servicesCount;
-    nameToIdx[name] = idx;
-
-    for (std::vector<std::string>::const_iterator endpointsIt = endpoints.begin();
-         endpointsIt != endpoints.end();
-         ++endpointsIt)
-    {
-      connectedServices[idx].push_back(*endpointsIt);
-    }
-
-    qiLogInfo("qimessaging.ServiceDirectory")  << "service " << name << " registered #" << servicesCount << std::endl;
-
+    nameToIdx[svcinfo.name()] = idx;
+    connectedServices[idx] = svcinfo;
+    connectedServices[idx].setServiceId(idx);
+    qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered #" << idx << std::endl;
     return idx;
   }
-
-public:
-  qi::NetworkThread                                 *nthd;
-  qi::TransportServer                               *ts;
-  std::map<unsigned int, std::vector<std::string> >  connectedServices;
-  std::map<std::string, unsigned int>                nameToIdx;
-  unsigned int                                       servicesCount;
-
-}; // !ServiceDirectoryPrivate
 
 
 ServiceDirectory::ServiceDirectory()
@@ -167,7 +166,12 @@ ServiceDirectory::~ServiceDirectory()
 
 bool ServiceDirectory::listen(const std::string &address)
 {
-  qi::Url url(address);
+  qi::Url                  url(address);
+  std::vector<std::string> eps;
+  ServiceInfo             &si = _p->connectedServices[1];
+
+  eps.push_back(address);
+  si.setEndpoints(eps);
 
   return _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
 }

@@ -9,8 +9,10 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/server.hpp>
 #include <qimessaging/transport_server.hpp>
+#include <qimessaging/service_info.hpp>
 #include "src/url.hpp"
 #include "src/network_thread.hpp"
+#include <qi/os.hpp>
 
 namespace qi {
 
@@ -82,14 +84,18 @@ namespace qi {
 
   void Server::registerService(const std::string& name, qi::Object *obj) {
     qi::Message msg;
+    qi::ServiceInfo si;
     msg.setType(qi::Message::Call);
     msg.setService(qi::Message::ServiceDirectory);
     msg.setPath(0);
     msg.setFunction(qi::Message::RegisterService);
 
     qi::DataStream d(msg.buffer());
-    d << name;
-    d << _p->_endpoints;
+    si.setName(name);
+    si.setProcessId(qi::os::getpid());
+    si.setMachineId("TODO");
+    si.setEndpoints(_p->_endpoints);
+    d << si;
 
     _p->_session->tc->send(msg);
     _p->_session->tc->waitForId(msg.id());

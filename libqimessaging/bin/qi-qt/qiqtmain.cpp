@@ -28,9 +28,9 @@ void call(const std::string &addr)
   session.connect(QString::fromStdString(addr));
   session.waitForConnected();
 
-  QVector<QString> services = session.services();
-  foreach (QString service, services)
-    std::cout << "service named " << qPrintable(service) << std::endl;
+  QVector<qi::ServiceInfo> services = session.services();
+  foreach (const qi::ServiceInfo &service, services)
+    std::cout << "service named " << qPrintable(service.name().c_str()) << std::endl;
 
 
   QObject *obj = session.service("serviceTest");

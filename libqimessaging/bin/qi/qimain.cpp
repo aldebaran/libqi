@@ -26,10 +26,10 @@ void call(const std::string &addr)
   session.connect(addr);
   session.waitForConnected();
 
-  std::vector<std::string> servs = session.services();
+  std::vector<qi::ServiceInfo> servs = session.services();
   std::cout << "available services:" << std::endl;
   for (unsigned int i = 0; i < servs.size(); ++i)
-    std::cout << "* " << servs[i] << std::endl;
+    std::cout << "* " << servs[i].name() << std::endl;
   std::cout << std::endl;
 
   qi::Object *obj = session.service("serviceTest");
@@ -41,9 +41,7 @@ void call(const std::string &addr)
   }
 
   std::string result = obj->call<std::string>("reply", "plaf");
-
   std::cout << "answer:" << result << std::endl;
-
   session.disconnect();
 }
 

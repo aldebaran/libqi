@@ -10,6 +10,7 @@
 # define   	QT_QITRANSPORTSESSION_H_
 
 #include <qimessaging/api.hpp>
+#include <qimessaging/service_info.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QMetaObject>
 #include <QtCore/QUrl>
@@ -26,12 +27,12 @@ public:
   ~QiSession();
 
 public:
-  void               connect(const QString &masterAddress);
-  void               disconnect();
-  bool               waitForConnected(int msecs = 30000);
-  bool               waitForDisconnected(int msecs = 30000);
-  QObject           *service(const QString &name, const QString &type = "tcp");
-  QVector<QString>   services();
+  void                     connect(const QString &masterAddress);
+  void                     disconnect();
+  bool                     waitForConnected(int msecs = 30000);
+  bool                     waitForDisconnected(int msecs = 30000);
+  QObject                 *service(const QString &name, const QString &type = "tcp");
+  QVector<qi::ServiceInfo> services();
 
   // private implementation
   QiSessionPrivate *_p;

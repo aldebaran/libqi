@@ -10,6 +10,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/service_info.hpp>
 #include "src/url.hpp"
 #include "src/remoteobject_p.hpp"
 #include "src/network_thread.hpp"
@@ -61,9 +62,9 @@ bool Session::waitForDisconnected(int msecs)
   return tc->waitForDisconnected(msecs);
 }
 
-std::vector<std::string> Session::services()
+std::vector<ServiceInfo> Session::services()
 {
-  std::vector<std::string> result;
+  std::vector<ServiceInfo> result;
 
   qi::Message msg;
   msg.setType(qi::Message::Call);
@@ -101,14 +102,15 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::Message ans;
   tc->read(msg.id(), &ans);
 
+  qi::ServiceInfo si;
   qi::DataStream d(ans.buffer());
-  d >> result;
-  std::stringstream ss(result[0]);
-  ss >> *idx;
+  d >> si;
+  *idx = si.serviceId();
 
   qi::TransportSocket* ts = NULL;
 
-  qi::Url url(result[1]);
+  //TODO: choose a good endpoint
+  qi::Url url(si.endpoints()[0]);
 
   ts = new qi::TransportSocket();
   ts->setDelegate(this);
