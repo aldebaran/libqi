@@ -21,10 +21,11 @@ public:
   qi::TransportSocket *socket;
   std::string          dest;
   QMetaObject         *meta;
+  unsigned int         serviceId;
 };
 
 
-QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, const qi::MetaObject &metaobject)
+QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject)
   : _p (new QiRemoteObjectPrivate)
 {
   QMetaObjectBuilder mob;
@@ -38,11 +39,13 @@ QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest,
     qi_SignatureToMetaMethod(mm.signature(), &retSig, &funSig);
     //qDebug() << "Ret: " << retSig;
     //qDebug() << "Fun: " << funSig;
-    mob.addMethod(funSig.toUtf8(), retSig.toUtf8());
+    QMetaMethodBuilder mmb = mob.addMethod(funSig.toUtf8(), retSig.toUtf8());
+    mmb.setTag(mm.signature().c_str());
   }
 
   _p->socket = ts;
   _p->dest = dest;
+  _p->serviceId = serviceId;
   _p->meta = mob.toMetaObject();
 }
 
@@ -79,10 +82,8 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   methodname.truncate(methodname.indexOf('('));
 
   msg.setType(qi::Message::Call);
-  //msg.setService(_p->dest);
+  msg.setService(_p->serviceId);
   msg.setFunction(id - _p->meta->methodOffset());
-//  msg.setFunction(methodname.toStdString());
-//  msg.setData(args.str());
   _p->socket->send(msg);
 
   _p->socket->waitForId(msg.id());
