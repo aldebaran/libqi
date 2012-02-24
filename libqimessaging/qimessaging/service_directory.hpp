@@ -23,7 +23,7 @@ namespace qi
     ServiceDirectory();
     virtual ~ServiceDirectory();
 
-    void listen(const std::string &address);
+    bool listen(const std::string &address);
     void join();
 
   private:

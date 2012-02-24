@@ -165,11 +165,11 @@ ServiceDirectory::~ServiceDirectory()
   delete _p;
 }
 
-void ServiceDirectory::listen(const std::string &address)
+bool ServiceDirectory::listen(const std::string &address)
 {
   qi::Url url(address);
 
-  _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
+  return _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
 }
 
 void ServiceDirectory::join()

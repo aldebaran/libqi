@@ -50,7 +50,10 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
 
       qi::ServiceDirectory sd;
-      sd.listen(masterAddress);
+      if (!sd.listen(masterAddress))
+      {
+        return 1;
+      }
 
       std::cout << "ready." << std::endl;
 

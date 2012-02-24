@@ -40,7 +40,7 @@ public:
 
   void setDelegate(TransportServerInterface *delegate);
 
-  void start(const std::string &address,
+  bool start(const std::string &address,
              unsigned short port,
              struct event_base *base);
 

@@ -15,6 +15,7 @@
 #include <cstring>
 #include <queue>
 #include <qi/log.hpp>
+#include <cerrno>
 
 #include <event2/util.h>
 #include <event2/event.h>
@@ -103,7 +104,8 @@ TransportServer::~TransportServer()
   delete _p;
 }
 
-void TransportServer::start(const std::string &address,
+
+bool TransportServer::start(const std::string &address,
                             unsigned short port,
                             struct event_base *base)
 {
@@ -114,7 +116,7 @@ void TransportServer::start(const std::string &address,
   if ((sock = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
     qiLogError("qimessaging.transportserver") << "Could not get socket" << std::endl;
-    return;
+    return false;
   }
 
   evutil_make_socket_nonblocking(sock);
@@ -129,21 +131,22 @@ void TransportServer::start(const std::string &address,
   if ((addr.sin_addr.s_addr = inet_addr(address.c_str())) == INADDR_NONE)
   {
     qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
-    return;
+    return false;
   }
 
   // bind socket
   if (::bind(sock, (struct sockaddr*)&addr, sizeof (addr)) == -1)
   {
-    qiLogError("qimessaging.transportserver") << "Could not bind socket" << std::endl;
-    return;
+    qiLogError("qimessaging.transportserver") << "Could not bind socket ("
+                                              << strerror(errno) << ")" << std::endl;
+    return false;
   }
 
   //listen on the socket
   if (::listen(sock, SOMAXCONN) == -1)
   {
     qiLogError("qimessaging.transportserver") << "Could not listen on socket" << std::endl;
-    return;
+    return false;
   }
 
   _p->base = base;
@@ -151,6 +154,8 @@ void TransportServer::start(const std::string &address,
                         ::qi::accept, this);
 
   event_add(sockEvent, NULL);
+
+  return true;
 }
 
 TransportSocket *TransportServer::nextPendingConnection()
