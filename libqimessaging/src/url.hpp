@@ -56,6 +56,7 @@ namespace qi {
     unsigned short port() const { return _port; }
     const std::string& host() const { return _host; }
     unsigned int protocol() const { return _protocol; }
+    const std::string& str() const { return _url; }
   };
 }
 
