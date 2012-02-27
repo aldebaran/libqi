@@ -26,11 +26,11 @@ QiTransportSocket::~QiTransportSocket()
   delete _p;
 }
 
-bool QiTransportSocket::connect(const std::string &address,
-                                unsigned short port,
+bool QiTransportSocket::connect(const QUrl        &url,
                                 struct event_base *base)
 {
-  return _p->socket->connect(address, port, base);
+  qi::Url urlo(url.toString().toUtf8().constData());
+  return _p->socket->connect(urlo, base);
 }
 
 void QiTransportSocket::disconnect()

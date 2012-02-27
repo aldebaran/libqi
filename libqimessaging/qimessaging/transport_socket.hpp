@@ -59,8 +59,7 @@ public:
   TransportSocket(int fd, struct event_base *base);
   virtual ~TransportSocket();
 
-  bool connect(const std::string &address,
-               unsigned short port,
+  bool connect(const qi::Url     &url,
                struct event_base *base);
   void disconnect();
 

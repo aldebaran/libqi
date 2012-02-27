@@ -204,8 +204,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message &ms
       qi::Url url(result[1]);
       qi::TransportSocket *servSocket = new qi::TransportSocket();
       servSocket->setDelegate(this);
-      servSocket->connect(url.host(),
-                          url.port(),
+      servSocket->connect(url,
                           _session->_nthd->getEventBase());
       _services[serviceId] = servSocket;
 
@@ -289,14 +288,15 @@ Gateway::~Gateway()
 void Gateway::listen(qi::Session *session, const std::string &addr)
 {
   qi::Url url(addr);
+  qi::Url masterUrl("tcp://127.0.0.1:5555");
   _p->_session = session;
   _p->_socketToServiceDirectory = new qi::TransportSocket();
   _p->_socketToServiceDirectory->setDelegate(_p);
-  _p->_socketToServiceDirectory->connect("127.0.0.1", 5555, _p->_session->_nthd->getEventBase());
+  _p->_socketToServiceDirectory->connect(masterUrl, _p->_session->_nthd->getEventBase());
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(addr);
   _p->_transportServer.setDelegate(_p);
-  _p->_transportServer.start(url.host(), url.port(), session->_nthd->getEventBase());
+  _p->_transportServer.start(url, session->_nthd->getEventBase());
 }
 } // !qi

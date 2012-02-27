@@ -38,7 +38,7 @@ void Session::connect(const std::string &masterAddress)
 {
   qi::Url url(masterAddress);
 
-  tc->connect(url.host(), url.port(), _nthd->getEventBase());
+  tc->connect(url, _nthd->getEventBase());
 }
 
 bool Session::disconnect()
@@ -112,7 +112,7 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 
   ts = new qi::TransportSocket();
   ts->setDelegate(this);
-  ts->connect(url.host(), url.port(), _nthd->getEventBase());
+  ts->connect(url, _nthd->getEventBase());
   ts->waitForConnected();
 
   return ts;

@@ -175,10 +175,12 @@ TransportSocket::~TransportSocket()
   delete _p;
 }
 
-bool TransportSocket::connect(const std::string &address,
-                              unsigned short port,
+bool TransportSocket::connect(const qi::Url     &url,
                               struct event_base *base)
 {
+  const std::string &address = url.host();
+  unsigned short port = url.port();
+
   if (!_p->connected)
   {
     _p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);

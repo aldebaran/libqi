@@ -9,6 +9,7 @@
 # define   	QT_QITRANSPORTSOCKET_H_
 
 #include <QtNetwork/QAbstractSocket>
+#include <QtCore/QUrl>
 #include <qimessaging/transport_socket.hpp>
 
 class QiTransportSocketPrivate;
@@ -19,8 +20,7 @@ public:
   QiTransportSocket(int fd, struct event_base *base);
   virtual ~QiTransportSocket();
 
-  bool connect(const std::string &address,
-               unsigned short port,
+  bool connect(const QUrl        &url,
                struct event_base *base);
   void disconnect();
 

@@ -41,10 +41,7 @@ public:
 
   void setDelegate(TransportServerInterface *delegate);
 
-  bool start(const std::string &address,
-             unsigned short port,
-             struct event_base *base);
-
+  bool start(const qi::Url &url, struct event_base *base);
 
   TransportSocket *nextPendingConnection();
 

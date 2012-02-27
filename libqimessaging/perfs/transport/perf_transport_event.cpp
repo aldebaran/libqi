@@ -119,7 +119,7 @@ public:
     qi::Url urlo(_p->_url);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(urlo.host(), urlo.port(), _p->_session->_nthd->getEventBase());
+    _p->_ts.start(urlo, _p->_session->_nthd->getEventBase());
   }
 
 

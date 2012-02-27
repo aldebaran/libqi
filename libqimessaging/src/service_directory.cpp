@@ -172,7 +172,7 @@ bool ServiceDirectory::listen(const std::string &address)
   eps.push_back(address);
   si.setEndpoints(eps);
 
-  return _p->ts->start(url.host(), url.port(), _p->nthd->getEventBase());
+  return _p->ts->start(url, _p->nthd->getEventBase());
 }
 
 void ServiceDirectory::join()

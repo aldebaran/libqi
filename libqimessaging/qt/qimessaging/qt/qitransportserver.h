@@ -20,8 +20,7 @@ public:
   QiTransportServer();
   virtual ~QiTransportServer();
 
-  void start(QString            address,
-             unsigned short     port,
+  void start(const QUrl        &url,
              struct event_base *base);
 
   QiTransportSocket *nextPendingConnection();

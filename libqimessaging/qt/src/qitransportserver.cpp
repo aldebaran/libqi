@@ -14,11 +14,11 @@ public:
   qi::TransportServer server;
 };
 
-void QiTransportServer::start(QString            address,
-                              unsigned short     port,
+void QiTransportServer::start(const QUrl        &url,
                               struct event_base *base)
 {
-  _p->server.start(address.toUtf8().constData(), port, base);
+  qi::Url urlo(url.toString().toUtf8().constData());
+  _p->server.start(urlo, base);
 }
 
 QiTransportSocket *QiTransportServer::nextPendingConnection()

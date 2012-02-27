@@ -105,10 +105,11 @@ TransportServer::~TransportServer()
 }
 
 
-bool TransportServer::start(const std::string &address,
-                            unsigned short port,
+bool TransportServer::start(const qi::Url &url,
                             struct event_base *base)
 {
+  const std::string &address = url.host();
+  unsigned short port = url.port();
   evutil_socket_t sock;
   struct event*   sockEvent;
 
