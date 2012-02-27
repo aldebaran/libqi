@@ -19,7 +19,7 @@ Standards
 ---------
 
  - :ref:`Binary Message <std-binary-message>`:  describe the network binary network protocol used in qiMessaging.
-
+ - :ref:`std-code-convention` : code convention
 
 Topics
 ------
