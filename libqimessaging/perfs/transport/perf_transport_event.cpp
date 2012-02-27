@@ -30,6 +30,7 @@
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 
+#include <iostream>
 
 
 class ServerEventPrivate : public qi::TransportServerInterface, public qi::TransportSocketInterface {
@@ -38,45 +39,32 @@ public:
   {
     _dp = new qi::perf::DataPerfTimer("Transport synchronous call");
     _msgRecv = 0;
-    _sizeM = 0;
+    _numBytes = 0;
   }
 
-  virtual void newConnection() {
+  virtual void newConnection()
+  {
     qi::TransportSocket *socket = _ts.nextPendingConnection();
     if (!socket)
       return;
     socket->setDelegate(this);
   }
 
-  virtual void onReadyRead(qi::TransportSocket *client, qi::Message &msg)  {
+  virtual void onReadyRead(qi::TransportSocket *client, qi::Message *msg)
+  {
+    _msgRecv++;
+    int s = msg->size();
+    if (s != _numBytes)
+    {
+      if ((_msgRecv - 1) != gLoopCount)
+        std::cout << "Drop " << gLoopCount - _msgRecv - 1 << " messages!" << std::endl;
 
-    if (_msgRecv == 0)
-    {
-      unsigned int numBytes = (unsigned int)pow(2.0f, (int)_sizeM);
-      _dp->start(gLoopCount, numBytes);
-      _msgRecv++;
-    }
-    else if (_msgRecv == gLoopCount)
-    {
       _dp->stop(1);
-      _msgRecv = 0;
-      _sizeM++;
+      _msgRecv = 1;
+      _numBytes = s;
+      _dp->start(gLoopCount, _numBytes);
     }
-    else
-    {
-      _msgRecv++;
-    }
-
-//    qi::Object *obj;
-
-//    obj = _services[msg.service()];
-
-//    obj->metaCall(msg.function(), "", ds, rs);
-
-//    qi::Message retval;
-//    retval.buildReplyFrom(msg);
-//    client->send(retval);
-  };
+  }
 
   virtual void onWriteDone(qi::TransportSocket *client)
   {
@@ -91,13 +79,14 @@ public:
   }
 
 public:
-  qi::perf::DataPerfTimer           *_dp;
-  std::map<std::string, qi::Object*> _services;
-  qi::TransportServer                _ts;
-  std::string                        _url;
-  qi::Session                       *_session;
-  int                                _msgRecv;
-  int                                _sizeM;
+  std::map<unsigned int, qi::Object*> _services;
+  qi::TransportServer                 _ts;
+  std::vector<std::string>            _endpoints;
+  qi::Session                        *_session;
+
+  qi::perf::DataPerfTimer            *_dp;
+  int                                 _msgRecv;
+  unsigned int                        _numBytes;
 };
 
 class ServerEvent
@@ -113,20 +102,20 @@ public:
     delete _p;
   }
 
-  void listen(qi::Session *session, const std::string &url) {
-    _p->_url = url;
+  void listen(qi::Session *session, const std::vector<std::string> &endpoints)
+  {
+    _p->_endpoints = endpoints;
     _p->_session = session;
 
-    qi::Url urlo(_p->_url);
+    qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
     _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
   }
 
 
-  void registerService(const std::string &name, qi::Object *obj) {
-    _p->_services[name] = obj;
-
+  void registerService(const std::string &name, qi::Object *obj)
+  {
     qi::Message msg;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
@@ -135,13 +124,21 @@ public:
 
     qi::DataStream d(msg.buffer());
     d << name;
-    d << _p->_url;
+    d << _p->_endpoints;
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans;
+
+    qi::Message *ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-  };
+
+    qi::DataStream dout(ans->buffer());
+
+    unsigned int idx = 0;
+    dout >> idx;
+    _p->_services[idx] = obj;
+  }
+
 
   void stop() {
     }
@@ -181,8 +178,8 @@ int main_client(std::string src)
       d << requeststr;
 
       /* FIXME: what are we trying to do here? */
-      msg.setType(qi::Message::Type_Call);
-      msg.setService(1);
+      msg.setType(qi::Message::Type_Event);
+      msg.setService(serviceId);
       msg.setPath(qi::Message::Path_Main);
       msg.setFunction(1);
       sock->send(msg);

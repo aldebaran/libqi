@@ -34,10 +34,10 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, DataStr
   _ts->send(msg);
   _ts->waitForId(msg.id());
 
-  qi::Message ret;
+  qi::Message *ret;
   _ts->read(msg.id(), &ret);
   //TODO: ret(out.ioDevice())
-  out.setIODevice(ret.buffer());
+  out.setIODevice(ret->buffer());
 }
 
 }

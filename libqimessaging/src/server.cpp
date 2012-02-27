@@ -26,17 +26,17 @@ namespace qi {
       socket->setDelegate(this);
     };
 
-    virtual void onReadyRead(TransportSocket *client, qi::Message &msg) {
+    virtual void onReadyRead(TransportSocket *client, qi::Message *msg)
       qi::Object *obj;
 
-      obj = _services[msg.service()];
-      qi::DataStream ds(msg.buffer());
+      obj = _services[msg->service()];
+      qi::DataStream ds(msg->buffer());
 
       qi::Message retval;
-      retval.buildReplyFrom(msg);
+      retval.buildReplyFrom(*msg);
       qi::DataStream rs(retval.buffer());
 
-      obj->metaCall(msg.function(), "", ds, rs);
+      obj->metaCall(msg->function(), "", ds, rs);
 
       client->send(retval);
     };
@@ -99,9 +99,9 @@ namespace qi {
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans;
+    qi::Message *ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-    qi::DataStream dout(ans.buffer());
+    qi::DataStream dout(ans->buffer());
     unsigned int idx = 0;
     dout >> idx;
     _p->_services[idx] = obj;

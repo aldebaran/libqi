@@ -45,7 +45,7 @@ public:
   virtual void onConnected(TransportSocket *client)    = 0;
   virtual void onDisconnected(TransportSocket *client) = 0;
   virtual void onWriteDone(TransportSocket *client)        = 0;
-  virtual void onReadyRead(TransportSocket *client, qi::Message &msg)         = 0;
+  virtual void onReadyRead(TransportSocket *client, qi::Message *msg)         = 0;
 };
 
 struct TransportSocketPrivate;
@@ -70,7 +70,7 @@ public:
   bool waitForDisconnected(int msecs = 30000);
   bool waitForId(int id, int msecs = 30000);
 
-  void read(int id, qi::Message *msg);
+  void read(int id, qi::Message **msg);
 
   bool send(qi::Message &msg);
 

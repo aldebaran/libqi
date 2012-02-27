@@ -35,7 +35,7 @@ namespace qi {
   {
   }
 
-  void SessionPrivate::onReadyRead(TransportSocket *client, Message &msg)
+  void SessionPrivate::onReadyRead(TransportSocket *client, Message *msg)
   {
   }
 
@@ -65,10 +65,10 @@ namespace qi {
       _serviceSocket->send(msg);
 
       _serviceSocket->waitForId(msg.id());
-      qi::Message ans;
+  qi::Message *ans;
       _serviceSocket->read(msg.id(), &ans);
 
-      qi::DataStream d(ans.buffer());
+  qi::DataStream d(ans->buffer());
       d >> result;
 
       return result;
@@ -88,11 +88,11 @@ namespace qi {
     _serviceSocket->send(msg);
 
     _serviceSocket->waitForId(msg.id());
-    qi::Message ans;
+  qi::Message *ans;
     _serviceSocket->read(msg.id(), &ans);
 
     qi::ServiceInfo si;
-    qi::DataStream d(ans.buffer());
+  qi::DataStream d(ans->buffer());
     d >> si;
     *idx = si.serviceId();
 
@@ -139,12 +139,12 @@ namespace qi {
     ts->send(msg);
     ts->waitForId(msg.id());
 
-    qi::Message ret;
+  qi::Message *ret;
     ts->read(msg.id(), &ret);
 
     qi::MetaObject *mo = new qi::MetaObject;
 
-    qi::DataStream ds(ret.buffer());
+  qi::DataStream ds(ret->buffer());
 
     ds >> *mo;
 
