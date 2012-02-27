@@ -67,7 +67,9 @@ namespace qi {
     _QI_SIMPLE_SIGNATURE(void       , "v");
     _QI_SIMPLE_SIGNATURE(bool       , "b");
     _QI_SIMPLE_SIGNATURE(char       , "c");
+    _QI_SIMPLE_SIGNATURE(unsigned char , "C");
     _QI_SIMPLE_SIGNATURE(int        , "i");
+    _QI_SIMPLE_SIGNATURE(unsigned int  , "I");
     _QI_SIMPLE_SIGNATURE(float      , "f");
     _QI_SIMPLE_SIGNATURE(double     , "d");
     _QI_SIMPLE_SIGNATURE(qi::Value  , "m");
