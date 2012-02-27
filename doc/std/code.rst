@@ -1,7 +1,7 @@
 .. _std-code-convention:
 
-Code Convention
-===============
+Coding Convention
+=================
 
 Backward Compatibility
 ----------------------
@@ -12,14 +12,14 @@ http://wiki.qt-project.org/API_Design_Principles
 Naming convention
 -----------------
 
-- headers goes in <libname>/*
-- sources and private headers goes into <src>/*
+- Headers go into <libname>/*
+- Sources and private headers only go into <src>/*
 - Private headers should be named '<classname>_p.hpp'
-- Qt classes are not in a namespace and are prefixed by 'Qi'
+- Qt classes are not in a namespace and are prefixed with 'Qi'
 
 Example
 +++++++
-for the foo class in the bar library we have:
+For the *foo* class in the *bar* library we have:
 
 .. code-block:: console
 
@@ -31,7 +31,7 @@ for the foo class in the bar library we have:
   qt/src/qifoo.cpp
   qt/src/qifoo_p.h
 
-This give us the following objects:
+This gives us the following objects:
 
 STL:
 
@@ -53,15 +53,28 @@ QT:
      QiFoo foo;
   }
 
+Headers
+--------------
+
+Public headers must not include other public headers from our libraries. This
+ensures binary compatibility.
+
+Public headers must be enclosed within brackets <> when included.
+
+On the other hand, private headers must be enclosed within double quotes "" when
+included.
 
 Private Implementation
 ----------------------
 
 - Use private implementation where applicable.
-- Reserve a pointer instead if you dont use it. (for future use, see example two)
-- classes should be named <classname>Private
+- Still reserve a pointer instead if you dont use it. (for future use, see
+  example two).
+- Classes should be named <classname>Private.
+- A pointer '_p' should be added into the class.
 
-a pointer '_p' should be added into the class:
+When a class has a private implementation, the copy constructor *must* be either
+implemented, either disabled - *ie.* defined in the private section of the class.
 
 Example with Pimpl
 ++++++++++++++++++
@@ -94,12 +107,14 @@ Example without Pimpl
 Exception
 ---------
 
-Do not use exception, it's really hard to write code that do not leak using.
+Exceptions are prohibited, it's really hard to write code that do not leak using.
 
 Enum
 ----
 
-enum value should be prefixed by the enum name followed by an underscore.
+One must used the singular when naming an enumeration.
+
+Enum values should be prefixed by the enum name followed by an underscore.
 
 .. code-block:: c++
 
@@ -119,4 +134,4 @@ enum value should be prefixed by the enum name followed by an underscore.
 Members
 -------
 
-- members should be prefixed by an underscore
+- Private members names should be prefixed with underscores.
