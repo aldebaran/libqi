@@ -6,7 +6,6 @@ TODO
 xx - alcommon
 
 HX - TEST TEST TEST (auto and perf)
-XX - serialization: support unsigned everywhere
 LX - qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
 XX - ServiceDirectory: use good UUID
 XX - abstract transport

@@ -117,8 +117,17 @@ namespace qi {
       case 'b':
         _result += "bool";
         break;
+      case 'c':
+        _result += "char";
+        break;
+      case 'C':
+        _result += "unsigned char";
+        break;
       case 'i':
         _result += "int";
+        break;
+      case 'I':
+        _result += "unsigned int";
         break;
       case 'f':
         _result += "float";
