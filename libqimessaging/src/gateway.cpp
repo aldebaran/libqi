@@ -10,7 +10,6 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport_server.hpp>
 #include "src/network_thread.hpp"
-#include "src/url.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 

@@ -7,8 +7,8 @@
 
 
 #pragma once
-#ifndef _SRC_URL_HPP_
-#define _SRC_URL_HPP_
+#ifndef _QIMESSAGING_URL_HPP_
+#define _QIMESSAGING_URL_HPP_
 
 #include <string>
 #include <sstream>
@@ -60,4 +60,4 @@ namespace qi {
   };
 }
 
-#endif  // _SRC_URL_HPP_
+#endif  // _QIMESSAGING_URL_HPP_

@@ -16,7 +16,6 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
-#include "src/url.hpp"
 #include "src/network_thread.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>

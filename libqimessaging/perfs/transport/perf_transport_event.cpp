@@ -23,7 +23,7 @@
 #include <qimessaging/gateway.hpp>
 
 #include <qimessaging/transport_server.hpp>
-#include "../src/url.hpp"
+#include <qimessaging/url.hpp>
 #include "../src/network_thread.hpp"
 
 static int gLoopCount = 10000;

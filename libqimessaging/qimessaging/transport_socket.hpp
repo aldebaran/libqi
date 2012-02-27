@@ -33,6 +33,7 @@
 # include <event2/event.h>
 # include <event2/bufferevent.h>
 # include <qimessaging/message.hpp>
+# include <qimessaging/url.hpp>
 
 namespace qi {
 

@@ -10,7 +10,6 @@
 #include <qimessaging/server.hpp>
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
-#include "src/url.hpp"
 #include "src/network_thread.hpp"
 #include <qi/os.hpp>
 

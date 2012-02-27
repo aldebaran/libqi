@@ -52,6 +52,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/transport_server.hpp
                                    qimessaging/transport_socket.hpp
                                    qimessaging/value.hpp
+                                   qimessaging/url.hpp
                                    qimessaging/details/callfunctor.hpp
                                    qimessaging/details/dataperftimer.hpp
                                    qimessaging/details/function_signature.hpp
@@ -83,7 +84,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/signature_iterator.cpp
                                    src/transport_server.cpp
                                    src/transport_socket.cpp
-                                   src/url.hpp
                                    src/value.cpp)
 
 

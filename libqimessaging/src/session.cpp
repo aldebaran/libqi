@@ -11,7 +11,6 @@
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
-#include "src/url.hpp"
 #include "src/remoteobject_p.hpp"
 #include "src/network_thread.hpp"
 
