@@ -96,15 +96,6 @@ namespace qi {
     d >> si;
     *idx = si.serviceId();
 
-    qi::TransportSocket* ts = NULL;
-
-    //TODO: choose a good endpoint
-    qi::Url url(si.endpoints()[0]);
-
-    ts = new qi::TransportSocket();
-    ts->setDelegate(this);
-    ts->connect(url, _networkThread->getEventBase());
-    ts->waitForConnected();
     for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
          it != si.endpoints().end();
          ++it)
@@ -114,6 +105,7 @@ namespace qi {
       if (type == qi::Url::Protocol_Any ||
           type == url.protocol())
       {
+        qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
         ts->setDelegate(this);
         ts->connect(url, _nthd->getEventBase());
