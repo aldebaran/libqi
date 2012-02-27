@@ -44,21 +44,17 @@ namespace qi {
     MetaMethod mm(name, signature, functor);
     unsigned int idx = _meta->_methodsNumber++;
     mm._idx = idx;
-    _meta->_methods[name] = mm;
-    _meta->_methodsTable.push_back(&(_meta->_methods[name]));
-    return idx;
-  }
+    _meta->_methods.push_back(mm);
+    _meta->_methodsNameToIdx[name] = idx;
 
-  void Object::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
-  {
-    metaCall(metaObject()._methods[method]._idx, sig, in, out);
+    return idx;
   }
 
   void Object::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
   {
     //TODO: correctly handle failure
-    assert(method < metaObject()._methodsTable.size());
-    MetaMethod *mm = metaObject()._methodsTable[method];
+    assert(method < _meta->_methods.size());
+    MetaMethod *mm = &(_meta->_methods[method]);
     if (mm->_functor)
       mm->_functor->call(in, out);
   }
@@ -78,12 +74,16 @@ namespace qi {
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta) {
+    stream << meta._methodsNameToIdx;
     stream << meta._methods;
+    stream << meta._methodsNumber;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta) {
+    stream >> meta._methodsNameToIdx;
     stream >> meta._methods;
+    stream >> meta._methodsNumber;
     return stream;
   }
 

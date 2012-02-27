@@ -31,7 +31,6 @@ namespace qi {
     const qi::Functor *_functor;
     unsigned int _idx;
   };
-  typedef std::map<std::string, MetaMethod> MetaMethodMap;
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
@@ -42,9 +41,13 @@ namespace qi {
       : _methodsNumber(0)
     {
     };
-    MetaMethodMap   _methods;
-    std::vector<MetaMethod*> _methodsTable;
-    unsigned int             _methodsNumber;
+    /*
+     * When a member is added, serialization and deserialization
+     * operators _MUST_ be updated.
+     */
+    std::map<std::string, unsigned int> _methodsNameToIdx;
+    std::vector<MetaMethod>             _methods;
+    unsigned int                        _methodsNumber;
     // std::map<std::string, MethodInfo>   _signals;
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
@@ -116,7 +119,6 @@ namespace qi {
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
     RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
-    virtual void metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out);
     virtual void metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out);
 
   protected:

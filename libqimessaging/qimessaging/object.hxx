@@ -31,7 +31,7 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -50,7 +50,7 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a void method </summary>
@@ -66,7 +66,7 @@ namespace qi {
     signature += "::";
     signatureFromObject::value(f, signature);
     request << p0;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -83,7 +83,8 @@ namespace qi {
     signature += "::";
     signatureFromObject::value(f, signature);
     request << p0;
-    metaCall(method, signature, request, reply);
+
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -106,7 +107,7 @@ namespace qi {
     signatureFromObject::value(f, signature);
     request << p0;
     request << p1;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -124,7 +125,7 @@ namespace qi {
     signatureFromObject::value(f, signature);
     request << p0;
     request << p1;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -148,7 +149,7 @@ namespace qi {
     request << p0;
     request << p1;
     request << p2;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -167,7 +168,7 @@ namespace qi {
     request << p0;
     request << p1;
     request << p2;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -192,7 +193,7 @@ namespace qi {
     request << p1;
     request << p2;
     request << p3;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -212,7 +213,7 @@ namespace qi {
     request << p1;
     request << p2;
     request << p3;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -238,7 +239,7 @@ namespace qi {
     request << p2;
     request << p3;
     request << p4;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -259,7 +260,7 @@ namespace qi {
     request << p2;
     request << p3;
     request << p4;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -286,7 +287,7 @@ namespace qi {
     request << p3;
     request << p4;
     request << p5;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -308,7 +309,7 @@ namespace qi {
     request << p3;
     request << p4;
     request << p5;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -336,7 +337,7 @@ namespace qi {
     request << p4;
     request << p5;
     request << p6;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -359,7 +360,7 @@ namespace qi {
     request << p4;
     request << p5;
     request << p6;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -388,7 +389,7 @@ namespace qi {
     request << p5;
     request << p6;
     request << p7;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -412,7 +413,7 @@ namespace qi {
     request << p5;
     request << p6;
     request << p7;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
@@ -442,7 +443,7 @@ namespace qi {
     request << p6;
     request << p7;
     request << p8;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 
   /// <summary> Calls a method </summary>
@@ -467,7 +468,7 @@ namespace qi {
     request << p6;
     request << p7;
     request << p8;
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;

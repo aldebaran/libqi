@@ -22,14 +22,14 @@ RemoteObject::~RemoteObject()
 {
 }
 
-void RemoteObject::metaCall(const std::string &method, const std::string &sig, DataStream &in, DataStream &out)
+void RemoteObject::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
 {
   qi::Message msg(static_cast<Buffer *>(in.ioDevice()));
   msg.setType(qi::Message::Call);
   msg.setService(_service);
   msg.setPath(0);
   //todo handle failure
-  msg.setFunction(_meta->_methods[method]._idx);
+  msg.setFunction(method);
 
   _ts->send(msg);
   _ts->waitForId(msg.id());

@@ -17,4 +17,3 @@ XX - error handling (be rock solid)
 XX - asynchronous call for Object and for Session
 XX - private service objects (path)
 CX - object/struct serialization/signature
-LX - remove metacall with string
