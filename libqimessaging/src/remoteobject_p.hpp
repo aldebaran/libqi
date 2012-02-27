@@ -27,7 +27,6 @@ namespace qi {
   protected:
     qi::TransportSocket *_ts;
     unsigned int         _service;
-    qi::MetaObject      *_mo;
   };
 }
 
