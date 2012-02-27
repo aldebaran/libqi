@@ -12,6 +12,7 @@
 #include "src/network_thread.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
+#include "src/session_p.hpp"
 
 static int reqid = 500;
 
@@ -205,7 +206,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message &ms
       qi::TransportSocket *servSocket = new qi::TransportSocket();
       servSocket->setDelegate(this);
       servSocket->connect(url,
-                          _session->_nthd->getEventBase());
+                          _session->_p->_networkThread->getEventBase());
       _services[serviceId] = servSocket;
 
       return; //// jump to S.2
@@ -292,11 +293,11 @@ void Gateway::listen(qi::Session *session, const std::string &addr)
   _p->_session = session;
   _p->_socketToServiceDirectory = new qi::TransportSocket();
   _p->_socketToServiceDirectory->setDelegate(_p);
-  _p->_socketToServiceDirectory->connect(masterUrl, _p->_session->_nthd->getEventBase());
+  _p->_socketToServiceDirectory->connect(masterUrl, _p->_session->_p->_networkThread->getEventBase());
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(addr);
   _p->_transportServer.setDelegate(_p);
-  _p->_transportServer.start(url, session->_nthd->getEventBase());
+  _p->_transportServer.start(url, session->_p->_networkThread->getEventBase());
 }
 } // !qi

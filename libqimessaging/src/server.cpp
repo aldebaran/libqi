@@ -11,6 +11,7 @@
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/network_thread.hpp"
+#include "src/session_p.hpp"
 #include <qi/os.hpp>
 
 namespace qi {
@@ -77,7 +78,7 @@ namespace qi {
     qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(urlo, _p->_session->_nthd->getEventBase());
+    _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
   }
 
 
@@ -96,10 +97,10 @@ namespace qi {
     si.setEndpoints(_p->_endpoints);
     d << si;
 
-    _p->_session->tc->send(msg);
-    _p->_session->tc->waitForId(msg.id());
+    _p->_session->_p->_serviceSocket->send(msg);
+    _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;
-    _p->_session->tc->read(msg.id(), &ans);
+    _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
     qi::DataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;

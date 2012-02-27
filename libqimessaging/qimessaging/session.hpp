@@ -17,19 +17,13 @@
 
 namespace qi {
 
-  class NetworkThread;
   class Object;
 
-  class Session : public qi::TransportSocketInterface {
+  class SessionPrivate;
+  class Session {
   public:
     Session();
     virtual ~Session();
-
-    void onConnected(TransportSocket *client);
-    void onDisconnected(TransportSocket *client);
-    void onWriteDone(TransportSocket *client);
-    void onReadyRead(TransportSocket *client, qi::Message &msg);
-
 
     void connect(const std::string &masterAddress);
     bool disconnect();
@@ -46,10 +40,11 @@ namespace qi {
     qi::Object* service(const std::string &service,
                         qi::Url::Protocol  type = qi::Url::Protocol_Tcp);
 
-    qi::TransportSocket *tc;
-    qi::NetworkThread   *_nthd;
+
+    SessionPrivate      *_p;
   };
 }
+
 
 
 #endif  // _QIMESSAGING_SESSION_HPP_

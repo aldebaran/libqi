@@ -25,6 +25,7 @@
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/url.hpp>
 #include "../src/network_thread.hpp"
+#include "../src/session_p.hpp"
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
@@ -119,7 +120,7 @@ public:
     qi::Url urlo(_p->_url);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(urlo, _p->_session->_nthd->getEventBase());
+    _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
   }
 
 
@@ -136,10 +137,10 @@ public:
     d << name;
     d << _p->_url;
 
-    _p->_session->tc->send(msg);
-    _p->_session->tc->waitForId(msg.id());
+    _p->_session->_p->_serviceSocket->send(msg);
+    _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;
-    _p->_session->tc->read(msg.id(), &ans);
+    _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
   };
 
   void stop() {
