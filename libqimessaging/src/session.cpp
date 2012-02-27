@@ -105,8 +105,24 @@ namespace qi {
     ts->setDelegate(this);
     ts->connect(url, _networkThread->getEventBase());
     ts->waitForConnected();
+    for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
+         it != si.endpoints().end();
+         ++it)
+    {
+      qi::Url url(*it);
 
-    return ts;
+      if (type == qi::Url::Protocol_Unknown ||
+          type == url.protocol())
+      {
+        ts = new qi::TransportSocket();
+        ts->setDelegate(this);
+        ts->connect(url, _nthd->getEventBase());
+        ts->waitForConnected();
+        return ts;
+      }
+    }
+
+    return 0;
   }
 
 
