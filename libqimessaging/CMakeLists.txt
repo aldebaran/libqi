@@ -51,6 +51,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/transport_socket.hpp
                                    qimessaging/value.hpp
                                    qimessaging/url.hpp
+                                   qimessaging/future.hpp
                                    qimessaging/details/callfunctor.hpp
                                    qimessaging/details/dataperftimer.hpp
                                    qimessaging/details/function_signature.hpp
