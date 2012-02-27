@@ -120,7 +120,7 @@ namespace qi {
     virtual void metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out);
 
   protected:
-    unsigned int xAdvertiseService(const std::string &name, const std::string& signature, const Functor *functor);
+    unsigned int xAdvertiseMethod(const std::string &name, const std::string& signature, const Functor *functor);
 
   protected:
     MetaObject *_meta;
@@ -134,7 +134,7 @@ inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE
   std::string signature(name);
   signature += "::";
   signatureFromObject::value(method, signature);
-  return xAdvertiseService(name, signature, makeFunctor(object, method));
+  return xAdvertiseMethod(name, signature, makeFunctor(object, method));
 }
 
 template <typename FUNCTION_TYPE>
@@ -143,7 +143,7 @@ inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TY
   std::string signature(name);
   signature += "::";
   signatureFromObject::value(function, signature);
-  return xAdvertiseService(name, signature, makeFunctor(function));
+  return xAdvertiseMethod(name, signature, makeFunctor(function));
 }
 
 
