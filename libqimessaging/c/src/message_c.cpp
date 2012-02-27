@@ -46,15 +46,15 @@ void qi_message_set_type(qi_message_t *msg, qi_message_type_t type)
   switch (type)
   {
     case call:
-      m->msg->setType(qi::Message::Call);
+      m->msg->setType(qi::Message::Type_Call);
     case reply:
-      m->msg->setType(qi::Message::Reply);
+      m->msg->setType(qi::Message::Type_Reply);
     case event:
-      m->msg->setType(qi::Message::Event);
+      m->msg->setType(qi::Message::Type_Event);
     case error:
-      m->msg->setType(qi::Message::Error);
+      m->msg->setType(qi::Message::Type_Error);
     case none:
-      m->msg->setType(qi::Message::None);
+      m->msg->setType(qi::Message::Type_None);
     default:
       assert(false);
   }
@@ -66,15 +66,15 @@ qi_message_type_t qi_message_get_type(qi_message_t *msg)
 
   switch (m->msg->type())
   {
-    case qi::Message::Call:
+    case qi::Message::Type_Call:
       return call;
-    case qi::Message::Reply:
+    case qi::Message::Type_Reply:
       return reply;
-    case qi::Message::Event:
+    case qi::Message::Type_Event:
       return event;
-    case qi::Message::Error:
+    case qi::Message::Type_Error:
       return error;
-    case qi::Message::None:
+    case qi::Message::Type_None:
       return none;
     default:
       assert(false);

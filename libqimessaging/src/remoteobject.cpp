@@ -25,9 +25,9 @@ RemoteObject::~RemoteObject()
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
 {
   qi::Message msg(static_cast<Buffer *>(in.ioDevice()));
-  msg.setType(qi::Message::Call);
+  msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
-  msg.setPath(0);
+  msg.setPath(qi::Message::Path_Main);
   //todo handle failure
   msg.setFunction(method);
 

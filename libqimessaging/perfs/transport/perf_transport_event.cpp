@@ -127,10 +127,10 @@ public:
     _p->_services[name] = obj;
 
     qi::Message msg;
-    msg.setType(qi::Message::Call);
-    msg.setService(qi::Message::ServiceDirectory);
-    msg.setPath(0);
-    msg.setFunction(qi::Message::RegisterService);
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::DataStream d(msg.buffer());
     d << name;
@@ -180,9 +180,9 @@ int main_client(std::string src)
       d << requeststr;
 
       /* FIXME: what are we trying to do here? */
-      msg.setType(qi::Message::Call);
+      msg.setType(qi::Message::Type_Call);
       msg.setService(1);
-      msg.setPath(0);
+      msg.setPath(qi::Message::Path_Main);
       msg.setFunction(1);
       sock->send(msg);
     }

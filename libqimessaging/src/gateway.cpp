@@ -111,10 +111,10 @@ void GatewayPrivate::handleClientRead(TransportSocket *client,
 
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
-    masterMsg.setType(qi::Message::Call);
-    masterMsg.setService(qi::Message::ServiceDirectory);
-    masterMsg.setPath(0);
-    masterMsg.setFunction(qi::Message::Service);
+    masterMsg.setType(qi::Message::Type_Call);
+    masterMsg.setService(qi::Message::Service_ServiceDirectory);
+    masterMsg.setPath(qi::Message::Path_Main);
+    masterMsg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
 
     ClientRequestIdMap &reqIdMap = _serviceToClient[_socketToServiceDirectory];
     reqIdMap[masterMsg.id()] = std::make_pair(0, (qi::TransportSocket*)NULL);
@@ -161,9 +161,9 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message &ms
   if (itReq != request.end())
   {
     //// S.1/
-    if (msg.service() == qi::Message::ServiceDirectory &&
-        msg.function() == qi::Message::Service &&
-        msg.type() == qi::Message::Reply)
+    if (msg.service() == qi::Message::Service_ServiceDirectory &&
+        msg.function() == qi::Message::ServiceDirectoryFunction_Service &&
+        msg.type() == qi::Message::Type_Reply)
     {
       // Get serviceId
       std::vector<std::string> result;
@@ -295,7 +295,7 @@ void Gateway::listen(qi::Session *session, const std::string &addr)
   _p->_socketToServiceDirectory->setDelegate(_p);
   _p->_socketToServiceDirectory->connect("127.0.0.1", 5555, _p->_session->_nthd->getEventBase());
   _p->_socketToServiceDirectory->waitForConnected();
-  _p->_services[qi::Message::ServiceDirectory] = _p->_socketToServiceDirectory;
+  _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(addr);
   _p->_transportServer.setDelegate(_p);
   _p->_transportServer.start(url.host(), url.port(), session->_nthd->getEventBase());

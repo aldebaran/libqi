@@ -81,7 +81,7 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   QString methodname(method.signature());
   methodname.truncate(methodname.indexOf('('));
 
-  msg.setType(qi::Message::Call);
+  msg.setType(qi::Message::Type_Call);
   msg.setService(_p->serviceId);
   msg.setFunction(id - _p->meta->methodOffset());
   _p->socket->send(msg);

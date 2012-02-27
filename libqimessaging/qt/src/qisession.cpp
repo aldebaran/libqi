@@ -55,11 +55,10 @@ QObject *QiSession::service(const QString &name, const QString &type)
   if (!ts)
     return 0;
   qi::Message msg;
-  msg.setType(qi::Message::Call);
+  msg.setType(qi::Message::Type_Call);
   msg.setService(idx);
-  //__metaobject is always 0:0
-  msg.setPath(0);
-  msg.setFunction(0);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::Function_MetaObject);
 
   ts->send(msg);
   ts->waitForId(msg.id());

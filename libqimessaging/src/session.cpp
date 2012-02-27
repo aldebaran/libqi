@@ -67,10 +67,10 @@ std::vector<ServiceInfo> Session::services()
   std::vector<ServiceInfo> result;
 
   qi::Message msg;
-  msg.setType(qi::Message::Call);
-  msg.setService(qi::Message::ServiceDirectory);
-  msg.setPath(0);
-  msg.setFunction(qi::Message::Services);
+  msg.setType(qi::Message::Type_Call);
+  msg.setService(qi::Message::Service_ServiceDirectory);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
 
   tc->send(msg);
 
@@ -91,10 +91,10 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
   qi::Message msg;
   qi::DataStream dr(msg.buffer());
   dr << name;
-  msg.setType(qi::Message::Call);
-  msg.setService(qi::Message::ServiceDirectory);
-  msg.setPath(0);
-  msg.setFunction(qi::Message::Service);
+  msg.setType(qi::Message::Type_Call);
+  msg.setService(qi::Message::Service_ServiceDirectory);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
   tc->send(msg);
 
   tc->waitForId(msg.id());
@@ -133,11 +133,10 @@ qi::Object* Session::service(const std::string &service,
   }
 
   qi::Message msg;
-  msg.setType(qi::Message::Call);
+  msg.setType(qi::Message::Type_Call);
   msg.setService(serviceId);
-  //__metaobject is always 0:0
-  msg.setPath(0);
-  msg.setFunction(0);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::Function_MetaObject);
 
   ts->send(msg);
   ts->waitForId(msg.id());

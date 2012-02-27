@@ -37,25 +37,37 @@ namespace qi {
       uint32_t reserved;
     } MessageHeader;
 
-    enum MessageServices
+    enum Service
     {
-      ServiceDirectory = 1,
+      Service_None             = 0,
+      Service_ServiceDirectory = 1,
     };
 
-    enum ServiceDirectoryFunctions
+    enum Path
     {
-      Service         = 1,
-      Services        = 2,
-      RegisterService = 3,
+      Path_none = 0,
+      Path_Main = 1,
     };
 
-    enum MessageType
+    enum Function
     {
-      None   = 0,
-      Call   = 1,
-      Reply  = 2,
-      Event  = 3,
-      Error  = 4,
+      Function_MetaObject = 0,
+    };
+
+    enum ServiceDirectoryFunction
+    {
+      ServiceDirectoryFunction_Service         = 1,
+      ServiceDirectoryFunction_Services        = 2,
+      ServiceDirectoryFunction_RegisterService = 3,
+    };
+
+    enum Type
+    {
+      Type_None  = 0,
+      Type_Call  = 1,
+      Type_Reply = 2,
+      Type_Event = 3,
+      Type_Error = 4,
     };
 
     Message();

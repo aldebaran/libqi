@@ -85,10 +85,10 @@ namespace qi {
   void Server::registerService(const std::string& name, qi::Object *obj) {
     qi::Message msg;
     qi::ServiceInfo si;
-    msg.setType(qi::Message::Call);
-    msg.setService(qi::Message::ServiceDirectory);
-    msg.setPath(0);
-    msg.setFunction(qi::Message::RegisterService);
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::DataStream d(msg.buffer());
     si.setName(name);
