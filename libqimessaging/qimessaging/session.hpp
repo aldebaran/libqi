@@ -41,10 +41,10 @@ namespace qi {
 
     qi::TransportSocket* serviceSocket(const std::string &name,
                                        unsigned int      *idx,
-                                       const std::string &type = "tcp");
+                                       qi::Url::Protocol  type = qi::Url::Protocol_Tcp);
 
     qi::Object* service(const std::string &service,
-                        const std::string &type = "tcp");
+                        qi::Url::Protocol  type = qi::Url::Protocol_Tcp);
 
     qi::TransportSocket *tc;
     qi::NetworkThread   *_nthd;

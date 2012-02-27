@@ -47,10 +47,10 @@ bool QiSession::waitForDisconnected(int msecs)
   return _p->session.waitForDisconnected(msecs);
 }
 
-QObject *QiSession::service(const QString &name, const QString &type)
+QObject *QiSession::service(const QString &name, qi::Url::Protocol type)
 {
   unsigned int idx = 0;
-  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), &idx, type.toUtf8().constData());
+  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), &idx, type);
 
   if (!ts)
     return 0;

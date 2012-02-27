@@ -85,7 +85,7 @@ std::vector<ServiceInfo> Session::services()
 
 qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             unsigned int      *idx,
-                                            const std::string &type)
+                                            qi::Url::Protocol  type)
 {
   qi::Message msg;
   qi::DataStream dr(msg.buffer());
@@ -120,7 +120,7 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
 
 
 qi::Object* Session::service(const std::string &service,
-                             const std::string &type)
+                             qi::Url::Protocol  type)
 {
   qi::Object          *obj;
   unsigned int serviceId = 0;

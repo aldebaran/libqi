@@ -11,6 +11,7 @@
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/service_info.hpp>
+#include <qimessaging/url.hpp>
 #include <QtCore/QObject>
 #include <QtCore/QMetaObject>
 #include <QtCore/QUrl>
@@ -31,7 +32,8 @@ public:
   void                     disconnect();
   bool                     waitForConnected(int msecs = 30000);
   bool                     waitForDisconnected(int msecs = 30000);
-  QObject                 *service(const QString &name, const QString &type = "tcp");
+  QObject                 *service(const QString     &name,
+                                   qi::Url::Protocol type = qi::Url::Protocol_Tcp);
   QVector<qi::ServiceInfo> services();
 
   // private implementation
