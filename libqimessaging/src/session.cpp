@@ -88,7 +88,6 @@ qi::TransportSocket* Session::serviceSocket(const std::string &name,
                                             unsigned int      *idx,
                                             const std::string &type)
 {
-  std::vector<std::string> result;
   qi::Message msg;
   qi::DataStream dr(msg.buffer());
   dr << name;
