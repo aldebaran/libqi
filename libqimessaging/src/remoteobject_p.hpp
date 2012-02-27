@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef _SRC_REMOTEOBJECT_P_HPP_
 #define _SRC_REMOTEOBJECT_P_HPP_
 

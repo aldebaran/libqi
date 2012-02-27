@@ -1,5 +1,4 @@
 
-#pragma once
 /*
 ** $autogen
 *
@@ -11,6 +10,7 @@
 */
 
 
+#pragma once
 #ifndef _QIMESSAGING_QT_HPP_
 #define _QIMESSAGING_QT_HPP_
 

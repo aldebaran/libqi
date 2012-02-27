@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 hcuche
 */
 
+#pragma once
 #ifndef _QIMESSAGING_BUFFER_HPP_
 #define _QIMESSAGING_BUFFER_HPP_
 

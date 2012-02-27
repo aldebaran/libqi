@@ -7,6 +7,7 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef _QIMESSAGING_DETAILS_VOIDFUNCTOR_HXX_
 #define _QIMESSAGING_DETAILS_VOIDFUNCTOR_HXX_
 

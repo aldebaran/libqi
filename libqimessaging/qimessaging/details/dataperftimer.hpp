@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
@@ -8,6 +7,7 @@
 */
 
 
+#pragma once
 #ifndef _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 #define _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 

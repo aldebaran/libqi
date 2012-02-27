@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
@@ -8,6 +7,7 @@
 */
 
 
+#pragma once
 #ifndef _SRC_MESSAGING_NETWORK_ENDPOINT_CONTEXT_HPP_
 #define _SRC_MESSAGING_NETWORK_ENDPOINT_CONTEXT_HPP_
 

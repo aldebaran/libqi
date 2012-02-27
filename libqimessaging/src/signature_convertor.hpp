@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
@@ -8,6 +7,7 @@
 */
 
 
+#pragma once
 #ifndef _SRC_SIGNATURE_CONVERTOR_HPP_
 #define _SRC_SIGNATURE_CONVERTOR_HPP_
 

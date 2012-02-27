@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
@@ -8,6 +7,7 @@
 */
 
 
+#pragma once
 #ifndef _SRC_MESSAGING_NETWORK_ENDPOINTS_HPP_
 #define _SRC_MESSAGING_NETWORK_ENDPOINTS_HPP_
 

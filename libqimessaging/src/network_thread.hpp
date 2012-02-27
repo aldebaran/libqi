@@ -10,6 +10,7 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
+#pragma once
 #ifndef _SRC_NETWORK_THREAD_HPP_
 #define _SRC_NETWORK_THREAD_HPP_
 

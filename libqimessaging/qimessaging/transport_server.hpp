@@ -10,6 +10,7 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
+#pragma once
 #ifndef _QIMESSAGING_TRANSPORT_SERVER_HPP_
 #define _QIMESSAGING_TRANSPORT_SERVER_HPP_
 

@@ -1,5 +1,4 @@
 
-#pragma once
 /*
 * $autogen
 *
@@ -10,6 +9,7 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef _QIMESSAGING_OBJECT_HXX_
 #define _QIMESSAGING_OBJECT_HXX_
 

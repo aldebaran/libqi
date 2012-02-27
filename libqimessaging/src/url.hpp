@@ -1,4 +1,3 @@
-#pragma once
 /*
 *  Author(s):
 *  - Laurent Lec <llec@aldebaran-robotics.com>
@@ -7,6 +6,7 @@
 */
 
 
+#pragma once
 #ifndef _SRC_URL_HPP_
 #define _SRC_URL_HPP_
 

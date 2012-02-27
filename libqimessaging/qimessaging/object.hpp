@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef _QIMESSAGING_OBJECT_HPP_
 #define _QIMESSAGING_OBJECT_HPP_
 

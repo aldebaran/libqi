@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef _QIMESSAGING_SESSION_HPP_
 #define _QIMESSAGING_SESSION_HPP_
 
