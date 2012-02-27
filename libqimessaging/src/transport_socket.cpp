@@ -297,11 +297,9 @@ bool TransportSocket::send(qi::Message &msg)
 {
   msg.complete();
 
-  struct evbuffer *output = bufferevent_get_output(_p->bev);
-  if (_p->connected && !evbuffer_add_buffer(output, reinterpret_cast<struct evbuffer*>(msg.buffer()->data())))
-  {
+  struct evbuffer *buf = reinterpret_cast<struct evbuffer*>(msg.buffer()->data());
+  if (_p->connected && (bufferevent_write_buffer(_p->bev, buf) == 0))
     return true;
-  }
 
   return false;
 }
