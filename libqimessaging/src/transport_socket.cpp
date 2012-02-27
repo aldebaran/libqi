@@ -39,7 +39,10 @@ struct TransportSocketPrivate
     , bev(NULL)
     , connected(false)
     , fd(-1)
+    , readHdr(true)
+    , sizeRead(0)
   {
+    msg = NULL;
   }
 
   TransportSocketPrivate(int fileDesc)
@@ -47,12 +50,16 @@ struct TransportSocketPrivate
     , bev(NULL)
     , connected(false)
     , fd(fileDesc)
+    , readHdr(true)
+    , sizeRead(0)
   {
+    msg = NULL;
   }
 
   ~TransportSocketPrivate()
   {
   }
+
 
   TransportSocketInterface            *tcd;
   struct bufferevent                  *bev;
@@ -61,6 +68,12 @@ struct TransportSocketPrivate
   boost::mutex                         mtx;
   boost::condition_variable            cond;
   int                                  fd;
+
+
+  // data to rebuild message
+  bool                         readHdr;
+  int                          sizeRead;
+  qi::Message                 *msg;
 };
 
 
@@ -92,27 +105,59 @@ static void eventcb(struct bufferevent *bev,
 void TransportSocket::readcb(struct bufferevent *bev,
                              void *context)
 {
-  // FIXME for multiple message & optimization
-  qi::Buffer      *buf = new qi::Buffer();
-  qi::Message     *msg = new qi::Message(buf);
   struct evbuffer *input = bufferevent_get_input(bev);
-  struct evbuffer *tmp = evbuffer_new();
 
-  // get the header
-  evbuffer_remove(input, msg->_header, sizeof(qi::Message::MessageHeader));
-  // get the data
-  //TODO check the return value
-  evbuffer_remove_buffer(input, tmp, msg->_header->size);
-  // set the data
-  buf->setData(reinterpret_cast<void*>(tmp));
-
-  boost::mutex::scoped_lock l(_p->mtx);
+  while (true)
   {
-    _p->msgSend[msg->id()] = msg;
-    _p->tcd->onReadyRead(this, *msg);
-    _p->cond.notify_all();
+    if (_p->msg == NULL)
+    {
+      _p->msg = new qi::Message();
+      _p->sizeRead = 0;
+      _p->readHdr = true;
+    }
+
+    int read = 0;
+    // get the header
+    if (_p->readHdr)
+    {
+      read = evbuffer_remove(input,
+                             (char*)_p->msg->_header + _p->sizeRead,
+                             sizeof(qi::Message::MessageHeader) - _p->sizeRead);
+
+      if (read <= 0)
+        break;
+
+      _p->sizeRead += read;
+      if (_p->sizeRead < sizeof(qi::Message::MessageHeader))
+        break;
+
+
+      _p->readHdr = false;
+      _p->sizeRead = 0;
+    }
+
+    read = evbuffer_remove_buffer(input,
+                                  (struct evbuffer *)_p->msg->buffer()->data(),
+                                  _p->msg->_header->size - _p->sizeRead);
+
+    if (read < 0)
+      break;
+
+    _p->sizeRead += read;
+    if (_p->sizeRead < _p->msg->_header->size)
+      break;
+
+    {
+      boost::mutex::scoped_lock l(_p->mtx);
+      _p->msgSend[_p->msg->id()] = _p->msg;
+      _p->tcd->onReadyRead(this, _p->msg);
+      _p->cond.notify_all();
+    }
+
+    _p->msg = NULL;
   }
 }
+
 
 void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
@@ -314,3 +359,4 @@ bool TransportSocket::isConnected()
 }
 
 }
+
