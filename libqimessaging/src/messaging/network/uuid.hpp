@@ -21,8 +21,8 @@
     TODO: use uuid from boost 1.44
 */
 
-#ifndef _QI_MESSAGING_SRC_NETWORK_UUID_HPP_
-#define _QI_MESSAGING_SRC_NETWORK_UUID_HPP_
+#ifndef _SRC_MESSAGING_NETWORK_UUID_HPP_
+#define _SRC_MESSAGING_NETWORK_UUID_HPP_
 
 #include <string>
 #ifdef _WIN32
@@ -79,4 +79,4 @@ namespace qi {
   }
 }
 
-#endif  // _QI_MESSAGING_SRC_NETWORK_UUID_HPP_
+#endif  // _SRC_MESSAGING_NETWORK_UUID_HPP_

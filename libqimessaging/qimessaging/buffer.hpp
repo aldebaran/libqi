@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 hcuche
 */
 
-#ifndef BUFFER_HPP_
-# define BUFFER_HPP_
+#ifndef _QIMESSAGING_BUFFER_HPP_
+#define _QIMESSAGING_BUFFER_HPP_
 
 # include <qimessaging/iodevice.hpp>
 
@@ -41,4 +41,4 @@ namespace qi
 
 } // !qi
 
-#endif // !BUFFER_HPP_
+#endif  // _QIMESSAGING_BUFFER_HPP_

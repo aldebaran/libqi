@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
-#define _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
+#ifndef _SRC_MESSAGING_NETWORK_MACHINE_CONTEXT_HPP_
+#define _SRC_MESSAGING_NETWORK_MACHINE_CONTEXT_HPP_
 
 #include <string>
 #include "src/messaging/network/platform.hpp"
@@ -31,5 +31,5 @@ namespace qi {
     };
   }
 }
-#endif  // _QI_MESSAGING_SRC_NETWORK_MACHINE_CONTEXT_HPP_
+#endif  // _SRC_MESSAGING_NETWORK_MACHINE_CONTEXT_HPP_
 

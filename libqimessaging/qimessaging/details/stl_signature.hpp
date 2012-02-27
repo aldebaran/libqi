@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QIMESSAGING_SIGNATURE_DETAIL_STL_SIGNATURE_HPP_
-#define _QIMESSAGING_SIGNATURE_DETAIL_STL_SIGNATURE_HPP_
+#ifndef _QIMESSAGING_DETAILS_STL_SIGNATURE_HPP_
+#define _QIMESSAGING_DETAILS_STL_SIGNATURE_HPP_
 
 # include <qimessaging/details/type_signature.hpp>
 # include <string>
@@ -28,4 +28,4 @@ namespace qi {
   }
 }
 
-#endif  // _QIMESSAGING_SIGNATURE_DETAIL_STL_SIGNATURE_HPP_
+#endif  // _QIMESSAGING_DETAILS_STL_SIGNATURE_HPP_

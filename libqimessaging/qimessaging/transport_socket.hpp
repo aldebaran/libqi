@@ -23,8 +23,8 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef   	TRANSPORT_CLIENT_HPP_
-# define   	TRANSPORT_CLIENT_HPP_
+#ifndef _QIMESSAGING_TRANSPORT_SOCKET_HPP_
+#define _QIMESSAGING_TRANSPORT_SOCKET_HPP_
 
 # include <string>
 # include <qi/macro.hpp>
@@ -88,4 +88,4 @@ private:
 
 }
 
-#endif	    /* !TRANSPORT_CLIENT_HPP_ */
+#endif  // _QIMESSAGING_TRANSPORT_SOCKET_HPP_

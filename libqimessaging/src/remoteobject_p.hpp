@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	REMOTEOBJECT_P_HPP_
-# define   	REMOTEOBJECT_P_HPP_
+#ifndef _SRC_REMOTEOBJECT_P_HPP_
+#define _SRC_REMOTEOBJECT_P_HPP_
 
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/object.hpp>
@@ -32,4 +32,4 @@ namespace qi {
 
 
 
-#endif	    /* !REMOTEOBJECT_P_PP_ */
+#endif  // _SRC_REMOTEOBJECT_P_HPP_

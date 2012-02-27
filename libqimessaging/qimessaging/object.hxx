@@ -10,8 +10,8 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
-#ifndef _QI_MESSAGING_OBJECT_HXX_
-#define _QI_MESSAGING_OBJECT_HXX_
+#ifndef _QIMESSAGING_OBJECT_HXX_
+#define _QIMESSAGING_OBJECT_HXX_
 
 #include <qimessaging/buffer.hpp>
 
@@ -476,4 +476,4 @@ namespace qi {
   }
 
 }
-#endif  // _QI_MESSAGING_OBJECT_HXX_
+#endif  // _QIMESSAGING_OBJECT_HXX_

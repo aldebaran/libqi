@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
-#define _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
+#ifndef _SRC_MESSAGING_NETWORK_IP_ADDRESS_HPP_
+#define _SRC_MESSAGING_NETWORK_IP_ADDRESS_HPP_
 
 #include <string>
 #include <vector>
@@ -38,5 +38,5 @@ namespace qi {
         std::string& numericHostName);
   }
 }
-#endif  // _QI_MESSAGING_SRC_NETWORK_IP_ADDRESS_HPP_
+#endif  // _SRC_MESSAGING_NETWORK_IP_ADDRESS_HPP_
 

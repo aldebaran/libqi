@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef	GATEWAY_HPP_
-# define GATEWAY_HPP_
+#ifndef _QIMESSAGING_GATEWAY_HPP_
+#define _QIMESSAGING_GATEWAY_HPP_
 
 # include <string>
 # include <qimessaging/object.hpp>
@@ -32,4 +32,4 @@ namespace qi
   };
 }
 
-#endif // !GATEWAY_HPP_
+#endif  // _QIMESSAGING_GATEWAY_HPP_

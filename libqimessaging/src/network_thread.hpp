@@ -10,8 +10,8 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
-#ifndef NETWORK_THREAD_HPP_
-# define NETWORK_THREAD_HPP_
+#ifndef _SRC_NETWORK_THREAD_HPP_
+#define _SRC_NETWORK_THREAD_HPP_
 
 # include <event2/event.h>
 # include <event2/bufferevent.h>
@@ -38,4 +38,4 @@ private:
 };
 }
 
-#endif /* !NETWORK_THREAD_PP_ */
+#endif  // _SRC_NETWORK_THREAD_HPP_

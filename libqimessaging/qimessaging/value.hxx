@@ -153,4 +153,4 @@ namespace qi {
 
 };
 
-#endif  // _QIMESSAGING_VALUE_HPP_
+#endif  // _QIMESSAGING_VALUE_HXX_

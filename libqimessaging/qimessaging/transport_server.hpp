@@ -10,8 +10,8 @@
 ** Copyright (C) 2012 Herve Cuche
 */
 
-#ifndef   	TRANSPORT_SERVER_HPP_
-# define   	TRANSPORT_SERVER_HPP_
+#ifndef _QIMESSAGING_TRANSPORT_SERVER_HPP_
+#define _QIMESSAGING_TRANSPORT_SERVER_HPP_
 
 # include <string>
 # include <map>
@@ -52,4 +52,4 @@ public:
 
 }
 
-#endif	    /* !TRANSPORT_SERVER_HPP_ */
+#endif  // _QIMESSAGING_TRANSPORT_SERVER_HPP_

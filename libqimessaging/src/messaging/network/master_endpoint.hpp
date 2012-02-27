@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_MESSAGING_SRC_NETWORK_MASTER_ENDPOINT_HPP_
-#define _QI_MESSAGING_SRC_NETWORK_MASTER_ENDPOINT_HPP_
+#ifndef _SRC_MESSAGING_NETWORK_MASTER_ENDPOINT_HPP_
+#define _SRC_MESSAGING_NETWORK_MASTER_ENDPOINT_HPP_
 
 #include <string>
 
@@ -31,5 +31,5 @@ namespace qi {
       std::pair<std::string, int>& outEndpointAndPort);
   }
 }
-#endif  // _QI_MESSAGING_SRC_NETWORK_MASTER_ENDPOINT_HPP_
+#endif  // _SRC_MESSAGING_NETWORK_MASTER_ENDPOINT_HPP_
 

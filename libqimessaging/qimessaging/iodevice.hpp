@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 hcuche
 */
 
-#ifndef IODEVICE_HPP_
-# define IODEVICE_HPP_
+#ifndef _QIMESSAGING_IODEVICE_HPP_
+#define _QIMESSAGING_IODEVICE_HPP_
 
 namespace qi
 {
@@ -24,4 +24,4 @@ namespace qi
   }; // !IODevice
 } // !qi
 
-#endif // !IODEVICE_HPP_
+#endif  // _QIMESSAGING_IODEVICE_HPP_

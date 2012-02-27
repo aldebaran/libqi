@@ -8,8 +8,8 @@
 */
 
 
-#ifndef _QI_PERF_DATAPERFTIMER_HPP_
-#define _QI_PERF_DATAPERFTIMER_HPP_
+#ifndef _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
+#define _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 
 #include <qi/config.hpp>
 #include <qi/os.hpp>
@@ -74,5 +74,5 @@ namespace qi {
 }
 
 
-#endif  // _QI_PERF_DATAPERFTIMER_HPP_
+#endif  // _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 

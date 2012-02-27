@@ -8,8 +8,8 @@
  */
 
 
-#ifndef _QIMESSAGING_SERIALIZATION_DATASTREAM_HPP_
-#define _QIMESSAGING_SERIALIZATION_DATASTREAM_HPP_
+#ifndef _QIMESSAGING_DATASTREAM_HPP_
+#define _QIMESSAGING_DATASTREAM_HPP_
 
 #include <iostream>
 #include <list>
@@ -215,4 +215,4 @@ namespace qi {
   qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &value);
 }
 
-#endif  // _QIMESSAGING_SERIALIZATION_MESSAGE_HPP_
+#endif  // _QIMESSAGING_DATASTREAM_HPP_

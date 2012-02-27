@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	NETWORK_CLIENT_HPP_
-# define   	NETWORK_CLIENT_HPP_
+#ifndef _QIMESSAGING_SESSION_HPP_
+#define _QIMESSAGING_SESSION_HPP_
 
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_info.hpp>
@@ -51,4 +51,4 @@ namespace qi {
 }
 
 
-#endif	    /* !NETWORK_CLIENT_PP_ */
+#endif  // _QIMESSAGING_SESSION_HPP_

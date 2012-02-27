@@ -7,8 +7,8 @@
 */
 
 
-#ifndef _QIMESSAGING_TRANSPORT_URL_HPP_
-#define _QIMESSAGING_TRANSPORT_URL_HPP_
+#ifndef _SRC_URL_HPP_
+#define _SRC_URL_HPP_
 
 #include <string>
 #include <sstream>
@@ -60,4 +60,4 @@ namespace qi {
   };
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_URL_HPP_
+#endif  // _SRC_URL_HPP_

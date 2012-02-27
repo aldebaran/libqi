@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	_QIMESSAGING_OBJECT_HPP_
-# define   	_QIMESSAGING_OBJECT_HPP_
+#ifndef _QIMESSAGING_OBJECT_HPP_
+#define _QIMESSAGING_OBJECT_HPP_
 
 #include <map>
 #include <string>
@@ -150,4 +150,4 @@ inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TY
 };
 
 #include <qimessaging/object.hxx>
-#endif
+#endif  // _QIMESSAGING_OBJECT_HPP_

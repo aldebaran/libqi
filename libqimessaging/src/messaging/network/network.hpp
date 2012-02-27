@@ -8,13 +8,13 @@
 */
 
 
-#ifndef _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
-#define _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
+#ifndef _SRC_MESSAGING_NETWORK_NETWORK_HPP_
+#define _SRC_MESSAGING_NETWORK_NETWORK_HPP_
 
 #include "src/messaging/network/ip_address.hpp"
 #include "src/messaging/network/mac_address.hpp"
 #include "src/messaging/network/uuid.hpp"
 #include "src/messaging/network/platform.hpp"
 
-#endif  // _QI_MESSAGING_SRC_NETWORK_NETWORK_HPP_
+#endif  // _SRC_MESSAGING_NETWORK_NETWORK_HPP_
 

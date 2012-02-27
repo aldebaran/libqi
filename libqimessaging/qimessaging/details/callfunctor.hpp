@@ -10,8 +10,8 @@
 *  Copyright (C) 2010 Aldebaran Robotics
 */
 
-#ifndef _QIMESSAGING_FUNCTORS_CALLFUNCTOR_HPP_
-#define _QIMESSAGING_FUNCTORS_CALLFUNCTOR_HPP_
+#ifndef _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
+#define _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
 
 #include <qimessaging/functor.hpp>
 
@@ -344,4 +344,4 @@ namespace qi
   }
 
 }
-#endif  // _QIMESSAGING_FUNCTORS_CALLFUNCTOR_HPP_
+#endif  // _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_

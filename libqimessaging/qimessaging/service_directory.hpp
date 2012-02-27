@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef SERVICE_DIRECTORY_HPP_
-# define SERVICE_DIRECTORY_HPP_
+#ifndef _QIMESSAGING_SERVICE_DIRECTORY_HPP_
+#define _QIMESSAGING_SERVICE_DIRECTORY_HPP_
 
 #include <string>
 
@@ -32,4 +32,4 @@ namespace qi
   }; // !ServiceDirectory
 }; // !qi
 
-#endif // !SERVICE_DIRECTORY_HPP_
+#endif  // _QIMESSAGING_SERVICE_DIRECTORY_HPP_
