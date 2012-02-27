@@ -22,10 +22,10 @@ namespace qi {
     std::string    _host;
     unsigned int   _protocol;
   public:
-    enum UrlProtocol {
-      Invalid = 0,
-      Unknown = 1,
-      Tcp     = 2,
+    enum Protocol {
+      Protocol_Invalid = 0,
+      Protocol_Unknown = 1,
+      Protocol_Tcp     = 2,
     };
 
     Url(const std::string &url)
@@ -38,11 +38,11 @@ namespace qi {
 
       if (type == "tcp")
       {
-        _protocol = Tcp;
+        _protocol = Protocol_Tcp;
       }
       else
       {
-        _protocol = Unknown;
+        _protocol = Protocol_Unknown;
       }
 
       begin = end + 3;
