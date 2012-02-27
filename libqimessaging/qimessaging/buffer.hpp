@@ -33,7 +33,7 @@ namespace qi
     size_t size() const;
 
     void *data();
-    void setData(void *data);
+    void  setData(void *data);
 
   private:
     BufferPrivate *_p;

@@ -9,6 +9,8 @@
 #include <event2/buffer.h>
 #include <qimessaging/buffer.hpp>
 
+#include <cstdio>
+#include <cstdlib>
 
 namespace qi
 {
@@ -24,8 +26,11 @@ public:
   {
   }
 
+  void dump();
   struct evbuffer *_bufev;
 };
+
+
 
   Buffer::Buffer()
     : _p(new BufferPrivate())
@@ -74,6 +79,23 @@ public:
   void Buffer::setData(void *data)
   {
     _p->_bufev = reinterpret_cast<struct evbuffer *>(data);
+  }
+
+  void BufferPrivate::dump()
+  {
+    size_t size = evbuffer_get_length(_bufev);
+    unsigned char *buf = (unsigned char*)malloc(size * sizeof(unsigned char));
+    evbuffer_copyout(_bufev, buf, size);
+
+    int i = 0;
+    while (i < size)
+    {
+      printf("%02x ", *buf);
+      ++buf;
+      ++i;
+    }
+    printf("\n");
+    fflush(stdout);
   }
 
 } // !qi
