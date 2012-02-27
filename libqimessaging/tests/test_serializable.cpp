@@ -2,7 +2,6 @@
 #include <string>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/reflect.hpp>
 
 //using namespace qi::serialization;
 

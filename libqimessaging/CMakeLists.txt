@@ -42,8 +42,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/message.hpp
                                    qimessaging/object.hpp
                                    qimessaging/object.hxx
-                                   qimessaging/qt.hpp
-                                   qimessaging/reflect.hpp
                                    qimessaging/server.hpp
                                    qimessaging/service_directory.hpp
                                    qimessaging/service_info.hpp

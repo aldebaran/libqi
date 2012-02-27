@@ -8,7 +8,6 @@
 #include <gtest/gtest.h>
 #include <qimessaging/value.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/reflect.hpp>
 #include <vector>
 #include <map>
 
