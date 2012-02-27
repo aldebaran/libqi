@@ -45,7 +45,7 @@ namespace qi {
 
     enum Path
     {
-      Path_none = 0,
+      Path_None = 0,
       Path_Main = 1,
     };
 

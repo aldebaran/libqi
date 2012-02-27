@@ -138,7 +138,7 @@ namespace qi {
       return false;
     }
 
-    if (path() == qi::Message::Service_None)
+    if (path() == qi::Message::Path_None)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (path is 0)" << std::endl;
       assert(service() != qi::Message::Service_None);
