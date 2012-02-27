@@ -3,6 +3,12 @@
 Code Convention
 ===============
 
+Backward Compatibility
+----------------------
+
+http://wiki.qt-project.org/API_Design_Principles
+
+
 Naming convention
 -----------------
 
