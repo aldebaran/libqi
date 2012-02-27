@@ -111,7 +111,7 @@ namespace qi {
     {
       qi::Url url(*it);
 
-      if (type == qi::Url::Protocol_Unknown ||
+      if (type == qi::Url::Protocol_Any ||
           type == url.protocol())
       {
         ts = new qi::TransportSocket();

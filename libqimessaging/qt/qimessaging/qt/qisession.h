@@ -33,7 +33,7 @@ public:
   bool                     waitForConnected(int msecs = 30000);
   bool                     waitForDisconnected(int msecs = 30000);
   QObject                 *service(const QString     &name,
-                                   qi::Url::Protocol type = qi::Url::Protocol_Tcp);
+                                   qi::Url::Protocol type = qi::Url::Protocol_Any);
   QVector<qi::ServiceInfo> services();
 
   // private implementation

@@ -25,7 +25,8 @@ namespace qi {
     enum Protocol {
       Protocol_Invalid = 0,
       Protocol_Unknown = 1,
-      Protocol_Tcp     = 2,
+      Protocol_Any     = 2,
+      Protocol_Tcp     = 3,
     };
 
     Url(const std::string &url)
@@ -42,7 +43,7 @@ namespace qi {
       }
       else
       {
-        _protocol = Protocol_Unknown;
+        _protocol = Protocol_Any;
       }
 
       begin = end + 3;
