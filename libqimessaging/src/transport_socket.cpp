@@ -235,8 +235,13 @@ bool TransportSocket::connect(const qi::Url     &url,
 
     bufferevent_socket_connect_hostname(_p->bev, NULL, AF_INET, address.c_str(), port);
 
-    if (_p->connected)
+    int result = bufferevent_socket_connect_hostname(_p->bev, NULL, AF_INET, address.c_str(), port);
+
+    if (result == 0)
+    {
+      _p->connected = true;
       return true;
+    }
   }
 
   return false;
