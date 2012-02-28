@@ -53,6 +53,7 @@ namespace qi {
     memcpy(_header, msg._header, sizeof(MessageHeader));
     _buffer = msg._buffer;
     _withBuffer = true;
+    return *this;
   }
 
   Message::~Message()
