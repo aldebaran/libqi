@@ -25,7 +25,7 @@ namespace qi {
     Session();
     virtual ~Session();
 
-    void connect(const std::string &masterAddress);
+    bool connect(const std::string &masterAddress);
     bool disconnect();
     void join();
     bool waitForConnected(int msecs = 30000);

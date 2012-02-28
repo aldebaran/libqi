@@ -47,9 +47,9 @@ namespace qi {
   {
   }
 
-  void SessionPrivate::connect(const std::string &url)
+  bool SessionPrivate::connect(const std::string &url)
   {
-    _serviceSocket->connect(url, _networkThread->getEventBase());
+    return _serviceSocket->connect(url, _networkThread->getEventBase());
   }
 
   std::vector<ServiceInfo> SessionPrivate::services()
@@ -167,9 +167,9 @@ namespace qi {
   }
 
 
-  void Session::connect(const std::string &masterAddress)
+  bool Session::connect(const std::string &masterAddress)
   {
-    _p->connect(masterAddress);
+    return _p->connect(masterAddress);
   }
 
   bool Session::disconnect()
