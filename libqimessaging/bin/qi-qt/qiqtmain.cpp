@@ -30,7 +30,7 @@ void call(const std::string &addr)
 
   QVector<qi::ServiceInfo> services = session.services();
   foreach (const qi::ServiceInfo &service, services)
-    std::cout << "service named " << qPrintable(service.name().c_str()) << std::endl;
+    std::cout << "service named " << service.name().c_str() << std::endl;
 
 
   QObject *obj = session.service("serviceTest");

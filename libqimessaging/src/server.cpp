@@ -3,7 +3,7 @@
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 #include <qimessaging/object.hpp>
@@ -16,17 +16,20 @@
 
 namespace qi {
 
-  class ServerPrivate : public TransportServerInterface, public TransportSocketInterface {
+  class ServerPrivate : public TransportServerInterface, public TransportSocketInterface
+  {
   public:
 
-    virtual void newConnection() {
+    virtual void newConnection()
+    {
       TransportSocket *socket = _ts.nextPendingConnection();
       if (!socket)
         return;
       socket->setDelegate(this);
-    };
+    }
 
     virtual void onReadyRead(TransportSocket *client, qi::Message *msg)
+    {
       qi::Object *obj;
 
       obj = _services[msg->service()];
@@ -54,10 +57,10 @@ namespace qi {
     }
 
   public:
-    std::map<unsigned int, qi::Object*>_services;
-    TransportServer                    _ts;
-    std::vector<std::string>           _endpoints;
-    qi::Session                       *_session;
+    std::map<unsigned int, qi::Object*> _services;
+    TransportServer                     _ts;
+    std::vector<std::string>            _endpoints;
+    qi::Session                        *_session;
   };
 
   Server::Server()
@@ -83,6 +86,7 @@ namespace qi {
 
 
   unsigned int Server::registerService(const std::string& name, qi::Object *obj) {
+  {
     qi::Message msg;
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Call);

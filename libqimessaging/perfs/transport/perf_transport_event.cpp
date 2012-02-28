@@ -248,7 +248,9 @@ int main_server()
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
-  srv.listen(&session, "tcp://127.0.0.1:9559");
+  std::vector<std::string> endpoints;
+  endpoints.push_back("tcp://127.0.0.1:9559");
+  srv.listen(&session, endpoints);
   srv.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
