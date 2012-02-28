@@ -91,6 +91,9 @@ namespace qi {
     bool complete();
     void buildReplyFrom(const Message &call);
     void buildForwardFrom(const Message &msg);
+
+    bool checkMagic();
+
   public:
     MessageHeader *_header;
 

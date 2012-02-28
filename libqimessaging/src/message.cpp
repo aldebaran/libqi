@@ -167,4 +167,10 @@ namespace qi {
     setPath(msg.path());
     setFunction(msg.function());
   }
+
+  bool Message::checkMagic()
+  {
+    assert(messageMagic == _header->magic);
+    return (messageMagic == _header->magic);
+  }
 }

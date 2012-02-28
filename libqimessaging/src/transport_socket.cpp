@@ -131,7 +131,7 @@ void TransportSocket::readcb(struct bufferevent *bev,
       if (_p->sizeRead < sizeof(qi::Message::MessageHeader))
         break;
 
-
+      _p->msg->checkMagic();
       _p->readHdr = false;
       _p->sizeRead = 0;
     }
