@@ -82,14 +82,14 @@ namespace qi {
     delete _p;
   }
 
-  void Server::listen(qi::Session *session, const std::vector<std::string> &endpoints) {
+  bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints) {
     _p->_endpoints = endpoints;
     _p->_session = session;
 
     qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
+    return _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
   }
 
 

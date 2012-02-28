@@ -42,7 +42,7 @@ namespace qi {
     Server();
     virtual ~Server();
 
-    void listen(qi::Session *session, const std::vector<std::string> &url);
+    bool listen(qi::Session *session, const std::vector<std::string> &url);
     void stop();
     unsigned int registerService(const std::string &name, qi::Object *obj);
 
