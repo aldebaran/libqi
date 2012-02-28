@@ -42,7 +42,7 @@ protected:
   virtual void newConnection();
 
   //SocketInterface
-  virtual void onReadyRead(TransportSocket    *client, qi::Message *msg);
+  virtual void onReadyRead(TransportSocket    *client, int id);
   virtual void onWriteDone(TransportSocket    *client);
   virtual void onConnected(TransportSocket    *client);
   virtual void onDisconnected(TransportSocket *client);
@@ -215,13 +215,15 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
   }
 }
 
-void GatewayPrivate::onReadyRead(TransportSocket *client, qi::Message *msg)
+void GatewayPrivate::onReadyRead(TransportSocket *client, int id)
 {
+  qi::Message msg;
+  client->read(id, &msg);
   // Dispatch request coming from client or service
   if (std::find(_clients.begin(), _clients.end(), client) != _clients.end())
-    handleClientRead(client, msg);  // Client
+    handleClientRead(client, &msg);  // Client
   else
-    handleServiceRead(client, msg); // Service
+    handleServiceRead(client, &msg); // Service
 }
 
 void GatewayPrivate::onWriteDone(TransportSocket *client)

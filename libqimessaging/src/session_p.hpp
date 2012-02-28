@@ -27,7 +27,7 @@ namespace qi {
     virtual void onConnected(TransportSocket *client);
     virtual void onDisconnected(TransportSocket *client);
     virtual void onWriteDone(TransportSocket *client);
-    virtual void onReadyRead(TransportSocket *client, qi::Message *msg);
+    virtual void onReadyRead(TransportSocket *client, int id);
 
   public:
     qi::TransportSocket *_serviceSocket;

@@ -50,10 +50,12 @@ public:
     socket->setDelegate(this);
   }
 
-  virtual void onReadyRead(qi::TransportSocket *client, qi::Message *msg)
+  virtual void onReadyRead(qi::TransportSocket *client, int id)
   {
+    qi::Message msg;
+    client->read(id, &msg);
     _msgRecv++;
-    int s = msg->size();
+    int s = msg.size();
     if (s != _numBytes)
     {
       if ((_msgRecv - 1) != gLoopCount)
@@ -129,10 +131,10 @@ public:
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
 
-    qi::Message *ans;
+    qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
 
-    qi::DataStream dout(ans->buffer());
+    qi::DataStream dout(ans.buffer());
 
     unsigned int idx = 0;
     dout >> idx;

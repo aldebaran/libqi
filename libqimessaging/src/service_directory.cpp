@@ -33,7 +33,7 @@ namespace qi
     ~ServiceDirectoryPrivate();
 
     virtual void newConnection();
-    virtual void onReadyRead(TransportSocket *socket, qi::Message *msg);
+    virtual void onReadyRead(TransportSocket *socket, int id);
     virtual void onWriteDone(TransportSocket *client);
     virtual void onConnected(TransportSocket *client);
     virtual void onDisconnected(TransportSocket *client);
@@ -89,15 +89,17 @@ namespace qi
     socket->setDelegate(this);
   }
 
-  void ServiceDirectoryPrivate::onReadyRead(TransportSocket *socket, qi::Message *msg)
+  void ServiceDirectoryPrivate::onReadyRead(TransportSocket *socket, int id)
   {
-    DataStream din(msg->buffer());
+    qi::Message msg;
+    socket->read(id, &msg);
+    DataStream din(msg.buffer());
 
     qi::Message out;
-    out.buildReplyFrom(*msg);
+    out.buildReplyFrom(msg);
     DataStream dout(out.buffer());
 
-    metaCall(msg->function(), "sig", din, dout);
+    metaCall(msg.function(), "sig", din, dout);
     socket->send(out);
   }
 

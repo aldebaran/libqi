@@ -20,41 +20,11 @@ namespace qi {
   {
   public:
 
-    virtual void newConnection()
-    {
-      TransportSocket *socket = _ts.nextPendingConnection();
-      if (!socket)
-        return;
-      socket->setDelegate(this);
-    }
-
-    virtual void onReadyRead(TransportSocket *client, qi::Message *msg)
-    {
-      qi::Object *obj;
-
-      obj = _services[msg->service()];
-      qi::DataStream ds(msg->buffer());
-
-      qi::Message retval;
-      retval.buildReplyFrom(*msg);
-      qi::DataStream rs(retval.buffer());
-
-      obj->metaCall(msg->function(), "", ds, rs);
-
-      client->send(retval);
-    };
-
-    virtual void onWriteDone(TransportSocket *client)
-    {
-    }
-
-    virtual void onConnected(TransportSocket *client)
-    {
-    }
-
-    virtual void onDisconnected(TransportSocket *client)
-    {
-    }
+    virtual void newConnection();
+    virtual void onReadyRead(TransportSocket *client, int id);
+    virtual void onWriteDone(TransportSocket *client);
+    virtual void onConnected(TransportSocket *client);
+    virtual void onDisconnected(TransportSocket *client);
 
   public:
     std::map<unsigned int, qi::Object*> _services;
@@ -62,6 +32,44 @@ namespace qi {
     std::vector<std::string>            _endpoints;
     qi::Session                        *_session;
   };
+
+  void ServerPrivate::newConnection()
+  {
+    TransportSocket *socket = _ts.nextPendingConnection();
+    if (!socket)
+      return;
+    socket->setDelegate(this);
+  }
+
+  void ServerPrivate::onReadyRead(TransportSocket *client, int id) {
+    qi::Message msg;
+    client->read(id, &msg);
+    qi::Object *obj;
+
+    obj = _services[msg.service()];
+    qi::DataStream ds(msg.buffer());
+
+    qi::Message retval;
+    retval.buildReplyFrom(msg);
+    qi::DataStream rs(retval.buffer());
+
+    obj->metaCall(msg.function(), "", ds, rs);
+
+    client->send(retval);
+  };
+
+  void ServerPrivate::onWriteDone(TransportSocket *client)
+  {
+  }
+
+  void ServerPrivate::onConnected(TransportSocket *client)
+  {
+  }
+
+  void ServerPrivate::onDisconnected(TransportSocket *client)
+  {
+  }
+
 
   Server::Server()
     : _p(new ServerPrivate())
@@ -85,7 +93,7 @@ namespace qi {
   }
 
 
-  unsigned int Server::registerService(const std::string& name, qi::Object *obj) {
+  unsigned int Server::registerService(const std::string& name, qi::Object *obj)
   {
     qi::Message msg;
     qi::ServiceInfo si;
@@ -103,9 +111,9 @@ namespace qi {
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message *ans;
+    qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-    qi::DataStream dout(ans->buffer());
+    qi::DataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;
     _p->_services[idx] = obj;

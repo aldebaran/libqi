@@ -150,9 +150,9 @@ void TransportSocket::readcb(struct bufferevent *bev,
     {
       boost::mutex::scoped_lock l(_p->mtx);
       _p->msgSend[_p->msg->id()] = _p->msg;
-      _p->tcd->onReadyRead(this, _p->msg);
       _p->cond.notify_all();
     }
+    _p->tcd->onReadyRead(this, _p->msg->id());
 
     _p->msg = NULL;
   }
@@ -326,7 +326,7 @@ bool TransportSocket::waitForId(int id, int msecs)
   return false;
 }
 
-void TransportSocket::read(int id, qi::Message **msg)
+void TransportSocket::read(int id, qi::Message *msg)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
   {
@@ -335,7 +335,7 @@ void TransportSocket::read(int id, qi::Message **msg)
       it = _p->msgSend.find(id);
       if (it != _p->msgSend.end())
       {
-        *msg = it->second;
+        *msg = *(it->second);
         _p->msgSend.erase(it);
       }
     }

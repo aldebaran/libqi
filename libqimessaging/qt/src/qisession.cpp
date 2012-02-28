@@ -63,12 +63,12 @@ QObject *QiSession::service(const QString &name, qi::Url::Protocol type)
   ts->send(msg);
   ts->waitForId(msg.id());
 
-  qi::Message *ret;
+  qi::Message ret;
   ts->read(msg.id(), &ret);
 
   qi::MetaObject mo;
 
-  qi::DataStream ds(ret->buffer());
+  qi::DataStream ds(ret.buffer());
 
   ds >> mo;
 
