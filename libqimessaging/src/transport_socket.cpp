@@ -152,7 +152,8 @@ void TransportSocket::readcb(struct bufferevent *bev,
       _p->msgSend[_p->msg->id()] = _p->msg;
       _p->cond.notify_all();
     }
-    _p->tcd->onReadyRead(this, _p->msg->id());
+    if (_p->tcd)
+      _p->tcd->onReadyRead(this, _p->msg->id());
 
     _p->msg = NULL;
   }
@@ -162,7 +163,8 @@ void TransportSocket::readcb(struct bufferevent *bev,
 void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
 {
-  _p->tcd->onWriteDone(this);
+  if (_p->tcd)
+    _p->tcd->onWriteDone(this);
 }
 
 void TransportSocket::eventcb(struct bufferevent *bev,
@@ -173,12 +175,14 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   {
     qi::Message msg;
     _p->connected = true;
-    _p->tcd->onConnected(this);
+    if (_p->tcd)
+      _p->tcd->onConnected(this);
   }
   else if (events & BEV_EVENT_EOF)
   {
     qi::Message msg;
-    _p->tcd->onDisconnected(this);
+    if (_p->tcd)
+      _p->tcd->onDisconnected(this);
     _p->connected = false;
     // connection has been closed, do any clean up here
     qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
