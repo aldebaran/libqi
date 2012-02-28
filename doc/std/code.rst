@@ -104,6 +104,12 @@ Example without Pimpl
   };
 
 
+Struct
+------
+
+You can expose struct but they should only contains POD. If a struct have a member which a class (or worst) a STL class, Windows wont be happy, and you will have to link
+the exe and the dll with the same VC runtime, in the same configuration (release/debug). Prefer Pimpl in this case.
+
 Exception
 ---------
 
