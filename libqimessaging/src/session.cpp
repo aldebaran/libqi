@@ -207,9 +207,10 @@ namespace qi {
     return _p->service(service, type);
   }
 
-  void Session::join()
+  bool Session::join()
   {
     _p->_networkThread->join();
+    return true;
   }
 
 
