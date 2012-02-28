@@ -304,8 +304,8 @@ bool TransportSocket::waitForId(int id, int msecs)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
   {
-    boost::mutex::scoped_lock l(_p->mtx);
     {
+      boost::mutex::scoped_lock l(_p->mtx);
       it = _p->msgSend.find(id);
       if (it != _p->msgSend.end())
         return true;
@@ -325,8 +325,8 @@ void TransportSocket::read(int id, qi::Message **msg)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
   {
-    boost::mutex::scoped_lock l(_p->mtx);
     {
+      boost::mutex::scoped_lock l(_p->mtx);
       it = _p->msgSend.find(id);
       if (it != _p->msgSend.end())
       {
