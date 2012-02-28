@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <queue>
 #include <qi/log.hpp>
 #include <cerrno>
