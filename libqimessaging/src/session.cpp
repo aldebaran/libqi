@@ -108,7 +108,7 @@ namespace qi {
         qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
         ts->setDelegate(this);
-        ts->connect(url, _nthd->getEventBase());
+        ts->connect(url, _networkThread->getEventBase());
         ts->waitForConnected();
         return ts;
       }
