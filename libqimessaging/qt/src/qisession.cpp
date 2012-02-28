@@ -16,10 +16,50 @@
 #include "src/qisession_p.h"
 
 
+void QiSessionPrivate::onConnected(qi::TransportSocket *client) {
+}
+
+void QiSessionPrivate::onDisconnected(qi::TransportSocket *client) {
+}
+
+void QiSessionPrivate::onWriteDone(qi::TransportSocket *client) {
+}
+
+void QiSessionPrivate::onReadyRead(qi::TransportSocket *client, int id) {
+  qi::Message                         msg;
+  QMap<int, ServiceRequest>::iterator it;
+
+  client->read(id, &msg);
+
+  it = _futureService.find(id);
+  if (it != _futureService.end()) {
+    service_end(client, &msg, it.value());
+    return;
+  }
+//  fut = _future_services[msg.id()];
+//  if (fut) {
+//    services_end(id, fut);
+//    return;
+//  }
+}
+
+void QiSessionPrivate::service_end(qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+  qi::MetaObject mo;
+  qi::DataStream ds(msg->buffer());
+  ds >> mo;
+  //remove the delegate on us, now the socket is owned by QiRemoteObject
+  client->setDelegate(0);
+  QiRemoteObject *robj = new QiRemoteObject(client, sr.name.toUtf8().constData(), sr.serviceId, mo);
+  //notify future
+  sr.fu.reportResult(robj);
+}
+
+
 QiSession::QiSession()
   : _p(new QiSessionPrivate)
 {
 }
+
 
 QiSession::~QiSession()
 {
@@ -47,35 +87,30 @@ bool QiSession::waitForDisconnected(int msecs)
   return _p->session.waitForDisconnected(msecs);
 }
 
-QObject *QiSession::service(const QString &name, qi::Url::Protocol type)
-{
+QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol type) {
+  ServiceRequest sr;
   unsigned int idx = 0;
+  //todo: this lock
   qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), &idx, type);
-
-  if (!ts)
-    return 0;
+  ts->setDelegate(_p);
+  sr.fu.reportStarted();
+  if (!ts) {
+    sr.fu.reportCanceled();
+    return sr.fu.future();
+  }
+  sr.name = name;
+  sr.serviceId = idx;
+  sr.name = name;
+  sr.serviceId = idx;
   qi::Message msg;
   msg.setType(qi::Message::Type_Call);
   msg.setService(idx);
   msg.setPath(qi::Message::Path_Main);
   msg.setFunction(qi::Message::Function_MetaObject);
-
+  //TODO: remove on answer
   ts->send(msg);
-  ts->waitForId(msg.id());
-
-  qi::Message ret;
-  ts->read(msg.id(), &ret);
-
-  qi::MetaObject mo;
-
-  qi::DataStream ds(ret.buffer());
-
-  ds >> mo;
-
-  QiRemoteObject *robj = new QiRemoteObject(ts, name.toUtf8().constData(), idx, mo);
-
-  return static_cast<QObject *>(robj);
-
+  _p->_futureService[msg.id()] = sr;
+  return sr.fu.future();
 }
 
 QVector<qi::ServiceInfo> QiSession::services()

@@ -9,11 +9,29 @@
 # define   	QISESSION_P_H_
 
 #include <QtCore/qobject.h>
+#include <QtCore/qmap.h>
 #include <qimessaging/session.hpp>
+#include <qimessaging/transport_socket.hpp>
 
-class QiSessionPrivate {
-public:
-  qi::Session session;
+struct ServiceRequest {
+  QFutureInterface<QObject *> fu;
+  QString                     name;
+  unsigned int                serviceId;
 };
+
+class QiSessionPrivate : public qi::TransportSocketInterface {
+public:
+  virtual void onConnected(qi::TransportSocket *client);
+  virtual void onDisconnected(qi::TransportSocket *client);
+  virtual void onWriteDone(qi::TransportSocket *client);
+  virtual void onReadyRead(qi::TransportSocket *client, int id);
+
+  void service_end(qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
+  //void services_end(qi::TransportSocket *client, int id, QFutureInterface<QObject *> *fu);
+
+  qi::Session               session;
+  QMap<int, ServiceRequest> _futureService;
+};
+
 
 #endif 	    /* !QISESSION_P_H_ */

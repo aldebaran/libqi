@@ -17,6 +17,7 @@
 #include <QtCore/QUrl>
 #include <QVector>
 #include <QString>
+#include <QtCore/QFuture>
 
 class QiSessionPrivate;
 
@@ -32,7 +33,7 @@ public:
   void                     disconnect();
   bool                     waitForConnected(int msecs = 30000);
   bool                     waitForDisconnected(int msecs = 30000);
-  QObject                 *service(const QString     &name,
+  QFuture<QObject *>       service(const QString     &name,
                                    qi::Url::Protocol type = qi::Url::Protocol_Any);
   QVector<qi::ServiceInfo> services();
 
