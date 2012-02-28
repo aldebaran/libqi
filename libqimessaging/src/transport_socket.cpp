@@ -323,7 +323,7 @@ bool TransportSocket::waitForId(int id, int msecs)
   return false;
 }
 
-void TransportSocket::read(int id, qi::Message *msg)
+bool TransportSocket::read(int id, qi::Message *msg)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
   {
@@ -334,9 +334,11 @@ void TransportSocket::read(int id, qi::Message *msg)
       {
         *msg = *(it->second);
         _p->msgSend.erase(it);
+        return true;
       }
     }
   }
+  return false;
 }
 
 bool TransportSocket::send(qi::Message &msg)

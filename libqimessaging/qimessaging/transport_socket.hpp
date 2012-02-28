@@ -70,7 +70,7 @@ public:
   bool waitForDisconnected(int msecs = 30000);
   bool waitForId(int id, int msecs = 30000);
 
-  void read(int id, qi::Message *msg);
+  bool read(int id, qi::Message *msg);
 
   bool send(qi::Message &msg);
 
