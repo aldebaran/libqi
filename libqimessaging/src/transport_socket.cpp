@@ -233,10 +233,7 @@ bool TransportSocket::connect(const qi::Url     &url,
     bufferevent_setwatermark(_p->bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(_p->bev, EV_READ|EV_WRITE);
 
-    bufferevent_socket_connect_hostname(_p->bev, NULL, AF_INET, address.c_str(), port);
-
     int result = bufferevent_socket_connect_hostname(_p->bev, NULL, AF_INET, address.c_str(), port);
-
     if (result == 0)
     {
       _p->connected = true;
