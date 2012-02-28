@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
       //obj.advertiseMethod("reply", &reply);
 
       QVector<QUrl> endpoints;
-      endpoints.push_back(QUrl::QUrl("tcp://127.0.0.1:9571"));
+      QUrl url("tcp://127.0.0.1:9571");
+      endpoints.push_back(url);
       srv.registerService("serviceTest", &obj);
       srv.listen(&session, endpoints);
 
