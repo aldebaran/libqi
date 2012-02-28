@@ -93,9 +93,11 @@ namespace qi {
     void buildForwardFrom(const Message &msg);
 
     bool checkMagic();
-
   public:
     MessageHeader *_header;
+
+    Message(const Message &msg);
+    Message &operator=(const Message &msg);
 
   protected:
     qi::Buffer    *_buffer;

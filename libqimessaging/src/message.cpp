@@ -43,6 +43,18 @@ namespace qi {
     _withBuffer = true;
   }
 
+  Message::Message(const Message &msg) {
+    memcpy(_header, msg._header, sizeof(MessageHeader));
+    _buffer = msg._buffer;
+    _withBuffer = true;
+  }
+
+  Message &Message::operator=(const Message &msg) {
+    memcpy(_header, msg._header, sizeof(MessageHeader));
+    _buffer = msg._buffer;
+    _withBuffer = true;
+  }
+
   Message::~Message()
   {
     if (!_withBuffer)
