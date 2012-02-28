@@ -82,7 +82,7 @@ namespace qi {
   }
 
 
-  void Server::registerService(const std::string& name, qi::Object *obj) {
+  unsigned int Server::registerService(const std::string& name, qi::Object *obj) {
     qi::Message msg;
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Call);
@@ -105,6 +105,7 @@ namespace qi {
     unsigned int idx = 0;
     dout >> idx;
     _p->_services[idx] = obj;
+    return idx;
   };
 
   void Server::stop() {
