@@ -22,6 +22,7 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <event2/listener.h>
 
 #ifdef _WIN32
  #include <winsock2.h> // for socket
@@ -51,47 +52,33 @@ public:
     event_base_free(base);
   }
 
-  void accept(evutil_socket_t listener,
-              short events,
-              void *context);
-
+  void accept(evutil_socket_t        fd,
+              struct evconnlistener *listener,
+              void                  *context);
 
   std::queue<qi::TransportSocket*>  connection;
   TransportServerInterface          *tsi;
   struct event_base                 *base;
 };
 
-void accept(evutil_socket_t listener,
-            short events,
-            void *context)
+void TransportServerPrivate::accept(evutil_socket_t        fd,
+                                    struct evconnlistener *listener,
+                                    void                  *context)
 {
-  TransportServer *ts = static_cast<TransportServer*>(context);
-  ts->_p->accept(listener, events, context);
+  struct event_base *base = evconnlistener_get_base(listener);
+
+  connection.push(new qi::TransportSocket(fd, base));
+  tsi->newConnection();
 }
 
-void TransportServerPrivate::accept(evutil_socket_t listener,
-                                    short events,
-                                    void *context)
+void accept_cb(struct evconnlistener *listener,
+               evutil_socket_t        fd,
+               struct sockaddr       *a,
+               int                    slen,
+               void                  *p)
 {
-  struct sockaddr_storage ss;
-  socklen_t slen = sizeof(ss);
-
-  int fd = ::accept(listener, (struct sockaddr*)&ss, &slen);
-
-  if (fd < 0)
-  {
-    qiLogError("qimessaging.TransportServer") << "Gateway: Could not accept client" << std::endl;
-  }
-  else if (fd > FD_SETSIZE)
-  {
-    evutil_closesocket(fd);
-  }
-  else
-  {
-    evutil_make_socket_nonblocking(fd);
-    connection.push(new qi::TransportSocket(fd, base));
-    tsi->newConnection();
-  }
+  TransportServer *ts = static_cast<TransportServer*>(p);
+  ts->_p->accept(fd, listener, p);
 }
 
 
@@ -109,53 +96,28 @@ TransportServer::~TransportServer()
 bool TransportServer::start(const qi::Url &url,
                             struct event_base *base)
 {
-  const std::string &address = url.host();
-  unsigned short port = url.port();
-  evutil_socket_t sock;
-  struct event*   sockEvent;
+  struct evconnlistener *listener;
+  static struct sockaddr_storage listen_on_addr;
+  memset(&listen_on_addr, 0, sizeof(listen_on_addr));
+  int socklen = sizeof(listen_on_addr);
+  struct sockaddr_in *sin = reinterpret_cast<struct sockaddr_in *>(&listen_on_addr);
 
-  // get tcp socket
-  if ((sock = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
-  {
-    qiLogError("qimessaging.transportserver") << "Could not get socket" << std::endl;
-    return false;
-  }
-
-  evutil_make_socket_nonblocking(sock);
-  evutil_make_listen_socket_reuseable(sock);
-  evutil_make_socket_closeonexec(sock);
-
-  // get valid IP
-  struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-
-  if ((addr.sin_addr.s_addr = inet_addr(address.c_str())) == INADDR_NONE)
+  socklen = sizeof(struct sockaddr_in);
+  sin->sin_port = htons(url.port());
+  sin->sin_family = AF_INET;
+  if ((sin->sin_addr.s_addr = inet_addr(url.host().c_str())) == INADDR_NONE)
   {
     qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
     return false;
   }
 
-  // bind socket
-  if (::bind(sock, (struct sockaddr*)&addr, sizeof (addr)) == -1)
-  {
-    qiLogError("qimessaging.transportserver") << "Could not bind socket ("
-                                              << strerror(errno) << ")" << std::endl;
-    return false;
-  }
-
-  //listen on the socket
-  if (::listen(sock, SOMAXCONN) == -1)
-  {
-    qiLogError("qimessaging.transportserver") << "Could not listen on socket" << std::endl;
-    return false;
-  }
-
-  _p->base = base;
-  sockEvent = event_new(_p->base, sock, EV_READ | EV_PERSIST,
-                        ::qi::accept, this);
-
-  event_add(sockEvent, NULL);
+  listener = evconnlistener_new_bind(base,
+                                     accept_cb,
+                                     this,
+                                     LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE,
+                                     -1,
+                                     (struct sockaddr*)&listen_on_addr,
+                                     socklen);
 
   return true;
 }
