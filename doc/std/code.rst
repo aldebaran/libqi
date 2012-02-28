@@ -64,6 +64,16 @@ Public headers must be enclosed within brackets <> when included.
 On the other hand, private headers must be enclosed within double quotes "" when
 included.
 
+Export symbol
+-------------
+
+All public functions and classes should be exported using <LIBNAME>_API macro. This macro should be unique to the library and never be used by others libraries.
+
+.. code-block:: cpp
+  class BAR_API Foo {
+  };
+
+
 Private Implementation
 ----------------------
 
@@ -75,6 +85,7 @@ Private Implementation
 
 When a class has a private implementation, the copy constructor *must* be either
 implemented, either disabled - *ie.* defined in the private section of the class.
+
 
 Example with Pimpl
 ++++++++++++++++++
