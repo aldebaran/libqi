@@ -58,14 +58,15 @@ public:
     int s = msg.size();
     if (s != _numBytes)
     {
-      if ((_msgRecv - 1) != gLoopCount)
-        std::cout << "Drop " << gLoopCount - _msgRecv - 1 << " messages!" << std::endl;
-
       _dp->stop(1);
-      _msgRecv = 1;
+      if (_msgRecv != gLoopCount)
+        std::cout << "Drop " << gLoopCount - _msgRecv << " messages!" << std::endl;
+
       _numBytes = s;
+       _msgRecv = 0;
       _dp->start(gLoopCount, _numBytes);
     }
+
   }
 
   virtual void onWriteDone(qi::TransportSocket *client)
@@ -116,44 +117,46 @@ public:
   }
 
 
-  void registerService(const std::string &name, qi::Object *obj)
+  unsigned int registerService(const std::string &name, qi::Object *obj)
   {
-    qi::Message msg;
-    msg.setType(qi::Message::Type_Call);
+    qi::Message     msg;
+    qi::ServiceInfo si;
+    msg.setType(qi::Message::Type_Event);
     msg.setService(qi::Message::Service_ServiceDirectory);
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::DataStream d(msg.buffer());
-    d << name;
-    d << _p->_endpoints;
+    si.setName(name);
+    si.setProcessId(qi::os::getpid());
+    si.setMachineId("TODO");
+    si.setEndpoints(_p->_endpoints);
+    d << si;
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-
     qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-
     qi::DataStream dout(ans.buffer());
-
     unsigned int idx = 0;
     dout >> idx;
     _p->_services[idx] = obj;
+    return idx;
   }
 
 
   void stop() {
-    }
+  }
 
-  private:
-    ServerEventPrivate *_p;
+private:
+  ServerEventPrivate *_p;
 };
 
 
 int main_client(std::string src)
 {
   unsigned int serviceId;
-  qi::Session session;
+  qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
@@ -179,7 +182,6 @@ int main_client(std::string src)
       qi::DataStream d(msg.buffer());
       d << requeststr;
 
-      /* FIXME: what are we trying to do here? */
       msg.setType(qi::Message::Type_Event);
       msg.setService(serviceId);
       msg.setPath(qi::Message::Path_Main);
@@ -242,9 +244,9 @@ int main_server()
   sd.listen("tcp://127.0.0.1:5555");
   std::cout << "Service Directory ready." << std::endl;
 
-  qi::Session       session;
-  qi::Object        obj;
-  ServerEvent       srv;
+  qi::Session session;
+  qi::Object  obj;
+  ServerEvent srv;
   obj.advertiseMethod("reply", &reply);
 
   session.connect("tcp://127.0.0.1:5555");
@@ -277,15 +279,10 @@ int main(int argc, char **argv)
   {
     return main_server();
   }
-  else if (argc > 1 && !strcmp(argv[1], "--gateway"))
-  {
-    return main_gateway();
-  }
   else
   {
     //start the server
     boost::thread threadServer1(boost::bind(&main_server));
-//    boost::thread threadServer2(boost::bind(&main_gateway));
     qi::os::sleep(1);
     start_client(gThreadCount);
   }
