@@ -13,6 +13,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
+#include <stdint.h>
 
 #include <qi/log.hpp>
 
@@ -26,6 +27,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include "src/network_thread.hpp"
 #include "src/buffer_p.hpp"
+#include "src/message_p.hpp"
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
@@ -35,6 +37,7 @@
 
 namespace qi {
 
+const unsigned int headerSize = 8 * sizeof(uint32_t);
 
 struct TransportSocketPrivate
 {
@@ -120,24 +123,24 @@ void TransportSocket::readcb(struct bufferevent *bev,
     if (_p->readHdr)
     {
       length = evbuffer_get_length(input);
-      if (length < sizeof(qi::Message::MessageHeader))
+      if (length < headerSize)
         return;
 
       evbuffer_remove(input,
-                      (char*)_p->msg->_header,
-                      sizeof(qi::Message::MessageHeader));
+                      (char*)_p->msg->_p,
+                      headerSize);
 
       _p->msg->checkMagic();
       _p->readHdr = false;
     }
 
     length = evbuffer_get_length(input);
-    if (length < _p->msg->_header->size)
+    if (length < _p->msg->_p->size)
       return;
 
     evbuffer_remove_buffer(input,
                            _p->msg->buffer()->_p->data(),
-                           _p->msg->_header->size);
+                           _p->msg->_p->size);
 
     {
       boost::mutex::scoped_lock l(_p->mtx);
