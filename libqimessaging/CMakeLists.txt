@@ -84,7 +84,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/signature_iterator.cpp
                                    src/transport_server.cpp
                                    src/transport_socket.cpp
-                                   src/value.cpp)
+                                   src/value.cpp
+                                   src/url.cpp)
 
 
 add_subdirectory(c)

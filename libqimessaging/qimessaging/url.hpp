@@ -16,11 +16,6 @@
 namespace qi {
   class Url
   {
-  private:
-    std::string    _url;
-    unsigned short _port;
-    std::string    _host;
-    unsigned int   _protocol;
   public:
     enum Protocol {
       Protocol_Invalid = 0,
@@ -29,35 +24,20 @@ namespace qi {
       Protocol_Tcp     = 3,
     };
 
-    Url(const std::string &url)
-      : _url(url)
-    {
-      size_t begin = 0;
-      size_t end = 0;
-      end = url.find(":");
-      std::string type = url.substr(begin, end);
+    Url(const char *url);
+    Url(const std::string &url);
 
-      if (type == "tcp")
-      {
-        _protocol = Protocol_Tcp;
-      }
-      else
-      {
-        _protocol = Protocol_Any;
-      }
+    unsigned short     port() const     { return _port; }
+    const std::string& host() const     { return _host; }
+    unsigned int       protocol() const { return _protocol; }
+    const std::string& str() const      { return _url; }
 
-      begin = end + 3;
-      end = url.find(":", begin);
-      _host = url.substr(begin, end - begin);
-      begin = end + 1;
-      std::stringstream ss(url.substr(begin));
-      ss >> _port;
-    }
-
-    unsigned short port() const { return _port; }
-    const std::string& host() const { return _host; }
-    unsigned int protocol() const { return _protocol; }
-    const std::string& str() const { return _url; }
+  private:
+    std::string    _url;
+    unsigned short _port;
+    std::string    _host;
+    unsigned int   _protocol;
+    void          *_reserved;
   };
 }
 
