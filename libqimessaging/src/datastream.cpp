@@ -8,6 +8,7 @@
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qi/log.hpp>
 #include <vector>
 #include <cstring>
 
@@ -81,6 +82,10 @@ namespace qi {
     s.clear();
     if (sz) {
       char *data = static_cast<char *>(_buffer->peek(sz));
+      if (!data) {
+        qiLogError("datastream", "buffer empty");
+        return *this;
+      }
       s.append(data, sz);
       _buffer->drain(sz);
       __QI_DEBUG_SERIALIZATION_DATA_R(std::string, s);
