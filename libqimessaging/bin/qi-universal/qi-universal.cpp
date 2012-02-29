@@ -28,18 +28,29 @@
  #include <arpa/inet.h>
 #endif
 
+size_t socket_read(struct bufferevent *bev,
+                   void               *data,
+                   size_t              size)
+{
+  struct evbuffer *input = bufferevent_get_input(bev);
+  return evbuffer_remove(input, data, size);;
+}
+
+bool socket_write(struct bufferevent *bev,
+                  const void         *data,
+                  size_t              size)
+{
+  evbuffer *evb = evbuffer_new();
+  evbuffer_add(evb, data, size);
+  return bufferevent_write_buffer(bev, evb) == 0;
+}
+
 void readcb(struct bufferevent *bev, void* context)
 {
   std::cout << "readcb" << std::endl;
-  struct evbuffer *input = bufferevent_get_input(bev);
   char buffer[1024];
-  size_t read = evbuffer_remove(input, buffer, sizeof(buffer));
-  buffer[read] = '\0';
-
-  /* strike back! */
-  evbuffer *evb = evbuffer_new();
-  evbuffer_add(evb, buffer, read);
-  bufferevent_write_buffer(bev, evb);
+  size_t read = socket_read(bev, buffer, sizeof(buffer));
+  socket_write(bev, buffer, read);
 }
 
 void writecb(struct bufferevent *bev, void* context)
@@ -117,6 +128,11 @@ int start_server(const qi::Url &url, struct event_base *base)
   return 0;
 }
 
+void *network_thread(void *arg)
+{
+  event_base_dispatch(reinterpret_cast<struct event_base *>(arg));
+  return 0;
+}
 
 int main()
 {
@@ -129,12 +145,24 @@ int main()
   ::WSAStartup(MAKEWORD(1, 0), &WSAData);
   #endif
 
-  struct event_base *base = event_base_new();
+  pthread_t server_thread;
+  struct event_base *server_base = event_base_new();
+  qi::Url server_url("tcp://127.0.0.1:9571");
+  start_server(server_url, server_base);
+  pthread_create(&server_thread, 0, network_thread, server_base);
 
-  qi::Url url("tcp://127.0.0.1:5555");
-  start_server(url, base);
+  pthread_t client_thread;
+  struct event_base *client_base = event_base_new();
+  qi::Url client_url("tcp://127.0.0.1:5555");
+  struct bufferevent *bev = bufferevent_socket_new(client_base, -1, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent_setcb(bev, readcb, writecb, eventcb, 0);
+  bufferevent_socket_connect_hostname(bev, 0, AF_INET,
+                                      client_url.host().c_str(), client_url.port());
+  socket_write(bev, "CHICHE", 6);
+  pthread_create(&client_thread, 0, network_thread, client_base);
 
-  event_base_dispatch(base);
+  pthread_join(client_thread, 0);
+  pthread_join(server_thread, 0);
 
   return 0;
 }
