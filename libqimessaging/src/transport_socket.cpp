@@ -190,9 +190,10 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   else if (events & BEV_EVENT_ERROR)
   {
     bufferevent_free(_p->bev);
+    if (_p->tcd)
+      _p->tcd->onSocketConnectionError(this);
     // check errno to see what error occurred
     qiLogError("qimessaging.TransportSocket")  << "Cannnot connect" << std::endl;
-
   }
   else if (events & BEV_EVENT_TIMEOUT)
   {
