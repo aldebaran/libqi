@@ -176,15 +176,21 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   else if (events & BEV_EVENT_EOF)
   {
     qi::Message msg;
+    _p->connected = false;
+    //for waitForId
+    _p->cond.notify_all();
     if (_p->tcd)
       _p->tcd->onSocketDisconnected(this);
-    _p->connected = false;
     // connection has been closed, do any clean up here
     qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (events & BEV_EVENT_ERROR)
   {
     bufferevent_free(_p->bev);
+    _p->bev = 0;
+    _p->connected = false;
+    //for waitForId
+    _p->cond.notify_all();
     if (_p->tcd)
       _p->tcd->onSocketConnectionError(this);
     // check errno to see what error occurred
@@ -312,6 +318,8 @@ bool TransportSocket::waitForId(int id, int msecs)
       it = _p->msgSend.find(id);
       if (it != _p->msgSend.end())
         return true;
+      if (!_p->connected)
+        return false;
       if (msecs > 0)
         _p->cond.timed_wait(l, boost::posix_time::milliseconds(msecs));
       else
