@@ -9,8 +9,10 @@
 #ifndef _SRC_SESSION_P_HPP_
 #define _SRC_SESSION_P_HPP_
 
+
 namespace qi {
 
+  class NetworkThread;
   class SessionPrivate : public qi::TransportSocketInterface {
   public:
     SessionPrivate();

@@ -29,13 +29,14 @@ public:
   ~QiSession();
 
 public:
-  void                     connect(const QString &masterAddress);
-  void                     disconnect();
-  bool                     waitForConnected(int msecs = 30000);
-  bool                     waitForDisconnected(int msecs = 30000);
-  QFuture<QObject *>       service(const QString     &name,
-                                   qi::Url::Protocol type = qi::Url::Protocol_Any);
-  QVector<qi::ServiceInfo> services();
+  bool connect(const QString &masterAddress);
+  bool disconnect();
+  bool waitForConnected(int msecs = 30000);
+  bool waitForDisconnected(int msecs = 30000);
+
+  QFuture<QObject *>                  service(const QString     &name,
+                                              qi::Url::Protocol type = qi::Url::Protocol_Any);
+  QFuture< QVector<qi::ServiceInfo> > services();
 
   // private implementation
   QiSessionPrivate *_p;

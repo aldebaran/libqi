@@ -12,46 +12,113 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/qt/qidatastream.h>
 #include "src/qiremoteobject_p.h"
 #include "src/qisession_p.h"
+#include "src/session_p.hpp"
+#include "src/network_thread.hpp"
 
-
-void QiSessionPrivate::onConnected(qi::TransportSocket *client) {
+QiSessionPrivate::QiSessionPrivate() {
+  _networkThread = new qi::NetworkThread();
+  _serviceSocket = new qi::TransportSocket();
+  _serviceSocket->setDelegate(this);
 }
 
+QiSessionPrivate::~QiSessionPrivate() {
+  _serviceSocket->disconnect();
+  delete _networkThread;
+  delete _serviceSocket;
+}
+
+void QiSessionPrivate::onConnected(qi::TransportSocket *client) {
+  QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+
+  if (it == _futureConnect.end())
+    return;
+
+  ServiceRequest &sr = it.value();
+  qi::Message msg;
+  msg.setType(qi::Message::Type_Call);
+  msg.setService(sr.serviceId);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::Function_MetaObject);
+  _futureService[msg.id()] = sr;
+  _futureConnect.remove(client);
+  client->send(msg);
+}
+
+//TODO: handle connection error
 void QiSessionPrivate::onDisconnected(qi::TransportSocket *client) {
+
 }
 
 void QiSessionPrivate::onWriteDone(qi::TransportSocket *client) {
 }
 
 void QiSessionPrivate::onReadyRead(qi::TransportSocket *client, int id) {
-  qi::Message                         msg;
-  QMap<int, ServiceRequest>::iterator it;
-
+  qi::Message                                                        msg;
+  QMap<int, ServiceRequest>::iterator                                it;
+  QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > >::iterator it2;
   client->read(id, &msg);
 
   it = _futureService.find(id);
   if (it != _futureService.end()) {
-    service_end(client, &msg, it.value());
+    if (client == _serviceSocket)
+      service_ep_end(id, client, &msg, it.value());
+    else
+      service_mo_end(id, client, &msg, it.value());
     return;
   }
-//  fut = _future_services[msg.id()];
-//  if (fut) {
-//    services_end(id, fut);
-//    return;
-//  }
+  it2 = _futureServices.find(id);
+  if (it2 != _futureServices.end()) {
+    services_end(client, &msg, it2.value());
+    _futureServices.erase(it2);
+    return;
+  }
 }
 
-void QiSessionPrivate::service_end(qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+//rep from master (endpoint)
+void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+  qi::ServiceInfo      si;
+  qi::DataStream       d(msg->buffer());
+  qi::TransportSocket* ts = NULL;
+  d >> si;
+
+  sr.serviceId = si.serviceId();
+  for (std::vector<std::string>::const_iterator it = si.endpoints().begin(); it != si.endpoints().end(); ++it)
+  {
+    qi::Url url(*it);
+    if (sr.protocol == qi::Url::Protocol_Any || sr.protocol == url.protocol())
+    {
+      qi::TransportSocket* ts = NULL;
+      ts = new qi::TransportSocket();
+      ts->setDelegate(this);
+      _futureConnect[ts] = sr;
+      _futureService.remove(id);
+      ts->connect(url, _networkThread->getEventBase());
+      return;
+    }
+    _futureService.remove(id);
+    sr.fu.reportCanceled();
+    return;
+  }
+}
+
+void QiSessionPrivate::service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
   qi::MetaObject mo;
   qi::DataStream ds(msg->buffer());
   ds >> mo;
   //remove the delegate on us, now the socket is owned by QiRemoteObject
   client->setDelegate(0);
   QiRemoteObject *robj = new QiRemoteObject(client, sr.name.toUtf8().constData(), sr.serviceId, mo);
-  //notify future
   sr.fu.reportResult(robj);
+}
+
+void QiSessionPrivate::services_end(qi::TransportSocket *client, qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
+  QVector<qi::ServiceInfo> result;
+  qi::DataStream d(msg->buffer());
+  d >> result;
+  fut.reportResult(result);
 }
 
 
@@ -67,53 +134,61 @@ QiSession::~QiSession()
 }
 
 
-void QiSession::connect(const QString &masterAddress)
+bool QiSession::connect(const QString &masterAddress)
 {
-  _p->session.connect(masterAddress.toUtf8().constData());
+  return _p->_serviceSocket->connect(masterAddress.toUtf8().constData(), _p->_networkThread->getEventBase());
 }
 
-void QiSession::disconnect()
+bool QiSession::disconnect()
 {
-  _p->session.disconnect();
+  _p->_serviceSocket->disconnect();
+  return true;
 }
 
 bool QiSession::waitForConnected(int msecs)
 {
-  return _p->session.waitForConnected(msecs);
+  return _p->_serviceSocket->waitForConnected(msecs);
 }
 
 bool QiSession::waitForDisconnected(int msecs)
 {
-  return _p->session.waitForDisconnected(msecs);
+  return _p->_serviceSocket->waitForDisconnected(msecs);
 }
 
+//1 call: req epinfo to the master
+//2 msg from serv: create a socket, connect
+//3 socket co: send msg for metadata
+//4
 QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol type) {
   ServiceRequest sr;
-  unsigned int idx = 0;
-  //todo: this lock
-  qi::TransportSocket *ts = _p->session.serviceSocket(name.toUtf8().constData(), &idx, type);
-  ts->setDelegate(_p);
+  qi::Message    msg;
+
   sr.fu.reportStarted();
-  if (!ts) {
-    sr.fu.reportCanceled();
-    return sr.fu.future();
-  }
-  sr.name = name;
-  sr.serviceId = idx;
-  sr.name = name;
-  sr.serviceId = idx;
-  qi::Message msg;
+  sr.name      = name;
+  sr.protocol  = type;
+
   msg.setType(qi::Message::Type_Call);
-  msg.setService(idx);
+  msg.setService(qi::Message::Service_ServiceDirectory);
   msg.setPath(qi::Message::Path_Main);
-  msg.setFunction(qi::Message::Function_MetaObject);
-  //TODO: remove on answer
-  ts->send(msg);
+  msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
+  qi::DataStream dr(msg.buffer());
+  dr << name.toUtf8().constData();
   _p->_futureService[msg.id()] = sr;
+  _p->_serviceSocket->send(msg);
   return sr.fu.future();
 }
 
-QVector<qi::ServiceInfo> QiSession::services()
+QFuture< QVector<qi::ServiceInfo> > QiSession::services()
 {
-  return QVector<qi::ServiceInfo>::fromStdVector(_p->session.services());
+  QFutureInterface< QVector<qi::ServiceInfo> > futi;
+  qi::Message msg;
+
+  futi.reportStarted();
+  msg.setType(qi::Message::Type_Call);
+  msg.setService(qi::Message::Service_ServiceDirectory);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
+  _p->_futureServices[msg.id()] = futi;
+  _p->_serviceSocket->send(msg);
+  return futi.future();
 }

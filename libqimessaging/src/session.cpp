@@ -22,7 +22,7 @@ namespace qi {
   SessionPrivate::SessionPrivate() {
     _networkThread = new qi::NetworkThread();
     _serviceSocket = new qi::TransportSocket();
-    _serviceSocket->setDelegate(this);
+    //_serviceSocket->setDelegate(this);
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -174,6 +174,7 @@ namespace qi {
 
   bool Session::disconnect()
   {
+    _p->_serviceSocket->disconnect();
     return true;
   }
 
