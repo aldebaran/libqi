@@ -48,7 +48,8 @@ namespace qi {
 
       _serviceSocket->send(msg);
 
-      _serviceSocket->waitForId(msg.id());
+      if (!_serviceSocket->waitForId(msg.id()))
+        return result;
       qi::Message ans;
       _serviceSocket->read(msg.id(), &ans);
 
@@ -71,7 +72,8 @@ namespace qi {
     msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
     _serviceSocket->send(msg);
 
-    _serviceSocket->waitForId(msg.id());
+    if (!_serviceSocket->waitForId(msg.id()))
+      return 0;
     qi::Message ans;
     _serviceSocket->read(msg.id(), &ans);
 
