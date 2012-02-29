@@ -56,7 +56,7 @@ public:
 
   bool read(int id, qi::Message *msg);
 
-  bool send(qi::Message &msg);
+  bool send(const qi::Message &msg);
 
   void setDelegate(TransportSocketInterface *delegate);
 

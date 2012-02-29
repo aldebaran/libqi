@@ -25,7 +25,11 @@
 
 #include <qimessaging/transport_socket.hpp>
 #include "src/network_thread.hpp"
+#include "src/buffer_p.hpp"
+
 #include <qimessaging/message.hpp>
+#include <qimessaging/datastream.hpp>
+#include <qimessaging/buffer.hpp>
 
 #define MAX_LINE 16384
 
@@ -347,12 +351,38 @@ bool TransportSocket::read(int id, qi::Message *msg)
   return false;
 }
 
-bool TransportSocket::send(qi::Message &msg)
-{
-  msg.complete();
 
-  struct evbuffer *buf = reinterpret_cast<struct evbuffer*>(msg.buffer()->data());
-  if (_p->connected && (bufferevent_write_buffer(_p->bev, buf) == 0))
+bool TransportSocket::send(const qi::Message &msg)
+{
+  if (msg.type() == qi::Message::Type_None)
+  {
+    qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
+    assert(msg.type() != qi::Message::Type_None);
+    return false;
+  }
+
+  if (msg.service() == qi::Message::Service_None)
+  {
+    qiLogError("qimessaging.TransportSocket")  << "Message dropped (service is 0)" << std::endl;
+    assert(msg.service() != qi::Message::Service_None);
+    return false;
+  }
+
+  if (msg.path() == qi::Message::Path_None)
+  {
+    qiLogError("qimessaging.TransportSocket")  << "Message dropped (path is 0)" << std::endl;
+    assert(msg.path() != qi::Message::Path_None);
+    return false;
+  }
+
+  // If we do not use qi::Buffer (using qi::Message instead of const qi::Message)
+  // we win 500 msg/s.
+  qi::Buffer     buf;
+  qi::DataStream d(&buf);
+  d << msg;
+
+  if (_p->connected &&
+      (bufferevent_write_buffer(_p->bev, buf._p->data()) == 0))
     return true;
 
   return false;
