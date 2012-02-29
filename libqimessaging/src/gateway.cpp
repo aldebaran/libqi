@@ -42,10 +42,8 @@ protected:
   virtual void newConnection();
 
   //SocketInterface
-  virtual void onReadyRead(TransportSocket    *client, int id);
-  virtual void onWriteDone(TransportSocket    *client);
-  virtual void onConnected(TransportSocket    *client);
-  virtual void onDisconnected(TransportSocket *client);
+  virtual void onSocketReadyRead(TransportSocket    *client, int id);
+  virtual void onSocketConnected(TransportSocket    *client);
 
 
 public:
@@ -215,7 +213,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
   }
 }
 
-void GatewayPrivate::onReadyRead(TransportSocket *client, int id)
+void GatewayPrivate::onSocketReadyRead(TransportSocket *client, int id)
 {
   qi::Message msg;
   client->read(id, &msg);
@@ -226,12 +224,8 @@ void GatewayPrivate::onReadyRead(TransportSocket *client, int id)
     handleServiceRead(client, &msg); // Service
 }
 
-void GatewayPrivate::onWriteDone(TransportSocket *client)
-{
-}
-
 // S.2/
-void GatewayPrivate::onConnected(TransportSocket *service)
+void GatewayPrivate::onSocketConnected(TransportSocket *service)
 {
   if (service == _socketToServiceDirectory)
     return;
@@ -265,10 +259,6 @@ void GatewayPrivate::onConnected(TransportSocket *service)
     qi::Message *msg = itPending->first;
     forwardClientMessage(client, service, msg);
   }
-}
-
-void GatewayPrivate::onDisconnected(TransportSocket *client)
-{
 }
 
 Gateway::Gateway()

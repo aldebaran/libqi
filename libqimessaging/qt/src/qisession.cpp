@@ -30,7 +30,7 @@ QiSessionPrivate::~QiSessionPrivate() {
   delete _serviceSocket;
 }
 
-void QiSessionPrivate::onConnected(qi::TransportSocket *client) {
+void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client) {
   QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
 
   if (it == _futureConnect.end())
@@ -47,15 +47,17 @@ void QiSessionPrivate::onConnected(qi::TransportSocket *client) {
   client->send(msg);
 }
 
-//TODO: handle connection error
-void QiSessionPrivate::onDisconnected(qi::TransportSocket *client) {
+void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client) {
+  QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
 
+  if (it == _futureConnect.end())
+    return;
+
+  it.value().fu.reportCanceled();
+  _futureConnect.remove(client);
 }
 
-void QiSessionPrivate::onWriteDone(qi::TransportSocket *client) {
-}
-
-void QiSessionPrivate::onReadyRead(qi::TransportSocket *client, int id) {
+void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
   qi::Message                                                        msg;
   QMap<int, ServiceRequest>::iterator                                it;
   QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > >::iterator it2;
@@ -132,7 +134,6 @@ QiSession::~QiSession()
 {
   delete _p;
 }
-
 
 bool QiSession::connect(const QString &masterAddress)
 {

@@ -50,7 +50,7 @@ public:
     socket->setDelegate(this);
   }
 
-  virtual void onReadyRead(qi::TransportSocket *client, int id)
+  virtual void onSocketReadyRead(qi::TransportSocket *client, int id)
   {
     qi::Message msg;
     client->read(id, &msg);
@@ -69,15 +69,15 @@ public:
 
   }
 
-  virtual void onWriteDone(qi::TransportSocket *client)
+  virtual void onSocketWriteDone(qi::TransportSocket *client)
   {
   }
 
-  virtual void onConnected(qi::TransportSocket *client)
+  virtual void onSocketConnected(qi::TransportSocket *client)
   {
   }
 
-  virtual void onDisconnected(qi::TransportSocket *client)
+  virtual void onSocketDisconnected(qi::TransportSocket *client)
   {
   }
 

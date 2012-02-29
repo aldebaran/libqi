@@ -33,10 +33,10 @@ namespace qi
     ~ServiceDirectoryPrivate();
 
     virtual void newConnection();
-    virtual void onReadyRead(TransportSocket *socket, int id);
-    virtual void onWriteDone(TransportSocket *client);
-    virtual void onConnected(TransportSocket *client);
-    virtual void onDisconnected(TransportSocket *client);
+    virtual void onSocketReadyRead(TransportSocket *socket, int id);
+    virtual void onSocketWriteDone(TransportSocket *client);
+    virtual void onSocketConnected(TransportSocket *client);
+    virtual void onSocketDisconnected(TransportSocket *client);
 
     std::vector<ServiceInfo> services();
     ServiceInfo              service(const std::string &name);
@@ -89,7 +89,7 @@ namespace qi
     socket->setDelegate(this);
   }
 
-  void ServiceDirectoryPrivate::onReadyRead(TransportSocket *socket, int id)
+  void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
   {
     qi::Message msg;
     socket->read(id, &msg);
@@ -103,15 +103,15 @@ namespace qi
     socket->send(out);
   }
 
-  void ServiceDirectoryPrivate::onWriteDone(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *client)
   {
   }
 
-  void ServiceDirectoryPrivate::onConnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *client)
   {
   }
 
-  void ServiceDirectoryPrivate::onDisconnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *client)
   {
   }
 

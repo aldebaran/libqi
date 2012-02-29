@@ -60,7 +60,7 @@ public:
     tc->send(msg);
   }
 
-  virtual void onConnected(const qi::Message &msg)
+  virtual void onSocketConnected(const qi::Message &msg)
   {
     std::cout << "connected: " << msg.str() << std::endl;
   }

@@ -31,22 +31,6 @@ namespace qi {
     delete _serviceSocket;
   }
 
-  void SessionPrivate::onWriteDone(TransportSocket *client)
-  {
-  }
-
-  void SessionPrivate::onReadyRead(TransportSocket *client, int id)
-  {
-  }
-
-  void SessionPrivate::onConnected(TransportSocket *client)
-  {
-  }
-
-  void SessionPrivate::onDisconnected(TransportSocket *client)
-  {
-  }
-
   bool SessionPrivate::connect(const std::string &url)
   {
     return _serviceSocket->connect(url, _networkThread->getEventBase());

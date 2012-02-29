@@ -153,7 +153,7 @@ void TransportSocket::readcb(struct bufferevent *bev,
       _p->cond.notify_all();
     }
     if (_p->tcd)
-      _p->tcd->onReadyRead(this, _p->msg->id());
+      _p->tcd->onSocketReadyRead(this, _p->msg->id());
 
     _p->msg = NULL;
   }
@@ -164,7 +164,7 @@ void TransportSocket::writecb(struct bufferevent* bev,
                               void* context)
 {
   if (_p->tcd)
-    _p->tcd->onWriteDone(this);
+    _p->tcd->onSocketWriteDone(this);
 }
 
 void TransportSocket::eventcb(struct bufferevent *bev,
@@ -176,13 +176,13 @@ void TransportSocket::eventcb(struct bufferevent *bev,
     qi::Message msg;
     _p->connected = true;
     if (_p->tcd)
-      _p->tcd->onConnected(this);
+      _p->tcd->onSocketConnected(this);
   }
   else if (events & BEV_EVENT_EOF)
   {
     qi::Message msg;
     if (_p->tcd)
-      _p->tcd->onDisconnected(this);
+      _p->tcd->onSocketDisconnected(this);
     _p->connected = false;
     // connection has been closed, do any clean up here
     qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
@@ -192,6 +192,7 @@ void TransportSocket::eventcb(struct bufferevent *bev,
     bufferevent_free(_p->bev);
     // check errno to see what error occurred
     qiLogError("qimessaging.TransportSocket")  << "Cannnot connect" << std::endl;
+
   }
   else if (events & BEV_EVENT_TIMEOUT)
   {

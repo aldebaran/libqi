@@ -1,26 +1,8 @@
 /*
-** transport-client.hpp
-** Login : <hcuche@hcuche-de>
-** Started on  Thu Jan  5 15:21:13 2012 Herve Cuche
-** $Id$
-**
 ** Author(s):
 **  - Herve Cuche <hcuche@aldebaran-robotics.com>
 **
-** Copyright (C) 2012 Herve Cuche
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 3 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+** Copyright (C) 2012 Aldebaran Robotics
 */
 
 #pragma once
@@ -42,10 +24,12 @@ class TransportSocket;
 class TransportSocketInterface
 {
 public:
-  virtual void onConnected(TransportSocket *client)         = 0;
-  virtual void onDisconnected(TransportSocket *client)      = 0;
-  virtual void onWriteDone(TransportSocket *client)         = 0;
-  virtual void onReadyRead(TransportSocket *client, int id) = 0;
+  virtual ~TransportSocketInterface()                                    {};
+  inline virtual void onSocketConnected(TransportSocket *client)         {};
+  inline virtual void onSocketConnectionError(TransportSocket *client)   {};
+  inline virtual void onSocketDisconnected(TransportSocket *client)      {};
+  inline virtual void onSocketWriteDone(TransportSocket *client)         {};
+  inline virtual void onSocketReadyRead(TransportSocket *client, int id) {};
 };
 
 struct TransportSocketPrivate;

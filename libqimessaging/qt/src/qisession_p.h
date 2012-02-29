@@ -29,10 +29,9 @@ public:
   QiSessionPrivate();
   ~QiSessionPrivate();
 
-  virtual void onConnected(qi::TransportSocket *client);
-  virtual void onDisconnected(qi::TransportSocket *client);
-  virtual void onWriteDone(qi::TransportSocket *client);
-  virtual void onReadyRead(qi::TransportSocket *client, int id);
+  virtual void onSocketConnected(qi::TransportSocket *client);
+  virtual void onSocketReadyRead(qi::TransportSocket *client, int id);
+  virtual void onSocketConnectionError(qi::TransportSocket *client);
 
   void service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
   void service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);

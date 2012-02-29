@@ -21,10 +21,7 @@ namespace qi {
   public:
 
     virtual void newConnection();
-    virtual void onReadyRead(TransportSocket *client, int id);
-    virtual void onWriteDone(TransportSocket *client);
-    virtual void onConnected(TransportSocket *client);
-    virtual void onDisconnected(TransportSocket *client);
+    virtual void onSocketReadyRead(TransportSocket *client, int id);
 
   public:
     std::map<unsigned int, qi::Object*> _services;
@@ -41,7 +38,7 @@ namespace qi {
     socket->setDelegate(this);
   }
 
-  void ServerPrivate::onReadyRead(TransportSocket *client, int id) {
+  void ServerPrivate::onSocketReadyRead(TransportSocket *client, int id) {
     qi::Message msg;
     client->read(id, &msg);
     qi::Object *obj;
@@ -57,18 +54,6 @@ namespace qi {
 
     client->send(retval);
   };
-
-  void ServerPrivate::onWriteDone(TransportSocket *client)
-  {
-  }
-
-  void ServerPrivate::onConnected(TransportSocket *client)
-  {
-  }
-
-  void ServerPrivate::onDisconnected(TransportSocket *client)
-  {
-  }
 
 
   Server::Server()

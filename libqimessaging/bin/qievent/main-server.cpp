@@ -38,7 +38,7 @@ public:
     ts->start(address, port, nthd->getEventBase());
   }
 
-  virtual void onConnected(const qi::Message &msg)
+  virtual void onSocketConnected(const qi::Message &msg)
   {
     std::cout << "connected: " << msg.str() << std::endl;
   }
