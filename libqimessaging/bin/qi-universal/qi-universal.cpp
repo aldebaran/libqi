@@ -20,7 +20,13 @@
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
 #include <qi/log.hpp>
-#include <arpa/inet.h>
+
+#ifdef _WIN32
+ #include <winsock2.h> // for socket
+ #include <WS2tcpip.h> // for socklen_t
+#else
+ #include <arpa/inet.h>
+#endif
 
 void readcb(struct bufferevent *bev, void* context)
 {
@@ -115,6 +121,13 @@ int start_server(const qi::Url &url, struct event_base *base)
 int main()
 {
   std::cout << "Starting..." << std::endl;
+
+  #ifdef _WIN32
+  // libevent does not call WSAStartup
+  WSADATA WSAData;
+  // TODO: handle return code
+  ::WSAStartup(MAKEWORD(1, 0), &WSAData);
+  #endif
 
   struct event_base *base = event_base_new();
 
