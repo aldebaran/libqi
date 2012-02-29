@@ -90,7 +90,6 @@ namespace qi {
     unsigned int size() const;
     Buffer *buffer() const;
 
-    bool complete();
     void buildReplyFrom(const Message &call);
     void buildForwardFrom(const Message &msg);
 

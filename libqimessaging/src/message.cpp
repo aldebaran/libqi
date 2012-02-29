@@ -155,36 +155,6 @@ namespace qi {
     return _buffer;
   }
 
-  // write header into msg before send.
-  bool Message::complete()
-  {
-    if (type() == qi::Message::Type_None)
-    {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
-      assert(type() != qi::Message::Type_None);
-      return false;
-    }
-
-    if (service() == qi::Message::Service_None)
-    {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (service is 0)" << std::endl;
-      assert(service() != qi::Message::Service_None);
-      return false;
-    }
-
-    if (path() == qi::Message::Path_None)
-    {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (path is 0)" << std::endl;
-      assert(path() != qi::Message::Path_None);
-      return false;
-    }
-
-    _header->size = _buffer->size();
-    _buffer->prepend(_header, sizeof(MessageHeader));
-
-    return true;
-  }
-
   void Message::buildReplyFrom(const Message &call)
   {
     setId(call.id());
