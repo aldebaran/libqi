@@ -22,9 +22,9 @@ namespace qi
     ~Buffer();
 
     // Add data to the end of the buffer
-    int            write(const void *data, size_t size);
+    int    write(const void *data, size_t size);
     // Add data in front of the buffer
-    int            prepend(const void *data, size_t size);
+    int    prepend(const void *data, size_t size);
     // read size first data of the buffer
     // warning: linearize data if needed (copy)
     int    read(void *data, size_t size);
@@ -32,10 +32,7 @@ namespace qi
     int    drain(size_t size);
     size_t size() const;
 
-    void *data();
-    void  setData(void *data);
-
-  private:
+  public:
     BufferPrivate *_p;
   };
 

@@ -12,24 +12,19 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "src/buffer_p.hpp"
+
 namespace qi
 {
-class BufferPrivate
-{
-public:
-  BufferPrivate()
+
+  BufferPrivate::BufferPrivate()
     : _bufev(evbuffer_new())
   {
   }
 
-  ~BufferPrivate()
+  BufferPrivate::~BufferPrivate()
   {
   }
-
-  void dump();
-  struct evbuffer *_bufev;
-};
-
 
 
   Buffer::Buffer()
@@ -71,14 +66,14 @@ public:
     return evbuffer_get_length(_p->_bufev);
   }
 
-  void *Buffer::data()
+  struct evbuffer *BufferPrivate::data()
   {
-    return (void*)_p->_bufev;
+    return _bufev;
   }
 
-  void Buffer::setData(void *data)
+  void BufferPrivate::setData(struct evbuffer *data)
   {
-    _p->_bufev = reinterpret_cast<struct evbuffer *>(data);
+    _bufev = data;
   }
 
   void BufferPrivate::dump()
