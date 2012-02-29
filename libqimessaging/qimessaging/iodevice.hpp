@@ -21,7 +21,7 @@ namespace qi
     virtual void          *peek(size_t size)             = 0;
     virtual int            drain(size_t size)            = 0;
 
-    virtual size_t         size() const = 0;
+    virtual unsigned int   size() const = 0;
   }; // !IODevice
 } // !qi
 

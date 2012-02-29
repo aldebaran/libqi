@@ -61,7 +61,7 @@ namespace qi
     return evbuffer_drain(_p->_bufev, size);
   }
 
-  size_t Buffer::size() const
+  unsigned int Buffer::size() const
   {
     return evbuffer_get_length(_p->_bufev);
   }

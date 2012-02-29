@@ -12,7 +12,11 @@
 #include <qi/log.hpp>
 #include <cassert>
 
+#include "src/buffer_p.hpp"
+
+
 namespace qi {
+#include <event2/buffer.h>
 
   const unsigned int messageMagic = 0x42adde42;
 
@@ -74,7 +78,24 @@ namespace qi {
     return os;
   }
 
-  size_t Message::size() const
+
+  qi::DataStream& operator<<(qi::DataStream& os, const qi::Message& msg)
+  {
+    os << msg._header->magic
+       << msg.id()
+       << msg.size()
+       << msg.type()
+       << msg.service()
+       << msg.path()
+       << msg.function()
+       << msg._header->reserved;
+
+    qi::Buffer *buf = reinterpret_cast<qi::Buffer *>(os.ioDevice());
+    evbuffer_add_buffer(buf->_p->data(), msg.buffer()->_p->data());
+    return os;
+  }
+
+  unsigned int Message::size() const
   {
     return _buffer->size();
   }

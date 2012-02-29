@@ -16,6 +16,7 @@
 #include <qimessaging/api.hpp>
 #include <stdint.h>
 #include <qimessaging/buffer.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi {
 
@@ -75,7 +76,6 @@ namespace qi {
 
     ~Message();
 
-    size_t size() const;
     void setId(unsigned int id);
     unsigned int id() const;
     void setType(uint32_t type);
@@ -86,6 +86,8 @@ namespace qi {
     unsigned int path() const;
     void setFunction(uint32_t function);
     unsigned int function() const;
+
+    unsigned int size() const;
     Buffer *buffer() const;
 
     bool complete();
@@ -103,8 +105,9 @@ namespace qi {
     qi::Buffer    *_buffer;
     bool           _withBuffer;
   };
-  std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 
+  std::ostream&   operator<<(std::ostream&   os, const qi::Message& msg);
+  qi::DataStream& operator<<(qi::DataStream& os, const qi::Message& msg);
 }
 
 

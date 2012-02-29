@@ -30,7 +30,7 @@ namespace qi
     int    read(void *data, size_t size);
     void  *peek(size_t size);
     int    drain(size_t size);
-    size_t size() const;
+    unsigned int size() const;
 
   public:
     BufferPrivate *_p;
