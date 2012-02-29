@@ -44,7 +44,6 @@ struct TransportSocketPrivate
     , connected(false)
     , fd(-1)
     , readHdr(true)
-    , sizeRead(0)
   {
     msg = NULL;
   }
@@ -55,7 +54,6 @@ struct TransportSocketPrivate
     , connected(false)
     , fd(fileDesc)
     , readHdr(true)
-    , sizeRead(0)
   {
     msg = NULL;
   }
@@ -76,7 +74,6 @@ struct TransportSocketPrivate
 
   // data to rebuild message
   bool                         readHdr;
-  int                          sizeRead;
   qi::Message                 *msg;
 };
 
@@ -110,46 +107,37 @@ void TransportSocket::readcb(struct bufferevent *bev,
                              void *context)
 {
   struct evbuffer *input = bufferevent_get_input(bev);
+  size_t length = 0;
 
   while (true)
   {
     if (_p->msg == NULL)
     {
       _p->msg = new qi::Message();
-      _p->sizeRead = 0;
       _p->readHdr = true;
     }
 
-    int read = 0;
-    // get the header
     if (_p->readHdr)
     {
-      read = evbuffer_remove(input,
-                             (char*)_p->msg->_header + _p->sizeRead,
-                             sizeof(qi::Message::MessageHeader) - _p->sizeRead);
+      length = evbuffer_get_length(input);
+      if (length < sizeof(qi::Message::MessageHeader))
+        return;
 
-      if (read <= 0)
-        break;
-
-      _p->sizeRead += read;
-      if (_p->sizeRead < sizeof(qi::Message::MessageHeader))
-        break;
+      evbuffer_remove(input,
+                      (char*)_p->msg->_header,
+                      sizeof(qi::Message::MessageHeader));
 
       _p->msg->checkMagic();
       _p->readHdr = false;
-      _p->sizeRead = 0;
     }
 
-    read = evbuffer_remove_buffer(input,
-                                  (struct evbuffer *)_p->msg->buffer()->data(),
-                                  _p->msg->_header->size - _p->sizeRead);
+    length = evbuffer_get_length(input);
+    if (length < _p->msg->_header->size)
+      return;
 
-    if (read < 0)
-      break;
-
-    _p->sizeRead += read;
-    if (_p->sizeRead < _p->msg->_header->size)
-      break;
+    evbuffer_remove_buffer(input,
+                           _p->msg->buffer()->_p->data(),
+                           _p->msg->_header->size);
 
     {
       boost::mutex::scoped_lock l(_p->mtx);
