@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <pthread.h>
 
 #include <event2/util.h>
 #include <event2/event.h>
