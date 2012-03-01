@@ -8,7 +8,6 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <pthread.h>
 
 #include <event2/util.h>
 #include <event2/event.h>
@@ -27,6 +26,7 @@
  #include <winsock2.h> // for socket
  #include <WS2tcpip.h> // for socklen_t
 #else
+ #include <pthread.h>
  #include <arpa/inet.h>
 #endif
 
