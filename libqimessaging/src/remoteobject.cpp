@@ -25,18 +25,25 @@ RemoteObject::~RemoteObject()
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, qi::FunctorResult &out)
 {
   qi::Message msg(static_cast<Buffer *>(in.datastream().ioDevice()));
+  qi::Message ret;
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
   msg.setPath(qi::Message::Path_Main);
   //todo handle failure
   msg.setFunction(method);
 
-  _ts->send(msg);
-  _ts->waitForId(msg.id());
-
-  qi::Message ret;
-  _ts->read(msg.id(), &ret);
-  //TODO: ret(out.ioDevice())
+  if (!_ts->send(msg)) {
+    out.setError(1);
+    return;
+  }
+  if (!_ts->waitForId(msg.id())) {
+    out.setError(1);
+    return;
+  }
+  if (!_ts->read(msg.id(), &ret)) {
+    out.setError(1);
+    return;
+  }
   out.datastream().setIODevice(ret.buffer());
 }
 
