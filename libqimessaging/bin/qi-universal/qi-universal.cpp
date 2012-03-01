@@ -167,6 +167,13 @@ int main()
   ::WSAStartup(MAKEWORD(1, 0), &WSAData);
   #endif
 
+  #ifdef EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED
+  evthread_use_windows_threads();
+  #endif
+  #ifdef EVTHREAD_USE_PTHREADS_IMPLEMENTED
+  evthread_use_pthreads();
+  #endif
+
   pthread_t server_thread;
   struct event_base *server_base = event_base_new();
   qi::Url server_url("tcp://127.0.0.1:9571");
