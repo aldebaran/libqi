@@ -79,6 +79,12 @@ Please consult the changelog for details. " #x)
   type(type const &);                           \
   void operator=(type const &)
 
+#if defined(__GNUC__)
+# define QI_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+# define QI_WARN_UNUSED_RESULT
+#endif
+
 
 #endif  // _LIBQI_QI_API_HPP_
 
