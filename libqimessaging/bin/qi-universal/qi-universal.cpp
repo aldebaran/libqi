@@ -135,6 +135,27 @@ void *network_thread(void *arg)
   return 0;
 }
 
+static void errorcb(struct bufferevent *bev,
+                    short error,
+                    void *context)
+{
+  std::cout << "errorcb" << std::endl;
+}
+
+void *network_thread2(void *arg)
+{
+  struct event_base *base = reinterpret_cast<struct event_base *>(arg);
+
+  /* hack to keep the loop running */
+  struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent_setcb(bev, 0, 0, errorcb, 0);
+  bufferevent_enable(bev, EV_READ | EV_WRITE);
+
+  event_base_dispatch(reinterpret_cast<struct event_base *>(arg));
+  std::cout << "exit" << std::endl;
+  return 0;
+}
+
 int main()
 {
   std::cout << "Starting..." << std::endl;
@@ -155,12 +176,15 @@ int main()
   pthread_t client_thread;
   struct event_base *client_base = event_base_new();
   qi::Url client_url("tcp://127.0.0.1:5555");
+  pthread_create(&client_thread, 0, network_thread2, client_base);
+
+  // test send
+  sleep(1); // wait for the thread to start
   struct bufferevent *bev = bufferevent_socket_new(client_base, -1, BEV_OPT_CLOSE_ON_FREE);
   bufferevent_setcb(bev, readcb, writecb, eventcb, 0);
   bufferevent_socket_connect_hostname(bev, 0, AF_INET,
                                       client_url.host().c_str(), client_url.port());
   socket_write(bev, "CHICHE", 6);
-  pthread_create(&client_thread, 0, network_thread, client_base);
 
   pthread_join(client_thread, 0);
   pthread_join(server_thread, 0);
