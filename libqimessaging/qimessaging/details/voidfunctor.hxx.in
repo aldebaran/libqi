@@ -1,4 +1,4 @@
-#from codegenerator import *
+#from qibuild_code_generator import *
 /*
 *  $autogen
 *

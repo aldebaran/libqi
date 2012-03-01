@@ -1,4 +1,4 @@
-#from codegenerator import *
+#from qibuild_code_generator import *
 <%
 def generate_argpush_list(count):
     t = "args.push_back(p%(count)d);"
