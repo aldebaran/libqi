@@ -44,11 +44,11 @@ namespace qi {
     qi::Object *obj;
 
     obj = _services[msg.service()];
-    qi::DataStream ds(msg.buffer());
+    qi::FunctorParameters ds(msg.buffer());
 
     qi::Message retval;
     retval.buildReplyFrom(msg);
-    qi::DataStream rs(retval.buffer());
+    qi::FunctorResult rs(retval.buffer());
 
     obj->metaCall(msg.function(), "", ds, rs);
 

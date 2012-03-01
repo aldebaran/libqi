@@ -4,7 +4,6 @@ def generate_argpush_list(count):
     t = "args.push_back(p%(count)d);"
     return generate_list(t, count, sep=" ")
 %>
-#pragma once
 /*
 *  $autogen
 *
@@ -12,12 +11,13 @@ def generate_argpush_list(count):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
 #raw
-#ifndef _QI_FUNCTORS_CALLFUNCTOR_HPP_
-#define _QI_FUNCTORS_CALLFUNCTOR_HPP_
+#pragma once
+#ifndef _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
+#define _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
 
 #include <qimessaging/functor.hpp>
 #include <qimessaging/buffer.hpp>
@@ -29,17 +29,17 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
     #for $j in range($i)
-    qi::serialization::serialize<P$j>::write(args, p$j);
+    args.datastream() << p$j;
     #end for
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
@@ -47,13 +47,13 @@ namespace qi
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
     #for $j in range($i)
-    qi::serialization::serialize<P$j>::write(args, p$j);
+    args.datastream() << p$j;
     #end for
     f->call(args, ret);
   }
@@ -61,5 +61,5 @@ namespace qi
 #end for
 #raw
 }
-#endif  // _QI_FUNCTORS_CALLFUNCTOR_HPP_
+#endif  // _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
 #end raw

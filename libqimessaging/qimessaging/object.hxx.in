@@ -30,19 +30,19 @@ namespace qi {
   /// <summary> Calls a void method </summary>
   template <${generate_typename_list($i)}>
   void Object::callVoid(const std::string& method${generate_param_list($i, begin=True)}) {
-    qi::Buffer    bufReq;
-    qi::Buffer    bufRep;
-    qi::DataStream request(&bufReq);
-    qi::DataStream reply(&bufRep);
+    qi::Buffer            breq;
+    qi::Buffer            brep;
+    qi::FunctorParameters request(&breq);
+    qi::FunctorResult     reply(&brep);
 
     void (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
     #for $j in range($i)
-    request << p${j};
+    request.datastream() << p${j};
     #end for
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
   }
 #end if
 
@@ -50,23 +50,23 @@ namespace qi {
   /// <returns> The response </returns>
   template <typename R${generate_typename_list($i, begin=True)}>
   R Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
-  qi::Buffer    bufReq;
-  qi::Buffer    bufRep;
-  qi::DataStream request(&bufReq);
-  qi::DataStream reply(&bufRep);
+    qi::Buffer            breq;
+    qi::Buffer            brep;
+    qi::FunctorParameters request(&breq);
+    qi::FunctorResult     reply(&brep);
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
     #for $j in range($i)
-    request << p${j};
+    request.datastream() << p${j};
     #end for
-    metaCall(method, signature, request, reply);
+    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
 
     // Optimise? I think compiler is smart enough to inline the returned object
     R ret;
-    reply >> ret;
+    reply.datastream() >> ret;
     return ret;
   }
 #end for

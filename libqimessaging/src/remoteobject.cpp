@@ -22,9 +22,9 @@ RemoteObject::~RemoteObject()
 {
 }
 
-void RemoteObject::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
+void RemoteObject::metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, qi::FunctorResult &out)
 {
-  qi::Message msg(static_cast<Buffer *>(in.ioDevice()));
+  qi::Message msg(static_cast<Buffer *>(in.datastream().ioDevice()));
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
   msg.setPath(qi::Message::Path_Main);
@@ -37,7 +37,7 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, DataStr
   qi::Message ret;
   _ts->read(msg.id(), &ret);
   //TODO: ret(out.ioDevice())
-  out.setIODevice(ret.buffer());
+  out.datastream().setIODevice(ret.buffer());
 }
 
 }

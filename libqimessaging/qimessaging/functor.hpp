@@ -19,13 +19,47 @@
 
 namespace qi
 {
+
+  class FunctorParameters {
+  public:
+    explicit FunctorParameters(qi::IODevice *buffer)
+      : _datastream(buffer)
+    {}
+
+    inline qi::DataStream       &datastream()       { return _datastream; }
+    inline const qi::DataStream &datastream() const { return _datastream; }
+
+  private:
+    qi::DataStream  _datastream;
+  };
+
+  class FunctorResult {
+  public:
+    explicit FunctorResult(qi::IODevice *buffer)
+      : _datastream(buffer),
+        _error(0)
+    {}
+
+    inline qi::DataStream       &datastream()       { return _datastream; }
+    inline const qi::DataStream &datastream() const { return _datastream; }
+
+    inline int       &error()       { return _error; }
+    inline const int &error() const { return _error; }
+
+    void setError(int err) { _error = err; }
+
+  private:
+    qi::DataStream  _datastream;
+    int             _error;
+  };
+
   /**
   * Generic functor class
   * \ingroup Functors
   */
   class Functor {
   public:
-    virtual void call(qi::DataStream &params, qi::DataStream& result)const = 0;
+    virtual void call(qi::FunctorParameters &params, qi::FunctorResult& result) const = 0;
     virtual ~Functor() {}
   };
 

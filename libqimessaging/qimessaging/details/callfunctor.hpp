@@ -14,27 +14,29 @@
 #define _QIMESSAGING_DETAILS_CALLFUNCTOR_HPP_
 
 #include <qimessaging/functor.hpp>
+#include <qimessaging/buffer.hpp>
 
 namespace qi
 {
 
   template <typename R>
   R callFunctor(Functor *f) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
+
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   void callVoidFunctor(Functor *f) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
     f->call(args, ret);
   }
@@ -42,304 +44,306 @@ namespace qi
 
   template <typename R, typename P0>
   R callFunctor(Functor *f, const P0 &p0) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
+    args.datastream() << p0;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0>
   void callVoidFunctor(Functor *f, const P0 &p0) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
-    args << p0;
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
+
+    args.datastream() << p0;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
+    args.datastream() << p0;
+    args.datastream() << p1;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
+    args.datastream() << p0;
+    args.datastream() << p1;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
+
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
-    args << p7;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
+    args.datastream() << p7;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
-    args << p7;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
+    args.datastream() << p7;
     f->call(args, ret);
   }
 
 
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
-    args << p7;
-    args << p8;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
+    args.datastream() << p7;
+    args.datastream() << p8;
     f->call(args, ret);
     R r;
-    ret >> r;
+    ret.datastream() >> r;
     return r;
   }
 
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
-    qi::Buffer  argsBuf;
-    qi::Buffer  retBuf;
-    qi::DataStream args(&argsBuf);
-    qi::DataStream ret(&retBuf);
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret(&retBuf);
 
-    args << p0;
-    args << p1;
-    args << p2;
-    args << p3;
-    args << p4;
-    args << p5;
-    args << p6;
-    args << p7;
-    args << p8;
+    args.datastream() << p0;
+    args.datastream() << p1;
+    args.datastream() << p2;
+    args.datastream() << p3;
+    args.datastream() << p4;
+    args.datastream() << p5;
+    args.datastream() << p6;
+    args.datastream() << p7;
+    args.datastream() << p8;
     f->call(args, ret);
   }
 

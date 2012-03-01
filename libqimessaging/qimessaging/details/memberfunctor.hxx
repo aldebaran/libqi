@@ -4,7 +4,7 @@
 *  Author(s):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
 
@@ -32,12 +32,11 @@ namespace detail {
       return (R)(fObject->*fFunction)();
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
 
-      result << (fObject->*fFunction)();
+      result.datastream() << (fObject->*fFunction)();
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -58,14 +57,13 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       P0 p0;
 
-      params >> p0;
-      result << (fObject->*fFunction)(p0);
+      params.datastream() >> p0;
+      result.datastream() << (fObject->*fFunction)(p0);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -86,16 +84,15 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       P0 p0;
       P1 p1;
 
-      params >> p0;
-      params >> p1;
-      result << (fObject->*fFunction)(p0, p1);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      result.datastream() << (fObject->*fFunction)(p0, p1);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -116,18 +113,17 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       P0 p0;
       P1 p1;
       P2 p2;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      result << (fObject->*fFunction)(p0, p1, p2);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -148,20 +144,19 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       P0 p0;
       P1 p1;
       P2 p2;
       P3 p3;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      result << (fObject->*fFunction)(p0, p1, p2, p3);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -182,7 +177,7 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       P0 p0;
       P1 p1;
@@ -190,14 +185,13 @@ namespace detail {
       P3 p3;
       P4 p4;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      params >> p4;
-      result << (fObject->*fFunction)(p0, p1, p2, p3, p4);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      params.datastream() >> p4;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3, p4);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -218,7 +212,7 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       P0 p0;
       P1 p1;
@@ -227,15 +221,14 @@ namespace detail {
       P4 p4;
       P5 p5;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      params >> p4;
-      params >> p5;
-      result << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      params.datastream() >> p4;
+      params.datastream() >> p5;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -256,7 +249,7 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
       P0 p0;
       P1 p1;
@@ -266,16 +259,15 @@ namespace detail {
       P5 p5;
       P6 p6;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      params >> p4;
-      params >> p5;
-      params >> p6;
-      result << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      params.datastream() >> p4;
+      params.datastream() >> p5;
+      params.datastream() >> p6;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -296,7 +288,7 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
       P0 p0;
       P1 p1;
@@ -307,17 +299,16 @@ namespace detail {
       P6 p6;
       P7 p7;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      params >> p4;
-      params >> p5;
-      params >> p6;
-      params >> p7;
-      result << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      params.datastream() >> p4;
+      params.datastream() >> p5;
+      params.datastream() >> p6;
+      params.datastream() >> p7;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;
@@ -338,7 +329,7 @@ namespace detail {
       return (R)(fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result) const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
       P0 p0;
       P1 p1;
@@ -350,18 +341,17 @@ namespace detail {
       P7 p7;
       P8 p8;
 
-      params >> p0;
-      params >> p1;
-      params >> p2;
-      params >> p3;
-      params >> p4;
-      params >> p5;
-      params >> p6;
-      params >> p7;
-      params >> p8;
-      result << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+      params.datastream() >> p0;
+      params.datastream() >> p1;
+      params.datastream() >> p2;
+      params.datastream() >> p3;
+      params.datastream() >> p4;
+      params.datastream() >> p5;
+      params.datastream() >> p6;
+      params.datastream() >> p7;
+      params.datastream() >> p8;
+      result.datastream() << (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     };
-
   private:
     C            *fObject;
     FunctionType  fFunction;

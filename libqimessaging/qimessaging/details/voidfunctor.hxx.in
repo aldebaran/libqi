@@ -5,12 +5,13 @@
 *  Author(s):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2012 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
-#raw
 
-#ifndef _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
-#define _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
+#raw
+#pragma once
+#ifndef _QIMESSAGING_DETAILS_VOIDFUNCTOR_HXX_
+#define _QIMESSAGING_DETAILS_VOIDFUNCTOR_HXX_
 
 # include <qimessaging/functor.hpp>
 
@@ -34,14 +35,14 @@ namespace detail {
       (*fFunction)($generate_arg_list($i));
     }
 
-    void call(qi::DataStream &params, qi::DataStream& result)const {
+    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       #for $j in range($i)
       P$j p$j;
       #end for
 
       #for $j in range($i)
-        params >> p$j;
+      params.datastream() >> p$j;
       #end for
       (*fFunction)($generate_callparam_list($i));
     };
@@ -54,5 +55,5 @@ namespace detail {
 #raw
 }
 }
-#endif  // _QI_FUNCTORS_DETAIL_VOIDFUNCTOR_HXX_IN_
+#endif  // _QIMESSAGING_DETAILS_VOIDFUNCTOR_HXX_
 #end raw

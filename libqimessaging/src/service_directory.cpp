@@ -93,11 +93,11 @@ namespace qi
   {
     qi::Message msg;
     socket->read(id, &msg);
-    DataStream din(msg.buffer());
+    FunctorParameters din(msg.buffer());
 
     qi::Message out;
     out.buildReplyFrom(msg);
-    DataStream dout(out.buffer());
+    FunctorResult dout(out.buffer());
 
     metaCall(msg.function(), "sig", din, dout);
     socket->send(out);

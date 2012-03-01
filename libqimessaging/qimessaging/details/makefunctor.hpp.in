@@ -1,17 +1,17 @@
 #from qibuild_code_generator import *
-#pragma once
 /*
 * $autogen
 *
 *  Author(s):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  Copyright (C) 2010 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
 #raw
-#ifndef _QI_FUNCTORS_MAKEFUNCTOR_HPP_
-#define _QI_FUNCTORS_MAKEFUNCTOR_HPP_
+#pragma once
+#ifndef _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_
+#define _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_
 
 #include <qimessaging/functor.hpp>
 
@@ -33,5 +33,5 @@ namespace qi
 #end for
 #raw
 }
-#endif  // _QI_FUNCTORS_MAKEFUNCTOR_HPP_
+#endif  // _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_
 #end raw

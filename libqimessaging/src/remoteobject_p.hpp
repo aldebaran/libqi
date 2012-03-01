@@ -22,7 +22,7 @@ namespace qi {
     explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject *mo);
     ~RemoteObject();
 
-    virtual void metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out);
+    virtual void metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, FunctorResult &out);
 
   protected:
     qi::TransportSocket *_ts;

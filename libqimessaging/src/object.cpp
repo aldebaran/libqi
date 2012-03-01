@@ -50,7 +50,7 @@ namespace qi {
     return idx;
   }
 
-  void Object::metaCall(unsigned int method, const std::string &sig, DataStream &in, DataStream &out)
+  void Object::metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, qi::FunctorResult &out)
   {
     //TODO: correctly handle failure
     assert(method < _meta->_methods.size());
