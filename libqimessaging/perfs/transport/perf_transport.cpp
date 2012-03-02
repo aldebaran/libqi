@@ -15,7 +15,7 @@
 
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/details/dataperftimer.hpp>
+#include "../dataperftimer.hpp"
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>

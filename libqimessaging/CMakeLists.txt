@@ -63,7 +63,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/url.hpp
                                    qimessaging/future.hpp
                                    qimessaging/details/callfunctor.hpp
-                                   qimessaging/details/dataperftimer.hpp
                                    qimessaging/details/function_signature.hpp
                                    qimessaging/details/functor.hxx
                                    qimessaging/details/makefunctor.hpp
@@ -75,7 +74,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/details/voidmemberfunctor.hxx
 
                                    src/buffer.cpp
-                                   src/dataperftimer.cpp
                                    src/datastream.cpp
                                    src/gateway.cpp
                                    src/message.cpp

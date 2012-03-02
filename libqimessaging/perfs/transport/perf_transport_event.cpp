@@ -17,7 +17,7 @@
 #include <qimessaging/transport_socket.hpp>
 
 #include <qimessaging/session.hpp>
-#include <qimessaging/details/dataperftimer.hpp>
+#include "../dataperftimer.hpp"
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
@@ -113,7 +113,7 @@ public:
     qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
-    _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
+    _p->_ts.start(session, urlo);
   }
 
 

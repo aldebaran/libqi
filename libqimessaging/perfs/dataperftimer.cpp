@@ -7,7 +7,7 @@
 */
 
 #include <iomanip>
-#include <qimessaging/details/dataperftimer.hpp>
+#include "dataperftimer.hpp"
 #include <iostream>
 //#include <rttools/rttime.h>
 

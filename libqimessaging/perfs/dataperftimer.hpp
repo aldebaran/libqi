@@ -11,7 +11,7 @@
 #ifndef _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 #define _QIMESSAGING_DETAILS_DATAPERFTIMER_HPP_
 
-#include <qi/config.hpp>
+#include <qimessaging/api.hpp>
 #include <qi/os.hpp>
 #include <boost/timer.hpp>
 #include <string>
@@ -36,7 +36,7 @@ namespace qi {
     /// dpt.stop();
     /// @endcode
     /// </summary>
-    class QI_API DataPerfTimer
+    class QIMESSAGING_API DataPerfTimer
     {
     public:
 
