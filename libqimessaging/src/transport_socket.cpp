@@ -43,6 +43,7 @@ const unsigned int headerSize = 8 * sizeof(uint32_t);
 
 class TransportSocketPrivate
 {
+public:
   explicit TransportSocketPrivate(TransportSocket *socket)
     : tcd(NULL)
     , bev(NULL)
