@@ -18,3 +18,4 @@ XX - private service objects (path)
 CX - object/struct serialization/signature
 XX - qi::Message : Pimpl
 XX - qi::session network thread
+XX - TransportSocket: remove libevent from public headers
