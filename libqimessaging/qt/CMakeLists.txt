@@ -9,7 +9,8 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 set(H_TO_MOC
         qimessaging/qt/qisession.h)
 
-set(H   qimessaging/qt/qiserver.h
+set(H   qimessaging/qt/api.h
+        qimessaging/qt/qiserver.h
         qimessaging/qt/qisession.h)
 
 set(H_P src/qiremoteobject_p.h

@@ -9,19 +9,17 @@
 #ifndef   	QT_QITRANSPORTSESSION_H_
 # define   	QT_QITRANSPORTSESSION_H_
 
-#include <qimessaging/api.hpp>
+#include <qimessaging/qt/api.h>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/url.hpp>
-#include <QtCore/QObject>
-#include <QtCore/QMetaObject>
-#include <QtCore/QUrl>
-#include <QVector>
-#include <QString>
-#include <QtCore/QFuture>
+#include <QtCore/qobject.h>
+#include <QtCore/qfuture.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qstring.h>
 
 class QiSessionPrivate;
 
-class QIMESSAGING_API QiSession : public QObject {
+class QIMESSAGING_QT_API QiSession : public QObject {
   Q_OBJECT
 
 public:

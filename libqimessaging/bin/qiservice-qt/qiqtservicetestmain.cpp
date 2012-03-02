@@ -14,6 +14,7 @@
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/qt/qiserver.h>
 
+#include <QtCore/qurl.h>
 //#include "qiservicetest.hpp"
 
 std::string reply(const std::string &msg) {
