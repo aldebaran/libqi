@@ -36,14 +36,31 @@ static void split_me(const std::string &url, unsigned short &_port, std::string 
 
 Url::Url(const std::string &url)
   : _url(url)
+  , _port(0)
+  , _host("")
+  , _protocol(Protocol_Invalid)
+  , _reserved(0)
 {
   split_me(_url, _port, _host, _protocol);
 }
 
 Url::Url(const char *url)
   : _url(url)
+  , _port(0)
+  , _host("")
+  , _protocol(Protocol_Invalid)
+  , _reserved(0)
 {
   split_me(_url, _port, _host, _protocol);
+}
+
+Url::Url(const qi::Url& url)
+  : _url(url._url)
+  , _port(url._port)
+  , _host(url._host)
+  , _protocol(url._protocol)
+  , _reserved(0)
+{
 }
 
 }

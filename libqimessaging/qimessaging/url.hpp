@@ -26,6 +26,8 @@ namespace qi {
 
     Url(const char *url);
     Url(const std::string &url);
+    Url(const qi::Url& url);
+    Url &operator=(const qi::Url&) { return *this; }
 
     unsigned short     port() const     { return _port; }
     const std::string& host() const     { return _host; }
