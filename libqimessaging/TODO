@@ -3,8 +3,7 @@
 TODO
 ====
 
-xx - alcommon
-
+XX - alcommon
 HX - TEST TEST TEST (auto and perf)
 LX - qi::os::getIP,qi::os::getMacAddress,qi::os::getInterfaceName
 XX - ServiceDirectory: use good UUID
@@ -16,6 +15,4 @@ XX - error handling (be rock solid)
 XX - asynchronous call for Object and for Session
 XX - private service objects (path)
 CX - object/struct serialization/signature
-XX - qi::Message : Pimpl
 XX - qi::session network thread
-XX - TransportSocket: remove libevent from public headers
