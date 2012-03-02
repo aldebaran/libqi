@@ -30,6 +30,10 @@ namespace qi
     void advertiseService(const std::string &name, qi::Object *obj);
 
   private:
+    Gateway(Gateway const &);
+    void operator=(Gateway const &);
+
+  private:
     GatewayPrivate *_p;
   };
 }

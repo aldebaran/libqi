@@ -265,6 +265,16 @@ Gateway::Gateway()
 {
 }
 
+Gateway::Gateway(Gateway const &)
+  : _p(0)
+{
+}
+
+void Gateway::operator=(Gateway const &)
+{
+  _p = 0;
+}
+
 Gateway::~Gateway()
 {
   delete _p;
