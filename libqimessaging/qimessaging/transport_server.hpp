@@ -19,8 +19,9 @@
 
 namespace qi {
 
-  class TransportServerInterface {
+  class QIMESSAGING_API TransportServerInterface {
   public:
+    virtual ~TransportServerInterface() = 0;
     virtual void newConnection() = 0;
   };
 

@@ -11,9 +11,10 @@
 
 namespace qi
 {
-  class IODevice
+  class QIMESSAGING_API IODevice
   {
   public:
+    virtual ~IODevice() = 0;
     virtual int            write(const void *data, size_t size)   = 0;
     virtual int            prepend(const void *data, size_t size) = 0;
 

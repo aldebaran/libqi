@@ -98,8 +98,8 @@ namespace qi {
 
   };
 
-  std::ostream&   operator<<(std::ostream&   os, const qi::Message& msg);
-  qi::DataStream& operator<<(qi::DataStream& os, const qi::Message& msg);
+  QIMESSAGING_API std::ostream&   operator<<(std::ostream&   os, const qi::Message& msg);
+  QIMESSAGING_API qi::DataStream& operator<<(qi::DataStream& os, const qi::Message& msg);
 }
 
 

@@ -50,6 +50,10 @@
 
 namespace qi {
 
+  IODevice::~IODevice()
+  {
+  }
+
   QI_SIMPLE_SERIALIZER_IMPL(bool);
   QI_SIMPLE_SERIALIZER_IMPL(char);
   QI_SIMPLE_SERIALIZER_IMPL(int);

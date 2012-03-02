@@ -92,7 +92,9 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
   return true;
 }
 
-
+TransportServerInterface::~TransportServerInterface()
+{
+}
 
 TransportServer::TransportServer()
 {
@@ -103,7 +105,6 @@ TransportServer::~TransportServer()
 {
   delete _p;
 }
-
 
 bool TransportServer::start(qi::Session *session, const qi::Url &url)
 {
