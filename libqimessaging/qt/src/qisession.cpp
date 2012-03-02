@@ -15,18 +15,16 @@
 #include <qimessaging/qt/qidatastream.h>
 #include "src/qiremoteobject_p.h"
 #include "src/qisession_p.h"
-#include "src/session_p.hpp"
-#include "src/network_thread.hpp"
 
 QiSessionPrivate::QiSessionPrivate() {
-  _networkThread = new qi::NetworkThread();
+  _session = new qi::Session();
   _serviceSocket = new qi::TransportSocket();
   _serviceSocket->setDelegate(this);
 }
 
 QiSessionPrivate::~QiSessionPrivate() {
   _serviceSocket->disconnect();
-  delete _networkThread;
+  delete _session;
   delete _serviceSocket;
 }
 
@@ -97,7 +95,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::M
       ts->setDelegate(this);
       _futureConnect[ts] = sr;
       _futureService.remove(id);
-      ts->connect(url, _networkThread->getEventBase());
+      ts->connect(_session, url);
       return;
     }
     _futureService.remove(id);
@@ -137,7 +135,7 @@ QiSession::~QiSession()
 
 bool QiSession::connect(const QString &masterAddress)
 {
-  return _p->_serviceSocket->connect(masterAddress.toUtf8().constData(), _p->_networkThread->getEventBase());
+  return _p->_serviceSocket->connect(_p->_session, masterAddress.toUtf8().constData());
 }
 
 bool QiSession::disconnect()

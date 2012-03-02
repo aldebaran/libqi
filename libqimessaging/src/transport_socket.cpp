@@ -29,9 +29,11 @@
 #include "src/buffer_p.hpp"
 #include "src/message_p.hpp"
 
+#include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
+#include "src/session_p.hpp"
 
 #define MAX_LINE 16384
 
@@ -41,22 +43,24 @@ const unsigned int headerSize = 8 * sizeof(uint32_t);
 
 struct TransportSocketPrivate
 {
-  TransportSocketPrivate()
+  explicit TransportSocketPrivate(TransportSocket *socket)
     : tcd(NULL)
     , bev(NULL)
     , connected(false)
     , fd(-1)
     , readHdr(true)
+    , _self(socket)
   {
     msg = NULL;
   }
 
-  TransportSocketPrivate(int fileDesc)
+  TransportSocketPrivate(TransportSocket *socket, int fileDesc)
     : tcd(NULL)
     , bev(NULL)
     , connected(false)
     , fd(fileDesc)
     , readHdr(true)
+    , _self(socket)
   {
     msg = NULL;
   }
@@ -73,11 +77,14 @@ struct TransportSocketPrivate
   boost::mutex                         mtx;
   boost::condition_variable            cond;
   int                                  fd;
-
+  void readcb(struct bufferevent *bev , void *context);
+  void writecb(struct bufferevent* bev, void* context);
+  void eventcb(struct bufferevent *bev, short error, void *context);
 
   // data to rebuild message
   bool                         readHdr;
   qi::Message                 *msg;
+  qi::TransportSocket         *_self;
 };
 
 
@@ -85,14 +92,14 @@ struct TransportSocketPrivate
 static void readcb(struct bufferevent *bev,
                    void *context)
 {
-  TransportSocket *tc = static_cast<TransportSocket*>(context);
+  TransportSocketPrivate *tc = static_cast<TransportSocketPrivate*>(context);
   tc->readcb(bev, context);
 }
 
 static void writecb(struct bufferevent* bev,
                     void* context)
 {
-  TransportSocket *tc = static_cast<TransportSocket*>(context);
+  TransportSocketPrivate *tc = static_cast<TransportSocketPrivate*>(context);
   tc->writecb(bev, context);
 }
 
@@ -101,12 +108,12 @@ static void eventcb(struct bufferevent *bev,
                     short error,
                     void *context)
 {
-  TransportSocket *tc = static_cast<TransportSocket*>(context);
+  TransportSocketPrivate *tc = static_cast<TransportSocketPrivate*>(context);
   tc->eventcb(bev, error, context);
 }
 
 
-void TransportSocket::readcb(struct bufferevent *bev,
+void TransportSocketPrivate::readcb(struct bufferevent *bev,
                              void *context)
 {
   struct evbuffer *input = bufferevent_get_input(bev);
@@ -114,85 +121,85 @@ void TransportSocket::readcb(struct bufferevent *bev,
 
   while (true)
   {
-    if (_p->msg == NULL)
+    if (msg == NULL)
     {
-      _p->msg = new qi::Message();
-      _p->readHdr = true;
+      msg = new qi::Message();
+      readHdr = true;
     }
 
-    if (_p->readHdr)
+    if (readHdr)
     {
       length = evbuffer_get_length(input);
       if (length < headerSize)
         return;
 
       evbuffer_remove(input,
-                      (char*)_p->msg->_p,
+                      (char*)msg->_p,
                       headerSize);
 
-      _p->msg->checkMagic();
-      _p->readHdr = false;
+      msg->checkMagic();
+      readHdr = false;
     }
 
     length = evbuffer_get_length(input);
-    if (length < _p->msg->_p->size)
+    if (length < msg->_p->size)
       return;
 
     evbuffer_remove_buffer(input,
-                           _p->msg->buffer()->_p->data(),
-                           _p->msg->_p->size);
+                           msg->buffer()->_p->data(),
+                           msg->_p->size);
 
     {
-      boost::mutex::scoped_lock l(_p->mtx);
-      _p->msgSend[_p->msg->id()] = _p->msg;
-      _p->cond.notify_all();
+      boost::mutex::scoped_lock l(mtx);
+      msgSend[msg->id()] = msg;
+      cond.notify_all();
     }
-    if (_p->tcd)
-      _p->tcd->onSocketReadyRead(this, _p->msg->id());
+    if (tcd)
+      tcd->onSocketReadyRead(_self, msg->id());
 
-    _p->msg = NULL;
+    msg = NULL;
   }
 }
 
 
-void TransportSocket::writecb(struct bufferevent* bev,
+void TransportSocketPrivate::writecb(struct bufferevent* bev,
                               void* context)
 {
-  if (_p->tcd)
-    _p->tcd->onSocketWriteDone(this);
+  if (tcd)
+    tcd->onSocketWriteDone(_self);
 }
 
-void TransportSocket::eventcb(struct bufferevent *bev,
+void TransportSocketPrivate::eventcb(struct bufferevent *bev,
                               short events,
                               void *context)
 {
   if (events & BEV_EVENT_CONNECTED)
   {
     qi::Message msg;
-    _p->connected = true;
-    if (_p->tcd)
-      _p->tcd->onSocketConnected(this);
+    connected = true;
+    if (tcd)
+      tcd->onSocketConnected(_self);
   }
   else if (events & BEV_EVENT_EOF)
   {
     qi::Message msg;
-    _p->connected = false;
+    connected = false;
     //for waitForId
-    _p->cond.notify_all();
-    if (_p->tcd)
-      _p->tcd->onSocketDisconnected(this);
+    cond.notify_all();
+    if (tcd)
+      tcd->onSocketDisconnected(_self);
     // connection has been closed, do any clean up here
     qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (events & BEV_EVENT_ERROR)
   {
-    bufferevent_free(_p->bev);
-    _p->bev = 0;
-    _p->connected = false;
+    bufferevent_free(bev);
+    bev = 0;
+    connected = false;
     //for waitForId
-    _p->cond.notify_all();
-    if (_p->tcd)
-      _p->tcd->onSocketConnectionError(this);
+    cond.notify_all();
+    if (tcd)
+      tcd->onSocketConnectionError(_self);
     // check errno to see what error occurred
     qiLogError("qimessaging.TransportSocket")  << "Cannnot connect" << std::endl;
   }
@@ -203,21 +210,23 @@ void TransportSocket::eventcb(struct bufferevent *bev,
   }
 }
 
-TransportSocket::TransportSocket()
-{
-  _p = new TransportSocketPrivate();
+TransportSocketInterface::~TransportSocketInterface() {
 }
 
-TransportSocket::TransportSocket(int fd,
-                                 struct event_base *base)
+TransportSocket::TransportSocket()
+  :_p(new TransportSocketPrivate(this))
 {
-  _p = new TransportSocketPrivate(fd);
 
+}
+
+TransportSocket::TransportSocket(int fd, void *data)
+  :_p(new TransportSocketPrivate(this, fd))
+{
+  struct event_base *base = static_cast<event_base *>(data);
   _p->bev = bufferevent_socket_new(base, _p->fd, BEV_OPT_CLOSE_ON_FREE);
-  bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
+  bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, _p);
   bufferevent_setwatermark(_p->bev, EV_WRITE, 0, MAX_LINE);
   bufferevent_enable(_p->bev, EV_READ|EV_WRITE);
-
   _p->connected = true;
 }
 
@@ -227,16 +236,16 @@ TransportSocket::~TransportSocket()
   delete _p;
 }
 
-bool TransportSocket::connect(const qi::Url     &url,
-                              struct event_base *base)
+bool TransportSocket::connect(qi::Session *session,
+                              const qi::Url &url)
 {
   const std::string &address = url.host();
   unsigned short port = url.port();
 
   if (!_p->connected)
   {
-    _p->bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
+    _p->bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
+    bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, _p);
     bufferevent_setwatermark(_p->bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(_p->bev, EV_READ|EV_WRITE);
 

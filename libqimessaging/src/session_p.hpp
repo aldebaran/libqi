@@ -13,9 +13,10 @@
 namespace qi {
 
   class NetworkThread;
+  class Session;
   class SessionPrivate : public qi::TransportSocketInterface {
   public:
-    SessionPrivate();
+    SessionPrivate(qi::Session *session);
     ~SessionPrivate();
 
     bool connect(const std::string &masterAddress);
@@ -29,6 +30,7 @@ namespace qi {
   public:
     qi::TransportSocket *_serviceSocket;
     qi::NetworkThread   *_networkThread;
+    qi::Session         *_self;
   };
 
 }

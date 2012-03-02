@@ -39,7 +39,7 @@ public:
 
 public:
   qi::TransportSocket                                     *_serviceSocket;
-  qi::NetworkThread                                       *_networkThread;
+  qi::Session                                             *_session;
 
   QMap<int, ServiceRequest>                                _futureService;
   QMap<void *, ServiceRequest>                             _futureConnect;

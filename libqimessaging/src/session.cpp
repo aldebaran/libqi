@@ -19,9 +19,11 @@ static int uniqueRequestId = 0;
 
 namespace qi {
 
-  SessionPrivate::SessionPrivate() {
-    _networkThread = new qi::NetworkThread();
-    _serviceSocket = new qi::TransportSocket();
+  SessionPrivate::SessionPrivate(qi::Session *session)
+    : _networkThread(new qi::NetworkThread()),
+      _serviceSocket(new qi::TransportSocket()),
+      _self(session)
+  {
     //_serviceSocket->setDelegate(this);
   }
 
@@ -33,7 +35,7 @@ namespace qi {
 
   bool SessionPrivate::connect(const std::string &url)
   {
-    return _serviceSocket->connect(url, _networkThread->getEventBase());
+    return _serviceSocket->connect(_self, url);
   }
 
   std::vector<ServiceInfo> SessionPrivate::services()
@@ -94,7 +96,7 @@ namespace qi {
         qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
         ts->setDelegate(this);
-        ts->connect(url, _networkThread->getEventBase());
+        ts->connect(_self, url);
         ts->waitForConnected();
         return ts;
       }
@@ -143,7 +145,7 @@ namespace qi {
   // ###### Session
 
   Session::Session()
-    : _p(new SessionPrivate())
+    : _p(new SessionPrivate(this))
   {
   }
 
