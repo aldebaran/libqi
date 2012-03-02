@@ -7,6 +7,7 @@
 */
 
 #include <qimessaging/value.hpp>
+#include <cassert>
 
 namespace qi {
 
@@ -108,6 +109,22 @@ namespace qi {
     clear();
     _private.type = t;
     switch (t) {
+      case Value::Invalid:
+      case Value::Bool:
+      case Value::Char:
+      case Value::Int32:
+      case Value::UInt32:
+      case Value::Int64:
+      case Value::UInt64:
+      case Value::Float:
+      case Value::Double:
+      case Value::QString:
+      case Value::QList:
+      case Value::QVector:
+      case Value::QMap:
+      case Value::Struct:
+        assert(false);
+        break;
       case Value::String:
         _private.data.ptr = new std::string();
         break;
