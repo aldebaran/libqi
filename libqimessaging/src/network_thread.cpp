@@ -11,7 +11,7 @@
 */
 
 #include <iostream>
-
+#include <event2/thread.h>
 #include <qi/log.hpp>
 
 #include "src/network_thread.hpp"
@@ -41,12 +41,25 @@ static void errorcb(struct bufferevent *bev,
 
 NetworkThread::NetworkThread()
 {
+  static bool libevent_init = false;
+
+  if (!libevent_init)
+  {
 #ifdef _WIN32
-  // libevent does not call WSAStartup
-  WSADATA WSAData;
-  // TODO: handle return code
-  ::WSAStartup(MAKEWORD(1, 0), &WSAData);
+    // libevent does not call WSAStartup
+    WSADATA WSAData;
+    // TODO: handle return code
+    ::WSAStartup(MAKEWORD(1, 0), &WSAData);
 #endif
+
+#ifdef EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED
+    evthread_use_windows_threads();
+#endif
+#ifdef EVTHREAD_USE_PTHREADS_IMPLEMENTED
+    evthread_use_pthreads();
+#endif
+    libevent_init = !libevent_init;
+  }
 
   if (!(_base = event_base_new()))
     return;
