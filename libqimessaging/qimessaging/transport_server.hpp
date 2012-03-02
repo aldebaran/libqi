@@ -14,39 +14,36 @@
 #ifndef _QIMESSAGING_TRANSPORT_SERVER_HPP_
 #define _QIMESSAGING_TRANSPORT_SERVER_HPP_
 
-# include <string>
-# include <map>
-# include <qi/macro.hpp>
-# include <qimessaging/message.hpp>
-# include <event2/event.h>
-# include <event2/bufferevent.h>
-
-# include <qimessaging/transport_socket.hpp>
+# include <qimessaging/api.hpp>
+# include <qimessaging/url.hpp>
 
 namespace qi {
 
-class TransportServerInterface {
-public:
-  virtual void newConnection() = 0;
-};
+  class TransportServerInterface {
+  public:
+    virtual void newConnection() = 0;
+  };
 
-class TransportServerPrivate;
-class TransportServer
-{
-  QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
+  class Session;
+  class TransportSocket;
+  class TransportServerPrivate;
 
-public:
-  TransportServer();
-  virtual ~TransportServer();
+  class QIMESSAGING_API TransportServer
+  {
+    QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
 
-  void setDelegate(TransportServerInterface *delegate);
+  public:
+    TransportServer();
+    virtual ~TransportServer();
 
-  bool start(const qi::Url &url, struct event_base *base);
+    void setDelegate(TransportServerInterface *delegate);
 
-  TransportSocket *nextPendingConnection();
+    bool start(qi::Session *session, const qi::Url &url);
 
-  TransportServerPrivate *_p;
-};
+    TransportSocket *nextPendingConnection();
+
+    TransportServerPrivate *_p;
+  };
 
 }
 

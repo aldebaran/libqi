@@ -33,43 +33,15 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/transport_socket.hpp>
+#include <qimessaging/session.hpp>
+#include "src/session_p.hpp"
+#include "src/network_thread.hpp"
+#include "src/transport_server_p.hpp"
 
 namespace qi {
 #define MAX_LINE 16384
 
 
-class TransportServerPrivate
-{
-public:
-  TransportServerPrivate()
-    : tsi(0)
-    , base(0)
-  {
-  }
-
-  ~TransportServerPrivate()
-  {
-    event_base_free(base);
-  }
-
-  void accept(evutil_socket_t        fd,
-              struct evconnlistener *listener,
-              void                  *context);
-
-  std::queue<qi::TransportSocket*>  connection;
-  TransportServerInterface          *tsi;
-  struct event_base                 *base;
-};
-
-void TransportServerPrivate::accept(evutil_socket_t        fd,
-                                    struct evconnlistener *listener,
-                                    void                  *context)
-{
-  struct event_base *base = evconnlistener_get_base(listener);
-
-  connection.push(new qi::TransportSocket(fd, base));
-  tsi->newConnection();
-}
 
 void accept_cb(struct evconnlistener *listener,
                evutil_socket_t        fd,
@@ -82,19 +54,17 @@ void accept_cb(struct evconnlistener *listener,
 }
 
 
-TransportServer::TransportServer()
+void TransportServerPrivate::accept(evutil_socket_t        fd,
+                                    struct evconnlistener *listener,
+                                    void                  *context)
 {
-  _p = new TransportServerPrivate();
+  struct event_base *base = evconnlistener_get_base(listener);
+
+  connection.push(new qi::TransportSocket(fd, base));
+  tsi->newConnection();
 }
 
-TransportServer::~TransportServer()
-{
-  delete _p;
-}
-
-
-bool TransportServer::start(const qi::Url &url,
-                            struct event_base *base)
+bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
 {
   struct evconnlistener *listener;
   static struct sockaddr_storage listen_on_addr;
@@ -120,6 +90,25 @@ bool TransportServer::start(const qi::Url &url,
                                      socklen);
 
   return true;
+}
+
+
+
+TransportServer::TransportServer()
+{
+  _p = new TransportServerPrivate();
+}
+
+TransportServer::~TransportServer()
+{
+  delete _p;
+}
+
+
+bool TransportServer::start(qi::Session *session, const qi::Url &url)
+{
+  struct event_base *base = session->_p->_networkThread->getEventBase();
+  return _p->start(base, url);
 }
 
 TransportSocket *TransportServer::nextPendingConnection()
