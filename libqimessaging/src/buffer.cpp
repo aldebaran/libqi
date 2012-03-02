@@ -82,7 +82,7 @@ namespace qi
     unsigned char *buf = (unsigned char*)malloc(size * sizeof(unsigned char));
     evbuffer_copyout(_bufev, buf, size);
 
-    int i = 0;
+    size_t i = 0;
     while (i < size)
     {
       printf("%02x ", *buf);
