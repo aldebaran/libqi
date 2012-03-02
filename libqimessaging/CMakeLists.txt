@@ -26,6 +26,10 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
+if (EFFECTIVE_CPP)
+  add_definitions(" -Weffc++ ")
+endif()
+
 qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
