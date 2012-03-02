@@ -49,8 +49,8 @@ void accept_cb(struct evconnlistener *listener,
                int                    slen,
                void                  *p)
 {
-  TransportServer *ts = static_cast<TransportServer*>(p);
-  ts->_p->accept(fd, listener, p);
+  TransportServerPrivate *_p = static_cast<TransportServerPrivate*>(p);
+  _p->accept(fd, listener, p);
 }
 
 
