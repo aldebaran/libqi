@@ -30,8 +30,8 @@ namespace qi {
   }
 
   Message::Message()
+    : _p(new qi::MessagePrivate())
   {
-    _p = new MessagePrivate();
     memset(_p, 0, sizeof(MessagePrivate));
     _p->id = newMessageId();
     _p->magic = messageMagic;
@@ -40,8 +40,8 @@ namespace qi {
   }
 
   Message::Message(Buffer *buf)
+    : _p(new qi::MessagePrivate())
   {
-    _p = new qi::MessagePrivate();
     memset(_p, 0, sizeof(MessagePrivate));
     _p->id = newMessageId();
     _p->magic = messageMagic;
@@ -49,7 +49,9 @@ namespace qi {
     _p->withBuffer = true;
   }
 
-  Message::Message(const Message &msg) {
+  Message::Message(const Message &msg)
+    : _p(0)
+  {
     memcpy(_p, msg._p, sizeof(MessagePrivate));
     _p->buffer = msg._p->buffer;
     _p->withBuffer = true;
