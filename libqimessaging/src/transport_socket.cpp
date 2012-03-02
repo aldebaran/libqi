@@ -41,7 +41,7 @@ namespace qi {
 
 const unsigned int headerSize = 8 * sizeof(uint32_t);
 
-struct TransportSocketPrivate
+class TransportSocketPrivate
 {
   explicit TransportSocketPrivate(TransportSocket *socket)
     : tcd(NULL)
