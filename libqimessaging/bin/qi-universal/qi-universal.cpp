@@ -22,11 +22,12 @@
 #include <qimessaging/object.hpp>
 #include <qi/log.hpp>
 
+#include <boost/thread.hpp>
+
 #ifdef _WIN32
  #include <winsock2.h> // for socket
  #include <WS2tcpip.h> // for socklen_t
 #else
- #include <pthread.h>
  #include <arpa/inet.h>
 #endif
 
@@ -175,27 +176,25 @@ int main()
   evthread_use_pthreads();
   #endif
 
-  pthread_t server_thread;
   struct event_base *server_base = event_base_new();
   qi::Url server_url("tcp://127.0.0.1:9571");
   start_server(server_url, server_base);
-  pthread_create(&server_thread, 0, network_thread, server_base);
+  boost::thread server_thread(network_thread, server_base);
 
-  pthread_t client_thread;
   struct event_base *client_base = event_base_new();
   qi::Url client_url("tcp://127.0.0.1:5555");
-  pthread_create(&client_thread, 0, network_thread2, client_base);
+  boost::thread client_thread(network_thread2, client_base);
 
   // test send
-  sleep(1); // wait for the thread to start
+  qi::os::sleep(1); // wait for the thread to start
   struct bufferevent *bev = bufferevent_socket_new(client_base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   bufferevent_setcb(bev, readcb, writecb, eventcb, 0);
   bufferevent_socket_connect_hostname(bev, 0, AF_INET,
                                       client_url.host().c_str(), client_url.port());
   socket_write(bev, "CHICHE", 6);
 
-  pthread_join(client_thread, 0);
-  pthread_join(server_thread, 0);
+  client_thread.join();
+  server_thread.join();
 
   return 0;
 }
