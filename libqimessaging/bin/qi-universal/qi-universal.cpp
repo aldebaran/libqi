@@ -148,7 +148,7 @@ void *network_thread2(void *arg)
   struct event_base *base = reinterpret_cast<struct event_base *>(arg);
 
   /* hack to keep the loop running */
-  struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   bufferevent_setcb(bev, 0, 0, errorcb, 0);
   bufferevent_enable(bev, EV_READ | EV_WRITE);
 
@@ -188,7 +188,7 @@ int main()
 
   // test send
   sleep(1); // wait for the thread to start
-  struct bufferevent *bev = bufferevent_socket_new(client_base, -1, BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent *bev = bufferevent_socket_new(client_base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   bufferevent_setcb(bev, readcb, writecb, eventcb, 0);
   bufferevent_socket_connect_hostname(bev, 0, AF_INET,
                                       client_url.host().c_str(), client_url.port());
