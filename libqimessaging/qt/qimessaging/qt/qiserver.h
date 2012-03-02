@@ -8,9 +8,10 @@
 #ifndef   	QT_QISERVER_H_
 # define   	QT_QISERVER_H_
 
-#include <QtCore/QObject>
-#include <qimessaging/qt/api.h>
-#include <qimessaging/qt/qisession.h>
+# include <QtCore/qobject.h>
+# include <QtCore/qurl.h>
+# include <qimessaging/qt/api.h>
+# include <qimessaging/qt/qisession.h>
 
 class QiServerPrivate;
 class NetworkThread;
@@ -22,7 +23,6 @@ public:
 
   void listen(QiSession *session, const QVector<QUrl> &url);
   void stop();
-
   void registerService(const QString &name, QObject *obj);
 
 protected:

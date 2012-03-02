@@ -6,9 +6,12 @@
 */
 
 #include <iostream>
+#include <QtCore/qurl.h>
+
 #include <qimessaging/qt/qiserver.h>
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/server.hpp>
+
 #include "src/qisession_p.h"
 
 class QiServerPrivate
@@ -16,7 +19,6 @@ class QiServerPrivate
 public:
   qi::Server server;
 };
-
 
 QiServer::QiServer()
   : _p(new QiServerPrivate)
@@ -30,7 +32,6 @@ QiServer::~QiServer()
 
 void QiServer::listen(QiSession *session, const QVector<QUrl> &url)
 {
-  //_p->server.listen(&(session->_p->session), url.toString().toUtf8().constData());
 }
 
 void QiServer::stop()
@@ -39,5 +40,4 @@ void QiServer::stop()
 
 void QiServer::registerService(const QString &name, QObject *obj)
 {
-
 }
