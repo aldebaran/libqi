@@ -24,7 +24,7 @@ namespace qi {
       _serviceSocket(new qi::TransportSocket()),
       _self(session)
   {
-    //_serviceSocket->setDelegate(this);
+    //_serviceSocket->setCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -95,7 +95,7 @@ namespace qi {
       {
         qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
-        ts->setDelegate(this);
+        ts->setCallbacks(this);
         ts->connect(_self, url);
         ts->waitForConnected();
         return ts;

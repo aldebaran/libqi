@@ -396,7 +396,7 @@ bool TransportSocket::send(const qi::Message &msg)
   return false;
 }
 
-void TransportSocket::setDelegate(TransportSocketInterface *delegate)
+void TransportSocket::setCallbacks(TransportSocketInterface *delegate)
 {
   _p->tcd = delegate;
 }

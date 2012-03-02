@@ -124,7 +124,7 @@ TransportSocket *TransportServer::nextPendingConnection()
   return NULL;
 }
 
-void TransportServer::setDelegate(TransportServerInterface *delegate)
+void TransportServer::setCallbacks(TransportServerInterface *delegate)
 {
   _p->tsi = delegate;
 }

@@ -64,7 +64,7 @@ void GatewayPrivate::newConnection()
   TransportSocket *socket = _transportServer.nextPendingConnection();
   if (!socket)
     return;
-  socket->setDelegate(this);
+  socket->setCallbacks(this);
   _clients.push_back(socket);
 }
 
@@ -195,7 +195,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
 
       // Connected to the service
       qi::TransportSocket *servSocket = new qi::TransportSocket();
-      servSocket->setDelegate(this);
+      servSocket->setCallbacks(this);
       servSocket->connect(_session, url);
       _services[serviceId] = servSocket;
 
@@ -286,12 +286,12 @@ void Gateway::listen(qi::Session *session, const std::string &addr)
   qi::Url masterUrl("tcp://127.0.0.1:5555");
   _p->_session = session;
   _p->_socketToServiceDirectory = new qi::TransportSocket();
-  _p->_socketToServiceDirectory->setDelegate(_p);
+  _p->_socketToServiceDirectory->setCallbacks(_p);
   _p->_socketToServiceDirectory->connect(session, masterUrl);
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(addr);
-  _p->_transportServer.setDelegate(_p);
+  _p->_transportServer.setCallbacks(_p);
   _p->_transportServer.start(session, url);
 }
 } // !qi

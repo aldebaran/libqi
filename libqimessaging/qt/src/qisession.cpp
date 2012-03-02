@@ -19,7 +19,7 @@
 QiSessionPrivate::QiSessionPrivate() {
   _session = new qi::Session();
   _serviceSocket = new qi::TransportSocket();
-  _serviceSocket->setDelegate(this);
+  _serviceSocket->setCallbacks(this);
 }
 
 QiSessionPrivate::~QiSessionPrivate() {
@@ -92,7 +92,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::M
     {
       qi::TransportSocket* ts = NULL;
       ts = new qi::TransportSocket();
-      ts->setDelegate(this);
+      ts->setCallbacks(this);
       _futureConnect[ts] = sr;
       _futureService.remove(id);
       ts->connect(_session, url);
@@ -109,7 +109,7 @@ void QiSessionPrivate::service_mo_end(int id, qi::TransportSocket *client, qi::M
   qi::DataStream ds(msg->buffer());
   ds >> mo;
   //remove the delegate on us, now the socket is owned by QiRemoteObject
-  client->setDelegate(0);
+  client->setCallbacks(0);
   QiRemoteObject *robj = new QiRemoteObject(client, sr.name.toUtf8().constData(), sr.serviceId, mo);
   sr.fu.reportResult(robj);
 }

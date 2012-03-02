@@ -59,7 +59,7 @@ namespace qi
     , ts(new qi::TransportServer())
     , servicesCount(0)
   {
-    ts->setDelegate(this);
+    ts->setCallbacks(this);
 
     ServiceInfo si;
     si.setName("serviceDirectory");
@@ -87,7 +87,7 @@ namespace qi
     TransportSocket *socket = ts->nextPendingConnection();
     if (!socket)
       return;
-    socket->setDelegate(this);
+    socket->setCallbacks(this);
   }
 
   void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)

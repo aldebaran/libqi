@@ -47,7 +47,7 @@ public:
     qi::TransportSocket *socket = _ts.nextPendingConnection();
     if (!socket)
       return;
-    socket->setDelegate(this);
+    socket->setCallbacks(this);
   }
 
   virtual void onSocketReadyRead(qi::TransportSocket *client, int id)
@@ -112,7 +112,7 @@ public:
 
     qi::Url urlo(_p->_endpoints[0]);
 
-    _p->_ts.setDelegate(_p);
+    _p->_ts.setCallbacks(_p);
     _p->_ts.start(session, urlo);
   }
 

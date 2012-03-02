@@ -19,7 +19,7 @@ public:
   RemoteServer()
   {
     ts = new qi::TransportServer();
-//    ts->setDelegate(this);
+//    ts->setCallbacks(this);
   }
 
   ~RemoteServer()

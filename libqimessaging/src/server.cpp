@@ -35,7 +35,7 @@ namespace qi {
     TransportSocket *socket = _ts.nextPendingConnection();
     if (!socket)
       return;
-    socket->setDelegate(this);
+    socket->setCallbacks(this);
   }
 
   void ServerPrivate::onSocketReadyRead(TransportSocket *client, int id) {
@@ -59,7 +59,7 @@ namespace qi {
   Server::Server()
     : _p(new ServerPrivate())
   {
-//    _p->_ts.setDelegate(this);
+//    _p->_ts.setCallbacks(this);
   }
 
   Server::~Server()
@@ -73,7 +73,7 @@ namespace qi {
 
     qi::Url urlo(_p->_endpoints[0]);
 
-    _p->_ts.setDelegate(_p);
+    _p->_ts.setCallbacks(_p);
     return _p->_ts.start(session, urlo);
   }
 
