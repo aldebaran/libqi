@@ -14,6 +14,7 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
+#include <qimessaging/future.hpp>
 
 namespace qi {
 
@@ -72,54 +73,26 @@ namespace qi {
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
 
 
-    void callVoid(const std::string& methodName);
     template <typename RETURN_TYPE>
-    RETURN_TYPE call(const std::string& methodName);
-
-    template <typename P0>
-    void callVoid(const std::string& methodName, const P0 &p0);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName);
     template <typename RETURN_TYPE, typename P0>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0);
-
-    template <typename P0, typename P1>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0);
     template <typename RETURN_TYPE, typename P0, typename P1>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1);
-
-    template <typename P0, typename P1, typename P2>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
-
-    template <typename P0, typename P1, typename P2, typename P3>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
-
-    template <typename P0, typename P1, typename P2, typename P3, typename P4>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
-
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
-
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
-
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
-
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
-    void callVoid(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
-    RETURN_TYPE call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
+    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
     virtual void metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResult &out);
 

@@ -25,31 +25,10 @@ namespace qi {
 #end raw
 #for $i in $count
 
-#if $i != 0
-
-  /// <summary> Calls a void method </summary>
-  template <${generate_typename_list($i)}>
-  void Object::callVoid(const std::string& method${generate_param_list($i, begin=True)}) {
-    qi::Buffer            breq;
-    qi::Buffer            brep;
-    qi::FunctorParameters request(&breq);
-    qi::FunctorResult     reply(&brep);
-
-    void (*f)(${generate_param_list($i)})  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
-    #for $j in range($i)
-    request.datastream() << p${j};
-    #end for
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, reply);
-  }
-#end if
-
   /// <summary> Calls a method </summary>
   /// <returns> The response </returns>
   template <typename R${generate_typename_list($i, begin=True)}>
-  R Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
+  qi::Future<R> Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
     qi::Buffer            breq;
     qi::Buffer            brep;
     qi::FunctorParameters request(&breq);
