@@ -137,7 +137,7 @@ namespace qi {
       case Value::UInt32:
       case Value::Int64:
       case Value::UInt64:
-        throw SerializationError("not implemented");
+        qiLogError("datasteam") << "not implemented";
         return sd;
       case qi::Value::Float:
         val._private.type = qi::Value::Float;
@@ -186,7 +186,7 @@ namespace qi {
       case Value::UInt32:
       case Value::Int64:
       case Value::UInt64:
-        throw SerializationError("not implemented");
+        qiLogError("datasteam") << "not implemented";
         return sd;
       case qi::Value::Float:
         sd << "f";

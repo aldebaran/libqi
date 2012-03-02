@@ -283,6 +283,6 @@ void Gateway::listen(qi::Session *session, const std::string &addr)
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(addr);
   _p->_transportServer.setDelegate(_p);
-  _p->_transportServer.start(url, session->_p->_networkThread->getEventBase());
+  _p->_transportServer.start(session, url);
 }
 } // !qi

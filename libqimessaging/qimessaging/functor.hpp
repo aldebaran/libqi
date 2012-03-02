@@ -15,12 +15,13 @@
 // #define QI_FUNCTOR_DEBUG(...) printf(__VA_ARGS__)
 #define QI_FUNCTOR_DEBUG(...)
 
+#include <qimessaging/api.hpp>
 #include <qimessaging/datastream.hpp>
 
 namespace qi
 {
 
-  class FunctorParameters {
+  class QIMESSAGING_API FunctorParameters {
   public:
     explicit FunctorParameters(qi::IODevice *buffer)
       : _datastream(buffer)
@@ -33,7 +34,7 @@ namespace qi
     qi::DataStream  _datastream;
   };
 
-  class FunctorResult {
+  class QIMESSAGING_API FunctorResult {
   public:
     explicit FunctorResult(qi::IODevice *buffer)
       : _datastream(buffer),
@@ -57,7 +58,7 @@ namespace qi
   * Generic functor class
   * \ingroup Functors
   */
-  class Functor {
+  class QIMESSAGING_API Functor {
   public:
     virtual void call(qi::FunctorParameters &params, qi::FunctorResult& result) const = 0;
     virtual ~Functor() {}

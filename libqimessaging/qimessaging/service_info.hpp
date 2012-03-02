@@ -18,6 +18,8 @@ namespace qi
 
   class QIMESSAGING_API ServiceInfo {
   public:
+    ServiceInfo();
+
     inline void setName(const std::string &name)                { _name = name; }
     inline void setServiceId(unsigned int serviceId)            { _serviceId = serviceId; }
     inline void setMachineId(const std::string &machineId)      { _machineId = machineId; }
@@ -42,8 +44,8 @@ namespace qi
     void                     *_reserved;
   };
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const ServiceInfo &sinfo);
-  qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo);
+  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const ServiceInfo &sinfo);
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo);
 
 }; // !qi
 

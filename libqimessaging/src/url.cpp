@@ -6,6 +6,7 @@
 */
 
 #include <qimessaging/url.hpp>
+#include <sstream>
 
 namespace qi {
 

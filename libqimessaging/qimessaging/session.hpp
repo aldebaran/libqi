@@ -9,6 +9,7 @@
 #ifndef _QIMESSAGING_SESSION_HPP_
 #define _QIMESSAGING_SESSION_HPP_
 
+#include <qimessaging/api.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_info.hpp>
 
@@ -20,7 +21,7 @@ namespace qi {
   class Object;
 
   class SessionPrivate;
-  class Session {
+  class QIMESSAGING_API Session {
   public:
     Session();
     virtual ~Session();

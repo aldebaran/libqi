@@ -17,6 +17,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/network_thread.hpp"
+#include "src/transport_server_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 
@@ -174,7 +175,7 @@ bool ServiceDirectory::listen(const std::string &address)
   eps.push_back(address);
   si.setEndpoints(eps);
 
-  return _p->ts->start(url, _p->nthd->getEventBase());
+  return _p->ts->_p->start(_p->nthd->getEventBase(), url);
 }
 
 void ServiceDirectory::join()

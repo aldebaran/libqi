@@ -15,6 +15,16 @@
 namespace qi
 {
 
+  ServiceInfo::ServiceInfo()
+    : _name(),
+      _serviceId(),
+      _machineId(),
+      _processId(),
+      _endpoints(),
+      _reserved(0)
+  {
+  }
+
   qi::DataStream &operator<<(qi::DataStream &stream, const ServiceInfo &sinfo) {
     stream << sinfo.name()
            << sinfo.serviceId()

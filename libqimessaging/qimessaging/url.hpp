@@ -10,11 +10,12 @@
 #ifndef _QIMESSAGING_URL_HPP_
 #define _QIMESSAGING_URL_HPP_
 
+#include <qimessaging/api.hpp>
 #include <string>
-#include <sstream>
 
 namespace qi {
-  class Url
+
+  class QIMESSAGING_API Url
   {
   public:
     enum Protocol {

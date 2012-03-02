@@ -11,12 +11,13 @@
 
 #include <map>
 #include <string>
+#include <qimessaging/api.hpp>
 #include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 
 namespace qi {
 
-  class MetaMethod {
+  class QIMESSAGING_API MetaMethod {
   public:
     MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor);
     MetaMethod();
@@ -32,10 +33,10 @@ namespace qi {
     unsigned int _idx;
   };
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
-  qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
+  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
 
-  class MetaObject {
+  class QIMESSAGING_API MetaObject {
   public:
     MetaObject()
       : _methodsNumber(0)
@@ -52,11 +53,12 @@ namespace qi {
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
   };
-  qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta);
-  qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta);
+
+  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta);
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta);
 
 
-  class Object {
+  class QIMESSAGING_API Object {
   public:
     Object();
     virtual ~Object();

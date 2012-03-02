@@ -9,6 +9,7 @@
 #ifndef _QIMESSAGING_SERVICE_DIRECTORY_HPP_
 #define _QIMESSAGING_SERVICE_DIRECTORY_HPP_
 
+#include <qimessaging/api.hpp>
 #include <string>
 
 namespace qi
@@ -18,7 +19,7 @@ namespace qi
   class ServiceDirectoryPrivate;
 
 
-  class ServiceDirectory
+  class QIMESSAGING_API ServiceDirectory
   {
   public:
     ServiceDirectory();

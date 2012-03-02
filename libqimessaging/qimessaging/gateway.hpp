@@ -10,6 +10,7 @@
 #define _QIMESSAGING_GATEWAY_HPP_
 
 # include <string>
+# include <qimessaging/api.hpp>
 # include <qimessaging/object.hpp>
 # include <qimessaging/session.hpp>
 
@@ -19,7 +20,7 @@ namespace qi
   class Object;
   class GatewayPrivate;
 
-  class Gateway
+  class QIMESSAGING_API Gateway
   {
   public:
     Gateway();

@@ -9,6 +9,7 @@
 #ifndef _QIMESSAGING_TRANSPORT_SOCKET_HPP_
 #define _QIMESSAGING_TRANSPORT_SOCKET_HPP_
 
+# include <qimessaging/api.hpp>
 # include <string>
 # include <qi/macro.hpp>
 
@@ -34,7 +35,7 @@ public:
 
 struct TransportSocketPrivate;
 
-class TransportSocket
+class QIMESSAGING_API TransportSocket
 {
   QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 

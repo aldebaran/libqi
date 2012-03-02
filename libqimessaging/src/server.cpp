@@ -74,7 +74,7 @@ namespace qi {
     qi::Url urlo(_p->_endpoints[0]);
 
     _p->_ts.setDelegate(_p);
-    return _p->_ts.start(urlo, _p->_session->_p->_networkThread->getEventBase());
+    return _p->_ts.start(session, urlo);
   }
 
 

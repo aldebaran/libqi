@@ -9,13 +9,14 @@
 #ifndef _QIMESSAGING_BUFFER_HPP_
 #define _QIMESSAGING_BUFFER_HPP_
 
+# include <qimessaging/api.hpp>
 # include <qimessaging/iodevice.hpp>
 
 namespace qi
 {
   class BufferPrivate;
 
-  class Buffer: public IODevice
+  class QIMESSAGING_API Buffer: public IODevice
   {
   public:
     Buffer();
