@@ -5,7 +5,7 @@
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2012 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
 

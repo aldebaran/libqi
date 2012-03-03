@@ -4,9 +4,8 @@
 *  Author(s):
 *  - Cedric GESTES <gestes@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2012 Aldebaran Robotics
+*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
-
 
 #pragma once
 #ifndef _QIMESSAGING_DETAILS_MEMBERFUNCTOR_HXX_
