@@ -346,15 +346,13 @@ bool TransportSocket::read(int id, qi::Message *msg)
 {
   std::map<unsigned int, qi::Message*>::iterator it;
   {
+    boost::mutex::scoped_lock l(_p->mtx);
+    it = _p->msgSend.find(id);
+    if (it != _p->msgSend.end())
     {
-      boost::mutex::scoped_lock l(_p->mtx);
-      it = _p->msgSend.find(id);
-      if (it != _p->msgSend.end())
-      {
-        *msg = *(it->second);
-        _p->msgSend.erase(it);
-        return true;
-      }
+      *msg = *(it->second);
+      _p->msgSend.erase(it);
+      return true;
     }
   }
   return false;
