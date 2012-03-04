@@ -152,3 +152,51 @@ Members
 -------
 
 - Private members names should be prefixed with underscores.
+
+Arguments
+---------
+
+If the argument is IN-OUT then use pointer and avoid reference. The code that use the function is clearer to look at.
+
+.. code-block:: c++
+  //the & show that the value can be modified
+  void getValue(&value);
+
+  //bad... we dont know value will be modified
+  void getValue(value);
+
+If the type is a POD (bool, char, short, int, float, double, etc...) use:
+
+.. code-block:: c++
+  void setValue(int i);
+
+In all other case use const ref.
+
+.. code-block:: c++
+
+   void setValue(const MyClass &myclass);
+
+Virtual
+-------
+
+All class with virtuals should have a virtual destructor to avoid leak.
+
+
+Interface
+---------
+
+Always declare the destructor of an interface pure virtual.
+
+(and provide an implementation to make it compile).
+
+An interface should not be instanciable, so forcing the destrutor to be pure is good.
+
+.. code-block:: c++
+
+  class SocketInterface {
+  public:
+    //pure virtual destructor
+    virtual ~SocketInterface() = 0;
+
+    virtual void onReadyRead();
+  };
