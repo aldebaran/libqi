@@ -105,11 +105,7 @@ qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
                  DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
 if(WIN32)
   qi_use_lib(qimessaging WSA)
-endif()
-
-if(UNIX AND NOT APPLE)
-  qi_use_lib(rt)
-endif()
+endif(WIN32)
 
 qi_stage_lib(qimessaging)
 
