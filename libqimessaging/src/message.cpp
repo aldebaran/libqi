@@ -5,12 +5,15 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <iostream>
+#include <cassert>
+#include <cstring>
+
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <iostream>
-#include <boost/atomic.hpp>
+
+#include <qi/atomic.hpp>
 #include <qi/log.hpp>
-#include <cassert>
 
 #include "src/buffer_p.hpp"
 #include "src/message_p.hpp"
@@ -24,9 +27,9 @@ namespace qi {
 
   unsigned int newMessageId()
   {
-    static boost::atomic_uint32_t id(0);
-    id++;
-    return id;
+    static qi::atomic<int> id(0);
+    ++id;
+    return *id;
   }
 
   Message::Message()
