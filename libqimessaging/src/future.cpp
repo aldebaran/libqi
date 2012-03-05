@@ -53,7 +53,10 @@ namespace qi {
       return _p->_isReady;
     }
 
-
   }
+
+  FunctorResultPromiseBase::~FunctorResultPromiseBase() {
+  }
+
 }
 

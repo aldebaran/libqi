@@ -11,6 +11,7 @@
 #define _QIMESSAGING_FUTURE_HPP_
 
 #include <qimessaging/api.hpp>
+#include <qimessaging/functor.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace qi {
@@ -19,6 +20,13 @@ namespace qi {
   template <typename T> class Future;
   template <>           class Future<void>;
   template <typename T> class Promise;
+  template <typename T> class FunctorReturnPromise;
+  template <>           class FunctorReturnPromise<void>;
+
+  namespace detail {
+    template <typename T> class FutureState;
+    template <>           class FutureState<void>;
+  }
 
   namespace detail {
 
@@ -69,7 +77,6 @@ namespace qi {
       FutureInterface<T> *_delegate;
       void               *_data;
     };
-    template <> class FutureState<void>;
 
 
   } // namespace detail
@@ -107,8 +114,16 @@ namespace qi {
     }
 
     friend class Promise<T>;
+    friend class FunctorReturnPromise<T>;
   private:
     boost::shared_ptr< detail::FutureState<T> > _p;
+  };
+
+
+  class QIMESSAGING_API FunctorResultPromiseBase {
+  public:
+    virtual ~FunctorResultPromiseBase()              = 0;
+    virtual void setValue(qi::FunctorResult &result) = 0;
   };
 
   template <typename T>
@@ -118,6 +133,29 @@ namespace qi {
 
     void setValue(const T &value) {
       _f._p->setValue(value);
+    }
+
+    Future<T> future() { return _f; }
+
+  protected:
+    Future<T> _f;
+  };
+
+  template <typename T>
+  class FunctorReturnPromise : public FunctorResultPromiseBase {
+  public:
+    FunctorReturnPromise() { }
+
+    void setValue(const T &value) {
+      _f._p->setValue(value);
+    }
+
+    virtual void setValue(qi::FunctorResult &result)
+    {
+      //TODO: remove the useless ref here
+      T v;
+      result.datastream() >> v;
+      _f._p->setValue(v);
     }
 
     Future<T> future() { return _f; }
@@ -165,6 +203,7 @@ namespace qi {
   //void specialisation: do not hold anything only used for synchronisation
   template <>
   class Future<void> {
+  public:
     Future()
       : _p(new detail::FutureState<void>(this))
     {};
@@ -179,8 +218,44 @@ namespace qi {
     }
 
     friend class Promise<void>;
+    friend class FunctorReturnPromise<void>;
   private:
     boost::shared_ptr< detail::FutureState<void> > _p;
+  };
+
+  template <>
+  class Promise<void> {
+  public:
+    Promise() { }
+
+    void setValue(const void *value) {
+      _f._p->setValue(value);
+    }
+
+    Future<void> future() { return _f; }
+
+  protected:
+    Future<void> _f;
+  };
+
+  template <>
+  class FunctorReturnPromise<void> : public FunctorResultPromiseBase {
+  public:
+    FunctorReturnPromise() { }
+
+    void setValue(const void *value) {
+      _f._p->setValue(value);
+    }
+    virtual void setValue(qi::FunctorResult &result)
+    {
+      //TODO: remove the useless ref here
+      _f._p->setValue(0);
+    }
+
+    Future<void> future() { return _f; }
+
+  protected:
+    Future<void> _f;
   };
 
 };
