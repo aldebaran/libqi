@@ -12,11 +12,13 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_info.hpp>
+#include <qimessaging/future.hpp>
 
 #include <vector>
 #include <string>
 
 namespace qi {
+
 
   class Object;
 
@@ -32,14 +34,14 @@ namespace qi {
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 
-    std::vector<ServiceInfo> services();
+    qi::Future< std::vector<ServiceInfo> > services();
 
-    qi::TransportSocket* serviceSocket(const std::string &name,
-                                       unsigned int      *idx,
-                                       qi::Url::Protocol  type = qi::Url::Protocol_Any);
+    qi::Future< qi::TransportSocket* > serviceSocket(const std::string &name,
+                                                     unsigned int      *idx,
+                                                     qi::Url::Protocol  type = qi::Url::Protocol_Any);
 
-    qi::Object* service(const std::string &service,
-                        qi::Url::Protocol  type = qi::Url::Protocol_Any);
+    qi::Future< qi::Object* > service(const std::string &service,
+                                      qi::Url::Protocol  type = qi::Url::Protocol_Any);
 
 
     SessionPrivate      *_p;

@@ -177,23 +177,29 @@ namespace qi {
     return _p->_serviceSocket->waitForDisconnected(msecs);
   }
 
-  std::vector<ServiceInfo> Session::services()
+  qi::Future< std::vector<ServiceInfo> > Session::services()
   {
-    return _p->services();
+    qi::Promise< std::vector<ServiceInfo> > promise;
+    promise.setValue(_p->services());
+    return promise.future();
   }
 
-  qi::TransportSocket* Session::serviceSocket(const std::string &name,
+  qi::Future< qi::TransportSocket* > Session::serviceSocket(const std::string &name,
                                               unsigned int      *idx,
                                               qi::Url::Protocol  type)
   {
-    return _p->serviceSocket(name, idx, type);
+    qi::Promise< qi::TransportSocket* > promise;
+    promise.setValue(_p->serviceSocket(name, idx, type));
+    return promise.future();
   }
 
 
-  qi::Object* Session::service(const std::string &service,
-                               qi::Url::Protocol  type)
+  qi::Future< qi::Object* > Session::service(const std::string &service,
+                                             qi::Url::Protocol  type)
   {
-    return _p->service(service, type);
+    qi::Promise< qi::Object * > promise;
+    promise.setValue(_p->service(service, type));
+    return promise.future();
   }
 
   bool Session::join()
