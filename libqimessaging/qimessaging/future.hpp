@@ -98,8 +98,10 @@ namespace qi {
   class Future {
   public:
     Future()
-      : _p(new detail::FutureState<T>(this))
-    {};
+      : _p(0)
+    {
+      _p = new detail::FutureState<T>(this);
+    }
 
     const T &value() const    { return _p->value(); }
     T &value()                { return _p->value(); }
@@ -205,8 +207,10 @@ namespace qi {
   class Future<void> {
   public:
     Future()
-      : _p(new detail::FutureState<void>(this))
-    {};
+      : _p(0)
+    {
+      _p = new detail::FutureState<void>(this);
+    }
 
     void value() const    { _p->waitForValue(); }
 
