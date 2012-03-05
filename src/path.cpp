@@ -3,12 +3,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
+
+#include "src/sdklayout.hpp"
+#include "src/filesystem.hpp"
+
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include "src/sdklayout.hpp"
 #include <qi/qi.hpp>
+#include <qi/log.hpp>
+
 #include <boost/filesystem.hpp>
-#include "src/filesystem.hpp"
 
 namespace qi
 {
@@ -62,16 +66,20 @@ namespace qi
     std::string findConf(const std::string &applicationName,
                          const std::string &filename)
     {
-      if(filename == "")
-        throw std::invalid_argument("Filename cannot be empty!");
+      if(filename == "") {
+        qiLogError("qi::path:") << "Filename cannot be empty!";
+        return std::string();
+      }
       return getInstance()->findConf(applicationName, filename);
     }
 
     std::string findData(const std::string &applicationName,
                          const std::string &filename)
     {
-      if(filename == "")
-        throw std::invalid_argument("Filename cannot be empty!");
+      if(filename == "") {
+        qiLogError("qi::path:") << "Filename cannot be empty!";
+        return std::string();
+      }
       return getInstance()->findData(applicationName, filename);
     }
 
