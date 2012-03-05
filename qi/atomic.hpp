@@ -4,6 +4,11 @@
  * found in the COPYING file.
  */
 
+#pragma once
+
+#ifndef _LIBQI_QI_ATOMIC_HPP_
+#define _LIBQI_QI_ATOMIC_HPP_
+
 namespace qi
 {
   template <typename T>
@@ -80,3 +85,5 @@ namespace qi
   }
 #endif
 }
+
+#endif // _LIBQI_QI_ATOMIC_HPP_
