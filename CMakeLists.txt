@@ -40,7 +40,6 @@ set(H
   qi/atomic.hpp
   qi/config.hpp
   qi/error.hpp
-  qi/exception.hpp
   qi/log/consoleloghandler.hpp
   qi/log/fileloghandler.hpp
   qi/log/headfileloghandler.hpp
