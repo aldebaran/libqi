@@ -37,6 +37,7 @@ enable_testing()
 include(CMakeDependentOption)
 
 set(H
+  qi/atomic.hpp
   qi/config.hpp
   qi/error.hpp
   qi/exception.hpp
