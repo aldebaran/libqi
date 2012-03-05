@@ -21,15 +21,16 @@
 namespace qi {
   namespace os {
 
-    /** \class QiException error.hpp "qi/error.hpp"
-     *  \brief Custom exception that may be thrown by QI methods.
-     */
 #ifdef _MSC_VER
 # pragma warning( push )
 # pragma warning( disable : 4251 )
 #endif
 
-    class QI_API QiException : public std::runtime_error
+    /** \class QiException error.hpp "qi/error.hpp"
+     *  \brief Custom exception that may be thrown by QI methods.
+     *  \deprecated since 1.14, there is no more exception in libqi.
+     */
+    class QI_API QI_API_DEPRECATED QiException : public std::runtime_error
     {
     public:
 
