@@ -49,6 +49,7 @@ set(H
   qi/macro.hpp
   qi/os.hpp
   qi/path.hpp
+  qi/shared_ptr.hpp
   qi/qi.hpp
   )
 
