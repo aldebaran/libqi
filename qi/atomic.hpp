@@ -25,18 +25,9 @@ namespace qi
     {
     }
 
-#ifdef __GNUC__
-    /* prefix */
-    T operator++()
-    {
-      return __sync_add_and_fetch(&_value, 1);
-    }
-
-    T operator--()
-    {
-      return __sync_sub_and_fetch(&_value, 1);
-    }
-#endif
+    /* prefix operators */
+    T operator++();
+    T operator--();
 
     T operator*()
     {
@@ -47,29 +38,25 @@ namespace qi
     T _value;
   };
 
-#ifdef MSVC
-  template <>
-  long atomic<long>::operator++()
-  {
-    return _InterlockedIncrement(&_value);
-  }
+#ifdef __GNUC__
+    template <typename T>
+    T atomic<T>::operator++()
+    {
+      return __sync_add_and_fetch(&_value, 1);
+    }
 
+    template <typename T>
+    T atomic<T>::operator--()
+    {
+      return __sync_sub_and_fetch(&_value, 1);
+    }
+#endif
+
+#ifdef _MSC_VER
   template<>
   short atomic<short>::operator++()
   {
     return _InterlockedIncrement16(&_value);
-  }
-
-  template<>
-  __int64 atomic<__int64>::operator++()
-  {
-    return _InterlockedIncrement64(&_value);
-  }
-
-  template <>
-  long atomic<long>::operator--()
-  {
-    return _InterlockedDecrement(&_value);
   }
 
   template<>
@@ -78,10 +65,16 @@ namespace qi
     return _InterlockedDecrement16(&_value);
   }
 
-  template<>
-  __int64 atomic<__int64>::operator--()
+  template <>
+  long atomic<long>::operator++()
   {
-    return _InterlockedDecrement64(&_value);
+    return _InterlockedIncrement(&_value);
+  }
+
+  template <>
+  long atomic<long>::operator--()
+  {
+    return _InterlockedDecrement(&_value);
   }
 #endif
 }
