@@ -59,6 +59,20 @@ namespace qi {
       mm->_functor->call(in, out);
   }
 
+  void Object::metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out)
+  {
+    qi::Buffer        buf;
+    qi::FunctorResult fout(&buf);
+
+    assert(method < _meta->_methods.size());
+    MetaMethod *mm = &(_meta->_methods[method]);
+    if (mm->_functor)
+      mm->_functor->call(in, fout);
+    out->setValue(fout);
+    delete out;
+  }
+
+
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
     stream << meta._name;
     stream << meta._signature;
