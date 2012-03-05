@@ -27,10 +27,16 @@ int main_client(std::string src)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   qi::Session session;
-  session.connect("tcp://127.0.0.1:12345");
+  session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
   qi::Object *obj = session.service("serviceTest");
+
+  if (!obj)
+  {
+    std::cerr << "cant get serviceTest" << std::endl;
+    return -1;
+  }
 
   for (int i = 0; i < 12; ++i)
   {
