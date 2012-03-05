@@ -65,7 +65,7 @@ public:
   void checkInit()
   {
     if (_mode == "error" || _sdkPrefixes.empty())
-      throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
+      qiLogDebug("qi::path") << "please call qi::init first before using qi::path";
   }
 };
 
@@ -127,7 +127,9 @@ void SDKLayout::clearOptionalSdkPrefix()
 std::string SDKLayout::sdkPrefix() const
 {
   _private->checkInit();
-  return std::string(QDir::toNativeSeparators(_private->_sdkPrefixes.at(0)).toUtf8().constData());
+  if (_private->_sdkPrefixes.size() > 0)
+    return std::string(QDir::toNativeSeparators(_private->_sdkPrefixes.at(0)).toUtf8().constData());
+  return std::string();
 }
 
 std::vector<std::string> SDKLayout::getSdkPrefixes() const
