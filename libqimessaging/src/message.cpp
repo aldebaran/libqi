@@ -27,7 +27,7 @@ namespace qi {
 
   unsigned int newMessageId()
   {
-    static qi::atomic<int> id(0);
+    static qi::atomic<long> id(0);
     ++id;
     return *id;
   }
