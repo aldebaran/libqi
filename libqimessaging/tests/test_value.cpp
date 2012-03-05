@@ -33,7 +33,7 @@ TEST(TestValue, BasicType) {
   qi::Value v(b);
   EXPECT_EQ(true, v.toBool());
   v.clear();
-  EXPECT_THROW(v.toBool(), qi::ValueError);
+  EXPECT_FALSE(v.toBool());
   v.setValue(c);
   EXPECT_EQ(42, v.toChar());
   v.setValue(i);
@@ -48,12 +48,12 @@ TEST(TestValue, BasicType) {
 TEST(TestValue, WowType) {
   qi::Value v(qi::Value::List);
   qi::Value v2("titi toto");
-  qi::ValueList &vl = v.value<qi::ValueList>();
-  vl.push_back(v2);
+  qi::ValueList *vl = v.value<qi::ValueList>();
+  vl->push_back(v2);
 
   qi::ValueList::iterator it;
 
-  it = vl.begin();
+  it = vl->begin();
   EXPECT_STREQ("titi toto", it->toString().c_str());
 }
 
@@ -61,8 +61,9 @@ TEST(TestValue, TestSerialize) {
   qi::Value v(qi::Value::Map);
   qi::Value v2;
 
-  v.value<qi::ValueMap>()["toto"] = qi::Value("coco");
-  v.value<qi::ValueMap>()["tata"] = qi::Value("caca");
+  qi::ValueMap *vm1 = v.value<qi::ValueMap>();
+  (*vm1)["toto"] = qi::Value("coco");
+  (*vm1)["tata"] = qi::Value("caca");
 
   qi::Buffer     buf;
   qi::DataStream ms(&buf);
@@ -70,24 +71,24 @@ TEST(TestValue, TestSerialize) {
   ms << v;
   ms >> v2;
 
-  qi::ValueMap &vm = v2.value<qi::ValueMap>();
+  qi::ValueMap *vm = v2.value<qi::ValueMap>();
   qi::ValueMap::iterator it;
 
-  it = vm.find("toto");
+  it = vm->find("toto");
   EXPECT_STREQ("toto", it->first.c_str());
   EXPECT_STREQ("coco", it->second.toString().c_str());
-  it = vm.find("tata");
+  it = vm->find("tata");
   EXPECT_STREQ("tata", it->first.c_str());
   EXPECT_STREQ("caca", it->second.toString().c_str());
-  EXPECT_EQ(2, vm.size());
+  EXPECT_EQ(2, vm->size());
 }
 
 TEST(TestValue, TestSerializeVector) {
   qi::Value v(qi::Value::Vector);
   qi::Value v2;
 
-  v.value<qi::ValueVector>().push_back(qi::Value("coco"));
-  v.value<qi::ValueVector>().push_back(qi::Value("caca"));
+  v.value<qi::ValueVector>()->push_back(qi::Value("coco"));
+  v.value<qi::ValueVector>()->push_back(qi::Value("caca"));
 
   qi::Buffer     buf;
   qi::DataStream ms(&buf);
@@ -95,15 +96,15 @@ TEST(TestValue, TestSerializeVector) {
   ms << v;
   ms >> v2;
 
-  qi::ValueVector &vm = v2.value<qi::ValueVector>();
+  qi::ValueVector *vm = v2.value<qi::ValueVector>();
   qi::ValueVector::iterator it;
 
-  it = vm.begin();
+  it = vm->begin();
   EXPECT_STREQ("coco", it->toString().c_str());
   ++it;
   EXPECT_STREQ("caca", it->toString().c_str());
   ++it;
-  EXPECT_EQ(1, vm.end() == it);
+  EXPECT_EQ(1, vm->end() == it);
 }
 
 struct Point2D {

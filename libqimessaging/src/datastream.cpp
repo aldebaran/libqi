@@ -153,19 +153,19 @@ namespace qi {
         return sd;
       case qi::Value::String:
         val.setType(qi::Value::String);
-        sd >> val.value<std::string>();
+        sd >> *val.value<std::string>();
         return sd;
       case qi::Value::List:
         val.setType(qi::Value::List);
-        sd >> val.value< std::list<qi::Value> >();
+        sd >> *val.value< std::list<qi::Value> >();
         return sd;
       case qi::Value::Vector:
         val.setType(qi::Value::Vector);
-        sd >> val.value< std::vector<qi::Value> >();
+        sd >> *val.value< std::vector<qi::Value> >();
         return sd;
       case qi::Value::Map:
         val.setType(qi::Value::Map);
-        sd >> val.value< std::map<std::string, qi::Value> >();
+        sd >> *val.value< std::map<std::string, qi::Value> >();
         return sd;
     };
     return sd;
@@ -202,25 +202,25 @@ namespace qi {
         return sd;
       case qi::Value::String:{
         sd << "s";
-        sd << val.constValue< std::string >();
+        sd << *val.value< std::string >();
         return sd;
       }
       case qi::Value::List:{
         sd << "[m]";
-        const std::list<qi::Value> &le = val.constValue< std::list<qi::Value> >();
-        sd << le;
+        const std::list<qi::Value> *le = val.value< std::list<qi::Value> >();
+        sd << *le;
         return sd;
       }
       case qi::Value::Vector: {
         sd << "[m]";
-        const std::vector<qi::Value> &ve = val.constValue< std::vector<qi::Value> >();
-        sd << ve;
+        const std::vector<qi::Value> *ve = val.value< std::vector<qi::Value> >();
+        sd << *ve;
         return sd;
       }
       case qi::Value::Map: {
         sd << "{sm}";
-        const std::map<std::string, qi::Value> &me = val.constValue< std::map<std::string, qi::Value> >();
-        sd << me;
+        const std::map<std::string, qi::Value> *me = val.value< std::map<std::string, qi::Value> >();
+        sd << *me;
         return sd;
       }
       default:

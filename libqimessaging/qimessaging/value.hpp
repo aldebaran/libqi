@@ -13,34 +13,12 @@
 
 #include <qimessaging/api.hpp>
 
-#include <stdexcept>
 #include <string>
 #include <list>
 #include <vector>
 #include <map>
 
 namespace qi {
-
-  /** \class ValueError value.hpp "qi/value.hpp"
-   *  \brief Thrown when an operation on a value fail
-   */
-  class QIMESSAGING_API ValueError : public std::runtime_error
-  {
-  public:
-    /**
-     * \brief Constructor
-     * Create a message exception.
-     * \param message Exception message.
-     */
-    explicit ValueError(const std::string &message)
-      : std::runtime_error(message)
-    {}
-
-    /** \brief Destructor */
-    virtual ~ValueError() throw()
-    {}
-  };
-
 
   class QIMESSAGING_API Value {
   public:
@@ -115,11 +93,11 @@ namespace qi {
     inline void setValue(const T &value);
 
     template <typename T>
-    inline const T &constValue() const;
+    inline const T *value() const;
 
     template <typename T>
-    inline T &value() {
-      return const_cast<T &>(constValue<T>());
+    inline T *value() {
+      return const_cast<T *>((const T *)value<T>());
     }
 
 

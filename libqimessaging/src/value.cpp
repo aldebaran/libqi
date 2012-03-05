@@ -143,25 +143,30 @@ namespace qi {
   bool                         Value::toBool() const {
     if (_private.type == Value::Bool)
       return _private.data.b;
-    throw ValueError("value can't be converted to bool");
+    qiLogDebug("qi::Value") << "value can't be converted to bool";
+    return 0;
   }
 
   char                         Value::toChar() const {
     if (_private.type == Value::Char)
       return _private.data.c;
-    throw ValueError("value can't be converted to char");
+    qiLogDebug("qi::Value") << "value can't be converted to char";
+    return 0;
   }
 
   int                          Value::toInt32() const {
     if (_private.type == Value::Int32)
       return _private.data.i;
-    throw ValueError("value can't be converted to int32");
+    qiLogDebug("qi::Value") << "value can't be converted to int32";
+    return 0;
   }
 
   unsigned int                 Value::toUInt32() const {
     if (_private.type == Value::UInt32)
       return _private.data.ui;
-    throw ValueError("value can't be converted to uint32");
+    qiLogDebug("qi::Value") << "value can't be converted to uint32";
+    return 0;
+
   }
 
   long long                    Value::toInt64() const {
@@ -169,7 +174,8 @@ namespace qi {
       return _private.data.i;
     if (_private.type == Value::Int64)
       return _private.data.l;
-    throw ValueError("value can't be converted to int64");
+    qiLogDebug("qi::Value") << "value can't be converted to int64";
+    return 0;
   }
 
   unsigned long long           Value::toUInt64() const {
@@ -177,13 +183,15 @@ namespace qi {
       return _private.data.ui;
     if (_private.type == Value::UInt64)
       return _private.data.ul;
-    throw ValueError("value can't be converted to uint64");
+    qiLogDebug("qi::Value") << "value can't be converted to uint64";
+    return 0;
   }
 
   float                        Value::toFloat() const {
     if (_private.type == Value::Float)
       return _private.data.f;
-    throw ValueError("value can't be converted to float");
+    qiLogDebug("qi::Value") << "value can't be converted to float";
+    return 0;
   }
 
   double                       Value::toDouble() const {
@@ -191,31 +199,36 @@ namespace qi {
       return _private.data.f;
     if (_private.type == Value::Double)
       return _private.data.d;
-    throw ValueError("value can't be converted to double");
+    qiLogDebug("qi::Value") << "value can't be converted to double";
+    return 0;
   }
 
   std::string                  Value::toString() const {
     if (_private.type == Value::String)
       return *reinterpret_cast<std::string *>(_private.data.ptr);
-    throw ValueError("value can't be converted to string");
+    qiLogDebug("qi::Value") << "value can't be converted to string";
+    return std::string();
   }
 
   std::list<Value>             Value::toList() const {
     if (_private.type == Value::List)
       return *reinterpret_cast< std::list<Value> *>(_private.data.ptr);
-    throw ValueError("value can't be converted to list");
+    qiLogDebug("qi::Value") << "value can't be converted to list";
+    return std::list<Value>();
   }
 
   std::vector<Value>           Value::toVector() const {
     if (_private.type == Value::Vector)
       return *reinterpret_cast< std::vector<Value> *>(_private.data.ptr);
-    throw ValueError("value can't be converted to vector");
+    qiLogDebug("qi::Value") << "value can't be converted to vector";
+    return std::vector<Value>();
   }
 
   std::map<std::string, Value> Value::toMap() const {
     if (_private.type == Value::Map)
       return *reinterpret_cast< std::map<std::string, Value> *>(_private.data.ptr);
-    throw ValueError("value can't be converted to map");
+    qiLogDebug("qi::Value") << "value can't be converted to map";
+    return std::map<std::string, Value>();
   }
 
 #ifdef QI_QT
