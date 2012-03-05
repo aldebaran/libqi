@@ -10,7 +10,7 @@
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
-#include <qi/error.hpp>
+#include <qi/log.hpp>
 
 #include <boost/filesystem.hpp>
 #include <locale>
@@ -55,8 +55,9 @@ namespace qi {
 
     void checkInit()
     {
-      if (_mode == "error" || _sdkPrefixes.empty())
-        throw qi::os::QiException("qi::path not initialized.\nPlease call qi::init first.");
+      if (_mode == "error" || _sdkPrefixes.empty()) {
+        qiLogDebug("qi::path") << "please call qi::init first before using qi::path";
+      }
     }
   };
 
@@ -69,6 +70,7 @@ namespace qi {
     : _private(new PrivateSDKLayout)
   {
     _private->initSDKlayout();
+    _private->checkInit();
   }
 
   SDKLayout::SDKLayout(const SDKLayout &rhs)
@@ -94,8 +96,6 @@ namespace qi {
 
   void SDKLayout::addOptionalSdkPrefix(const char *prefix)
   {
-    _private->checkInit();
-
     boost::filesystem::path prefixPath(prefix, qi::unicodeFacet());
     try
     {
@@ -103,15 +103,13 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
-
     _private->_sdkPrefixes.push_back(prefixPath.string(qi::unicodeFacet()));
   }
 
   void SDKLayout::clearOptionalSdkPrefix()
   {
-    _private->checkInit();
     if (_private->_sdkPrefixes.size() > 0)
     {
       std::string sdkPrefixPath = _private->_sdkPrefixes[0];
@@ -122,20 +120,18 @@ namespace qi {
 
   std::string SDKLayout::sdkPrefix() const
   {
-    _private->checkInit();
+    if (_private->_sdkPrefixes.size() <= 0)
+      return std::string();
     return _private->_sdkPrefixes[0];
   }
 
   std::vector<std::string> SDKLayout::getSdkPrefixes() const
   {
-    _private->checkInit();
     return _private->_sdkPrefixes;
   }
 
   std::string SDKLayout::findBin(const std::string &name) const
   {
-    _private->checkInit();
-
     boost::filesystem::path bin(name, qi::unicodeFacet());
     try
     {
@@ -164,7 +160,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
     return std::string();
   }
@@ -186,16 +182,13 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
-
     return std::string();
   }
 
   std::string SDKLayout::findLib(const std::string &name) const
   {
-    _private->checkInit();
-
     try
     {
       boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
@@ -266,7 +259,7 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
 
     return std::string();
@@ -275,7 +268,6 @@ namespace qi {
   std::string SDKLayout::findConf(const std::string &applicationName,
                                   const std::string &filename) const
   {
-    _private->checkInit();
     std::vector<std::string> paths = confPaths(applicationName);
     try
     {
@@ -290,16 +282,14 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
-
     return std::string();
   }
 
   std::string SDKLayout::findData(const std::string &applicationName,
                                   const std::string &filename) const
   {
-    _private->checkInit();
     std::vector<std::string> paths = dataPaths(applicationName);
     try
     {
@@ -314,14 +304,13 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
     }
     return std::string();
   }
 
   std::vector<std::string> SDKLayout::confPaths(const std::string &applicationName) const
   {
-    _private->checkInit();
     std::vector<std::string> res;
 
     // Pass an empty string to get the directory:
@@ -344,7 +333,8 @@ namespace qi {
     }
     catch (const boost::filesystem::filesystem_error &e)
     {
-      throw qi::os::QiException(e.what());
+      qiLogDebug("qi::path") << e.what();
+      return std::vector<std::string>();
     }
 
     return res;
@@ -353,7 +343,6 @@ namespace qi {
   // FIXME: Auto-test needed
   std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
   {
-    _private->checkInit();
     std::vector<std::string> res;
 
     // Pass an empty string to get the directory:
@@ -366,14 +355,12 @@ namespace qi {
     {
       res.push_back(fsconcat(*it, "share", applicationName));
     }
-
     return res;
   }
 
 
   std::vector<std::string> SDKLayout::binPaths() const
   {
-    _private->checkInit();
     std::vector<std::string> binPaths;
 
     std::vector<std::string>::const_iterator it;
@@ -389,7 +376,6 @@ namespace qi {
 
   std::vector<std::string> SDKLayout::libPaths() const
   {
-    _private->checkInit();
     std::vector<std::string> libPaths;
 
     std::vector<std::string>::const_iterator it;
@@ -407,7 +393,6 @@ namespace qi {
   std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    _private->checkInit();
     boost::filesystem::path path;
 #ifndef _WIN32
     path = boost::filesystem::path(fsconcat(::qi::os::home(), ".local", "share", applicationName, filename),
@@ -427,7 +412,8 @@ namespace qi {
       }
       catch (const boost::filesystem::filesystem_error &e)
       {
-        throw qi::os::QiException(e.what());
+        qiLogDebug("qi::path") << e.what();
+        return std::string();
       }
     }
     return path.string(qi::unicodeFacet());
@@ -437,7 +423,6 @@ namespace qi {
   std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    _private->checkInit();
     boost::filesystem::path path;
 
 #ifndef _WIN32
@@ -458,7 +443,8 @@ namespace qi {
       }
       catch (const boost::filesystem::filesystem_error &e)
       {
-        throw qi::os::QiException(e.what());
+        qiLogDebug("qi::path") << e.what();
+        return std::string();
       }
     }
     return path.string(qi::unicodeFacet());
