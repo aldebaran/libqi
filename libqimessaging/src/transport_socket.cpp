@@ -350,7 +350,8 @@ bool TransportSocket::read(int id, qi::Message *msg)
     it = _p->msgSend.find(id);
     if (it != _p->msgSend.end())
     {
-      *msg = *(it->second);
+      msg->swap(*(it->second));
+      delete it->second;
       _p->msgSend.erase(it);
       return true;
     }
