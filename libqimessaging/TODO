@@ -14,9 +14,6 @@ XX - ALProxies: generate c++ interface from XML (once)
 XX - ALProxies: parse interface and generate XML from that. (use qi/qigen)
 XX - ALProxies: generate proxies from XML (or use the old python-code-generator)
 
-XX - libqi: atomics
-XX - libqi: shared_ptr
-
 XX - cleanup future in RemoteObject without answer (timeout? max count limitation?)
 XX - cleanup Answer in TransportSocket that have not been read (timeout? max count limitation?)
 XX - implement XMPP transport (look at webrtc and libjingle)
