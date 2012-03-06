@@ -3,27 +3,25 @@
 TODO
 ====
 
-XX - ALCommon: threadpool (put each request in it's own thread)
+Mandatory:
+X2 - ALCommon: threadpool (put each request in it's own thread) (reimplement ALModuleCore::metaCall)
+C2 - ALCommon: implement pCall (blocked by future in qi::Object)
+X2 - ALCommon: extract http put/get from old ALNetwork, put that in behaviormanager
+X2 - cleanup future in RemoteObject without answer (timeout? max count limitation?)
+X2 - cleanup Answer in TransportSocket that have not been read (timeout? max count limitation?)
+X2 - FunctorReturnFuture: sharedptr, make it work for client and server, use a makeXX factory.
+X2 - test gateway, client, server, disconnection
+X2 - test 10000 connection/deconnection
+X2 - test that we do not loose message
+X2 - ALMemory: make subscribe to event work
+X1 - object::metacall, remove the prototype without future
+C1 - future: asynchronous call for Session (dont fake it)
 XX - ALCommon: implement introspection and various alproxy/albroker constructor
-XX - ALCommon: implement pCall (blocked by future in qi::Object)
-XX - ALCommon: extract http put/get from old ALNetwork, put that in behaviormanager
 
-XX - ALMemory: make it work using a gateway (hack inside)
-
-XX - ALProxies: generate c++ interface from XML (once)
-XX - ALProxies: parse interface and generate XML from that. (use qi/qigen)
-XX - ALProxies: generate proxies from XML (or use the old python-code-generator)
-
-XX - cleanup future in RemoteObject without answer (timeout? max count limitation?)
-XX - cleanup Answer in TransportSocket that have not been read (timeout? max count limitation?)
+from future import:
 XX - implement XMPP transport (look at webrtc and libjingle)
-XX - remove exception (everywhere)
-CX - future: asynchronous call for Session (dont fake it)
 XX - object/struct serialization/signature (opaque message)
 XX - Unknow signature type.
-HX - TEST TEST TEST (auto and perf)
-XX - test 10000 connection/deconnection
-XX - test that we do not loose message
 XX - error handling (be rock solid)
 XX - doc (coding style)
 XX - doc (qimessaging)
@@ -35,3 +33,6 @@ XX - abstract transport
 XX - implement binder transport
 XX - private service objects (path)
 XX - failover ServiceDirectory
+X0 - ALProxies: generate c++ interface from XML (once)
+X0 - ALProxies: parse interface and generate XML from that. (use qi/qigen)
+X0 - ALProxies: generate proxies from XML (or use the old python-code-generator)
