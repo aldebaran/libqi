@@ -11,3 +11,4 @@
 #add_subdirectory(messaging)
 add_subdirectory(transport)
 #qi_create_gtest(perf_functor SRC perf_functor.cpp DEPENDS QI GTEST TIMEOUT 120)
+qi_create_gtest(perf_pool    SRC dataperftimer.* perf_pool.cpp DEPENDS GTEST QI QIMESSAGING)
