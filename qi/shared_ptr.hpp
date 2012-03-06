@@ -50,8 +50,6 @@ namespace qi
                   << "tried to copy a shared pointer targeted for deletion"
                   << std::endl;
       }
-
-      return *this;
     }
 
     SharedPtr& operator=(SharedPtr<T> &sp)
@@ -66,9 +64,14 @@ namespace qi
       _refcount = sp._refcount;
     }
 
-    T *operator*(SharedPtr<T> &sp)
+    T &operator*() const
     {
-      return sp._ptr;
+      return *_ptr;
+    }
+
+    T *operator->() const
+    {
+      return _ptr;
     }
 
   private:
