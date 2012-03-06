@@ -22,7 +22,8 @@ XX - cleanup Answer in TransportSocket that have not been read (timeout? max cou
 XX - implement XMPP transport (look at webrtc and libjingle)
 XX - remove exception (everywhere)
 CX - future: asynchronous call for Session (dont fake it)
-XX - object/struct serialization/signature
+XX - object/struct serialization/signature (opaque message)
+XX - Unknow signature type.
 HX - TEST TEST TEST (auto and perf)
 XX - test 10000 connection/deconnection
 XX - test that we do not loose message
