@@ -54,7 +54,7 @@ QT:
   }
 
 Headers
---------------
+-------
 
 Public headers must not include other public headers from our libraries. This
 ensures binary compatibility.
@@ -70,6 +70,7 @@ Export symbol
 All public functions and classes should be exported using <LIBNAME>_API macro. This macro should be unique to the library and never be used by others libraries.
 
 .. code-block:: cpp
+
   class BAR_API Foo {
   };
 
@@ -133,6 +134,7 @@ One must used the singular when naming an enumeration.
 
 Enum values should be prefixed by the enum name followed by an underscore.
 
+
 .. code-block:: c++
 
   class Message {
@@ -147,6 +149,16 @@ Enum values should be prefixed by the enum name followed by an underscore.
 
   };
 
+Always prefer enum than boolean for readability.
+
+.. code-block:: c++
+
+  //bad cant understand by just reading the line
+  Client ds("ip", true);
+  //GOOD: easy to read, ok this is keepalive.
+  Client ds("ip", Connection_KeepAlive);
+
+
 
 Members
 -------
@@ -159,6 +171,7 @@ Arguments
 If the argument is IN-OUT then use pointer and avoid reference. The code that use the function is clearer to look at.
 
 .. code-block:: c++
+
   //the & show that the value can be modified
   void getValue(&value);
 
@@ -168,6 +181,7 @@ If the argument is IN-OUT then use pointer and avoid reference. The code that us
 If the type is a POD (bool, char, short, int, float, double, etc...) use:
 
 .. code-block:: c++
+
   void setValue(int i);
 
 In all other case use const ref.
@@ -200,3 +214,48 @@ An interface should not be instanciable, so forcing the destrutor to be pure is 
 
     virtual void onReadyRead();
   };
+
+
+Global
+------
+
+- Never define a global in a library that need code to run.
+- always define global static
+
+.. code-block:: c++
+
+   static const std::string titi;       //bad
+   static std::string titi = "toto";    //bad
+   static const int i = somefunction(); //bad
+   std::string tutu;                    //very very bad
+
+.. code-block:: c++
+
+   static const std::string *titi = 0;
+   static const int i = 0;
+   static const float f = 2.;
+
+** pointers
+-----------
+
+They should never be used to return data to users.
+Implement fast copy constructor and operator=. Rely on swap semantic if needed.
+
+Rational:
+  Allocation should always be done in the same "space", a library should malloc and free his structure, user code too. Under windows structure do not have the same size between debug and release, this lead to release library not usable in debug build.
+
+** pointer should only be used as input parameter, to pass an array of pointer.
+
+.. code-block: c++
+
+  //BAD an object is created in the socket library, but should be released
+  //in the client program
+  Message *msg;
+  socket.read(&msg);
+
+.. code-block: c++
+
+  //Good, user provide a message to fill
+  Message msg;
+  socket.read(&msg);
+
