@@ -90,6 +90,7 @@ namespace qi {
 
     void buildReplyFrom(const Message &call);
     void buildForwardFrom(const Message &msg);
+    void swap(Message &msg);
 
     bool checkMagic();
 

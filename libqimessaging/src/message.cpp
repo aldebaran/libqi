@@ -180,6 +180,13 @@ namespace qi {
     setFunction(msg.function());
   }
 
+  void Message::swap(Message &msg)
+  {
+    MessagePrivate *p = _p;
+    _p = msg._p;
+    msg._p = p;
+  }
+
   bool Message::checkMagic()
   {
     assert(messageMagic == _p->magic);
