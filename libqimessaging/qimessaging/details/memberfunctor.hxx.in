@@ -37,14 +37,16 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
+      qi::DataStream dsi(params.buffer());
+      qi::DataStream dso(result.buffer());
       #for $j in range($i)
       P$j p$j;
       #end for
 
       #for $j in range($i)
-      params.datastream() >> p$j;
+      dsi >> p$j;
       #end for
-      result.datastream() << (fObject->*fFunction)($generate_callparam_list($i));
+      dso << (fObject->*fFunction)($generate_callparam_list($i));
     };
   private:
     C            *fObject;

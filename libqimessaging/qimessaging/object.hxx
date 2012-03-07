@@ -24,8 +24,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)()  = 0;
     std::string signature(method);
@@ -43,14 +44,15 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
+    ds << p0;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -63,15 +65,16 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
+    ds << p0;
+    ds << p1;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -84,16 +87,17 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
+    ds << p0;
+    ds << p1;
+    ds << p2;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -106,17 +110,18 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -129,18 +134,19 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
-    request.datastream() << p4;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -153,19 +159,20 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
-    request.datastream() << p4;
-    request.datastream() << p5;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -178,20 +185,21 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
-    request.datastream() << p4;
-    request.datastream() << p5;
-    request.datastream() << p6;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -204,21 +212,22 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
-    request.datastream() << p4;
-    request.datastream() << p5;
-    request.datastream() << p6;
-    request.datastream() << p7;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
+    ds << p7;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
@@ -231,22 +240,23 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    request.datastream() << p0;
-    request.datastream() << p1;
-    request.datastream() << p2;
-    request.datastream() << p3;
-    request.datastream() << p4;
-    request.datastream() << p5;
-    request.datastream() << p6;
-    request.datastream() << p7;
-    request.datastream() << p8;
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
+    ds << p7;
+    ds << p8;
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;

@@ -23,26 +23,28 @@ namespace qi
 
   class QIMESSAGING_API FunctorParameters {
   public:
-    explicit FunctorParameters(qi::IODevice *buffer)
-      : _datastream(buffer)
+    explicit FunctorParameters(qi::Buffer *buffer)
+      : _buffer(buffer)
     {}
 
-    inline qi::DataStream       &datastream()       { return _datastream; }
-    inline const qi::DataStream &datastream() const { return _datastream; }
+    inline qi::Buffer       *buffer()       { return _buffer; }
+    inline const qi::Buffer *buffer() const { return _buffer; }
 
   private:
-    qi::DataStream  _datastream;
+    qi::Buffer *_buffer;
   };
 
   class QIMESSAGING_API FunctorResult {
   public:
-    explicit FunctorResult(qi::IODevice *buffer)
-      : _datastream(buffer),
+    explicit FunctorResult(qi::Buffer *buffer)
+      : _buffer(buffer),
         _error(0)
     {}
 
-    inline qi::DataStream       &datastream()       { return _datastream; }
-    inline const qi::DataStream &datastream() const { return _datastream; }
+    inline qi::Buffer       *buffer()       { return _buffer; }
+    inline const qi::Buffer *buffer() const { return _buffer; }
+
+    void setBuffer(qi::Buffer *buffer)      { _buffer = buffer; }
 
     inline int       &error()       { return _error; }
     inline const int &error() const { return _error; }
@@ -50,8 +52,8 @@ namespace qi
     void setError(int err) { _error = err; }
 
   private:
-    qi::DataStream  _datastream;
-    int             _error;
+    qi::Buffer *_buffer;
+    int         _error;
   };
 
   /**

@@ -29,7 +29,7 @@ RemoteObject::~RemoteObject()
 
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, qi::FunctorResult &out)
 {
-  qi::Message msg(static_cast<Buffer *>(in.datastream().ioDevice()));
+  qi::Message msg(in.buffer());
   qi::Message ret;
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
@@ -49,7 +49,7 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, Functor
     out.setError(1);
     return;
   }
-  out.datastream().setIODevice(ret.buffer());
+  out.setBuffer(ret.buffer());
 }
 
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
@@ -73,7 +73,7 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out)
 {
-  qi::Message msg(static_cast<Buffer *>(in.datastream().ioDevice()));
+  qi::Message msg(in.buffer());
   qi::Message ret;
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);

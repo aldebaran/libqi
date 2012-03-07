@@ -154,9 +154,10 @@ namespace qi {
 
     virtual void setValue(qi::FunctorResult &result)
     {
+      qi::DataStream ds(result.buffer());
       //TODO: remove the useless ref here
       T v;
-      result.datastream() >> v;
+      ds >> v;
       _f._p->setValue(v);
     }
 

@@ -32,15 +32,16 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer            breq;
-    qi::FunctorParameters request(&breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
     #for $j in range($i)
-    request.datastream() << p${j};
+    ds << p${j};
     #end for
     future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);

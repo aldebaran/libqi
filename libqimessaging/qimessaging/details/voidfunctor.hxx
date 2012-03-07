@@ -33,6 +33,7 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
+      qi::DataStream dsi(params.buffer());
 
       (*fFunction)();
     };
@@ -58,9 +59,10 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
 
-      params.datastream() >> p0;
+      dsi >> p0;
       (*fFunction)(p0);
     };
 
@@ -85,11 +87,12 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
+      dsi >> p0;
+      dsi >> p1;
       (*fFunction)(p0, p1);
     };
 
@@ -114,13 +117,14 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
       (*fFunction)(p0, p1, p2);
     };
 
@@ -145,15 +149,16 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
       P3 p3;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
       (*fFunction)(p0, p1, p2, p3);
     };
 
@@ -178,17 +183,18 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
       P3 p3;
       P4 p4;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
-      params.datastream() >> p4;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
+      dsi >> p4;
       (*fFunction)(p0, p1, p2, p3, p4);
     };
 
@@ -213,6 +219,7 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
@@ -220,12 +227,12 @@ namespace detail {
       P4 p4;
       P5 p5;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
-      params.datastream() >> p4;
-      params.datastream() >> p5;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
+      dsi >> p4;
+      dsi >> p5;
       (*fFunction)(p0, p1, p2, p3, p4, p5);
     };
 
@@ -250,6 +257,7 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
@@ -258,13 +266,13 @@ namespace detail {
       P5 p5;
       P6 p6;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
-      params.datastream() >> p4;
-      params.datastream() >> p5;
-      params.datastream() >> p6;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
+      dsi >> p4;
+      dsi >> p5;
+      dsi >> p6;
       (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
     };
 
@@ -289,6 +297,7 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
@@ -298,14 +307,14 @@ namespace detail {
       P6 p6;
       P7 p7;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
-      params.datastream() >> p4;
-      params.datastream() >> p5;
-      params.datastream() >> p6;
-      params.datastream() >> p7;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
+      dsi >> p4;
+      dsi >> p5;
+      dsi >> p6;
+      dsi >> p7;
       (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
     };
 
@@ -330,6 +339,7 @@ namespace detail {
 
     void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
+      qi::DataStream dsi(params.buffer());
       P0 p0;
       P1 p1;
       P2 p2;
@@ -340,15 +350,15 @@ namespace detail {
       P7 p7;
       P8 p8;
 
-      params.datastream() >> p0;
-      params.datastream() >> p1;
-      params.datastream() >> p2;
-      params.datastream() >> p3;
-      params.datastream() >> p4;
-      params.datastream() >> p5;
-      params.datastream() >> p6;
-      params.datastream() >> p7;
-      params.datastream() >> p8;
+      dsi >> p0;
+      dsi >> p1;
+      dsi >> p2;
+      dsi >> p3;
+      dsi >> p4;
+      dsi >> p5;
+      dsi >> p6;
+      dsi >> p7;
+      dsi >> p8;
       (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
     };
 

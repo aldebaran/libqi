@@ -23,18 +23,21 @@ namespace qi
   R callFunctor(Functor *f) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
   void callVoidFunctor(Functor *f) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
@@ -46,13 +49,15 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
+    dsi << p0;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -60,10 +65,11 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
+    dsi << p0;
     f->call(args, ret);
   }
 
@@ -72,14 +78,16 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
+    dsi << p0;
+    dsi << p1;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -87,11 +95,12 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
+    dsi << p0;
+    dsi << p1;
     f->call(args, ret);
   }
 
@@ -100,15 +109,17 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -116,12 +127,13 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
     f->call(args, ret);
   }
 
@@ -130,16 +142,18 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -147,13 +161,14 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
     f->call(args, ret);
   }
 
@@ -162,17 +177,19 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -180,14 +197,15 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
     f->call(args, ret);
   }
 
@@ -196,18 +214,20 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -215,15 +235,16 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
     f->call(args, ret);
   }
 
@@ -232,19 +253,21 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -252,16 +275,17 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
     f->call(args, ret);
   }
 
@@ -270,20 +294,22 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
-    args.datastream() << p7;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
+    dsi << p7;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -291,17 +317,18 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
-    args.datastream() << p7;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
+    dsi << p7;
     f->call(args, ret);
   }
 
@@ -310,21 +337,23 @@ namespace qi
   R callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
-    args.datastream() << p7;
-    args.datastream() << p8;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
+    dsi << p7;
+    dsi << p8;
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -332,18 +361,19 @@ namespace qi
   void callVoidFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
-    args.datastream() << p0;
-    args.datastream() << p1;
-    args.datastream() << p2;
-    args.datastream() << p3;
-    args.datastream() << p4;
-    args.datastream() << p5;
-    args.datastream() << p6;
-    args.datastream() << p7;
-    args.datastream() << p8;
+    dsi << p0;
+    dsi << p1;
+    dsi << p2;
+    dsi << p3;
+    dsi << p4;
+    dsi << p5;
+    dsi << p6;
+    dsi << p7;
+    dsi << p8;
     f->call(args, ret);
   }
 

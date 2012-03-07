@@ -31,15 +31,17 @@ namespace qi
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
     #for $j in range($i)
-    args.datastream() << p$j;
+    dsi << p$j;
     #end for
     f->call(args, ret);
     R r;
-    ret.datastream() >> r;
+    dso >> r;
     return r;
   }
 
@@ -49,11 +51,12 @@ namespace qi
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
     qi::Buffer            argsBuf;
     qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret(&retBuf);
 
     #for $j in range($i)
-    args.datastream() << p$j;
+    dsi << p$j;
     #end for
     f->call(args, ret);
   }
