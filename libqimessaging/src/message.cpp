@@ -192,9 +192,8 @@ namespace qi {
     msg._p = p;
   }
 
-  bool Message::checkMagic()
+  bool Message::isValid() const
   {
-    assert(messageMagic == _p->magic);
     return (messageMagic == _p->magic);
   }
 }

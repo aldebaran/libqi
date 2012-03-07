@@ -94,7 +94,7 @@ namespace qi {
     void buildForwardFrom(const Message &msg);
     void swap(Message &msg);
 
-    bool checkMagic();
+    bool isValid() const;
 
   public:
     MessagePrivate *_p;

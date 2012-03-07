@@ -138,7 +138,7 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
                       (char*)msg->_p,
                       headerSize);
 
-      msg->checkMagic();
+      assert(msg->isValid());
       readHdr = false;
     }
 
