@@ -27,31 +27,6 @@ RemoteObject::~RemoteObject()
   delete _meta;
 }
 
-void RemoteObject::metaCall(unsigned int method, const std::string &sig, FunctorParameters &in, qi::FunctorResult &out)
-{
-  qi::Message msg(in.buffer());
-  qi::Message ret;
-  msg.setType(qi::Message::Type_Call);
-  msg.setService(_service);
-  msg.setPath(qi::Message::Path_Main);
-  //todo handle failure
-  msg.setFunction(method);
-
-  if (!_ts->send(msg)) {
-    out.setError(1);
-    return;
-  }
-  if (!_ts->waitForId(msg.id())) {
-    out.setError(1);
-    return;
-  }
-  if (!_ts->read(msg.id(), &ret)) {
-    out.setError(1);
-    return;
-  }
-  out.setBuffer(ret.buffer());
-}
-
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 {
   qi::FunctorResultPromiseBase                            *promise;
@@ -81,13 +56,13 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, qi::Fun
   //todo handle failure
   msg.setFunction(method);
 
+  //allocated from caller, owned by us then. (clean up by onReadyRead)
+  _promises[msg.id()] = out;
   if (!_ts->send(msg)) {
     //TODO
     //out.setError(1);
     return;
   }
-  //allocated from caller, owned by us then. (clean up by onReadyRead)
-  _promises[msg.id()] = out;
 }
 
 
