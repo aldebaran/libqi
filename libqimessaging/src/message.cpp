@@ -39,7 +39,7 @@ namespace qi {
     _p->id = newMessageId();
     _p->magic = messageMagic;
     _p->buffer = new qi::Buffer();
-    _p->withBuffer = false;
+    _p->deleteBuffer = true;
   }
 
   Message::Message(Buffer *buf)
@@ -49,7 +49,7 @@ namespace qi {
     _p->id = newMessageId();
     _p->magic = messageMagic;
     _p->buffer = buf;
-    _p->withBuffer = true;
+    _p->deleteBuffer = false;
   }
 
   Message::Message(const Message &msg)
@@ -57,21 +57,26 @@ namespace qi {
   {
     memcpy(_p, msg._p, sizeof(MessagePrivate));
     _p->buffer = msg._p->buffer;
-    _p->withBuffer = true;
+    _p->deleteBuffer = false;
   }
 
   Message &Message::operator=(const Message &msg) {
     memcpy(_p, msg._p, sizeof(MessagePrivate));
     _p->buffer = msg._p->buffer;
-    _p->withBuffer = true;
+    _p->deleteBuffer = false;
     return *this;
   }
 
   Message::~Message()
   {
-    if (!_p->withBuffer)
+    if (_p->deleteBuffer)
       delete _p->buffer;
     delete _p;
+  }
+
+  void Message::setBuffer(qi::Buffer *buffer) {
+    _p->buffer = buffer;
+    _p->deleteBuffer = false;
   }
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {

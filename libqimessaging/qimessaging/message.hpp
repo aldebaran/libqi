@@ -88,6 +88,8 @@ namespace qi {
     unsigned int size() const;
     Buffer      *buffer() const;
 
+    void         setBuffer(qi::Buffer *buffer);
+
     void buildReplyFrom(const Message &call);
     void buildForwardFrom(const Message &msg);
     void swap(Message &msg);
