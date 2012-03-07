@@ -95,7 +95,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/transport_socket.cpp
                                    src/value.cpp
                                    src/url.cpp
-                                   src/future.cpp)
+                                   src/future.cpp
+                                   src/server_functor_result_future_p.hpp)
 
 
 add_subdirectory(c)
