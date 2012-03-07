@@ -12,6 +12,7 @@
 #include <qimessaging/service_info.hpp>
 #include "src/network_thread.hpp"
 #include "src/session_p.hpp"
+#include "src/server_functor_result_future_p.hpp"
 #include <qi/os.hpp>
 
 namespace qi {
@@ -43,16 +44,18 @@ namespace qi {
     client->read(id, &msg);
     qi::Object *obj;
 
-    obj = _services[msg.service()];
+    std::map<unsigned int, qi::Object*>::iterator it;
+    it = _services.find(msg.service());
+    obj = it->second;
+    if (it == _services.end() || !obj)
+    {
+      qiLogError("qi::Server") << "Can't find service: " << msg.service();
+      return;
+    }
     qi::FunctorParameters ds(msg.buffer());
 
-    qi::Message retval;
-    retval.buildReplyFrom(msg);
-    qi::FunctorResult rs(retval.buffer());
-
-    obj->metaCall(msg.function(), "", ds, rs);
-
-    client->send(retval);
+    FunctorResultPromiseBase *promise = new ServerFunctorResultPromise(client, msg);
+    obj->metaCall(msg.function(), "", ds, promise);
   };
 
 

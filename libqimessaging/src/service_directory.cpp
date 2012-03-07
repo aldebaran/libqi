@@ -18,6 +18,7 @@
 #include <qimessaging/service_info.hpp>
 #include "src/network_thread.hpp"
 #include "src/transport_server_p.hpp"
+#include "src/server_functor_result_future_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 
@@ -96,12 +97,8 @@ namespace qi
     socket->read(id, &msg);
     FunctorParameters din(msg.buffer());
 
-    qi::Message out;
-    out.buildReplyFrom(msg);
-    FunctorResult dout(out.buffer());
-
-    metaCall(msg.function(), "sig", din, dout);
-    socket->send(out);
+    ServerFunctorResultPromise sfrp(socket, msg);
+    metaCall(msg.function(), "sig", din, &sfrp);
   }
 
   void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *client)
