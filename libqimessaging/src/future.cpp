@@ -30,6 +30,11 @@ namespace qi {
     FutureBase::FutureBase()
       : _p(new FutureBasePrivate())
     {
+    }
+
+    FutureBase::~FutureBase()
+    {
+      delete _p;
     };
 
     bool FutureBase::waitForValue(int msecs) const {

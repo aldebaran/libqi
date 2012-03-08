@@ -24,6 +24,7 @@ namespace qi
 
   BufferPrivate::~BufferPrivate()
   {
+    evbuffer_free(_bufev);
   }
 
 
@@ -34,6 +35,7 @@ namespace qi
 
   Buffer::~Buffer()
   {
+    delete _p;
   }
 
   int Buffer::write(const void *data, size_t size)

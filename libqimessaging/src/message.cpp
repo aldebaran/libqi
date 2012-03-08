@@ -74,6 +74,8 @@ namespace qi {
   }
 
   void Message::setBuffer(qi::Buffer *buffer) {
+    if (_p->deleteBuffer)
+      delete _p->buffer;
     _p->buffer = buffer;
     _p->deleteBuffer = false;
   }

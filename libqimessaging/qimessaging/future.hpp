@@ -34,6 +34,7 @@ namespace qi {
     class QIMESSAGING_API FutureBase {
     public:
       FutureBase();
+      ~FutureBase();
       bool waitForValue(int msecs = 30000) const;
       void setReady();
       bool isReady() const;
