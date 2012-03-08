@@ -156,7 +156,43 @@ the exe and the dll with the same VC runtime, in the same configuration (release
 Exception
 ---------
 
-Exceptions are prohibited, it's really hard to write code that do not leak using.
+http://stackoverflow.com/questions/4756944/c-dll-plugin-interface/4757105#4757105
+
+Exceptions are prohibited.
+
+- not available on all platforms: android for example
+- it's not really compatible with asynchronous design, where error reporting should be asynchronous too. So another mean of reporting should be used anyway.
+- exceptions increase the library size
+- it's really hard to write exception-safe code
+- Exception catching of a user defined type in a binary other than the one which threw the exception requires a typeinfo lookup. (and rtti do not work well accross dll boundary http://gcc.gnu.org/faq.html#dso)
+- it break ABI: memory allocated in one place should be deallocated in the same place (remember that object do not have the same size in release/debug with MSVC), so if user catch a ref, this can crash.
+- Avoiding leak is really hard (all function should handle exceptions):
+
+.. code-block:: c++
+
+  A *a = new A();
+  //this leak a A*
+  functionthatthrow();
+
+even more harder:
+
+.. code-block:: c++
+
+  //Object that throw in operator= sometime
+  class EvilObject;
+  std::list<EvilObject> evilList;
+
+  //simple function, that do not look evil, but can throw nevertheless,
+  //but can you guess what?
+  void functionthatdonotthrow(const EvilObject &eo) {
+    evilList.push_back(eo);
+  }
+
+  void main() {
+    EvilObject *eo = new EvilObject;
+    //leak, but you cant guess that reading functionthatdonotthrow
+    functionthatdonotthrow(*eo);
+  }
 
 Enum
 ----
