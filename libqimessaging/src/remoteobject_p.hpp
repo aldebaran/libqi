@@ -12,6 +12,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/transport_socket.hpp>
+#include <boost/thread/mutex.hpp>
 #include <string>
 
 namespace qi {
@@ -27,9 +28,10 @@ namespace qi {
     virtual void metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out);
 
   protected:
-    qi::TransportSocket              *_ts;
-    unsigned int                      _service;
+    qi::TransportSocket                           *_ts;
+    unsigned int                                   _service;
     std::map<int, qi::FunctorResultPromiseBase *>  _promises;
+    boost::mutex                                   _mutex;
   };
 
 }

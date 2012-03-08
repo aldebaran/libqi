@@ -9,6 +9,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qi/log.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace qi {
 
@@ -29,20 +30,28 @@ RemoteObject::~RemoteObject()
 
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 {
-  qi::FunctorResultPromiseBase                            *promise;
+  qi::FunctorResultPromiseBase                            *promise = 0;
   qi::Message                                              msg;
   std::map<int, qi::FunctorResultPromiseBase *>::iterator  it;
 
   client->read(id, &msg);
-  it = _promises.find(id);
-  if (it != _promises.end()) {
-    promise = _promises[id];
+
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    it = _promises.find(id);
+    if (it != _promises.end()) {
+      promise = _promises[id];
+      _promises.erase(it);
+    }
+  }
+
+  if (promise) {
     qi::FunctorResult ret(msg.buffer());
     promise->setValue(ret);
-    _promises.erase(it);
     delete promise;
   } else {
     qiLogError("remoteobject") << "no promise found for req id:" << id;
+    return;
   }
 }
 
@@ -57,7 +66,11 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, qi::Fun
   msg.setFunction(method);
 
   //allocated from caller, owned by us then. (clean up by onReadyRead)
-  _promises[msg.id()] = out;
+
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    _promises[msg.id()] = out;
+  }
   if (!_ts->send(msg)) {
     //TODO
     //out.setError(1);
