@@ -90,12 +90,12 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int >& >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt& >::value());
   //ERROR
-  EXPECT_EQ("UNKNOWN", qi::signatureFromType<short>::value());
+  EXPECT_EQ("X", qi::signatureFromType<short>::value());
 }
 
-TEST(TestSignature, OpaqueMessage) {
-  EXPECT_EQ("m", qi::signatureFromType<qi::DataStream >::value());
-}
+//TEST(TestSignature, OpaqueMessage) {
+//  EXPECT_EQ("m", qi::signatureFromType<qi::DataStream >::value());
+//}
 
 // TEST(TestSignature, ProtobufSignature) {
 //   EXPECT_EQ("@ALCompat.ALValue@", qi::signatureFromType<ALCompat::ALValue>::value());
