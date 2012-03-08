@@ -6,8 +6,17 @@ Coding Convention
 Backward Compatibility
 ----------------------
 
-http://wiki.qt-project.org/API_Design_Principles
+Qt API Design Principles
+  http://wiki.qt-project.org/API_Design_Principles
 
+Qt ABI thoughts
+  http://labs.qt.nokia.com/2009/08/12/some-thoughts-on-binary-compatibility/
+
+C++ Tips and Tricks for Mac OS X
+  https://developer.apple.com/library/mac/#technotes/tn2185/_index.html
+
+Potential Errors Passing CRT Objects Across DLL Boundaries
+  http://msdn.microsoft.com/en-us/library/ms235460.aspx
 
 Naming convention
 -----------------
