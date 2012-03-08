@@ -53,10 +53,9 @@ namespace qi {
   }
 
   Message::Message(const Message &msg)
-    : _p(0)
+    : _p(new qi::MessagePrivate())
   {
     memcpy(_p, msg._p, sizeof(MessagePrivate));
-    _p->buffer = msg._p->buffer;
     _p->deleteBuffer = false;
   }
 
