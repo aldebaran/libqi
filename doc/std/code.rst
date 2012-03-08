@@ -268,3 +268,15 @@ Rational:
   Message msg;
   socket.read(&msg);
 
+
+Assert/Exit
+-----------
+
+- do not call assert
+- do not call exit
+
+Report error the user of the library instead. User then is free to assert/exit as he want. A library should never crash a program delibarately.
+
+assert is only active during debug, you may think that it is enough to use it, but Windows users use debug build (and some developer may too), and they do not want their program to crash because of a lib that do not handle errors correctly.
+
+Assert can be used during developement, but should be removed before going to production.
