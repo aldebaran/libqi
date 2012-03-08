@@ -80,8 +80,30 @@ All public functions and classes should be exported using <LIBNAME>_API macro. T
 
 .. code-block:: cpp
 
+  #include <bar/api.hpp>
+
   class BAR_API Foo {
   };
+
+For each library you will have to define <library>/api.hpp
+
+.. code-block:: cpp
+
+  #pragma once
+  #ifndef _BAR_API_HPP_
+  #define _BAR_API_HPP_
+
+  #include <qi/macro.hpp>
+
+  //bar_EXPORTS is defined by the build system, only when building the library
+  #ifdef bar_EXPORTS
+  # define BAR_API QI_EXPORT_API
+  #else
+  # define BAR_API QI_IMPORT_API
+  #endif
+
+  #endif  // _BAR_API_HPP_
+
 
 
 Private Implementation
