@@ -21,24 +21,45 @@ Potential Errors Passing CRT Objects Across DLL Boundaries
 Naming convention
 -----------------
 
-- Headers go into <libname>/*
-- Sources and private headers only go into <src>/*
-- Private headers should be named '<classname>_p.hpp'
-- Qt classes are not in a namespace and are prefixed with 'Qi'
+Headers go into <libname>/*
+
+  - we want the same layout when headers are installed and are in the source tree
+  - we want to prefix by the library name to avoid headers clash, remember that we want to install in /usr/include sometimes
+
+Sources and private headers goes into <src>/*
+
+  - That allows us to isolate public code that need a particular attention
+  - It's easier to grep only in public headers
+
+Private classes go into <src>/*
+
+Private implementation headers should be named '<classname>_p.hpp'
+
+  - this distinguishes public and private headers, otherwise we can have two files with the same name which is not pratical.
+  - futhermore this denotates that the content should never be public, it's the private part of a class.
+
+- Qt classes are not in a namespace
+- Qt classes are prefixed with 'Qi'
 
 Example
 +++++++
-For the *foo* class in the *bar* library we have:
+For the public *foo* class and the private *oups* class in the *bar* library we have:
 
 .. code-block:: console
 
   bar/foo.hpp
+
   src/foo.cpp
   src/foo_p.hpp
+  src/oups.cpp
+  src/oups.hpp
+  src/oups_p.hpp (optional)
 
   qt/bar/qt/qifoo.h
+
   qt/src/qifoo.cpp
   qt/src/qifoo_p.h
+
 
 This gives us the following objects:
 
