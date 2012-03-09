@@ -6,27 +6,24 @@
 **  - hcuche <hcuche@aldebaran-robotics.com>
 */
 
-#include <event2/buffer.h>
 #include <qimessaging/buffer.hpp>
 
 #include <cstdio>
-#include <cstdlib>
+#include <cstring>
+#include <ctype.h>
 
 #include "src/buffer_p.hpp"
+
+#include <iostream>
 
 namespace qi
 {
 
   BufferPrivate::BufferPrivate()
-    : _bufev(evbuffer_new())
   {
+    size = 0;
+    cursor = 0;
   }
-
-  BufferPrivate::~BufferPrivate()
-  {
-    evbuffer_free(_bufev);
-  }
-
 
   Buffer::Buffer()
     : _p(new BufferPrivate())
@@ -35,64 +32,114 @@ namespace qi
 
   Buffer::~Buffer()
   {
-    delete _p;
+    // FIXME: should be released by the pool
   }
 
-  int Buffer::write(const void *data, size_t size)
+  size_t Buffer::write(const void *data, size_t size)
   {
-    return evbuffer_add(_p->_bufev, data, size);
-  }
-
-  int Buffer::prepend(const void *data, size_t size)
-  {
-    return evbuffer_prepend(_p->_bufev, data, size);
-  }
-
-  int Buffer::read(void *data, size_t size)
-  {
-    return evbuffer_remove(_p->_bufev, data, size);
-  }
-
-  void *Buffer::peek(size_t size)
-  {
-    return evbuffer_pullup(_p->_bufev, size);
-  }
-
-  int Buffer::drain(size_t size)
-  {
-    return evbuffer_drain(_p->_bufev, size);
-  }
-
-  unsigned int Buffer::size() const
-  {
-    return evbuffer_get_length(_p->_bufev);
-  }
-
-  struct evbuffer *BufferPrivate::data()
-  {
-    return _bufev;
-  }
-
-  void BufferPrivate::setData(struct evbuffer *data)
-  {
-    _bufev = data;
-  }
-
-  void BufferPrivate::dump()
-  {
-    size_t size = evbuffer_get_length(_bufev);
-    unsigned char *buf = (unsigned char*)malloc(size * sizeof(unsigned char));
-    evbuffer_copyout(_bufev, buf, size);
-
-    size_t i = 0;
-    while (i < size)
+    if (sizeof(_p->data) - _p->cursor < size)
     {
-      printf("%02x ", *buf);
-      ++buf;
-      ++i;
+      return -1;
+    }
+
+    memcpy(_p->data + _p->size, data, size);
+    _p->size += size;
+    _p->cursor += _p->size;
+
+    return size;
+  }
+
+  size_t Buffer::read(void *data, size_t size)
+  {
+    if (_p->size - _p->cursor < size)
+    {
+      size = _p->size - _p->cursor;
+    }
+
+    memcpy(data, _p->data + _p->cursor, size);
+    _p->cursor += size;
+
+    return size;
+  }
+
+  void *Buffer::read(size_t size)
+  {
+    void *p = 0;
+    if ((p = peek(size)))
+    {
+      seek(size);
+    }
+
+    return p;
+  }
+
+  size_t Buffer::size() const
+  {
+    return _p->size;
+  }
+
+  void *Buffer::reserve(size_t size)
+  {
+    void *p = _p->data + _p->cursor;
+    _p->size = size;
+
+    return p;
+  }
+
+  size_t Buffer::seek(long offset)
+  {
+    if (_p->cursor + offset <= _p->size)
+    {
+      _p->cursor += offset;
+      return _p->cursor;
+    }
+    else
+    {
+      return -1;
+    }
+  }
+
+  void *Buffer::peek(size_t size) const
+  {
+    return _p->cursor + _p->data;
+  }
+
+  void *Buffer::data() const
+  {
+    return _p->data;
+  }
+
+  void Buffer::dump() const
+  {
+    unsigned int i = 0;
+
+    while (i < _p->size)
+    {
+      printf("%02x ", _p->data[i]);
+      i++;
+      if (i % 8 == 0) printf(" ");
+      if (i % 16 == 0)
+      {
+        for (unsigned int j = i - 16; j < i ; j++)
+        {
+          printf("%c", isgraph(_p->data[j]) ? _p->data[j] : '.');
+        }
+        printf("\n");
+      }
+    }
+
+    while (i % 16 != 0)
+    {
+      printf("   ");
+      if (i % 8 == 0) printf(" ");
+      i++;
+    }
+    printf(" ");
+    for (unsigned int j = i - 16; j < _p->size; j++)
+    {
+      printf("%c", isgraph(_p->data[j]) ? _p->data[j] : '.');
     }
     printf("\n");
-    fflush(stdout);
   }
 
 } // !qi

@@ -48,7 +48,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/datastream.hpp
                                    qimessaging/functor.hpp
                                    qimessaging/gateway.hpp
-                                   qimessaging/iodevice.hpp
                                    qimessaging/message.hpp
                                    qimessaging/object.hpp
                                    qimessaging/object.hxx

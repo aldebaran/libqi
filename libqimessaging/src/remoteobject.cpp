@@ -31,7 +31,7 @@ RemoteObject::~RemoteObject()
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 {
   qi::FunctorResultPromiseBase                            *promise = 0;
-  qi::Message                                              msg;
+  qi::Message                                              msg(qi::Message::Create_WithoutBuffer);;
   std::map<int, qi::FunctorResultPromiseBase *>::iterator  it;
 
   client->read(id, &msg);
@@ -58,7 +58,7 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out)
 {
   qi::Message msg(in.buffer());
-  qi::Message ret;
+  qi::Message ret(qi::Message::Create_WithoutBuffer);;
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
   msg.setPath(qi::Message::Path_Main);

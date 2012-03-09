@@ -10,30 +10,31 @@
 #define _QIMESSAGING_BUFFER_HPP_
 
 # include <qimessaging/api.hpp>
-# include <qimessaging/iodevice.hpp>
+# include <cstdlib>
 
 namespace qi
 {
   class BufferPrivate;
 
-  class QIMESSAGING_API Buffer: public IODevice
+  class QIMESSAGING_API Buffer
   {
   public:
     Buffer();
     ~Buffer();
 
-    // Add data to the end of the buffer
-    int    write(const void *data, size_t size);
-    // Add data in front of the buffer
-    int    prepend(const void *data, size_t size);
-    // read size first data of the buffer
-    // warning: linearize data if needed (copy)
-    int    read(void *data, size_t size);
-    void  *peek(size_t size);
-    int    drain(size_t size);
-    unsigned int size() const;
+    size_t write(const void *data, size_t size);
+    size_t read(void *data, size_t size);
+    // equivalent to peek() && seek()
+    void  *read(size_t size);
+    size_t size() const;
+    void  *reserve(size_t size);
+    size_t seek(long offset);
+    void  *peek(size_t size) const;
 
-  public:
+    void  *data() const;
+    void   dump() const;
+
+  private:
     BufferPrivate *_p;
   };
 

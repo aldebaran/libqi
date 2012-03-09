@@ -93,7 +93,7 @@ namespace qi
 
   void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
   {
-    qi::Message msg;
+    qi::Message msg(qi::Message::Create_WithoutBuffer);;
     socket->read(id, &msg);
     FunctorParameters din(msg.buffer());
 

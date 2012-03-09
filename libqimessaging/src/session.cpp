@@ -42,7 +42,7 @@ namespace qi {
     {
       std::vector<ServiceInfo> result;
 
-      qi::Message msg;
+      qi::Message msg(qi::Message::Create_WithBuffer);
       msg.setType(qi::Message::Type_Call);
       msg.setService(qi::Message::Service_ServiceDirectory);
       msg.setPath(qi::Message::Path_Main);
@@ -52,7 +52,7 @@ namespace qi {
 
       if (!_serviceSocket->waitForId(msg.id()))
         return result;
-      qi::Message ans;
+      qi::Message ans(qi::Message::Create_WithoutBuffer);;
       _serviceSocket->read(msg.id(), &ans);
 
       qi::DataStream d(ans.buffer());
@@ -65,7 +65,7 @@ namespace qi {
                                                      unsigned int      *idx,
                                                      qi::Url::Protocol  type)
   {
-    qi::Message msg;
+    qi::Message msg(qi::Message::Create_WithBuffer);;
     qi::DataStream dr(msg.buffer());
     dr << name;
     msg.setType(qi::Message::Type_Call);
@@ -76,7 +76,7 @@ namespace qi {
 
     if (!_serviceSocket->waitForId(msg.id()))
       return 0;
-    qi::Message ans;
+    qi::Message ans(qi::Message::Create_WithoutBuffer);;
     _serviceSocket->read(msg.id(), &ans);
 
     qi::ServiceInfo si;
@@ -118,7 +118,7 @@ namespace qi {
       return 0;
     }
 
-    qi::Message msg;
+    qi::Message msg(qi::Message::Create_WithBuffer);;
     msg.setType(qi::Message::Type_Call);
     msg.setService(serviceId);
     msg.setPath(qi::Message::Path_Main);
@@ -127,7 +127,7 @@ namespace qi {
     ts->send(msg);
     ts->waitForId(msg.id());
 
-    qi::Message ret;
+    qi::Message ret(qi::Message::Create_WithoutBuffer);;
     ts->read(msg.id(), &ret);
 
     qi::MetaObject *mo = new qi::MetaObject;

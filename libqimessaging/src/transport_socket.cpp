@@ -39,8 +39,6 @@
 
 namespace qi {
 
-const unsigned int headerSize = 8 * sizeof(uint32_t);
-
 class TransportSocketPrivate
 {
 public:
@@ -50,9 +48,9 @@ public:
     , connected(false)
     , fd(-1)
     , readHdr(true)
+    , msg(0)
     , _self(socket)
   {
-    msg = NULL;
   }
 
   TransportSocketPrivate(TransportSocket *socket, int fileDesc)
@@ -61,9 +59,9 @@ public:
     , connected(false)
     , fd(fileDesc)
     , readHdr(true)
+    , msg(0)
     , _self(socket)
   {
-    msg = NULL;
   }
 
   ~TransportSocketPrivate()
@@ -118,37 +116,35 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
                              void *context)
 {
   struct evbuffer *input = bufferevent_get_input(bev);
-  size_t length = 0;
 
   while (true)
   {
     if (msg == NULL)
     {
-      msg = new qi::Message();
+      msg = new qi::Message(new qi::Buffer());
       readHdr = true;
     }
 
     if (readHdr)
     {
-      length = evbuffer_get_length(input);
-      if (length < headerSize)
+      if (evbuffer_get_length(input) < sizeof(MessagePrivate::MessageHeader))
         return;
 
       evbuffer_remove(input,
-                      (char*)msg->_p,
-                      headerSize);
-
-      assert(msg->isValid());
+                      msg->header(),
+                      sizeof(MessagePrivate::MessageHeader));
+      /* we have to let the Buffer know we pushed some data inside */
+      msg->buffer()->reserve(static_cast<MessagePrivate::MessageHeader*>(msg->header())->size);
       readHdr = false;
     }
 
-    length = evbuffer_get_length(input);
-    if (length < msg->_p->size)
+    if (evbuffer_get_length(input) < msg->size())
       return;
 
-    evbuffer_remove_buffer(input,
-                           msg->buffer()->_p->data(),
-                           msg->_p->size);
+    evbuffer_remove(input,
+                    msg->buffer()->data(),
+                    msg->size());
+    assert(msg->isValid());
 
     {
       boost::mutex::scoped_lock l(mtx);
@@ -176,14 +172,12 @@ void TransportSocketPrivate::eventcb(struct bufferevent *bev,
 {
   if (events & BEV_EVENT_CONNECTED)
   {
-    qi::Message msg;
     connected = true;
     if (tcd)
       tcd->onSocketConnected(_self);
   }
   else if (events & BEV_EVENT_EOF)
   {
-    qi::Message msg;
     connected = false;
     //for waitForId
     cond.notify_all();
@@ -350,7 +344,7 @@ bool TransportSocket::read(int id, qi::Message *msg)
     it = _p->msgSend.find(id);
     if (it != _p->msgSend.end())
     {
-      msg->swap(*(it->second));
+      *msg = *it->second;
       delete it->second;
       _p->msgSend.erase(it);
       return true;
@@ -362,38 +356,39 @@ bool TransportSocket::read(int id, qi::Message *msg)
 
 bool TransportSocket::send(const qi::Message &msg)
 {
-  if (msg.type() == qi::Message::Type_None)
+  qi::Message *m = new qi::Message(qi::Message::Create_WithoutBuffer);;
+  *m = msg;
+  m->_p->complete();
+
+  assert(m->isValid());
+
+  struct evbuffer *evb = bufferevent_get_output(_p->bev);
+
+  if (!_p->connected)
   {
-    qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
-    assert(msg.type() != qi::Message::Type_None);
     return false;
   }
 
-  if (msg.service() == qi::Message::Service_None)
+  if (evbuffer_add_reference(evb, m->header(),
+                             sizeof(MessagePrivate::MessageHeader),
+                                    0, 0) != 0)
   {
-    qiLogError("qimessaging.TransportSocket")  << "Message dropped (service is 0)" << std::endl;
-    assert(msg.service() != qi::Message::Service_None);
     return false;
   }
 
-  if (msg.path() == qi::Message::Path_None)
+  if (evbuffer_add_reference(evb, m->buffer()->data(),
+                             m->size(),
+                             qi::MessagePrivate::sentcb, static_cast<void *>(m)) != 0)
   {
-    qiLogError("qimessaging.TransportSocket")  << "Message dropped (path is 0)" << std::endl;
-    assert(msg.path() != qi::Message::Path_None);
     return false;
   }
 
-  // If we do not use qi::Buffer (using qi::Message instead of const qi::Message)
-  // we win 500 msg/s.
-  qi::Buffer     buf;
-  qi::DataStream d(&buf);
-  d << msg;
+  if (bufferevent_write_buffer(_p->bev, evb) != 0)
+  {
+    return false;
+  }
 
-  if (_p->connected &&
-      (bufferevent_write_buffer(_p->bev, buf._p->data()) == 0))
-    return true;
-
-  return false;
+  return true;
 }
 
 void TransportSocket::setCallbacks(TransportSocketInterface *delegate)

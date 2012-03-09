@@ -9,23 +9,16 @@
 #ifndef BUFFER_P_HPP_
 # define BUFFER_P_HPP_
 
-# include <event2/buffer.h>
-
 namespace qi
 {
   class BufferPrivate
   {
   public:
     BufferPrivate();
-    ~BufferPrivate();
 
-    struct evbuffer *data();
-    void setData(struct evbuffer *data);
-
-    void dump();
-
-  public:
-    struct evbuffer *_bufev;
+    unsigned char   data[4096];
+    size_t          size;
+    size_t          cursor;
   };
 }
 

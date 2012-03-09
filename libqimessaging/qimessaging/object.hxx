@@ -24,9 +24,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)()  = 0;
     std::string signature(method);
@@ -44,9 +44,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0)  = 0;
     std::string signature(method);
@@ -65,9 +65,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
     std::string signature(method);
@@ -87,9 +87,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     std::string signature(method);
@@ -110,9 +110,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     std::string signature(method);
@@ -134,9 +134,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     std::string signature(method);
@@ -159,9 +159,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     std::string signature(method);
@@ -185,9 +185,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     std::string signature(method);
@@ -212,9 +212,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     std::string signature(method);
@@ -240,9 +240,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     std::string signature(method);

@@ -24,7 +24,7 @@ typedef struct
 qi_message_t *qi_message_create()
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(malloc(sizeof(qi_message_data_t)));
-  m->msg = new qi::Message();
+  m->msg = new qi::Message(qi::Message::Create_WithoutBuffer);
 
   return reinterpret_cast<qi_message_t*>(m);
 }

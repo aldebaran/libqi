@@ -52,8 +52,8 @@ namespace qi {
 
   void Object::metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out)
   {
-    qi::Buffer        buf;
-    qi::FunctorResult fout(&buf);
+    qi::Buffer       *buf = new qi::Buffer();
+    qi::FunctorResult fout(buf);
 
     assert(method < _meta->_methods.size());
     MetaMethod *mm = &(_meta->_methods[method]);

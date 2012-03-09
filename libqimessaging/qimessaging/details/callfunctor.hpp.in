@@ -29,12 +29,12 @@ namespace qi
 
   template <typename R$generate_typename_list($i, begin = True)>
   R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
-    qi::FunctorResult     ret(&retBuf);
+    qi::Buffer           *argsBuf = new qi::Buffer();
+    qi::Buffer           *retBuf = new qi::Buffer();
+    qi::DataStream        dsi(argsBuf);
+    qi::DataStream        dso(retBuf);
+    qi::FunctorParameters args(argsBuf);
+    qi::FunctorResult     ret(retBuf);
 
     #for $j in range($i)
     dsi << p$j;
@@ -49,11 +49,12 @@ namespace qi
   template <$generate_typename_list($i)>
   #end if
   void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::FunctorParameters args(&argsBuf);
-    qi::FunctorResult     ret(&retBuf);
+    qi::Buffer           *argsBuf = new qi::Buffer();
+    qi::Buffer           *retBuf = new qi::Buffer();
+    qi::DataStream        dsi(argsBuf);
+    qi::DataStream        dso(retBuf);
+    qi::FunctorParameters args(argsBuf);
+    qi::FunctorResult     ret(retBuf);
 
     #for $j in range($i)
     dsi << p$j;

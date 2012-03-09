@@ -17,17 +17,26 @@ namespace qi
   class MessagePrivate
   {
   public:
-    uint32_t magic;
-    uint32_t id;
-    uint32_t size;
-    uint32_t type;
-    uint32_t service;
-    uint32_t path;
-    uint32_t function;
-    uint32_t reserved;
+    typedef struct
+    {
+      uint32_t magic;
+      uint32_t id;
+      uint32_t size;
+      uint32_t type;
+      uint32_t service;
+      uint32_t path;
+      uint32_t function;
+      uint32_t reserved;
+    } MessageHeader;
 
-    bool        deleteBuffer;
-    qi::Buffer *buffer;
+    MessagePrivate();
+    ~MessagePrivate();
+
+    static void  sentcb(const void *data, size_t datalen, void *msg);
+    void         complete();
+
+    Buffer        *buffer;
+    MessageHeader *header;
   };
 }
 

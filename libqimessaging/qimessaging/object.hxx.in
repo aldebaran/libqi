@@ -32,9 +32,9 @@ namespace qi {
     //will be deleted by metaCall
     qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::Buffer                       *breq = new qi::Buffer();
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
 
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);

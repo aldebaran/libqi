@@ -61,14 +61,17 @@ namespace qi {
       Type_Error = 4
     };
 
-    Message();
-    ~Message();
+    enum Create
+    {
+      Create_WithoutBuffer = 0,
+      Create_WithBuffer    = 1,
+    };
 
-    Message(qi::Buffer *buf);
+    ~Message();
+    Message(int flags);
+    Message(Buffer *buf);
     Message(const Message &msg);
     Message &operator=(const Message &msg);
-
-
 
     void         setId(unsigned int id);
     unsigned int id() const;
@@ -86,19 +89,19 @@ namespace qi {
     unsigned int function() const;
 
     unsigned int size() const;
+
+    void         setBuffer(Buffer* buffer);
     Buffer      *buffer() const;
 
-    void         setBuffer(qi::Buffer *buffer);
+    void        *header() const;
 
-    void buildReplyFrom(const Message &call);
-    void buildForwardFrom(const Message &msg);
-    void swap(Message &msg);
+    void         buildReplyFrom(const Message &call);
+    void         buildForwardFrom(const Message &msg);
 
-    bool isValid() const;
+    bool         isValid();
 
   public:
     MessagePrivate *_p;
-
   };
 
   QIMESSAGING_API std::ostream&   operator<<(std::ostream&   os, const qi::Message& msg);
