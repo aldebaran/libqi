@@ -64,31 +64,31 @@ namespace qi {
     Message();
     ~Message();
 
-    Message(qi::Buffer *buf);
+    Message(const qi::Buffer *buf);
     Message(const Message &msg);
     Message &operator=(const Message &msg);
 
 
 
-    void         setId(unsigned int id);
-    unsigned int id() const;
+    void          setId(unsigned int id);
+    unsigned int  id() const;
 
-    void         setType(uint32_t type);
-    unsigned int type() const;
+    void          setType(uint32_t type);
+    unsigned int  type() const;
 
-    void         setService(uint32_t service);
-    unsigned int service() const;
+    void          setService(uint32_t service);
+    unsigned int  service() const;
 
-    void         setPath(uint32_t path);
-    unsigned int path() const;
+    void          setPath(uint32_t path);
+    unsigned int  path() const;
 
-    void         setFunction(uint32_t function);
-    unsigned int function() const;
+    void          setFunction(uint32_t function);
+    unsigned int  function() const;
 
-    unsigned int size() const;
-    Buffer      *buffer() const;
+    unsigned int  size() const;
+    const Buffer *buffer() const;
 
-    void         setBuffer(qi::Buffer *buffer);
+    void          setBuffer(const qi::Buffer *buffer);
 
     void buildReplyFrom(const Message &call);
     void buildForwardFrom(const Message &msg);
