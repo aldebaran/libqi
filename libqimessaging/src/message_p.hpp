@@ -26,7 +26,8 @@ namespace qi
     uint32_t function;
     uint32_t reserved;
 
-    const qi::Buffer *buffer;
+    bool        deleteBuffer;
+    qi::Buffer *buffer;
   };
 }
 
