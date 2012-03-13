@@ -28,76 +28,28 @@ namespace qi
 {
   namespace os
   {
+
     int spawnvp(char *const argv[])
     {
-      std::string tmp;
-      int i =0;
-      char* test = argv[i];
-      while(test != NULL)
-      {
-        tmp.append(argv[i]);
-        i++;
-        test = argv[i];
-        if(test != NULL)
-          tmp.push_back(' ');
-      }
-
-      LPTSTR cmdLine = (LPTSTR) malloc(tmp.size() + 1);
-      strcpy(cmdLine, tmp.c_str());
-
-      STARTUPINFO info = {sizeof(info)};
-      PROCESS_INFORMATION processInfo;
-      CreateProcess(
-        NULL,
-        cmdLine,
-        NULL,
-        NULL,
-        false,
-        0,
-        NULL,
-        NULL,
-        &info,
-        &processInfo);
-
-      free(cmdLine);
-
-      return processInfo.dwProcessId;
+      return _spawnvp(_P_NOWAIT, argv[0], (char* const*)argv);
     }
 
     int spawnlp(const char* argv, ...)
     {
-      std::string tmp;
+      const char* cmd[64];
+
       va_list ap;
       const char* arg;
 
+      int i = 0;
       va_start(ap, argv);
-      for(arg = argv ; arg != NULL ; arg = va_arg(ap, const char*))
-      {
-        tmp.append(arg);
-        tmp.push_back(' ');
-      }
+      for (arg = argv; arg != NULL; arg = va_arg(ap, const char*), ++i)
+        cmd[i] = arg;
+
       va_end(ap);
+      cmd[i] = NULL;
 
-      LPTSTR cmdLine = (LPTSTR) malloc(tmp.size() + 1);
-      strcpy(cmdLine, tmp.c_str());
-
-      STARTUPINFO info = {sizeof(info)};
-      PROCESS_INFORMATION processInfo;
-      CreateProcess(
-        NULL,
-        cmdLine,
-        NULL,
-        NULL,
-        false,
-        0,
-        NULL,
-        NULL,
-        &info,
-        &processInfo);
-
-      free(cmdLine);
-
-      return processInfo.dwProcessId;
+      return _spawnvp(_P_NOWAIT, cmd[0], (char* const*)cmd);
     }
 
     int system(const char *command)
@@ -115,19 +67,9 @@ namespace qi
     {
       errno = 0;
 
-      HANDLE processHandle = OpenProcess(
-        PROCESS_QUERY_INFORMATION | SYNCHRONIZE,
-        false,
-        pid);
-      WaitForSingleObjectEx(processHandle, INFINITE, true);
-      DWORD wStatus = 0;
-      qi::os::msleep(100);
-      GetExitCodeProcess(processHandle, &wStatus);
+      _cwait(status, pid, 0);
 
-      *status = wStatus;
-
-      CloseHandle(processHandle);
-      if (errno == ECHILD || processHandle == NULL)
+      if (errno == ECHILD)
       {
         *status = 127;
         return 0;
@@ -138,41 +80,26 @@ namespace qi
 
     int kill(int pid, int sig)
     {
+      HANDLE handle = (HANDLE) pid;
       int res = -1;
-      HANDLE processHandle = OpenProcess(
-        PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
-        false,
-        pid);
-      if(processHandle != NULL)
+      DWORD status;
+      GetExitCodeProcess(handle, &status);
+      if(status == STILL_ACTIVE)
       {
-        DWORD status;
-        GetExitCodeProcess(processHandle, &status);
-        if(status == STILL_ACTIVE)
+        if(sig == SIGTERM)
         {
-          if(sig == SIGTERM)
-          {
-            DWORD error = TerminateProcess(processHandle, 0);
-            qi::os::msleep(100);
-            GetExitCodeProcess(processHandle, &status);
-            if(status != STILL_ACTIVE)
-              res = 0;
-          }
-          else
-          {
+          DWORD error = TerminateProcess(handle, 0);
+          qi::os::msleep(100);
+          GetExitCodeProcess(handle, &status);
+          if(status != STILL_ACTIVE)
             res = 0;
-          }
         }
         else
         {
-          res = -1;
+          res = 0;
         }
-        CloseHandle(processHandle);
-        return res;
       }
-      else
-      {
-        return -1;
-      }
+      return res;
     }
   };
 };
