@@ -9,12 +9,14 @@
 #ifndef _LIBQI_QI_ATOMIC_HPP_
 #define _LIBQI_QI_ATOMIC_HPP_
 
-# include <qi/config.hpp>
+#ifdef _MSC_VER
+# include <windows.h>
+#endif
 
 namespace qi
 {
   template <typename T>
-  class QI_API atomic
+  class atomic
   {
   public:
     atomic()
@@ -39,6 +41,46 @@ namespace qi
   private:
     T _value;
   };
+
+#ifdef __GNUC__
+    template <typename T>
+    T atomic<T>::operator++()
+    {
+      return __sync_add_and_fetch(&_value, 1);
+    }
+
+    template <typename T>
+    T atomic<T>::operator--()
+    {
+      return __sync_sub_and_fetch(&_value, 1);
+    }
+#endif
+
+#ifdef _MSC_VER
+  template<>
+  short atomic<short>::operator++()
+  {
+    return _InterlockedIncrement16(&_value);
+  }
+
+  template<>
+  short atomic<short>::operator--()
+  {
+    return _InterlockedDecrement16(&_value);
+  }
+
+  template <>
+  long atomic<long>::operator++()
+  {
+    return _InterlockedIncrement(&_value);
+  }
+
+  template <>
+  long atomic<long>::operator--()
+  {
+    return _InterlockedDecrement(&_value);
+  }
+#endif
 }
 
 #endif // _LIBQI_QI_ATOMIC_HPP_

@@ -53,7 +53,6 @@ set(H
   )
 
 set(C
-  src/atomic.cpp
   src/dlfcn.cpp
   src/path.cpp
   src/application.cpp
