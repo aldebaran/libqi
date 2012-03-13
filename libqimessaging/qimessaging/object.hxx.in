@@ -30,12 +30,13 @@ namespace qi {
   template <typename R${generate_typename_list($i, begin=True)}>
   qi::Future<R> Object::call(const std::string& method${generate_param_list($i, begin=True)}) {
     //will be deleted by metaCall
-    qi::FunctorReturnPromise<R>      *promise = new qi::FunctorReturnPromise<R>();
     qi::Future<R>                     future;
-    qi::Buffer                       *breq = new qi::Buffer();
-    qi::DataStream                    ds(breq);
-    qi::FunctorParameters             request(breq);
+    qi::Buffer                        breq;
+    qi::DataStream                    ds(&breq);
+    qi::FunctorParameters             request(&breq);
+    qi::FunctorResult                 promise;
 
+    makeFunctorResult<R>(&promise, &future);
     R (*f)(${generate_param_list($i)})  = 0;
     std::string signature(method);
     signature += "::";
@@ -43,7 +44,6 @@ namespace qi {
     #for $j in range($i)
     ds << p${j};
     #end for
-    future = promise->future();
     metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
     return future;
   }

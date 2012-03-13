@@ -38,7 +38,10 @@ namespace qi {
 
   void MessagePrivate::complete()
   {
-    header->size = buffer->size();
+    if (!buffer)
+      header->size = 0;
+    else
+      header->size = buffer->size();
   }
 
   MessagePrivate::MessagePrivate()
@@ -88,6 +91,8 @@ namespace qi {
 
   unsigned int Message::size() const
   {
+    if (!_p->buffer)
+      return 0;
     return _p->buffer->size();
   }
 
@@ -141,12 +146,12 @@ namespace qi {
     return _p->header->function;
   }
 
-  void Message::setBuffer(Buffer *buffer)
+  void Message::setBuffer(const Buffer *buffer)
   {
     _p->buffer = buffer;
   }
 
-  qi::Buffer *Message::buffer() const
+  const qi::Buffer *Message::buffer() const
   {
     return _p->buffer;
   }

@@ -24,7 +24,6 @@ namespace qi {
       _serviceSocket(new qi::TransportSocket()),
       _self(session)
   {
-    //_serviceSocket->setCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -43,7 +42,6 @@ namespace qi {
       std::vector<ServiceInfo> result;
 
       qi::Message msg;
-      msg.setBuffer(new qi::Buffer);
       msg.setType(qi::Message::Type_Call);
       msg.setService(qi::Message::Service_ServiceDirectory);
       msg.setPath(qi::Message::Path_Main);
@@ -66,9 +64,10 @@ namespace qi {
                                                      unsigned int      *idx,
                                                      qi::Url::Protocol  type)
   {
-    qi::Message msg;
-    msg.setBuffer(new qi::Buffer);
-    qi::DataStream dr(msg.buffer());
+    qi::Message    msg;
+    qi::Buffer    *buf = new qi::Buffer();
+    qi::DataStream dr(buf);
+    msg.setBuffer(buf);
     dr << name;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
@@ -121,7 +120,6 @@ namespace qi {
     }
 
     qi::Message msg;
-    msg.setBuffer(new qi::Buffer);
     msg.setType(qi::Message::Type_Call);
     msg.setService(serviceId);
     msg.setPath(qi::Message::Path_Main);

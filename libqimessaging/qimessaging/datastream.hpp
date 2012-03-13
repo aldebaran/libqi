@@ -17,7 +17,6 @@
 #include <map>
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
-
 #include <qimessaging/buffer.hpp>
 
 namespace qi {
@@ -56,12 +55,8 @@ namespace qi {
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    explicit DataStream(qi::Buffer *buffer)
-      : _buffer(buffer)
-    {
-      // may be a copy if linearize needed
-      // need to add header size
-    }
+    explicit DataStream(const qi::Buffer *buffer);
+    explicit DataStream(qi::Buffer *buffer);
 
     size_t read(void *data, size_t len);
     void writeString(const char *str, size_t len);
@@ -91,6 +86,7 @@ namespace qi {
 
   private:
     qi::Buffer *_buffer;
+    bool        _ro;
 
     /// <summary>Default constructor. </summary>
     DataStream()

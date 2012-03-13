@@ -60,8 +60,5 @@ namespace qi {
 
   }
 
-  FunctorResultPromiseBase::~FunctorResultPromiseBase() {
-  }
-
 }
 

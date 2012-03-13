@@ -54,7 +54,7 @@ namespace qi {
     }
     qi::FunctorParameters ds(msg.buffer());
 
-    FunctorResultPromiseBase *promise = new ServerFunctorResultPromise(client, msg);
+    ServerFunctorResult promise(client, msg);
     obj->metaCall(msg.function(), "", ds, promise);
   };
 
@@ -84,20 +84,21 @@ namespace qi {
   unsigned int Server::registerService(const std::string& name, qi::Object *obj)
   {
     qi::Message msg;
-    msg.setBuffer(new qi::Buffer);
+    qi::Buffer  buf;
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
-    qi::DataStream d(msg.buffer());
+    qi::DataStream d(&buf);
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
     si.setEndpoints(_p->_endpoints);
     d << si;
 
+    msg.setBuffer(&buf);
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;

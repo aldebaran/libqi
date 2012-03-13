@@ -83,6 +83,7 @@ public:
   // data to rebuild message
   bool                         readHdr;
   qi::Message                 *msg;
+  qi::Buffer                  *buf;
   qi::TransportSocket         *_self;
 };
 
@@ -121,8 +122,9 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
   {
     if (msg == NULL)
     {
-      msg = new qi::Message;
-      msg->setBuffer(new qi::Buffer());
+      buf = new qi::Buffer();
+      msg = new qi::Message();
+      msg->setBuffer(buf);
       readHdr = true;
     }
 
@@ -135,7 +137,7 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
                       msg->header(),
                       sizeof(MessagePrivate::MessageHeader));
       /* we have to let the Buffer know we pushed some data inside */
-      msg->buffer()->reserve(static_cast<MessagePrivate::MessageHeader*>(msg->header())->size);
+      buf->reserve(static_cast<MessagePrivate::MessageHeader*>(msg->header())->size);
       readHdr = false;
     }
 
@@ -143,7 +145,7 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
       return;
 
     evbuffer_remove(input,
-                    msg->buffer()->data(),
+                    buf->data(),
                     msg->size());
     assert(msg->isValid());
 
@@ -377,7 +379,8 @@ bool TransportSocket::send(const qi::Message &msg)
     return false;
   }
 
-  if (evbuffer_add_reference(evb, m->buffer()->data(),
+  if (m->size() &&
+      evbuffer_add_reference(evb, m->buffer()->data(),
                              m->size(),
                              qi::MessagePrivate::sentcb, static_cast<void *>(m)) != 0)
   {

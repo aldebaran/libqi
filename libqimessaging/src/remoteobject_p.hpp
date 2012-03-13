@@ -25,12 +25,12 @@ namespace qi {
     ~RemoteObject();
 
     virtual void onSocketReadyRead(TransportSocket *client, int id);
-    virtual void metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out);
+    virtual void metaCall(unsigned int method, const std::string &sig, const qi::FunctorParameters &in, qi::FunctorResult out);
 
   protected:
     qi::TransportSocket                           *_ts;
     unsigned int                                   _service;
-    std::map<int, qi::FunctorResultPromiseBase *>  _promises;
+    std::map<int, qi::FunctorResult>               _promises;
     boost::mutex                                   _mutex;
   };
 

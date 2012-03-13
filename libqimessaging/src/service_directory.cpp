@@ -97,8 +97,8 @@ namespace qi
     socket->read(id, &msg);
     FunctorParameters din(msg.buffer());
 
-    ServerFunctorResultPromise *sfrp = new ServerFunctorResultPromise(socket, msg);
-    metaCall(msg.function(), "sig", din, sfrp);
+    ServerFunctorResult fr(socket, msg);
+    metaCall(msg.function(), "sig", din, fr);
   }
 
   void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *client)

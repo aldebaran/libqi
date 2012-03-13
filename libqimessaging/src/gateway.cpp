@@ -176,10 +176,11 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
       result.setEndpoints(_endpoints);
 
       // create new message for the client
-      qi::Message ans;
-      ans.setBuffer(new qi::Buffer);
+      qi::Message  ans;
+      qi::Buffer  *buf = new qi::Buffer;
+      ans.setBuffer(buf);
       ans.buildReplyFrom(*msg);
-      qi::DataStream dsAns(ans.buffer());
+      qi::DataStream dsAns(buf);
       dsAns << result;
 
       // id should be rewritten then sent to the client

@@ -35,7 +35,7 @@ namespace qi
     static void  sentcb(const void *data, size_t datalen, void *msg);
     void         complete();
 
-    Buffer        *buffer;
+    const Buffer  *buffer;
     MessageHeader *header;
   };
 }

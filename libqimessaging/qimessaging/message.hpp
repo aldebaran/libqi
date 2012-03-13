@@ -83,8 +83,8 @@ namespace qi {
 
     unsigned int size() const;
 
-    void         setBuffer(Buffer* buffer);
-    Buffer      *buffer() const;
+    void          setBuffer(const Buffer* buffer);
+    const Buffer *buffer() const;
 
     void        *header() const;
 

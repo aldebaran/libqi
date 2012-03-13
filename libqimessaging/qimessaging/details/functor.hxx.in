@@ -36,10 +36,11 @@ namespace detail {
       return (R)(*fFunction)($generate_arg_list($i));
     }
 
-    void call(qi::FunctorParameters &params, qi::FunctorResult &result) const {
+    void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       qi::DataStream dsi(params.buffer());
-      qi::DataStream dso(result.buffer());
+      qi::Buffer     buf;
+      qi::DataStream dso(&buf);
       #for $j in range($i)
       P$j p$j;
       #end for
@@ -47,6 +48,7 @@ namespace detail {
       dsi >> p$j;
       #end for
       dso << (*fFunction)($generate_callparam_list($i));
+      result.setValue(&buf);
     };
 
   private:

@@ -30,9 +30,9 @@ RemoteObject::~RemoteObject()
 
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 {
-  qi::FunctorResultPromiseBase                            *promise = 0;
-  qi::Message                                              msg;
-  std::map<int, qi::FunctorResultPromiseBase *>::iterator  it;
+  qi::FunctorResult                          promise;
+  qi::Message                                msg;
+  std::map<int, qi::FunctorResult>::iterator it;
 
   client->read(id, &msg);
 
@@ -45,17 +45,15 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
     }
   }
 
-  if (promise) {
-    qi::FunctorResult ret(msg.buffer());
-    promise->setValue(ret);
-    delete promise;
+  if (promise.isValid()) {
+    promise.setValue(msg.buffer());
   } else {
     qiLogError("remoteobject") << "no promise found for req id:" << id;
     return;
   }
 }
 
-void RemoteObject::metaCall(unsigned int method, const std::string &sig, qi::FunctorParameters &in, qi::FunctorResultPromiseBase *out)
+void RemoteObject::metaCall(unsigned int method, const std::string &sig, const FunctorParameters &in, FunctorResult out)
 {
   qi::Message msg;
   msg.setBuffer(in.buffer());

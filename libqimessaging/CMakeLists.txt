@@ -64,6 +64,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    qimessaging/details/callfunctor.hpp
                                    qimessaging/details/function_signature.hpp
                                    qimessaging/details/functor.hxx
+                                   qimessaging/details/future.hxx
                                    qimessaging/details/makefunctor.hpp
                                    qimessaging/details/memberfunctor.hxx
                                    qimessaging/details/qt_signature.hpp
@@ -95,7 +96,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/value.cpp
                                    src/url.cpp
                                    src/future.cpp
-                                   src/server_functor_result_future_p.hpp)
+                                   src/server_functor_result_future_p.hpp
+                                   src/functor.cpp)
 
 
 add_subdirectory(c)

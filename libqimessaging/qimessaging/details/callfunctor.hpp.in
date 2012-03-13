@@ -28,38 +28,21 @@ namespace qi
 #for $i in $count
 
   template <typename R$generate_typename_list($i, begin = True)>
-  R callFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer           *argsBuf = new qi::Buffer();
-    qi::Buffer           *retBuf = new qi::Buffer();
-    qi::DataStream        dsi(argsBuf);
-    qi::DataStream        dso(retBuf);
-    qi::FunctorParameters args(argsBuf);
-    qi::FunctorResult     ret(retBuf);
+  qi::Future<R> callFunctor(Functor *f$generate_param_list($i, begin = True)) {
+    qi::Buffer            argsBuf;
+    qi::Buffer            retBuf;
+    qi::DataStream        dsi(&argsBuf);
+    qi::DataStream        dso(&retBuf);
+    qi::FunctorParameters args(&argsBuf);
+    qi::FunctorResult     ret;
+    qi::Future<R>         future;
 
+    qi::makeFunctorResult<R>(&ret, &future);
     #for $j in range($i)
     dsi << p$j;
     #end for
     f->call(args, ret);
-    R r;
-    dso >> r;
-    return r;
-  }
-
-  #if $i != 0
-  template <$generate_typename_list($i)>
-  #end if
-  void callVoidFunctor(Functor *f$generate_param_list($i, begin = True)) {
-    qi::Buffer           *argsBuf = new qi::Buffer();
-    qi::Buffer           *retBuf = new qi::Buffer();
-    qi::DataStream        dsi(argsBuf);
-    qi::DataStream        dso(retBuf);
-    qi::FunctorParameters args(argsBuf);
-    qi::FunctorResult     ret(retBuf);
-
-    #for $j in range($i)
-    dsi << p$j;
-    #end for
-    f->call(args, ret);
+    return future;
   }
 
 #end for

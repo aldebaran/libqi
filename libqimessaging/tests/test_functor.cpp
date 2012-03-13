@@ -78,31 +78,31 @@ TEST(TestBind, MultiArgVoidMember) {
   qi::Functor *functor;
 
   functor = qi::makeFunctor(&foo, &Foo::vfun0);
-  qi::callVoidFunctor(functor);
+  qi::callFunctor<void>(functor);
   EXPECT_EQ(0, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun1);
-  qi::callVoidFunctor(functor, 1);
+  qi::callFunctor<void>(functor, 1);
   EXPECT_EQ(1, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun2);
-  qi::callVoidFunctor(functor, 1, 2);
+  qi::callFunctor<void>(functor, 1, 2);
   EXPECT_EQ(3, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun3);
-  qi::callVoidFunctor(functor, 1, 2, 3);
+  qi::callFunctor<void>(functor, 1, 2, 3);
   EXPECT_EQ(6, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun4);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4);
   EXPECT_EQ(10, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun5);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4, 5);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4, 5);
   EXPECT_EQ(15, gGlobalResult);
 
   functor = qi::makeFunctor(&foo, &Foo::vfun6);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4, 5, 6);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4, 5, 6);
   EXPECT_EQ(21, gGlobalResult);
 }
 
@@ -130,30 +130,30 @@ TEST(TestBind, MultiArgVoidFun) {
   qi::Functor *functor;
 
   functor = qi::makeFunctor(&vfun0);
-  qi::callVoidFunctor(functor);
+  qi::callFunctor<void>(functor);
   EXPECT_EQ(0, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun1);
-  qi::callVoidFunctor(functor, 1);
+  qi::callFunctor<void>(functor, 1);
   EXPECT_EQ(1, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun2);
-  qi::callVoidFunctor(functor, 1, 2);
+  qi::callFunctor<void>(functor, 1, 2);
   EXPECT_EQ(3, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun3);
-  qi::callVoidFunctor(functor, 1, 2, 3);
+  qi::callFunctor<void>(functor, 1, 2, 3);
   EXPECT_EQ(6, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun4);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4);
   EXPECT_EQ(10, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun5);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4, 5);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4, 5);
   EXPECT_EQ(15, gGlobalResult);
 
   functor = qi::makeFunctor(&vfun6);
-  qi::callVoidFunctor(functor, 1, 2, 3, 4, 5, 6);
+  qi::callFunctor<void>(functor, 1, 2, 3, 4, 5, 6);
   EXPECT_EQ(21, gGlobalResult);
 }
