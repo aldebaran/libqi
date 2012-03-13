@@ -9,6 +9,10 @@
 #ifndef _LIBQI_QI_ATOMIC_HPP_
 #define _LIBQI_QI_ATOMIC_HPP_
 
+#ifdef _MSC_VER
+# include <windows.h>
+#endif
+
 namespace qi
 {
   template <typename T>
