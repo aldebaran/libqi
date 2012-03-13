@@ -57,6 +57,7 @@ namespace qi {
     QI_API int system(const char *command);
     QI_API int getpid();
     QI_API int waitpid(int pid, int* status);
+    QI_API int kill(int pid, int sig);
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");

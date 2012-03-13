@@ -309,6 +309,22 @@
     \ingroup qios
     \since 1.12
     \see qi::os::spawnlp qi::os::spawnvp
+
+  \fn int qi::os::kill(int pid);
+    \brief Send a signal to a process.
+
+    The kill() function shall send a signal to a process or
+    a group of processes specified by pid.
+
+    \param pid Pid to kill.
+    \param pid Sig to deliver.
+    \return rc.
+      rc = 0 means that everything went well.
+      rc != 0 means that an error occurs. (For instance,
+             no process corresponding to the pid was
+             found).
+    \ingroup qios
+    \since 1.14
 */
 ///@}
 

@@ -32,6 +32,7 @@
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
 
+#include <signal.h>
 
 namespace qi
 {
@@ -277,6 +278,11 @@ namespace qi
 #endif
 
       return result;
+    }
+
+    int kill(int pid, int sig)
+    {
+        return ::kill(pid, sig);
     }
   };
 };

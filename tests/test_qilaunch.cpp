@@ -3,6 +3,7 @@
 #include <qi/path.hpp>
 #include <qi/qi.hpp>
 
+#include <errno.h>
 
 #ifdef _WIN32
 # include <windows.h>
@@ -140,6 +141,42 @@ TEST(spawnlp, InvalidBin)
 
   EXPECT_TRUE(error == 0) << "error: " << error;
   EXPECT_TRUE(status == 127) << "status: " << status;
+}
+
+TEST(kill, Terminate)
+{
+  int status = 0;
+  int alive = -1;
+  int killed = -1;
+  int dead = 0;
+#ifdef _WIN32
+  int childPid = qi::os::spawnlp("cmd", NULL);
+#endif
+#ifdef __linux__
+  int childPid = qi::os::spawnlp("/usr/bin/sleep", "30", NULL);
+#endif
+#ifdef __APPLE__
+  int childPid = qi::os::spawnlp("/bin/sleep", "30", NULL);
+#endif
+
+  if (childPid != -1)
+  {
+    sleep(1);
+    // is it alive?
+    alive = qi::os::kill(childPid, 0);
+
+    // let's kill it
+    killed = qi::os::kill(childPid, SIGTERM);
+
+    qi::os::waitpid(childPid, &status);
+
+    // is it dead?
+    dead = qi::os::kill(childPid, 0);
+  }
+
+  EXPECT_TRUE(alive == 0) << "alive: " << alive;
+  EXPECT_TRUE(killed == 0) << "killed: " << killed;
+  EXPECT_TRUE(dead == -1) << "dead: " << dead;
 }
 
 TEST(system, CmdWithNoArgs)
