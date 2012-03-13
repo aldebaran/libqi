@@ -177,6 +177,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
 
       // create new message for the client
       qi::Message ans;
+      ans.setBuffer(new qi::Buffer);
       ans.buildReplyFrom(*msg);
       qi::DataStream dsAns(ans.buffer());
       dsAns << result;
