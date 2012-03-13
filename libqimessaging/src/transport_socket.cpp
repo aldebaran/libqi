@@ -121,7 +121,8 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
   {
     if (msg == NULL)
     {
-      msg = new qi::Message(new qi::Buffer());
+      msg = new qi::Message;
+      msg->setBuffer(new qi::Buffer());
       readHdr = true;
     }
 
@@ -356,7 +357,7 @@ bool TransportSocket::read(int id, qi::Message *msg)
 
 bool TransportSocket::send(const qi::Message &msg)
 {
-  qi::Message *m = new qi::Message(qi::Message::Create_WithoutBuffer);;
+  qi::Message *m = new qi::Message;
   *m = msg;
   m->_p->complete();
 

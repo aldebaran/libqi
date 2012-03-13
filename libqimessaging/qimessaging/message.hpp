@@ -61,15 +61,8 @@ namespace qi {
       Type_Error = 4
     };
 
-    enum Create
-    {
-      Create_WithoutBuffer = 0,
-      Create_WithBuffer    = 1,
-    };
-
     ~Message();
-    Message(int flags);
-    Message(Buffer *buf);
+    Message();
     Message(const Message &msg);
     Message &operator=(const Message &msg);
 

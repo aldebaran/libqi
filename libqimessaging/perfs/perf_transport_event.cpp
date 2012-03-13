@@ -52,7 +52,7 @@ public:
 
   virtual void onSocketReadyRead(qi::TransportSocket *client, int id)
   {
-    qi::Message msg(qi::Message::Create_WithoutBuffer);;
+    qi::Message msg;
     client->read(id, &msg);
     _msgRecv++;
     int s = msg.size();
@@ -119,7 +119,7 @@ public:
 
   unsigned int registerService(const std::string &name, qi::Object *obj)
   {
-    qi::Message     msg(qi::Message::Create_WithoutBuffer);;
+    qi::Message     msg;
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Event);
     msg.setService(qi::Message::Service_ServiceDirectory);
@@ -135,7 +135,7 @@ public:
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans(qi::Message::Create_WithoutBuffer);;
+    qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
     qi::DataStream dout(ans.buffer());
     unsigned int idx = 0;
@@ -178,7 +178,7 @@ int main_client(std::string src)
         c++;
       requeststr[2] = c;
 
-      qi::Message msg(qi::Message::Create_WithoutBuffer);;
+      qi::Message msg;
       qi::DataStream d(msg.buffer());
       d << requeststr;
 

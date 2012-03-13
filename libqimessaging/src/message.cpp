@@ -55,19 +55,9 @@ namespace qi {
     // FIXME: should release buffer
   }
 
-  Message::Message(int flags)
+  Message::Message()
     : _p(new qi::MessagePrivate())
   {
-    if ((flags & Create_WithBuffer) == Create_WithBuffer)
-    {
-      _p->buffer = new qi::Buffer();
-    }
-  }
-
-  Message::Message(Buffer *buf)
-    : _p(new qi::MessagePrivate())
-  {
-    _p->buffer = buf;
   }
 
   Message& Message::operator=(const Message& msg)

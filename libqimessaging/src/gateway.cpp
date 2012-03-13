@@ -73,7 +73,8 @@ void GatewayPrivate::forwardClientMessage(TransportSocket *client,
                                           qi::Message     *msg)
 {
   // Create new message with unique ID
-  qi::Message  msgToService(msg->buffer());
+  qi::Message  msgToService;
+  msgToService.setBuffer(msg->buffer());
   msgToService.buildForwardFrom(*msg);
 
   // Store message to map call msg with return msg from the service
@@ -103,7 +104,7 @@ void GatewayPrivate::handleClientRead(TransportSocket *client,
   else  //// C.2/
   {
     // request to gateway to have the endpoint
-    qi::Message masterMsg(qi::Message::Create_WithoutBuffer);;
+    qi::Message masterMsg;
     qi::DataStream d(masterMsg.buffer());
     d << msg->service();
 
@@ -175,7 +176,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
       result.setEndpoints(_endpoints);
 
       // create new message for the client
-      qi::Message ans(qi::Message::Create_WithoutBuffer);;
+      qi::Message ans;
       ans.buildReplyFrom(*msg);
       qi::DataStream dsAns(ans.buffer());
       dsAns << result;
@@ -204,7 +205,8 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
     else //// S.3/
     {
       // id should be rewritten then sent to the client
-      qi::Message ans(msg->buffer());
+      qi::Message ans;
+      ans.setBuffer(msg->buffer());
       ans.buildReplyFrom(*msg);
       ans.setId(itReq->second.first);
       itReq->second.second->send(ans);
@@ -214,7 +216,7 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
 
 void GatewayPrivate::onSocketReadyRead(TransportSocket *client, int id)
 {
-  qi::Message msg(qi::Message::Create_WithoutBuffer);;
+  qi::Message msg;
   client->read(id, &msg);
   // Dispatch request coming from client or service
   if (std::find(_clients.begin(), _clients.end(), client) != _clients.end())

@@ -35,7 +35,7 @@ void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client) {
     return;
 
   ServiceRequest &sr = it.value();
-  qi::Message msg(qi::Message::Create_WithoutBuffer);;
+  qi::Message msg;
   msg.setType(qi::Message::Type_Call);
   msg.setService(sr.serviceId);
   msg.setPath(qi::Message::Path_Main);
@@ -56,7 +56,7 @@ void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client) {
 }
 
 void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
-  qi::Message                                                        msg(qi::Message::Create_WithoutBuffer);;
+  qi::Message                                                        msg;
   QMap<int, ServiceRequest>::iterator                                it;
   QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > >::iterator it2;
   client->read(id, &msg);
@@ -160,7 +160,7 @@ bool QiSession::waitForDisconnected(int msecs)
 //4
 QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol type) {
   ServiceRequest sr;
-  qi::Message    msg(qi::Message::Create_WithoutBuffer);;
+  qi::Message    msg;
 
   sr.fu.reportStarted();
   sr.name      = name;
@@ -180,7 +180,7 @@ QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol typ
 QFuture< QVector<qi::ServiceInfo> > QiSession::services()
 {
   QFutureInterface< QVector<qi::ServiceInfo> > futi;
-  qi::Message msg(qi::Message::Create_WithoutBuffer);;
+  qi::Message msg;
 
   futi.reportStarted();
   msg.setType(qi::Message::Type_Call);

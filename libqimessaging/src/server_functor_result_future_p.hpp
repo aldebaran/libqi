@@ -14,7 +14,6 @@ namespace qi {
   public:
     ServerFunctorResultPromise(TransportSocket *client, const qi::Message &req)
       : _client(client)
-      , _retval(qi::Message::Create_WithoutBuffer)
     {
       _retval.buildReplyFrom(req);
     };

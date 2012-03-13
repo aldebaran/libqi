@@ -40,7 +40,7 @@ namespace qi {
   }
 
   void ServerPrivate::onSocketReadyRead(TransportSocket *client, int id) {
-    qi::Message msg(qi::Message::Create_WithoutBuffer);;
+    qi::Message msg;
     client->read(id, &msg);
     qi::Object *obj;
 
@@ -83,7 +83,8 @@ namespace qi {
 
   unsigned int Server::registerService(const std::string& name, qi::Object *obj)
   {
-    qi::Message msg(qi::Message::Create_WithBuffer);
+    qi::Message msg;
+    msg.setBuffer(new qi::Buffer);
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
@@ -99,7 +100,7 @@ namespace qi {
 
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans(qi::Message::Create_WithoutBuffer);
+    qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
     qi::DataStream dout(ans.buffer());
     unsigned int idx = 0;

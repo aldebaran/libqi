@@ -58,8 +58,9 @@ const QMetaObject* QiRemoteObject::metaObject() const {
 };
 
 int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void **a) {
-  qi::Message    msg(qi::Message::Create_WithBuffer);;
-  qi::Message    retmsg(qi::Message::Create_WithoutBuffer);;
+  qi::Message    msg;
+  msg.setBuffer(new qi::Buffer);
+  qi::Message    retmsg;
   qi::DataStream args(msg.buffer());
 
 
