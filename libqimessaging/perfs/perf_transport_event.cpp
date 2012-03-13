@@ -55,7 +55,7 @@ public:
     qi::Message msg;
     client->read(id, &msg);
     _msgRecv++;
-    int s = msg.size();
+    int s = msg.buffer()->size();
     if (s != _numBytes)
     {
       _dp->stop(1);

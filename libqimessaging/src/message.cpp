@@ -30,32 +30,30 @@ namespace qi {
     return *id;
   }
 
-  void MessagePrivate::sentcb(const void *data, size_t datalen, void *msg)
+  void MessagePrivate::onMessageSent(const void *data, size_t datalen, void *msg)
   {
     Message *m = static_cast<Message *>(msg);
-    // FIXME: should clean stuff, and release buffer
+    delete m;
   }
 
   void MessagePrivate::complete()
   {
     if (!buffer)
-      header->size = 0;
+      header.size = 0;
     else
-      header->size = buffer->size();
+      header.size = buffer->size();
   }
 
   MessagePrivate::MessagePrivate()
   {
-    header = new MessagePrivate::MessageHeader();
-    memset(header, 0, sizeof(MessagePrivate::MessageHeader));
-    header->id = newMessageId();
-    header->magic = messageMagic;
+    memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
+    header.id = newMessageId();
+    header.magic = messageMagic;
     buffer = 0;
   }
 
   MessagePrivate::~MessagePrivate()
   {
-    // FIXME: should release buffer
   }
 
   Message::Message()
@@ -66,7 +64,7 @@ namespace qi {
   Message& Message::operator=(const Message& msg)
   {
     _p->buffer = msg._p->buffer;
-    memcpy(_p->header, msg._p->header, sizeof(MessagePrivate::MessageHeader));
+    memcpy(&(_p->header), &(msg._p->header), sizeof(MessagePrivate::MessageHeader));
     return *this;
   }
 
@@ -77,7 +75,7 @@ namespace qi {
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
     os << "message {" << std::endl
-       << "  size=" << msg.size() << "," << std::endl
+       << "  size=" << msg._p->header.size << "," << std::endl
        << "  id  =" << msg.id() << "," << std::endl
        << "  type=" << msg.type() << "," << std::endl
        << "  serv=" << msg.service() << "," << std::endl
@@ -89,61 +87,54 @@ namespace qi {
     return os;
   }
 
-  unsigned int Message::size() const
-  {
-    if (!_p->buffer)
-      return 0;
-    return _p->buffer->size();
-  }
-
   void Message::setId(uint32_t id)
   {
-    _p->header->id = id;
+    _p->header.id = id;
   }
 
   unsigned int Message::id() const
   {
-    return _p->header->id;
+    return _p->header.id;
   }
 
   void Message::setType(uint32_t type)
   {
-    _p->header->type = type;
+    _p->header.type = type;
   }
 
   unsigned int Message::type() const
   {
-    return _p->header->type;
+    return _p->header.type;
   }
 
   void Message::setService(uint32_t service)
   {
-    _p->header->service = service;
+    _p->header.service = service;
   }
 
   unsigned int Message::service() const
   {
-    return _p->header->service;
+    return _p->header.service;
   }
 
   void Message::setPath(uint32_t path)
   {
-    _p->header->path = path;
+    _p->header.path = path;
   }
 
   unsigned int Message::path() const
   {
-    return _p->header->path;
+    return _p->header.path;
   }
 
   void Message::setFunction(uint32_t function)
   {
-    _p->header->function = function;
+    _p->header.function = function;
   }
 
   unsigned int Message::function() const
   {
-    return _p->header->function;
+    return _p->header.function;
   }
 
   void Message::setBuffer(const Buffer *buffer)
@@ -156,9 +147,9 @@ namespace qi {
     return _p->buffer;
   }
 
-  void *Message::header() const
+  void *MessagePrivate::getHeader()
   {
-    return _p->header;
+    return reinterpret_cast<void *>(&header);
   }
 
   void Message::buildReplyFrom(const Message &call)
@@ -180,10 +171,10 @@ namespace qi {
 
   bool Message::isValid()
   {
-    if (_p->header->magic != messageMagic)
+    if (_p->header.magic != messageMagic)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (magic is incorrect)" << std::endl;
-      assert(_p->header->magic == messageMagic);
+      assert(_p->header.magic == messageMagic);
       return false;
     }
 
