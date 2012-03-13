@@ -11,6 +11,7 @@
 
 #include <windows.h>
 #include <process.h>
+#include <signal.h>
 
 #include <sstream>
 #include <string>
@@ -27,28 +28,76 @@ namespace qi
 {
   namespace os
   {
-
     int spawnvp(char *const argv[])
     {
-      return _spawnvp(_P_NOWAIT, argv[0], (char* const*)argv);
+      std::string tmp;
+      int i =0;
+      char* test = argv[i];
+      while(test != NULL)
+      {
+        tmp.append(argv[i]);
+        i++;
+        test = argv[i];
+        if(test != NULL)
+          tmp.push_back(' ');
+      }
+
+      LPTSTR cmdLine = (LPTSTR) malloc(tmp.size() + 1);
+      strcpy(cmdLine, tmp.c_str());
+
+      STARTUPINFO info = {sizeof(info)};
+      PROCESS_INFORMATION processInfo;
+      CreateProcess(
+        NULL,
+        cmdLine,
+        NULL,
+        NULL,
+        false,
+        0,
+        NULL,
+        NULL,
+        &info,
+        &processInfo);
+
+      free(cmdLine);
+
+      return processInfo.dwProcessId;
     }
 
     int spawnlp(const char* argv, ...)
     {
-      const char* cmd[64];
-
+      std::string tmp;
       va_list ap;
       const char* arg;
 
-      int i = 0;
       va_start(ap, argv);
-      for (arg = argv; arg != NULL; arg = va_arg(ap, const char*), ++i)
-        cmd[i] = arg;
-
+      for(arg = argv ; arg != NULL ; arg = va_arg(ap, const char*))
+      {
+        tmp.append(arg);
+        tmp.push_back(' ');
+      }
       va_end(ap);
-      cmd[i] = NULL;
 
-      return _spawnvp(_P_NOWAIT, cmd[0], (char* const*)cmd);
+      LPTSTR cmdLine = (LPTSTR) malloc(tmp.size() + 1);
+      strcpy(cmdLine, tmp.c_str());
+
+      STARTUPINFO info = {sizeof(info)};
+      PROCESS_INFORMATION processInfo;
+      CreateProcess(
+        NULL,
+        cmdLine,
+        NULL,
+        NULL,
+        false,
+        0,
+        NULL,
+        NULL,
+        &info,
+        &processInfo);
+
+      free(cmdLine);
+
+      return processInfo.dwProcessId;
     }
 
     int system(const char *command)
@@ -66,15 +115,64 @@ namespace qi
     {
       errno = 0;
 
-      _cwait(status, pid, 0);
+      HANDLE processHandle = OpenProcess(
+        PROCESS_QUERY_INFORMATION | SYNCHRONIZE,
+        false,
+        pid);
+      WaitForSingleObjectEx(processHandle, INFINITE, true);
+      DWORD wStatus = 0;
+      qi::os::msleep(100);
+      GetExitCodeProcess(processHandle, &wStatus);
 
-      if (errno == ECHILD)
+      *status = wStatus;
+
+      CloseHandle(processHandle);
+      if (errno == ECHILD || processHandle == NULL)
       {
         *status = 127;
         return 0;
       }
 
       return errno;
+    }
+
+    int kill(int pid, int sig)
+    {
+      int res = -1;
+      HANDLE processHandle = OpenProcess(
+        PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+        false,
+        pid);
+      if(processHandle != NULL)
+      {
+        DWORD status;
+        GetExitCodeProcess(processHandle, &status);
+        if(status == STILL_ACTIVE)
+        {
+          if(sig == SIGTERM)
+          {
+            DWORD error = TerminateProcess(processHandle, 0);
+            qi::os::msleep(100);
+            GetExitCodeProcess(processHandle, &status);
+            if(status != STILL_ACTIVE)
+              res = 0;
+          }
+          else
+          {
+            res = 0;
+          }
+        }
+        else
+        {
+          res = -1;
+        }
+        CloseHandle(processHandle);
+        return res;
+      }
+      else
+      {
+        return -1;
+      }
     }
   };
 };

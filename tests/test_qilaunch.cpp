@@ -8,6 +8,7 @@
 #ifdef _WIN32
 # include <windows.h>
 # include <process.h>
+# include <signal.h>
 #else
 # include <sys/wait.h>
 #endif
@@ -136,7 +137,7 @@ TEST(spawnlp, InvalidBin)
   std::string bin = "test42";
   int status = 0;
 
-  int childPid = qi::os::spawnlp(bin.c_str());
+  int childPid = qi::os::spawnlp(bin.c_str(), NULL);
   int error = qi::os::waitpid(childPid, &status);
 
   EXPECT_TRUE(error == 0) << "error: " << error;
@@ -161,7 +162,7 @@ TEST(kill, Terminate)
 
   if (childPid != -1)
   {
-    sleep(1);
+    qi::os::sleep(1);
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
