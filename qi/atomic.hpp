@@ -13,10 +13,12 @@
 # include <windows.h>
 #endif
 
+#include <qi/config.hpp>
+
 namespace qi
 {
   template <typename T>
-  class atomic
+  class QI_API atomic
   {
   public:
     atomic()
@@ -58,25 +60,25 @@ namespace qi
 
 #ifdef _MSC_VER
   template<>
-  short atomic<short>::operator++()
+  inline short atomic<short>::operator++()
   {
     return _InterlockedIncrement16(&_value);
   }
 
   template<>
-  short atomic<short>::operator--()
+  inline short atomic<short>::operator--()
   {
     return _InterlockedDecrement16(&_value);
   }
 
   template <>
-  long atomic<long>::operator++()
+  inline long atomic<long>::operator++()
   {
     return _InterlockedIncrement(&_value);
   }
 
   template <>
-  long atomic<long>::operator--()
+  inline long atomic<long>::operator--()
   {
     return _InterlockedDecrement(&_value);
   }
