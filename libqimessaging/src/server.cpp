@@ -91,14 +91,14 @@ namespace qi {
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
-    qi::DataStream d(&buf);
+    qi::DataStream d(buf);
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
     si.setEndpoints(_p->_endpoints);
     d << si;
 
-    msg.setBuffer(&buf);
+    msg.setBuffer(buf);
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;

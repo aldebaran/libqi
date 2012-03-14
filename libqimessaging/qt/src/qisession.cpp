@@ -161,7 +161,7 @@ bool QiSession::waitForDisconnected(int msecs)
 QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol type) {
   ServiceRequest sr;
   qi::Message    msg;
-  qi::Buffer    *buf = new qi::Buffer;
+  qi::Buffer     buf;
 
   msg.setBuffer(buf);
   sr.fu.reportStarted();

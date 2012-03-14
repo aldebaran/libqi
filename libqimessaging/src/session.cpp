@@ -65,7 +65,7 @@ namespace qi {
                                                      qi::Url::Protocol  type)
   {
     qi::Message    msg;
-    qi::Buffer    *buf = new qi::Buffer();
+    qi::Buffer     buf;
     qi::DataStream dr(buf);
     msg.setBuffer(buf);
     dr << name;

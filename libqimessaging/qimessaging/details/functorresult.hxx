@@ -25,7 +25,7 @@ namespace qi {
         _f._p->setValue(value);
       }
 
-      virtual void setValue(const qi::Buffer *result)
+      virtual void setValue(const qi::Buffer &result)
       {
         qi::DataStream ds(result);
         //TODO: avoid the copy
@@ -48,7 +48,7 @@ namespace qi {
       void setValue(const void *value) {
         _f.setValue(value);
       }
-      virtual void setValue(const qi::Buffer *result)
+      virtual void setValue(const qi::Buffer &result)
       {
         //TODO: remove the useless ref here
         _f.setValue(0);

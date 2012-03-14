@@ -22,10 +22,8 @@ namespace qi
   template <typename R>
   qi::Future<R> callFunctor(Functor *f) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -38,10 +36,8 @@ namespace qi
   template <typename R, typename P0>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -55,10 +51,8 @@ namespace qi
   template <typename R, typename P0, typename P1>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -73,10 +67,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -92,10 +84,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -112,10 +102,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -133,10 +121,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -155,10 +141,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -178,10 +162,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 
@@ -202,10 +184,8 @@ namespace qi
   template <typename R, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   qi::Future<R> callFunctor(Functor *f, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
-    qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
-    qi::FunctorParameters args(&argsBuf);
+    qi::DataStream        dsi(argsBuf);
+    qi::FunctorParameters args(argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;
 

@@ -30,9 +30,7 @@ namespace qi
   template <typename R$generate_typename_list($i, begin = True)>
   qi::Future<R> callFunctor(Functor *f$generate_param_list($i, begin = True)) {
     qi::Buffer            argsBuf;
-    qi::Buffer            retBuf;
     qi::DataStream        dsi(&argsBuf);
-    qi::DataStream        dso(&retBuf);
     qi::FunctorParameters args(&argsBuf);
     qi::FunctorResult     ret;
     qi::Future<R>         future;

@@ -27,6 +27,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include "src/network_thread.hpp"
 #include "src/message_p.hpp"
+#include "src/buffer_p.hpp"
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
@@ -67,6 +68,17 @@ public:
   {
   }
 
+  static void onBufferSent(const void *data, size_t datalen, void *buffer)
+  {
+    Buffer *b = static_cast<Buffer *>(buffer);
+    delete b;
+  }
+
+  static void onMessageSent(const void *data, size_t datalen, void *msg)
+  {
+    Message *m = static_cast<Message *>(msg);
+    delete m;
+  }
 
   TransportSocketInterface            *tcd;
   struct bufferevent                  *bev;
@@ -82,7 +94,6 @@ public:
   // data to rebuild message
   bool                         readHdr;
   qi::Message                 *msg;
-  qi::Buffer                  *buf;
   qi::TransportSocket         *_self;
 };
 
@@ -121,9 +132,7 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
   {
     if (msg == NULL)
     {
-      buf = new qi::Buffer();
       msg = new qi::Message();
-      msg->setBuffer(buf);
       readHdr = true;
     }
 
@@ -135,17 +144,21 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
       evbuffer_remove(input,
                       msg->_p->getHeader(),
                       sizeof(MessagePrivate::MessageHeader));
-      /* we have to let the Buffer know we pushed some data inside */
-      buf->reserve(static_cast<MessagePrivate::MessageHeader*>(msg->_p->getHeader())->size);
       readHdr = false;
     }
 
-    if (evbuffer_get_length(input) < buf->size())
+    if (evbuffer_get_length(input) <
+          static_cast<MessagePrivate::MessageHeader*>(msg->_p->getHeader())->size)
       return;
 
+    /* we have to let the Buffer know we are going to push some data inside */
+    qi::Buffer buf;
+    buf.reserve(static_cast<MessagePrivate::MessageHeader*>(msg->_p->getHeader())->size);
+    msg->setBuffer(buf);
+
     evbuffer_remove(input,
-                    buf->data(),
-                    buf->size());
+                    buf.data(),
+                    buf.size());
     assert(msg->isValid());
 
     {
@@ -361,7 +374,6 @@ bool TransportSocket::send(const qi::Message &msg)
   qi::Message *m = new qi::Message;
   *m = msg;
   m->_p->complete();
-
   assert(m->isValid());
 
   struct evbuffer *evb = bufferevent_get_output(_p->bev);
@@ -371,24 +383,24 @@ bool TransportSocket::send(const qi::Message &msg)
     return false;
   }
 
-  // m might be deleted.
-  const qi::Buffer *buffer = m->buffer();
+  // b might be deleted.
+  qi::Buffer *b = new qi::Buffer(m->buffer());
 
   if (evbuffer_add_reference(evb,
                              m->_p->getHeader(),
                              sizeof(qi::MessagePrivate::MessageHeader),
-                             qi::MessagePrivate::onMessageSent,
+                             qi::TransportSocketPrivate::onMessageSent,
                              static_cast<void *>(m)) != 0)
   {
     return false;
   }
 
-  if (buffer &&
+  if (b->size() &&
       evbuffer_add_reference(evb,
-                             buffer->data(),
-                             buffer->size(),
-                             0,
-                             0) != 0)
+                             b->data(),
+                             b->size(),
+                             qi::TransportSocketPrivate::onBufferSent,
+                             static_cast<void *>(b)) != 0)
   {
     return false;
   }

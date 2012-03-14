@@ -22,7 +22,7 @@ namespace qi {
         _retval.buildReplyFrom(req);
       };
 
-      inline virtual void setValue(const qi::Buffer *result) {
+      inline virtual void setValue(const qi::Buffer &result) {
         _retval.setBuffer(result);
         _client->send(_retval);
       }

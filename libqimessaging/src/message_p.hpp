@@ -32,11 +32,10 @@ namespace qi
     MessagePrivate();
     ~MessagePrivate();
 
-    static void  onMessageSent(const void *data, size_t datalen, void *msg);
     void         complete();
     void        *getHeader();
 
-    const Buffer  *buffer;
+    Buffer         buffer;
     MessageHeader  header;
   };
 }

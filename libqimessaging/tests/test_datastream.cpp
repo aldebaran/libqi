@@ -14,7 +14,7 @@
 
 TEST(TestBind, serializeInt)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << 12;
 
@@ -27,7 +27,7 @@ TEST(TestBind, serializeInt)
 
 TEST(TestBind, serializeInts)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << 12;
   d << 13;
@@ -48,7 +48,7 @@ TEST(TestBind, serializeInts)
 
 TEST(TestBind, serializeBool)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << true;
 
@@ -61,7 +61,7 @@ TEST(TestBind, serializeBool)
 
 TEST(TestBind, serializeBools)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << true;
   d << false;
@@ -82,7 +82,7 @@ TEST(TestBind, serializeBools)
 
 TEST(TestBind, serializeChar)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << 'c';
 
@@ -95,7 +95,7 @@ TEST(TestBind, serializeChar)
 
 TEST(TestBind, serializeChars)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   d << 'c';
   d << 'd';
@@ -116,7 +116,7 @@ TEST(TestBind, serializeChars)
 
 TEST(TestBind, serializeUInt)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   unsigned int ui1 = UINT_MAX;
   d << ui1;
@@ -130,7 +130,7 @@ TEST(TestBind, serializeUInt)
 
 TEST(TestBind, serializeUInts)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   unsigned int ui1 = UINT_MAX;
   unsigned int ui2 = 0;
@@ -154,7 +154,7 @@ TEST(TestBind, serializeUInts)
 
 TEST(TestBind, serializeUChar)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   unsigned char ui1 = UCHAR_MAX;
   d << ui1;
@@ -168,7 +168,7 @@ TEST(TestBind, serializeUChar)
 
 TEST(TestBind, serializeUChars)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   unsigned char ui1 = UCHAR_MAX;
   unsigned char ui2 = 0;
@@ -192,7 +192,7 @@ TEST(TestBind, serializeUChars)
 
 TEST(TestBind, serializeFloat)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   float f = 1.25f;
   d << f;
@@ -206,7 +206,7 @@ TEST(TestBind, serializeFloat)
 
 TEST(TestBind, serializeFloats)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   float f1 = 1.25f;
   float f2 = -1.25f;
@@ -231,7 +231,7 @@ TEST(TestBind, serializeFloats)
 
 TEST(TestBind, serializeDouble)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   double f = 1.25;
   d << f;
@@ -245,7 +245,7 @@ TEST(TestBind, serializeDouble)
 
 TEST(TestBind, serializeDoubles)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   double f1 = 1.25;
   double f2 = -1.25;
@@ -269,7 +269,7 @@ TEST(TestBind, serializeDoubles)
 
 TEST(TestBind, serializeString)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::string s = "1.25";
   d << s;
@@ -283,7 +283,7 @@ TEST(TestBind, serializeString)
 
 TEST(TestBind, serializeStrings)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::string f1 = "1.25";
   std::string f2 = "-1.25";
@@ -307,7 +307,7 @@ TEST(TestBind, serializeStrings)
 
 TEST(TestBind, serializeCChar)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::string s = "1.25";
   d << s.c_str();
@@ -321,7 +321,7 @@ TEST(TestBind, serializeCChar)
 
 TEST(TestBind, serializeCChars)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::string f1 = "1.25";
   std::string f2 = "-1.25";
@@ -345,7 +345,7 @@ TEST(TestBind, serializeCChars)
 
 TEST(TestBind, serializeVectorString)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::vector<std::string> vs;
   vs.push_back("toto");
@@ -364,7 +364,7 @@ TEST(TestBind, serializeVectorString)
 
 TEST(TestBind, serializeVectorStrings)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  d(buf);
   std::vector<std::string> vs;
   vs.push_back("toto");
@@ -390,7 +390,7 @@ TEST(TestBind, serializeVectorStrings)
 
 TEST(TestBind, serializeAllTypes)
 {
-  qi::Buffer     *buf = new qi::Buffer();
+  qi::Buffer      buf;
   qi::DataStream  ds(buf);
 
   bool b = true;

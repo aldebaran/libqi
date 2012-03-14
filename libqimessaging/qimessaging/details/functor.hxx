@@ -36,9 +36,9 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       dso << (*fFunction)();
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -64,11 +64,11 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       dsi >> p0;
       dso << (*fFunction)(p0);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -94,13 +94,13 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       dsi >> p0;
       dsi >> p1;
       dso << (*fFunction)(p0, p1);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -126,7 +126,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -134,7 +134,7 @@ namespace detail {
       dsi >> p1;
       dsi >> p2;
       dso << (*fFunction)(p0, p1, p2);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -160,7 +160,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -170,7 +170,7 @@ namespace detail {
       dsi >> p2;
       dsi >> p3;
       dso << (*fFunction)(p0, p1, p2, p3);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -196,7 +196,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -208,7 +208,7 @@ namespace detail {
       dsi >> p3;
       dsi >> p4;
       dso << (*fFunction)(p0, p1, p2, p3, p4);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -234,7 +234,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -248,7 +248,7 @@ namespace detail {
       dsi >> p4;
       dsi >> p5;
       dso << (*fFunction)(p0, p1, p2, p3, p4, p5);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -274,7 +274,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -290,7 +290,7 @@ namespace detail {
       dsi >> p5;
       dsi >> p6;
       dso << (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -316,7 +316,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -334,7 +334,7 @@ namespace detail {
       dsi >> p6;
       dsi >> p7;
       dso << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:
@@ -360,7 +360,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
       qi::DataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(&buf);
+      qi::DataStream dso(buf);
       P0 p0;
       P1 p1;
       P2 p2;
@@ -380,7 +380,7 @@ namespace detail {
       dsi >> p7;
       dsi >> p8;
       dso << (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
-      result.setValue(&buf);
+      result.setValue(buf);
     };
 
   private:

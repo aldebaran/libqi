@@ -24,8 +24,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -44,8 +44,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -65,8 +65,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -87,8 +87,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -110,8 +110,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -134,8 +134,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -159,8 +159,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -185,8 +185,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -212,8 +212,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
@@ -240,8 +240,8 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(&breq);
-    qi::FunctorParameters             request(&breq);
+    qi::DataStream                    ds(breq);
+    qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);

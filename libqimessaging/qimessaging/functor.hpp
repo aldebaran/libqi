@@ -25,21 +25,21 @@ namespace qi
 
   class QIMESSAGING_API FunctorParameters {
   public:
-    explicit FunctorParameters(const qi::Buffer *buffer)
+    explicit FunctorParameters(const qi::Buffer &buffer)
       : _buffer(buffer)
     {}
 
-    inline const qi::Buffer *buffer() const { return _buffer; }
+    inline const qi::Buffer &buffer() const { return _buffer; }
 
   private:
-    const qi::Buffer *_buffer;
+    const qi::Buffer &_buffer;
   };
 
 
   class QIMESSAGING_API FunctorResultBase {
   public:
     virtual ~FunctorResultBase()                    = 0;
-    virtual void setValue(const qi::Buffer *buffer) = 0;
+    virtual void setValue(const qi::Buffer &buffer) = 0;
   };
 
   class QIMESSAGING_API FunctorResult {
@@ -52,7 +52,7 @@ namespace qi
 
     virtual ~FunctorResult() {}
 
-    virtual void setValue(const qi::Buffer *buffer) { _p->setValue(buffer); }
+    virtual void setValue(const qi::Buffer &buffer) { _p->setValue(buffer); }
 
     inline int       &error()       { return _error; }
     inline const int &error() const { return _error; }

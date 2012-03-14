@@ -26,13 +26,8 @@ namespace qi
   }
 
   Buffer::Buffer()
-    : _p(new BufferPrivate())
+    : _p(new BufferPrivate) // TODO: add allocation-on-write.
   {
-  }
-
-  Buffer::~Buffer()
-  {
-    // FIXME: should be released by the pool
   }
 
   size_t Buffer::write(const void *data, size_t size)

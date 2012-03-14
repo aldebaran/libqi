@@ -66,7 +66,7 @@ TEST(TestValue, TestSerialize) {
   (*vm1)["tata"] = qi::Value("caca");
 
   qi::Buffer     buf;
-  qi::DataStream ms(&buf);
+  qi::DataStream ms(buf);
 
   ms << v;
   ms >> v2;
@@ -91,7 +91,7 @@ TEST(TestValue, TestSerializeVector) {
   v.value<qi::ValueVector>()->push_back(qi::Value("caca"));
 
   qi::Buffer     buf;
-  qi::DataStream ms(&buf);
+  qi::DataStream ms(buf);
 
   ms << v;
   ms >> v2;

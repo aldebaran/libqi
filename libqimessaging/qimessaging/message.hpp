@@ -81,8 +81,8 @@ namespace qi {
     void         setFunction(uint32_t function);
     unsigned int function() const;
 
-    void          setBuffer(const Buffer* buffer);
-    const Buffer *buffer() const;
+    void          setBuffer(const Buffer &buffer);
+    const Buffer &buffer() const;
 
     void         buildReplyFrom(const Message &call);
     void         buildForwardFrom(const Message &msg);

@@ -39,7 +39,7 @@ namespace detail {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
       qi::DataStream  dsi(params.buffer());
       qi::Buffer      buf;
-      qi::DataStream  dso(&buf);
+      qi::DataStream  dso(buf);
       #for $j in range($i)
       P$j p$j;
       #end for
@@ -48,7 +48,7 @@ namespace detail {
       dsi >> p$j;
       #end for
       dso << (fObject->*fFunction)($generate_callparam_list($i));
-      result.setValue(&buf);
+      result.setValue(buf);
     };
   private:
     C            *fObject;

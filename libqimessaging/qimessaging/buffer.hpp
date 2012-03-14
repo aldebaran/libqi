@@ -9,6 +9,7 @@
 #ifndef _QIMESSAGING_BUFFER_HPP_
 #define _QIMESSAGING_BUFFER_HPP_
 
+# include <boost/shared_ptr.hpp>
 # include <qimessaging/api.hpp>
 # include <cstdlib>
 
@@ -20,7 +21,6 @@ namespace qi
   {
   public:
     Buffer();
-    ~Buffer();
 
     size_t write(const void *data, size_t size);
     size_t read(void *data, size_t size);
@@ -35,7 +35,7 @@ namespace qi
     void   dump() const;
 
   private:
-    BufferPrivate *_p;
+    boost::shared_ptr<BufferPrivate> _p;
   };
 
 

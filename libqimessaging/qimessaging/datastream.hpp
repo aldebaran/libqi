@@ -55,8 +55,8 @@ namespace qi {
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    explicit DataStream(const qi::Buffer *buffer);
-    explicit DataStream(qi::Buffer *buffer);
+    explicit DataStream(const qi::Buffer &buffer);
+    explicit DataStream(qi::Buffer &buffer);
 
     size_t read(void *data, size_t len);
     void writeString(const char *str, size_t len);
@@ -85,7 +85,7 @@ namespace qi {
     //void *data() { return _buffer->data(); }
 
   private:
-    qi::Buffer *_buffer;
+    qi::Buffer  _buffer;
     bool        _ro;
 
     /// <summary>Default constructor. </summary>

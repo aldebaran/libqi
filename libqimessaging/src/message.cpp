@@ -29,18 +29,9 @@ namespace qi {
     return *id;
   }
 
-  void MessagePrivate::onMessageSent(const void *data, size_t datalen, void *msg)
-  {
-    Message *m = static_cast<Message *>(msg);
-    delete m;
-  }
-
   void MessagePrivate::complete()
   {
-    if (!buffer)
-      header.size = 0;
-    else
-      header.size = buffer->size();
+    header.size = buffer.size();
   }
 
   MessagePrivate::MessagePrivate()
@@ -48,7 +39,6 @@ namespace qi {
     memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
     header.id = newMessageId();
     header.magic = messageMagic;
-    buffer = 0;
   }
 
   MessagePrivate::~MessagePrivate()
@@ -81,7 +71,7 @@ namespace qi {
        << "  path=" << msg.path() << "," << std::endl
        << "  func=" << msg.function() << "," << std::endl
        << "  data=" << std::endl;
-    msg._p->buffer->dump();
+    msg._p->buffer.dump();
     os << "}";
     return os;
   }
@@ -136,12 +126,12 @@ namespace qi {
     return _p->header.function;
   }
 
-  void Message::setBuffer(const Buffer *buffer)
+  void Message::setBuffer(const Buffer &buffer)
   {
     _p->buffer = buffer;
   }
 
-  const qi::Buffer *Message::buffer() const
+  const qi::Buffer &Message::buffer() const
   {
     return _p->buffer;
   }
