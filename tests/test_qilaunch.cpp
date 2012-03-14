@@ -21,6 +21,7 @@
 // TODO2: Some tests to check the consume stack
 
 static std::string binDir;
+static std::string loopBinDir;
 
 TEST(spawnvp, CmdWithNoArgs)
 {
@@ -130,8 +131,6 @@ TEST(spawnlp, Environment)
   EXPECT_EQ(0, status) << "check_env failed with rectode: " << status;
 }
 
-
-
 TEST(spawnlp, InvalidBin)
 {
   std::string bin = "test42";
@@ -150,25 +149,18 @@ TEST(kill, Terminate)
   int alive = -1;
   int killed = -1;
   int dead = 0;
-#ifdef _WIN32
-  int childPid = qi::os::spawnlp("cmd", NULL);
-#endif
-#ifdef __linux__
-  int childPid = qi::os::spawnlp("/usr/bin/sleep", "30", NULL);
-#endif
-#ifdef __APPLE__
-  int childPid = qi::os::spawnlp("/bin/sleep", "30", NULL);
-#endif
+
+  int childPid = qi::os::spawnlp(loopBinDir.c_str(), NULL);
 
   if (childPid != -1)
   {
     qi::os::sleep(1);
+
     // is it alive?
     alive = qi::os::kill(childPid, 0);
 
     // let's kill it
     killed = qi::os::kill(childPid, SIGTERM);
-
     qi::os::waitpid(childPid, &status);
 
     // is it dead?
@@ -225,6 +217,7 @@ int main(int argc, char* argv[])
 {
   qi::init(argc, (char**)argv);
   binDir = qi::path::findBin("testlaunch");
+  loopBinDir = qi::path::findBin("testlaunchloop");
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
