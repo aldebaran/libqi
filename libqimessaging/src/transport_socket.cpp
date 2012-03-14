@@ -26,7 +26,6 @@
 
 #include <qimessaging/transport_socket.hpp>
 #include "src/network_thread.hpp"
-#include "src/buffer_p.hpp"
 #include "src/message_p.hpp"
 
 #include <qimessaging/session.hpp>

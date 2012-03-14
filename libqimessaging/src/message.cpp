@@ -15,7 +15,6 @@
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
 
-#include "src/buffer_p.hpp"
 #include "src/message_p.hpp"
 
 
