@@ -36,10 +36,12 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
 
 
       (fObject->*fFunction)();
+      result.setValue(buf);
     };
 
   private:
@@ -66,12 +68,14 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
 
 
       dsi >> p0;
       (fObject->*fFunction)(p0);
+      result.setValue(buf);
     };
 
   private:
@@ -98,6 +102,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -106,6 +111,7 @@ namespace detail {
       dsi >> p0;
       dsi >> p1;
       (fObject->*fFunction)(p0, p1);
+      result.setValue(buf);
     };
 
   private:
@@ -132,6 +138,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -142,6 +149,7 @@ namespace detail {
       dsi >> p1;
       dsi >> p2;
       (fObject->*fFunction)(p0, p1, p2);
+      result.setValue(buf);
     };
 
   private:
@@ -168,6 +176,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -180,6 +189,7 @@ namespace detail {
       dsi >> p2;
       dsi >> p3;
       (fObject->*fFunction)(p0, p1, p2, p3);
+      result.setValue(buf);
     };
 
   private:
@@ -206,6 +216,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -220,6 +231,7 @@ namespace detail {
       dsi >> p3;
       dsi >> p4;
       (fObject->*fFunction)(p0, p1, p2, p3, p4);
+      result.setValue(buf);
     };
 
   private:
@@ -246,6 +258,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -262,6 +275,7 @@ namespace detail {
       dsi >> p4;
       dsi >> p5;
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
+      result.setValue(buf);
     };
 
   private:
@@ -288,6 +302,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -306,6 +321,7 @@ namespace detail {
       dsi >> p5;
       dsi >> p6;
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
+      result.setValue(buf);
     };
 
   private:
@@ -332,6 +348,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -352,6 +369,7 @@ namespace detail {
       dsi >> p6;
       dsi >> p7;
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
+      result.setValue(buf);
     };
 
   private:
@@ -378,6 +396,7 @@ namespace detail {
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
       qi::DataStream dsi(params.buffer());
+      qi::Buffer buf;
 
       P0 p0;
       P1 p1;
@@ -400,6 +419,7 @@ namespace detail {
       dsi >> p7;
       dsi >> p8;
       (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+      result.setValue(buf);
     };
 
   private:
