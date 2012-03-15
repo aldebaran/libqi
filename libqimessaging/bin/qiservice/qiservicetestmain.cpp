@@ -71,10 +71,9 @@ int main(int argc, char *argv[])
 
       qiLogInfo("qimessaging.ServiceTest") << "registered as service #" << id << std::endl;
 
-      qi::os::sleep(2);
+      session.join();
 
       srv.unregisterService(id);
-
       srv.stop();
       session.disconnect();
     }
