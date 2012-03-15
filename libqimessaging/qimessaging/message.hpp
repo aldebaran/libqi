@@ -47,9 +47,10 @@ namespace qi {
 
     enum ServiceDirectoryFunction
     {
-      ServiceDirectoryFunction_Service         = 1,
-      ServiceDirectoryFunction_Services        = 2,
-      ServiceDirectoryFunction_RegisterService = 3
+      ServiceDirectoryFunction_Service           = 1,
+      ServiceDirectoryFunction_Services          = 2,
+      ServiceDirectoryFunction_RegisterService   = 3,
+      ServiceDirectoryFunction_UnregisterService = 4,
     };
 
     enum Type

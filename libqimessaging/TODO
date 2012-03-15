@@ -17,6 +17,7 @@ X2 - ALMemory: make subscribe to event work
 X1 - object::metacall, remove the prototype without future
 C1 - future: asynchronous call for Session (dont fake it)
 XX - ALCommon: implement introspection and various alproxy/albroker constructor
+CX - asynchronous implementation for Server
 
 from future import:
 XX - implement XMPP transport (look at webrtc and libjingle)

@@ -110,6 +110,25 @@ namespace qi {
     return idx;
   };
 
+  void Server::unregisterService(unsigned int idx)
+  {
+    qi::Message msg;
+    qi::Buffer  buf;
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+
+    qi::DataStream d(buf);
+    d << idx;
+
+    msg.setBuffer(buf);
+    _p->_session->_p->_serviceSocket->send(msg);
+    _p->_session->_p->_serviceSocket->waitForId(msg.id());
+    qi::Message ans;
+    _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
+  };
+
   void Server::stop() {
   }
 }

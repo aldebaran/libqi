@@ -43,6 +43,7 @@ namespace qi
     std::vector<ServiceInfo> services();
     ServiceInfo              service(const std::string &name);
     unsigned int             registerService(const ServiceInfo &svcinfo);
+    void                     unregisterService(const unsigned int &idx);
 
   public:
     qi::NetworkThread                                 *nthd;
@@ -75,6 +76,7 @@ namespace qi
     advertiseMethod("service", this, &ServiceDirectoryPrivate::service);
     advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
     advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
+    advertiseMethod("unregisterService", this, &ServiceDirectoryPrivate::unregisterService);
   }
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
@@ -152,6 +154,23 @@ namespace qi
     return idx;
   }
 
+  void ServiceDirectoryPrivate::unregisterService(const unsigned int &idx)
+  {
+    std::map<std::string, unsigned int>::iterator it;
+    it = nameToIdx.find(connectedServices[idx].name());
+    if (it != nameToIdx.end())
+    {
+      qiLogInfo("qimessaging.ServiceDirectory") << "service "
+                                                << connectedServices[idx].name()
+                                                << " (#" << idx << ") unregistered"
+                                                << std::endl;
+      nameToIdx.erase(it);
+
+      std::map<unsigned int, ServiceInfo>::iterator it2;
+      it2 = connectedServices.find(idx);
+      connectedServices.erase(it2);
+    }
+  }
 
 ServiceDirectory::ServiceDirectory()
   : _p(new ServiceDirectoryPrivate())
