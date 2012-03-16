@@ -201,7 +201,6 @@ void TransportSocketPrivate::eventcb(struct bufferevent *bev,
     if (tcd)
       tcd->onSocketDisconnected(_self);
     // connection has been closed, do any clean up here
-    qiLogInfo("qimessaging.TransportSocket") << "connection has been closed, do any clean up here" << std::endl;
   }
   else if (events & BEV_EVENT_ERROR)
   {
@@ -257,7 +256,7 @@ bool TransportSocket::connect(qi::Session *session,
   const std::string &address = url.host();
   unsigned short port = url.port();
 
-  if (!_p->connected)
+  if (!isConnected())
   {
     _p->bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(_p->bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, _p);
@@ -270,6 +269,10 @@ bool TransportSocket::connect(qi::Session *session,
       _p->connected = true;
       return true;
     }
+  }
+  else
+  {
+    qiLogError("qimessaging.TransportSocket") << "socket is already connected.";
   }
 
   return false;
@@ -301,11 +304,15 @@ bool TransportSocket::waitForConnected(int msecs)
 
 void TransportSocket::disconnect()
 {
-  if (_p->connected)
+  if (isConnected())
   {
     bufferevent_free(_p->bev);
     _p->bev = NULL;
     _p->connected = false;
+  }
+  else
+  {
+    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
   }
 }
 
@@ -358,6 +365,12 @@ bool TransportSocket::waitForId(int id, int msecs)
 
 bool TransportSocket::read(int id, qi::Message *msg)
 {
+  if (!isConnected())
+  {
+    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+    return false;
+  }
+
   std::map<unsigned int, qi::Message*>::iterator it;
   {
     boost::mutex::scoped_lock l(_p->mtx);
@@ -370,23 +383,28 @@ bool TransportSocket::read(int id, qi::Message *msg)
       return true;
     }
   }
+
+  qiLogError("qimessaging.TransportSocket") << "message #" << id
+                                            << " could not be found.";
+
   return false;
 }
 
 
 bool TransportSocket::send(const qi::Message &msg)
 {
-  qi::Message *m = new qi::Message;
+  if (!isConnected())
+  {
+    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+    return false;
+  }
+
+  qi::Message *m = new qi::Message();
   *m = msg;
   m->_p->complete();
   assert(m->isValid());
 
   struct evbuffer *evb = bufferevent_get_output(_p->bev);
-
-  if (!_p->connected)
-  {
-    return false;
-  }
 
   // m might be deleted.
   qi::Buffer *b = new qi::Buffer(m->buffer());
