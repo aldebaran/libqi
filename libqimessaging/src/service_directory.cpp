@@ -44,13 +44,16 @@ namespace qi
     ServiceInfo              service(const std::string &name);
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
+    TransportSocket         *socket() { return currentSocket; }
 
   public:
-    qi::NetworkThread                                 *nthd;
-    qi::TransportServer                               *ts;
-    std::map<unsigned int, ServiceInfo>                connectedServices;
-    std::map<std::string, unsigned int>                nameToIdx;
-    unsigned int                                       servicesCount;
+    qi::NetworkThread                                     *nthd;
+    qi::TransportServer                                   *ts;
+    std::map<unsigned int, ServiceInfo>                    connectedServices;
+    std::map<std::string, unsigned int>                    nameToIdx;
+    std::map<TransportSocket*, std::vector<unsigned int> > socketToIdx;
+    unsigned int                                           servicesCount;
+    TransportSocket                                       *currentSocket;
   }; // !ServiceDirectoryPrivate
 
 
@@ -60,6 +63,7 @@ namespace qi
     : nthd(new qi::NetworkThread())
     , ts(new qi::TransportServer())
     , servicesCount(0)
+    , currentSocket(0)
   {
     ts->setCallbacks(this);
 
@@ -95,24 +99,55 @@ namespace qi
 
   void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
   {
+    currentSocket  = socket;
+
     qi::Message msg;
     socket->read(id, &msg);
     FunctorParameters din(msg.buffer());
 
     ServerFunctorResult fr(socket, msg);
     metaCall(msg.function(), "sig", din, fr);
+
+    currentSocket  = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *socket)
   {
+    currentSocket = socket;
+
+    currentSocket = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *socket)
   {
+    currentSocket = socket;
+
+    currentSocket = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *client)
+  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *socket)
   {
+    currentSocket = socket;
+
+    // if services were connected behind the socket
+    std::map<TransportSocket*, std::vector<unsigned int> >::iterator it;
+    if ((it = socketToIdx.find(socket)) == socketToIdx.end())
+    {
+      return;
+    }
+
+    for (std::vector<unsigned int>::iterator it2 = it->second.begin();
+         it2 != it->second.end();
+         it2++)
+    {
+      qiLogInfo("qimessaging.ServiceDirectory") << "service "
+                                                << connectedServices[*it2].name()
+                                                << " (#" << *it2 << ") disconnected"
+                                                << std::endl;
+      unregisterService(*it2);
+    }
+
+    currentSocket = 0;
   }
 
   std::vector<ServiceInfo> ServiceDirectoryPrivate::services()
@@ -148,6 +183,7 @@ namespace qi
   {
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
+    socketToIdx[socket()].push_back(idx);
     connectedServices[idx] = svcinfo;
     connectedServices[idx].setServiceId(idx);
     qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered #" << idx << std::endl;
@@ -169,6 +205,10 @@ namespace qi
       std::map<unsigned int, ServiceInfo>::iterator it2;
       it2 = connectedServices.find(idx);
       connectedServices.erase(it2);
+
+      std::map<TransportSocket*, std::vector<unsigned int> >::iterator it3;
+      it3 = socketToIdx.find(socket());
+      socketToIdx.erase(it3);
     }
   }
 
