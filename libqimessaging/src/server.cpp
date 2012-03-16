@@ -83,6 +83,12 @@ namespace qi {
 
   unsigned int Server::registerService(const std::string& name, qi::Object *obj)
   {
+    if (!_p->_session)
+    {
+      qiLogError("qimessaging.Server") << "no session attached to the server.";
+      return 0;
+    }
+
     qi::Message msg;
     qi::Buffer  buf;
     qi::ServiceInfo si;
@@ -112,6 +118,12 @@ namespace qi {
 
   void Server::unregisterService(unsigned int idx)
   {
+    if (!_p->_session)
+    {
+      qiLogError("qimessaging.Server") << "no session attached to the server.";
+      return;
+    }
+
     qi::Message msg;
     qi::Buffer  buf;
     msg.setType(qi::Message::Type_Call);
