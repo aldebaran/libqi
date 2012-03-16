@@ -27,7 +27,6 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    _serviceSocket->disconnect();
     delete _networkThread;
     delete _serviceSocket;
   }

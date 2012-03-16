@@ -244,7 +244,10 @@ TransportSocket::TransportSocket(int fd, void *data)
 
 TransportSocket::~TransportSocket()
 {
-  disconnect();
+  if (isConnected())
+  {
+    disconnect();
+  }
   delete _p;
 }
 
