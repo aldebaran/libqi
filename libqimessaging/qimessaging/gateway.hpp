@@ -16,8 +16,6 @@
 
 namespace qi
 {
-  class NetworkThread;
-  class Object;
   class GatewayPrivate;
 
   class QIMESSAGING_API Gateway
@@ -27,7 +25,6 @@ namespace qi
     virtual ~Gateway();
 
     void listen(qi::Session *session, const std::string &addr);
-    void advertiseService(const std::string &name, qi::Object *obj);
 
   private:
     Gateway(Gateway const &);
