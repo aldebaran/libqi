@@ -383,7 +383,7 @@ bool TransportSocket::send(const qi::Message &msg)
     return false;
   }
 
-  // b might be deleted.
+  // m might be deleted.
   qi::Buffer *b = new qi::Buffer(m->buffer());
 
   if (evbuffer_add_reference(evb,
