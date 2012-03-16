@@ -11,7 +11,6 @@
 
 # include <string>
 # include <qimessaging/api.hpp>
-# include <qimessaging/object.hpp>
 # include <qimessaging/session.hpp>
 
 namespace qi
