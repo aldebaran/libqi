@@ -193,6 +193,8 @@ void TransportSocketPrivate::eventcb(struct bufferevent *bev,
   }
   else if (events & BEV_EVENT_EOF)
   {
+    bufferevent_free(bev);
+    bev = 0;
     connected = false;
     //for waitForId
     cond.notify_all();
