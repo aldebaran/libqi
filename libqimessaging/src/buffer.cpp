@@ -20,9 +20,9 @@ namespace qi
 {
 
   BufferPrivate::BufferPrivate()
+    : size(0)
+    , cursor(0)
   {
-    size = 0;
-    cursor = 0;
   }
 
   Buffer::Buffer()
