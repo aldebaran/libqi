@@ -5,6 +5,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(LibQi)
 find_package(qibuild)
+qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 include(CheckSymbolExists)
 check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
@@ -12,22 +13,12 @@ set_source_files_properties(src/os_posix.cpp
   PROPERTIES
     COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
 
-if (EFFECTIVE_CPP)
-  add_definitions(" -Weffc++ ")
-endif()
-
+# We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
 if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN ")
 endif()
 
-# Because CMake automatically qi_EXPORTS, we can do:
-if (UNIX OR MINGW)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-endif()
-
-# We always want boost
 # Remove this line to use QT if usable
 set(WITH_QT_QTCORE OFF)
 
