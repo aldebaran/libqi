@@ -11,6 +11,12 @@
 
 #include <qi/qi.hpp>
 
+#ifdef _MSC_VER
+# pragma warning( push )
+// truncation of constant value when building char* objects
+# pragma warning( disable : 4309 )
+#endif
+
 #ifndef __APPLE__
 TEST(qiPathTests, pathUTF8)
 {
@@ -123,3 +129,6 @@ int main(int argc, char* argv[])
 }
 #endif
 
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif

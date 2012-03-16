@@ -24,6 +24,9 @@ namespace qi {
 #ifdef _MSC_VER
 # pragma warning( push )
 # pragma warning( disable : 4251 )
+// non dll-interface std::runtime_error used as base for dll-interface calss
+// qi::os::QiException
+# pragma warning( disable : 4275 )
 #endif
 
     /** \class QiException error.hpp "qi/error.hpp"

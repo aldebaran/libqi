@@ -18,6 +18,11 @@
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
 
+#ifdef _MSC_VER
+# pragma warning( push )
+// truncation of constant value when building char* objects
+# pragma warning( disable : 4309 )
+#endif
 class QiOSTests: public ::testing::Test
 {
 public:
@@ -110,7 +115,7 @@ void test_writable_and_empty(std::string fdir) {
   tempfile = pp.string(qi::unicodeFacet());
 
   FILE *f = qi::os::fopen(tempfile.c_str(), "w+");
-  EXPECT_TRUE((void *)f);
+  EXPECT_TRUE(f != NULL);
   fclose(f);
 
   EXPECT_TRUE(boost::filesystem::exists(pp));
@@ -201,3 +206,7 @@ TEST(QiOs, get_host_name)
   std::string temp = qi::os::gethostname();
   EXPECT_NE(std::string(), temp);
 }
+
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif
