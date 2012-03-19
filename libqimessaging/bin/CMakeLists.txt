@@ -7,6 +7,7 @@
 ## Copyright (C) 2009, 2010 Aldebaran Robotics
 ##
 
+add_subdirectory("qicli")
 add_subdirectory("qiclient")
 add_subdirectory("qiservice")
 add_subdirectory("qimaster")
