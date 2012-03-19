@@ -31,9 +31,9 @@ namespace qi {
     delete _serviceSocket;
   }
 
-  bool SessionPrivate::connect(const std::string &url)
+  bool SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _serviceSocket->connect(_self, url);
+    return _serviceSocket->connect(_self, serviceDirectoryURL);
   }
 
   std::vector<ServiceInfo> SessionPrivate::services()
@@ -155,9 +155,9 @@ namespace qi {
   }
 
 
-  bool Session::connect(const std::string &masterAddress)
+  bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _p->connect(masterAddress);
+    return _p->connect(serviceDirectoryURL);
   }
 
   bool Session::disconnect()

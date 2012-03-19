@@ -9,28 +9,23 @@
 #ifndef _QIMESSAGING_SERVICE_DIRECTORY_HPP_
 #define _QIMESSAGING_SERVICE_DIRECTORY_HPP_
 
-#include <qimessaging/api.hpp>
-#include <string>
+#include <qimessaging/url.hpp>
 
 namespace qi
 {
-  class NetworkThread;
-  class Object;
   class ServiceDirectoryPrivate;
-
 
   class QIMESSAGING_API ServiceDirectory
   {
   public:
     ServiceDirectory();
-    virtual ~ServiceDirectory();
+    ~ServiceDirectory();
 
-    bool listen(const std::string &address);
+    bool listen(const qi::Url &listenAddress);
     void join();
 
   private:
     ServiceDirectoryPrivate *_p;
-
   }; // !ServiceDirectory
 }; // !qi
 

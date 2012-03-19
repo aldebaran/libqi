@@ -88,17 +88,11 @@ void start_client(int count)
 
 int main_gateway()
 {
-  qi::Session       session;
-  qi::Object        obj;
   qi::Gateway       gate;
 
-  session.connect("tcp://127.0.0.1:5555");
-  session.waitForConnected();
-
-  gate.listen(&session, "tcp://127.0.0.1:12345");
+  gate.listen("tcp://127.0.0.1:12345", "tcp://127.0.0.1:5555");
   std::cout << "ready." << std::endl;
-
-  session.join();
+  gate.join();
 
   return 0;
 }

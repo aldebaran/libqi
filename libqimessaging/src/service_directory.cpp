@@ -222,16 +222,15 @@ ServiceDirectory::~ServiceDirectory()
   delete _p;
 }
 
-bool ServiceDirectory::listen(const std::string &address)
+bool ServiceDirectory::listen(const qi::Url &address)
 {
-  qi::Url                  url(address);
   std::vector<std::string> eps;
   ServiceInfo             &si = _p->connectedServices[1];
 
-  eps.push_back(address);
+  eps.push_back(address.str());
   si.setEndpoints(eps);
 
-  return _p->ts->_p->start(_p->nthd->getEventBase(), url);
+  return _p->ts->_p->start(_p->nthd->getEventBase(), address);
 }
 
 void ServiceDirectory::join()

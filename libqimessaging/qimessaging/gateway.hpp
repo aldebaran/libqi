@@ -9,9 +9,7 @@
 #ifndef _QIMESSAGING_GATEWAY_HPP_
 #define _QIMESSAGING_GATEWAY_HPP_
 
-# include <string>
-# include <qimessaging/api.hpp>
-# include <qimessaging/session.hpp>
+# include <qimessaging/url.hpp>
 
 namespace qi
 {
@@ -21,17 +19,14 @@ namespace qi
   {
   public:
     Gateway();
-    virtual ~Gateway();
+    ~Gateway();
 
-    void listen(qi::Session *session, const std::string &addr);
-
-  private:
-    Gateway(Gateway const &);
-    void operator=(Gateway const &);
+    void listen(const qi::Url &listenAddress, const qi::Url &serviceDirectoryURL);
+    void join();
 
   private:
     GatewayPrivate *_p;
-  };
-}
+  }; // !Gateway
+}; // !qi
 
 #endif  // _QIMESSAGING_GATEWAY_HPP_

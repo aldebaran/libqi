@@ -19,7 +19,7 @@ namespace qi {
     SessionPrivate(qi::Session *session);
     ~SessionPrivate();
 
-    bool connect(const std::string &masterAddress);
+    bool connect(const qi::Url &serviceDirectoryURL);
     qi::TransportSocket* serviceSocket(const std::string &name,
                                        unsigned int      *idx,
                                        qi::Url::Protocol type);

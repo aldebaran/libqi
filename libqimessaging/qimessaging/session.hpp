@@ -13,6 +13,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/object.hpp>
 
 #include <vector>
 #include <string>
@@ -28,7 +29,7 @@ namespace qi {
     Session();
     virtual ~Session();
 
-    bool connect(const std::string &masterAddress);
+    bool connect(const qi::Url &serviceDirectoryURL);
     bool disconnect();
     bool join();
     bool waitForConnected(int msecs = 30000);

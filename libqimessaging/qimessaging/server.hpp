@@ -23,7 +23,7 @@ namespace qi {
   class ServerPrivate;
 
   /// <summary> Used to advertise named services. Advertised Services are
-  /// registered with the master so that clients can find them. The exact
+  /// registered with the service directory so that clients can find them. The exact
   /// signature of your method is composed of the methods name and the
   /// return and argument types of your handler.</summary>
   /// \b Advertise a Service

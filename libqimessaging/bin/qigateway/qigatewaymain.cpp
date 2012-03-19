@@ -10,11 +10,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <qi/os.hpp>
 #include <qimessaging/gateway.hpp>
-#include <qimessaging/session.hpp>
-#include <qimessaging/object.hpp>
-
 
 namespace po = boost::program_options;
 
@@ -55,21 +51,15 @@ int main(int argc, char *argv[])
       std::string gatewayAddress = vm["gateway-address"].as<std::string>();
       std::string masterAddress = vm["master-address"].as<std::string>();
 
-      qi::Session       session;
-      qi::Object        obj;
-      qi::Gateway       gate;
+      qi::Gateway gateway;
+      if (!gateway.listen(gatewayAddress, masterAddress))
+      {
+        return 1;
+      }
 
-      session.connect(masterAddress);
-      session.waitForConnected();
-
-//      gate.advertiseService("gateway", &obj);
-      gate.listen(&session, "tcp://127.0.0.1:12345");
       std::cout << "ready." << std::endl;
 
-//      std::vector<std::string> result = session.services();
-
-      session.join();
-
+      gateway.join();
     }
     else
     {
