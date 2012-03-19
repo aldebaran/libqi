@@ -193,7 +193,7 @@ static void from_argv(int   argc,
 
 static void usage(char *argv0)
 {
-  std::cout << "Usage: " << basename(argv0) << " [ADDRESS CMD]" << std::endl;
+  std::cout << "Usage: qicli [ADDRESS CMD]" << std::endl;
   std::cout << "  connect ADDRESS" << std::endl
             << "  services" << std::endl
             << "  service SERVICE" << std::endl;
