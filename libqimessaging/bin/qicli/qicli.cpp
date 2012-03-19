@@ -39,11 +39,11 @@ static void cmd_service(const command           &cmd,
                 << "  machine:  " << servs[i].machineId() << std::endl
                 << "  process:  " << servs[i].processId() << std::endl
                 << "  endpoints:" << std::endl;
-      for (std::vector<std::string>::const_iterator it = servs[i].endpoints().begin();
-           it != servs[i].endpoints().end();
-           it++)
+      for (std::vector<std::string>::const_iterator it2 = servs[i].endpoints().begin();
+           it2 != servs[i].endpoints().end();
+           it2++)
       {
-        std::cout << "    " << *it << std::endl;
+        std::cout << "    " << *it2 << std::endl;
       }
 
       std::cout << "  methods:" << std::endl;
@@ -181,7 +181,7 @@ static void from_argv(int   argc,
   session.connect(argv[1]);
   session.waitForConnected();
 
-  for (unsigned int i = 2;
+  for (int i = 2;
        i < argc;
        ++i)
   {
