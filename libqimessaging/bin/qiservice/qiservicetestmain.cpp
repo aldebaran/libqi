@@ -68,6 +68,11 @@ int main(int argc, char *argv[])
       endpoints.push_back("tcp://127.0.0.1:9571");
       srv.listen(&session, endpoints);
       unsigned int id = srv.registerService("serviceTest", &obj);
+
+      // test unregistration
+      srv.unregisterService(id);
+      id = srv.registerService("serviceTest", &obj);
+
       qiLogInfo("qimessaging.ServiceTest") << "registered as service #" << id << std::endl;
 
       session.join();
