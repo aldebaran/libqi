@@ -9,6 +9,7 @@
 cmake_minimum_required(VERSION 2.6.4)
 project(qi-framework)
 find_package(qibuild)
+qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
