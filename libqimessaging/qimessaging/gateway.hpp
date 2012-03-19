@@ -21,7 +21,7 @@ namespace qi
     Gateway();
     ~Gateway();
 
-    void listen(const qi::Url &listenAddress, const qi::Url &serviceDirectoryURL);
+    bool listen(const qi::Url &listenAddress, const qi::Url &serviceDirectoryURL);
     void join();
 
   private:

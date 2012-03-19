@@ -279,7 +279,7 @@ void Gateway::join()
   _p->_session.join();
 }
 
-void Gateway::listen(const qi::Url &listenAddress,
+bool Gateway::listen(const qi::Url &listenAddress,
                      const qi::Url &serviceDirectoryURL)
 {
   _p->_session.connect(serviceDirectoryURL);
@@ -288,11 +288,10 @@ void Gateway::listen(const qi::Url &listenAddress,
   _p->_socketToServiceDirectory = new qi::TransportSocket();
   _p->_socketToServiceDirectory->setCallbacks(_p);
   _p->_socketToServiceDirectory->connect(&(_p->_session), serviceDirectoryURL);
-  std::cout <<"chiche" <<std::endl;
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(listenAddress.str());
   _p->_transportServer.setCallbacks(_p);
-  _p->_transportServer.start(&(_p->_session), listenAddress);
+  return _p->_transportServer.start(&(_p->_session), listenAddress);
 }
 } // !qi
