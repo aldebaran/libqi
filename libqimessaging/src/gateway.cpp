@@ -14,8 +14,6 @@
 #include <qi/log.hpp>
 #include "src/session_p.hpp"
 
-static int reqid = 500;
-
 namespace qi
 {
 

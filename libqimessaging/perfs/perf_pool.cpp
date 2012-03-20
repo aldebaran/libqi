@@ -17,7 +17,7 @@ struct MyStruct {
 
 
 static const int gLoopCount = 10000000;
-int main(int argc, char **argv)
+int main()
 {
   qi::perf::DataPerfTimer dp;
 

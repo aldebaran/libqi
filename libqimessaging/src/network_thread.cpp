@@ -18,9 +18,9 @@
 
 namespace qi {
 
-static void errorcb(struct bufferevent *bev,
-                    short error,
-                    void *ctx)
+static void errorcb(struct bufferevent *QI_UNUSED(bev),
+                    short               error,
+                    void               *QI_UNUSED(ctx))
 {
   if (error & BEV_EVENT_EOF)
   {

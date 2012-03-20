@@ -15,8 +15,6 @@
 #include "src/network_thread.hpp"
 #include "src/session_p.hpp"
 
-static int uniqueRequestId = 0;
-
 namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session *session)

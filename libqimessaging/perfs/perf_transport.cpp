@@ -23,7 +23,7 @@
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 
-int main_client(std::string src)
+int main_client(std::string QI_UNUSED(src))
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   qi::Session session;
