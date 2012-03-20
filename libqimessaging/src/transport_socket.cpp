@@ -68,13 +68,13 @@ public:
   {
   }
 
-  static void onBufferSent(const void *data, size_t datalen, void *buffer)
+  static void onBufferSent(const void *QI_UNUSED(data), size_t QI_UNUSED(datalen), void *buffer)
   {
     Buffer *b = static_cast<Buffer *>(buffer);
     delete b;
   }
 
-  static void onMessageSent(const void *data, size_t datalen, void *msg)
+  static void onMessageSent(const void *QI_UNUSED(data), size_t QI_UNUSED(datalen), void *msg)
   {
     Message *m = static_cast<Message *>(msg);
     delete m;
@@ -124,7 +124,7 @@ static void eventcb(struct bufferevent *bev,
 
 
 void TransportSocketPrivate::readcb(struct bufferevent *bev,
-                             void *context)
+                                    void               *QI_UNUSED(context))
 {
   struct evbuffer *input = bufferevent_get_input(bev);
 
@@ -174,16 +174,16 @@ void TransportSocketPrivate::readcb(struct bufferevent *bev,
 }
 
 
-void TransportSocketPrivate::writecb(struct bufferevent* bev,
-                              void* context)
+void TransportSocketPrivate::writecb(struct bufferevent *QI_UNUSED(bev),
+                                     void               *QI_UNUSED(context))
 {
   if (tcd)
     tcd->onSocketWriteDone(_self);
 }
 
 void TransportSocketPrivate::eventcb(struct bufferevent *bev,
-                              short events,
-                              void *context)
+                                     short events,
+                                     void *QI_UNUSED(context))
 {
   if (events & BEV_EVENT_CONNECTED)
   {
