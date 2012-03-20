@@ -90,12 +90,12 @@ namespace qi {
         }
 
         template <typename T>
-        NullStream& operator<<(const T& val)
+        NullStream& operator<<(const T &QI_UNUSED(val))
         {
           return self();
         }
 
-        NullStream& operator<<(std::ostream& (*f)(std::ostream&))
+        NullStream& operator<<(std::ostream& (*QI_UNUSED(f))(std::ostream&))
         {
           return self();
         }
