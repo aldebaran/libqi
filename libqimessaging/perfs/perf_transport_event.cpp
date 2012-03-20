@@ -153,7 +153,7 @@ private:
 };
 
 
-int main_client()
+int main_client(std::string QI_UNUSED(str))
 {
   unsigned int serviceId;
   qi::Session  session;
