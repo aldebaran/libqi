@@ -85,6 +85,7 @@ Please consult the changelog for details. " #x)
 # define QI_WARN_UNUSED_RESULT
 #endif
 
+#define QI_UNUSED(x)
 
 #endif  // _LIBQI_QI_API_HPP_
 

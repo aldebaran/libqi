@@ -43,6 +43,16 @@
  *   QI_DISALLOW_COPY_AND_ASSIGN(type);
  * }
  * \endcode
+ *
+ * \def QI_UNUSED(x)
+ * \ingroup qimacro
+ * \brief This macro tags a parameter as unused.
+ * \code
+ * int zero(int QI_UNUSED(x)
+ * {
+ *   return zero;
+ * }
+ * \endcode
  */
 
 
