@@ -34,14 +34,6 @@ std::string randomstr(std::string::size_type sz) {
   return s;
 }
 
-static wchar_t wrand_alnum()
-{
-  wchar_t c;
-  while (!std::isalnum(c = static_cast<wchar_t>(std::rand())))
-    ;
-  return c;
-}
-
 std::wstring wrandomstr(std::wstring::size_type sz) {
   std::wstring s;
   s.reserve(sz);

@@ -138,7 +138,7 @@ namespace qi {
 
     QI_API const char* logLevelToString(const qi::log::LogLevel verb);
 
-    QI_API const qi::log::LogLevel stringToLogLevel(const char* verb);
+    QI_API qi::log::LogLevel stringToLogLevel(const char* verb);
 
     QI_API void setVerbosity(const qi::log::LogLevel lv);
 

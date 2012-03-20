@@ -298,7 +298,7 @@ namespace qi {
       LogInstance->logHandlers.erase(name);
     }
 
-    const LogLevel stringToLogLevel(const char* verb)
+    LogLevel stringToLogLevel(const char* verb)
     {
       std::string v(verb);
       if (v == "silent")
