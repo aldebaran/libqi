@@ -16,7 +16,7 @@
 namespace qi {
 
   template <typename T>
-  inline void Value::setValue(const T &value) {
+  inline void Value::setValue(const T &QI_UNUSED(value)) {
     qiLogDebug("qi::value") << "setValue not implemented for this type";
   }
 

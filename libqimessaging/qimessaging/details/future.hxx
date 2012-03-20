@@ -76,7 +76,7 @@ namespace qi {
       {
       }
 
-      void setValue(const void *value)
+      void setValue(const void *QI_UNUSED(value))
       {
         setReady();
         if (_callback) {
