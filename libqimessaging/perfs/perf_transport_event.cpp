@@ -55,7 +55,7 @@ public:
     qi::Message msg;
     client->read(id, &msg);
     _msgRecv++;
-    int s = msg.buffer().size();
+    size_t s = msg.buffer().size();
     if (s != _numBytes)
     {
       _dp->stop(1);
@@ -69,15 +69,15 @@ public:
 
   }
 
-  virtual void onSocketWriteDone(qi::TransportSocket *client)
+  virtual void onSocketWriteDone(qi::TransportSocket *QI_UNUSED(client))
   {
   }
 
-  virtual void onSocketConnected(qi::TransportSocket *client)
+  virtual void onSocketConnected(qi::TransportSocket *QI_UNUSED(client))
   {
   }
 
-  virtual void onSocketDisconnected(qi::TransportSocket *client)
+  virtual void onSocketDisconnected(qi::TransportSocket *QI_UNUSED(client))
   {
   }
 
@@ -153,7 +153,7 @@ private:
 };
 
 
-int main_client(std::string src)
+int main_client()
 {
   unsigned int serviceId;
   qi::Session  session;

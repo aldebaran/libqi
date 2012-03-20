@@ -21,11 +21,12 @@ namespace qi {
   {
   public:
     virtual ~TransportSocketInterface() = 0;
-    inline virtual void onSocketConnected(TransportSocket *client)         {};
-    inline virtual void onSocketConnectionError(TransportSocket *client)   {};
-    inline virtual void onSocketDisconnected(TransportSocket *client)      {};
-    inline virtual void onSocketWriteDone(TransportSocket *client)         {};
-    inline virtual void onSocketReadyRead(TransportSocket *client, int id) {};
+    inline virtual void onSocketConnected(TransportSocket *QI_UNUSED(client))         {};
+    inline virtual void onSocketConnectionError(TransportSocket *QI_UNUSED(client))   {};
+    inline virtual void onSocketDisconnected(TransportSocket *QI_UNUSED(client))      {};
+    inline virtual void onSocketWriteDone(TransportSocket *QI_UNUSED(client))         {};
+    inline virtual void onSocketReadyRead(TransportSocket *QI_UNUSED(client),
+                                          int QI_UNUSED(id)) {};
   };
 
 

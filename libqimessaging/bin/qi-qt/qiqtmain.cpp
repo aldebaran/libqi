@@ -20,8 +20,6 @@
 
 namespace po = boost::program_options;
 
-static int uniqueReqId = 200;
-
 void call(const std::string &addr)
 {
   QiSession session;

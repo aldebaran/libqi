@@ -81,7 +81,6 @@ void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
 void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
   qi::ServiceInfo      si;
   qi::DataStream       d(msg->buffer());
-  qi::TransportSocket* ts = NULL;
   d >> si;
 
   sr.serviceId = si.serviceId();

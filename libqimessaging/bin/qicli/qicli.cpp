@@ -71,8 +71,8 @@ static void cmd_service(const command           &cmd,
 /****************
 *    SERVICES   *
 ****************/
-static void cmd_services(const command           &cmd,
-                         command::const_iterator &it)
+static void cmd_services(const command           &QI_UNUSED(cmd),
+                         command::const_iterator &QI_UNUSED(it))
 {
   std::vector<qi::ServiceInfo> servs = session.services();
   for (unsigned int i = 0; i < servs.size(); ++i)
