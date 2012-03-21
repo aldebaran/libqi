@@ -146,7 +146,7 @@ namespace qi
                                                 << std::endl;
       unregisterService(*it2);
     }
-
+    socketToIdx.erase(it);
     currentSocket = 0;
   }
 
@@ -204,11 +204,10 @@ namespace qi
 
       std::map<unsigned int, ServiceInfo>::iterator it2;
       it2 = connectedServices.find(idx);
-      connectedServices.erase(it2);
-
-      std::map<TransportSocket*, std::vector<unsigned int> >::iterator it3;
-      it3 = socketToIdx.find(socket());
-      socketToIdx.erase(it3);
+      if (it2 == connectedServices.end())
+        qiLogError("qimessaging.ServiceDirectory") << "Can't find service #" << idx;
+      else
+        connectedServices.erase(it2);
     }
   }
 
