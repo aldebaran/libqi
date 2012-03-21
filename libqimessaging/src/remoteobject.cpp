@@ -25,7 +25,6 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::Me
 RemoteObject::~RemoteObject()
 {
   delete _ts;
-  delete _meta;
 }
 
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
@@ -71,6 +70,7 @@ void RemoteObject::metaCall(unsigned int method, const std::string &sig, const F
     _promises[msg.id()] = out;
   }
   if (!_ts->send(msg)) {
+    qiLogError("remoteobject") << "error while sending answer";
     //TODO
     //out.setError(1);
     return;
