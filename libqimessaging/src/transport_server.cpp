@@ -80,7 +80,7 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
     qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
     return false;
   }
-
+  qiLogVerbose("qimessaging.transportserver") << "Starting server at " << url.str();
   listener = evconnlistener_new_bind(base,
                                      accept_cb,
                                      this,
