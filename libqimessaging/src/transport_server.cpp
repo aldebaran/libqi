@@ -89,7 +89,7 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
                                      (struct sockaddr*)&listen_on_addr,
                                      socklen);
 
-  return true;
+  return listener != 0;
 }
 
 TransportServerInterface::~TransportServerInterface()
