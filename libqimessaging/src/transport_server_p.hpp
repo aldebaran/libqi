@@ -30,7 +30,6 @@ namespace qi {
 
     ~TransportServerPrivate()
     {
-      event_base_free(base);
     }
 
     bool start(struct event_base *base, const qi::Url &url);
