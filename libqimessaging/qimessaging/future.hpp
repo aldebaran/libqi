@@ -32,6 +32,7 @@ namespace qi {
   public:
     virtual ~FutureInterface() = 0;
     virtual void onFutureFinished(const Future<T> &future, void *data) = 0;
+    virtual void onFutureFailed(const Future<T> &future, void *data) = 0;
   };
 
   //pure virtual destructor need an implementation
@@ -53,8 +54,11 @@ namespace qi {
     operator const T&() const { return _p->value(); }
     operator T&()             { return _p->value(); }
 
-    bool waitForValue(int msecs = 30000) const { return _p->waitForValue(msecs); }
+    bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
     bool isReady() const                       { return _p->isReady(); }
+    bool hasError() const                      { return _p->hasError(); }
+
+    const std::string &error() const           { return _p->error(); }
 
     void setCallback(FutureInterface<T> *interface, void *data = 0) {
       _p->setCallback(interface, data);
@@ -73,6 +77,10 @@ namespace qi {
 
     void setValue(const T &value) {
       _f._p->setValue(value);
+    }
+
+    void setError(const std::string &msg) {
+      _f._p->setError(msg);
     }
 
     Future<T> future() { return _f; }

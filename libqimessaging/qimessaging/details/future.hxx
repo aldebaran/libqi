@@ -17,9 +17,14 @@ namespace qi {
     public:
       FutureBase();
       ~FutureBase();
-      bool waitForValue(int msecs = 30000) const;
-      void setReady();
+      bool wait(int msecs = 30000) const;
       bool isReady() const;
+      bool hasError() const;
+      const std::string &error() const;
+
+    protected:
+      void reportReady();
+      void reportError(const std::string &message);
 
     public:
       FutureBasePrivate *_p;
@@ -40,10 +45,18 @@ namespace qi {
       void setValue(const T &value)
       {
         _value = value;
-        setReady();
+        reportReady();
         if (_callback) {
-            _callback->onFutureFinished(*_self, _data);
-          }
+          _callback->onFutureFinished(*_self, _data);
+        }
+      }
+
+      void setError(const std::string &message)
+      {
+        reportError(message);
+        if (_callback) {
+          _callback->onFutureFailed(*_self, _data);
+        }
       }
 
       void setCallback(FutureInterface<T> *interface, void *data) {
@@ -51,8 +64,8 @@ namespace qi {
         _data     = data;
       }
 
-      const T &value() const    { waitForValue(); return _value; }
-      T &value()                { waitForValue(); return _value; }
+      const T &value() const    { wait(); return _value; }
+      T &value()                { wait(); return _value; }
 
     private:
       Future<T>          *_self;
@@ -78,10 +91,18 @@ namespace qi {
 
       void setValue(const void *QI_UNUSED(value))
       {
-        setReady();
+        reportReady();
         if (_callback) {
             _callback->onFutureFinished(*_self, _data);
           }
+      }
+
+      void setError(const std::string &message)
+      {
+        reportError(message);
+        if (_callback) {
+          _callback->onFutureFailed(*_self, _data);
+        }
       }
 
       void setCallback(FutureInterface<void> *interface, void *data) {
@@ -89,7 +110,7 @@ namespace qi {
         _data     = data;
       }
 
-      void value() const    { waitForValue(); }
+      void value() const    { wait(); }
 
     private:
       Future<void>          *_self;
@@ -108,10 +129,13 @@ namespace qi {
       _p = boost::shared_ptr< detail::FutureState<void> >(new detail::FutureState<void>(this));
     }
 
-    void value() const    { _p->waitForValue(); }
+    void value() const    { _p->wait(); }
 
-    bool waitForValue(int msecs = 30000) const { return _p->waitForValue(msecs); }
+    bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
     bool isReady() const                       { return _p->isReady(); }
+
+    bool hasError() const                      { return _p->hasError(); }
+    const std::string &error() const           { return _p->error(); }
 
     void setCallback(FutureInterface<void> *interface, void *data = 0) {
       _p->setCallback(interface, data);
@@ -129,6 +153,10 @@ namespace qi {
 
     void setValue(const void *value) {
       _f._p->setValue(value);
+    }
+
+    void setError(const std::string &message) {
+      _f._p->setError(message);
     }
 
     Future<void> future() { return _f; }

@@ -14,11 +14,16 @@
 
 static int         gGlobalI(0);
 static std::string gGlobalS("");
+static std::string gGlobalE("");
 
 class TestFutureI : public qi::FutureInterface<int> {
 public:
   void onFutureFinished(const qi::Future<int> &future, void *data) {
     gGlobalI = future.value();
+  }
+
+  void onFutureFailed(const qi::Future<int> &future, void *data) {
+    gGlobalE = future.error();
   }
 };
 
@@ -26,6 +31,10 @@ class TestFutureS : public qi::FutureInterface<std::string> {
 public:
   void onFutureFinished(const qi::Future<std::string> &future, void *data) {
     gGlobalS = future.value();
+  }
+
+  void onFutureFailed(const qi::Future<std::string> &future, void *data) {
+    gGlobalE = future.error();
   }
 };
 
@@ -71,7 +80,7 @@ void producer(qi::Promise<int> pro) {
 
 void consumer(qi::Future<int> fut) {
   //wont block thread on error
-  ASSERT_TRUE(fut.waitForValue(1000));
+  ASSERT_TRUE(fut.wait(1000));
   EXPECT_EQ(42, fut.value());
   gSuccess++;
 }
@@ -94,6 +103,24 @@ TEST(TestFuture, TestTimeout) {
   qi::Promise<int> pro;
   qi::Future<int>  fut = pro.future();
 
-  EXPECT_FALSE(fut.waitForValue(100));
+  EXPECT_FALSE(fut.wait(100));
   EXPECT_FALSE(fut.isReady());
+}
+
+TEST(TestFuture, TestError) {
+  TestFutureI tf;
+
+  qi::Promise<int> pro;
+
+  qi::Future<int>  fut = pro.future();
+  fut.setCallback(&tf);
+
+  EXPECT_STREQ("", gGlobalE.c_str());
+  EXPECT_FALSE(fut.hasError());
+  EXPECT_FALSE(fut.isReady());
+  pro.setError("chiche");
+  fut.wait();
+  EXPECT_STREQ("chiche", gGlobalE.c_str());
+  EXPECT_TRUE(fut.isReady());
+  EXPECT_TRUE(fut.hasError());
 }
