@@ -44,7 +44,7 @@ namespace qi {
     #for $j in range($i)
     ds << p${j};
     #end for
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 #end for

@@ -106,7 +106,7 @@ namespace qi
     FunctorParameters din(msg.buffer());
 
     ServerFunctorResult fr(socket, msg);
-    metaCall(msg.function(), "sig", din, fr);
+    metaCall(msg.function(), din, fr);
 
     currentSocket  = 0;
   }

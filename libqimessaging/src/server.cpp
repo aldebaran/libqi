@@ -55,7 +55,7 @@ namespace qi {
     qi::FunctorParameters ds(msg.buffer());
 
     ServerFunctorResult promise(client, msg);
-    obj->metaCall(msg.function(), "", ds, promise);
+    obj->metaCall(msg.function(), ds, promise);
   };
 
 

@@ -78,8 +78,12 @@ namespace qi {
     template <typename T>
     struct signature<T*, typename boost::disable_if< boost::function_types::is_function<T> >::type> {
       static std::string &value(std::string &val) {
-        qi::detail::signature<T>::value(val);
-        val += "*"; return val;
+        std::string sub;
+        qi::detail::signature<T>::value(sub);
+        if (sub == "c")
+          val += "s";
+        else
+          val += sub + "*";
       }
     };
 

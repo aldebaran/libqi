@@ -25,32 +25,29 @@ namespace qi {
   }
 
   MetaMethod::MetaMethod()
-    : _name("")
-    , _signature("")
+    : _signature("")
     , _functor(0)
     , _idx(0)
   {
   }
 
-  MetaMethod::MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor)
-    : _name(name)
-    , _signature(sig)
+  MetaMethod::MetaMethod(const std::string &sig, const qi::Functor *functor)
+    : _signature(sig)
     , _functor(functor)
     , _idx(0)
   {
   }
 
-  unsigned int Object::xAdvertiseMethod(const std::string &name, const std::string& signature, const qi::Functor* functor) {
-    MetaMethod mm(name, signature, functor);
+  unsigned int Object::xAdvertiseMethod(const std::string& signature, const qi::Functor* functor) {
+    MetaMethod mm(signature, functor);
     unsigned int idx = _meta->_methodsNumber++;
     mm._idx = idx;
     _meta->_methods.push_back(mm);
-    _meta->_methodsNameToIdx[name] = idx;
-
+    _meta->_methodsNameToIdx[signature] = idx;
     return idx;
   }
 
-  void Object::metaCall(unsigned int method, const std::string &sig, const FunctorParameters &in, qi::FunctorResult out)
+  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
     assert(method < _meta->_methods.size());
     MetaMethod *mm = &(_meta->_methods[method]);
@@ -59,14 +56,12 @@ namespace qi {
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
-    stream << meta._name;
     stream << meta._signature;
     stream << meta._idx;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
-    stream >> meta._name;
     stream >> meta._signature;
     stream >> meta._idx;
     return stream;
@@ -85,6 +80,5 @@ namespace qi {
     stream >> meta._methodsNumber;
     return stream;
   }
-
 
 };

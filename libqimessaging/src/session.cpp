@@ -35,27 +35,27 @@ namespace qi {
   }
 
   std::vector<ServiceInfo> SessionPrivate::services()
-    {
-      std::vector<ServiceInfo> result;
+  {
+    std::vector<ServiceInfo> result;
 
-      qi::Message msg;
-      msg.setType(qi::Message::Type_Call);
-      msg.setService(qi::Message::Service_ServiceDirectory);
-      msg.setPath(qi::Message::Path_Main);
-      msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
+    qi::Message msg;
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
 
-      _serviceSocket->send(msg);
+    _serviceSocket->send(msg);
 
-      if (!_serviceSocket->waitForId(msg.id()))
-        return result;
-      qi::Message ans;
-      _serviceSocket->read(msg.id(), &ans);
-
-      qi::DataStream d(ans.buffer());
-      d >> result;
-
+    if (!_serviceSocket->waitForId(msg.id()))
       return result;
-    }
+    qi::Message ans;
+    _serviceSocket->read(msg.id(), &ans);
+
+    qi::DataStream d(ans.buffer());
+    d >> result;
+
+    return result;
+  }
 
   qi::TransportSocket* SessionPrivate::serviceSocket(const std::string &name,
                                                      unsigned int      *idx,
@@ -152,7 +152,6 @@ namespace qi {
     delete _p;
   }
 
-
   bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
     return _p->connect(serviceDirectoryURL);
@@ -163,7 +162,6 @@ namespace qi {
     _p->_serviceSocket->disconnect();
     return true;
   }
-
 
   bool Session::waitForConnected(int msecs)
   {

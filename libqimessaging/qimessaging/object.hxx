@@ -33,7 +33,7 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -54,7 +54,7 @@ namespace qi {
     signature += "::";
     signatureFromObject::value(f, signature);
     ds << p0;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -76,7 +76,7 @@ namespace qi {
     signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -99,7 +99,7 @@ namespace qi {
     ds << p0;
     ds << p1;
     ds << p2;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -123,7 +123,7 @@ namespace qi {
     ds << p1;
     ds << p2;
     ds << p3;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -148,7 +148,7 @@ namespace qi {
     ds << p2;
     ds << p3;
     ds << p4;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -174,7 +174,7 @@ namespace qi {
     ds << p3;
     ds << p4;
     ds << p5;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -201,7 +201,7 @@ namespace qi {
     ds << p4;
     ds << p5;
     ds << p6;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -229,7 +229,7 @@ namespace qi {
     ds << p5;
     ds << p6;
     ds << p7;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 
@@ -258,7 +258,7 @@ namespace qi {
     ds << p6;
     ds << p7;
     ds << p8;
-    metaCall(metaObject()._methodsNameToIdx[method], signature, request, promise);
+    metaCall(metaObject().methodId(signature), request, promise);
     return future;
   }
 

@@ -20,18 +20,16 @@ namespace qi {
 
   class QIMESSAGING_API MetaMethod {
   public:
-    MetaMethod(const std::string &name, const std::string &sig, const qi::Functor *functor);
+    MetaMethod(const std::string &sig, const qi::Functor *functor);
     MetaMethod();
 
-    const std::string &name() const { return _name; }
     const std::string &signature() const { return _signature; }
 
   protected:
   public:
-    std::string  _name;
-    std::string  _signature;
+    std::string        _signature;
     const qi::Functor *_functor;
-    unsigned int _idx;
+    unsigned int       _idx;
   };
 
   QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
@@ -43,6 +41,15 @@ namespace qi {
       : _methodsNumber(0)
     {
     };
+
+    inline int methodId(const std::string &name) {
+      std::map<std::string, unsigned int>::iterator it;
+      it = _methodsNameToIdx.find(name);
+      if (it == _methodsNameToIdx.end())
+        return -1;
+      return it->second;
+    }
+
     /*
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.
@@ -94,10 +101,10 @@ namespace qi {
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
     qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
-    virtual void metaCall(unsigned int method, const std::string &sig, const qi::FunctorParameters &in, FunctorResult out);
+    virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out);
 
   protected:
-    unsigned int xAdvertiseMethod(const std::string &name, const std::string& signature, const Functor *functor);
+    unsigned int xAdvertiseMethod(const std::string& signature, const Functor *functor);
 
   protected:
     MetaObject *_meta;
@@ -111,7 +118,7 @@ inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE
   std::string signature(name);
   signature += "::";
   signatureFromObject::value(method, signature);
-  return xAdvertiseMethod(name, signature, makeFunctor(object, method));
+  return xAdvertiseMethod(signature, makeFunctor(object, method));
 }
 
 template <typename FUNCTION_TYPE>
@@ -120,7 +127,7 @@ inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TY
   std::string signature(name);
   signature += "::";
   signatureFromObject::value(function, signature);
-  return xAdvertiseMethod(name, signature, makeFunctor(function));
+  return xAdvertiseMethod(signature, makeFunctor(function));
 }
 
 
