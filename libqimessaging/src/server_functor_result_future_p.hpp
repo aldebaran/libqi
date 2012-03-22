@@ -10,6 +10,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <qimessaging/functor.hpp>
+#include <qimessaging/message.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi {
 
@@ -24,6 +26,12 @@ namespace qi {
 
       inline virtual void setValue(const qi::Buffer &result) {
         _retval.setBuffer(result);
+        _client->send(_retval);
+      }
+
+      inline virtual void setError(const qi::Buffer &error) {
+        _retval.setType(qi::Message::Type_Error);
+        _retval.setBuffer(error);
         _client->send(_retval);
       }
 

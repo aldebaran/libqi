@@ -44,12 +44,22 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
     }
   }
 
-  if (promise.isValid()) {
-    promise.setValue(msg.buffer());
-  } else {
+  if (!promise.isValid()) {
     qiLogError("remoteobject") << "no promise found for req id:" << id;
     return;
   }
+  switch (msg.type()) {
+    case 'qi::Message::Type_Reply':
+      promise.setValue(msg.buffer());
+      return;
+    case 'qi::Message::Type_Error':
+      promise.setError(msg.buffer());
+      return;
+    default:
+      qiLogError("remoteobject") << "Message (#" << id << ") type not handled: " << msg.type();
+      return;
+  }
+
 }
 
 void RemoteObject::metaCall(unsigned int method, const std::string &sig, const FunctorParameters &in, FunctorResult out)

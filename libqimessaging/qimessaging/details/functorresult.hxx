@@ -34,6 +34,15 @@ namespace qi {
         _f.setValue(v);
       }
 
+      virtual void setError(const qi::Buffer &message)
+      {
+        qi::DataStream ds(message);
+
+        std::string err;
+        ds >> err;
+        _f.setError(err);
+      }
+
       Future<T> future() { return _f.future(); }
 
     protected:
@@ -52,6 +61,15 @@ namespace qi {
       {
         //TODO: remove the useless ref here
         _f.setValue(0);
+      }
+
+      virtual void setError(const qi::Buffer &message)
+      {
+        qi::DataStream ds(message);
+
+        std::string err;
+        ds >> err;
+        _f.setError(err);
       }
 
       Future<void> future() { return _f.future(); }

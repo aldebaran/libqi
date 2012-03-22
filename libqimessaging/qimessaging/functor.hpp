@@ -18,10 +18,10 @@
 #include <qi/shared_ptr.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/buffer.hpp>
 
 namespace qi
 {
-  class Buffer;
 
   class QIMESSAGING_API FunctorParameters {
   public:
@@ -32,7 +32,7 @@ namespace qi
     inline const qi::Buffer &buffer() const { return _buffer; }
 
   private:
-    const qi::Buffer &_buffer;
+    qi::Buffer _buffer;
   };
 
 
@@ -40,33 +40,26 @@ namespace qi
   public:
     virtual ~FunctorResultBase()                    = 0;
     virtual void setValue(const qi::Buffer &buffer) = 0;
+    virtual void setError(const qi::Buffer &msg)    = 0;
   };
 
   class QIMESSAGING_API FunctorResult {
   public:
 
     FunctorResult()
-      : _p(),
-        _error(0)
+      : _p()
     {}
 
     virtual ~FunctorResult() {}
 
     virtual void setValue(const qi::Buffer &buffer) { _p->setValue(buffer); }
-
-    inline int       &error()       { return _error; }
-    inline const int &error() const { return _error; }
-
-    virtual void setError(int err) { _error = err; }
+    virtual void setError(const qi::Buffer &msg)    { _p->setError(msg); }
 
     bool isValid() const { return _p ? true : false; }
 
     //could be changed using inheritance
   protected:
     boost::shared_ptr<FunctorResultBase> _p;
-
-  private:
-    int                                  _error;
   };
 
   /**
