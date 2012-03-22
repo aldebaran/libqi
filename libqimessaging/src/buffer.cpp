@@ -7,6 +7,7 @@
 */
 
 #include <qimessaging/buffer.hpp>
+#include <qi/log.hpp>
 
 #include <cstdio>
 #include <cstring>
@@ -32,14 +33,14 @@ namespace qi
 
   size_t Buffer::write(const void *data, size_t size)
   {
-    if (sizeof(_p->data) - _p->cursor < size)
+    if (sizeof(_p->data) - _p->size < size)
     {
+      qiLogVerbose("qi.Buffer") << "write(" << size << ") failed, buffer size is " << _p->size;
       return -1;
     }
 
     memcpy(_p->data + _p->size, data, size);
     _p->size += size;
-    _p->cursor += _p->size;
 
     return size;
   }
