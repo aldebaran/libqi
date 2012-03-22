@@ -48,11 +48,12 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
     qiLogError("remoteobject") << "no promise found for req id:" << id;
     return;
   }
+
   switch (msg.type()) {
-    case 'qi::Message::Type_Reply':
+    case qi::Message::Type_Reply:
       promise.setValue(msg.buffer());
       return;
-    case 'qi::Message::Type_Error':
+    case qi::Message::Type_Error:
       promise.setError(msg.buffer());
       return;
     default:
