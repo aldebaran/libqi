@@ -229,7 +229,16 @@ bool ServiceDirectory::listen(const qi::Url &address)
   eps.push_back(address.str());
   si.setEndpoints(eps);
 
-  return _p->ts->_p->start(_p->nthd->getEventBase(), address);
+  if (_p->ts->_p->start(_p->nthd->getEventBase(), address))
+  {
+    return true;
+  }
+  else
+  {
+    qiLogError("qimessaging.ServiceDirectory") << "Could not listen on "
+                                               << address.str() << std::endl;
+    return false;
+  }
 }
 
 void ServiceDirectory::join()
