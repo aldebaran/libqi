@@ -16,7 +16,7 @@ namespace qi
   public:
     BufferPrivate();
 
-    unsigned char   data[4096];
+    unsigned char   data[16396];
     size_t          size;
     size_t          cursor;
   };
