@@ -46,7 +46,7 @@
       qiLogError("datastream", "cant write to a readonly buffer");  \
       return *this;                                                 \
     }                                                               \
-    _buffer.write((Type *)&b, sizeof(b));                  \
+    assert(_buffer.write((Type *)&b, sizeof(b)) != -1);             \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);              \
     return *this;                                          \
   }
@@ -89,7 +89,7 @@ namespace qi {
     }
     *this << (int)len;
     if (len) {
-      _buffer.write(str, len)
+      assert(_buffer.write(str, len) != -1);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
     }
   }
@@ -122,7 +122,7 @@ namespace qi {
     }
     *this << (int)s.size();
     if (!s.empty()) {
-      _buffer.write(s.data(), s.size());
+      assert(_buffer.write(s.data(), s.size()) != -1);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
     }
 
