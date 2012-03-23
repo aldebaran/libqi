@@ -11,7 +11,7 @@
 
 # include <boost/shared_ptr.hpp>
 # include <qimessaging/api.hpp>
-# include <cstdlib>
+# include <cstddef>
 
 namespace qi
 {
