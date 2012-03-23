@@ -200,10 +200,10 @@ void qi_SignatureToMetaMethod(const std::string &signature, QString *returnSig, 
   std::string parSig;
   std::string funcName;
 
-  int idx1 = signature.find("::");
+  size_t idx1 = signature.find("::");
   if (idx1 != signature.npos)
     funcName = signature.substr(0, idx1);
-  int idx2 = signature.find("(", idx1);
+  size_t idx2 = signature.find("(", idx1);
   if (idx2 != signature.npos) {
     retSig = signature.substr(idx1 + 2, idx2 - idx1 - 2);
     parSig = signature.substr(idx2);
