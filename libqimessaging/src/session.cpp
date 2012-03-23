@@ -18,8 +18,8 @@
 namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session *session)
-    : _networkThread(new qi::NetworkThread()),
-      _serviceSocket(new qi::TransportSocket()),
+    : _serviceSocket(new qi::TransportSocket()),
+      _networkThread(new qi::NetworkThread()),
       _self(session)
   {
   }
