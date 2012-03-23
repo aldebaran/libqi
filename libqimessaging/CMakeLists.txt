@@ -94,7 +94,7 @@ add_subdirectory(c)
 
 qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
                  #qi-cbinding
-                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD TINYXML LIBEVENT UUID)
+                 DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT UUID)
 if(WIN32)
   qi_use_lib(qimessaging WSA)
 endif(WIN32)
