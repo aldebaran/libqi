@@ -30,7 +30,7 @@ QiServer::~QiServer()
   delete _p;
 }
 
-void QiServer::listen(QiSession *session, const QVector<QUrl> &url)
+void QiServer::listen(QiSession *QI_UNUSED(session), const QVector<QUrl> &QI_UNUSED(url))
 {
 }
 
@@ -38,6 +38,6 @@ void QiServer::stop()
 {
 }
 
-void QiServer::registerService(const QString &name, QObject *obj)
+void QiServer::registerService(const QString &QI_UNUSED(name), QObject *QI_UNUSED(obj))
 {
 }

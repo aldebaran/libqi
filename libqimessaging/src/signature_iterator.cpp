@@ -15,7 +15,7 @@
 namespace qi {
 
   //TODO
-  static bool _is_valid(const char *begin, const char *end) {
+  static bool _is_valid(const char *begin, const char *QI_UNUSED(end)) {
     const char *current = begin;
 
     while (*current) {

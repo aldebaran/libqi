@@ -45,8 +45,8 @@ namespace qi {
 
 void accept_cb(struct evconnlistener *listener,
                evutil_socket_t        fd,
-               struct sockaddr       *a,
-               int                    slen,
+               struct sockaddr       *QI_UNUSED(a),
+               int                    QI_UNUSED(slen),
                void                  *p)
 {
   TransportServerPrivate *_p = static_cast<TransportServerPrivate*>(p);
@@ -56,7 +56,7 @@ void accept_cb(struct evconnlistener *listener,
 
 void TransportServerPrivate::accept(evutil_socket_t        fd,
                                     struct evconnlistener *listener,
-                                    void                  *context)
+                                    void                  *QI_UNUSED(context))
 {
   struct event_base *base = evconnlistener_get_base(listener);
 

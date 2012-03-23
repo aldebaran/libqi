@@ -78,7 +78,7 @@ void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
 }
 
 //rep from master (endpoint)
-void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, ServiceRequest &sr) {
   qi::ServiceInfo      si;
   qi::DataStream       d(msg->buffer());
   d >> si;
@@ -103,7 +103,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *client, qi::M
   }
 }
 
-void QiSessionPrivate::service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+void QiSessionPrivate::service_mo_end(int QI_UNUSED(id), qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
   qi::MetaObject mo;
   qi::DataStream ds(msg->buffer());
   ds >> mo;
@@ -113,7 +113,7 @@ void QiSessionPrivate::service_mo_end(int id, qi::TransportSocket *client, qi::M
   sr.fu.reportResult(robj);
 }
 
-void QiSessionPrivate::services_end(qi::TransportSocket *client, qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
+void QiSessionPrivate::services_end(qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
   QVector<qi::ServiceInfo> result;
   qi::DataStream d(msg->buffer());
   d >> result;

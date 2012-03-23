@@ -95,7 +95,7 @@ namespace qi
     }
   }
 
-  void *Buffer::peek(size_t size) const
+  void *Buffer::peek(size_t QI_UNUSED(size)) const
   {
     return _p->cursor + _p->data;
   }

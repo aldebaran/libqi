@@ -15,7 +15,7 @@
 class ALMemoryTest {
 
   template <typename T>
-  T get(std::string name) {
+  T get(std::string QI_UNUSED(name)) {
     qi::Value v;
     //v = get(name);
     //return v.to<T>();

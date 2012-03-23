@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int _qi_signature_find_end(qi_signature_t *sig, char **pcurrent, const char **psignature, char copen, char close)
+static int _qi_signature_find_end(qi_signature_t *QI_UNUSED(sig), char **pcurrent, const char **psignature, char copen, char close)
 {
   int         opencount  = 1;
   int         closecount = 0;

@@ -243,7 +243,7 @@ char *qi_message_read_string(qi_message_t *msg)
 #endif
 }
 
-char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
+char *qi_message_read_raw(qi_message_t *msg, unsigned int *QI_UNUSED(size))
 {
   //TODO set size
   return qi_message_read_string(msg);
