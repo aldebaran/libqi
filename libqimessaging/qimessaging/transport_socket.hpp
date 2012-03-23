@@ -14,8 +14,8 @@
 # include <qimessaging/url.hpp>
 # include <string>
 
-namespace qi {
-
+namespace qi
+{
   class TransportSocket;
   class QIMESSAGING_API TransportSocketInterface
   {
@@ -29,7 +29,6 @@ namespace qi {
                                           int QI_UNUSED(id)) {};
   };
 
-
   class Session;
   class TransportSocketPrivate;
   class QIMESSAGING_API TransportSocket
@@ -38,13 +37,11 @@ namespace qi {
 
   public:
     TransportSocket();
-    TransportSocket(int fd, void *data);
     virtual ~TransportSocket();
 
     bool connect(qi::Session *session, const qi::Url &url);
     void disconnect();
 
-    bool isConnected();
 
     // if msecs < 0 no timeout
     bool waitForConnected(int msecs = 30000);
@@ -53,10 +50,11 @@ namespace qi {
 
     bool read(int id, qi::Message *msg);
     bool send(const qi::Message &msg);
-    void setCallbacks(TransportSocketInterface *delegate);
 
-  private:
-    TransportSocketPrivate  *_p;
+    void setCallbacks(TransportSocketInterface *delegate);
+    bool isConnected();
+
+    TransportSocketPrivate *_p;
   };
 
 }

@@ -37,6 +37,7 @@
 #include "src/session_p.hpp"
 #include "src/network_thread.hpp"
 #include "src/transport_server_p.hpp"
+#include "src/transport_socket_libevent_p.hpp"
 
 namespace qi {
 #define MAX_LINE 16384
@@ -60,7 +61,10 @@ void TransportServerPrivate::accept(evutil_socket_t        fd,
 {
   struct event_base *base = evconnlistener_get_base(listener);
 
-  connection.push(new qi::TransportSocket(fd, base));
+  qi::TransportSocket *ts = new qi::TransportSocket();
+  ts->_p = new qi::TransportSocketLibEvent(ts, fd, base);
+  connection.push(ts);
+
   tsi->newConnection();
 }
 

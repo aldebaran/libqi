@@ -9,9 +9,11 @@
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport_server.hpp>
-#include "src/network_thread.hpp"
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
+
+#include "src/transport_socket_libevent_p.hpp"
+#include "src/network_thread.hpp"
 #include "src/session_p.hpp"
 
 namespace qi
@@ -196,8 +198,8 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
 
       // Connected to the service
       qi::TransportSocket *servSocket = new qi::TransportSocket();
-      servSocket->setCallbacks(this);
       servSocket->connect(&_session, url);
+      servSocket->setCallbacks(this);
       _services[serviceId] = servSocket;
 
       return; //// jump to S.2
@@ -284,8 +286,8 @@ bool Gateway::listen(const qi::Url &listenAddress,
   _p->_session.waitForConnected();
 
   _p->_socketToServiceDirectory = new qi::TransportSocket();
-  _p->_socketToServiceDirectory->setCallbacks(_p);
   _p->_socketToServiceDirectory->connect(&(_p->_session), serviceDirectoryURL);
+  _p->_socketToServiceDirectory->setCallbacks(_p);
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(listenAddress.str());

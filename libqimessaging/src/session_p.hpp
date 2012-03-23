@@ -9,6 +9,8 @@
 #ifndef _SRC_SESSION_P_HPP_
 #define _SRC_SESSION_P_HPP_
 
+#include <qimessaging/object.hpp>
+#include <qimessaging/service_info.hpp>
 
 namespace qi {
 

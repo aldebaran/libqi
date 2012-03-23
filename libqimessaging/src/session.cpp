@@ -93,8 +93,8 @@ namespace qi {
       {
         qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
-        ts->setCallbacks(this);
         ts->connect(_self, url);
+        ts->setCallbacks(this);
         ts->waitForConnected();
         return ts;
       }
