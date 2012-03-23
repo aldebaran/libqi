@@ -29,7 +29,6 @@ void verify(qi_signature_t *sig, char *current, int ispointer)
 void test() {
   qi_signature_t *sig;
   int             ret;
-  char           *signature = 0;
 
   printf("Signature: Us**S\n");
   sig = qi_signature_create("Us**S");
