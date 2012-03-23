@@ -22,8 +22,8 @@ namespace qi
   public:
     Buffer();
 
-    size_t write(const void *data, size_t size);
-    size_t read(void *data, size_t size);
+    ssize_t write(const void *data, size_t size);
+    ssize_t read(void *data, size_t size);
     // equivalent to peek() && seek()
     void  *read(size_t size);
     size_t size() const;
