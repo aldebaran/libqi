@@ -84,6 +84,7 @@ namespace qi {
           val += "s";
         else
           val += sub + "*";
+        return val;
       }
     };
 
