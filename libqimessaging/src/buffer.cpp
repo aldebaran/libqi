@@ -31,7 +31,7 @@ namespace qi
   {
   }
 
-  ssize_t Buffer::write(const void *data, size_t size)
+  int Buffer::write(const void *data, size_t size)
   {
     if (sizeof(_p->data) - _p->size < size)
     {
@@ -45,7 +45,7 @@ namespace qi
     return size;
   }
 
-  ssize_t Buffer::read(void *data, size_t size)
+  int Buffer::read(void *data, size_t size)
   {
     if (_p->size - _p->cursor < size)
     {
