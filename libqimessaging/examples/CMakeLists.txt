@@ -3,7 +3,7 @@
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010, 2011 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2011, 2012 Aldebaran Robotics
 ##
 
 
@@ -30,3 +30,6 @@ _qimessaging_create_example(example_qi_signature_instance )
 _qimessaging_create_example(example_qi_signature_pp       )
 #_qimessaging_create_example(example_qi_signature_function )
 _qimessaging_create_example(example_qi_signature_iterator )
+
+_qimessaging_create_example(example_qi_future)
+qi_use_lib(example_qi_future BOOST_THREAD BOOST)
