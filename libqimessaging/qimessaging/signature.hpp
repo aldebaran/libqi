@@ -87,8 +87,8 @@ namespace qi {
     bool isValid() const;
 
     class iterator;
-    ::qi::Signature::iterator begin() const;
-    ::qi::Signature::iterator end() const;
+    iterator begin() const;
+    iterator end() const;
 
     //TODO use the type than "network type"
     enum Type {
@@ -110,7 +110,7 @@ namespace qi {
 
     class iterator {
     public:
-      iterator(const char *begin = 0, const char *end = 0) : _current(begin), _end(end) {}
+      iterator() : _current(0), _end(0) {}
       iterator          &operator++();
       iterator          &operator++(int);
       inline bool        operator!=(const iterator &rhs) const { return _current != rhs._current; }
@@ -128,9 +128,13 @@ namespace qi {
       Signature   children()const;
 
     protected:
+      iterator(const char *begin, const char *end) : _current(begin), _end(end) {}
       const char *_current;
       const char *_end;
+      friend class qi::Signature;
     };
+
+
 
     std::string toSTLSignature(bool constify = false);
     std::string toQtSignature(bool constify = false);

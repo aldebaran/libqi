@@ -169,12 +169,12 @@ namespace qi {
     return _p->_valid;
   }
 
-  ::qi::Signature::iterator Signature::begin() const {
+  Signature::iterator Signature::begin() const {
     ::qi::Signature::iterator it(_p->_signature, _p->_end);
     return it;
   };
 
-  ::qi::Signature::iterator Signature::end() const {
+  Signature::iterator Signature::end() const {
     ::qi::Signature::iterator it;
     return it;
   };
