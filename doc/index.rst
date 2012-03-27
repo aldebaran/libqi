@@ -25,6 +25,7 @@ Topics
 ------
 
  - :ref:`qiMessaging <qimessaging-index>`
+ - :ref:`qiMessaging API Reference <qimessaging-api-index>`
  - :ref:`NAOqi 2.0 - Core <core-index>`
 
 Software Stack
@@ -42,6 +43,7 @@ Software Stack
    std/index
    messaging/index
    core/index
+   messaging/api/index
 
 ..
    connectivity
