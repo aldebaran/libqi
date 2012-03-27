@@ -16,7 +16,7 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -25,7 +25,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = [ 'sphinx.ext.todo' ]
+extensions = [ 'sphinx.ext.todo', 'extendcpp', 'extendcppp' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'qi Framework'
-copyright = u'2011, platform@aldebaran-robotics.com'
+copyright = u'2012, platform@aldebaran-robotics.com'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -91,7 +91,10 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'agogo'
+# agogo/  default/  haiku/   pyramid/  sphinxdoc/
+# basic/  epub/     nature/  scrolls/  traditional/
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -181,6 +184,8 @@ latex_documents = [
   ('index', 'qiFramework.tex', u'qi Framework Documentation',
    u'platform@aldebaran-robotics.com', 'manual'),
 ]
+
+todo_include_todos = True
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
