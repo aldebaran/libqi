@@ -25,7 +25,7 @@ namespace qi {
     ~RemoteObject();
 
     virtual void onSocketReadyRead(TransportSocket *client, int id);
-    virtual void metaCall(unsigned int method, const qi::FunctorParameters &in, qi::FunctorResult out);
+    virtual void metaCall(int method, const qi::FunctorParameters &in, qi::FunctorResult out);
 
   protected:
     qi::TransportSocket                           *_ts;

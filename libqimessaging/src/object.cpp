@@ -44,12 +44,21 @@ namespace qi {
     mm._idx = idx;
     _meta->_methods.push_back(mm);
     _meta->_methodsNameToIdx[signature] = idx;
+    qiLogVerbose("qi::Object") << "binding method:" << signature;
     return idx;
   }
 
-  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
+  void Object::metaCall(int method, const FunctorParameters &in, qi::FunctorResult out)
   {
-    assert(method < _meta->_methods.size());
+    if (method < 0 || method > _meta->_methods.size()) {
+      std::stringstream ss;
+      ss << "Can't find method " << method;
+      qi::Buffer     buf;
+      qi::DataStream ds(buf);
+      ds << ss.str();
+      out.setError(buf);
+      return;
+    }
     MetaMethod *mm = &(_meta->_methods[method]);
     if (mm->_functor)
       mm->_functor->call(in, out);
