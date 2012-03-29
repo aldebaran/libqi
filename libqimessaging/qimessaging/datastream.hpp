@@ -145,7 +145,7 @@ namespace qi {
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
-    int sz;
+    int sz = 0;
     sd >> sz;
     v.clear();
     if (sz) {
