@@ -27,11 +27,14 @@ namespace qi {
 
   public:
     std::map<unsigned int, qi::Object*>     _services;
-    std::map<unsigned int, qi::ServiceInfo> _servicesInfo;
+    std::map<std::string, qi::Object*>      _servicesByName;
+    std::map<std::string, qi::ServiceInfo>  _servicesInfo;
+    std::map<unsigned int, std::string>     _servicesIndex;
     TransportServer                         _ts;
     std::vector<std::string>                _endpoints;
     qi::Session                            *_session;
-    boost::mutex                            _mutex;
+    boost::mutex                            _mutexServices;
+    boost::mutex                            _mutexOthers;
   };
 
   void ServerPrivate::newConnection()
@@ -48,7 +51,7 @@ namespace qi {
     qi::Object *obj;
 
     {
-      boost::mutex::scoped_lock sl(_mutex);
+      boost::mutex::scoped_lock sl(_mutexServices);
       std::map<unsigned int, qi::Object*>::iterator it;
       it = _services.find(msg.service());
       obj = it->second;
@@ -120,9 +123,14 @@ namespace qi {
     dout >> idx;
     si.setServiceId(idx);
     {
-      boost::mutex::scoped_lock sl(_p->_mutex);
+      boost::mutex::scoped_lock sl(_p->_mutexServices);
       _p->_services[idx] = obj;
-      _p->_servicesInfo[idx] = si;
+    }
+    {
+      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      _p->_servicesInfo[name] = si;
+      _p->_servicesByName[name] = obj;
+      _p->_servicesIndex[idx] = name;
     }
     return idx;
   };
@@ -151,26 +159,61 @@ namespace qi {
     qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
     {
-      boost::mutex::scoped_lock sl(_p->_mutex);
+      boost::mutex::scoped_lock sl(_p->_mutexServices);
       _p->_services.erase(idx);
-      _p->_servicesInfo.erase(idx);
+    }
+    {
+      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      std::map<unsigned int, std::string>::iterator it;
+      it = _p->_servicesIndex.find(idx);
+      if (it == _p->_servicesIndex.end()) {
+        qiLogError("qimessaging.Server") << "Can't find name associated to id:" << idx;
+      }
+      else {
+        _p->_servicesByName.erase(it->second);
+        _p->_servicesInfo.erase(it->second);
+      }
+      _p->_servicesIndex.erase(idx);
     }
   };
 
   void Server::stop() {
+    qiLogError("qimessaging.Server") << "stop is not implemented";
   }
 
   std::vector<qi::ServiceInfo> Server::registeredServices() {
     std::vector<qi::ServiceInfo> ssi;
-    std::map<unsigned int, qi::ServiceInfo>::iterator it;
+    std::map<std::string, qi::ServiceInfo>::iterator it;
 
     {
-      boost::mutex::scoped_lock sl(_p->_mutex);
+      boost::mutex::scoped_lock sl(_p->_mutexOthers);
       for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
         ssi.push_back(it->second);
       }
     }
     return ssi;
+  }
+
+  qi::ServiceInfo Server::registeredService(const std::string &service) {
+    std::map<std::string, qi::ServiceInfo>::iterator it;
+    {
+      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      it = _p->_servicesInfo.find(service);
+      if (it != _p->_servicesInfo.end())
+        return it->second;
+    }
+    return qi::ServiceInfo();
+  }
+
+  qi::Object *Server::registeredServiceObject(const std::string &service) {
+    std::map<std::string, qi::Object *>::iterator it;
+    {
+      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      it = _p->_servicesByName.find(service);
+      if (it != _p->_servicesByName.end())
+        return it->second;
+    }
+    return 0;
   }
 
 }

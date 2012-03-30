@@ -44,9 +44,13 @@ namespace qi {
 
     bool listen(qi::Session *session, const std::vector<std::string> &url);
     void stop();
+
     unsigned int registerService(const std::string &name, qi::Object *obj);
-    void unregisterService(unsigned int idx);
-    std::vector<qi::ServiceInfo> registeredServices();
+    void         unregisterService(unsigned int idx);
+
+    std::vector<qi::ServiceInfo>  registeredServices();
+    qi::ServiceInfo               registeredService(const std::string &service);
+    qi::Object                   *registeredServiceObject(const std::string &service);
 
   private:
     ServerPrivate *_p;
