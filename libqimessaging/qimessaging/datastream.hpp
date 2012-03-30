@@ -15,6 +15,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <stdint.h>
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
 #include <qimessaging/buffer.hpp>
@@ -61,21 +62,35 @@ namespace qi {
     size_t read(void *data, size_t len);
     void writeString(const char *str, size_t len);
 
-    DataStream& operator<<(bool   i);
-    DataStream& operator<<(char   i);
-    DataStream& operator<<(int    i);
-    DataStream& operator<<(unsigned char   i);
-    DataStream& operator<<(unsigned int    i);
-    DataStream& operator<<(float  i);
-    DataStream& operator<<(double i);
+    DataStream& operator<<(bool     b);
+    DataStream& operator<<(char     c);
+    DataStream& operator<<(int8_t   c);
+    DataStream& operator<<(int16_t  s);
+    DataStream& operator<<(int32_t  i);
+    DataStream& operator<<(int64_t  l);
+
+    DataStream& operator<<(uint8_t  uc);
+    DataStream& operator<<(uint16_t us);
+    DataStream& operator<<(uint32_t ui);
+    DataStream& operator<<(uint64_t ul);
+    DataStream& operator<<(float    f);
+    DataStream& operator<<(double   d);
     DataStream& operator<<(const char *);
     DataStream& operator<<(const std::string& i);
 
-    DataStream& operator>>(bool   &i);
-    DataStream& operator>>(char   &i);
-    DataStream& operator>>(int    &i);
-    DataStream& operator>>(unsigned char   &i);
-    DataStream& operator>>(unsigned int    &i);
+    DataStream& operator>>(bool     &b);
+    DataStream& operator>>(char     &c);
+
+    DataStream& operator>>(int8_t   &c);
+    DataStream& operator>>(int16_t  &i);
+    DataStream& operator>>(int32_t  &i);
+    DataStream& operator>>(int64_t  &l);
+
+    DataStream& operator>>(uint8_t  &uc);
+    DataStream& operator>>(uint16_t &us);
+    DataStream& operator>>(uint32_t &ui);
+    DataStream& operator>>(uint64_t &ul);
+
     DataStream& operator>>(float  &i);
     DataStream& operator>>(double &i);
     DataStream& operator>>(std::string& i);
