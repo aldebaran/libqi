@@ -113,6 +113,7 @@ namespace qi {
 
     if (ts == 0)
     {
+      qiLogError("qi::Session") << "service not found: " << service;
       return 0;
     }
 
