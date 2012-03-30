@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <qimessaging/object.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace qi {
 
@@ -88,6 +89,21 @@ namespace qi {
     stream >> meta._methods;
     stream >> meta._methodsNumber;
     return stream;
+  }
+
+  std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name)
+  {
+    std::vector<qi::MetaMethod>           ret;
+    std::vector<qi::MetaMethod>::iterator it;
+    std::string cname(name);
+    cname += "::";
+
+    for (it = _methods.begin(); it != _methods.end(); ++it) {
+      qi::MetaMethod &mm = *it;
+      if (boost::starts_with(mm.signature(), cname))
+        ret.push_back(mm);
+    }
+    return ret;
   }
 
 };

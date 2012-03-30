@@ -25,6 +25,8 @@ namespace qi {
 
     const std::string &signature() const { return _signature; }
 
+    unsigned int       index() const { return _idx; }
+
   protected:
   public:
     std::string        _signature;
@@ -50,6 +52,9 @@ namespace qi {
       return it->second;
     }
 
+    const std::vector<MetaMethod> &methods() const { return _methods; }
+
+    std::vector<MetaMethod> findMethod(const std::string &name);
     /*
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.
