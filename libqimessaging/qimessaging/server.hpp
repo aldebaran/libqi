@@ -46,6 +46,7 @@ namespace qi {
     void stop();
     unsigned int registerService(const std::string &name, qi::Object *obj);
     void unregisterService(unsigned int idx);
+    std::vector<qi::ServiceInfo> registeredServices();
 
   private:
     ServerPrivate *_p;

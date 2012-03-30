@@ -14,6 +14,7 @@
 #include "src/session_p.hpp"
 #include "src/server_functor_result_future_p.hpp"
 #include <qi/os.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace qi {
 
@@ -25,10 +26,12 @@ namespace qi {
     virtual void onSocketReadyRead(TransportSocket *client, int id);
 
   public:
-    std::map<unsigned int, qi::Object*> _services;
-    TransportServer                     _ts;
-    std::vector<std::string>            _endpoints;
-    qi::Session                        *_session;
+    std::map<unsigned int, qi::Object*>     _services;
+    std::map<unsigned int, qi::ServiceInfo> _servicesInfo;
+    TransportServer                         _ts;
+    std::vector<std::string>                _endpoints;
+    qi::Session                            *_session;
+    boost::mutex                            _mutex;
   };
 
   void ServerPrivate::newConnection()
@@ -44,13 +47,16 @@ namespace qi {
     client->read(id, &msg);
     qi::Object *obj;
 
-    std::map<unsigned int, qi::Object*>::iterator it;
-    it = _services.find(msg.service());
-    obj = it->second;
-    if (it == _services.end() || !obj)
     {
-      qiLogError("qi::Server") << "Can't find service: " << msg.service();
-      return;
+      boost::mutex::scoped_lock sl(_mutex);
+      std::map<unsigned int, qi::Object*>::iterator it;
+      it = _services.find(msg.service());
+      obj = it->second;
+      if (it == _services.end() || !obj)
+      {
+        qiLogError("qi::Server") << "Can't find service: " << msg.service();
+        return;
+      }
     }
     qi::FunctorParameters ds(msg.buffer());
 
@@ -112,7 +118,12 @@ namespace qi {
     qi::DataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;
-    _p->_services[idx] = obj;
+    si.setServiceId(idx);
+    {
+      boost::mutex::scoped_lock sl(_p->_mutex);
+      _p->_services[idx] = obj;
+      _p->_servicesInfo[idx] = si;
+    }
     return idx;
   };
 
@@ -139,8 +150,27 @@ namespace qi {
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
+    {
+      boost::mutex::scoped_lock sl(_p->_mutex);
+      _p->_services.erase(idx);
+      _p->_servicesInfo.erase(idx);
+    }
   };
 
   void Server::stop() {
   }
+
+  std::vector<qi::ServiceInfo> Server::registeredServices() {
+    std::vector<qi::ServiceInfo> ssi;
+    std::map<unsigned int, qi::ServiceInfo>::iterator it;
+
+    {
+      boost::mutex::scoped_lock sl(_p->_mutex);
+      for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
+        ssi.push_back(it->second);
+      }
+    }
+    return ssi;
+  }
+
 }
