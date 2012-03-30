@@ -280,5 +280,27 @@ namespace qi {
   }
 
 
+  std::vector<std::string> signatureSplit(const std::string &fullSignature) {
+    std::vector<std::string> ret;
+    std::string retSig;
+    std::string parSig;
+    std::string funcName;
+
+    size_t idx1 = fullSignature.find("::");
+    if (idx1 != fullSignature.npos)
+      funcName = fullSignature.substr(0, idx1);
+    size_t idx2 = fullSignature.find("(", idx1);
+    if (idx2 != fullSignature.npos) {
+      retSig = fullSignature.substr(idx1 + 2, idx2 - idx1 - 2);
+      parSig = fullSignature.substr(idx2);
+    }
+
+    ret.push_back(retSig);
+    ret.push_back(funcName);
+    ret.push_back(parSig);
+    return ret;
+  }
+
+
 }
 

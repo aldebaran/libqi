@@ -196,23 +196,11 @@ bool qi_MetaTypeLoad(qi::DataStream &stream, int metatype, void *data)
 
 void qi_SignatureToMetaMethod(const std::string &signature, QString *returnSig, QString *funcSig)
 {
-  std::string retSig;
-  std::string parSig;
-  std::string funcName;
+  std::vector<std::string> sigs = qi::signatureSplit(signature);
 
-  size_t idx1 = signature.find("::");
-  if (idx1 != signature.npos)
-    funcName = signature.substr(0, idx1);
-  size_t idx2 = signature.find("(", idx1);
-  if (idx2 != signature.npos) {
-    retSig = signature.substr(idx1 + 2, idx2 - idx1 - 2);
-    parSig = signature.substr(idx2);
-  }
-
-
-  qi::Signature rets(retSig);
-  qi::Signature funs(parSig);
+  qi::Signature rets(sigs[0]);
+  qi::Signature funs(sigs[2]);
   *returnSig = QString::fromStdString(rets.toQtSignature(false));
-  *funcSig = QString::fromStdString(funcName) + QString::fromStdString(funs.toQtSignature(true));
+  *funcSig = QString::fromStdString(sigs[1]) + QString::fromStdString(funs.toQtSignature(true));
 }
 

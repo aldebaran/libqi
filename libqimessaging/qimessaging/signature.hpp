@@ -74,6 +74,7 @@ namespace qi {
     }
   };
 
+  QIMESSAGING_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
 
   class SignaturePrivate;
 
@@ -81,8 +82,8 @@ namespace qi {
   public:
 
   public:
-    Signature(const char *fullSignature = 0);
-    Signature(const std::string &fullSignature);
+    Signature(const char *signature = 0);
+    Signature(const std::string &signature);
 
     bool isValid() const;
 
