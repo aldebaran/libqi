@@ -15,3 +15,7 @@ qiMessaging API Reference
   server
   session
   signature
+
+
+- :doc:`/cpp-classindex`
+- :doc:`/cpp-funcindex`
