@@ -1080,6 +1080,16 @@ class CPPMemberObject(CPPObject):
 
 class CPPFunctionObject(CPPObject):
 
+    doc_field_types = [
+        TypedField('parameter', label=l_('Parameters'),
+                   names=('param', 'parameter', 'arg', 'argument'),
+                   typerolename='type', typenames=('type',)),
+        Field('returnvalue', label=l_('Returns'), has_arg=False,
+              names=('returns', 'return')),
+        Field('returntype', label=l_('Return type'), has_arg=False,
+              names=('rtype',)),
+        ]
+
     def attach_function(self, node, func):
         owner, name = func.name.split_owner()
         if owner is not None:
