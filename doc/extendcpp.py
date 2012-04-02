@@ -62,7 +62,7 @@ class CppIndex(Index):
         functable = dict()
         for refname, (docname, type, theid) in self.domain.data['objects'].iteritems():
             if type == self._type:
-                fnames = refname.rsplit("::", 1)
+                fnames = split_func_name(refname, discard_args=True)
                 if len(fnames) == 2:
                     fname = fnames[1]
                     fpath = fnames[0]
