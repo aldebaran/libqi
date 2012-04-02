@@ -1191,8 +1191,10 @@ class CPPXRefRole(XRefRole):
                     title = title[dcolon + 2:]
         return title, target
 
+#we need to derive from the real CPPDomain
+from sphinx.domains.cpp import CPPDomain
 
-class CPPDomain(Domain):
+class MyCPPDomain(CPPDomain):
     """C++ language domain."""
     name = 'cpp'
     label = 'C++'
@@ -1264,3 +1266,9 @@ class CPPDomain(Domain):
     def get_objects(self):
         for refname, (docname, type, theid) in self.data['objects'].iteritems():
             yield (refname, refname, type, docname, refname, 1)
+
+
+
+def setup(app):
+    app.override_domain(MyCPPDomain)
+
