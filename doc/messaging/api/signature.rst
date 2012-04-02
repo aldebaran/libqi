@@ -84,37 +84,7 @@ Classes
 
 
 
-.. cpp:class:: Signature
-
-  .. cpp:class:: iterator
-
-    .. cpp:function:: iterator()
-
-      Constructor
-
-    .. cpp:function:: iterator          &iterator::operator++()
-
-    .. cpp:function:: iterator          &iterator::operator++(int)
-
-    .. cpp:function:: bool        iterator::operator!=(const iterator &rhs) const
-
-    .. cpp:function:: bool        iterator::operator==(const iterator &rhs) const
-
-    .. cpp:function:: std::string iterator::operator*() const
-
-    .. cpp:function:: std::string iterator::operator->() const
-
-    .. cpp:function:: Type        iterator::type()const
-
-    .. cpp:function:: std::string iterator::signature()const
-
-    .. cpp:function:: bool        iterator::isValid()const
-
-    .. cpp:function:: int         iterator::pointer()const
-
-    .. cpp:function:: bool        iterator::hasChildren()const
-
-    .. cpp:function:: Signature   iterator::children()const
+.. cpp:class:: qi::Signature
 
   .. cpp:type:: Type
 
@@ -154,3 +124,32 @@ Classes
 
 
 
+.. cpp:class:: qi::Signature::iterator
+
+  .. cpp:function:: iterator()
+
+    Constructor
+
+  .. cpp:function:: iterator          &operator++()
+
+  .. cpp:function:: iterator          &operator++(int)
+
+  .. cpp:function:: bool        operator!=(const iterator &rhs) const
+
+  .. cpp:function:: bool        operator==(const iterator &rhs) const
+
+  .. cpp:function:: std::string operator*() const
+
+  .. cpp:function:: std::string operator->() const
+
+  .. cpp:function:: Type        type()const
+
+  .. cpp:function:: std::string signature()const
+
+  .. cpp:function:: bool        isValid()const
+
+  .. cpp:function:: int         pointer()const
+
+  .. cpp:function:: bool        hasChildren()const
+
+  .. cpp:function:: Signature   children()const
