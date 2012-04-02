@@ -21,7 +21,7 @@ from sphinx.domains import Domain, ObjType
 from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
 from sphinx.util.compat import Directive
-from sphinx.util.docfields import Field, GroupedField
+from sphinx.util.docfields import Field, GroupedField, TypedField
 
 
 _identifier_re = re.compile(r'(~?\b[a-zA-Z_][a-zA-Z0-9_]*)\b')
@@ -342,7 +342,7 @@ class CastOpDefExpr(PrimaryDefExpr):
         return u'castto-%s-operator' % self.typename.get_id()
 
     def __unicode__(self):
-        return u'operator %s' % self.typename
+        return u'operator %s()' % self.typename
 
 
 class ArgumentDefExpr(DefExpr):
@@ -449,6 +449,11 @@ class FuncDefExpr(NamedDefExpr):
 
     def __init__(self, name, visibility, static, explicit, constexpr, rv,
                  signature, const, noexcept, pure_virtual):
+        #add the signature to support overload
+        if signature:
+            name.name = str(name) + "(" + ",".join([str(x.type) for x in signature]) + ")"
+        else:
+            name.name = str(name) + "()"
         NamedDefExpr.__init__(self, name, visibility, static)
         self.rv = rv
         self.signature = signature
@@ -459,8 +464,13 @@ class FuncDefExpr(NamedDefExpr):
         self.pure_virtual = pure_virtual
 
     def get_id(self):
+        name = self.name.get_id().split("(", 1)
+        if len(name) == 2:
+            name = name[0]
+        else:
+            name = self.name.get_id()
         return u'%s%s%s%s' % (
-            self.name.get_id(),
+            name,
             self.signature and u'__' +
                 u'.'.join(x.get_id() for x in self.signature) or u'',
             self.const and u'C' or u'',
@@ -1103,7 +1113,12 @@ class CPPFunctionObject(CPPObject):
             node += nodes.Text(u' ')
             self.attach_type(node, name.typename)
         else:
-            funcname = unicode(name)
+            #discard params
+            sname = unicode(name).split("(", 1)
+            if len(sname) == 2:
+                funcname = unicode(sname[0])
+            else:
+                funcname = unicode(name)
             node += addnodes.desc_name(funcname, funcname)
 
         paramlist = addnodes.desc_parameterlist()
