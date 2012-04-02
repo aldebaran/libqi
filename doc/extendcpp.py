@@ -315,22 +315,17 @@ class BriefEnv:
             pni.append(pbl)
             for (n, be) in objs.iteritems():
                 ni  = nodes.list_item()
-                prub = nodes.paragraph(text=n2 + n)
-                pbl.append(ni)
-                ni.append(prub)
-                ni.append(be.render(app, doctree))
+                ni += addnodes.desc_annotation('class ', 'class ')
+                ni += addnodes.desc_name(n, n)
+                ni += be.render(app, doctree)
+                pbl += ni
             return pni
 
     def render_simple(self, app, doctree, objs, n1, n2):
         if objs:
-            #ni  = nodes.list_item()
             ni  = nodes.definition_list_item()
-            rub = nodes.rubric(text=n1)
-            st = nodes.strong()
-            st.append(rub)
-            ren = filebrief_replace_node(app, doctree, n2, objs)
-            ni.append(st)
-            ni.append(ren)
+            ni += addnodes.desc_type(n1, n1)
+            ni += filebrief_replace_node(app, doctree, n2, objs)
             return ni
 
     def render(self, app, doctree):
@@ -341,8 +336,8 @@ class BriefEnv:
         append = ""
         if self.scope == "global":
             prepend = "Global "
-        if self.scope == "class":
-            append = " (class %s)" % self.refname
+        #if self.scope == "class":
+        #    append = " (class %s)" % self.refname
         elif self.scope == "namespace":
             append = " (namespace %s)" % self.refname
 
