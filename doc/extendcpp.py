@@ -24,14 +24,24 @@ from sphinx.locale import l_, _
 from sphinx.domains import Index
 
 
-def split_func_name(name):
+def split_func_name(name, discard_args = False):
+    pif = name.split("(", 1)
+    if len(pif) == 2:
+        name = pif[0]
+        param = "(" + pif[1]
+    else:
+        param = ""
+
+    if discard_args:
+        param = ""
+
     fnames = name.rsplit("::", 1)
     if len(fnames) == 2:
         fpath = fnames[0]
-        fname = fnames[1]
+        fname = fnames[1] + param
     else:
         fpath = ""
-        fname = name
+        fname = name + param
     return (fpath, fname)
 
 class CppIndex(Index):
@@ -207,7 +217,7 @@ def filebrief_replace_node(app, doctree, itemtype, items):
         retnode = refnode
         cnode = nodefuncmap.get(theid)
         if cnode:
-            (_, fname) = split_func_name(refname)
+            (_, fname) = split_func_name(refname, discard_args=True)
             refnode = nodes.reference(fname, fname, refdocname=docname, refid=theid)
             i = cnode[0].first_child_matching_class(addnodes.desc_name)
             cnode[0][i] = refnode
