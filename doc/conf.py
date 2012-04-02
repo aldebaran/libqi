@@ -92,6 +92,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = 'agogo'
+html_theme = 'aldoc'
 # agogo/  default/  haiku/   pyramid/  sphinxdoc/
 # basic/  epub/     nature/  scrolls/  traditional/
 
@@ -102,7 +103,7 @@ html_theme = 'agogo'
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = [ '_themes' ]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
