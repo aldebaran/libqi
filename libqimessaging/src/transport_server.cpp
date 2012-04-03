@@ -77,21 +77,38 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
   struct sockaddr_in *sin = reinterpret_cast<struct sockaddr_in *>(&listen_on_addr);
 
   socklen = sizeof(struct sockaddr_in);
-  sin->sin_port = htons(url.port());
   sin->sin_family = AF_INET;
   if ((sin->sin_addr.s_addr = inet_addr(url.host().c_str())) == INADDR_NONE)
   {
     qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
     return false;
   }
-  qiLogVerbose("qimessaging.transportserver") << "Starting server at " << url.str();
-  listener = evconnlistener_new_bind(base,
-                                     accept_cb,
-                                     this,
-                                     LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE,
-                                     -1,
-                                     (struct sockaddr*)&listen_on_addr,
-                                     socklen);
+
+  bool findPort = url.port() == 0;
+  unsigned short port = url.port() == 0 ? 1 : url.port();
+
+  do
+  {
+    sin->sin_port = htons(port);
+    listener = evconnlistener_new_bind(base,
+                                       accept_cb,
+                                       this,
+                                       LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE,
+                                       -1,
+                                       (struct sockaddr*)&listen_on_addr,
+                                       socklen);
+
+    if (!findPort || listener)
+    {
+      break;
+    }
+
+    port = qi::os::findAvailablePort(port);
+  }
+  while (port != 0);
+
+  qiLogVerbose("qimessaging.transportserver") << "Starting server at "
+                                              << url.host().c_str() << ":" << port;
 
   return listener != 0;
 }
