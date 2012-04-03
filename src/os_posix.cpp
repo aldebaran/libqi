@@ -193,7 +193,7 @@ namespace qi {
                                           << unavailable << std::endl;
       }
       qiLogDebug("core.common.network") << "findAvailablePort: Returning port: "
-                                        << port << std::endl;
+                                        << iPort << std::endl;
       return iPort;
     }
 

@@ -366,12 +366,12 @@ namespace qi {
 
         qiLogError("core.common.network") << "freePort Socket Bind Error: "
                                           << error << std::endl;
-        port = 0;
+        iPort = 0;
       }
 
       qiLogDebug("core.common.network") << "freePort: Returning port: "
-                                        << port << std::endl;
-      return port;
+                                        << iPort << std::endl;
+      return iPort;
     }
 
   }
