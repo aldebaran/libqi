@@ -106,6 +106,10 @@ if(UNIX AND NOT APPLE)
   qi_use_lib(qi DL)
 endif()
 
+if(WIN32)
+  qi_use_lib(qi WSOCK)
+endif()
+
 qi_install_header(${H} KEEP_RELATIVE_PATHS)
 qi_stage_lib(qi QI)
 

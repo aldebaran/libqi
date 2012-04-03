@@ -21,6 +21,7 @@
 #include <iphlpapi.h> // GetComputerName
 
 #include <qi/error.hpp>
+#include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
@@ -276,6 +277,101 @@ namespace qi {
         return boost::filesystem::path((WCHAR *)chrComputerName, qi::unicodeFacet()).string(qi::unicodeFacet());
       }
       return std::string();
+    }
+
+
+    // Function to get real string representation from
+    // GetLastError() and WSAGetLastError()
+    static std::string GetLastErrorMessage(DWORD lastError)
+    {
+      TCHAR errmsg[512];
+
+      if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                         0,
+                         lastError,
+                         0,
+                         errmsg,
+                         511,
+                         NULL))
+      {
+        /* if we fail, call ourself to find out why and return that error */
+        return (GetLastErrorMessage(GetLastError()));
+      }
+
+      return errmsg;
+    }
+
+    unsigned short findAvailablePort(unsigned short port)
+    {
+      static bool static_bWSAInit = false;
+      if (!static_bWSAInit )
+      {
+        WORD wVersionRequested = MAKEWORD(2, 0);
+        WSADATA wsaData;
+        int nRet = WSAStartup(wVersionRequested, &wsaData);
+        if (nRet == SOCKET_ERROR)
+          qiLogError("core.common.network") << "WSAStartup returned error: %d\n"
+                                            << WSAGetLastError() << std::endl;
+        else
+          static_bWSAInit = true;
+      }
+
+      struct sockaddr_in name;
+      name.sin_family = AF_INET;
+      name.sin_addr.s_addr = htonl(INADDR_ANY);
+      name.sin_port = (u_short)htons(port);
+      int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+
+      // CK July 8 2010
+      // Set port options which make sure that the port is not
+      // alredy in use.
+      int optval = 1;
+      int rc = setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+                          (char*)&optval, sizeof(optval));
+      // CK August 2 2011
+      // Force Brutal disconnect (not background) so that the socket is freed
+      // as soon as disconnect returns
+      // See: http://msdn.microsoft.com/en-us/library/ms737582(v=VS.85).aspx
+      struct linger linger_setting;
+      linger_setting.l_onoff  = 1;
+      linger_setting.l_linger = 0;
+      rc = setsockopt(sock, SOL_SOCKET, SO_LINGER,
+                      (char*)&linger_setting, sizeof(linger_setting));
+
+      // cast ushort into int to check all ports between
+      // [0, 65535] (e.g. USHRT_MAX)
+      int iPort = static_cast<int>(port);
+      int unavailable = -1;
+      do
+      {
+        name.sin_port = htons(iPort);
+        unavailable = ::bind(sock, (struct sockaddr *)&name, sizeof(name));
+
+        if (!unavailable)
+        {
+          unavailable = ::closesocket(sock);
+          // See: http://msdn.microsoft.com/en-us/library/ms737582(v=VS.85).aspx last comments
+          sock = INVALID_SOCKET; // do not make further use of sock.
+          if (!unavailable)
+            break;
+        }
+        ++iPort;
+      }
+      while (iPort <= USHRT_MAX);
+
+      if (unavailable)
+      {
+        unavailable = WSAGetLastError();
+        std::string error = GetLastErrorMessage(unavailable);
+
+        qiLogError("core.common.network") << "freePort Socket Bind Error: "
+                                          << error << std::endl;
+        port = 0;
+      }
+
+      qiLogDebug("core.common.network") << "freePort: Returning port: "
+                                        << port << std::endl;
+      return port;
     }
 
   }

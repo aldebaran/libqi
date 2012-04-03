@@ -325,6 +325,16 @@
              found).
     \ingroup qios
     \since 1.14
+
+  \fn unsigned short qi::os::findAvailablePort(unsigned short port);
+    \brief Find the first available port starting at `port`.
+
+    \param port First port tested, then try each port after this one
+                one by one.
+    \return Available port or 0 on error
+    \ingroup qios
+    \since 1.14
+
 */
 ///@}
 

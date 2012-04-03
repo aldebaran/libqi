@@ -5,8 +5,10 @@
  */
 
 #ifdef WIN32
+# include <winsock2.h>
 # include <process.h>  // for getpid
 #else
+# include <arpa/inet.h>
 # include <unistd.h> // for getpid
 #endif
 #include <cstdio>
@@ -37,9 +39,6 @@ protected:
     a_newPath.append(a_accent, qi::unicodeFacet());
     FILE* fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
     fclose(fileHandle);
-//    QString pouet = QDir::tempPath() + "/" + QString::fromUtf8(a_accent);
-//    FILE* fileHandle = qi::os::fopen(pouet.toUtf8().data(), "w");
-//    fclose(fileHandle);
   }
 
   void TearDown() {
@@ -74,7 +73,7 @@ TEST(QiOs, sleep)
   qi::os::sleep(1);
 }
 
-TEST(QiOS, msleep)
+TEST(QiOs, msleep)
 {
   qi::os::msleep(1000);
 }
@@ -205,6 +204,76 @@ TEST(QiOs, get_host_name)
 {
   std::string temp = qi::os::gethostname();
   EXPECT_NE(std::string(), temp);
+}
+
+bool freeportbind(unsigned short port, int &sock)
+{
+  struct sockaddr_in name;
+  name.sin_family = AF_INET;
+  name.sin_addr.s_addr = htonl(INADDR_ANY);
+  sock = ::socket(AF_INET, SOCK_STREAM, 0);
+  name.sin_port = htons(port);
+
+  return ::bind(sock, (struct sockaddr *)&name, sizeof(name));
+}
+
+TEST(QiOs, free_port)
+{
+  int sock;
+  unsigned short port = qi::os::findAvailablePort(9559);
+  int success = freeportbind(port, sock);
+
+  if (success == -1)
+    EXPECT_TRUE(false);
+  else
+#ifndef WIN32
+    ::close(sock);
+#else
+    ::closesocket(sock);
+#endif
+
+  EXPECT_TRUE(true);
+}
+
+
+TEST(QiOs, free_port_multiple_connection)
+{
+  int sock1;
+  unsigned short port1 = qi::os::findAvailablePort(9559);
+  int success1 = freeportbind(port1, sock1);
+  int sock2;
+  unsigned short port2 = qi::os::findAvailablePort(9559);
+  int success2 = freeportbind(port2, sock2);
+  int sock3;
+  unsigned short port3 = qi::os::findAvailablePort(9559);
+  int success3 = freeportbind(port3, sock3);
+
+  if (success1 == -1)
+    EXPECT_TRUE(false);
+  else
+#ifndef WIN32
+    ::close(sock1);
+#else
+    ::closesocket(sock1);
+#endif
+  if (success2 == -1)
+    EXPECT_TRUE(false);
+  else
+#ifndef WIN32
+    ::close(sock2);
+#else
+    ::closesocket(sock2);
+#endif
+  if (success3 == -1)
+    EXPECT_TRUE(false);
+  else
+#ifndef WIN32
+    ::close(sock3);
+#else
+    ::closesocket(sock3);
+#endif
+
+  EXPECT_TRUE(true);
 }
 
 #ifdef _MSC_VER

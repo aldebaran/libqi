@@ -17,15 +17,14 @@
 #include <string>
 #include <limits.h>
 
-#ifdef _WIN32
-# include <io.h>      //_wopen
-# include <windows.h> //Sleep
-#else
 # include <pwd.h>
 # include <sys/time.h>
-#endif
+# include <sys/socket.h>
+# include <sys/types.h>
+# include <arpa/inet.h>
 
 #include <qi/os.hpp>
+#include <qi/log.hpp>
 #include <qi/error.hpp>
 #include <qi/qi.hpp>
 #include "src/filesystem.hpp"
@@ -159,5 +158,45 @@ namespace qi {
       free(szHostName);
       return std::string();
     }
+
+
+    unsigned short findAvailablePort(unsigned short port)
+    {
+      struct sockaddr_in name;
+      name.sin_family = AF_INET;
+      name.sin_addr.s_addr = htonl(INADDR_ANY);
+      int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+
+      // cast ushort into int to check all ports between
+      // [0, 65535] (e.g. USHRT_MAX)
+      int iPort = static_cast<int>(port);
+      int unavailable = -1;
+      do
+      {
+        name.sin_port = htons(iPort);
+        unavailable = ::bind(sock, (struct sockaddr *)&name, sizeof(name));
+
+        if (!unavailable)
+        {
+          unavailable = ::close(sock);
+          if (!unavailable)
+            break;
+        }
+        ++iPort;
+      }
+      while (iPort <= USHRT_MAX);
+
+      if (unavailable)
+      {
+        port = 0;
+        qiLogError("core.common.network") << "findAvailablePort Socket Cannot find available port, Last Error: "
+                                          << unavailable << std::endl;
+      }
+      qiLogDebug("core.common.network") << "findAvailablePort: Returning port: "
+                                        << port << std::endl;
+      return port;
+    }
+
+
   };
 };
