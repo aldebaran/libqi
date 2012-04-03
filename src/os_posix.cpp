@@ -188,13 +188,13 @@ namespace qi {
 
       if (unavailable)
       {
-        port = 0;
+        iPort = 0;
         qiLogError("core.common.network") << "findAvailablePort Socket Cannot find available port, Last Error: "
                                           << unavailable << std::endl;
       }
       qiLogDebug("core.common.network") << "findAvailablePort: Returning port: "
                                         << port << std::endl;
-      return port;
+      return iPort;
     }
 
 
