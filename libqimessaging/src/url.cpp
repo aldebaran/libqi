@@ -64,5 +64,12 @@ Url::Url(const qi::Url& url)
 {
 }
 
+Url &Url::operator=(const std::string& rhs)
+{
+  _url = rhs;
+  split_me(_url, _port, _host, _protocol);
+  return *this;
+}
+
 }
 
