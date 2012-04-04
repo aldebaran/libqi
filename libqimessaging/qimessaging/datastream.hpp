@@ -131,7 +131,13 @@ namespace qi {
     sd >> sz;
     v.clear();
     if (sz) {
-      v.resize(sz);
+      try {
+        v.resize(sz);
+      } catch (const std::exception &e) {
+        qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
+                                    << sz;
+        return sd;
+      }
       typename std::list<T>::iterator it = v.begin();
       typename std::list<T>::iterator end = v.end();
       for (; it != end; ++it) {
@@ -164,7 +170,13 @@ namespace qi {
     sd >> sz;
     v.clear();
     if (sz) {
-      v.resize(sz);
+      try {
+        v.resize(sz);
+      } catch (const std::exception &e) {
+        qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
+                                    << sz;
+        return sd;
+      }
       typename std::vector<T>::iterator it = v.begin();
       typename std::vector<T>::iterator end = v.end();
       for (; it != end; ++it) {
