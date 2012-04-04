@@ -20,6 +20,7 @@ def generate_argpush_list(count):
 #define _QI_MESSAGING_OBJECT_HXX_
 
 #include <qimessaging/buffer.hpp>
+#include <qimessaging/functor.hpp>
 
 namespace qi {
 #end raw
@@ -38,13 +39,13 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(${generate_param_list($i)})  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     #for $j in range($i)
     ds << p${j};
     #end for
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 #end for

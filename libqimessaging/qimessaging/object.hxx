@@ -14,6 +14,7 @@
 #define _QI_MESSAGING_OBJECT_HXX_
 
 #include <qimessaging/buffer.hpp>
+#include <qimessaging/functor.hpp>
 
 namespace qi {
 
@@ -33,7 +34,7 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    metaCall(metaObject().methodId(signature), request, promise);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -50,11 +51,11 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0)  = 0;
+    ds << p0;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    ds << p0;
-    metaCall(metaObject().methodId(signature), request, promise);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -71,12 +72,12 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1)  = 0;
+    ds << p0;
+    ds << p1;
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    ds << p0;
-    ds << p1;
-    metaCall(metaObject().methodId(signature), request, promise);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -93,13 +94,13 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -116,14 +117,14 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -140,15 +141,15 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
     ds << p4;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -165,16 +166,16 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
     ds << p4;
     ds << p5;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -191,9 +192,6 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
@@ -201,7 +199,10 @@ namespace qi {
     ds << p4;
     ds << p5;
     ds << p6;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -218,9 +219,6 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
@@ -229,7 +227,10 @@ namespace qi {
     ds << p5;
     ds << p6;
     ds << p7;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 
@@ -246,9 +247,6 @@ namespace qi {
 
     makeFunctorResult<R>(&promise, &future);
     R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
-    std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
     ds << p0;
     ds << p1;
     ds << p2;
@@ -258,7 +256,10 @@ namespace qi {
     ds << p6;
     ds << p7;
     ds << p8;
-    metaCall(metaObject().methodId(signature), request, promise);
+    std::string signature(method);
+    signature += "::";
+    signatureFromObject::value(f, signature);
+    xMetaCall(signature, request, promise);
     return future;
   }
 

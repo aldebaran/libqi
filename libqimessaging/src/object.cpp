@@ -49,11 +49,11 @@ namespace qi {
     return idx;
   }
 
-  void Object::metaCall(int method, const FunctorParameters &in, qi::FunctorResult out)
+  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
-    if (method < 0 || method > _meta->_methods.size()) {
+    if (method > _meta->_methods.size()) {
       std::stringstream ss;
-      ss << "Can't find method " << method;
+      ss << "Can't find methodID: " << method;
       qi::Buffer     buf;
       qi::DataStream ds(buf);
       ds << ss.str();
@@ -63,6 +63,20 @@ namespace qi {
     MetaMethod *mm = &(_meta->_methods[method]);
     if (mm->_functor)
       mm->_functor->call(in, out);
+  }
+
+  bool Object::xMetaCall(const std::string &signature, const FunctorParameters &in, FunctorResult out)
+  {
+    int methodId = metaObject().methodId(signature);
+    if (!methodId) {
+      qi::Buffer     buf;
+      qi::DataStream ds(buf);
+      ds << "Can't find method: " << signature;
+      out.setError(buf);
+      return false;
+    }
+    metaCall(methodId, in, out);
+    return true;
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
@@ -105,5 +119,7 @@ namespace qi {
     }
     return ret;
   }
+
+
 
 };
