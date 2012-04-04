@@ -168,9 +168,10 @@ namespace qi {
       int sock = ::socket(AF_INET, SOCK_STREAM, 0);
 
       // cast ushort into int to check all ports between
-      // [0, 65535] (e.g. USHRT_MAX)
-      int iPort = static_cast<int>(port);
+      // [49152, 65535] (e.g. USHRT_MAX)
+      int iPort = port != 0 ? static_cast<int>(port) : 49152;
       int unavailable = -1;
+
       do
       {
         name.sin_port = htons(iPort);

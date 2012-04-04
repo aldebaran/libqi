@@ -339,8 +339,8 @@ namespace qi {
                       (char*)&linger_setting, sizeof(linger_setting));
 
       // cast ushort into int to check all ports between
-      // [0, 65535] (e.g. USHRT_MAX)
-      int iPort = static_cast<int>(port);
+      // [49152, 65535] (e.g. USHRT_MAX)
+      int iPort = port != 0 ? static_cast<int>(port) : 49152;
       int unavailable = -1;
       do
       {
