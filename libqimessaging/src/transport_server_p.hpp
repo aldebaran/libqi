@@ -25,6 +25,7 @@ namespace qi {
     TransportServerPrivate()
       : tsi(0)
       , base(0)
+      , listenUrl("tcp://0.0.0.0:0")
     {
     }
 
@@ -41,6 +42,8 @@ namespace qi {
     std::queue<qi::TransportSocket*>  connection;
     TransportServerInterface          *tsi;
     struct event_base                 *base;
+    qi::Url                            listenUrl;
+
   };
 
 }

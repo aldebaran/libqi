@@ -107,8 +107,20 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
   }
   while (port != 0);
 
-  qiLogVerbose("qimessaging.transportserver") << "Starting server at "
-                                              << url.host().c_str() << ":" << port;
+  if (listener)
+  {
+    std::stringstream out;
+    out << port;
+
+    listenUrl = "tcp://" + url.host() + ":" + out.str();
+    qiLogVerbose("qimessaging.transportserver") << "Starting server at "
+                                                << listenUrl.str();
+  }
+  else
+  {
+    qiLogError("qimessaging.transportserver") << "Could not start server at "
+                                              << url.str();
+  }
 
   return listener != 0;
 }
