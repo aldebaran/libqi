@@ -13,6 +13,7 @@
 #include "src/network_thread.hpp"
 #include "src/session_p.hpp"
 #include "src/server_functor_result_future_p.hpp"
+#include "src/transport_server_p.hpp"
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -79,14 +80,38 @@ namespace qi {
     delete _p;
   }
 
-  bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints) {
-    _p->_endpoints = endpoints;
+  bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints)
+  {
+    bool success = true;
+
     _p->_session = session;
-
-    qi::Url urlo(_p->_endpoints[0]);
-
     _p->_ts.setCallbacks(_p);
-    return _p->_ts.start(session, urlo);
+
+    for (std::vector<std::string>::const_iterator it = endpoints.begin();
+         it != endpoints.end();
+         it++)
+    {
+      qi::Url url(*it);
+
+      switch (url.protocol())
+      {
+      case Url::Protocol_Tcp:
+        if (_p->_ts.start(session, url))
+        {
+          _p->_endpoints.push_back(_p->_ts._p->listenUrl.str());
+        }
+        else
+        {
+          success = false;
+        }
+        break;
+      default:
+        success = false;
+        break;
+      }
+    }
+
+    return success;
   }
 
 
