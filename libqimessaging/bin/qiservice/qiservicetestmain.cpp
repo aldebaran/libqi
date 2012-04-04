@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   desc.add_options()
       ("help", "Print this help.")
       ("master-address",
-       po::value<std::string>()->default_value(std::string("tcp://0.0.0.0:5555")),
+       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
        "The master address");
 
   // allow master address to be specified as the first arg
