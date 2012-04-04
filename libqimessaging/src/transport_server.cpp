@@ -85,7 +85,7 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
   }
 
   bool findPort = url.port() == 0;
-  unsigned short port = url.port() == 0 ? 1 : url.port();
+  unsigned short port = findPort ? qi::os::findAvailablePort(0) : url.port();
 
   do
   {
@@ -98,7 +98,7 @@ bool TransportServerPrivate::start(struct event_base *base, const qi::Url &url)
                                        (struct sockaddr*)&listen_on_addr,
                                        socklen);
 
-    if (!findPort || listener)
+    if (!findPort || (findPort && listener))
     {
       break;
     }
