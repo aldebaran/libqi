@@ -22,6 +22,10 @@ static void split_me(const std::string &url, unsigned short &_port, std::string 
   {
     _protocol = Url::Protocol_Tcp;
   }
+  else if (type =="tcp+ssl" || type == "ssl+tcp")
+  {
+    _protocol = Url::Protocol_TcpSsl;
+  }
   else
   {
     _protocol = Url::Protocol_Any;

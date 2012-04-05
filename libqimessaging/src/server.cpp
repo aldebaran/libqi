@@ -105,6 +105,9 @@ namespace qi {
           success = false;
         }
         break;
+      case Url::Protocol_TcpSsl:
+        qiLogError("qi::Server") << "SSL over TCP is not implemented yet";
+        break;
       default:
         success = false;
         break;

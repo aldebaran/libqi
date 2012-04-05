@@ -23,6 +23,7 @@ namespace qi {
       Protocol_Unknown = 1,
       Protocol_Any     = 2,
       Protocol_Tcp     = 3,
+      Protocol_TcpSsl  = 4,
     };
 
     Url(const char *url);

@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 
       std::vector<std::string> endpoints;
       endpoints.push_back("tcp://0.0.0.0:0");
+      endpoints.push_back("tcp+ssl://0.0.0.0:0");
       srv.listen(&session, endpoints);
       unsigned int id = srv.registerService("serviceTest", &obj);
 
