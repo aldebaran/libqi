@@ -217,6 +217,8 @@ namespace qi
         qiLogError("qimessaging.ServiceDirectory") << "Can't find service #" << idx;
       else
         connectedServices.erase(it2);
+
+      // FIXME: should update socketToIdx...
     }
   }
 
