@@ -74,8 +74,15 @@ int main(int argc, char *argv[])
       srv.unregisterService(id);
       id = srv.registerService("serviceTest", &obj);
 
-      qiLogInfo("qimessaging.ServiceTest") << "registered as service #" << id << std::endl;
-
+      if (id)
+      {
+        qiLogInfo("qimessaging.ServiceTest") << "registered as service #" << id << std::endl;
+      }
+      else
+      {
+        qiLogError("qimessaging.ServiceTest") << "registration failed..." << std::endl;
+        return 1;
+      }
       session.join();
 
       srv.unregisterService(id);
