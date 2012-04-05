@@ -92,7 +92,7 @@ namespace qi {
       qiLogError("datastream", "cant write to a readonly buffer");
       return;
     }
-    *this << (int)len;
+    *this << (uint32_t)len;
     if (len) {
       assert(_buffer.write(str, len) != -1);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
@@ -102,7 +102,7 @@ namespace qi {
   // string
   DataStream& DataStream::operator>>(std::string &s)
   {
-    int sz;
+    uint32_t sz;
     *this >> sz;
 
     s.clear();
@@ -125,7 +125,7 @@ namespace qi {
       qiLogError("datastream", "cant write to a readonly buffer");
       return *this;
     }
-    *this << (int)s.size();
+    *this << (uint32_t)s.size();
     if (!s.empty()) {
       assert(_buffer.write(s.data(), s.size()) != -1);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
@@ -140,7 +140,7 @@ namespace qi {
       qiLogError("datastream", "cant write to a readonly buffer");
       return *this;
     }
-    int len = strlen(s);
+    uint32_t len = strlen(s);
     writeString(s, len);
     __QI_DEBUG_SERIALIZATION_DATA_W(char *, s);
     return *this;
@@ -150,7 +150,7 @@ namespace qi {
   qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &val)
   {
     std::string sig;
-    int type;
+    uint32_t type;
     val.clear();
     sd >> type;
     sd >> sig;
@@ -202,7 +202,7 @@ namespace qi {
 
   qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &val)
   {
-    sd << (int)val.type();
+    sd << (uint32_t)val.type();
     switch(val.type()) {
       case qi::Value::Bool:
         sd << "b";

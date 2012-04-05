@@ -116,7 +116,7 @@ namespace qi {
     typename std::list<T>::const_iterator it = v.begin();
     typename std::list<T>::const_iterator end = v.end();
 
-    sd << (int)v.size();
+    sd << (uint32_t)v.size();
     for (; it != end; ++it) {
       sd << *it;
     }
@@ -127,7 +127,7 @@ namespace qi {
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::list<T> &v) {
     typedef std::list<T> _typefordebug;
-    int sz;
+    uint32_t sz;
     sd >> sz;
     v.clear();
     if (sz) {
@@ -155,7 +155,7 @@ namespace qi {
     typename std::vector<T>::const_iterator it = v.begin();
     typename std::vector<T>::const_iterator end = v.end();
 
-    sd << (int)v.size();
+    sd << (uint32_t)v.size();
     for (; it != end; ++it) {
       sd << *it;
     }
@@ -166,7 +166,7 @@ namespace qi {
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
-    int sz = 0;
+    uint32_t sz = 0;
     sd >> sz;
     v.clear();
     if (sz) {
@@ -193,7 +193,7 @@ namespace qi {
     typename std::map<K,V>::const_iterator it = m.begin();
     typename std::map<K,V>::const_iterator end = m.end();
 
-    sd << (int)m.size();
+    sd << (uint32_t)m.size();
 
     for (; it != end; ++it) {
       sd << it->first;
@@ -206,11 +206,11 @@ namespace qi {
   template<typename K, typename V>
   qi::DataStream &operator>>(qi::DataStream &sd, std::map<K, V>  &m) {
     typedef  std::map<K,V> _typefordebug;
-    int sz;
+    uint32_t sz;
     sd >> sz;
     m.clear();
 
-    for(int i=0; i < sz; ++i) {
+    for(uint32_t i=0; i < sz; ++i) {
       K k;
       V v;
       sd >> k;
