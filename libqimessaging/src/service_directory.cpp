@@ -181,12 +181,21 @@ namespace qi
 
   unsigned int ServiceDirectoryPrivate::registerService(const ServiceInfo &svcinfo)
   {
+    std::map<std::string, unsigned int>::iterator it;
+    it = nameToIdx.find(svcinfo.name());
+    if (it != nameToIdx.end())
+    {
+      qiLogWarning("qimessaging.ServiceDirectory")  << "service " << svcinfo.name()
+                                                    << " is already registered (#" << it->second << ")" << std::endl;
+      return 0;
+    }
+
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
     socketToIdx[socket()].push_back(idx);
     connectedServices[idx] = svcinfo;
     connectedServices[idx].setServiceId(idx);
-    qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered #" << idx << std::endl;
+    qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered (#" << idx << ")" << std::endl;
     return idx;
   }
 
