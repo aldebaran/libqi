@@ -55,7 +55,7 @@ namespace qi {
   };
 
 
-  SignatureConvertor::SignatureConvertor(qi::Signature *sig, SignatureType type, bool constify)
+  SignatureConvertor::SignatureConvertor(const Signature *sig, SignatureType type, bool constify)
     : _type(type),
       _done(false),
       _constify(constify),
@@ -86,7 +86,7 @@ namespace qi {
     return _result;
   }
 
-  void SignatureConvertor::visit(qi::Signature *sig) {
+  void SignatureConvertor::visit(const qi::Signature *sig) {
 
     qi::Signature::iterator it;
 

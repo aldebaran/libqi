@@ -137,8 +137,9 @@ namespace qi {
 
 
 
-    std::string toSTLSignature(bool constify = false);
-    std::string toQtSignature(bool constify = false);
+    std::string toSTLSignature(bool constify = false) const;
+    std::string toQtSignature(bool constify = false) const;
+    std::string toString() const;
 
   protected:
     boost::shared_ptr<SignaturePrivate> _p;

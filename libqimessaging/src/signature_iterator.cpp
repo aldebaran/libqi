@@ -82,8 +82,11 @@ namespace qi {
 
     if (_signature)
       free(_signature);
-
+    if (size == 0)
+      size = 1;
     _signature = new char[size];
+    if (size == 1)
+      _signature[0] = 0;
     _end = _signature + size;
     _valid = split(signature, signature + len);
   }
@@ -141,12 +144,12 @@ namespace qi {
       //std::cout << "elt:" << prev << std::endl;
       prev = current;
     }
-    _end = current - 1;
+    if (current != _signature)
+      _end = current - 1;
+    else
+      _end = _signature;
     return true;
   };
-
-
-
 
 
 
@@ -169,7 +172,24 @@ namespace qi {
     return _p->_valid;
   }
 
+  std::string Signature::toString() const {
+    char *current = _p->_signature;
+    std::string ret;
+
+    //yeah kinda too big, but it's ok
+    ret.reserve(_p->_end - _p->_signature);
+    while (current != _p->_end) {
+      if (*current)
+        ret += *current;
+      current++;
+    }
+    return ret;
+  }
+
+
   Signature::iterator Signature::begin() const {
+    if (_p->_signature == _p->_end)
+      return ::qi::Signature::iterator();
     ::qi::Signature::iterator it(_p->_signature, _p->_end);
     return it;
   };
@@ -269,12 +289,12 @@ namespace qi {
     return sig;
   }
 
-  std::string Signature::toSTLSignature(bool constify) {
+  std::string Signature::toSTLSignature(bool constify) const {
     SignatureConvertor sc(this, SignatureConvertor::STL, constify);
     return sc.signature();
   }
 
-  std::string Signature::toQtSignature(bool constify) {
+  std::string Signature::toQtSignature(bool constify) const {
     SignatureConvertor sc(this, SignatureConvertor::Qt, constify);
     return sc.signature();
   }

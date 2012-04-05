@@ -25,12 +25,12 @@ namespace qi {
       Qt
     };
 
-    SignatureConvertor(qi::Signature *sig, SignatureType type = STL, bool constify = true);
+    SignatureConvertor(const qi::Signature *sig, SignatureType type = STL, bool constify = true);
 
     const std::string &signature();
 
   protected:
-    void visit(qi::Signature *sig);
+    void visit(const Signature *sig);
     void visitSingle(qi::Signature::iterator *it, bool constify);
     void visitSimple(qi::Signature::iterator *it, bool constify);
     void visitList(qi::Signature::iterator *it, bool constify);
@@ -42,7 +42,7 @@ namespace qi {
     SignatureType  _type;
     bool           _done;
     bool           _constify;
-    qi::Signature *_sig;
+    const qi::Signature *_sig;
     std::string    _result;
   };
 

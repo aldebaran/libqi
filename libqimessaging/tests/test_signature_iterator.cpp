@@ -45,6 +45,7 @@ TEST(TestSignatureIterator, Simple) {
 
   qi::Signature sig("is");
   EXPECT_TRUE(sig.isValid());
+  EXPECT_STREQ("is", sig.toString().c_str());
   it = sig.begin();
   verif_iter(it, "i", Int, false, false);
 
@@ -65,6 +66,7 @@ TEST(TestSignatureIterator, STL) {
   //TODO EXPECT_FALSE(sig1.isValid());
 
   qi::Signature sig2("[i]*");
+  EXPECT_STREQ("[i]*", sig2.toString().c_str());
   EXPECT_TRUE(sig1.isValid());
   it = sig2.begin();
   verif_iter(it, "[i]*", List, true, true);
@@ -74,6 +76,7 @@ TEST(TestSignatureIterator, STL) {
   verif_iter(it, "{is}*", Map, true, true);
 
   qi::Signature sig4("{is}**");
+  EXPECT_STREQ("{is}**", sig4.toString().c_str());
   it = sig4.begin();
   verif_iter(it, "{is}**", Map, true, 2);
 
@@ -85,6 +88,15 @@ TEST(TestSignatureIterator, STL) {
   it++;
   verif_iter(it, "s", String, false, false);
 
+}
+
+TEST(TestSignatureIterator, Empty) {
+  qi::Signature::iterator it;
+  qi::Signature sig3("");
+  it = sig3.begin();
+  verif_iter(it, "", None, false, false);
+  EXPECT_TRUE(it == sig3.end());
+  EXPECT_STREQ("", sig3.toString().c_str());
 }
 
 #if 0
