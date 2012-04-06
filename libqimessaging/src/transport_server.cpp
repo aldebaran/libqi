@@ -40,9 +40,6 @@
 #include "src/transport_socket_libevent_p.hpp"
 
 namespace qi {
-#define MAX_LINE 16384
-
-
 
 void accept_cb(struct evconnlistener *listener,
                evutil_socket_t        fd,
