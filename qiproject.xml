@@ -1,5 +1,6 @@
 <project name="libqi">
-  <depends buildtime="true" runtime="true" names="boost" />
+  <depends buildtime="true" runtime="true"
+    names="boost phtread" />
   <depends buildtime="true" names="gtest" />
   <doxydoc name="libqi" src="." dest="ref/libqi" />
 </project>
