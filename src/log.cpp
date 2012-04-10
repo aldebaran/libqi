@@ -62,7 +62,6 @@ namespace qi {
     static int                    _glContext = false;
     static bool                   _glSyncLog = false;
     static bool                   _glInit    = false;
-    static bool                   _glAtExit  = false;
     static ConsoleLogHandler      *_glConsoleLogHandler;
 
     static Log                    *LogInstance;

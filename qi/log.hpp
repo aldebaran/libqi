@@ -161,26 +161,6 @@ namespace qi {
     class LogStream: public std::stringstream
     {
     public:
-
-      LogStream(const LogStream &rhs)
-        : _logLevel(rhs._logLevel)
-        , _category(rhs._category)
-        , _file(rhs._file)
-        , _function(rhs._function)
-        , _line(rhs._line)
-      {
-      }
-
-      LogStream &operator=(const LogStream &rhs)
-      {
-        _logLevel = rhs._logLevel;
-        _category = rhs._category;
-        _file     = rhs._file;
-        _function = rhs._function;
-        _line     = rhs._line;
-        return *this;
-      }
-
       LogStream(const LogLevel    level,
                 const char        *file,
                 const char        *function,
@@ -234,6 +214,10 @@ namespace qi {
       const char *_file;
       const char *_function;
       int         _line;
+
+      //avoid copy
+      LogStream(const LogStream &rhs);
+      LogStream &operator=(const LogStream &rhs);
     };
   }
 }
