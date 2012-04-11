@@ -115,6 +115,7 @@ namespace qi {
         case qi::Signature::Float:
         case qi::Signature::Double:
         case qi::Signature::String:
+        case 'X':
           *current = *signature;
           current++;
           signature++;
@@ -129,6 +130,7 @@ namespace qi {
           _find_end(&current, &signature, sig_end, '(', ')');
           break;
         default:
+          qiLogError("qimessaging.Signature") << "Signature is invalid:" << signature;
           return false;
       }
 
