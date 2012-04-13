@@ -69,19 +69,19 @@ namespace qi {
   {
     int methodId = metaObject().methodId(signature);
     if (methodId < 0) {
-      qiLogError("object") << "cant find method: " << signature;
       qi::Buffer     buf;
       qi::DataStream ds(buf);
       std::stringstream ss;
       ss << "Can't find method: " << signature << std::endl
-         << "Canditate(s):" << std::endl;
+         << "  Candidate(s):" << std::endl;
       std::vector<qi::MetaMethod>           mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
-      std::vector<qi::MetaMethod>::iterator it;
+      std::vector<qi::MetaMethod>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
-        qi::MetaMethod       &mm = *it;
+        const qi::MetaMethod       &mm = *it;
         ss << "  " << mm.signature();
       }
+      qiLogError("object") << ss.str();
       ds << ss.str();
       out.setError(buf);
       return false;
