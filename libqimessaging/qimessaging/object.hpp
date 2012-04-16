@@ -109,7 +109,7 @@ namespace qi {
     virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out);
 
   protected:
-    unsigned int xAdvertiseMethod(const std::string& signature, const Functor *functor);
+    int xAdvertiseMethod(const std::string& signature, const Functor *functor);
     bool xMetaCall(const std::string &signature, const FunctorParameters &in, FunctorResult out);
 
   protected:

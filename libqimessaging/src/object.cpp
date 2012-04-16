@@ -39,13 +39,20 @@ namespace qi {
   {
   }
 
-  unsigned int Object::xAdvertiseMethod(const std::string& signature, const qi::Functor* functor) {
+  int Object::xAdvertiseMethod(const std::string& signature, const qi::Functor* functor) {
+    std::map<std::string, unsigned int>::iterator it;
+
+    it = _meta->_methodsNameToIdx.find(signature);
+    if (it != _meta->_methodsNameToIdx.end()) {
+      qiLogWarning("qi.Object") << "Can't bind method: " << signature << " which is already bound.";
+      return -1;
+    }
     MetaMethod mm(signature, functor);
     unsigned int idx = _meta->_methodsNumber++;
     mm._idx = idx;
     _meta->_methods.push_back(mm);
     _meta->_methodsNameToIdx[signature] = idx;
-    qiLogVerbose("qi::Object") << "binding method:" << signature;
+    qiLogVerbose("qi.Object") << "binding method:" << signature;
     return idx;
   }
 
