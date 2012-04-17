@@ -31,4 +31,5 @@ qi_create_lib(qimessaging-qt ${H_P} ${H} ${SRC} ${H_MOC})
 
 qi_use_lib(qimessaging-qt qimessaging QT_QTCORE QT_QTNETWORK)
 
+qi_install_header(${H} KEEP_RELATIVE_PATHS)
 qi_stage_lib(qimessaging-qt)

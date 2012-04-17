@@ -31,37 +31,40 @@ qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp"
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
+set(PUBLIC_HEADERS qimessaging/api.hpp
+                   qimessaging/buffer.hpp
+                   qimessaging/datastream.hpp
+                   qimessaging/functor.hpp
+                   qimessaging/gateway.hpp
+                   qimessaging/message.hpp
+                   qimessaging/object.hpp
+                   qimessaging/object.hxx
+                   qimessaging/server.hpp
+                   qimessaging/service_directory.hpp
+                   qimessaging/service_info.hpp
+                   qimessaging/session.hpp
+                   qimessaging/signature.hpp
+                   qimessaging/transport_server.hpp
+                   qimessaging/transport_socket.hpp
+                   qimessaging/value.hpp
+                   qimessaging/url.hpp
+                   qimessaging/future.hpp
+                   qimessaging/details/callfunctor.hpp
+                   qimessaging/details/function_signature.hpp
+                   qimessaging/details/functor.hxx
+                   qimessaging/details/future.hxx
+                   qimessaging/details/makefunctor.hpp
+                   qimessaging/details/memberfunctor.hxx
+                   qimessaging/details/qt_signature.hpp
+                   qimessaging/details/stl_signature.hpp
+                   qimessaging/details/type_signature.hpp
+                   qimessaging/details/voidfunctor.hxx
+                   qimessaging/details/voidmemberfunctor.hxx)
+
+
+qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 qi_submodule_create("qi-messaging" ${CONFIG_H}
-                                   qimessaging/api.hpp
-                                   qimessaging/buffer.hpp
-                                   qimessaging/config.hpp.in
-                                   qimessaging/datastream.hpp
-                                   qimessaging/functor.hpp
-                                   qimessaging/gateway.hpp
-                                   qimessaging/message.hpp
-                                   qimessaging/object.hpp
-                                   qimessaging/object.hxx
-                                   qimessaging/server.hpp
-                                   qimessaging/service_directory.hpp
-                                   qimessaging/service_info.hpp
-                                   qimessaging/session.hpp
-                                   qimessaging/signature.hpp
-                                   qimessaging/transport_server.hpp
-                                   qimessaging/transport_socket.hpp
-                                   qimessaging/value.hpp
-                                   qimessaging/url.hpp
-                                   qimessaging/future.hpp
-                                   qimessaging/details/callfunctor.hpp
-                                   qimessaging/details/function_signature.hpp
-                                   qimessaging/details/functor.hxx
-                                   qimessaging/details/future.hxx
-                                   qimessaging/details/makefunctor.hpp
-                                   qimessaging/details/memberfunctor.hxx
-                                   qimessaging/details/qt_signature.hpp
-                                   qimessaging/details/stl_signature.hpp
-                                   qimessaging/details/type_signature.hpp
-                                   qimessaging/details/voidfunctor.hxx
-                                   qimessaging/details/voidmemberfunctor.hxx
+                                   ${PUBLIC_HEADERS}
 
                                    src/buffer.cpp
                                    src/datastream.cpp
