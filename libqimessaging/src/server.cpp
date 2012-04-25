@@ -31,7 +31,7 @@ namespace qi {
     std::map<std::string, qi::Object*>      _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
     std::map<unsigned int, std::string>     _servicesIndex;
-    TransportServer                         _ts;
+    TransportServer                        *_ts;
     std::vector<std::string>                _endpoints;
     qi::Session                            *_session;
     boost::mutex                            _mutexServices;
@@ -40,7 +40,7 @@ namespace qi {
 
   void ServerPrivate::newConnection()
   {
-    TransportSocket *socket = _ts.nextPendingConnection();
+    TransportSocket *socket = _ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setCallbacks(this);
@@ -72,7 +72,7 @@ namespace qi {
   Server::Server()
     : _p(new ServerPrivate())
   {
-//    _p->_ts.setCallbacks(this);
+//    _p->_ts->setCallbacks(this);
   }
 
   Server::~Server()
@@ -85,7 +85,6 @@ namespace qi {
     bool success = true;
 
     _p->_session = session;
-    _p->_ts.setCallbacks(_p);
 
     for (std::vector<std::string>::const_iterator it = endpoints.begin();
          it != endpoints.end();
@@ -96,9 +95,11 @@ namespace qi {
       switch (url.protocol())
       {
       case Url::Protocol_Tcp:
-        if (_p->_ts.start(session, url))
+        _p->_ts = new qi::TransportServer(session, url);
+        _p->_ts->setCallbacks(_p);
+        if (_p->_ts->start())
         {
-          _p->_endpoints.push_back(_p->_ts._p->listenUrl.str());
+          _p->_endpoints.push_back(_p->_ts->_p->listenUrl.str());
         }
         else
         {

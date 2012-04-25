@@ -50,7 +50,7 @@ public:
   ServiceSocketMap                   _services;
   std::vector<qi::TransportSocket *> _clients;
   std::vector<std::string>           _endpoints;
-  TransportServer                    _transportServer;
+  TransportServer                   *_transportServer;
   TransportSocket                   *_socketToServiceDirectory;
   qi::Session                        _session;
 
@@ -61,7 +61,7 @@ public:
 
 void GatewayPrivate::newConnection()
 {
-  TransportSocket *socket = _transportServer.nextPendingConnection();
+  TransportSocket *socket = _transportServer->nextPendingConnection();
   if (!socket)
     return;
   socket->setCallbacks(this);
@@ -291,7 +291,8 @@ bool Gateway::listen(const qi::Url &listenAddress,
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
   _p->_endpoints.push_back(listenAddress.str());
-  _p->_transportServer.setCallbacks(_p);
-  return _p->_transportServer.start(&(_p->_session), listenAddress);
+  _p->_transportServer = new qi::TransportServer(&(_p->_session), listenAddress);
+  _p->_transportServer->setCallbacks(_p);
+  return _p->_transportServer->start();
 }
 } // !qi

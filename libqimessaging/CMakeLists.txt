@@ -87,6 +87,10 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/signature_iterator.cpp
                                    src/transport_server.cpp
                                    src/transport_server_p.hpp
+                                   src/transport_server_libevent_p.cpp
+                                   src/transport_server_libevent_p.hpp
+                                   src/transport_server_dummy_p.cpp
+                                   src/transport_server_dummy_p.hpp
                                    src/transport_socket.cpp
                                    src/transport_socket_p.cpp
                                    src/transport_socket_p.hpp

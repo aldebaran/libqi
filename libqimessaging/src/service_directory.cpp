@@ -47,6 +47,7 @@ namespace qi
     TransportSocket         *socket() { return currentSocket; }
 
   public:
+    qi::Session                                           *session;
     qi::NetworkThread                                     *nthd;
     qi::TransportServer                                   *ts;
     std::map<unsigned int, ServiceInfo>                    connectedServices;
@@ -61,12 +62,10 @@ namespace qi
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
     : nthd(new qi::NetworkThread())
-    , ts(new qi::TransportServer())
+    , ts(0)
     , servicesCount(0)
     , currentSocket(0)
   {
-    ts->setCallbacks(this);
-
     ServiceInfo si;
     si.setName("serviceDirectory");
     si.setServiceId(1);
@@ -87,6 +86,7 @@ namespace qi
   {
     delete ts;
     delete nthd;
+    delete session;
   }
 
   void ServiceDirectoryPrivate::newConnection()
@@ -239,8 +239,11 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
   eps.push_back(address.str());
   si.setEndpoints(eps);
+  _p->session = new qi::Session();
+  _p->ts = new qi::TransportServer(_p->session, address);
+  _p->ts->setCallbacks(_p);
 
-  if (_p->ts->_p->start(_p->nthd->getEventBase(), address))
+  if (_p->ts->start())
   {
     return true;
   }

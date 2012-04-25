@@ -35,10 +35,12 @@ namespace qi {
 
   public:
     TransportServer();
+    TransportServer(qi::Session *session, const qi::Url &url);
     virtual ~TransportServer();
 
     void setCallbacks(TransportServerInterface *delegate);
 
+    bool start();
     bool start(qi::Session *session, const qi::Url &url);
 
     TransportSocket *nextPendingConnection();

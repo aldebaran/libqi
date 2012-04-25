@@ -44,7 +44,7 @@ public:
 
   virtual void newConnection()
   {
-    qi::TransportSocket *socket = _ts.nextPendingConnection();
+    qi::TransportSocket *socket = _ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setCallbacks(this);
@@ -83,7 +83,7 @@ public:
 
 public:
   std::map<unsigned int, qi::Object*> _services;
-  qi::TransportServer                 _ts;
+  qi::TransportServer                *_ts;
   std::vector<std::string>            _endpoints;
   qi::Session                        *_session;
 
@@ -111,9 +111,10 @@ public:
     _p->_session = session;
 
     qi::Url urlo(_p->_endpoints[0]);
+    _p->_ts = new qi::TransportServer(session, urlo);
 
-    _p->_ts.setCallbacks(_p);
-    _p->_ts.start(session, urlo);
+    _p->_ts->setCallbacks(_p);
+    _p->_ts->start();
   }
 
 

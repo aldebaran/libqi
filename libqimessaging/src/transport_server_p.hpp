@@ -10,40 +10,43 @@
 #define _QIMESSAGING_TRANSPORT_SERVER_P_HPP_
 
 # include <qimessaging/api.hpp>
-# include <event2/event.h>
-# include <event2/bufferevent.h>
 # include <qimessaging/url.hpp>
+# include <qimessaging/session.hpp>
 
 # include <string>
 # include <queue>
+
+# include <qimessaging/transport_server.hpp>
 
 namespace qi {
 
   class TransportServerPrivate
   {
   public:
+    TransportServerPrivate(qi::Session *session, const qi::Url &url)
+      : tsi(0)
+      , mainSession(session)
+      , listenUrl(url)
+    {}
+
+    virtual ~TransportServerPrivate()
+    {
+    }
+
+    virtual bool start() = 0;
+
+  public:
+    std::queue<qi::TransportSocket*> connection;
+    TransportServerInterface        *tsi;
+    qi::Session                     *mainSession;
+    qi::Url                          listenUrl;
+
+  protected:
     TransportServerPrivate()
       : tsi(0)
-      , base(0)
-      , listenUrl("tcp://0.0.0.0:0")
-    {
-    }
-
-    ~TransportServerPrivate()
-    {
-    }
-
-    bool start(struct event_base *base, const qi::Url &url);
-
-    void accept(evutil_socket_t        fd,
-                struct evconnlistener *listener,
-                void                  *context);
-
-    std::queue<qi::TransportSocket*>  connection;
-    TransportServerInterface          *tsi;
-    struct event_base                 *base;
-    qi::Url                            listenUrl;
-
+      , mainSession(NULL)
+      , listenUrl("")
+    {};
   };
 
 }
