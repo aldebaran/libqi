@@ -102,7 +102,6 @@ namespace qi {
     char *current   = _signature;
     //char *signature = _signature;
 
-    const char *prev = current;
     while(*signature) {
       if (signature >= sig_end || _signature >= _end)
         break;
@@ -144,7 +143,6 @@ namespace qi {
       *current = 0;
       current++;
       //std::cout << "elt:" << prev << std::endl;
-      prev = current;
     }
     if (current != _signature)
       _end = current - 1;
