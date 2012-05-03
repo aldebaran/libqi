@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
       qi::ServiceDirectory sd;
       if (!sd.listen(masterAddress))
       {
-        return 1;
+        exit(1);
       }
 
       std::cout << "ready." << std::endl;
