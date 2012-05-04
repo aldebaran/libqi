@@ -213,6 +213,10 @@ namespace qi
   {
     const std::string &address = url.host();
     unsigned short port = url.port();
+    struct evutil_addrinfo *ai=NULL;
+    int     err;
+    struct evutil_addrinfo hint;
+    char portbuf[10];
 
     if (!isConnected())
     {
@@ -221,12 +225,26 @@ namespace qi
       bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
       bufferevent_enable(bev, EV_READ|EV_WRITE);
 
-      int result = bufferevent_socket_connect_hostname(bev, NULL, AF_INET, address.c_str(), port);
+      evutil_snprintf(portbuf, sizeof(portbuf), "%d", url.port());
+      memset(&hint, 0, sizeof(hint));
+      hint.ai_family = AF_INET;
+      hint.ai_protocol = IPPROTO_TCP;
+      hint.ai_socktype = SOCK_STREAM;
+      err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
+      if (err != 0)
+      {
+        qiLogError("qimessaging.TransportSocketLibEvent", "Cannot resolve dns");
+        return (false);
+      }
+
+      int result = bufferevent_socket_connect(bev, ai->ai_addr, ai->ai_addrlen);
+
       if (result == 0)
       {
         connected = true;
         return true;
       }
+      return false;
     }
     else
     {
