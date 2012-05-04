@@ -22,6 +22,7 @@
 # include <sys/socket.h>
 # include <sys/types.h>
 # include <arpa/inet.h>
+# include <ifaddrs.h>
 
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -198,6 +199,40 @@ namespace qi {
       return iPort;
     }
 
+    bool hostIPAddrs(std::map<std::string, std::vector<std::string> >& ifsMap)
+    {
+      struct ifaddrs *ifAddrStruct = 0;
+      struct ifaddrs *ifa = 0;
+      void *tmpAddrPtr = 0;
+
+      getifaddrs(&ifAddrStruct);
+
+      if (ifAddrStruct == 0)
+      {
+        return false;
+      }
+
+      for (ifa = ifAddrStruct; ifa != 0; ifa = ifa->ifa_next)
+      {
+        if (ifa ->ifa_addr->sa_family == AF_INET)
+        {
+          tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+          char addressBuffer[INET_ADDRSTRLEN];
+          inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+
+          ifsMap[ifa->ifa_name].push_back(addressBuffer);
+        }
+        else if (ifa->ifa_addr->sa_family==AF_INET6)
+        {
+          tmpAddrPtr = &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
+          char addressBuffer[INET6_ADDRSTRLEN];
+          inet_ntop(AF_INET6, tmpAddrPtr, addressBuffer, INET6_ADDRSTRLEN);
+          ifsMap[ifa->ifa_name].push_back(addressBuffer);
+        }
+      }
+
+      return true;
+     }
 
   };
 };

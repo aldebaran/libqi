@@ -335,6 +335,14 @@
     \ingroup qios
     \since 1.14
 
+  \fn bool qi::os::hostIPAddrs(std::map<std::string, std::vector<std::string>>& ifsMap);
+    \brief Find all network adapters and corresponding IPs.
+
+    \param ifsMap The key is the name of the adapter, vectors contain IPs in string.
+    \return true on success or false on error
+    \ingroup qios
+    \since 1.14
+
 */
 ///@}
 

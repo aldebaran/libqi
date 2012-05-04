@@ -107,6 +107,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if(WIN32)
+  target_link_libraries(qi Iphlpapi.lib)
   qi_use_lib(qi WSOCK)
 endif()
 

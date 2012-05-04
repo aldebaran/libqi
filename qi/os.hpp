@@ -16,6 +16,8 @@
 #define _LIBQI_QI_OS_HPP_
 
 # include <string>
+# include <map>
+# include <vector>
 # include <qi/config.hpp>
 
 struct stat;
@@ -60,6 +62,7 @@ namespace qi {
     QI_API int kill(int pid, int sig);
 
     QI_API unsigned short findAvailablePort(unsigned short port);
+    QI_API bool hostIPAddrs(std::map<std::string, std::vector<std::string>>& ifsMap);
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");

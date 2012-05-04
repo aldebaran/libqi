@@ -374,5 +374,62 @@ namespace qi {
       return iPort;
     }
 
+    bool hostIPAddrs(std::map<std::string, std::vector<std::string>>& ifsMap)
+    {
+      PIP_ADAPTER_INFO pAdapterInfo;
+      PIP_ADAPTER_INFO pAdapter = NULL;
+      DWORD dwRetVal = 0;
+      std::map<int, std::string> AdapterType;
+      std::string type, addr;
+
+      AdapterType[MIB_IF_TYPE_OTHER] = "Other";
+      AdapterType[IF_TYPE_IEEE80211] = "802.11wireless";
+      AdapterType[MIB_IF_TYPE_ETHERNET] = "Ethernet";
+      AdapterType[MIB_IF_TYPE_TOKENRING] = "TokenRing";
+      AdapterType[MIB_IF_TYPE_FDDI] = "FDDI";
+      AdapterType[MIB_IF_TYPE_PPP] = "PPP";
+      AdapterType[MIB_IF_TYPE_LOOPBACK] = "Loopback";
+      AdapterType[MIB_IF_TYPE_SLIP] = "Slip";
+
+      ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+      if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO))) == NULL)
+      {
+        qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
+        return (false);
+      }
+
+      /* Make initial call to GetAdaptersInfo to get
+      ** the necessary size into the ulOutBufLen variable (pr)
+      ** http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx */
+      if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) != ERROR_BUFFER_OVERFLOW)
+        return (false);
+
+      free(pAdapterInfo);
+      if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
+      {
+          qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
+          return (false);
+      }
+
+      if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
+        return (false);
+
+      pAdapter = pAdapterInfo;
+      while (pAdapter)
+      {
+        if ((type = AdapterType[pAdapter->Type]).compare("") == 0)
+          type = "Other";
+
+        addr = pAdapter->IpAddressList.IpAddress.String;
+        if (addr.compare("0.0.0.0") != 0)
+          ifsMap[type].push_back(pAdapter->IpAddressList.IpAddress.String);
+        pAdapter = pAdapter->Next;
+      }
+
+      if (pAdapterInfo)
+        free(pAdapterInfo);
+      return (true);
+    }
+
   }
 }
