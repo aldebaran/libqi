@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
       else
       {
         qiLogError("qimessaging.ServiceTest") << "registration failed..." << std::endl;
-        return 1;
+        exit(1);
       }
       session.join();
 

@@ -126,7 +126,15 @@ namespace qi
       if (tcd)
         tcd->onSocketConnected(self);
     }
+#ifdef WIN32
+    /* On windows, BEV_EVENT_EOF doesn't pop on service kill
+    ** but BEV_EVENT_READING and BEV_EVENT_ERROR suggest an error while reading.
+    ** For a better fix, need to find out how to make libevent pop the proper error. (pr)
+    */
+    else if ((events & BEV_EVENT_READING) && (events & BEV_EVENT_ERROR))
+#else
     else if (events & BEV_EVENT_EOF)
+#endif
     {
       bufferevent_free(bev);
       bev = 0;
