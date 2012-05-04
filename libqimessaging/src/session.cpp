@@ -125,10 +125,12 @@ namespace qi {
     msg.setFunction(qi::Message::Function_MetaObject);
 
     ts->send(msg);
-    ts->waitForId(msg.id());
+    if (ts->waitForId(msg.id()) == false)
+      return (NULL);
 
     qi::Message ret;
-    ts->read(msg.id(), &ret);
+    if (ts->read(msg.id(), &ret) == false)
+      return (NULL);
 
     qi::MetaObject *mo = new qi::MetaObject;
 
