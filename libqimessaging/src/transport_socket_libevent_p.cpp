@@ -152,10 +152,12 @@ namespace qi
       connected = false;
       //for waitForId
       cond.notify_all();
+
       if (tcd)
         tcd->onSocketConnectionError(self);
+
       // check errno to see what error occurred
-      qiLogError("qimessaging.TransportSocketLibevent")  << "Cannnot connect" << std::endl;
+      qiLogError("qimessaging.TransportSocketLibevent")  << "Cannot connect" << std::endl;
     }
     else if (events & BEV_EVENT_TIMEOUT)
     {
