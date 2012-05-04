@@ -28,6 +28,7 @@ public:
   ~NetworkThread();
 
   void join();
+  void stop();
   struct event_base* getEventBase();
 
 protected:

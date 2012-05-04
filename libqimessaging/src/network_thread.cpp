@@ -43,8 +43,7 @@ NetworkThread::NetworkThread()
 {
   static bool libevent_init = false;
 
-  if (!libevent_init)
-  {
+
 #ifdef _WIN32
     // libevent does not call WSAStartup
     WSADATA WSAData;
@@ -52,6 +51,8 @@ NetworkThread::NetworkThread()
     ::WSAStartup(MAKEWORD(1, 0), &WSAData);
 #endif
 
+  if (!libevent_init)
+  {
 #ifdef EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED
     evthread_use_windows_threads();
 #endif
@@ -83,6 +84,12 @@ void NetworkThread::run()
   bufferevent_enable(bev, EV_READ|EV_WRITE);
 
   event_base_dispatch(_base);
+}
+
+void NetworkThread::stop()
+{
+  event_base_loopexit(_base, NULL);
+  this->join();
 }
 
 void NetworkThread::join()
