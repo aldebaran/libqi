@@ -374,7 +374,7 @@ namespace qi {
       return iPort;
     }
 
-    bool hostIPAddrs(std::map<std::string, std::vector<std::string>>& ifsMap)
+    bool hostIPAddrs(std::map<std::string, std::vector<std::string> >& ifsMap)
     {
       PIP_ADAPTER_INFO pAdapterInfo;
       PIP_ADAPTER_INFO pAdapter = NULL;
