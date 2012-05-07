@@ -39,6 +39,25 @@ int main(int argc, char *argv[])
   po::positional_options_description pos;
   pos.add("master-address", 1);
 
+  // Test hostIPAddrs
+  std::map<std::string, std::vector<std::string> > ifsMap;
+
+  if (qi::os::hostIPAddrs(ifsMap) == false)
+   qiLogInfo("qimessaging.ServiceTest", "hostIPAddrs failed");
+
+  if (ifsMap.empty() == false)
+    for (std::map<std::string, std::vector<std::string> >::const_iterator adapter = ifsMap.begin();
+         adapter != ifsMap.end();
+         ++adapter)
+    {
+      for (std::vector<std::string>::const_iterator address = (*adapter).second.begin();
+           address != (*adapter).second.end();
+           ++address)
+      {
+        qiLogInfo("qimessaging.ServiceTest", "%s : %s", (*adapter).first.c_str(), (*address).c_str());
+      }
+    }
+
   // parse and store
   po::variables_map vm;
   try
