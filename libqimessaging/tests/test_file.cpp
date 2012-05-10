@@ -1,0 +1,100 @@
+/*
+ *  Author(s):
+ *  - Herve Cuche <hcuche@aldebaran-robotics.com>
+ *
+ *  Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ */
+
+#include <string>
+
+#include <gtest/gtest.h>
+#include <boost/filesystem.hpp>
+
+#include <qi/qi.hpp>
+#include <qimessaging/file.hpp>
+#include <qimessaging/datastream.hpp>
+
+class TestFile: public ::testing::Test
+{
+public:
+  TestFile()
+    : a_newPath()
+    , a_path()
+    , a_fileName("plop")
+    , a_content("Nothing to say!\n")
+  {
+  }
+
+protected:
+  void SetUp()
+  {
+    a_newPath = qi::os::mktmpdir("QiFileTest");
+    a_newPath.append(a_fileName, qi::unicodeFacet());
+    a_path = qi::os::mktmpdir("QiFileTest");
+    a_path.append(a_fileName, qi::unicodeFacet());
+    FILE *fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
+    fprintf(fileHandle, "%s", a_content.c_str());
+    fclose(fileHandle);
+  }
+
+  void TearDown()
+  {
+    if (boost::filesystem::exists(a_newPath))
+    {
+      try
+      {
+        boost::filesystem::remove_all(a_newPath.parent_path());
+      }
+      catch (std::exception &)
+      {
+      }
+    }
+
+    if (boost::filesystem::exists(a_path))
+    {
+      try
+      {
+        boost::filesystem::remove_all(a_path.parent_path());
+      }
+      catch (std::exception &)
+      {
+      }
+    }
+  }
+
+public:
+  boost::filesystem::path a_newPath;
+  boost::filesystem::path a_path;
+  std::string             a_fileName;
+  std::string             a_content;
+};
+
+TEST_F(TestFile, BasicMemoryFile)
+{
+  qi::File f;
+  f.open(qi::Flag_Read | qi::Flag_Write | qi::Flag_Truncate);
+
+  ASSERT_TRUE(qi::Flag_Read & f.flags());
+  ASSERT_TRUE(qi::Flag_Write & f.flags());
+  ASSERT_TRUE(qi::Flag_Truncate & f.flags());
+  ASSERT_FALSE(qi::Flag_Create & f.flags());
+  ASSERT_FALSE(qi::Flag_Invalid & f.flags());
+}
+
+TEST_F(TestFile, BasicDiskFile)
+{
+  qi::File f;
+  f.open(a_newPath.string(qi::unicodeFacet()), qi::Flag_Read);
+  f.save(a_path.string(qi::unicodeFacet()));
+
+  FILE *file = qi::os::fopen(a_path.string(qi::unicodeFacet()).c_str(), "r");
+  char r[a_content.size()];
+  fread(r, 1, a_content.size(), file);
+  fclose(file);
+
+  ASSERT_TRUE(qi::Flag_Read & f.flags());
+  ASSERT_FALSE(qi::Flag_Write & f.flags());
+  ASSERT_FALSE(qi::Flag_Truncate & f.flags());
+  ASSERT_FALSE(qi::Flag_Create & f.flags());
+  ASSERT_FALSE(qi::Flag_Invalid & f.flags());
+}

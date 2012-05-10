@@ -45,6 +45,7 @@ set(PUBLIC_HEADERS qimessaging/details/voidmemberfunctor.hxx
                    qimessaging/details/stl_signature.hpp
                    qimessaging/value.hpp
                    qimessaging/url.hpp
+                   qimessaging/file.hpp
                    qimessaging/object.hpp
                    qimessaging/session.hpp
                    qimessaging/object.hxx
@@ -97,6 +98,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/transport_socket_libevent_p.cpp
                                    src/transport_socket_libevent_p.hpp
                                    src/value.cpp
+                                   src/file.cpp
                                    src/url.cpp
                                    src/future.cpp
                                    src/server_functor_result_future_p.hpp
