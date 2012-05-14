@@ -103,15 +103,14 @@ namespace qi
     stream << sfile.flags();
     stream << sfile.fileName();
 
-    char buf[MAX_SIZE_STREAM_CONTENT + 1];
     boost::filesystem::path filePath(sfile.p->path, qi::unicodeFacet());
     FILE *f = qi::os::fopen(filePath.string(qi::unicodeFacet()).c_str(), "r");
-    int readSize = 0;
-    while ((readSize = fread(buf, 1, MAX_SIZE_STREAM_CONTENT, f)) != 0)
-    {
-      buf[readSize] = '\0';
-      stream << buf;
-    }
+    int readSize = boost::filesystem::file_size(filePath);
+    char buf[readSize + 1];
+
+    readSize = fread(buf, 1, readSize, f);
+    buf[readSize] = '\0';
+    stream << buf;
 
     fclose(f);
     return stream;
@@ -130,13 +129,8 @@ namespace qi
     sfile.p->path = filePath.make_preferred().string(qi::unicodeFacet()).c_str();
 
     FILE *f = qi::os::fopen(sfile.p->path.c_str(), "w+");
-    do
-    {
-      buffer.clear();
-      stream >> buffer;
-      fwrite(buffer.c_str(), 1, buffer.size(), f);
-    }
-    while (buffer.size() != 0);
+    stream >> buffer;
+    fwrite(buffer.c_str(), 1, buffer.size(), f);
 
     fclose(f);
     return stream;
