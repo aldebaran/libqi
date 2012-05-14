@@ -13,6 +13,7 @@
 #include <qi/qi.hpp>
 #include <qimessaging/file.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/buffer.hpp>
 
 class TestFile: public ::testing::Test
 {
@@ -32,7 +33,7 @@ protected:
     a_newPath.append(a_fileName, qi::unicodeFacet());
     a_path = qi::os::mktmpdir("QiFileTest");
     a_path.append(a_fileName, qi::unicodeFacet());
-    FILE *fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w");
+    FILE *fileHandle = qi::os::fopen(a_newPath.string(qi::unicodeFacet()).c_str(), "w+");
     fprintf(fileHandle, "%s", a_content.c_str());
     fclose(fileHandle);
   }
@@ -88,13 +89,44 @@ TEST_F(TestFile, BasicDiskFile)
   f.save(a_path.string(qi::unicodeFacet()));
 
   FILE *file = qi::os::fopen(a_path.string(qi::unicodeFacet()).c_str(), "r");
-  char r[a_content.size()];
+  char r[a_content.size() + 1];
   fread(r, 1, a_content.size(), file);
+  r[a_content.size()] = '\0';
   fclose(file);
 
+  ASSERT_EQ(a_fileName, f.fileName());
+  ASSERT_EQ(a_content, std::string(r));
   ASSERT_TRUE(qi::Flag_Read & f.flags());
   ASSERT_FALSE(qi::Flag_Write & f.flags());
   ASSERT_FALSE(qi::Flag_Truncate & f.flags());
   ASSERT_FALSE(qi::Flag_Create & f.flags());
+  ASSERT_FALSE(qi::Flag_Invalid & f.flags());
+}
+
+TEST_F(TestFile, fileStream)
+{
+  qi::File f;
+  f.open(a_newPath.string(qi::unicodeFacet()), qi::Flag_Read);
+  f.save(a_path.string(qi::unicodeFacet()));
+
+  qi::Buffer buf;
+  qi::DataStream d(buf);
+  d << f;
+
+  qi::File fres;
+  d >> fres;
+
+  FILE *file = qi::os::fopen(fres.path().c_str(), "r");
+  char r[a_content.size() + 1];
+  fread(r, 1, a_content.size(), file);
+  r[a_content.size()] = '\0';
+  fclose(file);
+
+  ASSERT_EQ(a_fileName, fres.fileName());
+  ASSERT_EQ(a_content, std::string(r));
+  ASSERT_TRUE(qi::Flag_Read & fres.flags());
+  ASSERT_FALSE(qi::Flag_Write & fres.flags());
+  ASSERT_FALSE(qi::Flag_Truncate & fres.flags());
+  ASSERT_FALSE(qi::Flag_Create & fres.flags());
   ASSERT_FALSE(qi::Flag_Invalid & f.flags());
 }

@@ -11,53 +11,63 @@
 #include <qi/qi.hpp>
 #include <qimessaging/file.hpp>
 
+#define MAX_SIZE_STREAM_CONTENT 1024
+
 namespace qi
 {
   class PrivateFile
   {
   public:
     PrivateFile()
-      : _path("")
-      , _flags(qi::Flag_Invalid)
+      : path("")
+      , fileName("")
+      , flags(qi::Flag_Invalid)
     {
     };
 
   public:
-    std::string _path;
-    int         _flags;
+    std::string path;
+    std::string fileName;
+    int         flags;
   };
 
   File::File()
-    : _p(new PrivateFile())
+    : p(new PrivateFile())
   {
   }
 
   File::~File()
   {
-    delete _p;
+    delete p;
   }
 
-  const std::string &File::path()
+  const std::string &File::path() const
   {
-    return _p->_path;
+    return p->path;
   }
 
-  int File::flags()
+  const std::string &File::fileName() const
   {
-    return _p->_flags;
+    return p->fileName;
+  }
+
+  int File::flags() const
+  {
+    return p->flags;
   }
 
   bool File::open(int flags)
   {
-    _p->_flags = flags;
+    p->flags = flags;
     return true;
   }
 
   bool File::open(const std::string &path,
                   int                flags)
   {
-    _p->_flags = flags;
-    _p->_path = path;
+    p->flags = flags;
+    p->path = path;
+    p->fileName = boost::filesystem::path(p->path, qi::unicodeFacet()).filename().string(qi::unicodeFacet());
 
     return boost::filesystem::exists(path);
   }
@@ -66,7 +76,7 @@ namespace qi
   {
     try
     {
-      boost::filesystem::path filePath(_p->_path, qi::unicodeFacet());
+      boost::filesystem::path filePath(p->path, qi::unicodeFacet());
       boost::filesystem::path oldFilePath(dst, qi::unicodeFacet());
 
       // Here, we need to be careful with windows and UTF-16 local encoding.
@@ -85,5 +95,50 @@ namespace qi
       return false;
     }
     return true;
+  }
+
+  qi::DataStream &operator<<(qi::DataStream &stream,
+                             const qi::File &sfile)
+  {
+    stream << sfile.flags();
+    stream << sfile.fileName();
+
+    char buf[MAX_SIZE_STREAM_CONTENT + 1];
+    boost::filesystem::path filePath(sfile.p->path, qi::unicodeFacet());
+    FILE *f = qi::os::fopen(filePath.string(qi::unicodeFacet()).c_str(), "r");
+    int readSize = 0;
+    while ((readSize = fread(buf, 1, MAX_SIZE_STREAM_CONTENT, f)) != 0)
+    {
+      buf[readSize] = '\0';
+      stream << buf;
+    }
+
+    fclose(f);
+    return stream;
+  }
+
+  qi::DataStream &operator>>(qi::DataStream &stream,
+                             qi::File &sfile)
+  {
+    stream >> sfile.p->flags;
+    stream >> sfile.p->fileName;
+
+    std::string buffer;
+    boost::filesystem::path filePath(qi::os::mktmpdir(),
+                                     qi::unicodeFacet());
+    filePath.append(sfile.p->fileName, qi::unicodeFacet());
+    sfile.p->path = filePath.make_preferred().string(qi::unicodeFacet()).c_str();
+
+    FILE *f = qi::os::fopen(sfile.p->path.c_str(), "w+");
+    do
+    {
+      buffer.clear();
+      stream >> buffer;
+      fwrite(buffer.c_str(), 1, buffer.size(), f);
+    }
+    while (buffer.size() != 0);
+
+    fclose(f);
+    return stream;
   }
 }

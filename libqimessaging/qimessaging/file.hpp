@@ -11,6 +11,7 @@
 #define _QIMESSAGING_FILE_HPP_
 
 #include <qimessaging/api.hpp>
+#include <qimessaging/datastream.hpp>
 #include <string>
 
 namespace qi
@@ -59,16 +60,28 @@ namespace qi
      *  \brief Get the path to the file.
      *  \return Path to the file, or std::string() if the qi::file is in memory.
      */
-    const std::string &path();
+    const std::string &path() const;
+
+    /**
+     *  \brief Get the file name.
+     *  \return Name of the file, or std::string() if the qi::file is in memory.
+     */
+    const std::string &fileName() const;
+
     /**
      *  \brief Get flags of the qi::file.
      *  \return File's flags.
      */
-    int flags();
+    int flags() const;
 
-  private:
-    PrivateFile *_p;
+  public:
+    PrivateFile *p;
   };
+
+  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream,
+                                             const qi::File &sfile);
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream,
+                                             qi::File &sfile);
 }
 
 #endif  // _QIMESSAGING_FILE_HPP_
