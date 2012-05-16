@@ -111,7 +111,7 @@ namespace qi {
         path = pp.make_preferred().string(qi::unicodeFacet());
         ++i;
       }
-      while (mkdir(path.c_str(), S_IRWXU) == -1 && i < TMP_MAX);
+      while (i < TMP_MAX && mkdir(path.c_str(), S_IRWXU) == -1);
 
       return path;
     }
