@@ -106,13 +106,18 @@ namespace qi
     boost::filesystem::path filePath(sfile.p->path, qi::unicodeFacet());
     FILE *f = qi::os::fopen(filePath.string(qi::unicodeFacet()).c_str(), "r");
     int readSize = boost::filesystem::file_size(filePath);
-    char buf[readSize + 1];
-
+    char *buf = new char[readSize + 1];
+    if (buf == NULL)
+    {
+      qiLogError("qifile.stream") << "Cannot allocate enough memory for the buffer.";
+      return stream;
+    }
     readSize = fread(buf, 1, readSize, f);
     buf[readSize] = '\0';
     stream << buf;
 
     fclose(f);
+    delete[] buf;
     return stream;
   }
 

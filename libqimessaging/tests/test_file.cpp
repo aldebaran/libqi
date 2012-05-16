@@ -89,13 +89,16 @@ TEST_F(TestFile, BasicDiskFile)
   f.save(a_path.string(qi::unicodeFacet()));
 
   FILE *file = qi::os::fopen(a_path.string(qi::unicodeFacet()).c_str(), "r");
-  char r[a_content.size() + 1];
+  char *r = new char[a_content.size() + 1];
+  ASSERT_TRUE(r) << "Cannot allocate read buffer.";
   fread(r, 1, a_content.size(), file);
   r[a_content.size()] = '\0';
   fclose(file);
 
   ASSERT_EQ(a_fileName, f.fileName());
   ASSERT_EQ(a_content, std::string(r));
+  delete[] r;
+
   ASSERT_TRUE(qi::Flag_Read & f.flags());
   ASSERT_FALSE(qi::Flag_Write & f.flags());
   ASSERT_FALSE(qi::Flag_Truncate & f.flags());
@@ -117,13 +120,17 @@ TEST_F(TestFile, fileStream)
   d >> fres;
 
   FILE *file = qi::os::fopen(fres.path().c_str(), "r");
-  char r[a_content.size() + 1];
+  char *r = new char[a_content.size() + 1];
+  ASSERT_TRUE(r) << "Cannot allocate read buffer.";
+
   fread(r, 1, a_content.size(), file);
   r[a_content.size()] = '\0';
   fclose(file);
 
   ASSERT_EQ(a_fileName, fres.fileName());
   ASSERT_EQ(a_content, std::string(r));
+  delete[] r;
+
   ASSERT_TRUE(qi::Flag_Read & fres.flags());
   ASSERT_FALSE(qi::Flag_Write & fres.flags());
   ASSERT_FALSE(qi::Flag_Truncate & fres.flags());
