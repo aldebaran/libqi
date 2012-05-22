@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'qi Framework'
+project = u'qimessaging Framework'
 copyright = u'2012, platform@aldebaran-robotics.com'
 
 # The version info for the project you're documenting, acts as replacement for
