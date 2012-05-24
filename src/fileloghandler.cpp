@@ -97,39 +97,50 @@ namespace qi {
         fixedCategory[CATSIZEMAX] = '\0';
         _private->cutCat(category, fixedCategory);
 
+        std::stringstream l;
         std::stringstream ss;
         ss << date.tv_sec << "." << date.tv_usec;
 
-        fprintf(_private->_file,"%s ", head);
+        l << head << " ";
         int ctx = qi::log::context();
         switch (ctx)
         {
-        case 1:
-          fprintf(_private->_file, "%s: ", fixedCategory);
-          break;
-        case 2:
-          fprintf(_private->_file, "%s ", ss.str().c_str());
-          break;
-        case 3:
-          fprintf(_private->_file, "%s(%d) ", file, line);
-          break;
-        case 4:
-          fprintf(_private->_file, "%s %s: ", ss.str().c_str(), fixedCategory);
-          break;
-        case 5:
-          fprintf(_private->_file, "%s %s(%d) ", ss.str().c_str(), file, line);
-          break;
-        case 6:
-          fprintf(_private->_file, "%s: %s(%d) ", fixedCategory, file, line);
-          break;
-        case 7:
-          fprintf(_private->_file, "%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
-          break;
-        default:
-          break;
+          case 1:
+            l << fixedCategory << ": ";
+            break;
+          case 2:
+            l << ss.str() << " ";
+            break;
+          case 3:
+            if (line != 0)
+              l << file << "(" << line << ") ";
+            break;
+          case 4:
+            l << ss.str() << " " << fixedCategory << ": ";
+            break;
+          case 5:
+            if (line != 0)
+              l << ss.str() << " " << file << "(" << line << ") ";
+            else
+              l << ss.str() << " ";
+            break;
+          case 6:
+            if (line != 0)
+              l << fixedCategory << ": " << file << "(" << line << ") ";
+            else
+              l << fixedCategory << ": ";
+            break;
+          case 7:
+            if (line != 0)
+              l << ss.str() << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
+            else
+              l << ss.str() << " " << fixedCategory << ": " << fct;
+            break;
+          default:
+            break;
         }
-        fprintf(_private->_file,"%s", msg);
-
+        l << msg;
+        fprintf(_private->_file, "%s", l.str().c_str());
         fflush(_private->_file);
       }
     }

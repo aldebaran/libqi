@@ -92,25 +92,25 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-        if (verb > qi::log::verbosity() || _private->_file == NULL)
-        {
-          return;
-        }
-        else
-        {
-          const char* head = logLevelToString(verb);
-          char fixedCategory[CATSIZEMAX + 1];
-          fixedCategory[CATSIZEMAX] = '\0';
-          _private->cutCat(category, fixedCategory);
+      if (verb > qi::log::verbosity() || _private->_file == NULL)
+      {
+        return;
+      }
+      else
+      {
+        const char *head = logLevelToString(verb);
+        char fixedCategory[CATSIZEMAX + 1];
+        fixedCategory[CATSIZEMAX] = '\0';
+        _private->cutCat(category, fixedCategory);
 
-          std::stringstream l;
-          std::stringstream ss;
-          ss << date.tv_sec << "." << date.tv_usec;
+        std::stringstream l;
+        std::stringstream ss;
+        ss << date.tv_sec << "." << date.tv_usec;
 
-          l << head << " ";
-          int ctx = qi::log::context();
-          switch (ctx)
-          {
+        l << head << " ";
+        int ctx = qi::log::context();
+        switch (ctx)
+        {
           case 1:
             l << fixedCategory << ": ";
             break;
@@ -118,31 +118,40 @@ namespace qi {
             l << ss.str() << " ";
             break;
           case 3:
-            l << file << "(" << line << ") ";
+            if (line != 0)
+              l << file << "(" << line << ") ";
             break;
           case 4:
             l << ss.str() << " " << fixedCategory << ": ";
             break;
           case 5:
-            l << ss.str() << " " << file << "(" << line << ") ";
+            if (line != 0)
+              l << ss.str() << " " << file << "(" << line << ") ";
+            else
+              l << ss.str() << " ";
             break;
           case 6:
-            l << fixedCategory << ": " << file << "(" << line << ") ";
+            if (line != 0)
+              l << fixedCategory << ": " << file << "(" << line << ") ";
+            else
+              l << fixedCategory << ": ";
             break;
           case 7:
-            l << ss.str() << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
+            if (line != 0)
+              l << ss.str() << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
+            else
+              l << ss.str() << " " << fixedCategory << ": " << fct;
             break;
           default:
             break;
-          }
-          l << msg;
+        }
+        l << msg;
+        fseek(_private->_file, 0, SEEK_END);
+        fprintf(_private->_file, "%s", l.str().c_str());
+        fflush(_private->_file);
 
-          fseek(_private->_file, 0, SEEK_END);
-          fprintf(_private->_file, "%s", l.str().c_str());
-          fflush(_private->_file);
-
-          _private->_writeSize += l.str().size();
-       }
+        _private->_writeSize += l.str().size();
+      }
 
       if (_private->_writeSize > FILESIZEMAX)
       {

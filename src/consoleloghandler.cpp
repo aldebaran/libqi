@@ -227,34 +227,46 @@ namespace qi {
         int ctx = qi::log::context();
         switch (ctx)
         {
-        case 1:
-          printf("%s: ", fixedCategory);
-          break;
-        case 2:
-          printf("%s ", ss.str().c_str());
-          break;
-        case 3:
-          printf("%s(%d) ", file, line);
-          break;
-        case 4:
-          printf("%s %s: ", ss.str().c_str(), fixedCategory);
-          break;
-        case 5:
-          printf("%s %s(%d) ", ss.str().c_str(), file, line);
-          break;
-        case 6:
-          printf("%s: %s(%d) ", fixedCategory, file, line);
-          break;
-        case 7:
-          printf("%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
-          break;
-        default:
-          break;
+          case 1:
+            printf("%s: ", fixedCategory);
+            break;
+          case 2:
+            printf("%s ", ss.str().c_str());
+            break;
+          case 3:
+            if (line == 0)
+              printf("");
+            else
+              printf("%s(%d) ", file, line);
+            break;
+          case 4:
+            printf("%s %s: ", ss.str().c_str(), fixedCategory);
+            break;
+          case 5:
+            if (line == 0)
+              printf("%s ", ss.str().c_str());
+            else
+              printf("%s %s(%d) ", ss.str().c_str(), file, line);
+            break;
+          case 6:
+            if (line == 0)
+              printf("%s: ", fixedCategory);
+            else
+              printf("%s: %s(%d) ", fixedCategory, file, line);
+            break;
+          case 7:
+            if (line == 0)
+              printf("%s %s: %s ", ss.str().c_str(), fixedCategory, fct);
+            else
+              printf("%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
+            break;
+          default:
+            break;
         }
         printf("%s", msg);
-        fflush (stdout);
+        fflush(stdout);
       }
-      fflush (stdout);
+      fflush(stdout);
     }
   }
 }
