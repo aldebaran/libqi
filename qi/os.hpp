@@ -66,8 +66,8 @@ namespace qi {
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");
-  };
-};
+  }
+}
 
 
 #endif  // _LIBQI_QI_OS_HPP_
