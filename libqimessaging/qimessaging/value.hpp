@@ -101,7 +101,8 @@ namespace qi {
     }
 
 
-    struct ValuePrivate {
+    class QIMESSAGING_API ValuePrivate {
+      public:
       ValuePrivate() : type(Invalid) { data.ptr = 0; }
 
       union {

@@ -27,8 +27,9 @@ namespace qi {
   /// \ingroup Signature
   /// \include example_qi_signature_type.cpp
   template <typename T>
-  struct QIMESSAGING_API signatureFromType {
-    static std::string &value(std::string &valueRef) {
+  class signatureFromType {
+  public:
+      static std::string &value(std::string &valueRef) {
       ::qi::detail::signature<T>::value(valueRef);
       return valueRef;
     }
@@ -42,8 +43,8 @@ namespace qi {
   /// Take the signature of an instanciated Object, it could be a references or a pointer.
   /// \ingroup Signature
   /// \include example_qi_signature_instance.cpp
-  struct QIMESSAGING_API signatureFromObject {
-
+  class signatureFromObject {
+  public:
     //POINTER
     template<typename T>
     static std::string &value(const T *t, std::string &valueRef) {
