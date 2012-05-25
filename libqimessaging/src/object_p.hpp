@@ -23,6 +23,9 @@ namespace qi {
     {
     };
 
+    MetaObjectPrivate(const MetaObjectPrivate &rhs);
+    MetaObjectPrivate&  operator=(const MetaObjectPrivate &rhs);
+
     inline int methodId(const std::string &name) {
       std::map<std::string, unsigned int>::iterator it;
       it = _methodsNameToIdx.find(name);

@@ -18,6 +18,19 @@ namespace qi {
     _p = new MetaObjectPrivate();
   }
 
+  MetaObject::MetaObject(const MetaObject &other)
+  {
+    _p = new MetaObjectPrivate();
+    *_p = *(other._p);
+  }
+
+  MetaObject& MetaObject::operator=(const MetaObject &other)
+  {
+    _p = new MetaObjectPrivate();
+    *_p = *(other._p);
+    return (*this);
+  }
+
   MetaObject::~MetaObject()
   {
     delete _p;

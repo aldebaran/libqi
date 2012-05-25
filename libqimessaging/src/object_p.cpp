@@ -8,6 +8,21 @@
 
 namespace qi {
 
+  MetaObjectPrivate::MetaObjectPrivate(const MetaObjectPrivate &rhs)
+  {
+    _methodsNameToIdx = rhs._methodsNameToIdx;
+    _methods = rhs._methods;
+    _methodsNumber = rhs._methodsNumber;
+  }
+
+  MetaObjectPrivate&  MetaObjectPrivate::operator=(const MetaObjectPrivate &rhs)
+  {
+    _methodsNameToIdx = rhs._methodsNameToIdx;
+    _methods = rhs._methods;
+    _methodsNumber = rhs._methodsNumber;
+    return (*this);
+  }
+
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
     std::vector<qi::MetaMethod>           ret;

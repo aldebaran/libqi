@@ -19,6 +19,8 @@ namespace qi {
   public:
     MetaMethodPrivate(const std::string &sig, const qi::Functor *functor);
     MetaMethodPrivate();
+    MetaMethodPrivate(const MetaMethodPrivate &rhs);
+    MetaMethodPrivate &operator=(const MetaMethodPrivate &rhs);
 
     const std::string &signature() const { return _signature; }
     unsigned int      index() const { return _idx; }

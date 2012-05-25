@@ -18,6 +18,19 @@ namespace qi {
     _p = new MetaMethodPrivate(sig, functor);
   }
 
+  MetaMethod::MetaMethod(const MetaMethod &other)
+  {
+    _p = new MetaMethodPrivate();
+    *_p = *(other._p);
+  }
+
+  MetaMethod& MetaMethod::operator=(const MetaMethod &other)
+  {
+    _p = new MetaMethodPrivate();
+    *_p = *(other._p);
+    return (*this);
+  }
+
   MetaMethod::~MetaMethod()
   {
     delete _p;

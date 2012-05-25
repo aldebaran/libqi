@@ -21,4 +21,19 @@ MetaMethodPrivate::MetaMethodPrivate() :
   {
   }
 
+  MetaMethodPrivate::MetaMethodPrivate(const MetaMethodPrivate &rhs)
+  {
+    _signature = rhs._signature;
+    _functor = rhs._functor;
+    _idx = rhs._idx;
+  }
+
+  MetaMethodPrivate& MetaMethodPrivate::operator=(const MetaMethodPrivate &rhs)
+  {
+    _signature = rhs._signature;
+    _functor = rhs._functor;
+    _idx = rhs._idx;
+    return (*this);
+  }
+
 };

@@ -23,6 +23,8 @@ namespace qi {
   class QIMESSAGING_API MetaObject {
   public:
     MetaObject();
+    MetaObject(const MetaObject &other);
+    MetaObject& operator=(const MetaObject &other);
     ~MetaObject();
 
     inline int methodId(const std::string &name);
