@@ -22,8 +22,17 @@ namespace qi {
 
 
   class Object;
-
   class SessionPrivate;
+
+  class QIMESSAGING_API SessionInterface
+  {
+  public:
+    virtual ~SessionInterface() = 0;
+    inline virtual void onSessionConnected(Session *QI_UNUSED(session))         {};
+    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session))   {};
+    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session))      {};
+  };
+
   class QIMESSAGING_API Session {
   public:
     Session();
@@ -44,6 +53,7 @@ namespace qi {
     qi::Future< qi::Object* > service(const std::string &service,
                                       qi::Url::Protocol  type = qi::Url::Protocol_Any);
 
+    void setCallbacks(SessionInterface *delegate);
 
     SessionPrivate      *_p;
   };

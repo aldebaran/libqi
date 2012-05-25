@@ -17,11 +17,16 @@
 
 namespace qi {
 
+  SessionInterface::~SessionInterface() {
+  }
+
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _serviceSocket(new qi::TransportSocket()),
       _networkThread(new qi::NetworkThread()),
-      _self(session)
+      _self(session),
+      _callbacks(0)
   {
+    _serviceSocket->setCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -29,6 +34,22 @@ namespace qi {
     delete _networkThread;
     delete _serviceSocket;
   }
+
+  void SessionPrivate::onSocketConnected(TransportSocket *client) {
+    if (_callbacks)
+      _callbacks->onSessionConnected(_self);
+  }
+
+  void SessionPrivate::onSocketConnectionError(TransportSocket *client) {
+    if (_callbacks)
+      _callbacks->onSessionConnectionError(_self);
+  }
+
+  void SessionPrivate::onSocketDisconnected(TransportSocket *client) {
+    if (_callbacks)
+      _callbacks->onSessionDisconnected(_self);
+  }
+
 
   bool SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
@@ -95,7 +116,6 @@ namespace qi {
         qi::TransportSocket* ts = NULL;
         ts = new qi::TransportSocket();
         ts->connect(_self, url);
-        ts->setCallbacks(this);
         ts->waitForConnected();
         return ts;
       }
@@ -208,6 +228,8 @@ namespace qi {
     return true;
   }
 
-
+  void Session::setCallbacks(SessionInterface *delegate) {
+    _p->_callbacks = delegate;
+  }
 
 }

@@ -16,6 +16,7 @@ namespace qi {
 
   class NetworkThread;
   class Session;
+  class SessionInterface;
   class SessionPrivate : public qi::TransportSocketInterface {
   public:
     SessionPrivate(qi::Session *session);
@@ -29,10 +30,15 @@ namespace qi {
                         qi::Url::Protocol type);
     std::vector<ServiceInfo> services();
 
+    virtual void onSocketConnected(TransportSocket *client);
+    virtual void onSocketConnectionError(TransportSocket *client);
+    virtual void onSocketDisconnected(TransportSocket *client);
+
   public:
-    qi::TransportSocket *_serviceSocket;
-    qi::NetworkThread   *_networkThread;
-    qi::Session         *_self;
+    qi::TransportSocket  *_serviceSocket;
+    qi::NetworkThread    *_networkThread;
+    qi::Session          *_self;
+    qi::SessionInterface *_callbacks;
   };
 
 }
