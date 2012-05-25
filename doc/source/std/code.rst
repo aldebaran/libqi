@@ -312,14 +312,14 @@ Global
 
 .. code-block:: c++
 
-   static const std::string titi;       //bad
-   static std::string titi = "toto";    //bad
-   static const int i = somefunction(); //bad
-   std::string tutu;                    //very very bad
+   static const std::string titi;       //bad because it call the constructor of std::string
+   static std::string titi = "toto";    //bad because it call the constructor of std::string
+   static const int i = somefunction(); //bad because it call somefunction
+   std::string tutu;                    //very very bad because it's not static to the file and call the constructor of std::string
 
 .. code-block:: c++
 
-   static const std::string *titi = 0;
+   static const std::string *titi = 0; // it's a pointer, so it does not call the std::string constructor
    static const int i = 0;
    static const float f = 2.;
 
