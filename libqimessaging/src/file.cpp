@@ -105,7 +105,7 @@ namespace qi
 
     boost::filesystem::path filePath(sfile.p->path, qi::unicodeFacet());
     FILE *f = qi::os::fopen(filePath.string(qi::unicodeFacet()).c_str(), "r");
-    int readSize = boost::filesystem::file_size(filePath);
+    int readSize = static_cast<int>(boost::filesystem::file_size(filePath));
     char *buf = new char[readSize + 1];
     if (buf == NULL)
     {
