@@ -25,6 +25,7 @@
 #include "src/message_p.hpp"
 #include "src/buffer_p.hpp"
 #include "src/transport_socket_libevent_p.hpp"
+#include "src/transport_socket_dummy_p.hpp"
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
@@ -32,121 +33,129 @@
 #include <qimessaging/buffer.hpp>
 #include "src/session_p.hpp"
 
-namespace qi {
-
-
-TransportSocketInterface::~TransportSocketInterface()
+namespace qi
 {
-}
-
-TransportSocket::TransportSocket()
-  : _p(NULL)
-{
-}
-
-TransportSocket::~TransportSocket()
-{
-  delete _p;
-}
-
-bool TransportSocket::connect(qi::Session *session,
-                              const qi::Url &url)
-{
-  if (url.protocol() == qi::Url::Protocol_Tcp)
-    _p = new qi::TransportSocketLibEvent(this);
-
-  if (_p == NULL)
+  TransportSocketInterface::~TransportSocketInterface()
   {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
   }
 
-  return _p->connect(session, url);
-}
-
-void TransportSocket::disconnect()
-{
-  if (_p == NULL)
+  TransportSocket::TransportSocket()
+    : _p(new TransportSocketDummyPrivate(this))
   {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return;
   }
 
-  _p->disconnect();
-}
-
-bool TransportSocket::waitForConnected(int msecs)
-{
-  if (_p == NULL)
+  TransportSocket::~TransportSocket()
   {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
-  }
-  return _p->waitForConnected(msecs);
-
-}
-
-bool TransportSocket::waitForDisconnected(int msecs)
-{
-  if (_p == NULL)
-  {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
-  }
-  return _p->waitForDisconnected(msecs);
-}
-
-bool TransportSocket::waitForId(int id, int msecs)
-{
-  if (_p == NULL)
-  {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
-  }
-  return _p->waitForId(id, msecs);
-}
-
-bool TransportSocket::read(int id, qi::Message *msg)
-{
-  if (_p == NULL)
-  {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
-  }
-  return _p->read(id, msg);
-}
-
-
-bool TransportSocket::send(const qi::Message &msg)
-{
-  if (_p == NULL)
-  {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
+    delete _p;
   }
 
-  return _p->send(msg);
-}
-
-void TransportSocket::setCallbacks(TransportSocketInterface *delegate)
-{
-  if (_p == NULL)
+  bool TransportSocket::connect(qi::Session *session,
+                                const qi::Url &url)
   {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return;
+    TransportSocketPrivate *save = _p;
+    switch (url.protocol())
+    {
+      case qi::Url::Protocol_Tcp:
+        _p = new qi::TransportSocketLibEvent(this);
+        _p->tcd = save->tcd;
+        _p->connected = save->connected;
+        _p->readHdr = save->readHdr;
+        _p->msg = save->msg;
+        _p->self = save->self;
+        break;
+      default:
+        qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket."
+                                      << " TransportSocket create with dummy implementation.";
+        delete save;
+        return false;
+    }
+    delete save;
+    return _p->connect(session, url);
   }
-  _p->setCallbacks(delegate);
-}
 
-bool TransportSocket::isConnected()
-{
-  if (_p == NULL)
+  void TransportSocket::disconnect()
   {
-    qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-    return false;
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return;
+    }
+
+    _p->disconnect();
   }
-  return _p->isConnected();
-}
+
+  bool TransportSocket::waitForConnected(int msecs)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+    return _p->waitForConnected(msecs);
+
+  }
+
+  bool TransportSocket::waitForDisconnected(int msecs)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+    return _p->waitForDisconnected(msecs);
+  }
+
+  bool TransportSocket::waitForId(int id, int msecs)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+    return _p->waitForId(id, msecs);
+  }
+
+  bool TransportSocket::read(int id, qi::Message *msg)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+    return _p->read(id, msg);
+  }
+
+
+  bool TransportSocket::send(const qi::Message &msg)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+
+    return _p->send(msg);
+  }
+
+  void TransportSocket::setCallbacks(TransportSocketInterface *delegate)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return;
+    }
+    _p->setCallbacks(delegate);
+  }
+
+  bool TransportSocket::isConnected()
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return false;
+    }
+    return _p->isConnected();
+  }
 
 }
 

@@ -21,7 +21,7 @@
 namespace qi
 {
   class Session;
-  class TransportSocketPrivate : public TransportSocket
+  class TransportSocketPrivate
   {
   public:
     TransportSocketPrivate(TransportSocket *socket);
