@@ -6,10 +6,22 @@
 */
 
 #include <iostream>
-#include <qimessaging/object.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include "src/metamethod_p.hpp"
+#include "src/object_p.hpp"
+#include <qimessaging/object.hpp>
 
 namespace qi {
+
+  MetaObject::MetaObject()
+  {
+    _p = new MetaObjectPrivate();
+  }
+
+  MetaObject::~MetaObject()
+  {
+    delete _p;
+  }
 
   Object::Object()
     : _meta(new MetaObject())
@@ -25,40 +37,34 @@ namespace qi {
     return *_meta;
   }
 
-  MetaMethod::MetaMethod()
-    : _signature("")
-    , _functor(0)
-    , _idx(0)
-  {
+  std::vector<MetaMethod> &MetaObject::methods() {
+    return _p->methods();
   }
 
-  MetaMethod::MetaMethod(const std::string &sig, const qi::Functor *functor)
-    : _signature(sig)
-    , _functor(functor)
-    , _idx(0)
-  {
+  const std::vector<MetaMethod> &MetaObject::methods() const {
+    return _p->methods();
   }
 
   int Object::xAdvertiseMethod(const std::string& signature, const qi::Functor* functor) {
     std::map<std::string, unsigned int>::iterator it;
 
-    it = _meta->_methodsNameToIdx.find(signature);
-    if (it != _meta->_methodsNameToIdx.end()) {
+    it = _meta->_p->_methodsNameToIdx.find(signature);
+    if (it != _meta->_p->_methodsNameToIdx.end()) {
       qiLogWarning("qi.Object") << "Can't bind method: " << signature << " which is already bound.";
       return -1;
     }
     MetaMethod mm(signature, functor);
-    unsigned int idx = _meta->_methodsNumber++;
-    mm._idx = idx;
-    _meta->_methods.push_back(mm);
-    _meta->_methodsNameToIdx[signature] = idx;
+    unsigned int idx = _meta->_p->_methodsNumber++;
+    mm._p->_idx = idx;
+    _meta->methods().push_back(mm);
+    _meta->_p->_methodsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding method:" << signature;
     return idx;
   }
 
   void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
-    if (method > _meta->_methods.size()) {
+    if (method > _meta->methods().size()) {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
       qi::Buffer     buf;
@@ -67,9 +73,14 @@ namespace qi {
       out.setError(buf);
       return;
     }
-    MetaMethod *mm = &(_meta->_methods[method]);
-    if (mm->_functor)
-      mm->_functor->call(in, out);
+    MetaMethod *mm = &(_meta->methods()[method]);
+    if (mm->_p->_functor)
+      mm->_p->_functor->call(in, out);
+  }
+
+  inline int MetaObject::methodId(const std::string &name)
+  {
+      return _p->methodId(name);
   }
 
   bool Object::xMetaCall(const std::string &signature, const FunctorParameters &in, FunctorResult out)
@@ -98,46 +109,34 @@ namespace qi {
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
-    stream << meta._signature;
-    stream << meta._idx;
+    stream << meta._p->_signature;
+    stream << meta._p->_idx;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
-    stream >> meta._signature;
-    stream >> meta._idx;
+    stream >> meta._p->_signature;
+    stream >> meta._p->_idx;
     return stream;
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta) {
-    stream << meta._methodsNameToIdx;
-    stream << meta._methods;
-    stream << meta._methodsNumber;
+    stream << meta._p->_methodsNameToIdx;
+    stream << meta._p->_methods;
+    stream << meta._p->_methodsNumber;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta) {
-    stream >> meta._methodsNameToIdx;
-    stream >> meta._methods;
-    stream >> meta._methodsNumber;
+    stream >> meta._p->_methodsNameToIdx;
+    stream >> meta._p->_methods;
+    stream >> meta._p->_methodsNumber;
     return stream;
   }
 
   std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name)
   {
-    std::vector<qi::MetaMethod>           ret;
-    std::vector<qi::MetaMethod>::iterator it;
-    std::string cname(name);
-    cname += "::";
-
-    for (it = _methods.begin(); it != _methods.end(); ++it) {
-      qi::MetaMethod &mm = *it;
-      if (boost::starts_with(mm.signature(), cname))
-        ret.push_back(mm);
-    }
-    return ret;
+    return _p->findMethod(name);
   }
-
-
 
 };

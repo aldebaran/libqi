@@ -15,56 +15,23 @@
 #include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/metamethod.hpp>
 
 namespace qi {
 
-  class QIMESSAGING_API MetaMethod {
-  public:
-    MetaMethod(const std::string &sig, const qi::Functor *functor);
-    MetaMethod();
-
-    const std::string &signature() const { return _signature; }
-
-    unsigned int       index() const { return _idx; }
-
-  protected:
-  public:
-    std::string        _signature;
-    const qi::Functor *_functor;
-    unsigned int       _idx;
-  };
-
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
-
+  class MetaObjectPrivate;
   class QIMESSAGING_API MetaObject {
   public:
-    MetaObject()
-      : _methodsNumber(0)
-    {
-    };
+    MetaObject();
+    ~MetaObject();
 
-    inline int methodId(const std::string &name) {
-      std::map<std::string, unsigned int>::iterator it;
-      it = _methodsNameToIdx.find(name);
-      if (it == _methodsNameToIdx.end())
-        return -1;
-      return it->second;
-    }
+    inline int methodId(const std::string &name);
 
-    const std::vector<MetaMethod> &methods() const { return _methods; }
-
+    std::vector<MetaMethod> &methods();
+    const std::vector<MetaMethod> &methods() const;
     std::vector<MetaMethod> findMethod(const std::string &name);
-    /*
-     * When a member is added, serialization and deserialization
-     * operators _MUST_ be updated.
-     */
-    std::map<std::string, unsigned int> _methodsNameToIdx;
-    std::vector<MetaMethod>             _methods;
-    unsigned int                        _methodsNumber;
-    // std::map<std::string, MethodInfo>   _signals;
-    // std::map<std::string, MethodInfo>   _slots;
-    // std::map<std::string, PropertyInfo> _properties;
+
+    MetaObjectPrivate   *_p;
   };
 
   QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta);

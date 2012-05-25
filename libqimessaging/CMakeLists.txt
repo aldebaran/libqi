@@ -48,6 +48,7 @@ set(PUBLIC_HEADERS qimessaging/details/voidmemberfunctor.hxx
                    qimessaging/file.hpp
                    qimessaging/object.hpp
                    qimessaging/session.hpp
+                   qimessaging/metamethod.hpp
                    qimessaging/object.hxx
                    qimessaging/value.hxx
                    qimessaging/service_directory.hpp
@@ -75,7 +76,12 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/message.cpp
                                    src/network_thread.cpp
                                    src/network_thread.hpp
+                                   src/metamethod.cpp
+                                   src/metamethod_p.cpp
+                                   src/metamethod_p.hpp
+                                   src/object_p.hpp
                                    src/object.cpp
+                                   src/object_p.cpp
                                    src/remoteobject.cpp
                                    src/remoteobject_p.hpp
                                    src/server.cpp

@@ -53,8 +53,8 @@ static void cmd_service(const command           &cmd,
         services[*it] = obj;
 
         qi::MetaObject &mobj = obj->metaObject();
-        for (std::vector<qi::MetaMethod>::const_iterator it2 = mobj._methods.begin();
-             it2 != mobj._methods.end();
+        for (std::vector<qi::MetaMethod>::const_iterator it2 = mobj.methods().begin();
+             it2 != mobj.methods().end();
              ++it2)
         {
           std::cout << "    " << (*it2).signature() << std::endl;
