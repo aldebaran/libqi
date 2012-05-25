@@ -133,7 +133,7 @@ namespace qi {
     if (sz) {
       try {
         v.resize(sz);
-      } catch (const std::exception &e) {
+      } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
                                     << sz;
         return sd;
@@ -172,7 +172,7 @@ namespace qi {
     if (sz) {
       try {
         v.resize(sz);
-      } catch (const std::exception &e) {
+      } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
                                     << sz;
         return sd;
