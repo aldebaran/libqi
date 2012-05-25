@@ -59,8 +59,8 @@ namespace qi {
         }
       }
 
-      void setCallback(FutureInterface<T> *interface, void *data) {
-        _callback = interface;
+      void setCallback(FutureInterface<T> *p_interface, void *data) {
+        _callback = p_interface;
         _data     = data;
       }
 
@@ -105,8 +105,8 @@ namespace qi {
         }
       }
 
-      void setCallback(FutureInterface<void> *interface, void *data) {
-        _callback = interface;
+      void setCallback(FutureInterface<void> *p_interface, void *data) {
+        _callback = p_interface;
         _data     = data;
       }
 
@@ -137,8 +137,8 @@ namespace qi {
     bool hasError() const                      { return _p->hasError(); }
     const std::string &error() const           { return _p->error(); }
 
-    void setCallback(FutureInterface<void> *interface, void *data = 0) {
-      _p->setCallback(interface, data);
+    void setCallback(FutureInterface<void> *p_interface, void *data = 0) {
+      _p->setCallback(p_interface, data);
     }
 
     friend class Promise<void>;
