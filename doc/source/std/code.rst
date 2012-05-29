@@ -86,7 +86,7 @@ QT:
 Headers
 -------
 
-Public headers must not include other public headers from our libraries. This
+Public headers must not include public headers from other libraries. This
 ensures binary compatibility.
 
 Public headers must be enclosed within brackets <> when included.
