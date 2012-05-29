@@ -45,6 +45,8 @@ namespace qi
   };
 
   QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const ServiceInfo &sinfo);
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo);
+
 }; // !qi
 
 #endif  // _QIMESSAGING_SERVICE_INFO_HPP_
