@@ -33,7 +33,7 @@ namespace qi
     inline unsigned int                    processId() const   { return _processId; }
     inline const std::vector<std::string> &endpoints() const   { return _endpoints; }
 
-    friend qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo);
+    friend QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo);
 
   protected:
     std::string               _name;
