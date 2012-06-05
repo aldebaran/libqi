@@ -276,6 +276,7 @@ namespace qi
                                qi::TransportSocketLibEvent::onMessageSent,
                                static_cast<void *>(m)) != 0)
     {
+      qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail in header";
       return false;
     }
 
@@ -286,6 +287,7 @@ namespace qi
                                qi::TransportSocketLibEvent::onBufferSent,
                                static_cast<void *>(b)) != 0)
     {
+      qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << b->size();
       return false;
     }
 
