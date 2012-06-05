@@ -82,6 +82,20 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
   }
   if (!_ts->send(msg)) {
     qiLogError("remoteobject") << "error while sending answer";
+    qi::Buffer buf;
+    qi::DataStream dse(buf);
+
+    qi::MetaMethod *meth = metaObject().method(method);
+    std::stringstream msg;
+    if (meth) {
+      msg << "Network error while sending data to method: '";
+      msg << meth->signature();;
+      msg << "'";
+    } else {
+      msg << "Network error while sending data an unknown method (id=" << method << ")";
+    }
+    dse << msg.str();
+    out.setError(buf);
     //TODO
     //out.setError(1);
     return;
