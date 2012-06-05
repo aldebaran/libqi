@@ -91,6 +91,18 @@ namespace qi {
       mm->_p->_functor->call(in, out);
   }
 
+  MetaMethod *MetaObject::method(unsigned int id) {
+    if (id < _p->_methods.size())
+      return &_p->_methods[id];
+    return 0;
+  }
+
+  MetaMethod *MetaObject::method(unsigned int id) const {
+    if (id < _p->_methods.size())
+      return &_p->_methods[id];
+    return 0;
+  }
+
   inline int MetaObject::methodId(const std::string &name)
   {
       return _p->methodId(name);
@@ -117,6 +129,7 @@ namespace qi {
       out.setError(buf);
       return false;
     }
+    //TODO: check for metacall to return false when not able to send the answer
     metaCall(methodId, in, out);
     return true;
   }

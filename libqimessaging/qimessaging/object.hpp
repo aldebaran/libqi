@@ -31,6 +31,10 @@ namespace qi {
 
     std::vector<MetaMethod> &methods();
     const std::vector<MetaMethod> &methods() const;
+
+    MetaMethod *method(unsigned int id);
+    MetaMethod *method(unsigned int id) const;
+
     std::vector<MetaMethod> findMethod(const std::string &name);
 
     MetaObjectPrivate   *_p;
