@@ -37,9 +37,13 @@ void call(const std::string &addr)
       std::cerr << "obj == 0" << std::endl;
       return;
   }
-
-  std::string result = obj->call<std::string>("reply", "plaf");
-  std::cout << "answer:" << result << std::endl;
+  int i = 0;
+  while (true) {
+    std::string result = obj->call<std::string>("reply", "plaf");
+    if (!( i % 1000))
+      std::cout << "answer(" << i << "):" << result << std::endl;
+    ++i;
+  }
   session.disconnect();
   session.waitForDisconnected();
 }
@@ -82,8 +86,8 @@ int main(int argc, char *argv[])
       std::string masteraddr = vm["master-address"].as<std::string>();
       call(masteraddr);
 
-      std::string gatewayaddr = vm["gateway-address"].as<std::string>();
-      call(gatewayaddr);
+      //std::string gatewayaddr = vm["gateway-address"].as<std::string>();
+      //call(gatewayaddr);
     }
     else
     {
