@@ -209,6 +209,10 @@ namespace qi
       bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
       bufferevent_enable(bev, EV_READ|EV_WRITE);
 
+      //use locking for output, because we can have send command while the network thread run.
+      evbuffer_enable_locking(bufferevent_get_output(bev), 0);
+      evbuffer_enable_locking(bufferevent_get_input(bev), 0);
+
       evutil_snprintf(portbuf, sizeof(portbuf), "%d", url.port());
       memset(&hint, 0, sizeof(hint));
       hint.ai_family = AF_INET;
