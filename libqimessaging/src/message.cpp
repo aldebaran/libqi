@@ -163,21 +163,18 @@ namespace qi {
     if (_p->header.magic != messageMagic)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (magic is incorrect)" << std::endl;
-      assert(_p->header.magic == messageMagic);
       return false;
     }
 
     if (type() == qi::Message::Type_None)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
-      assert(type() != qi::Message::Type_None);
       return false;
     }
 
     if (service() == qi::Message::Service_None)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (service is 0)" << std::endl;
-      assert(service() != qi::Message::Service_None);
       return false;
     }
 
