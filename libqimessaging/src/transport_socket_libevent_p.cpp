@@ -281,15 +281,15 @@ namespace qi
       delete b;
       return false;
     }
-
-    if (b->size()) {
+    size_t sz = b->size();
+    if (sz) {
       if (evbuffer_add_reference(evb,
                                  b->data(),
-                                 b->size(),
+                                 sz,
                                  qi::TransportSocketLibEvent::onBufferSent,
                                  static_cast<void *>(b)) != 0)
       {
-        qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << b->size();
+        qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
         delete b;
         return false;
       }
@@ -301,7 +301,7 @@ namespace qi
     if (bufferevent_write_buffer(bev, evb) != 0)
     {
       qiLogError("qimessaging.TransportSocketLibevent") << "Can't add buffer to the send queue";
-      evbuffer_drain(evb);
+      evbuffer_drain(evb, sizeof(qi::MessagePrivate::MessageHeader) + sz);
       return false;
     }
 
