@@ -62,9 +62,9 @@ namespace qi
   {
     void *p = 0;
     if ((p = peek(size)))
-    {
       seek(size);
-    }
+    else
+      return 0;
 
     return p;
   }
@@ -95,9 +95,12 @@ namespace qi
     }
   }
 
-  void *Buffer::peek(size_t QI_UNUSED(size)) const
+  void *Buffer::peek(size_t size) const
   {
-    return _p->cursor + _p->data;
+    if (_p->cursor + size <= _p->size)
+      return _p->cursor + _p->data;
+    else
+      return 0;
   }
 
   void *Buffer::data() const
