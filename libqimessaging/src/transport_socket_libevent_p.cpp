@@ -202,6 +202,7 @@ namespace qi
     struct evutil_addrinfo hint;
     char portbuf[10];
 
+    qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host();
     if (!isConnected())
     {
       bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
@@ -221,7 +222,7 @@ namespace qi
       err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
       if (err != 0)
       {
-        qiLogError("qimessaging.TransportSocketLibEvent", "Cannot resolve dns");
+        qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
         return (false);
       }
 

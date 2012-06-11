@@ -25,6 +25,7 @@ namespace qi {
 
     virtual void newConnection();
     virtual void onSocketReadyRead(TransportSocket *client, int id);
+    bool         setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost);
 
   public:
     std::map<unsigned int, qi::Object*>     _services;
@@ -80,6 +81,61 @@ namespace qi {
     delete _p;
   }
 
+  bool ServerPrivate::setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost)
+  {
+    std::map<std::string, std::vector<std::string> >  ifsMap;
+    std::stringstream                                 ss;
+    std::string                                       protocol, newEndpoint;
+
+    if (url.host().compare("0.0.0.0") != 0)
+      return (true);
+
+    if (qi::os::hostIPAddrs(ifsMap) == false)
+    {
+      qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
+      return (false);
+    }
+#ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
+    ifsMap["Loopback"].push_back("127.0.0.1");
+#endif
+
+    switch (url.protocol())
+    {
+    case Url::Protocol_Tcp:
+      protocol = "tcp://";
+      break;
+    case Url::Protocol_TcpSsl:
+      protocol = "tcp+ssl://";
+      break;
+    case Url::Protocol_Any:
+      protocol = "tcp://";
+      break;
+    }
+
+    for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
+         interfaceIt != ifsMap.end();
+         ++interfaceIt)
+    {
+      for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
+           addressIt != (*interfaceIt).second.end();
+           ++addressIt)
+      {
+        newEndpoint.clear();
+        ss.clear();
+        ss << protocol;
+        ss << (*addressIt);
+        ss << ":";
+        ss << finalHost.port();
+        ss >> newEndpoint;
+        qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << newEndpoint;
+        if (newEndpoint.compare("") != 0)
+          this->_endpoints.push_back(newEndpoint);
+       }
+    }
+
+    return (true);
+  }
+
   bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints)
   {
     bool success = true;
@@ -97,14 +153,12 @@ namespace qi {
       case Url::Protocol_Tcp:
         _p->_ts = new qi::TransportServer(session, url);
         _p->_ts->setCallbacks(_p);
-        if (_p->_ts->start())
-        {
-          _p->_endpoints.push_back(_p->_ts->_p->listenUrl.str());
-        }
-        else
+       if (!_p->_ts->start())
         {
           success = false;
         }
+       else
+         _p->setSuitableEndpoints(url, _p->_ts->_p->listenUrl);
         break;
       case Url::Protocol_TcpSsl:
         qiLogError("qi::Server") << "SSL over TCP is not implemented yet";

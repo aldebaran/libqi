@@ -110,6 +110,11 @@ namespace qi {
     {
       qi::Url url(*it);
 
+      if (url.host().compare("0.0.0.0") == 0)
+        qiLogWarning("qimessaging.sessionprivate.servicesocket")
+          << "Service directory return non-valid address for "
+          << name << " : " << url.host() << std::endl;
+
       if (type == qi::Url::Protocol_Any ||
           type == url.protocol())
       {
@@ -159,6 +164,11 @@ namespace qi {
     ds >> *mo;
 
     qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId, mo);
+    if (robj == NULL)
+    {
+      qiLogWarning("qimessaging.SessionPrivate.Service") << "No object related to service" << std::endl;
+      return (0);
+    }
     obj = robj;
     return obj;
   }

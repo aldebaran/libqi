@@ -21,7 +21,7 @@
 #include "src/server_functor_result_future_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-
+#include <qimessaging/url.hpp>
 
 namespace qi
 {
@@ -196,6 +196,13 @@ namespace qi
     connectedServices[idx] = svcinfo;
     connectedServices[idx].setServiceId(idx);
     qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered (#" << idx << ")" << std::endl;
+    for (std::vector<std::string>::const_iterator it = svcinfo.endpoints().begin();
+         it != svcinfo.endpoints().end();
+         ++it)
+    {
+      qiLogDebug("qimessaging.ServiceDirectory") << svcinfo.name() << " is now on " << *it << std::endl;
+    }
+
     return idx;
   }
 

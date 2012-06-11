@@ -59,6 +59,8 @@ namespace qi
     struct event_base *base = evconnlistener_get_base(listener);
 
     qi::TransportSocket *ts = new qi::TransportSocket();
+    if (ts->_p)
+      delete ts->_p;
     ts->_p = new qi::TransportSocketLibEvent(ts, fd, base);
     connection.push(ts);
 
