@@ -196,7 +196,6 @@ namespace qi
                                         const qi::Url &url)
   {
     const std::string &address = url.host();
-    unsigned short port = url.port();
     struct evutil_addrinfo *ai=NULL;
     int     err;
     struct evutil_addrinfo hint;

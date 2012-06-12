@@ -93,13 +93,13 @@ TEST(TestReserveSpace, TestBuffer)
   qi::Buffer      buffer;
   unsigned char   *image, *resultImage;
   int             fiveM = 5242880;
-  void           *reservedSpace, *reservedSpace1;
+  void           *reservedSpace1;
   std::string     str("Oh man, this is a super config file, check it out !");
 
   // let's put a string in buffer
   reservedSpace1 = buffer.reserve(150);
   //Oh wait it's a config file !
-  reservedSpace = buffer.reserve(1024);
+  ASSERT_TRUE(buffer.reserve(1024));
 
   image = new unsigned char [fiveM];
   srand(time(NULL));
