@@ -21,6 +21,7 @@ qi_create_gtest(test_future             SRC test_future.cpp             DEPENDS 
 qi_create_gtest(test_without_gateway    SRC test_without_gateway.cpp    DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 qi_create_gtest(test_with_gateway       SRC test_with_gateway.cpp       DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 qi_create_gtest(test_file               SRC test_file.cpp               DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
+qi_create_gtest(test_buffer             SRC test_buffer.cpp             DEPENDS QI QIMESSAGING GTEST TIMEOUT 30)
 
 #qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 #qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
