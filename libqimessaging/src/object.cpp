@@ -62,10 +62,25 @@ namespace qi {
     std::map<std::string, unsigned int>::iterator it;
 
     it = _meta->_p->_methodsNameToIdx.find(signature);
-    if (it != _meta->_p->_methodsNameToIdx.end()) {
-      qiLogWarning("qi.Object") << "Can't bind method: " << signature << " which is already bound.";
-      return -1;
+    if (it != _meta->_p->_methodsNameToIdx.end())
+    {
+      qiLogWarning("qi.Object") << "Method " << signature << " is already bound.";
+      unsigned int idx = it->second;
+
+      for (std::vector<MetaMethod>::iterator mit = _meta->methods().begin();
+           mit != _meta->methods().end();
+           mit++)
+      {
+        if (mit->_p->_idx == idx)
+        {
+          _meta->methods().erase(mit);
+          qiLogVerbose("qi.Object") << "Method " << signature << " unbound.";
+          break;
+        }
+      }
+
     }
+
     MetaMethod mm(signature, functor);
     unsigned int idx = _meta->_p->_methodsNumber++;
     mm._p->_idx = idx;
