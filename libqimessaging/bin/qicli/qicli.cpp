@@ -217,5 +217,6 @@ int main(int argc, char *argv[])
     from_argv(argc, argv);
   }
 
-  return 0;
+  session.disconnect();
+  return (0);
 }
