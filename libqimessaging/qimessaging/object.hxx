@@ -55,6 +55,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -77,6 +79,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -100,6 +104,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -124,6 +130,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -149,6 +157,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -175,6 +185,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -202,6 +214,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -230,6 +244,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
@@ -259,6 +275,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
+    if (breq.size() > 512)
+      qiLogVerbose("qi::Object::call") << "Calling method " << method << " with data of size: " << breq.size();
     xMetaCall(signature, request, promise);
     return future;
   }
