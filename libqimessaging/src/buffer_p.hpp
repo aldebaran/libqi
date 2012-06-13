@@ -9,6 +9,7 @@
 #ifndef BUFFER_P_HPP_
 # define BUFFER_P_HPP_
 
+#define STATIC_BLOCK 512
 #define BLOCK   4096
 
 namespace qi
@@ -23,7 +24,7 @@ namespace qi
 
   public:
     unsigned char*  _bigdata;
-    unsigned char   _data[512];
+    unsigned char   _data[STATIC_BLOCK];
 
   public:
     size_t          used; // size used

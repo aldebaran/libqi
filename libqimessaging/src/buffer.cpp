@@ -77,10 +77,13 @@ namespace qi
   int Buffer::write(const void *data, size_t size)
   {
 
-    if ((_p->available - _p->used < size) && _p->resize(_p->used + size) == false)
+    if (_p->used + size > _p->available)
     {
-      qiLogVerbose("qi.Buffer") << "write(" << size << ") failed, buffer size is " << _p->available;
-      return -1;
+      bool ret = _p->resize(_p->used + size);
+      if (!ret) {
+        qiLogVerbose("qi.Buffer") << "write(" << size << ") failed, buffer size is " << _p->available;
+        return -1;
+      }
     }
 
     memcpy(_p->data() + _p->used, data, size);
@@ -125,7 +128,7 @@ namespace qi
   */
   void *Buffer::reserve(size_t size)
   {
-    if (_p->_bigdata == NULL || (_p->used + size > _p->available))
+    if (_p->used + size > _p->available)
       _p->resize(_p->used + size);
 
     void *p = _p->data() + _p->used;
