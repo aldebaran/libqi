@@ -32,7 +32,7 @@ static void split_me(const std::string &url, unsigned short &_port, std::string 
   }
 
   begin = end + 3;
-  end = url.find(":", begin);
+  end = url.find_last_of(":");
   _host = url.substr(begin, end - begin);
   begin = end + 1;
   std::stringstream ss(url.substr(begin));
