@@ -26,12 +26,6 @@ namespace qi
 // if msecs < 0 no timeout
   bool TransportSocketPrivate::waitForConnected(int msecs)
   {
-    if (!isConnected())
-    {
-      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-      return false;
-    }
-
     // no timeout
     if (msecs < 0)
     {
@@ -56,9 +50,6 @@ namespace qi
 
   bool TransportSocketPrivate::waitForDisconnected(int msecs)
   {
-    if (!isConnected())
-      return true;
-
     // no timeout
     if (msecs < 0)
     {
