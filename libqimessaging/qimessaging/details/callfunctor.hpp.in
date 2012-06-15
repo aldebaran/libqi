@@ -39,7 +39,8 @@ namespace qi
     #for $j in range($i)
     dsi << p$j;
     #end for
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 

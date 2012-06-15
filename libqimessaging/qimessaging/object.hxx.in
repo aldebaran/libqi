@@ -45,7 +45,8 @@ namespace qi {
     std::string signature(method);
     signature += "::";
     signatureFromObject::value(f, signature);
-    xMetaCall(signature, request, promise);
+    if (qi::detail::sanityCheckAndReport(ds, promise))
+      xMetaCall(signature, request, promise);
     return future;
   }
 #end for

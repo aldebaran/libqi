@@ -40,8 +40,10 @@ namespace detail {
 
 
 
-      (fObject->*fFunction)();
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)();
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -74,8 +76,10 @@ namespace detail {
 
 
       dsi >> p0;
-      (fObject->*fFunction)(p0);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -110,8 +114,10 @@ namespace detail {
 
       dsi >> p0;
       dsi >> p1;
-      (fObject->*fFunction)(p0, p1);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -148,8 +154,10 @@ namespace detail {
       dsi >> p0;
       dsi >> p1;
       dsi >> p2;
-      (fObject->*fFunction)(p0, p1, p2);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -188,8 +196,10 @@ namespace detail {
       dsi >> p1;
       dsi >> p2;
       dsi >> p3;
-      (fObject->*fFunction)(p0, p1, p2, p3);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -230,8 +240,10 @@ namespace detail {
       dsi >> p2;
       dsi >> p3;
       dsi >> p4;
-      (fObject->*fFunction)(p0, p1, p2, p3, p4);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3, p4);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -274,8 +286,10 @@ namespace detail {
       dsi >> p3;
       dsi >> p4;
       dsi >> p5;
-      (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3, p4, p5);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -320,8 +334,10 @@ namespace detail {
       dsi >> p4;
       dsi >> p5;
       dsi >> p6;
-      (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -368,8 +384,10 @@ namespace detail {
       dsi >> p5;
       dsi >> p6;
       dsi >> p7;
-      (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -418,8 +436,10 @@ namespace detail {
       dsi >> p6;
       dsi >> p7;
       dsi >> p8;
-      (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (fObject->*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+        result.setValue(buf);
+      }
     };
 
   private:

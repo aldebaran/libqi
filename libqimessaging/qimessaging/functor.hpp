@@ -80,6 +80,12 @@ namespace qi
     *promise = fr;
   }
 
+  class DataStream;
+  namespace detail {
+    //return true if everything is correct
+    QIMESSAGING_API bool sanityCheckAndReport(qi::DataStream &ds, qi::FunctorResult &fr);
+  }
+
 }
 
 

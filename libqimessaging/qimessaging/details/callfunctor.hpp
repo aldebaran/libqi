@@ -28,7 +28,8 @@ namespace qi
     qi::Future<R>         future;
 
     qi::makeFunctorResult<R>(&ret, &future);
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -43,7 +44,8 @@ namespace qi
 
     qi::makeFunctorResult<R>(&ret, &future);
     dsi << p0;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -59,7 +61,8 @@ namespace qi
     qi::makeFunctorResult<R>(&ret, &future);
     dsi << p0;
     dsi << p1;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -76,7 +79,8 @@ namespace qi
     dsi << p0;
     dsi << p1;
     dsi << p2;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -94,7 +98,8 @@ namespace qi
     dsi << p1;
     dsi << p2;
     dsi << p3;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -113,7 +118,8 @@ namespace qi
     dsi << p2;
     dsi << p3;
     dsi << p4;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -133,7 +139,8 @@ namespace qi
     dsi << p3;
     dsi << p4;
     dsi << p5;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -154,7 +161,8 @@ namespace qi
     dsi << p4;
     dsi << p5;
     dsi << p6;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -176,7 +184,8 @@ namespace qi
     dsi << p5;
     dsi << p6;
     dsi << p7;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 
@@ -199,7 +208,8 @@ namespace qi
     dsi << p6;
     dsi << p7;
     dsi << p8;
-    f->call(args, ret);
+    if (qi::detail::sanityCheckAndReport(dsi, ret))
+      f->call(args, ret);
     return future;
   }
 

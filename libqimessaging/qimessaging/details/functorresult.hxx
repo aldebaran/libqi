@@ -31,7 +31,10 @@ namespace qi {
         //TODO: avoid the copy
         T v;
         ds >> v;
-        _f.setValue(v);
+        if (ds.status() != qi::DataStream::Status_Ok)
+          _f.setError("Serialization error.");
+        else
+          _f.setValue(v);
       }
 
       virtual void setError(const qi::Buffer &message)
@@ -40,6 +43,8 @@ namespace qi {
 
         std::string err;
         ds >> err;
+        if (ds.status() != qi::DataStream::Status_Ok)
+          qiLogVerbose("qimessaging.functorresult") << "Can't report error in FunctorResult.setError";
         _f.setError(err);
       }
 
@@ -59,7 +64,6 @@ namespace qi {
       }
       virtual void setValue(const qi::Buffer &QI_UNUSED(result))
       {
-        //TODO: remove the useless ref here
         _f.setValue(0);
       }
 
@@ -69,6 +73,8 @@ namespace qi {
 
         std::string err;
         ds >> err;
+        if (ds.status() != qi::DataStream::Status_Ok)
+          qiLogVerbose("qimessaging.functorresult") << "Can't report error in FunctorResult.setError";
         _f.setError(err);
       }
 

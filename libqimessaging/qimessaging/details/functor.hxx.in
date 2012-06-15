@@ -47,8 +47,12 @@ namespace detail {
       #for $j in range($i)
       dsi >> p$j;
       #end for
-      dso << (*fFunction)($generate_callparam_list($i));
-      result.setValue(buf);
+
+      if (sanityCheckAndReport(dsi, result)) {
+        dso << (*fFunction)($generate_callparam_list($i));
+        if (sanityCheckAndReport(dso, result))
+          result.setValue(buf);
+      }
     };
 
   private:

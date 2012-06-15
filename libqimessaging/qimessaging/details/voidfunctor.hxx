@@ -36,8 +36,10 @@ namespace detail {
       qi::DataStream dsi(params.buffer());
       qi::Buffer buf;
 
-      (*fFunction)();
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)();
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -66,8 +68,10 @@ namespace detail {
       P0 p0;
 
       dsi >> p0;
-      (*fFunction)(p0);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -98,8 +102,10 @@ namespace detail {
 
       dsi >> p0;
       dsi >> p1;
-      (*fFunction)(p0, p1);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -132,8 +138,10 @@ namespace detail {
       dsi >> p0;
       dsi >> p1;
       dsi >> p2;
-      (*fFunction)(p0, p1, p2);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -168,8 +176,10 @@ namespace detail {
       dsi >> p1;
       dsi >> p2;
       dsi >> p3;
-      (*fFunction)(p0, p1, p2, p3);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -206,8 +216,10 @@ namespace detail {
       dsi >> p2;
       dsi >> p3;
       dsi >> p4;
-      (*fFunction)(p0, p1, p2, p3, p4);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3, p4);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -246,8 +258,10 @@ namespace detail {
       dsi >> p3;
       dsi >> p4;
       dsi >> p5;
-      (*fFunction)(p0, p1, p2, p3, p4, p5);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3, p4, p5);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -288,8 +302,10 @@ namespace detail {
       dsi >> p4;
       dsi >> p5;
       dsi >> p6;
-      (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3, p4, p5, p6);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -332,8 +348,10 @@ namespace detail {
       dsi >> p5;
       dsi >> p6;
       dsi >> p7;
-      (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7);
+        result.setValue(buf);
+      }
     };
 
   private:
@@ -378,8 +396,10 @@ namespace detail {
       dsi >> p6;
       dsi >> p7;
       dsi >> p8;
-      (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
-      result.setValue(buf);
+      if (sanityCheckAndReport(dsi, result)) {
+        (*fFunction)(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+        result.setValue(buf);
+      }
     };
 
   private:
