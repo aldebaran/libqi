@@ -234,9 +234,6 @@ namespace qi {
             printf("%s ", ss.str().c_str());
             break;
           case 3:
-            if (line == 0)
-              printf("");
-            else
               printf("%s(%d) ", file, line);
             break;
           case 4:
