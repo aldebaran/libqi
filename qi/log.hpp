@@ -27,13 +27,15 @@
 
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define qiLogDebug(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#   define qiLogDebug(...)      qi::log::LogStream(qi::log::debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
-# define qiLogDebug(...)        qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
+#   define qiLogDebug(...)      qi::log::LogStream(qi::log::debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
 #ifdef NO_QI_VERBOSE
 # define qiLogVerbose(...)      if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
-#elif defined(NDEBUG)
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 # define qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define qiLogVerbose(...)      qi::log::LogStream(qi::log::verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
@@ -41,7 +43,7 @@
 
 #ifdef NO_QI_INFO
 # define qiLogInfo(...)         if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
-#elif defined(NDEBUG)
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 # define qiLogInfo(...)         qi::log::LogStream(qi::log::info, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define qiLogInfo(...)         qi::log::LogStream(qi::log::info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
@@ -49,7 +51,7 @@
 
 #ifdef NO_QI_WARNING
 # define qiLogWarning(...)      if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
-#elif defined(NDEBUG)
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 # define qiLogWarning(...)      qi::log::LogStream(qi::log::warning, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define qiLogWarning(...)      qi::log::LogStream(qi::log::warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
@@ -57,7 +59,7 @@
 
 #ifdef NO_QI_ERROR
 # define qiLogError(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
-#elif defined(NDEBUG)
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 # define qiLogError(...)        qi::log::LogStream(qi::log::error, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define qiLogError(...)        qi::log::LogStream(qi::log::error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
@@ -65,7 +67,7 @@
 
 #ifdef NO_QI_FATAL
 # define qiLogFatal(...)        if (false) qi::log::detail::NullStream(__VA_ARGS__).self()
-#elif defined(NDEBUG)
+#elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
 # define qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define qiLogFatal(...)        qi::log::LogStream(qi::log::fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
