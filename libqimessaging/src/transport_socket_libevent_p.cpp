@@ -228,10 +228,8 @@ namespace qi
       int result = bufferevent_socket_connect(bev, ai->ai_addr, ai->ai_addrlen);
 
       if (result == 0)
-      {
-        connected = true;
         return true;
-      }
+
       return false;
     }
     else
