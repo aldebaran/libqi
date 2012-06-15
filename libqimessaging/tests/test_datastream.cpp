@@ -75,9 +75,9 @@ TEST(TestBind, serializeBools)
   bool b3;
   d2 >> b3;
 
-  EXPECT_EQ(true, b1);
-  EXPECT_EQ(false, b2);
-  EXPECT_EQ(false, b3);
+  EXPECT_TRUE(b1);
+  EXPECT_FALSE(b2);
+  EXPECT_FALSE(b3);
 }
 
 TEST(TestBind, serializeChar)

@@ -80,7 +80,7 @@ TEST(TestValue, TestSerialize) {
   it = vm->find("tata");
   EXPECT_STREQ("tata", it->first.c_str());
   EXPECT_STREQ("caca", it->second.toString().c_str());
-  EXPECT_EQ(2, vm->size());
+  EXPECT_EQ((unsigned int)2, vm->size());
 }
 
 TEST(TestValue, TestSerializeVector) {
