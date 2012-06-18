@@ -53,6 +53,13 @@ namespace qi {
   class QIMESSAGING_API DataStream {
   public:
 
+    enum Status {
+      Status_Ok                     = 0,
+      Status_ReadError              = 1,
+      Status_ReadPastEnd            = 2,
+      Status_WriteError             = 3,
+      Status_WriteOnReadOnlyStream  = 4
+    };
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
@@ -95,6 +102,9 @@ namespace qi {
     DataStream& operator>>(double &i);
     DataStream& operator>>(std::string& i);
 
+    Status status() const { return _status; };
+    void setStatus(Status status) { _status = status; }
+
     /// <summary>Gets the string. </summary>
     /// <returns> The string representation of the serialized message</returns>
     //void *data() { return _buffer->data(); }
@@ -102,7 +112,7 @@ namespace qi {
   private:
     qi::Buffer  _buffer;
     bool        _ro;
-
+    Status      _status;
     /// <summary>Default constructor. </summary>
     DataStream()
     {}
@@ -136,6 +146,7 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
                                     << sz;
+        sd.setStatus(DataStream::Status_ReadError);
         return sd;
       }
       typename std::list<T>::iterator it = v.begin();
@@ -175,6 +186,7 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
                                     << sz;
+        sd.setStatus(DataStream::Status_ReadError);
         return sd;
       }
       typename std::vector<T>::iterator it = v.begin();
