@@ -71,14 +71,26 @@ static void cmd_service(const command           &cmd,
 /****************
 *    SERVICES   *
 ****************/
-static void cmd_services(const command           &QI_UNUSED(cmd),
+static void cmd_services(const command           &cmd,
                          command::const_iterator &QI_UNUSED(it))
 {
+  bool enum_all = false;
+  if (std::find(cmd.begin(), cmd.end(), "-v") != cmd.end())
+    enum_all = true;
   std::vector<qi::ServiceInfo> servs = session.services();
   for (unsigned int i = 0; i < servs.size(); ++i)
   {
     std::cout << "[" << servs[i].serviceId() << "] "
               << servs[i].name() << std::endl;
+    if (enum_all) {
+      command ncmd;
+      command::const_iterator it;
+
+      ncmd.push_back(servs[i].name());
+      it = ncmd.begin();
+      cmd_service(ncmd, it);
+      std::cout << std::endl;
+    }
   }
 }
 
@@ -195,7 +207,7 @@ static void usage(char *argv0)
 {
   std::cout << "Usage: " << argv0 << " [ADDRESS CMD]" << std::endl;
   std::cout << "  connect ADDRESS" << std::endl
-            << "  services" << std::endl
+            << "  services [-v]" << std::endl
             << "  service SERVICE" << std::endl;
 }
 
