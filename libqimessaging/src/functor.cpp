@@ -19,7 +19,7 @@ namespace qi {
       if (ds.status() != qi::DataStream::Status_Ok) {
         qi::Buffer buf;
         qi::DataStream dso(buf);
-        dso << "Serialization error: " << int(dso.status());
+        dso << "Serialization error: " << int(ds.status());
         fr.setError(buf);
         return false;
       }
