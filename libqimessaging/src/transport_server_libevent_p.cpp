@@ -109,7 +109,6 @@ namespace qi
                                          -1,
                                          (struct sockaddr *)&listen_on_addr,
                                          socklen);
-      evconnlistener_set_error_cb(listener, accept_error_cb);
       if (!findPort || (findPort && listener))
       {
         break;
@@ -121,6 +120,7 @@ namespace qi
 
     if (listener)
     {
+      evconnlistener_set_error_cb(listener, accept_error_cb);
       std::stringstream out;
       out << port;
 
