@@ -93,11 +93,10 @@ namespace qi
       listener = evconnlistener_new_bind(base,
                                          accept_cb,
                                          this,
-                                         LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE,
+                                         LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
                                          -1,
                                          (struct sockaddr *)&listen_on_addr,
                                          socklen);
-
       if (!findPort || (findPort && listener))
       {
         break;

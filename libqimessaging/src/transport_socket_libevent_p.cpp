@@ -163,7 +163,7 @@ namespace qi
     , fd(fileDesc)
   {
     struct event_base *base = static_cast<event_base *>(data);
-    bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
+    bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
     bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
     bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ|EV_WRITE);
@@ -204,14 +204,10 @@ namespace qi
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host();
     if (!isConnected())
     {
-      bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
+      bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
       bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
       bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
       bufferevent_enable(bev, EV_READ|EV_WRITE);
-
-      //use locking for output, because we can have send command while the network thread run.
-      evbuffer_enable_locking(bufferevent_get_output(bev), 0);
-      evbuffer_enable_locking(bufferevent_get_input(bev), 0);
 
       evutil_snprintf(portbuf, sizeof(portbuf), "%d", url.port());
       memset(&hint, 0, sizeof(hint));
