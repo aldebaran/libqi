@@ -32,7 +32,7 @@ namespace qi
   {
     if (_bigdata)
     {
-      delete _bigdata;
+      free(_bigdata);
       _bigdata = NULL;
     }
   }
@@ -55,26 +55,16 @@ namespace qi
     neededSize += BLOCK; // Should be enough in most cases;
 
     qiLogDebug("qimessaging.buffer") << "Resizing buffer from " << available << " to " << neededSize;
-    if (_bigdata) // If we're already on heap, realloc
-    {
-      unsigned char *newBigdata;
+    unsigned char *newBigdata;
 
-      if ((newBigdata = static_cast<unsigned char *>(realloc(_bigdata, neededSize))) == NULL)
-        return (false);
-      available = neededSize;
-      _bigdata = newBigdata; // Don't worry, realloc free previous buffer if needed
-      return (true);
-    }
-    else
-    {
-      _bigdata = new unsigned char[neededSize];
-      available = neededSize;
-
-      if (used)
-        ::memcpy(_bigdata, _data, used);
-
-      return (true);
-    }
+    newBigdata = static_cast<unsigned char *>(realloc(_bigdata, neededSize));
+    if (newBigdata == NULL)
+      return false;
+    if (!_bigdata && used > 0)
+      ::memcpy(newBigdata, _data, used);
+    available = neededSize;
+    _bigdata = newBigdata; // Don't worry, realloc free previous buffer if needed
+    return true;
   }
 
   int Buffer::write(const void *data, size_t size)
