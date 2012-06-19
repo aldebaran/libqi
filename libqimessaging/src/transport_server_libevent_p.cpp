@@ -49,12 +49,18 @@ namespace qi
                  void                  *p)
   {
     TransportServerLibEventPrivate *_p = static_cast<TransportServerLibEventPrivate *>(p);
-    _p->accept(fd, listener, p);
+    _p->accept(fd, listener);
+  }
+
+  void accept_error_cb(struct evconnlistener *listener,
+                       void                  *p)
+  {
+    TransportServerLibEventPrivate *_p = static_cast<TransportServerLibEventPrivate *>(p);
+    _p->accept_error(listener);
   }
 
   void TransportServerLibEventPrivate::accept(evutil_socket_t        fd,
-                                              struct evconnlistener *listener,
-                                              void                  *QI_UNUSED(context))
+                                              struct evconnlistener *listener)
   {
     struct event_base *base = evconnlistener_get_base(listener);
 
@@ -65,6 +71,12 @@ namespace qi
     connection.push(ts);
 
     tsi->newConnection();
+  }
+
+  void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {
+    std::cout << "accept error" << std::endl;
+    int err = errno;
+    qiLogError("qimessaging.transportserver", "Got an error %d (%s) on the listener.", err, evutil_socket_error_to_string(err));
   }
 
   bool TransportServerLibEventPrivate::start()
@@ -97,6 +109,7 @@ namespace qi
                                          -1,
                                          (struct sockaddr *)&listen_on_addr,
                                          socklen);
+      evconnlistener_set_error_cb(listener, accept_error_cb);
       if (!findPort || (findPort && listener))
       {
         break;

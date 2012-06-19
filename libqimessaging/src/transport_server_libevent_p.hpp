@@ -32,8 +32,9 @@ namespace qi
     virtual bool start();
 
     void accept(evutil_socket_t        fd,
-                struct evconnlistener *listener,
-                void                  *context);
+                struct evconnlistener *listener);
+
+    void accept_error(struct evconnlistener *listener);
 
     struct event_base *base;
 
