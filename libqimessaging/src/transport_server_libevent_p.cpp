@@ -81,34 +81,52 @@ namespace qi
 
   bool TransportServerLibEventPrivate::start()
   {
-    struct event_base *base = mainSession->_p->_networkThread->getEventBase();
+    struct event_base     *base = mainSession->_p->_networkThread->getEventBase();
     struct evconnlistener *listener;
-    static struct sockaddr_storage listen_on_addr;
-    memset(&listen_on_addr, 0, sizeof(listen_on_addr));
-    int socklen = sizeof(listen_on_addr);
-    struct sockaddr_in *sin = reinterpret_cast<struct sockaddr_in *>(&listen_on_addr);
 
-    socklen = sizeof(struct sockaddr_in);
-    sin->sin_family = AF_INET;
-    if ((sin->sin_addr.s_addr = inet_addr(listenUrl.host().c_str())) == INADDR_NONE)
-    {
-      qiLogError("qimessaging.transportserver") << "Provided IP is not valid" << std::endl;
-      return false;
-    }
+    struct evutil_addrinfo *ai = NULL;
+    int                     err;
+    struct evutil_addrinfo  hint;
+    char                    portbuf[10];
 
     bool findPort = listenUrl.port() == 0;
     unsigned short port = findPort ? qi::os::findAvailablePort(0) : listenUrl.port();
 
+    // Convert the port to decimal.
+    evutil_snprintf(portbuf, sizeof(portbuf), "%d", (int)port);
+
+    // Build the hints to tell getaddrinfo how to act.
+    memset(&hint, 0, sizeof(hint));
+    hint.ai_family = AF_UNSPEC; // v4 or v6 is fine.
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_protocol = IPPROTO_TCP; // We want a TCP socket
+    // Only return addresses we can use.
+    hint.ai_flags = EVUTIL_AI_PASSIVE | EVUTIL_AI_ADDRCONFIG;
+
+    // Look up the hostname.
+    err = evutil_getaddrinfo(listenUrl.host().c_str(), portbuf, &hint, &ai);
+    if (err < 0)
+    {
+      qiLogError("qimessaging.transportserver") << "Error while resolving '"
+                                                << listenUrl.host()  << "': "
+                                                << evutil_gai_strerror(err)
+                                                << std::endl;
+      if (ai)
+        evutil_freeaddrinfo(ai);
+      return false;
+    }
+
     do
     {
-      sin->sin_port = htons(port);
+      reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port = htons(port);
       listener = evconnlistener_new_bind(base,
                                          accept_cb,
                                          this,
                                          LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
                                          -1,
-                                         (struct sockaddr *)&listen_on_addr,
-                                         socklen);
+                                         ai->ai_addr,
+                                         ai->ai_addrlen);
+
       if (!findPort || (findPort && listener))
       {
         break;
@@ -134,6 +152,8 @@ namespace qi
                                                 << listenUrl.str();
     }
 
+    if (ai)
+      evutil_freeaddrinfo(ai);
     return listener != 0;
   }
 

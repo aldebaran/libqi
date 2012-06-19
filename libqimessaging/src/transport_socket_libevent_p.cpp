@@ -196,12 +196,12 @@ namespace qi
                                         const qi::Url &url)
   {
     const std::string &address = url.host();
-    struct evutil_addrinfo *ai=NULL;
-    int     err;
-    struct evutil_addrinfo hint;
-    char portbuf[10];
+    struct evutil_addrinfo *ai = NULL;
+    int                     err;
+    struct evutil_addrinfo  hint;
+    char                    portbuf[10];
 
-    qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host();
+    qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host() << ":" << url.port();
     if (!isConnected())
     {
       bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
@@ -211,7 +211,7 @@ namespace qi
 
       evutil_snprintf(portbuf, sizeof(portbuf), "%d", url.port());
       memset(&hint, 0, sizeof(hint));
-      hint.ai_family = AF_INET;
+      hint.ai_family = AF_UNSPEC;
       hint.ai_protocol = IPPROTO_TCP;
       hint.ai_socktype = SOCK_STREAM;
       err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
