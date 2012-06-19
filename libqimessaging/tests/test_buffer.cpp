@@ -114,6 +114,4 @@ TEST(TestReserveSpace, TestBuffer)
 
   ::memset(reservedSpace1, 0, 150);
   ::memcpy(reservedSpace1, str.c_str(), str.size());
-
-  //buffer.dump();
 }

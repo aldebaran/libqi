@@ -31,7 +31,10 @@ namespace qi
   BufferPrivate::~BufferPrivate()
   {
     if (_bigdata)
+    {
       delete _bigdata;
+      _bigdata = NULL;
+    }
   }
 
   Buffer::Buffer()
