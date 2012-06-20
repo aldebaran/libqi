@@ -62,6 +62,7 @@ namespace qi
                                        void               *QI_UNUSED(context))
   {
     struct evbuffer *input = bufferevent_get_input(bev);
+    int              msgId = 0;
 
     while (true)
     {
@@ -99,12 +100,13 @@ namespace qi
       {
         boost::mutex::scoped_lock l(mtx);
         msgSend[msg->id()] = msg;
+        msgId = msg->id();
+        msg = NULL;
         cond.notify_all();
       }
       if (tcd)
-        tcd->onSocketReadyRead(self, msg->id());
+        tcd->onSocketReadyRead(self, msgId);
 
-      msg = NULL;
     }
   }
 
