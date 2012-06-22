@@ -208,6 +208,16 @@ namespace qi
 
   void ServiceDirectoryPrivate::unregisterService(const unsigned int &idx)
   {
+    // search the id before accessing it
+    // otherwise operator[] create a empty entry
+    std::map<unsigned int, ServiceInfo>::iterator it2;
+    it2 = connectedServices.find(idx);
+    if (it2 == connectedServices.end())
+    {
+      qiLogError("qimessaging.ServiceDirectory") << "Can't find service #" << idx;
+      return;
+    }
+
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(connectedServices[idx].name());
     if (it != nameToIdx.end())
@@ -217,14 +227,7 @@ namespace qi
                                                 << " (#" << idx << ") unregistered"
                                                 << std::endl;
       nameToIdx.erase(it);
-
-      std::map<unsigned int, ServiceInfo>::iterator it2;
-      it2 = connectedServices.find(idx);
-      if (it2 == connectedServices.end())
-        qiLogError("qimessaging.ServiceDirectory") << "Can't find service #" << idx;
-      else
-        connectedServices.erase(it2);
-
+      connectedServices.erase(it2);
       // FIXME: should update socketToIdx...
     }
   }
