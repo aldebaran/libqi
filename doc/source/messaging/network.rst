@@ -22,6 +22,28 @@ example a service can support ipc and tcp endpoints. To connect client to their
 final service we need a ServiceDirectory which enumerate services and endpoints
 associated to them.
 
+IPv4 vs IPv6
+------------
+
+IPv4 and IPv6 are supported, but you need to know that you cannot connect from
+one type to another. For example, if you listen on an IPv4 address you can only
+connect to it with the same IPv4 address. same rule applies for IPv6.
+
+If you want to bind on all IPs you must listen on both tcp://0.0.0.0:0 for IPv4
+and tcp://::0:0 for IPv6 addresses.
+
+If you set the port to 0 (e.g. tcp://127.0.0.1:0 or tcp://::1:0),
+the system will choose a valid and available port to listen to.
+
+If you want to use IPv6 addresses, you must know that the scope identifier is
+hardcoded to the name of the hardware interface associated with the address (such as
+eth0). Example would be like "fe80::1%eth0", which means "fe80::1y on the
+link associated with eth0 interface".
+
+For more explanation about IPv6, you can read `IPv6 on wikipedia`_.
+
+.. _IPv6 on wikipedia: http://en.wikipedia.org/wiki/IPv6
+
 Service Directory
 -----------------
 
