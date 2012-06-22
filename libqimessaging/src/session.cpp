@@ -118,11 +118,17 @@ namespace qi {
       if (type == qi::Url::Protocol_Any ||
           type == url.protocol())
       {
-        qi::TransportSocket* ts = NULL;
+        qi::TransportSocket *ts = NULL;
         ts = new qi::TransportSocket();
         ts->connect(_self, url);
-        ts->waitForConnected();
-        return ts;
+        if (ts->waitForConnected(3))
+          return ts;
+        else
+        {
+          qiLogVerbose("qimessaging.sessionprivate.servicesocket")
+          << "Fail to connect to " << url.host() << ":" << url.port() << std::endl;
+          delete ts;
+        }
       }
     }
 
