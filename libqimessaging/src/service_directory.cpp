@@ -136,9 +136,11 @@ namespace qi
       return;
     }
 
+    // Always start at the beginning since we erase elements on unregisterService
+    // and mess up the iterator
     for (std::vector<unsigned int>::iterator it2 = it->second.begin();
          it2 != it->second.end();
-         it2++)
+         it2 = it->second.begin())
     {
       qiLogInfo("qimessaging.ServiceDirectory") << "service "
                                                 << connectedServices[*it2].name()
@@ -228,7 +230,22 @@ namespace qi
                                                 << std::endl;
       nameToIdx.erase(it);
       connectedServices.erase(it2);
-      // FIXME: should update socketToIdx...
+      // Find and remove serviceId into socketToIdx map
+      std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
+      for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); socketIt++)
+      {
+        std::vector<unsigned int>::iterator serviceIdxIt;
+        for (serviceIdxIt = socketIt->second.begin();
+             serviceIdxIt != socketIt->second.end();
+             ++serviceIdxIt)
+        {
+          if (*serviceIdxIt == idx)
+          {
+            socketIt->second.erase(serviceIdxIt);
+            break;
+          }
+        }
+      }
     }
   }
 
