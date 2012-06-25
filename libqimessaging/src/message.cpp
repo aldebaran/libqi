@@ -48,6 +48,12 @@ namespace qi {
   Message::Message()
     : _p(new qi::MessagePrivate())
   {
+
+  }
+  Message::Message(const Message &msg)
+    : _p(new qi::MessagePrivate())
+  {
+    this->operator =(msg);
   }
 
   Message& Message::operator=(const Message& msg)
