@@ -121,7 +121,7 @@ namespace qi {
         qi::TransportSocket *ts = NULL;
         ts = new qi::TransportSocket();
         ts->connect(_self, url);
-        if (ts->waitForConnected(3))
+        if (ts->waitForConnected())
           return ts;
         else
         {
