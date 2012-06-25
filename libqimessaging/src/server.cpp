@@ -83,14 +83,14 @@ namespace qi {
 
   bool ServerPrivate::setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost)
   {
-    std::map<std::string, std::vector<std::string> >  ifsMap;
     std::stringstream                                 ss;
     std::string                                       protocol, newEndpoint;
+    std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
 
     if (url.host().compare("0.0.0.0") != 0)
       return (true);
 
-    if (qi::os::hostIPAddrs(ifsMap) == false)
+    if (ifsMap.empty())
     {
       qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
       return (false);

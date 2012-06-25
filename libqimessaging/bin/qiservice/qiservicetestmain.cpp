@@ -40,9 +40,9 @@ int main(int argc, char *argv[])
   pos.add("master-address", 1);
 
   // Test hostIPAddrs
-  std::map<std::string, std::vector<std::string> > ifsMap;
+  std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
 
-  if (qi::os::hostIPAddrs(ifsMap) == false)
+  if (ifsMap.empty())
    qiLogInfo("qimessaging.ServiceTest", "hostIPAddrs failed");
 
   if (ifsMap.empty() == false)
