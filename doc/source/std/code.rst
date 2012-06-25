@@ -260,11 +260,14 @@ If the argument is IN-OUT then use pointer and avoid reference. The code that us
 
 .. code-block:: c++
 
+  int     a, b, result;
+  bool    check;
+
   //the & show that the value can be modified
-  void getValue(&value);
+  check = computeButCanFail(a, b, &result);
 
   //bad... we dont know value will be modified
-  void getValue(value);
+  check = computeButCanFail(a, b, result);
 
 If the type is a POD (bool, char, short, int, float, double, etc...) use:
 
