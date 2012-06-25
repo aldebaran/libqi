@@ -374,13 +374,14 @@ namespace qi {
       return iPort;
     }
 
-    bool hostIPAddrs(std::map<std::string, std::vector<std::string> >& ifsMap)
+    std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
       PIP_ADAPTER_INFO pAdapterInfo;
       PIP_ADAPTER_INFO pAdapter = NULL;
       DWORD dwRetVal = 0;
       std::map<int, std::string> AdapterType;
       std::string type, addr;
+      std::map<std::string, std::vector<std::string> > ifsMap;
 
       AdapterType[MIB_IF_TYPE_OTHER] = "Other";
       AdapterType[IF_TYPE_IEEE80211] = "802.11wireless";
@@ -395,24 +396,24 @@ namespace qi {
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO))) == NULL)
       {
         qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
-        return (false);
+        return std::map<std::string, std::vector<std::string> >();
       }
 
       /* Make initial call to GetAdaptersInfo to get
       ** the necessary size into the ulOutBufLen variable (pr)
       ** http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx */
       if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) != ERROR_BUFFER_OVERFLOW)
-        return (false);
+        return std::map<std::string, std::vector<std::string> >();
 
       free(pAdapterInfo);
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
       {
           qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
-          return (false);
+          std::map<std::string, std::vector<std::string> >();
       }
 
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
-        return (false);
+        return std::map<std::string, std::vector<std::string> >();
 
       pAdapter = pAdapterInfo;
       while (pAdapter)
@@ -428,7 +429,7 @@ namespace qi {
 
       if (pAdapterInfo)
         free(pAdapterInfo);
-      return (true);
+      return ifsMap;
     }
 
   }

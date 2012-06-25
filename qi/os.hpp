@@ -62,8 +62,7 @@ namespace qi {
     QI_API int kill(int pid, int sig);
 
     QI_API unsigned short findAvailablePort(unsigned short port);
-    QI_API bool hostIPAddrs(std::map<std::string, std::vector<std::string> >& ifsMap,
-                            bool ipv6Addr = false);
+    QI_API std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr = false);
 
     //since 1.12.1
     QI_API_DEPRECATED QI_API std::string tmpdir(const char *prefix = "");

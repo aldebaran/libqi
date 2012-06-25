@@ -199,9 +199,9 @@ namespace qi {
       return iPort;
     }
 
-    bool hostIPAddrs(std::map<std::string, std::vector<std::string> >& ifsMap,
-                     bool ipv6Addr)
+    std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
+      std::map<std::string, std::vector<std::string> > ifsMap;
       struct ifaddrs *ifAddrStruct = 0;
       struct ifaddrs *ifa = 0;
       void *tmpAddrPtr = 0;
@@ -209,9 +209,7 @@ namespace qi {
       getifaddrs(&ifAddrStruct);
 
       if (ifAddrStruct == 0)
-      {
-        return false;
-      }
+        return std::map<std::string, std::vector<std::string> >();
 
       for (ifa = ifAddrStruct; ifa != 0; ifa = ifa->ifa_next)
       {
@@ -232,7 +230,7 @@ namespace qi {
         }
       }
 
-      return true;
+      return ifsMap;
      }
 
   };
