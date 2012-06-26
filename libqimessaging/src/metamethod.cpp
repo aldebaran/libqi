@@ -9,24 +9,23 @@
 namespace qi {
 
   MetaMethod::MetaMethod()
+    : _p(new MetaMethodPrivate())
   {
-    _p = new MetaMethodPrivate();
   }
 
   MetaMethod::MetaMethod(const std::string &sig, const qi::Functor *functor)
+    : _p(new MetaMethodPrivate(sig, functor))
   {
-    _p = new MetaMethodPrivate(sig, functor);
   }
 
   MetaMethod::MetaMethod(const MetaMethod &other)
+    : _p(new MetaMethodPrivate())
   {
-    _p = new MetaMethodPrivate();
     *_p = *(other._p);
   }
 
   MetaMethod& MetaMethod::operator=(const MetaMethod &other)
   {
-    _p = new MetaMethodPrivate();
     *_p = *(other._p);
     return (*this);
   }
