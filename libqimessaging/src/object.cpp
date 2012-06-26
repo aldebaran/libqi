@@ -64,21 +64,12 @@ namespace qi {
     it = _meta->_p->_methodsNameToIdx.find(signature);
     if (it != _meta->_p->_methodsNameToIdx.end())
     {
-      qiLogWarning("qi.Object") << "Method " << signature << " is already bound.";
       unsigned int idx = it->second;
-
-      for (std::vector<MetaMethod>::iterator mit = _meta->methods().begin();
-           mit != _meta->methods().end();
-           mit++)
-      {
-        if (mit->_p->_idx == idx)
-        {
-          _meta->methods().erase(mit);
-          qiLogVerbose("qi.Object") << "Method " << signature << " unbound.";
-          break;
-        }
-      }
-
+      MetaMethod mm(signature, functor);
+      mm._p->_idx = idx;
+      _meta->methods()[idx] = mm;
+      qiLogVerbose("qi.Object") << "rebinding method:" << signature;
+      return idx;
     }
 
     MetaMethod mm(signature, functor);
@@ -92,7 +83,8 @@ namespace qi {
 
   void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
-    if (method > _meta->methods().size()) {
+    MetaMethod *mm = _meta->method(method);
+    if (!mm) {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
       qi::Buffer     buf;
@@ -101,7 +93,6 @@ namespace qi {
       out.setError(buf);
       return;
     }
-    MetaMethod *mm = &(_meta->methods()[method]);
     if (mm->_p->_functor)
       mm->_p->_functor->call(in, out);
   }
