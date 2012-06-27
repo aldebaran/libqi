@@ -127,7 +127,7 @@ namespace qi {
 
       for (it = mml.begin(); it != mml.end(); ++it) {
         const qi::MetaMethod       &mm = *it;
-        ss << "  " << mm.signature();
+        ss << "  " << mm.signature() << std::endl;
       }
       qiLogError("object") << ss.str();
       ds << ss.str();
