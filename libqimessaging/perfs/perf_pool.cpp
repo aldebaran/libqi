@@ -40,7 +40,7 @@ int main()
     MyStruct *ms = new MyStruct;
     ms->x = 2;
     toto += (unsigned long long)ms;
-    free(ms);
+    delete ms;
   }
   dp.stop();
   //only need to use toto (to force the code used)
