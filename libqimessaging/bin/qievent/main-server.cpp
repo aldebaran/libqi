@@ -18,6 +18,7 @@ class RemoteServer : public qi::TransportServer
 public:
   RemoteServer()
   {
+    nthd = NULL;
     ts = new qi::TransportServer();
 //    ts->setCallbacks(this);
   }
