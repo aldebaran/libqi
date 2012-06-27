@@ -37,6 +37,8 @@ class ServerEventPrivate : public qi::TransportServerInterface, public qi::Trans
 public:
   ServerEventPrivate()
   {
+    _ts = NULL;
+    _session = NULL;
     _dp = new qi::perf::DataPerfTimer("Transport synchronous call");
     _msgRecv = 0;
     _numBytes = 0;
