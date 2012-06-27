@@ -39,12 +39,12 @@ namespace qi
     virtual bool waitForId(int id, int msecs = 30000);
 
     virtual void setCallbacks(TransportSocketInterface *delegate);
-    virtual bool isConnected();
+    virtual bool isConnected() const;
 
   public:
     TransportSocketInterface *tcd;
     bool                      connected;
-
+    int                       status;
     // data to rebuild message
     bool                      readHdr;
     qi::Message              *msg;

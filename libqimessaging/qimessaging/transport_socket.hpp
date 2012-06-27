@@ -52,7 +52,8 @@ namespace qi
     bool send(const qi::Message &msg);
 
     void setCallbacks(TransportSocketInterface *delegate);
-    bool isConnected();
+    bool isConnected() const;
+    int  status() const;
 
   public:
     TransportSocketPrivate *_p;

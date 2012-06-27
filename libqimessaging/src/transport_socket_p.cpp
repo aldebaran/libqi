@@ -29,23 +29,17 @@ namespace qi
     // no timeout
     if (msecs < 0)
     {
-      while (!isConnected())
+      while (!isConnected() && status == 0)
         ;
-
       return true;
     }
 
-    while (!isConnected() && msecs > 0)
+    while ((!isConnected() && status == 0) && msecs > 0)
     {
       qi::os::msleep(1);
       msecs--;
     }
-
-    // timeout
-    if (msecs == 0)
-      return false;
-
-    return true;
+    return isConnected();
   }
 
   bool TransportSocketPrivate::waitForDisconnected(int msecs)
@@ -55,7 +49,6 @@ namespace qi
     {
       while (isConnected())
         ;
-
       return true;
     }
 
@@ -65,11 +58,7 @@ namespace qi
       msecs--;
     }
 
-    // timeout
-    if (msecs == 0)
-      return false;
-
-    return true;
+    return !isConnected();
   }
 
   bool TransportSocketPrivate::waitForId(int id, int msecs)
@@ -133,7 +122,7 @@ namespace qi
     tcd = delegate;
   }
 
-  bool TransportSocketPrivate::isConnected()
+  bool TransportSocketPrivate::isConnected() const
   {
     return connected;
   }

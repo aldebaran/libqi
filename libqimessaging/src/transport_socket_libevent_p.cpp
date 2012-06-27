@@ -164,7 +164,7 @@ namespace qi
         tcd->onSocketConnectionError(self);
       if (wasco && tcd)
         tcd->onSocketDisconnected(self);
-
+      status = errno;
       // check errno to see what error occurred
       qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
     }

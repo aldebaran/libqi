@@ -53,6 +53,7 @@ namespace qi
                                 const qi::Url &url)
   {
     TransportSocketPrivate *save = _p;
+    _p->status = 0;
     switch (url.protocol())
     {
       case qi::Url::Protocol_Tcp:
@@ -105,6 +106,10 @@ namespace qi
     return _p->waitForDisconnected(msecs);
   }
 
+  int TransportSocket::status() const {
+    return _p->status;
+  }
+
   bool TransportSocket::waitForId(int id, int msecs)
   {
     if (_p == NULL)
@@ -147,7 +152,7 @@ namespace qi
     _p->setCallbacks(delegate);
   }
 
-  bool TransportSocket::isConnected()
+  bool TransportSocket::isConnected() const
   {
     if (_p == NULL)
     {
