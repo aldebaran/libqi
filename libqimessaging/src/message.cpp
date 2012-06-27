@@ -20,7 +20,7 @@
 
 namespace qi {
 
-  const unsigned int messageMagic = 0x42adde42;
+
 
   unsigned int newMessageId()
   {
@@ -38,7 +38,7 @@ namespace qi {
   {
     memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
     header.id = newMessageId();
-    header.magic = messageMagic;
+    header.magic = qi::MessagePrivate::magic;
   }
 
   MessagePrivate::~MessagePrivate()
@@ -166,7 +166,7 @@ namespace qi {
 
   bool Message::isValid()
   {
-    if (_p->header.magic != messageMagic)
+    if (_p->header.magic != qi::MessagePrivate::magic)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (magic is incorrect)" << std::endl;
       return false;

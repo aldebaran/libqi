@@ -63,6 +63,7 @@ namespace qi
   {
     struct evbuffer *input = bufferevent_get_input(bev);
     int              msgId = 0;
+    unsigned int magicValue = qi::MessagePrivate::magic;
 
     while (true)
     {
@@ -77,9 +78,32 @@ namespace qi
         if (evbuffer_get_length(input) < sizeof(MessagePrivate::MessageHeader))
           return;
 
-        evbuffer_remove(input,
-                        msg->_p->getHeader(),
-                        sizeof(MessagePrivate::MessageHeader));
+        struct evbuffer_ptr p;
+        evbuffer_ptr_set(input, &p, 0, EVBUFFER_PTR_SET);
+        // search a messageMagic number
+        p = evbuffer_search(input, (const char *)&magicValue, sizeof(uint32_t), &p);
+        if (p.pos < 0)
+        {
+          qiLogWarning("qimessaging.TransportSocketLibevent") << "No magic found in the message. Waiting for more data.";
+          return;
+        }
+        // Drain to the magic
+        evbuffer_drain(input, p.pos);
+        // Get the message header
+        // there is a copy here.
+        evbuffer_copyout(input, msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader));
+        // check if the msg is valid
+        if (!msg->isValid())
+        {
+          qiLogError("qimessaging.TransportSocketLibevent") << "Message received is invalid! Try to find a new one.";
+          // only drop the magic and restart scanning
+          evbuffer_drain(input, sizeof(uint32_t));
+          return;
+        }
+        // header is valid, next step get all the buffer
+        // remove the header from the evbuffer
+        evbuffer_drain(input, sizeof(MessagePrivate::MessageHeader));
+
         readHdr = false;
       }
 
@@ -95,7 +119,6 @@ namespace qi
       evbuffer_remove(input,
                       buf.data(),
                       buf.size());
-      assert(msg->isValid());
 
       {
         boost::mutex::scoped_lock l(mtx);

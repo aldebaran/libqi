@@ -32,11 +32,13 @@ namespace qi
     MessagePrivate();
     ~MessagePrivate();
 
-    void         complete();
-    void        *getHeader();
+    void                       complete();
+    void                      *getHeader();
 
-    Buffer         buffer;
-    MessageHeader  header;
+    Buffer        buffer;
+    MessageHeader header;
+
+    static const unsigned int magic = 0x42adde42;
   };
 }
 
