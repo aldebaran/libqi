@@ -13,6 +13,7 @@ namespace qi
   TransportSocketPrivate::TransportSocketPrivate(TransportSocket *socket)
     : tcd(NULL)
     , connected(false)
+    , status(0)
     , readHdr(true)
     , msg(0)
     , self(socket)
