@@ -43,18 +43,19 @@ std::string getPrimaryPublicIPAddress()
 bool splitAddress(const std::string& userHostString,
     Address& outAddress, std::vector<std::string>& parts)
 {
+  std::vector<std::string> tmp;
+
   if (userHostString.empty())
     return false;
 
-  boost::split(parts, userHostString, boost::is_any_of(":/"));
+  boost::split(tmp, userHostString, boost::is_any_of(":/"));
 
-  std::vector<std::string>::iterator i = parts.begin();
-  while (i != parts.end())
+  for (std::vector<std::string>::iterator i = tmp.begin();
+       i != tmp.end();
+       ++i)
   {
-    if (i->empty())
-      parts.erase(i);
-    else
-      ++i;
+    if (!i->empty())
+      parts.push_back(*i);
   }
 
   if (parts.size() <= 2)
