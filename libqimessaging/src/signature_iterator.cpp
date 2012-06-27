@@ -114,7 +114,7 @@ namespace qi {
         case qi::Signature::Float:
         case qi::Signature::Double:
         case qi::Signature::String:
-        case 'X':
+        case qi::Signature::Unknown:
           *current = *signature;
           current++;
           signature++;

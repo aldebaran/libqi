@@ -107,7 +107,8 @@ namespace qi {
       List     = '[',
       Map      = '{',
       Tuple    = '(',
-      Object   = '@'
+      Object   = '@',
+      Unknown  = 'X'
     };
 
     class iterator {

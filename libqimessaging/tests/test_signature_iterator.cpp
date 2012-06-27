@@ -20,8 +20,8 @@
 #define verif_iter(_it, _sig, _type, _hasChildren, _isPointer) \
 {\
   EXPECT_STREQ(_sig, _it.signature().c_str());\
-  EXPECT_EQ(_hasChildren, _it.hasChildren()); \
-  EXPECT_EQ(_isPointer, _it.pointer());\
+  EXPECT_TRUE(_hasChildren == _it.hasChildren()); \
+  EXPECT_TRUE(_isPointer == _it.pointer());\
   EXPECT_EQ(qi::Signature::_type, _it.type());\
 }
 
