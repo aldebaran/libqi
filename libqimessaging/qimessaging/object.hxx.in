@@ -38,15 +38,19 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(${generate_param_list($i)})  = 0;
     #for $j in range($i)
     ds << p${j};
     #end for
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+   #for $j in range($i)
+    signatureFromObject::value(p${j}, signature);
+   #end for
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 #end for

@@ -31,6 +31,30 @@ namespace qi {
     return (*this);
   }
 
+  MetaMethod *MetaObject::method(unsigned int id) {
+    if (id < _p->_methods.size())
+      return &_p->_methods[id];
+    return 0;
+  }
+
+  MetaMethod *MetaObject::method(unsigned int id) const {
+    if (id < _p->_methods.size())
+      return &_p->_methods[id];
+    return 0;
+  }
+
+  inline int MetaObject::methodId(const std::string &name)
+  {
+    return _p->methodId(name);
+  }
+
+  std::vector<MetaMethod> &MetaObject::methods() {
+    return _p->methods();
+  }
+
+  const std::vector<MetaMethod> &MetaObject::methods() const {
+    return _p->methods();
+  }
   MetaObject::~MetaObject()
   {
     delete _p;
@@ -50,29 +74,21 @@ namespace qi {
     return *_meta;
   }
 
-  std::vector<MetaMethod> &MetaObject::methods() {
-    return _p->methods();
-  }
-
-  const std::vector<MetaMethod> &MetaObject::methods() const {
-    return _p->methods();
-  }
-
-  int Object::xAdvertiseMethod(const std::string& signature, const qi::Functor* functor) {
+  int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
     std::map<std::string, unsigned int>::iterator it;
 
     it = _meta->_p->_methodsNameToIdx.find(signature);
     if (it != _meta->_p->_methodsNameToIdx.end())
     {
       unsigned int idx = it->second;
-      MetaMethod mm(signature, functor);
+      MetaMethod mm(sigret, signature, functor);
       mm._p->_idx = idx;
       _meta->methods()[idx] = mm;
       qiLogVerbose("qi.Object") << "rebinding method:" << signature;
       return idx;
     }
 
-    MetaMethod mm(signature, functor);
+    MetaMethod mm(sigret, signature, functor);
     unsigned int idx = _meta->_p->_methodsNumber++;
     mm._p->_idx = idx;
     _meta->methods().push_back(mm);
@@ -97,24 +113,7 @@ namespace qi {
       mm->_p->_functor->call(in, out);
   }
 
-  MetaMethod *MetaObject::method(unsigned int id) {
-    if (id < _p->_methods.size())
-      return &_p->_methods[id];
-    return 0;
-  }
-
-  MetaMethod *MetaObject::method(unsigned int id) const {
-    if (id < _p->_methods.size())
-      return &_p->_methods[id];
-    return 0;
-  }
-
-  inline int MetaObject::methodId(const std::string &name)
-  {
-      return _p->methodId(name);
-  }
-
-  bool Object::xMetaCall(const std::string &signature, const FunctorParameters &in, FunctorResult out)
+  bool Object::xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out)
   {
     int methodId = metaObject().methodId(signature);
     if (methodId < 0) {
@@ -135,6 +134,19 @@ namespace qi {
       out.setError(buf);
       return false;
     }
+    if (retsig != "v") {
+      qi::MetaMethod *mm = metaObject().method(methodId);
+      if (!mm) {
+        qiLogError("object") << "method " << signature << "(id: " << methodId << ") disapeared mysteriously!";
+        return false;
+      }
+      if (mm->sigreturn() != retsig) {
+        qiLogError("object") << "signature mismatch for return value:" << std::endl
+                             << "we want: " << retsig << " " << signature << std::endl
+                             << "we had:" << mm->sigreturn() << " " << mm->signature();
+        return false;
+      }
+    }
     //TODO: check for metacall to return false when not able to send the answer
     metaCall(methodId, in, out);
     return true;
@@ -142,12 +154,14 @@ namespace qi {
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
     stream << meta._p->_signature;
+    stream << meta._p->_sigret;
     stream << meta._p->_idx;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
     stream >> meta._p->_signature;
+    stream >> meta._p->_sigret;
     stream >> meta._p->_idx;
     return stream;
   }

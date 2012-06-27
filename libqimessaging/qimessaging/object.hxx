@@ -30,12 +30,13 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)()  = 0;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -51,13 +52,15 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0)  = 0;
     ds << p0;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -73,14 +76,17 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1)  = 0;
     ds << p0;
     ds << p1;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -96,15 +102,19 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -120,16 +130,21 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -145,17 +160,23 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
     ds << p4;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signatureFromObject::value(p4, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -171,18 +192,25 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
     ds << p3;
     ds << p4;
     ds << p5;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signatureFromObject::value(p4, signature);
+    signatureFromObject::value(p5, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -198,7 +226,6 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
@@ -206,11 +233,20 @@ namespace qi {
     ds << p4;
     ds << p5;
     ds << p6;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signatureFromObject::value(p4, signature);
+    signatureFromObject::value(p5, signature);
+    signatureFromObject::value(p6, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -226,7 +262,6 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
@@ -235,11 +270,21 @@ namespace qi {
     ds << p5;
     ds << p6;
     ds << p7;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signatureFromObject::value(p4, signature);
+    signatureFromObject::value(p5, signature);
+    signatureFromObject::value(p6, signature);
+    signatureFromObject::value(p7, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 
@@ -255,7 +300,6 @@ namespace qi {
     qi::FunctorResult                 promise;
 
     makeFunctorResult<R>(&promise, &future);
-    R (*f)(const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8)  = 0;
     ds << p0;
     ds << p1;
     ds << p2;
@@ -265,11 +309,22 @@ namespace qi {
     ds << p6;
     ds << p7;
     ds << p8;
+    std::string sigret;
     std::string signature(method);
-    signature += "::";
-    signatureFromObject::value(f, signature);
+    signature += "::(";
+    signatureFromObject::value(p0, signature);
+    signatureFromObject::value(p1, signature);
+    signatureFromObject::value(p2, signature);
+    signatureFromObject::value(p3, signature);
+    signatureFromObject::value(p4, signature);
+    signatureFromObject::value(p5, signature);
+    signatureFromObject::value(p6, signature);
+    signatureFromObject::value(p7, signature);
+    signatureFromObject::value(p8, signature);
+    signature += ")";
+    signatureFromType<R>::value(sigret);
     if (qi::detail::sanityCheckAndReport(ds, promise))
-      xMetaCall(signature, request, promise);
+      xMetaCall(sigret, signature, request, promise);
     return future;
   }
 

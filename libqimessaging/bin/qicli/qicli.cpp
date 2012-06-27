@@ -57,7 +57,7 @@ static void cmd_service(const command           &cmd,
              it2 != mobj.methods().end();
              ++it2)
         {
-          std::cout << "    " << (*it2).signature() << std::endl;
+          std::cout << "    " << (*it2).sigreturn() << " " << (*it2).signature() << std::endl;
         }
       }
       else

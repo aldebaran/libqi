@@ -82,32 +82,44 @@ namespace qi {
     virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out);
 
   protected:
-    int xAdvertiseMethod(const std::string& signature, const Functor *functor);
-    bool xMetaCall(const std::string &signature, const FunctorParameters &in, FunctorResult out);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
+    bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
 
   protected:
     MetaObject *_meta;
   };
 
+  template <typename OBJECT_TYPE, typename METHOD_TYPE>
+  inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+  {
+    std::string signature(name);
+    std::string sigret;
+    signature += "::(";
+    typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
+    typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
+
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
+    signature += ")";
+    typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
+    signatureFromType<ResultType>::value(sigret);
+    return xAdvertiseMethod(sigret, signature, makeFunctor(object, method));
+  }
+
+  template <typename FUNCTION_TYPE>
+  inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  {
+    std::string signature(name);
+    std::string sigret;
+    signature += "::(";
+    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
+    signature += ")";
+    typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
+    signatureFromType<ResultType>::value(sigret);
+    return xAdvertiseMethod(sigret, signature, makeFunctor(function));
+  }
 
 
-template <typename OBJECT_TYPE, typename METHOD_TYPE>
-inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
-{
-  std::string signature(name);
-  signature += "::";
-  signatureFromObject::value(method, signature);
-  return xAdvertiseMethod(signature, makeFunctor(object, method));
-}
-
-template <typename FUNCTION_TYPE>
-inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
-{
-  std::string signature(name);
-  signature += "::";
-  signatureFromObject::value(function, signature);
-  return xAdvertiseMethod(signature, makeFunctor(function));
-}
 
 
 

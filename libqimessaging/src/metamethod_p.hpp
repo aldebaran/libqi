@@ -17,17 +17,19 @@ namespace qi {
 
   class MetaMethodPrivate {
   public:
-    MetaMethodPrivate(const std::string &sig, const qi::Functor *functor);
+    MetaMethodPrivate(const std::string &sigret, const std::string &sig, const qi::Functor *functor);
     MetaMethodPrivate();
     MetaMethodPrivate(const MetaMethodPrivate &rhs);
     MetaMethodPrivate &operator=(const MetaMethodPrivate &rhs);
 
     const std::string &signature() const { return _signature; }
+    const std::string &sigreturn() const { return _sigret; }
     unsigned int      index() const { return _idx; }
 
   protected:
   public:
-    QI_API std::string        _signature;
+    std::string        _signature;
+    std::string        _sigret;
     const qi::Functor *_functor;
     unsigned int       _idx;
   };

@@ -11,13 +11,14 @@ namespace qi {
   class MetaMethodPrivate;
   class QIMESSAGING_API MetaMethod {
   public:
-    MetaMethod(const std::string &sig, const qi::Functor *functor);
+    MetaMethod(const std::string &sigret, const std::string &sig, const qi::Functor *functor);
     MetaMethod();
     MetaMethod(const MetaMethod &other);
     MetaMethod& operator=(const MetaMethod &other);
     ~MetaMethod();
 
     const std::string &signature() const;
+    const std::string &sigreturn() const;
     const qi::Functor *functor() const;
     unsigned int       index() const;
 

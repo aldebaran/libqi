@@ -13,8 +13,8 @@ namespace qi {
   {
   }
 
-  MetaMethod::MetaMethod(const std::string &sig, const qi::Functor *functor)
-    : _p(new MetaMethodPrivate(sig, functor))
+  MetaMethod::MetaMethod(const std::string &sigret, const std::string &sig, const qi::Functor *functor)
+    : _p(new MetaMethodPrivate(sigret, sig, functor))
   {
   }
 
@@ -38,6 +38,11 @@ namespace qi {
   const std::string &MetaMethod::signature() const
   {
     return _p->signature();
+  }
+
+  const std::string &MetaMethod::sigreturn() const
+  {
+    return _p->sigreturn();
   }
 
   const qi::Functor *MetaMethod::functor() const
