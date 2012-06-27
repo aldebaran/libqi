@@ -52,7 +52,8 @@ class DataPerf
 {
 public:
   DataPerf()
-  {} : _count(0), _bytes(0)
+    : _count(0), _bytes(0)
+  {}
 
   int begin() { return 0; }
   int end() { return _count; }
