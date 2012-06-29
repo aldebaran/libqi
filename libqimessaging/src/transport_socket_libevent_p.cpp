@@ -286,48 +286,50 @@ namespace qi
     qi::Message *m = new qi::Message();
     *m = msg;
     m->_p->complete();
-    assert(m->isValid());
 
-    struct evbuffer *evb = bufferevent_get_output(bev);
-
+    struct evbuffer *mess = evbuffer_new();
     // m might be deleted.
     qi::Buffer *b = new qi::Buffer(m->buffer());
-
-    if (evbuffer_add_reference(evb,
+    if (evbuffer_add_reference(mess,
                                m->_p->getHeader(),
                                sizeof(qi::MessagePrivate::MessageHeader),
                                qi::TransportSocketLibEvent::onMessageSent,
                                static_cast<void *>(m)) != 0)
     {
       qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail in header";
+      evbuffer_free(mess);
       delete m;
       delete b;
       return false;
     }
     size_t sz = b->size();
-    if (sz) {
-      if (evbuffer_add_reference(evb,
+
+    if (sz)
+    {
+      if (evbuffer_add_reference(mess,
                                  b->data(),
                                  sz,
                                  qi::TransportSocketLibEvent::onBufferSent,
                                  static_cast<void *>(b)) != 0)
       {
         qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
+        evbuffer_free(mess);
         delete b;
         return false;
       }
     }
-    else {
+    else
+    {
       delete b;
     }
 
-    if (bufferevent_write_buffer(bev, evb) != 0)
+    if (bufferevent_write_buffer(bev, mess) != 0)
     {
       qiLogError("qimessaging.TransportSocketLibevent") << "Can't add buffer to the send queue";
-      evbuffer_drain(evb, sizeof(qi::MessagePrivate::MessageHeader) + sz);
+      evbuffer_free(mess);
       return false;
     }
-
+    evbuffer_free(mess);
     return true;
   }
 }
