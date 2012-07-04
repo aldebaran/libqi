@@ -42,6 +42,10 @@ namespace qi {
     Server();
     virtual ~Server();
 
+    /// <summary> Listen on the given set of ports. </summary>
+    /// <param name="session" the service directory session on which to advertise.</param>
+    /// <param name="url"> the set of urls to listen to. You can use
+    /// a port value of 0 to let the system pick an available port.</param>
     bool listen(qi::Session *session, const std::vector<std::string> &url);
     void stop();
 
