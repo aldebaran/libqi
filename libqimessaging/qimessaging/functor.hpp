@@ -50,6 +50,10 @@ namespace qi
       : _p()
     {}
 
+    FunctorResult(boost::shared_ptr<FunctorResultBase> p)
+     : _p(p)
+    {}
+
     virtual ~FunctorResult() {}
 
     virtual void setValue(const qi::Buffer &buffer) { _p->setValue(buffer); }
