@@ -11,6 +11,7 @@
 
 # include <boost/shared_ptr.hpp>
 # include <qimessaging/api.hpp>
+
 # include <cstddef>
 
 namespace qi
@@ -42,6 +43,7 @@ namespace qi
     boost::shared_ptr<BufferPrivate> _p;
   };
 
+  //operator << and >> implemented in qi::DataStream to avoid header recursive inclusion
 
 } // !qi
 

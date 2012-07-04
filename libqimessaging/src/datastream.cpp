@@ -95,6 +95,20 @@ namespace qi {
     return _buffer.read(data, len);
   }
 
+  void DataStream::write(const char *str, size_t len)
+  {
+    if (_ro) {
+      qiLogError("datastream", "cant write to a readonly buffer");
+      setStatus(Status_WriteOnReadOnlyStream);
+      return;
+    }
+    if (len) {
+      if (_buffer.write(str, len) != (int)len)
+        setStatus(Status_WriteError);
+      __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
+    }
+  }
+
   void DataStream::writeString(const char *str, size_t len)
   {
     if (_ro) {
@@ -275,6 +289,19 @@ namespace qi {
     return sd;
   }
 
+  qi::DataStream &operator<<(qi::DataStream &stream, const qi::Buffer &meta) {
+    stream << (uint32_t)meta.size();
+    stream.write((const char *)meta.data(), meta.size());
+    return stream;
+  }
+
+  qi::DataStream &operator>>(qi::DataStream &stream, qi::Buffer &meta) {
+    uint32_t sz;
+    stream >> sz;
+    meta.reserve(sz);
+    stream.read(meta.data(), sz);
+    return stream;
+  }
 
 
 

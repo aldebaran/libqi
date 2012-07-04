@@ -66,7 +66,11 @@ namespace qi {
     explicit DataStream(const qi::Buffer &buffer);
     explicit DataStream(qi::Buffer &buffer);
 
+    //read raw data
     size_t read(void *data, size_t len);
+    //write raw data without any formatting
+    void write(const char *str, size_t len);
+    //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
 
     DataStream& operator<<(bool     b);
@@ -119,6 +123,9 @@ namespace qi {
 
   };
 
+  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const qi::Buffer &meta);
+
+  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, qi::Buffer &meta);
 
   template<typename T>
   qi::DataStream &operator<<(qi::DataStream &sd, const std::list<T> &v) {

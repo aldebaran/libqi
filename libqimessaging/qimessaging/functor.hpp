@@ -19,21 +19,37 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/future.hpp>
 #include <qimessaging/buffer.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi
 {
 
   class QIMESSAGING_API FunctorParameters {
   public:
+    FunctorParameters()
+      : _buffer()
+    {}
+
     explicit FunctorParameters(const qi::Buffer &buffer)
       : _buffer(buffer)
     {}
 
     inline const qi::Buffer &buffer() const { return _buffer; }
+    inline qi::Buffer &buffer() { return _buffer; }
 
   private:
     qi::Buffer _buffer;
   };
+
+  inline QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const FunctorParameters &funParams) {
+    stream << funParams.buffer();
+    return stream;
+  }
+
+  inline QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, FunctorParameters &funParams) {
+    stream >> funParams.buffer();
+    return stream;
+  }
 
 
   class QIMESSAGING_API FunctorResultBase {
