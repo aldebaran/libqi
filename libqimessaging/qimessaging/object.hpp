@@ -27,7 +27,7 @@ namespace qi {
     MetaObject& operator=(const MetaObject &other);
     ~MetaObject();
 
-    inline int methodId(const std::string &name);
+    int methodId(const std::string &name);
 
     std::vector<MetaMethod> &methods();
     const std::vector<MetaMethod> &methods() const;
