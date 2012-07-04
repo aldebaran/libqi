@@ -50,7 +50,7 @@ namespace qi
       : _p()
     {}
 
-    FunctorResult(boost::shared_ptr<FunctorResultBase> p)
+    explicit FunctorResult(boost::shared_ptr<FunctorResultBase> p)
      : _p(p)
     {}
 
