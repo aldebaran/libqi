@@ -88,6 +88,9 @@ namespace qi {
 
     bool isValid() const;
 
+    // Number of elements in the signature.
+    unsigned int size() const;
+
     class iterator;
     iterator begin() const;
     iterator end() const;

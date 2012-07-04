@@ -199,6 +199,13 @@ namespace qi {
     return it;
   };
 
+  unsigned int Signature::size() const {
+    unsigned int res = 0;
+    for (iterator i = begin(); i != end(); ++i, ++res)
+      ;
+    return res;
+  }
+
 
   ::qi::Signature::iterator &Signature::iterator::operator++() {
     if (!_current)
