@@ -43,7 +43,7 @@ namespace qi {
     return 0;
   }
 
-  inline int MetaObject::methodId(const std::string &name)
+  int MetaObject::methodId(const std::string &name)
   {
     return _p->methodId(name);
   }
