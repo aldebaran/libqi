@@ -53,6 +53,11 @@ namespace qi {
       ServiceDirectoryFunction_UnregisterService = 4,
     };
 
+    enum GatewayFunction
+    {
+      GatewayFunction_Connect = 1,
+    };
+
     enum Type
     {
       Type_None  = 0,

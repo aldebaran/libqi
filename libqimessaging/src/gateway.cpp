@@ -108,6 +108,18 @@ void GatewayPrivate::handleClientRead(TransportSocket *client,
     qi::DataStream d(sdMsg.buffer());
     d << msg->service();
 
+    // The message comes from a gateway which wants to establish connection.
+    if (msg->service() == qi::Message::Service_None &&
+        msg->function() == qi::Message::GatewayFunction_Connect)
+    {
+      // The socket was previously added to the client map instead of Service
+      std::vector<qi::TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), client);
+      _clients.erase(it);
+      _socketToServiceDirectory = client;
+      _services[qi::Message::Service_ServiceDirectory] = _socketToServiceDirectory;
+      return;
+    }
+
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
     sdMsg.setType(qi::Message::Type_Call);
@@ -290,9 +302,63 @@ bool Gateway::listen(const qi::Url &listenAddress,
   _p->_socketToServiceDirectory->setCallbacks(_p);
   _p->_socketToServiceDirectory->waitForConnected();
   _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
+
+  return listen(listenAddress);
+}
+
+bool Gateway::listen(const Url &listenAddress)
+{
   _p->_endpoints.push_back(listenAddress.str());
   _p->_transportServer = new qi::TransportServer(&(_p->_session), listenAddress);
   _p->_transportServer->setCallbacks(_p);
   return _p->_transportServer->start();
 }
+
+bool Gateway::connect(const qi::Url &connectURL)
+{
+  qi::TransportSocket *ts = new qi::TransportSocket();
+  ts->connect(&(_p->_session), connectURL);
+  ts->waitForConnected();
+
+  qi::Message msg;
+  msg.setService(qi::Message::Service_None);
+  msg.setType(qi::Message::Type_Call);
+  msg.setFunction(qi::Message::GatewayFunction_Connect);
+  msg.setPath(qi::Message::Path_Main);
+
+  ts->send(msg);
+
+#if 0
+  qi::Message ans;
+  qi::DataStream ds(ans.buffer());
+
+  if (!ts->waitForId(msg.id()))
+  {
+    return false;
+  }
+  ts->read(msg.id(), &ans);
+
+  /*
+   * Why do we need to deserialize the endpoint address since
+   * we already have an opened TransportSocket?
+   */
+  std::string endpointURL;
+  ds >> endpointURL;
+
+  if (connectURL.str() != endpointURL)
+  {
+    delete ts;
+    qi::Url endpoint(endpointURL);
+    qi::TransportSocket *ts = new qi::TransportSocket();
+    ts->connect(&(_p->_session), endpoint);
+    ts->waitForConnected();
+  }
+#endif
+
+  ts->setCallbacks(_p);
+  _p->_clients.push_back(ts);
+
+  return true;
+}
+
 } // !qi
