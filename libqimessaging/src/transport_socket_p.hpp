@@ -53,7 +53,7 @@ namespace qi
     std::map<unsigned int, qi::Message*> msgSend;
     boost::mutex                         mtx;
     boost::condition_variable            cond;
-
+    qi::Url                              url;
   private:
     TransportSocketPrivate() {}
   };

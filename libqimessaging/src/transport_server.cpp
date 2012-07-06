@@ -128,4 +128,9 @@ namespace qi
     }
     _p->tsi = delegate;
   }
+
+  qi::Url TransportServer::listenUrl() const {
+    return _p->listenUrl;
+  }
+
 }

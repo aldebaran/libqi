@@ -71,7 +71,12 @@ namespace qi
         return false;
     }
     delete save;
+    _p->url = url;
     return _p->connect(session, url);
+  }
+
+  qi::Url TransportSocket::url() const {
+    return _p->url;
   }
 
   void TransportSocket::disconnect()

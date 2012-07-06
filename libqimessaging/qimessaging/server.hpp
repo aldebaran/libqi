@@ -56,6 +56,8 @@ namespace qi {
     qi::ServiceInfo               registeredService(const std::string &service);
     qi::Object                   *registeredServiceObject(const std::string &service);
 
+    qi::Url                       listenUrl() const;
+
   private:
     ServerPrivate *_p;
   };

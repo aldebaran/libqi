@@ -43,6 +43,8 @@ namespace qi {
     bool start();
     bool start(qi::Session *session, const qi::Url &url);
 
+    qi::Url listenUrl() const;
+
     TransportSocket *nextPendingConnection();
 
     TransportServerPrivate *_p;

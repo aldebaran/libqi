@@ -299,4 +299,8 @@ namespace qi {
     return 0;
   }
 
+  qi::Url Server::listenUrl() const {
+    return _p->_ts->listenUrl();
+  }
+
 }

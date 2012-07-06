@@ -248,4 +248,8 @@ namespace qi {
     _p->_callbacks = delegate;
   }
 
+  qi::Url Session::url() const {
+    return _p->_serviceSocket->url();
+  }
+
 }

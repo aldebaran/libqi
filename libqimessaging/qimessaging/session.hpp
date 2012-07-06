@@ -55,6 +55,8 @@ namespace qi {
 
     void setCallbacks(SessionInterface *delegate);
 
+    qi::Url url() const;
+
     SessionPrivate      *_p;
   };
 }
