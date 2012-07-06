@@ -26,8 +26,11 @@ extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
 
 namespace qi
 {
+  /**
+    * Warning : On windows, only short and long instanciation can be used
+    */
   template <typename T>
-  class QI_API atomic
+  class atomic
   {
   public:
     atomic()
