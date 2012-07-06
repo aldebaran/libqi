@@ -37,6 +37,8 @@ void call(const std::string &addr)
       std::cerr << "obj == 0" << std::endl;
       return;
   }
+
+#if 0
   int i = 0;
   while (true) {
     std::string result = obj->call<std::string>("reply", "plaf");
@@ -44,6 +46,10 @@ void call(const std::string &addr)
       std::cout << "answer(" << i << "):" << result << std::endl;
     ++i;
   }
+#endif
+  std::string result = obj->call<std::string>("reply", "plaf");
+  std::cout << result << std::endl;
+
   session.disconnect();
   session.waitForDisconnected();
 }
