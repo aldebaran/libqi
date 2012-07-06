@@ -26,6 +26,7 @@ namespace qi {
       Protocol_TcpSsl  = 4,
     };
 
+    Url();
     Url(const char *url);
     Url(const std::string &url);
     Url(const qi::Url& url);

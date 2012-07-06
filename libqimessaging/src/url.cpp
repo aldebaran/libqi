@@ -49,6 +49,15 @@ Url::Url(const std::string &url)
   split_me(_url, _port, _host, _protocol);
 }
 
+Url::Url()
+  : _url()
+  , _port(0)
+  , _host("")
+  , _protocol(Protocol_Invalid)
+  , _reserved(0)
+{
+}
+
 Url::Url(const char *url)
   : _url(url)
   , _port(0)
