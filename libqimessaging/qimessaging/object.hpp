@@ -93,10 +93,38 @@ namespace qi {
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
     int xForgetMethod(const std::string &meth);
+
+    inline
+    void emitEvent(const std::string& eventName);
+    template <typename P0>
+    void emitEvent(const std::string& eventName, const P0 &p0);
+    template <typename P0, typename P1>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1);
+    template <typename P0, typename P1, typename P2>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2);
+    template <typename P0, typename P1, typename P2, typename P3>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
+    template <typename P0, typename P1, typename P2, typename P3, typename P4>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
+    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
+    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
+
+    virtual void metaEmit(unsigned int event, const FunctorParameters &args);
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
+    /// Resolve the method Id and bounces to metaCall
     bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
     int xAdvertiseEvent(const std::string& signature);
-
+    //// Resolve and bounce to metaEmit
+    bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
+  protected:
+    /// Trigger event handlers
+    void trigger(unsigned int event, const FunctorParameters &in);
   protected:
     MetaObject *_meta;
   };

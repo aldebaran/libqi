@@ -178,6 +178,36 @@ namespace qi {
       mm->_p->_functor->call(in, out);
   }
 
+  class DropResult: public FunctorResultBase
+  {
+  public:
+    virtual void setValue(const qi::Buffer &buffer) {}
+    virtual void setError(const qi::Buffer &msg)
+    {
+      qiLogError("object") << "Event handler returned an error";
+    }
+  };
+  void Object::metaEmit(unsigned int event, const FunctorParameters &args)
+  {
+    trigger(event, args);
+  }
+  void Object::trigger(unsigned int event, const FunctorParameters &args)
+  {
+    MetaEvent* ev = _meta->event(event);
+    if (!ev)
+    {
+      qiLogError("object") << "No such event " << event;
+      return;
+    }
+
+    for (MetaEventPrivate::Subscribers::iterator il =
+      ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
+    {
+      il->second.handler->call(args, FunctorResult(
+        boost::shared_ptr<FunctorResultBase>(new DropResult())));
+    }
+  }
+
   bool Object::xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out)
   {
     int methodId = metaObject().methodId(signature);
@@ -214,6 +244,26 @@ namespace qi {
     }
     //TODO: check for metacall to return false when not able to send the answer
     metaCall(methodId, in, out);
+    return true;
+  }
+
+  /// Resolve signature and bounce
+  bool Object::xMetaEmit(const std::string &signature, const FunctorParameters &in) {
+    int eventId = metaObject().eventId(signature);
+    if (eventId < 0) {
+      std::stringstream ss;
+      ss << "Can't find event: " << signature << std::endl
+      << "  Candidate(s):" << std::endl;
+      std::vector<MetaEvent>           mml = metaObject().findEvent(qi::signatureSplit(signature)[1]);
+      std::vector<MetaEvent>::const_iterator it;
+
+      for (it = mml.begin(); it != mml.end(); ++it) {
+        ss << "  " << it->signature() << std::endl;
+      }
+      qiLogError("object") << ss.str();
+      return false;
+    }
+    metaEmit(eventId, in);
     return true;
   }
 

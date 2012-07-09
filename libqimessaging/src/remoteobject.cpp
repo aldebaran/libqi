@@ -102,5 +102,15 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
   }
 }
 
+void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
+{
+  // Bounce the emit request to server
+  // TODO: one optimisation that could be done is to trigger the local
+  // subscribers immediately.
+  // But it is a bit complex, because the server will bounce the
+  // event back to us.
+  qiLogError("Not implemented yet lol");
+}
+
 
 }
