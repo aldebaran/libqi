@@ -6,6 +6,7 @@
 */
 
 #include "remoteobject_p.hpp"
+#include "src/metaevent_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qi/log.hpp>
@@ -44,17 +45,19 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
     }
   }
 
-  if (!promise.isValid()) {
-    qiLogError("remoteobject") << "no promise found for req id:" << id;
-    return;
-  }
-
   switch (msg.type()) {
     case qi::Message::Type_Reply:
+      if (!promise.isValid()) {
+        qiLogError("remoteobject") << "no promise found for req id:" << id;
+        return;
+      }
       promise.setValue(msg.buffer());
       return;
     case qi::Message::Type_Error:
       promise.setError(msg.buffer());
+      return;
+    case qi::Message::Type_Event:
+      trigger(msg.function(), FunctorParameters(msg.buffer()));
       return;
     default:
       qiLogError("remoteobject") << "Message (#" << id << ") type not handled: " << msg.type();
@@ -112,5 +115,62 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   qiLogError("Not implemented yet lol");
 }
 
+unsigned int RemoteObject::connect(unsigned int event, const Functor* functor)
+{
+  // Bind the function locally.
+  unsigned int uid = Object::connect(event, functor);
+  // Notify the Service that we are interested in its event.
+  // Provide our uid as payload
+  qi::Message msg;
+  qi::Buffer buf;
+  qi::DataStream ds(buf);
+  ds << uid;
+  msg.setBuffer(buf);
+  msg.setType(qi::Message::Type_Register_Event);
+  msg.setService(_service);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(event);
+  if (!_ts->send(msg)) {
+    qiLogError("remoteobject") << "error while registering event";
+  }
+  return uid;
+}
+
+bool RemoteObject::disconnect(unsigned int linkId)
+{
+  // Figure out which event this link is associated to
+  std::vector<MetaEvent>::iterator i;
+  unsigned int event = (unsigned int)-1;
+  for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
+  {
+    MetaEventPrivate::Subscribers::iterator j = i->_p->_subscribers.find(linkId);
+    if (j != i->_p->_subscribers.end())
+    {
+      event = i->index();
+      break;
+    }
+  }
+  if (event == (unsigned int)-1)
+    return false;
+  if (Object::disconnect(linkId))
+  {
+    // Tell the remote we are no longer interested.
+    qi::Message msg;
+    qi::Buffer buf;
+    qi::DataStream ds(buf);
+    ds << linkId;
+    msg.setBuffer(buf);
+    msg.setType(qi::Message::Type_Unregister_Event);
+    msg.setService(_service);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(event);
+    if (!_ts->send(msg)) {
+      qiLogError("remoteobject") << "error while registering event";
+    }
+    return true;
+  }
+  else
+    return false;
+}
 
 }

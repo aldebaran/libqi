@@ -25,9 +25,29 @@ namespace qi {
 
     virtual void newConnection();
     virtual void onSocketReadyRead(TransportSocket *client, int id);
+    virtual void onSocketDisconnected(TransportSocket *client);
     bool         setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost);
 
   public:
+    // (service, linkId)
+    struct RemoteLink
+    {
+      RemoteLink() {}
+      RemoteLink(unsigned int localLinkId, unsigned int event)
+      : localLinkId(localLinkId)
+      , event(event) {}
+      unsigned int localLinkId;
+      unsigned int event;
+    };
+    // remote link id -> local link id
+    typedef std::map<unsigned int, RemoteLink> ServiceLinks;
+    // service id -> links
+    typedef std::map<unsigned int, ServiceLinks> PerServiceLinks;
+    // socket -> all links
+    // Keep track of links setup by clients to disconnect when the client exits.
+    typedef std::map<TransportSocket*, PerServiceLinks > Links;
+    Links                                   _links;
+
     std::map<unsigned int, qi::Object*>     _services;
     std::map<std::string, qi::Object*>      _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
@@ -47,6 +67,52 @@ namespace qi {
     socket->setCallbacks(this);
   }
 
+  void ServerPrivate::onSocketDisconnected(TransportSocket* client)
+  {
+    // Disconnect event links set for this client.
+    Links::iterator i = _links.find(client);
+    if (i != _links.end())
+    {
+      // Iterate per service
+      for (PerServiceLinks::iterator j = i->second.begin();
+        j != i->second.end(); ++j)
+      {
+        std::map<unsigned int, qi::Object*>::iterator iservice = _services.find(j->first);
+        // If the service is still there, disconnect one by one.
+        if (iservice != _services.end())
+          for (ServiceLinks::iterator k = j->second.begin();
+            k != j->second.end(); ++k)
+            iservice->second->disconnect(k->second.localLinkId);
+      }
+      _links.erase(i);
+    }
+  }
+
+  // Grah give me boost::bind!
+  class EventForwarder: public Functor
+  {
+  public:
+    EventForwarder(unsigned int service, unsigned int event,
+      TransportSocket* client)
+    : _service(service)
+    , _event(event)
+    , _client(client)
+    {}
+    virtual void call(const qi::FunctorParameters &params, qi::FunctorResult result) const
+    {
+      qi::Message msg;
+      msg.setBuffer(params.buffer());
+      msg.setService(_service);
+      msg.setFunction(_event);
+      msg.setType(Message::Type_Event);
+      msg.setPath(Message::Path_Main);
+      _client->send(msg);
+    }
+  private:
+    unsigned int _service;
+    unsigned int _event;
+    TransportSocket* _client;
+  };
   void ServerPrivate::onSocketReadyRead(TransportSocket *client, int id) {
     qi::Message msg;
     client->read(id, &msg);
@@ -63,10 +129,47 @@ namespace qi {
         return;
       }
     }
-    qi::FunctorParameters ds(msg.buffer());
+    switch (msg.type())
+    {
+    case Message::Type_Call:
+      {
+         qi::FunctorParameters ds(msg.buffer());
 
-    ServerFunctorResult promise(client, msg);
-    obj->metaCall(msg.function(), ds, promise);
+         ServerFunctorResult promise(client, msg);
+         obj->metaCall(msg.function(), ds, promise);
+      }
+      break;
+    case Message::Type_Register_Event:
+      {
+        unsigned int remoteLinkId;
+        DataStream(msg.buffer()) >> remoteLinkId;
+        // locate object, register locally and bounce to an event message
+        unsigned int event = msg.function();
+        unsigned int linkId = obj->connect(event,
+          new EventForwarder(msg.service(), event, client));
+        _links[client][msg.service()][remoteLinkId]
+          = RemoteLink(linkId, event);
+      }
+      break;
+    case Message::Type_Unregister_Event:
+      {
+        unsigned int remoteLinkId;
+        DataStream(msg.buffer()) >> remoteLinkId;
+        ServiceLinks& sl = _links[client][msg.service()];
+        ServiceLinks::iterator i = sl.find(remoteLinkId);
+        if (i == sl.end())
+        {
+          qiLogError("qi::Server") << "Unregister request failed for "
+            << remoteLinkId <<" " << msg.service();
+        }
+        else
+        {
+          obj->disconnect(i->second.localLinkId);
+        }
+      }
+      break;
+    }
+
   };
 
 

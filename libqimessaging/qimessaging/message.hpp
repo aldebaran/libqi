@@ -61,10 +61,17 @@ namespace qi {
     enum Type
     {
       Type_None  = 0,
+      // Method call, Client->Server
       Type_Call  = 1,
+      // Method return value, Server->Client
       Type_Reply = 2,
+      // Event, Server->Client
       Type_Event = 3,
-      Type_Error = 4
+      Type_Error = 4,
+      // Ask to be notified on events, Client->Server
+      Type_Register_Event = 5,
+      // Cancel a Register_Event, Client->Server
+      Type_Unregister_Event = 6,
     };
 
     ~Message();
