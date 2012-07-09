@@ -59,6 +59,13 @@ static void cmd_service(const command           &cmd,
         {
           std::cout << "    " << (*it2).sigreturn() << " " << (*it2).signature() << std::endl;
         }
+        std::cout << "  events:" << std::endl;
+        for (std::vector<qi::MetaEvent>::const_iterator it2 = mobj.events().begin();
+          it2 != mobj.events().end();
+          ++it2)
+        {
+          std::cout << "    " << it2->signature() << std::endl;
+        }
       }
       else
       {
