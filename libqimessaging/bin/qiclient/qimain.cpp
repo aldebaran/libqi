@@ -63,10 +63,7 @@ int main(int argc, char *argv[])
       ("help", "Print this help.")
       ("master-address",
        po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
-       "The master address")
-      ("gateway-address",
-       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:12345")),
-       "The gateway address");
+       "The master address");
 
   // allow master address to be specified as the first arg
   po::positional_options_description pos;
@@ -86,14 +83,10 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    if (vm.count("master-address") == 1 &&
-        vm.count("gateway-address") == 1)
+    if (vm.count("master-address") == 1)
     {
       std::string masteraddr = vm["master-address"].as<std::string>();
       call(masteraddr);
-
-      //std::string gatewayaddr = vm["gateway-address"].as<std::string>();
-      //call(gatewayaddr);
     }
     else
     {
