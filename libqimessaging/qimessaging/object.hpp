@@ -92,7 +92,6 @@ namespace qi {
 
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
-  protected:
     int xForgetMethod(const std::string &meth);
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
     bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
