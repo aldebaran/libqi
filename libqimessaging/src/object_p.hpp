@@ -73,6 +73,9 @@ namespace qi {
     // std::map<std::string, MethodInfo>   _signals;
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
+
+    // Global uid for event subscribers.
+    static qi::atomic<long> uid;
   };
 
 };

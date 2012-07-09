@@ -53,5 +53,5 @@ namespace qi {
     return ret;
   }
 
-  unsigned int MetaObjectPrivate::uid = 1;
+  qi::atomic<long> MetaObjectPrivate::uid = 1;
 };

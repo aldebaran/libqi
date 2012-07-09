@@ -267,6 +267,59 @@ namespace qi {
     return true;
   }
 
+  /// Resolve signature and bounce
+  unsigned int Object::xConnect(const std::string &signature, const Functor* functor)
+  {
+    int eventId = metaObject().eventId(signature);
+    if (eventId < 0) {
+      std::stringstream ss;
+      ss << "Can't find event: " << signature << std::endl
+      << "  Candidate(s):" << std::endl;
+      std::vector<MetaEvent>           mml = metaObject().findEvent(qi::signatureSplit(signature)[1]);
+      std::vector<MetaEvent>::const_iterator it;
+
+      for (it = mml.begin(); it != mml.end(); ++it) {
+        ss << "  " << it->signature() << std::endl;
+      }
+      qiLogError("object") << ss.str();
+      return -1;
+    }
+    return connect(eventId, functor);
+  }
+
+  unsigned int Object::connect(unsigned int event, const Functor* functor)
+  {
+    MetaEvent* ev = _meta->event(event);
+    if (!ev)
+    {
+      qiLogError("object") << "No such event " << event;
+      return 0;
+    }
+    // Should we validate event here too?
+    // Use [] directly, will create the entry if not present.
+    unsigned int uid = ++MetaObjectPrivate::uid;
+    ev->_p->_subscribers[uid].handler = functor;
+    return uid;
+  }
+
+  bool Object::disconnect(unsigned int id)
+  {
+    // Look it up.
+    // FIXME: Maybe store the event id inside the link id for faster lookup?
+    std::vector<MetaEvent>::iterator i;
+    for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
+    {
+      MetaEventPrivate::Subscribers::iterator j = i->_p->_subscribers.find(id);
+      if (j != i->_p->_subscribers.end())
+      {
+        delete j->second.handler;
+        i->_p->_subscribers.erase(j);
+        return true;
+      }
+    }
+    return false;
+  }
+
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
     stream << meta._p->_signature;
     stream << meta._p->_sigret;

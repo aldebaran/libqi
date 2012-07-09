@@ -116,6 +116,21 @@ namespace qi {
     void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
     virtual void metaEmit(unsigned int event, const FunctorParameters &args);
+
+    /** Connect an event to an arbitrary callback.
+     *
+     * If you are within a service, it is recommended that you connect the
+     * event to one of your Slots instead of using this method.
+     */
+    template <typename FUNCTOR_TYPE>
+    unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback);
+    unsigned int xConnect(const std::string &signature, const Functor* functor);
+    /// Calls given functor when event is fired. Takes ownership of functor.
+    virtual unsigned int connect(unsigned int event, const Functor* functor);
+
+    /// Disconnect an event link. Returns if disconnection was successful.
+    virtual bool disconnect(unsigned int uid);
+
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
     /// Resolve the method Id and bounces to metaCall
     bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
@@ -170,6 +185,16 @@ namespace qi {
     return xAdvertiseEvent(signature);
   }
 
+  template <typename FUNCTION_TYPE>
+  unsigned int Object::connect(const std::string& eventName, FUNCTION_TYPE callback)
+  {
+    std::string signature(eventName);
+    signature += "::(";
+    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
+    signature += ")";
+    return xConnect(signature, makeFunctor(callback));
+  }
 
 
 
