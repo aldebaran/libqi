@@ -8,6 +8,7 @@
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
 #include "src/metamethod_p.hpp"
+#include "src/metaevent_p.hpp"
 #include "src/object_p.hpp"
 #include <qimessaging/object.hpp>
 
@@ -43,9 +44,26 @@ namespace qi {
     return 0;
   }
 
+  MetaEvent *MetaObject::event(unsigned int id) {
+    if (id < _p->_events.size())
+      return &_p->_events[id];
+    return 0;
+  }
+
+  MetaEvent *MetaObject::event(unsigned int id) const {
+    if (id < _p->_events.size())
+      return &_p->_events[id];
+    return 0;
+  }
+
   int MetaObject::methodId(const std::string &name)
   {
     return _p->methodId(name);
+  }
+
+  int MetaObject::eventId(const std::string &name)
+  {
+    return _p->eventId(name);
   }
 
   std::vector<MetaMethod> &MetaObject::methods() {
@@ -55,6 +73,15 @@ namespace qi {
   const std::vector<MetaMethod> &MetaObject::methods() const {
     return _p->methods();
   }
+
+  std::vector<MetaEvent> &MetaObject::events() {
+    return _p->events();
+  }
+
+  const std::vector<MetaEvent> &MetaObject::events() const {
+    return _p->events();
+  }
+
   MetaObject::~MetaObject()
   {
     delete _p;
@@ -180,17 +207,32 @@ namespace qi {
     return stream;
   }
 
+  qi::DataStream &operator<<(qi::DataStream &stream, const MetaEvent &meta) {
+    stream << meta._p->_signature;
+    stream << meta._p->_idx;
+    return stream;
+  }
+
+  qi::DataStream &operator>>(qi::DataStream &stream, MetaEvent &meta) {
+    stream >> meta._p->_signature;
+    stream >> meta._p->_idx;
+    return stream;
+  }
+
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta) {
-    stream << meta._p->_methodsNameToIdx;
     stream << meta._p->_methods;
     stream << meta._p->_methodsNumber;
+    stream << meta._p->_events;
+    stream << meta._p->_eventsNumber;
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta) {
-    stream >> meta._p->_methodsNameToIdx;
     stream >> meta._p->_methods;
     stream >> meta._p->_methodsNumber;
+    stream >> meta._p->_events;
+    stream >> meta._p->_eventsNumber;
+    meta._p->refreshCache();
     return stream;
   }
 
@@ -199,4 +241,19 @@ namespace qi {
     return _p->findMethod(name);
   }
 
+  std::vector<MetaEvent> MetaObject::findEvent(const std::string &name)
+  {
+    return _p->findEvent(name);
+  }
+
+  void MetaObjectPrivate::refreshCache()
+  {
+    _methodsNameToIdx.clear();
+    for (std::vector<MetaMethod>::iterator i = _methods.begin();
+      i != _methods.end(); ++i)
+      _methodsNameToIdx[i->signature()] = i->index();
+    for (std::vector<MetaEvent>::iterator i = _events.begin();
+      i != _events.end(); ++i)
+      _eventsNameToIdx[i->signature()] = i->index();
+  }
 };

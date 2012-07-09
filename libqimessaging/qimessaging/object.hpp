@@ -15,6 +15,7 @@
 #include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
 
 namespace qi {
@@ -28,14 +29,22 @@ namespace qi {
     ~MetaObject();
 
     int methodId(const std::string &name);
+    int eventId(const std::string &name);
 
     std::vector<MetaMethod> &methods();
     const std::vector<MetaMethod> &methods() const;
 
+    std::vector<MetaEvent> &events();
+    const std::vector<MetaEvent> &events() const;
+
     MetaMethod *method(unsigned int id);
     MetaMethod *method(unsigned int id) const;
 
+    MetaEvent *event(unsigned int id);
+    MetaEvent *event(unsigned int id) const;
+
     std::vector<MetaMethod> findMethod(const std::string &name);
+    std::vector<MetaEvent> findEvent(const std::string &name);
 
     MetaObjectPrivate   *_p;
   };

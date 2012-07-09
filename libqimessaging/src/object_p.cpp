@@ -10,9 +10,7 @@ namespace qi {
 
   MetaObjectPrivate::MetaObjectPrivate(const MetaObjectPrivate &rhs)
   {
-    _methodsNameToIdx = rhs._methodsNameToIdx;
-    _methods = rhs._methods;
-    _methodsNumber = rhs._methodsNumber;
+    (*this) = rhs;
   }
 
   MetaObjectPrivate&  MetaObjectPrivate::operator=(const MetaObjectPrivate &rhs)
@@ -20,6 +18,8 @@ namespace qi {
     _methodsNameToIdx = rhs._methodsNameToIdx;
     _methods = rhs._methods;
     _methodsNumber = rhs._methodsNumber;
+    _events = rhs._events;
+    _eventsNumber = rhs._eventsNumber;
     return (*this);
   }
 
@@ -38,4 +38,20 @@ namespace qi {
     return ret;
   }
 
+  std::vector<MetaEvent> MetaObjectPrivate::findEvent(const std::string &name)
+  {
+    std::vector<MetaEvent>           ret;
+    std::vector<MetaEvent>::iterator it;
+    std::string cname(name);
+    cname += "::";
+
+    for (it = _events.begin(); it != _events.end(); ++it) {
+      MetaEvent &mm = *it;
+      if (boost::starts_with(mm.signature(), cname))
+        ret.push_back(mm);
+    }
+    return ret;
+  }
+
+  unsigned int MetaObjectPrivate::uid = 1;
 };
