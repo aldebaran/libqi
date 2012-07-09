@@ -138,6 +138,30 @@ namespace qi {
     return idx;
   }
 
+  int Object::xAdvertiseEvent(const std::string& signature) {
+    if (signature.empty())
+    {
+      qiLogError("qi.Object") << "Event has empty signature.";
+      return -1;
+    }
+    std::map<std::string, unsigned int>::iterator it;
+
+    it = _meta->_p->_eventsNameToIdx.find(signature);
+    if (it != _meta->_p->_eventsNameToIdx.end())
+    { // Event already there.
+      qiLogError("qi.Object") << "event already there";
+      return it->second;
+    }
+    unsigned int idx = _meta->_p->_eventsNumber++;
+    MetaEvent me(signature);
+    me._p->_idx = idx;
+    _meta->events().push_back(me);
+    _meta->_p->_eventsNameToIdx[signature] = idx;
+    qiLogVerbose("qi.Object") << "binding event:" << signature <<" with id "
+    << idx;
+    return idx;
+  }
+
   void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
     MetaMethod *mm = _meta->method(method);

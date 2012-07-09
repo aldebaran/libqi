@@ -90,10 +90,13 @@ namespace qi {
 
     virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out);
 
+    template<typename FUNCTION_TYPE>
+    inline unsigned int advertiseEvent(const std::string& eventName);
   protected:
     int xForgetMethod(const std::string &meth);
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
     bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
+    int xAdvertiseEvent(const std::string& signature);
 
   protected:
     MetaObject *_meta;
@@ -129,6 +132,16 @@ namespace qi {
     return xAdvertiseMethod(sigret, signature, makeFunctor(function));
   }
 
+  template<typename FUNCTION_TYPE>
+  inline unsigned int Object::advertiseEvent(const std::string& eventName)
+  {
+    std::string signature(eventName);
+    signature += "::(";
+    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
+    signature += ")";
+    return xAdvertiseEvent(signature);
+  }
 
 
 
