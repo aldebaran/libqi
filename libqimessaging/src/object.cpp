@@ -74,6 +74,20 @@ namespace qi {
     return *_meta;
   }
 
+  int Object::xForgetMethod(const std::string &meth)
+  {
+    std::map<std::string, unsigned int>::iterator it;
+
+    it = _meta->_p->_methodsNameToIdx.find(meth);
+    if (it != _meta->_p->_methodsNameToIdx.end())
+    {
+      _meta->_p->_methodsNameToIdx.erase(it);
+      return (0);
+    }
+
+    return (1);
+  }
+
   int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
     std::map<std::string, unsigned int>::iterator it;
 
