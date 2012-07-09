@@ -129,13 +129,14 @@ public:
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
-    qi::DataStream d(msg.buffer());
+    qi::Buffer b;
+    qi::DataStream d(b);
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
     si.setEndpoints(_p->_endpoints);
     d << si;
-
+    msg.setBuffer(b);
     _p->_session->_p->_serviceSocket->send(msg);
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;
@@ -182,9 +183,10 @@ int main_client(std::string QI_UNUSED(str))
       requeststr[2] = c;
 
       qi::Message msg;
-      qi::DataStream d(msg.buffer());
+      qi::Buffer b;
+      qi::DataStream d(b);
       d << requeststr;
-
+      msg.setBuffer(b);
       msg.setType(qi::Message::Type_Event);
       msg.setService(serviceId);
       msg.setPath(qi::Message::Path_Main);
