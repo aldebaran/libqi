@@ -136,40 +136,30 @@ namespace qi {
     return true;
   }
 
-  bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints)
+  bool Server::listen(qi::Session *session, const std::string &address)
   {
-    bool success = true;
-
+    qi::Url url(address);
     _p->_session = session;
 
-    for (std::vector<std::string>::const_iterator it = endpoints.begin();
-         it != endpoints.end();
-         it++)
+    switch (url.protocol())
     {
-      qi::Url url(*it);
-
-      switch (url.protocol())
-      {
-      case Url::Protocol_Tcp:
-        _p->_ts = new qi::TransportServer(session, url);
-        _p->_ts->setCallbacks(_p);
-       if (!_p->_ts->start())
-        {
-          success = false;
-        }
-       else
-         _p->setSuitableEndpoints(url, _p->_ts->_p->listenUrl);
-        break;
-      case Url::Protocol_TcpSsl:
-        qiLogError("qi::Server") << "SSL over TCP is not implemented yet";
-        break;
-      default:
-        success = false;
-        break;
-      }
+    case Url::Protocol_Tcp:
+      _p->_ts = new qi::TransportServer(session, url);
+      _p->_ts->setCallbacks(_p);
+      if (!_p->_ts->start())
+        return false;
+      break;
+    case Url::Protocol_TcpSsl:
+      qiLogError("qi::Server") << "SSL over TCP is not implemented yet";
+      return false;
+    default:
+      return false;
     }
-
-    return success;
+    if (!_p->setSuitableEndpoints(url, _p->_ts->listenUrl())) {
+      //TODO: cleanup...
+      return false;
+    }
+    return true;
   }
 
 
@@ -189,6 +179,10 @@ namespace qi {
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
+    if (_p->_endpoints.empty()) {
+      qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
+      return 0;
+    }
     qi::DataStream d(buf);
     si.setName(name);
     si.setProcessId(qi::os::getpid());

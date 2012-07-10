@@ -42,11 +42,11 @@ namespace qi {
     Server();
     virtual ~Server();
 
-    /// <summary> Listen on the given set of ports. </summary>
+    /// <summary> Listen on the given address. </summary>
     /// <param name="session" the service directory session on which to advertise.</param>
-    /// <param name="url"> the set of urls to listen to. You can use
+    /// <param name="address"> the url to listen to. You can use
     /// a port value of 0 to let the system pick an available port.</param>
-    bool listen(qi::Session *session, const std::vector<std::string> &url);
+    bool listen(qi::Session *session, const std::string &address);
     void stop();
 
     unsigned int registerService(const std::string &name, qi::Object *obj);

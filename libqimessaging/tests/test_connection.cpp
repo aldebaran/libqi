@@ -99,7 +99,6 @@ int main(int argc, char **argv) {
 
   sd.listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
-
   qi::Session       session;
   qi::Object        obj;
   qi::Server        srv;
@@ -108,16 +107,13 @@ int main(int argc, char **argv) {
   session.connect(sdAddr.str());
   session.waitForConnected();
 
-  std::vector<std::string> endpoints;
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
-
-  endpoints.push_back(serviceAddr.str());
-  srv.listen(&session, endpoints);
-  srv.registerService("serviceTest", &obj);
-  std::cout << "serviceTest ready." << std::endl;
+  srv.listen(&session, serviceAddr.str());
+  unsigned int id = srv.registerService("serviceTest", &obj);
+  std::cout << "serviceTest ready:" << id << std::endl;
 
 #ifdef WITH_GATEWAY_
   unsigned int gatewayPort = qi::os::findAvailablePort(12345);
