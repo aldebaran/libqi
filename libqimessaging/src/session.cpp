@@ -52,9 +52,7 @@ namespace qi {
   }
 
 
-  bool SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _serviceSocket->connect(_self, serviceDirectoryURL);
   }
 
   void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
@@ -255,7 +253,7 @@ namespace qi {
 
   bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _p->connect(serviceDirectoryURL);
+    return _p->_serviceSocket->connect(_p->_self, serviceDirectoryURL);
   }
 
   bool Session::disconnect()
