@@ -7,6 +7,7 @@
 */
 
 #include <qimessaging/session.hpp>
+#include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
@@ -56,48 +57,54 @@ namespace qi {
     return _serviceSocket->connect(_self, serviceDirectoryURL);
   }
 
-  std::vector<ServiceInfo> SessionPrivate::services()
+  void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
   {
-    std::vector<ServiceInfo> result;
-
     qi::Message msg;
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
+    client->read(id, &msg);
 
-    _serviceSocket->send(msg);
 
-    if (!_serviceSocket->waitForId(msg.id()))
-      return result;
-    qi::Message ans;
-    _serviceSocket->read(msg.id(), &ans);
 
-    qi::DataStream d(ans.buffer());
-    d >> result;
-
-    return result;
+    // Request for register/unregister methods
+    std::map<int, qi::FunctorResult>::iterator it3;
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      it3 = _futureFunctor.find(id);
+    }
+    if (it3 != _futureFunctor.end())
+    {
+      serviceRegisterUnregisterEnd(id, &msg, it3->second);
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        _futureFunctor.erase(it3);
+      }
+      return;
+    }
   }
 
-  qi::TransportSocket* SessionPrivate::serviceSocket(const std::string &name,
-                                                     unsigned int      *idx,
-                                                     qi::Url::Protocol  type)
+  void SessionPrivate::serviceRegisterUnregisterEnd(int id,
+                                                    qi::Message *msg,
+                                                    qi::FunctorResult promise)
   {
-    qi::Message    msg;
-    qi::Buffer     buf;
-    qi::DataStream dr(buf);
-    msg.setBuffer(buf);
-    dr << name;
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
-    _serviceSocket->send(msg);
+    if (!promise.isValid())
+    {
+      qiLogError("qimessaging.sessionprivate") << "No promise found for req id:" << id;
+      return;
+    }
 
-    if (!_serviceSocket->waitForId(msg.id()))
-      return 0;
-    qi::Message ans;
-    _serviceSocket->read(msg.id(), &ans);
+    switch (msg->type())
+    {
+      case qi::Message::Type_Reply:
+        promise.setValue(msg->buffer());
+        break;
+      case qi::Message::Type_Event:
+        promise.setValue(msg->buffer());
+        break;
+      default:
+        qiLogError("qimessaging.sessionprivate") << "Message (#" << id << ") type not handled: "
+            << msg->type();
+        return;
+    }
+  }
 
     qi::ServiceInfo si;
     qi::DataStream d(ans.buffer());
@@ -148,40 +155,94 @@ namespace qi {
       qiLogError("qi::Session") << "service not found: " << service;
       return 0;
     }
-
-    qi::Message msg;
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(serviceId);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(qi::Message::Function_MetaObject);
-
-    ts->send(msg);
-    if (ts->waitForId(msg.id()) == false)
-      return (NULL);
-
-    qi::Message ret;
-    if (ts->read(msg.id(), &ret) == false)
-      return (NULL);
-
-    qi::MetaObject *mo = new qi::MetaObject;
-
-    qi::DataStream ds(ret.buffer());
-
-    ds >> *mo;
-
-    qi::RemoteObject *robj = new qi::RemoteObject(ts, serviceId, mo);
-    if (robj == NULL)
-    {
-      qiLogWarning("qimessaging.SessionPrivate.Service") << "No object related to service" << std::endl;
-      return (0);
-    }
-    obj = robj;
-    return obj;
   }
 
+  qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si)
+  {
+    qi::Message msg;
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
+
+    qi::Buffer     buf;
+    qi::DataStream d(buf);
+    d << si;
+
+    qi::Future<unsigned int> future;
+    if (d.status() == qi::DataStream::Status_Ok)
+    {
+      msg.setBuffer(buf);
+
+      qi::FunctorResult        ret;
+      qi::makeFunctorResult<unsigned int>(&ret, &future);
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        _futureFunctor[msg.id()] = ret;
+      }
+
+      if (!_serviceSocket->send(msg))
+      {
+        qi::DataStream dout(msg.buffer());
+        qi::ServiceInfo si;
+        dout >> si;
+        qiLogError("qimessaging.Session") << "Error while register service: "
+                                          << si.name() << " request";
+        qi::Buffer buf;
+        qi::DataStream dse(buf);
+
+        dse << "Error while register service: "
+            << si.name() << " request";
+        ret.setError(buf);
+      }
+    }
+    return future;
+  }
+
+  qi::Future<void> SessionPrivate::unregisterService(unsigned int idx)
+  {
+    qi::Message msg;
+    qi::Buffer  buf;
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+
+    qi::DataStream d(buf);
+    d << idx;
+
+    qi::Future<void> future;
+    if (d.status() == qi::DataStream::Status_Ok)
+    {
+      msg.setBuffer(buf);
+
+      qi::FunctorResult ret;
+      qi::makeFunctorResult<void>(&ret, &future);
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        _futureFunctor[msg.id()] = ret;
+      }
+
+      if (!_serviceSocket->send(msg))
+      {
+        qi::DataStream dout(msg.buffer());
+        unsigned int idx;
+        dout >> idx;
+        qiLogError("qimessaging.Session") << "Error while unregister serviceId: "
+                                          << idx << " request";
+
+        qi::Buffer buf;
+        qi::DataStream dse(buf);
+
+        dse << "Error while unregister serviceId: "
+            << idx << " request";
+        ret.setError(buf);
+      }
+    }
+    return future;
+  }
 
   // ###### Session
-
   Session::Session()
     : _p(new SessionPrivate(this))
   {

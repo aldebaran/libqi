@@ -9,10 +9,21 @@
 #ifndef _SRC_SESSION_P_HPP_
 #define _SRC_SESSION_P_HPP_
 
+#include <map>
+#include <boost/thread.hpp>
+#include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
 
 namespace qi {
+
+  struct ServiceRequest
+  {
+    qi::Promise<qi::Object *> promise;
+    std::string               name;
+    unsigned int              serviceId;
+    qi::Url::Protocol         protocol;
+  };
 
   class NetworkThread;
   class Session;
@@ -28,19 +39,28 @@ namespace qi {
                                        qi::Url::Protocol type);
     qi::Object* service(const std::string &service,
                         qi::Url::Protocol type);
+
+    qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si);
+    qi::Future<void>            unregisterService(unsigned int idx);
     std::vector<ServiceInfo> services();
 
     virtual void onSocketConnected(TransportSocket *client);
     virtual void onSocketConnectionError(TransportSocket *client);
     virtual void onSocketDisconnected(TransportSocket *client);
+    virtual void onSocketReadyRead(TransportSocket *client, int id);
+
+    void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
+
 
   public:
     qi::TransportSocket  *_serviceSocket;
     qi::NetworkThread    *_networkThread;
     qi::Session          *_self;
     qi::SessionInterface *_callbacks;
-  };
 
+    boost::mutex                                               _mutexFuture;
+    std::map<int, qi::FunctorResult>                           _futureFunctor;
+  };
 }
 
 
