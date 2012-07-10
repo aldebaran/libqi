@@ -8,6 +8,7 @@
 
 #include <qimessaging/object.hpp>
 #include <qimessaging/server.hpp>
+#include <qimessaging/functor.hpp>
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/network_thread.hpp"
@@ -19,15 +20,21 @@
 
 namespace qi {
 
-  class ServerPrivate : public TransportServerInterface, public TransportSocketInterface
+  class ServerPrivate : public TransportServerInterface,
+                        public TransportSocketInterface,
+                        public FutureInterface<unsigned int>
   {
   public:
 
     virtual void newConnection();
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketDisconnected(TransportSocket *client);
-    bool         setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost);
-
+    virtual void onFutureFinished(const Future<unsigned int> &future,
+                                  void *data);
+    virtual void onFutureFailed(const Future<unsigned int> &future,
+                                void *data);
+    bool         setSuitableEndpoints(const qi::Url &url,
+                                      const qi::Url &finalHost);
   public:
     // (service, linkId)
     struct RemoteLink
@@ -51,6 +58,7 @@ namespace qi {
     std::map<unsigned int, qi::Object*>     _services;
     std::map<std::string, qi::Object*>      _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
+    std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
     std::map<unsigned int, std::string>     _servicesIndex;
     TransportServer                        *_ts;
     std::vector<std::string>                _endpoints;
@@ -172,6 +180,45 @@ namespace qi {
 
   };
 
+  void ServerPrivate::onFutureFailed(const Future<unsigned int> &future,
+                                     void                       *data)
+  {
+    qi::ServiceInfo si;
+    qi::Object     *obj = static_cast<qi::Object *>(data);
+
+    std::map<qi::Object *, qi::ServiceInfo>::iterator it = _servicesObject.find(obj);
+    if (it != _servicesObject.end())
+      _servicesObject.erase(it);
+  }
+
+  void ServerPrivate::onFutureFinished(const Future<unsigned int> &future,
+                                       void                       *data)
+  {
+    qi::Object     *obj = static_cast<qi::Object *>(data);
+    unsigned int    idx = future.value();
+    qi::ServiceInfo si;
+    std::map<qi::Object *, qi::ServiceInfo>::iterator it;
+
+    {
+      boost::mutex::scoped_lock sl(_mutexOthers);
+      it = _servicesObject.find(obj);
+      if (it != _servicesObject.end())
+        si = _servicesObject[obj];
+    }
+    si.setServiceId(idx);
+
+    {
+      boost::mutex::scoped_lock sl(_mutexServices);
+      _services[idx] = obj;
+    }
+    {
+      boost::mutex::scoped_lock sl(_mutexOthers);
+      _servicesInfo[si.name()] = si;
+      _servicesByName[si.name()] = obj;
+      _servicesIndex[idx] = si.name();
+      _servicesObject.erase(it);
+    }
+  }
 
   Server::Server()
     : _p(new ServerPrivate())
@@ -266,78 +313,46 @@ namespace qi {
   }
 
 
-  unsigned int Server::registerService(const std::string& name, qi::Object *obj)
+  qi::Future<unsigned int> Server::registerService(const std::string &name,
+                                                   qi::Object        *obj)
   {
     if (!_p->_session)
     {
       qiLogError("qimessaging.Server") << "no session attached to the server.";
-      return 0;
+      return qi::Future<unsigned int>();
     }
-
-    qi::Message msg;
-    qi::Buffer  buf;
-    qi::ServiceInfo si;
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     if (_p->_endpoints.empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
-      return 0;
+      return qi::Future<unsigned int>();
     }
-    qi::DataStream d(buf);
+    qi::ServiceInfo si;
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
     si.setEndpoints(_p->_endpoints);
-    d << si;
 
-    msg.setBuffer(buf);
-    _p->_session->_p->_serviceSocket->send(msg);
-    _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans;
-    _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-    qi::DataStream dout(ans.buffer());
-    unsigned int idx = 0;
-    dout >> idx;
-    si.setServiceId(idx);
-    {
-      boost::mutex::scoped_lock sl(_p->_mutexServices);
-      _p->_services[idx] = obj;
-    }
     {
       boost::mutex::scoped_lock sl(_p->_mutexOthers);
-      _p->_servicesInfo[name] = si;
-      _p->_servicesByName[name] = obj;
-      _p->_servicesIndex[idx] = name;
+      _p->_servicesObject[obj] = si;
     }
-    return idx;
+
+    qi::Future<unsigned int> future = _p->_session->_p->registerService(si);
+    future.setCallback(_p, obj);
+
+    return future;
   };
 
-  void Server::unregisterService(unsigned int idx)
+  qi::Future<void> Server::unregisterService(unsigned int idx)
   {
     if (!_p->_session)
     {
       qiLogError("qimessaging.Server") << "no session attached to the server.";
-      return;
+      return qi::Future<void>();
     }
 
-    qi::Message msg;
-    qi::Buffer  buf;
-    msg.setType(qi::Message::Type_Call);
-    msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+    qi::Future<void> future = _p->_session->_p->unregisterService(idx);
 
-    qi::DataStream d(buf);
-    d << idx;
-
-    msg.setBuffer(buf);
-    _p->_session->_p->_serviceSocket->send(msg);
-    _p->_session->_p->_serviceSocket->waitForId(msg.id());
-    qi::Message ans;
-    _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
     {
       boost::mutex::scoped_lock sl(_p->_mutexServices);
       _p->_services.erase(idx);
@@ -355,6 +370,7 @@ namespace qi {
       }
       _p->_servicesIndex.erase(idx);
     }
+    return future;
   };
 
   void Server::stop() {
