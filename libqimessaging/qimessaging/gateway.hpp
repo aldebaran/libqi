@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Herve Cuche <hcuche@aldebaran-robotics.com>
+**  - Laurent Lec <llec@aldebaran-robotics.com>
 **
 ** Copyright (C) 2012 Aldebaran Robotics
 */
@@ -21,14 +22,40 @@ namespace qi
     Gateway();
     ~Gateway();
 
-    bool listen(const qi::Url &listenAddress);
-    bool listen(const qi::Url &listenAddress, const qi::Url &serviceDirectoryURL);
+    bool attachToServiceDirectory(const qi::Url &address);
+    bool listen(const qi::Url &address);
     void join();
-    bool connect(const qi::Url &connectURL);
 
   private:
     GatewayPrivate *_p;
-  }; // !Gateway
-}; // !qi
+  };
+
+  class QIMESSAGING_API RemoteGateway
+  {
+  public:
+    RemoteGateway();
+    ~RemoteGateway();
+
+    bool listen(const qi::Url &address);
+    void join();
+
+  private:
+    GatewayPrivate *_p;
+  };
+
+  class QIMESSAGING_API ReverseGateway
+  {
+  public:
+    ReverseGateway();
+    ~ReverseGateway();
+
+    bool attachToServiceDirectory(const qi::Url &address);
+    bool connect(const qi::Url &address);
+    void join();
+
+  private:
+    GatewayPrivate *_p;
+  };
+}
 
 #endif  // _QIMESSAGING_GATEWAY_HPP_

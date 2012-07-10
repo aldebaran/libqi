@@ -128,7 +128,8 @@ int main(int argc, char **argv) {
   connectionAddr = gatewayAddr.str();
 
   qi::Gateway gate;
-  gate.listen(gatewayAddr.str(), sdAddr.str());
+  gate.attachToServiceDirectory(sdAddr.str());
+  gate.listen(gatewayAddr.str());
 #endif
 
   int res = RUN_ALL_TESTS();

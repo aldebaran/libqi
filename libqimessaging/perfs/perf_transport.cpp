@@ -90,7 +90,8 @@ int main_gateway()
 {
   qi::Gateway       gate;
 
-  gate.listen("tcp://127.0.0.1:12345", "tcp://127.0.0.1:5555");
+  gate.attachToServiceDirectory("tcp://127.0.0.1:5555");
+  gate.listen("tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
   gate.join();
 

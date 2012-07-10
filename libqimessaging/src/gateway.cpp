@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Herve Cuche <hcuche@aldebaran-robotics.com>
+**  - Laurent Lec <llec@aldebaran-robotics.com>
 **
 ** Copyright (C) 2012 Aldebaran Robotics
 */
@@ -30,6 +31,11 @@ public:
   typedef std::map< TransportSocket *, ClientRequestIdMap >  ServiceRequestIdMap;
 
   typedef std::map< unsigned int, qi::TransportSocket * > ServiceSocketMap;
+
+  bool attachToServiceDirectory(const qi::Url &address);
+  bool listen(const qi::Url &address);
+  bool connect(const qi::Url &address);
+  void join();
 
 protected:
 
@@ -276,48 +282,32 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
   }
 }
 
-Gateway::Gateway()
-  : _p(new GatewayPrivate())
+bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 {
+  _session.connect(address);
+  _session.waitForConnected();
+
+  _socketToServiceDirectory = new qi::TransportSocket();
+  _socketToServiceDirectory->connect(&_session, address);
+  _socketToServiceDirectory->setCallbacks(this);
+  _socketToServiceDirectory->waitForConnected();
+  _services[qi::Message::Service_ServiceDirectory] = _socketToServiceDirectory;
+
+  return true;
 }
 
-Gateway::~Gateway()
+bool GatewayPrivate::listen(const Url &address)
 {
-  delete _p;
+  _endpoints.push_back(address.str());
+  _transportServer = new qi::TransportServer(&_session, address);
+  _transportServer->setCallbacks(this);
+  return _transportServer->start();
 }
 
-void Gateway::join()
-{
-  _p->_session.join();
-}
-
-bool Gateway::listen(const qi::Url &listenAddress,
-                     const qi::Url &serviceDirectoryURL)
-{
-  _p->_session.connect(serviceDirectoryURL);
-  _p->_session.waitForConnected();
-
-  _p->_socketToServiceDirectory = new qi::TransportSocket();
-  _p->_socketToServiceDirectory->connect(&(_p->_session), serviceDirectoryURL);
-  _p->_socketToServiceDirectory->setCallbacks(_p);
-  _p->_socketToServiceDirectory->waitForConnected();
-  _p->_services[qi::Message::Service_ServiceDirectory] = _p->_socketToServiceDirectory;
-
-  return listen(listenAddress);
-}
-
-bool Gateway::listen(const Url &listenAddress)
-{
-  _p->_endpoints.push_back(listenAddress.str());
-  _p->_transportServer = new qi::TransportServer(&(_p->_session), listenAddress);
-  _p->_transportServer->setCallbacks(_p);
-  return _p->_transportServer->start();
-}
-
-bool Gateway::connect(const qi::Url &connectURL)
+bool GatewayPrivate::connect(const qi::Url &connectURL)
 {
   qi::TransportSocket *ts = new qi::TransportSocket();
-  ts->connect(&(_p->_session), connectURL);
+  ts->connect(&_session, connectURL);
   ts->waitForConnected();
 
   qi::Message msg;
@@ -355,10 +345,88 @@ bool Gateway::connect(const qi::Url &connectURL)
   }
 #endif
 
-  ts->setCallbacks(_p);
-  _p->_clients.push_back(ts);
+  ts->setCallbacks(this);
+  _clients.push_back(ts);
 
   return true;
+}
+
+void GatewayPrivate::join()
+{
+  _session.join();
+}
+
+/* Gateway bindings */
+Gateway::Gateway()
+  : _p(new GatewayPrivate())
+{
+}
+
+Gateway::~Gateway()
+{
+  delete _p;
+}
+
+bool Gateway::attachToServiceDirectory(const qi::Url &address)
+{
+  return _p->attachToServiceDirectory(address);
+}
+
+bool Gateway::listen(const qi::Url &address)
+{
+  return _p->listen(address);
+}
+
+void Gateway::join()
+{
+  _p->join();
+}
+
+/* RemoteGateway bindings */
+RemoteGateway::RemoteGateway()
+  : _p(new GatewayPrivate())
+{
+}
+
+RemoteGateway::~RemoteGateway()
+{
+  delete _p;
+}
+
+bool RemoteGateway::listen(const qi::Url &address)
+{
+  return _p->listen(address);
+}
+
+void RemoteGateway::join()
+{
+  _p->join();
+}
+
+/* ReverseGateway bindings */
+ReverseGateway::ReverseGateway()
+  : _p(new GatewayPrivate())
+{
+}
+
+ReverseGateway::~ReverseGateway()
+{
+  delete _p;
+}
+
+bool ReverseGateway::attachToServiceDirectory(const qi::Url &address)
+{
+  return _p->attachToServiceDirectory(address);
+}
+
+void ReverseGateway::join()
+{
+  _p->join();
+}
+
+bool ReverseGateway::connect(const qi::Url &address)
+{
+  return _p->connect(address);
 }
 
 } // !qi

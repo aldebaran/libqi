@@ -9,7 +9,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-
+#include <qi/log.hpp>
 #include <qimessaging/gateway.hpp>
 
 namespace po = boost::program_options;
@@ -25,7 +25,10 @@ int main(int argc, char *argv[])
        "The master address")
       ("gateway-address",
        po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:12345")),
-       "The gateway address");
+       "The gateway address")
+      ("gateway-type",
+       po::value<std::string>()->default_value(std::string("local")),
+       "The gateway type");
 
   // allow master address to be specified as the first arg
   po::positional_options_description pos;
@@ -45,25 +48,53 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    if (vm.count("master-address") == 1 &&
-        vm.count("gateway-address") == 1 )
-    {
-      std::string gatewayAddress = vm["gateway-address"].as<std::string>();
-      std::string masterAddress = vm["master-address"].as<std::string>();
+    std::string gatewayAddress = vm["gateway-address"].as<std::string>();
+    std::string masterAddress = vm["master-address"].as<std::string>();
+    std::string gatewayType = vm["gateway-type"].as<std::string>();
 
+    if (gatewayType == "local")
+    {
       qi::Gateway gateway;
-      if (!gateway.listen(gatewayAddress, masterAddress))
+      if (!gateway.attachToServiceDirectory(masterAddress) ||
+          !gateway.listen(gatewayAddress))
+      {
+        return 1;
+      }
+      std::cout << "Local gateway ready: " << gatewayAddress << std::endl;
+      gateway.join();
+    }
+    else if (gatewayType == "remote")
+    {
+      qi::RemoteGateway gateway;
+      if (!gateway.listen(gatewayAddress))
+      {
+        return 1;
+      }
+      std::cout << "Remote gateway ready: " << gatewayAddress << std::endl;
+      gateway.join();
+    }
+    else if (gatewayType == "reverse")
+    {
+      qi::ReverseGateway gateway;
+      if (!gateway.attachToServiceDirectory(masterAddress))
       {
         return 1;
       }
 
-      std::cout << "ready." << std::endl;
-
+      std::cout << "Reverse gateway ready" << std::endl;
+      std::string line;
+      while (std::getline(std::cin, line))
+      {
+        std::cout << line << std::endl;
+        qi::Url url(line);
+        gateway.connect(url);
+      }
       gateway.join();
     }
     else
     {
-      std::cout << desc << "\n";
+      std::cerr << "unknown type: " << gatewayType << std::endl;
+      return 1;
     }
   }
   catch (const boost::program_options::error&)
