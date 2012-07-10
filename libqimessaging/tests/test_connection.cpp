@@ -67,7 +67,7 @@ private:
 TEST(QiMessagingConnexion, testSyncSendOneMessage)
 {
   TestConnection tc;
-  EXPECT_TRUE(tc.init());
+  ASSERT_TRUE(tc.init());
 
   std::string result = tc.obj->call<std::string>("reply", "question");
   EXPECT_EQ("question", result);
@@ -76,7 +76,7 @@ TEST(QiMessagingConnexion, testSyncSendOneMessage)
 TEST(QiMessagingConnexion, testSyncSendMessages)
 {
   TestConnection tc;
-  EXPECT_TRUE(tc.init());
+  ASSERT_TRUE(tc.init());
 
   std::string result = tc.obj->call<std::string>("reply", "question1");
   EXPECT_EQ("question1", result);
@@ -109,16 +109,15 @@ int main(int argc, char **argv) {
   session.waitForConnected();
 
   std::vector<std::string> endpoints;
-  unsigned int servicePort = qi::os::findAvailablePort(9559);
+  unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
+
 
   endpoints.push_back(serviceAddr.str());
   srv.listen(&session, endpoints);
   srv.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
-
-  qi::os::msleep(400);
 
 #ifdef WITH_GATEWAY_
   unsigned int gatewayPort = qi::os::findAvailablePort(12345);
@@ -137,6 +136,7 @@ int main(int argc, char **argv) {
   srv.stop();
   session.disconnect();
   session.waitForDisconnected();
+
 
   return res;
 }
