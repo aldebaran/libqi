@@ -164,7 +164,7 @@ int main_client(std::string QI_UNUSED(str))
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
-  qi::TransportSocket *sock = session.serviceSocket("serviceTest", &serviceId);
+  qi::Object *sock = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -174,24 +174,7 @@ int main_client(std::string QI_UNUSED(str))
 
     for (int j = 0; j < gLoopCount; ++j)
     {
-      static int id = 1;
-      id++;
-      char c = 1;
-      c++;
-      if (c == 0)
-        c++;
-      requeststr[2] = c;
-
-      qi::Message msg;
-      qi::Buffer b;
-      qi::DataStream d(b);
-      d << requeststr;
-      msg.setBuffer(b);
-      msg.setType(qi::Message::Type_Event);
-      msg.setService(serviceId);
-      msg.setPath(qi::Message::Path_Main);
-      msg.setFunction(1);
-      sock->send(msg);
+      sock->emitEvent("New event");
     }
   }
   return 0;

@@ -36,23 +36,52 @@ namespace qi {
     delete _serviceSocket;
   }
 
-  void SessionPrivate::onSocketConnected(TransportSocket *client) {
-    if (_callbacks)
-      _callbacks->onSessionConnected(_self);
+  void SessionPrivate::onSocketConnected(TransportSocket *client)
+  {
+    // Come from connection between transport socket and service
+    std::map<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+    if (it != _futureConnect.end())
+    {
+      ServiceRequest &sr = it->second;
+      qi::Message msg;
+      msg.setType(qi::Message::Type_Call);
+      msg.setService(sr.serviceId);
+      msg.setPath(qi::Message::Path_Main);
+      msg.setFunction(qi::Message::Function_MetaObject);
+      _futureService[msg.id()] = sr;
+      _futureConnect.erase(client);
+      client->send(msg);
+      return;
+    }
+
+    {
+      // Comes from session connected to ServiceDirectory
+      if (_callbacks)
+        _callbacks->onSessionConnected(_self);
+      return;
+    }
   }
 
-  void SessionPrivate::onSocketConnectionError(TransportSocket *client) {
-    if (_callbacks)
-      _callbacks->onSessionConnectionError(_self);
+  void SessionPrivate::onSocketConnectionError(TransportSocket *client)
+  {
+    std::map<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+    if (it != _futureConnect.end())
+    {
+      _futureConnect.erase(client);
+      return;
+    }
+
+    {
+      if (_callbacks)
+        _callbacks->onSessionConnectionError(_self);
+      return;
+    }
   }
 
-  void SessionPrivate::onSocketDisconnected(TransportSocket *client) {
+  void SessionPrivate::onSocketDisconnected(TransportSocket *client)
+  {
     if (_callbacks)
       _callbacks->onSessionDisconnected(_self);
-  }
-
-
-  {
   }
 
   void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
@@ -60,6 +89,20 @@ namespace qi {
     qi::Message msg;
     client->read(id, &msg);
 
+    // request for service method
+    std::map<int, ServiceRequest>::iterator it;
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      it = _futureService.find(id);
+    }
+    if (it != _futureService.end())
+    {
+      if (client == _serviceSocket)
+        serviceEndpointEnd(id, client, &msg, it->second); // Come from ServiceDirectory with endpoints to connect
+      else
+        serviceMetaobjectEnd(id, client, &msg, it->second); // Come from Service to get the MetaObject
+      return;
+    }
 
     // request from services method
     std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >::iterator it2;
@@ -119,55 +162,73 @@ namespace qi {
     }
   }
 
+  void SessionPrivate::serviceEndpointEnd(int id,
+                                          qi::TransportSocket *QI_UNUSED(client),
+                                          qi::Message *msg,
+                                          ServiceRequest &sr)
+  {
     qi::ServiceInfo si;
-    qi::DataStream d(ans.buffer());
+    qi::DataStream  d(msg->buffer());
     d >> si;
-    *idx = si.serviceId();
 
-    for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
-         it != si.endpoints().end();
-         ++it)
+    if (d.status() == qi::DataStream::Status_Ok)
     {
-      qi::Url url(*it);
-
-      if (url.host().compare("0.0.0.0") == 0)
-        qiLogWarning("qimessaging.sessionprivate.servicesocket")
-          << "Service directory return non-valid address for "
-          << name << " : " << url.host() << std::endl;
-
-      if (type == qi::Url::Protocol_Any ||
-          type == url.protocol())
+      sr.serviceId = si.serviceId();
+      for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
+           it != si.endpoints().end();
+           ++it)
       {
-        qi::TransportSocket *ts = NULL;
-        ts = new qi::TransportSocket();
-        ts->connect(_self, url);
-        if (ts->waitForConnected())
-          return ts;
-        else
+        qi::Url url(*it);
+        if (sr.protocol == qi::Url::Protocol_Any || sr.protocol == url.protocol())
         {
-          qiLogVerbose("qimessaging.sessionprivate.servicesocket")
-          << "Fail to connect to " << url.host() << ":" << url.port() << std::endl;
-          delete ts;
+          qi::TransportSocket *ts = NULL;
+          ts = new qi::TransportSocket();
+          ts->setCallbacks(this);
+          {
+            boost::mutex::scoped_lock l(_mutexFuture);
+            _futureConnect[ts] = sr;
+            _futureService.erase(id);
+          }
+          ts->connect(_self, url);
+          return;
         }
       }
     }
-
-    return 0;
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      _futureService.erase(id);
+    }
+    return;
   }
 
-
-  qi::Object* SessionPrivate::service(const std::string &service,
-                                      qi::Url::Protocol  type)
+  void SessionPrivate::serviceMetaobjectEnd(int QI_UNUSED(id),
+                                            qi::TransportSocket *client,
+                                            qi::Message *msg,
+                                            ServiceRequest &sr)
   {
-    qi::Object          *obj;
-    unsigned int serviceId = 0;
-    qi::TransportSocket *ts = serviceSocket(service, &serviceId, type);
+    qi::MetaObject *mo = new qi::MetaObject();
+    qi::DataStream  d(msg->buffer());
+    d >> *mo;
 
-    if (ts == 0)
+    if (d.status() == qi::DataStream::Status_Ok)
     {
-      qiLogError("qi::Session") << "service not found: " << service;
-      return 0;
+      client->setCallbacks(0);
+      qi::RemoteObject *robj = new qi::RemoteObject(client, sr.serviceId, mo);
+      qi::Object *obj;
+      obj = robj;
+      sr.promise.setValue(obj);
     }
+  }
+
+  void SessionPrivate::servicesEnd(qi::TransportSocket *QI_UNUSED(client),
+                                   qi::Message *msg,
+                                   qi::Promise<std::vector<qi::ServiceInfo> > &fut)
+  {
+    std::vector<qi::ServiceInfo> result;
+    qi::DataStream d(msg->buffer());
+    d >> result;
+    if (d.status() == qi::DataStream::Status_Ok)
+      fut.setValue(result);
   }
 
   qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si)
@@ -304,22 +365,29 @@ namespace qi {
     return promise.future();
   }
 
-  qi::Future< qi::TransportSocket* > Session::serviceSocket(const std::string &name,
-                                              unsigned int      *idx,
+  qi::Future< qi::Object * > Session::service(const std::string &service,
                                               qi::Url::Protocol  type)
   {
-    qi::Promise< qi::TransportSocket* > promise;
-    promise.setValue(_p->serviceSocket(name, idx, type));
-    return promise.future();
-  }
+    ServiceRequest sr;
+    qi::Message    msg;
+    qi::Buffer     buf;
 
+    msg.setBuffer(buf);
+    sr.name      = service;
+    sr.protocol  = type;
 
-  qi::Future< qi::Object* > Session::service(const std::string &service,
-                                             qi::Url::Protocol  type)
-  {
-    qi::Promise< qi::Object * > promise;
-    promise.setValue(_p->service(service, type));
-    return promise.future();
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
+    qi::DataStream dr(buf);
+    dr << service;
+    {
+      boost::mutex::scoped_lock l(_p->_mutexFuture);
+      _p->_futureService[msg.id()] = sr;
+    }
+    _p->_serviceSocket->send(msg);
+    return sr.promise.future();
   }
 
   bool Session::join()
@@ -335,5 +403,4 @@ namespace qi {
   qi::Url Session::url() const {
     return _p->_serviceSocket->url();
   }
-
 }

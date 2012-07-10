@@ -31,13 +31,7 @@ namespace qi {
   class SessionPrivate : public qi::TransportSocketInterface {
   public:
     SessionPrivate(qi::Session *session);
-    ~SessionPrivate();
-
-    qi::TransportSocket* serviceSocket(const std::string &name,
-                                       unsigned int      *idx,
-                                       qi::Url::Protocol type);
-    qi::Object* service(const std::string &service,
-                        qi::Url::Protocol type);
+    virtual ~SessionPrivate();
 
     qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si);
     qi::Future<void>            unregisterService(unsigned int idx);
@@ -47,6 +41,10 @@ namespace qi {
     virtual void onSocketDisconnected(TransportSocket *client);
     virtual void onSocketReadyRead(TransportSocket *client, int id);
 
+    void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
+    void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
+    void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
+                     qi::Promise<std::vector<qi::ServiceInfo> > &si);
     void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
 
 
@@ -57,6 +55,8 @@ namespace qi {
     qi::SessionInterface *_callbacks;
 
     boost::mutex                                               _mutexFuture;
+    std::map<int, ServiceRequest>                              _futureService;
+    std::map<void *, ServiceRequest>                           _futureConnect;
     std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > > _futureServices;
     std::map<int, qi::FunctorResult>                           _futureFunctor;
   };
