@@ -41,7 +41,6 @@ namespace qi {
 
     qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si);
     qi::Future<void>            unregisterService(unsigned int idx);
-    std::vector<ServiceInfo> services();
 
     virtual void onSocketConnected(TransportSocket *client);
     virtual void onSocketConnectionError(TransportSocket *client);
@@ -58,6 +57,7 @@ namespace qi {
     qi::SessionInterface *_callbacks;
 
     boost::mutex                                               _mutexFuture;
+    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > > _futureServices;
     std::map<int, qi::FunctorResult>                           _futureFunctor;
   };
 }

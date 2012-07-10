@@ -61,6 +61,21 @@ namespace qi {
     client->read(id, &msg);
 
 
+    // request from services method
+    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >::iterator it2;
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      it2 = _futureServices.find(id);
+    }
+    if (it2 != _futureServices.end())
+    {
+      servicesEnd(client, &msg, it2->second);
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        _futureServices.erase(it2);
+      }
+      return;
+    }
 
     // Request for register/unregister methods
     std::map<int, qi::FunctorResult>::iterator it3;
@@ -274,8 +289,18 @@ namespace qi {
 
   qi::Future< std::vector<ServiceInfo> > Session::services()
   {
-    qi::Promise< std::vector<ServiceInfo> > promise;
-    promise.setValue(_p->services());
+    qi::Promise<std::vector<ServiceInfo> > promise;
+    qi::Message msg;
+
+    msg.setType(qi::Message::Type_Call);
+    msg.setService(qi::Message::Service_ServiceDirectory);
+    msg.setPath(qi::Message::Path_Main);
+    msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
+    {
+      boost::mutex::scoped_lock l(_p->_mutexFuture);
+      _p->_futureServices[msg.id()] = promise;
+    }
+    _p->_serviceSocket->send(msg);
     return promise.future();
   }
 
