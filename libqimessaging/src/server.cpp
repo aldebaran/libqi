@@ -83,17 +83,21 @@ namespace qi {
 
   bool ServerPrivate::setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost)
   {
-    std::stringstream                                 ss;
-    std::string                                       protocol, newEndpoint;
-    std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
+    std::string protocol;
+    std::map<std::string, std::vector<std::string> > ifsMap;
 
-    if (url.host().compare("0.0.0.0") != 0)
-      return (true);
+    _endpoints.clear();
 
+    if (url.host().compare("0.0.0.0") != 0) {
+      _endpoints.push_back(url.str());
+      return true;
+    }
+
+    ifsMap = qi::os::hostIPAddrs();
     if (ifsMap.empty())
     {
       qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
-      return (false);
+      return false;
     }
 #ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
     ifsMap["Loopback"].push_back("127.0.0.1");
@@ -120,20 +124,16 @@ namespace qi {
            addressIt != (*interfaceIt).second.end();
            ++addressIt)
       {
-        newEndpoint.clear();
-        ss.clear();
+        std::stringstream ss;
         ss << protocol;
         ss << (*addressIt);
         ss << ":";
         ss << finalHost.port();
-        ss >> newEndpoint;
-        qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << newEndpoint;
-        if (newEndpoint.compare("") != 0)
-          this->_endpoints.push_back(newEndpoint);
+        qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
+        _endpoints.push_back(ss.str());
        }
     }
-
-    return (true);
+    return true;
   }
 
   bool Server::listen(qi::Session *session, const std::vector<std::string> &endpoints)
