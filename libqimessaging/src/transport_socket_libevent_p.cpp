@@ -226,6 +226,10 @@ namespace qi
     struct evutil_addrinfo  hint;
     char                    portbuf[10];
 
+    if (url.port() == 0) {
+      qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << url.str();
+      return false;
+    }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host() << ":" << url.port();
     if (!isConnected())
     {
