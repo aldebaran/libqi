@@ -73,7 +73,7 @@ namespace qi
     delete _p;
   }
 
-  bool TransportServer::start(qi::Session *session,
+  bool TransportServer::listen(qi::Session *session,
                               const qi::Url &url)
   {
     TransportServerPrivate *save = _p;
@@ -92,12 +92,12 @@ namespace qi
     }
 
     delete save;
-    return start();
+    return listen();
   }
 
-  bool TransportServer::start()
+  bool TransportServer::listen()
   {
-    return _p->start();
+    return _p->listen();
   }
 
   TransportSocket *TransportServer::nextPendingConnection()
@@ -131,6 +131,10 @@ namespace qi
 
   qi::Url TransportServer::listenUrl() const {
     return _p->listenUrl;
+  }
+
+  bool TransportServer::close() {
+    _p->close();
   }
 
 }

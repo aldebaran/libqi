@@ -270,7 +270,7 @@ bool ServiceDirectory::listen(const qi::Url &address)
   _p->ts = new qi::TransportServer(_p->session, address);
   _p->ts->setCallbacks(_p);
 
-  if (_p->ts->start())
+  if (_p->ts->listen())
   {
     return true;
   }
@@ -280,6 +280,10 @@ bool ServiceDirectory::listen(const qi::Url &address)
                                                << address.str() << std::endl;
     return false;
   }
+}
+
+bool ServiceDirectory::close() {
+  return _p->ts->close();
 }
 
 void ServiceDirectory::join()

@@ -79,10 +79,14 @@ namespace qi
     qiLogError("qimessaging.transportserver", "Got an error %d (%s) on the listener.", err, evutil_socket_error_to_string(err));
   }
 
-  bool TransportServerLibEventPrivate::start()
+  bool TransportServerLibEventPrivate::close() {
+    evconnlistener_free(_listener);
+    return true;
+  }
+
+  bool TransportServerLibEventPrivate::listen()
   {
     struct event_base     *base = mainSession->_p->_networkThread->getEventBase();
-    struct evconnlistener *listener;
 
     struct evutil_addrinfo *ai = NULL;
     int                     err;
@@ -119,15 +123,15 @@ namespace qi
     do
     {
       reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port = htons(port);
-      listener = evconnlistener_new_bind(base,
-                                         accept_cb,
-                                         this,
-                                         LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
-                                         -1,
-                                         ai->ai_addr,
-                                         ai->ai_addrlen);
+      _listener = evconnlistener_new_bind(base,
+                                          accept_cb,
+                                          this,
+                                          LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
+                                          -1,
+                                          ai->ai_addr,
+                                          ai->ai_addrlen);
 
-      if (!findPort || (findPort && listener))
+      if (!findPort || (findPort && _listener))
       {
         break;
       }
@@ -136,9 +140,9 @@ namespace qi
     }
     while (port != 0);
 
-    if (listener)
+    if (_listener)
     {
-      evconnlistener_set_error_cb(listener, accept_error_cb);
+      evconnlistener_set_error_cb(_listener, accept_error_cb);
       std::stringstream out;
       out << port;
 
@@ -154,13 +158,12 @@ namespace qi
 
     if (ai)
       evutil_freeaddrinfo(ai);
-    return listener != 0;
+    return _listener != 0;
   }
 
   TransportServerLibEventPrivate::TransportServerLibEventPrivate(qi::Session *session,
                                                                  const qi::Url &url)
     : TransportServerPrivate(session, url)
-    , base(0)
   {
   }
 

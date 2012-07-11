@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 
   int res = RUN_ALL_TESTS();
 
-  srv.stop();
+  srv.close();
   session.disconnect();
   session.waitForDisconnected();
 

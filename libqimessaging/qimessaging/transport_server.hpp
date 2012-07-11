@@ -40,8 +40,10 @@ namespace qi {
 
     void setCallbacks(TransportServerInterface *delegate);
 
-    bool start();
-    bool start(qi::Session *session, const qi::Url &url);
+    bool listen();
+    bool listen(qi::Session *session, const qi::Url &url);
+
+    bool close();
 
     qi::Url listenUrl() const;
 

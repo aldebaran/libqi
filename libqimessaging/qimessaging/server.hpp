@@ -47,7 +47,7 @@ namespace qi {
     /// <param name="address"> the url to listen to. You can use
     /// a port value of 0 to let the system pick an available port.</param>
     bool listen(qi::Session *session, const std::string &address);
-    void stop();
+    void close();
 
     qi::Future<unsigned int> registerService(const std::string &name,
                                              qi::Object *obj);

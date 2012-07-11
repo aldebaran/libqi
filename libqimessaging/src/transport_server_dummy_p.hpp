@@ -25,7 +25,8 @@ namespace qi
     TransportServerDummyPrivate(qi::Session *session,
                                 const qi::Url &url);
     virtual ~TransportServerDummyPrivate();
-    virtual bool start();
+    virtual bool listen();
+    virtual bool close();
 
   private:
     TransportServerDummyPrivate() {};

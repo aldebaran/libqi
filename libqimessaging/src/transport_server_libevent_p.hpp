@@ -20,6 +20,8 @@
 # include <string>
 # include <queue>
 
+struct evconnlistener;
+
 namespace qi
 {
   class TransportServerLibEventPrivate : public TransportServerPrivate
@@ -29,15 +31,16 @@ namespace qi
                                    const qi::Url &url);
     virtual ~TransportServerLibEventPrivate();
 
-    virtual bool start();
+    virtual bool listen();
+    virtual bool close();
 
     void accept(evutil_socket_t        fd,
                 struct evconnlistener *listener);
 
     void accept_error(struct evconnlistener *listener);
 
-    struct event_base *base;
-
+    //struct event_base     *_base;
+    struct evconnlistener *_listener;
   private:
     TransportServerLibEventPrivate() {};
   };

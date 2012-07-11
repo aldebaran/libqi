@@ -20,9 +20,16 @@
 
 namespace qi
 {
-  bool TransportServerDummyPrivate::start()
+  bool TransportServerDummyPrivate::listen()
   {
-    qiLogWarning("TransportServer") << "You are currently running on dummy"
+    qiLogWarning("TransportServer") << "listen: You are currently running on dummy"
+                                    << " TransportServer!";
+    return true;
+  }
+
+  bool TransportServerDummyPrivate::close()
+  {
+    qiLogWarning("TransportServer") << "close: You are currently running on dummy"
                                     << " TransportServer!";
     return true;
   }

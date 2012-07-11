@@ -225,6 +225,9 @@ namespace qi {
 
   Server::~Server()
   {
+    if (_p->_ts)
+      delete _p->_ts;
+    _p->_ts = 0;
     delete _p;
   }
 
@@ -293,7 +296,7 @@ namespace qi {
     case Url::Protocol_Tcp:
       _p->_ts = new qi::TransportServer(session, url);
       _p->_ts->setCallbacks(_p);
-      if (!_p->_ts->start())
+      if (!_p->_ts->listen())
         return false;
       break;
     case Url::Protocol_TcpSsl:
@@ -370,8 +373,8 @@ namespace qi {
     return future;
   };
 
-  void Server::stop() {
-    qiLogError("qimessaging.Server") << "stop is not implemented";
+  void Server::close() {
+    _p->_ts->close();
   }
 
   std::vector<qi::ServiceInfo> Server::registeredServices() {

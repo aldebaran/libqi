@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
       session.join();
 
       srv.unregisterService(id);
-      srv.stop();
+      srv.close();
       session.disconnect();
     }
     else

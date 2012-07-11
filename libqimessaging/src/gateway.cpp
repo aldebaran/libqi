@@ -301,7 +301,7 @@ bool GatewayPrivate::listen(const Url &address)
   _endpoints.push_back(address.str());
   _transportServer = new qi::TransportServer(&_session, address);
   _transportServer->setCallbacks(this);
-  return _transportServer->start();
+  return _transportServer->listen();
 }
 
 bool GatewayPrivate::connect(const qi::Url &connectURL)

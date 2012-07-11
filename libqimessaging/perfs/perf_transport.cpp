@@ -125,7 +125,7 @@ int main_server()
 
   session.join();
 
-  srv.stop();
+  srv.close();
   session.disconnect();
 
   return 0;
