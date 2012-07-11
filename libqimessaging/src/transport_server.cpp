@@ -134,7 +134,7 @@ namespace qi
   }
 
   bool TransportServer::close() {
-    _p->close();
+    return _p->close();
   }
 
 }
