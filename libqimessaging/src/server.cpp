@@ -309,6 +309,7 @@ namespace qi {
       //TODO: cleanup...
       return false;
     }
+    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
     return true;
   }
 

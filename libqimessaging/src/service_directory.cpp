@@ -272,6 +272,8 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
   if (_p->ts->listen())
   {
+    qiLogVerbose("qimessaging.ServiceDirectory") << "Started ServiceDirectory at " << _p->ts->listenUrl().str();
+
     return true;
   }
   else

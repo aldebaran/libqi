@@ -147,12 +147,12 @@ namespace qi
       out << port;
 
       listenUrl = "tcp://" + listenUrl.host() + ":" + out.str();
-      qiLogVerbose("qimessaging.transportserver") << "Starting server at "
+      qiLogVerbose("qimessaging.transportserver") << "Started TransportServer at "
                                                   << listenUrl.str();
     }
     else
     {
-      qiLogError("qimessaging.transportserver") << "Could not start server at "
+      qiLogError("qimessaging.transportserver") << "Could not start TransportServer at "
                                                 << listenUrl.str();
     }
 
