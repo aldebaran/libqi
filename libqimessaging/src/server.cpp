@@ -32,8 +32,7 @@ namespace qi {
     virtual void onFutureFinished(const unsigned int &future,
                                   void *data);
     virtual void onFutureFailed(const std::string &error, void *data);
-    bool         setSuitableEndpoints(const qi::Url &url,
-                                      const qi::Url &finalHost);
+    bool         setSuitableEndpoints(const qi::Url &url);
   public:
     // (service, linkId)
     struct RemoteLink
@@ -231,7 +230,7 @@ namespace qi {
     delete _p;
   }
 
-  bool ServerPrivate::setSuitableEndpoints(const qi::Url &url, const qi::Url &finalHost)
+  bool ServerPrivate::setSuitableEndpoints(const qi::Url &url)
   {
     std::string protocol;
     std::map<std::string, std::vector<std::string> > ifsMap;
@@ -278,7 +277,7 @@ namespace qi {
         ss << protocol;
         ss << (*addressIt);
         ss << ":";
-        ss << finalHost.port();
+        ss << url.port();
         qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
         _endpoints.push_back(ss.str());
        }
@@ -305,7 +304,7 @@ namespace qi {
     default:
       return false;
     }
-    if (!_p->setSuitableEndpoints(url, _p->_ts->listenUrl())) {
+    if (!_p->setSuitableEndpoints(_p->_ts->listenUrl())) {
       //TODO: cleanup...
       return false;
     }
