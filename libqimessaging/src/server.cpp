@@ -29,10 +29,9 @@ namespace qi {
     virtual void newConnection();
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketDisconnected(TransportSocket *client);
-    virtual void onFutureFinished(const Future<unsigned int> &future,
+    virtual void onFutureFinished(const unsigned int &future,
                                   void *data);
-    virtual void onFutureFailed(const Future<unsigned int> &future,
-                                void *data);
+    virtual void onFutureFailed(const std::string &error, void *data);
     bool         setSuitableEndpoints(const qi::Url &url,
                                       const qi::Url &finalHost);
   public:
@@ -180,8 +179,7 @@ namespace qi {
 
   };
 
-  void ServerPrivate::onFutureFailed(const Future<unsigned int> &future,
-                                     void                       *data)
+  void ServerPrivate::onFutureFailed(const std::string &error, void *data)
   {
     qi::ServiceInfo si;
     qi::Object     *obj = static_cast<qi::Object *>(data);
@@ -191,11 +189,10 @@ namespace qi {
       _servicesObject.erase(it);
   }
 
-  void ServerPrivate::onFutureFinished(const Future<unsigned int> &future,
-                                       void                       *data)
+  void ServerPrivate::onFutureFinished(const unsigned int &idx,
+                                       void               *data)
   {
     qi::Object     *obj = static_cast<qi::Object *>(data);
-    unsigned int    idx = future.value();
     qi::ServiceInfo si;
     std::map<qi::Object *, qi::ServiceInfo>::iterator it;
 

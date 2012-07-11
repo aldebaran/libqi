@@ -79,6 +79,14 @@ namespace qi {
       return _p->_error;
     }
 
+
+    void FutureBase::reset() {
+      boost::mutex::scoped_lock lock(_p->_mutex);
+      _p->_isReady = false;
+      _p->_error = std::string();
+      _p->_hasError = false;
+    }
+
   }
 
 }

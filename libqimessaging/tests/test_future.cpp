@@ -18,23 +18,23 @@ static std::string gGlobalE("");
 
 class TestFutureI : public qi::FutureInterface<int> {
 public:
-  void onFutureFinished(const qi::Future<int> &future, void *QI_UNUSED(data)) {
-    gGlobalI = future.value();
+  void onFutureFinished(const int &future, void *QI_UNUSED(data)) {
+    gGlobalI = future;
   }
 
-  void onFutureFailed(const qi::Future<int> &future, void *QI_UNUSED(data)) {
-    gGlobalE = future.error();
+  void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
+    gGlobalE = error;
   }
 };
 
 class TestFutureS : public qi::FutureInterface<std::string> {
 public:
-  void onFutureFinished(const qi::Future<std::string> &future, void *QI_UNUSED(data)) {
-    gGlobalS = future.value();
+  void onFutureFinished(const std::string &future, void *QI_UNUSED(data)) {
+    gGlobalS = future;
   }
 
-  void onFutureFailed(const qi::Future<std::string> &future, void *QI_UNUSED(data)) {
-    gGlobalE = future.error();
+  void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
+    gGlobalE = error;
   }
 };
 

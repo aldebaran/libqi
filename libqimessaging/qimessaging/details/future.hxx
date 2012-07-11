@@ -21,11 +21,11 @@ namespace qi {
       bool isReady() const;
       bool hasError() const;
       const std::string &error() const;
+      void reset();
 
     protected:
       void reportReady();
       void reportError(const std::string &message);
-
     public:
       FutureBasePrivate *_p;
     };
@@ -45,18 +45,18 @@ namespace qi {
       void setValue(const T &value)
       {
         _value = value;
-        reportReady();
         if (_callback) {
-          _callback->onFutureFinished(*_self, _data);
+          _callback->onFutureFinished(_value, _data);
         }
+        reportReady();
       }
 
       void setError(const std::string &message)
       {
-        reportError(message);
         if (_callback) {
-          _callback->onFutureFailed(*_self, _data);
+          _callback->onFutureFailed(message, _data);
         }
+        reportError(message);
       }
 
       void setCallback(FutureInterface<T> *p_interface, void *data) {
@@ -91,18 +91,18 @@ namespace qi {
 
       void setValue(const void *QI_UNUSED(value))
       {
-        reportReady();
         if (_callback) {
-            _callback->onFutureFinished(*_self, _data);
-          }
+            _callback->onFutureFinished(_data);
+        }
+        reportReady();
       }
 
       void setError(const std::string &message)
       {
-        reportError(message);
         if (_callback) {
-          _callback->onFutureFailed(*_self, _data);
+          _callback->onFutureFailed(message, _data);
         }
+        reportError(message);
       }
 
       void setCallback(FutureInterface<void> *p_interface, void *data) {
@@ -157,6 +157,10 @@ namespace qi {
 
     void setError(const std::string &message) {
       _f._p->setError(message);
+    }
+
+    void reset() {
+      _f._p->reset();
     }
 
     Future<void> future() { return _f; }

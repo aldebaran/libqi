@@ -31,8 +31,16 @@ namespace qi {
   class FutureInterface {
   public:
     virtual ~FutureInterface() = 0;
-    virtual void onFutureFinished(const Future<T> &future, void *data) = 0;
-    virtual void onFutureFailed(const Future<T> &future, void *data) = 0;
+    virtual void onFutureFinished(const T &future, void *data) = 0;
+    virtual void onFutureFailed(const std::string &error, void *data) = 0;
+  };
+
+  template <>
+  class FutureInterface<void> {
+  public:
+    virtual ~FutureInterface() = 0;
+    virtual void onFutureFinished(void *data) = 0;
+    virtual void onFutureFailed(const std::string &error, void *data) = 0;
   };
 
   //pure virtual destructor need an implementation
@@ -81,6 +89,10 @@ namespace qi {
 
     void setError(const std::string &msg) {
       _f._p->setError(msg);
+    }
+
+    void reset() {
+      _f._p->reset();
     }
 
     Future<T> future() { return _f; }
