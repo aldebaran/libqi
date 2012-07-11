@@ -196,7 +196,8 @@ namespace qi {
             _futureConnect[ts] = sr;
             _futureService.erase(id);
           }
-          ts->connect(_self, url);
+          if (!ts->connect(_self, url))
+            sr.promise.setError("Connection error");
           return;
         }
       }
