@@ -287,4 +287,9 @@ void ServiceDirectory::join()
   _p->nthd->join();
 }
 
+qi::Url ServiceDirectory::listenUrl() const {
+  return _p->ts->listenUrl();
+}
+
+
 }; // !qi

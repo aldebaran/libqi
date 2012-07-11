@@ -23,6 +23,7 @@ namespace qi
 
     bool listen(const qi::Url &listenAddress);
     void join();
+    qi::Url listenUrl() const;
 
   private:
     ServiceDirectoryPrivate *_p;
