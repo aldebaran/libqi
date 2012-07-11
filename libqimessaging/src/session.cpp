@@ -135,6 +135,7 @@ namespace qi {
       }
       return;
     }
+    qiLogError("qimessaging") << "Session::Private: onSocketReadyRead: unknow message id";
   }
 
   void SessionPrivate::serviceRegisterUnregisterEnd(int id,
@@ -149,16 +150,22 @@ namespace qi {
 
     switch (msg->type())
     {
-      case qi::Message::Type_Reply:
-        promise.setValue(msg->buffer());
-        break;
-      case qi::Message::Type_Event:
-        promise.setValue(msg->buffer());
-        break;
-      default:
+    case qi::Message::Type_Reply:
+      promise.setValue(msg->buffer());
+      break;
+    case qi::Message::Type_Event:
+      promise.setValue(msg->buffer());
+      break;
+    default:
+      {
+        qi::Buffer b;
+        qi::DataStream ds(b);
+        ds << "Bad message type";
+        promise.setError(b);
         qiLogError("qimessaging.sessionprivate") << "Message (#" << id << ") type not handled: "
-            << msg->type();
+                                                 << msg->type();
         return;
+      }
     }
   }
 
@@ -196,6 +203,7 @@ namespace qi {
     }
     {
       boost::mutex::scoped_lock l(_mutexFuture);
+      _futureService[id].promise.setError("No service found");
       _futureService.erase(id);
     }
     return;
@@ -217,18 +225,22 @@ namespace qi {
       qi::Object *obj;
       obj = robj;
       sr.promise.setValue(obj);
+    } else {
+      sr.promise.setError("Serialization error");
     }
   }
 
   void SessionPrivate::servicesEnd(qi::TransportSocket *QI_UNUSED(client),
                                    qi::Message *msg,
-                                   qi::Promise<std::vector<qi::ServiceInfo> > &fut)
+                                   qi::Promise<std::vector<qi::ServiceInfo> > &promise)
   {
     std::vector<qi::ServiceInfo> result;
     qi::DataStream d(msg->buffer());
     d >> result;
     if (d.status() == qi::DataStream::Status_Ok)
-      fut.setValue(result);
+      promise.setValue(result);
+    else
+      promise.setError("Serialization error");
   }
 
   qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si)
@@ -269,6 +281,10 @@ namespace qi {
             << si.name() << " request";
         ret.setError(buf);
       }
+    } else {
+      qi::Promise<unsigned int> prom;
+      future = prom.future();
+      prom.setError("serialization error");
     }
     return future;
   }
