@@ -44,21 +44,28 @@ protected:
   virtual void newConnection();
 
   //SocketInterface
-  virtual void onSocketReadyRead(TransportSocket    *client, int id);
-  virtual void onSocketConnected(TransportSocket    *client);
+  virtual void onSocketReadyRead(TransportSocket *client, int id);
+  virtual void onSocketConnected(TransportSocket *client);
 
 public:
   std::vector<std::string>           _endpoints;
   Type                               _type;
   TransportServer                   *_transportServer;
-  qi::Session                        _session;
+  Session                            _session;
 
+  /* Map from ServiceId to associated TransportSocket */
   std::map< unsigned int, qi::TransportSocket* > _services;
+
+  /* Vector of all the TransportSocket of the clients */
   std::vector<TransportSocket*>                  _clients;
-  //for each service socket, associated if request to a client socket. 0 mean gateway
-  std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > >                 _serviceToClient;
-  std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >                  _pendingMessage;
-}; // !GatewayPrivate
+
+  /* For each service, map a received Message and its TransportSocket to the rewritten id */
+  std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > > _serviceToClient;
+
+  /* Map of vectors of pending messages for each service */
+  std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >  _pendingMessage;
+
+};
 
 void GatewayPrivate::newConnection()
 {
