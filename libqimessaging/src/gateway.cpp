@@ -23,27 +23,23 @@ namespace qi
 class GatewayPrivate: public TransportServerInterface, public TransportSocketInterface
 {
 public:
+  enum Type
+  {
+    Type_LocalGateway   = 1,
+    Type_ReverseGateway = 2,
+    Type_RemoteGateway  = 3,
+  };
 
-  typedef std::vector< std::pair<qi::Message*, TransportSocket *> > PendingMessageVector;
-  typedef std::map< unsigned int, PendingMessageVector >           PendingMessageMap;
-
-  typedef std::map< int, std::pair<int, TransportSocket *> > ClientRequestIdMap;
-  typedef std::map< TransportSocket *, ClientRequestIdMap >  ServiceRequestIdMap;
-
-  typedef std::map< unsigned int, qi::TransportSocket * > ServiceSocketMap;
-
-  bool attachToServiceDirectory(const qi::Url &address);
-  bool listen(const qi::Url &address);
-  bool connect(const qi::Url &address);
+  bool attachToServiceDirectory(const Url &address);
+  bool listen(const Url &address);
+  bool connect(const Url &address);
   void join();
 
 protected:
+  void handleMsgFromClient(TransportSocket *client, qi::Message *msg);
+  void handleMsgFromService(TransportSocket *service, qi::Message *msg);
+  void forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg);
 
-  void handleClientRead(TransportSocket     *client,  qi::Message *msg);
-  void handleServiceRead(TransportSocket    *service, qi::Message *msg);
-  void forwardClientMessage(TransportSocket *client,
-                            TransportSocket *service,
-                            qi::Message     *msg);
   //ServerInterface
   virtual void newConnection();
 
@@ -51,18 +47,17 @@ protected:
   virtual void onSocketReadyRead(TransportSocket    *client, int id);
   virtual void onSocketConnected(TransportSocket    *client);
 
-
 public:
-  ServiceSocketMap                   _services;
-  std::vector<qi::TransportSocket *> _clients;
   std::vector<std::string>           _endpoints;
+  Type                               _type;
   TransportServer                   *_transportServer;
-  TransportSocket                   *_socketToServiceDirectory;
   qi::Session                        _session;
 
+  std::map< unsigned int, qi::TransportSocket* > _services;
+  std::vector<TransportSocket*>                  _clients;
   //for each service socket, associated if request to a client socket. 0 mean gateway
-  ServiceRequestIdMap                _serviceToClient;
-  PendingMessageMap                  _pendingMessage;
+  std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > >                 _serviceToClient;
+  std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >                  _pendingMessage;
 }; // !GatewayPrivate
 
 void GatewayPrivate::newConnection()
@@ -74,96 +69,74 @@ void GatewayPrivate::newConnection()
   _clients.push_back(socket);
 }
 
-void GatewayPrivate::forwardClientMessage(TransportSocket *client,
-                                          TransportSocket *service,
-                                          qi::Message     *msg)
+void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg)
 {
   // Create new message with unique ID
-  qi::Message  msgToService;
+  Message  msgToService;
   msgToService.setBuffer(msg->buffer());
   msgToService.buildForwardFrom(*msg);
 
   // Store message to map call msg with return msg from the service
-  ClientRequestIdMap &reqIdMap = _serviceToClient[service];
+  std::map< int, std::pair<int, TransportSocket *> > &reqIdMap = _serviceToClient[service];
   reqIdMap[msgToService.id()] = std::make_pair(msg->id(), client);
 
   // Send to the service
   service->send(msgToService);
 }
 
-//From Client
-// C.1/ new message from client to know services         => forward to service, enter S.3 or S.1
-// C.2/ new message from client to unknown destination   => put msg in pending queue, enter S.2
-void GatewayPrivate::handleClientRead(TransportSocket *client,
-                                      qi::Message     *msg)
+/*
+ * The message comes from a client. Two cases:
+ * C1: the destination service is already known, we can forward the message.
+ * C2: the destination service is unknown, we try to establish connection,
+ *     and we enqueue the message, which will be sent in S2.
+ */
+void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
 {
   // Search service
-  std::map<unsigned int, qi::TransportSocket*>::iterator it;
-  it = _services.find(msg->service());
+  std::map<unsigned int, TransportSocket*>::iterator it = _services.find(msg->service());
 
-  //// C.1/
+  /* C1 */
   if (it != _services.end() && it->second->isConnected())
   {
     forwardClientMessage(client, it->second, msg);
     return;
   }
-  else  //// C.2/
+  /* C2 */
+  else
   {
-    // request to gateway to have the endpoint
-    qi::Message sdMsg;
-    qi::DataStream d(sdMsg.buffer());
+    /*
+     * The service is unknown to the Gateway. We will have to query
+     * the Service Directory.
+     */
+    Message sdMsg;
+    DataStream d(sdMsg.buffer());
     d << msg->service();
-
-    // The message comes from a gateway which wants to establish connection.
-    if (msg->service() == qi::Message::Service_None &&
-        msg->function() == qi::Message::GatewayFunction_Connect)
-    {
-      // The socket was previously added to the client map instead of Service
-      std::vector<qi::TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), client);
-      _clients.erase(it);
-      _socketToServiceDirectory = client;
-      _services[qi::Message::Service_ServiceDirectory] = _socketToServiceDirectory;
-      return;
-    }
 
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
-    sdMsg.setType(qi::Message::Type_Call);
-    sdMsg.setService(qi::Message::Service_ServiceDirectory);
-    sdMsg.setPath(qi::Message::Path_Main);
-    sdMsg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
+    sdMsg.setType(Message::Type_Call);
+    sdMsg.setService(Message::Service_ServiceDirectory);
+    sdMsg.setPath(Message::Path_Main);
+    sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
 
-    ClientRequestIdMap &reqIdMap = _serviceToClient[_socketToServiceDirectory];
-    reqIdMap[sdMsg.id()] = std::make_pair(0, (qi::TransportSocket*)NULL);
+    _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, (TransportSocket*) 0);
 
-    // store the pending message
-    PendingMessageMap::iterator itPending;
-    itPending = _pendingMessage.find(msg->service());
-    if (itPending == _pendingMessage.end())
-    {
-      PendingMessageVector pendingMsg;
-      pendingMsg.push_back(std::make_pair(msg, client));
-      _pendingMessage[msg->service()] = pendingMsg;
-    }
-    else
-    {
-      PendingMessageVector &pendingMsg = itPending->second;
-      pendingMsg.push_back(std::make_pair(msg, client));
-    }
-    _socketToServiceDirectory->send(sdMsg);
+    // store the pending message until connection to the service is established (S2)
+    _pendingMessage[msg->service()].push_back(std::make_pair(msg, client));
+
+    _services[Message::Service_ServiceDirectory]->send(sdMsg);
 
     return;
   }
 }
 
-//From Service
 // S.1/ New message from sd for us => Change endpoint (gateway), enter S.3
 // S.2/ New service connected          => forward pending msg to service, enter S.3
 // S.3/ New message from service       => forward to client, (end)
-void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *msg)
+void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg)
 {
   // get the map of request => client
-  ServiceRequestIdMap::iterator it;
+  std::map< TransportSocket *, std::map< int, std::pair<int, TransportSocket *> > >::iterator it;
   it = _serviceToClient.find(service);
   // Must not fail
   if (it == _serviceToClient.end())
@@ -172,15 +145,15 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
     return;
   }
 
-  ClientRequestIdMap &request = it->second;
-  ClientRequestIdMap::const_iterator itReq;
+  std::map< int, std::pair<int, TransportSocket *> > &request = it->second;
+  std::map< int, std::pair<int, TransportSocket *> >::const_iterator itReq;
   itReq = request.find(msg->id());
   if (itReq != request.end())
   {
     //// S.1/
-    if (msg->service() == qi::Message::Service_ServiceDirectory &&
-        msg->function() == qi::Message::ServiceDirectoryFunction_Service &&
-        msg->type() == qi::Message::Type_Reply)
+    if (msg->service() == Message::Service_ServiceDirectory &&
+        msg->function() == Message::ServiceDirectoryFunction_Service &&
+        msg->type() == Message::Type_Reply)
     {
       // Get serviceId
       ServiceInfo    result;
@@ -188,17 +161,17 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
       ds >> result;
 
       // save address of the new service
-      qi::Url url(result.endpoints()[0]);
+      std::vector<std::string> endpoints = result.endpoints();
       // Construct reply with serviceId
       // and gateway endpoint
       result.setEndpoints(_endpoints);
 
       // create new message for the client
-      qi::Message  ans;
-      qi::Buffer   buf;
+      Message  ans;
+      Buffer   buf;
       ans.setBuffer(buf);
       ans.buildReplyFrom(*msg);
-      qi::DataStream dsAns(buf);
+      DataStream dsAns(buf);
       dsAns << result;
 
       // id should be rewritten then sent to the client
@@ -208,24 +181,32 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
       unsigned int serviceId = result.serviceId();
 
       // Check if the gateway is connected to the requested service
-      std::map<unsigned int, qi::TransportSocket*>::const_iterator it;
+      std::map<unsigned int, TransportSocket*>::const_iterator it;
       it = _services.find(serviceId);
       // Service connected
       if (it != _services.end())
         return;
 
-      // Connected to the service
-      qi::TransportSocket *servSocket = new qi::TransportSocket();
-      servSocket->connect(&_session, url);
-      servSocket->setCallbacks(this);
-      _services[serviceId] = servSocket;
+      if (_type == Type_RemoteGateway)
+      {
+        _services[serviceId] = _services[Message::Service_ServiceDirectory];
+      }
+      else
+      {
+        qi::Url url(endpoints[0]);
+        // Connect to the service
+        TransportSocket *service = new TransportSocket();
+        service->connect(&_session, url);
+        service->setCallbacks(this);
+        _services[serviceId] = service;
+      }
 
-      return; //// jump to S.2
+      // We will be called back when the connection is established (S2).
     }
     else //// S.3/
     {
       // id should be rewritten then sent to the client
-      qi::Message ans;
+      Message ans;
       ans.setBuffer(msg->buffer());
       ans.buildReplyFrom(*msg);
       ans.setId(itReq->second.first);
@@ -234,52 +215,82 @@ void GatewayPrivate::handleServiceRead(TransportSocket *service, qi::Message *ms
   }
 }
 
-void GatewayPrivate::onSocketReadyRead(TransportSocket *client, int id)
+/*
+ * Called for any incoming message.
+ */
+void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
 {
   qi::Message msg;
-  client->read(id, &msg);
-  // Dispatch request coming from client or service
-  if (std::find(_clients.begin(), _clients.end(), client) != _clients.end())
-    handleClientRead(client, &msg);  // Client
+  socket->read(id, &msg);
+
+  /*
+   * A ReverseGateway connected. This is our endpoint for the Service
+   * Directory.
+   * A RemoteGateway can be connected to only one ReverseGateway.
+   */
+  if (msg.service() == Message::Service_None &&
+      msg.function() == Message::GatewayFunction_Connect)
+  {
+    /*
+     * Since the ReverseGateway connected itself to the RemoteGateway,
+     * it is known as a client. We need to fix it by removing its
+     * TransportSocket fro the _clients vector.
+     */
+    std::vector<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
+    _clients.erase(it);
+
+    if (_services.find(Message::Service_ServiceDirectory) == _services.end())
+    {
+      _services[Message::Service_ServiceDirectory] = socket;
+    }
+    else
+    {
+      qiLogError("gateway") << "Already connected to Service Directory";
+    }
+
+    return; // nothing more to do here
+  }
+
+  /*
+   * Routing will depend on where the package comes from.
+   */
+  if (std::find(_clients.begin(), _clients.end(), socket) != _clients.end())
+  {
+    handleMsgFromClient(socket, &msg);
+  }
   else
-    handleServiceRead(client, &msg); // Service
+  {
+    handleMsgFromService(socket, &msg);
+  }
 }
 
+/*
+ * Callback triggered when Gateway or ReverseGateway have established
+ * a connection to the ServiceDirectory or to another service.
+ */
 // S.2/
 void GatewayPrivate::onSocketConnected(TransportSocket *service)
 {
-  if (service == _socketToServiceDirectory)
-    return;
-
-  unsigned int serviceId;
-  ServiceSocketMap::const_iterator it;
-
-  //TODO: optimise?  O(log(n)) instead O(n)
-  for (it = _services.begin(); it != _services.end(); ++it)
+  for (std::map< unsigned int, TransportSocket * >::const_iterator it = _services.begin();
+       it != _services.end();
+       ++it)
   {
-    if (static_cast<TransportSocket *>(it->second) == service)
+    // handle pending messages
+    if (it->second == service)
     {
-      serviceId = it->first;
-      break;
+      unsigned int serviceId = it->first;
+      std::vector< std::pair<qi::Message*, TransportSocket*> >  &pmv = _pendingMessage[serviceId];
+      std::vector< std::pair<qi::Message*, TransportSocket*> > ::iterator itPending;
+
+      for (itPending = pmv.begin(); itPending != pmv.end(); ++itPending)
+      {
+        forwardClientMessage(itPending->second, service, itPending->first);
+      }
+      return;
     }
   }
 
-  if (it == _services.end())
-  {
-    qiLogError("Gateway", "Cannot find any service!\n");
-    return;
-  }
-
-  //handle pending message
-  PendingMessageVector &pmv = _pendingMessage[serviceId];
-  PendingMessageVector::iterator itPending;
-
-  for (itPending = pmv.begin(); itPending != pmv.end(); ++itPending)
-  {
-    TransportSocket *client = itPending->second;
-    qi::Message *msg = itPending->first;
-    forwardClientMessage(client, service, msg);
-  }
+  qiLogError("gateway") << "Unknown service TransportSocket " << service;
 }
 
 bool GatewayPrivate::attachToServiceDirectory(const Url &address)
@@ -287,11 +298,11 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   _session.connect(address);
   _session.waitForConnected();
 
-  _socketToServiceDirectory = new qi::TransportSocket();
-  _socketToServiceDirectory->connect(&_session, address);
-  _socketToServiceDirectory->setCallbacks(this);
-  _socketToServiceDirectory->waitForConnected();
-  _services[qi::Message::Service_ServiceDirectory] = _socketToServiceDirectory;
+  TransportSocket *sdSocket = new qi::TransportSocket();
+  _services[qi::Message::Service_ServiceDirectory] = sdSocket;
+  sdSocket->connect(&_session, address);
+  sdSocket->setCallbacks(this);
+  sdSocket->waitForConnected();
 
   return true;
 }
@@ -360,6 +371,7 @@ void GatewayPrivate::join()
 Gateway::Gateway()
   : _p(new GatewayPrivate())
 {
+  _p->_type = GatewayPrivate::Type_LocalGateway;
 }
 
 Gateway::~Gateway()
@@ -386,6 +398,7 @@ void Gateway::join()
 RemoteGateway::RemoteGateway()
   : _p(new GatewayPrivate())
 {
+  _p->_type = GatewayPrivate::Type_RemoteGateway;
 }
 
 RemoteGateway::~RemoteGateway()
@@ -407,6 +420,7 @@ void RemoteGateway::join()
 ReverseGateway::ReverseGateway()
   : _p(new GatewayPrivate())
 {
+  _p->_type = GatewayPrivate::Type_ReverseGateway;
 }
 
 ReverseGateway::~ReverseGateway()
