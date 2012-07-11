@@ -12,54 +12,96 @@
 #include <qimessaging/server.hpp>
 #include <qimessaging/service_directory.hpp>
 
-static int lastPayload = 0;
-static unsigned int msDelay = 200;
+static qi::Promise<int> *payload;
 
 void onFire(const int& pl)
 {
-  lastPayload = pl;
+  std::cout << "onFire:" << pl << std::endl;
+  std::cout.flush();
+  payload->setValue(pl);
 }
 
-qi::Object        oserver;
-static void setupServer(const std::string& sd)
+class TestObject: public ::testing::Test
 {
-  qi::Session&       session = *new qi::Session();
-  qi::Server&        srv = *new qi::Server();
-  oserver.advertiseEvent<void (*)(int)>("fire");
-  session.connect(sd);
-  session.waitForConnected();
-  srv.listen(&session, "tcp://0.0.0.0:0");
-  srv.registerService("coin", &oserver);
-  EXPECT_EQ(1U, srv.registeredServices().size());
-}
-TEST(TestObject, Simple)
-{
-  qi::ServiceDirectory sd;
-  unsigned int sdPort = qi::os::findAvailablePort(5555);
-  std::stringstream sdAddr;
-  sdAddr << "tcp://127.0.0.1:" << sdPort;
-  sd.listen(sdAddr.str());
-  setupServer(sdAddr.str());
-  qi::Session client;
-  client.connect(sdAddr.str());
-  client.waitForConnected();
-  std::vector<qi::ServiceInfo> services = client.services();
+public:
+  TestObject()
+  {
+  }
+
+protected:
+  void SetUp()
+  {
+    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:9559"));
+    ASSERT_TRUE(session.connect(sd.listenUrl()));
+    ASSERT_TRUE(session.waitForConnected());
+
+    oserver.advertiseEvent<void (*)(const int&)>("fire");
+
+    ASSERT_TRUE(srv.listen(&session, "tcp://0.0.0.0:0"));
+    ASSERT_GT(srv.registerService("coin", &oserver).wait(), 0);
+    EXPECT_EQ(1U, srv.registeredServices().size());
+
+    ASSERT_TRUE(sclient.connect(sd.listenUrl()));
+    ASSERT_TRUE(sclient.waitForConnected());
+    std::vector<qi::ServiceInfo> services = sclient.services();
     EXPECT_EQ(2U, services.size());
-  qi::Object* oclient = client.service("coin");
+    oclient = sclient.service("coin");
+    payload = &prom;
+  }
 
+  void TearDown()
+  {
+    payload = 0;
+    sclient.disconnect();
+    srv.close();
+    session.disconnect();
+    sd.close();
+  }
+
+public:
+  qi::Promise<int>     prom;
+  qi::ServiceDirectory sd;
+  qi::Session          session;
+  qi::Server           srv;
+  qi::Object           oserver;
+  qi::Session          sclient;
+  qi::Object          *oclient;
+};
+
+
+TEST_F(TestObject, Simple)
+{
+  int linkId = oclient->connect("fire", &onFire);
+  qi::os::msleep(800);
+  EXPECT_LT(0, linkId);
+  oserver.emitEvent("fire", 42);
+  ASSERT_TRUE(payload->future().wait(2000));
+  EXPECT_EQ(42, payload->future().value());
+}
+
+
+TEST_F(TestObject, CoDeco)
+{
   for (unsigned i=0; i<5; ++i)
   {
+    payload->reset();
     int linkId = oclient->connect("fire", &onFire);
-    qi::os::msleep(msDelay);
-    oserver.emitEvent("fire", 42);
-    qi::os::msleep(msDelay);
-    EXPECT_EQ(42, lastPayload);
-    oserver.emitEvent("fire", 51);
-    qi::os::msleep(msDelay);
-    EXPECT_EQ(51, lastPayload);
+    qi::os::msleep(800);
+    EXPECT_GE(linkId, 0);
+    oserver.emitEvent("fire", (int)(50 + i));
+    ASSERT_TRUE(payload->future().wait(2000));
+    EXPECT_EQ(50 + i, payload->future().value());
+
+    payload->reset();
+    oserver.emitEvent("fire", (int)(51 + i));
+    ASSERT_TRUE(payload->future().wait(2000));
+    EXPECT_EQ(51+i, payload->future().value());
+
     oclient->disconnect(linkId);
-    oserver.emitEvent("fire", 42);
-    qi::os::msleep(msDelay);
-    EXPECT_EQ(51, lastPayload);
+
+    payload->reset();
+    oserver.emitEvent("fire", (int)(50 + i));
+    ASSERT_FALSE(payload->future().wait(200));
   }
 }
+
