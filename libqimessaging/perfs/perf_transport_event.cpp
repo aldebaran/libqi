@@ -159,7 +159,6 @@ private:
 
 int main_client(std::string QI_UNUSED(str))
 {
-  unsigned int serviceId;
   qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
