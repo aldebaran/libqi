@@ -4,6 +4,7 @@
 */
 
 #include <src/metaevent_p.hpp>
+#include <qimessaging/object.hpp>
 
 namespace qi {
 

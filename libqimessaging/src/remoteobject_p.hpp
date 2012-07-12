@@ -28,7 +28,7 @@ namespace qi {
     virtual void onSocketTimeout(TransportSocket *client, int id);
     virtual void metaCall(unsigned int method, const qi::FunctorParameters &in, qi::FunctorResult out);
     virtual void metaEmit(unsigned int event, const FunctorParameters &args);
-    virtual unsigned int connect(unsigned int event, const Functor* functor);
+    virtual unsigned int connect(unsigned int event, const MetaEvent::Subscriber& sub);
     virtual bool disconnect(unsigned int linkId);
   protected:
     qi::TransportSocket                           *_ts;

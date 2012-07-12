@@ -130,10 +130,10 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   qiLogError("Not implemented yet lol");
 }
 
-unsigned int RemoteObject::connect(unsigned int event, const Functor* functor)
+unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscriber& sub)
 {
   // Bind the function locally.
-  unsigned int uid = Object::connect(event, functor);
+  unsigned int uid = Object::connect(event, sub);
   // Notify the Service that we are interested in its event.
   // Provide our uid as payload
   qi::Message msg;

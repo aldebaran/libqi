@@ -7,6 +7,7 @@
 #include <string>
 #include <qimessaging/api.hpp>
 #include <qimessaging/details/makefunctor.hpp>
+#include <qimessaging/metaevent.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 
@@ -15,6 +16,7 @@
 
 namespace qi {
 
+  class Object;
   class MetaEventPrivate {
   public:
     explicit MetaEventPrivate(const std::string &sig);
@@ -25,13 +27,7 @@ namespace qi {
     const std::string &signature() const { return _signature; }
     unsigned int      index() const { return _idx; }
 
-    struct Subscriber
-    {
-      const Functor* handler;
-    };
-    // Subscriber indexed by link id for one given event
-    typedef std::map<unsigned int, Subscriber> Subscribers;
-
+    typedef std::map<unsigned int, MetaEvent::Subscriber> Subscribers;
   protected:
   public:
     Subscribers        _subscribers;

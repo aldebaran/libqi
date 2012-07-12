@@ -125,8 +125,11 @@ namespace qi {
     template <typename FUNCTOR_TYPE>
     unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback);
     unsigned int xConnect(const std::string &signature, const Functor* functor);
+    unsigned int connect(unsigned int event, const Functor* Functor);
+
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual unsigned int connect(unsigned int event, const Functor* functor);
+    virtual unsigned int connect(unsigned int event,
+      const MetaEvent::Subscriber& subscriber);
 
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(unsigned int uid);
@@ -137,6 +140,19 @@ namespace qi {
     int xAdvertiseEvent(const std::string& signature);
     //// Resolve and bounce to metaEmit
     bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
+
+    /** Connect an event to a method.
+     * Recommended use is when target is not a proxy.
+     * If target is a proxy and this is server-side, the event will be
+     *    registered localy and the call will be forwarded.
+     * If target and this are proxies, the message will be routed through
+     * the current process.
+     */
+    unsigned int connect(unsigned int signal, qi::Object* target, unsigned int slot);
+    /** Same as connect(signal, target, slot) but with reverse signature,
+     * so that we can advertise this method.
+     *
+     */
   protected:
     /// Trigger event handlers
     void trigger(unsigned int event, const FunctorParameters &in);

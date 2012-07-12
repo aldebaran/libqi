@@ -200,8 +200,7 @@ namespace qi {
     for (MetaEventPrivate::Subscribers::iterator il =
       ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
     {
-      il->second.handler->call(args, FunctorResult(
-        boost::shared_ptr<FunctorResultBase>(new DropResult())));
+      il->second.call(args);
     }
   }
 
@@ -283,6 +282,12 @@ namespace qi {
 
   unsigned int Object::connect(unsigned int event, const Functor* functor)
   {
+    return connect(event, MetaEvent::Subscriber(functor));
+  }
+
+  unsigned int Object::connect(unsigned int event,
+    const MetaEvent::Subscriber& sub)
+  {
     MetaEvent* ev = _meta->event(event);
     if (!ev)
     {
@@ -292,7 +297,9 @@ namespace qi {
     // Should we validate event here too?
     // Use [] directly, will create the entry if not present.
     unsigned int uid = ++MetaObjectPrivate::uid;
-    ev->_p->_subscribers[uid].handler = functor;
+    ev->_p->_subscribers[uid] = sub;
+    // Set correct linkId to the copy we just put in our map.
+    ev->_p->_subscribers[uid].linkId = uid;
     return uid;
   }
 
@@ -312,6 +319,18 @@ namespace qi {
       }
     }
     return false;
+  }
+
+  unsigned int Object::connect(unsigned int signal,
+      qi::Object* target, unsigned int slot)
+  {
+    MetaEvent* ev = _meta->event(signal);
+    if (!ev)
+    {
+      qiLogError("object") << "No such event " << signal;
+      return 0;
+    }
+    return connect(signal, MetaEvent::Subscriber(target, slot));
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
