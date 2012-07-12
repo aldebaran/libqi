@@ -26,6 +26,8 @@ namespace qi {
   {
   public:
 
+    ServerPrivate();
+    virtual ~ServerPrivate();
     virtual void newConnection();
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketDisconnected(TransportSocket *client);
@@ -64,6 +66,18 @@ namespace qi {
     boost::mutex                            _mutexServices;
     boost::mutex                            _mutexOthers;
   };
+
+  ServerPrivate::ServerPrivate()
+    : _ts(new TransportServer()),
+      _session(0)
+  {
+    _ts->setCallbacks(this);
+  }
+
+  ServerPrivate::~ServerPrivate() {
+    delete _ts;
+    //do not delete the session that we dont own
+  }
 
   void ServerPrivate::newConnection()
   {
@@ -252,18 +266,11 @@ namespace qi {
     ifsMap["Loopback"].push_back("127.0.0.1");
 #endif
 
-    switch (url.protocol())
-    {
-    case Url::Protocol_Tcp:
-      protocol = "tcp://";
-      break;
-    case Url::Protocol_TcpSsl:
-      protocol = "tcp+ssl://";
-      break;
-    case Url::Protocol_Any:
-      protocol = "tcp://";
-      break;
-    }
+    if (url.protocol() == "any")
+      protocol = "tcp";
+    else
+      protocol = url.protocol();
+    protocol += "://";
 
     for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
          interfaceIt != ifsMap.end();
@@ -290,20 +297,12 @@ namespace qi {
     qi::Url url(address);
     _p->_session = session;
 
-    switch (url.protocol())
-    {
-    case Url::Protocol_Tcp:
-      _p->_ts = new qi::TransportServer(session, url);
-      _p->_ts->setCallbacks(_p);
-      if (!_p->_ts->listen())
-        return false;
-      break;
-    case Url::Protocol_TcpSsl:
-      qiLogError("qi::Server") << "SSL over TCP is not implemented yet";
-      return false;
-    default:
+    if (url.protocol() != "tcp") {
+      qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
       return false;
     }
+    if (!_p->_ts->listen(session, url))
+      return false;
     if (!_p->setSuitableEndpoints(_p->_ts->listenUrl())) {
       //TODO: cleanup...
       return false;

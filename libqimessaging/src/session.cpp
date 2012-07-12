@@ -186,7 +186,7 @@ namespace qi {
            ++it)
       {
         qi::Url url(*it);
-        if (sr.protocol == qi::Url::Protocol_Any || sr.protocol == url.protocol())
+        if (sr.protocol == "any" || sr.protocol == url.protocol())
         {
           qi::TransportSocket *ts = NULL;
           ts = new qi::TransportSocket();
@@ -383,7 +383,7 @@ namespace qi {
   }
 
   qi::Future< qi::Object * > Session::service(const std::string &service,
-                                              qi::Url::Protocol  type)
+                                              const std::string &type)
   {
     ServiceRequest sr;
     qi::Message    msg;

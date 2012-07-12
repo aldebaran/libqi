@@ -17,7 +17,7 @@ struct ServiceRequest {
   QFutureInterface<QObject *> fu;
   QString                     name;
   unsigned int                serviceId;
-  qi::Url::Protocol           protocol;
+  QString                     protocol;
 };
 
 namespace qi {

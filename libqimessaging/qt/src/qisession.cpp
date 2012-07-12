@@ -87,7 +87,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(cli
   for (std::vector<std::string>::const_iterator it = si.endpoints().begin(); it != si.endpoints().end(); ++it)
   {
     qi::Url url(*it);
-    if (sr.protocol == qi::Url::Protocol_Any || sr.protocol == url.protocol())
+    if (sr.protocol == "any" || sr.protocol == QString::fromStdString(url.protocol()))
     {
       qi::TransportSocket* ts = NULL;
       ts = new qi::TransportSocket();
@@ -157,7 +157,7 @@ bool QiSession::waitForDisconnected(int msecs)
 //2 msg from serv: create a socket, connect
 //3 socket co: send msg for metadata
 //4
-QFuture<QObject *> QiSession::service(const QString &name, qi::Url::Protocol type) {
+QFuture<QObject *> QiSession::service(const QString &name, const QString &type) {
   ServiceRequest sr;
   qi::Message    msg;
   qi::Buffer     buf;

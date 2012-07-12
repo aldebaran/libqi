@@ -22,7 +22,7 @@ namespace qi {
     qi::Promise<qi::Object *> promise;
     std::string               name;
     unsigned int              serviceId;
-    qi::Url::Protocol         protocol;
+    std::string               protocol;
   };
 
   class NetworkThread;

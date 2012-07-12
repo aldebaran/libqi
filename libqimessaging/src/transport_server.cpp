@@ -42,30 +42,32 @@
 
 namespace qi
 {
+
+
+  static TransportServerPrivate * newTSP(qi::Session *session, const qi::Url &url) {
+    if (url.protocol() == "tcp") {
+      return new TransportServerLibEventPrivate(session, url);
+    }
+
+    qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
+                                  << " TransportServer create with dummy implementation.";
+    return new TransportServerDummyPrivate(session, url);
+  }
+
   TransportServerInterface::~TransportServerInterface()
   {
   }
 
   TransportServer::TransportServer()
+    : _p(new TransportServerDummyPrivate(NULL, ""))
   {
-    _p = new TransportServerDummyPrivate(NULL, "");
   }
+
 
   TransportServer::TransportServer(qi::Session *session,
                                    const qi::Url &url)
+    : _p(newTSP(session, url))
   {
-    switch (url.protocol())
-    {
-      case qi::Url::Protocol_Tcp:
-        _p = new TransportServerLibEventPrivate(session, url);
-        break;
-
-      default:
-        qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
-                                      << " TransportServer create with dummy implementation.";
-        _p = new TransportServerDummyPrivate(session, url);
-        break;
-    }
   }
 
   TransportServer::~TransportServer()
@@ -77,20 +79,9 @@ namespace qi
                               const qi::Url &url)
   {
     TransportServerPrivate *save = _p;
-    switch (url.protocol())
-    {
-      case qi::Url::Protocol_Tcp:
-        _p = new TransportServerLibEventPrivate(session, url);
-        _p->tsi = save->tsi;
-        _p->connection = save->connection;
-        break;
-
-      default:
-        qiLogError("TransportServer") << "Unrecognized protocol to start the TransportServer.";
-        delete save;
-        return false;
-    }
-
+    _p = newTSP(session, url);
+    _p->tsi = save->tsi;
+    _p->connection = save->connection;
     delete save;
     return listen();
   }
@@ -104,7 +95,7 @@ namespace qi
   {
     if (_p == NULL)
     {
-      qiLogError("TransportServer") << "TransportServer is not start. "
+      qiLogError("TransportServer") << "TransportServer is not started. "
                                     << "You cannot get next pending connection.";
       return NULL;
     }

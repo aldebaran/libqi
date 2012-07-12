@@ -11,39 +11,41 @@
 namespace qi {
 
 
-static void split_me(const std::string &url, unsigned short &_port, std::string &_host, unsigned int &_protocol)
+static void split_me(const std::string &url, unsigned short &_port, std::string &_host, std::string &_protocol)
 {
-  size_t begin = 0;
-  size_t end = 0;
-  end = url.find(":");
-  std::string type = url.substr(begin, end);
+  std::string    protocol;
+  std::string    host;
+  unsigned short port;
 
-  if (type == "tcp")
-  {
-    _protocol = Url::Protocol_Tcp;
-  }
-  else if (type =="tcp+ssl" || type == "ssl+tcp")
-  {
-    _protocol = Url::Protocol_TcpSsl;
-  }
-  else
-  {
-    _protocol = Url::Protocol_Any;
-  }
+  size_t begin = 0;
+  size_t end   = 0;
+  end = url.find(":");
+  if (end == std::string::npos)
+    return;
+  protocol = url.substr(begin, end);
+
+  if (protocol.empty())
+    return;
 
   begin = end + 3;
   end = url.find_last_of(":");
-  _host = url.substr(begin, end - begin);
+  if (end == std::string::npos || end < begin)
+    return;
+  host = url.substr(begin, end - begin);
   begin = end + 1;
   std::stringstream ss(url.substr(begin));
-  ss >> _port;
+  ss >> port;
+
+  _port = port;
+  _host = host;
+  _protocol = protocol;
 }
 
 Url::Url(const std::string &url)
   : _url(url)
   , _port(0)
   , _host("")
-  , _protocol(Protocol_Invalid)
+  , _protocol()
   , _reserved(0)
 {
   split_me(_url, _port, _host, _protocol);
@@ -52,8 +54,8 @@ Url::Url(const std::string &url)
 Url::Url()
   : _url()
   , _port(0)
-  , _host("")
-  , _protocol(Protocol_Invalid)
+  , _host()
+  , _protocol()
   , _reserved(0)
 {
 }
@@ -61,8 +63,8 @@ Url::Url()
 Url::Url(const char *url)
   : _url(url)
   , _port(0)
-  , _host("")
-  , _protocol(Protocol_Invalid)
+  , _host()
+  , _protocol()
   , _reserved(0)
 {
   split_me(_url, _port, _host, _protocol);
@@ -77,11 +79,15 @@ Url::Url(const qi::Url& url)
 {
 }
 
-Url &Url::operator=(const std::string& rhs)
-{
-  _url = rhs;
-  split_me(_url, _port, _host, _protocol);
-  return *this;
+//Url &Url::operator=(const std::string& rhs)
+//{
+//  _url = rhs;
+//  split_me(_url, _port, _host, _protocol);
+//  return *this;
+//}
+
+bool Url::isValid() const {
+  return !_protocol.empty();
 }
 
 }

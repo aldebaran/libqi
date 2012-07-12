@@ -48,10 +48,10 @@ namespace qi {
 
     qi::Future< qi::TransportSocket* > serviceSocket(const std::string &name,
                                                      unsigned int      *idx,
-                                                     qi::Url::Protocol  type = qi::Url::Protocol_Any);
+                                                     const std::string &type = std::string("any"));
 
     qi::Future< qi::Object* > service(const std::string &service,
-                                      qi::Url::Protocol  type = qi::Url::Protocol_Any);
+                                      const std::string &type = std::string("any"));
 
     void setCallbacks(SessionInterface *delegate);
 
