@@ -67,6 +67,8 @@ namespace qi {
     std::vector<MetaEvent>              _events;
     unsigned int                        _eventsNumber;
 
+    // Links that target us. Needed to be able to disconnec upon destruction
+    std::vector<MetaEvent::Subscriber>  _registrations;
     // Recompute data cached in *ToIdx
     void refreshCache();
 

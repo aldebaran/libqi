@@ -34,11 +34,17 @@ namespace qi {
       Subscriber(Object * target, unsigned int method)
       : handler(0), target(target), method(method) {}
       void call(const FunctorParameters& args);
+
+      // Source information
+      Object*            eventSource;
+      unsigned int       event;
+       /// Uid that can be passed to Object::disconnect()
+      unsigned int       linkId;
+
+      // Target information
       const Functor*     handler;
       Object*            target;
       unsigned int       method;
-      /// Uid that can be passed to Object::disconnect()
-      unsigned int       linkId;
     };
 
     /// Return a copy of all registered subscribers.

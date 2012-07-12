@@ -94,6 +94,24 @@ namespace qi {
   }
 
   Object::~Object() {
+    // Notify events that have subscribers that call us that we are dead
+    // We need to make a copy of the vector, since disconnect will
+    // remove entries from it.
+    std::vector<MetaEvent::Subscriber> regs = _meta->_p->_registrations;
+    std::vector<MetaEvent::Subscriber>::iterator i;
+    for (i = regs.begin(); i != regs.end(); ++i)
+      i->eventSource->disconnect(i->linkId);
+
+    // Then remove _registrations with one of our event as source
+    std::vector<MetaEvent>::iterator ii;
+    for (ii = _meta->events().begin(); ii!= _meta->events().end(); ++ii)
+    {
+      MetaEventPrivate::Subscribers::iterator j;
+      for (j = ii->_p->_subscribers.begin();
+        j != ii->_p->_subscribers.end();
+        ++j)
+        disconnect(j->second.linkId);
+    }
     delete _meta;
   }
 
@@ -200,7 +218,10 @@ namespace qi {
     for (MetaEventPrivate::Subscribers::iterator il =
       ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
     {
-      il->second.call(args);
+      // FIXME ugly hack, buffer is actualy a streambuf and can only be read once.
+      Buffer& b = const_cast<FunctorParameters&>(args).buffer();
+      b.seek(-b.seek(0));
+      il->second.call(FunctorParameters(args.buffer()));
     }
   }
 
@@ -298,8 +319,14 @@ namespace qi {
     // Use [] directly, will create the entry if not present.
     unsigned int uid = ++MetaObjectPrivate::uid;
     ev->_p->_subscribers[uid] = sub;
-    // Set correct linkId to the copy we just put in our map.
-    ev->_p->_subscribers[uid].linkId = uid;
+    // Get the subscrber copy in our map:
+    MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
+    s.linkId = uid;
+    s.eventSource = this;
+    s.event = event;
+    // Notify the target of this subscribers
+    if (s.target)
+      s.target->_meta->_p->_registrations.push_back(s);
     return uid;
   }
 
@@ -313,7 +340,22 @@ namespace qi {
       MetaEventPrivate::Subscribers::iterator j = i->_p->_subscribers.find(id);
       if (j != i->_p->_subscribers.end())
       {
-        delete j->second.handler;
+        MetaEvent::Subscriber& sub = j->second;
+        // We have ownership of the handler, despite all the copies.
+        delete sub.handler;
+        // If target is an object, deregister from it
+        if (sub.target)
+        {
+          std::vector<MetaEvent::Subscriber>& regs = sub.target->_meta->_p->_registrations;
+          // Look it up in vector, then swap with last.
+          for (unsigned int i=0; i< regs.size(); ++i)
+            if (sub.linkId == regs[i].linkId)
+            {
+              regs[i] = regs[regs.size()-1];
+              regs.pop_back();
+              break;
+            }
+        }
         i->_p->_subscribers.erase(j);
         return true;
       }
