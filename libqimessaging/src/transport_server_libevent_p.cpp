@@ -80,7 +80,9 @@ namespace qi
   }
 
   bool TransportServerLibEventPrivate::close() {
-    evconnlistener_free(_listener);
+    if (_listener)
+      evconnlistener_free(_listener);
+    _listener = 0;
     return true;
   }
 
