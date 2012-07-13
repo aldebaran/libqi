@@ -11,14 +11,121 @@
 #ifndef _QIMESSAGING_SIGNATURE_HPP_
 #define _QIMESSAGING_SIGNATURE_HPP_
 
+#include <string>
+#include <vector>
 #include <qimessaging/api.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <qimessaging/details/type_signature.hpp>
-#include <qimessaging/details/function_signature.hpp>
-#include <qimessaging/details/stl_signature.hpp>
 
 namespace qi {
+
+  QIMESSAGING_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
+
+  class SignaturePrivate;
+
+  class QIMESSAGING_API Signature {
+  public:
+
+  public:
+    Signature(const char *signature = 0);
+    Signature(const std::string &signature);
+
+    bool isValid() const;
+
+    // Number of elements in the signature.
+    unsigned int size() const;
+
+    class iterator;
+    iterator begin() const;
+    iterator end() const;
+
+    //TODO use the type than "network type"
+    enum Type {
+      Type_None     = 0,
+      Type_Bool     = 'b',
+
+      Type_Int8     = 'c',
+      Type_UInt8    = 'C',
+
+      Type_Void     = 'v',
+
+      Type_Int16    = 'w',
+      Type_UInt16   = 'W',
+
+      Type_Int32    = 'i',
+      Type_UInt32   = 'I',
+
+      Type_Int64    = 'l',
+      Type_UInt64   = 'L',
+
+      Type_Float    = 'f',
+      Type_Double   = 'd',
+
+      Type_String   = 's',
+      Type_List     = '[',
+      Type_List_End = ']',
+
+      Type_Map      = '{',
+      Type_Map_End  = '}',
+
+      Type_Tuple    = '(',
+      Type_Tuple_End= ')',
+
+      Type_Dynamic  = 'm',
+
+      Type_Unknown  = 'X'
+    };
+
+    class iterator {
+    public:
+      iterator() : _current(0), _end(0) {}
+      iterator          &operator++();
+      iterator          &operator++(int);
+      inline bool        operator!=(const iterator &rhs) const { return _current != rhs._current; }
+      inline bool        operator==(const iterator &rhs) const { return _current == rhs._current; };
+      inline std::string operator*() const                     { return signature(); }
+      inline std::string operator->() const                    { return signature(); }
+
+      // accesors
+      Type        type()const;
+      std::string signature()const;
+      bool        isValid()const;
+      int         pointer()const;
+
+      bool        hasChildren()const;
+      Signature   children()const;
+
+    protected:
+      iterator(const char *begin, const char *end) : _current(begin), _end(end) {}
+      const char *_current;
+      const char *_end;
+      friend class qi::Signature;
+    };
+
+
+
+    std::string toSTLSignature(bool constify = false) const;
+    std::string toQtSignature(bool constify = false) const;
+    std::string toString() const;
+
+  protected:
+    boost::shared_ptr<SignaturePrivate> _p;
+  };
+}
+
+namespace qi {
+
+  //defined here before signatureFromType
+  namespace detail {
+    template <typename T, class Enable = void>
+    struct signature {
+      static std::string &value(std::string &val) {
+        //should match Type_Unknown (which is not defined at that moment)
+        val += (char)qi::Signature::Type_Unknown;
+        return val;
+      }
+    };
+  }
 
   //this is the entry point of all the signature machinery
 
@@ -75,82 +182,11 @@ namespace qi {
     }
   };
 
-  QIMESSAGING_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
-
-  class SignaturePrivate;
-
-  class QIMESSAGING_API Signature {
-  public:
-
-  public:
-    Signature(const char *signature = 0);
-    Signature(const std::string &signature);
-
-    bool isValid() const;
-
-    // Number of elements in the signature.
-    unsigned int size() const;
-
-    class iterator;
-    iterator begin() const;
-    iterator end() const;
-
-    //TODO use the type than "network type"
-    enum Type {
-      None     = 0,
-      Bool     = 'b',
-      Char     = 'c',
-      UChar    = 'C',
-      Void     = 'v',
-      Int      = 'i',
-      UInt     = 'I',
-      Float    = 'f',
-      Double   = 'd',
-      String   = 's',
-      List     = '[',
-      Map      = '{',
-      Tuple    = '(',
-      Object   = '@',
-      Unknown  = 'X'
-    };
-
-    class iterator {
-    public:
-      iterator() : _current(0), _end(0) {}
-      iterator          &operator++();
-      iterator          &operator++(int);
-      inline bool        operator!=(const iterator &rhs) const { return _current != rhs._current; }
-      inline bool        operator==(const iterator &rhs) const { return _current == rhs._current; };
-      inline std::string operator*() const                     { return signature(); }
-      inline std::string operator->() const                    { return signature(); }
-
-      // accesors
-      Type        type()const;
-      std::string signature()const;
-      bool        isValid()const;
-      int         pointer()const;
-
-      bool        hasChildren()const;
-      Signature   children()const;
-
-    protected:
-      iterator(const char *begin, const char *end) : _current(begin), _end(end) {}
-      const char *_current;
-      const char *_end;
-      friend class qi::Signature;
-    };
-
-
-
-    std::string toSTLSignature(bool constify = false) const;
-    std::string toQtSignature(bool constify = false) const;
-    std::string toString() const;
-
-  protected:
-    boost::shared_ptr<SignaturePrivate> _p;
-  };
-
-
 }
+
+#include <qimessaging/details/type_signature.hpp>
+#include <qimessaging/details/function_signature.hpp>
+#include <qimessaging/details/stl_signature.hpp>
+
 
 #endif  // _QIMESSAGING_SIGNATURE_HPP_

@@ -34,7 +34,7 @@ void verif_bad(const qi::Signature::iterator it)
   EXPECT_STREQ("", it.signature().c_str());
   EXPECT_FALSE(it.hasChildren());
   EXPECT_FALSE(it.pointer());
-  EXPECT_EQ(qi::Signature::None, it.type());
+  EXPECT_EQ(qi::Signature::Type_None, it.type());
   EXPECT_TRUE(it == ite);
   EXPECT_TRUE(it == s.end());
 }
@@ -47,10 +47,10 @@ TEST(TestSignatureIterator, Simple) {
   EXPECT_TRUE(sig.isValid());
   EXPECT_STREQ("is", sig.toString().c_str());
   it = sig.begin();
-  verif_iter(it, "i", Int, false, false);
+  verif_iter(it, "i", Type_Int32, false, false);
 
   ++it;
-  verif_iter(it, "s", String, false, false);
+  verif_iter(it, "s", Type_String, false, false);
 
   ++it;
   verif_bad(it);
@@ -69,24 +69,24 @@ TEST(TestSignatureIterator, STL) {
   EXPECT_STREQ("[i]*", sig2.toString().c_str());
   EXPECT_TRUE(sig1.isValid());
   it = sig2.begin();
-  verif_iter(it, "[i]*", List, true, true);
+  verif_iter(it, "[i]*", Type_List, true, true);
 
   qi::Signature sig3("{is}*");
   it = sig3.begin();
-  verif_iter(it, "{is}*", Map, true, true);
+  verif_iter(it, "{is}*", Type_Map, true, true);
 
   qi::Signature sig4("{is}**");
   EXPECT_STREQ("{is}**", sig4.toString().c_str());
   it = sig4.begin();
-  verif_iter(it, "{is}**", Map, true, 2);
+  verif_iter(it, "{is}**", Type_Map, true, 2);
 
 
   qi::Signature subsig = it.children();
   it = subsig.begin();
-  verif_iter(it, "i", Int, false, false);
+  verif_iter(it, "i", Type_Int32, false, false);
   //it++;
   it++;
-  verif_iter(it, "s", String, false, false);
+  verif_iter(it, "s", Type_String, false, false);
 
 }
 
@@ -94,7 +94,7 @@ TEST(TestSignatureIterator, Empty) {
   qi::Signature::iterator it;
   qi::Signature sig3("");
   it = sig3.begin();
-  verif_iter(it, "", None, false, false);
+  verif_iter(it, "", Type_None, false, false);
   EXPECT_TRUE(it == sig3.end());
   EXPECT_STREQ("", sig3.toString().c_str());
 }

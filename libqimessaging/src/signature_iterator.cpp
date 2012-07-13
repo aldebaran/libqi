@@ -107,25 +107,32 @@ namespace qi {
         break;
       //verify that the current signature is correct
       switch(static_cast<qi::Signature::Type>(*signature)) {
-        case qi::Signature::Void:
-        case qi::Signature::Bool:
-        case qi::Signature::Char:
-        case qi::Signature::Int:
-        case qi::Signature::Float:
-        case qi::Signature::Double:
-        case qi::Signature::String:
-        case qi::Signature::Unknown:
+        case qi::Signature::Type_Void:
+        case qi::Signature::Type_Bool:
+        case qi::Signature::Type_Int8:
+        case qi::Signature::Type_UInt8:
+        case qi::Signature::Type_Int16:
+        case qi::Signature::Type_UInt16:
+        case qi::Signature::Type_Int32:
+        case qi::Signature::Type_UInt32:
+        case qi::Signature::Type_Int64:
+        case qi::Signature::Type_UInt64:
+        case qi::Signature::Type_Float:
+        case qi::Signature::Type_Double:
+        case qi::Signature::Type_String:
+        case qi::Signature::Type_Dynamic:
+        case qi::Signature::Type_Unknown:
           *current = *signature;
           current++;
           signature++;
           break;
-        case qi::Signature::List:
+        case qi::Signature::Type_List:
           _find_end(&current, &signature, sig_end, '[', ']');
           break;
-        case qi::Signature::Map:
+        case qi::Signature::Type_Map:
           _find_end(&current, &signature, sig_end, '{', '}');
           break;
-        case qi::Signature::Tuple:
+        case qi::Signature::Type_Tuple:
           _find_end(&current, &signature, sig_end, '(', ')');
           break;
         default:
@@ -229,7 +236,7 @@ namespace qi {
 
   Signature::Type Signature::iterator::type()const {
     if (!_current)
-      return None;
+      return Type_None;
     return static_cast<Type>(*_current);
   }
 

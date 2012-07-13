@@ -20,7 +20,7 @@
 namespace qi {
   namespace detail {
 
-    _QI_SIMPLE_SIGNATURE(std::string, "s");
+    _QI_SIMPLE_SIGNATURE(std::string, qi::Signature::Type_String);
     _QI_LIST_SIGNATURE(std::list);
     _QI_LIST_SIGNATURE(std::vector);
     _QI_MAP_SIGNATURE(std::map);
