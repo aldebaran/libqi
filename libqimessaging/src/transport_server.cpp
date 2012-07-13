@@ -72,6 +72,7 @@ namespace qi
 
   TransportServer::~TransportServer()
   {
+    close();
     delete _p;
   }
 
