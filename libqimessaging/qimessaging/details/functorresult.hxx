@@ -37,10 +37,17 @@ namespace qi {
           _f.setValue(v);
       }
 
-      virtual void setError(const qi::Buffer &message)
+      virtual void setError(const std::string &signature,
+                            const qi::Buffer &message)
       {
         qi::DataStream ds(message);
 
+        if (signature != "s") {
+          std::stringstream ss;
+          ss << "Can't report the correct error message because the error signature is :" << signature;
+          _f.setError(ss.str());
+          return;
+        }
         std::string err;
         ds >> err;
         if (ds.status() != qi::DataStream::Status_Ok)
@@ -67,10 +74,17 @@ namespace qi {
         _f.setValue(0);
       }
 
-      virtual void setError(const qi::Buffer &message)
+      virtual void setError(const std::string &signature,
+                            const qi::Buffer &message)
       {
         qi::DataStream ds(message);
 
+        if (signature != "s") {
+          std::stringstream ss;
+          ss << "Can't report the correct error message because the error signature is :" << signature;
+          _f.setError(ss.str());
+          return;
+        }
         std::string err;
         ds >> err;
         if (ds.status() != qi::DataStream::Status_Ok)

@@ -12,15 +12,22 @@ namespace qi {
   FunctorResultBase::~FunctorResultBase() {
   }
 
+  void FunctorResult::setError(const std::string &str) {
+    qi::Buffer buf;
+    qi::DataStream dso(buf);
+    dso << str;
+    _p->setError("s", buf);
+  }
+
+
   namespace detail {
 
     //return true on success
     bool sanityCheckAndReport(qi::DataStream &ds, qi::FunctorResult &fr) {
       if (ds.status() != qi::DataStream::Status_Ok) {
-        qi::Buffer buf;
-        qi::DataStream dso(buf);
-        dso << "Serialization error: " << int(ds.status());
-        fr.setError(buf);
+        std::stringstream ss;
+        ss << "Serialization error: " << int(ds.status());
+        fr.setError(ss.str());
         return false;
       }
       return true;

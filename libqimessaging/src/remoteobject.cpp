@@ -53,9 +53,15 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
       }
       promise.setValue(msg.buffer());
       return;
-    case qi::Message::Type_Error:
-      promise.setError(msg.buffer());
+    case qi::Message::Type_Error: {
+      qi::DataStream ds(msg.buffer());
+      qi::Buffer     buf;
+      std::string    sig;
+      ds >> sig;
+      ds >> buf;
+      promise.setError(sig, buf);
       return;
+    }
     case qi::Message::Type_Event:
       trigger(msg.function(), FunctorParameters(msg.buffer()));
       return;
@@ -85,9 +91,6 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
   }
   if (!_ts->send(msg)) {
     qiLogError("remoteobject") << "error while sending answer";
-    qi::Buffer buf;
-    qi::DataStream dse(buf);
-
     qi::MetaMethod *meth = metaObject().method(method);
     std::stringstream msg;
     if (meth) {
@@ -97,8 +100,7 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
     } else {
       msg << "Network error while sending data an unknown method (id=" << method << ")";
     }
-    dse << msg.str();
-    out.setError(buf);
+    out.setError(msg.str());
     //TODO
     //out.setError(1);
     return;

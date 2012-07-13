@@ -158,10 +158,7 @@ namespace qi {
       break;
     default:
       {
-        qi::Buffer b;
-        qi::DataStream ds(b);
-        ds << "Bad message type";
-        promise.setError(b);
+        promise.setError("Bad message type");
         qiLogError("qimessaging.sessionprivate") << "Message (#" << id << ") type not handled: "
                                                  << msg->type();
         return;
@@ -275,12 +272,10 @@ namespace qi {
         dout >> si;
         qiLogError("qimessaging.Session") << "Error while register service: "
                                           << si.name() << " request";
-        qi::Buffer buf;
-        qi::DataStream dse(buf);
-
-        dse << "Error while register service: "
-            << si.name() << " request";
-        ret.setError(buf);
+        std::stringstream ss;
+        ss << "Error while register service: "
+           << si.name() << " request";
+        ret.setError(ss.str());
       }
     } else {
       qi::Promise<unsigned int> prom;
@@ -322,12 +317,10 @@ namespace qi {
         qiLogError("qimessaging.Session") << "Error while unregister serviceId: "
                                           << idx << " request";
 
-        qi::Buffer buf;
-        qi::DataStream dse(buf);
-
-        dse << "Error while unregister serviceId: "
-            << idx << " request";
-        ret.setError(buf);
+        std::stringstream ss;
+        ss << "Error while unregister serviceId: "
+           << idx << " request";
+        ret.setError(ss.str());
       }
     }
     return future;

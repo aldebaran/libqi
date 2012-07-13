@@ -168,10 +168,7 @@ namespace qi {
     if (!mm) {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
-      qi::Buffer     buf;
-      qi::DataStream ds(buf);
-      ds << ss.str();
-      out.setError(buf);
+      out.setError(ss.str());
       return;
     }
     if (mm->_p->_functor)
@@ -182,7 +179,7 @@ namespace qi {
   {
   public:
     virtual void setValue(const qi::Buffer &buffer) {}
-    virtual void setError(const qi::Buffer &msg)
+    virtual void setError(const std::string &sig, const qi::Buffer &msg)
     {
       qiLogError("object") << "Event handler returned an error";
     }
@@ -212,8 +209,6 @@ namespace qi {
   {
     int methodId = metaObject().methodId(signature);
     if (methodId < 0) {
-      qi::Buffer     buf;
-      qi::DataStream ds(buf);
       std::stringstream ss;
       ss << "Can't find method: " << signature << std::endl
          << "  Candidate(s):" << std::endl;
@@ -225,8 +220,7 @@ namespace qi {
         ss << "  " << mm.signature() << std::endl;
       }
       qiLogError("object") << ss.str();
-      ds << ss.str();
-      out.setError(buf);
+      out.setError(ss.str());
       return false;
     }
     if (retsig != "v") {

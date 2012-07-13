@@ -56,7 +56,8 @@ namespace qi
   public:
     virtual ~FunctorResultBase()                    = 0;
     virtual void setValue(const qi::Buffer &buffer) = 0;
-    virtual void setError(const qi::Buffer &msg)    = 0;
+    virtual void setError(const std::string &signature,
+                          const qi::Buffer &msg)    = 0;
   };
 
   class QIMESSAGING_API FunctorResult {
@@ -73,7 +74,11 @@ namespace qi
     virtual ~FunctorResult() {}
 
     virtual void setValue(const qi::Buffer &buffer) { _p->setValue(buffer); }
-    virtual void setError(const qi::Buffer &msg)    { _p->setError(msg); }
+    //error are correctly only reported when the signature is "s"
+    virtual void setError(const std::string &signature,
+                          const qi::Buffer &msg)    { _p->setError(signature, msg); }
+    //report error of type string.
+    virtual void setError(const std::string &str);
 
     bool isValid() const { return _p ? true : false; }
 

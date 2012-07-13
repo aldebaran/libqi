@@ -29,7 +29,7 @@ namespace qi {
         _client->send(_retval);
       }
 
-      inline virtual void setError(const qi::Buffer &error) {
+      inline virtual void setError(const std::string &sig, const qi::Buffer &error) {
         _retval.setType(qi::Message::Type_Error);
         _retval.setBuffer(error);
         _client->send(_retval);
