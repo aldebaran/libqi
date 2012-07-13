@@ -135,6 +135,8 @@ namespace qi {
     boost::filesystem::path bin(name, qi::unicodeFacet());
     try
     {
+      // try if the name is a full path
+      bin = boost::filesystem::system_complete(bin);
       if (boost::filesystem::exists(bin)
           && !boost::filesystem::is_directory(bin))
         return bin.string(qi::unicodeFacet());
@@ -176,6 +178,7 @@ namespace qi {
                                          lib.string(qi::unicodeFacet())),
                                 qi::unicodeFacet());
 
+      p = boost::filesystem::system_complete(p);
       if (boost::filesystem::exists(p)
           && !boost::filesystem::is_directory(p))
         return (p.string(qi::unicodeFacet()));
@@ -191,6 +194,7 @@ namespace qi {
   {
     try
     {
+      // check if it's a full path
       boost::filesystem::path module = boost::filesystem::path(name, qi::unicodeFacet());
       boost::filesystem::path prefix = module.parent_path().make_preferred();
       std::string libName = module.filename().make_preferred().string(qi::unicodeFacet());
@@ -344,7 +348,6 @@ namespace qi {
   std::vector<std::string> SDKLayout::dataPaths(const std::string &applicationName) const
   {
     std::vector<std::string> res;
-
     // Pass an empty string to get the directory:
     res.push_back(userWritableDataPath(applicationName, ""));
 
