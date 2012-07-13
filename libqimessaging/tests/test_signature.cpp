@@ -56,6 +56,8 @@ struct Foo {
   void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 };
 
+class noSigForThis;
+
 TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
   EXPECT_EQ("i",    qi::signatureFromType<int>::value());
@@ -90,7 +92,8 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int >& >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt& >::value());
   //ERROR
-  EXPECT_EQ("X", qi::signatureFromType<short>::value());
+  EXPECT_EQ("w", qi::signatureFromType<short>::value());
+  EXPECT_EQ("X", qi::signatureFromType<noSigForThis>::value());
 }
 
 //TEST(TestSignature, OpaqueMessage) {
