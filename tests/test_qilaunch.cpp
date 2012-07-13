@@ -32,8 +32,8 @@ TEST(spawnvp, CmdWithNoArgs)
   int childPid = qi::os::spawnvp(args);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 42) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(42, status) << "status: " << status;
 }
 
 TEST(spawnvp, CmdWithArgs)
@@ -45,8 +45,8 @@ TEST(spawnvp, CmdWithArgs)
   int childPid = qi::os::spawnvp(args);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 23) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(23, status) << "status: " << status;
 }
 
 TEST(spawnvp, CmdWithMultiArgs)
@@ -58,8 +58,8 @@ TEST(spawnvp, CmdWithMultiArgs)
   int childPid = qi::os::spawnvp(args);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 22) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(22, status) << "status: " << status;
 }
 
 TEST(spawnvp, InvalidBin)
@@ -69,10 +69,11 @@ TEST(spawnvp, InvalidBin)
   int status = 0;
 
   int childPid = qi::os::spawnvp(args);
+  EXPECT_EQ(-1, childPid);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 127) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(127, status) << "status: " << status;
 }
 
 
@@ -85,8 +86,8 @@ TEST(spawnlp, CmdWithNoArgs)
   int childPid = qi::os::spawnlp(bin.c_str(), NULL);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 42) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(42, status) << "status: " << status;
 }
 
 TEST(spawnlp, CmdWithArgs)
@@ -98,8 +99,8 @@ TEST(spawnlp, CmdWithArgs)
   int childPid = qi::os::spawnlp(bin.c_str(), arg1.c_str(), NULL);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 23) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(23, status) << "status: " << status;
 }
 
 TEST(spawnlp, CmdWithMultiArgs)
@@ -113,8 +114,8 @@ TEST(spawnlp, CmdWithMultiArgs)
   int childPid = qi::os::spawnlp(bin.c_str(), arg2.c_str(), arg1.c_str(), NULL);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 22) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(22, status) << "status: " << status;
 }
 
 TEST(spawnlp, Environment)
@@ -137,10 +138,11 @@ TEST(spawnlp, InvalidBin)
   int status = 0;
 
   int childPid = qi::os::spawnlp(bin.c_str(), NULL);
+  EXPECT_EQ(-1, childPid);
   int error = qi::os::waitpid(childPid, &status);
 
-  EXPECT_TRUE(error == 0) << "error: " << error;
-  EXPECT_TRUE(status == 127) << "status: " << status;
+  EXPECT_EQ(0, error) << "error: " << error;
+  EXPECT_EQ(127, status) << "status: " << status;
 }
 
 TEST(kill, Terminate)
@@ -167,9 +169,9 @@ TEST(kill, Terminate)
     dead = qi::os::kill(childPid, 0);
   }
 
-  EXPECT_TRUE(alive == 0) << "alive: " << alive;
-  EXPECT_TRUE(killed == 0) << "killed: " << killed;
-  EXPECT_TRUE(dead == -1) << "dead: " << dead;
+  EXPECT_EQ(0, alive) << "alive: " << alive;
+  EXPECT_EQ(0, killed) << "killed: " << killed;
+  EXPECT_EQ(-1, dead) << "dead: " << dead;
 }
 
 TEST(system, CmdWithNoArgs)
@@ -178,7 +180,7 @@ TEST(system, CmdWithNoArgs)
 
   int status = qi::os::system(bin.c_str());
 
-  EXPECT_TRUE(status == 42) << "status: " << status;
+  EXPECT_EQ(42, status) << "status: " << status;
 }
 
 TEST(system, CmdWithArgs)
@@ -187,7 +189,7 @@ TEST(system, CmdWithArgs)
 
   int status = qi::os::system(bin.c_str());
 
-  EXPECT_TRUE(status == 23) << "status: " << status;
+  EXPECT_EQ(23, status) << "status: " << status;
 }
 
 TEST(system, CmdWithMultiArgs)
@@ -196,7 +198,7 @@ TEST(system, CmdWithMultiArgs)
 
   int status = qi::os::system(bin.c_str());
 
-  EXPECT_TRUE(status == 22) << "status: " << status;
+  EXPECT_EQ(22, status) << "status: " << status;
 }
 
 TEST(system, InvalidBin)
@@ -206,9 +208,9 @@ TEST(system, InvalidBin)
   int status = qi::os::system(bin.c_str());
 
  #ifdef _WIN32
-  EXPECT_TRUE(status == 1) << "status: " << status;
+  EXPECT_EQ(1, status) << "status: " << status;
  #else
-  EXPECT_TRUE(status == 127) << "status: " << status;
+  EXPECT_EQ(127, status) << "status: " << status;
  #endif
 }
 
