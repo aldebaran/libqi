@@ -57,7 +57,7 @@ void testDelete(bool afirst, bool disconnectFirst)
 }
 
 TEST(TestObject, Destruction)
-{ 
+{
   testDelete(false, false);
   testDelete(true, true);
   testDelete(false, true);

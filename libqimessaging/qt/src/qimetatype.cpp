@@ -29,7 +29,7 @@ QString qi_NetworkTypeToMetatype(const QString &nettype)
 
 
 // string
-qi::DataStream& operator>>(qi::DataStream &stream, QString &s)
+qi::IDataStream& operator>>(qi::IDataStream &stream, QString &s)
 {
   int len;
   stream >> len;
@@ -39,14 +39,14 @@ qi::DataStream& operator>>(qi::DataStream &stream, QString &s)
   return stream;
 }
 
-qi::DataStream& operator<<(qi::DataStream &stream, const QString &s)
+qi::ODataStream& operator<<(qi::ODataStream &stream, const QString &s)
 {
   stream.writeString((const char *)s.toAscii().constData(), s.size());
   return stream;
 }
 
 
-bool qi_MetaTypeStore(qi::DataStream &stream, int metatype, void *data)
+bool qi_MetaTypeStore(qi::ODataStream &stream, int metatype, void *data)
 {
   if (!data || !QMetaType::isRegistered(metatype))
     return false;
@@ -117,7 +117,7 @@ bool qi_MetaTypeStore(qi::DataStream &stream, int metatype, void *data)
   return true;
 }
 
-bool qi_MetaTypeLoad(qi::DataStream &stream, int metatype, void *data)
+bool qi_MetaTypeLoad(qi::IDataStream &stream, int metatype, void *data)
 {
   if (!data || !QMetaType::isRegistered(metatype))
       return false;

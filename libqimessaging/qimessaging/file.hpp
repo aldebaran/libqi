@@ -78,9 +78,9 @@ namespace qi
     PrivateFile *p;
   };
 
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream,
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream,
                                              const qi::File &sfile);
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream,
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream,
                                              qi::File &sfile);
 }
 

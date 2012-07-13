@@ -27,8 +27,8 @@ namespace qi {
     MetaMethodPrivate   *_p;
   };
 
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta);
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta);
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta);
 
 }; // namespace qi
 

@@ -61,13 +61,14 @@ struct TimeStampedPoint2D {
 
 TEST(testSerializable, POD) {
   qi::Buffer      buf;
-  qi::DataStream  m(buf);
+  qi::ODataStream  m(buf);
   int i1, i2;
 
   i1 = 42;
 
   m << i1;
-  m >> i2;
+  qi::IDataStream  m2(buf);
+  m2 >> i2;
 
   EXPECT_EQ(i1, i2);
 }

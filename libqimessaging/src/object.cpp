@@ -218,10 +218,7 @@ namespace qi {
     for (MetaEventPrivate::Subscribers::iterator il =
       ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
     {
-      // FIXME ugly hack, buffer is actualy a streambuf and can only be read once.
-      Buffer& b = const_cast<FunctorParameters&>(args).buffer();
-      b.seek(-b.seek(0));
-      il->second.call(FunctorParameters(args.buffer()));
+      il->second.call(args);
     }
   }
 
@@ -375,33 +372,33 @@ namespace qi {
     return connect(signal, MetaEvent::Subscriber(target, slot));
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const MetaMethod &meta) {
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta) {
     stream << meta._p->_signature;
     stream << meta._p->_sigret;
     stream << meta._p->_idx;
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream, MetaMethod &meta) {
+  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta) {
     stream >> meta._p->_signature;
     stream >> meta._p->_sigret;
     stream >> meta._p->_idx;
     return stream;
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const MetaEvent &meta) {
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
     stream << meta._p->_signature;
     stream << meta._p->_idx;
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream, MetaEvent &meta) {
+  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta) {
     stream >> meta._p->_signature;
     stream >> meta._p->_idx;
     return stream;
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const MetaObject &meta) {
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
     stream << meta._p->_methods;
     stream << meta._p->_methodsNumber;
     stream << meta._p->_events;
@@ -409,7 +406,7 @@ namespace qi {
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream, MetaObject &meta) {
+  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta) {
     stream >> meta._p->_methods;
     stream >> meta._p->_methodsNumber;
     stream >> meta._p->_events;

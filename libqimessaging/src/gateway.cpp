@@ -160,8 +160,10 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
     }
 
     Message sdMsg;
-    DataStream d(sdMsg.buffer());
+    Buffer buf;
+    ODataStream d(buf);
     d << msg->service();
+    sdMsg.setBuffer(buf);
 
     // associate the transportSoket client = 0
     // this will allow S.1 to be handle correctly
@@ -205,7 +207,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
     {
       // Get serviceId
       ServiceInfo    result;
-      qi::DataStream ds(msg->buffer());
+      qi::IDataStream ds(msg->buffer());
       ds >> result;
 
       if (result.name() == "")
@@ -225,7 +227,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       Buffer   buf;
       ans.setBuffer(buf);
       ans.buildReplyFrom(*msg);
-      DataStream dsAns(buf);
+      ODataStream dsAns(buf);
       dsAns << result;
 
       // id should be rewritten then sent to the client
@@ -314,7 +316,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
         ans.setType(qi::Message::Type_Reply);
         ans.setFunction(qi::Message::GatewayFunction_Connect);
         ans.setPath(qi::Message::Path_Main);
-        qi::DataStream d(buf);
+        qi::ODataStream d(buf);
         d << "";
         socket->send(ans);
       }
@@ -326,7 +328,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
     else if (_type == Type_ReverseGateway && msg.type() == Message::Type_Reply)
     {
       std::string endpoint;
-      DataStream d(msg.buffer());
+      IDataStream d(msg.buffer());
       d >> endpoint;
       if (endpoint != "")
       {

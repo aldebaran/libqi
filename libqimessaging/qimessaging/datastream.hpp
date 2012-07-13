@@ -15,12 +15,12 @@
 #include <list>
 #include <vector>
 #include <map>
-
+#include <stdint.h>
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
 #include <qimessaging/buffer.hpp>
+#include <qimessaging/bufferreader.hpp>
 #include <qi/types.hpp>
-
 namespace qi {
 
 #if 0
@@ -51,85 +51,106 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-  class QIMESSAGING_API DataStream {
+  /** This class provides data serialization, using
+   * a qi::Buffer as a backend.
+   *
+   *
+   */
+  class QIMESSAGING_API IDataStream {
   public:
 
-    enum Status {
-      Status_Ok                     = 0,
+     explicit IDataStream(const qi::Buffer &buffer);
+     ~IDataStream();
+
+
+     enum Status {
+       Status_Ok                     = 0,
       Status_ReadError              = 1,
       Status_ReadPastEnd            = 2,
-      Status_WriteError             = 3,
-      Status_WriteOnReadOnlyStream  = 4
+    };
+
+    IDataStream& operator>>(bool     &b);
+    IDataStream& operator>>(char     &c);
+    IDataStream& operator>>(qi::int8_t   &c);
+    IDataStream& operator>>(qi::int16_t  &s);
+    IDataStream& operator>>(qi::int32_t  &i);
+    IDataStream& operator>>(qi::int64_t  &l);
+
+    IDataStream& operator>>(qi::uint8_t  &uc);
+    IDataStream& operator>>(qi::uint16_t &us);
+    IDataStream& operator>>(qi::uint32_t &ui);
+    IDataStream& operator>>(qi::uint64_t &ul);
+    IDataStream& operator>>(float    &f);
+    IDataStream& operator>>(double   &d);
+    IDataStream& operator>>(std::string& i);
+        //read raw data
+    size_t read(void *data, size_t len);
+    void* read(size_t len);
+    Status status() const { return _status; };
+    void setStatus(Status status) { _status = status; }
+  private:
+    Status _status;
+    BufferReader _reader;
+  };
+  /** This class provides data deserialization, using
+   * a qi::Buffer as a backend.
+   *
+   *
+   */
+  class QIMESSAGING_API ODataStream {
+  public:
+        enum Status {
+      Status_Ok                     = 0,
+      Status_WriteError             = 1
     };
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    explicit DataStream(const qi::Buffer &buffer);
-    explicit DataStream(qi::Buffer &buffer);
+    explicit ODataStream(qi::Buffer &buffer);
+    ~ODataStream();
 
-    //read raw data
-    size_t read(void *data, size_t len);
-    //write raw data without any formatting
-    void write(const char *str, size_t len);
+       //write raw data without any formatting
+    int write(const char *str, size_t len);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
+    ODataStream& operator<<(bool     b);
+    ODataStream& operator<<(char     c);
 
-    DataStream& operator<<(bool        b);
-    DataStream& operator<<(char        c);
-    DataStream& operator<<(qi::int8_t  c);
-    DataStream& operator<<(qi::int16_t s);
-    DataStream& operator<<(qi::int32_t i);
-    DataStream& operator<<(qi::int64_t l);
+    ODataStream& operator<<(qi::int8_t   c);
+    ODataStream& operator<<(qi::int16_t  i);
+    ODataStream& operator<<(qi::int32_t  i);
+    ODataStream& operator<<(qi::int64_t  l);
 
-    DataStream& operator<<(qi::uint8_t  uc);
-    DataStream& operator<<(qi::uint16_t us);
-    DataStream& operator<<(qi::uint32_t ui);
-    DataStream& operator<<(qi::uint64_t ul);
-    DataStream& operator<<(float        f);
-    DataStream& operator<<(double       d);
-    DataStream& operator<<(const char *);
-    DataStream& operator<<(const std::string& i);
+    ODataStream& operator<<(qi::uint8_t  uc);
+    ODataStream& operator<<(qi::uint16_t us);
+    ODataStream& operator<<(qi::uint32_t ui);
+    ODataStream& operator<<(qi::uint64_t ul);
 
-    DataStream& operator>>(bool     &b);
-    DataStream& operator>>(char     &c);
-
-    DataStream& operator>>(qi::int8_t   &c);
-    DataStream& operator>>(qi::int16_t  &i);
-    DataStream& operator>>(qi::int32_t  &i);
-    DataStream& operator>>(qi::int64_t  &l);
-
-    DataStream& operator>>(qi::uint8_t  &uc);
-    DataStream& operator>>(qi::uint16_t &us);
-    DataStream& operator>>(qi::uint32_t &ui);
-    DataStream& operator>>(qi::uint64_t &ul);
-
-    DataStream& operator>>(float  &i);
-    DataStream& operator>>(double &i);
-    DataStream& operator>>(std::string& i);
+    ODataStream& operator<<(float  i);
+    ODataStream& operator<<(double i);
+    ODataStream& operator<<(const char *);
+    ODataStream& operator<<(const std::string& i);
 
     Status status() const { return _status; };
     void setStatus(Status status) { _status = status; }
 
-    /// <summary>Gets the string. </summary>
-    /// <returns> The string representation of the serialized message</returns>
-    //void *data() { return _buffer->data(); }
-
   private:
-    qi::Buffer  _buffer;
-    bool        _ro;
     Status      _status;
+    Buffer _buffer;
     /// <summary>Default constructor. </summary>
-    DataStream()
+    ODataStream()
     {}
 
   };
 
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const qi::Buffer &meta);
 
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, qi::Buffer &meta);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta);
+
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &meta);
+
 
   template<typename T>
-  qi::DataStream &operator<<(qi::DataStream &sd, const std::list<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::list<T> &v) {
     typedef std::list<T> _typefordebug;
     typename std::list<T>::const_iterator it = v.begin();
     typename std::list<T>::const_iterator end = v.end();
@@ -143,7 +164,7 @@ namespace qi {
   }
 
   template<typename T>
-  qi::DataStream &operator>>(qi::DataStream &sd, std::list<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::list<T> &v) {
     typedef std::list<T> _typefordebug;
     qi::uint32_t sz;
     sd >> sz;
@@ -154,7 +175,7 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
                                     << sz;
-        sd.setStatus(DataStream::Status_ReadError);
+        sd.setStatus(IDataStream::Status_ReadError);
         return sd;
       }
       typename std::list<T>::iterator it = v.begin();
@@ -169,7 +190,7 @@ namespace qi {
 
 
   template<typename T>
-  qi::DataStream &operator<<(qi::DataStream &sd, const std::vector<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
     typename std::vector<T>::const_iterator it = v.begin();
     typename std::vector<T>::const_iterator end = v.end();
@@ -183,7 +204,7 @@ namespace qi {
   }
 
   template<typename T>
-  qi::DataStream &operator>>(qi::DataStream &sd, std::vector<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
     qi::uint32_t sz = 0;
     sd >> sz;
@@ -194,7 +215,7 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
                                     << sz;
-        sd.setStatus(DataStream::Status_ReadError);
+        sd.setStatus(IDataStream::Status_ReadError);
         return sd;
       }
       typename std::vector<T>::iterator it = v.begin();
@@ -208,7 +229,7 @@ namespace qi {
   }
 
   template<typename K, typename V>
-  qi::DataStream &operator<<(qi::DataStream &sd, const std::map<K, V> &m) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::map<K, V> &m) {
     typedef  std::map<K,V> _typefordebug;
     typename std::map<K,V>::const_iterator it = m.begin();
     typename std::map<K,V>::const_iterator end = m.end();
@@ -224,7 +245,7 @@ namespace qi {
   }
 
   template<typename K, typename V>
-  qi::DataStream &operator>>(qi::DataStream &sd, std::map<K, V>  &m) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::map<K, V>  &m) {
     typedef  std::map<K,V> _typefordebug;
     qi::uint32_t sz;
     sd >> sz;
@@ -241,8 +262,8 @@ namespace qi {
     return sd;
   };
 
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &value);
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &value);
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::Value &value);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::Value &value);
 }
 
 #endif  // _QIMESSAGING_DATASTREAM_HPP_

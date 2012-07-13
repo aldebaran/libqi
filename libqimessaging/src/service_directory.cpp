@@ -251,10 +251,10 @@ namespace qi
         msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
 
         qi::Buffer     buf;
-        qi::DataStream d(buf);
+        qi::ODataStream d(buf);
         d << serviceName;
 
-        if (d.status() == qi::DataStream::Status_Ok)
+        if (d.status() == qi::ODataStream::Status_Ok)
         {
           msg.setBuffer(buf);
           if (!socketIt->first->send(msg))
@@ -304,10 +304,10 @@ namespace qi
       msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
       qi::Buffer     buf;
-      qi::DataStream d(buf);
+      qi::ODataStream d(buf);
       d << serviceName;
 
-      if (d.status() == qi::DataStream::Status_Ok)
+      if (d.status() == qi::ODataStream::Status_Ok)
       {
         msg.setBuffer(buf);
         if (!socketIt->first->send(msg))

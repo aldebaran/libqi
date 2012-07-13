@@ -12,6 +12,8 @@
 #define STATIC_BLOCK 768
 #define BLOCK   4096
 
+#include <qi/atomic.hpp>
+
 namespace qi
 {
   class BufferPrivate
@@ -28,8 +30,11 @@ namespace qi
 
   public:
     size_t          used; // size used
-    size_t          cursor; // cursor needed for peek/read/peek
     size_t          available; // total size of buffer
+    // Keep count of linked DataStream to try to report dangerous
+    // parallel read and writes.
+    qi::atomic<long> nReaders;
+    qi::atomic<long> nWriters;
   };
 }
 

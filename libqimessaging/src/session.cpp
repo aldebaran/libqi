@@ -117,7 +117,7 @@ namespace qi {
       for (sessionIt = localCallbacks.begin(); sessionIt != localCallbacks.end(); ++sessionIt)
       {
         std::string serviceName;
-        qi::DataStream  d(msg.buffer());
+        qi::IDataStream  d(msg.buffer());
         d >> serviceName;
 
         if (msg.function() == qi::Message::ServiceDirectoryFunction_RegisterService)
@@ -241,10 +241,10 @@ namespace qi {
                                           ServiceRequest &sr)
   {
     qi::ServiceInfo si;
-    qi::DataStream  d(msg->buffer());
+    qi::IDataStream  d(msg->buffer());
     d >> si;
 
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::IDataStream::Status_Ok)
     {
       sr.serviceId = si.serviceId();
       for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
@@ -282,10 +282,10 @@ namespace qi {
                                             ServiceRequest &sr)
   {
     qi::MetaObject *mo = new qi::MetaObject();
-    qi::DataStream  d(msg->buffer());
+    qi::IDataStream  d(msg->buffer());
     d >> *mo;
 
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::IDataStream::Status_Ok)
     {
       client->removeCallbacks(this);
       qi::RemoteObject *robj = new qi::RemoteObject(client, sr.serviceId, mo);
@@ -302,9 +302,9 @@ namespace qi {
                                    qi::Promise<std::vector<qi::ServiceInfo> > &promise)
   {
     std::vector<qi::ServiceInfo> result;
-    qi::DataStream d(msg->buffer());
+    qi::IDataStream d(msg->buffer());
     d >> result;
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::IDataStream::Status_Ok)
       promise.setValue(result);
     else
       promise.setError("Serialization error");
@@ -320,10 +320,10 @@ namespace qi {
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::Buffer     buf;
-    qi::DataStream d(buf);
+    qi::ODataStream d(buf);
     d << si;
 
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::ODataStream::Status_Ok)
     {
       msg.setBuffer(buf);
 
@@ -336,7 +336,7 @@ namespace qi {
 
       if (!_serviceSocket->send(msg))
       {
-        qi::DataStream dout(msg.buffer());
+        qi::IDataStream dout(msg.buffer());
         qi::ServiceInfo si;
         dout >> si;
         qiLogError("qimessaging.Session") << "Error while register service: "
@@ -372,11 +372,11 @@ namespace qi {
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
 
-    qi::DataStream d(buf);
+    qi::ODataStream d(buf);
     d << idx;
 
     qi::Future<void> future;
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::ODataStream::Status_Ok)
     {
       msg.setBuffer(buf);
 
@@ -389,7 +389,7 @@ namespace qi {
 
       if (!_serviceSocket->send(msg))
       {
-        qi::DataStream dout(msg.buffer());
+        qi::IDataStream dout(msg.buffer());
         unsigned int id;
         dout >> id;
         qiLogError("qimessaging.Session") << "Error while unregister serviceId: "
@@ -426,10 +426,10 @@ namespace qi {
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_ServiceReady);
 
-    qi::DataStream d(buf);
+    qi::ODataStream d(buf);
     d << idx;
 
-    if (d.status() == qi::DataStream::Status_Ok)
+    if (d.status() == qi::ODataStream::Status_Ok)
     {
       msg.setBuffer(buf);
       {
@@ -509,7 +509,7 @@ namespace qi {
     msg.setService(qi::Message::Service_ServiceDirectory);
     msg.setPath(qi::Message::Path_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
-    qi::DataStream dr(buf);
+    qi::ODataStream dr(buf);
     dr << service;
     {
       boost::mutex::scoped_lock l(_p->_mutexFuture);

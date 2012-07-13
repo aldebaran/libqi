@@ -33,7 +33,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -63,7 +63,7 @@ namespace qi {
 #end if
   void Object::emitEvent(const std::string& eventName${generate_param_list($i, begin=True)}) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     #for $j in range($i)
     ds << p${j};
@@ -74,7 +74,7 @@ namespace qi {
     signatureFromObject::value(p${j}, signature);
     #end for
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);

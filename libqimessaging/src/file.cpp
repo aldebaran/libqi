@@ -97,7 +97,7 @@ namespace qi
     return true;
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream,
+  qi::ODataStream &operator<<(qi::ODataStream &stream,
                              const qi::File &sfile)
   {
     stream << sfile.flags();
@@ -121,7 +121,7 @@ namespace qi
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream,
+  qi::IDataStream &operator>>(qi::IDataStream &stream,
                              qi::File &sfile)
   {
     stream >> sfile.p->flags;

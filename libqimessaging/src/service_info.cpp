@@ -25,7 +25,7 @@ namespace qi
   {
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const ServiceInfo &sinfo) {
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const ServiceInfo &sinfo) {
     stream << sinfo.name()
            << sinfo.serviceId()
            << sinfo.machineId()
@@ -34,7 +34,7 @@ namespace qi
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream, ServiceInfo &sinfo) {
+  qi::IDataStream &operator>>(qi::IDataStream &stream, ServiceInfo &sinfo) {
     stream >> sinfo._name;
     stream >> sinfo._serviceId;
     stream >> sinfo._machineId;

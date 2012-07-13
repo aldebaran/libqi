@@ -10,10 +10,11 @@
 
 #include <qimessaging/datastream.hpp>
 
-typedef qi::DataStream QiDataStream;
+typedef qi::IDataStream QiIDataStream;
+typedef qi::ODataStream QiODataStream;
 
   template<typename T>
-  qi::DataStream &operator<<(qi::DataStream &sd, const QList<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const QList<T> &v) {
     typedef QList<T> _typefordebug;
     typename QList<T>::const_iterator it = v.begin();
     typename QList<T>::const_iterator end = v.end();
@@ -27,7 +28,7 @@ typedef qi::DataStream QiDataStream;
   }
 
   template<typename T>
-  qi::DataStream &operator>>(qi::DataStream &sd, QList<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, QList<T> &v) {
     typedef QList<T> _typefordebug;
     int sz;
     sd >> sz;
@@ -46,7 +47,7 @@ typedef qi::DataStream QiDataStream;
 
 
   template<typename T>
-  qi::DataStream &operator<<(qi::DataStream &sd, const QVector<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const QVector<T> &v) {
     typedef QVector<T> _typefordebug;
     typename QVector<T>::const_iterator it = v.begin();
     typename QVector<T>::const_iterator end = v.end();
@@ -60,7 +61,7 @@ typedef qi::DataStream QiDataStream;
   }
 
   template<typename T>
-  qi::DataStream &operator>>(qi::DataStream &sd, QVector<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, QVector<T> &v) {
     typedef QVector<T> _typefordebug;
     int sz;
     sd >> sz;
@@ -78,7 +79,7 @@ typedef qi::DataStream QiDataStream;
   }
 
   template<typename K, typename V>
-  qi::DataStream &operator<<(qi::DataStream &sd, const QMap<K, V> &m) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const QMap<K, V> &m) {
     typedef  QMap<K,V> _typefordebug;
     typename QMap<K,V>::const_iterator it = m.begin();
     typename QMap<K,V>::const_iterator end = m.end();
@@ -94,7 +95,7 @@ typedef qi::DataStream QiDataStream;
   }
 
   template<typename K, typename V>
-  qi::DataStream &operator>>(qi::DataStream &sd, QMap<K, V>  &m) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, QMap<K, V>  &m) {
     typedef  QMap<K,V> _typefordebug;
     int sz;
     sd >> sz;

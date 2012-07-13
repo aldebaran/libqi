@@ -12,7 +12,7 @@
 #include <qi/types.hpp>
 #include <vector>
 #include <cstring>
-
+#include "src/buffer_p.hpp"
 
 
 #if 0
@@ -34,25 +34,20 @@
 #endif
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                                 \
-  DataStream& DataStream::operator>>(Type &b)                           \
+  IDataStream& IDataStream::operator>>(Type &b)                           \
   {                                                                     \
     int ret;                                                            \
-    ret = _buffer.read((void *)&b, sizeof(Type));                       \
+    ret = read((void *)&b, sizeof(Type));                       \
     if (ret != sizeof(Type))                                            \
       setStatus(Status_ReadPastEnd)                                     \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);                           \
     return *this;                                                       \
   }                                                                     \
                                                                         \
-  DataStream& DataStream::operator<<(Type b)                            \
+  ODataStream& ODataStream::operator<<(Type b)                            \
   {                                                                     \
-    if (_ro) {                                                          \
-      qiLogError("datastream", "cant write to a readonly buffer");      \
-      setStatus(Status_WriteOnReadOnlyStream);                          \
-      return *this;                                                     \
-    }                                                                   \
     int ret;                                                            \
-    ret = _buffer.write((Type *)&b, sizeof(b));                         \
+    ret = write((const char*)(const void *)&b, sizeof(b));              \
     if (ret == -1)                                                      \
       setStatus(Status_WriteError);                                     \
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);                           \
@@ -75,48 +70,44 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(float);
   QI_SIMPLE_SERIALIZER_IMPL(double);
 
-  DataStream::DataStream(const qi::Buffer &buffer)
-    : _buffer(buffer),
-      _ro(true),
-      _status(Status_Ok)
+  IDataStream::IDataStream(const qi::Buffer& buffer)
+  : _status(Status_Ok)
+  , _reader(BufferReader(buffer))
+  {
+
+  }
+
+  ODataStream::ODataStream(qi::Buffer &buffer)
+  : _status(Status_Ok)
+  , _buffer(buffer)
+  {
+    ++_buffer._p->nWriters;
+  }
+
+
+  ODataStream::~ODataStream()
+  {
+    --_buffer._p->nWriters;
+  }
+  IDataStream::~IDataStream()
   {
   }
 
-  DataStream::DataStream(qi::Buffer &buffer)
-    : _buffer(buffer),
-      _ro(false),
-      _status(Status_Ok)
+  int ODataStream::write(const char *str, size_t len)
   {
-  }
-
-
-  // string
-  size_t DataStream::read(void *data, size_t len)
-  {
-    return _buffer.read(data, len);
-  }
-
-  void DataStream::write(const char *str, size_t len)
-  {
-    if (_ro) {
-      qiLogError("datastream", "cant write to a readonly buffer");
-      setStatus(Status_WriteOnReadOnlyStream);
-      return;
-    }
     if (len) {
-      if (_buffer.write(str, len) != (int)len)
+      if (_buffer.write(str, len) < 0)
+      {
         setStatus(Status_WriteError);
-      __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
+        __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
+        return -1;
+      }
     }
+    return len;
   }
 
-  void DataStream::writeString(const char *str, size_t len)
+  void ODataStream::writeString(const char *str, size_t len)
   {
-    if (_ro) {
-      qiLogError("datastream", "cant write to a readonly buffer");
-      setStatus(Status_WriteOnReadOnlyStream);
-      return;
-    }
     *this << (qi::uint32_t)len;
     if (len) {
       if (_buffer.write(str, len) != (int)len)
@@ -126,14 +117,14 @@ namespace qi {
   }
 
   // string
-  DataStream& DataStream::operator>>(std::string &s)
+  IDataStream& IDataStream::operator>>(std::string &s)
   {
     qi::uint32_t sz;
     *this >> sz;
 
     s.clear();
     if (sz) {
-      char *data = static_cast<char *>(_buffer.read(sz));
+      char *data = static_cast<char *>(read(sz));
       if (!data) {
         qiLogError("datastream", "buffer empty");
         setStatus(Status_ReadPastEnd);
@@ -146,38 +137,21 @@ namespace qi {
     return *this;
   }
 
-  DataStream& DataStream::operator<<(const std::string &s)
+  ODataStream& ODataStream::operator<<(const std::string &s)
   {
-    if (_ro) {
-      qiLogError("datastream", "cant write to a readonly buffer");
-      setStatus(Status_WriteOnReadOnlyStream);
-      return *this;
-    }
-    *this << (qi::uint32_t)s.size();
-    if (!s.empty()) {
-      if (_buffer.write(s.data(), s.size()) != (int)s.size())
-        setStatus(Status_WriteError);
-      __QI_DEBUG_SERIALIZATION_DATA_W(std::string, s);
-    }
-
+    writeString(s.c_str(), s.length());
     return *this;
   }
 
-  DataStream& DataStream::operator<<(const char *s)
+  ODataStream& ODataStream::operator<<(const char *s)
   {
-    if (_ro) {
-      qiLogError("datastream", "cant write to a readonly buffer");
-      setStatus(Status_WriteOnReadOnlyStream);
-      return *this;
-    }
     qi::uint32_t len = strlen(s);
     writeString(s, len);
     __QI_DEBUG_SERIALIZATION_DATA_W(char *, s);
     return *this;
   }
 
-
-  qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &val)
+  IDataStream &operator>>(qi::IDataStream &sd, qi::Value &val)
   {
     std::string sig;
     qi::uint32_t type;
@@ -201,7 +175,7 @@ namespace qi {
       case Value::Int64:
       case Value::UInt64:
         qiLogError("datasteam") << "not implemented";
-        sd.setStatus(DataStream::Status_ReadError);
+        sd.setStatus(IDataStream::Status_ReadError);
         return sd;
       case qi::Value::Float:
         val._private.type = qi::Value::Float;
@@ -231,7 +205,7 @@ namespace qi {
     return sd;
   }
 
-  qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &val)
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const qi::Value &val)
   {
     sd << (qi::uint32_t)val.type();
     switch(val.type()) {
@@ -251,7 +225,7 @@ namespace qi {
       case Value::Int64:
       case Value::UInt64:
         qiLogError("datasteam") << "not implemented";
-        sd.setStatus(DataStream::Status_WriteError);
+        sd.setStatus(ODataStream::Status_WriteError);
         return sd;
       case qi::Value::Float:
         sd << "f";
@@ -290,13 +264,13 @@ namespace qi {
     return sd;
   }
 
-  qi::DataStream &operator<<(qi::DataStream &stream, const qi::Buffer &meta) {
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &meta) {
     stream << (qi::uint32_t)meta.size();
     stream.write((const char *)meta.data(), meta.size());
     return stream;
   }
 
-  qi::DataStream &operator>>(qi::DataStream &stream, qi::Buffer &meta) {
+  qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta) {
     qi::uint32_t sz;
     stream >> sz;
     meta.reserve(sz);
@@ -304,7 +278,15 @@ namespace qi {
     return stream;
   }
 
+  size_t IDataStream::read(void *data, size_t size)
+  {
+    return _reader.read(data, size);
+  }
 
+  void* IDataStream::read(size_t size)
+  {
+    return _reader.read(size);
+  }
 
 }
 

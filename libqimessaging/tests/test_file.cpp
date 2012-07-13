@@ -113,11 +113,12 @@ TEST_F(TestFile, fileStream)
   f.save(a_path.string(qi::unicodeFacet()));
 
   qi::Buffer buf;
-  qi::DataStream d(buf);
+  qi::ODataStream d(buf);
   d << f;
 
+  qi::IDataStream d2(buf);
   qi::File fres;
-  d >> fres;
+  d2 >> fres;
 
   FILE *file = qi::os::fopen(fres.path().c_str(), "r");
   char *r = new char[a_content.size() + 1];

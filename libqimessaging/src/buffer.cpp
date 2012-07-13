@@ -23,8 +23,9 @@ namespace qi
   BufferPrivate::BufferPrivate()
     : _bigdata(0)
     , used(0)
-    , cursor(0)
     , available(sizeof(_data))
+    , nReaders(0)
+    , nWriters(0)
   {
   }
 
@@ -69,7 +70,8 @@ namespace qi
 
   int Buffer::write(const void *data, size_t size)
   {
-
+    if (*_p->nReaders)
+      qiLogWarning("qi.Buffer") << "write operation while readers are present";
     if (_p->used + size > _p->available)
     {
       bool ret = _p->resize(_p->used + size);
@@ -83,30 +85,6 @@ namespace qi
     _p->used += size;
 
     return size;
-  }
-
-  int Buffer::read(void *data, size_t size)
-  {
-    if (_p->used - _p->cursor < size)
-    {
-      size = _p->used - _p->cursor;
-    }
-
-    memcpy(data, _p->data() + _p->cursor, size);
-    _p->cursor += size;
-
-    return size;
-  }
-
-  void *Buffer::read(size_t size)
-  {
-    void *p = 0;
-    if ((p = peek(size)))
-      seek(size);
-    else
-      return 0;
-
-    return p;
   }
 
   size_t Buffer::size() const
@@ -130,30 +108,30 @@ namespace qi
     return p;
   }
 
-  size_t Buffer::seek(long offset)
-  {
-    if (_p->cursor + offset <= _p->used)
-    {
-      _p->cursor += offset;
-      return _p->cursor;
-    }
-    else
-    {
-      return -1;
-    }
-  }
-
-  void *Buffer::peek(size_t size) const
-  {
-    if (_p->cursor + size <= _p->used)
-      return _p->cursor + _p->data();
-    else
-      return 0;
-  }
-
-  void *Buffer::data() const
+  void* Buffer::data()
   {
     return _p->data();
+  }
+
+  const void* Buffer::data() const
+  {
+    return _p->data();
+  }
+
+  void *Buffer::read(size_t off, size_t length) const
+  {
+    if (off + length > _p->used)
+      return 0;
+    return (char*)_p->data() + off;
+  }
+
+  size_t Buffer::read(void* buffer, size_t off, size_t length) const
+  {
+    if (off > _p->used)
+      return -1;
+    size_t copy = std::min(length, _p->used - off);
+    memcpy(buffer, (char*)_p->data()+off, copy);
+    return copy;
   }
 
   void Buffer::dump() const

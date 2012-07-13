@@ -41,12 +41,12 @@ namespace qi
     qi::Buffer _buffer;
   };
 
-  inline QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const FunctorParameters &funParams) {
+  inline QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const FunctorParameters &funParams) {
     stream << funParams.buffer();
     return stream;
   }
 
-  inline QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, FunctorParameters &funParams) {
+  inline QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, FunctorParameters &funParams) {
     stream >> funParams.buffer();
     return stream;
   }
@@ -105,10 +105,13 @@ namespace qi
     *promise = fr;
   }
 
-  class DataStream;
+  class IDataStream;
+  class ODataStream;
   namespace detail {
     //return true if everything is correct
-    QIMESSAGING_API bool sanityCheckAndReport(qi::DataStream &ds, qi::FunctorResult &fr);
+    QIMESSAGING_API bool sanityCheckAndReport(qi::ODataStream &ds, qi::FunctorResult &fr);
+    QIMESSAGING_API bool sanityCheckAndReport(qi::IDataStream &ds, qi::FunctorResult &fr);
+
   }
 
 }

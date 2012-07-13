@@ -15,7 +15,8 @@
 
 typedef struct
 {
-  qi::DataStream *ds;
+  qi::ODataStream *os;
+  qi::IDataStream *is;
   qi::Message    *msg;
 } qi_message_data_t;
 
@@ -25,7 +26,8 @@ qi_message_t *qi_message_create()
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(malloc(sizeof(qi_message_data_t)));
   m->msg = new qi::Message;
-
+  m->is = 0;
+  m->os = 0;
   return reinterpret_cast<qi_message_t*>(m);
 }
 
@@ -33,7 +35,8 @@ void qi_message_destroy(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  delete m->ds;
+  delete m->is;
+  delete m->os;
   delete m->msg;
 
   free(m);
@@ -151,50 +154,50 @@ char *qi_message_get_data(qi_message_t *msg)
 void qi_message_write_bool(qi_message_t *msg, char b)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << b;
+  *m->os << b;
 }
 
 void qi_message_write_char(qi_message_t *msg, char c)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << c;
+  *m->os << c;
 }
 
 void qi_message_write_int(qi_message_t *msg, int i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << i;
+  *m->os << i;
 }
 
 void qi_message_write_float(qi_message_t *msg, float f)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << f;
+  *m->os << f;
 }
 
 void qi_message_write_double(qi_message_t *msg, double d)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << d;
+  *m->os << d;
 }
 
 void qi_message_write_string(qi_message_t *msg, const char *s)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << std::string(s);
+  *m->os << std::string(s);
 }
 
 void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  *m->ds << std::string(s, size);
+  *m->os << std::string(s, size);
 }
 
 char qi_message_read_bool(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   bool b;
-  *m->ds >> b;
+  *m->is >> b;
   return b;
 }
 
@@ -202,7 +205,7 @@ char qi_message_read_char(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   char c;
-  *m->ds >> c;
+  *m->is >> c;
   return c;
 }
 
@@ -210,7 +213,7 @@ int qi_message_read_int(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   int i;
-  *m->ds >> i;
+  *m->is >> i;
   return i;
 }
 
@@ -218,7 +221,7 @@ float qi_message_read_float(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   float f;
-  *m->ds >> f;
+  *m->is >> f;
   return f;
 }
 
@@ -226,7 +229,7 @@ double qi_message_read_double(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   double d;
-  *m->ds >> d;
+  *m->is >> d;
   return d;
 }
 
@@ -234,7 +237,7 @@ char *qi_message_read_string(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string s;
-  *m->ds >> s;
+  *m->is >> s;
   //TODO: buffer overflow
 #ifdef _WIN32
   return _strdup(s.c_str());

@@ -80,7 +80,7 @@ void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
 //rep from master (endpoint)
 void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, ServiceRequest &sr) {
   qi::ServiceInfo      si;
-  qi::DataStream       d(msg->buffer());
+  qi::IDataStream       d(msg->buffer());
   d >> si;
 
   sr.serviceId = si.serviceId();
@@ -105,7 +105,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(cli
 
 void QiSessionPrivate::service_mo_end(int QI_UNUSED(id), qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
   qi::MetaObject mo;
-  qi::DataStream ds(msg->buffer());
+  qi::IDataStream ds(msg->buffer());
   ds >> mo;
   //remove the delegate on us, now the socket is owned by QiRemoteObject
   client->removeCallbacks(this);
@@ -115,7 +115,7 @@ void QiSessionPrivate::service_mo_end(int QI_UNUSED(id), qi::TransportSocket *cl
 
 void QiSessionPrivate::services_end(qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
   QVector<qi::ServiceInfo> result;
-  qi::DataStream d(msg->buffer());
+  qi::IDataStream d(msg->buffer());
   d >> result;
   fut.reportResult(result);
 }
@@ -171,7 +171,7 @@ QFuture<QObject *> QiSession::service(const QString &name, const QString &type) 
   msg.setService(qi::Message::Service_ServiceDirectory);
   msg.setPath(qi::Message::Path_Main);
   msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
-  qi::DataStream dr(buf);
+  qi::ODataStream dr(buf);
   dr << name.toUtf8().constData();
   _p->_futureService[msg.id()] = sr;
   _p->_serviceSocket->send(msg);

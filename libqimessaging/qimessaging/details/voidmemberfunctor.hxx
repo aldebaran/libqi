@@ -35,7 +35,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 0);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
 
@@ -69,7 +69,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 1);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -105,7 +105,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 2);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -143,7 +143,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 3);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -183,7 +183,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 4);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -225,7 +225,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 5);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -269,7 +269,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 6);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -315,7 +315,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 7);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -363,7 +363,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 8);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;
@@ -413,7 +413,7 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, 9);
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer buf;
 
       P0 p0;

@@ -61,7 +61,7 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   qi::Message    msg;
   qi::Buffer     buf;
   qi::Message    retmsg;
-  qi::DataStream args(buf);
+  qi::ODataStream args(buf);
 
   msg.setBuffer(buf);
 
@@ -92,7 +92,7 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   _p->socket->waitForId(msg.id());
   _p->socket->read(msg.id(), &retmsg);
 
-  qi::DataStream retv(retmsg.buffer());
+  qi::IDataStream retv(retmsg.buffer());
 
   qi_MetaTypeLoad(retv, returnType, a[0]);
 

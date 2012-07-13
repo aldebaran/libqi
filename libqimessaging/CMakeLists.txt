@@ -78,6 +78,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
 
                                    ${CMAKE_CURRENT_BINARY_DIR}/tp_qimessaging.h
                                    src/buffer.cpp
+                                   src/bufferreader.cpp
                                    src/datastream.cpp
                                    src/gateway.cpp
                                    src/message.cpp

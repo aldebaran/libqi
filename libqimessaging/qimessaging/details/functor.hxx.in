@@ -38,9 +38,9 @@ namespace detail {
 
     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const {
       QI_FUNCTOR_ASSUME_NBR_PARAMS(params, ${i});
-      qi::DataStream dsi(params.buffer());
+      qi::IDataStream dsi(params.buffer());
       qi::Buffer     buf;
-      qi::DataStream dso(buf);
+      qi::ODataStream dso(buf);
       #for $j in range($i)
       P$j p$j;
       #end for

@@ -139,7 +139,7 @@ public:
       ans.setType(qi::Message::Type_Reply);
       ans.setFunction(qi::Message::GatewayFunction_Connect);
       ans.setPath(qi::Message::Path_Main);
-      qi::DataStream d(buf);
+      qi::ODataStream d(buf);
 
       RemoteConnection *rc = new RemoteConnection(socket);
 

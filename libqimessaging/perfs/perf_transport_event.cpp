@@ -129,7 +129,7 @@ public:
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::Buffer b;
-    qi::DataStream d(b);
+    qi::ODataStream d(b);
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
@@ -140,7 +140,7 @@ public:
     _p->_session->_p->_serviceSocket->waitForId(msg.id());
     qi::Message ans;
     _p->_session->_p->_serviceSocket->read(msg.id(), &ans);
-    qi::DataStream dout(ans.buffer());
+    qi::IDataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;
     _p->_services[idx] = obj;

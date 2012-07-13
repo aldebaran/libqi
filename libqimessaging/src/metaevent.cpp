@@ -49,7 +49,7 @@ namespace qi {
   {
   public:
     virtual void setValue(const qi::Buffer &buffer) {}
-    virtual void setError(const qi::Buffer &msg)
+    virtual void setError(const std::string &sig, const qi::Buffer& msg)
     {
       qiLogError("object") << "Event handler returned an error";
     }

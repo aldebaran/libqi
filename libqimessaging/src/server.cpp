@@ -164,7 +164,7 @@ namespace qi {
     case Message::Type_Register_Event:
       {
         unsigned int remoteLinkId;
-        DataStream(msg.buffer()) >> remoteLinkId;
+        IDataStream(msg.buffer()) >> remoteLinkId;
         // locate object, register locally and bounce to an event message
         unsigned int event = msg.function();
         unsigned int linkId = obj->connect(event,
@@ -176,7 +176,7 @@ namespace qi {
     case Message::Type_Unregister_Event:
       {
         unsigned int remoteLinkId;
-        DataStream(msg.buffer()) >> remoteLinkId;
+        IDataStream(msg.buffer()) >> remoteLinkId;
         ServiceLinks& sl = _links[client][msg.service()];
         ServiceLinks::iterator i = sl.find(remoteLinkId);
         if (i == sl.end())

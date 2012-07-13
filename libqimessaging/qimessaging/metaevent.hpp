@@ -54,8 +54,8 @@ namespace qi {
     MetaEventPrivate   *_p;
   };
 
-  QIMESSAGING_API qi::DataStream &operator<<(qi::DataStream &stream, const MetaEvent &meta);
-  QIMESSAGING_API qi::DataStream &operator>>(qi::DataStream &stream, MetaEvent &meta);
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta);
 
 }; // namespace qi
 

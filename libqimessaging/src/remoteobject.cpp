@@ -67,7 +67,7 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
       promise.setValue(msg.buffer());
       return;
     case qi::Message::Type_Error: {
-      qi::DataStream ds(msg.buffer());
+      qi::IDataStream ds(msg.buffer());
       qi::Buffer     buf;
       std::string    sig;
       ds >> sig;
@@ -138,7 +138,7 @@ unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscrib
   // Provide our uid as payload
   qi::Message msg;
   qi::Buffer buf;
-  qi::DataStream ds(buf);
+  qi::ODataStream ds(buf);
   ds << uid;
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Register_Event);
@@ -172,7 +172,7 @@ bool RemoteObject::disconnect(unsigned int linkId)
     // Tell the remote we are no longer interested.
     qi::Message msg;
     qi::Buffer buf;
-    qi::DataStream ds(buf);
+    qi::ODataStream ds(buf);
     ds << linkId;
     msg.setBuffer(buf);
     msg.setType(qi::Message::Type_Unregister_Event);

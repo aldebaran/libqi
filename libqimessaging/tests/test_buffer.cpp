@@ -24,22 +24,22 @@ void    fillString(std::string &str, int size)
 TEST(TestNormalStackBuffer, TestBuffer)
 {
   qi::Buffer      buffer;
-  qi::DataStream  d(buffer);
+  qi::ODataStream  d(buffer);
   std::string     data, resultString;
 
   fillString(data, 150);
 
   d << data;
   ASSERT_EQ(150 + sizeof(int), buffer.size());
-
-  d >> resultString;
+  qi::IDataStream dout(buffer);
+  dout >> resultString;
   ASSERT_STREQ(data.c_str(), resultString.c_str());
 }
 
 TEST(TestFirstAllocation, TestBuffer)
 {
   qi::Buffer      buffer;
-  qi::DataStream  d(buffer);
+  qi::ODataStream  d(buffer);
   std::string     data, resultString;
 
   fillString(data, 252);
@@ -53,21 +53,22 @@ TEST(TestFirstAllocation, TestBuffer)
   d << data;
   ASSERT_EQ(505 + 3 * sizeof(int), buffer.size());
 
+  qi::IDataStream dout(buffer);
   fillString(data, 252);
-  d >> resultString;
+  dout >> resultString;
   ASSERT_STREQ(data.c_str(), resultString.c_str());
 
-  d >> resultString;
+  dout >> resultString;
   ASSERT_STREQ(data.c_str(), resultString.c_str());
 
-  d >> resultString;
+  dout >> resultString;
   ASSERT_STREQ("!", resultString.c_str());
 }
 
 TEST(TestSecondAllocation, TestBuffer)
 {
   qi::Buffer      buffer;
-  qi::DataStream  d(buffer);
+  qi::ODataStream  d(buffer);
   std::string     data, resultString;
 
   fillString(data, 525);
@@ -79,12 +80,13 @@ TEST(TestSecondAllocation, TestBuffer)
   d << data;
   ASSERT_EQ(4622 + 2 * sizeof(int), buffer.size());
 
+  qi::IDataStream dout(buffer);
   fillString(data, 525);
-  d >> resultString;
+  dout >> resultString;
   ASSERT_STREQ(data.c_str(), resultString.c_str());
 
   fillString(data, 4097);
-  d >> resultString;
+  dout >> resultString;
   ASSERT_STREQ(data.c_str(), resultString.c_str());
 }
 

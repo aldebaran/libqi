@@ -25,7 +25,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -47,7 +47,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -71,7 +71,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -97,7 +97,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -125,7 +125,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -155,7 +155,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -187,7 +187,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -221,7 +221,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -257,7 +257,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -295,7 +295,7 @@ namespace qi {
     //will be deleted by metaCall
     qi::Future<R>                     future;
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                   ds(breq);
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
@@ -331,12 +331,12 @@ namespace qi {
   inline
   void Object::emitEvent(const std::string& eventName) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     std::string signature(eventName);
     signature += "::(";
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -344,14 +344,14 @@ namespace qi {
   template <typename P0>
   void Object::emitEvent(const std::string& eventName, const P0 &p0) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     std::string signature(eventName);
     signature += "::(";
     signatureFromObject::value(p0, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -359,7 +359,7 @@ namespace qi {
   template <typename P0, typename P1>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -368,7 +368,7 @@ namespace qi {
     signatureFromObject::value(p0, signature);
     signatureFromObject::value(p1, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -376,7 +376,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -387,7 +387,7 @@ namespace qi {
     signatureFromObject::value(p1, signature);
     signatureFromObject::value(p2, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -395,7 +395,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -408,7 +408,7 @@ namespace qi {
     signatureFromObject::value(p2, signature);
     signatureFromObject::value(p3, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -416,7 +416,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3, typename P4>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -431,7 +431,7 @@ namespace qi {
     signatureFromObject::value(p3, signature);
     signatureFromObject::value(p4, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -439,7 +439,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -456,7 +456,7 @@ namespace qi {
     signatureFromObject::value(p4, signature);
     signatureFromObject::value(p5, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -464,7 +464,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -483,7 +483,7 @@ namespace qi {
     signatureFromObject::value(p5, signature);
     signatureFromObject::value(p6, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -491,7 +491,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -512,7 +512,7 @@ namespace qi {
     signatureFromObject::value(p6, signature);
     signatureFromObject::value(p7, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
@@ -520,7 +520,7 @@ namespace qi {
   template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
   void Object::emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8) {
     qi::Buffer                        breq;
-    qi::DataStream                    ds(breq);
+    qi::ODataStream                    ds(breq);
     qi::FunctorParameters             request(breq);
     ds << p0;
     ds << p1;
@@ -543,7 +543,7 @@ namespace qi {
     signatureFromObject::value(p7, signature);
     signatureFromObject::value(p8, signature);
     signature += ")";
-    if (ds.status() != qi::DataStream::Status_Ok)
+    if (ds.status() != qi::ODataStream::Status_Ok)
       qiLogError("object.emit") << "Serialization error: " << (int)ds.status();
     else
       xMetaEmit(signature, request);
