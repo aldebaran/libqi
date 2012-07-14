@@ -65,6 +65,7 @@ public:
   /* Map of vectors of pending messages for each service */
   std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >  _pendingMessage;
 
+  std::list<TransportSocket*> _remoteGateways;
 };
 
 void GatewayPrivate::newConnection()
@@ -238,21 +239,46 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
   if (msg.service() == Message::Service_None &&
       msg.function() == Message::GatewayFunction_Connect)
   {
-    /*
-     * Since the ReverseGateway connected itself to the RemoteGateway,
-     * it is known as a client. We need to fix it by removing its
-     * TransportSocket fro the _clients vector.
-     */
-    std::vector<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
-    _clients.erase(it);
+    if (_type == Type_RemoteGateway && msg.type() == Message::Type_Call)
+    {
+      /*
+       * Since the ReverseGateway connected itself to the RemoteGateway,
+       * it is known as a client. We need to fix it by removing its
+       * TransportSocket fro the _clients vector.
+       */
+      std::vector<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
+      _clients.erase(it);
 
-    if (_services.find(Message::Service_ServiceDirectory) == _services.end())
-    {
-      _services[Message::Service_ServiceDirectory] = socket;
+      if (_services.find(Message::Service_ServiceDirectory) == _services.end())
+      {
+        qiLogInfo("gateway") << "Attached to ReverseGateway";
+
+        _services[Message::Service_ServiceDirectory] = socket;
+        qi::Buffer buf;
+        qi::Message ans;
+        ans.setBuffer(buf);
+        ans.setService(qi::Message::Service_None);
+        ans.setType(qi::Message::Type_Reply);
+        ans.setFunction(qi::Message::GatewayFunction_Connect);
+        ans.setPath(qi::Message::Path_Main);
+        qi::DataStream d(buf);
+        d << "";
+        socket->send(ans);
+      }
+      else
+      {
+        qiLogError("gateway") << "Already connected to Service Directory";
+      }
     }
-    else
+    else if (_type == Type_ReverseGateway && msg.type() == Message::Type_Reply)
     {
-      qiLogError("gateway") << "Already connected to Service Directory";
+      std::string endpoint;
+      DataStream d(msg.buffer());
+      d >> endpoint;
+      if (endpoint != "")
+      {
+        connect(endpoint);
+      }
     }
 
     return; // nothing more to do here
@@ -273,7 +299,8 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
 
 /*
  * Callback triggered when Gateway or ReverseGateway have established
- * a connection to the ServiceDirectory or to another service.
+ * a connection to the ServiceDirectory or to another service, or when
+ * the ReverseGateway has reached a RemoteGateway.
  */
 // S.2/
 void GatewayPrivate::onSocketConnected(TransportSocket *service)
@@ -297,7 +324,30 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
     }
   }
 
-  qiLogError("gateway") << "Unknown service TransportSocket " << service;
+  for (std::list<TransportSocket*>::iterator it = _remoteGateways.begin();
+       it != _remoteGateways.end();
+       it++)
+  {
+    if (*it == service)
+    {
+      TransportSocket *ts = *it;
+
+      qi::Message msg;
+      msg.setService(qi::Message::Service_None);
+      msg.setType(qi::Message::Type_Call);
+      msg.setFunction(qi::Message::GatewayFunction_Connect);
+      msg.setPath(qi::Message::Path_Main);
+
+      ts->send(msg);
+      _clients.push_back(ts);
+      break;
+    }
+  }
+
+  if (_type != Type_ReverseGateway)
+  {
+    qiLogError("gateway") << "Unknown service TransportSocket " << service;
+  }
 }
 
 bool GatewayPrivate::attachToServiceDirectory(const Url &address)
@@ -324,47 +374,12 @@ bool GatewayPrivate::listen(const Url &address)
 
 bool GatewayPrivate::connect(const qi::Url &connectURL)
 {
+  qiLogInfo("gateway") << "Connecting to remote gateway: " << connectURL.str();
+
   qi::TransportSocket *ts = new qi::TransportSocket();
-  ts->connect(&_session, connectURL);
-  ts->waitForConnected();
-
-  qi::Message msg;
-  msg.setService(qi::Message::Service_None);
-  msg.setType(qi::Message::Type_Call);
-  msg.setFunction(qi::Message::GatewayFunction_Connect);
-  msg.setPath(qi::Message::Path_Main);
-
-  ts->send(msg);
-
-#if 0
-  qi::Message ans;
-  qi::DataStream ds(ans.buffer());
-
-  if (!ts->waitForId(msg.id()))
-  {
-    return false;
-  }
-  ts->read(msg.id(), &ans);
-
-  /*
-   * Why do we need to deserialize the endpoint address since
-   * we already have an opened TransportSocket?
-   */
-  std::string endpointURL;
-  ds >> endpointURL;
-
-  if (connectURL.str() != endpointURL)
-  {
-    delete ts;
-    qi::Url endpoint(endpointURL);
-    qi::TransportSocket *ts = new qi::TransportSocket();
-    ts->connect(&(_p->_session), endpoint);
-    ts->waitForConnected();
-  }
-#endif
-
   ts->setCallbacks(this);
-  _clients.push_back(ts);
+  ts->connect(&_session, connectURL);
+  _remoteGateways.push_back(ts);
 
   return true;
 }
