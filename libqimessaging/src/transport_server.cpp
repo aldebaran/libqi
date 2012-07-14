@@ -92,6 +92,11 @@ namespace qi
     return _p->listen();
   }
 
+  void TransportServer::join()
+  {
+    _p->join();
+  }
+
   TransportSocket *TransportServer::nextPendingConnection()
   {
     if (_p == NULL)

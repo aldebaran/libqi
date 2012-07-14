@@ -163,6 +163,11 @@ namespace qi
     return _listener != 0;
   }
 
+  void TransportServerLibEventPrivate::join()
+  {
+    mainSession->_p->_networkThread->join();
+  }
+
   TransportServerLibEventPrivate::TransportServerLibEventPrivate(qi::Session *session,
                                                                  const qi::Url &url)
     : TransportServerPrivate(session, url)

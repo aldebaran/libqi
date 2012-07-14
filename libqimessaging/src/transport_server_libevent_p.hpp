@@ -33,6 +33,7 @@ namespace qi
 
     virtual bool listen();
     virtual bool close();
+    virtual void join();
 
     void accept(evutil_socket_t        fd,
                 struct evconnlistener *listener);

@@ -35,6 +35,7 @@ namespace qi {
 
     virtual bool listen() = 0;
     virtual bool close() = 0;
+    virtual void join() = 0;
 
   public:
     std::queue<qi::TransportSocket*> connection;

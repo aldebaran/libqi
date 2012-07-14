@@ -27,6 +27,7 @@ namespace qi
     virtual ~TransportServerDummyPrivate();
     virtual bool listen();
     virtual bool close();
+    virtual void join();
 
   private:
     TransportServerDummyPrivate() {};

@@ -42,7 +42,7 @@ namespace qi {
 
     bool listen();
     bool listen(qi::Session *session, const qi::Url &url);
-
+    void join();
     bool close();
 
     qi::Url listenUrl() const;
