@@ -14,3 +14,5 @@ add_subdirectory("qimaster")
 add_subdirectory("qigateway")
 add_subdirectory("qi-qt")
 add_subdirectory("qiservice-qt")
+
+add_subdirectory("qilb")
