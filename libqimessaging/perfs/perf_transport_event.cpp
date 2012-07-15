@@ -44,9 +44,8 @@ public:
     _numBytes = 0;
   }
 
-  virtual void newConnection()
+  virtual void newConnection(qi::TransportSocket *socket)
   {
-    qi::TransportSocket *socket = _ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setCallbacks(this);

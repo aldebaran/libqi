@@ -28,7 +28,7 @@ namespace qi {
 
     ServerPrivate();
     virtual ~ServerPrivate();
-    virtual void newConnection();
+    virtual void newConnection(TransportSocket *client);
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketDisconnected(TransportSocket *client);
     virtual void onFutureFinished(const unsigned int &future,
@@ -79,9 +79,8 @@ namespace qi {
     //do not delete the session that we dont own
   }
 
-  void ServerPrivate::newConnection()
+  void ServerPrivate::newConnection(TransportSocket *socket)
   {
-    TransportSocket *socket = _ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setCallbacks(this);

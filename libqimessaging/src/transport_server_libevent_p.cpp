@@ -68,9 +68,8 @@ namespace qi
     if (ts->_p)
       delete ts->_p;
     ts->_p = new qi::TransportSocketLibEvent(ts, fd, base);
-    connection.push(ts);
 
-    tsi->newConnection();
+    tsi->newConnection(ts);
   }
 
   void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {

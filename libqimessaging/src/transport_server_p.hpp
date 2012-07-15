@@ -38,7 +38,6 @@ namespace qi {
     virtual void join() = 0;
 
   public:
-    std::queue<qi::TransportSocket*> connection;
     TransportServerInterface        *tsi;
     qi::Session                     *mainSession;
     qi::Url                          listenUrl;

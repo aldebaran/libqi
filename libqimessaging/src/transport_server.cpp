@@ -80,9 +80,10 @@ namespace qi
                               const qi::Url &url)
   {
     TransportServerPrivate *save = _p;
+
     _p = newTSP(session, url);
     _p->tsi = save->tsi;
-    _p->connection = save->connection;
+
     delete save;
     return listen();
   }
@@ -95,24 +96,6 @@ namespace qi
   void TransportServer::join()
   {
     _p->join();
-  }
-
-  TransportSocket *TransportServer::nextPendingConnection()
-  {
-    if (_p == NULL)
-    {
-      qiLogError("TransportServer") << "TransportServer is not started. "
-                                    << "You cannot get next pending connection.";
-      return NULL;
-    }
-    if (!_p->connection.empty())
-    {
-      qi::TransportSocket *front = _p->connection.front();
-      _p->connection.pop();
-      return front;
-    }
-
-    return NULL;
   }
 
   void TransportServer::setCallbacks(TransportServerInterface *delegate)

@@ -19,14 +19,15 @@
 
 namespace qi {
 
+  class TransportSocket;
+
   class QIMESSAGING_API TransportServerInterface {
   public:
     virtual ~TransportServerInterface() = 0;
-    virtual void newConnection() = 0;
+    virtual void newConnection(TransportSocket *socket) = 0;
   };
 
   class Session;
-  class TransportSocket;
   class TransportServerPrivate;
 
   class QIMESSAGING_API TransportServer
@@ -46,8 +47,6 @@ namespace qi {
     bool close();
 
     qi::Url listenUrl() const;
-
-    TransportSocket *nextPendingConnection();
 
     TransportServerPrivate *_p;
   };

@@ -34,7 +34,7 @@ namespace qi
     ServiceDirectoryPrivate();
     ~ServiceDirectoryPrivate();
 
-    virtual void newConnection();
+    virtual void newConnection(TransportSocket *socket);
     virtual void onSocketReadyRead(TransportSocket *socket, int id);
     virtual void onSocketWriteDone(TransportSocket *client);
     virtual void onSocketConnected(TransportSocket *client);
@@ -89,9 +89,8 @@ namespace qi
     delete session;
   }
 
-  void ServiceDirectoryPrivate::newConnection()
+  void ServiceDirectoryPrivate::newConnection(TransportSocket *socket)
   {
-    TransportSocket *socket = ts->nextPendingConnection();
     if (!socket)
       return;
     socket->setCallbacks(this);

@@ -41,7 +41,7 @@ protected:
   void forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg);
 
   //ServerInterface
-  virtual void newConnection();
+  virtual void newConnection(TransportSocket *socket);
 
   //SocketInterface
   virtual void onSocketReadyRead(TransportSocket *client, int id);
@@ -68,9 +68,8 @@ public:
   std::list<TransportSocket*> _remoteGateways;
 };
 
-void GatewayPrivate::newConnection()
+void GatewayPrivate::newConnection(TransportSocket *socket)
 {
-  TransportSocket *socket = _transportServer->nextPendingConnection();
   if (!socket)
     return;
   socket->setCallbacks(this);
