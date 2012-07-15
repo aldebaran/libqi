@@ -86,9 +86,11 @@ int main(int argc, char *argv[])
       srv.listen(&session, "tcp://0.0.0.0:0");
       unsigned int id = srv.registerService("serviceTest", &obj);
 
+#if 0
       // test unregistration
       srv.unregisterService(id);
       id = srv.registerService("serviceTest", &obj);
+#endif
 
       if (id)
       {
