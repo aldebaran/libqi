@@ -86,16 +86,19 @@ TEST_F(TestObject, CoDeco)
   {
     payload->reset();
     int linkId = oclient->connect("fire", &onFire);
+    int exp;
     qi::os::msleep(800);
     EXPECT_GE(linkId, 0);
     oserver.emitEvent("fire", (int)(50 + i));
     ASSERT_TRUE(payload->future().wait(2000));
-    EXPECT_EQ(50 + i, payload->future().value());
+    exp = 50 + i;
+    EXPECT_EQ(exp, payload->future().value());
 
     payload->reset();
     oserver.emitEvent("fire", (int)(51 + i));
     ASSERT_TRUE(payload->future().wait(2000));
-    EXPECT_EQ(51+i, payload->future().value());
+    exp = 51 + i;
+    EXPECT_EQ(exp, payload->future().value());
 
     oclient->disconnect(linkId);
 
