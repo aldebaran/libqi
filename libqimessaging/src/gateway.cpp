@@ -30,10 +30,14 @@ public:
     Type_RemoteGateway  = 3,
   };
 
+  GatewayPrivate();
+
   bool attachToServiceDirectory(const Url &address);
   bool listen(const Url &address);
   bool connect(const Url &address);
   void join();
+  void addCallbacks(TransportServerInterface *tsrvi,
+                    TransportSocketInterface *tscki);
 
 protected:
   void handleMsgFromClient(TransportSocket *client, qi::Message *msg);
@@ -66,13 +70,27 @@ public:
   std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >  _pendingMessage;
 
   std::list<TransportSocket*> _remoteGateways;
+
+  std::list<TransportSocketInterface*> _transportSocketCallbacks;
 };
+
+GatewayPrivate::GatewayPrivate()
+{
+  _transportSocketCallbacks.push_back(this);
+}
 
 void GatewayPrivate::newConnection(TransportSocket *socket)
 {
   if (!socket)
     return;
-  socket->addCallbacks(this);
+
+  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+       it != _transportSocketCallbacks.end();
+       it++)
+  {
+    socket->addCallbacks(*it);
+  }
+
   _clients.push_back(socket);
 }
 
@@ -204,7 +222,14 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
         // Connect to the service
         TransportSocket *service = new TransportSocket();
         service->connect(&_session, url);
-        service->addCallbacks(this);
+
+        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+             it != _transportSocketCallbacks.end();
+             it++)
+        {
+          service->addCallbacks(*it);
+        }
+
         _services[serviceId] = service;
       }
 
@@ -357,7 +382,12 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   TransportSocket *sdSocket = new qi::TransportSocket();
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
   sdSocket->connect(&_session, address);
-  sdSocket->addCallbacks(this);
+  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+       it != _transportSocketCallbacks.end();
+       it++)
+  {
+    sdSocket->addCallbacks(*it);
+  }
   sdSocket->waitForConnected();
 
   return true;
@@ -376,7 +406,12 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
   qiLogInfo("gateway") << "Connecting to remote gateway: " << connectURL.str();
 
   qi::TransportSocket *ts = new qi::TransportSocket();
-  ts->addCallbacks(this);
+  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+       it != _transportSocketCallbacks.end();
+       it++)
+  {
+    ts->addCallbacks(*it);
+  }
   ts->connect(&_session, connectURL);
   _remoteGateways.push_back(ts);
 
@@ -386,6 +421,13 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
 void GatewayPrivate::join()
 {
   _session.join();
+}
+
+void GatewayPrivate::addCallbacks(qi::TransportServerInterface *tsrvi,
+                                  qi::TransportSocketInterface *tscki)
+{
+  _transportServer->addCallbacks(tsrvi);
+  _transportSocketCallbacks.push_back(tscki);
 }
 
 /* Gateway bindings */
@@ -435,6 +477,12 @@ bool RemoteGateway::listen(const qi::Url &address)
 void RemoteGateway::join()
 {
   _p->join();
+}
+
+void RemoteGateway::addCallbacks(TransportServerInterface *tsrvi,
+                                 TransportSocketInterface *tscki)
+{
+  _p->addCallbacks(tsrvi, tscki);
 }
 
 /* ReverseGateway bindings */

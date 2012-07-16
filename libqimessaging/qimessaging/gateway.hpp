@@ -8,9 +8,11 @@
 
 #pragma once
 #ifndef _QIMESSAGING_GATEWAY_HPP_
-#define _QIMESSAGING_GATEWAY_HPP_
+# define _QIMESSAGING_GATEWAY_HPP_
 
 # include <qimessaging/url.hpp>
+# include <qimessaging/transport_server.hpp>
+# include <qimessaging/transport_socket.hpp>
 
 namespace qi
 {
@@ -38,6 +40,8 @@ namespace qi
 
     bool listen(const qi::Url &address);
     void join();
+    void addCallbacks(TransportServerInterface *tsrvi,
+                      TransportSocketInterface *tscki);
 
   private:
     GatewayPrivate *_p;
