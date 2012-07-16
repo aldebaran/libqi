@@ -72,7 +72,7 @@ void GatewayPrivate::newConnection(TransportSocket *socket)
 {
   if (!socket)
     return;
-  socket->setCallbacks(this);
+  socket->addCallbacks(this);
   _clients.push_back(socket);
 }
 
@@ -204,7 +204,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
         // Connect to the service
         TransportSocket *service = new TransportSocket();
         service->connect(&_session, url);
-        service->setCallbacks(this);
+        service->addCallbacks(this);
         _services[serviceId] = service;
       }
 
@@ -357,7 +357,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   TransportSocket *sdSocket = new qi::TransportSocket();
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
   sdSocket->connect(&_session, address);
-  sdSocket->setCallbacks(this);
+  sdSocket->addCallbacks(this);
   sdSocket->waitForConnected();
 
   return true;
@@ -367,7 +367,7 @@ bool GatewayPrivate::listen(const Url &address)
 {
   _endpoints.push_back(address.str());
   _transportServer = new qi::TransportServer(&_session, address);
-  _transportServer->setCallbacks(this);
+  _transportServer->addCallbacks(this);
   return _transportServer->listen();
 }
 
@@ -376,7 +376,7 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
   qiLogInfo("gateway") << "Connecting to remote gateway: " << connectURL.str();
 
   qi::TransportSocket *ts = new qi::TransportSocket();
-  ts->setCallbacks(this);
+  ts->addCallbacks(this);
   ts->connect(&_session, connectURL);
   _remoteGateways.push_back(ts);
 

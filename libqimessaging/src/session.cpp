@@ -27,7 +27,7 @@ namespace qi {
       _self(session),
       _callbacks(0)
   {
-    _serviceSocket->setCallbacks(this);
+    _serviceSocket->addCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -56,8 +56,14 @@ namespace qi {
 
     {
       // Comes from session connected to ServiceDirectory
-      if (_callbacks)
-        _callbacks->onSessionConnected(_self);
+      std::vector<SessionInterface *> localCallbacks;
+      {
+        boost::mutex::scoped_lock l(_mutexCallback);
+        localCallbacks = _callbacks;
+      }
+      std::vector<SessionInterface *>::const_iterator it;
+      for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+        (*it)->onSessionConnected(_self);
       return;
     }
   }
@@ -71,17 +77,28 @@ namespace qi {
       return;
     }
 
+    std::vector<SessionInterface *> localCallbacks;
     {
-      if (_callbacks)
-        _callbacks->onSessionConnectionError(_self);
-      return;
+      boost::mutex::scoped_lock l(_mutexCallback);
+      localCallbacks = _callbacks;
     }
+    std::vector<SessionInterface *>::const_iterator it2;
+    for (it2 = localCallbacks.begin(); it2 != localCallbacks.end(); ++it2)
+      (*it2)->onSessionConnectionError(_self);
+    return;
   }
 
   void SessionPrivate::onSocketDisconnected(TransportSocket *client)
   {
-    if (_callbacks)
-      _callbacks->onSessionDisconnected(_self);
+    std::vector<SessionInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(_mutexCallback);
+      localCallbacks = _callbacks;
+    }
+    std::vector<SessionInterface *>::const_iterator it;
+    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+      (*it)->onSessionDisconnected(_self);
+    return;
   }
 
   void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
@@ -187,7 +204,7 @@ namespace qi {
         {
           qi::TransportSocket *ts = NULL;
           ts = new qi::TransportSocket();
-          ts->setCallbacks(this);
+          ts->addCallbacks(this);
           {
             boost::mutex::scoped_lock l(_mutexFuture);
             _futureConnect[ts] = sr;
@@ -218,7 +235,7 @@ namespace qi {
 
     if (d.status() == qi::DataStream::Status_Ok)
     {
-      client->setCallbacks(0);
+      client->removeCallbacks(this);
       qi::RemoteObject *robj = new qi::RemoteObject(client, sr.serviceId, mo);
       qi::Object *obj;
       obj = robj;
@@ -406,8 +423,34 @@ namespace qi {
     return true;
   }
 
-  void Session::setCallbacks(SessionInterface *delegate) {
-    _p->_callbacks = delegate;
+  void Session::addCallbacks(SessionInterface *delegate)
+  {
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(_p->_mutexCallback);
+      _p->_callbacks.push_back(delegate);
+    }
+    else
+      qiLogError("qimessaging.Session") << "Trying to set invalid callback on the session.";
+  }
+
+  void Session::removeCallbacks(SessionInterface *delegate)
+  {
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(_p->_mutexCallback);
+      std::vector<SessionInterface *>::iterator it;
+      for (it = _p->_callbacks.begin(); it != _p->_callbacks.end(); ++it)
+      {
+        if (*it == delegate)
+        {
+          _p->_callbacks.erase(it);
+          break;
+        }
+      }
+    }
+    else
+      qiLogError("qimessaging.Session") << "Trying to erase invalid callback on the session.";
   }
 
   qi::Url Session::url() const {

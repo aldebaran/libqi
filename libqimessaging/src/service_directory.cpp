@@ -93,7 +93,7 @@ namespace qi
   {
     if (!socket)
       return;
-    socket->setCallbacks(this);
+    socket->addCallbacks(this);
   }
 
   void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
@@ -267,7 +267,7 @@ bool ServiceDirectory::listen(const qi::Url &address)
   si.setEndpoints(eps);
   _p->session = new qi::Session();
   _p->ts = new qi::TransportServer(_p->session, address);
-  _p->ts->setCallbacks(_p);
+  _p->ts->addCallbacks(_p);
 
   if (_p->ts->listen())
   {

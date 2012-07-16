@@ -20,7 +20,7 @@ public:
   {
     nthd = NULL;
     ts = new qi::TransportServer();
-//    ts->setCallbacks(this);
+//    ts->addCallbacks(this);
   }
 
   ~RemoteServer()

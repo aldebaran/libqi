@@ -18,7 +18,7 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::Me
   : _ts(ts)
   , _service(service)
 {
-  _ts->setCallbacks(this);
+  _ts->addCallbacks(this);
   //allocate by caller, but owned by us then
   _meta = mo;
 }

@@ -69,7 +69,14 @@ namespace qi
       delete ts->_p;
     ts->_p = new qi::TransportSocketLibEvent(ts, fd, base);
 
-    tsi->newConnection(ts);
+    std::vector<TransportServerInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(mutexCallback);
+      localCallbacks = tsi;
+    }
+    std::vector<TransportServerInterface *>::const_iterator it;
+    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+      (*it)->newConnection(ts);
   }
 
   void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {

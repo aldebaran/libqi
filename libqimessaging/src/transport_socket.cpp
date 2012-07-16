@@ -110,9 +110,19 @@ namespace qi
     return _p->send(msg);
   }
 
-  void TransportSocket::setCallbacks(TransportSocketInterface *delegate)
+  void TransportSocket::addCallbacks(TransportSocketInterface *delegate)
   {
-    _p->setCallbacks(delegate);
+    _p->addCallbacks(delegate);
+  }
+
+  void TransportSocket::removeCallbacks(TransportSocketInterface *delegate)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
+      return;
+    }
+    _p->removeCallbacks(delegate);
   }
 
   bool TransportSocket::isConnected() const

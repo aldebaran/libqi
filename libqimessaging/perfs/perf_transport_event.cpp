@@ -48,7 +48,7 @@ public:
   {
     if (!socket)
       return;
-    socket->setCallbacks(this);
+    socket->addCallbacks(this);
   }
 
   virtual void onSocketReadyRead(qi::TransportSocket *client, int id)
@@ -114,7 +114,7 @@ public:
     qi::Url urlo(_p->_endpoints[0]);
     _p->_ts = new qi::TransportServer(session, urlo);
 
-    _p->_ts->setCallbacks(_p);
+    _p->_ts->addCallbacks(_p);
     _p->_ts->listen();
   }
 

@@ -12,11 +12,13 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/session.hpp>
+# include <qimessaging/transport_server.hpp>
 
 # include <string>
 # include <queue>
+# include <vector>
 
-# include <qimessaging/transport_server.hpp>
+#include <boost/thread.hpp>
 
 namespace qi {
 
@@ -38,9 +40,10 @@ namespace qi {
     virtual void join() = 0;
 
   public:
-    TransportServerInterface        *tsi;
-    qi::Session                     *mainSession;
-    qi::Url                          listenUrl;
+    std::vector<TransportServerInterface *> tsi;
+    boost::mutex                            mutexCallback;
+    qi::Session                            *mainSession;
+    qi::Url                                 listenUrl;
 
   protected:
     TransportServerPrivate()

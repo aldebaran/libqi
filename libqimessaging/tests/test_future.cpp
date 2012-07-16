@@ -45,7 +45,7 @@ TEST(TestFuture, SimpleType) {
 
   qi::Future<int>  fut = pro.future();
 
-  fut.setCallback(&tf);
+  fut.addCallbacks(&tf);
 
   EXPECT_EQ(0, gGlobalI);
   EXPECT_FALSE(fut.isReady());
@@ -62,7 +62,7 @@ TEST(TestFuture, ComplexType) {
 
   qi::Future<std::string>  fut = pro.future();
 
-  fut.setCallback(&tf);
+  fut.addCallbacks(&tf);
 
   EXPECT_STREQ("", gGlobalS.c_str());
   EXPECT_FALSE(fut.isReady());
@@ -113,7 +113,7 @@ TEST(TestFuture, TestError) {
   qi::Promise<int> pro;
 
   qi::Future<int>  fut = pro.future();
-  fut.setCallback(&tf);
+  fut.addCallbacks(&tf);
 
   EXPECT_STREQ("", gGlobalE.c_str());
   EXPECT_FALSE(fut.hasError());

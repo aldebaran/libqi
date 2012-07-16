@@ -10,6 +10,7 @@
 # define _QIMESSAGING_TRANSPORT_SOCKET_P_HPP_
 
 # include <string>
+# include <vector>
 # include <boost/thread.hpp>
 
 # include <qimessaging/api.hpp>
@@ -38,13 +39,15 @@ namespace qi
     virtual bool waitForDisconnected(int msecs = 30000);
     virtual bool waitForId(int id, int msecs = 30000);
 
-    virtual void setCallbacks(TransportSocketInterface *delegate);
+    virtual void addCallbacks(TransportSocketInterface *delegate);
+    virtual void removeCallbacks(TransportSocketInterface *delegate);
     virtual bool isConnected() const;
 
   public:
-    TransportSocketInterface *tcd;
-    bool                      connected;
-    int                       status;
+    std::vector<TransportSocketInterface *> tcd;
+    boost::mutex                            mtxCallback;
+    bool                                    connected;
+    int                                     status;
     // data to rebuild message
     bool                      readHdr;
     qi::Message              *msg;

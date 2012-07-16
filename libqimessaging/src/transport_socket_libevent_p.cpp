@@ -127,9 +127,14 @@ namespace qi
         msg = NULL;
         cond.notify_all();
       }
-      if (tcd)
-        tcd->onSocketReadyRead(self, msgId);
-
+      std::vector<TransportSocketInterface *> localCallbacks;
+      {
+        boost::mutex::scoped_lock l(mtxCallback);
+        localCallbacks = tcd;
+      }
+      std::vector<TransportSocketInterface *>::const_iterator it;
+      for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+        (*it)->onSocketReadyRead(self, msgId);
     }
   }
 
@@ -137,19 +142,32 @@ namespace qi
   void TransportSocketLibEvent::writecb(struct bufferevent *QI_UNUSED(bev),
                                         void               *QI_UNUSED(context))
   {
-    if (tcd)
-      tcd->onSocketWriteDone(self);
+    std::vector<TransportSocketInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(mtxCallback);
+      localCallbacks = tcd;
+    }
+    std::vector<TransportSocketInterface *>::const_iterator it;
+    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+      (*it)->onSocketWriteDone(self);
   }
 
   void TransportSocketLibEvent::eventcb(struct bufferevent *bev,
                                         short events,
                                         void *QI_UNUSED(context))
   {
+    std::vector<TransportSocketInterface *>::const_iterator it;
+    std::vector<TransportSocketInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(mtxCallback);
+      localCallbacks = tcd;
+    }
+
     if (events & BEV_EVENT_CONNECTED)
     {
       connected = true;
-      if (tcd)
-        tcd->onSocketConnected(self);
+      for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+        (*it)->onSocketConnected(self);
     }
     else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
     {
@@ -160,10 +178,13 @@ namespace qi
       //for waitForId
       cond.notify_all();
 
-      if (tcd)
-        tcd->onSocketConnectionError(self);
-      if (wasco && tcd)
-        tcd->onSocketDisconnected(self);
+      for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+        (*it)->onSocketConnectionError(self);
+      if (wasco)
+      {
+        for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+          (*it)->onSocketDisconnected(self);
+      }
       status = errno;
       // check errno to see what error occurred
       qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;

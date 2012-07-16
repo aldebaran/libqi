@@ -68,8 +68,12 @@ namespace qi {
 
     const std::string &error() const           { return _p->error(); }
 
-    void setCallback(FutureInterface<T> *p_interface, void *data = 0) {
-      _p->setCallback(p_interface, data);
+    void addCallbacks(FutureInterface<T> *p_interface, void *data = 0) {
+      _p->addCallbacks(p_interface, data);
+    }
+
+    void removeCallbacks(FutureInterface<T> *p_interface) {
+      _p->removeCallbacks(p_interface);
     }
 
     friend class Promise<T>;

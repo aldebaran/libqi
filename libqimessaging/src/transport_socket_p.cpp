@@ -118,9 +118,34 @@ namespace qi
     return false;
   }
 
-  void TransportSocketPrivate::setCallbacks(TransportSocketInterface *delegate)
+  void TransportSocketPrivate::addCallbacks(TransportSocketInterface *delegate)
   {
-    tcd = delegate;
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(mtxCallback);
+      tcd.push_back(delegate);
+    }
+    else
+      qiLogError("") << "Trying to set invalid callback on TransportSoket.";
+  }
+
+  void TransportSocketPrivate::removeCallbacks(TransportSocketInterface *delegate)
+  {
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(mtxCallback);
+      std::vector<TransportSocketInterface *>::iterator it;
+      for (it = tcd.begin(); it != tcd.end(); ++it)
+      {
+        if (*it == delegate)
+        {
+          tcd.erase(it);
+          break;
+        }
+      }
+    }
+    else
+      qiLogError("") << "Trying to erase invalid callback on TransportSoket.";
   }
 
   bool TransportSocketPrivate::isConnected() const

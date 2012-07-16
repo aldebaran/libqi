@@ -108,7 +108,7 @@ Classes
 
     :return: the error
 
-  .. cpp:function:: void setCallback(FutureInterface<T> *interface, void *data = 0)
+  .. cpp:function:: void addCallbacks(FutureInterface<T> *interface, void *data = 0)
 
     :param interface: the callback interface
     :param data: pointer to user data

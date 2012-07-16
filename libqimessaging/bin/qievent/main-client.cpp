@@ -36,7 +36,7 @@ class RemoteService : public qi::TransportSocketInterface {
 public:
   RemoteService() {
     tc = new qi::TransportSocket();
-    tc->setCallbacks(this);
+    tc->addCallbacks(this);
   }
 
   ~RemoteService() {

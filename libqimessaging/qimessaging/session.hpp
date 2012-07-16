@@ -53,7 +53,8 @@ namespace qi {
     qi::Future< qi::Object* > service(const std::string &service,
                                       const std::string &type = std::string("any"));
 
-    void setCallbacks(SessionInterface *delegate);
+    void addCallbacks(SessionInterface *delegate);
+    void removeCallbacks(SessionInterface *delegate);
 
     qi::Url url() const;
 

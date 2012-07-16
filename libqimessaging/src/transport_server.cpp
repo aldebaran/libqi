@@ -98,7 +98,7 @@ namespace qi
     _p->join();
   }
 
-  void TransportServer::setCallbacks(TransportServerInterface *delegate)
+  void TransportServer::addCallbacks(TransportServerInterface *delegate)
   {
     if (_p == NULL)
     {
@@ -106,7 +106,38 @@ namespace qi
                                     << "You cannot set callbacks.";
       return;
     }
-    _p->tsi = delegate;
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(_p->mutexCallback);
+      _p->tsi.push_back(delegate);
+    }
+    else
+      qiLogError("TransportServer") << "Trying to set invalid callback on TransportServer.";
+  }
+
+  void TransportServer::removeCallbacks(TransportServerInterface *delegate)
+  {
+    if (_p == NULL)
+    {
+      qiLogError("TransportServer") << "TransportServer is not start. "
+                                    << "You cannot set callbacks.";
+      return;
+    }
+    if (delegate)
+    {
+      boost::mutex::scoped_lock l(_p->mutexCallback);
+      std::vector<TransportServerInterface *>::iterator it;
+      for (it = _p->tsi.begin(); it != _p->tsi.end(); ++it)
+      {
+        if (*it == delegate)
+        {
+          _p->tsi.erase(it);
+          break;
+        }
+      }
+    }
+    else
+      qiLogError("TransportServer") << "Trying to erase invalid callback on TransportServer.";
   }
 
   qi::Url TransportServer::listenUrl() const {

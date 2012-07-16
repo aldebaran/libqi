@@ -10,6 +10,7 @@
 #define _SRC_SESSION_P_HPP_
 
 #include <map>
+#include <vector>
 #include <boost/thread.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
@@ -49,10 +50,11 @@ namespace qi {
 
 
   public:
-    qi::TransportSocket  *_serviceSocket;
-    qi::NetworkThread    *_networkThread;
-    qi::Session          *_self;
-    qi::SessionInterface *_callbacks;
+    qi::TransportSocket                *_serviceSocket;
+    qi::NetworkThread                  *_networkThread;
+    qi::Session                        *_self;
+    std::vector<qi::SessionInterface *> _callbacks;
+    boost::mutex                        _mutexCallback;
 
     boost::mutex                                               _mutexFuture;
     std::map<int, ServiceRequest>                              _futureService;

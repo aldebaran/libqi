@@ -39,7 +39,8 @@ namespace qi {
     TransportServer(qi::Session *session, const qi::Url &url);
     virtual ~TransportServer();
 
-    void setCallbacks(TransportServerInterface *delegate);
+    void addCallbacks(TransportServerInterface *delegate);
+    void removeCallbacks(TransportServerInterface *delegate);
 
     bool listen();
     bool listen(qi::Session *session, const qi::Url &url);

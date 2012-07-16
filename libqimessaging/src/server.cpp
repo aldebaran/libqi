@@ -71,7 +71,7 @@ namespace qi {
     : _ts(new TransportServer()),
       _session(0)
   {
-    _ts->setCallbacks(this);
+    _ts->addCallbacks(this);
   }
 
   ServerPrivate::~ServerPrivate() {
@@ -83,7 +83,7 @@ namespace qi {
   {
     if (!socket)
       return;
-    socket->setCallbacks(this);
+    socket->addCallbacks(this);
   }
 
   void ServerPrivate::onSocketDisconnected(TransportSocket* client)
@@ -232,7 +232,6 @@ namespace qi {
   Server::Server()
     : _p(new ServerPrivate())
   {
-//    _p->_ts->setCallbacks(this);
   }
 
   Server::~Server()
@@ -336,7 +335,7 @@ namespace qi {
     }
 
     qi::Future<unsigned int> future = _p->_session->_p->registerService(si);
-    future.setCallback(_p, obj);
+    future.addCallbacks(_p, obj);
 
     return future;
   };

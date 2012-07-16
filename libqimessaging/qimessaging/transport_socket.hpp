@@ -51,7 +51,8 @@ namespace qi
     bool read(int id, qi::Message *msg);
     bool send(const qi::Message &msg);
 
-    void setCallbacks(TransportSocketInterface *delegate);
+    void addCallbacks(TransportSocketInterface *delegate);
+    void removeCallbacks(TransportSocketInterface *delegate);
     bool isConnected() const;
     int  status() const;
     qi::Url url() const;
