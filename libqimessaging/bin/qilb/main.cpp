@@ -26,11 +26,12 @@ public:
     State_Disconnected = 3,
   };
 
-  RemoteConnection()
+  RemoteConnection(qi::TransportSocket *socket)
     : _state(State_Waiting)
     , _creationTime(time(0))
     , _socket(0)
     , _updated(false)
+    , _originalSocket(socket)
   {
   }
 
@@ -52,6 +53,7 @@ public:
     _socket = socket;
     _connectionTime = time(0);
     _updated = true;
+    _originalSocket->disconnect();
   }
 
   void onSocketConnected(qi::TransportSocket *) { }
@@ -80,6 +82,7 @@ private:
   qi::RemoteGateway    _remoteGateway;
   qi::TransportSocket *_socket;
   bool                 _updated;
+  qi::TransportSocket *_originalSocket;
 };
 
 class LoadBalancer: public qi::TransportServerInterface,
@@ -137,7 +140,7 @@ public:
       ans.setPath(qi::Message::Path_Main);
       qi::DataStream d(buf);
 
-      RemoteConnection *rc = new RemoteConnection();
+      RemoteConnection *rc = new RemoteConnection(socket);
 
       qi::Url url;
       do
@@ -169,9 +172,11 @@ public:
       {
         qiLogError("lb") << "query failed: " << sqlite3_errmsg(_db);
       }
-
-      //TODO: socket->disconnect();
     }
+  }
+
+  void onSocketWriteDone(qi::TransportSocket *socket)
+  {
   }
 
   void refresh()
