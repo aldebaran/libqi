@@ -47,7 +47,7 @@ namespace qi {
 
   const qi::Functor *MetaMethod::functor() const
   {
-    return _p->_functor;
+    return _p->_functor.get();
   }
 
   unsigned int       MetaMethod::index() const

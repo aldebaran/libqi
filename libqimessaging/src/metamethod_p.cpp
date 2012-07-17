@@ -10,7 +10,7 @@ namespace qi {
   MetaMethodPrivate::MetaMethodPrivate()
     : _signature(),
       _sigret(),
-      _functor(NULL),
+      _functor(),
       _idx(0)
   {
   }

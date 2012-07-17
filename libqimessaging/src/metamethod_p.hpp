@@ -30,7 +30,7 @@ namespace qi {
   public:
     std::string        _signature;
     std::string        _sigret;
-    const qi::Functor *_functor;
+    boost::shared_ptr<const qi::Functor> _functor;
     unsigned int       _idx;
   };
 
