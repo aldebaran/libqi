@@ -11,7 +11,7 @@
 namespace qi
 {
   TransportSocketPrivate::TransportSocketPrivate(TransportSocket *socket)
-    : tcd(NULL)
+    : tcd()
     , connected(false)
     , status(0)
     , readHdr(true)
