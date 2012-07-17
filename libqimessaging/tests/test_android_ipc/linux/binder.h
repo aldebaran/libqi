@@ -19,7 +19,7 @@
 
 #ifndef _LINUX_BINDER_H
 #define _LINUX_BINDER_H
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 #include <linux/ioctl.h>
 
 #define B_PACK_CHARS(c1, c2, c3, c4) \

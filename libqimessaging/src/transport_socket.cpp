@@ -13,7 +13,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 
 #include <qi/log.hpp>
 

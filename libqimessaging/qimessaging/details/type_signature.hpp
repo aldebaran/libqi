@@ -12,7 +12,7 @@
 #define _QIMESSAGING_DETAILS_TYPE_SIGNATURE_HPP_
 
 # include <string>
-# include <stdint.h>
+# include <boost/cstdint.hpp>
 # include <vector>
 # include <map>
 # include <boost/utility.hpp>

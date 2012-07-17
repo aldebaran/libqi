@@ -9,7 +9,7 @@
 #ifndef MESSAGE_P_HPP_
 # define MESSAGE_P_HPP_
 
-# include <stdint.h>
+# include <boost/cstdint.hpp>
 # include <qimessaging/buffer.hpp>
 
 namespace qi

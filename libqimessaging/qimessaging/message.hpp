@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/datastream.hpp>
 

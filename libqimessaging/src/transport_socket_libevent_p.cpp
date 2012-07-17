@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 
 #include <event2/util.h>
 #include <event2/event.h>
