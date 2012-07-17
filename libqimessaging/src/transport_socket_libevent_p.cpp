@@ -138,9 +138,7 @@ namespace qi
     }
   }
 
-
-  void TransportSocketLibEvent::writecb(struct bufferevent *QI_UNUSED(bev),
-                                        void               *QI_UNUSED(context))
+  void TransportSocketLibEvent::onWriteDone()
   {
     std::vector<TransportSocketInterface *> localCallbacks;
     {
@@ -150,6 +148,20 @@ namespace qi
     std::vector<TransportSocketInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
       (*it)->onSocketWriteDone(self);
+  }
+
+  void TransportSocketLibEvent::writecb(struct bufferevent *QI_UNUSED(bev),
+                                        void               *QI_UNUSED(context))
+  {
+    /*
+     * EV_WRITE
+     * This flag indicates an event that becomes active when the provided file
+     * descriptor is ready for writing.
+     * (http://www.wangafu.net/~nickm/libevent-book/Ref4_event.html)
+     *
+     * This means the callback is not called when data was sent, only when
+     * the socket is ready for writing.
+     */
   }
 
   void TransportSocketLibEvent::eventcb(struct bufferevent *bev,
@@ -290,6 +302,15 @@ namespace qi
   {
     if (isConnected())
     {
+      /*
+       * Currently (as of Libevent 2.0.5-beta), bufferevent_flush() is only
+       * implemented for some bufferevent types. In particular, socket-based
+       * bufferevents dont have it.
+       * (http://www.wangafu.net/~nickm/libevent-book/Ref6_bufferevent.html)
+       *
+       * :'(
+       */
+      bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
       bufferevent_free(bev);
       bev = NULL;
       connected = false;
@@ -355,6 +376,9 @@ namespace qi
       return false;
     }
     evbuffer_free(mess);
+
+    onWriteDone();
+
     return true;
   }
 }

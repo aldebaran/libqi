@@ -42,6 +42,8 @@ namespace qi
                  short events,
                  void *QI_UNUSED(context));
 
+    void onWriteDone();
+
     static void onBufferSent(const void *QI_UNUSED(data),
                              size_t QI_UNUSED(datalen),
                              void *buffer);
