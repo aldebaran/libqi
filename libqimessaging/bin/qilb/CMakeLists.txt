@@ -7,7 +7,7 @@
 
 project (QiLB)
 
-qi_create_bin(qilb
+qi_create_bin(qi-lb
   main.cpp
   DEPENDS QI QIMESSAGING SQLITE3)
 
