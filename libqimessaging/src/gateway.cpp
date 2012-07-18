@@ -50,6 +50,7 @@ protected:
   //SocketInterface
   virtual void onSocketReadyRead(TransportSocket *client, int id);
   virtual void onSocketConnected(TransportSocket *client);
+  virtual void onSocketDisconnected(TransportSocket *socket);
 
 public:
   std::vector<std::string>           _endpoints;
@@ -373,6 +374,45 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
   {
     qiLogError("gateway") << "Unknown service TransportSocket " << service;
   }
+}
+
+void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
+{
+  // Was it a Service?
+  for (std::map< unsigned int, qi::TransportSocket* >::iterator it = _services.begin();
+       it != _services.end();
+       )
+  {
+    if (it->second == socket)
+    {
+      if (it->first == Message::Service_ServiceDirectory)
+      {
+        qiLogError("gateway") << "Connection to the Service Directory was lost!"
+                              << " (FIXME: should re-establish connection)";
+      }
+      else
+      {
+        qiLogInfo("gateway") << "Connection to service #" << it->first
+                             << " was lost!";
+      }
+      // Remove the service from the _services map
+      _services.erase(it++);
+
+      // Remove the corresponding message routing table
+      std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > >::iterator it2 = _serviceToClient.find(socket);
+      if (it2 != _serviceToClient.end())
+      {
+        _serviceToClient.erase(it2);
+      }
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  // Was it a Client?
+  _clients.remove(socket); // this stupid STL doesn't have list::find()
 }
 
 bool GatewayPrivate::attachToServiceDirectory(const Url &address)
