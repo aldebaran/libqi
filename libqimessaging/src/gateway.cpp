@@ -61,7 +61,7 @@ public:
   std::map< unsigned int, qi::TransportSocket* > _services;
 
   /* Vector of all the TransportSocket of the clients */
-  std::vector<TransportSocket*>                  _clients;
+  std::list<TransportSocket*>                    _clients;
 
   /* For each service, map a received Message and its TransportSocket to the rewritten id */
   std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > > _serviceToClient;
@@ -270,7 +270,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
        * it is known as a client. We need to fix it by removing its
        * TransportSocket fro the _clients vector.
        */
-      std::vector<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
+      std::list<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
       _clients.erase(it);
 
       if (_services.find(Message::Service_ServiceDirectory) == _services.end())
