@@ -429,9 +429,6 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
 
 bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 {
-  _session.connect(address);
-  _session.waitForConnected();
-
   TransportSocket *sdSocket = new qi::TransportSocket();
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
   sdSocket->connect(&_session, address);
