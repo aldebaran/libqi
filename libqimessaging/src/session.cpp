@@ -329,14 +329,14 @@ namespace qi {
       if (!_serviceSocket->send(msg))
       {
         qi::DataStream dout(msg.buffer());
-        unsigned int idx;
-        dout >> idx;
+        unsigned int id;
+        dout >> id;
         qiLogError("qimessaging.Session") << "Error while unregister serviceId: "
-                                          << idx << " request";
+                                          << id << " request";
 
         std::stringstream ss;
         ss << "Error while unregister serviceId: "
-           << idx << " request";
+           << id << " request";
         ret.setError(ss.str());
       }
     }
