@@ -134,6 +134,12 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
      * The service is unknown to the Gateway. We will have to query
      * the Service Directory.
      */
+    if (_services.find(Message::Service_ServiceDirectory) == _services.end())
+    {
+      qiLogError("gateway") << "Not connected to ServiceDirectory";
+      return;
+    }
+
     Message sdMsg;
     DataStream d(sdMsg.buffer());
     d << msg->service();
