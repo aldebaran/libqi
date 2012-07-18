@@ -432,13 +432,14 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 {
   TransportSocket *sdSocket = new qi::TransportSocket();
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
-  sdSocket->connect(&_session, address);
   for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
        it != _transportSocketCallbacks.end();
        it++)
   {
     sdSocket->addCallbacks(*it);
   }
+
+  sdSocket->connect(&_session, address);
   sdSocket->waitForConnected();
 
   if (!sdSocket->isConnected())
