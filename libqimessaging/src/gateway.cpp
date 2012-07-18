@@ -350,6 +350,7 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
     if (it->second == service)
     {
       unsigned int serviceId = it->first;
+      qiLogInfo("gateway") << "Connected to service #" << serviceId;
       std::vector< std::pair<qi::Message*, TransportSocket*> >  &pmv = _pendingMessage[serviceId];
       std::vector< std::pair<qi::Message*, TransportSocket*> > ::iterator itPending;
 
