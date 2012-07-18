@@ -98,7 +98,7 @@ TEST(QiSession, getSimpleService)
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
   srv.listen(&session, serviceAddr.str());
-  unsigned int id = srv.registerService("serviceTest", &obj);
+  srv.registerService("serviceTest", &obj);
 
   qi::Object *object = session.service("serviceTest");
   EXPECT_TRUE(object);
@@ -144,7 +144,7 @@ TEST(QiSession, getCloseService)
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
   srv.listen(&session, serviceAddr.str());
-  unsigned int id = srv.registerService("serviceTest", &obj);
+  srv.registerService("serviceTest", &obj);
   srv.close();
 
   qi::Object *object = session.service("serviceTest");
