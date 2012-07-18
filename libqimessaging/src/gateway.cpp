@@ -443,6 +443,13 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   }
   sdSocket->waitForConnected();
 
+  if (!sdSocket->isConnected())
+  {
+    qiLogError("gateway") << "Could not attach to Service Directory "
+                          << address.str();
+    return false;
+  }
+
   return true;
 }
 
