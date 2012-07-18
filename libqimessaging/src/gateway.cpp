@@ -73,6 +73,8 @@ public:
   std::list<TransportSocket*> _remoteGateways;
 
   std::list<TransportSocketInterface*> _transportSocketCallbacks;
+
+  Url _attachAddress;
 };
 
 GatewayPrivate::GatewayPrivate()
@@ -136,7 +138,21 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
      */
     if (_services.find(Message::Service_ServiceDirectory) == _services.end())
     {
-      qiLogError("gateway") << "Not connected to ServiceDirectory";
+      qiLogError("gateway") << "Not connected to Service Directory";
+      if (_attachAddress.isValid())
+      {
+        qiLogInfo("gateway") << "Retry to connect to Service Directory on "
+                             << _attachAddress.str();
+        TransportSocket *sdSocket = new qi::TransportSocket();
+        _services[qi::Message::Service_ServiceDirectory] = sdSocket;
+        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+             it != _transportSocketCallbacks.end();
+             it++)
+        {
+          sdSocket->addCallbacks(*it);
+        }
+        sdSocket->connect(&_session, _attachAddress);
+      }
       return;
     }
 
@@ -400,8 +416,7 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
     {
       if (it->first == Message::Service_ServiceDirectory)
       {
-        qiLogError("gateway") << "Connection to the Service Directory was lost!"
-                              << " (FIXME: should re-establish connection)";
+        qiLogError("gateway") << "Connection to the Service Directory was lost!";
       }
       else
       {
@@ -430,6 +445,8 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
 
 bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 {
+  _attachAddress = address;
+
   TransportSocket *sdSocket = new qi::TransportSocket();
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
   for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
