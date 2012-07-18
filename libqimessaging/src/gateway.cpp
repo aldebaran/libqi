@@ -364,6 +364,7 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
 
       ts->send(msg);
       _clients.push_back(ts);
+      _remoteGateways.erase(it);
       break;
     }
   }
