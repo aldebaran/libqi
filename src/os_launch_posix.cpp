@@ -105,7 +105,7 @@ namespace qi
       setCloexecFlag(getpid());
 #endif
 
-      pid_t pID;
+      pid_t pID = -1;
       int err;
       posix_spawnattr_t* pSpawnattr = NULL;
 
@@ -126,6 +126,13 @@ namespace qi
       char*** environ_ptr = _NSGetEnviron();
       char** child_env = *environ_ptr;
 #endif
+      /* Upon successful completion, posix_spawn() and posix_spawnp() shall return the process ID of the child process to the parent process,
+       * in the variable pointed to by a non-NULL pid argument, and shall return zero as the function return value.
+       * Otherwise, no child process shall be created, the value stored into the variable pointed to by a non-NULL pid is unspecified,
+       * and an error number shall be returned as the function return value to indicate the error */
+      /*
+       * WARNING : Today, 17/07/2012, posix_spawnp always returns 0 on linux
+       */
       err = posix_spawnp(&pID,
                          argv[0],
                          NULL,
@@ -138,6 +145,10 @@ namespace qi
         return -1;
       }
       if (err != 0)
+      {
+        return -1;
+      }
+      if (errno)
       {
         return -1;
       }
@@ -160,7 +171,7 @@ namespace qi
       va_end(ap);
       cmd[i] = NULL;
 
-      pid_t pID;
+      pid_t pID = -1;
       int err;
 
 #ifdef __linux__
@@ -188,6 +199,13 @@ namespace qi
       char*** environ_ptr = _NSGetEnviron();
       char** child_env = *environ_ptr;
 #endif
+      /* Upon successful completion, posix_spawn() and posix_spawnp() shall return the process ID of the child process to the parent process,
+       * in the variable pointed to by a non-NULL pid argument, and shall return zero as the function return value.
+       * Otherwise, no child process shall be created, the value stored into the variable pointed to by a non-NULL pid is unspecified,
+       * and an error number shall be returned as the function return value to indicate the error */
+      /*
+       * WARNING : Today, 17/07/2012, posix_spawnp always returns 0 on linux
+       */
       err = posix_spawnp(&pID,
                          cmd[0],
                          NULL,
@@ -200,6 +218,10 @@ namespace qi
         return -1;
       }
       if (err != 0)
+      {
+        return -1;
+      }
+      if (errno)
       {
         return -1;
       }
