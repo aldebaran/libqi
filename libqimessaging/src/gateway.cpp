@@ -192,6 +192,12 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       qi::DataStream ds(msg->buffer());
       ds >> result;
 
+      if (result.name() == "")
+      {
+        qiLogError("gateway") << "Could not find requested service";
+        return;
+      }
+
       // save address of the new service
       std::vector<std::string> endpoints = result.endpoints();
       // Construct reply with serviceId
