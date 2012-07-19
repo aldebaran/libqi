@@ -14,9 +14,10 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
-#include <boost/cstdint.hpp>
+
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qi/types.hpp>
 
 namespace qi {
 
@@ -83,16 +84,16 @@ namespace qi {
     void         setId(unsigned int id);
     unsigned int id() const;
 
-    void         setType(uint32_t type);
+    void         setType(qi::uint32_t type);
     unsigned int type() const;
 
-    void         setService(uint32_t service);
+    void         setService(qi::uint32_t service);
     unsigned int service() const;
 
-    void         setPath(uint32_t path);
+    void         setPath(qi::uint32_t path);
     unsigned int path() const;
 
-    void         setFunction(uint32_t function);
+    void         setFunction(qi::uint32_t function);
     unsigned int function() const;
 
     void          setBuffer(const Buffer &buffer);

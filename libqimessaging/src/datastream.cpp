@@ -9,6 +9,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/log.hpp>
+#include <qi/types.hpp>
 #include <vector>
 #include <cstring>
 
@@ -63,14 +64,14 @@ namespace qi {
 
   QI_SIMPLE_SERIALIZER_IMPL(bool);
   QI_SIMPLE_SERIALIZER_IMPL(char);
-  QI_SIMPLE_SERIALIZER_IMPL(int8_t);
-  QI_SIMPLE_SERIALIZER_IMPL(uint8_t);
-  QI_SIMPLE_SERIALIZER_IMPL(int16_t);
-  QI_SIMPLE_SERIALIZER_IMPL(uint16_t);
-  QI_SIMPLE_SERIALIZER_IMPL(int32_t);
-  QI_SIMPLE_SERIALIZER_IMPL(uint32_t);
-  QI_SIMPLE_SERIALIZER_IMPL(int64_t);
-  QI_SIMPLE_SERIALIZER_IMPL(uint64_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::int8_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::uint8_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::int16_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::uint16_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::int32_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::uint32_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::int64_t);
+  QI_SIMPLE_SERIALIZER_IMPL(qi::uint64_t);
   QI_SIMPLE_SERIALIZER_IMPL(float);
   QI_SIMPLE_SERIALIZER_IMPL(double);
 
@@ -116,7 +117,7 @@ namespace qi {
       setStatus(Status_WriteOnReadOnlyStream);
       return;
     }
-    *this << (uint32_t)len;
+    *this << (qi::uint32_t)len;
     if (len) {
       if (_buffer.write(str, len) != (int)len)
         setStatus(Status_WriteError);
@@ -127,7 +128,7 @@ namespace qi {
   // string
   DataStream& DataStream::operator>>(std::string &s)
   {
-    uint32_t sz;
+    qi::uint32_t sz;
     *this >> sz;
 
     s.clear();
@@ -152,7 +153,7 @@ namespace qi {
       setStatus(Status_WriteOnReadOnlyStream);
       return *this;
     }
-    *this << (uint32_t)s.size();
+    *this << (qi::uint32_t)s.size();
     if (!s.empty()) {
       if (_buffer.write(s.data(), s.size()) != (int)s.size())
         setStatus(Status_WriteError);
@@ -169,7 +170,7 @@ namespace qi {
       setStatus(Status_WriteOnReadOnlyStream);
       return *this;
     }
-    uint32_t len = strlen(s);
+    qi::uint32_t len = strlen(s);
     writeString(s, len);
     __QI_DEBUG_SERIALIZATION_DATA_W(char *, s);
     return *this;
@@ -179,7 +180,7 @@ namespace qi {
   qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &val)
   {
     std::string sig;
-    uint32_t type;
+    qi::uint32_t type;
     val.clear();
     sd >> type;
     sd >> sig;
@@ -232,7 +233,7 @@ namespace qi {
 
   qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &val)
   {
-    sd << (uint32_t)val.type();
+    sd << (qi::uint32_t)val.type();
     switch(val.type()) {
       case qi::Value::Bool:
         sd << "b";
@@ -290,13 +291,13 @@ namespace qi {
   }
 
   qi::DataStream &operator<<(qi::DataStream &stream, const qi::Buffer &meta) {
-    stream << (uint32_t)meta.size();
+    stream << (qi::uint32_t)meta.size();
     stream.write((const char *)meta.data(), meta.size());
     return stream;
   }
 
   qi::DataStream &operator>>(qi::DataStream &stream, qi::Buffer &meta) {
-    uint32_t sz;
+    qi::uint32_t sz;
     stream >> sz;
     meta.reserve(sz);
     stream.read(meta.data(), sz);

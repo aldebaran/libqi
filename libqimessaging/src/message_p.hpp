@@ -11,6 +11,7 @@
 
 # include <boost/cstdint.hpp>
 # include <qimessaging/buffer.hpp>
+# include <qi/types.hpp>
 
 namespace qi
 {
@@ -19,14 +20,14 @@ namespace qi
   public:
     typedef struct
     {
-      uint32_t magic;
-      uint32_t id;
-      uint32_t size;
-      uint32_t type;
-      uint32_t service;
-      uint32_t path;
-      uint32_t function;
-      uint32_t reserved;
+      qi::uint32_t magic;
+      qi::uint32_t id;
+      qi::uint32_t size;
+      qi::uint32_t type;
+      qi::uint32_t service;
+      qi::uint32_t path;
+      qi::uint32_t function;
+      qi::uint32_t reserved;
     } MessageHeader;
 
     MessagePrivate();

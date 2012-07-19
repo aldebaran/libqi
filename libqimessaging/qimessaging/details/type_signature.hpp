@@ -19,6 +19,7 @@
 # include <boost/function_types/is_function_pointer.hpp>
 # include <boost/function_types/is_function.hpp>
 # include <qimessaging/value.hpp>
+# include <qi/types.hpp>
 //# include <qimessaging/message.hpp>
 
 namespace qi {
@@ -64,12 +65,12 @@ namespace qi {
     _QI_SIMPLE_SIGNATURE(bool          , qi::Signature::Type_Bool);
     _QI_SIMPLE_SIGNATURE(char          , qi::Signature::Type_Int8);
     _QI_SIMPLE_SIGNATURE(unsigned char , qi::Signature::Type_UInt8);
-    _QI_SIMPLE_SIGNATURE(int16_t       , qi::Signature::Type_Int16);
-    _QI_SIMPLE_SIGNATURE(uint16_t      , qi::Signature::Type_UInt16);
-    _QI_SIMPLE_SIGNATURE(int32_t       , qi::Signature::Type_Int32);
-    _QI_SIMPLE_SIGNATURE(uint32_t      , qi::Signature::Type_UInt32);
-    _QI_SIMPLE_SIGNATURE(int64_t       , qi::Signature::Type_Int64);
-    _QI_SIMPLE_SIGNATURE(uint64_t      , qi::Signature::Type_UInt64);
+    _QI_SIMPLE_SIGNATURE(qi::int16_t   , qi::Signature::Type_Int16);
+    _QI_SIMPLE_SIGNATURE(qi::uint16_t  , qi::Signature::Type_UInt16);
+    _QI_SIMPLE_SIGNATURE(qi::int32_t   , qi::Signature::Type_Int32);
+    _QI_SIMPLE_SIGNATURE(qi::uint32_t  , qi::Signature::Type_UInt32);
+    _QI_SIMPLE_SIGNATURE(qi::int64_t   , qi::Signature::Type_Int64);
+    _QI_SIMPLE_SIGNATURE(qi::uint64_t  , qi::Signature::Type_UInt64);
     _QI_SIMPLE_SIGNATURE(float         , qi::Signature::Type_Float);
     _QI_SIMPLE_SIGNATURE(double        , qi::Signature::Type_Double);
     _QI_SIMPLE_SIGNATURE(qi::Value     , qi::Signature::Type_Dynamic);

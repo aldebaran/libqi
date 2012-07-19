@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
-#include <boost/cstdint.hpp>
+
 
 #include <event2/util.h>
 #include <event2/event.h>
@@ -25,6 +25,7 @@
 #include "src/session_p.hpp"
 
 #include <qi/log.hpp>
+#include <qi/types.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
@@ -81,7 +82,7 @@ namespace qi
         struct evbuffer_ptr p;
         evbuffer_ptr_set(input, &p, 0, EVBUFFER_PTR_SET);
         // search a messageMagic number
-        p = evbuffer_search(input, (const char *)&magicValue, sizeof(uint32_t), &p);
+        p = evbuffer_search(input, (const char *)&magicValue, sizeof(qi::uint32_t), &p);
         if (p.pos < 0)
         {
           qiLogWarning("qimessaging.TransportSocketLibevent") << "No magic found in the message. Waiting for more data.";
@@ -97,7 +98,7 @@ namespace qi
         {
           qiLogError("qimessaging.TransportSocketLibevent") << "Message received is invalid! Try to find a new one.";
           // only drop the magic and restart scanning
-          evbuffer_drain(input, sizeof(uint32_t));
+          evbuffer_drain(input, sizeof(qi::uint32_t));
           return;
         }
         // header is valid, next step get all the buffer

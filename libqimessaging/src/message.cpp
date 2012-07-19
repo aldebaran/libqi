@@ -14,6 +14,7 @@
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
+#include <qi/types.hpp>
 
 #include "src/message_p.hpp"
 
@@ -82,7 +83,7 @@ namespace qi {
     return os;
   }
 
-  void Message::setId(uint32_t id)
+  void Message::setId(qi::uint32_t id)
   {
     _p->header.id = id;
   }
@@ -92,7 +93,7 @@ namespace qi {
     return _p->header.id;
   }
 
-  void Message::setType(uint32_t type)
+  void Message::setType(qi::uint32_t type)
   {
     _p->header.type = type;
   }
@@ -102,7 +103,7 @@ namespace qi {
     return _p->header.type;
   }
 
-  void Message::setService(uint32_t service)
+  void Message::setService(qi::uint32_t service)
   {
     _p->header.service = service;
   }
@@ -112,7 +113,7 @@ namespace qi {
     return _p->header.service;
   }
 
-  void Message::setPath(uint32_t path)
+  void Message::setPath(qi::uint32_t path)
   {
     _p->header.path = path;
   }
@@ -122,7 +123,7 @@ namespace qi {
     return _p->header.path;
   }
 
-  void Message::setFunction(uint32_t function)
+  void Message::setFunction(qi::uint32_t function)
   {
     _p->header.function = function;
   }

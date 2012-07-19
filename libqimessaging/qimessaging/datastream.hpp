@@ -15,10 +15,11 @@
 #include <list>
 #include <vector>
 #include <map>
-#include <boost/cstdint.hpp>
+
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
 #include <qimessaging/buffer.hpp>
+#include <qi/types.hpp>
 
 namespace qi {
 
@@ -73,34 +74,34 @@ namespace qi {
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
 
-    DataStream& operator<<(bool     b);
-    DataStream& operator<<(char     c);
-    DataStream& operator<<(int8_t   c);
-    DataStream& operator<<(int16_t  s);
-    DataStream& operator<<(int32_t  i);
-    DataStream& operator<<(int64_t  l);
+    DataStream& operator<<(bool        b);
+    DataStream& operator<<(char        c);
+    DataStream& operator<<(qi::int8_t  c);
+    DataStream& operator<<(qi::int16_t s);
+    DataStream& operator<<(qi::int32_t i);
+    DataStream& operator<<(qi::int64_t l);
 
-    DataStream& operator<<(uint8_t  uc);
-    DataStream& operator<<(uint16_t us);
-    DataStream& operator<<(uint32_t ui);
-    DataStream& operator<<(uint64_t ul);
-    DataStream& operator<<(float    f);
-    DataStream& operator<<(double   d);
+    DataStream& operator<<(qi::uint8_t  uc);
+    DataStream& operator<<(qi::uint16_t us);
+    DataStream& operator<<(qi::uint32_t ui);
+    DataStream& operator<<(qi::uint64_t ul);
+    DataStream& operator<<(float        f);
+    DataStream& operator<<(double       d);
     DataStream& operator<<(const char *);
     DataStream& operator<<(const std::string& i);
 
     DataStream& operator>>(bool     &b);
     DataStream& operator>>(char     &c);
 
-    DataStream& operator>>(int8_t   &c);
-    DataStream& operator>>(int16_t  &i);
-    DataStream& operator>>(int32_t  &i);
-    DataStream& operator>>(int64_t  &l);
+    DataStream& operator>>(qi::int8_t   &c);
+    DataStream& operator>>(qi::int16_t  &i);
+    DataStream& operator>>(qi::int32_t  &i);
+    DataStream& operator>>(qi::int64_t  &l);
 
-    DataStream& operator>>(uint8_t  &uc);
-    DataStream& operator>>(uint16_t &us);
-    DataStream& operator>>(uint32_t &ui);
-    DataStream& operator>>(uint64_t &ul);
+    DataStream& operator>>(qi::uint8_t  &uc);
+    DataStream& operator>>(qi::uint16_t &us);
+    DataStream& operator>>(qi::uint32_t &ui);
+    DataStream& operator>>(qi::uint64_t &ul);
 
     DataStream& operator>>(float  &i);
     DataStream& operator>>(double &i);
@@ -133,7 +134,7 @@ namespace qi {
     typename std::list<T>::const_iterator it = v.begin();
     typename std::list<T>::const_iterator end = v.end();
 
-    sd << (uint32_t)v.size();
+    sd << (qi::uint32_t)v.size();
     for (; it != end; ++it) {
       sd << *it;
     }
@@ -144,7 +145,7 @@ namespace qi {
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::list<T> &v) {
     typedef std::list<T> _typefordebug;
-    uint32_t sz;
+    qi::uint32_t sz;
     sd >> sz;
     v.clear();
     if (sz) {
@@ -173,7 +174,7 @@ namespace qi {
     typename std::vector<T>::const_iterator it = v.begin();
     typename std::vector<T>::const_iterator end = v.end();
 
-    sd << (uint32_t)v.size();
+    sd << (qi::uint32_t)v.size();
     for (; it != end; ++it) {
       sd << *it;
     }
@@ -184,7 +185,7 @@ namespace qi {
   template<typename T>
   qi::DataStream &operator>>(qi::DataStream &sd, std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
-    uint32_t sz = 0;
+    qi::uint32_t sz = 0;
     sd >> sz;
     v.clear();
     if (sz) {
@@ -212,7 +213,7 @@ namespace qi {
     typename std::map<K,V>::const_iterator it = m.begin();
     typename std::map<K,V>::const_iterator end = m.end();
 
-    sd << (uint32_t)m.size();
+    sd << (qi::uint32_t)m.size();
 
     for (; it != end; ++it) {
       sd << it->first;
@@ -225,11 +226,11 @@ namespace qi {
   template<typename K, typename V>
   qi::DataStream &operator>>(qi::DataStream &sd, std::map<K, V>  &m) {
     typedef  std::map<K,V> _typefordebug;
-    uint32_t sz;
+    qi::uint32_t sz;
     sd >> sz;
     m.clear();
 
-    for(uint32_t i=0; i < sz; ++i) {
+    for(qi::uint32_t i=0; i < sz; ++i) {
       K k;
       V v;
       sd >> k;
