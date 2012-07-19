@@ -220,6 +220,8 @@ namespace qi {
       boost::mutex::scoped_lock sl(_mutexServices);
       _services[idx] = obj;
     }
+    // ack the Service directory to tell that we are ready
+    _session->_p->serviceReady(idx);
     {
       boost::mutex::scoped_lock sl(_mutexOthers);
       _servicesInfo[si.name()] = si;

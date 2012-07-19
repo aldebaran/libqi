@@ -51,6 +51,7 @@ namespace qi {
       ServiceDirectoryFunction_Services          = 2,
       ServiceDirectoryFunction_RegisterService   = 3,
       ServiceDirectoryFunction_UnregisterService = 4,
+      ServiceDirectoryFunction_ServiceReady      = 5,
     };
 
     enum GatewayFunction

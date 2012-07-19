@@ -45,11 +45,12 @@ namespace qi
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
     TransportSocket         *socket() { return currentSocket; }
-
+    void                     serviceReady(const unsigned int &idx);
   public:
     qi::Session                                           *session;
     qi::NetworkThread                                     *nthd;
     qi::TransportServer                                   *ts;
+    std::map<unsigned int, ServiceInfo>                    pendingServices;
     std::map<unsigned int, ServiceInfo>                    connectedServices;
     std::map<std::string, unsigned int>                    nameToIdx;
     std::map<TransportSocket*, std::vector<unsigned int> > socketToIdx;
@@ -70,6 +71,7 @@ namespace qi
     si.setName("serviceDirectory");
     si.setServiceId(1);
     unsigned int regid = registerService(si);
+    serviceReady(1);
     //serviceDirectory must have id '1'
     assert(regid == 1);
 
@@ -80,6 +82,7 @@ namespace qi
     advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
     advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
     advertiseMethod("unregisterService", this, &ServiceDirectoryPrivate::unregisterService);
+    advertiseMethod("serviceReady", this, &ServiceDirectoryPrivate::serviceReady);
   }
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
@@ -194,8 +197,9 @@ namespace qi
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
     socketToIdx[socket()].push_back(idx);
-    connectedServices[idx] = svcinfo;
-    connectedServices[idx].setServiceId(idx);
+    pendingServices[idx] = svcinfo;
+    pendingServices[idx].setServiceId(idx);
+
     qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered (#" << idx << ")" << std::endl;
     for (std::vector<std::string>::const_iterator it = svcinfo.endpoints().begin();
          it != svcinfo.endpoints().end();
@@ -246,6 +250,22 @@ namespace qi
         }
       }
     }
+  }
+
+  void ServiceDirectoryPrivate::serviceReady(const unsigned int &idx)
+  {
+    // search the id before accessing it
+    // otherwise operator[] create a empty entry
+    std::map<unsigned int, ServiceInfo>::iterator it;
+    it = pendingServices.find(idx);
+    if (it == pendingServices.end())
+    {
+      qiLogError("qimessaging.ServiceDirectory") << "Can't find pending service #" << idx;
+      return;
+    }
+
+    connectedServices[idx] = it->second;
+    pendingServices.erase(it);
   }
 
 ServiceDirectory::ServiceDirectory()

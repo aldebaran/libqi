@@ -47,6 +47,7 @@ namespace qi {
     void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
                      qi::Promise<std::vector<qi::ServiceInfo> > &si);
     void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
+    void serviceReady(unsigned int idx);
 
 
   public:
@@ -61,6 +62,8 @@ namespace qi {
     std::map<void *, ServiceRequest>                           _futureConnect;
     std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > > _futureServices;
     std::map<int, qi::FunctorResult>                           _futureFunctor;
+    boost::mutex                                               _mutexServiceReady;
+    std::vector<unsigned int>                                  _serviceReady;
   };
 }
 
