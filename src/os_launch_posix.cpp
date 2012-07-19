@@ -133,6 +133,7 @@ namespace qi
       /*
        * WARNING : Today, 17/07/2012, posix_spawnp always returns 0 on linux
        */
+      errno = 0;
       err = posix_spawnp(&pID,
                          argv[0],
                          NULL,
@@ -206,6 +207,7 @@ namespace qi
       /*
        * WARNING : Today, 17/07/2012, posix_spawnp always returns 0 on linux
        */
+      errno = 0;
       err = posix_spawnp(&pID,
                          cmd[0],
                          NULL,
