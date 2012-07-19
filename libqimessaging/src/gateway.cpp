@@ -136,6 +136,9 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
      * The service is unknown to the Gateway. We will have to query
      * the Service Directory.
      */
+    // store the pending message until connection to the service is established (S2)
+    _pendingMessage[msg->service()].push_back(std::make_pair(msg, client));
+
     if (_services.find(Message::Service_ServiceDirectory) == _services.end())
     {
       qiLogError("gateway") << "Not connected to Service Directory";
@@ -168,9 +171,6 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
     sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
 
     _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, (TransportSocket*) 0);
-
-    // store the pending message until connection to the service is established (S2)
-    _pendingMessage[msg->service()].push_back(std::make_pair(msg, client));
 
     _services[Message::Service_ServiceDirectory]->send(sdMsg);
 
@@ -431,6 +431,7 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
       if (it2 != _serviceToClient.end())
       {
         _serviceToClient.erase(it2);
+        _pendingMessage[it->first].clear();
       }
     }
     else
