@@ -7,6 +7,7 @@
 
 #include <map>
 #include <gtest/gtest.h>
+#include <qi/qi.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/server.hpp>
@@ -108,3 +109,12 @@ TEST_F(TestObject, CoDeco)
   }
 }
 
+int main(int argc, char *argv[])
+{
+#if defined(__APPLE__) || defined(__linux__)
+  setsid();
+#endif
+  ::testing::InitGoogleTest(&argc, argv);
+  qi::init(argc, argv);
+  return RUN_ALL_TESTS();
+}
