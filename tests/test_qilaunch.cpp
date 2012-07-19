@@ -153,6 +153,7 @@ TEST(kill, Terminate)
   int dead = 0;
 
   int childPid = qi::os::spawnlp(loopBinDir.c_str(), NULL);
+  ASSERT_NE(-1, childPid);
 
   if (childPid != -1)
   {
