@@ -38,6 +38,7 @@ set(H
   qi/log.hpp
   qi/macro.hpp
   qi/os.hpp
+  qi/types.hpp
   qi/path.hpp
   qi/shared_ptr.hpp
   qi/qi.hpp
