@@ -10,6 +10,7 @@
 #ifndef _QIMESSAGING_FUTURE_HPP_
 #define _QIMESSAGING_FUTURE_HPP_
 
+#include <vector>
 #include <qimessaging/api.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -74,6 +75,11 @@ namespace qi {
 
     void removeCallbacks(FutureInterface<T> *p_interface) {
       _p->removeCallbacks(p_interface);
+    }
+
+    std::vector<std::pair<FutureInterface<T> *, void *> > callbacks()
+    {
+      return _p->callbacks();
     }
 
     friend class Promise<T>;

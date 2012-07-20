@@ -84,6 +84,11 @@ namespace qi {
         }
       }
 
+      std::vector<std::pair<FutureInterface<T> *, void *> > callbacks()
+      {
+        return _callback;
+      }
+
       const T &value() const    { wait(); return _value; }
       T &value()                { wait(); return _value; }
 
@@ -142,6 +147,11 @@ namespace qi {
         }
       }
 
+      std::vector<std::pair<FutureInterface<void> *, void *> > callbacks()
+      {
+        return _callback;
+      }
+
       void value() const    { wait(); }
 
     private:
@@ -175,6 +185,11 @@ namespace qi {
 
     void removeCallbacks(FutureInterface<void> *p_interface) {
       _p->removeCallbacks(p_interface);
+    }
+
+    std::vector<std::pair<FutureInterface<void> *, void *> > callbacks()
+    {
+      return _p->callbacks();
     }
 
     friend class Promise<void>;

@@ -103,7 +103,14 @@ namespace qi {
     public:
       FutureFunctorResult(qi::Future<T> *future) {
         boost::shared_ptr< FunctorResultBase_Typed<T> > p(new FunctorResultBase_Typed<T>());
+        // FIXME Maybe we can do better
+        // save callback
+        std::vector<std::pair<FutureInterface<T> *, void *> > tmpCallbacks = future->callbacks();
         *future = p->future();
+
+        typename std::vector<std::pair<FutureInterface<T> *, void *> >::iterator it;
+        for (it = tmpCallbacks.begin(); it != tmpCallbacks.end(); ++it)
+          future->addCallbacks((*it).first, (*it).second);
         _p = p;
       };
     };

@@ -336,8 +336,9 @@ namespace qi {
       _p->_servicesObject[obj] = si;
     }
 
-    qi::Future<unsigned int> future = _p->_session->_p->registerService(si);
+    qi::Future<unsigned int> future;
     future.addCallbacks(_p, obj);
+    future = _p->_session->_p->registerService(si, future);
 
     return future;
   };

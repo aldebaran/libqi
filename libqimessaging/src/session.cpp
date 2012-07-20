@@ -270,7 +270,8 @@ namespace qi {
       promise.setError("Serialization error");
   }
 
-  qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si)
+  qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si,
+                                                           qi::Future<unsigned int> future)
   {
     qi::Message msg;
     msg.setType(qi::Message::Type_Call);
@@ -282,7 +283,6 @@ namespace qi {
     qi::DataStream d(buf);
     d << si;
 
-    qi::Future<unsigned int> future;
     if (d.status() == qi::DataStream::Status_Ok)
     {
       msg.setBuffer(buf);
@@ -308,7 +308,16 @@ namespace qi {
       }
     } else {
       qi::Promise<unsigned int> prom;
+      // FIXME: Maybe there is a better way
+      // save all callbacks
+      std::vector<std::pair<FutureInterface<unsigned int> *, void *> > callbacks = future.callbacks();
+
       future = prom.future();
+
+      std::vector<std::pair<FutureInterface<unsigned int> *, void *> >::iterator it;
+      for (it = callbacks.begin(); it != callbacks.end(); ++it)
+        future.addCallbacks(it->first, it->second);
+
       prom.setError("serialization error");
     }
     return future;

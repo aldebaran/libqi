@@ -34,7 +34,8 @@ namespace qi {
     SessionPrivate(qi::Session *session);
     virtual ~SessionPrivate();
 
-    qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si);
+    qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si,
+                                                qi::Future<unsigned int> future);
     qi::Future<void>            unregisterService(unsigned int idx);
 
     virtual void onSocketConnected(TransportSocket *client);
