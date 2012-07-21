@@ -68,9 +68,9 @@ namespace qi {
       }
 
       void addCallbacks(FutureInterface<T> *p_interface, void *data) {
-        std::pair<FutureInterface<T> *, void *> interface = std::make_pair(p_interface, data);
+        std::pair<FutureInterface<T> *, void *> itf = std::make_pair(p_interface, data);
         boost::mutex::scoped_lock l(_mutexCallback);
-        _callback.push_back(interface);
+        _callback.push_back(itf);
       }
 
       void removeCallbacks(FutureInterface<T> *p_interface) {
@@ -131,9 +131,9 @@ namespace qi {
       }
 
       void addCallbacks(FutureInterface<void> *p_interface, void *data) {
-        std::pair<FutureInterface<void> *, void *> interface = std::make_pair(p_interface, data);
+        std::pair<FutureInterface<void> *, void *> itf = std::make_pair(p_interface, data);
         boost::mutex::scoped_lock l(_mutexCallback);
-        _callback.push_back(interface);
+        _callback.push_back(itf);
       }
 
       void removeCallbacks(FutureInterface<void> *p_interface) {
