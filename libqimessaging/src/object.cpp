@@ -216,8 +216,18 @@ namespace qi {
     MetaEvent* ev = _meta->event(event);
     if (!ev)
     {
-      qiLogError("object") << "No such event " << event;
-      return;
+      MetaMethod* me = _meta->method(event);
+      if (!me)
+      {
+        qiLogError("object") << "No such event " << event;
+        return;
+      }
+      else
+      {
+        metaCall(event, args, FunctorResult(
+          boost::shared_ptr<FunctorResultBase>(new DropResult)));
+        return;
+      }
     }
 
     for (MetaEventPrivate::Subscribers::iterator il =
@@ -266,6 +276,8 @@ namespace qi {
   /// Resolve signature and bounce
   bool Object::xMetaEmit(const std::string &signature, const FunctorParameters &in) {
     int eventId = metaObject().eventId(signature);
+    if (eventId < 0)
+      eventId = metaObject().methodId(signature);
     if (eventId < 0) {
       std::stringstream ss;
       ss << "Can't find event: " << signature << std::endl

@@ -29,3 +29,12 @@ TEST(TestObject, Simple)
   obj.emitEvent("fire", 42);
   EXPECT_EQ(51, lastPayload);
 }
+
+TEST(TestObject, EmitMethod)
+{
+  lastPayload = 0;
+  qi::Object obj;
+  obj.advertiseMethod("fire", &onFire);
+  obj.emitEvent("fire", 23);
+  EXPECT_EQ(23, lastPayload);
+}
