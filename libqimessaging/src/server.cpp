@@ -161,6 +161,12 @@ namespace qi {
          obj->metaCall(msg.function(), ds, promise);
       }
       break;
+    case Message::Type_Event:
+      {
+        qi::FunctorParameters ds(msg.buffer());
+        obj->metaEmit(msg.function(), ds);
+      }
+      break;
     case Message::Type_Register_Event:
       {
         unsigned int remoteLinkId;

@@ -67,7 +67,7 @@ namespace qi {
       Type_Call  = 1,
       // Method return value, Server->Client
       Type_Reply = 2,
-      // Event, Server->Client
+      // Event, or method call without caring about return. Server<->Client
       Type_Event = 3,
       Type_Error = 4,
       // Ask to be notified on events, Client->Server

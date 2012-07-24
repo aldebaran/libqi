@@ -72,6 +72,6 @@ namespace qi {
     if (handler)
       handler->call(args, dummy);
     if (target)
-      target->metaCall(method, args, dummy);
+      target->metaEmit(method, args);
   }
 };

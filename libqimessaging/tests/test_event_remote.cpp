@@ -81,6 +81,19 @@ TEST_F(TestObject, Simple)
 }
 
 
+TEST_F(TestObject, RemoteEmit)
+{
+  int linkId = oclient->connect("fire", &onFire);
+  qi::os::msleep(800);
+  EXPECT_LT(0, linkId);
+  oclient->emitEvent("fire", 43);
+  ASSERT_TRUE(payload->future().wait(2000));
+  EXPECT_EQ(43, payload->future().value());
+}
+
+
+
+
 TEST_F(TestObject, CoDeco)
 {
   for (unsigned i=0; i<5; ++i)

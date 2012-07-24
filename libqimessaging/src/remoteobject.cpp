@@ -128,6 +128,15 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   // But it is a bit complex, because the server will bounce the
   // event back to us.
   qiLogError("Not implemented yet lol");
+  qi::Message msg;
+  msg.setBuffer(args.buffer());
+  msg.setType(Message::Type_Event);
+  msg.setService(_service);
+  msg.setPath(qi::Message::Path_Main);
+  msg.setFunction(event);
+  if (!_ts->send(msg)) {
+    qiLogError("remoteobject") << "error while registering event";
+  }
 }
 
 unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscriber& sub)
