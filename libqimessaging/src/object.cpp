@@ -33,27 +33,31 @@ namespace qi {
   }
 
   MetaMethod *MetaObject::method(unsigned int id) {
-    if (id < _p->_methods.size())
-      return &_p->_methods[id];
-    return 0;
+    MethodMap::iterator i = _p->_methods.find(id);
+    if (i == _p->_methods.end())
+      return 0;
+    return &i->second;
   }
 
-  MetaMethod *MetaObject::method(unsigned int id) const {
-    if (id < _p->_methods.size())
-      return &_p->_methods[id];
-    return 0;
+  const MetaMethod *MetaObject::method(unsigned int id) const {
+    MethodMap::const_iterator i = _p->_methods.find(id);
+    if (i == _p->_methods.end())
+      return 0;
+    return &i->second;
   }
 
   MetaEvent *MetaObject::event(unsigned int id) {
-    if (id < _p->_events.size())
-      return &_p->_events[id];
-    return 0;
+    EventMap::iterator i = _p->_events.find(id);
+    if (i == _p->_events.end())
+      return 0;
+    return &i->second;
   }
 
-  MetaEvent *MetaObject::event(unsigned int id) const {
-    if (id < _p->_events.size())
-      return &_p->_events[id];
-    return 0;
+  const MetaEvent *MetaObject::event(unsigned int id) const {
+    EventMap::const_iterator i = _p->_events.find(id);
+    if (i == _p->_events.end())
+      return 0;
+    return &i->second;
   }
 
   int MetaObject::methodId(const std::string &name)
@@ -66,20 +70,20 @@ namespace qi {
     return _p->eventId(name);
   }
 
-  std::vector<MetaMethod> &MetaObject::methods() {
-    return _p->methods();
+  MetaObject::MethodMap &MetaObject::methods() {
+    return _p->_methods;
   }
 
-  const std::vector<MetaMethod> &MetaObject::methods() const {
-    return _p->methods();
+  const MetaObject::MethodMap &MetaObject::methods() const {
+    return _p->_methods;
   }
 
-  std::vector<MetaEvent> &MetaObject::events() {
-    return _p->events();
+  MetaObject::EventMap &MetaObject::events() {
+    return _p->_events;
   }
 
-  const std::vector<MetaEvent> &MetaObject::events() const {
-    return _p->events();
+  const  MetaObject::EventMap &MetaObject::events() const {
+    return _p->_events;
   }
 
   MetaObject::~MetaObject()
@@ -103,12 +107,12 @@ namespace qi {
       i->eventSource->disconnect(i->linkId);
 
     // Then remove _registrations with one of our event as source
-    std::vector<MetaEvent>::iterator ii;
+    MetaObject::EventMap::iterator ii;
     for (ii = _meta->events().begin(); ii!= _meta->events().end(); ++ii)
     {
       MetaEventPrivate::Subscribers::iterator j;
-      for (j = ii->_p->_subscribers.begin();
-        j != ii->_p->_subscribers.end();
+      for (j = ii->second._p->_subscribers.begin();
+        j != ii->second._p->_subscribers.end();
         ++j)
         disconnect(j->second.linkId);
     }
@@ -139,18 +143,19 @@ namespace qi {
     it = _meta->_p->_methodsNameToIdx.find(signature);
     if (it != _meta->_p->_methodsNameToIdx.end())
     {
-      unsigned int idx = it->second;
+      unsigned int uid = it->second;
       MetaMethod mm(sigret, signature, functor);
-      mm._p->_idx = idx;
-      _meta->methods()[idx] = mm;
+      mm._p->_uid = uid;
+      // find it
+      _meta->_p->_methods[uid] = mm;
       qiLogVerbose("qi.Object") << "rebinding method:" << signature;
-      return idx;
+      return uid;
     }
 
     MetaMethod mm(sigret, signature, functor);
     unsigned int idx = _meta->_p->_methodsNumber++;
-    mm._p->_idx = idx;
-    _meta->methods().push_back(mm);
+    mm._p->_uid = idx;
+    _meta->_p->_methods[idx] = mm;
     _meta->_p->_methodsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding method:" << signature;
     return idx;
@@ -172,8 +177,8 @@ namespace qi {
     }
     unsigned int idx = _meta->_p->_eventsNumber++;
     MetaEvent me(signature);
-    me._p->_idx = idx;
-    _meta->events().push_back(me);
+    me._p->_uid = idx;
+    _meta->_p->_events[idx] = me;
     _meta->_p->_eventsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding event:" << signature <<" with id "
     << idx;
@@ -331,11 +336,11 @@ namespace qi {
   {
     // Look it up.
     // FIXME: Maybe store the event id inside the link id for faster lookup?
-    std::vector<MetaEvent>::iterator i;
+    MetaObject::EventMap::iterator i;
     for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
     {
-      MetaEventPrivate::Subscribers::iterator j = i->_p->_subscribers.find(id);
-      if (j != i->_p->_subscribers.end())
+      MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(id);
+      if (j != i->second._p->_subscribers.end())
       {
         MetaEvent::Subscriber& sub = j->second;
         // We have ownership of the handler, despite all the copies.
@@ -353,7 +358,7 @@ namespace qi {
               break;
             }
         }
-        i->_p->_subscribers.erase(j);
+        i->second._p->_subscribers.erase(j);
         return true;
       }
     }
@@ -375,26 +380,26 @@ namespace qi {
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta) {
     stream << meta._p->_signature;
     stream << meta._p->_sigret;
-    stream << meta._p->_idx;
+    stream << meta._p->_uid;
     return stream;
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta) {
     stream >> meta._p->_signature;
     stream >> meta._p->_sigret;
-    stream >> meta._p->_idx;
+    stream >> meta._p->_uid;
     return stream;
   }
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
     stream << meta._p->_signature;
-    stream << meta._p->_idx;
+    stream << meta._p->_uid;
     return stream;
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta) {
     stream >> meta._p->_signature;
-    stream >> meta._p->_idx;
+    stream >> meta._p->_uid;
     return stream;
   }
 
@@ -428,11 +433,11 @@ namespace qi {
   void MetaObjectPrivate::refreshCache()
   {
     _methodsNameToIdx.clear();
-    for (std::vector<MetaMethod>::iterator i = _methods.begin();
+    for (MetaObject::MethodMap::iterator i = _methods.begin();
       i != _methods.end(); ++i)
-      _methodsNameToIdx[i->signature()] = i->index();
-    for (std::vector<MetaEvent>::iterator i = _events.begin();
+      _methodsNameToIdx[i->second.signature()] = i->second.uid();
+    for (MetaObject::EventMap::iterator i = _events.begin();
       i != _events.end(); ++i)
-      _eventsNameToIdx[i->signature()] = i->index();
+      _eventsNameToIdx[i->second.signature()] = i->second.uid();
   }
 };

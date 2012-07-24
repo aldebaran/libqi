@@ -19,7 +19,7 @@ namespace qi {
     ~MetaEvent();
 
     const std::string &signature() const;
-    unsigned int       index() const;
+    unsigned int       uid() const;
 
     /** Event subscriber info.
      *

@@ -154,14 +154,14 @@ unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscrib
 bool RemoteObject::disconnect(unsigned int linkId)
 {
   // Figure out which event this link is associated to
-  std::vector<MetaEvent>::iterator i;
+  MetaObject::EventMap::iterator i;
   unsigned int event = (unsigned int)-1;
   for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
   {
-    MetaEventPrivate::Subscribers::iterator j = i->_p->_subscribers.find(linkId);
-    if (j != i->_p->_subscribers.end())
+    MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(linkId);
+    if (j != i->second._p->_subscribers.end())
     {
-      event = i->index();
+      event = i->second.uid();
       break;
     }
   }

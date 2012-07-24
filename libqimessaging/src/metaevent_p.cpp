@@ -10,26 +10,26 @@ namespace qi {
 
   MetaEventPrivate::MetaEventPrivate()
     : _signature(),
-      _idx(0)
+      _uid(0)
   {
   }
 
   MetaEventPrivate::MetaEventPrivate(const std::string &sig)
     : _signature(sig),
-      _idx(0)
+      _uid(0)
   {
   }
 
   MetaEventPrivate::MetaEventPrivate(const MetaEventPrivate &rhs)
   {
     _signature = rhs._signature;
-    _idx = rhs._idx;
+    _uid = rhs._uid;
   }
 
   MetaEventPrivate& MetaEventPrivate::operator=(const MetaEventPrivate &rhs)
   {
     _signature = rhs._signature;
-    _idx = rhs._idx;
+    _uid = rhs._uid;
     return (*this);
   }
 

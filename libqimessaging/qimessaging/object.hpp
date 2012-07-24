@@ -31,17 +31,19 @@ namespace qi {
     int methodId(const std::string &name);
     int eventId(const std::string &name);
 
-    std::vector<MetaMethod> &methods();
-    const std::vector<MetaMethod> &methods() const;
+    typedef std::map<unsigned int, MetaMethod> MethodMap;
+    MethodMap& methods();
+    const MethodMap& methods() const;
 
-    std::vector<MetaEvent> &events();
-    const std::vector<MetaEvent> &events() const;
+    typedef std::map<unsigned int, MetaEvent> EventMap;
+    EventMap& events();
+    const EventMap& events() const;
 
     MetaMethod *method(unsigned int id);
-    MetaMethod *method(unsigned int id) const;
+    const MetaMethod *method(unsigned int id) const;
 
     MetaEvent *event(unsigned int id);
-    MetaEvent *event(unsigned int id) const;
+    const MetaEvent *event(unsigned int id) const;
 
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaEvent> findEvent(const std::string &name);
@@ -211,8 +213,6 @@ namespace qi {
     signature += ")";
     return xConnect(signature, makeFunctor(callback));
   }
-
-
 
 };
 

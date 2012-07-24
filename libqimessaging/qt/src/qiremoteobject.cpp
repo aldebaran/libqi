@@ -31,9 +31,9 @@ QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest,
   QMetaObjectBuilder mob;
   mob.setClassName(dest.c_str());
 
-  std::vector<qi::MetaMethod>::const_iterator it;
+  qi::MetaObject::MethodMap::const_iterator it;
   for (it = metaobject.methods().begin(); it != metaobject.methods().end(); ++it) {
-    const qi::MetaMethod &mm = *it;
+    const qi::MetaMethod &mm = it->second;
     QString retSig;
     QString funSig;
     qi_SignatureToMetaMethod(mm.signature(), &retSig, &funSig);

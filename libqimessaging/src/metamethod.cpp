@@ -50,9 +50,9 @@ namespace qi {
     return _p->_functor.get();
   }
 
-  unsigned int       MetaMethod::index() const
+  unsigned int       MetaMethod::uid() const
   {
-    return _p->index();
+    return _p->uid();
   }
 
 };

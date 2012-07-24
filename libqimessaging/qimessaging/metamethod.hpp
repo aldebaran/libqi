@@ -20,7 +20,7 @@ namespace qi {
     const std::string &signature() const;
     const std::string &sigreturn() const;
     const qi::Functor *functor() const;
-    unsigned int       index() const;
+    unsigned int       uid() const;
 
   protected:
   public:

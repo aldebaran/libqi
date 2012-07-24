@@ -40,9 +40,9 @@ namespace qi {
     return _p->signature();
   }
 
-  unsigned int       MetaEvent::index() const
+  unsigned int       MetaEvent::uid() const
   {
-    return _p->index();
+    return _p->uid();
   }
 
   class DropResult: public FunctorResultBase

@@ -24,14 +24,14 @@ namespace qi {
 
     const std::string &signature() const { return _signature; }
     const std::string &sigreturn() const { return _sigret; }
-    unsigned int      index() const { return _idx; }
+    unsigned int      uid() const { return _uid; }
 
   protected:
   public:
     std::string        _signature;
     std::string        _sigret;
     boost::shared_ptr<const qi::Functor> _functor;
-    unsigned int       _idx;
+    unsigned int       _uid;
   };
 
 };

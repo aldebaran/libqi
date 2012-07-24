@@ -26,12 +26,12 @@ namespace qi {
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
     std::vector<qi::MetaMethod>           ret;
-    std::vector<qi::MetaMethod>::iterator it;
+    MetaObject::MethodMap::iterator it;
     std::string cname(name);
     cname += "::";
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
-      qi::MetaMethod &mm = *it;
+      qi::MetaMethod &mm = it->second;
       if (boost::starts_with(mm.signature(), cname))
         ret.push_back(mm);
     }
@@ -41,12 +41,12 @@ namespace qi {
   std::vector<MetaEvent> MetaObjectPrivate::findEvent(const std::string &name)
   {
     std::vector<MetaEvent>           ret;
-    std::vector<MetaEvent>::iterator it;
+    MetaObject::EventMap::iterator it;
     std::string cname(name);
     cname += "::";
 
     for (it = _events.begin(); it != _events.end(); ++it) {
-      MetaEvent &mm = *it;
+      MetaEvent &mm = it->second;
       if (boost::starts_with(mm.signature(), cname))
         ret.push_back(mm);
     }

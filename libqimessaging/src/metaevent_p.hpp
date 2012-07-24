@@ -25,14 +25,14 @@ namespace qi {
     MetaEventPrivate &operator=(const MetaEventPrivate &rhs);
 
     const std::string &signature() const { return _signature; }
-    unsigned int      index() const { return _idx; }
+    unsigned int      uid() const { return _uid; }
 
     typedef std::map<unsigned int, MetaEvent::Subscriber> Subscribers;
   protected:
   public:
     Subscribers        _subscribers;
     std::string        _signature;
-    unsigned int       _idx;
+    unsigned int       _uid;
   };
 
 };

@@ -11,7 +11,7 @@ namespace qi {
     : _signature(),
       _sigret(),
       _functor(),
-      _idx(0)
+      _uid(0)
   {
   }
 
@@ -19,7 +19,7 @@ namespace qi {
     : _signature(sig),
       _sigret(sigret),
       _functor(functor),
-      _idx(0)
+      _uid(0)
   {
   }
 
@@ -28,7 +28,7 @@ namespace qi {
     _signature = rhs._signature;
     _sigret = rhs._sigret;
     _functor = rhs._functor;
-    _idx = rhs._idx;
+    _uid = rhs._uid;
   }
 
   MetaMethodPrivate& MetaMethodPrivate::operator=(const MetaMethodPrivate &rhs)
@@ -36,7 +36,7 @@ namespace qi {
     _signature = rhs._signature;
     _sigret = rhs._sigret;
     _functor = rhs._functor;
-    _idx = rhs._idx;
+    _uid = rhs._uid;
     return (*this);
   }
 
