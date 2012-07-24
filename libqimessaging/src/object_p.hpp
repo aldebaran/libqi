@@ -21,8 +21,7 @@ namespace qi {
   class MetaObjectPrivate {
   public:
     MetaObjectPrivate()
-    :  _methodsNumber(0)
-    , _eventsNumber(0)
+    :  _nextNumber(0)
     {
     };
 
@@ -56,12 +55,11 @@ namespace qi {
     NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
 
-    unsigned int                        _methodsNumber;
+    unsigned int                        _nextNumber;
 
 
 
     NameToIdx                           _eventsNameToIdx;
-    unsigned int                        _eventsNumber;
     MetaObject::EventMap                _events;
 
     // Links that target us. Needed to be able to disconnec upon destruction

@@ -17,9 +17,8 @@ namespace qi {
   {
     _methodsNameToIdx = rhs._methodsNameToIdx;
     _methods = rhs._methods;
-    _methodsNumber = rhs._methodsNumber;
     _events = rhs._events;
-    _eventsNumber = rhs._eventsNumber;
+    _nextNumber = rhs._nextNumber;
     return (*this);
   }
 

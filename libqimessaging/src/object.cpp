@@ -153,7 +153,7 @@ namespace qi {
     }
 
     MetaMethod mm(sigret, signature, functor);
-    unsigned int idx = _meta->_p->_methodsNumber++;
+    unsigned int idx = _meta->_p->_nextNumber++;
     mm._p->_uid = idx;
     _meta->_p->_methods[idx] = mm;
     _meta->_p->_methodsNameToIdx[signature] = idx;
@@ -175,7 +175,7 @@ namespace qi {
       qiLogError("qi.Object") << "event already there";
       return it->second;
     }
-    unsigned int idx = _meta->_p->_eventsNumber++;
+    unsigned int idx = _meta->_p->_nextNumber++;
     MetaEvent me(signature);
     me._p->_uid = idx;
     _meta->_p->_events[idx] = me;
@@ -405,17 +405,15 @@ namespace qi {
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
     stream << meta._p->_methods;
-    stream << meta._p->_methodsNumber;
     stream << meta._p->_events;
-    stream << meta._p->_eventsNumber;
+    stream << meta._p->_nextNumber;
     return stream;
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta) {
     stream >> meta._p->_methods;
-    stream >> meta._p->_methodsNumber;
     stream >> meta._p->_events;
-    stream >> meta._p->_eventsNumber;
+    stream >> meta._p->_nextNumber;
     meta._p->refreshCache();
     return stream;
   }
