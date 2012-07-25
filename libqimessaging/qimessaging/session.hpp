@@ -28,9 +28,20 @@ namespace qi {
   {
   public:
     virtual ~SessionInterface() = 0;
-    inline virtual void onSessionConnected(Session *QI_UNUSED(session))         {};
-    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session))   {};
-    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session))      {};
+    inline virtual void onSessionConnected(Session *QI_UNUSED(session))
+    {
+      qiLogVerbose("session.hpp") << "onSessionConnected not implemented";
+    }
+
+    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session))
+    {
+      qiLogVerbose("session.hpp") << "onSessionConnectionError not implemented";
+    }
+
+    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session))
+    {
+      qiLogVerbose("session.hpp") << "onSessionDisconnected not implemented";
+    }
   };
 
   class QIMESSAGING_API Session {
