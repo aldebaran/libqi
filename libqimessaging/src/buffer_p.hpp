@@ -9,7 +9,7 @@
 #ifndef BUFFER_P_HPP_
 # define BUFFER_P_HPP_
 
-#define STATIC_BLOCK 512
+#define STATIC_BLOCK 768
 #define BLOCK   4096
 
 namespace qi
