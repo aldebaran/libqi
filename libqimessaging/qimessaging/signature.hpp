@@ -73,6 +73,8 @@ namespace qi {
 
       Type_Dynamic  = 'm',
 
+      Type_Raw      = 'r',
+
       Type_Unknown  = 'X'
     };
 
