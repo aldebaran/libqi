@@ -142,7 +142,10 @@ message(STATUS "WITH_PERF    : ${WITH_PERF}")
 message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 
-add_subdirectory("qt")
+qi_add_optional_package(Qt4)
+if(WITH_QT4)
+  add_subdirectory("qt")
+endif()
 add_subdirectory("bin")
 if(WITH_PYTHON)
   add_subdirectory("python")
