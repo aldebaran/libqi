@@ -15,6 +15,7 @@
 #ifndef _LIBQI_QI_OS_HPP_
 #define _LIBQI_QI_OS_HPP_
 
+# include <cstdio>
 # include <string>
 # include <map>
 # include <vector>
