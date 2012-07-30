@@ -234,7 +234,7 @@ namespace qi
                                             const std::string& filename="");
 
 
-  };
-};
+  }
+}
 
 #endif  // _LIBQI_QI_PATH_HPP_

@@ -143,5 +143,5 @@ namespace qi
     return gInstance;
   }
 
-};
+}
 

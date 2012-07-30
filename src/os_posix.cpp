@@ -233,5 +233,5 @@ namespace qi {
       return ifsMap;
      }
 
-  };
-};
+  }
+}

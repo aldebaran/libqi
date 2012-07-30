@@ -161,4 +161,4 @@ namespace qi {
     }
   }
 
-};
+}

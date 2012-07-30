@@ -452,4 +452,4 @@ namespace qi {
     }
     return path.string(qi::unicodeFacet());
   }
-}; // qi
+}

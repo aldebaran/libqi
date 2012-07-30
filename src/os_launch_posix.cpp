@@ -308,5 +308,5 @@ namespace qi
     {
         return ::kill(pid, sig);
     }
-  };
-};
+  }
+}

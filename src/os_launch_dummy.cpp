@@ -4,25 +4,8 @@
  * found in the COPYING file.
  */
 
-#include <iostream>
-
-#include <errno.h>
-#include <fcntl.h>
-
-#include <sys/wait.h>
-#include <stdarg.h>
-
-#include <sstream>
-#include <string>
-
-#include <boost/filesystem.hpp>
-#include <locale>
-
 #include <qi/os.hpp>
-#include <qi/qi.hpp>
-#include "src/filesystem.hpp"
 
-//posix implementation
 namespace qi
 {
   namespace os
@@ -57,5 +40,5 @@ namespace qi
         return -1;
     }
 
-  };
-};
+  }
+}
