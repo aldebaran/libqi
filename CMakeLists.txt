@@ -27,6 +27,19 @@ qi_add_optional_package(QT_QTCORE "Enable QT")
 enable_testing()
 include(CMakeDependentOption)
 
+if(ANDROID)
+  set(_lock_free_default FALSE)
+else()
+  set(_lock_free_default TRUE)
+endif()
+option(USE_BOOST_LOCK_FREE "Use boost/lockfree for asynchronous qi::log"
+  ${_lock_free_default}
+)
+
+if(USE_BOOST_LOCK_FREE)
+  add_definitions("-D QI_USE_BOOST_LOCK_FREE")
+endif()
+
 set(H
   qi/atomic.hpp
   qi/config.hpp
@@ -69,10 +82,14 @@ if (WIN32)
   )
 else()
   list(APPEND C
-    src/os_launch_posix.cpp
     src/os_posix.cpp
     src/os_debugger_posix.cpp
   )
+  if(ANDROID)
+    list(APPEND C src/os_launch_android.cpp)
+  else()
+    list(APPEND C src/os_launch_posix.cpp)
+  endif()
 endif()
 
 if (WITH_QT_QTCORE)
@@ -82,12 +99,14 @@ else()
 endif()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
+if(USE_BOOST_LOCK_FREE)
+  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
+endif()
 
-if("${BUILDCONFIG}" STREQUAL "python-sdk")
-  qi_create_lib(qi STATIC ${H} ${C})
-else()
+if(NOT DEFINED BUILD_SHARED_LIBS OR ${BUILD_SHARED_LIBS})
   qi_create_lib(qi SHARED ${H} ${C})
+else()
+  qi_create_lib(qi STATIC ${H} ${C})
 endif()
 
 

@@ -11,6 +11,10 @@
 # include <arpa/inet.h>
 # include <unistd.h> // for getpid
 #endif
+#ifdef ANDROID
+# include <sys/socket.h>
+#endif
+
 #include <cstdio>
 
 #include <gtest/gtest.h>

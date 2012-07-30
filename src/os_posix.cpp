@@ -22,7 +22,9 @@
 # include <sys/socket.h>
 # include <sys/types.h>
 # include <arpa/inet.h>
+#ifndef ANDROID
 # include <ifaddrs.h>
+#endif
 
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -140,6 +142,14 @@ namespace qi {
       return mktmpdir(prefix);
     }
 
+#ifdef ANDROID
+    std::string gethostname()
+    {
+      assert(0 && "qi::os::gethostname is not implemented for android, "
+                  "use the JAVA API instead");
+      return "";
+    }
+#else
     std::string gethostname()
     {
       long hostNameMax;
@@ -159,6 +169,7 @@ namespace qi {
       free(szHostName);
       return std::string();
     }
+#endif
 
 
     unsigned short findAvailablePort(unsigned short port)
@@ -199,6 +210,15 @@ namespace qi {
       return iPort;
     }
 
+#ifdef ANDROID
+    std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
+    {
+      assert(0 && "qi::os::hostIPAddrs is not implemented for android, "
+                  "use the JAVA API instead");
+      std::map<std::string, std::vector<std::string> > res;
+      return res;
+    }
+#else
     std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
       std::map<std::string, std::vector<std::string> > ifsMap;
@@ -229,9 +249,9 @@ namespace qi {
           ifsMap[ifa->ifa_name].push_back(addressBuffer);
         }
       }
-
       return ifsMap;
      }
+#endif
 
   }
 }

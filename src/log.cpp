@@ -14,7 +14,11 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/lockfree/fifo.hpp>
+#ifdef QI_USE_BOOST_LOCK_FREE
+# include <boost/lockfree/fifo.hpp>
+#else
+# include <queue>
+#endif
 #include <boost/function.hpp>
 
 #define RTLOG_BUFFERS (128)
@@ -54,7 +58,11 @@ namespace qi {
       boost::mutex               LogHandlerLock;
       boost::condition_variable  LogReadyCond;
 
+#ifdef QI_USE_BOOST_LOCK_FREE
       boost::lockfree::fifo<privateLog*>     logs;
+#else
+      std::queue<privateLog*>     logs;
+#endif
       std::map<std::string, logFuncHandler > logHandlers;
     };
 
@@ -87,8 +95,15 @@ namespace qi {
     {
       privateLog* pl;
       boost::mutex::scoped_lock lock(LogHandlerLock);
+#ifdef QI_USE_BOOST_LOCK_FREE
       while (logs.dequeue(&pl))
       {
+
+#else
+      while ((pl = logs.front()) != 0)
+      {
+        logs.pop();
+#endif
         if (!logHandlers.empty())
         {
           std::map<std::string, logFuncHandler >::iterator it;
@@ -118,7 +133,7 @@ namespace qi {
 
         printLog();
       }
-    };
+    }
 
     inline Log::Log()
     {
@@ -276,7 +291,11 @@ namespace qi {
       }
       else
       {
+#ifdef QI_USE_BOOST_LOCK_FREE
         LogInstance->logs.enqueue(pl);
+#else
+        LogInstance->logs.push(pl);
+#endif
         LogInstance->LogReadyCond.notify_one();
       }
     }
