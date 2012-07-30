@@ -52,5 +52,10 @@ namespace qi
     {
       return -1;
     }
+
+    int kill(int, int) {
+        return -1;
+    }
+
   };
 };
