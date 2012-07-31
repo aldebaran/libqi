@@ -11,6 +11,7 @@
 #include <boost/bind.hpp>
 
 #include <sstream>
+#include <iomanip>
 #include <string>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
@@ -111,7 +112,8 @@ namespace qi {
 
           std::stringstream l;
           std::stringstream ss;
-          ss << date.tv_sec << "." << date.tv_usec;
+          ss << date.tv_sec << "."
+             << std::setw(7) << std::setfill('0')  << date.tv_usec;
 
           l << head << " ";
           int ctx = qi::log::context();

@@ -5,6 +5,7 @@
  */
 
 #include <sstream>
+#include <iomanip>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -222,7 +223,8 @@ namespace qi {
 #endif
 
         std::stringstream ss;
-        ss << date.tv_sec << "." << date.tv_usec;
+        ss << date.tv_sec << "."
+           << std::setw(7) << std::setfill('0')  << date.tv_usec;
 
         int ctx = qi::log::context();
         switch (ctx)
