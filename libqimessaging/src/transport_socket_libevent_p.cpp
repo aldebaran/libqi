@@ -391,6 +391,7 @@ namespace qi
 
     if (m->type() == qi::Message::Type_Call)
     {
+      boost::mutex::scoped_lock l(mtx);
       msgSend[m->id()].timestamp = time(0);
     }
 
