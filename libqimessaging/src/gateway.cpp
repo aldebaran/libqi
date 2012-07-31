@@ -89,7 +89,7 @@ void GatewayPrivate::newConnection(TransportSocket *socket)
 
   for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
        it != _transportSocketCallbacks.end();
-       it++)
+       ++it)
   {
     socket->addCallbacks(*it);
   }
@@ -150,7 +150,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
         _services[qi::Message::Service_ServiceDirectory] = sdSocket;
         for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
              it != _transportSocketCallbacks.end();
-             it++)
+             ++it)
         {
           sdSocket->addCallbacks(*it);
         }
@@ -254,7 +254,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
 
         for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
              it != _transportSocketCallbacks.end();
-             it++)
+             ++it)
         {
           service->addCallbacks(*it);
         }
@@ -380,7 +380,7 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
 
   for (std::list<TransportSocket*>::iterator it = _remoteGateways.begin();
        it != _remoteGateways.end();
-       it++)
+       ++it)
   {
     if (*it == service)
     {
@@ -452,7 +452,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
   for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
        it != _transportSocketCallbacks.end();
-       it++)
+       ++it)
   {
     sdSocket->addCallbacks(*it);
   }
@@ -485,7 +485,7 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
   qi::TransportSocket *ts = new qi::TransportSocket();
   for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
        it != _transportSocketCallbacks.end();
-       it++)
+       ++it)
   {
     ts->addCallbacks(*it);
   }

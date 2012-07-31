@@ -37,7 +37,7 @@ namespace qi {
     void visitMap(qi::Signature::iterator *it, bool constify);
     void visitTuple(qi::Signature::iterator *it, bool constify);
 
-    const char *elementTypeSTL(int idx, bool constify);
+    const char *elementTypeSTL(int idx, bool constify) const;
 
     SignatureType  _type;
     bool           _done;

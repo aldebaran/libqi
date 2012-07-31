@@ -39,7 +39,10 @@ namespace qi {
     // (service, linkId)
     struct RemoteLink
     {
-      RemoteLink() {}
+      RemoteLink()
+        : localLinkId(0)
+        , event(0)
+      {}
       RemoteLink(unsigned int localLinkId, unsigned int event)
       : localLinkId(localLinkId)
       , event(event) {}

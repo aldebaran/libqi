@@ -41,7 +41,7 @@ static void cmd_service(const command           &cmd,
                 << "  endpoints:" << std::endl;
       for (std::vector<std::string>::const_iterator it2 = servs[i].endpoints().begin();
            it2 != servs[i].endpoints().end();
-           it2++)
+           ++it2)
       {
         std::cout << "    " << *it2 << std::endl;
       }

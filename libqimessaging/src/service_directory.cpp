@@ -235,7 +235,7 @@ namespace qi
       connectedServices.erase(it2);
       // Find and remove serviceId into socketToIdx map
       std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
-      for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); socketIt++)
+      for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
       {
         std::vector<unsigned int>::iterator serviceIdxIt;
         for (serviceIdxIt = socketIt->second.begin();

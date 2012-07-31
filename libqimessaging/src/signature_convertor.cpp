@@ -62,7 +62,7 @@ namespace qi {
       _sig(sig)
   {}
 
-  const char *SignatureConvertor::elementTypeSTL(int idx, bool constify)
+  const char *SignatureConvertor::elementTypeSTL(int idx, bool constify) const
   {
     if (constify) {
       if (_type == Qt)

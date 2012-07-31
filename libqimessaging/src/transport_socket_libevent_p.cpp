@@ -307,7 +307,6 @@ namespace qi
   {
     const std::string &address = url.host();
     struct evutil_addrinfo *ai = NULL;
-    int                     err;
     struct evutil_addrinfo  hint;
     char                    portbuf[10];
 
@@ -328,7 +327,7 @@ namespace qi
       hint.ai_family = AF_UNSPEC;
       hint.ai_protocol = IPPROTO_TCP;
       hint.ai_socktype = SOCK_STREAM;
-      err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
+      int err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
       if (err != 0)
       {
         qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
