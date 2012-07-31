@@ -9,6 +9,9 @@
 #include <cstring>
 #include <map>
 
+#ifdef ANDROID
+#include <linux/in.h> // for  IPPROTO_TCP
+#endif
 
 #include <event2/util.h>
 #include <event2/event.h>
