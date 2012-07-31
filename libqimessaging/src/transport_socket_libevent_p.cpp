@@ -33,10 +33,15 @@
 
 #define MAX_LINE 16384
 
+// Default timeout in NAOqi 1
+const unsigned int socketTimeout = 5 * 60;
+
 namespace qi
 {
   static void cleancb(evutil_socket_t fd, short what, void *arg)
   {
+    TransportSocketLibEvent *ts = static_cast<TransportSocketLibEvent*>(arg);
+    ts->onCleanPendingMessages();
   }
 
   static void readcb(struct bufferevent *bev,
@@ -127,7 +132,8 @@ namespace qi
 
       {
         boost::mutex::scoped_lock l(mtx);
-        msgSend[msg->id()] = msg;
+
+        msgSend[msg->id()].msg = msg;
         msgId = msg->id();
         msg = NULL;
         cond.notify_all();
@@ -235,7 +241,7 @@ namespace qi
     if (!clean_event)
     {
       struct timeval clean_period = { 1, 0 };
-      struct event *clean_event = event_new(base, -1, EV_PERSIST, cleancb, 0);
+      struct event *clean_event = event_new(base, -1, EV_PERSIST, cleancb, this);
       event_add(clean_event, &clean_period);
     }
   }
@@ -244,6 +250,37 @@ namespace qi
   {
     if (isConnected())
       disconnect();
+  }
+
+  void TransportSocketLibEvent::onCleanPendingMessages()
+  {
+    for (std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it = msgSend.begin();
+         it != msgSend.end();
+         )
+    {
+      if (time(0) - it->second.timestamp >= socketTimeout)
+      {
+        std::vector<TransportSocketInterface *> localCallbacks;
+        {
+          boost::mutex::scoped_lock l(mtxCallback);
+          localCallbacks = tcd;
+        }
+
+        // Call onSocketTimeout callback
+        for (std::vector<TransportSocketInterface *>::const_iterator it2 = localCallbacks.begin();
+             it2 != localCallbacks.end();
+             ++it2)
+        {
+          (*it2)->onSocketTimeout(self, it->first);
+        }
+
+        msgSend.erase(it++);
+      }
+      else
+      {
+        it++;
+      }
+    }
   }
 
   void TransportSocketLibEvent::onBufferSent(const void *QI_UNUSED(data),
@@ -298,7 +335,7 @@ namespace qi
       if (!clean_event)
       {
         struct timeval clean_period = { 1, 0 };
-        struct event *clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, 0);
+        struct event *clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, this);
         event_add(clean_event, &clean_period);
       }
 
@@ -351,6 +388,11 @@ namespace qi
     qi::Message *m = new qi::Message();
     *m = msg;
     m->_p->complete();
+
+    if (m->type() == qi::Message::Type_Call)
+    {
+      msgSend[m->id()].timestamp = time(0);
+    }
 
     struct evbuffer *mess = evbuffer_new();
     // m might be deleted.

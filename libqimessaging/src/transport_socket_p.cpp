@@ -70,7 +70,7 @@ namespace qi
       return false;
     }
 
-    std::map<unsigned int, qi::Message*>::iterator it;
+    std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
     {
       {
         boost::mutex::scoped_lock l(mtx);
@@ -99,14 +99,14 @@ namespace qi
       return false;
     }
 
-    std::map<unsigned int, qi::Message*>::iterator it;
+    std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
     {
       boost::mutex::scoped_lock l(mtx);
       it = msgSend.find(id);
       if (it != msgSend.end())
       {
-        *msg = *it->second;
-        delete it->second;
+        *msg = *(it->second.msg);
+        delete it->second.msg;
         msgSend.erase(it);
         return true;
       }

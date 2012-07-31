@@ -27,6 +27,8 @@ namespace qi
     inline virtual void onSocketWriteDone(TransportSocket *QI_UNUSED(client))         {};
     inline virtual void onSocketReadyRead(TransportSocket *QI_UNUSED(client),
                                           int QI_UNUSED(id)) {};
+    inline virtual void onSocketTimeout(TransportSocket *QI_UNUSED(client),
+                                        int  QI_UNUSED(id)) {};
   };
 
   class Session;

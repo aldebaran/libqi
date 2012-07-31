@@ -53,7 +53,13 @@ namespace qi
     qi::Message              *msg;
     qi::TransportSocket      *self;
 
-    std::map<unsigned int, qi::Message*> msgSend;
+    struct PendingMessage
+    {
+      qi::Message         *msg;
+      time_t               timestamp;
+    };
+
+    std::map<unsigned int, PendingMessage> msgSend;
     boost::mutex                         mtx;
     boost::condition_variable            cond;
     qi::Url                              url;
