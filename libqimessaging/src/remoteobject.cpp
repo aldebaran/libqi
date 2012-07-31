@@ -28,6 +28,19 @@ RemoteObject::~RemoteObject()
   delete _ts;
 }
 
+void RemoteObject::onSocketTimeout(TransportSocket *client, int id)
+{
+  {
+    boost::mutex::scoped_lock lock(_mutex);
+    std::map<int, qi::FunctorResult>::iterator it = _promises.find(id);
+    if (it != _promises.end())
+    {
+      it->second.setError("network timeout");
+      _promises.erase(it);
+    }
+  }
+}
+
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 {
   qi::FunctorResult                          promise;
