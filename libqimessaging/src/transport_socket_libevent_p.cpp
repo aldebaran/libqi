@@ -211,6 +211,30 @@ namespace qi
         for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
           (*it)->onSocketDisconnected(self);
       }
+
+      // Call onSocketTimeout callback
+      while (true)
+      {
+        unsigned int id = 0;
+        {
+          boost::mutex::scoped_lock l(mtx);
+          std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator msgSendIt = msgSend.begin();
+          if (msgSendIt == msgSend.end())
+          {
+            break;
+          }
+          id = msgSendIt->first;
+          msgSend.erase(msgSendIt);
+        }
+
+        for (std::vector<TransportSocketInterface*>::const_iterator localCallbacksIt = localCallbacks.begin();
+             localCallbacksIt != localCallbacks.end();
+             ++localCallbacksIt)
+        {
+          (*localCallbacksIt)->onSocketTimeout(self, id);
+        }
+      }
+
       status = errno;
       // check errno to see what error occurred
       qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
