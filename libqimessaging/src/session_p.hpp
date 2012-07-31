@@ -42,6 +42,7 @@ namespace qi {
     virtual void onSocketConnectionError(TransportSocket *client);
     virtual void onSocketDisconnected(TransportSocket *client);
     virtual void onSocketReadyRead(TransportSocket *client, int id);
+    virtual void onSocketTimeout(TransportSocket *client, int id);
 
     void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
     void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);

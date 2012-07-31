@@ -364,6 +364,19 @@ namespace qi {
     return future;
   }
 
+  void SessionPrivate::onSocketTimeout(TransportSocket *client, int id)
+  {
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      std::map<int, qi::FunctorResult>::iterator it = _futureFunctor.find(id);
+      if (it != _futureFunctor.end())
+      {
+        it->second.setError("network timeout");
+        _futureFunctor.erase(it);
+      }
+    }
+  }
+
   void SessionPrivate::serviceReady(unsigned int idx)
   {
     qi::Message msg;
