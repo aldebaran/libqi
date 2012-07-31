@@ -35,6 +35,10 @@
 
 namespace qi
 {
+  static void cleancb(evutil_socket_t fd, short what, void *arg)
+  {
+  }
+
   static void readcb(struct bufferevent *bev,
                      void *context)
   {
@@ -227,6 +231,13 @@ namespace qi
     bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ|EV_WRITE);
     connected = true;
+
+    if (!clean_event)
+    {
+      struct timeval clean_period = { 1, 0 };
+      struct event *clean_event = event_new(base, -1, EV_PERSIST, cleancb, 0);
+      event_add(clean_event, &clean_period);
+    }
   }
 
   TransportSocketLibEvent::~TransportSocketLibEvent()
@@ -282,6 +293,13 @@ namespace qi
       {
         qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
         return (false);
+      }
+
+      if (!clean_event)
+      {
+        struct timeval clean_period = { 1, 0 };
+        struct event *clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, 0);
+        event_add(clean_event, &clean_period);
       }
 
       int result = bufferevent_socket_connect(bev, ai->ai_addr, ai->ai_addrlen);

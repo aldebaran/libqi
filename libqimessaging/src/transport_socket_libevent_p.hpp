@@ -54,6 +54,7 @@ namespace qi
   private:
     struct bufferevent *bev;
     int                 fd;
+    struct event       *clean_event;
   };
 
 }
