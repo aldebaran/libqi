@@ -215,13 +215,24 @@ even more harder:
     functionthatdonotthrow(*eo);
   }
 
+
+Iterators
+---------
+
+When naming an iterator, simply append "It" after the name of the container.
+
+.. code-block:: c++
+
+  std::vector<int> primeNumbers;
+  std::vector<int>::iterator primeNumbersIt;
+
+
 Enum
 ----
 
-One must used the singular when naming an enumeration.
+The name of the enumeration must be singular.
 
-Enum values should be prefixed by the enum name followed by an underscore.
-
+The enumeration values must be prefixed by the name of the enumeration followed by an underscore.
 
 .. code-block:: c++
 
@@ -237,13 +248,13 @@ Enum values should be prefixed by the enum name followed by an underscore.
 
   };
 
-Always prefer enum than boolean for readability.
+Always prefer enumerations to booleans for readability.
 
 .. code-block:: c++
 
-  //bad cant understand by just reading the line
+  // bad: cannot understand just by reading the line
   Client ds("ip", true);
-  //GOOD: easy to read, ok this is keepalive.
+  // GOOD: easy to read, ok this is keepalive.
   Client ds("ip", Connection_KeepAlive);
 
 
