@@ -103,7 +103,7 @@ if(USE_BOOST_LOCK_FREE)
   include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 endif()
 
-if(NOT DEFINED BUILD_SHARED_LIBS OR ${BUILD_SHARED_LIBS})
+if(NOT DEFINED BUILD_SHARED_LIBS OR "${BUILD_SHARED_LIBS}")
   qi_create_lib(qi SHARED ${H} ${C})
 else()
   qi_create_lib(qi STATIC ${H} ${C})
