@@ -196,7 +196,11 @@ namespace qi
 
     unsigned int idx = ++servicesCount;
     nameToIdx[svcinfo.name()] = idx;
-    socketToIdx[socket()].push_back(idx);
+    // Do not add serviceDirectory on the map (socket() == null)
+    if (idx != qi::Message::Service_ServiceDirectory)
+    {
+      socketToIdx[socket()].push_back(idx);
+    }
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
 
@@ -227,16 +231,38 @@ namespace qi
     it = nameToIdx.find(connectedServices[idx].name());
     if (it != nameToIdx.end())
     {
+      std::string serviceName = connectedServices[idx].name();
       qiLogInfo("qimessaging.ServiceDirectory") << "service "
-                                                << connectedServices[idx].name()
+                                                << serviceName
                                                 << " (#" << idx << ") unregistered"
                                                 << std::endl;
       nameToIdx.erase(it);
       connectedServices.erase(it2);
+
       // Find and remove serviceId into socketToIdx map
       std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
       for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
       {
+        // notify every session that the service is unregistered
+        qi::Message msg;
+        msg.setType(qi::Message::Type_Event);
+        msg.setService(idx);
+        msg.setPath(qi::Message::Path_Main);
+        msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+
+        qi::Buffer     buf;
+        qi::DataStream d(buf);
+        d << serviceName;
+
+        if (d.status() == qi::DataStream::Status_Ok)
+        {
+          msg.setBuffer(buf);
+          if (!socketIt->first->send(msg))
+          {
+            qiLogError("qimessaging.Session") << "Error while unregister service, cannot send event.";
+          }
+        }
+
         std::vector<unsigned int>::iterator serviceIdxIt;
         for (serviceIdxIt = socketIt->second.begin();
              serviceIdxIt != socketIt->second.end();
@@ -256,16 +282,40 @@ namespace qi
   {
     // search the id before accessing it
     // otherwise operator[] create a empty entry
-    std::map<unsigned int, ServiceInfo>::iterator it;
-    it = pendingServices.find(idx);
-    if (it == pendingServices.end())
+    std::map<unsigned int, ServiceInfo>::iterator itService;
+    itService = pendingServices.find(idx);
+    if (itService == pendingServices.end())
     {
       qiLogError("qimessaging.ServiceDirectory") << "Can't find pending service #" << idx;
       return;
     }
 
-    connectedServices[idx] = it->second;
-    pendingServices.erase(it);
+    std::string serviceName = itService->second.name();
+    connectedServices[idx] = itService->second;
+    pendingServices.erase(itService);
+
+    std::map<TransportSocket*, std::vector<unsigned int> >::iterator socketIt;
+    for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
+    {
+      qi::Message msg;
+      msg.setType(qi::Message::Type_Event);
+      msg.setService(idx);
+      msg.setPath(qi::Message::Path_Main);
+      msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
+
+      qi::Buffer     buf;
+      qi::DataStream d(buf);
+      d << serviceName;
+
+      if (d.status() == qi::DataStream::Status_Ok)
+      {
+        msg.setBuffer(buf);
+        if (!socketIt->first->send(msg))
+        {
+          qiLogError("qimessaging.Session") << "Error while register service, cannot send event.";
+        }
+      }
+    }
   }
 
 ServiceDirectory::ServiceDirectory()

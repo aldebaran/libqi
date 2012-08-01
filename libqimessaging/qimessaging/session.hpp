@@ -42,6 +42,18 @@ namespace qi {
     {
       qiLogVerbose("session.hpp") << "onSessionDisconnected not implemented";
     }
+
+    inline virtual void onServiceRegistered(Session *QI_UNUSED(session),
+                                            const std::string &QI_UNUSED(serviceName))
+    {
+      qiLogVerbose("session.hpp") << "onServiceRegistered not implemented";
+    }
+
+    inline virtual void onServiceUnregistered(Session *QI_UNUSED(session),
+                                              const std::string &QI_UNUSED(serviceName))
+    {
+      qiLogVerbose("session.hpp") << "onServiceUnregistered not implemented";
+    }
   };
 
   class QIMESSAGING_API Session {

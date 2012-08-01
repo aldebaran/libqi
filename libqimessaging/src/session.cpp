@@ -106,65 +106,105 @@ namespace qi {
     qi::Message msg;
     client->read(id, &msg);
 
-    // request for service method
-    std::map<int, ServiceRequest>::iterator futureServiceIt;
+    if (msg.type() == qi::Message::Type_Event)
     {
-      boost::mutex::scoped_lock l(_mutexFuture);
-      futureServiceIt = _futureService.find(id);
-    }
-    if (futureServiceIt != _futureService.end())
-    {
-      if (client == _serviceSocket)
-        serviceEndpointEnd(id, client, &msg, futureServiceIt->second); // Come from ServiceDirectory with endpoints to connect
-      else
-        serviceMetaobjectEnd(id, client, &msg, futureServiceIt->second); // Come from Service to get the MetaObject
-      return;
-    }
-
-    // request from services method
-    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >::iterator futureServicesIt;
-    {
-      boost::mutex::scoped_lock l(_mutexFuture);
-      futureServicesIt = _futureServices.find(id);
-    }
-    if (futureServicesIt != _futureServices.end())
-    {
-      servicesEnd(client, &msg, futureServicesIt->second);
+      std::vector<SessionInterface *> localCallbacks;
       {
-        boost::mutex::scoped_lock l(_mutexFuture);
-        _futureServices.erase(futureServicesIt);
+        boost::mutex::scoped_lock l(_mutexCallback);
+        localCallbacks = _callbacks;
+      }
+      std::vector<SessionInterface *>::const_iterator sessionIt;
+      for (sessionIt = localCallbacks.begin(); sessionIt != localCallbacks.end(); ++sessionIt)
+      {
+        std::string serviceName;
+        qi::DataStream  d(msg.buffer());
+        d >> serviceName;
+
+        if (msg.function() == qi::Message::ServiceDirectoryFunction_RegisterService)
+        {
+          (*sessionIt)->onServiceRegistered(_self, serviceName);
+        }
+        else if (msg.function() == qi::Message::ServiceDirectoryFunction_UnregisterService)
+        {
+          (*sessionIt)->onServiceUnregistered(_self, serviceName);
+        }
+        else
+        {
+          qiLogError("qi::session") << "Unrecognize event type";
+        }
       }
       return;
     }
-
-    // Request for register/unregister methods
-    std::map<int, qi::FunctorResult>::iterator futureFunctorIt;
+    else
     {
-      boost::mutex::scoped_lock l(_mutexFuture);
-      futureFunctorIt = _futureFunctor.find(id);
-    }
-    if (futureFunctorIt != _futureFunctor.end())
-    {
-      serviceRegisterUnregisterEnd(id, &msg, futureFunctorIt->second);
+      // request for service method
+      std::map<int, ServiceRequest>::iterator futureServiceIt;
       {
         boost::mutex::scoped_lock l(_mutexFuture);
-        _futureFunctor.erase(futureFunctorIt);
+        futureServiceIt = _futureService.find(id);
       }
-      return;
-    }
-    std::vector<unsigned int>::iterator serviceReadyIt;
-    {
-      boost::mutex::scoped_lock l(_mutexServiceReady);
-      serviceReadyIt = std::find(_serviceReady.begin(), _serviceReady.end(), id);
-    }
-    if (serviceReadyIt != _serviceReady.end())
-    {
-      boost::mutex::scoped_lock l(_mutexServiceReady);
-      _serviceReady.erase(serviceReadyIt);
-      return;
-    }
+      if (futureServiceIt != _futureService.end())
+      {
+        if (client == _serviceSocket)
+        {
+          // Message comes from the ServiceDirectory with the endpoints of the Service
+          // the client wants to connect to
+          serviceEndpointEnd(id, client, &msg, futureServiceIt->second);
+        }
+        else
+        {
+          // The Message comes from the service and contains its MetaObject,
+          // which is forwarded to the client.
+          serviceMetaobjectEnd(id, client, &msg, futureServiceIt->second);
+        }
+        return;
+      }
 
-    qiLogError("qimessaging") << "Session::Private: onSocketReadyRead: unknown message id " << id;
+      // request from services method
+      std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >::iterator futureServicesIt;
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        futureServicesIt = _futureServices.find(id);
+      }
+      if (futureServicesIt != _futureServices.end())
+      {
+        servicesEnd(client, &msg, futureServicesIt->second);
+        {
+          boost::mutex::scoped_lock l(_mutexFuture);
+          _futureServices.erase(futureServicesIt);
+        }
+        return;
+      }
+
+      // Request for register/unregister methods
+      std::map<int, qi::FunctorResult>::iterator futureFunctorIt;
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        futureFunctorIt = _futureFunctor.find(id);
+      }
+      if (futureFunctorIt != _futureFunctor.end())
+      {
+        serviceRegisterUnregisterEnd(id, &msg, futureFunctorIt->second);
+        {
+          boost::mutex::scoped_lock l(_mutexFuture);
+          _futureFunctor.erase(futureFunctorIt);
+        }
+        return;
+      }
+      std::vector<unsigned int>::iterator serviceReadyIt;
+      {
+        boost::mutex::scoped_lock l(_mutexServiceReady);
+        serviceReadyIt = std::find(_serviceReady.begin(), _serviceReady.end(), id);
+      }
+      if (serviceReadyIt != _serviceReady.end())
+      {
+        boost::mutex::scoped_lock l(_mutexServiceReady);
+        _serviceReady.erase(serviceReadyIt);
+        return;
+      }
+
+      qiLogError("qimessaging") << "Session::Private: onSocketReadyRead: unknown message id " << id;
+    }
   }
 
   void SessionPrivate::serviceRegisterUnregisterEnd(int id,
