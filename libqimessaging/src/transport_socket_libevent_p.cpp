@@ -250,6 +250,7 @@ namespace qi
     : TransportSocketPrivate(socket)
     , bev(NULL)
     , fd(-1)
+    , clean_event(0)
   {
   }
 
@@ -257,6 +258,7 @@ namespace qi
     : TransportSocketPrivate(socket)
     , bev(NULL)
     , fd(fileDesc)
+    , clean_event(0)
   {
     struct event_base *base = static_cast<event_base *>(data);
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
