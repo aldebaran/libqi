@@ -43,6 +43,7 @@ namespace qi
                  void *QI_UNUSED(context));
 
     void onCleanPendingMessages();
+    void cleanPendingMessages();
     void onWriteDone();
 
     static void onBufferSent(const void *QI_UNUSED(data),

@@ -223,28 +223,7 @@ namespace qi
           (*it)->onSocketDisconnected(self);
       }
 
-      // Call onSocketTimeout callback
-      while (true)
-      {
-        unsigned int id = 0;
-        {
-          boost::mutex::scoped_lock l(mtx);
-          std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator msgSendIt = msgSend.begin();
-          if (msgSendIt == msgSend.end())
-          {
-            break;
-          }
-          id = msgSendIt->first;
-          msgSend.erase(msgSendIt);
-        }
-
-        for (std::vector<TransportSocketInterface*>::const_iterator localCallbacksIt = localCallbacks.begin();
-             localCallbacksIt != localCallbacks.end();
-             ++localCallbacksIt)
-        {
-          (*localCallbacksIt)->onSocketTimeout(self, id);
-        }
-      }
+      cleanPendingMessages();
 
       status = errno;
       // check errno to see what error occurred
@@ -319,6 +298,38 @@ namespace qi
       else
       {
         it++;
+      }
+    }
+  }
+
+  void TransportSocketLibEvent::cleanPendingMessages()
+  {
+    std::vector<TransportSocketInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(mtxCallback);
+      localCallbacks = tcd;
+    }
+
+    // Call onSocketTimeout callback
+    while (true)
+    {
+      unsigned int id = 0;
+      {
+        boost::mutex::scoped_lock l(mtx);
+        std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator msgSendIt = msgSend.begin();
+        if (msgSendIt == msgSend.end())
+        {
+          break;
+        }
+        id = msgSendIt->first;
+        msgSend.erase(msgSendIt);
+      }
+
+      for (std::vector<TransportSocketInterface*>::const_iterator localCallbacksIt = localCallbacks.begin();
+           localCallbacksIt != localCallbacks.end();
+           ++localCallbacksIt)
+      {
+        (*localCallbacksIt)->onSocketTimeout(self, id);
       }
     }
   }
@@ -409,6 +420,7 @@ namespace qi
       bufferevent_free(bev);
       bev = NULL;
       connected = false;
+      cleanPendingMessages();
     }
     else
     {
