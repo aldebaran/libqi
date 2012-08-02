@@ -17,7 +17,8 @@
 class QiServerPrivate
 {
 public:
-  qi::Server server;
+  qi::Server  server;
+  QiSession  *session;
 };
 
 QiServer::QiServer()
@@ -30,14 +31,26 @@ QiServer::~QiServer()
   delete _p;
 }
 
-void QiServer::listen(QiSession *QI_UNUSED(session), const QVector<QUrl> &QI_UNUSED(url))
+bool QiServer::listen(QiSession *session, const QUrl &url)
 {
+  qi::Url qurl(url.toString().toUtf8().data());
+  std::cout << "url:" << qurl.str() << std::endl;
+  _p->session = session;
+  return _p->server.listen(_p->session->_p->_session, qurl.str());
 }
 
-void QiServer::stop()
+void QiServer::close()
 {
+  _p->server.close();
 }
 
-void QiServer::registerService(const QString &QI_UNUSED(name), QObject *QI_UNUSED(obj))
+QFuture<unsigned int> QiServer::registerService(const QString &QI_UNUSED(name), QObject *QI_UNUSED(obj))
 {
+  QFutureInterface<unsigned int> fut;
+  return fut.future();
+}
+
+QUrl QiServer::listenUrl() const {
+  QUrl url;
+  return url;
 }

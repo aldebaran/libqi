@@ -10,6 +10,7 @@
 
 # include <QtCore/qobject.h>
 # include <QtCore/qurl.h>
+# include <QtCore/qlist.h>
 # include <qimessaging/qt/api.h>
 # include <qimessaging/qt/qisession.h>
 
@@ -21,9 +22,18 @@ public:
   QiServer();
   ~QiServer();
 
-  void listen(QiSession *session, const QVector<QUrl> &url);
-  void stop();
-  void registerService(const QString &name, QObject *obj);
+  bool listen(QiSession *session, const QUrl &url);
+  void close();
+
+  QFuture<unsigned int> registerService(const QString &name,
+                                        QObject *obj);
+  //QFuture<void>         unregisterService(unsigned int idx);
+
+  //QList<qi::ServiceInfo> registeredServices();
+  //qi::ServiceInfo        registeredService(const QString &name);
+  //QObject               *registeredServiceObject(const QString &service);
+
+  QUrl                  listenUrl() const;
 
 protected:
   QiServerPrivate *_p;

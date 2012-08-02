@@ -17,13 +17,16 @@ set(H   qimessaging/qt/api.h
 set(H_P src/qiremoteobject_p.h
         src/qisession_p.h
         src/qmetaobjectbuilder_p.h
-        src/qimetatype_p.h)
+        src/qimetatype_p.h
+        src/qiqobject.h
+        )
 
 set(SRC src/qisession.cpp
         src/qiserver.cpp
         src/qiremoteobject.cpp
         src/qmetaobjectbuilder.cpp
-        src/qimetatype.cpp)
+        src/qimetatype.cpp
+        src/qiqobject.cpp)
 
 
 qt4_wrap_cpp(H_MOC ${H_TO_MOC})

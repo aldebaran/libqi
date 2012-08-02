@@ -14,7 +14,9 @@
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/qt/qiserver.h>
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qurl.h>
+#include "helloservice.h"
 //#include "qiservicetest.hpp"
 
 std::string reply(const std::string &msg) {
@@ -26,12 +28,13 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
+  QCoreApplication app(argc, argv);
   // declare the program options
   po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
   desc.add_options()
       ("help", "Print this help.")
       ("master-address",
-       po::value<std::string>()->default_value(std::string("127.0.0.1:5555")),
+       po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
        "The master address");
 
   // allow master address to be specified as the first arg
@@ -54,27 +57,23 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      QiSession session;
-      QObject obj;
-      QiServer srv;
-      //obj.advertiseMethod("reply", &reply);
+      QString masterAddress = QString::fromUtf8(vm["master-address"].as<std::string>().c_str());
+      QiSession     session;
+      QiServer      srv;
+      QHelloService hello;
 
-      QVector<QUrl> endpoints;
-      QUrl url("tcp://127.0.0.1:9571");
-      endpoints.push_back(url);
-      srv.registerService("serviceTest", &obj);
-      srv.listen(&session, endpoints);
+      session.connect(masterAddress);
+      session.waitForConnected();
+
+      srv.registerService("serviceTest", &hello);
+      srv.listen(&session, QString::fromAscii("tcp://0.0.0.0:0"));
 
       std::cout << "ready." << std::endl;
 
-      std::string masterAddress = vm["master-address"].as<std::string>();
-      session.connect(QString::fromStdString(masterAddress));
-      session.waitForConnected();
 
-      while (1)
-        qi::os::sleep(1);
+      app.exec();
 
-      srv.stop();
+      srv.close();
     }
     else
     {
