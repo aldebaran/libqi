@@ -1,5 +1,5 @@
 <project name="qimessaging">
   <depends buildtime="true" runtime="true" names="qissh zeromq boost libqi sqlite"/>
-  <depends buildtime="true" names="python gtest zlib uuid pthread"/>
+  <depends buildtime="true" names="python gtest zlib uuid pthread qiprobes"/>
   <sphinxdoc name="qimessaging" src="doc" />
 </project>
