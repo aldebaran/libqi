@@ -36,11 +36,22 @@
 
 #define MAX_LINE 16384
 
-// Default timeout in NAOqi 1
-const unsigned int socketTimeout = 5 * 60;
-
 namespace qi
 {
+  static unsigned int getSocketTimeout()
+  {
+    const std::string st = qi::os::getenv("QI_SOCKET_TIMEOUT");
+    if (st != "")
+    {
+      return atoi(st.c_str());
+    }
+    else
+    {
+      // Default timeout in NAOqi 1
+      return 5 * 60;
+    }
+  }
+
   static void cleancb(evutil_socket_t fd, short what, void *arg)
   {
     TransportSocketLibEvent *ts = static_cast<TransportSocketLibEvent*>(arg);
@@ -287,7 +298,7 @@ namespace qi
          it != msgSend.end();
          )
     {
-      if (time(0) - it->second.timestamp >= socketTimeout)
+      if (time(0) - it->second.timestamp >= getSocketTimeout())
       {
         std::vector<TransportSocketInterface *> localCallbacks;
         {
