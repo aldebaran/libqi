@@ -192,3 +192,8 @@ QFuture< QVector<qi::ServiceInfo> > QiSession::services()
   _p->_serviceSocket->send(msg);
   return futi.future();
 }
+
+QUrl QiSession::url() const {
+  QUrl url(QString::fromUtf8(_p->_session->url().str().c_str()));
+  return url;
+}

@@ -68,7 +68,8 @@ public:
 
   void onSocketWriteDone(qi::TransportSocket *) { }
 
-  void onSocketReadyRead(qi::TransportSocket *socket)
+  void onSocketReadyRead(qi::TransportSocket *socket,
+                         int QI_UNUSED(id))
   {
     _lastPingTime = time(0);
     _updated = true;

@@ -16,6 +16,7 @@
 #include <QtCore/qfuture.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qurl.h>
 
 class QiSessionPrivate;
 
@@ -36,12 +37,16 @@ public:
                                               const QString     &type = QString("any"));
   QFuture< QVector<qi::ServiceInfo> > services();
 
+  QUrl url() const;
+
   // private implementation
   QiSessionPrivate *_p;
 
 signals:
   void connected();
   void disconnected();
+  void onServiceRegistered(const QString &serviceName);
+  void onServiceUnregistered(const QString &serviceName);
 };
 
 
