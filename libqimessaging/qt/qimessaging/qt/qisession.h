@@ -42,11 +42,13 @@ public:
   // private implementation
   QiSessionPrivate *_p;
 
-signals:
+  friend class QiSessionPrivate;
+
+Q_SIGNALS:
   void connected();
   void disconnected();
-  void onServiceRegistered(const QString &serviceName);
-  void onServiceUnregistered(const QString &serviceName);
+  void serviceRegistered(const QString &serviceName);
+  void serviceUnregistered(const QString &serviceName);
 };
 
 

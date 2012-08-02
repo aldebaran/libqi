@@ -24,14 +24,20 @@ namespace qi {
   class NetworkThread;
 };
 
-class QiSessionPrivate : public qi::TransportSocketInterface {
+class QiSessionPrivate : public qi::TransportSocketInterface,
+                         public qi::SessionInterface
+{
 public:
-  QiSessionPrivate();
+  QiSessionPrivate(QiSession *self);
   ~QiSessionPrivate();
 
   virtual void onSocketConnected(qi::TransportSocket *client);
   virtual void onSocketReadyRead(qi::TransportSocket *client, int id);
   virtual void onSocketConnectionError(qi::TransportSocket *client);
+  virtual void onServiceRegistered(qi::Session *QI_UNUSED(session),
+                                  const std::string &serviceName);
+  virtual void onServiceUnregistered(qi::Session *QI_UNUSED(session),
+                                    const std::string &serviceName);
 
   void service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
   void service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
@@ -40,6 +46,7 @@ public:
 public:
   qi::TransportSocket                                     *_serviceSocket;
   qi::Session                                             *_session;
+  QiSession                                               *_self;
 
   QMap<int, ServiceRequest>                                _futureService;
   QMap<void *, ServiceRequest>                             _futureConnect;

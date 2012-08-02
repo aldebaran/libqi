@@ -16,8 +16,10 @@
 #include "src/qiremoteobject_p.h"
 #include "src/qisession_p.h"
 
-QiSessionPrivate::QiSessionPrivate() {
+QiSessionPrivate::QiSessionPrivate(QiSession *self) {
   _session = new qi::Session();
+  _session->addCallbacks(this);
+  _self = self;
   _serviceSocket = new qi::TransportSocket();
   _serviceSocket->addCallbacks(this);
 }
@@ -26,6 +28,18 @@ QiSessionPrivate::~QiSessionPrivate() {
   _serviceSocket->disconnect();
   delete _session;
   delete _serviceSocket;
+}
+
+void QiSessionPrivate::onServiceRegistered(qi::Session *QI_UNUSED(session),
+                                          const std::string &serviceName)
+{
+  emit(_self->serviceRegistered(QString::fromUtf8(serviceName.c_str())));
+}
+
+void QiSessionPrivate::onServiceUnregistered(qi::Session *QI_UNUSED(session),
+                                            const std::string &serviceName)
+{
+  emit(_self->serviceUnregistered(QString::fromUtf8(serviceName.c_str())));
 }
 
 void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client) {
@@ -122,7 +136,7 @@ void QiSessionPrivate::services_end(qi::TransportSocket *QI_UNUSED(client), qi::
 
 
 QiSession::QiSession()
-  : _p(new QiSessionPrivate)
+  : _p(new QiSessionPrivate(this))
 {
 }
 
