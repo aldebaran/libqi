@@ -135,15 +135,10 @@ qi_add_subdirectory(perfs     WITH_PERF)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
 
-message(STATUS "")
-message(STATUS "Build Options:")
-message(STATUS "WITH_EXAMPLES: ${WITH_EXAMPLES}")
-message(STATUS "WITH_PERF    : ${WITH_PERF}")
-message(STATUS "WITH_PYTHON  : ${WITH_PYTHON}")
 
 
-qi_add_optional_package(Qt4)
-if(WITH_QT4)
+qi_add_optional_package(QT_QTCORE)
+if(WITH_QT_QTCORE)
   add_subdirectory("qt")
 endif()
 add_subdirectory("bin")
@@ -152,3 +147,9 @@ if(WITH_PYTHON)
 endif()
 add_subdirectory("tests")
 
+message(STATUS "")
+message(STATUS "Build Options:")
+message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
+message(STATUS "WITH_PERF      : ${WITH_PERF}")
+message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
+message(STATUS "WITH_QT_QTCORE : ${WITH_QT_QTCORE}")
