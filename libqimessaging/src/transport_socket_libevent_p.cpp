@@ -429,10 +429,10 @@ namespace qi
       connected = false;
       cleanPendingMessages();
     }
-    else
-    {
-      qiLogError("qimessaging.TransportSocketLibevent") << "socket is not connected.";
-    }
+    //else
+    //{
+    //  qiLogError("qimessaging.TransportSocketLibevent") << "socket is not connected.";
+    //}
   }
 
   bool TransportSocketLibEvent::send(const qi::Message &msg)
