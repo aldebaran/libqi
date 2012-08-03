@@ -392,7 +392,7 @@ namespace qi {
       AdapterType[MIB_IF_TYPE_LOOPBACK] = "Loopback";
       AdapterType[MIB_IF_TYPE_SLIP] = "Slip";
 
-      ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+      ULONG ulOutBufLen = 0;
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO))) == NULL)
       {
         qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
@@ -402,18 +402,24 @@ namespace qi {
       /* Make initial call to GetAdaptersInfo to get
       ** the necessary size into the ulOutBufLen variable (pr)
       ** http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx */
-      if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) != ERROR_BUFFER_OVERFLOW)
+      if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != ERROR_BUFFER_OVERFLOW)
+      {
+        qiLogError("core.common.network") << "GetAdaptersInfo failed with error " << dwRetVal << " (1)";
         return std::map<std::string, std::vector<std::string> >();
+      }
 
       free(pAdapterInfo);
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
       {
-          qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
-          std::map<std::string, std::vector<std::string> >();
+        qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
+        std::map<std::string, std::vector<std::string> >();
       }
 
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
+	  {
+        qiLogError("core.common.network") << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
         return std::map<std::string, std::vector<std::string> >();
+      }
 
       pAdapter = pAdapterInfo;
       while (pAdapter)
