@@ -51,6 +51,7 @@ set(H
   qi/log.hpp
   qi/macro.hpp
   qi/os.hpp
+  qi/preproc.hpp
   qi/types.hpp
   qi/path.hpp
   qi/shared_ptr.hpp
