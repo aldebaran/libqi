@@ -34,6 +34,8 @@ TEST(QiSession, simpleConnectionToSd)
 
   EXPECT_TRUE(connected);
 
+  EXPECT_TRUE(session.isConnected());
+
   session.disconnect();
   bool disconnected = session.waitForDisconnected(5000);
 

@@ -67,6 +67,7 @@ namespace qi {
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 
+    bool isConnected() const;
     qi::Future< std::vector<ServiceInfo> > services();
 
     qi::Future< qi::TransportSocket* > serviceSocket(const std::string &name,

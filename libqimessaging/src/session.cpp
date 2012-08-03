@@ -31,10 +31,11 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
+    delete _serviceSocket;
     _networkThread->stop();
     delete _networkThread;
-    delete _serviceSocket;
   }
+
 
   void SessionPrivate::onSocketConnected(TransportSocket *client)
   {
@@ -553,6 +554,10 @@ namespace qi {
     }
     else
       qiLogError("qimessaging.Session") << "Trying to erase invalid callback on the session.";
+  }
+
+  bool Session::isConnected() const {
+    return _p->_serviceSocket->isConnected();
   }
 
   qi::Url Session::url() const {
