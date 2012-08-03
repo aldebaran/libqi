@@ -23,6 +23,7 @@
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
+#include <qi/os.hpp>
 
 #ifdef _MSC_VER
 # pragma warning( push )
@@ -278,6 +279,14 @@ TEST(QiOs, free_port_multiple_connection)
 #endif
 
   EXPECT_TRUE(true);
+}
+
+TEST(QiOs, hostIPAddrs)
+{
+  std::map<std::string, std::vector<std::string> > ifsMap;
+
+  ifsMap = qi::os::hostIPAddrs();
+  ASSERT_TRUE(ifsMap.empty() == false);
 }
 
 #ifdef _MSC_VER
