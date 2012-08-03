@@ -273,9 +273,13 @@ namespace qi
 
   void TransportSocketLibEvent::onCleanPendingMessages()
   {
-    for (std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it = msgSend.begin();
-         it != msgSend.end();
-         )
+    std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
+    std::map<unsigned int, TransportSocketPrivate::PendingMessage> lmap;
+    {
+      boost::mutex::scoped_lock l(mtx);
+      lmap = msgSend;
+    }
+    for (it = lmap.begin();it != lmap.end(); ++it)
     {
       if (time(0) - it->second.timestamp >= getSocketTimeout())
       {
@@ -292,12 +296,10 @@ namespace qi
         {
           (*it2)->onSocketTimeout(self, it->first);
         }
-
-        msgSend.erase(it++);
-      }
-      else
-      {
-        it++;
+        {
+          boost::mutex::scoped_lock l(mtx);
+          msgSend.erase(it->first);
+        }
       }
     }
   }
@@ -406,6 +408,11 @@ namespace qi
 
   void TransportSocketLibEvent::disconnect()
   {
+    if (clean_event) {
+      event_del(clean_event);
+      event_free(clean_event);
+      clean_event = NULL;
+    }
     if (isConnected())
     {
       /*
