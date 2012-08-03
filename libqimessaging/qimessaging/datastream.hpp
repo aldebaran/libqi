@@ -166,7 +166,7 @@ namespace qi {
   template<typename T>
   qi::IDataStream &operator>>(qi::IDataStream &sd, std::list<T> &v) {
     typedef std::list<T> _typefordebug;
-    qi::uint32_t sz;
+    qi::uint32_t sz = 0;
     sd >> sz;
     v.clear();
     if (sz) {
@@ -247,7 +247,7 @@ namespace qi {
   template<typename K, typename V>
   qi::IDataStream &operator>>(qi::IDataStream &sd, std::map<K, V>  &m) {
     typedef  std::map<K,V> _typefordebug;
-    qi::uint32_t sz;
+    qi::uint32_t sz = 0;
     sd >> sz;
     m.clear();
 

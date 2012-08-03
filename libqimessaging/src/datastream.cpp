@@ -119,7 +119,7 @@ namespace qi {
   // string
   IDataStream& IDataStream::operator>>(std::string &s)
   {
-    qi::uint32_t sz;
+    qi::uint32_t sz = 0;
     *this >> sz;
 
     s.clear();
