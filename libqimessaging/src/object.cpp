@@ -196,6 +196,11 @@ namespace qi {
     }
     if (mm->_p->_functor)
       mm->_p->_functor->call(in, out);
+    else {
+      std::stringstream ss;
+      ss << "No valid functor for methodid: " << method;
+      out.setError(ss.str());
+    }
   }
 
   class DropResult: public FunctorResultBase
@@ -237,7 +242,7 @@ namespace qi {
     }
   }
 
-  bool Object::xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out)
+  void Object::xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out)
   {
     int methodId = metaObject().methodId(signature);
     if (methodId < 0) {
@@ -253,24 +258,30 @@ namespace qi {
       }
       qiLogError("object") << ss.str();
       out.setError(ss.str());
-      return false;
+      return;
     }
     if (retsig != "v") {
       qi::MetaMethod *mm = metaObject().method(methodId);
       if (!mm) {
-        qiLogError("object") << "method " << signature << "(id: " << methodId << ") disapeared mysteriously!";
-        return false;
+        std::stringstream ss;
+        ss << "method " << signature << "(id: " << methodId << ") disapeared mysteriously!";
+        qiLogError("object") << ss.str();
+        out.setError(ss.str());
+        return;
       }
       if (mm->sigreturn() != retsig) {
-        qiLogError("object") << "signature mismatch for return value:" << std::endl
+        std::stringstream ss;
+        ss << "signature mismatch for return value:" << std::endl
                              << "we want: " << retsig << " " << signature << std::endl
                              << "we had:" << mm->sigreturn() << " " << mm->signature();
-        return false;
+        qiLogError("object") << ss;
+        out.setError(ss.str());
+        return;
       }
     }
     //TODO: check for metacall to return false when not able to send the answer
     metaCall(methodId, in, out);
-    return true;
+    return;
   }
 
   /// Resolve signature and bounce

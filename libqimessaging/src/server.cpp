@@ -147,6 +147,18 @@ namespace qi {
       obj = it->second;
       if (it == _services.end() || !obj)
       {
+        if (msg.type() == qi::Message::Type_Call) {
+          qi::Message retval;
+          retval.buildReplyFrom(msg);
+          qi::Buffer error;
+          qi::ODataStream ds(error);
+          std::stringstream ss;
+          ss << "can't find service id: " << id;
+          ds << ss.str();
+          retval.setBuffer(error);
+          client->send(retval);
+
+        }
         qiLogError("qi::Server") << "Can't find service: " << msg.service();
         return;
       }

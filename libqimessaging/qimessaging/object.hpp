@@ -138,7 +138,7 @@ namespace qi {
 
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
     /// Resolve the method Id and bounces to metaCall
-    bool xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
+    void xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
     int xAdvertiseEvent(const std::string& signature);
     //// Resolve and bounce to metaEmit
     bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
