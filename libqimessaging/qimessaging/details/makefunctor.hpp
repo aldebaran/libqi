@@ -125,5 +125,9 @@ namespace qi
     return new detail::Functor_9<P0, P1, P2, P3, P4, P5, P6, P7, P8, R>(f);
   }
 
+  template<typename T>
+  Functor* makeFunctor(boost::function<T> fun) {
+    return new detail::BoostFunctor<T>(fun);
+  }
 }
 #endif  // _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_

@@ -1,0 +1,74 @@
+#from qibuild_code_generator import *
+/*
+* $autogen
+*
+*
+*  Copyright (C) 2012 Aldebaran Robotics
+*/
+
+#raw
+
+#pragma once
+#ifndef _QIMESSAGING_DETAILS_BOOSTFUNCTOR_HXX_
+#define _QIMESSAGING_DETAILS_BOOSTFUNCTOR_HXX_
+
+#include <boost/mpl/at.hpp>
+
+# include <qimessaging/functor.hpp>
+# include <boost/function_types/function_arity.hpp>
+# include <boost/function_types/function_type.hpp>
+# include <boost/function_types/result_type.hpp>
+# include <boost/function_types/parameter_types.hpp>
+
+namespace qi {
+namespace detail {
+#end raw
+
+template<int count> struct Invoker {};
+template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi::FunctorParameters &params);
+
+// I'm guessing this iteration could be avoided with fusion.
+#for $i in $count
+  template<> struct Invoker<$i> {
+  template<typename T, typename R> static
+  R invoke(boost::function<T>& f, const qi::FunctorParameters &params)
+  {
+    typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+    qi::IDataStream dsi(params.buffer());
+    #for $j in range($i)
+    typename boost::mpl::at<ArgsType, boost::mpl::int_<$j> >::type p$j;
+    #end for
+    #for $j in range($i)
+    dsi >> p$j;
+    #end for
+    return f($generate_callparam_list($i));
+  }
+  };
+#end for
+
+  template<typename T>
+  class BoostFunctor: public Functor
+  {
+    public:
+      BoostFunctor(boost::function<T> f)
+        : f(f) {}
+     void call(const qi::FunctorParameters &params, qi::FunctorResult result) const
+     {
+       typedef typename boost::function_types::result_type<T>::type ResultType;
+       Invoker<boost::function_types::function_arity<T>::value> invoker;
+       ResultType res = invoker.invoke<T, ResultType>(
+         const_cast<boost::function<T>&>(f), params);
+       qi::Buffer     buf;
+       qi::ODataStream dso(buf);
+       dso << res;
+       if (sanityCheckAndReport(dso, result))
+          result.setValue(buf);
+     }
+     boost::function<T> f;
+  };
+
+#raw
+}
+}
+#endif  // _QIMESSAGING_DETAILS_FUNCTOR_HXX_
+#end raw

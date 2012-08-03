@@ -40,6 +40,7 @@ set(PUBLIC_HEADERS qimessaging/details/voidmemberfunctor.hxx
                    qimessaging/details/voidfunctor.hxx
                    qimessaging/details/functorresult.hxx
                    qimessaging/details/memberfunctor.hxx
+                   qimessaging/details/boostfunctor.hxx
                    qimessaging/details/future.hxx
                    qimessaging/details/functor.hxx
                    qimessaging/details/type_signature.hpp

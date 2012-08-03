@@ -55,6 +55,7 @@ if __name__ == "__main__":
     #os.chdir(os.path.dirname(__file__))
     numArgs = 10 # This results in n-1 arguments
     generate_file("qimessaging/details/memberfunctor.hxx.in"    , "qimessaging/details/memberfunctor.hxx"    , numArgs)
+    generate_file("qimessaging/details/boostfunctor.hxx.in"    , "qimessaging/details/boostfunctor.hxx"    , numArgs)
     generate_file("qimessaging/details/voidmemberfunctor.hxx.in", "qimessaging/details/voidmemberfunctor.hxx", numArgs)
     generate_file("qimessaging/details/functor.hxx.in"          , "qimessaging/details/functor.hxx"          , numArgs)
     generate_file("qimessaging/details/voidfunctor.hxx.in"      , "qimessaging/details/voidfunctor.hxx"      , numArgs)

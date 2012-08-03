@@ -94,6 +94,9 @@ namespace qi {
 
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
+    template<typename T>
+    inline unsigned int advertiseMethod(const std::string& name,
+      boost::function<T> func);
     int xForgetMethod(const std::string &meth);
 
     inline
@@ -188,6 +191,21 @@ namespace qi {
     boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
     signature += ")";
     typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
+    signatureFromType<ResultType>::value(sigret);
+    return xAdvertiseMethod(sigret, signature, makeFunctor(function));
+  }
+
+  template<typename T>
+  inline unsigned int Object::advertiseMethod(const std::string& name,
+    boost::function<T> function)
+  {
+    std::string signature(name);
+    std::string sigret;
+    signature += "::(";
+    typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
+    signature += ")";
+    typedef typename boost::function_types::result_type<T>::type ResultType;
     signatureFromType<ResultType>::value(sigret);
     return xAdvertiseMethod(sigret, signature, makeFunctor(function));
   }

@@ -32,6 +32,10 @@ namespace qi
 
 #end for
 #raw
+  template<typename T>
+  Functor* makeFunctor(boost::function<T> fun) {
+    return new detail::BoostFunctor<T>(fun);
+  }
 }
 #endif  // _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_
 #end raw
