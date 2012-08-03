@@ -88,7 +88,8 @@ void NetworkThread::run()
 
 void NetworkThread::stop()
 {
-  event_base_loopexit(_base, NULL);
+  if (event_base_loopexit(_base, NULL) != 0)
+    qiLogError("networkThread") << "Can't stop the NetworkThread";
   this->join();
 }
 
