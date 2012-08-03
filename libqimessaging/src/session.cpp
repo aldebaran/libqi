@@ -454,6 +454,8 @@ namespace qi {
 
   Session::~Session()
   {
+    disconnect();
+    waitForDisconnected();
     delete _p;
   }
 
