@@ -234,5 +234,24 @@ namespace qi {
 
 };
 
+/** Register struct with QI binding system.
+ * Once called, your structure can be passed as argument to call(), and method
+ * using it can be bound with advertiseMethod().
+ * Usage: pass the name of the structure, and the list of members.
+ */
+#define QI_REGISTER_STRUCT(Cname, ...)        \
+  QI_DATASTREAM_STRUCT(Cname, __VA_ARGS__)    \
+  QI_SIGNATURE_STRUCT(Cname, __VA_ARGS__)
+
+/// Only declare required functions for class registration
+#define QI_REGISTER_STRUCT_DECLARE(Cname)    \
+  QI_DATASTREAM_STRUCT_DECLARE(Cname)        \
+  QI_SIGNATURE_STRUCT_DECLARE(Cname)
+
+/// Implement functions required for class registration
+#define QI_REGISTER_STRUCT_IMPLEMENT(Cname, ...) \
+  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)    \
+  __QI_SIGNATURE_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
+
 #include <qimessaging/object.hxx>
 #endif  // _QIMESSAGING_OBJECT_HPP_

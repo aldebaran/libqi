@@ -44,3 +44,88 @@ TEST(TestObject, Simple) {
   obj.call<void>("objvtest", 21, 21);
   EXPECT_EQ(42, gGlobalResult);
 }
+
+struct Point
+{
+  bool operator == (const Point& b) const { return x==b.x && y==b.y;}
+  int x, y;
+};
+
+Point point(int x, int y)
+{
+  Point p; p.x = x; p.y = y; return p;
+}
+
+QI_REGISTER_STRUCT(Point, x, y);
+
+struct Test
+{
+  float x;
+};
+/// Test the split form of the macro.
+QI_REGISTER_STRUCT_DECLARE(Test)
+QI_REGISTER_STRUCT_IMPLEMENT(Test, x)
+
+
+
+Point swapPoint(const Point& b)
+{
+  return point(b.y, b.x);
+}
+
+TEST(TestObject, SerializeSimple)
+{
+  qi::Object obj;
+  obj.advertiseMethod("swapPoint", &swapPoint);
+  Point p;
+  p.x = 1; p.y = 2;
+  Point res = obj.call<Point>("swapPoint", p);
+  ASSERT_EQ(2, res.x);
+  ASSERT_EQ(1, res.y);
+}
+
+
+struct Complex
+{
+  bool operator == (const Complex& b) const {
+    return points == b.points
+    && foo == b.foo
+    && baz == b.baz
+    && stuff == b.stuff;
+  }
+  std::vector<Point> points;
+  float foo;
+  std::string baz;
+  std::list<std::vector<int> > stuff;
+};
+
+// Test the sub macros
+QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
+QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)
+
+
+Complex echoBack(const Complex& c)
+{
+  return c;
+}
+
+TEST(TestObject, SerializeComplex)
+{
+  Complex comp;
+  comp.foo = 1.5;
+  comp.points.push_back(point(1, 2));
+  comp.points.push_back(point(3, 4));
+  comp.baz = "testbaz";
+  std::vector<int> v;
+  v.push_back(1);
+  v.push_back(2);
+  comp.stuff.push_back(v);
+  v.push_back(3);
+  comp.stuff.push_back(v);
+
+  qi::Object obj;
+  unsigned id = obj.advertiseMethod("echo", &echoBack);
+  std::cerr << obj.metaObject().methods()[id].signature() << std::endl;
+  Complex res = obj.call<Complex>("echo", comp);
+  ASSERT_EQ(res, comp);
+}

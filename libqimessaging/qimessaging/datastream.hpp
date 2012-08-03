@@ -21,6 +21,7 @@
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qi/types.hpp>
+#include <qi/preproc.hpp>
 namespace qi {
 
 #if 0
@@ -265,5 +266,41 @@ namespace qi {
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::Value &value);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::Value &value);
 }
+
+/** Make a class serializable throug {IO}DataStream.
+ * Call with the class name and the list of fields. Each field must
+ * itself be serializable.
+ */
+#define QI_DATASTREAM_STRUCT(Cname, ...) \
+  QI_DATASTREAM_STRUCT_DECLARE(Cname) \
+  __QI_DATASTREAM_STRUCT_IMPLEMENT_(inline, Cname, __VA_ARGS__)
+
+/** Only declare serialization operators
+ */
+#define QI_DATASTREAM_STRUCT_DECLARE(Cname)   \
+  ::qi::ODataStream &operator<<(::qi::ODataStream &sd, const Cname &value); \
+  ::qi::IDataStream &operator>>(::qi::IDataStream &sd, Cname &value);
+
+/** Define serialization operators.
+ */
+#define QI_DATASTREAM_STRUCT_IMPLEMENT(Cname, ...) \
+  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
+
+#define __QI_SERIALIZE_FIELD(_, sep, Field) sep value.Field
+
+
+
+
+#define __QI_DATASTREAM_STRUCT_IMPLEMENT_(inl, Cname, ...)                    \
+ inl ::qi::ODataStream &operator<<(::qi::ODataStream &sd, const Cname &value)   \
+ {                                                                    \
+   return sd                                                          \
+   QI_VAARGS_APPLY(__QI_SERIALIZE_FIELD, <<, __VA_ARGS__);             \
+ }                                                                    \
+ inl ::qi::IDataStream &operator>>(::qi::IDataStream &sd, Cname &value) \
+ {                                                                    \
+   return sd                                                          \
+   QI_VAARGS_APPLY(__QI_SERIALIZE_FIELD, >>, __VA_ARGS__);             \
+ }
 
 #endif  // _QIMESSAGING_DATASTREAM_HPP_

@@ -191,4 +191,35 @@ namespace qi {
 #include <qimessaging/details/stl_signature.hpp>
 
 
+
+/// Create signature information for given struct.
+#define QI_SIGNATURE_STRUCT(Cname, ...) \
+  QI_SIGNATURE_STRUCT_DECLARE(Cname) \
+  __QI_SIGNATURE_STRUCT_IMPLEMENT_(inline, Cname, __VA_ARGS__)
+
+/// Only declare the signature creation operator.
+#define QI_SIGNATURE_STRUCT_DECLARE(Cname) \
+namespace qi { namespace detail {  \
+  template<> struct signature<Cname> { static std::string& value( std::string& val); };}}
+
+/// Implement the signature creation operator
+#define QI_SIGNATURE_STRUCT_IMPLEMENT(Cname, ...) \
+  __QI_SIGNATURE_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
+
+#define __QI_ADD_SIG(_, Cname, Field) \
+  val += ::qi::signatureFromObject::value(dummy.Field);
+
+#define __QI_SIGNATURE_STRUCT_IMPLEMENT_(inl, Cname, ...) \
+namespace qi {                                                       \
+   namespace detail {                                                 \
+     inl std::string& signature<Cname>::value( std::string& val)          \
+       {                                                              \
+         Cname dummy;                                                 \
+         QI_VAARGS_APPLY(__QI_ADD_SIG, _, __VA_ARGS__);                \
+         return val;                                                  \
+       }                                                              \
+   }                                                                  \
+ }
+
+
 #endif  // _QIMESSAGING_SIGNATURE_HPP_

@@ -443,3 +443,65 @@ TEST(TestBind, serializeAllTypes)
   EXPECT_EQ(s, s2);
 }
 
+struct Point
+{
+  bool operator == (const Point& b) const { return x==b.x && y==b.y;}
+  int x, y;
+};
+
+QI_DATASTREAM_STRUCT(Point, x, y)
+
+struct Complex
+{
+  bool operator == (const Complex& b) const {
+    return points == b.points
+    && foo == b.foo
+    && baz == b.baz
+    && stuff == b.stuff;
+  }
+  std::vector<Point> points;
+  float foo;
+  std::string baz;
+  std::list<std::vector<int> > stuff;
+};
+
+QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
+
+TEST(TestBind, SerializeCustomSimple)
+{
+  Point p;
+  p.x = 12; p.y = 13;
+  qi::Buffer buf;
+  qi::ODataStream dout(buf);
+  dout << p;
+  qi::IDataStream din(buf);
+  Point pout;
+  din >> pout;
+  ASSERT_EQ(p, pout);
+}
+Point point(int x, int y)
+{
+  Point p; p.x = x; p.y = y; return p;
+}
+TEST(TestBind, SerializeCustomComplex)
+{
+  Complex comp;
+  comp.foo = 1.5;
+  comp.points.push_back(point(1, 2));
+  comp.points.push_back(point(3, 4));
+  comp.baz = "testbaz";
+  std::vector<int> v;
+  v.push_back(1);
+  v.push_back(2);
+  comp.stuff.push_back(v);
+  v.push_back(3);
+  comp.stuff.push_back(v);
+  qi::Buffer buf;
+  qi::ODataStream dout(buf);
+  dout << comp;
+  qi::IDataStream din(buf);
+  Complex compout;
+  din >> compout;
+  ASSERT_EQ(comp, compout);
+}
+
