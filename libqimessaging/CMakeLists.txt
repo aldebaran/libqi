@@ -66,6 +66,7 @@ set(PUBLIC_HEADERS qimessaging/details/voidmemberfunctor.hxx
                    qimessaging/transport_socket.hpp
                    qimessaging/future.hpp
                    qimessaging/datastream.hpp
+                   qimessaging/bufferreader.hpp
                    qimessaging/buffer.hpp
                    qimessaging/server.hpp
                    qimessaging/gateway.hpp
