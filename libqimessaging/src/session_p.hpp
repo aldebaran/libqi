@@ -15,6 +15,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
+#include <qimessaging/session.hpp>
 
 namespace qi {
 
@@ -29,9 +30,7 @@ namespace qi {
   };
 
   class NetworkThread;
-  class Session;
-  class SessionInterface;
-  class SessionPrivate : public qi::TransportSocketInterface {
+  class SessionPrivate : public qi::TransportSocketInterface, public qi::SessionInterface {
   public:
     SessionPrivate(qi::Session *session);
     virtual ~SessionPrivate();
@@ -67,16 +66,18 @@ namespace qi {
     std::vector<qi::SessionInterface *> _callbacks;
     boost::mutex                        _mutexCallback;
 
-    boost::mutex                                               _mutexFuture;
+    boost::mutex                                                _mutexFuture;
     // Associate serviceRequest with the message id concerning it currently in
     // transit. It can be sd.service or service.metaobject call
-    std::map<int, boost::shared_ptr<ServiceRequest> >                              _futureService;
+    std::map<int, boost::shared_ptr<ServiceRequest> >           _futureService;
     // Associate serviceRequest with the connection currently connecting.
-    std::map<void *, boost::shared_ptr<ServiceRequest> >                           _futureConnect;
-    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > > _futureServices;
-    std::map<int, qi::FunctorResult>                           _futureFunctor;
-    boost::mutex                                               _mutexServiceReady;
-    std::vector<unsigned int>                                  _serviceReady;
+    std::map<void *, boost::shared_ptr<ServiceRequest> >        _futureConnect;
+    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >  _futureServices;
+    std::map<int, qi::FunctorResult>                            _futureFunctor;
+    boost::mutex                                                _mutexServiceReady;
+    std::vector<unsigned int>                                   _serviceReady;
+    boost::mutex                                                _watchedServicesMutex;
+    std::map< std::string, std::pair<int, qi::Promise<void> > > _watchedServices;
   };
 }
 

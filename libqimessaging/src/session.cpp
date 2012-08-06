@@ -31,8 +31,8 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    delete _serviceSocket;
     _networkThread->stop();
+    delete _serviceSocket;
     delete _networkThread;
   }
 
@@ -472,6 +472,14 @@ namespace qi {
   void SessionPrivate::onServiceRegistered(Session *QI_UNUSED(session),
                                            const std::string &serviceName)
   {
+    {
+      boost::mutex::scoped_lock _sl(_watchedServicesMutex);
+      std::map< std::string, std::pair< int, qi::Promise<void> > >::iterator it;
+      it = _watchedServices.find(serviceName);
+      if (it != _watchedServices.end())
+        it->second.second.setValue(0);
+    }
+
     std::vector<SessionInterface *> localCallbacks;
     {
       boost::mutex::scoped_lock l(_mutexCallback);
@@ -486,6 +494,14 @@ namespace qi {
 
   void SessionPrivate::onServiceUnregistered(Session *QI_UNUSED(session),
                                              const std::string &serviceName) {
+    {
+      boost::mutex::scoped_lock _sl(_watchedServicesMutex);
+      std::map< std::string, std::pair< int, qi::Promise<void> > >::iterator it;
+      it = _watchedServices.find(serviceName);
+      if (it != _watchedServices.end())
+        it->second.second.setError(0);
+    }
+
     std::vector<SessionInterface *> localCallbacks;
     {
       boost::mutex::scoped_lock l(_mutexCallback);
@@ -621,4 +637,52 @@ namespace qi {
   qi::Url Session::url() const {
     return _p->_serviceSocket->url();
   }
+
+  bool Session::waitForServiceReady(const std::string &service, int msecs) {
+    qi::Future< std::vector<ServiceInfo> > svs;
+    std::vector<ServiceInfo>::iterator     it;
+    qi::Promise<void>                      prom;
+    qi::Future<void>                       fut;
+
+    //register a watcher for the service
+    {
+      boost::mutex::scoped_lock _sl(_p->_watchedServicesMutex);
+      std::map< std::string, std::pair< int, qi::Promise<void> > >::iterator it;
+      it = _p->_watchedServices.find(service);
+      if (it == _p->_watchedServices.end()) {
+        fut = prom.future();
+        it = _p->_watchedServices.insert(std::make_pair(service, std::make_pair(0, prom))).first;
+      } else {
+        fut = it->second.second.future();
+      }
+      it->second.first += 1;
+    }
+
+    svs = services();
+    svs.wait(msecs);
+    if (!svs.isReady()) {
+      qiLogVerbose("qi.Session") << "waitForServiceReady failed because session.services did not return.";
+      return false;
+    }
+    for (it = svs.value().begin(); it != svs.value().end(); ++it) {
+      if (it->name() == service)
+        return true;
+    }
+    fut.wait(msecs);
+    //no error mean service found
+    bool found = (fut.isReady() && fut.hasError() == 0);
+
+    {
+      boost::mutex::scoped_lock _sl(_p->_watchedServicesMutex);
+      std::map< std::string, std::pair< int, qi::Promise<void> > >::iterator it;
+      it = _p->_watchedServices.find(service);
+      if (it != _p->_watchedServices.end()) {
+        it->second.first -= 1;
+      }
+      if (it->second.first == 0)
+        _p->_watchedServices.erase(it);
+    }
+    return found;
+  }
+
 }
