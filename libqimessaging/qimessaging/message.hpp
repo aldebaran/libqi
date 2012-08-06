@@ -29,10 +29,11 @@ namespace qi {
   public:
 
 
+    // Fixed service id numbers
     enum Service
     {
-      Service_None             = 0,
-      Service_ServiceDirectory = 1
+      Service_Server           = 0,
+      Service_ServiceDirectory = 1,
     };
 
     enum Path

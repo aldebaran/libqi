@@ -128,14 +128,14 @@ public:
     qi::Message msg;
     socket->read(id, &msg);
 
-    if (msg.service() == qi::Message::Service_None &&
+    if (msg.service() == qi::Message::Service_Server &&
         msg.function() == qi::Message::GatewayFunction_Connect)
     {
       // forge reply
       qi::Buffer buf;
       qi::Message ans;
       ans.setBuffer(buf);
-      ans.setService(qi::Message::Service_None);
+      ans.setService(qi::Message::Service_Server);
       ans.setType(qi::Message::Type_Reply);
       ans.setFunction(qi::Message::GatewayFunction_Connect);
       ans.setPath(qi::Message::Path_Main);

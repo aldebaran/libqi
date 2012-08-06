@@ -330,7 +330,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
    * Directory.
    * A RemoteGateway can be connected to only one ReverseGateway.
    */
-  if (msg.service() == Message::Service_None &&
+  if (msg.service() == Message::Service_Server &&
       msg.function() == Message::GatewayFunction_Connect)
   {
     if (_type == Type_RemoteGateway && msg.type() == Message::Type_Call)
@@ -351,7 +351,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
         qi::Buffer buf;
         qi::Message ans;
         ans.setBuffer(buf);
-        ans.setService(qi::Message::Service_None);
+        ans.setService(qi::Message::Service_Server);
         ans.setType(qi::Message::Type_Reply);
         ans.setFunction(qi::Message::GatewayFunction_Connect);
         ans.setPath(qi::Message::Path_Main);
@@ -428,7 +428,7 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
       TransportSocket *ts = *it;
 
       qi::Message msg;
-      msg.setService(qi::Message::Service_None);
+      msg.setService(qi::Message::Service_Server);
       msg.setType(qi::Message::Type_Call);
       msg.setFunction(qi::Message::GatewayFunction_Connect);
       msg.setPath(qi::Message::Path_Main);
