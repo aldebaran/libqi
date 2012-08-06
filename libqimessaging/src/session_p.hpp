@@ -48,6 +48,12 @@ namespace qi {
 
     void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);
     void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);
+
+    virtual void onServiceRegistered(Session *QI_UNUSED(session),
+                                     const std::string &QI_UNUSED(serviceName));
+    virtual void onServiceUnregistered(Session *QI_UNUSED(session),
+                                       const std::string &QI_UNUSED(serviceName));
+
     void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
                      qi::Promise<std::vector<qi::ServiceInfo> > &si);
     void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
