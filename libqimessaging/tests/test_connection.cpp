@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 #endif
 
   int res = RUN_ALL_TESTS();
-
+  sd.close();
   srv.close();
   session.disconnect();
   session.waitForDisconnected();

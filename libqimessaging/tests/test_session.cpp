@@ -101,6 +101,7 @@ TEST(QiSession, getSimpleService)
 
   srv.listen(&session, serviceAddr.str());
   srv.registerService("serviceTest", &obj);
+  ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
   qi::Object *object = session.service("serviceTest");
   EXPECT_TRUE(object);
