@@ -54,11 +54,20 @@ namespace qi {
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
 
+  class QIMESSAGING_API ObjectInterface {
+  public:
+    virtual ~ObjectInterface() = 0;
+    virtual void onObjectDestroyed(Object *object, void *data) = 0;
+  };
 
+  class ObjectPrivate;
   class QIMESSAGING_API Object {
   public:
     Object();
     virtual ~Object();
+
+    void addCallbacks(ObjectInterface *callbacks, void *data = 0);
+    void removeCallbacks(ObjectInterface *callbacks);
 
     MetaObject &metaObject();
 
@@ -162,7 +171,7 @@ namespace qi {
     /// Trigger event handlers
     void trigger(unsigned int event, const FunctorParameters &in);
   protected:
-    MetaObject *_meta;
+    boost::shared_ptr<ObjectPrivate> _p;
   };
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>

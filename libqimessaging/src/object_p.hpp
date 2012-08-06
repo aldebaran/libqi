@@ -18,6 +18,16 @@
 
 namespace qi {
 
+  class ObjectPrivate {
+  public:
+    ObjectPrivate();
+    ~ObjectPrivate();
+
+    MetaObject                         *_meta;
+    std::map<ObjectInterface *, void *> _callbacks;
+    boost::mutex                        _callbacksMutex;
+  };
+
   class MetaObjectPrivate {
   public:
     MetaObjectPrivate()

@@ -8,6 +8,14 @@
 
 namespace qi {
 
+  ObjectPrivate::ObjectPrivate()
+    : _meta(new qi::MetaObject){
+  }
+
+  ObjectPrivate::~ObjectPrivate() {
+    delete _meta;
+  }
+
   MetaObjectPrivate::MetaObjectPrivate(const MetaObjectPrivate &rhs)
   {
     (*this) = rhs;

@@ -6,6 +6,7 @@
 */
 
 #include "remoteobject_p.hpp"
+#include "src/object_p.hpp"
 #include "src/metaevent_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transport_socket.hpp>
@@ -20,7 +21,8 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::Me
 {
   _ts->addCallbacks(this);
   //allocate by caller, but owned by us then
-  _meta = mo;
+  delete _p->_meta;
+  _p->_meta = mo;
 }
 
 RemoteObject::~RemoteObject()
@@ -173,7 +175,7 @@ bool RemoteObject::disconnect(unsigned int linkId)
   // Figure out which event this link is associated to
   MetaObject::EventMap::iterator i;
   unsigned int event = (unsigned int)-1;
-  for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
+  for (i = metaObject().events().begin(); i!= metaObject().events().end(); ++i)
   {
     MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(linkId);
     if (j != i->second._p->_subscribers.end())

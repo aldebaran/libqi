@@ -14,6 +14,9 @@
 
 namespace qi {
 
+  ObjectInterface::~ObjectInterface() {
+  }
+
   MetaObject::MetaObject()
   {
     _p = new MetaObjectPrivate();
@@ -92,23 +95,32 @@ namespace qi {
   }
 
   Object::Object()
-    : _meta(new MetaObject())
+    : _p(new ObjectPrivate())
   {
     advertiseMethod("__metaobject", this, &Object::metaObject);
   }
 
-  Object::~Object() {
+  Object::~Object()
+  {
+    //notify registered users that we are going to be destroyed
+    std::map<ObjectInterface *, void *>::iterator it;
+    {
+      boost::mutex::scoped_lock l(_p->_callbacksMutex);
+      for (it = _p->_callbacks.begin(); it != _p->_callbacks.begin(); ++it)
+        it->first->onObjectDestroyed(this, it->second);
+    }
+
     // Notify events that have subscribers that call us that we are dead
     // We need to make a copy of the vector, since disconnect will
     // remove entries from it.
-    std::vector<MetaEvent::Subscriber> regs = _meta->_p->_registrations;
+    std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
     std::vector<MetaEvent::Subscriber>::iterator i;
     for (i = regs.begin(); i != regs.end(); ++i)
       i->eventSource->disconnect(i->linkId);
 
     // Then remove _registrations with one of our event as source
     MetaObject::EventMap::iterator ii;
-    for (ii = _meta->events().begin(); ii!= _meta->events().end(); ++ii)
+    for (ii = metaObject().events().begin(); ii!= metaObject().events().end(); ++ii)
     {
       MetaEventPrivate::Subscribers::iterator j;
       for (j = ii->second._p->_subscribers.begin();
@@ -116,21 +128,39 @@ namespace qi {
         ++j)
         disconnect(j->second.linkId);
     }
-    delete _meta;
+  }
+
+  void Object::addCallbacks(ObjectInterface *callbacks, void *data)
+  {
+    {
+      boost::mutex::scoped_lock l(_p->_callbacksMutex);
+      _p->_callbacks[callbacks] = data;
+    }
+  }
+
+  void Object::removeCallbacks(ObjectInterface *callbacks)
+  {
+    std::map<ObjectInterface *, void *>::iterator it;
+    {
+      boost::mutex::scoped_lock l(_p->_callbacksMutex);
+      it = _p->_callbacks.find(callbacks);
+      if (it != _p->_callbacks.end())
+        _p->_callbacks.erase(it);
+    }
   }
 
   MetaObject &Object::metaObject() {
-    return *_meta;
+    return *_p->_meta;
   }
 
   int Object::xForgetMethod(const std::string &meth)
   {
     std::map<std::string, unsigned int>::iterator it;
 
-    it = _meta->_p->_methodsNameToIdx.find(meth);
-    if (it != _meta->_p->_methodsNameToIdx.end())
+    it = metaObject()._p->_methodsNameToIdx.find(meth);
+    if (it != metaObject()._p->_methodsNameToIdx.end())
     {
-      _meta->_p->_methodsNameToIdx.erase(it);
+      metaObject()._p->_methodsNameToIdx.erase(it);
       return (0);
     }
 
@@ -140,23 +170,23 @@ namespace qi {
   int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
     std::map<std::string, unsigned int>::iterator it;
 
-    it = _meta->_p->_methodsNameToIdx.find(signature);
-    if (it != _meta->_p->_methodsNameToIdx.end())
+    it = metaObject()._p->_methodsNameToIdx.find(signature);
+    if (it != metaObject()._p->_methodsNameToIdx.end())
     {
       unsigned int uid = it->second;
       MetaMethod mm(sigret, signature, functor);
       mm._p->_uid = uid;
       // find it
-      _meta->_p->_methods[uid] = mm;
+      metaObject()._p->_methods[uid] = mm;
       qiLogVerbose("qi.Object") << "rebinding method:" << signature;
       return uid;
     }
 
     MetaMethod mm(sigret, signature, functor);
-    unsigned int idx = _meta->_p->_nextNumber++;
+    unsigned int idx = metaObject()._p->_nextNumber++;
     mm._p->_uid = idx;
-    _meta->_p->_methods[idx] = mm;
-    _meta->_p->_methodsNameToIdx[signature] = idx;
+    metaObject()._p->_methods[idx] = mm;
+    metaObject()._p->_methodsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding method:" << signature;
     return idx;
   }
@@ -169,17 +199,17 @@ namespace qi {
     }
     std::map<std::string, unsigned int>::iterator it;
 
-    it = _meta->_p->_eventsNameToIdx.find(signature);
-    if (it != _meta->_p->_eventsNameToIdx.end())
+    it = metaObject()._p->_eventsNameToIdx.find(signature);
+    if (it != metaObject()._p->_eventsNameToIdx.end())
     { // Event already there.
       qiLogError("qi.Object") << "event already there";
       return it->second;
     }
-    unsigned int idx = _meta->_p->_nextNumber++;
+    unsigned int idx = metaObject()._p->_nextNumber++;
     MetaEvent me(signature);
     me._p->_uid = idx;
-    _meta->_p->_events[idx] = me;
-    _meta->_p->_eventsNameToIdx[signature] = idx;
+    metaObject()._p->_events[idx] = me;
+    metaObject()._p->_eventsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding event:" << signature <<" with id "
     << idx;
     return idx;
@@ -187,7 +217,7 @@ namespace qi {
 
   void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
   {
-    MetaMethod *mm = _meta->method(method);
+    MetaMethod *mm = metaObject().method(method);
     if (!mm) {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
@@ -218,10 +248,10 @@ namespace qi {
   }
   void Object::trigger(unsigned int event, const FunctorParameters &args)
   {
-    MetaEvent* ev = _meta->event(event);
+    MetaEvent* ev = metaObject().event(event);
     if (!ev)
     {
-      MetaMethod* me = _meta->method(event);
+      MetaMethod* me = metaObject().method(event);
       if (!me)
       {
         qiLogError("object") << "No such event " << event;
@@ -334,7 +364,7 @@ namespace qi {
   unsigned int Object::connect(unsigned int event,
     const MetaEvent::Subscriber& sub)
   {
-    MetaEvent* ev = _meta->event(event);
+    MetaEvent* ev = metaObject().event(event);
     if (!ev)
     {
       qiLogError("object") << "No such event " << event;
@@ -351,7 +381,7 @@ namespace qi {
     s.event = event;
     // Notify the target of this subscribers
     if (s.target)
-      s.target->_meta->_p->_registrations.push_back(s);
+      s.target->metaObject()._p->_registrations.push_back(s);
     return uid;
   }
 
@@ -360,7 +390,7 @@ namespace qi {
     // Look it up.
     // FIXME: Maybe store the event id inside the link id for faster lookup?
     MetaObject::EventMap::iterator i;
-    for (i = _meta->events().begin(); i!= _meta->events().end(); ++i)
+    for (i = metaObject().events().begin(); i!= metaObject().events().end(); ++i)
     {
       MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(id);
       if (j != i->second._p->_subscribers.end())
@@ -371,7 +401,7 @@ namespace qi {
         // If target is an object, deregister from it
         if (sub.target)
         {
-          std::vector<MetaEvent::Subscriber>& regs = sub.target->_meta->_p->_registrations;
+          std::vector<MetaEvent::Subscriber>& regs = sub.target->metaObject()._p->_registrations;
           // Look it up in vector, then swap with last.
           for (unsigned int i=0; i< regs.size(); ++i)
             if (sub.linkId == regs[i].linkId)
@@ -391,7 +421,7 @@ namespace qi {
   unsigned int Object::connect(unsigned int signal,
       qi::Object* target, unsigned int slot)
   {
-    MetaEvent* ev = _meta->event(signal);
+    MetaEvent* ev = metaObject().event(signal);
     if (!ev)
     {
       qiLogError("object") << "No such event " << signal;
