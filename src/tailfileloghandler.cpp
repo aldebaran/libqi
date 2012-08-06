@@ -14,10 +14,10 @@
 #include <iomanip>
 #include <string>
 #include <qi/log.hpp>
+#include "log_p.hpp"
 #include <qi/os.hpp>
 #include <cstdio>
 
-#define CATSIZEMAX 16
 #define FILESIZEMAX 1024 * 1024
 
 namespace qi {
@@ -25,8 +25,6 @@ namespace qi {
     class PrivateTailFileLogHandler
     {
     public:
-      void cutCat(const char* category, char* res);
-
       FILE* _file;
       std::string _fileName;
       int   _writeSize;
@@ -68,23 +66,6 @@ namespace qi {
         fclose(_private->_file);
     }
 
-    void PrivateTailFileLogHandler::cutCat(const char* category, char* res)
-    {
-      int categorySize = strlen(category);
-      if (categorySize < CATSIZEMAX)
-      {
-        memset(res, ' ', CATSIZEMAX);
-        memcpy(res, category, strlen(category));
-      }
-      else
-      {
-        memset(res, '.', CATSIZEMAX);
-        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
-      }
-      res[CATSIZEMAX] = '\0';
-    }
-
-
     void TailFileLogHandler::log(const qi::log::LogLevel verb,
                                  const qi::os::timeval   date,
                                  const char              *category,
@@ -99,60 +80,11 @@ namespace qi {
       }
       else
       {
-        const char *head = logLevelToString(verb);
-        char fixedCategory[CATSIZEMAX + 1];
-        fixedCategory[CATSIZEMAX] = '\0';
-        _private->cutCat(category, fixedCategory);
-
-        std::stringstream l;
-        std::stringstream ss;
-        ss << date.tv_sec << "."
-           << std::setw(7) << std::setfill('0')  << date.tv_usec;
-
-        l << head << " ";
-        int ctx = qi::log::context();
-        switch (ctx)
-        {
-          case 1:
-            l << fixedCategory << ": ";
-            break;
-          case 2:
-            l << ss.str() << " ";
-            break;
-          case 3:
-            if (line != 0)
-              l << file << "(" << line << ") ";
-            break;
-          case 4:
-            l << ss.str() << " " << fixedCategory << ": ";
-            break;
-          case 5:
-            if (line != 0)
-              l << ss.str() << " " << file << "(" << line << ") ";
-            else
-              l << ss.str() << " ";
-            break;
-          case 6:
-            if (line != 0)
-              l << fixedCategory << ": " << file << "(" << line << ") ";
-            else
-              l << fixedCategory << ": ";
-            break;
-          case 7:
-            if (line != 0)
-              l << ss.str() << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
-            else
-              l << ss.str() << " " << fixedCategory << ": " << fct;
-            break;
-          default:
-            break;
-        }
-        l << msg;
         fseek(_private->_file, 0, SEEK_END);
-        fprintf(_private->_file, "%s", l.str().c_str());
-        fflush(_private->_file);
 
-        _private->_writeSize += l.str().size();
+        std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
+        _private->_writeSize += fprintf(_private->_file, "%s %s", logLevelToString(verb), logline.c_str());
+        fflush(_private->_file);
       }
 
       if (_private->_writeSize > FILESIZEMAX)

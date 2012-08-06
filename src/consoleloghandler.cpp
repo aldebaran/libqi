@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
+#include "log_p.hpp"
 #include <qi/log/consoleloghandler.hpp>
 
 #ifdef _WIN32
@@ -20,8 +21,6 @@
 #else
 # include <unistd.h>
 #endif
-
-#define CATSIZEMAX 16
 
 namespace qi {
   namespace log {
@@ -183,22 +182,6 @@ namespace qi {
         _private->_color = 0;
     }
 
-    void cutCat(const char* category, char* res)
-    {
-      int categorySize = strlen(category);
-      if (categorySize < CATSIZEMAX)
-      {
-        memset(res, ' ', CATSIZEMAX);
-        memcpy(res, category, strlen(category));
-      }
-      else
-      {
-        memset(res, '.', CATSIZEMAX);
-        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
-      }
-      res[CATSIZEMAX] = '\0';
-    }
-
     void ConsoleLogHandler::log(const LogLevel        verb,
                                 const qi::os::timeval date,
                                 const char            *category,
@@ -214,56 +197,13 @@ namespace qi {
       else
       {
         _private->header(verb);
-        char fixedCategory[CATSIZEMAX + 1];
-        fixedCategory[CATSIZEMAX] = '\0';
-        cutCat(category, fixedCategory);
 #ifndef WIN32
         _private->textColorAttr(_private->reset);
         _private->textColorFG(_private->gray);
 #endif
 
-        std::stringstream ss;
-        ss << date.tv_sec << "."
-           << std::setw(7) << std::setfill('0')  << date.tv_usec;
-
-        int ctx = qi::log::context();
-        switch (ctx)
-        {
-          case 1:
-            printf("%s: ", fixedCategory);
-            break;
-          case 2:
-            printf("%s ", ss.str().c_str());
-            break;
-          case 3:
-            if (line != 0)
-              printf("%s(%d) ", file, line);
-            break;
-          case 4:
-            printf("%s %s: ", ss.str().c_str(), fixedCategory);
-            break;
-          case 5:
-            if (line == 0)
-              printf("%s ", ss.str().c_str());
-            else
-              printf("%s %s(%d) ", ss.str().c_str(), file, line);
-            break;
-          case 6:
-            if (line == 0)
-              printf("%s: ", fixedCategory);
-            else
-              printf("%s: %s(%d) ", fixedCategory, file, line);
-            break;
-          case 7:
-            if (line == 0)
-              printf("%s %s: %s ", ss.str().c_str(), fixedCategory, fct);
-            else
-              printf("%s %s: %s(%d) %s ", ss.str().c_str(), fixedCategory, file, line, fct);
-            break;
-          default:
-            break;
-        }
-        printf("%s", msg);
+        std::string logline = qi::detail::logline(date, category, msg, file, fct, line);
+        printf("%s", logline.c_str());
         fflush(stdout);
       }
       fflush(stdout);

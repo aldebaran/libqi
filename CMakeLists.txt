@@ -66,6 +66,7 @@ set(C
   src/filesystem.hpp
   src/filesystem.cpp
   src/log.cpp
+  src/log_p.hpp
   src/consoleloghandler.cpp
   src/fileloghandler.cpp
   src/headfileloghandler.cpp

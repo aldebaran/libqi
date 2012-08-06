@@ -5,10 +5,12 @@
  */
 
 #include <qi/log.hpp>
+#include "log_p.hpp"
 #include <qi/os.hpp>
 #include <list>
 #include <map>
 #include <cstring>
+#include <iomanip>
 
 #include <qi/log/consoleloghandler.hpp>
 
@@ -29,6 +31,83 @@
 #define LOG_SIZE 2048
 
 namespace qi {
+  namespace detail {
+    void cutCat(const char* category, char* res)
+    {
+      int categorySize = strlen(category);
+      if (categorySize < CATSIZEMAX)
+      {
+        memset(res, ' ', CATSIZEMAX);
+        memcpy(res, category, strlen(category));
+      }
+      else
+      {
+        memset(res, '.', CATSIZEMAX);
+        memcpy(res + 3, category + categorySize - CATSIZEMAX + 3, CATSIZEMAX - 3);
+      }
+      res[CATSIZEMAX] = '\0';
+    }
+
+    std::string logline(const              os::timeval date,
+                        const char        *category,
+                        const char        *msg,
+                        const char        *file,
+                        const char        *fct,
+                        const int          line)
+    {
+      char fixedCategory[CATSIZEMAX + 1];
+      fixedCategory[CATSIZEMAX] = '\0';
+      cutCat(category, fixedCategory);
+
+      int tid = qi::os::gettid();
+      std::stringstream logline;
+
+      std::stringstream ss;
+      ss << date.tv_sec << "."
+         << std::setw(7) << std::setfill('0')  << date.tv_usec;
+
+      switch (qi::log::context())
+      {
+      case 1:
+        logline << fixedCategory << ": ";
+        break;
+      case 2:
+        logline << ss.str() << " ";
+        break;
+      case 3:
+        if (line != 0)
+          logline << file << "(" << line << ") ";
+        break;
+      case 4:
+        logline << ss.str() << " " << fixedCategory << ": ";
+        break;
+      case 5:
+        if (line == 0)
+          logline << ss.str() << " ";
+        else
+          logline << ss.str() << " " << file << "(" << line << ") ";
+        break;
+      case 6:
+        if (line == 0)
+          logline << fixedCategory << ": ";
+        else
+          logline << fixedCategory << ": " << file << "(" << line << ")";
+        break;
+      case 7:
+        if (line == 0)
+          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << fct;
+        else
+          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
+        break;
+      default:
+        break;
+      }
+      logline << msg;
+
+      return logline.str();
+    }
+  }
+
   namespace log {
 
     typedef struct sPrivateLog
@@ -248,7 +327,6 @@ namespace qi {
              const char           *file,
              const char           *fct,
              const int             line)
-
     {
       if (!LogInstance)
         return;
