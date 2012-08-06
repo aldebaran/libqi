@@ -8,8 +8,7 @@
 
 #include <iomanip>
 #include "dataperftimer.hpp"
-#include <iostream>
-//#include <rttools/rttime.h>
+#include <qi/log.hpp>
 
 namespace qi {
   namespace perf {
@@ -28,9 +27,9 @@ namespace qi {
 
     void DataPerfTimer::printHeader(const std::string& testDescription) {
       if (! testDescription.empty()) {
-        std::cout << testDescription << std::endl;
+        qiLogInfo("DataPerfTimer") << testDescription;
       }
-      std::cout << "bytes, msg/s, Mb/s, period (us)" << std::endl;
+      qiLogInfo("DataPerfTimer") << "bytes, msg/s, Mb/s, period (us)";
     }
 
     void DataPerfTimer::start(
@@ -76,13 +75,13 @@ namespace qi {
       if (cpu)
         str = "cpu      : ";
       if (fMsgSize > 0) {
-        std::cout << str
+        qiLogInfo("DataPerfTimer") << str
                   << std::fixed << std::setprecision(2) << fMsgSize << " b, "
                   << fMsgPs << " msg/s, "
                   << std::setprecision(12) << fMgbPs << " MB/s, "
-                  << std::setprecision(0) << fPeriod << " us" << std::endl;
+                  << std::setprecision(0) << fPeriod << " us";
       } else {
-        std::cout << str << std::setprecision(12) << fMsgPs  << " msg/s" << std::endl;
+        qiLogInfo("DataPerfTimer") << str << std::setprecision(12) << fMsgPs  << " msg/s";
       }
     }
   }
