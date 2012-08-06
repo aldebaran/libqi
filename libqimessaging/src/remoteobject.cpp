@@ -89,7 +89,6 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
 {
   qi::Message msg;
   msg.setBuffer(in.buffer());
-  qi::Message ret;
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
   msg.setPath(qi::Message::Path_Main);
