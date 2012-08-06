@@ -24,6 +24,8 @@ namespace qi {
     std::string               name;
     unsigned int              serviceId;
     std::string               protocol;
+    bool                      connected; // True if the service server was reached
+    unsigned int              attempts; // Number of connection attempts pending.
   };
 
   class NetworkThread;
@@ -44,8 +46,8 @@ namespace qi {
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketTimeout(TransportSocket *client, int id);
 
-    void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
-    void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
+    void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);
+    void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);
     void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
                      qi::Promise<std::vector<qi::ServiceInfo> > &si);
     void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
@@ -60,8 +62,11 @@ namespace qi {
     boost::mutex                        _mutexCallback;
 
     boost::mutex                                               _mutexFuture;
-    std::map<int, ServiceRequest>                              _futureService;
-    std::map<void *, ServiceRequest>                           _futureConnect;
+    // Associate serviceRequest with the message id concerning it currently in
+    // transit. It can be sd.service or service.metaobject call
+    std::map<int, boost::shared_ptr<ServiceRequest> >                              _futureService;
+    // Associate serviceRequest with the connection currently connecting.
+    std::map<void *, boost::shared_ptr<ServiceRequest> >                           _futureConnect;
     std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > > _futureServices;
     std::map<int, qi::FunctorResult>                           _futureFunctor;
     boost::mutex                                               _mutexServiceReady;

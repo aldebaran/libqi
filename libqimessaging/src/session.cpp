@@ -40,17 +40,27 @@ namespace qi {
   void SessionPrivate::onSocketConnected(TransportSocket *client)
   {
     // Come from connection between transport socket and service
-    std::map<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+    std::map<void *, boost::shared_ptr<ServiceRequest> >::iterator it = _futureConnect.find(client);
     if (it != _futureConnect.end())
     {
-      ServiceRequest &sr = it->second;
       qi::Message msg;
-      msg.setType(qi::Message::Type_Call);
-      msg.setService(sr.serviceId);
-      msg.setPath(qi::Message::Path_Main);
-      msg.setFunction(qi::Message::Function_MetaObject);
-      _futureService[msg.id()] = sr;
-      _futureConnect.erase(client);
+      boost::shared_ptr<ServiceRequest> sr = it->second;
+      {
+        boost::mutex::scoped_lock l(_mutexFuture);
+        _futureConnect.erase(client);
+        if (sr->connected)
+        {
+          // An other attempt got here first, disconnect and drop
+          client->disconnect();
+          return;
+        }
+        sr->connected = true;
+        msg.setType(qi::Message::Type_Call);
+        msg.setService(sr->serviceId);
+        msg.setPath(qi::Message::Path_Main);
+        msg.setFunction(qi::Message::Function_MetaObject);
+        _futureService[msg.id()] = sr;
+      }
       client->send(msg);
       return;
     }
@@ -71,10 +81,18 @@ namespace qi {
 
   void SessionPrivate::onSocketConnectionError(TransportSocket *client)
   {
-    std::map<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+    boost::mutex::scoped_lock l(_mutexFuture);
+    std::map<void *, boost::shared_ptr<ServiceRequest> >::iterator it = _futureConnect.find(client);
     if (it != _futureConnect.end())
     {
-      _futureConnect.erase(client);
+      boost::shared_ptr<ServiceRequest> sr = it->second;
+      --sr->attempts;
+      if (!sr->attempts)
+      {
+        // This was the last connection attempt, and it failed.
+        sr->promise.setError("Failed to connect to service");
+      }
+      _futureConnect.erase(it);
       return;
     }
 
@@ -139,7 +157,7 @@ namespace qi {
     else
     {
       // request for service method
-      std::map<int, ServiceRequest>::iterator futureServiceIt;
+      std::map<int, boost::shared_ptr<ServiceRequest> >::iterator futureServiceIt;
       {
         boost::mutex::scoped_lock l(_mutexFuture);
         futureServiceIt = _futureService.find(id);
@@ -239,21 +257,23 @@ namespace qi {
   void SessionPrivate::serviceEndpointEnd(int id,
                                           qi::TransportSocket *QI_UNUSED(client),
                                           qi::Message *msg,
-                                          ServiceRequest &sr)
+                                          boost::shared_ptr<ServiceRequest> sr)
   {
+    sr->attempts = 0;
+    // Decode ServiceInfo in the message
     qi::ServiceInfo si;
     qi::IDataStream  d(msg->buffer());
     d >> si;
-
     if (d.status() == qi::IDataStream::Status_Ok)
     {
-      sr.serviceId = si.serviceId();
+      sr->serviceId = si.serviceId();
+      // Attempt to connect to all endpoints.
       for (std::vector<std::string>::const_iterator it = si.endpoints().begin();
            it != si.endpoints().end();
            ++it)
       {
         qi::Url url(*it);
-        if (sr.protocol == "any" || sr.protocol == url.protocol())
+        if (sr->protocol == "any" || sr->protocol == url.protocol())
         {
           qi::TransportSocket *ts = NULL;
           ts = new qi::TransportSocket();
@@ -264,14 +284,24 @@ namespace qi {
             _futureService.erase(id);
           }
           if (!ts->connect(_self, url))
-            sr.promise.setError("Connection error");
-          return;
+          {
+            // Synchronous failure, do nothing, try next
+            continue;
+          }
+          else
+          {
+            // The connect may still fail asynchronously.
+            boost::mutex::scoped_lock l(_mutexFuture);
+            ++sr->attempts;
+          }
         }
       }
     }
+    if (!sr->attempts)
     {
+      // All attempts failed synchronously.
       boost::mutex::scoped_lock l(_mutexFuture);
-      _futureService[id].promise.setError("No service found");
+      sr->promise.setError("No service found");
       _futureService.erase(id);
     }
     return;
@@ -280,21 +310,24 @@ namespace qi {
   void SessionPrivate::serviceMetaobjectEnd(int QI_UNUSED(id),
                                             qi::TransportSocket *client,
                                             qi::Message *msg,
-                                            ServiceRequest &sr)
+                                            boost::shared_ptr<ServiceRequest> sr)
   {
     qi::MetaObject *mo = new qi::MetaObject();
     qi::IDataStream  d(msg->buffer());
     d >> *mo;
-
+    {
+      boost::mutex::scoped_lock l(_mutexFuture);
+      _futureService.erase(msg->id());
+    }
     if (d.status() == qi::IDataStream::Status_Ok)
     {
       client->removeCallbacks(this);
-      qi::RemoteObject *robj = new qi::RemoteObject(client, sr.serviceId, mo);
+      qi::RemoteObject *robj = new qi::RemoteObject(client, sr->serviceId, mo);
       qi::Object *obj;
       obj = robj;
-      sr.promise.setValue(obj);
+      sr->promise.setValue(obj);
     } else {
-      sr.promise.setError("Serialization error");
+      sr->promise.setError("Serialization error");
     }
   }
 
@@ -500,14 +533,17 @@ namespace qi {
   qi::Future< qi::Object * > Session::service(const std::string &service,
                                               const std::string &type)
   {
-    ServiceRequest sr;
+    boost::shared_ptr<ServiceRequest> sr(new ServiceRequest);
     qi::Message    msg;
     qi::Buffer     buf;
 
     msg.setBuffer(buf);
-    sr.name      = service;
-    sr.protocol  = type;
+    sr->name      = service;
+    sr->protocol  = type;
+    sr->connected  = false;
+    sr->attempts = 0;
 
+    // Ask a ServiceInfo to the ServiceDirectory.
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
     msg.setPath(qi::Message::Path_Main);
@@ -519,7 +555,7 @@ namespace qi {
       _p->_futureService[msg.id()] = sr;
     }
     _p->_serviceSocket->send(msg);
-    return sr.promise.future();
+    return sr->promise.future();
   }
 
   bool Session::join()
