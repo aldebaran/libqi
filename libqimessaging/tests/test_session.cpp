@@ -101,7 +101,8 @@ TEST(QiSession, getSimpleService)
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
   srv.listen(&session, serviceAddr.str());
-  srv.registerService("serviceTest", &obj);
+  // Wait for service id, otherwise register is asynchronous.
+  srv.registerService("serviceTest", &obj).wait();
   ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
   qi::Object *object = session.service("serviceTest");
