@@ -63,6 +63,11 @@ namespace qi
       return _getpid();
     }
 
+    int gettid()
+    {
+      return GetCurrentThreadId();
+    }
+
     int waitpid(int pid, int* status)
     {
       errno = 0;

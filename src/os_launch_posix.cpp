@@ -9,11 +9,16 @@
 #include <errno.h>
 #include <fcntl.h>
 #ifdef __linux__
-# include <unistd.h> // for environ
+# include <unistd.h>
+# include <linux/unistd.h>
+# include <sys/types.h>
 #endif
 #ifdef __APPLE__
 // See man 3 environ (PROGRAMMING)
 # include <crt_externs.h> // for _NSGetEnviron
+# define _XOPEN_SOURCE
+# define _POSIX_C_SOURCE
+# include <pthread.h>
 #endif
 
 #include <sys/wait.h>
@@ -271,6 +276,18 @@ namespace qi
     int getpid()
     {
       return ::getpid();
+    }
+
+    int gettid()
+    {
+      int ret;
+#ifdef __linux__
+      ret = syscall(__NR_gettid);
+#endif
+#ifdef __APPLE__
+      ret = pthread_mach_thread_np(pthread_self());
+#endif
+      return ret;
     }
 
     int waitpid(int pid, int* status)
