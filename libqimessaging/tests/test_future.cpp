@@ -12,12 +12,37 @@
 #include <qi/os.hpp>
 #include <qimessaging/future.hpp>
 
-static int         gGlobalI(0);
-static std::string gGlobalS("");
-static std::string gGlobalE("");
+
+class TestFuture : public ::testing::Test
+{
+public:
+  static int         gGlobalI;
+  static std::string gGlobalS;
+  static std::string gGlobalE;
+  static int         gSuccess;
+
+protected:
+  static void SetUpTestCase()
+  {
+    gGlobalI = 0;
+    gGlobalS = "";
+    gGlobalE = "";
+    gSuccess = 0;
+  }
+};
+
+int         TestFuture::gGlobalI;
+std::string TestFuture::gGlobalS;
+std::string TestFuture::gGlobalE;
+int         TestFuture::gSuccess;
 
 class TestFutureI : public qi::FutureInterface<int> {
 public:
+  TestFutureI(int &gGlobalI, std::string &gGlobalE)
+    : gGlobalI(gGlobalI),
+      gGlobalE(gGlobalE)
+  {}
+
   void onFutureFinished(const int &future, void *QI_UNUSED(data)) {
     gGlobalI = future;
   }
@@ -25,10 +50,18 @@ public:
   void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
     gGlobalE = error;
   }
+
+  int         &gGlobalI;
+  std::string &gGlobalE;
 };
 
 class TestFutureS : public qi::FutureInterface<std::string> {
 public:
+  TestFutureS(std::string &gGlobalS, std::string &gGlobalE)
+    : gGlobalS(gGlobalS),
+      gGlobalE(gGlobalE)
+  {}
+
   void onFutureFinished(const std::string &future, void *QI_UNUSED(data)) {
     gGlobalS = future;
   }
@@ -36,10 +69,13 @@ public:
   void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
     gGlobalE = error;
   }
+
+  std::string &gGlobalS;
+  std::string &gGlobalE;
 };
 
-TEST(TestFuture, SimpleType) {
-  TestFutureI tf;
+TEST_F(TestFuture, SimpleType) {
+  TestFutureI tf(gGlobalI, gGlobalE);
 
   qi::Promise<int> pro;
 
@@ -55,8 +91,8 @@ TEST(TestFuture, SimpleType) {
   EXPECT_EQ(42, gGlobalI);
 }
 
-TEST(TestFuture, ComplexType) {
-  TestFutureS tf;
+TEST_F(TestFuture, ComplexType) {
+  TestFutureS tf(gGlobalS, gGlobalE);
 
   qi::Promise<std::string> pro;
 
@@ -72,34 +108,33 @@ TEST(TestFuture, ComplexType) {
   EXPECT_STREQ("42", gGlobalS.c_str());
 }
 
-static int gSuccess = 0;
 void producer(qi::Promise<int> pro) {
   qi::os::msleep(100);
   pro.setValue(42);
 }
 
-void consumer(qi::Future<int> fut) {
+void consumer(int &gSuccess, qi::Future<int> fut) {
   //wont block thread on error
   ASSERT_TRUE(fut.wait(1000));
   EXPECT_EQ(42, fut.value());
   gSuccess++;
 }
 
-TEST(TestFuture, Threaded) {
+TEST_F(TestFuture, Threaded) {
   qi::Promise<int> pro;
   EXPECT_EQ(0, gSuccess);
   boost::thread_group tg;
 
-  tg.create_thread(boost::bind(&consumer, pro.future()));
-  tg.create_thread(boost::bind(&consumer, pro.future()));
-  tg.create_thread(boost::bind(&consumer, pro.future()));
+  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
+  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
+  tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
   tg.create_thread(boost::bind(&producer, pro));
   tg.join_all();
   EXPECT_EQ(3, gSuccess);
 }
 
 
-TEST(TestFuture, TestTimeout) {
+TEST_F(TestFuture, TestTimeout) {
   qi::Promise<int> pro;
   qi::Future<int>  fut = pro.future();
 
@@ -107,8 +142,8 @@ TEST(TestFuture, TestTimeout) {
   EXPECT_FALSE(fut.isReady());
 }
 
-TEST(TestFuture, TestError) {
-  TestFutureI tf;
+TEST_F(TestFuture, TestError) {
+  TestFutureI tf(gGlobalI, gGlobalE);
 
   qi::Promise<int> pro;
 
