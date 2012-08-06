@@ -216,7 +216,7 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
      {
        typedef typename boost::function_types::result_type<T>::type ResultType;
        Invoker<boost::function_types::function_arity<T>::value> invoker;
-       ResultType res = invoker.invoke<T, ResultType>(
+       ResultType res = invoker.template invoke<T, ResultType>(
          const_cast<boost::function<T>&>(f), params);
        qi::Buffer     buf;
        qi::ODataStream dso(buf);
