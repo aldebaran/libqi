@@ -298,6 +298,8 @@ namespace qi
         }
         {
           boost::mutex::scoped_lock l(mtx);
+          qiLogError("qimessaging.TransportSocket") << "Message timed out: "
+                                                    << it->first;
           msgSend.erase(it->first);
         }
       }

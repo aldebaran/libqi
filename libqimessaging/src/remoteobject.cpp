@@ -99,6 +99,11 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
 
   {
     boost::mutex::scoped_lock lock(_mutex);
+    if (_promises.find(msg.id()) != _promises.end())
+    {
+      qiLogError("remoteobject") << "There is already a pending promise with id "
+                                 << msg.id();
+    }
     _promises[msg.id()] = out;
   }
   if (!_ts->send(msg)) {
