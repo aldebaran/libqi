@@ -12,6 +12,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/session.hpp>
@@ -22,16 +23,23 @@
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
+static bool allInOne = false; // True if sd/server/client are in this process
+static std::string sdPort;
 
-int main_client(std::string QI_UNUSED(src))
+
+int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 {
+  if (host.empty())
+    host = "127.0.0.1";
+  if (port.empty())
+    port = allInOne?sdPort:std::string("5555");
+
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   qi::Session session;
-  session.connect("tcp://127.0.0.1:5555");
+  session.connect("tcp://"+host+":"+port);
   session.waitForConnected();
-
-  qi::Object *obj = session.service("serviceTest");
-
+  qi::Future< qi::Object * > fobj =  session.service("serviceTest");
+  qi::Object *obj = fobj.value();
   if (!obj)
   {
     std::cerr << "cant get serviceTest" << std::endl;
@@ -45,6 +53,7 @@ int main_client(std::string QI_UNUSED(src))
     std::string requeststr = std::string(numBytes, character);
 
     dp.start(gLoopCount, numBytes);
+    unsigned long long latencySum = 0;
     for (int j = 0; j < gLoopCount; ++j)
     {
       static int id = 1;
@@ -54,17 +63,24 @@ int main_client(std::string QI_UNUSED(src))
       if (c == 0)
         c++;
       requeststr[2] = c;
-
+      qi::os::timeval tstart, tstop;
+      qi::os::gettimeofday(&tstart);
       std::string result = obj->call<std::string>("reply", requeststr);
+      qi::os::gettimeofday(&tstop);
+      latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
+      + (tstop.tv_usec - tstart.tv_usec);
       if (result != requeststr)
         std::cout << "error content" << std::endl;
     }
     dp.stop(1);
+    // We expect latency to be dp.meanInterval, but just to be sure also show
+    // latency.
+    std::cerr << "Average latency " << (latencySum / gLoopCount) << std::endl;
   }
   return 0;
 }
 
-void start_client(int count)
+void start_client(int count, std::string host, std::string port)
 {
   boost::thread thd[100];
 
@@ -75,7 +91,7 @@ void start_client(int count)
     std::stringstream ss;
     ss << "remote" << i;
     std::cout << "starting thread: " << ss.str() << std::endl;
-    thd[i] = boost::thread(boost::bind(&main_client, ss.str()));
+    thd[i] = boost::thread(boost::bind(&main_client, ss.str(), host, port));
   }
 
   for (int i = 0; i < count; ++i)
@@ -86,12 +102,17 @@ void start_client(int count)
 #include <qi/os.hpp>
 
 
-int main_gateway()
+int main_gateway(std::string host, std::string port)
 {
+  if (host.empty())
+    host = "127.0.0.1";
+  if (port.empty())
+    port = allInOne?sdPort:std::string("5555");
+
   qi::Gateway       gate;
 
-  gate.attachToServiceDirectory("tcp://127.0.0.1:5555");
-  gate.listen("tcp://127.0.0.1:12345");
+  gate.attachToServiceDirectory("tcp://"+host+":"+port);
+  gate.listen("tcp://0.0.0.0:12345");
   std::cout << "ready." << std::endl;
   gate.join();
 
@@ -105,21 +126,28 @@ std::string reply(const std::string &msg)
   return msg;
 }
 
-int main_server()
+int main_server(std::string host, std::string port)
 {
+  if (port.empty())
+    port = "0";
+  if (host.empty())
+    host = "0.0.0.0";
   qi::ServiceDirectory sd;
-  sd.listen("tcp://127.0.0.1:5555");
-  std::cout << "Service Directory ready." << std::endl;
+  sd.listen("tcp://" + host +":" + port);
+  if (port == "0")
+    port = boost::lexical_cast<std::string>(sd.listenUrl().port());
+  sdPort = port;
+  std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
 
   qi::Session       session;
   qi::Object        obj;
   qi::Server        srv;
   obj.advertiseMethod("reply", &reply);
 
-  session.connect("tcp://127.0.0.1:5555");
+  session.connect("tcp://127.0.0.1:"+port);
   session.waitForConnected();
 
-  srv.listen(&session, "tcp://127.0.0.1:9559");
+  srv.listen(&session, "tcp://0.0.0.0:0");
   srv.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
@@ -133,28 +161,48 @@ int main_server()
 
 int main(int argc, char **argv)
 {
+  if (argc > 1
+    && (argv[1] == std::string("--help") || argv[1] == std::string("-h")))
+  {
+    std::cerr << argv[0]
+      << "[--client threadcount | --server | --gateway] [sdHost] [sdPort]\n"
+      << "\t If no mode is specified, run client and server in same process"
+      << std::endl;
+    exit(1);
+  }
+  std::string host, port;
+  if (argc > 2)
+    host = argv[2];
+  if (argc > 3)
+    port = argv[3];
   if (argc > 1 && !strcmp(argv[1], "--client"))
   {
     int threadc = 1;
     if (argc > 2)
       threadc = atoi(argv[2]);
-    start_client(threadc);
+    if (argc > 3)
+      host = argv[3];
+    if (argc > 4)
+    port = argv[4];
+    start_client(threadc, host, port);
   }
   else if (argc > 1 && !strcmp(argv[1], "--server"))
   {
-    return main_server();
+    return main_server(host, port);
   }
   else if (argc > 1 && !strcmp(argv[1], "--gateway"))
   {
-    return main_gateway();
+    return main_gateway(host, port);
   }
   else
   {
     //start the server
-    boost::thread threadServer1(boost::bind(&main_server));
-    boost::thread threadServer2(boost::bind(&main_gateway));
+    allInOne = true;
+    boost::thread threadServer1(boost::bind(&main_server, host, port));
+    qi::os::msleep(500); // give it time to listen
+    boost::thread threadServer2(boost::bind(&main_gateway, host, port));
     qi::os::sleep(1);
-    start_client(gThreadCount);
+    start_client(gThreadCount, host, "12345");
   }
   return 0;
 }
