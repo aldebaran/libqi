@@ -56,6 +56,12 @@ namespace qi {
       ServiceDirectoryFunction_ServiceReady      = 5,
     };
 
+    enum ServerFunction
+    {
+      ServerFunction_RegisterEvent     = 1,
+      ServerFunction_UnregisterEvent   = 2
+    };
+
     enum GatewayFunction
     {
       GatewayFunction_Connect = 1,
@@ -71,10 +77,6 @@ namespace qi {
       // Event, or method call without caring about return. Server<->Client
       Type_Event = 3,
       Type_Error = 4,
-      // Ask to be notified on events, Client->Server
-      Type_Register_Event = 5,
-      // Cancel a Register_Event, Client->Server
-      Type_Unregister_Event = 6,
     };
 
     ~Message();

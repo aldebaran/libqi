@@ -158,12 +158,13 @@ unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscrib
   qi::Message msg;
   qi::Buffer buf;
   qi::ODataStream ds(buf);
-  ds << uid;
+  ds << _service << event << uid;
   msg.setBuffer(buf);
-  msg.setType(qi::Message::Type_Register_Event);
-  msg.setService(_service);
   msg.setPath(qi::Message::Path_Main);
-  msg.setFunction(event);
+  msg.setType(Message::Type_Event);
+  msg.setService(Message::Service_Server);
+  msg.setFunction(Message::ServerFunction_RegisterEvent);
+
   if (!_ts->send(msg)) {
     qiLogError("remoteobject") << "error while registering event";
   }
@@ -192,12 +193,12 @@ bool RemoteObject::disconnect(unsigned int linkId)
     qi::Message msg;
     qi::Buffer buf;
     qi::ODataStream ds(buf);
-    ds << linkId;
+    ds << _service << event << linkId;
     msg.setBuffer(buf);
-    msg.setType(qi::Message::Type_Unregister_Event);
-    msg.setService(_service);
-    msg.setPath(qi::Message::Path_Main);
-    msg.setFunction(event);
+    msg.setType(Message::Type_Event);
+    msg.setService(Message::Service_Server);
+    msg.setPath(Message::Path_Main);
+    msg.setFunction(Message::ServerFunction_UnregisterEvent);
     if (!_ts->send(msg)) {
       qiLogError("remoteobject") << "error while registering event";
     }

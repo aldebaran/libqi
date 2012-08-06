@@ -143,6 +143,93 @@ namespace qi {
     {
       boost::mutex::scoped_lock sl(_mutexServices);
       std::map<unsigned int, qi::Object*>::iterator it;
+      if (msg.service() == Message::Service_Server)
+      {
+        // Accept register/unregister event as emit or as call
+        if (msg.type() != Message::Type_Event
+          && msg.type() != Message::Type_Call)
+        {
+          qiLogError("qi::Server") << "Server service only handles call/emit";
+          qi::Message retval;
+          retval.buildReplyFrom(msg);
+          Buffer buf;
+          ODataStream(buf) << "Server service only handles call/emit";
+          retval.setBuffer(buf);
+          client->send(retval);
+          return;
+        }
+        // First arg is always a service id, so factor a bi there
+        IDataStream ds(msg.buffer());
+        unsigned int service;
+        ds >> service;
+        it = _services.find(service);
+        if (it == _services.end())
+        {
+          if (msg.type() == Message::Type_Call)
+          {
+            qi::Message retval;
+            retval.buildReplyFrom(msg);
+            Buffer buf;
+            ODataStream(buf) << "Service not found";
+            retval.setBuffer(buf);
+            client->send(retval);
+          }
+          return;
+        }
+        switch(msg.function())
+        {
+
+        case Message::ServerFunction_RegisterEvent:
+          {
+            unsigned int event, remoteLinkId;
+            ds >> event >> remoteLinkId;
+
+            // locate object, register locally and bounce to an event message
+            unsigned int linkId = it->second->connect(event,
+              new EventForwarder(service, event, client));
+            _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
+            if (msg.type() == Message::Type_Call)
+            {
+              qi::Message retval;
+              retval.buildReplyFrom(msg);
+              Buffer buf;
+              ODataStream ds(buf);
+              ds << linkId;
+              retval.setBuffer(buf);
+              client->send(retval);
+            }
+          }
+          break;
+        case Message::ServerFunction_UnregisterEvent:
+          {
+            unsigned int event, remoteLinkId;
+            ds >> event >> remoteLinkId;
+            ServiceLinks& sl = _links[client][service];
+            ServiceLinks::iterator i = sl.find(remoteLinkId);
+            if (i == sl.end())
+            {
+              qiLogError("qi::Server") << "Unregister request failed for "
+              << remoteLinkId <<" " << service;
+            }
+            else
+            {
+              it->second->disconnect(i->second.localLinkId);
+            }
+            if (msg.type() == Message::Type_Call)
+            {
+              qi::Message retval;
+              retval.buildReplyFrom(msg);
+              Buffer buf;
+              ODataStream ds(buf);
+              ds << (i == sl.end());
+              retval.setBuffer(buf);
+              client->send(retval);
+            }
+          }
+          break;
+        }
+        return;
+      } // msg.service() == Server
       it = _services.find(msg.service());
       obj = it->second;
       if (it == _services.end() || !obj)
@@ -176,35 +263,6 @@ namespace qi {
       {
         qi::FunctorParameters ds(msg.buffer());
         obj->metaEmit(msg.function(), ds);
-      }
-      break;
-    case Message::Type_Register_Event:
-      {
-        unsigned int remoteLinkId;
-        IDataStream(msg.buffer()) >> remoteLinkId;
-        // locate object, register locally and bounce to an event message
-        unsigned int event = msg.function();
-        unsigned int linkId = obj->connect(event,
-          new EventForwarder(msg.service(), event, client));
-        _links[client][msg.service()][remoteLinkId]
-          = RemoteLink(linkId, event);
-      }
-      break;
-    case Message::Type_Unregister_Event:
-      {
-        unsigned int remoteLinkId;
-        IDataStream(msg.buffer()) >> remoteLinkId;
-        ServiceLinks& sl = _links[client][msg.service()];
-        ServiceLinks::iterator i = sl.find(remoteLinkId);
-        if (i == sl.end())
-        {
-          qiLogError("qi::Server") << "Unregister request failed for "
-            << remoteLinkId <<" " << msg.service();
-        }
-        else
-        {
-          obj->disconnect(i->second.localLinkId);
-        }
       }
       break;
     }
