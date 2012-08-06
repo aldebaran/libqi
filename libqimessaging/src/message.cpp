@@ -26,8 +26,7 @@ namespace qi {
   unsigned int newMessageId()
   {
     static qi::atomic<long> id(0);
-    ++id;
-    return *id;
+    return ++id;
   }
 
   void MessagePrivate::complete()
