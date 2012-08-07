@@ -15,7 +15,6 @@
 #include <list>
 #include <vector>
 #include <map>
-#include <stdint.h>
 #include <qimessaging/api.hpp>
 #include <qimessaging/value.hpp>
 #include <qimessaging/buffer.hpp>
