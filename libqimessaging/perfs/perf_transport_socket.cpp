@@ -88,7 +88,7 @@ int thd_client(qi::TransportSocket *socket)
 
 int main_client(bool shared)
 {
-  int count = 4;
+  const int count = 4;
   qi::TransportSocket socket;
   qi::Session session;
   TSIRead tsi;

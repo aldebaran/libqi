@@ -74,7 +74,7 @@ int client_calls(qi::Session *session, qi::Object *obj)
 
 int main_client(bool shared)
 {
-  unsigned int nbThreads = 4;
+  const unsigned int nbThreads = 4;
   qi::Session session;
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
