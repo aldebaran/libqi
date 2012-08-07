@@ -31,6 +31,7 @@ public:
   };
 
   GatewayPrivate();
+  ~GatewayPrivate();
 
   bool attachToServiceDirectory(const Url &address);
   bool listen(const Url &address);
@@ -80,6 +81,44 @@ public:
 GatewayPrivate::GatewayPrivate()
 {
   _transportSocketCallbacks.push_back(this);
+}
+
+GatewayPrivate::~GatewayPrivate()
+{
+  for (std::list<TransportSocket*>::iterator clientIt = _clients.begin();
+       clientIt != _clients.end();
+       ++clientIt)
+  {
+    delete *clientIt;
+  }
+
+  for (std::map< unsigned int, qi::TransportSocket* >::iterator servicesIt = _services.begin();
+       servicesIt != _services.end();
+       ++servicesIt)
+  {
+    delete servicesIt->second;
+  }
+
+  for (std::list<TransportSocket*>::iterator remoteGatewaysIt = _remoteGateways.begin();
+       remoteGatewaysIt != _remoteGateways.end();
+       ++remoteGatewaysIt)
+  {
+    delete *remoteGatewaysIt;
+  }
+
+  for (std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> > >::iterator _pendingMessageIt = _pendingMessage.begin();
+       _pendingMessageIt != _pendingMessage.end();
+       _pendingMessageIt++)
+  {
+    for (std::vector< std::pair<Message*, TransportSocket*> >::iterator msgTsVecIt = _pendingMessageIt->second.begin();
+         msgTsVecIt != _pendingMessageIt->second.end();
+         msgTsVecIt++)
+    {
+      delete msgTsVecIt->first;
+    }
+  }
+
+  delete _transportServer;
 }
 
 void GatewayPrivate::newConnection(TransportSocket *socket)
