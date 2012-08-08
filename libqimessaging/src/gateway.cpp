@@ -79,12 +79,14 @@ public:
 };
 
 GatewayPrivate::GatewayPrivate()
+: _transportServer(0)
 {
   _transportSocketCallbacks.push_back(this);
 }
 
 GatewayPrivate::~GatewayPrivate()
 {
+  _transportSocketCallbacks.clear();
   for (std::list<TransportSocket*>::iterator clientIt = _clients.begin();
        clientIt != _clients.end();
        ++clientIt)
