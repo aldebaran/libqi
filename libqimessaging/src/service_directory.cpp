@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <qimessaging/object.hpp>
 #include <qimessaging/transport_server.hpp>
@@ -19,6 +20,7 @@
 #include "src/network_thread.hpp"
 #include "src/transport_server_p.hpp"
 #include "src/server_functor_result_future_p.hpp"
+#include "src/session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
@@ -47,8 +49,7 @@ namespace qi
     TransportSocket         *socket() { return currentSocket; }
     void                     serviceReady(const unsigned int &idx);
   public:
-    qi::Session                                           *session;
-    qi::NetworkThread                                     *nthd;
+    Session                                               *session;
     qi::TransportServer                                   *ts;
     std::map<unsigned int, ServiceInfo>                    pendingServices;
     std::map<unsigned int, ServiceInfo>                    connectedServices;
@@ -56,13 +57,15 @@ namespace qi
     std::map<TransportSocket*, std::vector<unsigned int> > socketToIdx;
     unsigned int                                           servicesCount;
     TransportSocket                                       *currentSocket;
+    std::set<TransportSocket*>                             _clients;
+    boost::recursive_mutex                                 _clientsMutex;
   }; // !ServiceDirectoryPrivate
 
 
 
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : nthd(new qi::NetworkThread())
+  :  session(new Session)
     , ts(0)
     , servicesCount(0)
     , currentSocket(0)
@@ -87,16 +90,25 @@ namespace qi
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
   {
+    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
+    for (std::set<TransportSocket*>::iterator i = _clients.begin();
+      i!= _clients.end(); ++i)
+    {
+      (*i)->removeCallbacks(this);
+      delete *i;
+    }
+    _clients.clear();
     delete ts;
-    delete nthd;
     delete session;
   }
 
   void ServiceDirectoryPrivate::newConnection(TransportSocket *socket)
   {
+    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     if (!socket)
       return;
     socket->addCallbacks(this);
+    _clients.insert(socket);
   }
 
   void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
@@ -129,6 +141,8 @@ namespace qi
 
   void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *socket)
   {
+    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
+    _clients.erase(socket);
     currentSocket = socket;
 
     // if services were connected behind the socket
@@ -137,12 +151,13 @@ namespace qi
     {
       return;
     }
-
+    // Copy the vector, iterators will be invalidated.
+    std::vector<unsigned int> ids = it->second;
     // Always start at the beginning since we erase elements on unregisterService
     // and mess up the iterator
-    for (std::vector<unsigned int>::iterator it2 = it->second.begin();
-         it2 != it->second.end();
-         it2 = it->second.begin())
+    for (std::vector<unsigned int>::iterator it2 = ids.begin();
+         it2 != ids.end();
+         ++it2)
     {
       qiLogInfo("qimessaging.ServiceDirectory") << "service "
                                                 << connectedServices[*it2].name()
@@ -152,6 +167,7 @@ namespace qi
     }
     socketToIdx.erase(it);
     currentSocket = 0;
+    delete socket;
   }
 
   /*
@@ -260,50 +276,52 @@ namespace qi
 
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(connectedServices[idx].name());
-    if (it != nameToIdx.end())
+    if (it == nameToIdx.end())
     {
-      std::string serviceName = connectedServices[idx].name();
-      qiLogInfo("qimessaging.ServiceDirectory") << "service "
-                                                << serviceName
-                                                << " (#" << idx << ") unregistered"
-                                                << std::endl;
-      nameToIdx.erase(it);
-      connectedServices.erase(it2);
+      qiLogError("Mapping error, service not in nameToIdx");
+      return;
+    }
+    std::string serviceName = it2->second.name();
+    qiLogInfo("qimessaging.ServiceDirectory") << "service "
+      << serviceName
+      << " (#" << idx << ") unregistered"
+      << std::endl;
+    nameToIdx.erase(it);
+    connectedServices.erase(it2);
 
-      // Find and remove serviceId into socketToIdx map
-      std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
-      for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
+    // Find and remove serviceId into socketToIdx map
+    std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
+    for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
+    {
+      // notify every session that the service is unregistered
+      qi::Message msg;
+      msg.setType(qi::Message::Type_Event);
+      msg.setService(idx);
+      msg.setPath(qi::Message::Path_Main);
+      msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+
+      qi::Buffer     buf;
+      qi::ODataStream d(buf);
+      d << serviceName;
+
+      if (d.status() == qi::ODataStream::Status_Ok)
       {
-        // notify every session that the service is unregistered
-        qi::Message msg;
-        msg.setType(qi::Message::Type_Event);
-        msg.setService(idx);
-        msg.setPath(qi::Message::Path_Main);
-        msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
-
-        qi::Buffer     buf;
-        qi::ODataStream d(buf);
-        d << serviceName;
-
-        if (d.status() == qi::ODataStream::Status_Ok)
+        msg.setBuffer(buf);
+        if (!socketIt->first->send(msg))
         {
-          msg.setBuffer(buf);
-          if (!socketIt->first->send(msg))
-          {
-            qiLogError("qimessaging.Session") << "Error while unregister service, cannot send event.";
-          }
+          qiLogError("qimessaging.Session") << "Error while unregister service, cannot send event.";
         }
+      }
 
-        std::vector<unsigned int>::iterator serviceIdxIt;
-        for (serviceIdxIt = socketIt->second.begin();
-             serviceIdxIt != socketIt->second.end();
-             ++serviceIdxIt)
+      std::vector<unsigned int>::iterator serviceIdxIt;
+      for (serviceIdxIt = socketIt->second.begin();
+        serviceIdxIt != socketIt->second.end();
+        ++serviceIdxIt)
+      {
+        if (*serviceIdxIt == idx)
         {
-          if (*serviceIdxIt == idx)
-          {
-            socketIt->second.erase(serviceIdxIt);
-            break;
-          }
+          socketIt->second.erase(serviceIdxIt);
+          break;
         }
       }
     }
@@ -366,7 +384,6 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
   eps.push_back(address.str());
   si.setEndpoints(eps);
-  _p->session = new qi::Session();
   _p->ts = new qi::TransportServer(_p->session, address);
   _p->ts->addCallbacks(_p);
 
@@ -390,7 +407,7 @@ bool ServiceDirectory::close() {
 
 void ServiceDirectory::join()
 {
-  _p->nthd->join();
+  _p->session->_p->_networkThread->join();
 }
 
 qi::Url ServiceDirectory::listenUrl() const {
