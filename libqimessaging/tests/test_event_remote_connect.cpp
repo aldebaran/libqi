@@ -44,7 +44,7 @@ protected:
   void SetUp()
   {
     // Two objects with a fire event and a onFire method.
-    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:9559"));
+    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
     ASSERT_TRUE(session1.connect(sd.listenUrl()));
     ASSERT_TRUE(session1.waitForConnected());
     ASSERT_TRUE(session2.connect(sd.listenUrl()));

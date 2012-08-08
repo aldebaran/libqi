@@ -32,7 +32,7 @@ public:
 protected:
   void SetUp()
   {
-    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:9559"));
+    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
     ASSERT_TRUE(session.connect(sd.listenUrl()));
     ASSERT_TRUE(session.waitForConnected());
 
