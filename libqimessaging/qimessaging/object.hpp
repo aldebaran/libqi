@@ -32,12 +32,10 @@ namespace qi {
     int eventId(const std::string &name);
 
     typedef std::map<unsigned int, MetaMethod> MethodMap;
-    MethodMap& methods();
-    const MethodMap& methods() const;
+    MethodMap methods() const;
 
     typedef std::map<unsigned int, MetaEvent> EventMap;
-    EventMap& events();
-    const EventMap& events() const;
+    EventMap events() const;
 
     MetaMethod *method(unsigned int id);
     const MetaMethod *method(unsigned int id) const;

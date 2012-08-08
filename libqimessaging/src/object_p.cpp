@@ -3,6 +3,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <boost/thread/mutex.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "src/object_p.hpp"
 
@@ -32,6 +33,7 @@ namespace qi {
 
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
+    boost::recursive_mutex::scoped_lock sl(_mutex);
     std::vector<qi::MetaMethod>           ret;
     MetaObject::MethodMap::iterator it;
     std::string cname(name);
@@ -47,6 +49,7 @@ namespace qi {
 
   std::vector<MetaEvent> MetaObjectPrivate::findEvent(const std::string &name)
   {
+    boost::recursive_mutex::scoped_lock sl(_mutex);
     std::vector<MetaEvent>           ret;
     MetaObject::EventMap::iterator it;
     std::string cname(name);

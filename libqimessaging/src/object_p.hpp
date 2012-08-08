@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <boost/thread/recursive_mutex.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
@@ -81,6 +82,7 @@ namespace qi {
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
 
+    boost::recursive_mutex              _mutex;
     // Global uid for event subscribers.
     static qi::atomic<long> uid;
   };

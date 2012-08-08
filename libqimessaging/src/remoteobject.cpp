@@ -176,7 +176,7 @@ bool RemoteObject::disconnect(unsigned int linkId)
   // Figure out which event this link is associated to
   MetaObject::EventMap::iterator i;
   unsigned int event = (unsigned int)-1;
-  for (i = metaObject().events().begin(); i!= metaObject().events().end(); ++i)
+  for (i = metaObject()._p->_events.begin(); i!= metaObject()._p->_events.end(); ++i)
   {
     MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(linkId);
     if (j != i->second._p->_subscribers.end())

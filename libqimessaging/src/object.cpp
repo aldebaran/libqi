@@ -36,6 +36,7 @@ namespace qi {
   }
 
   MetaMethod *MetaObject::method(unsigned int id) {
+    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
     MethodMap::iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -43,6 +44,7 @@ namespace qi {
   }
 
   const MetaMethod *MetaObject::method(unsigned int id) const {
+    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
     MethodMap::const_iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -50,6 +52,7 @@ namespace qi {
   }
 
   MetaEvent *MetaObject::event(unsigned int id) {
+    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
     EventMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -57,6 +60,7 @@ namespace qi {
   }
 
   const MetaEvent *MetaObject::event(unsigned int id) const {
+    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
     EventMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -73,21 +77,14 @@ namespace qi {
     return _p->eventId(name);
   }
 
-  MetaObject::MethodMap &MetaObject::methods() {
+  MetaObject::MethodMap MetaObject::methods() const {
     return _p->_methods;
   }
 
-  const MetaObject::MethodMap &MetaObject::methods() const {
-    return _p->_methods;
-  }
-
-  MetaObject::EventMap &MetaObject::events() {
+  MetaObject::EventMap MetaObject::events() const {
     return _p->_events;
   }
 
-  const  MetaObject::EventMap &MetaObject::events() const {
-    return _p->_events;
-  }
 
   MetaObject::~MetaObject()
   {
@@ -100,33 +97,35 @@ namespace qi {
     advertiseMethod("__metaobject", this, &Object::metaObject);
   }
 
-  Object::~Object()
-  {
-    //notify registered users that we are going to be destroyed
-    std::map<ObjectInterface *, void *>::iterator it;
+  Object::~Object() {
     {
-      boost::mutex::scoped_lock l(_p->_callbacksMutex);
-      for (it = _p->_callbacks.begin(); it != _p->_callbacks.begin(); ++it)
-        it->first->onObjectDestroyed(this, it->second);
-    }
+      // We delete meta at the end, and it holds the mutex, so make a scope.
+      boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+      //std::cerr <<"boum " << this << " " << pthread_self() << std::endl;
+      // Notify events that have subscribers that call us that we are dead
+      // We need to make a copy of the vector, since disconnect will
+      // remove entries from it.
+      std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
+      std::vector<MetaEvent::Subscriber>::iterator i;
+      for (i = regs.begin(); i != regs.end(); ++i)
+        i->eventSource->disconnect(i->linkId);
 
-    // Notify events that have subscribers that call us that we are dead
-    // We need to make a copy of the vector, since disconnect will
-    // remove entries from it.
-    std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
-    std::vector<MetaEvent::Subscriber>::iterator i;
-    for (i = regs.begin(); i != regs.end(); ++i)
-      i->eventSource->disconnect(i->linkId);
+      // First get the link ids, then disconnect as calling disconnect
+      // while iterating might kill us (if subscriber is on same object).
+      std::vector<unsigned int> links;
 
-    // Then remove _registrations with one of our event as source
-    MetaObject::EventMap::iterator ii;
-    for (ii = metaObject().events().begin(); ii!= metaObject().events().end(); ++ii)
-    {
-      MetaEventPrivate::Subscribers::iterator j;
-      for (j = ii->second._p->_subscribers.begin();
-        j != ii->second._p->_subscribers.end();
-        ++j)
-        disconnect(j->second.linkId);
+      // Then remove _registrations with one of our event as source
+      MetaObject::EventMap::iterator ii;
+      for (ii = metaObject()._p->_events.begin(); ii!= metaObject()._p->_events.end(); ++ii)
+      {
+        MetaEventPrivate::Subscribers::iterator j;
+        for (j = ii->second._p->_subscribers.begin();
+          j != ii->second._p->_subscribers.end();
+          ++j)
+        links.push_back(j->second.linkId);
+      }
+      for (unsigned int i=0; i<links.size(); ++i)
+        disconnect(links[i]);
     }
   }
 
@@ -155,6 +154,7 @@ namespace qi {
 
   int Object::xForgetMethod(const std::string &meth)
   {
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
     std::map<std::string, unsigned int>::iterator it;
 
     it = metaObject()._p->_methodsNameToIdx.find(meth);
@@ -168,8 +168,9 @@ namespace qi {
   }
 
   int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
-    std::map<std::string, unsigned int>::iterator it;
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
 
+    std::map<std::string, unsigned int>::iterator it;
     it = metaObject()._p->_methodsNameToIdx.find(signature);
     if (it != metaObject()._p->_methodsNameToIdx.end())
     {
@@ -192,6 +193,7 @@ namespace qi {
   }
 
   int Object::xAdvertiseEvent(const std::string& signature) {
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
     if (signature.empty())
     {
       qiLogError("qi.Object") << "Event has empty signature.";
@@ -244,6 +246,7 @@ namespace qi {
   };
   void Object::metaEmit(unsigned int event, const FunctorParameters &args)
   {
+    //std::cerr <<"metaemit on " << this <<" from " << pthread_self() << std::endl;
     trigger(event, args);
   }
   void Object::trigger(unsigned int event, const FunctorParameters &args)
@@ -264,7 +267,7 @@ namespace qi {
         return;
       }
     }
-
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
     for (MetaEventPrivate::Subscribers::iterator il =
       ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
     {
@@ -371,26 +374,30 @@ namespace qi {
       return 0;
     }
     // Should we validate event here too?
-    // Use [] directly, will create the entry if not present.
     unsigned int uid = ++MetaObjectPrivate::uid;
-    ev->_p->_subscribers[uid] = sub;
-    // Get the subscrber copy in our map:
-    MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
-    s.linkId = uid;
-    s.eventSource = this;
-    s.event = event;
-    // Notify the target of this subscribers
-    if (s.target)
-      s.target->metaObject()._p->_registrations.push_back(s);
+    {
+       boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+       // Use [] directly, will create the entry (copy) if not present.
+       ev->_p->_subscribers[uid] = sub;
+       // Get the subscrber copy in our map:
+       MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
+       s.linkId = uid;
+       s.eventSource = this;
+       s.event = event;
+       // Notify the target of this subscribers
+       if (s.target)
+         s.target->metaObject()._p->_registrations.push_back(s);
+    }
     return uid;
   }
 
   bool Object::disconnect(unsigned int id)
   {
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
     // Look it up.
     // FIXME: Maybe store the event id inside the link id for faster lookup?
     MetaObject::EventMap::iterator i;
-    for (i = metaObject().events().begin(); i!= metaObject().events().end(); ++i)
+    for (i = metaObject()._p->_events.begin(); i!= metaObject()._p->_events.end(); ++i)
     {
       MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(id);
       if (j != i->second._p->_subscribers.end())
@@ -401,6 +408,7 @@ namespace qi {
         // If target is an object, deregister from it
         if (sub.target)
         {
+          boost::recursive_mutex::scoped_lock sl(sub.target->metaObject()._p->_mutex);
           std::vector<MetaEvent::Subscriber>& regs = sub.target->metaObject()._p->_registrations;
           // Look it up in vector, then swap with last.
           for (unsigned int i=0; i< regs.size(); ++i)
@@ -483,6 +491,7 @@ namespace qi {
 
   void MetaObjectPrivate::refreshCache()
   {
+    boost::recursive_mutex::scoped_lock sl(_mutex);
     _methodsNameToIdx.clear();
     for (MetaObject::MethodMap::iterator i = _methods.begin();
       i != _methods.end(); ++i)
