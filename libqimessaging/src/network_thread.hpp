@@ -18,6 +18,7 @@
 # include <event2/bufferevent.h>
 
 # include <boost/thread.hpp>
+# include <boost/shared_ptr.hpp>
 
 namespace qi {
 
@@ -30,6 +31,15 @@ public:
   void join();
   void stop();
   struct event_base* getEventBase();
+  struct AsyncCallHandler
+  {
+    void cancel() { cancelled = true;}
+    bool cancelled;
+    event* ev;
+    boost::function0<void> callback;
+  };
+  /// Call given function once after given delay in microseconds.
+  boost::shared_ptr<AsyncCallHandler> asyncCall(uint64_t usDelay, boost::function0<void> callback);
 
 protected:
 private:

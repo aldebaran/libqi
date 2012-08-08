@@ -98,6 +98,35 @@ void NetworkThread::join()
   _thd.join();
 }
 
+static void async_call(evutil_socket_t,
+  short what,
+  void *context)
+{
+  boost::shared_ptr<NetworkThread::AsyncCallHandler>* handler =
+  (boost::shared_ptr<NetworkThread::AsyncCallHandler>*)context;
+  if (!(*handler)->cancelled)
+    (*handler)->callback();
+  event_del((*handler)->ev);
+  event_free((*handler)->ev);
+  delete handler;
+}
+
+boost::shared_ptr<NetworkThread::AsyncCallHandler> NetworkThread::asyncCall(uint64_t usDelay, boost::function0<void> cb)
+{
+  boost::shared_ptr<AsyncCallHandler> res(new AsyncCallHandler);
+  struct timeval period;
+  period.tv_sec = usDelay / 1000000ULL;
+  period.tv_usec = usDelay % 1000000ULL;
+  struct event *ev = event_new(_base, -1, EV_PERSIST, async_call,
+    new boost::shared_ptr<AsyncCallHandler>(res));
+  // Order is important.
+  res->ev = ev;
+  res->cancelled = false;
+  res->callback = cb;
+  event_add(ev, &period);
+  return res;
+}
+
 struct event_base* NetworkThread::getEventBase()
 {
   return _base;
