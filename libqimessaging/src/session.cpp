@@ -32,10 +32,19 @@ namespace qi {
 
   SessionPrivate::~SessionPrivate() {
     _networkThread->stop();
-    delete _serviceSocket;
-    delete _networkThread;
+    _networkThread->destroy(true);
   }
 
+  Session::~Session()
+  {
+    {
+      boost::mutex::scoped_lock sl(_p->_mutexCallback);
+      _p->_callbacks.clear();
+    }
+    disconnect();
+    waitForDisconnected();
+    delete _p;
+  }
 
   void SessionPrivate::onSocketConnected(TransportSocket *client)
   {
@@ -93,6 +102,7 @@ namespace qi {
         sr->promise.setError("Failed to connect to service");
       }
       _futureConnect.erase(it);
+      delete client;
       return;
     }
 
@@ -276,6 +286,7 @@ namespace qi {
           if (!ts->connect(_self, url))
           {
             // Synchronous failure, do nothing, try next
+            delete ts;
             continue;
           }
           else
@@ -522,12 +533,6 @@ namespace qi {
   {
   }
 
-  Session::~Session()
-  {
-    disconnect();
-    waitForDisconnected();
-    delete _p;
-  }
 
   bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
