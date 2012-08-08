@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include <qi/os.hpp>
+#include <qi/atomic.hpp>
 #include <qimessaging/future.hpp>
 
 
@@ -19,7 +20,7 @@ public:
   static int         gGlobalI;
   static std::string gGlobalS;
   static std::string gGlobalE;
-  static int         gSuccess;
+  static qi::atomic<long>   gSuccess;
 
 protected:
   static void SetUpTestCase()
@@ -34,7 +35,7 @@ protected:
 int         TestFuture::gGlobalI;
 std::string TestFuture::gGlobalS;
 std::string TestFuture::gGlobalE;
-int         TestFuture::gSuccess;
+qi::atomic<long> TestFuture::gSuccess;
 
 class TestFutureI : public qi::FutureInterface<int> {
 public:
@@ -113,16 +114,16 @@ void producer(qi::Promise<int> pro) {
   pro.setValue(42);
 }
 
-void consumer(int &gSuccess, qi::Future<int> fut) {
+void consumer(qi::atomic<long> &gSuccess, qi::Future<int> fut) {
   //wont block thread on error
   ASSERT_TRUE(fut.wait(1000));
   EXPECT_EQ(42, fut.value());
-  gSuccess++;
+  ++gSuccess;
 }
 
 TEST_F(TestFuture, Threaded) {
   qi::Promise<int> pro;
-  EXPECT_EQ(0, gSuccess);
+  EXPECT_EQ(0, *gSuccess);
   boost::thread_group tg;
 
   tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
@@ -130,7 +131,7 @@ TEST_F(TestFuture, Threaded) {
   tg.create_thread(boost::bind(&consumer, boost::ref(gSuccess), pro.future()));
   tg.create_thread(boost::bind(&producer, pro));
   tg.join_all();
-  EXPECT_EQ(3, gSuccess);
+  EXPECT_EQ(3, *gSuccess);
 }
 
 
