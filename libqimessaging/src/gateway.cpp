@@ -455,7 +455,8 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
   {
     if (it->second == socket)
     {
-      if (it->first == Message::Service_ServiceDirectory)
+      unsigned int sid = it->first;
+      if (sid == Message::Service_ServiceDirectory)
       {
         qiLogError("gateway") << "Connection to the Service Directory was lost!";
       }
@@ -472,7 +473,7 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
       if (it2 != _serviceToClient.end())
       {
         _serviceToClient.erase(it2);
-        _pendingMessage[it->first].clear();
+        _pendingMessage[sid].clear();
       }
     }
     else
