@@ -6,6 +6,7 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
+#include <set>
 #include <qimessaging/object.hpp>
 #include <qimessaging/server.hpp>
 #include <qimessaging/functor.hpp>
@@ -58,6 +59,7 @@ namespace qi {
     typedef std::map<TransportSocket*, PerServiceLinks > Links;
     Links                                   _links;
 
+    std::set<TransportSocket*>              _clients;
     std::map<unsigned int, qi::Object*>     _services;
     std::map<std::string, qi::Object*>      _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
@@ -78,19 +80,27 @@ namespace qi {
   }
 
   ServerPrivate::~ServerPrivate() {
+    for (std::set<TransportSocket*>::iterator i = _clients.begin();
+      i != _clients.end(); ++i)
+    {
+      // We do not want onSocketDisconnected called
+      (*i)->removeCallbacks(this);
+      delete *i;
+    }
     delete _ts;
-    //do not delete the session that we dont own
   }
 
   void ServerPrivate::newConnection(TransportSocket *socket)
   {
     if (!socket)
       return;
+    _clients.insert(socket);
     socket->addCallbacks(this);
   }
 
   void ServerPrivate::onSocketDisconnected(TransportSocket* client)
   {
+    _clients.erase(client);
     // Disconnect event links set for this client.
     Links::iterator i = _links.find(client);
     if (i != _links.end())
@@ -108,6 +118,7 @@ namespace qi {
       }
       _links.erase(i);
     }
+    delete client;
   }
 
   // Grah give me boost::bind!
@@ -316,9 +327,6 @@ namespace qi {
 
   Server::~Server()
   {
-    if (_p->_ts)
-      delete _p->_ts;
-    _p->_ts = 0;
     delete _p;
   }
 
