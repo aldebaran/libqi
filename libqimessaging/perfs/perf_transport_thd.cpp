@@ -9,7 +9,9 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#if 0
 #include <sched.h>
+#endif
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
@@ -25,13 +27,14 @@ static const int gThreadCount = 1;
 
 int client_calls(qi::Session *session, qi::Object *obj)
 {
+#if 0
   cpu_set_t mask;
   CPU_ZERO(&mask);
   CPU_SET(0, &mask);
   CPU_SET(1, &mask);
   unsigned int len = sizeof(mask);
   qiLogInfo("sched") << "::" << pthread_setaffinity_np(pthread_self(), len, &mask);
-
+#endif
 
   if (!obj)
   {
@@ -182,12 +185,13 @@ int main_server()
 
 int main(int argc, char **argv)
 {
+#if 0
   cpu_set_t mask;
   CPU_ZERO(&mask);
   CPU_SET(0, &mask);
   unsigned int len = sizeof(mask);
   qiLogInfo("sched") << "::" << sched_setaffinity(getpid(), len, &mask);
-
+#endif
 
   if (argc > 1 && !strcmp(argv[1], "--client-shared"))
   {
