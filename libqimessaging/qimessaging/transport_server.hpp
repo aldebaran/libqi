@@ -25,6 +25,7 @@ namespace qi {
   public:
     virtual ~TransportServerInterface() = 0;
     virtual void newConnection(TransportSocket *socket) = 0;
+    virtual void error(int err) {}
   };
 
   class Session;

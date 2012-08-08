@@ -83,6 +83,14 @@ namespace qi
     std::cout << "accept error" << std::endl;
     int err = errno;
     qiLogError("qimessaging.transportserver", "Got an error %d (%s) on the listener.", err, evutil_socket_error_to_string(err));
+    std::vector<TransportServerInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(mutexCallback);
+      localCallbacks = tsi;
+    }
+    std::vector<TransportServerInterface *>::const_iterator it;
+    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+      (*it)->error(err);
   }
 
   bool TransportServerLibEventPrivate::close() {
