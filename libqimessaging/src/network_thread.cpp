@@ -40,6 +40,8 @@ static void errorcb(struct bufferevent *QI_UNUSED(bev),
 }
 
 NetworkThread::NetworkThread()
+: _destroyMe(false)
+, _running(true)
 {
   static bool libevent_init = false;
 
@@ -69,33 +71,75 @@ NetworkThread::NetworkThread()
 
 NetworkThread::~NetworkThread()
 {
-  event_base_free(_base);
+  if (_running && boost::this_thread::get_id() != _thd.get_id())
+    qiLogError("Destroying NetworkThread from itself while running");
+  stop();
+  join();
+
 #ifdef _WIN32
   // TODO handle return code
   ::WSACleanup();
 #endif
 }
 
+void NetworkThread::destroy(bool join)
+{
+  bool needJoin;
+  bool needDelete;
+  {
+    boost::recursive_mutex::scoped_lock sl(_mutex);
+    needJoin = join && _running && (boost::this_thread::get_id() != _thd.get_id());
+    needDelete = needJoin || !_running;
+    _destroyMe = !needDelete;
+  }
+  stop(); // Deadlock if called within the scoped_lock
+  if (needJoin)
+    _thd.join();
+  if (needDelete)
+    delete this;
+}
+
 void NetworkThread::run()
 {
-
-  struct bufferevent *bev = bufferevent_socket_new(_base, -1, BEV_OPT_CLOSE_ON_FREE);
+  // stop will set _base to 0 to delect usage attempts after stop
+  // so use a local copy.
+  event_base* base = _base;
+  struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   bufferevent_setcb(bev, NULL, NULL, ::qi::errorcb, this);
   bufferevent_enable(bev, EV_READ|EV_WRITE);
 
-  event_base_dispatch(_base);
+  event_base_dispatch(base);
+  bufferevent_free(bev);
+  event_base_free(base);
+  {
+    boost::recursive_mutex::scoped_lock sl(_mutex);
+    _running = false;
+    if (_destroyMe)
+      delete this; // I assume this is safe even if someone is joining us.
+  }
 }
 
 void NetworkThread::stop()
 {
-  if (event_base_loopexit(_base, NULL) != 0)
-    qiLogError("networkThread") << "Can't stop the NetworkThread";
-  this->join();
+  event_base* base = 0;
+  { // Ensure no multipe calls are made.
+    boost::recursive_mutex::scoped_lock sl(_mutex);
+    if (_base && _running)
+    {
+      base = _base;
+      _base = 0;
+    }
+  }
+  if (base)
+    if (event_base_loopexit(base, NULL) != 0)
+      qiLogError("networkThread") << "Can't stop the NetworkThread";
+
 }
 
 void NetworkThread::join()
 {
-  _thd.join();
+  if (boost::this_thread::get_id() != _thd.get_id())
+    _thd.join();
 }
 
 static void async_call(evutil_socket_t,

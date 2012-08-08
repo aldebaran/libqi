@@ -26,10 +26,11 @@ class NetworkThread
 {
 public:
   NetworkThread();
-  ~NetworkThread();
+
 
   void join();
   void stop();
+  void destroy(bool join);
   struct event_base* getEventBase();
   struct AsyncCallHandler
   {
@@ -43,10 +44,13 @@ public:
 
 protected:
 private:
+  ~NetworkThread();
   void run();
-
   struct event_base *_base;
   boost::thread      _thd;
+  bool               _destroyMe;
+  bool               _running;
+  boost::recursive_mutex _mutex;
 };
 }
 
