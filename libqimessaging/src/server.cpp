@@ -168,9 +168,8 @@ namespace qi {
     case Message::Type_Call:
       {
          qi::FunctorParameters ds(msg.buffer());
-
          ServerFunctorResult promise(client, msg);
-         obj->metaCall(msg.function(), ds, promise);
+         obj->metaCall(msg.function(), ds, promise, qi::Object::MetaCallType_Queued);
       }
       break;
     case Message::Type_Event:
