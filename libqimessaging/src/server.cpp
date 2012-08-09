@@ -69,17 +69,22 @@ namespace qi {
     std::vector<std::string>                _endpoints;
     qi::Session                            *_session;
     boost::mutex                            _mutexServices;
-    boost::mutex                            _mutexOthers;
+    boost::recursive_mutex                  _mutexOthers;
+    bool                                    _dying;
   };
 
   ServerPrivate::ServerPrivate()
-    : _ts(new TransportServer()),
-      _session(0)
+    : _ts(new TransportServer())
+    ,  _session(0)
+    , _dying(false)
   {
     _ts->addCallbacks(this);
   }
 
   ServerPrivate::~ServerPrivate() {
+    _dying = true;
+    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
+    delete _ts;
     for (std::set<TransportSocket*>::iterator i = _clients.begin();
       i != _clients.end(); ++i)
     {
@@ -87,11 +92,11 @@ namespace qi {
       (*i)->removeCallbacks(this);
       delete *i;
     }
-    delete _ts;
   }
 
   void ServerPrivate::newConnection(TransportSocket *socket)
   {
+    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     if (!socket)
       return;
     _clients.insert(socket);
@@ -100,6 +105,10 @@ namespace qi {
 
   void ServerPrivate::onSocketDisconnected(TransportSocket* client)
   {
+    // The check below must be done before holding the lock.
+    if (_dying)
+      return;
+    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     _clients.erase(client);
     // Disconnect event links set for this client.
     Links::iterator i = _links.find(client);
@@ -298,7 +307,7 @@ namespace qi {
     std::map<qi::Object *, qi::ServiceInfo>::iterator it;
 
     {
-      boost::mutex::scoped_lock sl(_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       it = _servicesObject.find(obj);
       if (it != _servicesObject.end())
         si = _servicesObject[obj];
@@ -312,7 +321,7 @@ namespace qi {
     // ack the Service directory to tell that we are ready
     _session->_p->serviceReady(idx);
     {
-      boost::mutex::scoped_lock sl(_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       _servicesInfo[si.name()] = si;
       _servicesByName[si.name()] = obj;
       _servicesIndex[idx] = si.name();
@@ -418,7 +427,7 @@ namespace qi {
     si.setEndpoints(_p->_endpoints);
 
     {
-      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       _p->_servicesObject[obj] = si;
     }
 
@@ -444,7 +453,7 @@ namespace qi {
       _p->_services.erase(idx);
     }
     {
-      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       std::map<unsigned int, std::string>::iterator it;
       it = _p->_servicesIndex.find(idx);
       if (it == _p->_servicesIndex.end()) {
@@ -468,7 +477,7 @@ namespace qi {
     std::map<std::string, qi::ServiceInfo>::iterator it;
 
     {
-      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
         ssi.push_back(it->second);
       }
@@ -479,7 +488,7 @@ namespace qi {
   qi::ServiceInfo Server::registeredService(const std::string &service) {
     std::map<std::string, qi::ServiceInfo>::iterator it;
     {
-      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       it = _p->_servicesInfo.find(service);
       if (it != _p->_servicesInfo.end())
         return it->second;
@@ -490,7 +499,7 @@ namespace qi {
   qi::Object *Server::registeredServiceObject(const std::string &service) {
     std::map<std::string, qi::Object *>::iterator it;
     {
-      boost::mutex::scoped_lock sl(_p->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       it = _p->_servicesByName.find(service);
       if (it != _p->_servicesByName.end())
         return it->second;
