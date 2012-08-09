@@ -57,6 +57,9 @@ namespace qi
   private:
     friend class TransportServerLibEventPrivate;
     friend void disconnect_dec(TransportSocketLibEvent* ptr);
+    friend void send_dec(TransportSocketLibEvent*, Message*);
+
+    bool _send(qi::Message* msg);
     boost::recursive_mutex mutex;
     Session            *session;
     struct bufferevent *bev;

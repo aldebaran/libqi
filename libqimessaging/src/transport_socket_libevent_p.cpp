@@ -500,7 +500,35 @@ namespace qi
     //}
   }
 
+  void send_dec(TransportSocketLibEvent* sock,
+    qi::Message* m)
+  {
+    --sock->inMethod;
+    sock->_send(m);
+  }
+
   bool TransportSocketLibEvent::send(const qi::Message &msg)
+  {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    if (!isConnected())
+    {
+      qiLogError("qimessaging.TransportSocketLibevent") << "socket is not connected.";
+      return false;
+    }
+    qi::Message *m = new qi::Message();
+    *m = msg;
+    if (!session->_p->_networkThread->isInNetworkThread())
+    {
+      ++inMethod;
+      session->_p->_networkThread->asyncCall(1,
+        boost::bind(&send_dec, this, m));
+      return true;
+    }
+    else
+      return _send(m);
+  }
+
+  bool TransportSocketLibEvent::_send(qi::Message* m)
   {
     if (!isConnected())
     {
@@ -508,8 +536,6 @@ namespace qi
       return false;
     }
 
-    qi::Message *m = new qi::Message();
-    *m = msg;
     m->_p->complete();
 
     if (m->type() == qi::Message::Type_Call)
