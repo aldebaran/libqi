@@ -69,25 +69,27 @@ namespace qi
       qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
       return false;
     }
-
+    int wait = msecs;
+    int64_t start = os::ustime();
     std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
+    do
     {
-      {
-        boost::mutex::scoped_lock l(mtx);
-        it = msgSend.find(id);
-        if (it != msgSend.end())
-          return true;
-        if (!isConnected())
-          return false;
-        if (msecs > 0)
-          cond.timed_wait(l, boost::posix_time::milliseconds(msecs));
-        else
-          cond.wait(l);
-        it = msgSend.find(id);
-        if (it != msgSend.end())
-          return true;
-      }
+      boost::mutex::scoped_lock l(mtx);
+      it = msgSend.find(id);
+      if (it != msgSend.end())
+        return true;
+      if (!isConnected())
+        return false;
+      if (msecs > 0)
+        cond.timed_wait(l, boost::posix_time::milliseconds(wait));
+      else
+        cond.wait(l);
+      it = msgSend.find(id);
+      if (it != msgSend.end())
+        return true;
+      wait =  msecs - (os::ustime()-start) / 1000LL;
     }
+    while (wait > 0);
     return false;
   }
 
