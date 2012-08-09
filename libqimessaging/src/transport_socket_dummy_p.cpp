@@ -48,4 +48,8 @@ namespace qi
     return false;
 
   }
+  void TransportSocketDummyPrivate::destroy()
+  {
+    delete this;
+  }
 }

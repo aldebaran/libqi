@@ -38,6 +38,7 @@ namespace qi {
     virtual bool listen() = 0;
     virtual bool close() = 0;
     virtual void join() = 0;
+    virtual void destroy() = 0;
 
   public:
     std::vector<TransportServerInterface *> tsi;
@@ -48,7 +49,7 @@ namespace qi {
   protected:
     TransportServerPrivate()
       : tsi(0)
-      , mainSession(NULL)
+      , mainSession(0)
       , listenUrl("")
     {};
   };

@@ -72,8 +72,10 @@ namespace qi
 
   TransportServer::~TransportServer()
   {
+    _p->tsi.clear();
     close();
-    delete _p;
+    _p->destroy();
+    _p = 0;
   }
 
   bool TransportServer::listen(qi::Session *session,
@@ -95,7 +97,8 @@ namespace qi
 
   void TransportServer::join()
   {
-    _p->join();
+    if (_p)
+      _p->join();
   }
 
   void TransportServer::addCallbacks(TransportServerInterface *delegate)
@@ -145,7 +148,7 @@ namespace qi
   }
 
   bool TransportServer::close() {
-    return _p->close();
+    return _p?_p->close():true;
   }
 
 }

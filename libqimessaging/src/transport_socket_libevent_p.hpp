@@ -10,7 +10,8 @@
 # define _QIMESSAGING_TRANSPORT_SOCKET_LIBEVENT_P_HPP_
 
 # include <string>
-
+# include <boost/thread/recursive_mutex.hpp>
+# include <qi/atomic.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
@@ -33,7 +34,7 @@ namespace qi
                          const qi::Url &url);
     virtual void disconnect();
     virtual bool send(const qi::Message &msg);
-
+    virtual void destroy();
     void readcb(struct bufferevent *bev,
                 void               *QI_UNUSED(context));
     void writecb(struct bufferevent *QI_UNUSED(bev),
@@ -54,9 +55,14 @@ namespace qi
                               void *msg);
 
   private:
+    friend class TransportServerLibEventPrivate;
+    friend void disconnect_dec(TransportSocketLibEvent* ptr);
+    boost::recursive_mutex mutex;
+    Session            *session;
     struct bufferevent *bev;
     int                 fd;
     struct event       *clean_event;
+    qi::atomic<long>   inMethod; // used for reentrency and async method tracking
   };
 
 }

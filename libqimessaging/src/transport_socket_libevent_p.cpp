@@ -38,6 +38,14 @@
 
 namespace qi
 {
+  class ScopeAtomicSetter
+  {
+  public:
+    ScopeAtomicSetter(qi::atomic<long>& b)
+    : b(b) { ++b;}
+    ~ScopeAtomicSetter() { --b;}
+    qi::atomic<long>& b;
+  };
   static unsigned int getSocketTimeout()
   {
     const std::string st = qi::os::getenv("QI_SOCKET_TIMEOUT");
@@ -153,10 +161,9 @@ namespace qi
         cond.notify_all();
       }
       std::vector<TransportSocketInterface *> localCallbacks;
-      {
-        boost::mutex::scoped_lock l(mtxCallback);
-        localCallbacks = tcd;
-      }
+      boost::recursive_mutex::scoped_lock l(mtxCallback);
+      localCallbacks = tcd;
+      ScopeAtomicSetter bs(inMethod);
       std::vector<TransportSocketInterface *>::const_iterator it;
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
         (*it)->onSocketReadyRead(self, msgId);
@@ -166,10 +173,10 @@ namespace qi
   void TransportSocketLibEvent::onWriteDone()
   {
     std::vector<TransportSocketInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(mtxCallback);
-      localCallbacks = tcd;
-    }
+    boost::recursive_mutex::scoped_lock l(mtxCallback);
+    localCallbacks = tcd;
+
+    ScopeAtomicSetter bs(inMethod);
     std::vector<TransportSocketInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
       (*it)->onSocketWriteDone(self);
@@ -193,12 +200,14 @@ namespace qi
                                         short events,
                                         void *QI_UNUSED(context))
   {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    if (!this->bev)
+      return;
+    boost::recursive_mutex::scoped_lock l(mtxCallback);
+
     std::vector<TransportSocketInterface *>::const_iterator it;
     std::vector<TransportSocketInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(mtxCallback);
-      localCallbacks = tcd;
-    }
+    localCallbacks = tcd;
 
     if (events & BEV_EVENT_CONNECTED)
     {
@@ -208,13 +217,22 @@ namespace qi
     }
     else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
     {
-      bufferevent_free(bev);
-      bev = 0;
+      if (this->bev)
+      {
+        bufferevent_setcb(bev, 0, 0, 0, 0);
+        bufferevent_free(bev);
+        this->bev = 0;
+      }
+      if (clean_event) {
+        event_del(clean_event);
+        event_free(clean_event);
+        clean_event = NULL;
+      }
       bool wasco = connected;
       connected = false;
       //for waitForId
       cond.notify_all();
-
+      ScopeAtomicSetter bs(inMethod);
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
         (*it)->onSocketConnectionError(self);
       if (wasco)
@@ -222,7 +240,6 @@ namespace qi
         for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
           (*it)->onSocketDisconnected(self);
       }
-
       cleanPendingMessages();
 
       status = errno;
@@ -241,6 +258,7 @@ namespace qi
     , bev(NULL)
     , fd(-1)
     , clean_event(0)
+    , inMethod(false)
   {
   }
 
@@ -249,6 +267,7 @@ namespace qi
     , bev(NULL)
     , fd(fileDesc)
     , clean_event(0)
+    , inMethod(false)
   {
     struct event_base *base = static_cast<event_base *>(data);
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
@@ -260,7 +279,7 @@ namespace qi
     if (!clean_event)
     {
       struct timeval clean_period = { 1, 0 };
-      struct event *clean_event = event_new(base, -1, EV_PERSIST, cleancb, this);
+      clean_event = event_new(base, -1, EV_PERSIST, cleancb, this);
       event_add(clean_event, &clean_period);
     }
   }
@@ -279,17 +298,15 @@ namespace qi
       boost::mutex::scoped_lock l(mtx);
       lmap = msgSend;
     }
+    std::vector<TransportSocketInterface *> localCallbacks;
+    boost::recursive_mutex::scoped_lock l(mtxCallback);
+    localCallbacks = tcd;
     for (it = lmap.begin();it != lmap.end(); ++it)
     {
       if (time(0) - it->second.timestamp >= getSocketTimeout())
       {
-        std::vector<TransportSocketInterface *> localCallbacks;
-        {
-          boost::mutex::scoped_lock l(mtxCallback);
-          localCallbacks = tcd;
-        }
-
         // Call onSocketTimeout callback
+        ScopeAtomicSetter bs(inMethod);
         for (std::vector<TransportSocketInterface *>::const_iterator it2 = localCallbacks.begin();
              it2 != localCallbacks.end();
              ++it2)
@@ -309,10 +326,8 @@ namespace qi
   void TransportSocketLibEvent::cleanPendingMessages()
   {
     std::vector<TransportSocketInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(mtxCallback);
-      localCallbacks = tcd;
-    }
+    boost::recursive_mutex::scoped_lock l(mtxCallback);
+    localCallbacks = tcd;
 
     // Call onSocketTimeout callback
     while (true)
@@ -357,6 +372,7 @@ namespace qi
   bool TransportSocketLibEvent::connect(qi::Session *session,
                                         const qi::Url &url)
   {
+    this->session = session;
     const std::string &address = url.host();
     struct evutil_addrinfo *ai = NULL;
     struct evutil_addrinfo  hint;
@@ -389,7 +405,7 @@ namespace qi
       if (!clean_event)
       {
         struct timeval clean_period = { 1, 0 };
-        struct event *clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, this);
+        clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, this);
         event_add(clean_event, &clean_period);
       }
 
@@ -408,8 +424,53 @@ namespace qi
     return false;
   }
 
+  void TransportSocketLibEvent::destroy()
+  {
+    // Queue request if not in network thread.
+    if (!session->_p->_networkThread->isInNetworkThread())
+    {
+      session->_p->_networkThread->asyncCall(1,
+        boost::bind(&TransportSocketLibEvent::destroy, this));
+    }
+    else
+    {
+      bool delay;
+      {
+        // If we are connected, disconnect and retry asynchronously.
+        boost::recursive_mutex::scoped_lock sl(mutex);
+        delay = bev;
+        disconnect();
+      }
+      // While our tracker says something is running, try again.
+      delay = delay || *inMethod;
+      if (delay)
+      {
+        session->_p->_networkThread->asyncCall(1,
+          boost::bind(&TransportSocketLibEvent::destroy, this));
+      }
+      else
+      {
+        delete this;
+      }
+    }
+  }
+
+  void disconnect_dec(TransportSocketLibEvent* ptr)
+  {
+    --ptr->inMethod;
+    ptr->disconnect();
+  }
+
   void TransportSocketLibEvent::disconnect()
   {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    if (!session->_p->_networkThread->isInNetworkThread())
+    {
+      ++inMethod;
+      session->_p->_networkThread->asyncCall(1,
+        boost::bind(disconnect_dec, this));
+      return;
+    }
     if (clean_event) {
       event_del(clean_event);
       event_free(clean_event);
@@ -425,11 +486,13 @@ namespace qi
        *
        * :'(
        */
-      bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
-      bufferevent_free(bev);
-      bev = NULL;
-      connected = false;
-      cleanPendingMessages();
+       //bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
+       // Must be in network thread due to a libevent deadlock bug.
+       bufferevent_setcb(bev, 0, 0, 0, 0);
+       bufferevent_free(bev);
+       bev = NULL;
+       connected = false;
+       cleanPendingMessages();
     }
     //else
     //{

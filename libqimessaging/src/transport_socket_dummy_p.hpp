@@ -31,6 +31,7 @@ namespace qi
                          const qi::Url &url);
     virtual void disconnect();
     virtual bool send(const qi::Message &msg);
+    virtual void destroy();
   };
 }
 

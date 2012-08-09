@@ -34,7 +34,7 @@ namespace qi
     virtual bool listen();
     virtual bool close();
     virtual void join();
-
+    virtual void destroy();
     void accept(evutil_socket_t        fd,
                 struct evconnlistener *listener);
 
@@ -43,6 +43,7 @@ namespace qi
     //struct event_base     *_base;
     struct evconnlistener *_listener;
   private:
+    NetworkThread* _ioService;
     TransportServerLibEventPrivate() {};
   };
 }

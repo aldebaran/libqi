@@ -42,10 +42,10 @@ namespace qi
     virtual void addCallbacks(TransportSocketInterface *delegate);
     virtual void removeCallbacks(TransportSocketInterface *delegate);
     virtual bool isConnected() const;
-
+    virtual void destroy() = 0;
   public:
     std::vector<TransportSocketInterface *> tcd;
-    boost::mutex                            mtxCallback;
+    boost::recursive_mutex                  mtxCallback;
     bool                                    connected;
     int                                     status;
     // data to rebuild message

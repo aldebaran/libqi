@@ -46,8 +46,11 @@ namespace qi
 
   TransportSocket::~TransportSocket()
   {
-    disconnect();
-    delete _p;
+    {
+      boost::recursive_mutex::scoped_lock l(_p->mtxCallback);
+      _p->tcd.clear();
+    }
+    _p->destroy();
   }
 
   bool TransportSocket::connect(qi::Session *session,
@@ -103,7 +106,6 @@ namespace qi
   {
     return _p->read(id, msg);
   }
-
 
   bool TransportSocket::send(const qi::Message &msg)
   {

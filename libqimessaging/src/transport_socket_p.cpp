@@ -22,6 +22,7 @@ namespace qi
 
   TransportSocketPrivate::~TransportSocketPrivate()
   {
+    delete msg;
   }
 
 // if msecs < 0 no timeout
@@ -124,7 +125,7 @@ namespace qi
   {
     if (delegate)
     {
-      boost::mutex::scoped_lock l(mtxCallback);
+      boost::recursive_mutex::scoped_lock l(mtxCallback);
       tcd.push_back(delegate);
     }
     else
@@ -135,7 +136,7 @@ namespace qi
   {
     if (delegate)
     {
-      boost::mutex::scoped_lock l(mtxCallback);
+      boost::recursive_mutex::scoped_lock l(mtxCallback);
       std::vector<TransportSocketInterface *>::iterator it;
       for (it = tcd.begin(); it != tcd.end(); ++it)
       {

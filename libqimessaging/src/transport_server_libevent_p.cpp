@@ -67,7 +67,9 @@ namespace qi
     qi::TransportSocket *ts = new qi::TransportSocket();
     if (ts->_p)
       delete ts->_p;
-    ts->_p = new qi::TransportSocketLibEvent(ts, fd, base);
+    TransportSocketLibEvent* tsle = new qi::TransportSocketLibEvent(ts, fd, base);
+    tsle->session = mainSession;
+    ts->_p = tsle;
 
     std::vector<TransportServerInterface *> localCallbacks;
     {
@@ -102,7 +104,7 @@ namespace qi
 
   bool TransportServerLibEventPrivate::listen()
   {
-    struct event_base     *base = mainSession->_p->_networkThread->getEventBase();
+    struct event_base     *base = _ioService->getEventBase();
 
     struct evutil_addrinfo *ai = NULL;
     int                     err;
@@ -179,12 +181,24 @@ namespace qi
 
   void TransportServerLibEventPrivate::join()
   {
-    mainSession->_p->_networkThread->join();
+    _ioService->join();
+  }
+
+  void server_deletor(TransportServerLibEventPrivate* ptr)
+  {
+    delete ptr;
+  }
+
+  void TransportServerLibEventPrivate::destroy()
+  {
+    close();
+    _ioService->asyncCall(200000, boost::bind(&server_deletor, this));
   }
 
   TransportServerLibEventPrivate::TransportServerLibEventPrivate(qi::Session *session,
                                                                  const qi::Url &url)
     : TransportServerPrivate(session, url)
+    , _ioService(session->_p->_networkThread)
   {
   }
 

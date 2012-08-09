@@ -46,6 +46,10 @@ namespace qi
   {
   }
 
+  void TransportServerDummyPrivate::destroy()
+  {
+    delete this;
+  }
   TransportServerDummyPrivate::~TransportServerDummyPrivate()
   {
   }
