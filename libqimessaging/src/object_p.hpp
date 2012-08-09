@@ -27,6 +27,7 @@ namespace qi {
     MetaObject                         *_meta;
     std::map<ObjectInterface *, void *> _callbacks;
     boost::mutex                        _callbacksMutex;
+    bool                                _dying;
   };
 
   class MetaObjectPrivate {
@@ -82,7 +83,9 @@ namespace qi {
     // std::map<std::string, MethodInfo>   _slots;
     // std::map<std::string, PropertyInfo> _properties;
 
-    boost::recursive_mutex              _mutex;
+    boost::recursive_mutex              _mutexEvent;
+    boost::recursive_mutex              _mutexRegistration;
+    boost::recursive_mutex              _mutexMethod;
     // Global uid for event subscribers.
     static qi::atomic<long> uid;
   };

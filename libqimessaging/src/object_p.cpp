@@ -10,10 +10,12 @@
 namespace qi {
 
   ObjectPrivate::ObjectPrivate()
-    : _meta(new qi::MetaObject){
+    : _meta(new qi::MetaObject)
+    , _dying(false){
   }
 
   ObjectPrivate::~ObjectPrivate() {
+    _dying = true;
     delete _meta;
   }
 
@@ -33,7 +35,7 @@ namespace qi {
 
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
-    boost::recursive_mutex::scoped_lock sl(_mutex);
+    boost::recursive_mutex::scoped_lock sl(_mutexMethod);
     std::vector<qi::MetaMethod>           ret;
     MetaObject::MethodMap::iterator it;
     std::string cname(name);
@@ -49,7 +51,7 @@ namespace qi {
 
   std::vector<MetaEvent> MetaObjectPrivate::findEvent(const std::string &name)
   {
-    boost::recursive_mutex::scoped_lock sl(_mutex);
+    boost::recursive_mutex::scoped_lock sl(_mutexEvent);
     std::vector<MetaEvent>           ret;
     MetaObject::EventMap::iterator it;
     std::string cname(name);

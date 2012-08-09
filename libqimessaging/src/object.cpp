@@ -36,7 +36,7 @@ namespace qi {
   }
 
   MetaMethod *MetaObject::method(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
     MethodMap::iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -44,7 +44,7 @@ namespace qi {
   }
 
   const MetaMethod *MetaObject::method(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
     MethodMap::const_iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -52,7 +52,7 @@ namespace qi {
   }
 
   MetaEvent *MetaObject::event(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
     EventMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -60,7 +60,7 @@ namespace qi {
   }
 
   const MetaEvent *MetaObject::event(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
     EventMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -99,33 +99,36 @@ namespace qi {
 
   Object::~Object() {
     {
-      // We delete meta at the end, and it holds the mutex, so make a scope.
-      boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
-      //std::cerr <<"boum " << this << " " << pthread_self() << std::endl;
-      // Notify events that have subscribers that call us that we are dead
-      // We need to make a copy of the vector, since disconnect will
-      // remove entries from it.
-      std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
-      std::vector<MetaEvent::Subscriber>::iterator i;
-      for (i = regs.begin(); i != regs.end(); ++i)
-        i->eventSource->disconnect(i->linkId);
+      _p->_dying = true;
+      {
+        boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexRegistration);
 
+        // Notify events that have subscribers that call us that we are dead
+        // We need to make a copy of the vector, since disconnect will
+        // remove entries from it.
+        std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
+        std::vector<MetaEvent::Subscriber>::iterator i;
+        for (i = regs.begin(); i != regs.end(); ++i)
+          i->eventSource->disconnect(i->linkId);
+      }
       // First get the link ids, then disconnect as calling disconnect
       // while iterating might kill us (if subscriber is on same object).
       std::vector<unsigned int> links;
-
-      // Then remove _registrations with one of our event as source
-      MetaObject::EventMap::iterator ii;
-      for (ii = metaObject()._p->_events.begin(); ii!= metaObject()._p->_events.end(); ++ii)
       {
-        MetaEventPrivate::Subscribers::iterator j;
-        for (j = ii->second._p->_subscribers.begin();
-          j != ii->second._p->_subscribers.end();
-          ++j)
-        links.push_back(j->second.linkId);
+        boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
+        // Then remove _registrations with one of our event as source
+        MetaObject::EventMap::iterator ii;
+        for (ii = metaObject()._p->_events.begin(); ii!= metaObject()._p->_events.end(); ++ii)
+        {
+          MetaEventPrivate::Subscribers::iterator j;
+          for (j = ii->second._p->_subscribers.begin();
+            j != ii->second._p->_subscribers.end();
+            ++j)
+          links.push_back(j->second.linkId);
+        }
+        for (unsigned int i=0; i<links.size(); ++i)
+          disconnect(links[i]);
       }
-      for (unsigned int i=0; i<links.size(); ++i)
-        disconnect(links[i]);
     }
   }
 
@@ -154,7 +157,7 @@ namespace qi {
 
   int Object::xForgetMethod(const std::string &meth)
   {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexMethod);
     std::map<std::string, unsigned int>::iterator it;
 
     it = metaObject()._p->_methodsNameToIdx.find(meth);
@@ -168,7 +171,7 @@ namespace qi {
   }
 
   int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexMethod);
 
     std::map<std::string, unsigned int>::iterator it;
     it = metaObject()._p->_methodsNameToIdx.find(signature);
@@ -193,7 +196,7 @@ namespace qi {
   }
 
   int Object::xAdvertiseEvent(const std::string& signature) {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
     if (signature.empty())
     {
       qiLogError("qi.Object") << "Event has empty signature.";
@@ -251,6 +254,7 @@ namespace qi {
   }
   void Object::trigger(unsigned int event, const FunctorParameters &args)
   {
+    // Note: Not thread-safe, event/method may die while we hold it.
     MetaEvent* ev = metaObject().event(event);
     if (!ev)
     {
@@ -267,7 +271,7 @@ namespace qi {
         return;
       }
     }
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
     for (MetaEventPrivate::Subscribers::iterator il =
       ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
     {
@@ -367,6 +371,12 @@ namespace qi {
   unsigned int Object::connect(unsigned int event,
     const MetaEvent::Subscriber& sub)
   {
+    if (_p->_dying)
+    {
+      qiLogError("object") << "Cannot connect to dying object";
+      return 0;
+    }
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
     MetaEvent* ev = metaObject().event(event);
     if (!ev)
     {
@@ -375,25 +385,25 @@ namespace qi {
     }
     // Should we validate event here too?
     unsigned int uid = ++MetaObjectPrivate::uid;
+    // Use [] directly, will create the entry (copy) if not present.
+    ev->_p->_subscribers[uid] = sub;
+    // Get the subscrber copy in our map:
+    MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
+    s.linkId = uid;
+    s.eventSource = this;
+    s.event = event;
+    // Notify the target of this subscribers
+    if (s.target)
     {
-       boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
-       // Use [] directly, will create the entry (copy) if not present.
-       ev->_p->_subscribers[uid] = sub;
-       // Get the subscrber copy in our map:
-       MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
-       s.linkId = uid;
-       s.eventSource = this;
-       s.event = event;
-       // Notify the target of this subscribers
-       if (s.target)
-         s.target->metaObject()._p->_registrations.push_back(s);
+      boost::recursive_mutex::scoped_lock sl(s.target->metaObject()._p->_mutexRegistration);
+      s.target->metaObject()._p->_registrations.push_back(s);
     }
     return uid;
   }
 
   bool Object::disconnect(unsigned int id)
   {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutex);
+    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
     // Look it up.
     // FIXME: Maybe store the event id inside the link id for faster lookup?
     MetaObject::EventMap::iterator i;
@@ -408,7 +418,7 @@ namespace qi {
         // If target is an object, deregister from it
         if (sub.target)
         {
-          boost::recursive_mutex::scoped_lock sl(sub.target->metaObject()._p->_mutex);
+          boost::recursive_mutex::scoped_lock sl(sub.target->metaObject()._p->_mutexRegistration);
           std::vector<MetaEvent::Subscriber>& regs = sub.target->metaObject()._p->_registrations;
           // Look it up in vector, then swap with last.
           for (unsigned int i=0; i< regs.size(); ++i)
@@ -491,13 +501,19 @@ namespace qi {
 
   void MetaObjectPrivate::refreshCache()
   {
-    boost::recursive_mutex::scoped_lock sl(_mutex);
-    _methodsNameToIdx.clear();
-    for (MetaObject::MethodMap::iterator i = _methods.begin();
-      i != _methods.end(); ++i)
+    {
+      boost::recursive_mutex::scoped_lock sl(_mutexMethod);
+      _methodsNameToIdx.clear();
+      for (MetaObject::MethodMap::iterator i = _methods.begin();
+        i != _methods.end(); ++i)
       _methodsNameToIdx[i->second.signature()] = i->second.uid();
-    for (MetaObject::EventMap::iterator i = _events.begin();
-      i != _events.end(); ++i)
+    }
+    {
+      boost::recursive_mutex::scoped_lock sl(_mutexEvent);
+      _eventsNameToIdx.clear();
+      for (MetaObject::EventMap::iterator i = _events.begin();
+        i != _events.end(); ++i)
       _eventsNameToIdx[i->second.signature()] = i->second.uid();
+    }
   }
 };
