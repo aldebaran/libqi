@@ -119,6 +119,11 @@ void NetworkThread::run()
   }
 }
 
+bool NetworkThread::isInNetworkThread()
+{
+  return boost::this_thread::get_id() == _thd.get_id();
+}
+
 void NetworkThread::stop()
 {
   event_base* base = 0;

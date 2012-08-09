@@ -27,7 +27,7 @@ class NetworkThread
 public:
   NetworkThread();
 
-
+  bool isInNetworkThread();
   void join();
   void stop();
   void destroy(bool join);
