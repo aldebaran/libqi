@@ -87,7 +87,7 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
 
 }
 
-void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out)
+void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out, MetaCallType callType)
 {
   qi::Message msg;
   msg.setBuffer(in.buffer());

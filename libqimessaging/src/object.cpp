@@ -215,7 +215,7 @@ namespace qi {
     return idx;
   }
 
-  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out)
+  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out, MetaCallType callType)
   {
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {

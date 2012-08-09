@@ -66,6 +66,12 @@ namespace qi {
     Object();
     virtual ~Object();
 
+    enum MetaCallType {
+      MetaCallType_Auto   = 0,
+      MetaCallType_Direct = 1,
+      MetaCallType_Queued = 2,
+    };
+
     void addCallbacks(ObjectInterface *callbacks, void *data = 0);
     void removeCallbacks(ObjectInterface *callbacks);
 
@@ -99,7 +105,7 @@ namespace qi {
     template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
     qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
-    virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out);
+    virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out, MetaCallType callType = MetaCallType_Auto);
 
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);

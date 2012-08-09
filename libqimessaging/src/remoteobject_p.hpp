@@ -26,7 +26,7 @@ namespace qi {
 
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketTimeout(TransportSocket *client, int id);
-    virtual void metaCall(unsigned int method, const qi::FunctorParameters &in, qi::FunctorResult out);
+    virtual void metaCall(unsigned int method, const qi::FunctorParameters &in, qi::FunctorResult out, MetaCallType callType);
     virtual void metaEmit(unsigned int event, const FunctorParameters &args);
     virtual unsigned int connect(unsigned int event, const MetaEvent::Subscriber& sub);
     virtual bool disconnect(unsigned int linkId);
