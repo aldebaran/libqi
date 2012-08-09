@@ -90,14 +90,16 @@ namespace qi
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
   {
-    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
-    for (std::set<TransportSocket*>::iterator i = _clients.begin();
-      i!= _clients.end(); ++i)
     {
-      (*i)->removeCallbacks(this);
-      delete *i;
-    }
-    _clients.clear();
+      boost::recursive_mutex::scoped_lock sl(_clientsMutex);
+      for (std::set<TransportSocket*>::iterator i = _clients.begin();
+        i!= _clients.end(); ++i)
+      {
+        (*i)->removeCallbacks(this);
+        delete *i;
+      }
+      _clients.clear();
+    } // Lock must not be held while deleting session, or deadlock
     delete ts;
     delete session;
   }
