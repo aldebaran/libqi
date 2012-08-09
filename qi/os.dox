@@ -173,6 +173,9 @@
 
     \param tp the timeval structure used to return the current time
     \return should return 0 on success
+
+    \fn int64_t ustime();
+      \brief Return elapsed time since program start in microseconds
 */
 ///@}
 

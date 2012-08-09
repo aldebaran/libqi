@@ -72,6 +72,7 @@ set(C
   src/headfileloghandler.cpp
   src/tailfileloghandler.cpp
   src/locale-light.cpp
+  src/os.cpp
   src/utils.hpp
   src/utils.cpp
   )

@@ -20,6 +20,7 @@
 # include <map>
 # include <vector>
 # include <qi/config.hpp>
+# include <qi/types.hpp>
 
 struct stat;
 
@@ -47,6 +48,7 @@ namespace qi {
       long tv_usec;
     };
     QI_API int gettimeofday(qi::os::timeval *tp);
+    QI_API qi::int64_t ustime();
 
     // shared library
     QI_API void *dlopen(const char *filename, int flag = -1);
