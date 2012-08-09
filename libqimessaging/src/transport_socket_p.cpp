@@ -86,7 +86,8 @@ namespace qi
       else
         cond.wait(l);
       it = msgSend.find(id);
-      if (it != msgSend.end())
+      // msgSend also contains a timestamp entry for sent messages, but no data
+      if (it != msgSend.end() && it->second.msg)
         return true;
       wait =  msecs - (os::ustime()-start) / 1000LL;
     }

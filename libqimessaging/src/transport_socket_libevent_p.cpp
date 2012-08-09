@@ -544,6 +544,7 @@ namespace qi
       msgSend[m->id()].timestamp = time(0);
     }
 
+
     struct evbuffer *mess = evbuffer_new();
     // m might be deleted.
     qi::Buffer *b = new qi::Buffer(m->buffer());

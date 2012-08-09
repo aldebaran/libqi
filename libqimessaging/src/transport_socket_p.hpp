@@ -55,6 +55,7 @@ namespace qi
 
     struct PendingMessage
     {
+      PendingMessage() : msg(0), timestamp(0) {}
       qi::Message         *msg;
       time_t               timestamp;
     };
