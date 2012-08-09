@@ -166,7 +166,7 @@ boost::shared_ptr<NetworkThread::AsyncCallHandler> NetworkThread::asyncCall(uint
   struct timeval period;
   period.tv_sec = usDelay / 1000000ULL;
   period.tv_usec = usDelay % 1000000ULL;
-  struct event *ev = event_new(_base, -1, EV_PERSIST, async_call,
+  struct event *ev = event_new(_base, -1, 0, async_call,
     new boost::shared_ptr<AsyncCallHandler>(res));
   // Order is important.
   res->ev = ev;
