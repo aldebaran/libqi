@@ -285,6 +285,7 @@ namespace qi {
             ++sr->attempts;
           }
         }
+        break;
       }
     }
     if (!sr->attempts)
