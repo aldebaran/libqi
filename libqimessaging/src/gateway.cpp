@@ -46,7 +46,7 @@ protected:
   void forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg);
 
   //ServerInterface
-  virtual void newConnection(TransportSocket *socket);
+  virtual void newConnection(TransportServer* server, TransportSocket *socket);
 
   //SocketInterface
   virtual void onSocketReadyRead(TransportSocket *client, int id);
@@ -123,7 +123,7 @@ GatewayPrivate::~GatewayPrivate()
   delete _transportServer;
 }
 
-void GatewayPrivate::newConnection(TransportSocket *socket)
+void GatewayPrivate::newConnection(TransportServer* server, TransportSocket *socket)
 {
   if (!socket)
     return;

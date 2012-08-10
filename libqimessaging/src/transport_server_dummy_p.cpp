@@ -40,9 +40,10 @@ namespace qi
                                     << " TransportServer!";
   }
 
-  TransportServerDummyPrivate::TransportServerDummyPrivate(qi::Session *session,
+  TransportServerDummyPrivate::TransportServerDummyPrivate(TransportServer* self,
+                                                           qi::Session *session,
                                                            const qi::Url &url)
-    : TransportServerPrivate(session, url)
+    : TransportServerPrivate(self, session, url)
   {
   }
 

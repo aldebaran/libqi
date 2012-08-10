@@ -36,7 +36,7 @@ namespace qi
     ServiceDirectoryPrivate();
     ~ServiceDirectoryPrivate();
 
-    virtual void newConnection(TransportSocket *socket);
+    virtual void newConnection(TransportServer* server, TransportSocket *socket);
     virtual void onSocketReadyRead(TransportSocket *socket, int id);
     virtual void onSocketWriteDone(TransportSocket *client);
     virtual void onSocketConnected(TransportSocket *client);
@@ -104,7 +104,7 @@ namespace qi
     delete session;
   }
 
-  void ServiceDirectoryPrivate::newConnection(TransportSocket *socket)
+  void ServiceDirectoryPrivate::newConnection(TransportServer* server, TransportSocket *socket)
   {
     boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     if (!socket)

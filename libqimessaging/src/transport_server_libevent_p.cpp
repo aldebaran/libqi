@@ -78,7 +78,7 @@ namespace qi
     }
     std::vector<TransportServerInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->newConnection(ts);
+      (*it)->newConnection(self, ts);
   }
 
   void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {
@@ -92,7 +92,7 @@ namespace qi
     }
     std::vector<TransportServerInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->error(err);
+      (*it)->error(self, err);
   }
 
   bool TransportServerLibEventPrivate::close() {
@@ -195,9 +195,10 @@ namespace qi
     _ioService->asyncCall(200000, boost::bind(&server_deletor, this));
   }
 
-  TransportServerLibEventPrivate::TransportServerLibEventPrivate(qi::Session *session,
+  TransportServerLibEventPrivate::TransportServerLibEventPrivate(TransportServer* self,
+                                                                 qi::Session *session,
                                                                  const qi::Url &url)
-    : TransportServerPrivate(session, url)
+    : TransportServerPrivate(self, session, url)
     , _ioService(session->_p->_networkThread)
   {
   }

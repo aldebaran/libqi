@@ -22,7 +22,7 @@ namespace qi
   class TransportServerDummyPrivate : public TransportServerPrivate
   {
   public:
-    TransportServerDummyPrivate(qi::Session *session,
+    TransportServerDummyPrivate(TransportServer* self, qi::Session *session,
                                 const qi::Url &url);
     virtual ~TransportServerDummyPrivate();
     virtual bool listen();

@@ -27,7 +27,8 @@ namespace qi
   class TransportServerLibEventPrivate : public TransportServerPrivate
   {
   public:
-    TransportServerLibEventPrivate(qi::Session *session,
+    TransportServerLibEventPrivate(TransportServer* self,
+                                   qi::Session *session,
                                    const qi::Url &url);
     virtual ~TransportServerLibEventPrivate();
 

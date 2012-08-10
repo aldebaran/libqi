@@ -29,7 +29,7 @@ namespace qi {
 
     ServerPrivate();
     virtual ~ServerPrivate();
-    virtual void newConnection(TransportSocket *client);
+    virtual void newConnection(TransportServer* server, TransportSocket *client);
     virtual void onSocketReadyRead(TransportSocket *client, int id);
     virtual void onSocketDisconnected(TransportSocket *client);
     virtual void onFutureFinished(const unsigned int &future,
@@ -94,7 +94,7 @@ namespace qi {
     }
   }
 
-  void ServerPrivate::newConnection(TransportSocket *socket)
+  void ServerPrivate::newConnection(TransportServer* server, TransportSocket *socket)
   {
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     if (!socket)

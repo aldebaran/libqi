@@ -44,14 +44,14 @@ namespace qi
 {
 
 
-  static TransportServerPrivate * newTSP(qi::Session *session, const qi::Url &url) {
+  static TransportServerPrivate * newTSP(TransportServer* self, qi::Session *session, const qi::Url &url) {
     if (url.protocol() == "tcp") {
-      return new TransportServerLibEventPrivate(session, url);
+      return new TransportServerLibEventPrivate(self, session, url);
     }
 
     qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
                                   << " TransportServer create with dummy implementation.";
-    return new TransportServerDummyPrivate(session, url);
+    return new TransportServerDummyPrivate(self, session, url);
   }
 
   TransportServerInterface::~TransportServerInterface()
@@ -59,14 +59,14 @@ namespace qi
   }
 
   TransportServer::TransportServer()
-    : _p(new TransportServerDummyPrivate(NULL, ""))
+    : _p(new TransportServerDummyPrivate(this, NULL, ""))
   {
   }
 
 
   TransportServer::TransportServer(qi::Session *session,
                                    const qi::Url &url)
-    : _p(newTSP(session, url))
+    : _p(newTSP(this, session, url))
   {
   }
 
@@ -83,7 +83,7 @@ namespace qi
   {
     TransportServerPrivate *save = _p;
 
-    _p = newTSP(session, url);
+    _p = newTSP(this, session, url);
     _p->tsi = save->tsi;
 
     delete save;

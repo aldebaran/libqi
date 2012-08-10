@@ -20,12 +20,12 @@
 namespace qi {
 
   class TransportSocket;
-
+  class TransportServer;
   class QIMESSAGING_API TransportServerInterface {
   public:
     virtual ~TransportServerInterface() = 0;
-    virtual void newConnection(TransportSocket *socket) = 0;
-    virtual void error(int err) {}
+    virtual void newConnection(TransportServer* server, TransportSocket *socket) = 0;
+    virtual void error(TransportServer* server, int err) {}
   };
 
   class Session;

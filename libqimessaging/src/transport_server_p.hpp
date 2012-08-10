@@ -25,8 +25,9 @@ namespace qi {
   class TransportServerPrivate
   {
   public:
-    TransportServerPrivate(qi::Session *session, const qi::Url &url)
-      : tsi(0)
+    TransportServerPrivate(TransportServer* self, qi::Session *session, const qi::Url &url)
+      : self(self)
+      , tsi(0)
       , mainSession(session)
       , listenUrl(url)
     {}
@@ -41,6 +42,7 @@ namespace qi {
     virtual void destroy() = 0;
 
   public:
+    TransportServer                        *self;
     std::vector<TransportServerInterface *> tsi;
     boost::mutex                            mutexCallback;
     qi::Session                            *mainSession;
