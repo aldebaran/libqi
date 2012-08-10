@@ -254,6 +254,11 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       if (result.name() == "")
       {
         qiLogError("gateway") << "Could not find requested service";
+        Message ans;
+        ans.buildReplyFrom(*msg);
+        ans.setType(qi::Message::Type_Error);
+        ans.setId(itReq->second.first);
+        itReq->second.second->send(ans);
         return;
       }
 
