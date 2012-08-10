@@ -299,15 +299,11 @@ namespace qi
   void TransportSocketLibEvent::onCleanPendingMessages()
   {
     std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
-    std::map<unsigned int, TransportSocketPrivate::PendingMessage> lmap;
-    {
-      boost::mutex::scoped_lock l(mtx);
-      lmap = msgSend;
-    }
+    boost::mutex::scoped_lock ll(mtx);
     std::vector<TransportSocketInterface *> localCallbacks;
     boost::recursive_mutex::scoped_lock l(mtxCallback);
     localCallbacks = tcd;
-    for (it = lmap.begin();it != lmap.end(); ++it)
+    for (it = msgSend.begin();it != msgSend.end(); ++it)
     {
       if (time(0) - it->second.timestamp >= getSocketTimeout())
       {
@@ -319,12 +315,9 @@ namespace qi
         {
           (*it2)->onSocketTimeout(self, it->first);
         }
-        {
-          boost::mutex::scoped_lock l(mtx);
-          qiLogError("qimessaging.TransportSocket") << "Message timed out: "
-                                                    << it->first;
-          msgSend.erase(it->first);
-        }
+        qiLogError("qimessaging.TransportSocket") << "Message timed out: "
+          << it->first;
+        msgSend.erase(it);
       }
     }
   }
