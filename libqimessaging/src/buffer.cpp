@@ -108,6 +108,11 @@ namespace qi
     return p;
   }
 
+  void Buffer::clear()
+  {
+    if (_p)
+      _p->used = 0;
+  }
   void* Buffer::data()
   {
     return _p->data();

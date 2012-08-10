@@ -27,7 +27,10 @@ namespace qi
 
     size_t size() const;
 
-    //returned value is valid til the next non-const operation
+    void   clear();
+
+    /** Reserve "size" more bytes at the end and return a pointer to the data.
+     * returned value is valid til the next non-const operation*/
     void*  reserve(size_t size);
     void*  data();
     const void* data() const;
