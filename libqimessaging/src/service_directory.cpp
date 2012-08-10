@@ -154,13 +154,44 @@ namespace qi
     currentSocket = 0;
   }
 
+  /*
+   * FIXME I'm ugly
+   * We should detect we're not on the same host.
+   */
+  static ServiceInfo stripLoopbackFromServiceInfo(const ServiceInfo& si)
+  {
+    ServiceInfo ret;
+    ret.setName(si.name());
+    ret.setServiceId(si.serviceId());
+    ret.setMachineId(si.machineId());
+    ret.setProcessId(si.processId());
+
+    /*
+     * We should give loopback addresses *only* if we are on the same machine.
+     */
+    for (std::vector<std::string>::const_iterator retEndpointsIt = si.endpoints().begin();
+         retEndpointsIt != si.endpoints().end();
+         retEndpointsIt++)
+    {
+      qi::Url url(*retEndpointsIt);
+      if (url.host() != "127.0.0.1" && url.host() != "::1")
+      {
+        ret.addEndpoint(*retEndpointsIt);
+      }
+    }
+
+    return ret;
+  }
+
   std::vector<ServiceInfo> ServiceDirectoryPrivate::services()
   {
     std::vector<ServiceInfo> result;
     std::map<unsigned int, ServiceInfo>::const_iterator it;
 
     for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
-      result.push_back(it->second);
+    {
+      result.push_back(stripLoopbackFromServiceInfo(it->second));
+    }
 
     return result;
   }
@@ -180,7 +211,7 @@ namespace qi
     if (servicesIt == connectedServices.end())
       return ServiceInfo();
 
-    return servicesIt->second;
+    return stripLoopbackFromServiceInfo(servicesIt->second);
   }
 
   unsigned int ServiceDirectoryPrivate::registerService(const ServiceInfo &svcinfo)
