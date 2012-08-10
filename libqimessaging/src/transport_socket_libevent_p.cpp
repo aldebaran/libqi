@@ -46,9 +46,10 @@ namespace qi
     ~ScopeAtomicSetter() { --b;}
     qi::atomic<long>& b;
   };
-  static unsigned int getSocketTimeout()
+
+  static int _gst()
   {
-    const std::string st = qi::os::getenv("QI_SOCKET_TIMEOUT");
+    static const std::string st = qi::os::getenv("QI_SOCKET_TIMEOUT");
     if (st != "")
     {
       return atoi(st.c_str());
@@ -58,6 +59,11 @@ namespace qi
       // Default timeout in NAOqi 1
       return 5 * 60;
     }
+  }
+  static int _socket_timeout = _gst();
+  static inline unsigned int getSocketTimeout()
+  {
+    return _socket_timeout;
   }
 
   static void cleancb(evutil_socket_t fd, short what, void *arg)
