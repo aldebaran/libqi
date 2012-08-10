@@ -10,9 +10,11 @@
 namespace qi {
 
   BufferReader::BufferReader(const Buffer& buf)
-  : _buffer(buf)
-  , _cursor(0)
+  : _cursor(0)
   {
+    if (!buf._p)
+      const_cast<Buffer&>(buf)._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
+    _buffer = buf;
     ++_buffer._p->nReaders;
   }
 

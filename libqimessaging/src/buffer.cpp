@@ -39,8 +39,20 @@ namespace qi
   }
 
   Buffer::Buffer()
-    : _p(new BufferPrivate) // TODO: add allocation-on-write.
   {
+  }
+
+  Buffer::Buffer(const Buffer& b)
+  {
+    (*this) = b;
+  }
+
+  Buffer& Buffer::operator=(const Buffer& b)
+  {
+    if (!b._p)
+      const_cast<Buffer&>(b)._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
+    _p = b._p;
+    return *this;
   }
 
   unsigned char* BufferPrivate::data()
@@ -70,6 +82,8 @@ namespace qi
 
   int Buffer::write(const void *data, size_t size)
   {
+    if (!_p)
+      _p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     if (*_p->nReaders)
       qiLogWarning("qi.Buffer") << "write operation while readers are present";
     if (_p->used + size > _p->available)
@@ -89,7 +103,7 @@ namespace qi
 
   size_t Buffer::size() const
   {
-    return _p->used;
+    return _p?_p->used:0;
   }
 
   /*
@@ -99,6 +113,8 @@ namespace qi
   */
   void *Buffer::reserve(size_t size)
   {
+    if (!_p)
+      _p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     if (_p->used + size > _p->available)
       _p->resize(_p->used + size);
 
@@ -115,25 +131,43 @@ namespace qi
   }
   void* Buffer::data()
   {
-    return _p->data();
+    return _p ? _p->data() : 0;
   }
 
   const void* Buffer::data() const
   {
-    return _p->data();
+    return _p ? _p->data() : 0;
   }
 
   void *Buffer::read(size_t off, size_t length) const
   {
-    if (off + length > _p->used)
+    if (!_p)
+    {
+      qiLogDebug("qimessaging.buffer") << "read on empty buffer";
       return 0;
+    }
+    if (off + length > _p->used)
+    {
+      qiLogDebug("qimessaging.buffer") << "Attempt to read " << off+length
+       <<" on buffer of size " << _p->used;
+      return 0;
+    }
     return (char*)_p->data() + off;
   }
 
   size_t Buffer::read(void* buffer, size_t off, size_t length) const
   {
-    if (off > _p->used)
+    if (!_p)
+    {
+      qiLogDebug("qimessaging.buffer") << "read on empty buffer";
       return -1;
+    }
+    if (off > _p->used)
+    {
+      qiLogDebug("qimessaging.buffer") << "Attempt to read " << off+length
+      <<" on buffer of size " << _p->used;
+      return -1;
+    }
     size_t copy = std::min(length, _p->used - off);
     memcpy(buffer, (char*)_p->data()+off, copy);
     return copy;
@@ -141,6 +175,11 @@ namespace qi
 
   void Buffer::dump() const
   {
+    if (!_p)
+    {
+       qiLogDebug("qimessaging.buffer") << "dump on empty buffer";
+      return;
+    }
     unsigned int i = 0;
 
     while (i < _p->used)

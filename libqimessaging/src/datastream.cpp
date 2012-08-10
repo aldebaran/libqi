@@ -74,13 +74,14 @@ namespace qi {
   : _status(Status_Ok)
   , _reader(BufferReader(buffer))
   {
-
   }
 
   ODataStream::ODataStream(qi::Buffer &buffer)
   : _status(Status_Ok)
-  , _buffer(buffer)
   {
+    if (!buffer._p)
+      buffer._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
+    _buffer = buffer;
     ++_buffer._p->nWriters;
   }
 
