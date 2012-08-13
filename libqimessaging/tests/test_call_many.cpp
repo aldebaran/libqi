@@ -43,8 +43,8 @@ TEST(Test, Recurse)
   ASSERT_TRUE(session1.waitForConnected());
   ASSERT_TRUE(session2.connect(sd.listenUrl()));
   ASSERT_TRUE(session2.waitForConnected());
-  int m1 = oserver1.advertiseMethod("onFire1", &onFire1);
-  int m2 = oserver2.advertiseMethod("onFire2", &onFire2);
+  oserver1.advertiseMethod("onFire1", &onFire1);
+  oserver2.advertiseMethod("onFire2", &onFire2);
   ASSERT_TRUE(srv1.listen(&session1, "tcp://0.0.0.0:0"));
   ASSERT_TRUE(srv2.listen(&session2, "tcp://0.0.0.0:0"));
   ASSERT_GT(srv1.registerService("coin1", &oserver1).wait(), 0);
