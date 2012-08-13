@@ -455,6 +455,12 @@ namespace qi {
 
   void SessionPrivate::serviceReady(unsigned int idx)
   {
+    if (idx == 0)
+    {
+      qiLogError("qimessaging.Session") << "called serviceReady with id #0";
+      return;
+    }
+
     qi::Message msg;
     qi::Buffer  buf;
     msg.setType(qi::Message::Type_Call);
