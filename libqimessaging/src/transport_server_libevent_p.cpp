@@ -175,6 +175,47 @@ namespace qi
 
     if (ai)
       evutil_freeaddrinfo(ai);
+
+
+    /* Set endpoints */
+    if (listenUrl.host() != "0.0.0.0")
+    {
+      _endpoints.push_back(listenUrl);
+    }
+    else // need available ip addresses
+    {
+      std::string protocol;
+      std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
+      if (ifsMap.empty())
+      {
+        qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
+        return false;
+      }
+  #ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
+      ifsMap["Loopback"].push_back("127.0.0.1");
+  #endif
+
+      protocol = "tcp://";
+
+      for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
+           interfaceIt != ifsMap.end();
+           ++interfaceIt)
+      {
+        for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
+             addressIt != (*interfaceIt).second.end();
+             ++addressIt)
+        {
+          std::stringstream ss;
+          ss << protocol;
+          ss << (*addressIt);
+          ss << ":";
+          ss << listenUrl.port();
+          qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
+          _endpoints.push_back(ss.str());
+         }
+      }
+    }
+
     return _listener != 0;
   }
 

@@ -35,7 +35,6 @@ namespace qi {
     virtual void onFutureFinished(const unsigned int &future,
                                   void *data);
     virtual void onFutureFailed(const std::string &error, void *data);
-    bool         setSuitableEndpoints(const qi::Url &url);
   public:
     // (service, linkId)
     struct RemoteLink
@@ -66,7 +65,6 @@ namespace qi {
     std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
     std::map<unsigned int, std::string>     _servicesIndex;
     TransportServer                        *_ts;
-    std::vector<std::string>                _endpoints;
     qi::Session                            *_session;
     boost::mutex                            _mutexServices;
     boost::recursive_mutex                  _mutexOthers;
@@ -339,54 +337,6 @@ namespace qi {
     delete _p;
   }
 
-  bool ServerPrivate::setSuitableEndpoints(const qi::Url &url)
-  {
-    std::string protocol;
-    std::map<std::string, std::vector<std::string> > ifsMap;
-
-    _endpoints.clear();
-
-    if (url.host().compare("0.0.0.0") != 0) {
-      _endpoints.push_back(url.str());
-      return true;
-    }
-
-    ifsMap = qi::os::hostIPAddrs();
-    if (ifsMap.empty())
-    {
-      qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
-      return false;
-    }
-#ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
-    ifsMap["Loopback"].push_back("127.0.0.1");
-#endif
-
-    if (url.protocol() == "any")
-      protocol = "tcp";
-    else
-      protocol = url.protocol();
-    protocol += "://";
-
-    for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
-         interfaceIt != ifsMap.end();
-         ++interfaceIt)
-    {
-      for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
-           addressIt != (*interfaceIt).second.end();
-           ++addressIt)
-      {
-        std::stringstream ss;
-        ss << protocol;
-        ss << (*addressIt);
-        ss << ":";
-        ss << url.port();
-        qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
-        _endpoints.push_back(ss.str());
-       }
-    }
-    return true;
-  }
-
   bool Server::listen(qi::Session *session, const std::string &address)
   {
     qi::Url url(address);
@@ -398,14 +348,9 @@ namespace qi {
     }
     if (!_p->_ts->listen(session, url))
       return false;
-    if (!_p->setSuitableEndpoints(_p->_ts->listenUrl())) {
-      //TODO: cleanup...
-      return false;
-    }
     qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
     return true;
   }
-
 
   qi::Future<unsigned int> Server::registerService(const std::string &name,
                                                    qi::Object        *obj)
@@ -416,7 +361,7 @@ namespace qi {
       return qi::Future<unsigned int>();
     }
 
-    if (_p->_endpoints.empty()) {
+    if (_p->_ts->endpoints().empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
       return qi::Future<unsigned int>();
     }
@@ -424,7 +369,18 @@ namespace qi {
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId("TODO");
-    si.setEndpoints(_p->_endpoints);
+
+    {
+      std::vector<qi::Url> epsUrl = _p->_ts->endpoints();
+      std::vector<std::string> epsStr;
+      for (std::vector<qi::Url>::const_iterator epsUrlIt = epsUrl.begin();
+           epsUrlIt != epsUrl.end();
+           epsUrlIt++)
+      {
+        epsStr.push_back((*epsUrlIt).str());
+      }
+      si.setEndpoints(epsStr);
+    }
 
     {
       boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);

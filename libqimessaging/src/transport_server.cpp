@@ -147,6 +147,11 @@ namespace qi
     return _p->listenUrl;
   }
 
+  std::vector<qi::Url> TransportServer::endpoints() const
+  {
+    return _p->_endpoints;
+  }
+
   bool TransportServer::close() {
     return _p?_p->close():true;
   }

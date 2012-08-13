@@ -49,6 +49,7 @@ namespace qi {
     bool close();
 
     qi::Url listenUrl() const;
+    std::vector<qi::Url> endpoints() const;
 
     TransportServerPrivate *_p;
   };
