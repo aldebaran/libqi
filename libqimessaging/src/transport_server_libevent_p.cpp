@@ -67,9 +67,8 @@ namespace qi
     qi::TransportSocket *ts = new qi::TransportSocket();
     if (ts->_p)
       delete ts->_p;
-    TransportSocketLibEvent* tsle = new qi::TransportSocketLibEvent(ts, fd, base);
-    tsle->session = mainSession;
-    ts->_p = tsle;
+    ts->_p = new qi::TransportSocketLibEvent(ts, fd,
+      mainSession);
 
     std::vector<TransportServerInterface *> localCallbacks;
     {

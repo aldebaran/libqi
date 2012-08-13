@@ -27,7 +27,9 @@ namespace qi
   {
   public:
     TransportSocketLibEvent(TransportSocket *socket);
-    TransportSocketLibEvent(TransportSocket *socket, int fileDesc, void *data);
+    TransportSocketLibEvent(TransportSocket *socket, int fileDesc,
+      Session* session);
+    void setFD(int fd);
     virtual ~TransportSocketLibEvent();
 
     virtual bool connect(qi::Session *session,
@@ -58,7 +60,8 @@ namespace qi
     friend class TransportServerLibEventPrivate;
     friend void disconnect_dec(TransportSocketLibEvent* ptr);
     friend void send_dec(TransportSocketLibEvent*, Message*);
-
+    friend void connect_dec(TransportSocketLibEvent* ptr, Session* session, qi::Url url);
+    friend void setfd_dec(TransportSocketLibEvent* ptr, int fd);
     bool _send(qi::Message* msg);
     boost::recursive_mutex mutex;
     Session            *session;

@@ -268,15 +268,36 @@ namespace qi
   {
   }
 
-  TransportSocketLibEvent::TransportSocketLibEvent(TransportSocket *socket, int fileDesc, void *data)
+  TransportSocketLibEvent::TransportSocketLibEvent(TransportSocket *socket,
+    int fileDesc, Session *session)
     : TransportSocketPrivate(socket)
     , bev(NULL)
     , fd(fileDesc)
     , clean_event(0)
-    , inMethod(false)
+    , inMethod(0)
   {
-    struct event_base *base = static_cast<event_base *>(data);
-    bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
+    this->session = session;
+    setFD(fileDesc);
+  }
+
+  void setfd_dec(TransportSocketLibEvent* ptr, int fd)
+  {
+    --ptr->inMethod;
+    ptr->setFD(fd);
+  }
+
+  void TransportSocketLibEvent::setFD(int fd)
+  {
+    if (!session->_p->_networkThread->isInNetworkThread())
+    {
+      ++inMethod;
+      session->_p->_networkThread->asyncCall(1,
+        boost::bind(setfd_dec, this, fd));
+      return;
+    }
+    struct event_base *base = static_cast<event_base *>(
+      session->_p->_networkThread->getEventBase());
+    bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
     bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(bev, EV_READ|EV_WRITE);
@@ -368,10 +389,23 @@ namespace qi
     delete m;
   }
 
+  void connect_dec(TransportSocketLibEvent* ptr, Session* session, qi::Url url)
+  {
+    --ptr->inMethod;
+    ptr->connect(session, url);
+  }
+
   bool TransportSocketLibEvent::connect(qi::Session *session,
                                         const qi::Url &url)
   {
     this->session = session;
+    if (!session->_p->_networkThread->isInNetworkThread())
+    {
+      ++inMethod;
+      session->_p->_networkThread->asyncCall(1,
+        boost::bind(connect_dec, this, session, url));
+      return true;
+    }
     const std::string &address = url.host();
     struct evutil_addrinfo *ai = NULL;
     struct evutil_addrinfo  hint;
@@ -384,7 +418,7 @@ namespace qi
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host() << ":" << url.port();
     if (!isConnected())
     {
-      bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
+      bev = bufferevent_socket_new(session->_p->_networkThread->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
       bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
       bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
       bufferevent_enable(bev, EV_READ|EV_WRITE);
