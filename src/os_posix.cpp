@@ -225,15 +225,19 @@ namespace qi {
       struct ifaddrs *ifAddrStruct = 0;
       struct ifaddrs *ifa = 0;
       void *tmpAddrPtr = 0;
+      int ret = 0;
 
-      getifaddrs(&ifAddrStruct);
-
-      if (ifAddrStruct == 0)
+      ret = getifaddrs(&ifAddrStruct);
+      if (ret == -1) {
+        qiLogError("getifaddrs") << "getifaddrs failed: " << strerror(errno);
         return std::map<std::string, std::vector<std::string> >();
+      }
 
       for (ifa = ifAddrStruct; ifa != 0; ifa = ifa->ifa_next)
       {
-        if (ifa ->ifa_addr->sa_family == AF_INET && !ipv6Addr)
+        if (!ifa->ifa_addr)
+          continue;
+        if (ifa->ifa_addr->sa_family == AF_INET && !ipv6Addr)
         {
           tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
           char addressBuffer[INET_ADDRSTRLEN];
@@ -249,6 +253,7 @@ namespace qi {
           ifsMap[ifa->ifa_name].push_back(addressBuffer);
         }
       }
+      freeifaddrs(ifAddrStruct);
       return ifsMap;
      }
 #endif
