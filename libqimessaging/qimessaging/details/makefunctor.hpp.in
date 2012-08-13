@@ -14,7 +14,8 @@
 #define _QIMESSAGING_DETAILS_MAKEFUNCTOR_HPP_
 
 #include <qimessaging/functor.hpp>
-
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 namespace qi
 {
 #end raw
@@ -22,13 +23,16 @@ namespace qi
 
   template <${generate_typename_list($i, end = True)}typename C, typename R>
   Functor *makeFunctor(C *obj, R (C::*f) ($generate_param_list($i))) {
-    return new detail::MemberFunctor_$i<${generate_type_list($i, end = True)}C, R>(obj, f);
-  }
+    return new detail::BoostFunctor<R (${generate_full_type_list($i, end = False)})>
+      (boost::function<R (${generate_full_type_list($i, end = False)})>(
+      boost::bind(f, obj ${generate_placeholder_list($i, end = False, begin=True)})));
+ }
 
   template <${generate_typename_list($i, end = True)}typename R>
   Functor *makeFunctor(R (*f) ($generate_param_list($i))) {
-    return new detail::Functor_$i<${generate_type_list($i, end = True)}R>(f);
-  }
+    return new detail::BoostFunctor<R (${generate_full_type_list($i, end = False)})>
+      (boost::function<R (${generate_type_list($i, end = False)})>(f));
+ }
 
 #end for
 #raw

@@ -132,9 +132,6 @@ namespace qi
 
 #include <qimessaging/details/functorresult.hxx>
 #include <qimessaging/details/functor.hxx>
-#include <qimessaging/details/voidfunctor.hxx>
-#include <qimessaging/details/memberfunctor.hxx>
 #include <qimessaging/details/boostfunctor.hxx>
-#include <qimessaging/details/voidmemberfunctor.hxx>
 
 #endif  // _QIMESSAGING_FUNCTOR_HPP_

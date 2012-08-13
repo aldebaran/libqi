@@ -17,9 +17,26 @@
 # include <boost/function_types/function_type.hpp>
 # include <boost/function_types/result_type.hpp>
 # include <boost/function_types/parameter_types.hpp>
-
+# include <boost/type_traits/remove_const.hpp>
+# include <boost/type_traits/remove_reference.hpp>
 namespace qi {
 namespace detail {
+
+// Use a wrapper to avoid poluting a ',' operator on a user-visible class
+class _ODWrapper
+{
+public:
+  _ODWrapper(ODataStream& od)
+  : _od(od) {}
+  ODataStream& _od;
+  _ODWrapper& operator()() { return *this;}
+};
+
+template<typename T> void operator ,(_ODWrapper& odw, const T& val)
+{
+  odw._od << val;
+}
+
 
 template<int count> struct Invoker {};
 template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi::FunctorParameters &params);
@@ -40,7 +57,10 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
     dsi >> p0;
     return f(p0);
   }
@@ -51,8 +71,14 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
     dsi >> p0;
     dsi >> p1;
     return f(p0, p1);
@@ -64,9 +90,18 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -79,10 +114,22 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -96,11 +143,26 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type p4;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type
+      >::type>::type p4;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -115,12 +177,30 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type p4;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type p5;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type
+      >::type>::type p4;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type
+      >::type>::type p5;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -136,13 +216,34 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type p4;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type p5;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type p6;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type
+      >::type>::type p4;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type
+      >::type>::type p5;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type
+      >::type>::type p6;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -159,14 +260,38 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type p4;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type p5;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type p6;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<7> >::type p7;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type
+      >::type>::type p4;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type
+      >::type>::type p5;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type
+      >::type>::type p6;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<7> >::type
+      >::type>::type p7;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -184,15 +309,42 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type p0;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type p1;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type p2;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type p3;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type p4;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type p5;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type p6;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<7> >::type p7;
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<8> >::type p8;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
+      >::type>::type p0;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<1> >::type
+      >::type>::type p1;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<2> >::type
+      >::type>::type p2;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<3> >::type
+      >::type>::type p3;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<4> >::type
+      >::type>::type p4;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<5> >::type
+      >::type>::type p5;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<6> >::type
+      >::type>::type p6;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<7> >::type
+      >::type>::type p7;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<8> >::type
+      >::type>::type p8;
     dsi >> p0;
     dsi >> p1;
     dsi >> p2;
@@ -216,11 +368,12 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
      {
        typedef typename boost::function_types::result_type<T>::type ResultType;
        Invoker<boost::function_types::function_arity<T>::value> invoker;
-       ResultType res = invoker.template invoke<T, ResultType>(
-         const_cast<boost::function<T>&>(f), params);
        qi::Buffer     buf;
        qi::ODataStream dso(buf);
-       dso << res;
+       _ODWrapper odw = _ODWrapper(dso);
+       // Calls 'dso << invoker.invoke...', do nothing if T is void
+       odw() , (ResultType) invoker.invoke<T, ResultType>(
+         const_cast<boost::function<T>&>(f), params);
        if (sanityCheckAndReport(dso, result))
           result.setValue(buf);
      }

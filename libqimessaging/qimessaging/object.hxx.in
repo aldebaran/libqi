@@ -21,8 +21,42 @@ def generate_argpush_list(count):
 
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/functor.hpp>
+#include <qimessaging/details/boostfunctor.hxx>
 
 namespace qi {
+  namespace detail
+  {
+    // Wrapper class to prevent exposing the 'operator ,'.
+    template<typename T> class _PromiseWrap
+    {
+    public:
+      _PromiseWrap(Promise<T>& p)
+      : p(p) {}
+      /* Workaround to hide warning 'left side of comma has no effect' that
+      * gets triggered by user code.
+      */
+      _PromiseWrap<T>& operator()() { return *this;}
+      Promise<T>& p;
+    };
+    template<> class _PromiseWrap<void>
+    {
+    public:
+      _PromiseWrap(Promise<void>& p)
+      : p(p)
+      {
+        p.setValue(0);
+      }
+      /* Workaround to hide warning 'left side of comma has no effect' that
+      * gets triggered by user code.
+      */
+      _PromiseWrap<void>& operator()() { return *this;}
+      Promise<void>& p;
+    };
+    template<typename T, typename U> void operator , (_PromiseWrap<T>& p, const U& v)
+    {
+      p.p.setValue(v);
+    }
+  }
 #end raw
 #for $i in $count
 
@@ -37,10 +71,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    #for $j in range($i)
-    ds << p${j};
-    #end for
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -49,6 +79,42 @@ namespace qi {
    #end for
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (${generate_full_type_list($i)}) Func;
+        const detail::BoostFunctor<R (${generate_full_type_list($i)})>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (${generate_full_type_list($i)})>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (${generate_full_type_list($i)})>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(${generate_arg_list($i)});
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    #for $j in range($i)
+    ds << p${j};
+    #end for
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;

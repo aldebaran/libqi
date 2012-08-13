@@ -14,17 +14,25 @@ def generate_list(tpl, count, sep = ", ", begin = False, end = False):
     if begin and count:
         result += sep
     for i in range(count):
-        result += tpl % { 'count' : i }
-        if i != count - 1 or end:
-            result += sep
+      result += tpl % { 'count' : i, 'cplusone': i+1 }
+      if i != count - 1 or end:
+        result += sep
     return result
 
 def generate_callparam_list(count):
     t = "p%(count)d"
     return generate_list(t, count)
 
+def generate_placeholder_list(count, begin = False, end = False):
+    t = "_%(cplusone)d"
+    return generate_list(t, count, begin=begin, end=end)
+
 def generate_typename_list(count, begin = False, end = False):
     t = "typename P%(count)d"
+    return generate_list(t, count, begin=begin, end=end)
+
+def generate_full_type_list(count, begin = False, end = False):
+    t = "const P%(count)d &"
     return generate_list(t, count, begin=begin, end=end)
 
 def generate_type_list(count, begin = False, end = False):
@@ -54,11 +62,8 @@ if __name__ == "__main__":
     #print "cd", os.path.dirname(__file__)
     #os.chdir(os.path.dirname(__file__))
     numArgs = 10 # This results in n-1 arguments
-    generate_file("qimessaging/details/memberfunctor.hxx.in"    , "qimessaging/details/memberfunctor.hxx"    , numArgs)
     generate_file("qimessaging/details/boostfunctor.hxx.in"    , "qimessaging/details/boostfunctor.hxx"    , numArgs)
-    generate_file("qimessaging/details/voidmemberfunctor.hxx.in", "qimessaging/details/voidmemberfunctor.hxx", numArgs)
     generate_file("qimessaging/details/functor.hxx.in"          , "qimessaging/details/functor.hxx"          , numArgs)
-    generate_file("qimessaging/details/voidfunctor.hxx.in"      , "qimessaging/details/voidfunctor.hxx"      , numArgs)
     generate_file("qimessaging/details/makefunctor.hpp.in"      , "qimessaging/details/makefunctor.hpp"      , numArgs)
     generate_file("qimessaging/details/callfunctor.hpp.in"      , "qimessaging/details/callfunctor.hpp"      , numArgs)
     generate_file("qimessaging/object.hxx.in"                   , "qimessaging/object.hxx"                   , numArgs)

@@ -15,8 +15,42 @@
 
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/functor.hpp>
+#include <qimessaging/details/boostfunctor.hxx>
 
 namespace qi {
+  namespace detail
+  {
+    // Wrapper class to prevent exposing the 'operator ,'.
+    template<typename T> class _PromiseWrap
+    {
+    public:
+      _PromiseWrap(Promise<T>& p)
+      : p(p) {}
+      /* Workaround to hide warning 'left side of comma has no effect' that
+      * gets triggered by user code.
+      */
+      _PromiseWrap<T>& operator()() { return *this;}
+      Promise<T>& p;
+    };
+    template<> class _PromiseWrap<void>
+    {
+    public:
+      _PromiseWrap(Promise<void>& p)
+      : p(p)
+      {
+        p.setValue(0);
+      }
+      /* Workaround to hide warning 'left side of comma has no effect' that
+      * gets triggered by user code.
+      */
+      _PromiseWrap<void>& operator()() { return *this;}
+      Promise<void>& p;
+    };
+    template<typename T, typename U> void operator , (_PromiseWrap<T>& p, const U& v)
+    {
+      p.p.setValue(v);
+    }
+  }
 
   /// <summary> Calls a method </summary>
   /// <returns> The response </returns>
@@ -29,12 +63,44 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
     std::string sigret;
     std::string signature(method);
     signature += "::(";
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R () Func;
+        const detail::BoostFunctor<R ()>* bf =
+          dynamic_cast<const detail::BoostFunctor<R ()>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R ()>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f();
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -51,14 +117,46 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
     signatureFromObject::value(p0, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &) Func;
+        const detail::BoostFunctor<R (const P0 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -75,9 +173,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -85,6 +180,41 @@ namespace qi {
     signatureFromObject::value(p1, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -101,10 +231,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -113,6 +239,42 @@ namespace qi {
     signatureFromObject::value(p2, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -129,11 +291,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -143,6 +300,43 @@ namespace qi {
     signatureFromObject::value(p3, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -159,12 +353,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
-    ds << p4;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -175,6 +363,44 @@ namespace qi {
     signatureFromObject::value(p4, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3, p4);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -191,13 +417,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
-    ds << p4;
-    ds << p5;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -209,6 +428,45 @@ namespace qi {
     signatureFromObject::value(p5, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3, p4, p5);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -225,14 +483,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
-    ds << p4;
-    ds << p5;
-    ds << p6;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -245,6 +495,46 @@ namespace qi {
     signatureFromObject::value(p6, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3, p4, p5, p6);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -261,15 +551,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
-    ds << p4;
-    ds << p5;
-    ds << p6;
-    ds << p7;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -283,6 +564,47 @@ namespace qi {
     signatureFromObject::value(p7, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3, p4, p5, p6, p7);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
+    ds << p7;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;
@@ -299,16 +621,6 @@ namespace qi {
     qi::FunctorParameters             request(breq);
     qi::FunctorResult                 promise;
 
-    makeFunctorResult<R>(&promise, &future);
-    ds << p0;
-    ds << p1;
-    ds << p2;
-    ds << p3;
-    ds << p4;
-    ds << p5;
-    ds << p6;
-    ds << p7;
-    ds << p8;
     std::string sigret;
     std::string signature(method);
     signature += "::(";
@@ -323,6 +635,48 @@ namespace qi {
     signatureFromObject::value(p8, signature);
     signature += ")";
     signatureFromType<R>::value(sigret);
+    int methodId = metaObject().methodId(signature);
+    if (methodId >=0)
+    {
+      qi::MetaMethod* mm = metaObject().method(methodId);
+      if (mm->functor())
+      {
+        // Try to bypass serialization by fetching the boost::function.
+        // We validate that it is of the type we expect by using dynamic_cast.
+        // If it is not (paussible cause: missing/extra ref, int vs long)
+        // we fallback to serialization.
+        //FIXME Use a typedef once someone manages to type it.
+        // typedef R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &, const P8 &) Func;
+        const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &, const P8 &)>* bf =
+          dynamic_cast<const detail::BoostFunctor<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &, const P8 &)>*>(mm->functor());
+        if (bf)
+        {
+          const boost::function<R (const P0 &, const P1 &, const P2 &, const P3 &, const P4 &, const P5 &, const P6 &, const P7 &, const P8 &)>& f = bf->f;
+          Promise<R> res;
+          detail::_PromiseWrap<R> pw(res);
+          // Calls 'res.setValue(f(...))', do nothing for void.
+          pw() , f(p0, p1, p2, p3, p4, p5, p6, p7, p8);
+          assert(res.future().isReady());
+          return res.future();
+        }
+        else
+        {
+          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+            << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+        }
+      }
+    }
+    makeFunctorResult<R>(&promise, &future);
+    ds << p0;
+    ds << p1;
+    ds << p2;
+    ds << p3;
+    ds << p4;
+    ds << p5;
+    ds << p6;
+    ds << p7;
+    ds << p8;
+
     if (qi::detail::sanityCheckAndReport(ds, promise))
       xMetaCall(sigret, signature, request, promise);
     return future;

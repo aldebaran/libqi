@@ -19,9 +19,26 @@
 # include <boost/function_types/function_type.hpp>
 # include <boost/function_types/result_type.hpp>
 # include <boost/function_types/parameter_types.hpp>
-
+# include <boost/type_traits/remove_const.hpp>
+# include <boost/type_traits/remove_reference.hpp>
 namespace qi {
 namespace detail {
+
+// Use a wrapper to avoid poluting a ',' operator on a user-visible class
+class _ODWrapper
+{
+public:
+  _ODWrapper(ODataStream& od)
+  : _od(od) {}
+  ODataStream& _od;
+  _ODWrapper& operator()() { return *this;}
+};
+
+template<typename T> void operator ,(_ODWrapper& odw, const T& val)
+{
+  odw._od << val;
+}
+
 #end raw
 
 template<int count> struct Invoker {};
@@ -36,7 +53,10 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     qi::IDataStream dsi(params.buffer());
     #for $j in range($i)
-    typename boost::mpl::at<ArgsType, boost::mpl::int_<$j> >::type p$j;
+    typename boost::remove_const<
+      typename boost::remove_reference<
+        typename boost::mpl::at<ArgsType, boost::mpl::int_<$j> >::type
+      >::type>::type p$j;
     #end for
     #for $j in range($i)
     dsi >> p$j;
@@ -56,11 +76,12 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
      {
        typedef typename boost::function_types::result_type<T>::type ResultType;
        Invoker<boost::function_types::function_arity<T>::value> invoker;
-       ResultType res = invoker.invoke<T, ResultType>(
-         const_cast<boost::function<T>&>(f), params);
        qi::Buffer     buf;
        qi::ODataStream dso(buf);
-       dso << res;
+       _ODWrapper odw = _ODWrapper(dso);
+       // Calls 'dso << invoker.invoke...', do nothing if T is void
+       odw() , (ResultType) invoker.invoke<T, ResultType>(
+         const_cast<boost::function<T>&>(f), params);
        if (sanityCheckAndReport(dso, result))
           result.setValue(buf);
      }

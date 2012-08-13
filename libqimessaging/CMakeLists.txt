@@ -36,10 +36,8 @@ qi_add_probes(src/tp_qimessaging.in.h
               PROVIDER qi_probes_qimessaging
               INSTRUMENTED_FILES src/session.cpp)
 
-set(PUBLIC_HEADERS qimessaging/details/voidmemberfunctor.hxx
-                   qimessaging/details/voidfunctor.hxx
+set(PUBLIC_HEADERS
                    qimessaging/details/functorresult.hxx
-                   qimessaging/details/memberfunctor.hxx
                    qimessaging/details/boostfunctor.hxx
                    qimessaging/details/future.hxx
                    qimessaging/details/functor.hxx
