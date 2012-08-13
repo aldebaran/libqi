@@ -53,15 +53,17 @@ static void cmd_service(const command           &cmd,
         services[*it] = obj;
 
         qi::MetaObject &mobj = obj->metaObject();
-        for (qi::MetaObject::MethodMap::const_iterator it2 = mobj.methods().begin();
-             it2 != mobj.methods().end();
+        qi::MetaObject::MethodMap methods = mobj.methods();
+        for (qi::MetaObject::MethodMap::const_iterator it2 = methods.begin();
+             it2 != methods.end();
              ++it2)
         {
           std::cout << "    " << it2->second.sigreturn() << " " << it2->second.signature() << std::endl;
         }
         std::cout << "  events:" << std::endl;
-        for (qi::MetaObject::EventMap::const_iterator it2 = mobj.events().begin();
-          it2 != mobj.events().end();
+        qi::MetaObject::EventMap events = mobj.events();
+        for (qi::MetaObject::EventMap::const_iterator it2 = events.begin();
+          it2 != events.end();
           ++it2)
         {
           std::cout << "    " << it2->second.signature() << std::endl;
