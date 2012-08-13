@@ -54,7 +54,6 @@ protected:
   virtual void onSocketDisconnected(TransportSocket *socket);
 
 public:
-  std::vector<std::string>           _endpoints;
   Type                               _type;
   TransportServer                   *_transportServer;
   Session                            _session;
@@ -266,7 +265,17 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       std::vector<std::string> endpoints = result.endpoints();
       // Construct reply with serviceId
       // and gateway endpoint
-      result.setEndpoints(_endpoints);
+      {
+        std::vector<std::string> eps;
+        std::vector<qi::Url> tsEps = _transportServer->endpoints();
+        for (std::vector<qi::Url>::const_iterator tsEpsIt = tsEps.begin();
+             tsEpsIt != tsEps.end();
+             tsEpsIt++)
+        {
+          eps.push_back((*tsEpsIt).str());
+        }
+        result.setEndpoints(eps);
+      }
 
       // create new message for the client
       Message  ans;
@@ -521,7 +530,6 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 
 bool GatewayPrivate::listen(const Url &address)
 {
-  _endpoints.push_back(address.str());
   _transportServer = new qi::TransportServer(&_session, address);
   _transportServer->addCallbacks(this);
   return _transportServer->listen();
