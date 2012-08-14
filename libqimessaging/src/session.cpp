@@ -606,7 +606,7 @@ namespace qi {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
       _p->_futureService[msg.id()] = sr;
     }
-    if (!_p->_serviceSocket->send(msg));
+    if (!_p->_serviceSocket->send(msg))
     {
       sr->promise.setError("Send failed (socket disconnected?)");
       _p->_futureService.erase(msg.id());
