@@ -8,7 +8,6 @@
 
 #include <set>
 #include <qimessaging/object.hpp>
-#include "server.hpp"
 #include <qimessaging/functor.hpp>
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
