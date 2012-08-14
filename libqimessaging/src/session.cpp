@@ -31,8 +31,9 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    _networkThread->stop();
-    _networkThread->destroy(true);
+   // All these problems will be obsoleted by new ioContext system.
+   // _networkThread->stop();
+   // _networkThread->destroy(true);
   }
 
   Session::~Session()

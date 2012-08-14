@@ -277,6 +277,7 @@ namespace qi
     , inMethod(0)
   {
     this->session = session;
+    this->net = session->_p->_networkThread;
     setFD(fileDesc);
   }
 
@@ -288,15 +289,15 @@ namespace qi
 
   void TransportSocketLibEvent::setFD(int fd)
   {
-    if (!session->_p->_networkThread->isInNetworkThread())
+    if (!net->isInNetworkThread())
     {
       ++inMethod;
-      session->_p->_networkThread->asyncCall(1,
+      net->asyncCall(1,
         boost::bind(setfd_dec, this, fd));
       return;
     }
     struct event_base *base = static_cast<event_base *>(
-      session->_p->_networkThread->getEventBase());
+      net->getEventBase());
     bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(bev, ::qi::readcb, ::qi::writecb, ::qi::eventcb, this);
     bufferevent_setwatermark(bev, EV_WRITE, 0, MAX_LINE);
@@ -399,10 +400,11 @@ namespace qi
                                         const qi::Url &url)
   {
     this->session = session;
-    if (!session->_p->_networkThread->isInNetworkThread())
+    net = session->_p->_networkThread;
+    if (!net->isInNetworkThread())
     {
       ++inMethod;
-      session->_p->_networkThread->asyncCall(1,
+      net->asyncCall(1,
         boost::bind(connect_dec, this, session, url));
       return true;
     }
@@ -438,7 +440,7 @@ namespace qi
       if (!clean_event)
       {
         struct timeval clean_period = { 1, 0 };
-        clean_event = event_new(session->_p->_networkThread->getEventBase(), -1, EV_PERSIST, cleancb, this);
+        clean_event = event_new(net->getEventBase(), -1, EV_PERSIST, cleancb, this);
         event_add(clean_event, &clean_period);
       }
 
@@ -460,9 +462,9 @@ namespace qi
   void TransportSocketLibEvent::destroy()
   {
     // Queue request if not in network thread.
-    if (!session->_p->_networkThread->isInNetworkThread())
+    if (!net->isInNetworkThread())
     {
-      session->_p->_networkThread->asyncCall(1,
+      net->asyncCall(1,
         boost::bind(&TransportSocketLibEvent::destroy, this));
     }
     else
@@ -478,7 +480,7 @@ namespace qi
       delay = delay || *inMethod;
       if (delay)
       {
-        session->_p->_networkThread->asyncCall(1,
+        net->asyncCall(1,
           boost::bind(&TransportSocketLibEvent::destroy, this));
       }
       else
@@ -497,10 +499,10 @@ namespace qi
   void TransportSocketLibEvent::disconnect()
   {
     boost::recursive_mutex::scoped_lock sl(mutex);
-    if (!session->_p->_networkThread->isInNetworkThread())
+    if (!net->isInNetworkThread())
     {
       ++inMethod;
-      session->_p->_networkThread->asyncCall(1,
+      net->asyncCall(1,
         boost::bind(disconnect_dec, this));
       return;
     }
@@ -550,10 +552,10 @@ namespace qi
     }
     qi::Message *m = new qi::Message();
     *m = msg;
-    if (!session->_p->_networkThread->isInNetworkThread())
+    if (!net->isInNetworkThread())
     {
       ++inMethod;
-      session->_p->_networkThread->asyncCall(1,
+      net->asyncCall(1,
         boost::bind(&send_dec, this, m));
       return true;
     }

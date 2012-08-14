@@ -22,6 +22,7 @@
 namespace qi
 {
   class Session;
+  class NetworkThread;
   class TransportSocketPrivate;
   class TransportSocketLibEvent : public TransportSocketPrivate
   {
@@ -69,6 +70,7 @@ namespace qi
     int                 fd;
     struct event       *clean_event;
     qi::atomic<long>   inMethod; // used for reentrency and async method tracking
+    qi::NetworkThread* net;
   };
 
 }
