@@ -448,32 +448,6 @@ namespace qi {
     return connect(signal, MetaEvent::Subscriber(target, slot));
   }
 
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta) {
-    stream << meta._p->_signature;
-    stream << meta._p->_sigret;
-    stream << meta._p->_uid;
-    return stream;
-  }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta) {
-    stream >> meta._p->_signature;
-    stream >> meta._p->_sigret;
-    stream >> meta._p->_uid;
-    return stream;
-  }
-
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
-    stream << meta._p->_signature;
-    stream << meta._p->_uid;
-    return stream;
-  }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta) {
-    stream >> meta._p->_signature;
-    stream >> meta._p->_uid;
-    return stream;
-  }
-
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
     stream << meta._p->_methods;
     stream << meta._p->_events;

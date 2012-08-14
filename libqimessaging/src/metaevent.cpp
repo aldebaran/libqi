@@ -74,4 +74,16 @@ namespace qi {
     if (target)
       target->metaEmit(method, args);
   }
+
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
+    stream << meta._p->_signature;
+    stream << meta._p->_uid;
+    return stream;
+  }
+
+  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta) {
+    stream >> meta._p->_signature;
+    stream >> meta._p->_uid;
+    return stream;
+  }
 };

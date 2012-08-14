@@ -55,4 +55,18 @@ namespace qi {
     return _p->uid();
   }
 
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta) {
+    stream << meta._p->_signature;
+    stream << meta._p->_sigret;
+    stream << meta._p->_uid;
+    return stream;
+  }
+
+  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta) {
+    stream >> meta._p->_signature;
+    stream >> meta._p->_sigret;
+    stream >> meta._p->_uid;
+    return stream;
+  }
+
 };
