@@ -574,7 +574,11 @@ namespace qi {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
       _p->_futureServices[msg.id()] = promise;
     }
-    _p->_serviceSocket->send(msg);
+    if (!_p->_serviceSocket->send(msg))
+    {
+      promise.setError("Send failed (socket disconnected?)");
+      _p->_futureService.erase(msg.id());
+    }
     return promise.future();
   }
 
@@ -602,7 +606,11 @@ namespace qi {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
       _p->_futureService[msg.id()] = sr;
     }
-    _p->_serviceSocket->send(msg);
+    if (!_p->_serviceSocket->send(msg));
+    {
+      sr->promise.setError("Send failed (socket disconnected?)");
+      _p->_futureService.erase(msg.id());
+    }
     return sr->promise.future();
   }
 
