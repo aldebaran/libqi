@@ -4,6 +4,7 @@
  * found in the COPYING file.
  */
 
+#include <sys/syscall.h>
 #include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
@@ -37,6 +38,10 @@ namespace qi
     int getpid()
     {
       return ::getpid();
+    }
+
+    int gettid() {
+      return syscall(__NR_gettid);
     }
 
     int waitpid(int pid, int* status)
