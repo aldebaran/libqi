@@ -10,6 +10,7 @@
 #define _SRC_SESSION_P_HPP_
 
 #include <map>
+#include <set>
 #include <vector>
 #include <boost/thread.hpp>
 #include <qimessaging/transport_socket.hpp>
