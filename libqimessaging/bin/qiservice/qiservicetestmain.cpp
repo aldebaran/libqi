@@ -13,9 +13,6 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/object.hpp>
-
-//#include "qiservicetest.hpp"
 
 std::string reply(const std::string &msg) {
   std::cout << "Message recv:" << msg << std::endl;
