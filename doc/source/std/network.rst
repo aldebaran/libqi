@@ -1,7 +1,137 @@
 .. _std-binary-message:
 
 Network Binary Protocol
-=======================
+***********************
+
+
+Introduction
+============
+
+
+Glossary
+========
+
+* Message: a qiMessaging frame.
+* Object: an endpoint exposing methods and events.
+* Service: an object registered to the Service Directory.
+* Service Directory: a directory of all registered services.
+* Client: anyone connecting to a Service.
+
+Messages
+========
+
+Message header
+--------------
+
++--------------+----------------+---------------------------------------------------------------------+
+| Field        | Size (in bits) | Description                                                         |
++==============+================+=====================================================================+
+| magic        | 32             | qiMessaging message magic number (0x42dead42)                       |
++--------------+----------------+---------------------------------------------------------------------+
+| id           | 32             | id of the message                                                   |
++--------------+----------------+---------------------------------------------------------------------+
+| size         | 32             | size of the payload                                                 |
++--------------+----------------+---------------------------------------------------------------------+
+| version      | 16             | protocol version                                                    |
++--------------+----------------+---------------------------------------------------------------------+
+| type         | 16             | type of the message                                                 |
++--------------+----------------+---------------------------------------------------------------------+
+| service      | 32             | id of the service                                                   |
++--------------+----------------+---------------------------------------------------------------------+
+| object       | 32             | id of the object                                                    |
++--------------+----------------+---------------------------------------------------------------------+
+| action       | 32             | id of the function or event                                         |
++--------------+----------------+---------------------------------------------------------------------+
+| payload      | ...            | ...                                                                 |
++--------------+----------------+---------------------------------------------------------------------+
+
+Magic
+^^^^^
+The magic (0x42dead42) is used to verifiy the received buffer is a qiMessaging message.
+
+Id
+^^
+Each message has an id. A reply or an error will have the same id as the corresponding call.
+
+Size
+^^^^
+This field contains the size of the payload.
+
+Version
+^^^^^^^
+The version of the protocol.
+
+Type
+^^^^
+This is the type of the message, as defined in the table below.
+
+Defined types
+"""""""""""""
+
++-------+----+--------------------------------------------------+
+| Type  | Id | Description                                      |
++=======+====+==================================================+
+| Call  | 1  | A function call                                  |
++-------+----+--------------------------------------------------+
+| Reply | 2  | A reply to a call                                |
++-------+----+--------------------------------------------------+
+| Event | 3  | An event raised by a service                     |
++-------+----+--------------------------------------------------+
+| Error | 4  | An error                                         |
++-------+----+--------------------------------------------------+
+| Invoke| 5  | Invoke an event slot                             |
++-------+----+--------------------------------------------------+
+
+Service
+^^^^^^^
+
+The service id, as given by the Service Directory.
+
+Defined services
+""""""""""""""""
+
++-------------------+----+--------------------------------------+
+| Service           | Id | Description                          |
++===================+====+======================================+
+| Server            | 0  | Used for control frames              |
++-------------------+----+--------------------------------------+
+| Service directory | 1  | Directory of all registered services |
++-------------------+----+--------------------------------------+
+
+Object
+^^^^^^
+
+This field refers to objects that are created internally to the module.
+
+Defined services
+""""""""""""""""
+
++-------------------+----+-------------------------------------+
+| Object            | Id | Description                         |
++===================+====+=====================================+
+| Default           | 0  | Default object of the service       |
++-------------------+----+-------------------------------------+
+
+Action
+^^^^^^
+
+Function that should be performed, or event that is raised.
+
+
+Events
+======
+
+There are two different cases.
+
+An event is emitted by the service itself, it is broadcast to all registered clients.
+
+A slot can be triggered by the client, this is equivalent to a function call which
+return value we don't wait for.
+
+
+Serialization
+=============
+
 
 Basic Types
 -----------
@@ -56,56 +186,3 @@ STL Types
 |std::map<K, V> | 4 + n * (size(K) + size(V))    | - uint32_t - length                                            |
 |               |                                | - [ K0 ] [V0] .. [ Klength ] [ Vlength ]                       |
 +---------------+--------------------------------+----------------------------------------------------------------+
-
-
-Network Message
----------------
-
-There are 3 messages types:
-
-- request
-- response
-- event
-
-
-An id is used to identify messages.
-
-Messages have the following structure:
-
-  [uint32_t type + id] [ uint32_t size] [ message ]
-
-type could be:
-
- 0. req
- 1. rep
- 2. event
-
-The id is generated for the req and event message type, for the rep message type the id is the same as the req it answer to.
-
-
-Req Message
------------
-
-Structure:
-
-  [ 0x0 id ] [ size ] [ message ]
-
-A request is send to a service which could (or not) answer to that request. The response will have the same id as the answer.
-The id is generated by the client which ask for an answer.
-
-Rep Message
------------
-
-Structure:
-
-  [ 0x1 id ] [ size ] [ message ]
-
-
-
-Event Message
--------------
-
-Structure:
-
-  [ 0x2 id ] [ size ] [ message ]
-
