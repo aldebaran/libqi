@@ -21,11 +21,25 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 
-static int gLoopCount = 10000;
+static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
 static bool allInOne = false; // True if sd/server/client are in this process
 static std::string sdPort;
 
+int run_client(qi::Object* obj);
+
+std::string reply(const std::string &msg)
+{
+  return msg;
+}
+
+int main_local()
+{
+  qi::Object        obj;
+  obj.advertiseMethod("reply", &reply);
+  run_client(&obj);
+  return 0;
+}
 
 int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 {
@@ -34,7 +48,7 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
   if (port.empty())
     port = allInOne?sdPort:std::string("5555");
 
-  qi::perf::DataPerfTimer dp ("Transport synchronous call");
+
   qi::Session session;
   session.connect("tcp://"+host+":"+port);
   session.waitForConnected();
@@ -45,7 +59,12 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
     std::cerr << "cant get serviceTest" << std::endl;
     return -1;
   }
+  return run_client(obj);
+}
 
+int run_client(qi::Object* obj)
+{
+  qi::perf::DataPerfTimer dp ("Transport synchronous call");
   for (int i = 0; i < 12; ++i)
   {
     char character = 'c';
@@ -119,11 +138,6 @@ int main_gateway(std::string host, std::string port)
   return 0;
 }
 
-std::string reply(const std::string &msg)
-{
-  return msg;
-}
-
 int main_server(std::string host, std::string port)
 {
   if (port.empty())
@@ -190,6 +204,10 @@ int main(int argc, char **argv)
   else if (argc > 1 && !strcmp(argv[1], "--gateway"))
   {
     return main_gateway(host, port);
+  }
+  else if (argc > 1 && !strcmp(argv[1], "--local"))
+  {
+    return main_local();
   }
   else
   {
