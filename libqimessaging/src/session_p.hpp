@@ -17,12 +17,62 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/session.hpp>
+#include "src/server_functor_result_future_p.hpp"
 
 namespace qi {
 
   class NetworkThread;
   class Object;
-  class ServerPrivate;
+
+  class ServerPrivate : public TransportServerInterface,
+                        public TransportSocketInterface,
+                        public FutureInterface<unsigned int>
+  {
+  public:
+
+    ServerPrivate();
+    virtual ~ServerPrivate();
+    virtual void newConnection(TransportServer* server, TransportSocket *client);
+    virtual void onSocketReadyRead(TransportSocket *client, int id);
+    virtual void onSocketDisconnected(TransportSocket *client);
+    virtual void onFutureFinished(const unsigned int &future,
+                                  void *data);
+    virtual void onFutureFailed(const std::string &error, void *data);
+  public:
+    // (service, linkId)
+    struct RemoteLink
+    {
+      RemoteLink()
+        : localLinkId(0)
+        , event(0)
+      {}
+      RemoteLink(unsigned int localLinkId, unsigned int event)
+      : localLinkId(localLinkId)
+      , event(event) {}
+      unsigned int localLinkId;
+      unsigned int event;
+    };
+    // remote link id -> local link id
+    typedef std::map<unsigned int, RemoteLink> ServiceLinks;
+    // service id -> links
+    typedef std::map<unsigned int, ServiceLinks> PerServiceLinks;
+    // socket -> all links
+    // Keep track of links setup by clients to disconnect when the client exits.
+    typedef std::map<TransportSocket*, PerServiceLinks > Links;
+    Links                                   _links;
+
+    std::set<TransportSocket*>              _clients;
+    std::map<unsigned int, qi::Object*>     _services;
+    std::map<std::string, qi::Object*>      _servicesByName;
+    std::map<std::string, qi::ServiceInfo>  _servicesInfo;
+    std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
+    std::map<unsigned int, std::string>     _servicesIndex;
+    TransportServer                        *_ts;
+    qi::Session                            *_session;
+    boost::mutex                            _mutexServices;
+    boost::recursive_mutex                  _mutexOthers;
+    bool                                    _dying;
+  };
 
   /// <summary> Used to advertise named services. Advertised Services are
   /// registered with the service directory so that clients can find them. The exact
