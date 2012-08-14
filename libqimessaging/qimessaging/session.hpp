@@ -61,7 +61,6 @@ namespace qi {
 
     bool connect(const qi::Url &serviceDirectoryURL);
     bool disconnect();
-    bool join();
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
 

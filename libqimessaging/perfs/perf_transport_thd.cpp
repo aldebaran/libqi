@@ -24,6 +24,7 @@
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
+static bool clientDone = false;
 
 int client_calls(qi::Session *session, qi::Object *obj)
 {
@@ -112,7 +113,7 @@ int main_client(bool shared)
   {
     thd[i].join();
   }
-
+  clientDone = true;
   return 0;
 }
 
@@ -145,7 +146,8 @@ int main_gateway()
   gate.attachToServiceDirectory("tcp://127.0.0.1:5555");
   gate.listen("tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
-  gate.join();
+  while (!clientDone)
+    qi::os::sleep(60);
 
   return 0;
 }
@@ -172,10 +174,8 @@ int main_server()
   session.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
-  session.join();
-
-  session.close();
-  session.disconnect();
+  while (!clientDone)
+    qi::os::sleep(60);
 
   return 0;
 }

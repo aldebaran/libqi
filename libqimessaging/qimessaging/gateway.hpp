@@ -26,7 +26,6 @@ namespace qi
 
     bool attachToServiceDirectory(const qi::Url &address);
     bool listen(const qi::Url &address);
-    void join();
 
   private:
     GatewayPrivate *_p;

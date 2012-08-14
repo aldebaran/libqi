@@ -13,7 +13,6 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/remoteobject_p.hpp"
-#include "src/network_thread.hpp"
 #include "src/session_p.hpp"
 
 namespace qi {
@@ -49,7 +48,6 @@ namespace qi {
 
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _serviceSocket(new qi::TransportSocket()),
-      _networkThread(new qi::NetworkThread()),
       _self(session),
       _callbacks(0)
     , _ts(new TransportServer())
@@ -60,9 +58,6 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-   // All these problems will be obsoleted by new ioContext system.
-   // _networkThread->stop();
-   // _networkThread->destroy(true);
     _dying = true;
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     delete _ts;
@@ -486,7 +481,7 @@ namespace qi {
             _futureConnect[ts] = sr;
             _futureService.erase(id);
           }
-          if (!ts->connect(_self, url))
+          if (!ts->connect(url))
           {
             // Synchronous failure, do nothing, try next
             delete ts;
@@ -745,7 +740,7 @@ namespace qi {
 
   bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _p->_serviceSocket->connect(_p->_self, serviceDirectoryURL);
+    return _p->_serviceSocket->connect(serviceDirectoryURL);
   }
 
   bool Session::disconnect()
@@ -815,12 +810,6 @@ namespace qi {
       _p->_futureService.erase(msg.id());
     }
     return sr->promise.future();
-  }
-
-  bool Session::join()
-  {
-    _p->_networkThread->join();
-    return true;
   }
 
   void Session::addCallbacks(SessionInterface *delegate)
@@ -916,7 +905,7 @@ namespace qi {
       qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
       return false;
     }
-    if (!_p->_ts->listen(this, url))
+    if (!_p->_ts->listen(url))
       return false;
     qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
     return true;

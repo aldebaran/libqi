@@ -16,11 +16,13 @@
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
+# include <qimessaging/event_loop.hpp>
 
 namespace qi {
 
   class TransportSocket;
   class TransportServer;
+
   class QIMESSAGING_API TransportServerInterface {
   public:
     virtual ~TransportServerInterface() = 0;
@@ -37,15 +39,16 @@ namespace qi {
 
   public:
     TransportServer();
-    TransportServer(qi::Session *session, const qi::Url &url);
+    TransportServer(const qi::Url &url,
+                    qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
     virtual ~TransportServer();
 
     void addCallbacks(TransportServerInterface *delegate);
     void removeCallbacks(TransportServerInterface *delegate);
 
     bool listen();
-    bool listen(qi::Session *session, const qi::Url &url);
-    void join();
+    bool listen(const qi::Url &url,
+                qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
     bool close();
 
     qi::Url listenUrl() const;

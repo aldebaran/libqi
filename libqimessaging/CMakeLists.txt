@@ -45,6 +45,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/makefunctor.hpp
                    qimessaging/value.hpp
                    qimessaging/url.hpp
+                   qimessaging/event_loop.hpp
                    qimessaging/file.hpp
                    qimessaging/object.hpp
                    qimessaging/session.hpp
@@ -75,10 +76,10 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/buffer.cpp
                                    src/bufferreader.cpp
                                    src/datastream.cpp
+                                   src/event_loop.cpp
+                                   src/event_loop_p.hpp
                                    src/gateway.cpp
                                    src/message.cpp
-                                   src/network_thread.cpp
-                                   src/network_thread.hpp
                                    src/metamethod.cpp
                                    src/metamethod_p.cpp
                                    src/metamethod_p.hpp

@@ -108,7 +108,7 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(cli
       ts->addCallbacks(this);
       _futureConnect[ts] = sr;
       _futureService.remove(id);
-      ts->connect(_session, url);
+      ts->connect(url);
       return;
     }
     _futureService.remove(id);
@@ -148,7 +148,7 @@ QiSession::~QiSession()
 
 bool QiSession::connect(const QString &masterAddress)
 {
-  return _p->_serviceSocket->connect(_p->_session, masterAddress.toUtf8().constData());
+  return _p->_serviceSocket->connect(masterAddress.toUtf8().constData());
 }
 
 bool QiSession::disconnect()

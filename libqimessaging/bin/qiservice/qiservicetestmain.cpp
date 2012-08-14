@@ -10,6 +10,7 @@
 
 #include <boost/program_options.hpp>
 
+#include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
@@ -23,6 +24,7 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
+  qi::Application app(argc, argv);
   // declare the program options
   po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
   desc.add_options()
@@ -96,7 +98,7 @@ int main(int argc, char *argv[])
         qiLogError("qimessaging.ServiceTest") << "registration failed..." << std::endl;
         exit(1);
       }
-      session.join();
+      app.run();
 
       session.unregisterService(id);
       session.close();

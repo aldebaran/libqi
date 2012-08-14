@@ -9,6 +9,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+#include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/gateway.hpp>
 
@@ -16,6 +17,7 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
+  qi::Application app(argc, argv);
   // declare the program options
   po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
   desc.add_options()
@@ -61,7 +63,7 @@ int main(int argc, char *argv[])
         return 1;
       }
       std::cout << "Local gateway ready: " << gatewayAddress << std::endl;
-      gateway.join();
+      app.run();
     }
     else if (gatewayType == "remote")
     {
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
         return 1;
       }
       std::cout << "Remote gateway ready: " << gatewayAddress << std::endl;
-      gateway.join();
+      app.run();
     }
     else if (gatewayType == "reverse")
     {
@@ -88,7 +90,7 @@ int main(int argc, char *argv[])
         qi::Url url(line);
         gateway.connect(url);
       }
-      gateway.join();
+      app.run();
     }
     else
     {

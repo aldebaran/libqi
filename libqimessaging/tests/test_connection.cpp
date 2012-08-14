@@ -15,6 +15,7 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
+#include <qi/application.hpp>
 #include <qi/os.hpp>
 
 static std::string reply(const std::string &msg)
@@ -86,8 +87,8 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
 }
 
 int main(int argc, char **argv) {
+  qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-
   qi::ServiceDirectory sd;
 
   unsigned int sdPort = qi::os::findAvailablePort(5555);

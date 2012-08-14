@@ -14,7 +14,6 @@
 #include <qi/log.hpp>
 
 #include "src/transport_socket_libevent_p.hpp"
-#include "src/network_thread.hpp"
 #include "src/session_p.hpp"
 
 namespace qi
@@ -36,7 +35,6 @@ public:
   bool attachToServiceDirectory(const Url &address);
   bool listen(const Url &address);
   bool connect(const Url &address);
-  void join();
   void addCallbacks(TransportServerInterface *tsrvi,
                     TransportSocketInterface *tscki);
 
@@ -194,7 +192,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
         {
           sdSocket->addCallbacks(*it);
         }
-        sdSocket->connect(&_session, _attachAddress);
+        sdSocket->connect(_attachAddress);
       }
       return;
     }
@@ -307,7 +305,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
         qi::Url url(endpoints[0]);
         // Connect to the service
         TransportSocket *service = new TransportSocket();
-        service->connect(&_session, url);
+        service->connect(url);
 
         for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
              it != _transportSocketCallbacks.end();
@@ -515,7 +513,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
     sdSocket->addCallbacks(*it);
   }
 
-  sdSocket->connect(&_session, address);
+  sdSocket->connect(address);
   sdSocket->waitForConnected();
 
   if (!sdSocket->isConnected())
@@ -530,7 +528,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 
 bool GatewayPrivate::listen(const Url &address)
 {
-  _transportServer = new qi::TransportServer(&_session, address);
+  _transportServer = new qi::TransportServer(address);
   _transportServer->addCallbacks(this);
   return _transportServer->listen();
 }
@@ -546,15 +544,10 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
   {
     ts->addCallbacks(*it);
   }
-  ts->connect(&_session, connectURL);
+  ts->connect(connectURL);
   _remoteGateways.push_back(ts);
 
   return true;
-}
-
-void GatewayPrivate::join()
-{
-  _session.join();
 }
 
 void GatewayPrivate::addCallbacks(qi::TransportServerInterface *tsrvi,
@@ -586,11 +579,6 @@ bool Gateway::listen(const qi::Url &address)
   return _p->listen(address);
 }
 
-void Gateway::join()
-{
-  _p->join();
-}
-
 /* RemoteGateway bindings */
 RemoteGateway::RemoteGateway()
   : _p(new GatewayPrivate())
@@ -606,11 +594,6 @@ RemoteGateway::~RemoteGateway()
 bool RemoteGateway::listen(const qi::Url &address)
 {
   return _p->listen(address);
-}
-
-void RemoteGateway::join()
-{
-  _p->join();
 }
 
 void RemoteGateway::addCallbacks(TransportServerInterface *tsrvi,
@@ -634,11 +617,6 @@ ReverseGateway::~ReverseGateway()
 bool ReverseGateway::attachToServiceDirectory(const qi::Url &address)
 {
   return _p->attachToServiceDirectory(address);
-}
-
-void ReverseGateway::join()
-{
-  _p->join();
 }
 
 bool ReverseGateway::connect(const qi::Url &address)

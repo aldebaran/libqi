@@ -16,25 +16,25 @@
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/transport_socket.hpp>
+# include <qimessaging/event_loop.hpp>
 
 # include "src/transport_socket_p.hpp"
 
 namespace qi
 {
   class Session;
-  class NetworkThread;
   class TransportSocketPrivate;
+
   class TransportSocketLibEvent : public TransportSocketPrivate
   {
   public:
     TransportSocketLibEvent(TransportSocket *socket);
     TransportSocketLibEvent(TransportSocket *socket, int fileDesc,
-      Session* session);
+      EventLoop* ctx = getDefaultNetworkEventLoop());
     void setFD(int fd);
     virtual ~TransportSocketLibEvent();
 
-    virtual bool connect(qi::Session *session,
-                         const qi::Url &url);
+    virtual bool connect(const qi::Url &url, EventLoop* ctx);
     virtual void disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void destroy();
@@ -61,16 +61,15 @@ namespace qi
     friend class TransportServerLibEventPrivate;
     friend void disconnect_dec(TransportSocketLibEvent* ptr);
     friend void send_dec(TransportSocketLibEvent*, Message*);
-    friend void connect_dec(TransportSocketLibEvent* ptr, Session* session, qi::Url url);
+    friend void connect_dec(TransportSocketLibEvent* ptr, qi::Url url, EventLoop*);
     friend void setfd_dec(TransportSocketLibEvent* ptr, int fd);
     bool _send(qi::Message* msg);
     boost::recursive_mutex mutex;
-    Session            *session;
     struct bufferevent *bev;
     int                 fd;
     struct event       *clean_event;
     qi::atomic<long>   inMethod; // used for reentrency and async method tracking
-    qi::NetworkThread* net;
+    EventLoop* context;
   };
 
 }

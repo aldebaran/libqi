@@ -17,7 +17,6 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
-#include "src/network_thread.hpp"
 #include "src/transport_server_p.hpp"
 #include "src/server_functor_result_future_p.hpp"
 #include "src/session_p.hpp"
@@ -355,7 +354,7 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
   eps.push_back(address.str());
   si.setEndpoints(eps);
-  _p->ts = new qi::TransportServer(_p->session, address);
+  _p->ts = new qi::TransportServer(address);
   _p->ts->addCallbacks(_p);
 
   if (_p->ts->listen())
@@ -378,7 +377,6 @@ bool ServiceDirectory::close() {
 
 void ServiceDirectory::join()
 {
-  _p->session->_p->_networkThread->join();
 }
 
 qi::Url ServiceDirectory::listenUrl() const {

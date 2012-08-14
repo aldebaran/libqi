@@ -25,7 +25,7 @@ static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
 static bool allInOne = false; // True if sd/server/client are in this process
 static std::string sdPort;
-
+static bool clientDone = false;
 int run_client(qi::Object* obj);
 
 std::string reply(const std::string &msg)
@@ -115,6 +115,7 @@ void start_client(int count, std::string host, std::string port)
 
   for (int i = 0; i < count; ++i)
     thd[i].join();
+  clientDone = true;
 }
 
 
@@ -133,7 +134,8 @@ int main_gateway(std::string host, std::string port)
   gate.attachToServiceDirectory("tcp://"+host+":"+port);
   gate.listen("tcp://0.0.0.0:12345");
   std::cout << "ready." << std::endl;
-  gate.join();
+  while (!clientDone)
+    qi::os::sleep(60);
 
   return 0;
 }
@@ -162,11 +164,8 @@ int main_server(std::string host, std::string port)
   session.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
-  session.join();
-
-  session.close();
-  session.disconnect();
-
+  while (!clientDone)
+    qi::os::sleep(60);
   return 0;
 }
 

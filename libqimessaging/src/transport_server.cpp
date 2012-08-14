@@ -33,9 +33,6 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/transport_socket.hpp>
-#include <qimessaging/session.hpp>
-#include "src/session_p.hpp"
-#include "src/network_thread.hpp"
 #include "src/transport_server_libevent_p.hpp"
 #include "src/transport_server_dummy_p.hpp"
 #include "src/transport_socket_libevent_p.hpp"
@@ -44,14 +41,16 @@ namespace qi
 {
 
 
-  static TransportServerPrivate * newTSP(TransportServer* self, qi::Session *session, const qi::Url &url) {
+  static TransportServerPrivate * newTSP(TransportServer* self,
+    const qi::Url &url,
+    qi::EventLoop* ctx) {
     if (url.protocol() == "tcp") {
-      return new TransportServerLibEventPrivate(self, session, url);
+      return new TransportServerLibEventPrivate(self, url, ctx);
     }
 
     qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
                                   << " TransportServer create with dummy implementation.";
-    return new TransportServerDummyPrivate(self, session, url);
+    return new TransportServerDummyPrivate(self, url, ctx);
   }
 
   TransportServerInterface::~TransportServerInterface()
@@ -59,14 +58,15 @@ namespace qi
   }
 
   TransportServer::TransportServer()
-    : _p(new TransportServerDummyPrivate(this, NULL, ""))
+    : _p(new TransportServerDummyPrivate(this, "", 0))
   {
   }
 
 
-  TransportServer::TransportServer(qi::Session *session,
-                                   const qi::Url &url)
-    : _p(newTSP(this, session, url))
+  TransportServer::TransportServer(const qi::Url &url,
+    qi::EventLoop* ctx
+    )
+    : _p(newTSP(this, url, ctx))
   {
   }
 
@@ -78,12 +78,11 @@ namespace qi
     _p = 0;
   }
 
-  bool TransportServer::listen(qi::Session *session,
-                              const qi::Url &url)
+  bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
     TransportServerPrivate *save = _p;
 
-    _p = newTSP(this, session, url);
+    _p = newTSP(this, url, ctx);
     _p->tsi = save->tsi;
 
     delete save;
@@ -93,12 +92,6 @@ namespace qi
   bool TransportServer::listen()
   {
     return _p->listen();
-  }
-
-  void TransportServer::join()
-  {
-    if (_p)
-      _p->join();
   }
 
   void TransportServer::addCallbacks(TransportServerInterface *delegate)

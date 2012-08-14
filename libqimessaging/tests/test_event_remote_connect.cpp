@@ -8,6 +8,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
@@ -241,5 +242,12 @@ TEST_F(TestObject, Connect17)
   EXPECT_EQ(12, payload2->future().value());
 }
 
-
-
+int main(int argc, char *argv[])
+{
+#if defined(__APPLE__) || defined(__linux__)
+  setsid();
+#endif
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

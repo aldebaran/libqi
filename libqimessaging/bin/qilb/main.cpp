@@ -9,6 +9,7 @@
 #include <string>
 #include <ctime>
 
+#include <qi/application.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/gateway.hpp>
@@ -92,7 +93,7 @@ class LoadBalancer: public qi::TransportServerInterface,
 public:
   LoadBalancer(const qi::Url &listenURL)
     : _listenURL(listenURL)
-    , _server(&_session, _listenURL)
+    , _server(_listenURL)
   {
     qiLogInfo("lb") << "Will listen on " << _listenURL.str();
 
@@ -184,11 +185,6 @@ public:
   {
   }
 
-  void join()
-  {
-    _server.join();
-  }
-
   RemoteConnection *client(qi::RemoteGateway *remoteGateway)
   {
     return _clients[remoteGateway];
@@ -204,6 +200,7 @@ private:
 
 int main(int argc, char *argv[])
 {
+  qi::Application app(argc, argv);
   if (argc != 2)
   {
     std::cerr << "Usage: " << argv[0] << " ADDRESS" << std::endl;
@@ -213,7 +210,7 @@ int main(int argc, char *argv[])
   {
     LoadBalancer lb(argv[1]);
     lb.listen();
-    lb.join();
+    app.run();
   }
 
   return 0;

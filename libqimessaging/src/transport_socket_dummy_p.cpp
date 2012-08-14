@@ -24,8 +24,8 @@ namespace qi
   {
   }
 
-  bool TransportSocketDummyPrivate::connect(qi::Session *QI_UNUSED(session),
-                                            const qi::Url &QI_UNUSED(url))
+  bool TransportSocketDummyPrivate::connect(const qi::Url &,
+    EventLoop*)
   {
     qiLogWarning("TransportSocket") << "You are currently running on dummy"
                                     << " TransportSocket! "

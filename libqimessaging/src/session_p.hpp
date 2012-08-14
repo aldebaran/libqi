@@ -34,7 +34,6 @@ namespace qi {
     unsigned int              attempts; // Number of connection attempts pending.
   };
 
-  class NetworkThread;
   class SessionPrivate : public qi::TransportSocketInterface,
                          public TransportServerInterface,
                          public qi::SessionInterface,
@@ -74,7 +73,6 @@ namespace qi {
 
   public:
     qi::TransportSocket                *_serviceSocket;
-    qi::NetworkThread                  *_networkThread;
     qi::Session                        *_self;
     std::vector<qi::SessionInterface *> _callbacks;
     boost::mutex                        _mutexCallback;

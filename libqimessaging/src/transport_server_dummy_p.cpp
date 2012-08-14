@@ -34,16 +34,10 @@ namespace qi
     return true;
   }
 
-  void TransportServerDummyPrivate::join()
-  {
-    qiLogWarning("TransportServer") << "join: You are currently running on dummy"
-                                    << " TransportServer!";
-  }
-
   TransportServerDummyPrivate::TransportServerDummyPrivate(TransportServer* self,
-                                                           qi::Session *session,
-                                                           const qi::Url &url)
-    : TransportServerPrivate(self, session, url)
+                                                           const qi::Url &url,
+                                                           EventLoop* ctx)
+    : TransportServerPrivate(self, url, ctx)
   {
   }
 

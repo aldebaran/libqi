@@ -21,17 +21,14 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <qimessaging/transport_socket.hpp>
-#include "src/network_thread.hpp"
 #include "src/message_p.hpp"
 #include "src/buffer_p.hpp"
 #include "src/transport_socket_libevent_p.hpp"
 #include "src/transport_socket_dummy_p.hpp"
 
-#include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
-#include "src/session_p.hpp"
 
 namespace qi
 {
@@ -53,8 +50,7 @@ namespace qi
     _p->destroy();
   }
 
-  bool TransportSocket::connect(qi::Session *session,
-                                const qi::Url &url)
+  bool TransportSocket::connect(const qi::Url &url, qi::EventLoop* ctx)
   {
     TransportSocketPrivate *save = _p;
     _p->status = 0;
@@ -71,7 +67,7 @@ namespace qi
     _p->self = save->self;
     _p->url = url;
     delete save;
-    return _p->connect(session, url);
+    return _p->connect(url, ctx);
   }
 
   qi::Url TransportSocket::url() const {

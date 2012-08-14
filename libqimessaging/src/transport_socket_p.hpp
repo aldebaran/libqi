@@ -28,8 +28,7 @@ namespace qi
     TransportSocketPrivate(TransportSocket *socket);
     virtual ~TransportSocketPrivate();
 
-    virtual bool connect(qi::Session *session,
-                         const qi::Url &url)  = 0;
+    virtual bool connect(const qi::Url &url, EventLoop* ctx)  = 0;
     virtual void disconnect()                 = 0;
     virtual bool send(const qi::Message &msg) = 0;
     virtual bool read(int id, qi::Message *msg);

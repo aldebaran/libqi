@@ -24,12 +24,11 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/url.hpp>
-#include "../src/network_thread.hpp"
 #include "../src/session_p.hpp"
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
-
+static bool clientDone = false;
 #include <iostream>
 
 
@@ -112,7 +111,7 @@ public:
     _p->_session = session;
 
     qi::Url urlo(_p->_endpoints[0]);
-    _p->_ts = new qi::TransportServer(session, urlo);
+    _p->_ts = new qi::TransportServer(urlo);
 
     _p->_ts->addCallbacks(_p);
     _p->_ts->listen();
@@ -194,6 +193,7 @@ void start_client(int count)
 
   for (int i = 0; i < count; ++i)
     thd[i].join();
+  clientDone = true;
 }
 
 
@@ -207,7 +207,8 @@ int main_gateway()
   gate.attachToServiceDirectory("tcp://127.0.0.1:5555");
   gate.listen("tcp://127.0.0.1:12345");
   std::cout << "ready." << std::endl;
-  gate.join();
+  while (true)
+    qi::os::sleep(60);
 
   return 0;
 }
@@ -237,7 +238,8 @@ int main_server()
   srv.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
-  session.join();
+  while (!clientDone)
+    qi::os::sleep(60);
 
   srv.stop();
   session.disconnect();

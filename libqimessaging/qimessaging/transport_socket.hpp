@@ -12,11 +12,13 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
+# include <qimessaging/event_loop.hpp>
 # include <string>
 
 namespace qi
 {
   class TransportSocket;
+
   class QIMESSAGING_API TransportSocketInterface
   {
   public:
@@ -41,7 +43,8 @@ namespace qi
     TransportSocket();
     virtual ~TransportSocket();
 
-    bool connect(qi::Session *session, const qi::Url &url);
+    bool connect(const qi::Url &url,
+      qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
     void disconnect();
 
 

@@ -58,7 +58,7 @@ int thd_client(qi::TransportSocket *socket)
 
   if (!socket)
   {
-    ts.connect(&session, "tcp://127.0.0.1:5555");
+    ts.connect("tcp://127.0.0.1:5555");
     ts.waitForConnected(30);
     socket = &ts;
     socket->addCallbacks(&tsi);
@@ -97,7 +97,7 @@ int main_client(bool shared)
   if (shared)
   {
     qiLogInfo("perf_transport_socket") << "Socket will be shared";
-    socket.connect(&session, "tcp://127.0.0.1:5555");
+    socket.connect("tcp://127.0.0.1:5555");
     socket.waitForConnected(30);
     socket.addCallbacks(&tsi);
   }
@@ -124,10 +124,11 @@ int main_server()
   TSIReply tsi;
   qi::TransportServer server;
   qi::Session session;
-  server.listen(&session, "tcp://127.0.0.1:5555");
+  server.listen("tcp://127.0.0.1:5555");
   server.addCallbacks(&tsi);
   qiLogInfo("server") << "Now listening on tcp://127.0.0.1:5555";
-  server.join();
+  while (true)
+    qi::os::sleep(60);
 
   return 0;
 }
