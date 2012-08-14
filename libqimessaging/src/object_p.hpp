@@ -28,6 +28,10 @@ namespace qi {
     std::map<ObjectInterface *, void *> _callbacks;
     boost::mutex                        _callbacksMutex;
     bool                                _dying;
+
+    // Links that target us. Needed to be able to disconnect upon destruction
+    std::vector<MetaEvent::Subscriber>  _registrations;
+    boost::recursive_mutex              _mutexRegistration;
   };
 
   class MetaObjectPrivate {
@@ -60,6 +64,7 @@ namespace qi {
 
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaEvent> findEvent(const std::string &name);
+
     /*
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.
@@ -69,13 +74,9 @@ namespace qi {
 
     unsigned int                        _nextNumber;
 
-
-
     NameToIdx                           _eventsNameToIdx;
     MetaObject::EventMap                _events;
 
-    // Links that target us. Needed to be able to disconnec upon destruction
-    std::vector<MetaEvent::Subscriber>  _registrations;
     // Recompute data cached in *ToIdx
     void refreshCache();
 
@@ -84,7 +85,6 @@ namespace qi {
     // std::map<std::string, PropertyInfo> _properties;
 
     boost::recursive_mutex              _mutexEvent;
-    boost::recursive_mutex              _mutexRegistration;
     boost::recursive_mutex              _mutexMethod;
     // Global uid for event subscribers.
     static qi::atomic<long> uid;

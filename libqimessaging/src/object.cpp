@@ -101,12 +101,12 @@ namespace qi {
     {
       _p->_dying = true;
       {
-        boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexRegistration);
+        boost::recursive_mutex::scoped_lock sl(_p->_mutexRegistration);
 
         // Notify events that have subscribers that call us that we are dead
         // We need to make a copy of the vector, since disconnect will
         // remove entries from it.
-        std::vector<MetaEvent::Subscriber> regs = metaObject()._p->_registrations;
+        std::vector<MetaEvent::Subscriber> regs = _p->_registrations;
         std::vector<MetaEvent::Subscriber>::iterator i;
         for (i = regs.begin(); i != regs.end(); ++i)
           i->eventSource->disconnect(i->linkId);
@@ -395,8 +395,8 @@ namespace qi {
     // Notify the target of this subscribers
     if (s.target)
     {
-      boost::recursive_mutex::scoped_lock sl(s.target->metaObject()._p->_mutexRegistration);
-      s.target->metaObject()._p->_registrations.push_back(s);
+      boost::recursive_mutex::scoped_lock sl(s.target->_p->_mutexRegistration);
+      s.target->_p->_registrations.push_back(s);
     }
     return uid;
   }
@@ -418,8 +418,8 @@ namespace qi {
         // If target is an object, deregister from it
         if (sub.target)
         {
-          boost::recursive_mutex::scoped_lock sl(sub.target->metaObject()._p->_mutexRegistration);
-          std::vector<MetaEvent::Subscriber>& regs = sub.target->metaObject()._p->_registrations;
+          boost::recursive_mutex::scoped_lock sl(sub.target->_p->_mutexRegistration);
+          std::vector<MetaEvent::Subscriber>& regs = sub.target->_p->_registrations;
           // Look it up in vector, then swap with last.
           for (unsigned int i=0; i< regs.size(); ++i)
             if (sub.linkId == regs[i].linkId)
