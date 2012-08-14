@@ -5,12 +5,12 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#if 0
 #include <iostream>
 #include <QtCore/qurl.h>
 
 #include <qimessaging/qt/qiserver.h>
 #include <qimessaging/qt/qisession.h>
-#include <qimessaging/server.hpp>
 
 #include "src/qisession_p.h"
 
@@ -54,3 +54,4 @@ QUrl QiServer::listenUrl() const {
   QUrl url;
   return url;
 }
+#endif

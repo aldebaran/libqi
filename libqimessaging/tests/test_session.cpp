@@ -13,7 +13,6 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
-#include <qimessaging/server.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
@@ -93,23 +92,22 @@ TEST(QiSession, getSimpleService)
   EXPECT_TRUE(connected);
 
   qi::Object obj;
-  qi::Server srv;
   obj.advertiseMethod("reply", &reply);
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
-  srv.listen(&session, serviceAddr.str());
+  session.listen(serviceAddr.str());
   // Wait for service id, otherwise register is asynchronous.
-  srv.registerService("serviceTest", &obj).wait();
+  session.registerService("serviceTest", &obj).wait();
   ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
   qi::Object *object = session.service("serviceTest");
   EXPECT_TRUE(object);
 
   delete object;
-  srv.close();
+  session.close();
   session.disconnect();
   bool disconnected = session.waitForDisconnected(1000);
 
@@ -141,16 +139,15 @@ TEST(QiSession, getCloseService)
   EXPECT_TRUE(connected);
 
   qi::Object obj;
-  qi::Server srv;
   obj.advertiseMethod("reply", &reply);
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
-  srv.listen(&session, serviceAddr.str());
-  srv.registerService("serviceTest", &obj);
-  srv.close();
+  session.listen(serviceAddr.str());
+  session.registerService("serviceTest", &obj);
+  session.close();
 
   qi::Object *object = session.service("serviceTest");
   EXPECT_FALSE(object);

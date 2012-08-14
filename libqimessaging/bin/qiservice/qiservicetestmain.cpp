@@ -13,7 +13,6 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/server.hpp>
 #include <qimessaging/object.hpp>
 
 //#include "qiservicetest.hpp"
@@ -77,19 +76,18 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
       qi::Object        obj;
-      qi::Server        srv;
       obj.advertiseMethod("reply", &reply);
 
       session.connect(masterAddress);
       session.waitForConnected();
 
-      srv.listen(&session, "tcp://0.0.0.0:0");
-      unsigned int id = srv.registerService("serviceTest", &obj);
+      session.listen("tcp://0.0.0.0:0");
+      unsigned int id = session.registerService("serviceTest", &obj);
 
 #if 0
       // test unregistration
-      srv.unregisterService(id);
-      id = srv.registerService("serviceTest", &obj);
+      session.unregisterService(id);
+      id = session.registerService("serviceTest", &obj);
 #endif
 
       if (id)
@@ -103,8 +101,8 @@ int main(int argc, char *argv[])
       }
       session.join();
 
-      srv.unregisterService(id);
-      srv.close();
+      session.unregisterService(id);
+      session.close();
       session.disconnect();
     }
     else

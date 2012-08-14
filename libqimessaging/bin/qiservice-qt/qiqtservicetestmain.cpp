@@ -59,21 +59,24 @@ int main(int argc, char *argv[])
     {
       QString masterAddress = QString::fromUtf8(vm["master-address"].as<std::string>().c_str());
       QiSession     session;
-      QiServer      srv;
       QHelloService hello;
 
       session.connect(masterAddress);
       session.waitForConnected();
 
+#if 0
       srv.registerService("serviceTest", &hello);
       srv.listen(&session, QString::fromAscii("tcp://0.0.0.0:0"));
+#endif
 
       std::cout << "ready." << std::endl;
 
 
       app.exec();
 
+#if 0
       srv.close();
+#endif
     }
     else
     {

@@ -150,8 +150,6 @@ int main_gateway()
   return 0;
 }
 
-#include <qimessaging/server.hpp>
-
 std::string reply(const std::string &msg)
 {
   return msg;
@@ -165,19 +163,18 @@ int main_server()
 
   qi::Session       session;
   qi::Object        obj;
-  qi::Server        srv;
   obj.advertiseMethod("reply", &reply);
 
   session.connect("tcp://127.0.0.1:5555");
   session.waitForConnected();
 
-  srv.listen(&session, "tcp://127.0.0.1:9559");
-  srv.registerService("serviceTest", &obj);
+  session.listen("tcp://127.0.0.1:9559");
+  session.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
 
   session.join();
 
-  srv.close();
+  session.close();
   session.disconnect();
 
   return 0;

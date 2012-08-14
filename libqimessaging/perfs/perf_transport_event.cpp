@@ -212,8 +212,6 @@ int main_gateway()
   return 0;
 }
 
-#include <qimessaging/server.hpp>
-
 std::string reply(const std::string &msg)
 {
   return msg;

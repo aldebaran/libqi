@@ -10,7 +10,6 @@
 #include <qi/qi.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/server.hpp>
 #include <qimessaging/service_directory.hpp>
 
 static qi::Promise<int> *payload1;
@@ -53,12 +52,12 @@ protected:
     e2 = oserver2.advertiseEvent<void (*)(const int&)>("fire2");
     m1 = oserver1.advertiseMethod("onFire1", &onFire1);
     m2 = oserver2.advertiseMethod("onFire2", &onFire2);
-    ASSERT_TRUE(srv1.listen(&session1, "tcp://0.0.0.0:0"));
-    ASSERT_TRUE(srv2.listen(&session2, "tcp://0.0.0.0:0"));
-    ASSERT_GT(srv1.registerService("coin1", &oserver1).wait(), 0);
-    ASSERT_GT(srv2.registerService("coin2", &oserver2).wait(), 0);
-    EXPECT_EQ(1U, srv1.registeredServices().size());
-    EXPECT_EQ(1U, srv2.registeredServices().size());
+    ASSERT_TRUE(session1.listen("tcp://0.0.0.0:0"));
+    ASSERT_TRUE(session2.listen("tcp://0.0.0.0:0"));
+    ASSERT_GT(session1.registerService("coin1", &oserver1).wait(), 0);
+    ASSERT_GT(session2.registerService("coin2", &oserver2).wait(), 0);
+    EXPECT_EQ(1U, session1.registeredServices().size());
+    EXPECT_EQ(1U, session2.registeredServices().size());
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
     ASSERT_TRUE(sclient.waitForConnected());
     std::vector<qi::ServiceInfo> services = sclient.services();
@@ -75,8 +74,8 @@ protected:
     delete oclient1;
     delete oclient2;
     sclient.disconnect();
-    srv1.close();
-    srv2.close();
+    session1.close();
+    session2.close();
     session1.disconnect();
     session2.disconnect();
     sd.close();
@@ -88,7 +87,6 @@ public:
   qi::Promise<int>     prom1, prom2;
   qi::ServiceDirectory sd;
   qi::Session          session1, session2;
-  qi::Server           srv1, srv2;
   qi::Object           oserver1, oserver2;
   qi::Session          sclient;
   qi::Object          *oclient1, *oclient2;

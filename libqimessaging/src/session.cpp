@@ -706,4 +706,45 @@ namespace qi {
     return found;
   }
 
+  bool Session::listen(const std::string &address)
+  {
+    return _p->_server.listen(this, address);
+  }
+
+  void Session::close()
+  {
+    _p->_server.close();
+  }
+
+  qi::Future<unsigned int> Session::registerService(const std::string &name,
+                                                    qi::Object *obj)
+  {
+    return _p->_server.registerService(name, obj);
+  }
+
+  qi::Future<void> Session::unregisterService(unsigned int idx)
+  {
+    return _p->_server.unregisterService(idx);
+  }
+
+  std::vector<qi::ServiceInfo> Session::registeredServices()
+  {
+    return _p->_server.registeredServices();
+  }
+
+  qi::ServiceInfo Session::registeredService(const std::string &service)
+  {
+    return _p->_server.registeredService(service);
+  }
+
+  qi::Object *Session::registeredServiceObject(const std::string &service)
+  {
+    return _p->_server.registeredServiceObject(service);
+  }
+
+  qi::Url Session::listenUrl() const
+  {
+    return _p->_server.listenUrl();
+  }
+
 }

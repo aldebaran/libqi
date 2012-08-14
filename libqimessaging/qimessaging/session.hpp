@@ -84,6 +84,19 @@ namespace qi {
 
     qi::Url url() const;
 
+    bool listen(const std::string &address);
+    void close();
+
+    qi::Future<unsigned int> registerService(const std::string &name,
+                                             qi::Object *obj);
+    qi::Future<void>         unregisterService(unsigned int idx);
+
+    std::vector<qi::ServiceInfo>  registeredServices();
+    qi::ServiceInfo               registeredService(const std::string &service);
+    qi::Object                   *registeredServiceObject(const std::string &service);
+
+    qi::Url                       listenUrl() const;
+
     SessionPrivate      *_p;
   };
 }

@@ -13,7 +13,6 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
-#include <qimessaging/server.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
@@ -101,7 +100,6 @@ int main(int argc, char **argv) {
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
   qi::Object        obj;
-  qi::Server        srv;
   obj.advertiseMethod("reply", &reply);
 
   session.connect(sdAddr.str());
@@ -111,8 +109,8 @@ int main(int argc, char **argv) {
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
-  srv.listen(&session, serviceAddr.str());
-  unsigned int id = srv.registerService("serviceTest", &obj);
+  session.listen(serviceAddr.str());
+  unsigned int id = session.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready:" << id << std::endl;
 
 #ifdef WITH_GATEWAY_
@@ -129,7 +127,7 @@ int main(int argc, char **argv) {
 
   int res = RUN_ALL_TESTS();
   sd.close();
-  srv.close();
+  session.close();
   session.disconnect();
   session.waitForDisconnected();
 

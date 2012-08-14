@@ -10,7 +10,6 @@
 #include <qi/qi.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/server.hpp>
 #include <qimessaging/service_directory.hpp>
 
 static qi::Promise<int> *payload;
@@ -38,9 +37,9 @@ protected:
 
     oserver.advertiseEvent<void (*)(const int&)>("fire");
 
-    ASSERT_TRUE(srv.listen(&session, "tcp://0.0.0.0:0"));
-    ASSERT_GT(srv.registerService("coin", &oserver).wait(), 0);
-    EXPECT_EQ(1U, srv.registeredServices().size());
+    ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
+    ASSERT_GT(session.registerService("coin", &oserver).wait(), 0);
+    EXPECT_EQ(1U, session.registeredServices().size());
 
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
     ASSERT_TRUE(sclient.waitForConnected());
@@ -54,7 +53,7 @@ protected:
   {
     payload = 0;
     sclient.disconnect();
-    srv.close();
+    sclient.close();
     session.disconnect();
     sd.close();
   }
@@ -63,7 +62,6 @@ public:
   qi::Promise<int>     prom;
   qi::ServiceDirectory sd;
   qi::Session          session;
-  qi::Server           srv;
   qi::Object           oserver;
   qi::Session          sclient;
   qi::Object          *oclient;

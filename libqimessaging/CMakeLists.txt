@@ -67,7 +67,6 @@ set(PUBLIC_HEADERS
                    qimessaging/datastream.hpp
                    qimessaging/bufferreader.hpp
                    qimessaging/buffer.hpp
-                   qimessaging/server.hpp
                    qimessaging/gateway.hpp
                    qimessaging/service_info.hpp
 )
@@ -96,6 +95,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/remoteobject.cpp
                                    src/remoteobject_p.hpp
                                    src/server.cpp
+                                   src/server.hpp
                                    src/service_directory.cpp
                                    src/service_info.cpp
                                    src/session.cpp

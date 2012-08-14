@@ -16,6 +16,7 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/session.hpp>
+#include "server.hpp"
 
 namespace qi {
 
@@ -65,6 +66,7 @@ namespace qi {
     qi::Session                        *_self;
     std::vector<qi::SessionInterface *> _callbacks;
     boost::mutex                        _mutexCallback;
+    qi::Server                          _server;
 
     boost::mutex                                                _mutexFuture;
     // Associate serviceRequest with the message id concerning it currently in
