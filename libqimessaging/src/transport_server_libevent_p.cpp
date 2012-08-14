@@ -62,8 +62,6 @@ namespace qi
   void TransportServerLibEventPrivate::accept(evutil_socket_t        fd,
                                               struct evconnlistener *listener)
   {
-    struct event_base *base = evconnlistener_get_base(listener);
-
     qi::TransportSocket *ts = new qi::TransportSocket();
     if (ts->_p)
       delete ts->_p;
