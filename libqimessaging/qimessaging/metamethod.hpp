@@ -29,7 +29,9 @@ namespace qi {
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaMethod &meta);
 
 }; // namespace qi
+
 
 #endif // __METAMETHOD_HPP__

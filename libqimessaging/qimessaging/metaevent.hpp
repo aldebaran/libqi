@@ -6,6 +6,8 @@
 #ifndef _QIMESSAGING_METAEVENT_HPP_
 #define _QIMESSAGING_METAEVENT_HPP_
 
+#include <qimessaging/signature.hpp>
+
 namespace qi {
 
   class MetaEventPrivate;
@@ -56,6 +58,7 @@ namespace qi {
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaEvent &meta);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaEvent &meta);
 
 }; // namespace qi
 

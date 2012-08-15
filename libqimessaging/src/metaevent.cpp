@@ -86,4 +86,11 @@ namespace qi {
     stream >> meta._p->_uid;
     return stream;
   }
+
+  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaEvent &meta) {
+    stream & meta._p->_signature;
+    stream & meta._p->_uid;
+    return stream;
+  }
+
 };

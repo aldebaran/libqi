@@ -271,6 +271,11 @@ namespace qi {
     return stream;
   }
 
+  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer) {
+    os.write(qi::Signature::Type_Raw);
+    return os;
+  }
+
   qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta) {
     qi::uint32_t sz;
     stream >> sz;

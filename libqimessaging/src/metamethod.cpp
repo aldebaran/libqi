@@ -69,4 +69,11 @@ namespace qi {
     return stream;
   }
 
+  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaMethod &meta) {
+    stream & meta._p->_signature;
+    stream & meta._p->_sigret;
+    stream & meta._p->_uid;
+    return stream;
+  }
+
 };

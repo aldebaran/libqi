@@ -20,6 +20,7 @@
 #include <qimessaging/future.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/signature.hpp>
 
 namespace qi
 {
@@ -51,6 +52,10 @@ namespace qi
     return stream;
   }
 
+  inline QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const FunctorParameters &funParams) {
+    return os & funParams.buffer();
+
+  }
 
   class QIMESSAGING_API FunctorResultBase {
   public:

@@ -463,6 +463,13 @@ namespace qi {
     return stream;
   }
 
+  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta) {
+    stream & meta._p->_methods;
+    stream & meta._p->_events;
+    stream & meta._p->_nextNumber;
+    return stream;
+  }
+
   std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name)
   {
     return _p->findMethod(name);

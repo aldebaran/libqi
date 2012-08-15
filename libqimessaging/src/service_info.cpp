@@ -43,4 +43,13 @@ namespace qi
     return stream;
   }
 
+  qi::SignatureStream &operator&(qi::SignatureStream &stream, const ServiceInfo &sinfo) {
+    stream & sinfo.name();
+    stream & sinfo.serviceId();
+    stream & sinfo.machineId();
+    stream & sinfo.processId();
+    stream & sinfo.endpoints();
+    return stream;
+  }
+
 }; // !qi
