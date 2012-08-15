@@ -19,6 +19,7 @@
 #include <qimessaging/value.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
+#include <qimessaging/signature.hpp>
 #include <qi/types.hpp>
 #include <qi/preproc.hpp>
 namespace qi {
@@ -144,9 +145,11 @@ namespace qi {
   };
 
 
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &buffer);
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &meta);
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &buffer);
+
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
 
 
   template<typename T>
@@ -264,6 +267,9 @@ namespace qi {
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::Value &value);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::Value &value);
+  //QIMESSAGING_API qi::SignatureStream &operator>>(qi::SignatureStream &sd, const qi::Value &value);
+
+
 }
 
 /** Make a class serializable throug {IO}DataStream.

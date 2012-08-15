@@ -41,12 +41,8 @@ set(PUBLIC_HEADERS
                    qimessaging/details/boostfunctor.hxx
                    qimessaging/details/future.hxx
                    qimessaging/details/functor.hxx
-                   qimessaging/details/type_signature.hpp
-                   qimessaging/details/function_signature.hpp
-                   qimessaging/details/qt_signature.hpp
                    qimessaging/details/callfunctor.hpp
                    qimessaging/details/makefunctor.hpp
-                   qimessaging/details/stl_signature.hpp
                    qimessaging/value.hpp
                    qimessaging/url.hpp
                    qimessaging/file.hpp
@@ -119,7 +115,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/url.cpp
                                    src/future.cpp
                                    src/server_functor_result_future_p.hpp
-                                   src/functor.cpp)
+                                   src/functor.cpp
+                                   src/signature.cpp)
 
 
 add_subdirectory(c)

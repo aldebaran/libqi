@@ -18,6 +18,11 @@
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
 
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/transform_view.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+#include <boost/type_traits/add_pointer.hpp>
+
 namespace qi {
 
   class MetaObjectPrivate;
@@ -178,71 +183,98 @@ namespace qi {
     boost::shared_ptr<ObjectPrivate> _p;
   };
 
+  namespace detail {
+    struct signature_function_arg_apply {
+      signature_function_arg_apply(qi::SignatureStream &val)
+        : val(val)
+      {}
+
+      template<typename T> void operator()(T *x) {
+        val & (*x);
+      }
+
+      qi::SignatureStream &val;
+    };
+  }
+
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
   inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
   {
-    std::string signature(name);
-    std::string sigret;
-    signature += "::(";
+    std::stringstream   signature;
+    qi::SignatureStream sigs;
+    std::string         sigret;
+
     typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
     typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
 
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
-    signature += ")";
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer< boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    signature << name << "::(" << sigs.str() << ")";
+
     typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
     signatureFromType<ResultType>::value(sigret);
-    return xAdvertiseMethod(sigret, signature, makeFunctor(object, method));
+
+    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(object, method));
   }
 
   template <typename FUNCTION_TYPE>
   inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
-    std::string signature(name);
-    std::string sigret;
-    signature += "::(";
+    std::stringstream   signature;
+    qi::SignatureStream sigs;
+    std::string         sigret;
+
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
-    signature += ")";
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    signature << name << "::(" << sigs.str() << ")";
+
     typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
     signatureFromType<ResultType>::value(sigret);
-    return xAdvertiseMethod(sigret, signature, makeFunctor(function));
+
+    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
 
   template<typename T>
   inline unsigned int Object::advertiseMethod(const std::string& name,
     boost::function<T> function)
   {
-    std::string signature(name);
-    std::string sigret;
-    signature += "::(";
+    std::stringstream   signature;
+    qi::SignatureStream sigs;
+    std::string         sigret;
+
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
-    signature += ")";
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    signature << name << "::(" << sigs.str() << ")";
+
     typedef typename boost::function_types::result_type<T>::type ResultType;
     signatureFromType<ResultType>::value(sigret);
-    return xAdvertiseMethod(sigret, signature, makeFunctor(function));
+
+    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
 
   template<typename FUNCTION_TYPE>
   inline unsigned int Object::advertiseEvent(const std::string& eventName)
   {
-    std::string signature(eventName);
-    signature += "::(";
+    std::stringstream   signature;
+    qi::SignatureStream sigs;
+
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
-    signature += ")";
-    return xAdvertiseEvent(signature);
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    signature << eventName << "::(" << sigs.str() << ")";
+
+    return xAdvertiseEvent(signature.str());
   }
 
   template <typename FUNCTION_TYPE>
   unsigned int Object::connect(const std::string& eventName, FUNCTION_TYPE callback)
   {
-    std::string signature(eventName);
-    signature += "::(";
+    std::stringstream   signature;
+    qi::SignatureStream sigs;
+
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::remove_reference<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(signature));
-    signature += ")";
-    return xConnect(signature, makeFunctor(callback));
+    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    signature << eventName << "::(" << sigs.str() << ")";
+
+    return xConnect(signature.str(), makeFunctor(callback));
   }
 
 };
