@@ -395,18 +395,30 @@ TEST(TestBind, serializeAllTypes)
 
   bool b = true;
   char c = 'c';
-  int i = 42;
   unsigned char uc = UCHAR_MAX;
+  short sh = SHRT_MAX;
+  unsigned short ush = USHRT_MAX;
+  int i = 42;
   unsigned int ui = UINT_MAX;
+  long l = LONG_MAX;
+  unsigned long ul = ULONG_MAX;
+//  long long ll = LONG_LONG_MAX;
+//  unsigned long long ull = ULONG_LONG_MAX;
   float f = 23.5f;
   double d = 42.42;
   std::string s("test::string");
 
   ds << b;
   ds << c;
+  ds << sh;
   ds << i;
+  ds << l;
+  //ds << ll;
   ds << uc;
+  ds << ush;
   ds << ui;
+  ds << ul;
+  //ds << ull;
   ds << f;
   ds << d;
   ds << s;
@@ -415,18 +427,32 @@ TEST(TestBind, serializeAllTypes)
   qi::IDataStream  d2(buf);
   bool b1;
   char c1;
-  int i1;
   unsigned char uc1;
+  short sh1;
+  unsigned short ush1;
+  int i1;
   unsigned int ui1;
+  long l1;
+  unsigned long ul1;
+//  long long ll1;
+//  unsigned long long ull1;
   float f1;
   double d1;
   std::string s1;
   std::string s2;
+
+
   d2 >> b1;
   d2 >> c1;
+  d2 >> sh1;
   d2 >> i1;
+  d2 >> l1;
+  //d2 >> ll1;
   d2 >> uc1;
+  d2 >> ush1;
   d2 >> ui1;
+  d2 >> ul1;
+  //d2 >> ull1;
   d2 >> f1;
   d2 >> d1;
   d2 >> s1;
@@ -434,9 +460,16 @@ TEST(TestBind, serializeAllTypes)
 
   EXPECT_EQ(b, b1);
   EXPECT_EQ(c, c1);
+  EXPECT_EQ(sh, sh1);
   EXPECT_EQ(i, i1);
+  EXPECT_EQ(l, l1);
+  //EXPECT_EQ(ll, ll1);
+
   EXPECT_EQ(uc, uc1);
+  EXPECT_EQ(ush, ush1);
   EXPECT_EQ(ui, ui1);
+  EXPECT_EQ(ul, ul1);
+  //EXPECT_EQ(ull, ull1);
   EXPECT_EQ(f, f1);
   EXPECT_EQ(d, d1);
   EXPECT_EQ(s, s1);
@@ -505,3 +538,25 @@ TEST(TestBind, SerializeCustomComplex)
   ASSERT_EQ(comp, compout);
 }
 
+//compilation of weird case. C++ typesystem Hell.
+TEST(TestBind, TestShPtr) {
+  boost::shared_ptr<int> sh1;
+  boost::shared_ptr<int> sh2(new int);
+  qi::Buffer bif;
+  qi::ODataStream dou(bif);
+  bool b1;
+  bool b2;
+
+  dou << sh1;
+  dou << sh2;
+  qi::IDataStream din(bif);
+  din >> b1;
+  din >> b2;
+  EXPECT_EQ(b1, 0);
+  EXPECT_EQ(b2, 1);
+
+  typedef void(*titi_t)(void);
+  titi_t titi = (titi_t)1;
+
+  dou << titi;
+}
