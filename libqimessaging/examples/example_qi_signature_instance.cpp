@@ -29,8 +29,5 @@ int main()
   std::cout << "qi::signature< std::map<std::string, std::string> > :" << qi::signatureFromObject::value(mymap) << std::endl;
   std::cout << "qi::signature< std::vector<int> >                   :" << qi::signatureFromObject::value(myvector) << std::endl;
 
-  //take the signature of a function
-  std::cout << "qi::signature< int(int, int) >                      :" << qi::signatureFromObject::value(&foo) << std::endl;
-
   return 0;
 }

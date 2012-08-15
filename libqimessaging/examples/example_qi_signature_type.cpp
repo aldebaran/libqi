@@ -17,8 +17,5 @@ int main()
   std::cout << "qi::signature< std::vector<int> >                   :" << qi::signatureFromType< std::vector<int> >::value() << std::endl;
   std::cout << "qi::signature< std::map<std::string, std::string> > :" << qi::signatureFromType<StringMap>::value() << std::endl;
 
-  //take the signature of a function
-  std::cout << "qi::signature< (void *)(int, int) >                 :" << qi::signatureFromType< void(int, int)>::value() << std::endl;
-
   return 0;
 }
