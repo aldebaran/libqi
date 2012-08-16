@@ -21,7 +21,6 @@
 namespace qi {
 
   class SessionPrivate;
-  class ServerPrivate;
 
   class QIMESSAGING_API SessionInterface
   {
@@ -97,7 +96,6 @@ namespace qi {
     qi::Url                       listenUrl() const;
 
     SessionPrivate      *_p;
-    ServerPrivate       *_p2;
   };
 }
 

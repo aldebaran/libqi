@@ -26,14 +26,28 @@ namespace qi {
       _networkThread(new qi::NetworkThread()),
       _self(session),
       _callbacks(0)
+    , _ts(new TransportServer())
+    , _dying(false)
+    , _server(this)
   {
     _serviceSocket->addCallbacks(this);
+    _ts->addCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
    // All these problems will be obsoleted by new ioContext system.
    // _networkThread->stop();
    // _networkThread->destroy(true);
+    _dying = true;
+    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
+    delete _ts;
+    for (std::set<TransportSocket*>::iterator i = _clients.begin();
+      i != _clients.end(); ++i)
+    {
+      // We do not want onSocketDisconnected called
+      (*i)->removeCallbacks(this);
+      delete *i;
+    }
   }
 
   Session::~Session()
@@ -44,7 +58,6 @@ namespace qi {
     }
     disconnect();
     waitForDisconnected();
-    delete _p2;
     delete _p;
   }
 
@@ -538,7 +551,6 @@ namespace qi {
   // ###### Session
   Session::Session()
     : _p(new SessionPrivate(this))
-    , _p2(new ServerPrivate(this))
   {
   }
 
@@ -716,21 +728,21 @@ namespace qi {
       qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
       return false;
     }
-    if (!_p2->_ts->listen(this, url))
+    if (!_p->_ts->listen(this, url))
       return false;
-    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p2->_ts->listenUrl().str();
+    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
     return true;
   }
 
   void Session::close()
   {
-    _p2->_ts->close();
+    _p->_ts->close();
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,
                                                     qi::Object *obj)
   {
-    if (_p2->_ts->endpoints().empty()) {
+    if (_p->_ts->endpoints().empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
       return qi::Future<unsigned int>();
     }
@@ -740,7 +752,7 @@ namespace qi {
     si.setMachineId("TODO");
 
     {
-      std::vector<qi::Url> epsUrl = _p2->_ts->endpoints();
+      std::vector<qi::Url> epsUrl = _p->_ts->endpoints();
       std::vector<std::string> epsStr;
       for (std::vector<qi::Url>::const_iterator epsUrlIt = epsUrl.begin();
            epsUrlIt != epsUrl.end();
@@ -752,12 +764,12 @@ namespace qi {
     }
 
     {
-      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
-      _p2->_servicesObject[obj] = si;
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
+      _p->_servicesObject[obj] = si;
     }
 
     qi::Future<unsigned int> future;
-    future.addCallbacks(_p2, obj);
+    future.addCallbacks(_p, obj);
     future = _p->registerService(si, future);
 
     return future;
@@ -768,21 +780,21 @@ namespace qi {
     qi::Future<void> future = _p->unregisterService(idx);
 
     {
-      boost::mutex::scoped_lock sl(_p2->_mutexServices);
-      _p2->_services.erase(idx);
+      boost::mutex::scoped_lock sl(_p->_mutexServices);
+      _p->_services.erase(idx);
     }
     {
-      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
       std::map<unsigned int, std::string>::iterator it;
-      it = _p2->_servicesIndex.find(idx);
-      if (it == _p2->_servicesIndex.end()) {
+      it = _p->_servicesIndex.find(idx);
+      if (it == _p->_servicesIndex.end()) {
         qiLogError("qimessaging.Server") << "Can't find name associated to id:" << idx;
       }
       else {
-        _p2->_servicesByName.erase(it->second);
-        _p2->_servicesInfo.erase(it->second);
+        _p->_servicesByName.erase(it->second);
+        _p->_servicesInfo.erase(it->second);
       }
-      _p2->_servicesIndex.erase(idx);
+      _p->_servicesIndex.erase(idx);
     }
     return future;
   }
@@ -793,8 +805,8 @@ namespace qi {
     std::map<std::string, qi::ServiceInfo>::iterator it;
 
     {
-      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
-      for (it = _p2->_servicesInfo.begin(); it != _p2->_servicesInfo.end(); ++it) {
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
+      for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
         ssi.push_back(it->second);
       }
     }
@@ -805,9 +817,9 @@ namespace qi {
   {
     std::map<std::string, qi::ServiceInfo>::iterator it;
     {
-      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
-      it = _p2->_servicesInfo.find(service);
-      if (it != _p2->_servicesInfo.end())
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
+      it = _p->_servicesInfo.find(service);
+      if (it != _p->_servicesInfo.end())
         return it->second;
     }
     return qi::ServiceInfo();
@@ -817,9 +829,9 @@ namespace qi {
   {
     std::map<std::string, qi::Object *>::iterator it;
     {
-      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
-      it = _p2->_servicesByName.find(service);
-      if (it != _p2->_servicesByName.end())
+      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
+      it = _p->_servicesByName.find(service);
+      if (it != _p->_servicesByName.end())
         return it->second;
     }
     return 0;
@@ -827,62 +839,41 @@ namespace qi {
 
   qi::Url Session::listenUrl() const
   {
-    return _p2->_ts->listenUrl();
+    return _p->_ts->listenUrl();
   }
 
-  ServerPrivate::ServerPrivate(qi::Session* session)
-    : _ts(new TransportServer())
-    , _self(session)
-    , _dying(false)
-  {
-    _ts->addCallbacks(this);
-  }
-
-  ServerPrivate::~ServerPrivate() {
-    _dying = true;
-    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-    delete _ts;
-    for (std::set<TransportSocket*>::iterator i = _clients.begin();
-      i != _clients.end(); ++i)
-    {
-      // We do not want onSocketDisconnected called
-      (*i)->removeCallbacks(this);
-      delete *i;
-    }
-  }
-
-  void ServerPrivate::newConnection(TransportServer* server, TransportSocket *socket)
+  void SessionPrivate::newConnection(TransportServer* server, TransportSocket *socket)
   {
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     if (!socket)
       return;
     _clients.insert(socket);
-    socket->addCallbacks(this);
+    socket->addCallbacks(&_server);
   }
 
   void ServerPrivate::onSocketDisconnected(TransportSocket* client)
   {
     // The check below must be done before holding the lock.
-    if (_dying)
+    if (_self->_dying)
       return;
-    boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-    _clients.erase(client);
+    boost::recursive_mutex::scoped_lock sl(_self->_mutexOthers);
+    _self->_clients.erase(client);
     // Disconnect event links set for this client.
-    Links::iterator i = _links.find(client);
-    if (i != _links.end())
+    SessionPrivate::Links::iterator i = _self->_links.find(client);
+    if (i != _self->_links.end())
     {
       // Iterate per service
-      for (PerServiceLinks::iterator j = i->second.begin();
+      for (SessionPrivate::PerServiceLinks::iterator j = i->second.begin();
         j != i->second.end(); ++j)
       {
-        std::map<unsigned int, qi::Object*>::iterator iservice = _services.find(j->first);
+        std::map<unsigned int, qi::Object*>::iterator iservice = _self->_services.find(j->first);
         // If the service is still there, disconnect one by one.
-        if (iservice != _services.end())
-          for (ServiceLinks::iterator k = j->second.begin();
+        if (iservice != _self->_services.end())
+          for (SessionPrivate::ServiceLinks::iterator k = j->second.begin();
             k != j->second.end(); ++k)
             iservice->second->disconnect(k->second.localLinkId);
       }
-      _links.erase(i);
+      _self->_links.erase(i);
     }
     delete client;
   }
@@ -918,7 +909,7 @@ namespace qi {
     qi::Object *obj;
 
     {
-      boost::mutex::scoped_lock sl(_mutexServices);
+      boost::mutex::scoped_lock sl(_self->_mutexServices);
       std::map<unsigned int, qi::Object*>::iterator it;
       if (msg.service() == Message::Service_Server)
       {
@@ -939,8 +930,8 @@ namespace qi {
         IDataStream ds(msg.buffer());
         unsigned int service;
         ds >> service;
-        it = _services.find(service);
-        if (it == _services.end())
+        it = _self->_services.find(service);
+        if (it == _self->_services.end())
         {
           if (msg.type() == Message::Type_Call)
           {
@@ -964,7 +955,7 @@ namespace qi {
             // locate object, register locally and bounce to an event message
             unsigned int linkId = it->second->connect(event,
               new EventForwarder(service, event, client));
-            _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
+            _self->_links[client][service][remoteLinkId] = SessionPrivate::RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
             {
               qi::Message retval;
@@ -981,8 +972,8 @@ namespace qi {
           {
             unsigned int event, remoteLinkId;
             ds >> event >> remoteLinkId;
-            ServiceLinks& sl = _links[client][service];
-            ServiceLinks::iterator i = sl.find(remoteLinkId);
+            SessionPrivate::ServiceLinks& sl = _self->_links[client][service];
+            SessionPrivate::ServiceLinks::iterator i = sl.find(remoteLinkId);
             if (i == sl.end())
             {
               qiLogError("qi::Server") << "Unregister request failed for "
@@ -1007,9 +998,9 @@ namespace qi {
         }
         return;
       } // msg.service() == Server
-      it = _services.find(msg.service());
+      it = _self->_services.find(msg.service());
       obj = it->second;
-      if (it == _services.end() || !obj)
+      if (it == _self->_services.end() || !obj)
       {
         if (msg.type() == qi::Message::Type_Call) {
           qi::Message retval;
@@ -1046,7 +1037,7 @@ namespace qi {
 
   }
 
-  void ServerPrivate::onFutureFailed(const std::string &error, void *data)
+  void SessionPrivate::onFutureFailed(const std::string &error, void *data)
   {
     qi::ServiceInfo si;
     qi::Object     *obj = static_cast<qi::Object *>(data);
@@ -1056,7 +1047,7 @@ namespace qi {
       _servicesObject.erase(it);
   }
 
-  void ServerPrivate::onFutureFinished(const unsigned int &idx,
+  void SessionPrivate::onFutureFinished(const unsigned int &idx,
                                        void               *data)
   {
     qi::Object     *obj = static_cast<qi::Object *>(data);
