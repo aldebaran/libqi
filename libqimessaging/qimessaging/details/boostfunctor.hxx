@@ -372,7 +372,7 @@ template<typename T, typename R, int I> R invoke(boost::function<T>& f, const qi
        qi::ODataStream dso(buf);
        _ODWrapper odw = _ODWrapper(dso);
        // Calls 'dso << invoker.invoke...', do nothing if T is void
-       odw() , (ResultType) invoker.invoke<T, ResultType>(
+       odw() , (ResultType) invoker.template invoke<T, ResultType>(
          const_cast<boost::function<T>&>(f), params);
        if (sanityCheckAndReport(dso, result))
           result.setValue(buf);
