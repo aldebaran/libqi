@@ -24,19 +24,6 @@ namespace qi {
 
   class NetworkThread;
 
-  class ServerPrivate : public TransportSocketInterface
-
-  {
-  public:
-    ServerPrivate(SessionPrivate* sp) : _self(sp) { }
-    virtual ~ServerPrivate() { }
-
-    virtual void onSocketReadyRead(TransportSocket *client, int id);
-    virtual void onSocketDisconnected(TransportSocket *client);
-  public:
-    SessionPrivate *_self;
-  };
-
   struct ServiceRequest
   {
     qi::Promise<qi::Object *> promise;
@@ -138,8 +125,6 @@ namespace qi {
     boost::mutex                            _mutexServices;
     boost::recursive_mutex                  _mutexOthers;
     bool                                    _dying;
-
-    ServerPrivate                           _server;
   };
 }
 
