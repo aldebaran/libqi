@@ -15,7 +15,7 @@ namespace qi {
   class QI_API Application
   {
   public:
-    Application(int argc, char** argv);
+    Application(int& argc, char** &argv);
     ~Application();
 
     void run();

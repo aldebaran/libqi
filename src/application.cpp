@@ -83,7 +83,7 @@ namespace qi {
     return std::string();
   }
 
-  Application::Application(int& argc, char **&argv)
+  Application::Application(int& argc, char ** &argv)
   {
     //Feed qi::path prefix from share/qi/path.conf if present
     //(automatically created when using qiBuild)
