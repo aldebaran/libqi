@@ -27,6 +27,7 @@ namespace qi {
   static char**      globalArgv = 0;
   static bool        globalInitialized = false;
 
+  static std::vector<std::string>* globalArguments;
   static std::string globalPrefix;
   static std::string globalProgram;
   typedef std::vector<boost::function<void()> > FunctionList;
@@ -111,9 +112,17 @@ namespace qi {
     globalInitialized = true;
     globalArgc = argc;
     globalArgv = argv;
+    std::vector<std::string>& args = lazyGet(globalArguments);
+    args.clear();
+    for (int i=0; i<argc; ++i)
+      args.push_back(argv[i]);
+
     FunctionList& fl = lazyGet(globalAtEnter);
+    qiLogDebug("Application") << "Executing " << fl.size() << " atEnter handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+    argc = Application::argc();
+    argv = globalArgv;
   }
 
   Application::~Application()
@@ -127,6 +136,26 @@ namespace qi {
   {
     while (true)
       os::sleep(1000);
+  }
+
+  void Application::setArguments(const std::vector<std::string>& args)
+  {
+    globalArgc = args.size();
+    lazyGet(globalArguments) = args;
+    globalArgv = new char*[args.size() + 1];
+    for (unsigned i=0; i<args.size(); ++i)
+      globalArgv[i] = strdup(args[i].c_str());
+    globalArgv[args.size()] = 0;
+  }
+
+  void Application::setArguments(int argc, char** argv)
+  {
+    globalArgc = argc;
+    globalArgv = argv;
+    std::vector<std::string>& args = lazyGet(globalArguments);
+    args.resize(argc);
+    for (int i=0; i<argc; ++i)
+      args[i] = argv[i];
   }
 
   bool Application::initialized()
@@ -154,6 +183,11 @@ namespace qi {
   {
     lazyGet(globalAtExit).push_back(func);
     return true;
+  }
+
+  const std::vector<std::string>& Application::arguments()
+  {
+    return lazyGet(globalArguments);
   }
 
 /*

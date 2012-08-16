@@ -39,6 +39,24 @@
  */
 
  /**
+ * \fn const std::vector<std::string>& qi::Application::arguments()
+ * \brief Get arguments as a vector<string>
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn void qi::Application::setArguments(const std::vector<std::string>&)
+ * \brief Set arguments as a vector<string>
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn void qi::Application::setArguments(int argc, char** argv)
+ * \brief Set arguments as argc, argv
+ * \ingroup qi::Application
+ */
+
+ /**
  * \fn const char *qi::Application::program()
  * \brief Return the current program.
  * \ingroup qi::Application
@@ -83,3 +101,10 @@
   * \ingroup qi::Application
   */
 
+  /**
+  * \def QI_COMMAND_LINE_OPTIONS(opts)
+  * \brief Register command line options using boost::program_options
+  * \ingroup qi::Application
+  * Use the () operator as described in boost::program_options
+  * documentation.
+  */

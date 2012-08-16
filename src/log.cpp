@@ -12,10 +12,13 @@
 #include <cstring>
 #include <iomanip>
 
+#include <qi/application.hpp>
 #include <qi/log/consoleloghandler.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/program_options.hpp>
+
 #ifdef QI_USE_BOOST_LOCK_FREE
 # include <boost/lockfree/fifo.hpp>
 #else
@@ -466,6 +469,36 @@ namespace qi {
     {
       _glSyncLog = sync;
     };
+
+    static void _setVerbosityInt(int v)
+    {
+      setVerbosity((LogLevel)v);
+    }
+
+    static void _setVerbose(bool on)
+    {
+      if (on)
+        setVerbosity(verbose);
+    }
+    static void _setDebug(bool on)
+    {
+      if (on)
+        setVerbosity(debug);
+    }
+    static void _quiet(bool on)
+    {
+      if (on)
+        removeLogHandler("consoleloghandler");
+    }
+
+    QI_COMMAND_LINE_OPTIONS(
+      ("verbose,v", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
+      ("debug,d", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
+      ("quiet,q",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")
+      ("context,c", value<int>()->notifier(&setContext), "Show context logs: [0-7] (0: none, 1: categories, 2: date, 3: file+line, 4: date+categories, 5: date+line+file, 6: categories+line+file, 7: all (date+categories+line+file+function)).")
+      ("synchronous-log", bool_switch()->notifier(boost::bind(&setSynchronousLog, true)),  "Activate synchronous logs.")
+      ("log-level,L", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
+      )
 
   } // namespace log
 } // namespace qi
