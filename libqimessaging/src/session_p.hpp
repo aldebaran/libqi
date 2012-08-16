@@ -31,7 +31,7 @@ namespace qi {
   {
   public:
 
-    ServerPrivate();
+    ServerPrivate(qi::Session* session);
     virtual ~ServerPrivate();
     virtual void newConnection(TransportServer* server, TransportSocket *client);
     virtual void onSocketReadyRead(TransportSocket *client, int id);
@@ -69,51 +69,10 @@ namespace qi {
     std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
     std::map<unsigned int, std::string>     _servicesIndex;
     TransportServer                        *_ts;
-    qi::Session                            *_session;
+    qi::Session                            *_self;
     boost::mutex                            _mutexServices;
     boost::recursive_mutex                  _mutexOthers;
     bool                                    _dying;
-  };
-
-  /// <summary> Used to advertise named services. Advertised Services are
-  /// registered with the service directory so that clients can find them. The exact
-  /// signature of your method is composed of the methods name and the
-  /// return and argument types of your handler.</summary>
-  /// \b Advertise a Service
-  /// \include example_qi_server.cpp
-  /// \ingroup Messaging
-  class QIMESSAGING_API Server {
-  public:
-
-    /// <summary> Constructs a Server object that can be used to
-    /// advertise services to clients. </summary>
-    /// <param name="name"> The name you want to give to the server. </param>
-    /// <param name="context">
-    /// An optional context that can be used to group or separate
-    /// transport resources.
-    /// </param>
-    Server();
-    virtual ~Server();
-
-    /// <summary> Listen on the given address. </summary>
-    /// <param name="session" the service directory session on which to advertise.</param>
-    /// <param name="address"> the url to listen to. You can use
-    /// a port value of 0 to let the system pick an available port.</param>
-    bool listen(qi::Session *session, const std::string &address);
-    void close();
-
-    qi::Future<unsigned int> registerService(const std::string &name,
-                                             qi::Object *obj);
-    qi::Future<void>         unregisterService(unsigned int idx);
-
-    std::vector<qi::ServiceInfo>  registeredServices();
-    qi::ServiceInfo               registeredService(const std::string &service);
-    qi::Object                   *registeredServiceObject(const std::string &service);
-
-    qi::Url                       listenUrl() const;
-
-  private:
-    ServerPrivate *_p;
   };
 
   struct ServiceRequest
@@ -162,7 +121,6 @@ namespace qi {
     qi::Session                        *_self;
     std::vector<qi::SessionInterface *> _callbacks;
     boost::mutex                        _mutexCallback;
-    qi::Server                          _server;
 
     boost::mutex                                                _mutexFuture;
     // Associate serviceRequest with the message id concerning it currently in

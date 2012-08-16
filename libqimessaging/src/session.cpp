@@ -44,6 +44,7 @@ namespace qi {
     }
     disconnect();
     waitForDisconnected();
+    delete _p2;
     delete _p;
   }
 
@@ -537,6 +538,7 @@ namespace qi {
   // ###### Session
   Session::Session()
     : _p(new SessionPrivate(this))
+    , _p2(new ServerPrivate(this))
   {
   }
 
@@ -708,48 +710,129 @@ namespace qi {
 
   bool Session::listen(const std::string &address)
   {
-    return _p->_server.listen(this, address);
+    qi::Url url(address);
+
+    if (url.protocol() != "tcp") {
+      qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
+      return false;
+    }
+    if (!_p2->_ts->listen(this, url))
+      return false;
+    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p2->_ts->listenUrl().str();
+    return true;
   }
 
   void Session::close()
   {
-    _p->_server.close();
+    _p2->_ts->close();
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,
                                                     qi::Object *obj)
   {
-    return _p->_server.registerService(name, obj);
+    if (_p2->_ts->endpoints().empty()) {
+      qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
+      return qi::Future<unsigned int>();
+    }
+    qi::ServiceInfo si;
+    si.setName(name);
+    si.setProcessId(qi::os::getpid());
+    si.setMachineId("TODO");
+
+    {
+      std::vector<qi::Url> epsUrl = _p2->_ts->endpoints();
+      std::vector<std::string> epsStr;
+      for (std::vector<qi::Url>::const_iterator epsUrlIt = epsUrl.begin();
+           epsUrlIt != epsUrl.end();
+           epsUrlIt++)
+      {
+        epsStr.push_back((*epsUrlIt).str());
+      }
+      si.setEndpoints(epsStr);
+    }
+
+    {
+      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      _p2->_servicesObject[obj] = si;
+    }
+
+    qi::Future<unsigned int> future;
+    future.addCallbacks(_p2, obj);
+    future = _p->registerService(si, future);
+
+    return future;
   }
 
   qi::Future<void> Session::unregisterService(unsigned int idx)
   {
-    return _p->_server.unregisterService(idx);
+    qi::Future<void> future = _p->unregisterService(idx);
+
+    {
+      boost::mutex::scoped_lock sl(_p2->_mutexServices);
+      _p2->_services.erase(idx);
+    }
+    {
+      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      std::map<unsigned int, std::string>::iterator it;
+      it = _p2->_servicesIndex.find(idx);
+      if (it == _p2->_servicesIndex.end()) {
+        qiLogError("qimessaging.Server") << "Can't find name associated to id:" << idx;
+      }
+      else {
+        _p2->_servicesByName.erase(it->second);
+        _p2->_servicesInfo.erase(it->second);
+      }
+      _p2->_servicesIndex.erase(idx);
+    }
+    return future;
   }
 
   std::vector<qi::ServiceInfo> Session::registeredServices()
   {
-    return _p->_server.registeredServices();
+    std::vector<qi::ServiceInfo> ssi;
+    std::map<std::string, qi::ServiceInfo>::iterator it;
+
+    {
+      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      for (it = _p2->_servicesInfo.begin(); it != _p2->_servicesInfo.end(); ++it) {
+        ssi.push_back(it->second);
+      }
+    }
+    return ssi;
   }
 
   qi::ServiceInfo Session::registeredService(const std::string &service)
   {
-    return _p->_server.registeredService(service);
+    std::map<std::string, qi::ServiceInfo>::iterator it;
+    {
+      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      it = _p2->_servicesInfo.find(service);
+      if (it != _p2->_servicesInfo.end())
+        return it->second;
+    }
+    return qi::ServiceInfo();
   }
 
   qi::Object *Session::registeredServiceObject(const std::string &service)
   {
-    return _p->_server.registeredServiceObject(service);
+    std::map<std::string, qi::Object *>::iterator it;
+    {
+      boost::recursive_mutex::scoped_lock sl(_p2->_mutexOthers);
+      it = _p2->_servicesByName.find(service);
+      if (it != _p2->_servicesByName.end())
+        return it->second;
+    }
+    return 0;
   }
 
   qi::Url Session::listenUrl() const
   {
-    return _p->_server.listenUrl();
+    return _p2->_ts->listenUrl();
   }
 
-  ServerPrivate::ServerPrivate()
+  ServerPrivate::ServerPrivate(qi::Session* session)
     : _ts(new TransportServer())
-    ,  _session(0)
+    , _self(session)
     , _dying(false)
   {
     _ts->addCallbacks(this);
@@ -961,7 +1044,7 @@ namespace qi {
       break;
     }
 
-  };
+  }
 
   void ServerPrivate::onFutureFailed(const std::string &error, void *data)
   {
@@ -993,7 +1076,7 @@ namespace qi {
       _services[idx] = obj;
     }
     // ack the Service directory to tell that we are ready
-    _session->_p->serviceReady(idx);
+    _self->_p->serviceReady(idx);
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       _servicesInfo[si.name()] = si;
@@ -1002,145 +1085,4 @@ namespace qi {
       _servicesObject.erase(it);
     }
   }
-
-  Server::Server()
-    : _p(new ServerPrivate())
-  {
-  }
-
-  Server::~Server()
-  {
-    delete _p;
-  }
-
-  bool Server::listen(qi::Session *session, const std::string &address)
-  {
-    qi::Url url(address);
-    _p->_session = session;
-
-    if (url.protocol() != "tcp") {
-      qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
-      return false;
-    }
-    if (!_p->_ts->listen(session, url))
-      return false;
-    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
-    return true;
-  }
-
-  qi::Future<unsigned int> Server::registerService(const std::string &name,
-                                                   qi::Object        *obj)
-  {
-    if (!_p->_session)
-    {
-      qiLogError("qimessaging.Server") << "no session attached to the server.";
-      return qi::Future<unsigned int>();
-    }
-
-    if (_p->_ts->endpoints().empty()) {
-      qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
-      return qi::Future<unsigned int>();
-    }
-    qi::ServiceInfo si;
-    si.setName(name);
-    si.setProcessId(qi::os::getpid());
-    si.setMachineId("TODO");
-
-    {
-      std::vector<qi::Url> epsUrl = _p->_ts->endpoints();
-      std::vector<std::string> epsStr;
-      for (std::vector<qi::Url>::const_iterator epsUrlIt = epsUrl.begin();
-           epsUrlIt != epsUrl.end();
-           epsUrlIt++)
-      {
-        epsStr.push_back((*epsUrlIt).str());
-      }
-      si.setEndpoints(epsStr);
-    }
-
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      _p->_servicesObject[obj] = si;
-    }
-
-    qi::Future<unsigned int> future;
-    future.addCallbacks(_p, obj);
-    future = _p->_session->_p->registerService(si, future);
-
-    return future;
-  };
-
-  qi::Future<void> Server::unregisterService(unsigned int idx)
-  {
-    if (!_p->_session)
-    {
-      qiLogError("qimessaging.Server") << "no session attached to the server.";
-      return qi::Future<void>();
-    }
-
-    qi::Future<void> future = _p->_session->_p->unregisterService(idx);
-
-    {
-      boost::mutex::scoped_lock sl(_p->_mutexServices);
-      _p->_services.erase(idx);
-    }
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      std::map<unsigned int, std::string>::iterator it;
-      it = _p->_servicesIndex.find(idx);
-      if (it == _p->_servicesIndex.end()) {
-        qiLogError("qimessaging.Server") << "Can't find name associated to id:" << idx;
-      }
-      else {
-        _p->_servicesByName.erase(it->second);
-        _p->_servicesInfo.erase(it->second);
-      }
-      _p->_servicesIndex.erase(idx);
-    }
-    return future;
-  };
-
-  void Server::close() {
-    _p->_ts->close();
-  }
-
-  std::vector<qi::ServiceInfo> Server::registeredServices() {
-    std::vector<qi::ServiceInfo> ssi;
-    std::map<std::string, qi::ServiceInfo>::iterator it;
-
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
-        ssi.push_back(it->second);
-      }
-    }
-    return ssi;
-  }
-
-  qi::ServiceInfo Server::registeredService(const std::string &service) {
-    std::map<std::string, qi::ServiceInfo>::iterator it;
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      it = _p->_servicesInfo.find(service);
-      if (it != _p->_servicesInfo.end())
-        return it->second;
-    }
-    return qi::ServiceInfo();
-  }
-
-  qi::Object *Server::registeredServiceObject(const std::string &service) {
-    std::map<std::string, qi::Object *>::iterator it;
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      it = _p->_servicesByName.find(service);
-      if (it != _p->_servicesByName.end())
-        return it->second;
-    }
-    return 0;
-  }
-
-  qi::Url Server::listenUrl() const {
-    return _p->_ts->listenUrl();
-  }
-
 }
