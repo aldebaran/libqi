@@ -321,9 +321,13 @@ namespace qi {
   QI_SIGNATURE_STRUCT_DECLARE(Cname)
 
 /// Implement functions required for class registration
-#define QI_REGISTER_STRUCT_IMPLEMENT(Cname, ...) \
-  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)    \
+#define QI_REGISTER_STRUCT_IMPLEMENT(Cname, ...)              \
+  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__) \
   __QI_SIGNATURE_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
+
+#define QI_REGISTER_STRUCT_PRIVATE_ACCESS(Cname)  \
+  QI_DATASTREAM_STRUCT_PRIVATE_ACCESS(Cname)      \
+  QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname)
 
 #include <qimessaging/object.hxx>
 #endif  // _QIMESSAGING_OBJECT_HPP_

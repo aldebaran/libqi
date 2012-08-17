@@ -284,13 +284,18 @@ namespace qi {
 #define QI_SIGNATURE_STRUCT_IMPLEMENT(Cname, ...) \
   __QI_SIGNATURE_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
 
+#define QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname) \
+  friend qi::SignatureStream &operator&(qi::SignatureStream &stream, const Cname& t);
+
 #define __QI_ADD_SIG(_, Cname, Field) \
   stream & t.Field;
 
 #define __QI_SIGNATURE_STRUCT_IMPLEMENT_(inl, Cname, ...)                         \
   inl qi::SignatureStream &operator&(qi::SignatureStream &stream, const Cname& t) \
   {                                                                               \
+    stream.write(qi::Signature::Type_Tuple);                                      \
     QI_VAARGS_APPLY(__QI_ADD_SIG, _, __VA_ARGS__);                                \
+    stream.write(qi::Signature::Type_Tuple_End);                                  \
     return stream;                                                                \
   }
 

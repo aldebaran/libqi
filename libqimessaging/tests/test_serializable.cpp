@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
+#include <qimessaging/object.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 
@@ -9,68 +10,72 @@
 //(ii)
 struct Point2D {
 public:
-  //friend class qi::serialization::serialize<Point2D>;
   Point2D(int x = 0, int y = 0)
-    : x(x), y(y)
+    : _x(x), _y(y)
   {}
+  int x() { return _x; }
+  int y() { return _y; }
 
-//private:
-  int x;
-  int y;
+  QI_REGISTER_STRUCT_PRIVATE_ACCESS(Point2D);
+private:
+  int _x;
+  int _y;
 };
+QI_REGISTER_STRUCT(Point2D, _x, _y);
 
 //(ii)
 struct TimeStamp {
+  TimeStamp(int i = 0, int j = 0)
+    : i(i),
+      j(j)
+  {}
+
   int i;
   int j;
 };
+QI_REGISTER_STRUCT(TimeStamp, i, j);
 
 
 //((ii)(ii))
 struct TimeStampedPoint2D {
-  Point2D p;
+  TimeStampedPoint2D(int x = 0, int y = 0, int i = 0, int j = 0)
+    : p(x, y),
+      t(i, j)
+  {}
+
+  Point2D   p;
   TimeStamp t;
 };
-
-
-//namespace qi {
-//  namespace serialization {
-
-//  template <>
-//  struct serialize<Point2D>  {
-//    static inline void write(Message &sd, const Point2D &val) {
-//      qi::serialization::serialize<int>::write(val.x);
-//      qi::serialization::serialize<int>::write(val.y);
-//    }
-
-//    static inline void read(Message &sd, Point2D &val) {
-//      qi::serialization::serialize<int>::read(val.x);
-//      qi::serialization::serialize<int>::read(val.y);
-//    }
-
-//    static inline void signature(std::string &sign) {
-//      qi::signatureFromObject::value(val.x, sign);
-//      qi::signatureFromObject::value(val.y, sign);
-//    }
-//  };
-
-//  }
-//};
-
+QI_REGISTER_STRUCT(TimeStampedPoint2D, p, t);
 
 
 TEST(testSerializable, POD) {
-  qi::Buffer      buf;
+  qi::Buffer       buf;
   qi::ODataStream  m(buf);
-  int i1, i2;
 
-  i1 = 42;
+  Point2D   p2d1(4, 2), p2d2;
+  TimeStamp ts1(3, 1) , ts2;
+  TimeStampedPoint2D   tsp2d1(4, 2, 3, 1), tsp2d2;
+  m << p2d1;
+  m << ts1;
+  m << tsp2d1;
 
-  m << i1;
   qi::IDataStream  m2(buf);
-  m2 >> i2;
+  m2 >> p2d2;
+  m2 >> ts2;
+  m2 >> tsp2d2;
 
-  EXPECT_EQ(i1, i2);
+  EXPECT_EQ(p2d1.x(), p2d2.x());
+  EXPECT_EQ(p2d1.y(), p2d2.y());
+  EXPECT_EQ(ts1.i, ts2.i);
+  EXPECT_EQ(ts1.j, ts2.j);
+  EXPECT_EQ(tsp2d1.p.x(), tsp2d2.p.x());
+  EXPECT_EQ(tsp2d1.p.y(), tsp2d2.p.y());
+  EXPECT_EQ(tsp2d1.t.i, tsp2d2.t.i);
+  EXPECT_EQ(tsp2d1.t.j, tsp2d2.t.j);
+  EXPECT_EQ("(ii)", qi::signatureFromObject::value(p2d1));
+  EXPECT_EQ("(ii)", qi::signatureFromObject::value(ts1));
+  EXPECT_EQ("((ii)(ii))", qi::signatureFromObject::value(tsp2d1));
 }
 
 
