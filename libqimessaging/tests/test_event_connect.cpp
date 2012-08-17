@@ -7,9 +7,11 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qimessaging/object.hpp>
+#include <qi/application.hpp>
 
 static int lastPayload = 0;
 static int lastPayload2 = 0;
+static int completed = 0;
 void onFire(const int& pl)
 {
   lastPayload = pl;
@@ -54,12 +56,27 @@ void testDelete(bool afirst, bool disconnectFirst)
     a.emitEvent("fire", 12);
     delete &a;
   }
+  ++completed;
 }
 
 TEST(TestObject, Destruction)
 {
+  // Run test from object thread as they are synchronous
+  for (int i=0; i<4; ++i)
+    qi::getDefaultObjectEventLoop()->asyncCall(0,
+      boost::bind(&testDelete, (bool)i/2, (bool)i%2));
+  while (completed < 4)
+    qi::os::msleep(100);
+  /*
   testDelete(false, false);
   testDelete(true, true);
   testDelete(false, true);
   testDelete(true, false);
+  */
+}
+
+int main(int argc, char **argv) {
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

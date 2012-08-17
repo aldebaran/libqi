@@ -70,7 +70,13 @@ namespace qi {
     FunctorResult dummy(
       boost::shared_ptr<FunctorResultBase>(new DropResult()));
     if (handler)
-      handler->call(args, dummy);
+    {
+      if (eventLoop)
+        eventLoop->asyncCall(0,
+          boost::bind(&Functor::call, handler, args, dummy));
+      else
+        handler->call(args, dummy);
+    }
     if (target)
       target->metaEmit(method, args);
   }

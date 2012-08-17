@@ -11,6 +11,7 @@
 #include "src/metaevent_p.hpp"
 #include "src/object_p.hpp"
 #include <qimessaging/object.hpp>
+#include <qimessaging/event_loop.hpp>
 
 namespace qi {
 
@@ -230,7 +231,27 @@ namespace qi {
       return;
     }
     if (mm->_p->_functor)
-      mm->_p->_functor->call(in, out);
+    {
+      bool synchronous = true;
+      switch (callType)
+      {
+      case MetaCallType_Direct:
+        break;
+      case MetaCallType_Auto:
+        synchronous = !_p->_eventLoop ||  _p->_eventLoop->isInEventLoopThread();
+        break;
+      case MetaCallType_Queued:
+        synchronous = !_p->_eventLoop;
+        break;
+      }
+      if (synchronous)
+        mm->_p->_functor->call(in, out);
+      else
+        _p->_eventLoop->asyncCall(0,
+          boost::bind(&Functor::call,
+            mm->_p->_functor,
+            in, out));
+    }
     else {
       std::stringstream ss;
       ss << "No valid functor for methodid: " << method;
@@ -344,7 +365,8 @@ namespace qi {
   }
 
   /// Resolve signature and bounce
-  unsigned int Object::xConnect(const std::string &signature, const Functor* functor)
+  unsigned int Object::xConnect(const std::string &signature, const Functor* functor,
+                                EventLoop* ctx)
   {
     int eventId = metaObject().eventId(signature);
     if (eventId < 0) {
@@ -360,12 +382,13 @@ namespace qi {
       qiLogError("object") << ss.str();
       return -1;
     }
-    return connect(eventId, functor);
+    return connect(eventId, functor, ctx);
   }
 
-  unsigned int Object::connect(unsigned int event, const Functor* functor)
+  unsigned int Object::connect(unsigned int event, const Functor* functor,
+                               EventLoop* ctx)
   {
-    return connect(event, MetaEvent::Subscriber(functor));
+    return connect(event, MetaEvent::Subscriber(functor, ctx));
   }
 
   unsigned int Object::connect(unsigned int event,
@@ -400,7 +423,10 @@ namespace qi {
     }
     return uid;
   }
-
+  static void delete_functor(const Functor* ptr)
+  {
+    delete ptr;
+  }
   bool Object::disconnect(unsigned int id)
   {
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
@@ -414,7 +440,11 @@ namespace qi {
       {
         MetaEvent::Subscriber& sub = j->second;
         // We have ownership of the handler, despite all the copies.
-        delete sub.handler;
+        if (sub.handler && sub.eventLoop && !sub.eventLoop->isInEventLoopThread())
+          sub.eventLoop->asyncCall(0,
+            boost::bind(delete_functor, sub.handler));
+        else
+          delete sub.handler;
         // If target is an object, deregister from it
         if (sub.target)
         {
@@ -446,6 +476,16 @@ namespace qi {
       return 0;
     }
     return connect(signal, MetaEvent::Subscriber(target, slot));
+  }
+
+  EventLoop* Object::eventLoop()
+  {
+    return _p->_eventLoop;
+  }
+
+  void Object::moveToEventLoop(EventLoop* ctx)
+  {
+    _p->_eventLoop = ctx;
   }
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {

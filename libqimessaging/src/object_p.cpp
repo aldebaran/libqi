@@ -11,7 +11,8 @@ namespace qi {
 
   ObjectPrivate::ObjectPrivate()
     : _meta(new qi::MetaObject)
-    , _dying(false){
+    , _dying(false)
+    , _eventLoop(getDefaultObjectEventLoop()) {
   }
 
   ObjectPrivate::~ObjectPrivate() {

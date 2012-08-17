@@ -18,7 +18,7 @@
 #define _QIMESSAGING_OBJECTPRIVATE_HPP_
 
 namespace qi {
-
+  class EventLoop;
   class ObjectPrivate {
   public:
     ObjectPrivate();
@@ -32,6 +32,8 @@ namespace qi {
     // Links that target us. Needed to be able to disconnect upon destruction
     std::vector<MetaEvent::Subscriber>  _registrations;
     boost::recursive_mutex              _mutexRegistration;
+    // Event loop in which calls are made
+    EventLoop                          *_eventLoop;
   };
 
   class MetaObjectPrivate {

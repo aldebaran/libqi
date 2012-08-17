@@ -40,10 +40,10 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj.call<int>("testBind2", 21));
 
   gGlobalResult = 0;
-  obj.call<void>("vtest", 21, 21);
+  obj.call<void>("vtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
   gGlobalResult = 0;
-  obj.call<void>("objvtest", 21, 21);
+  obj.call<void>("objvtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
 }
 

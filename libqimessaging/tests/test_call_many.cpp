@@ -8,6 +8,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
 
@@ -66,4 +67,11 @@ TEST(Test, Recurse)
   // And deleting a registered service is undefined behavior.
   session1.disconnect();
   session2.disconnect();
+}
+
+
+int main(int argc, char **argv) {
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

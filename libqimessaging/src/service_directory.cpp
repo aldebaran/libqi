@@ -76,7 +76,9 @@ namespace qi
     serviceReady(1);
     //serviceDirectory must have id '1'
     assert(regid == 1);
-
+    // Make calls synchronous on net event loop so that the 'currentSocket' hack
+    // works.
+    moveToEventLoop(getDefaultNetworkEventLoop());
     /*
      * Order is important. See qi::Message::ServiceDirectoryFunctions.
      */

@@ -12,6 +12,7 @@ namespace qi {
 
   class MetaEventPrivate;
   class Object;
+  class EventLoop;
   class QIMESSAGING_API MetaEvent {
   public:
     MetaEvent(const std::string &sig);
@@ -30,11 +31,11 @@ namespace qi {
     struct Subscriber
     {
       Subscriber()
-      : handler(0), target(0), method(0) {}
-      Subscriber(const Functor* func)
-      : handler(func), target(0), method(0) {}
+      : handler(0), eventLoop(0), target(0), method(0) {}
+      Subscriber(const Functor* func, EventLoop* ctx)
+      : handler(func), eventLoop(ctx), target(0), method(0) {}
       Subscriber(Object * target, unsigned int method)
-      : handler(0), target(target), method(method) {}
+      : handler(0), eventLoop(0), target(target), method(method) {}
       void call(const FunctorParameters& args);
 
       // Source information
@@ -44,7 +45,10 @@ namespace qi {
       unsigned int       linkId;
 
       // Target information
+      //   Mode 1: Direct functor call
       const Functor*     handler;
+      EventLoop*         eventLoop;
+      //  Mode 2: metaCall
       Object*            target;
       unsigned int       method;
     };

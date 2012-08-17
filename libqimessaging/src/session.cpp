@@ -14,6 +14,7 @@
 #include <qimessaging/service_info.hpp>
 #include "src/remoteobject_p.hpp"
 #include "src/session_p.hpp"
+#include "src/object_p.hpp"
 
 namespace qi {
 

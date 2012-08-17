@@ -17,6 +17,7 @@
 #include <qimessaging/future.hpp>
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
+#include <qimessaging/event_loop.hpp>
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
@@ -148,9 +149,12 @@ namespace qi {
      * event to one of your Slots instead of using this method.
      */
     template <typename FUNCTOR_TYPE>
-    unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback);
-    unsigned int xConnect(const std::string &signature, const Functor* functor);
-    unsigned int connect(unsigned int event, const Functor* Functor);
+    unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback,
+                         EventLoop* ctx = getDefaultObjectEventLoop());
+    unsigned int xConnect(const std::string &signature, const Functor* functor,
+                          EventLoop* ctx = getDefaultObjectEventLoop());
+    unsigned int connect(unsigned int event, const Functor* Functor,
+                         EventLoop* ctx = getDefaultObjectEventLoop());
 
     /// Calls given functor when event is fired. Takes ownership of functor.
     virtual unsigned int connect(unsigned int event,
@@ -178,10 +182,13 @@ namespace qi {
      * so that we can advertise this method.
      *
      */
-  protected:
+
     /// Trigger event handlers
     void trigger(unsigned int event, const FunctorParameters &in);
-  protected:
+
+    void moveToEventLoop(EventLoop* ctx);
+    EventLoop* eventLoop();
+
     boost::shared_ptr<ObjectPrivate> _p;
   };
 
@@ -287,7 +294,9 @@ namespace qi {
   }
 
   template <typename FUNCTION_TYPE>
-  unsigned int Object::connect(const std::string& eventName, FUNCTION_TYPE callback)
+  unsigned int Object::connect(const std::string& eventName,
+                               FUNCTION_TYPE callback,
+                               EventLoop* ctx)
   {
     std::stringstream   signature;
     qi::SignatureStream sigs;
@@ -301,7 +310,7 @@ namespace qi {
 
     signature << eventName << "::(" << sigs.str() << ")";
 
-    return xConnect(signature.str(), makeFunctor(callback));
+    return xConnect(signature.str(), makeFunctor(callback), ctx);
   }
 
 };

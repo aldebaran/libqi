@@ -79,34 +79,38 @@ namespace qi {
    #end for
     signature += ")";
     signatureFromType<R>::value(sigret);
-    int methodId = metaObject().methodId(signature);
-    if (methodId >=0)
+    bool canBypass = !eventLoop() || eventLoop()->isInEventLoopThread();
+    if (canBypass)
     {
-      qi::MetaMethod* mm = metaObject().method(methodId);
-      if (mm->functor())
+      int methodId = metaObject().methodId(signature);
+      if (methodId >=0)
       {
-        // Try to bypass serialization by fetching the boost::function.
-        // We validate that it is of the type we expect by using dynamic_cast.
-        // If it is not (paussible cause: missing/extra ref, int vs long)
-        // we fallback to serialization.
-        //FIXME Use a typedef once someone manages to type it.
-        // typedef R (${generate_full_type_list($i)}) Func;
-        const detail::BoostFunctor<R (${generate_full_type_list($i)})>* bf =
-          dynamic_cast<const detail::BoostFunctor<R (${generate_full_type_list($i)})>*>(mm->functor());
-        if (bf)
+        qi::MetaMethod* mm = metaObject().method(methodId);
+        if (mm->functor())
         {
-          const boost::function<R (${generate_full_type_list($i)})>& f = bf->f;
-          Promise<R> res;
-          detail::_PromiseWrap<R> pw(res);
-          // Calls 'res.setValue(f(...))', do nothing for void.
-          pw() , f(${generate_arg_list($i)});
-          assert(res.future().isReady());
-          return res.future();
-        }
-        else
-        {
-          qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
+          // Try to bypass serialization by fetching the boost::function.
+          // We validate that it is of the type we expect by using dynamic_cast.
+          // If it is not (paussible cause: missing/extra ref, int vs long)
+          // we fallback to serialization.
+          //FIXME Use a typedef once someone manages to type it.
+          // typedef R (${generate_full_type_list($i)}) Func;
+          const detail::BoostFunctor<R (${generate_full_type_list($i)})>* bf =
+            dynamic_cast<const detail::BoostFunctor<R (${generate_full_type_list($i)})>*>(mm->functor());
+          if (bf)
+          {
+            const boost::function<R (${generate_full_type_list($i)})>& f = bf->f;
+            Promise<R> res;
+            detail::_PromiseWrap<R> pw(res);
+            // Calls 'res.setValue(f(...))', do nothing for void.
+            pw() , f(${generate_arg_list($i)});
+            assert(res.future().isReady());
+            return res.future();
+          }
+          else
+          {
+            qiLogDebug("qi.object") << "Signature mismatch, cannot bypass call "
             << typeid(bf).name() << " " << typeid(*mm->functor()).name();
+          }
         }
       }
     }
