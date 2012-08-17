@@ -76,11 +76,14 @@ namespace qi {
     IDataStream& operator>>(qi::int16_t  &s);
     IDataStream& operator>>(qi::int32_t  &i);
     IDataStream& operator>>(qi::int64_t  &l);
+    IDataStream& operator>>(long  &l);
 
     IDataStream& operator>>(qi::uint8_t  &uc);
     IDataStream& operator>>(qi::uint16_t &us);
     IDataStream& operator>>(qi::uint32_t &ui);
     IDataStream& operator>>(qi::uint64_t &ul);
+    IDataStream& operator>>(unsigned long  &l);
+
     IDataStream& operator>>(float    &f);
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
@@ -121,11 +124,13 @@ namespace qi {
     ODataStream& operator<<(qi::int16_t  i);
     ODataStream& operator<<(qi::int32_t  i);
     ODataStream& operator<<(qi::int64_t  l);
+    ODataStream& operator<<(long);
 
     ODataStream& operator<<(qi::uint8_t  uc);
     ODataStream& operator<<(qi::uint16_t us);
     ODataStream& operator<<(qi::uint32_t ui);
     ODataStream& operator<<(qi::uint64_t ul);
+    ODataStream& operator<<(unsigned long);
 
     ODataStream& operator<<(float  i);
     ODataStream& operator<<(double i);

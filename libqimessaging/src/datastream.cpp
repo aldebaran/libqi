@@ -33,18 +33,33 @@
 # define __QI_DEBUG_SERIALIZATION_DATA_W(x, d)
 #endif
 
+#define QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(Type, TypeCast)  \
+  IDataStream& IDataStream::operator>>(Type &b)               \
+  {                                                           \
+    TypeCast res;                                             \
+    (*this) >> res;                                           \
+    b = res;                                                  \
+    return *this;                                             \
+  }                                                           \
+  ODataStream& ODataStream::operator<<(Type b)                \
+  {                                                           \
+    TypeCast val = b;                                         \
+    return (*this) << val;                                    \
+  }
+
+
 #define QI_SIMPLE_SERIALIZER_IMPL(Type)                                 \
-  IDataStream& IDataStream::operator>>(Type &b)                           \
+    IDataStream& IDataStream::operator>>(Type &b)                       \
   {                                                                     \
     int ret;                                                            \
-    ret = read((void *)&b, sizeof(Type));                       \
+    ret = read((void *)&b, sizeof(Type));                               \
     if (ret != sizeof(Type))                                            \
       setStatus(Status_ReadPastEnd)                                     \
     __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);                           \
     return *this;                                                       \
   }                                                                     \
                                                                         \
-  ODataStream& ODataStream::operator<<(Type b)                            \
+  ODataStream& ODataStream::operator<<(Type b)                          \
   {                                                                     \
     int ret;                                                            \
     ret = write((const char*)(const void *)&b, sizeof(b));              \
@@ -53,7 +68,6 @@
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);                           \
     return *this;                                                       \
   }
-
 
 namespace qi {
 
@@ -69,6 +83,8 @@ namespace qi {
   QI_SIMPLE_SERIALIZER_IMPL(qi::uint64_t);
   QI_SIMPLE_SERIALIZER_IMPL(float);
   QI_SIMPLE_SERIALIZER_IMPL(double);
+  QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(long         , qi::int64_t);
+  QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(unsigned long, qi::uint64_t);
 
   IDataStream::IDataStream(const qi::Buffer& buffer)
   : _status(Status_Ok)
