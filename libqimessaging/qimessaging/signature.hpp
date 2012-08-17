@@ -172,6 +172,7 @@ namespace qi {
     // - you are taking the signature of an unsupported type (pointer, function pointer, method pointer)
     // - you forgot to add an operator& for your struct/class.
     BOOST_STATIC_ASSERT(sizeof(t) == 0);
+    return os;
    #endif
   }
 
