@@ -14,6 +14,7 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <qi/application.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/session.hpp>
 #include "dataperftimer.hpp"
@@ -171,6 +172,7 @@ int main_server(std::string host, std::string port)
 
 int main(int argc, char **argv)
 {
+  qi::Application app(argc, argv);
   if (argc > 1
     && (argv[1] == std::string("--help") || argv[1] == std::string("-h")))
   {
