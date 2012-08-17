@@ -192,7 +192,8 @@ namespace qi {
       {}
 
       template<typename T> void operator()(T *x) {
-        val & (*x);
+        static T v;
+        val & v;
       }
 
       qi::SignatureStream &val;
@@ -209,7 +210,11 @@ namespace qi {
     typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
     typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
 
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer< boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    boost::mpl::for_each<
+      boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
     signature << name << "::(" << sigs.str() << ")";
 
     typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
@@ -226,7 +231,12 @@ namespace qi {
     std::string         sigret;
 
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    boost::mpl::for_each<
+      boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+
     signature << name << "::(" << sigs.str() << ")";
 
     typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
@@ -244,7 +254,12 @@ namespace qi {
     std::string         sigret;
 
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    boost::mpl::for_each<
+      boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+
     signature << name << "::(" << sigs.str() << ")";
 
     typedef typename boost::function_types::result_type<T>::type ResultType;
@@ -260,7 +275,12 @@ namespace qi {
     qi::SignatureStream sigs;
 
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    boost::mpl::for_each<
+      boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+
     signature << eventName << "::(" << sigs.str() << ")";
 
     return xAdvertiseEvent(signature.str());
@@ -273,7 +293,12 @@ namespace qi {
     qi::SignatureStream sigs;
 
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each< boost::mpl::transform_view<ArgsType, boost::add_pointer<boost::mpl::_1> > >(qi::detail::signature_function_arg_apply(sigs));
+    boost::mpl::for_each<
+      boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
+        boost::remove_const<
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+
     signature << eventName << "::(" << sigs.str() << ")";
 
     return xConnect(signature.str(), makeFunctor(callback));
