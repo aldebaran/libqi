@@ -33,18 +33,28 @@
 # define __QI_DEBUG_SERIALIZATION_DATA_W(x, d)
 #endif
 
+
 #define QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(Type, TypeCast)  \
   IDataStream& IDataStream::operator>>(Type &b)               \
   {                                                           \
     TypeCast res;                                             \
-    (*this) >> res;                                           \
+    int ret;                                                  \
+    ret = read((void *)&res, sizeof(res));                    \
+    if (ret != sizeof(res))                                   \
+      setStatus(Status_ReadPastEnd)                           \
+    __QI_DEBUG_SERIALIZATION_DATA_R(Type, b);                 \
     b = res;                                                  \
     return *this;                                             \
   }                                                           \
   ODataStream& ODataStream::operator<<(Type b)                \
   {                                                           \
+    int ret;                                                  \
     TypeCast val = b;                                         \
-    return (*this) << val;                                    \
+    ret = write((const char*)&val, sizeof(val));              \
+    if (ret == -1)                                            \
+      setStatus(Status_WriteError);                           \
+    __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);                 \
+    return *this;                                             \
   }
 
 
@@ -69,22 +79,28 @@
     return *this;                                                       \
   }
 
+
+
+
+
+
+
 namespace qi {
 
   QI_SIMPLE_SERIALIZER_IMPL(bool);
   QI_SIMPLE_SERIALIZER_IMPL(char);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::int8_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::uint8_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::int16_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::uint16_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::int32_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::uint32_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::int64_t);
-  QI_SIMPLE_SERIALIZER_IMPL(qi::uint64_t);
-  QI_SIMPLE_SERIALIZER_IMPL(float);
-  QI_SIMPLE_SERIALIZER_IMPL(double);
+  QI_SIMPLE_SERIALIZER_IMPL(signed char);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned char);
+  QI_SIMPLE_SERIALIZER_IMPL(short);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned short);
+  QI_SIMPLE_SERIALIZER_IMPL(int);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned int);
   QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(long         , qi::int64_t);
   QI_SIMPLE_SERIALIZER_IMPL_FORCE_TYPE(unsigned long, qi::uint64_t);
+  QI_SIMPLE_SERIALIZER_IMPL(long long);
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned long long);
+  QI_SIMPLE_SERIALIZER_IMPL(float);
+  QI_SIMPLE_SERIALIZER_IMPL(double);
 
   IDataStream::IDataStream(const qi::Buffer& buffer)
   : _status(Status_Ok)

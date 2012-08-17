@@ -70,19 +70,20 @@ namespace qi {
       Status_ReadPastEnd            = 2,
     };
 
-    IDataStream& operator>>(bool     &b);
-    IDataStream& operator>>(char     &c);
-    IDataStream& operator>>(qi::int8_t   &c);
-    IDataStream& operator>>(qi::int16_t  &s);
-    IDataStream& operator>>(qi::int32_t  &i);
-    IDataStream& operator>>(qi::int64_t  &l);
-    IDataStream& operator>>(long  &l);
+    IDataStream& operator>>(bool      &b);
 
-    IDataStream& operator>>(qi::uint8_t  &uc);
-    IDataStream& operator>>(qi::uint16_t &us);
-    IDataStream& operator>>(qi::uint32_t &ui);
-    IDataStream& operator>>(qi::uint64_t &ul);
-    IDataStream& operator>>(unsigned long  &l);
+    IDataStream& operator>>(char        &c);
+    IDataStream& operator>>(signed char &c);
+    IDataStream& operator>>(short       &s);
+    IDataStream& operator>>(int         &i);
+    IDataStream& operator>>(long        &l);
+    IDataStream& operator>>(long long   &ll);
+
+    IDataStream& operator>>(unsigned char  &uc);
+    IDataStream& operator>>(unsigned short &us);
+    IDataStream& operator>>(unsigned int   &ui);
+    IDataStream& operator>>(unsigned long  &ul);
+    IDataStream& operator>>(unsigned long long &ull);
 
     IDataStream& operator>>(float    &f);
     IDataStream& operator>>(double   &d);
@@ -117,20 +118,20 @@ namespace qi {
     int write(const char *str, size_t len);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
-    ODataStream& operator<<(bool     b);
-    ODataStream& operator<<(char     c);
+    ODataStream& operator<<(bool      b);
 
-    ODataStream& operator<<(qi::int8_t   c);
-    ODataStream& operator<<(qi::int16_t  i);
-    ODataStream& operator<<(qi::int32_t  i);
-    ODataStream& operator<<(qi::int64_t  l);
-    ODataStream& operator<<(long);
+    ODataStream& operator<<(char        c);
+    ODataStream& operator<<(signed char c);
+    ODataStream& operator<<(short       i);
+    ODataStream& operator<<(int         i);
+    ODataStream& operator<<(long        l);
+    ODataStream& operator<<(long long   ll);
 
-    ODataStream& operator<<(qi::uint8_t  uc);
-    ODataStream& operator<<(qi::uint16_t us);
-    ODataStream& operator<<(qi::uint32_t ui);
-    ODataStream& operator<<(qi::uint64_t ul);
-    ODataStream& operator<<(unsigned long);
+    ODataStream& operator<<(unsigned char  uc);
+    ODataStream& operator<<(unsigned short us);
+    ODataStream& operator<<(unsigned int   ui);
+    ODataStream& operator<<(unsigned long  ul);
+    ODataStream& operator<<(unsigned long long ull);
 
     ODataStream& operator<<(float  i);
     ODataStream& operator<<(double i);

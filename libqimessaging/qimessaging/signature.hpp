@@ -144,22 +144,24 @@ namespace qi {
   };
 
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const bool &t);
+
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const char&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int8_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint8_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int16_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint16_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int32_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint32_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int64_t&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint64_t&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const signed char&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned char&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const short&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned short&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const int&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned int&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const long&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const long long&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long long&);
+
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const float&);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const double&);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const std::string&);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const char*);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, char*);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const long&);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long&);
 
   //Catch all to prevent the compiler to cast everything he can to bool.
   // eg: (pointers, functions pointers, shared_ptr,...)

@@ -19,42 +19,52 @@ qi::SignatureStream &operator&(qi::SignatureStream &os, const char&) {
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int8_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const signed char&) {
   os.write(qi::Signature::Type_Int8);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint8_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned char&) {
   os.write(qi::Signature::Type_UInt8);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int16_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const short&) {
   os.write(qi::Signature::Type_Int16);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint16_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned short&) {
   os.write(qi::Signature::Type_UInt16);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int32_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const int&) {
   os.write(qi::Signature::Type_Int32);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint32_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned int&) {
   os.write(qi::Signature::Type_UInt32);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::int64_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const long&) {
   os.write(qi::Signature::Type_Int64);
   return os;
 }
 
-qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::uint64_t&) {
+qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long&) {
+  os.write(qi::Signature::Type_UInt64);
+  return os;
+}
+
+qi::SignatureStream &operator&(qi::SignatureStream &os, const long long&) {
+  os.write(qi::Signature::Type_Int64);
+  return os;
+}
+
+qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long long&) {
   os.write(qi::Signature::Type_UInt64);
   return os;
 }
@@ -81,14 +91,6 @@ qi::SignatureStream &operator&(qi::SignatureStream &os, const char*) {
 
 qi::SignatureStream &operator&(qi::SignatureStream &os, char*) {
   os.write(qi::Signature::Type_String);
-  return os;
-}
-qi::SignatureStream &operator&(qi::SignatureStream &os, const long&) {
-  os.write(qi::Signature::Type_Int64);
-  return os;
-}
-qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long&) {
-  os.write(qi::Signature::Type_UInt64);
   return os;
 }
 
