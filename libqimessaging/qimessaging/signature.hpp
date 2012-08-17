@@ -158,6 +158,8 @@ namespace qi {
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const std::string&);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const char*);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, char*);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const long&);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const unsigned long&);
 
   //Catch all to prevent the compiler to cast everything he can to bool.
   // eg: (pointers, functions pointers, shared_ptr,...)
