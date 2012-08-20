@@ -471,7 +471,7 @@ namespace qi
       {
         // If we are connected, disconnect and retry asynchronously.
         boost::recursive_mutex::scoped_lock sl(mutex);
-        delay = bev;
+        delay = !!bev;
         disconnect();
       }
       // While our tracker says something is running, try again.
