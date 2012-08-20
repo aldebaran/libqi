@@ -4,6 +4,7 @@
  * found in the COPYING file.
  */
 
+#include <qi/log.hpp>
 #include <qi/os.hpp>
 
 #include <boost/filesystem.hpp>
@@ -45,8 +46,10 @@ namespace qi {
 
     void *dlopen(const char *filename, int flag) {
       void *handle = NULL;
-      boost::filesystem::path fname(libNameToFileName(filename), qi::unicodeFacet());
-
+      boost::filesystem::path fname(filename, qi::unicodeFacet());
+      std::string file = libNameToFileName(fname.filename().string());
+      fname = fname.parent_path() / file;
+      qiLogDebug("qi.dlopen") << "opening " << fname;
      #ifdef WIN32
       handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
      #else
