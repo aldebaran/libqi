@@ -90,6 +90,18 @@
  */
 
  /**
+ * \fn void* qi::Application::loadModule(const std::string& name, int flags=0)
+ * \brief Load a module into the current process.
+ * \param name The module path and name. If no extension is used, the
+ *        correct extension for a library on the current platform is used.
+ * \param flags Extra flags to pass to the dlopen function.
+ * \return A handle, to be used by qi::os::dlsym() or unloadModule().
+ *
+ * The module can execute code when loaded by using QI_AT_ENTER().
+ * \ingroup qi::Application
+ */
+
+ /**
   * \def QI_AT_ENTER(func)
   * \brief calls qi::Application::atEnter(func) at static initialization time.
   * \ingroup qi::Application

@@ -27,6 +27,8 @@ namespace qi {
     static void setArguments(int argc, char** argv);
     static void setArguments(const std::vector<std::string>& arguments);
 
+    static void* loadModule(const std::string& name, int flags=-1);
+    static void unloadModule(void* handle);
     static bool initialized();
 
     static const char* program();

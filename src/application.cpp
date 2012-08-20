@@ -121,8 +121,29 @@ namespace qi {
     qiLogDebug("Application") << "Executing " << fl.size() << " atEnter handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+    fl.clear();
     argc = Application::argc();
     argv = globalArgv;
+  }
+
+  void* Application::loadModule(const std::string& moduleName, int flags)
+  {
+    void* handle = os::dlopen(moduleName.c_str(), flags);
+    qiLogDebug("qi.Application") << "Loadmodule " << handle;
+    if (!handle)
+      qiLogVerbose("qi.Application") << "dlopen failed with " << os::dlerror();
+    // Reprocess atEnter list in case the module had AT_ENTER
+    FunctionList& fl = lazyGet(globalAtEnter);
+    qiLogDebug("qi.Application") << "Executing " << fl.size() << " atEnter handlers";
+    for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
+      (*i)();
+    fl.clear();
+    return handle;
+  }
+
+  void Application::unloadModule(void* handle)
+  {
+    os::dlclose(handle);
   }
 
   Application::~Application()
@@ -175,6 +196,7 @@ namespace qi {
 
   bool Application::atEnter(boost::function<void()> func)
   {
+    qiLogDebug("qi.Application") << "atEnter";
     lazyGet(globalAtEnter).push_back(func);
     return true;
   }
