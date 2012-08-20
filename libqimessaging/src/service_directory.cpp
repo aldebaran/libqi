@@ -269,7 +269,7 @@ namespace qi
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
       msg.setService(idx);
-      msg.setPath(qi::Message::Path_Main);
+      msg.setObject(qi::Message::Object_Main);
       msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
 
       qi::Buffer     buf;
@@ -321,7 +321,7 @@ namespace qi
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
       msg.setService(idx);
-      msg.setPath(qi::Message::Path_Main);
+      msg.setObject(qi::Message::Object_Main);
       msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
       qi::Buffer     buf;

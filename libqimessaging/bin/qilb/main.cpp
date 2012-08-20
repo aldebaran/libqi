@@ -130,7 +130,7 @@ public:
     socket->read(id, &msg);
 
     if (msg.service() == qi::Message::Service_Server &&
-        msg.function() == qi::Message::GatewayFunction_Connect)
+        msg.function() == qi::Message::ServerFunction_Connect)
     {
       // forge reply
       qi::Buffer buf;
@@ -138,8 +138,8 @@ public:
       ans.setBuffer(buf);
       ans.setService(qi::Message::Service_Server);
       ans.setType(qi::Message::Type_Reply);
-      ans.setFunction(qi::Message::GatewayFunction_Connect);
-      ans.setPath(qi::Message::Path_Main);
+      ans.setFunction(qi::Message::ServerFunction_Connect);
+      ans.setObject(qi::Message::Object_Main);
       qi::ODataStream d(buf);
 
       RemoteConnection *rc = new RemoteConnection(socket);

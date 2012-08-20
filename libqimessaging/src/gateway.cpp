@@ -207,7 +207,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
     // this will allow S.1 to be handle correctly
     sdMsg.setType(Message::Type_Call);
     sdMsg.setService(Message::Service_ServiceDirectory);
-    sdMsg.setPath(Message::Path_Main);
+    sdMsg.setObject(Message::Object_Main);
     sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
 
     _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, (TransportSocket*) 0);
@@ -345,7 +345,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
    * A RemoteGateway can be connected to only one ReverseGateway.
    */
   if (msg.service() == Message::Service_Server &&
-      msg.function() == Message::GatewayFunction_Connect)
+      msg.function() == Message::ServerFunction_Connect)
   {
     if (_type == Type_RemoteGateway && msg.type() == Message::Type_Call)
     {
@@ -367,8 +367,8 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
         ans.setBuffer(buf);
         ans.setService(qi::Message::Service_Server);
         ans.setType(qi::Message::Type_Reply);
-        ans.setFunction(qi::Message::GatewayFunction_Connect);
-        ans.setPath(qi::Message::Path_Main);
+        ans.setFunction(qi::Message::ServerFunction_Connect);
+        ans.setObject(qi::Message::Object_Main);
         qi::ODataStream d(buf);
         d << "";
         socket->send(ans);
@@ -444,8 +444,8 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
       qi::Message msg;
       msg.setService(qi::Message::Service_Server);
       msg.setType(qi::Message::Type_Call);
-      msg.setFunction(qi::Message::GatewayFunction_Connect);
-      msg.setPath(qi::Message::Path_Main);
+      msg.setFunction(qi::Message::ServerFunction_Connect);
+      msg.setObject(qi::Message::Object_Main);
 
       ts->send(msg);
       _clients.push_back(ts);

@@ -36,10 +36,10 @@ namespace qi {
       Service_ServiceDirectory = 1,
     };
 
-    enum Path
+    enum Object
     {
-      Path_None = 0,
-      Path_Main = 1
+      Object_None = 0,
+      Object_Main = 1
     };
 
     enum Function
@@ -59,12 +59,14 @@ namespace qi {
     enum ServerFunction
     {
       ServerFunction_RegisterEvent     = 1,
-      ServerFunction_UnregisterEvent   = 2
+      ServerFunction_UnregisterEvent   = 2,
+      ServerFunction_Connect           = 3,
     };
 
-    enum GatewayFunction
+    enum ServerEvent
     {
-      GatewayFunction_Connect = 1,
+      ServerEvent_ServiceRegistered   = 1,
+      ServerEvent_ServiceUnregistered = 2,
     };
 
     enum Type
@@ -87,17 +89,25 @@ namespace qi {
     void         setId(unsigned int id);
     unsigned int id() const;
 
-    void         setType(qi::uint32_t type);
+    void         setVersion(qi::uint16_t type);
+    unsigned int version() const;
+
+    void         setType(qi::uint16_t type);
     unsigned int type() const;
 
     void         setService(qi::uint32_t service);
     unsigned int service() const;
 
-    void         setPath(qi::uint32_t path);
-    unsigned int path() const;
+    void         setObject(qi::uint32_t object);
+    unsigned int object() const;
 
     void         setFunction(qi::uint32_t function);
     unsigned int function() const;
+
+    void         setEvent(qi::uint32_t event);
+    unsigned int event() const;
+
+    unsigned int action() const;
 
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;

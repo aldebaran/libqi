@@ -71,7 +71,7 @@ int thd_client(qi::TransportSocket *socket)
   qi::Message msg;
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
-  msg.setPath(1);
+  msg.setObject(qi::Message::Object_Main);
   msg.setFunction(1);
 
   for (int i = 0; i < 12; ++i)

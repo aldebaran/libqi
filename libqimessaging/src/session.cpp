@@ -35,7 +35,7 @@ namespace qi {
       msg.setService(_service);
       msg.setFunction(_event);
       msg.setType(Message::Type_Event);
-      msg.setPath(Message::Path_Main);
+      msg.setObject(Message::Object_Main);
       _client->send(msg);
     }
   private:
@@ -102,7 +102,7 @@ namespace qi {
         sr->connected = true;
         msg.setType(qi::Message::Type_Call);
         msg.setService(sr->serviceId);
-        msg.setPath(qi::Message::Path_Main);
+        msg.setObject(qi::Message::Object_Main);
         msg.setFunction(qi::Message::Function_MetaObject);
         _futureService[msg.id()] = sr;
       }
@@ -551,7 +551,7 @@ namespace qi {
     qi::Message msg;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
+    msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::Buffer     buf;
@@ -604,7 +604,7 @@ namespace qi {
     qi::Buffer  buf;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
+    msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
 
     qi::ODataStream d(buf);
@@ -664,7 +664,7 @@ namespace qi {
     qi::Buffer  buf;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
+    msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_ServiceReady);
 
     qi::ODataStream d(buf);
@@ -767,7 +767,7 @@ namespace qi {
 
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
+    msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
     {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
@@ -797,7 +797,7 @@ namespace qi {
     // Ask a ServiceInfo to the ServiceDirectory.
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setPath(qi::Message::Path_Main);
+    msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
     qi::ODataStream dr(buf);
     dr << service;

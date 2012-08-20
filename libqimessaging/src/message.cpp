@@ -72,10 +72,11 @@ namespace qi {
     os << "message {" << std::endl
        << "  size=" << msg._p->header.size << "," << std::endl
        << "  id  =" << msg.id() << "," << std::endl
+       << "  vers=" << msg.version() << "," << std::endl
        << "  type=" << msg.type() << "," << std::endl
        << "  serv=" << msg.service() << "," << std::endl
-       << "  path=" << msg.path() << "," << std::endl
-       << "  func=" << msg.function() << "," << std::endl
+       << "  path=" << msg.object() << "," << std::endl
+       << "  acti=" << msg.action() << "," << std::endl
        << "  data=" << std::endl;
     msg._p->buffer.dump();
     os << "}";
@@ -92,7 +93,17 @@ namespace qi {
     return _p->header.id;
   }
 
-  void Message::setType(qi::uint32_t type)
+  void Message::setVersion(qi::uint16_t version)
+  {
+    _p->header.version = version;
+  }
+
+  unsigned int Message::version() const
+  {
+    return _p->header.version;
+  }
+
+  void Message::setType(qi::uint16_t type)
   {
     _p->header.type = type;
   }
@@ -112,24 +123,29 @@ namespace qi {
     return _p->header.service;
   }
 
-  void Message::setPath(qi::uint32_t path)
+  void Message::setObject(qi::uint32_t object)
   {
-    _p->header.path = path;
+    _p->header.object = object;
   }
 
-  unsigned int Message::path() const
+  unsigned int Message::object() const
   {
-    return _p->header.path;
+    return _p->header.object;
   }
 
   void Message::setFunction(qi::uint32_t function)
   {
-    _p->header.function = function;
+    _p->header.action = function;
   }
 
   unsigned int Message::function() const
   {
-    return _p->header.function;
+    return _p->header.action;
+  }
+
+  unsigned int Message::action() const
+  {
+    return _p->header.action;
   }
 
   void Message::setBuffer(const Buffer &buffer)
@@ -152,7 +168,7 @@ namespace qi {
     setId(call.id());
     setType(qi::Message::Type_Reply);
     setService(call.service());
-    setPath(call.path());
+    setObject(call.object());
     setFunction(call.function());
   }
 
@@ -160,7 +176,7 @@ namespace qi {
   {
     setType(msg.type());
     setService(msg.service());
-    setPath(msg.path());
+    setObject(msg.object());
     setFunction(msg.function());
   }
 
@@ -178,10 +194,10 @@ namespace qi {
       return false;
     }
 
-    if (path() == qi::Message::Path_None)
+    if (object() == qi::Message::Object_None)
     {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (path is 0)" << std::endl;
-      assert(path() != qi::Message::Path_None);
+      qiLogError("qimessaging.TransportSocket")  << "Message dropped (object is 0)" << std::endl;
+      assert(object() != qi::Message::Object_None);
       return false;
     }
 

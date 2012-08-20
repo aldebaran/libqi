@@ -93,7 +93,7 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
   msg.setBuffer(in.buffer());
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
-  msg.setPath(qi::Message::Path_Main);
+  msg.setObject(qi::Message::Object_Main);
   //todo handle failure
   msg.setFunction(method);
 
@@ -142,7 +142,7 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   msg.setBuffer(args.buffer());
   msg.setType(Message::Type_Event);
   msg.setService(_service);
-  msg.setPath(qi::Message::Path_Main);
+  msg.setObject(qi::Message::Object_Main);
   msg.setFunction(event);
   if (!_ts->send(msg)) {
     qiLogError("remoteobject") << "error while registering event";
@@ -160,7 +160,7 @@ unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscrib
   qi::ODataStream ds(buf);
   ds << _service << event << uid;
   msg.setBuffer(buf);
-  msg.setPath(qi::Message::Path_Main);
+  msg.setObject(qi::Message::Object_Main);
   msg.setType(Message::Type_Event);
   msg.setService(Message::Service_Server);
   msg.setFunction(Message::ServerFunction_RegisterEvent);
@@ -197,7 +197,7 @@ bool RemoteObject::disconnect(unsigned int linkId)
     msg.setBuffer(buf);
     msg.setType(Message::Type_Event);
     msg.setService(Message::Service_Server);
-    msg.setPath(Message::Path_Main);
+    msg.setObject(Message::Object_Main);
     msg.setFunction(Message::ServerFunction_UnregisterEvent);
     if (!_ts->send(msg)) {
       qiLogError("remoteobject") << "error while registering event";

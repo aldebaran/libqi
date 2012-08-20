@@ -23,11 +23,11 @@ namespace qi
       qi::uint32_t magic;
       qi::uint32_t id;
       qi::uint32_t size;
-      qi::uint32_t type;
+      qi::uint16_t version;
+      qi::uint16_t type;
       qi::uint32_t service;
-      qi::uint32_t path;
-      qi::uint32_t function;
-      qi::uint32_t reserved;
+      qi::uint32_t object;
+      qi::uint32_t action;
     } MessageHeader;
 
     MessagePrivate();
