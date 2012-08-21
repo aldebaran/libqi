@@ -10,6 +10,8 @@
 #include <map>
 
 #include <qi/os.hpp>
+#include <qi/application.hpp>
+
 #include <qimessaging/service_directory.hpp>
 
 #include <boost/program_options.hpp>
@@ -19,6 +21,8 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
+  qi::Application app(argc, argv);
+
   // declare the program options
   po::options_description desc("Usage:\n  qi-master masterAddress [options]\nOptions");
   desc.add_options()
@@ -57,7 +61,7 @@ int main(int argc, char *argv[])
 
       std::cout << "ready." << std::endl;
 
-      sd.join();
+      app.run();
     }
     else
     {
