@@ -377,10 +377,6 @@ bool ServiceDirectory::close() {
   return _p->ts->close();
 }
 
-void ServiceDirectory::join()
-{
-}
-
 qi::Url ServiceDirectory::listenUrl() const {
   return _p->ts->listenUrl();
 }

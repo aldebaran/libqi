@@ -23,7 +23,6 @@ namespace qi
 
     bool listen(const qi::Url &listenAddress);
     bool close();
-    void join();
     qi::Url listenUrl() const;
 
   private:
