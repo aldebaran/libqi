@@ -306,7 +306,6 @@ namespace qi {
   void init(int argc, char* argv[])
   {
     qiLogError("qi") << "qi::init() is deprecated, use qi::Application";
-    globalArgc = argc;
-    globalArgv = argv;
+    new qi::Application(argc, argv);
   }
 }
