@@ -95,9 +95,9 @@ namespace qi {
         break;
       case 7:
         if (line == 0)
-          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << fct;
+          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << fct << " ";
         else
-          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << file << "(" << line << ") " << fct;
+          logline << ss.str() << " " << tid << " " << fixedCategory << ": " << file << "(" << line << ") " << fct << " ";
         break;
       default:
         break;
