@@ -13,6 +13,9 @@
 #include <qi/path.hpp>
 #include <numeric>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+
 #include "src/filesystem.hpp"
 
 #ifdef __APPLE__
@@ -30,9 +33,32 @@ namespace qi {
   static std::vector<std::string>* globalArguments;
   static std::string globalPrefix;
   static std::string globalProgram;
+
   typedef std::vector<boost::function<void()> > FunctionList;
   static FunctionList* globalAtExit = 0;
   static FunctionList* globalAtEnter = 0;
+  static FunctionList* globalAtStop = 0;
+
+
+  static boost::condition_variable globalCond;
+
+  static boost::asio::io_service* globalIoService;
+
+  bool Application::atSignal(boost::function<void(int)> func, int signal)
+  {
+    if (!globalIoService)
+    {
+      globalIoService = new boost::asio::io_service;
+      // Prevent run from exiting
+      new boost::asio::io_service::work(*globalIoService);
+      // Start io_service in a thread. It will call our handlers.
+      boost::thread bt(boost::bind(&boost::asio::io_service::run, globalIoService));
+    }
+    boost::asio::signal_set* sigs
+      = new boost::asio::signal_set(*globalIoService, signal);
+    sigs->async_wait(boost::bind(func, _2));
+    return true;
+  }
 
   template<typename T> static T& lazyGet(T* & ptr)
   {
@@ -124,6 +150,9 @@ namespace qi {
     fl.clear();
     argc = Application::argc();
     argv = globalArgv;
+    // kill with no signal sends TERM, control-c sends INT.
+    atSignal(boost::bind(&Application::stop), SIGTERM);
+    atSignal(boost::bind(&Application::stop), SIGINT);
   }
 
   void* Application::loadModule(const std::string& moduleName, int flags)
@@ -151,12 +180,25 @@ namespace qi {
     FunctionList& fl = lazyGet(globalAtExit);
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+    globalCond.notify_all();
   }
 
   void Application::run()
   {
-    while (true)
-      os::sleep(1000);
+    // We just need a barrier, so no need to share the mutex
+    boost::mutex m;
+    boost::unique_lock<boost::mutex> l(m);
+    globalCond.wait(l);
+    l.unlock();
+  }
+
+  void Application::stop()
+  {
+    globalCond.notify_all();
+    FunctionList& fl = lazyGet(globalAtStop);
+    qiLogDebug("qi.Application") << "Executing " << fl.size() << " atStop handlers";
+    for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
+      (*i)();
   }
 
   void Application::setArguments(const std::vector<std::string>& args)
@@ -204,6 +246,12 @@ namespace qi {
   bool Application::atExit(boost::function<void()> func)
   {
     lazyGet(globalAtExit).push_back(func);
+    return true;
+  }
+
+  bool Application::atStop(boost::function<void()> func)
+  {
+    lazyGet(globalAtStop).push_back(func);
     return true;
   }
 

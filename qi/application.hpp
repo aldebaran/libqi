@@ -19,7 +19,8 @@ namespace qi {
     Application(int& argc, char** &argv);
     ~Application();
 
-    void run();
+    static void run();
+    static void stop();
 
     static const std::vector<std::string>& arguments();
     static int argc();
@@ -35,6 +36,8 @@ namespace qi {
 
     static bool atEnter(boost::function<void()> func);
     static bool atExit(boost::function<void()> func);
+    static bool atStop(boost::function<void()> func);
+    static bool atSignal(boost::function<void(int)> func, int signal);
   };
 }
 
@@ -43,9 +46,6 @@ static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atEnter(func);
 
 #define QI_AT_EXIT(func) \
 static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atExit(func);
-
-#define QI_AT_PARSE_OPTIONS(func) \
-static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atParseOptions(func);
 
 #define QI_COMMAND_LINE_OPTIONS(opts)                                 \
 static void _qi_## __LINE__## opt_func() {                            \

@@ -73,7 +73,12 @@
 
  /**
  * \fn bool qi::Application::run()
- * \brief Loop forever.
+ * \brief Waits until one of those conditions becomes true:
+ *    - stop() is called.
+ *    - TERM or QUIT signal is received.
+ *    - the Application instance is destroyed, which means main() is exiting.
+ *
+ * Run can be called by multiple threads simultaneously.
  * \ingroup qi::Application
  */
 
@@ -85,7 +90,23 @@
 
  /**
  * \fn bool qi::Application::atExit(boost::function<void()> func)
+ * \brief Register a function to be executed when stop() is called.
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn bool qi::Application::atExit(boost::function<void()> func)
  * \brief Register a function to be executed at Application destruction.
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn bool qi::Application::atSignal(boost::function<void(int)> handler, int signal)
+ * \brief Register a function to be executed when a signal occurrs.
+ *
+ * The handler is executed in a thread, not from within the signal handler,
+ * so there is no restriction on what can be done by your handler function,
+ * except that it should return reasonably quickly.
  * \ingroup qi::Application
  */
 
