@@ -92,6 +92,9 @@ namespace qi {
 
     qi::Url                       listenUrl() const;
 
+    /// Load a module and register an instance of each declared object as a service.
+    std::vector<std::string>      loadService(const std::string& name, int flags = -1);
+
     SessionPrivate      *_p;
   };
 }

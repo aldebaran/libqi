@@ -7,10 +7,14 @@
 
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
+
+#include <qi/application.hpp>
+
 #include "src/metamethod_p.hpp"
 #include "src/metaevent_p.hpp"
 #include "src/object_p.hpp"
 #include <qimessaging/object.hpp>
+#include <qimessaging/object_factory.hpp>
 #include <qimessaging/event_loop.hpp>
 
 namespace qi {
@@ -498,6 +502,69 @@ namespace qi {
         i != _events.end(); ++i)
       _eventsNameToIdx[i->second.signature()] = i->second.uid();
     }
+  }
+
+  // Factory system
+  // We need thread-safeness, and we can be used at static init.
+  // But at static init, thread-safeness is not required.
+  // So lazy-init of the mutex should do the trick.
+  static boost::recursive_mutex *_f_mutex = 0;
+  static std::vector<std::string>* _f_keys = 0;
+  typedef std::map<std::string, boost::function<qi::Object*(const std::string&)> > FactoryMap;
+  static FactoryMap* _f_map = 0;
+  static void _f_init()
+  {
+    if (!_f_mutex)
+    {
+      _f_mutex = new boost::recursive_mutex;
+      _f_keys = new std::vector<std::string>;
+      _f_map = new FactoryMap;
+    }
+  }
+
+  bool registerObjectFactory(const std::string& name,
+    boost::function<qi::Object*(const std::string&)> factory)
+  {
+    _f_init();
+    boost::recursive_mutex::scoped_lock sl(*_f_mutex);
+    FactoryMap::iterator i = _f_map->find(name);
+    if (i != _f_map->end())
+      qiLogWarning("qi.object") << "Overriding factory for " <<name;
+    else
+      _f_keys->push_back(name);
+    (*_f_map)[name] = factory;
+    return true;
+  }
+
+  Object* createObject(const std::string& name)
+  {
+    _f_init();
+    boost::recursive_mutex::scoped_lock sl(*_f_mutex);
+    FactoryMap::iterator i = _f_map->find(name);
+    if (i == _f_map->end())
+      return 0;
+    return (i->second)(name);
+  }
+
+  std::vector<std::string> listObjectFactories()
+  {
+    _f_init();
+    boost::recursive_mutex::scoped_lock sl(*_f_mutex);
+    return *_f_keys;
+  }
+
+  std::vector<std::string> loadObject(const std::string& name,
+    int flags)
+  {
+    _f_init();
+    std::vector<std::string>& keys = *_f_keys;
+    boost::recursive_mutex::scoped_lock sl(*_f_mutex);
+    unsigned int count = keys.size();
+    Application::loadModule(name, flags);
+    if (count != keys.size())
+      return std::vector<std::string>(&keys[count], &keys[keys.size()]);
+    else
+      return std::vector<std::string>();
   }
 
   void Object::emitEvent(const std::string& eventName,

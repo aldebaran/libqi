@@ -11,6 +11,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/object_factory.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/remoteobject_p.hpp"
 #include "src/session_p.hpp"
@@ -1002,5 +1003,13 @@ namespace qi {
       _servicesIndex[idx] = si.name();
       _servicesObject.erase(it);
     }
+  }
+
+  std::vector<std::string> Session::loadService(const std::string& name, int flags)
+  {
+    std::vector<std::string> names = ::qi::loadObject(name, flags);
+    for (unsigned int i=0; i<names.size(); ++i)
+      registerService(names[i], createObject(names[i]));
+    return names;
   }
 }

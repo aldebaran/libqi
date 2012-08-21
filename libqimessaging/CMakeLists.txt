@@ -44,6 +44,7 @@ set(PUBLIC_HEADERS
                    qimessaging/file.hpp
                    qimessaging/object.hpp
                    qimessaging/object.hxx
+                   qimessaging/object_factory.hpp
                    qimessaging/session.hpp
                    qimessaging/metaevent.hpp
                    qimessaging/metamethod.hpp
