@@ -9,17 +9,11 @@
 #include <qimessaging/c/message_c.h>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
+#include "message_c_p.h"
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
 
-typedef struct
-{
-  qi::ODataStream *os;
-  qi::IDataStream *is;
-  qi::Message     *msg;
-  qi::Buffer      *buff;
-} qi_message_data_t;
 
 qi::IDataStream &get_is(qi_message_data_t *m)
 {
@@ -72,17 +66,55 @@ void qi_message_write_bool(qi_message_t *msg, char b)
   get_os(m) << b;
 }
 
-void qi_message_write_char(qi_message_t *msg, char c)
+void qi_message_write_int8(qi_message_t *msg, char c)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   get_os(m) << c;
 }
 
-void qi_message_write_int(qi_message_t *msg, int i)
+void qi_message_write_int16(qi_message_t *msg, short i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   get_os(m) << i;
 }
+
+void qi_message_write_int32(qi_message_t *msg, int i)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << i;
+}
+
+void qi_message_write_int64(qi_message_t *msg, long long i)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << i;
+}
+
+void qi_message_write_uint8(qi_message_t *msg, unsigned char c)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << c;
+}
+
+void qi_message_write_uint16(qi_message_t *msg, unsigned short i)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << i;
+}
+
+void qi_message_write_uint32(qi_message_t *msg, unsigned int i)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << i;
+}
+
+void qi_message_write_uint64(qi_message_t *msg, unsigned long long i)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  get_os(m) << i;
+}
+
+
 
 void qi_message_write_float(qi_message_t *msg, float f)
 {
@@ -109,6 +141,8 @@ void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
   get_os(m) << std::string(s, size);
 }
 
+
+
 char qi_message_read_bool(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
@@ -117,7 +151,7 @@ char qi_message_read_bool(qi_message_t *msg)
   return b;
 }
 
-char qi_message_read_char(qi_message_t *msg)
+char qi_message_read_int8(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   char c;
@@ -125,13 +159,62 @@ char qi_message_read_char(qi_message_t *msg)
   return c;
 }
 
-int qi_message_read_int(qi_message_t *msg)
+short qi_message_read_int16(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  short c;
+  get_is(m) >> c;
+  return c;
+}
+
+int qi_message_read_int32(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   int i;
   get_is(m) >> i;
   return i;
 }
+
+long long qi_message_read_int64(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  long long i;
+  get_is(m) >> i;
+  return i;
+}
+
+unsigned char qi_message_read_uint8(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  unsigned char c;
+  get_is(m) >> c;
+  return c;
+}
+
+unsigned short qi_message_read_uint16(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  unsigned short c;
+  get_is(m) >> c;
+  return c;
+}
+
+unsigned int qi_message_read_uint32(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  unsigned int i;
+  get_is(m) >> i;
+  return i;
+}
+
+unsigned long long qi_message_read_uint64(qi_message_t *msg)
+{
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  unsigned long long i;
+  get_is(m) >> i;
+  return i;
+}
+
 
 float qi_message_read_float(qi_message_t *msg)
 {
@@ -167,11 +250,11 @@ char *qi_message_read_raw(qi_message_t *msg, unsigned int *QI_UNUSED(size))
   return qi_message_read_string(msg);
 }
 
-qi_buffer_t  *qi_message_get_buffer(qi_message_t *msg)
-{
-  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+//qi_buffer_t  *qi_message_get_buffer(qi_message_t *msg)
+//{
+//  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  return (qi_buffer_t *) m->buff;
-}
+//  return (qi_buffer_t *) m->buff;
+//}
 
 // TODO OTHER TYPE

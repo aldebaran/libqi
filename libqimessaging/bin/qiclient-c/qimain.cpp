@@ -63,7 +63,7 @@ int main(int ac, char *av[])
   // get the program options
   if (ac != 2)
   {
-    printf("Usage : ./qi-client-c master-address\n", av[0]);
+    printf("Usage : ./qi-client-c master-address\n");
     printf("Assuming master address is tcp://127.0.0.1:5555\n");
     sd_addr = strdup("tcp://127.0.0.1:5555");
     return (0);

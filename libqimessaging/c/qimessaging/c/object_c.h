@@ -23,12 +23,11 @@ extern "C"
   typedef struct qi_future_t_s  qi_future_t;
 
 
-  QIMESSAGING_API typedef void (*BoundMethod)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
+  QIMESSAGING_API typedef void (*qi_object_method_t)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
   QIMESSAGING_API qi_object_t *qi_object_create(const char *name);
   QIMESSAGING_API void         qi_object_destroy(qi_object_t *object);
-  QIMESSAGING_API void         qi_object_connect(qi_object_t *object, const char *address); // TODO ~~
 
-  QIMESSAGING_API int          qi_object_register_method(qi_object_t *object, const char *complete_signature, BoundMethod func, void *data);
+  QIMESSAGING_API int          qi_object_register_method(qi_object_t *object, const char *complete_signature, qi_object_method_t func, void *data);
 
   QIMESSAGING_API qi_future_t *qi_object_call(qi_object_t *object, const char *signature, qi_message_t *message);
 

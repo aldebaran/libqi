@@ -29,7 +29,7 @@ int		main(int ac, char **av)
   // get the program options
   if (ac != 2)
   {
-    printf("Usage : ./qi-service-c master-address\n", av[0]);
+    printf("Usage : ./qi-service-c master-address\n");
     printf("Assuming master address is tcp://127.0.0.1:5555\n");
     sd_addr = strdup("tcp://127.0.0.1:5555");
     return (0);
@@ -37,7 +37,7 @@ int		main(int ac, char **av)
 
   sd_addr = av[1];
 
-  qi_application_t* app = qi_application_create(ac, av);
+  qi_application_t* app = qi_application_create(&ac, av);
   qi_object_t*  object = qi_object_create("lol");
   qi_object_register_method(object, "reply::s(s)", &reply, 0);
 

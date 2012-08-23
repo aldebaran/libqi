@@ -9,9 +9,9 @@
 #include <qimessaging/c/application_c.h>
 #include <qi/application.hpp>
 
-qi_application_t *qi_application_create(int ac, char **av)
+qi_application_t *qi_application_create(int *argc, char **argv)
 {
-  qi::Application* app = new qi::Application(ac, av);
+  qi::Application* app = new qi::Application(*argc, argv);
 
   return (qi_application_t *) app;
 }

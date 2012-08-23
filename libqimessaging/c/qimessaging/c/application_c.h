@@ -18,7 +18,8 @@ extern "C"
 
   typedef struct qi_application_t_s {} qi_application_t;
 
-  QIMESSAGING_API qi_application_t *qi_application_create(int ac, char **av);
+  //argc is a pointer because the fonction remove consumed arguments
+  QIMESSAGING_API qi_application_t *qi_application_create(int *argc, char **argv);
   QIMESSAGING_API void              qi_application_destroy(qi_application_t *app);
   QIMESSAGING_API void              qi_application_run(qi_application_t *app);
 

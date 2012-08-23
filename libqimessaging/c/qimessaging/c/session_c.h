@@ -18,7 +18,9 @@ extern "C"
 #endif
 
   typedef struct qi_session_t_s {} qi_session_t;
-  typedef struct qi_object_t_s qi_object_t;
+
+  //forward declaration
+  typedef struct qi_object_t_s     qi_object_t;
 
   /** \brief create a qi connection
    *
@@ -33,8 +35,7 @@ extern "C"
    * \param address address to connect to
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_connect(qi_session_t *session,
-                          const char   *address);
+  QIMESSAGING_API void qi_session_connect(qi_session_t *session, const char   *address);
 
   /* \brief active server side of session
    * \param listening address
@@ -67,8 +68,7 @@ extern "C"
    * \return a pointer to related object, or NULL on error.
    * \ingroup qiCapi
    */
-  QIMESSAGING_API qi_object_t *qi_session_get_service(qi_session_t *session,
-                                      const char   *name);
+  QIMESSAGING_API qi_object_t *qi_session_get_service(qi_session_t *session, const char *name);
 
   /** \brief destroy a qi connection
    *
@@ -90,8 +90,8 @@ extern "C"
    * \param msecs waiting timeout
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_for_disconnected(qi_session_t *session,
-                                   int           msecs);
+  QIMESSAGING_API void qi_session_wait_for_disconnected(qi_session_t *session, int msecs);
+
   /* \brief retrieve the list of available services
    *
    * \note The returned list is an array of char* terminated
@@ -105,18 +105,13 @@ extern "C"
 
   QIMESSAGING_API const char** qi_session_get_services(qi_session_t *session);
 
-  /* \brief Return service id
-   * \param service name
-   */
-  QIMESSAGING_API int          qi_object_get_service_id(qi_session_t *session, const char *service_name);
-
   /* \brief Free a list retrieved with qi_session_get_services
    * \param session associated session
    * \param list list to free
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_free_services_list(qi_session_t *session,
-                                     const char  **list);
+  QIMESSAGING_API void qi_session_free_services_list(qi_session_t *session, const char  **list);
+
 
 #ifdef __cplusplus
 }

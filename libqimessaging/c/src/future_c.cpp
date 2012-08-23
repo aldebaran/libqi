@@ -16,23 +16,32 @@ public:
   FutureCallbackForwarder() {}
   virtual ~FutureCallbackForwarder() {}
 
-  virtual void onFutureFailed(const std::string &error, void *data) { /* nothing to do here */}
-  virtual void onFutureFinished(void*const &future, void *data)
+  virtual void onFutureFailed(const std::string &error, void *data)
   {
-    std::list<QiFutureCallback>::iterator it;
+    std::list<qi_future_callback_t>::iterator it;
 
     for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
     {
-      (*(*it))(future, data);
+      (*(*it))(0, 0, data);
     }
   }
-  void         addCallback(QiFutureCallback callback)
+
+  virtual void onFutureFinished(void*const &value, void *data)
+  {
+    std::list<qi_future_callback_t>::iterator it;
+
+    for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
+    {
+      (*(*it))(value, 1, data);
+    }
+  }
+  void addCallback(qi_future_callback_t callback)
   {
     _callbacks.push_back(callback);
   }
 
 private:
-  std::list<QiFutureCallback>   _callbacks;
+  std::list<qi_future_callback_t>   _callbacks;
 };
 
 qi_promise_t* qi_promise_create()
@@ -79,7 +88,7 @@ void    qi_future_destroy(qi_future_t *fut)
   delete future;
 }
 
-void    qi_future_set_callback(qi_future_t *fut, QiFutureCallback cb, void *miscdata)
+void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *miscdata)
 {
   qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
   FutureCallbackForwarder *forwarder = new FutureCallbackForwarder();
@@ -109,9 +118,9 @@ int     qi_future_is_ready(qi_future_t *fut)
   return future->isReady();
 }
 
-qi_message_t *  qi_future_get_value(qi_future_t *fut)
+void*  qi_future_get_value(qi_future_t *fut)
 {
   qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
 
-  return (qi_message_t *) future->value();
+  return (void *) future->value();
 }

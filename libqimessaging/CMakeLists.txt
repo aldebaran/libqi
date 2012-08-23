@@ -133,11 +133,11 @@ qi_stage_lib(qimessaging)
 
 #add_subdirectory(test)
 qi_add_subdirectory(examples WITH_EXAMPLES)
-qi_add_subdirectory(perfs     WITH_PERF)
+qi_add_subdirectory(perfs    WITH_PERF)
 #add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
-
+#target_link_libraries(qimessaging "-Wl,--no-undefined")
 
 
 qi_add_optional_package(QT_QTCORE)

@@ -12,16 +12,7 @@
 #include <qimessaging/c/object_c.h>
 #include <qimessaging/c/message_c.h>
 #include <qimessaging/c/future_c.h>
-
-qi_buffer_t  *qi_message_get_buffer(qi_message_t *msg);
-
-typedef struct
-{
-  qi::ODataStream *os;
-  qi::IDataStream *is;
-  qi::Message     *msg;
-  qi::Buffer      *buff;
-} qi_message_data_t;
+#include "message_c_p.h"
 
 class CFunctorResultBase : public qi::FunctorResultBase
 {
@@ -91,14 +82,14 @@ private:
 
 class CFunctor : public qi::Functor {
 public:
-  CFunctor(const char *complete_sig, BoundMethod func, void *data = 0)
+  CFunctor(const char *complete_sig, qi_object_method_t func, void *data = 0)
     : _func(func),
       _complete_sig(strdup(complete_sig)),
       _data(data)
   {
   }
 
-  virtual void call(const qi::FunctorParameters &params, qi::FunctorResult result) const 
+  virtual void call(const qi::FunctorParameters &params, qi::FunctorResult result) const
   {
     qi_message_data_t* message_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
     qi_message_data_t* answer_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
@@ -122,9 +113,9 @@ public:
   }
 
 private:
-  BoundMethod   _func;
-  char         *_complete_sig;
-  void         *_data;
+  qi_object_method_t  _func;
+  char               *_complete_sig;
+  void               *_data;
 
 };
 
@@ -142,29 +133,6 @@ void        qi_object_destroy(qi_object_t *object)
   delete obj;
 }
 
-void         qi_object_connect(qi_object_t *object, const char *address)
-{
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
-
-  obj = 0; // what a feature
-}
-
-int          qi_object_get_object_id(qi_object_t *object)
-{
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
-
-  return 0;
-}
-
-int          qi_object_get_function_id(qi_object_t *object, const char *function_name)
-{
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
-
-  qi::MetaObject meta = obj->metaObject();
-
-  return meta.methodId(function_name);
-}
-
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_message_t *message)
 {
   qi::Object *obj = reinterpret_cast<qi::Object *>(object);
@@ -180,8 +148,8 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   sigInfo = qi::signatureSplit(fullSignature);
 
   //get buffer from message
-  qi::Buffer *buff = reinterpret_cast<qi::Buffer*>(qi_message_get_buffer(message));
-  qi::FunctorParameters             request(*buff);
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(message);
+  qi::FunctorParameters             request(*m->buff);
   boost::shared_ptr<CFunctorResultBase> base(new CFunctorResultBase(sigInfo[0]));
   CFunctorResult*                   promise = new CFunctorResult(base);
 
@@ -192,7 +160,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   return (qi_future_t *) promise->future();
 }
 
-int          qi_object_register_method(qi_object_t *object, const char *complete_signature, BoundMethod func, void *data)
+int          qi_object_register_method(qi_object_t *object, const char *complete_signature, qi_object_method_t func, void *data)
 {
   qi::Object *obj = reinterpret_cast<qi::Object *>(object);
   std::string signature(complete_signature);
