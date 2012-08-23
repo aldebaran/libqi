@@ -9,14 +9,14 @@ qi_submodule_create("qi-messaging-c"  qimessaging/c/api_c.h
                                       qimessaging/c/message_c.h
                                       qimessaging/c/object_c.h
                                       qimessaging/c/qi_c.h
-                                      qimessaging/c/server_c.h
                                       qimessaging/c/session_c.h
-                                      qimessaging/c/signature_c.h
                                       qimessaging/c/future_c.h
+                                      qimessaging/c/signature_c.h
+                                      qimessaging/c/application_c.h
 
                                       src/message_c.cpp
-                                      src/server_c.cpp
                                       src/session_c.cpp
-                                      src/signature_c.cpp
                                       src/object_c.cpp
-                                      src/future_c.cpp)
+                                      src/future_c.cpp
+                                      src/application_c.cpp
+                                      src/signature_c.cpp)

@@ -16,33 +16,24 @@ public:
   FutureCallbackForwarder() {}
   virtual ~FutureCallbackForwarder() {}
 
-  virtual void onFutureFinished(void*const &future, void *data);
-  virtual void onFutureFailed(const std::string &error, void *data);
-  void         addCallback(QiFutureCallback callback);
+  virtual void onFutureFailed(const std::string &error, void *data) { /* nothing to do here */}
+  virtual void onFutureFinished(void*const &future, void *data)
+  {
+    std::list<QiFutureCallback>::iterator it;
+
+    for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
+    {
+      (*(*it))(future, data);
+    }
+  }
+  void         addCallback(QiFutureCallback callback)
+  {
+    _callbacks.push_back(callback);
+  }
 
 private:
   std::list<QiFutureCallback>   _callbacks;
 };
-
-void FutureCallbackForwarder::addCallback(QiFutureCallback callback)
-{
-  _callbacks.push_back(callback);
-}
-
-void FutureCallbackForwarder::onFutureFinished(void * const &future, void *data)
-{
-  std::list<QiFutureCallback>::iterator it;
-
-  for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
-  {
-    (*(*it))(future, data);
-  }
-}
-
-void FutureCallbackForwarder::onFutureFailed(const std::string &error, void *data)
-{
-  // do nothing.
-}
 
 qi_promise_t* qi_promise_create()
 {

@@ -31,10 +31,7 @@ public:
      _promise(new qi::Promise<void *>())
   {
   }
-  ~CFunctorResultBase()
-  {
-    std::cout << "FunctorResultBase deleted" << std::endl;
-  }
+  ~CFunctorResultBase() {}
 
   inline virtual void setValue(const qi::Buffer &result)
   {
@@ -92,6 +89,45 @@ private:
   qi::Future<void *>          _future;
 };
 
+class CFunctor : public qi::Functor {
+public:
+  CFunctor(const char *complete_sig, BoundMethod func, void *data = 0)
+    : _func(func),
+      _complete_sig(strdup(complete_sig)),
+      _data(data)
+  {
+  }
+
+  virtual void call(const qi::FunctorParameters &params, qi::FunctorResult result) const 
+  {
+    qi_message_data_t* message_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
+    qi_message_data_t* answer_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
+
+    memset(message_c, 0, sizeof(qi_message_data_t));
+    memset(answer_c, 0, sizeof(qi_message_data_t));
+
+    message_c->buff = new qi::Buffer(params.buffer());
+    answer_c->buff = new qi::Buffer();
+
+    if (_func)
+      _func(_complete_sig, (qi_message_t *) message_c, reinterpret_cast<qi_message_t *>(answer_c), _data);
+
+    result.setValue(*answer_c->buff);
+    qi_message_destroy((qi_message_t *) message_c);
+    qi_message_destroy((qi_message_t *) answer_c);
+  }
+
+  virtual ~CFunctor() {
+    free(_complete_sig);
+  }
+
+private:
+  BoundMethod   _func;
+  char         *_complete_sig;
+  void         *_data;
+
+};
+
 qi_object_t *qi_object_create(const char *name)
 {
   qi::Object *obj = new qi::Object();
@@ -134,6 +170,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   qi::Object *obj = reinterpret_cast<qi::Object *>(object);
   std::vector<std::string>  sigInfo;
   std::string fullSignature(signature_c);
+
   if (!obj || !signature_c || !message)
   {
     printf("Invalid parameter\n");
@@ -153,4 +190,19 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   fullSignature.append(sigInfo[2]);
   obj->xMetaCall(sigInfo[0], fullSignature, request, *promise);
   return (qi_future_t *) promise->future();
+}
+
+int          qi_object_register_method(qi_object_t *object, const char *complete_signature, BoundMethod func, void *data)
+{
+  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
+  std::string signature(complete_signature);
+  std::vector<std::string>  sigInfo;
+
+  sigInfo = qi::signatureSplit(signature);
+  qi::Functor* functor = new CFunctor(complete_signature, func, data);
+  signature = sigInfo[1];
+  signature.append("::");
+  signature.append(sigInfo[2]);
+  obj->xAdvertiseMethod(sigInfo[0], signature, functor);
+  return 0;
 }

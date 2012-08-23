@@ -7,8 +7,8 @@
 ** Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
-#ifndef _QIMESSAGING_BROKER_H_
-#define _QIMESSAGING_BROKER_H_
+#ifndef _QIMESSAGING_SESSION_H_
+#define _QIMESSAGING_SESSION_H_
 
 #include <stdlib.h>
 
@@ -45,12 +45,12 @@ extern "C"
    * \param name of the module
    * \param object to register
    */
-  QIMESSAGING_API int qi_session_register_object(qi_session_t *session, const char *name, qi_object_t *object);
+  QIMESSAGING_API int qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object);
 
   /* \brief hide a object previously exposed to the world
    * \param object to unregister
    */
-  QIMESSAGING_API void qi_session_unregister_object(qi_session_t *session, unsigned int idx);
+  QIMESSAGING_API void qi_session_unregister_service(qi_session_t *session, unsigned int idx);
 
   /** \brief wait for the connection completion
    *
@@ -58,8 +58,7 @@ extern "C"
    * \param msecs waiting timeout
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_wait_for_connected(qi_session_t *session,
-                                     int           msecs);
+  QIMESSAGING_API int qi_session_wait_for_connected(qi_session_t *session, int msecs);
 
   /** \brief get a service
    *
@@ -118,10 +117,6 @@ extern "C"
    */
   QIMESSAGING_API void qi_session_free_services_list(qi_session_t *session,
                                      const char  **list);
-  /* \brief join
-   * \param session associated session
-   */
-  QIMESSAGING_API void qi_session_join(qi_session_t *session);
 
 #ifdef __cplusplus
 }
