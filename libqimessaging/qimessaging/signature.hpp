@@ -89,7 +89,7 @@ namespace qi {
       Type_Unknown  = 'X'
     };
 
-    class iterator {
+    class QIMESSAGING_API iterator {
     public:
       iterator() : _current(0), _end(0) {}
       iterator          &operator++();
