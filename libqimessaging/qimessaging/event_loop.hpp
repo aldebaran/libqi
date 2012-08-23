@@ -35,7 +35,7 @@ namespace qi
     /// Run main loop in current thread.
     void run();
 
-    class AsyncCallHandle
+    class QIMESSAGING_API AsyncCallHandle
     {
     public:
       AsyncCallHandle();
