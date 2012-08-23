@@ -32,7 +32,7 @@ namespace qi {
   class FutureInterface {
   public:
     virtual ~FutureInterface() = 0;
-    virtual void onFutureFinished(const T &future, void *data) = 0;
+    virtual void onFutureFinished(const T &value, void *data) = 0;
     virtual void onFutureFailed(const std::string &error, void *data) = 0;
   };
 
