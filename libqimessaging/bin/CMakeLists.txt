@@ -4,7 +4,7 @@
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
 ##  - Laurent LEC        <llec@aldebaran-robotics.com>
 ##
-## Copyright (C) 2009, 2010 Aldebaran Robotics
+## Copyright (C) 2009, 2010, 2012 Aldebaran Robotics
 ##
 
 add_subdirectory("qicli")
@@ -17,3 +17,5 @@ if(WITH_QT_QTCORE)
   add_subdirectory("qiservice-qt")
 endif()
 add_subdirectory("qilb")
+add_subdirectory("qiclient-c")
+#add_subdirectory("qiservice-c")
