@@ -6,6 +6,7 @@
 ** Copyright (C) 2010, 2011 Aldebaran Robotics
 */
 
+#include <qimessaging/c/server_c.h>
 #include <qimessaging/c/qi_c.h>
 #include <qimessaging/functor.hpp>
 

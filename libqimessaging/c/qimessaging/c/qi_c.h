@@ -12,5 +12,7 @@
 #include <qimessaging/c/message_c.h>
 #include <qimessaging/c/server_c.h>
 #include <qimessaging/c/session_c.h>
+#include <qimessaging/c/object_c.h>
+#include <qimessaging/c/future_c.h>
 
 #endif  // _QIMESSAGING_QI_H_

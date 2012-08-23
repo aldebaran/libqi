@@ -73,12 +73,6 @@ static int _qi_signature_split(qi_signature_t *sig, const char *signature, const
       return 2;
     }
 
-    if (*signature == QI_POINTER) {
-      *current = *signature;
-      current++;
-      signature++;
-    }
-
     *current = 0;
     current++;
   }

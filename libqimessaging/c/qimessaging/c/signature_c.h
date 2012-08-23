@@ -17,21 +17,42 @@ extern "C"
 #endif
 
   enum QiSignatureType {
-    QI_VOID       = 'v',
-    QI_POINTER    = '*',
+    QI_NONE       = 0,
     QI_BOOL       = 'b',
+
+    QI_VOID       = 'v',
+
     QI_CHAR       = 'c',
+    QI_UCHAR      = 'C',
+
+    QI_SHORT      = 'w',
+    QI_USHORT     = 'W',
+
     QI_INT        = 'i',
+    QI_UINT       = 'I',
+
+    QI_LONG       = 'l',
+    QI_ULONG      = 'L',
+
     QI_FLOAT      = 'f',
     QI_DOUBLE     = 'd',
+
     QI_STRING     = 's',
     QI_LIST       = '[',
     QI_LIST_END   = ']',
+
     QI_MAP        = '{',
     QI_MAP_END    = '}',
+
     QI_TUPPLE     = '(',
     QI_TUPPLE_END = ')',
-    QI_MESSAGE    = 'm'
+
+    QI_MESSAGE    = 'm',
+
+    QI_RAW        = 'r',
+
+    QI_UNKNOWN    = 'X',
+    QI_POINTER    = '*'
   };
 
 

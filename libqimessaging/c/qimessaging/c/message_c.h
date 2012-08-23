@@ -17,24 +17,11 @@ extern "C"
 {
 #endif
 
-  typedef struct {} qi_message_t;
-  typedef enum { call, reply, event, error, none } qi_message_type_t;
+  typedef struct qi_message_t_s {} qi_message_t;
+  typedef struct qi_buffer_t_s {} qi_buffer_t;
 
   QIMESSAGING_API qi_message_t *qi_message_create();
   QIMESSAGING_API void          qi_message_destroy(qi_message_t *msg);
-
-  QIMESSAGING_API void          qi_message_set_id(qi_message_t *msg, unsigned int id);
-  QIMESSAGING_API unsigned int  qi_message_get_id(qi_message_t *msg);
-  QIMESSAGING_API void          qi_message_set_src(qi_message_t *msg, char *src);
-  QIMESSAGING_API char         *qi_message_get_src(qi_message_t *msg);
-  QIMESSAGING_API void          qi_message_set_dst(qi_message_t *msg, char *dst);
-  QIMESSAGING_API char         *qi_message_get_dst(qi_message_t *msg);
-  QIMESSAGING_API void          qi_message_set_path(qi_message_t *msg, char *path);
-  QIMESSAGING_API char         *qi_message_get_path(qi_message_t *msg);
-  QIMESSAGING_API void          qi_message_set_data(qi_message_t *msg, char *data);
-  QIMESSAGING_API char         *qi_message_get_data(qi_message_t *msg);
-  QIMESSAGING_API void          qi_message_set_type(qi_message_t *msg, qi_message_type_t type);
-  QIMESSAGING_API qi_message_type_t qi_message_get_type(qi_message_t *msg);
 
   QIMESSAGING_API void          qi_message_write_bool(qi_message_t *msg, char b);
   QIMESSAGING_API void          qi_message_write_char(qi_message_t   *msg, char b);
@@ -51,7 +38,6 @@ extern "C"
   QIMESSAGING_API double        qi_message_read_double(qi_message_t *msg);
   QIMESSAGING_API char         *qi_message_read_string(qi_message_t *msg);
   QIMESSAGING_API char         *qi_message_read_raw(qi_message_t    *msg, unsigned int *size);
-
 
 #ifdef __cplusplus
 }

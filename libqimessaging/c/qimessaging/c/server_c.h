@@ -9,8 +9,8 @@
 #ifndef _QIMESSAGING_SERVER_H_
 #define _QIMESSAGING_SERVER_H_
 
-#include <qimessaging/c/message_c.h>
-#include <qimessaging/c/object_c.h>
+//#include <qimessaging/c/message_c.h>
+//#include <qimessaging/c/object_c.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -19,12 +19,12 @@ extern "C"
 
   typedef struct {} qi_server_t;
 
-  qi_server_t *qi_server_create(const char *name);
-  void         qi_server_destroy(qi_server_t *server);
-  void         qi_server_connect(qi_server_t *server, const char *address);
+  //qi_server_t *qi_server_create(const char *name);
+  //void         qi_server_destroy(qi_server_t *server);
+  //void         qi_server_connect(qi_server_t *server, const char *address);
 
-  int          qi_server_register_object(qi_server_t *server, const char *address, qi_object_t *object);
-  int          qi_server_unregister_object(qi_server_t *server, const char *address);
+  //int          qi_server_register_object(qi_server_t *server, const char *address, qi_object_t *object);
+  //int          qi_server_unregister_object(qi_server_t *server, const char *address);
 
 #ifdef __cplusplus
 }

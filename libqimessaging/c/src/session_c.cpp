@@ -13,7 +13,6 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_info.hpp>
 
-
 qi_session_t *qi_session_create()
 {
     qi::Session *session = new qi::Session();
@@ -35,15 +34,6 @@ void qi_session_wait_for_connected(qi_session_t *session, int msecs)
     s->waitForConnected(msecs);
 }
 
-/*
-qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
-{
-    qi::Session *s = reinterpret_cast<qi::Session*>(session);
-    qi::TransportSocket *socket = s->serviceSocket(name);
-
-    return reinterpret_cast<qi_object_t*>(s->service(name));
-}
-*/
 void qi_session_destroy(qi_session_t *session)
 {
     qi::Session *s = reinterpret_cast<qi::Session*>(session);
@@ -63,6 +53,34 @@ void qi_session_wait_for_disconnected(qi_session_t *session, int msecs)
     qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
     s->waitForDisconnected(msecs);
+}
+
+int qi_session_get_service_id(qi_session_t *session, const char *service_name)
+{
+  qi::Session *s = reinterpret_cast<qi::Session *>(session);
+  std::vector<qi::ServiceInfo>      services;
+  std::vector<qi::ServiceInfo>::iterator it;
+
+  services = s->services();
+  for (it = services.begin(); it != services.end(); ++it)
+    if ((*it).name().compare(service_name) == 0)
+      return (*it).serviceId();
+
+  return 0;
+}
+
+qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+
+  if (!s)
+  {
+    printf("session not valid.\n");
+    return 0;
+  }
+
+  qi_object_t * obj = (qi_object_t *) (void *) s->service(name);
+  return obj;
 }
 
 const char** qi_session_get_services(qi_session_t *session)
@@ -85,10 +103,40 @@ const char** qi_session_get_services(qi_session_t *session)
 
 void qi_session_free_services_list(const char **list)
 {
-    while (*list != 0)
-    {
-        free((void*) (*list));
-    }
-
+  while (*list != 0)
+  {
     free((void*) (*list));
+  }
+
+  free((void*) (*list));
 }
+
+bool qi_session_listen(qi_session_t *session, const char *address)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+	
+	return s->listen(address);
+}
+
+int qi_session_register_object(qi_session_t *session, const char *name, qi_object_t *object)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+	qi::Object  *obj = reinterpret_cast<qi::Object *>(object);
+
+	return s->registerService(name, obj);
+}
+
+void qi_session_unregister_object(qi_session_t *session, unsigned int idx)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+
+	s->unregisterService(idx);
+}
+
+  void qi_session_join(qi_session_t *session)
+  {
+    qi::Session *s = reinterpret_cast<qi::Session*>(session);
+
+    s->join();
+  }
+

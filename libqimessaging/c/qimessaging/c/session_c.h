@@ -11,21 +11,21 @@
 #define _QIMESSAGING_BROKER_H_
 
 #include <stdlib.h>
-#include <qimessaging/c/object_c.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-  typedef struct {} qi_session_t;
+  typedef struct qi_session_t_s {} qi_session_t;
+  typedef struct qi_object_t_s qi_object_t;
 
   /** \brief create a qi connection
    *
    * \return a pointer to an opaque structure, or NULL on error.
    * \ingroup qiCapi
    */
-  qi_session_t *qi_session_create();
+  QIMESSAGING_API qi_session_t *qi_session_create();
 
   /** \brief connect a qi connection
    *
@@ -33,8 +33,24 @@ extern "C"
    * \param address address to connect to
    * \ingroup qiCapi
    */
-  void qi_session_connect(qi_session_t *session,
+  QIMESSAGING_API void qi_session_connect(qi_session_t *session,
                           const char   *address);
+
+  /* \brief active server side of session
+   * \param listening address
+   */
+  QIMESSAGING_API bool qi_session_listen(qi_session_t *session, const char *address);
+
+  /* \brief expose an object to the world
+   * \param name of the module
+   * \param object to register
+   */
+  QIMESSAGING_API int qi_session_register_object(qi_session_t *session, const char *name, qi_object_t *object);
+
+  /* \brief hide a object previously exposed to the world
+   * \param object to unregister
+   */
+  QIMESSAGING_API void qi_session_unregister_object(qi_session_t *session, unsigned int idx);
 
   /** \brief wait for the connection completion
    *
@@ -42,7 +58,7 @@ extern "C"
    * \param msecs waiting timeout
    * \ingroup qiCapi
    */
-  void qi_session_wait_for_connected(qi_session_t *session,
+  QIMESSAGING_API void qi_session_wait_for_connected(qi_session_t *session,
                                      int           msecs);
 
   /** \brief get a service
@@ -52,7 +68,7 @@ extern "C"
    * \return a pointer to related object, or NULL on error.
    * \ingroup qiCapi
    */
-  qi_object_t *qi_session_get_service(qi_session_t *session,
+  QIMESSAGING_API qi_object_t *qi_session_get_service(qi_session_t *session,
                                       const char   *name);
 
   /** \brief destroy a qi connection
@@ -60,14 +76,14 @@ extern "C"
    * \param session to destroy
    * \ingroup qiCapi
    */
-  void qi_session_destroy(qi_session_t *session);
+  QIMESSAGING_API void qi_session_destroy(qi_session_t *session);
 
   /** \brief disconnect a qi connection
    *
    * \param session the session to disconnect
    * \ingroup qiCapi
    */
-  void qi_session_disconnect(qi_session_t *session);
+  QIMESSAGING_API void qi_session_disconnect(qi_session_t *session);
 
   /** \brief wait for the disconnection completion
    *
@@ -75,7 +91,7 @@ extern "C"
    * \param msecs waiting timeout
    * \ingroup qiCapi
    */
-  void qi_session_for_disconnected(qi_session_t *session,
+  QIMESSAGING_API void qi_session_for_disconnected(qi_session_t *session,
                                    int           msecs);
   /* \brief retrieve the list of available services
    *
@@ -88,15 +104,24 @@ extern "C"
    * \ingroup qiCapi
    */
 
-  const char** qi_session_get_services(qi_session_t *session);
+  QIMESSAGING_API const char** qi_session_get_services(qi_session_t *session);
+
+  /* \brief Return service id
+   * \param service name
+   */
+  QIMESSAGING_API int          qi_object_get_service_id(qi_session_t *session, const char *service_name);
 
   /* \brief Free a list retrieved with qi_session_get_services
    * \param session associated session
    * \param list list to free
    * \ingroup qiCapi
    */
-  void qi_session_free_services_list(qi_session_t *session,
+  QIMESSAGING_API void qi_session_free_services_list(qi_session_t *session,
                                      const char  **list);
+  /* \brief join
+   * \param session associated session
+   */
+  QIMESSAGING_API void qi_session_join(qi_session_t *session);
 
 #ifdef __cplusplus
 }
