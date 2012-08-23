@@ -126,6 +126,26 @@ For each library you will have to define <library>/api.hpp
   #endif  // _BAR_API_HPP_
 
 
+Please remember to export nested class
+
+.. code-block:: cpp
+
+  class BAR_API Foo
+  {
+  public:
+
+    Foo();
+    ~Foo();
+
+    class BAR_API Bar // BAR_API is mandatory here
+    {
+    public:
+
+      Bar();
+      ~Bar();
+    };
+
+  };
 
 Private Implementation
 ----------------------
