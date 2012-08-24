@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 
 #include <qi/qi.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/file.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
@@ -137,4 +138,11 @@ TEST_F(TestFile, fileStream)
   ASSERT_FALSE(qi::Flag_Truncate & fres.flags());
   ASSERT_FALSE(qi::Flag_Create & fres.flags());
   ASSERT_FALSE(qi::Flag_Invalid & f.flags());
+}
+
+int main(int argc, char **argv)
+{
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

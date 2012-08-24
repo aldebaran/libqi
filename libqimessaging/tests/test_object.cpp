@@ -9,6 +9,7 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 
+#include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <qimessaging/object.hpp>
 
@@ -130,4 +131,11 @@ TEST(TestObject, SerializeComplex)
   std::cerr << obj.metaObject().methods()[id].signature() << std::endl;
   Complex res = obj.call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
+}
+
+int main(int argc, char **argv)
+{
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

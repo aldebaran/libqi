@@ -16,6 +16,7 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
+#include <qi/application.hpp>
 
 static std::string reply(const std::string &msg)
 {
@@ -157,8 +158,10 @@ TEST(QiSession, getCloseService)
 
   EXPECT_TRUE(disconnected);
 }
+
 int main(int argc, char **argv)
 {
+  qi::Application app(argc, argv);
 #if defined(__APPLE__) || defined(__linux__)
   setsid();
 #endif
