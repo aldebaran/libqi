@@ -582,6 +582,7 @@ namespace qi
     struct evbuffer *mess = evbuffer_new();
     // m might be deleted.
     qi::Buffer *b = new qi::Buffer(m->buffer());
+    // Send header
     if (evbuffer_add_reference(mess,
                                m->_p->getHeader(),
                                sizeof(qi::MessagePrivate::MessageHeader),
@@ -595,14 +596,34 @@ namespace qi
       return false;
     }
     size_t sz = b->size();
-
-    if (sz)
+    const std::vector<std::pair<uint32_t, Buffer> >& subs = b->subBuffers();
+    size_t pos = 0;
+    // Handle subbuffers
+    for (unsigned i=0; i< subs.size(); ++i)
     {
+      // Send parent buffer between pos and start of sub
+      size_t end = subs[i].first;
+      qiLogDebug("qimessaging.TransportSocketLibevent")
+        << "serializing from " << pos <<" to " << end << " of " << sz;
+      if (end != pos)
+        if (evbuffer_add_reference(mess,
+                                 (const char*)b->data() + pos,
+                                 end - pos,
+                                 0, 0) != 0)
+        {
+          qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
+          evbuffer_free(mess);
+          delete b;
+          return false;
+        }
+      pos = subs[i].first;
+      // Send subbuffer
+      qiLogDebug("qimessaging.TransportSocketLibevent")
+        << "serializing subbuffer of size " << subs[i].second.size();
       if (evbuffer_add_reference(mess,
-                                 b->data(),
-                                 sz,
-                                 qi::TransportSocketLibEvent::onBufferSent,
-                                 static_cast<void *>(b)) != 0)
+                                 subs[i].second.data(),
+                                 subs[i].second.size(),
+                                 0, 0) != 0)
       {
         qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
         evbuffer_free(mess);
@@ -610,9 +631,17 @@ namespace qi
         return false;
       }
     }
-    else
+    // Send last chunk of parent buffer between pos and end
+    if (evbuffer_add_reference(mess,
+      (const char*)b->data() + pos,
+      b->size() - pos,
+      qi::TransportSocketLibEvent::onBufferSent,
+      static_cast<void *>(b)) != 0)
     {
+      qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
+      evbuffer_free(mess);
       delete b;
+      return false;
     }
 
     if (bufferevent_write_buffer(bev, mess) != 0)

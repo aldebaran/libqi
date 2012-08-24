@@ -12,7 +12,9 @@
 #define STATIC_BLOCK 768
 #define BLOCK   4096
 
+#include <vector>
 #include <qi/atomic.hpp>
+#include <qi/types.hpp>
 
 namespace qi
 {
@@ -35,6 +37,8 @@ namespace qi
     // parallel read and writes.
     qi::atomic<long> nReaders;
     qi::atomic<long> nWriters;
+
+    std::vector<std::pair<uint32_t, Buffer> > _subBuffers;
   };
 }
 

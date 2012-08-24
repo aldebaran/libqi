@@ -33,7 +33,7 @@ namespace qi
     MessagePrivate();
     ~MessagePrivate();
 
-    inline void                complete() { header.size = buffer.size(); }
+    inline void                complete() { header.size = buffer.totalSize(); }
     inline void               *getHeader() { return reinterpret_cast<void *>(&header); }
 
     Buffer        buffer;

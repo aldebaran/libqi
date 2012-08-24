@@ -20,10 +20,14 @@ namespace qi {
     void  *read(size_t size);
     size_t seek(long offset);
     void  *peek(size_t size) const;
-    Buffer& getBuffer() { return _buffer;}
+    /// @return true if a subBuffer is available at current offset
+    bool hasSubBuffer() const;
+    Buffer getSubBuffer();
+    size_t position() { return _cursor;}
   private:
     Buffer _buffer;
     size_t _cursor;
+    size_t _subCursor; // position in subbuffers
   };
 }
 

@@ -11,6 +11,7 @@ namespace qi {
 
   BufferReader::BufferReader(const Buffer& buf)
   : _cursor(0)
+  , _subCursor(0)
   {
     if (!buf._p)
       const_cast<Buffer&>(buf)._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
@@ -66,4 +67,21 @@ namespace qi {
 
     return size;
   }
+
+  bool BufferReader::hasSubBuffer() const
+  {
+    if (_buffer.subBuffers().size() <= _subCursor)
+      return false;
+    if (_buffer.subBuffers()[_subCursor].first != _cursor)
+      qiLogWarning("BufferReader") << "subBuffer offset mismatch";
+    return true;
+  }
+
+  Buffer BufferReader::getSubBuffer()
+  {
+    if (!hasSubBuffer())
+      return Buffer();
+    return _buffer.subBuffers()[_subCursor++].second;
+  }
+
 }

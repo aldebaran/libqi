@@ -106,6 +106,26 @@ namespace qi
     return _p?_p->used:0;
   }
 
+  size_t Buffer::totalSize() const
+  {
+    if (!_p)
+      return 0;
+    size_t res = size();
+    for (unsigned i=0; i< _p->_subBuffers.size(); ++i)
+      res += _p->_subBuffers[i].second.totalSize();
+    return res;
+  }
+
+  std::vector<std::pair<uint32_t, Buffer> >& Buffer::subBuffers()
+  {
+    return _p->_subBuffers;
+  }
+
+  const std::vector<std::pair<uint32_t, Buffer> > & Buffer::subBuffers() const
+  {
+    return _p->_subBuffers;
+  }
+
   /*
   ** We need to allocate memory as soon as this function is called
   ** Returned memory MUST be coherent with the buffer used (either on stack/heap)
@@ -127,7 +147,10 @@ namespace qi
   void Buffer::clear()
   {
     if (_p)
+    {
       _p->used = 0;
+      _p->_subBuffers.clear();
+    }
   }
   void* Buffer::data()
   {

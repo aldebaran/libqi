@@ -311,8 +311,11 @@ namespace qi {
   }
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &meta) {
-    stream << (qi::uint32_t)meta.size();
-    stream.write((const char *)meta.data(), meta.size());
+    qi::Buffer& parent = stream.getBuffer();
+    stream << (uint32_t)meta.size();
+    parent.subBuffers().push_back(std::make_pair(stream.getBuffer().size(),
+      meta));
+    qiLogDebug("DataStream") << "Serializing buffer " << meta.size() <<" at " << stream.getBuffer().size();
     return stream;
   }
 
@@ -322,10 +325,22 @@ namespace qi {
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta) {
-    qi::uint32_t sz;
+    BufferReader& reader = stream.getBufferReader();
+    uint32_t sz;
     stream >> sz;
-    meta.reserve(sz);
-    stream.read(meta.data(), sz);
+    if (reader.hasSubBuffer())
+    {
+      meta = reader.getSubBuffer();
+      if (meta.size() != sz)
+        qiLogWarning("DataStream") << "Buffer size mismatch " << sz << " " << meta.size();
+    }
+    else
+    {
+      qiLogDebug("DataStream") << "Extracting buffer of size " << sz <<" at " << reader.position();
+      meta.clear();
+      void* ptr = meta.reserve(sz);
+      memcpy(ptr, stream.read(sz), sz);
+    }
     return stream;
   }
 

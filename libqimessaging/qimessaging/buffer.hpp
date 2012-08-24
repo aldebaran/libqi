@@ -26,7 +26,20 @@ namespace qi
     Buffer& operator = (const Buffer& b);
     int    write(const void *data, size_t size);
 
+    /// @return the size of this buffer, not counting subbuffers
     size_t size() const;
+
+    /// @return the size of this buffer and all its sub-buffers.
+    size_t totalSize() const;
+
+    /** When a buffer is serialized into an other buffer, only the size is
+     * written, and the other buffer gets appended into subBuffers() instead of
+     * being copied. The first element of the pair is the offset at which
+     * the buffer should have been inserted.
+     *
+     */
+     std::vector<std::pair<uint32_t, Buffer> >&       subBuffers();
+     const std::vector<std::pair<uint32_t, Buffer> >& subBuffers() const;
 
     void   clear();
 
