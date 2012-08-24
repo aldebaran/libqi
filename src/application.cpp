@@ -42,17 +42,35 @@ namespace qi {
 
   static boost::condition_variable globalCond;
 
-  static boost::asio::io_service* globalIoService = 0;
-  static boost::thread*           globalIoThread = 0;
+  static boost::asio::io_service*             globalIoService = 0;
+  static boost::thread*                       globalIoThread = 0;
+  static boost::asio::io_service::work*       globalIoWork = 0;
+  static std::list<boost::asio::signal_set*>* globalSignalSet = 0;
 
   static void stop_io_service()
   {
-    if (globalIoService)
-      globalIoService->stop();
+    //dont call ioservice->stop, just remove all events for the ioservice
+    //deleting the object holding the run() method from quitting
+    delete globalIoWork;
+    globalIoWork = 0;
+
+    if (globalSignalSet) {
+      std::list<boost::asio::signal_set*>::iterator it;
+      for (it = globalSignalSet->begin(); it != globalSignalSet->end(); ++it) {
+        (*it)->cancel();
+        delete *it;
+      }
+      delete globalSignalSet;
+      globalSignalSet = 0;
+    }
     if (globalIoThread) {
+      //wait for the ioservice to terminate
       globalIoThread->join();
       //we are sure run has stopped so we can delete the io service
       delete globalIoService;
+      delete globalIoThread;
+      globalIoThread = 0;
+      globalIoService = 0;
     }
   }
 
@@ -61,20 +79,30 @@ namespace qi {
     globalIoService->run();
   }
 
-  bool Application::atSignal(boost::function<void(int)> func, int signal)
+  static void signal_handler(const boost::system::error_code& error, int signal_number, boost::function<void (int)> fun)
+  {
+    //when cancel is called the signal handler is raised with an error. catch it!
+    if (!error) {
+      fun(signal_number);
+    }
+  }
+
+  bool Application::atSignal(boost::function<void (int)> func, int signal)
   {
     if (!globalIoService)
     {
       globalIoService = new boost::asio::io_service;
       // Prevent run from exiting
-      new boost::asio::io_service::work(*globalIoService);
+      globalIoWork = new boost::asio::io_service::work(*globalIoService);
       // Start io_service in a thread. It will call our handlers.
       globalIoThread = new boost::thread(boost::bind(&run_io_service));
       atExit(&stop_io_service);
+      globalSignalSet = new std::list<boost::asio::signal_set*>;
     }
 
-    boost::asio::signal_set sset(*globalIoService, signal);
-    sset.async_wait(boost::bind(func, _2));
+    boost::asio::signal_set *sset = new boost::asio::signal_set(*globalIoService, signal);
+    sset->async_wait(boost::bind(signal_handler, _1, _2, func));
+    globalSignalSet->push_back(sset);
     return true;
   }
 
@@ -209,6 +237,7 @@ namespace qi {
     globalCond.wait(l);
     l.unlock();
   }
+
 
   void Application::stop()
   {
