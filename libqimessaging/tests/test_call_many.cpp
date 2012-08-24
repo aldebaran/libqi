@@ -14,11 +14,9 @@
 
 #include <qimessaging/service_directory.hpp>
 
-qi::ServiceDirectory sd;
-qi::Session          session1, session2;
-qi::Object           oserver1, oserver2;
 qi::Object          *oclient1, *oclient2;
 static qi::Promise<bool> payload;
+
 void onFire1(const int& pl)
 {
   if (pl)
@@ -37,6 +35,10 @@ void onFire2(const int& pl)
 
 TEST(Test, Recurse)
 {
+  qi::ServiceDirectory sd;
+  qi::Session          session1, session2;
+  qi::Object           oserver1, oserver2;
+
   // Two objects with a fire event and a onFire method.
   ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
   ASSERT_TRUE(session1.connect(sd.listenUrl()));
@@ -61,12 +63,16 @@ TEST(Test, Recurse)
   }
   oclient1->call<void>("onFire1", niter);
   ASSERT_TRUE(payload.future().wait(3000));
+
   session1.close();
   session2.close();
   // We must force delete, otherwise destruction order is undefined.
   // And deleting a registered service is undefined behavior.
   session1.disconnect();
   session2.disconnect();
+  sd.close();
+  delete oclient1;
+  delete oclient2;
 }
 
 
