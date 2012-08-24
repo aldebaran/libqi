@@ -4,8 +4,12 @@
  * found in the COPYING file.
  */
 
+#include <fstream>
+
 #include <qi/qi.hpp>
 #include <qi/os.hpp>
+#include <qi/log.hpp>
+#include <qi/path.hpp>
 #include <numeric>
 #include <boost/filesystem.hpp>
 #include "src/filesystem.hpp"
@@ -68,6 +72,28 @@ namespace qi {
 
   void init(int argc, char *argv[])
   {
+
+    //Feed qi::path prefix from share/qi/path.conf if present
+    //(automatically created when using qiBuild)
+    std::string pathConf = ::qi::path::findData("qi", "path.conf");
+    if (!pathConf.empty())
+    {
+      std::ifstream is(pathConf.c_str());
+      while (is.good())
+      {
+        std::string path;
+        std::getline(is, path);
+        if (!path.empty() && path[0] != '#')
+        {
+          boost::filesystem::path bpath(path, qi::unicodeFacet());
+          if (boost::filesystem::exists(bpath))
+          {
+            qiLogDebug("Application") << "Adding to path " << path;
+            ::qi::path::detail::addOptionalSdkPrefix(path.c_str());
+          }
+        }
+      }
+    }
     globalArgc = argc;
     globalArgv = argv;
   }
