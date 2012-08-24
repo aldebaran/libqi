@@ -44,6 +44,17 @@ namespace qi {
 
   static boost::asio::io_service* globalIoService;
 
+  static void stop_io_service()
+  {
+    if (globalIoService)
+      globalIoService->stop();
+  }
+  static void run_io_service()
+  {
+    globalIoService->run();
+    delete globalIoService;
+  }
+
   bool Application::atSignal(boost::function<void(int)> func, int signal)
   {
     if (!globalIoService)
@@ -52,7 +63,8 @@ namespace qi {
       // Prevent run from exiting
       new boost::asio::io_service::work(*globalIoService);
       // Start io_service in a thread. It will call our handlers.
-      boost::thread bt(boost::bind(&boost::asio::io_service::run, globalIoService));
+      boost::thread bt(boost::bind(&run_io_service));
+      atExit(&stop_io_service);
     }
     boost::asio::signal_set* sigs
       = new boost::asio::signal_set(*globalIoService, signal);
