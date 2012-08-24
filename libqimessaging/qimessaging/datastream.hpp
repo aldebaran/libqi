@@ -93,6 +93,7 @@ namespace qi {
     void* read(size_t len);
     Status status() const { return _status; };
     void setStatus(Status status) { _status = status; }
+    Buffer& getBuffer() { return _reader.getBuffer();}
   private:
     Status _status;
     BufferReader _reader;
@@ -141,6 +142,7 @@ namespace qi {
     Status status() const { return _status; };
     void setStatus(Status status) { _status = status; }
 
+    Buffer& getBuffer() { return _buffer;}
   private:
     Status      _status;
     Buffer _buffer;

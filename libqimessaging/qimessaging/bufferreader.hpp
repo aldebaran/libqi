@@ -20,6 +20,7 @@ namespace qi {
     void  *read(size_t size);
     size_t seek(long offset);
     void  *peek(size_t size) const;
+    Buffer& getBuffer() { return _buffer;}
   private:
     Buffer _buffer;
     size_t _cursor;
