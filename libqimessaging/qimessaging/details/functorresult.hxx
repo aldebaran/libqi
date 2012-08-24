@@ -21,10 +21,6 @@ namespace qi {
     public:
       FunctorResultBase_Typed() { }
 
-      void setValue(const T &value) {
-        _f._p->setValue(value);
-      }
-
       virtual void setValue(const qi::Buffer &result)
       {
         qi::IDataStream ds(result);
