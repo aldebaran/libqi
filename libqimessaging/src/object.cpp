@@ -107,8 +107,8 @@ namespace qi {
         // Notify events that have subscribers that call us that we are dead
         // We need to make a copy of the vector, since disconnect will
         // remove entries from it.
-        std::vector<MetaEvent::Subscriber> regs = _p->_registrations;
-        std::vector<MetaEvent::Subscriber>::iterator i;
+        std::vector<EventSubscriber> regs = _p->_registrations;
+        std::vector<EventSubscriber>::iterator i;
         for (i = regs.begin(); i != regs.end(); ++i)
           i->eventSource->disconnect(i->linkId);
       }
@@ -118,16 +118,15 @@ namespace qi {
       {
         boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
         // Then remove _registrations with one of our event as source
-        MetaObject::EventMap::iterator ii;
-        for (ii = metaObject()._p->_events.begin(); ii!= metaObject()._p->_events.end(); ++ii)
+        //MetaObject::EventMap::iterator ii;
+        std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator ii;
+        for (ii = _p->_subscribers.begin(); ii!= _p->_subscribers.end(); ++ii)
         {
-          MetaEventPrivate::Subscribers::iterator j;
-          for (j = ii->second._p->_subscribers.begin();
-            j != ii->second._p->_subscribers.end();
-            ++j)
-          links.push_back(j->second.linkId);
+          ObjectPrivate::SubscriberMap::iterator j;
+          for (j = ii->second.begin(); j != ii->second.end(); ++j)
+            links.push_back(j->second.linkId);
         }
-        for (unsigned int i=0; i<links.size(); ++i)
+        for (unsigned int i = 0; i < links.size(); ++i)
           disconnect(links[i]);
       }
     }
@@ -287,14 +286,17 @@ namespace qi {
       }
       else
       {
-        metaCall(event, args, FunctorResult(
-          boost::shared_ptr<FunctorResultBase>(new DropResult)));
+        metaCall(event, args, FunctorResult(boost::shared_ptr<FunctorResultBase>(new DropResult)));
         return;
       }
     }
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-    for (MetaEventPrivate::Subscribers::iterator il =
-      ev->_p->_subscribers.begin(); il != ev->_p->_subscribers.end(); ++il)
+    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
+    it = _p->_subscribers.find(event);
+    if (it == _p->_subscribers.end())
+      return;
+    ObjectPrivate::SubscriberMap::iterator il;
+    for (il = it->second.begin(); il != it->second.end(); ++il)
     {
       il->second.call(args);
     }
@@ -385,14 +387,12 @@ namespace qi {
     return connect(eventId, functor, ctx);
   }
 
-  unsigned int Object::connect(unsigned int event, const Functor* functor,
-                               EventLoop* ctx)
+  unsigned int Object::connect(unsigned int event, const Functor* functor, EventLoop* ctx)
   {
-    return connect(event, MetaEvent::Subscriber(functor, ctx));
+    return connect(event, EventSubscriber(functor, ctx));
   }
 
-  unsigned int Object::connect(unsigned int event,
-    const MetaEvent::Subscriber& sub)
+  unsigned int Object::connect(unsigned int event, const EventSubscriber& sub)
   {
     if (_p->_dying)
     {
@@ -409,9 +409,9 @@ namespace qi {
     // Should we validate event here too?
     unsigned int uid = ++MetaObjectPrivate::uid;
     // Use [] directly, will create the entry (copy) if not present.
-    ev->_p->_subscribers[uid] = sub;
+    _p->_subscribers[event][uid] = sub;
     // Get the subscrber copy in our map:
-    MetaEvent::Subscriber& s = ev->_p->_subscribers[uid];
+    EventSubscriber& s = _p->_subscribers[event][uid];
     s.linkId = uid;
     s.eventSource = this;
     s.event = event;
@@ -427,18 +427,18 @@ namespace qi {
   {
     delete ptr;
   }
-  bool Object::disconnect(unsigned int id)
+  bool Object::disconnect(unsigned int linkId)
   {
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
     // Look it up.
     // FIXME: Maybe store the event id inside the link id for faster lookup?
-    MetaObject::EventMap::iterator i;
-    for (i = metaObject()._p->_events.begin(); i!= metaObject()._p->_events.end(); ++i)
+    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
+    for (it = _p->_subscribers.begin(); it != _p->_subscribers.end(); ++it)
     {
-      MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(id);
-      if (j != i->second._p->_subscribers.end())
+      ObjectPrivate::SubscriberMap::iterator j = it->second.find(linkId);
+      if (j != it->second.end())
       {
-        MetaEvent::Subscriber& sub = j->second;
+        EventSubscriber& sub = j->second;
         // We have ownership of the handler, despite all the copies.
         if (sub.handler && sub.eventLoop && !sub.eventLoop->isInEventLoopThread())
           sub.eventLoop->asyncCall(0,
@@ -449,7 +449,7 @@ namespace qi {
         if (sub.target)
         {
           boost::recursive_mutex::scoped_lock sl(sub.target->_p->_mutexRegistration);
-          std::vector<MetaEvent::Subscriber>& regs = sub.target->_p->_registrations;
+          std::vector<EventSubscriber>& regs = sub.target->_p->_registrations;
           // Look it up in vector, then swap with last.
           for (unsigned int i=0; i< regs.size(); ++i)
             if (sub.linkId == regs[i].linkId)
@@ -459,7 +459,7 @@ namespace qi {
               break;
             }
         }
-        i->second._p->_subscribers.erase(j);
+        it->second.erase(j);
         return true;
       }
     }
@@ -475,7 +475,7 @@ namespace qi {
       qiLogError("object") << "No such event " << signal;
       return 0;
     }
-    return connect(signal, MetaEvent::Subscriber(target, slot));
+    return connect(signal, EventSubscriber(target, slot));
   }
 
   EventLoop* Object::eventLoop()
@@ -487,6 +487,19 @@ namespace qi {
   {
     _p->_eventLoop = ctx;
   }
+
+  std::vector<EventSubscriber> Object::subscribers(int eventId) const
+  {
+    std::vector<EventSubscriber> res;
+    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it = _p->_subscribers.find(eventId);
+    ObjectPrivate::SubscriberMap::iterator jt;
+    if (it == _p->_subscribers.end())
+      return res;
+    for (jt = it->second.begin(); jt != it->second.end(); ++jt)
+      res.push_back(jt->second);
+    return res;
+  }
+
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
     stream << meta._p->_methods;

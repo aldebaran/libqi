@@ -24,37 +24,6 @@ namespace qi {
     const std::string &signature() const;
     unsigned int       uid() const;
 
-    /** Event subscriber info.
-     *
-     * Only one of handler or target must be set.
-     */
-    struct Subscriber
-    {
-      Subscriber()
-      : handler(0), eventLoop(0), target(0), method(0) {}
-      Subscriber(const Functor* func, EventLoop* ctx)
-      : handler(func), eventLoop(ctx), target(0), method(0) {}
-      Subscriber(Object * target, unsigned int method)
-      : handler(0), eventLoop(0), target(target), method(method) {}
-      void call(const FunctorParameters& args);
-
-      // Source information
-      Object*            eventSource;
-      unsigned int       event;
-       /// Uid that can be passed to Object::disconnect()
-      unsigned int       linkId;
-
-      // Target information
-      //   Mode 1: Direct functor call
-      const Functor*     handler;
-      EventLoop*         eventLoop;
-      //  Mode 2: metaCall
-      Object*            target;
-      unsigned int       method;
-    };
-
-    /// Return a copy of all registered subscribers.
-    std::vector<Subscriber> subscribers() const;
   protected:
   public:
     MetaEventPrivate   *_p;

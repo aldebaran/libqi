@@ -11,6 +11,7 @@
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 
+
 #ifndef __METAEVENT_P_HPP__
 #define __METAEVENT_P_HPP__
 
@@ -27,10 +28,7 @@ namespace qi {
     const std::string &signature() const { return _signature; }
     unsigned int      uid() const { return _uid; }
 
-    typedef std::map<unsigned int, MetaEvent::Subscriber> Subscribers;
-  protected:
   public:
-    Subscribers        _subscribers;
     std::string        _signature;
     unsigned int       _uid;
   };

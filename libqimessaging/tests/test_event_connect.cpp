@@ -31,7 +31,7 @@ void testDelete(bool afirst, bool disconnectFirst)
   unsigned int onFireId2 = b.advertiseMethod("onFire2", &onFire2);
   unsigned int linkId = a.connect(fireId, &b, onFireId);
   a.connect(fireId, &b, onFireId2);
-  std::vector<qi::MetaEvent::Subscriber> subs = a.metaObject().event(fireId)->subscribers();
+  std::vector<qi::EventSubscriber> subs = a.subscribers(fireId);
   EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);

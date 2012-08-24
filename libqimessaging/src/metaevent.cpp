@@ -55,17 +55,7 @@ namespace qi {
     }
   };
 
-  std::vector<MetaEvent::Subscriber>
-  MetaEvent::subscribers() const
-  {
-    std::vector<MetaEvent::Subscriber> res;
-    for ( MetaEventPrivate::Subscribers::iterator i = _p->_subscribers.begin();
-      i != _p->_subscribers.end(); ++i)
-    res.push_back(i->second);
-    return res;
-  }
-
-  void MetaEvent::Subscriber::call(const FunctorParameters &args)
+  void EventSubscriber::call(const FunctorParameters &args)
   {
     FunctorResult dummy(
       boost::shared_ptr<FunctorResultBase>(new DropResult()));

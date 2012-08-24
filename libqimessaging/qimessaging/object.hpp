@@ -26,6 +26,36 @@
 
 namespace qi {
 
+  /** Event subscriber info.
+   *
+   * Only one of handler or target must be set.
+   */
+  struct EventSubscriber
+  {
+    EventSubscriber()
+    : handler(0), eventLoop(0), target(0), method(0) {}
+    EventSubscriber(const Functor* func, EventLoop* ctx)
+    : handler(func), eventLoop(ctx), target(0), method(0) {}
+    EventSubscriber(Object * target, unsigned int method)
+    : handler(0), eventLoop(0), target(target), method(method) {}
+    void call(const FunctorParameters& args);
+
+    // Source information
+    Object*            eventSource;
+    unsigned int       event;
+     /// Uid that can be passed to Object::disconnect()
+    unsigned int       linkId;
+
+    // Target information
+    //   Mode 1: Direct functor call
+    const Functor*     handler;
+    EventLoop*         eventLoop;
+    //  Mode 2: metaCall
+    Object*            target;
+    unsigned int       method;
+  };
+
+
   class MetaObjectPrivate;
   class QIMESSAGING_API MetaObject {
   public:
@@ -158,10 +188,10 @@ namespace qi {
 
     /// Calls given functor when event is fired. Takes ownership of functor.
     virtual unsigned int connect(unsigned int event,
-      const MetaEvent::Subscriber& subscriber);
+      const EventSubscriber& subscriber);
 
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual bool disconnect(unsigned int uid);
+    virtual bool disconnect(unsigned int linkId);
 
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
     /// Resolve the method Id and bounces to metaCall
@@ -170,6 +200,8 @@ namespace qi {
     //// Resolve and bounce to metaEmit
     bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
 
+    //return the list of all subscriber to an event
+    std::vector<EventSubscriber> subscribers(int eventId) const;
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
      * If target is a proxy and this is server-side, the event will be

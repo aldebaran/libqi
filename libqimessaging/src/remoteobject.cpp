@@ -149,7 +149,7 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   }
 }
 
-unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscriber& sub)
+unsigned int RemoteObject::connect(unsigned int event, const EventSubscriber& sub)
 {
   // Bind the function locally.
   unsigned int uid = Object::connect(event, sub);
@@ -173,15 +173,15 @@ unsigned int RemoteObject::connect(unsigned int event, const MetaEvent::Subscrib
 
 bool RemoteObject::disconnect(unsigned int linkId)
 {
+  unsigned int event = -1;
   // Figure out which event this link is associated to
-  MetaObject::EventMap::iterator i;
-  unsigned int event = (unsigned int)-1;
-  for (i = metaObject()._p->_events.begin(); i!= metaObject()._p->_events.end(); ++i)
+  std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
+  for (it = _p->_subscribers.begin(); it != _p->_subscribers.end(); ++it)
   {
-    MetaEventPrivate::Subscribers::iterator j = i->second._p->_subscribers.find(linkId);
-    if (j != i->second._p->_subscribers.end())
+    ObjectPrivate::SubscriberMap::iterator jt = it->second.find(linkId);
+    if (jt != it->second.end())
     {
-      event = i->second.uid();
+      event = it->first;
       break;
     }
   }
