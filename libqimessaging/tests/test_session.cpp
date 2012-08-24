@@ -34,7 +34,7 @@ TEST(QiSession, simpleConnectionToSd)
 
   EXPECT_TRUE(session.isConnected());
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -49,7 +49,7 @@ TEST(QiSession, simpleConnectionToNonReachableSd)
   EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -64,7 +64,7 @@ TEST(QiSession, simpleConnectionToInvalidAddrToSd)
   EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -79,7 +79,7 @@ TEST(QiSession, simpleConnectionToInvalidSd)
   EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -109,7 +109,6 @@ TEST(QiSession, getSimpleService)
 
   delete object;
   session.close();
-  session.disconnect();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -126,7 +125,7 @@ TEST(QiSession, getUnregisterService)
   qi::Object *object = session.service("serviceTest");
   EXPECT_FALSE(object);
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);
@@ -153,7 +152,7 @@ TEST(QiSession, getCloseService)
   qi::Object *object = session.service("serviceTest");
   EXPECT_FALSE(object);
 
-  session.disconnect();
+  session.close();
   bool disconnected = session.waitForDisconnected(1000);
 
   EXPECT_TRUE(disconnected);

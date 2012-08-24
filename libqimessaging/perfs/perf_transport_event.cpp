@@ -242,8 +242,7 @@ int main_server()
     qi::os::sleep(60);
 
   srv.stop();
-  session.disconnect();
-
+  session.close();
   return 0;
 }
 

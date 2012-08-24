@@ -145,8 +145,8 @@ namespace qi
     return _p->_endpoints;
   }
 
-  bool TransportServer::close() {
-    return _p?_p->close():true;
+  void TransportServer::close() {
+    _p->close();
   }
 
 }

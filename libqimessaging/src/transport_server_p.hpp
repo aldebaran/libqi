@@ -38,7 +38,7 @@ namespace qi {
     }
 
     virtual bool listen() = 0;
-    virtual bool close() = 0;
+    virtual void close() = 0;
     virtual void destroy() = 0;
 
   public:

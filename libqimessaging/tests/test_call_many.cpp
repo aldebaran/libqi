@@ -65,14 +65,12 @@ TEST(Test, Recurse)
   ASSERT_TRUE(payload.future().wait(3000));
 
   session1.close();
+  session1.waitForDisconnected();
   session2.close();
-  // We must force delete, otherwise destruction order is undefined.
-  // And deleting a registered service is undefined behavior.
-  session1.disconnect();
-  session2.disconnect();
-  sd.close();
+  session2.waitForDisconnected();
   delete oclient1;
   delete oclient2;
+  sd.close();
 }
 
 

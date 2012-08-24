@@ -74,11 +74,9 @@ protected:
     payload1 = payload2 = 0;
     delete oclient1;
     delete oclient2;
-    sclient.disconnect();
+    sclient.close();
     session1.close();
     session2.close();
-    session1.disconnect();
-    session2.disconnect();
     sd.close();
   }
 

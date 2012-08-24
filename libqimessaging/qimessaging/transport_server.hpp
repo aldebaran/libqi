@@ -49,7 +49,7 @@ namespace qi {
     bool listen();
     bool listen(const qi::Url &url,
                 qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
-    bool close();
+    void close();
 
     qi::Url listenUrl() const;
     std::vector<qi::Url> endpoints() const;

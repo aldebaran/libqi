@@ -77,7 +77,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_p->_mutexCallback);
       _p->_callbacks.clear();
     }
-    disconnect();
+    close();
     waitForDisconnected();
     delete _p;
   }
@@ -744,12 +744,6 @@ namespace qi {
     return _p->_serviceSocket->connect(serviceDirectoryURL);
   }
 
-  bool Session::disconnect()
-  {
-    _p->_serviceSocket->disconnect();
-    return true;
-  }
-
   bool Session::waitForConnected(int msecs)
   {
     return _p->_serviceSocket->waitForConnected(msecs);
@@ -914,7 +908,8 @@ namespace qi {
 
   void Session::close()
   {
-    _p->_ts->close();
+    _p->_serviceSocket->disconnect();
+    return _p->_ts->close();
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,

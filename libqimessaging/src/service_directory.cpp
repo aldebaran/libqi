@@ -373,8 +373,8 @@ bool ServiceDirectory::listen(const qi::Url &address)
   }
 }
 
-bool ServiceDirectory::close() {
-  return _p->ts->close();
+void ServiceDirectory::close() {
+  _p->ts->close();
 }
 
 qi::Url ServiceDirectory::listenUrl() const {

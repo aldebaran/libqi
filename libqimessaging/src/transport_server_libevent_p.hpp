@@ -32,7 +32,7 @@ namespace qi
     virtual ~TransportServerLibEventPrivate();
 
     virtual bool listen();
-    virtual bool close();
+    virtual void close();
     virtual void destroy();
     void accept(evutil_socket_t        fd,
                 struct evconnlistener *listener);

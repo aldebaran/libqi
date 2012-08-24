@@ -35,7 +35,7 @@ public:
 
   ~TestConnection()
   {
-    session.disconnect();
+    session.close();
     session.waitForDisconnected();
 
     delete obj;
@@ -129,7 +129,6 @@ int main(int argc, char **argv) {
   int res = RUN_ALL_TESTS();
   sd.close();
   session.close();
-  session.disconnect();
   session.waitForDisconnected();
 
 

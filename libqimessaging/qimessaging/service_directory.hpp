@@ -22,7 +22,7 @@ namespace qi
     ~ServiceDirectory();
 
     bool listen(const qi::Url &listenAddress);
-    bool close();
+    void close();
     qi::Url listenUrl() const;
 
   private:

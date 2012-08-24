@@ -102,7 +102,6 @@ int main(int argc, char *argv[])
 
       session.unregisterService(id);
       session.close();
-      session.disconnect();
     }
     else
     {

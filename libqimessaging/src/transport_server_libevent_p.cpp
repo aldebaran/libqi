@@ -66,8 +66,7 @@ namespace qi
     qi::TransportSocket *ts = new qi::TransportSocket();
     if (ts->_p)
       delete ts->_p;
-    ts->_p = new qi::TransportSocketLibEvent(ts, fd,
-      context);
+    ts->_p = new qi::TransportSocketLibEvent(ts, fd, context);
 
     std::vector<TransportServerInterface *> localCallbacks;
     {
@@ -93,11 +92,10 @@ namespace qi
       (*it)->error(self, err);
   }
 
-  bool TransportServerLibEventPrivate::close() {
+  void TransportServerLibEventPrivate::close() {
     if (_listener)
       evconnlistener_free(_listener);
     _listener = 0;
-    return true;
   }
 
   bool TransportServerLibEventPrivate::listen()

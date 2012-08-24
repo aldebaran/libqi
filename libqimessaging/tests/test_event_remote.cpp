@@ -53,9 +53,8 @@ protected:
   void TearDown()
   {
     payload = 0;
-    sclient.disconnect();
     sclient.close();
-    session.disconnect();
+    session.close();
     sd.close();
   }
 

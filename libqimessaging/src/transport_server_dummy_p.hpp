@@ -27,7 +27,7 @@ namespace qi
                                 EventLoop* ctx);
     virtual ~TransportServerDummyPrivate();
     virtual bool listen();
-    virtual bool close();
+    virtual void close();
     virtual void destroy();
   private:
     TransportServerDummyPrivate() {};

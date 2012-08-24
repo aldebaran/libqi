@@ -41,11 +41,11 @@ void qi_session_destroy(qi_session_t *session)
   delete s;
 }
 
-void qi_session_disconnect(qi_session_t *session)
+void qi_session_close(qi_session_t *session)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
-  s->disconnect();
+  s->close();
 }
 
 void qi_session_wait_for_disconnected(qi_session_t *session, int msecs)

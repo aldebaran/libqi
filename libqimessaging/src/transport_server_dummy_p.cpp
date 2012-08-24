@@ -27,11 +27,10 @@ namespace qi
     return true;
   }
 
-  bool TransportServerDummyPrivate::close()
+  void TransportServerDummyPrivate::close()
   {
     qiLogWarning("TransportServer") << "close: You are currently running on dummy"
                                     << " TransportServer!";
-    return true;
   }
 
   TransportServerDummyPrivate::TransportServerDummyPrivate(TransportServer* self,

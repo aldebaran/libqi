@@ -82,7 +82,7 @@ extern "C"
    * \param session the session to disconnect
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_disconnect(qi_session_t *session);
+  QIMESSAGING_API void qi_session_close(qi_session_t *session);
 
   /** \brief wait for the disconnection completion
    *
