@@ -35,10 +35,16 @@ std::string reply(const std::string &msg)
   return msg;
 }
 
+qi::Buffer replyBuf(const qi::Buffer& buf)
+{
+  return qi::Buffer(buf);
+}
+
 int main_local()
 {
   qi::Object        obj;
   obj.advertiseMethod("reply", &reply);
+  obj.advertiseMethod("replyBuf", &replyBuf);
   run_client(&obj);
   return 0;
 }
@@ -64,15 +70,56 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
   return run_client(obj);
 }
 
+
 int run_client(qi::Object* obj)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
-  for (int i = 0; i < 12; ++i)
+  int rstart = 0;
+  if (getenv("rstart")) rstart = strtol(getenv("rstart"), 0, 0);
+  int rend = 20;
+  if (getenv("rend")) rend = strtol(getenv("rend"), 0, 0);
+  for (int i = rstart; i < rend; i+=2)
+  {
+    unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
+    qi::Buffer buf;
+    buf.reserve(numBytes);
+    dp.start(gLoopCount, numBytes);
+    unsigned long long latencySum = 0;
+    for (int j = 0; j < gLoopCount; ++j)
+    {
+      static int id = 1;
+      id++;
+      qi::os::timeval tstart, tstop;
+      qi::os::gettimeofday(&tstart);
+      qi::Buffer result = obj->call<qi::Buffer>("replyBuf", buf);
+      qi::os::gettimeofday(&tstop);
+      latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
+      + (tstop.tv_usec - tstart.tv_usec);
+      if (result.size() != buf.size())
+        std::cout << "error content" << std::endl;
+    }
+    dp.stop(1);
+    // We expect latency to be dp.meanInterval, but just to be sure also show
+    // latency.
+    std::cerr << "Average latency " << (latencySum / gLoopCount) << std::endl;
+  }
+  return 0;
+}
+
+int run_client_string(qi::Object* obj)
+{
+  qi::perf::DataPerfTimer dp ("Transport synchronous call");
+  int rstart = 0;
+  if (getenv("rstart")) rstart = strtol(getenv("rstart"), 0, 0);
+  int rend = 20;
+  if (getenv("rend")) rend = strtol(getenv("rend"), 0, 0);
+  for (int i = rstart; i < rend; i+=2)
   {
     char character = 'c';
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string requeststr = std::string(numBytes, character);
-
+    qi::Buffer buf;
+    buf.reserve(numBytes);
     dp.start(gLoopCount, numBytes);
     unsigned long long latencySum = 0;
     for (int j = 0; j < gLoopCount; ++j)
@@ -158,7 +205,7 @@ int main_server(std::string host, std::string port)
   qi::Session       session;
   qi::Object        obj;
   obj.advertiseMethod("reply", &reply);
-
+  obj.advertiseMethod("replyBuf", &replyBuf);
   session.connect("tcp://127.0.0.1:"+port);
   session.waitForConnected();
 
