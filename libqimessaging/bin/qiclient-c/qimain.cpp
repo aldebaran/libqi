@@ -56,19 +56,20 @@ int make_call(char *addr)
 }
 
 
-int main(int ac, char *av[])
+int main(int argc, char *argv[])
 {
+  qi_application_t * app = qi_application_create(&argc, argv);
   char*     sd_addr = 0;
 
   // get the program options
-  if (ac != 2)
+  if (argc != 2)
   {
     printf("Usage : ./qi-client-c master-address\n");
     printf("Assuming master address is tcp://127.0.0.1:5555\n");
     sd_addr = strdup("tcp://127.0.0.1:5555");
-    return (0);
   }
-
-  sd_addr = av[1];
-  return make_call(sd_addr);
+  else
+    sd_addr = argv[1];
+  int ret = make_call(sd_addr);
+  qi_application_destroy(app);
 }
