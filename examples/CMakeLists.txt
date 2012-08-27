@@ -4,11 +4,9 @@
 
 project(qi_examples)
 
-if (WITH_BOOST_LOCALE)
-  qi_create_bin(qipath_example qipath_example.cpp NO_INSTALL)
-  qi_use_lib(qipath_example QI BOOST_LOCALE)
-  set_target_properties(qipath_example PROPERTIES FOLDER "examples")
-endif()
+qi_create_bin(qipath_example qipath_example.cpp NO_INSTALL)
+qi_use_lib(qipath_example QI)
+set_target_properties(qipath_example PROPERTIES FOLDER "examples")
 
 qi_create_bin(sharedlibrary_example sharedlibrary_example.cpp NO_INSTALL)
 qi_use_lib(sharedlibrary_example QI)

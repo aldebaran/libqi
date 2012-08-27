@@ -9,25 +9,14 @@
 
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include <qi/application.hpp>
 #include <qi/qi.hpp>
-
-#include <boost/locale.hpp>
-#include <boost/filesystem.hpp>
-#include <locale>
 
 int main(int argc, char *argv[])
 {
-  // Set the global locale to loc
-  std::locale::global(boost::locale::generator().generate(""));
-  // Make boost.filesystem use it
-  boost::filesystem::path::imbue(std::locale());
-
-  // Get the prefix name from argv0
-  std::cout << "argv0 is: " << argv[0] << std::endl;
   // Get the prefix name from argv0
   // Performs various initializations.
-  // This is usually called by qi::init()
-  qi::init(argc, argv);
+  qi::Application app(argc, argv);
 
   // Get sdk prefix
   std::cout << "SDK prefix is: " << qi::path::sdkPrefix() << std::endl;
@@ -54,7 +43,6 @@ int main(int argc, char *argv[])
     std::ifstream ifs;
 
     // Set stream to the right charset
-    ifs.imbue(std::locale());
     ifs.open(fooCfgPath.c_str(), std::fstream::in);
     while (! ifs.eof())
     {
