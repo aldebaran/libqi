@@ -301,19 +301,22 @@ namespace qi
       if (WIFSIGNALED(st))
       {
         result -= WTERMSIG(st);
-        status = NULL;
+        if (status)
+          *status = 0;
       }
       else
       {
         result = errno;
-        *status = WEXITSTATUS(st);
+        if (status)
+          *status = WEXITSTATUS(st);
       }
 
 #ifdef __APPLE__
       if (errno == ECHILD)
       {
         result = 0;
-        *status = 127;
+        if (status)
+          *status = 127;
         return result;
       }
 #endif
