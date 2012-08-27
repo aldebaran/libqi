@@ -16,10 +16,12 @@ namespace qi {
 
   //this is initialized once.. and will be reported to leak memory.
   //but that okay for a global to be freed by the program termination
-  static const detail::utf8_codecvt_facet *gUtf8CodecvtFacet = new detail::utf8_codecvt_facet();
+  static const detail::utf8_codecvt_facet *gUtf8CodecvtFacet = 0;
 
   const codecvt_type &unicodeFacet()
   {
+    if (!gUtf8CodecvtFacet)
+      gUtf8CodecvtFacet = new detail::utf8_codecvt_facet();
     const codecvt_type *ret = gUtf8CodecvtFacet;
     return *ret;
   }
