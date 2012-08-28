@@ -346,6 +346,7 @@ ServiceDirectory::ServiceDirectory()
 
 ServiceDirectory::~ServiceDirectory()
 {
+  close();
   delete _p;
 }
 
