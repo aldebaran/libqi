@@ -103,7 +103,7 @@ namespace qi {
 
     event_base_dispatch(base);
     qiLogDebug("qi.EventLoop") << this << "run ending";
-    //bufferevent_free(bev);
+    bufferevent_free(bev);
     event_base_free(base);
     {
       boost::recursive_mutex::scoped_lock sl(_mutex);
