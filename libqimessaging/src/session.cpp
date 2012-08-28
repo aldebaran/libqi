@@ -48,12 +48,12 @@ namespace qi {
   }
 
   SessionPrivate::SessionPrivate(qi::Session *session)
-    : _serviceSocket(new qi::TransportSocket()),
+    : _serviceSocket(),
       _self(session),
       _callbacks(0)
     , _dying(false)
   {
-    _serviceSocket->addCallbacks(this);
+    _serviceSocket.addCallbacks(this);
     _ts.addCallbacks(this);
   }
 
@@ -359,7 +359,7 @@ namespace qi {
     }
     if (futureServiceIt != _futureService.end())
     {
-      if (client == _serviceSocket)
+      if (client == &_serviceSocket)
       {
         // Message comes from the ServiceDirectory with the endpoints of the Service
         // the client wants to connect to
@@ -568,7 +568,7 @@ namespace qi {
         _futureFunctor[msg.id()] = ret;
       }
 
-      if (!_serviceSocket->send(msg))
+      if (!_serviceSocket.send(msg))
       {
         qi::IDataStream dout(msg.buffer());
         qi::ServiceInfo si;
@@ -621,7 +621,7 @@ namespace qi {
         _futureFunctor[msg.id()] = ret;
       }
 
-      if (!_serviceSocket->send(msg))
+      if (!_serviceSocket.send(msg))
       {
         qi::IDataStream dout(msg.buffer());
         unsigned int id;
@@ -677,7 +677,7 @@ namespace qi {
         _serviceReady.push_back(msg.id());
       }
 
-      if (!_serviceSocket->send(msg))
+      if (!_serviceSocket.send(msg))
       {
         qiLogError("qimessaging.Session") << "Error while ack service directory from service: "
                                           << idx;
@@ -740,17 +740,17 @@ namespace qi {
 
   bool Session::connect(const qi::Url &serviceDirectoryURL)
   {
-    return _p->_serviceSocket->connect(serviceDirectoryURL);
+    return _p->_serviceSocket.connect(serviceDirectoryURL);
   }
 
   bool Session::waitForConnected(int msecs)
   {
-    return _p->_serviceSocket->waitForConnected(msecs);
+    return _p->_serviceSocket.waitForConnected(msecs);
   }
 
   bool Session::waitForDisconnected(int msecs)
   {
-    return _p->_serviceSocket->waitForDisconnected(msecs);
+    return _p->_serviceSocket.waitForDisconnected(msecs);
   }
 
   qi::Future< std::vector<ServiceInfo> > Session::services()
@@ -766,7 +766,7 @@ namespace qi {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
       _p->_futureServices[msg.id()] = promise;
     }
-    if (!_p->_serviceSocket->send(msg))
+    if (!_p->_serviceSocket.send(msg))
     {
       promise.setError("Send failed (socket disconnected?)");
       _p->_futureService.erase(msg.id());
@@ -798,7 +798,7 @@ namespace qi {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
       _p->_futureService[msg.id()] = sr;
     }
-    if (!_p->_serviceSocket->send(msg))
+    if (!_p->_serviceSocket.send(msg))
     {
       sr->promise.setError("Send failed (socket disconnected?)");
       _p->_futureService.erase(msg.id());
@@ -837,11 +837,11 @@ namespace qi {
   }
 
   bool Session::isConnected() const {
-    return _p->_serviceSocket->isConnected();
+    return _p->_serviceSocket.isConnected();
   }
 
   qi::Url Session::url() const {
-    return _p->_serviceSocket->url();
+    return _p->_serviceSocket.url();
   }
 
   bool Session::waitForServiceReady(const std::string &service, int msecs) {
@@ -907,7 +907,7 @@ namespace qi {
 
   void Session::close()
   {
-    _p->_serviceSocket->disconnect();
+    _p->_serviceSocket.disconnect();
     return _p->_ts.close();
   }
 

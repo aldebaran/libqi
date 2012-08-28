@@ -72,7 +72,7 @@ namespace qi {
     virtual void onFutureFailed(const std::string &error, void *data);
 
   public:
-    qi::TransportSocket                *_serviceSocket;
+    qi::TransportSocket                 _serviceSocket;
     qi::Session                        *_self;
     std::vector<qi::SessionInterface *> _callbacks;
     boost::mutex                        _mutexCallback;
