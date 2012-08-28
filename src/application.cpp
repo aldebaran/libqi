@@ -79,6 +79,33 @@ namespace qi {
     globalIoService->run();
   }
 
+  static void stop_handler(int signal_number, qi::Application *app) {
+    static int  count_int = 0;
+    static int count_term = 0;
+    int sigcount = 0;
+    if (signal_number == SIGINT) {
+      count_int++;
+      sigcount = count_int;
+    }
+    else if (signal_number == SIGTERM) {
+      count_term++;
+      sigcount = count_term;
+    }
+    switch (sigcount) {
+      case 1:
+        qiLogInfo("qi.application") << "Sending the stop command...";
+        app->stop();
+        //register the signal again to call exit the next time if stop did not succeed
+        app->atSignal(boost::bind<void>(&stop_handler, _1, app), signal_number);
+        return;
+      default:
+        //even for SIGTERM this is an error, so return 1.
+        qiLogInfo("qi.application") << "signal " << signal_number << " received a second time, calling exit(1).";
+        exit(1);
+        return;
+    }
+  }
+
   static void signal_handler(const boost::system::error_code& error, int signal_number, boost::function<void (int)> fun)
   {
     //when cancel is called the signal handler is raised with an error. catch it!
@@ -197,8 +224,8 @@ namespace qi {
     argc = Application::argc();
     argv = globalArgv;
     // kill with no signal sends TERM, control-c sends INT.
-    atSignal(boost::bind(&Application::stop), SIGTERM);
-    atSignal(boost::bind(&Application::stop), SIGINT);
+    atSignal(boost::bind(&stop_handler, _1, this), SIGTERM);
+    atSignal(boost::bind(&stop_handler, _1, this), SIGINT);
   }
 
   void* Application::loadModule(const std::string& moduleName, int flags)
