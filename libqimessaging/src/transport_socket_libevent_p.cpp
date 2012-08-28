@@ -444,6 +444,7 @@ namespace qi
 
       int result = bufferevent_socket_connect(bev, ai->ai_addr, ai->ai_addrlen);
 
+      evutil_freeaddrinfo(ai);
       if (result == 0)
         return true;
 
