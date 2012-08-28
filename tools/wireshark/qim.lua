@@ -12,14 +12,15 @@ dst_F = ProtoField.string("qim.dst","Destination")
 magic_F = ProtoField.uint32("qim.magic", "Magic", base.HEX)
 id_F = ProtoField.uint32("qim.id","Id")
 size_F = ProtoField.uint32("qim.size","Size")
-type_F = ProtoField.uint32("qim.type","Type")
+version_F = ProtoField.uint16("qim.version","Version")
+type_F = ProtoField.uint16("qim.type","Type")
 service_F = ProtoField.uint32("qim.service","Service")
-path_F = ProtoField.uint32("qim.path","Path")
-function_F = ProtoField.uint32("qim.function","Function")
-reserved_F = ProtoField.uint32("qim.reserved","Reserved")
+object_F = ProtoField.uint32("qim.object","Object")
+action_F = ProtoField.uint32("qim.action","Action")
 data_F = ProtoField.string("qim.data", "Data")
 
-qim_proto.fields = {src_F, dst_F, conv_F, magic_F, id_F, size_F, type_F, service_F, path_F, function_F, reserved_F, data_F}
+
+qim_proto.fields = {src_F, dst_F, conv_F, magic_F, id_F, size_F, type_F, service_F, object_F, action_F, data_F}
 
 function qim_proto.dissector(buffer,pinfo,tree)
   local tcp_src = tcp_src_f()
@@ -55,25 +56,25 @@ function qim_proto.dissector(buffer,pinfo,tree)
     offset = offset + 4
     subtree:add_le(size_F, size)
 
-    local typez = buffer(offset, 4)
-    offset = offset + 4
+    local version = buffer(offset, 2)
+    offset = offset + 2
+    subtree:add_le(version_F, version)
+
+    local typez = buffer(offset, 2)
+    offset = offset + 2
     subtree:add_le(type_F, typez)
 
     local service = buffer(offset, 4)
     offset = offset + 4
     subtree:add_le(service_F, service)
 
-    local path = buffer(offset, 4)
+    local object = buffer(offset, 4)
     offset = offset + 4
-    subtree:add_le(path_F, path)
+    subtree:add_le(object_F, object)
 
-    local functionz = buffer(offset, 4)
+    local action = buffer(offset, 4)
     offset = offset + 4
-    subtree:add_le(function_F, functionz)
-
-    local reserved = buffer(offset, 4)
-    offset = offset + 4
-    subtree:add_le(reserved_F, reserved)
+    subtree:add_le(action_F, action)
 
     local data = buffer(offset, buffer:len() - offset)
     subtree:add(data_F, tostring(data))
