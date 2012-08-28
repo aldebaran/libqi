@@ -437,7 +437,7 @@ namespace qi {
       else
         _glVerbosity = lv;
 
-      qiLogInfo("qi.log") << "Verbosity set to " << _glVerbosity;
+      qiLogVerbose("qi.log") << "Verbosity set to " << _glVerbosity;
     };
 
     LogLevel verbosity()
@@ -454,7 +454,7 @@ namespace qi {
       else
         _glContext = ctx;
 
-      qiLogInfo("qi.log") << "Context set to " << _glContext;
+      qiLogVerbose("qi.log") << "Context set to " << _glContext;
     };
 
     int context()
