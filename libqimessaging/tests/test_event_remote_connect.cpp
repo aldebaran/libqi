@@ -57,8 +57,8 @@ protected:
     ASSERT_TRUE(session2.listen("tcp://0.0.0.0:0"));
     ASSERT_GT(session1.registerService("coin1", &oserver1).wait(), 0);
     ASSERT_GT(session2.registerService("coin2", &oserver2).wait(), 0);
-    EXPECT_EQ(1U, session1.registeredServices().size());
-    EXPECT_EQ(1U, session2.registeredServices().size());
+    EXPECT_EQ(1U, session1.services(qi::Session::ServiceLocality_Local).value().size());
+    EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
     ASSERT_TRUE(sclient.waitForConnected());
     std::vector<qi::ServiceInfo> services = sclient.services();

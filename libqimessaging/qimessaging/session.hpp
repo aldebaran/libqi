@@ -59,21 +59,24 @@ namespace qi {
     Session();
     virtual ~Session();
 
+    enum ServiceLocality {
+      ServiceLocality_All    = 0,
+      ServiceLocality_Local  = 1,
+      ServiceLocality_Remote = 2
+    };
+
     bool connect(const qi::Url &serviceDirectoryURL);
+    bool isConnected() const;
+
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
-
     bool waitForServiceReady(const std::string &service, int msecs = 30000);
 
-    bool isConnected() const;
-    qi::Future< std::vector<ServiceInfo> > services();
-
-    qi::Future< qi::TransportSocket* > serviceSocket(const std::string &name,
-                                                     unsigned int      *idx,
-                                                     const std::string &type = std::string("any"));
+    qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
     qi::Future< qi::Object* > service(const std::string &service,
-                                      const std::string &type = std::string("any"));
+                                      ServiceLocality locality = ServiceLocality_All,
+                                      const std::string &protocol  = std::string("any"));
 
     void addCallbacks(SessionInterface *delegate);
     void removeCallbacks(SessionInterface *delegate);
@@ -86,10 +89,6 @@ namespace qi {
     qi::Future<unsigned int> registerService(const std::string &name,
                                              qi::Object *obj);
     qi::Future<void>         unregisterService(unsigned int idx);
-
-    std::vector<qi::ServiceInfo>  registeredServices();
-    qi::ServiceInfo               registeredService(const std::string &service);
-    qi::Object                   *registeredServiceObject(const std::string &service);
 
     qi::Url                       listenUrl() const;
 

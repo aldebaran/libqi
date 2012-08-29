@@ -63,6 +63,11 @@ namespace qi {
 
     void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
                      qi::Promise<std::vector<qi::ServiceInfo> > &si);
+
+    void servicesEnd(qi::TransportSocket *QI_UNUSED(client),
+                     qi::Message *msg,
+                     qi::Session::ServiceLocality locality,
+                     qi::Promise<std::vector<qi::ServiceInfo> > &promise);
     void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
     void serviceReady(unsigned int idx);
 
@@ -83,7 +88,9 @@ namespace qi {
     std::map<int, boost::shared_ptr<ServiceRequest> >           _futureService;
     // Associate serviceRequest with the connection currently connecting.
     std::map<void *, boost::shared_ptr<ServiceRequest> >        _futureConnect;
-    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >  _futureServices;
+
+    typedef std::pair<Session::ServiceLocality, qi::Promise<std::vector<qi::ServiceInfo> > > ServicesPromiseLocality;
+    std::map<int, ServicesPromiseLocality>                      _futureServices;
     std::map<int, qi::FunctorResult>                            _futureFunctor;
     boost::mutex                                                _mutexServiceReady;
     std::vector<unsigned int>                                   _serviceReady;

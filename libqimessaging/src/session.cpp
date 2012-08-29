@@ -376,14 +376,14 @@ namespace qi {
 
 
     // request from services method
-    std::map<int, qi::Promise<std::vector<qi::ServiceInfo> > >::iterator futureServicesIt;
+    std::map<int, ServicesPromiseLocality>::iterator futureServicesIt;
     {
       boost::mutex::scoped_lock l(_mutexFuture);
       futureServicesIt = _futureServices.find(id);
     }
     if (futureServicesIt != _futureServices.end())
     {
-      servicesEnd(client, &msg, futureServicesIt->second);
+      servicesEnd(client, &msg, futureServicesIt->second.first, futureServicesIt->second.second);
       {
         boost::mutex::scoped_lock l(_mutexFuture);
         _futureServices.erase(futureServicesIt);
@@ -533,11 +533,22 @@ namespace qi {
 
   void SessionPrivate::servicesEnd(qi::TransportSocket *QI_UNUSED(client),
                                    qi::Message *msg,
+                                   qi::Session::ServiceLocality locality,
                                    qi::Promise<std::vector<qi::ServiceInfo> > &promise)
   {
     std::vector<qi::ServiceInfo> result;
     qi::IDataStream d(msg->buffer());
     d >> result;
+    if (locality == qi::Session::ServiceLocality_All)
+    {
+      std::map<std::string, qi::ServiceInfo>::iterator it;
+      {
+        boost::recursive_mutex::scoped_lock sl(_mutexOthers);
+        for (it = _servicesInfo.begin(); it != _servicesInfo.end(); ++it) {
+          result.push_back(it->second);
+        }
+      }
+    }
     if (d.status() == qi::IDataStream::Status_Ok)
       promise.setValue(result);
     else
@@ -753,18 +764,36 @@ namespace qi {
     return _p->_serviceSocket.waitForDisconnected(msecs);
   }
 
-  qi::Future< std::vector<ServiceInfo> > Session::services()
+  //3 cases:
+  //  - local service => just return the vector
+  //  - remote => ask the sd return the result
+  //  - all => ask the sd, append local services, return the result
+  qi::Future< std::vector<ServiceInfo> > Session::services(ServiceLocality locality)
   {
     qi::Promise<std::vector<ServiceInfo> > promise;
-    qi::Message msg;
+    if (locality == ServiceLocality_Local) {
+      std::vector<qi::ServiceInfo> ssi;
+      std::map<std::string, qi::ServiceInfo>::iterator it;
 
+      {
+        boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
+        for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
+          ssi.push_back(it->second);
+        }
+      }
+      promise.setValue(ssi);
+      return promise.future();
+    }
+
+    qi::Message msg;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
     msg.setObject(qi::Message::Object_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
     {
       boost::mutex::scoped_lock l(_p->_mutexFuture);
-      _p->_futureServices[msg.id()] = promise;
+      SessionPrivate::ServicesPromiseLocality spl = std::make_pair(locality, promise);
+      _p->_futureServices[msg.id()] = spl;
     }
     if (!_p->_serviceSocket.send(msg))
     {
@@ -775,8 +804,12 @@ namespace qi {
   }
 
   qi::Future< qi::Object * > Session::service(const std::string &service,
+                                              ServiceLocality locality,
                                               const std::string &type)
   {
+    if (locality == ServiceLocality_Local)
+      qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
+
     boost::shared_ptr<ServiceRequest> sr(new ServiceRequest);
     qi::Message    msg;
     qi::Buffer     buf;
@@ -969,44 +1002,6 @@ namespace qi {
       _p->_servicesIndex.erase(idx);
     }
     return future;
-  }
-
-  std::vector<qi::ServiceInfo> Session::registeredServices()
-  {
-    std::vector<qi::ServiceInfo> ssi;
-    std::map<std::string, qi::ServiceInfo>::iterator it;
-
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      for (it = _p->_servicesInfo.begin(); it != _p->_servicesInfo.end(); ++it) {
-        ssi.push_back(it->second);
-      }
-    }
-    return ssi;
-  }
-
-  qi::ServiceInfo Session::registeredService(const std::string &service)
-  {
-    std::map<std::string, qi::ServiceInfo>::iterator it;
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      it = _p->_servicesInfo.find(service);
-      if (it != _p->_servicesInfo.end())
-        return it->second;
-    }
-    return qi::ServiceInfo();
-  }
-
-  qi::Object *Session::registeredServiceObject(const std::string &service)
-  {
-    std::map<std::string, qi::Object *>::iterator it;
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_mutexOthers);
-      it = _p->_servicesByName.find(service);
-      if (it != _p->_servicesByName.end())
-        return it->second;
-    }
-    return 0;
   }
 
   qi::Url Session::listenUrl() const
