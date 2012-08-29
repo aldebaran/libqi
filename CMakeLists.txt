@@ -119,6 +119,10 @@ endif()
 
 qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD)
 
+if (UNIX)
+  qi_use_lib(qi PTHREAD)
+endif()
+
 if(MSVC)
   # Temporary ugly hack: we can't find out
   # where the boost_date_time dependency comes from:

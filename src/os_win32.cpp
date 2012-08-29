@@ -416,7 +416,7 @@ namespace qi {
       }
 
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
-	  {
+      {
         qiLogError("core.common.network") << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
         return std::map<std::string, std::vector<std::string> >();
       }
@@ -436,6 +436,30 @@ namespace qi {
       if (pAdapterInfo)
         free(pAdapterInfo);
       return ifsMap;
+    }
+
+    void setCurrentThreadName(const std::string &name) {
+      typedef struct tagTHREADNAME_INFO
+      {
+        DWORD dwType; // must be 0x1000
+        LPCSTR szName; // pointer to name (in user addr space)
+        HANDLE dwThreadID; // thread ID (-1=caller thread)
+        DWORD dwFlags; // reserved for future use, must be zero
+      } THREADNAME_INFO;
+
+      THREADNAME_INFO info;
+      info.dwType = 0x1000;
+      info.szName = name.c_str();
+      info.dwThreadID = (HANDLE)-1;
+      info.dwFlags = 0;
+
+      __try
+      {
+        RaiseException(0x406D1388, 0, sizeof(info)/sizeof(DWORD), (const ULONG_PTR*)&info);
+      }
+      __except (EXCEPTION_CONTINUE_EXECUTION)
+      {
+      }
     }
 
   }

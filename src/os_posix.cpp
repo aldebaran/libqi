@@ -26,6 +26,12 @@
 # include <ifaddrs.h>
 #endif
 
+#if defined (__linux__)
+# include <sys/prctl.h>
+#endif
+
+
+#include <pthread.h>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/error.hpp>
@@ -257,6 +263,19 @@ namespace qi {
       return ifsMap;
      }
 #endif
+
+    void setCurrentThreadName(const std::string &name) {
+     #if defined (__linux__) && !defined(ANDROID)
+      prctl(PR_SET_NAME, name.c_str(), 0, 0, 0);
+     #elif defined (__APPLE__)
+      pthread_setname_np(name.c_str());
+     #elif defined (ANDROID)
+      //no implementation under Android
+     #else
+      //BSD, whatever...
+      pthread_set_name_np(pthread_self(), name.c_str());
+     #endif
+    }
 
   }
 }
