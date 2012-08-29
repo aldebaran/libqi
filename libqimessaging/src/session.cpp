@@ -51,17 +51,15 @@ namespace qi {
     : _serviceSocket(new qi::TransportSocket()),
       _self(session),
       _callbacks(0)
-    , _ts(new TransportServer())
     , _dying(false)
   {
     _serviceSocket->addCallbacks(this);
-    _ts->addCallbacks(this);
+    _ts.addCallbacks(this);
   }
 
   SessionPrivate::~SessionPrivate() {
     _dying = true;
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-    delete _ts;
     for (std::set<TransportSocket*>::iterator i = _clients.begin();
       i != _clients.end(); ++i)
     {
@@ -900,22 +898,22 @@ namespace qi {
       qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
       return false;
     }
-    if (!_p->_ts->listen(url))
+    if (!_p->_ts.listen(url))
       return false;
-    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts->listenUrl().str();
+    qiLogVerbose("qimessaging.Server") << "Started Server at " << _p->_ts.listenUrl().str();
     return true;
   }
 
   void Session::close()
   {
     _p->_serviceSocket->disconnect();
-    return _p->_ts->close();
+    return _p->_ts.close();
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,
                                                     qi::Object *obj)
   {
-    if (_p->_ts->endpoints().empty()) {
+    if (_p->_ts.endpoints().empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
       return qi::Future<unsigned int>();
     }
@@ -925,7 +923,7 @@ namespace qi {
     si.setMachineId("TODO");
 
     {
-      std::vector<qi::Url> epsUrl = _p->_ts->endpoints();
+      std::vector<qi::Url> epsUrl = _p->_ts.endpoints();
       std::vector<std::string> epsStr;
       for (std::vector<qi::Url>::const_iterator epsUrlIt = epsUrl.begin();
            epsUrlIt != epsUrl.end();
@@ -1012,7 +1010,7 @@ namespace qi {
 
   qi::Url Session::listenUrl() const
   {
-    return _p->_ts->listenUrl();
+    return _p->_ts.listenUrl();
   }
 
   void SessionPrivate::newConnection(TransportServer* server, TransportSocket *socket)

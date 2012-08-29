@@ -119,7 +119,7 @@ namespace qi {
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
     std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
     std::map<unsigned int, std::string>     _servicesIndex;
-    TransportServer                        *_ts;
+    TransportServer                         _ts;
     boost::mutex                            _mutexServices;
     boost::recursive_mutex                  _mutexOthers;
     bool                                    _dying;
