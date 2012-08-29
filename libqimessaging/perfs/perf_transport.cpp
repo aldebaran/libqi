@@ -27,6 +27,7 @@ static const int gThreadCount = 1;
 static bool allInOne = false; // True if sd/server/client are in this process
 static std::string sdPort;
 static bool clientDone = false;
+static bool serverReady = false;
 int run_client(qi::Object* obj);
 
 std::string reply(const std::string &msg)
@@ -164,7 +165,7 @@ int main_server(std::string host, std::string port)
   session.listen("tcp://0.0.0.0:0");
   session.registerService("serviceTest", &obj);
   std::cout << "serviceTest ready." << std::endl;
-
+  serverReady = true;
   while (!clientDone)
     qi::os::sleep(60);
   return 0;
@@ -215,7 +216,9 @@ int main(int argc, char **argv)
     //start the server
     allInOne = true;
     boost::thread threadServer1(boost::bind(&main_server, host, port));
-    qi::os::msleep(500); // give it time to listen
+    do {
+      qi::os::msleep(500); // give it time to listen
+    } while (!serverReady); // be nice for valgrind
     boost::thread threadServer2(boost::bind(&main_gateway, host, port));
     qi::os::sleep(1);
     start_client(gThreadCount, host, "12345");
