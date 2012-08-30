@@ -55,7 +55,11 @@ TEST(Test, Recurse)
   EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
   oclient1 = session2.service("coin1");
   oclient2 = session1.service("coin2");
+#ifdef WIN32
+  int niter = 1000;
+#else
   int niter = 10000;
+#endif
   if (getenv("VALGRIND"))
   {
     std::cerr << "Valgrind detected, reducing iteration count" << std::endl;
