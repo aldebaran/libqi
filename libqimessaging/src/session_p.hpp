@@ -150,7 +150,7 @@ namespace qi {
     bool                                    _dying;
 
     SessionServer _server;
-    SessionServer _client;
+    SessionClient _client;
   };
 }
 
