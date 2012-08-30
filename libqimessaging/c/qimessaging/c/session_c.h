@@ -110,7 +110,7 @@ extern "C"
    * \param list list to free
    * \ingroup qiCapi
    */
-  QIMESSAGING_API void qi_session_free_services_list(qi_session_t *session, const char  **list);
+  QIMESSAGING_API void qi_session_free_services_list(const char **list);
 
 
 #ifdef __cplusplus

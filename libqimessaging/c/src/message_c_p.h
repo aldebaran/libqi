@@ -9,6 +9,8 @@
 #ifndef   	_QIMESSAGING_MESSAGE_C_P_H_
 # define   	_QIMESSAGING_MESSAGE_C_P_H_
 
+#include <qimessaging/message.hpp>
+
 typedef struct
 {
   qi::ODataStream *os;

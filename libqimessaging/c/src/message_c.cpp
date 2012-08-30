@@ -18,22 +18,14 @@
 qi::IDataStream &get_is(qi_message_data_t *m)
 {
   if (!m->is)
-  {
-    delete m->os;
     m->is = new qi::IDataStream(*m->buff);
-  }
-
   return *(m->is);
 }
 
 qi::ODataStream &get_os(qi_message_data_t *m)
 {
   if (!m->os)
-  {
-    delete m->is;
     m->os = new qi::ODataStream(*m->buff);
-  }
-
   return *(m->os);
 }
 
@@ -244,10 +236,18 @@ char *qi_message_read_string(qi_message_t *msg)
 #endif
 }
 
-char *qi_message_read_raw(qi_message_t *msg, unsigned int *QI_UNUSED(size))
+char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
 {
-  //TODO set size
-  return qi_message_read_string(msg);
+  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+  std::string s;
+  get_is(m) >> s;
+
+  *size = s.size();
+#ifdef _WIN32
+  return _strdup(s.c_str());
+#else
+  return strdup(s.c_str());
+#endif
 }
 
 //qi_buffer_t  *qi_message_get_buffer(qi_message_t *msg)

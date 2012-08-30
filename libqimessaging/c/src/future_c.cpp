@@ -5,44 +5,15 @@
 ** Copyright (C) 2010, 2011 Aldebararan Robotics
 */
 
+#include <list>
+#include <vector>
+
 #include <qimessaging/c/future_c.h>
 #include <qimessaging/future.hpp>
-#include <list>
+#include <qimessaging/c/object_c.h>
 
-//Needed to bridge C callback on C++ Future callbacks;
-class FutureCallbackForwarder : public qi::FutureInterface<void *>
-{
-public:
-  FutureCallbackForwarder() {}
-  virtual ~FutureCallbackForwarder() {}
-
-  virtual void onFutureFailed(const std::string &error, void *data)
-  {
-    std::list<qi_future_callback_t>::iterator it;
-
-    for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
-    {
-      (*(*it))(0, 0, data);
-    }
-  }
-
-  virtual void onFutureFinished(void*const &value, void *data)
-  {
-    std::list<qi_future_callback_t>::iterator it;
-
-    for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
-    {
-      (*(*it))(value, 1, data);
-    }
-  }
-  void addCallback(qi_future_callback_t callback)
-  {
-    _callbacks.push_back(callback);
-  }
-
-private:
-  std::list<qi_future_callback_t>   _callbacks;
-};
+#include "future_c_p.h"
+#include "object_c_p.h"
 
 qi_promise_t* qi_promise_create()
 {
@@ -74,53 +45,68 @@ void qi_promise_set_error(qi_promise_t *pr, const char *error)
 
 qi_future_t* qi_promise_get_future(qi_promise_t *pr)
 {
-  qi::Promise<void *>  *promise = reinterpret_cast<qi::Promise<void *> *>(pr);
-  qi::Future<void *>   *fut = new qi::Future<void *>();
+  qi::Promise<void *> *promise = reinterpret_cast<qi::Promise<void *> *>(pr);
+  qi_future_data_t*     data = new qi_future_data_t;
 
-  *fut = promise->future();
-  return (qi_future_t *) fut;
+  data->functor = 0;
+  data->future = new qi::Future<void *>();
+  *data->future = promise->future();
+
+  return (qi_future_t *) data;
 }
 
 void    qi_future_destroy(qi_future_t *fut)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
+  std::list<FutureCallbackForwarder *>::iterator it;
 
-  delete future;
+  for (it = data->callbacks.begin(); it != data->callbacks.end(); ++it)
+    delete (*it);
+
+  delete data->functor;
 }
 
 void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *miscdata)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
   FutureCallbackForwarder *forwarder = new FutureCallbackForwarder();
 
+  data->callbacks.push_back(forwarder);
   forwarder->addCallback(cb);
-  future->addCallbacks(forwarder, miscdata);
+  data->future->addCallbacks(forwarder, miscdata);
 }
 
 void    qi_future_wait(qi_future_t *fut)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
 
-  future->wait();
+  data->future->wait();
 }
 
 int     qi_future_is_error(qi_future_t *fut)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
 
-  return future->hasError();
+  return data->future->hasError();
 }
 
 int     qi_future_is_ready(qi_future_t *fut)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
 
-  return future->isReady();
+  return data->future->isReady();
 }
 
-void*  qi_future_get_value(qi_future_t *fut)
+qi_message_t *qi_future_get_value(qi_future_t *fut)
 {
-  qi::Future<void *> *future = reinterpret_cast<qi::Future<void *> *>(fut);
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
 
-  return (void *) future->value();
+  return (qi_message_t *) data->future->value();
+}
+
+const char*         qi_future_get_error(qi_future_t *fut)
+{
+  qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
+
+  return data->future->error().c_str();
 }
