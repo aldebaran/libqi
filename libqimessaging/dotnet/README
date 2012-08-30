@@ -1,0 +1,6 @@
+http://www.mono-project.com/Interop_with_Native_Libraries
+
+
+1 - You need to set in your PATH envirnoment variable the path to qimessaging.dll / qimessaging.so
+
+2 - On windows, qimessaging MUST be compiled in release mode
