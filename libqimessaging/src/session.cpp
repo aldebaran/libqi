@@ -67,7 +67,6 @@ namespace qi {
       (*i)->removeCallbacks(this);
       delete *i;
     }
-    delete _serviceSocket;
   }
 
   Session::~Session()
