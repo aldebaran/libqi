@@ -95,6 +95,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/service_info.cpp
                                    src/session.cpp
                                    src/session_p.hpp
+                                   src/service_watcher.hpp
+                                   src/service_watcher.cpp
                                    src/signature_convertor.cpp
                                    src/signature_convertor.hpp
                                    src/signature_iterator.cpp

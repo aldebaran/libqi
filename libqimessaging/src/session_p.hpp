@@ -19,6 +19,7 @@
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/session.hpp>
 #include "src/server_functor_result_future_p.hpp"
+#include "src/service_watcher.hpp"
 
 namespace qi {
 
@@ -51,6 +52,7 @@ namespace qi {
     bool                      connected; // True if the service server was reached
     unsigned int              attempts; // Number of connection attempts pending.
   };
+
 
   class SessionPrivate : public qi::TransportSocketInterface,
                          public TransportServerInterface,
@@ -112,8 +114,6 @@ namespace qi {
     std::map<int, qi::FunctorResult>                            _futureFunctor;
     boost::mutex                                                _mutexServiceReady;
     std::vector<unsigned int>                                   _serviceReady;
-    boost::mutex                                                _watchedServicesMutex;
-    std::map< std::string, std::pair<int, qi::Promise<void> > > _watchedServices;
 
 
     // (service, linkId)
@@ -149,8 +149,9 @@ namespace qi {
     boost::recursive_mutex                  _mutexOthers;
     bool                                    _dying;
 
-    SessionServer _server;
-    SessionClient _client;
+    SessionServer  _server;
+    SessionClient  _client;
+    ServiceWatcher _watcher;
   };
 }
 
