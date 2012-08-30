@@ -52,6 +52,10 @@ int make_call(char *addr)
     result = qi_message_read_string(msg);
 
   printf("Reply : %s\n", result);
+  qi_future_destroy(fut);
+  qi_message_destroy(message);
+  qi_object_destroy(object);
+  qi_session_destroy(session);
   return (0);
 }
 
@@ -71,5 +75,7 @@ int main(int argc, char *argv[])
   else
     sd_addr = argv[1];
   int ret = make_call(sd_addr);
+
   qi_application_destroy(app);
+  return ret;
 }

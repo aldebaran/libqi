@@ -32,7 +32,7 @@ qi_session_t*         session;
 qi_session_t*         client_session;
 qi_object_t*          object;
 qi_object_t*          remote;
-qi::ServiceDirectory  sd;
+qi::ServiceDirectory*  sd;
 std::string           connectionAddr;
 int                   id;
 
@@ -93,8 +93,8 @@ TEST(TestCBindings, CallReply)
   qi_future_wait(fut);
   qi_message_t *msg = 0;
 
-  assert(qi_future_is_error(fut) == false);
-  assert(qi_future_is_ready(fut) == true);
+  assert((bool) qi_future_is_error(fut) == false);
+  assert((bool) qi_future_is_ready(fut) == true);
 
   msg = (qi_message_t*) qi_future_get_value(fut);
   assert(msg != 0);
@@ -105,6 +105,8 @@ TEST(TestCBindings, CallReply)
 
 TEST(TestCBindings, TearDown)
 {
+  sd->close();
+  qi_message_destroy(message);
   qi_session_unregister_service(session, id);
   qi_session_destroy(session);
   qi_session_destroy(client_session);
@@ -114,7 +116,7 @@ TEST(TestCBindings, TearDown)
 }
 
 int main(int argc, char **argv) {
-  app = qi_application_create(argc, argv);
+  app = qi_application_create(&argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
 
   unsigned int sdPort = qi::os::findAvailablePort(5555);
@@ -123,7 +125,9 @@ int main(int argc, char **argv) {
 
   connectionAddr = sdAddr.str();
 
-  sd.listen(sdAddr.str());
+  sd = new qi::ServiceDirectory();
+  sd->listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
+
   return RUN_ALL_TESTS();
 }
