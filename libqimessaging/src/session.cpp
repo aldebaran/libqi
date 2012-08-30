@@ -52,9 +52,21 @@ namespace qi {
       _self(session),
       _callbacks(0)
     , _dying(false)
+    , _server(this)
+    , _client(this)
   {
     _serviceSocket.addCallbacks(this);
     _ts.addCallbacks(this);
+  }
+
+  SessionServer::SessionServer(SessionPrivate* self)
+    : _self(self)
+  {
+  }
+
+  SessionClient::SessionClient(SessionPrivate* self)
+    : _self(self)
+  {
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -151,181 +163,202 @@ namespace qi {
     return;
   }
 
+  void SessionServer::onSocketDisconnected(TransportSocket *client)
+  {
+    // The check below must be done before holding the lock.
+    if (_self->_dying)
+      return;
+    boost::recursive_mutex::scoped_lock sl(_self->_mutexOthers);
+    _self->_clients.erase(client);
+    // Disconnect event links set for this client.
+    SessionPrivate::Links::iterator i = _self->_links.find(client);
+    if (i != _self->_links.end())
+    {
+      // Iterate per service
+      for (SessionPrivate::PerServiceLinks::iterator j = i->second.begin();
+           j != i->second.end(); ++j)
+      {
+        std::map<unsigned int, qi::Object*>::iterator iservice = _self->_services.find(j->first);
+        // If the service is still there, disconnect one by one.
+        if (iservice != _self->_services.end())
+          for (SessionPrivate::ServiceLinks::iterator k = j->second.begin();
+               k != j->second.end(); ++k)
+            iservice->second->disconnect(k->second.localLinkId);
+      }
+      _self->_links.erase(i);
+    }
+    delete client;
+  }
+
+  void SessionClient::onSocketDisconnected(TransportSocket *client)
+  {
+    std::vector<SessionInterface *> localCallbacks;
+    {
+      boost::mutex::scoped_lock l(_self->_mutexCallback);
+      localCallbacks = _self->_callbacks;
+    }
+    std::vector<SessionInterface *>::const_iterator it;
+    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
+      (*it)->onSessionDisconnected(_self->_self);
+  }
+
   void SessionPrivate::onSocketDisconnected(TransportSocket *client)
   {
     if (_clients.find(client) != _clients.end())
     {
-      // The check below must be done before holding the lock.
-      if (_dying)
-        return;
-      boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-      _clients.erase(client);
-      // Disconnect event links set for this client.
-      SessionPrivate::Links::iterator i = _links.find(client);
-      if (i != _links.end())
+      _server.onSocketDisconnected(client);
+    }
+    else
+    {
+      _client.onSocketDisconnected(client);
+    }
+  }
+
+  void SessionServer::onSocketReadyRead(TransportSocket *client, int id)
+  {
+    qi::Message msg;
+    client->read(id, &msg);
+    qi::Object *obj;
+
+    {
+      boost::mutex::scoped_lock sl(_self->_mutexServices);
+      std::map<unsigned int, qi::Object*>::iterator it;
+      if (msg.service() == Message::Service_Server)
       {
-        // Iterate per service
-        for (SessionPrivate::PerServiceLinks::iterator j = i->second.begin();
-             j != i->second.end(); ++j)
+        // Accept register/unregister event as emit or as call
+        if (msg.type() != Message::Type_Event
+          && msg.type() != Message::Type_Call)
         {
-          std::map<unsigned int, qi::Object*>::iterator iservice = _services.find(j->first);
-          // If the service is still there, disconnect one by one.
-          if (iservice != _services.end())
-            for (SessionPrivate::ServiceLinks::iterator k = j->second.begin();
-                 k != j->second.end(); ++k)
-              iservice->second->disconnect(k->second.localLinkId);
+          qiLogError("qi::Server") << "Server service only handles call/emit";
+          qi::Message retval;
+          retval.buildReplyFrom(msg);
+          Buffer buf;
+          ODataStream(buf) << "Server service only handles call/emit";
+          retval.setBuffer(buf);
+          client->send(retval);
+          return;
         }
-        _links.erase(i);
+        // First arg is always a service id, so factor a bi there
+        IDataStream ds(msg.buffer());
+        unsigned int service;
+        ds >> service;
+        it = _self->_services.find(service);
+        if (it == _self->_services.end())
+        {
+          if (msg.type() == Message::Type_Call)
+          {
+            qi::Message retval;
+            retval.buildReplyFrom(msg);
+            Buffer buf;
+            ODataStream(buf) << "Service not found";
+            retval.setBuffer(buf);
+            client->send(retval);
+          }
+          return;
+        }
+        switch(msg.function())
+        {
+
+        case Message::ServerFunction_RegisterEvent:
+          {
+            unsigned int event, remoteLinkId;
+            ds >> event >> remoteLinkId;
+
+            // locate object, register locally and bounce to an event message
+            unsigned int linkId = it->second->connect(event,
+              new EventForwarder(service, event, client));
+            _self->_links[client][service][remoteLinkId] = SessionPrivate::RemoteLink(linkId, event);
+            if (msg.type() == Message::Type_Call)
+            {
+              qi::Message retval;
+              retval.buildReplyFrom(msg);
+              Buffer buf;
+              ODataStream ds(buf);
+              ds << linkId;
+              retval.setBuffer(buf);
+              client->send(retval);
+            }
+          }
+          break;
+        case Message::ServerFunction_UnregisterEvent:
+          {
+            unsigned int event, remoteLinkId;
+            ds >> event >> remoteLinkId;
+            SessionPrivate::ServiceLinks& sl = _self->_links[client][service];
+            SessionPrivate::ServiceLinks::iterator i = sl.find(remoteLinkId);
+            if (i == sl.end())
+            {
+              qiLogError("qi::Server") << "Unregister request failed for "
+              << remoteLinkId <<" " << service;
+            }
+            else
+            {
+              it->second->disconnect(i->second.localLinkId);
+            }
+            if (msg.type() == Message::Type_Call)
+            {
+              qi::Message retval;
+              retval.buildReplyFrom(msg);
+              Buffer buf;
+              ODataStream ds(buf);
+              ds << (i == sl.end());
+              retval.setBuffer(buf);
+              client->send(retval);
+            }
+          }
+          break;
+        }
+        return;
+      } // msg.service() == Server
+      it = _self->_services.find(msg.service());
+      obj = it->second;
+      if (it == _self->_services.end() || !obj)
+      {
+        if (msg.type() == qi::Message::Type_Call) {
+          qi::Message retval;
+          retval.buildReplyFrom(msg);
+          qi::Buffer error;
+          qi::ODataStream ds(error);
+          std::stringstream ss;
+          ss << "can't find service id: " << id;
+          ds << ss.str();
+          retval.setBuffer(error);
+          client->send(retval);
+
+        }
+        qiLogError("qi::Server") << "Can't find service: " << msg.service();
+        return;
       }
-      delete client;
-      return;
+    }
+    switch (msg.type())
+    {
+    case Message::Type_Call:
+      {
+         qi::FunctorParameters ds(msg.buffer());
+         ServerFunctorResult promise(client, msg);
+         obj->metaCall(msg.function(), ds, promise, qi::Object::MetaCallType_Queued);
+      }
+      break;
+    case Message::Type_Event:
+      {
+        qi::FunctorParameters ds(msg.buffer());
+        obj->metaEmit(msg.function(), ds);
+      }
+      break;
     }
 
-    std::vector<SessionInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(_mutexCallback);
-      localCallbacks = _callbacks;
-    }
-    std::vector<SessionInterface *>::const_iterator it;
-    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->onSessionDisconnected(_self);
-    return;
+  }
+
+  void SessionClient::onSocketReadyRead(TransportSocket *socket, int id)
+  {
+
   }
 
   void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
   {
     if (_clients.find(client) != _clients.end())
     {
-      qi::Message msg;
-      client->read(id, &msg);
-      qi::Object *obj;
-
-      {
-        boost::mutex::scoped_lock sl(_mutexServices);
-        std::map<unsigned int, qi::Object*>::iterator it;
-        if (msg.service() == Message::Service_Server)
-        {
-          // Accept register/unregister event as emit or as call
-          if (msg.type() != Message::Type_Event
-            && msg.type() != Message::Type_Call)
-          {
-            qiLogError("qi::Server") << "Server service only handles call/emit";
-            qi::Message retval;
-            retval.buildReplyFrom(msg);
-            Buffer buf;
-            ODataStream(buf) << "Server service only handles call/emit";
-            retval.setBuffer(buf);
-            client->send(retval);
-            return;
-          }
-          // First arg is always a service id, so factor a bi there
-          IDataStream ds(msg.buffer());
-          unsigned int service;
-          ds >> service;
-          it = _services.find(service);
-          if (it == _services.end())
-          {
-            if (msg.type() == Message::Type_Call)
-            {
-              qi::Message retval;
-              retval.buildReplyFrom(msg);
-              Buffer buf;
-              ODataStream(buf) << "Service not found";
-              retval.setBuffer(buf);
-              client->send(retval);
-            }
-            return;
-          }
-          switch(msg.function())
-          {
-
-          case Message::ServerFunction_RegisterEvent:
-            {
-              unsigned int event, remoteLinkId;
-              ds >> event >> remoteLinkId;
-
-              // locate object, register locally and bounce to an event message
-              unsigned int linkId = it->second->connect(event,
-                new EventForwarder(service, event, client));
-              _links[client][service][remoteLinkId] = SessionPrivate::RemoteLink(linkId, event);
-              if (msg.type() == Message::Type_Call)
-              {
-                qi::Message retval;
-                retval.buildReplyFrom(msg);
-                Buffer buf;
-                ODataStream ds(buf);
-                ds << linkId;
-                retval.setBuffer(buf);
-                client->send(retval);
-              }
-            }
-            break;
-          case Message::ServerFunction_UnregisterEvent:
-            {
-              unsigned int event, remoteLinkId;
-              ds >> event >> remoteLinkId;
-              SessionPrivate::ServiceLinks& sl = _links[client][service];
-              SessionPrivate::ServiceLinks::iterator i = sl.find(remoteLinkId);
-              if (i == sl.end())
-              {
-                qiLogError("qi::Server") << "Unregister request failed for "
-                << remoteLinkId <<" " << service;
-              }
-              else
-              {
-                it->second->disconnect(i->second.localLinkId);
-              }
-              if (msg.type() == Message::Type_Call)
-              {
-                qi::Message retval;
-                retval.buildReplyFrom(msg);
-                Buffer buf;
-                ODataStream ds(buf);
-                ds << (i == sl.end());
-                retval.setBuffer(buf);
-                client->send(retval);
-              }
-            }
-            break;
-          }
-          return;
-        } // msg.service() == Server
-        it = _services.find(msg.service());
-        obj = it->second;
-        if (it == _services.end() || !obj)
-        {
-          if (msg.type() == qi::Message::Type_Call) {
-            qi::Message retval;
-            retval.buildReplyFrom(msg);
-            qi::Buffer error;
-            qi::ODataStream ds(error);
-            std::stringstream ss;
-            ss << "can't find service id: " << id;
-            ds << ss.str();
-            retval.setBuffer(error);
-            client->send(retval);
-
-          }
-          qiLogError("qi::Server") << "Can't find service: " << msg.service();
-          return;
-        }
-      }
-      switch (msg.type())
-      {
-      case Message::Type_Call:
-        {
-           qi::FunctorParameters ds(msg.buffer());
-           ServerFunctorResult promise(client, msg);
-           obj->metaCall(msg.function(), ds, promise, qi::Object::MetaCallType_Queued);
-        }
-        break;
-      case Message::Type_Event:
-        {
-          qi::FunctorParameters ds(msg.buffer());
-          obj->metaEmit(msg.function(), ds);
-        }
-        break;
-      }
+      _server.onSocketReadyRead(client, id);
       return;
     }
 
