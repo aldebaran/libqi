@@ -26,5 +26,5 @@
 
 import qi
 
-print "motion::s:s[ss]"
-print qi.Signature("motion", qi.String, qi.String, qi.Map(qi.String, qi.String))
+print("motion::s:s[ss]")
+print(qi.Signature("motion", qi.String, qi.String, qi.Map(qi.String, qi.String)))

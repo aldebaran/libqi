@@ -12,7 +12,7 @@ project(libqimessaging)
 enable_testing()
 
 qi_add_optional_package(PYTHON)
-set(WITH_PYTHON OFF)
+set(WITH_PYTHON ON)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 

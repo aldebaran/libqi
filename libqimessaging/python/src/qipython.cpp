@@ -13,7 +13,7 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg);
 
 static PyObject *qi_value_to_python_list(const char *sig, qi_message_t *msg)
 {
-  int       size    = qi_message_read_int(msg);
+  int       size    = qi_message_read_int32(msg);
   int       i       = 0;
   PyObject *lst     = 0;
 
@@ -29,7 +29,7 @@ static PyObject *qi_value_to_python_list(const char *sig, qi_message_t *msg)
 
 static PyObject *qi_value_to_python_dict(const char *sigk, const char *sigv, qi_message_t *msg)
 {
-  int       size    = qi_message_read_int(msg);
+  int       size    = qi_message_read_int32(msg);
   int       i       = 0;
   PyObject *map     = 0;
 
@@ -54,9 +54,9 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
   case QI_BOOL:
     return PyBool_FromLong(qi_message_read_bool(msg));
   case QI_CHAR:
-    return PyString_FromFormat("%c", qi_message_read_char(msg));
+    return PyString_FromFormat("%c", qi_message_read_int8(msg));
   case QI_INT:
-    return PyInt_FromLong(qi_message_read_int(msg));
+    return PyInt_FromLong(qi_message_read_int32(msg));
   case QI_FLOAT:
     return PyFloat_FromDouble(qi_message_read_float(msg));
   case QI_DOUBLE:
@@ -190,12 +190,12 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     return 0;
   case QI_CHAR:
     if (PyNumber_Check(data))
-      qi_message_write_char(msg, PyInt_AsLong(data));
+      qi_message_write_int8(msg, PyInt_AsLong(data));
     else if (PyString_Check(data)) {
       char *str = PyString_AsString(data);
       if (!str)
         return 1;
-      qi_message_write_char(msg, str[0]);
+      qi_message_write_int8(msg, str[0]);
     }
     else
     {
@@ -204,7 +204,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     }
     return 0;
   case QI_INT:
-    qi_message_write_int(msg, PyInt_AsLong(data));
+    qi_message_write_int32(msg, PyInt_AsLong(data));
     return 0;
   case QI_FLOAT:
     qi_message_write_float(msg, PyFloat_AsDouble(data));
@@ -219,7 +219,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     {
       PyObject *iter = PyObject_GetIter(data);
       int       size = PySequence_Size(data);
-      qi_message_write_int(msg, size);
+      qi_message_write_int32(msg, size);
 
       PyObject *currentObj = PyIter_Next(iter);
       int i = 0;
@@ -247,7 +247,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
   case QI_MAP:
     {
       int size = PyDict_Size(data);
-      qi_message_write_int(msg, size);
+      qi_message_write_int32(msg, size);
 
       PyObject *key, *value;
       Py_ssize_t pos = 0;
@@ -357,7 +357,7 @@ static void _qi_server_callback(const char *complete_sig, qi_message_t *params, 
 // advertise a python service. It create a static c callback (_qi_server_callback) that
 // take the callable PyObject in parameter. Then the callback is responsible for calling
 // the PyObject with good parameters.
-void qi_server_advertise_python_service(qi_server_t *server, const char *name, PyObject *func)
+/*void qi_server_advertise_python_service(qi_server_t *server, const char *name, PyObject *func)
 {
   if (!PyCallable_Check(func)) {
     printf("Fail... func is not callable\n");
@@ -368,7 +368,7 @@ void qi_server_advertise_python_service(qi_server_t *server, const char *name, P
   Py_XINCREF(func);
   //TODO: ctaf
   //qi_server_advertise_service(server, name, &_qi_server_callback, static_cast<void *>(func));
-}
+}*/
 
 PyObject *qi_client_python_call(qi_client_t *client, const char *signature, PyObject *args) {
   char      callsig[100];

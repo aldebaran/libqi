@@ -1,0 +1,10 @@
+NOTE : On windows qimessaging MUST be compiled in release mode (qibuild --release)
+
+1 - SRC folder turn in qi.py after compilation
+
+2 - C bindings include may land in src/qi.i
+
+3 - _qi module is swig generated wraper around C code
+
+4 - For easy testing, use :
+PYTHONPATH=/home/foo/worktree/lib/qimessaging/build-my-system/sdk/lib:/home/foo/worktree/lib/qimessaging/libqimessaging/python python2 $@

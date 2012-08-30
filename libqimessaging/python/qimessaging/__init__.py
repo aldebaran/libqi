@@ -9,10 +9,11 @@
 from .signature import Bool, Char, Void, Int, String, Float, Map, Function, Signature
 from .message   import Message
 from .client    import Client
-from .server    import Server
+from .session   import Session
+from .application import Application
 
 __all__ = ( 'Bool', 'Char', 'Void', 'Int', 'String', 'Map', 'Function', 'Signature', 'Protobuf',
             'Message',
-            'Client',
-            'Server' )
-
+            'Session',
+            'Object',
+            'Application')

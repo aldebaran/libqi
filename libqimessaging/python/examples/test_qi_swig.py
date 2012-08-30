@@ -28,7 +28,7 @@ import _qi
 import sys
 
 def test_1():
-    client = _qi.qi_client_create("simplecli")
+    client = _qi.qi_session_create("simplecli")
     _qi.qi_client_connect(client, sys.argv[1])
     #msg = _qi.qi_message_create()
     #ret = _qi.qi_message_create()
@@ -40,7 +40,7 @@ def test_1():
 
     #result = _qi.qi_message_read_string(ret);
     result = _qi.qi_master_locate_service(client, "master.listServices::{ss}:")
-    print "locate returned: ", result
+    print("locate returned: ", result)
 
 def test_2():
     client = _qi.qi_client_create("simplecli")
@@ -54,11 +54,11 @@ def test_2():
     _qi.qi_client_call(client, "master.listServices::{ss}:", msg, ret);
 
     result = _qi.qi_message_read_int(ret);
-    print "result:", result
+    print("result:", result)
     for i in range(result):
         key = _qi.qi_message_read_string(ret);
         value = _qi.qi_message_read_string(ret);
-        print "k: %s, v: %s" % (key, value)
+        print("k: %s, v: %s" % (key, value))
 
 def test_3():
     client = qi.Client("tata")
@@ -75,19 +75,19 @@ def test_4():
 
     ret = client.call("master.listServices::{ss}:")
     for k,v in ret.iteritems():
-        print k, "=", v
+        print(k, "=", v)
 
 def moule(*args, **kargs):
-    print "moule"
+    print("moule")
 
 def poutre(a, s):
-    print "poutre", a
+    print("poutre"), a
     return 42
 
 def test_5():
     import qi
     import time
-    print "ici"
+    print("ici")
     client = qi.Client("flds")
     client.connect(sys.argv[1])
 
@@ -99,15 +99,15 @@ def test_5():
     server.advertise_service("poutre::i:is", poutre)
     #time.sleep(1)
 
-    print "before client.call"
+    print("before client.call")
     #ret = client.call("moule:::")
     ret = client.call("poutre::i:is", 41, "caca")
-    print "called result:", ret
+    print("called result:", ret)
     time.sleep(1)
 
 
-#test_1()
+test_1()
 #test_2()
 #test_3()
 #test_4()
-test_5()
+#test_5()
