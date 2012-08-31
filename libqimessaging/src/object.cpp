@@ -152,72 +152,24 @@ namespace qi {
   }
 
   MetaObject &Object::metaObject() {
-    return *_p->_meta;
+    return *_p->metaObject();
+  }
+
+  MetaObjectBuilder &Object::metaObjectBuilder() {
+    return _p->_builder;
   }
 
   int Object::xForgetMethod(const std::string &meth)
   {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexMethod);
-    std::map<std::string, unsigned int>::iterator it;
-
-    it = metaObject()._p->_methodsNameToIdx.find(meth);
-    if (it != metaObject()._p->_methodsNameToIdx.end())
-    {
-      metaObject()._p->_methodsNameToIdx.erase(it);
-      return (0);
-    }
-
-    return (1);
+    return _p->_builder.xForgetMethod(meth);
   }
 
   int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexMethod);
-
-    std::map<std::string, unsigned int>::iterator it;
-    it = metaObject()._p->_methodsNameToIdx.find(signature);
-    if (it != metaObject()._p->_methodsNameToIdx.end())
-    {
-      unsigned int uid = it->second;
-      MetaMethod mm(sigret, signature, functor);
-      mm._p->_uid = uid;
-      // find it
-      metaObject()._p->_methods[uid] = mm;
-      qiLogVerbose("qi.Object") << "rebinding method:" << signature;
-      return uid;
-    }
-
-    MetaMethod mm(sigret, signature, functor);
-    unsigned int idx = metaObject()._p->_nextNumber++;
-    mm._p->_uid = idx;
-    metaObject()._p->_methods[idx] = mm;
-    metaObject()._p->_methodsNameToIdx[signature] = idx;
-    qiLogVerbose("qi.Object") << "binding method:" << signature;
-    return idx;
+    return _p->_builder.xAdvertiseMethod(sigret, signature, functor);
   }
 
   int Object::xAdvertiseEvent(const std::string& signature) {
-    boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-    if (signature.empty())
-    {
-      qiLogError("qi.Object") << "Event has empty signature.";
-      return -1;
-    }
-    std::map<std::string, unsigned int>::iterator it;
-
-    it = metaObject()._p->_eventsNameToIdx.find(signature);
-    if (it != metaObject()._p->_eventsNameToIdx.end())
-    { // Event already there.
-      qiLogError("qi.Object") << "event already there";
-      return it->second;
-    }
-    unsigned int idx = metaObject()._p->_nextNumber++;
-    MetaEvent me(signature);
-    me._p->_uid = idx;
-    metaObject()._p->_events[idx] = me;
-    metaObject()._p->_eventsNameToIdx[signature] = idx;
-    qiLogVerbose("qi.Object") << "binding event:" << signature <<" with id "
-    << idx;
-    return idx;
+    return _p->_builder.xAdvertiseEvent(signature);
   }
 
   void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out, MetaCallType callType)

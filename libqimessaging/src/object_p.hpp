@@ -13,6 +13,7 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
+#include <qimessaging/metaobjectbuilder.hpp>
 
 #ifndef _QIMESSAGING_OBJECTPRIVATE_HPP_
 #define _QIMESSAGING_OBJECTPRIVATE_HPP_
@@ -27,7 +28,6 @@ namespace qi {
     ObjectPrivate();
     ~ObjectPrivate();
 
-    MetaObject                         *_meta;
     std::map<ObjectInterface *, void *> _callbacks;
     boost::mutex                        _callbacksMutex;
     bool                                _dying;
@@ -42,6 +42,16 @@ namespace qi {
     //eventid -> linkid -> Subscriber
     std::map<unsigned int, SubscriberMap> _subscribers;
 
+
+    void setMetaObject(qi::MetaObject *);
+
+    inline MetaObject* metaObject() { return _meta; }
+
+  private:
+    MetaObject                         *_meta;
+
+  public:
+    MetaObjectBuilder                   _builder;
   };
 
   class MetaObjectPrivate {

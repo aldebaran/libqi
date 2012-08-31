@@ -18,11 +18,8 @@
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/event_loop.hpp>
+#include <qimessaging/metaobjectbuilder.hpp>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/transform_view.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/add_pointer.hpp>
 
 namespace qi {
 
@@ -115,9 +112,16 @@ namespace qi {
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
-
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    template<typename T>
+    inline unsigned int advertiseMethod(const std::string& name, boost::function<T> func);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
+    int xForgetMethod(const std::string &meth);
+
+    template<typename FUNCTION_TYPE>
+    inline unsigned int advertiseEvent(const std::string& eventName);
+    int xAdvertiseEvent(const std::string& signature);
 
 
     template <typename RETURN_TYPE>
@@ -142,13 +146,9 @@ namespace qi {
     qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
     virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out, MetaCallType callType = MetaCallType_Auto);
+    /// Resolve the method Id and bounces to metaCall
+    void xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
 
-    template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseEvent(const std::string& eventName);
-    template<typename T>
-    inline unsigned int advertiseMethod(const std::string& name,
-      boost::function<T> func);
-    int xForgetMethod(const std::string &meth);
 
     inline
     void emitEvent(const std::string& eventName);
@@ -172,6 +172,8 @@ namespace qi {
     void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
 
     virtual void metaEmit(unsigned int event, const FunctorParameters &args);
+    //// Resolve and bounce to metaEmit
+    bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
 
     /** Connect an event to an arbitrary callback.
      *
@@ -187,18 +189,14 @@ namespace qi {
                          EventLoop* ctx = getDefaultObjectEventLoop());
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual unsigned int connect(unsigned int event,
-      const EventSubscriber& subscriber);
+    virtual unsigned int connect(unsigned int event, const EventSubscriber& subscriber);
 
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(unsigned int linkId);
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
-    /// Resolve the method Id and bounces to metaCall
-    void xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
-    int xAdvertiseEvent(const std::string& signature);
-    //// Resolve and bounce to metaEmit
-    bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
+    MetaObjectBuilder &metaObjectBuilder();
+
+
 
     //return the list of all subscriber to an event
     std::vector<EventSubscriber> subscribers(int eventId) const;
@@ -224,105 +222,28 @@ namespace qi {
     boost::shared_ptr<ObjectPrivate> _p;
   };
 
-  namespace detail {
-    struct signature_function_arg_apply {
-      signature_function_arg_apply(qi::SignatureStream &val)
-        : val(val)
-      {}
-
-      template<typename T> void operator()(T *x) {
-        static T v;
-        val & v;
-      }
-
-      qi::SignatureStream &val;
-    };
-  }
-
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
   inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
   {
-    std::stringstream   signature;
-    qi::SignatureStream sigs;
-    std::string         sigret;
-
-    typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
-    typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
-
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-    signature << name << "::(" << sigs.str() << ")";
-
-    typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
-    signatureFromType<ResultType>::value(sigret);
-
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(object, method));
+    return metaObjectBuilder().advertiseMethod<OBJECT_TYPE, METHOD_TYPE>(name, object, method);
   }
 
   template <typename FUNCTION_TYPE>
   inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
-    std::stringstream   signature;
-    qi::SignatureStream sigs;
-    std::string         sigret;
-
-    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-
-    signature << name << "::(" << sigs.str() << ")";
-
-    typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
-    signatureFromType<ResultType>::value(sigret);
-
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
+    return metaObjectBuilder().advertiseMethod<FUNCTION_TYPE>(name, function);
   }
 
   template<typename T>
-  inline unsigned int Object::advertiseMethod(const std::string& name,
-    boost::function<T> function)
+  inline unsigned int Object::advertiseMethod(const std::string& name, boost::function<T> function)
   {
-    std::stringstream   signature;
-    qi::SignatureStream sigs;
-    std::string         sigret;
-
-    typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-
-    signature << name << "::(" << sigs.str() << ")";
-
-    typedef typename boost::function_types::result_type<T>::type ResultType;
-    signatureFromType<ResultType>::value(sigret);
-
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
+    return metaObjectBuilder().advertiseMethod<T>(name, function);
   }
 
   template<typename FUNCTION_TYPE>
   inline unsigned int Object::advertiseEvent(const std::string& eventName)
   {
-    std::stringstream   signature;
-    qi::SignatureStream sigs;
-
-    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-
-    signature << eventName << "::(" << sigs.str() << ")";
-
-    return xAdvertiseEvent(signature.str());
+    return metaObjectBuilder().advertiseEvent<FUNCTION_TYPE>(eventName);
   }
 
   template <typename FUNCTION_TYPE>

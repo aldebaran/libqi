@@ -48,10 +48,11 @@ set(PUBLIC_HEADERS
                    qimessaging/event_loop.hpp
                    qimessaging/file.hpp
                    qimessaging/object.hpp
+                   qimessaging/object.hxx
                    qimessaging/session.hpp
                    qimessaging/metaevent.hpp
                    qimessaging/metamethod.hpp
-                   qimessaging/object.hxx
+                   qimessaging/metaobjectbuilder.hpp
                    qimessaging/value.hxx
                    qimessaging/service_directory.hpp
                    qimessaging/functor.hpp
@@ -89,6 +90,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/object_p.hpp
                                    src/object.cpp
                                    src/object_p.cpp
+                                   src/metaobjectbuilder.cpp
                                    src/remoteobject.cpp
                                    src/remoteobject_p.hpp
                                    src/service_directory.cpp
