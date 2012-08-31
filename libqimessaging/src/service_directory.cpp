@@ -23,45 +23,10 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
+#include "src/service_directory_p.hpp"
 
 namespace qi
 {
-
-  class ServiceDirectoryPrivate : public TransportServerInterface,
-      public TransportSocketInterface,
-      public Object
-  {
-  public:
-    ServiceDirectoryPrivate();
-    ~ServiceDirectoryPrivate();
-
-    virtual void newConnection(TransportServer* server, TransportSocket *socket);
-    virtual void onSocketReadyRead(TransportSocket *socket, int id, void *data);
-    virtual void onSocketWriteDone(TransportSocket *client, void *data);
-    virtual void onSocketConnected(TransportSocket *client, void *data);
-    virtual void onSocketDisconnected(TransportSocket *client, void *data);
-
-    std::vector<ServiceInfo> services();
-    ServiceInfo              service(const std::string &name);
-    unsigned int             registerService(const ServiceInfo &svcinfo);
-    void                     unregisterService(const unsigned int &idx);
-    TransportSocket         *socket() { return currentSocket; }
-    void                     serviceReady(const unsigned int &idx);
-  public:
-    Session                                               *session;
-    qi::TransportServer                                   *ts;
-    std::map<unsigned int, ServiceInfo>                    pendingServices;
-    std::map<unsigned int, ServiceInfo>                    connectedServices;
-    std::map<std::string, unsigned int>                    nameToIdx;
-    std::map<TransportSocket*, std::vector<unsigned int> > socketToIdx;
-    unsigned int                                           servicesCount;
-    TransportSocket                                       *currentSocket;
-    std::set<TransportSocket*>                             _clients;
-    boost::recursive_mutex                                 _clientsMutex;
-  }; // !ServiceDirectoryPrivate
-
-
-
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
   :  session(new Session)

@@ -94,6 +94,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/remoteobject.cpp
                                    src/remoteobject_p.hpp
                                    src/service_directory.cpp
+                                   src/service_directory_p.hpp
                                    src/service_info.cpp
                                    src/session.cpp
                                    src/session_p.hpp
