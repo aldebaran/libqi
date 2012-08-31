@@ -35,6 +35,9 @@ extern "C"
   QIMESSAGING_API void          qi_message_write_double(qi_message_t *msg, double d);
   QIMESSAGING_API void          qi_message_write_string(qi_message_t *msg, const char *s);
   QIMESSAGING_API void          qi_message_write_raw(qi_message_t    *msg, const char *s, unsigned int size);
+  QIMESSAGING_API void          qi_message_write_list_begin(qi_message_t *msg, unsigned int size);
+  QIMESSAGING_API void          qi_message_write_map_begin(qi_message_t *msg, unsigned int size);
+  QIMESSAGING_API void          qi_message_write_tuple_begin(qi_message_t *msg, unsigned int size);
 
   QIMESSAGING_API char               qi_message_read_bool(qi_message_t   *msg);
   QIMESSAGING_API char               qi_message_read_int8(qi_message_t   *msg);
@@ -49,6 +52,9 @@ extern "C"
   QIMESSAGING_API double             qi_message_read_double(qi_message_t *msg);
   QIMESSAGING_API char              *qi_message_read_string(qi_message_t *msg);
   QIMESSAGING_API char              *qi_message_read_raw(qi_message_t    *msg, unsigned int *size);
+  QIMESSAGING_API unsigned int       qi_message_read_list_size(qi_message_t *msg);
+  QIMESSAGING_API unsigned int       qi_message_read_map_size(qi_message_t *msg);
+  QIMESSAGING_API unsigned int       qi_message_read_tuple_size(qi_message_t *msg);
 
 #ifdef __cplusplus
 }

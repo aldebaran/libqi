@@ -19,5 +19,7 @@ typedef struct
   qi::Buffer      *buff;
 } qi_message_data_t;
 
+qi::ODataStream &get_os(qi_message_data_t *m);
+qi::IDataStream &get_is(qi_message_data_t *m);
 #endif
 

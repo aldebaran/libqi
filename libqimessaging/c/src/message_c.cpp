@@ -14,7 +14,6 @@
 #include <cstdlib>
 #include <cassert>
 
-
 qi::IDataStream &get_is(qi_message_data_t *m)
 {
   if (!m->is)
@@ -133,7 +132,20 @@ void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
   get_os(m) << std::string(s, size);
 }
 
+void          qi_message_write_list_begin(qi_message_t *msg, unsigned int size)
+{
+  qi_message_write_uint32(msg, size);
+}
 
+void          qi_message_write_map_begin(qi_message_t *msg, unsigned int size)
+{
+  qi_message_write_uint32(msg, size);
+}
+
+void          qi_message_write_tuple_begin(qi_message_t *msg, unsigned int size)
+{
+  qi_message_write_uint32(msg, size);
+}
 
 char qi_message_read_bool(qi_message_t *msg)
 {
@@ -250,11 +262,17 @@ char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
 #endif
 }
 
-//qi_buffer_t  *qi_message_get_buffer(qi_message_t *msg)
-//{
-//  qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
+unsigned int  qi_message_read_list_size(qi_message_t *msg)
+{
+  return qi_message_read_uint32(msg);
+}
 
-//  return (qi_buffer_t *) m->buff;
-//}
+unsigned int  qi_message_read_map_size(qi_message_t *msg)
+{
+  return qi_message_read_uint32(msg);
+}
 
-// TODO OTHER TYPE
+unsigned int  qi_message_read_tuple_size(qi_message_t *msg)
+{
+  return qi_message_read_uint32(msg);
+}
