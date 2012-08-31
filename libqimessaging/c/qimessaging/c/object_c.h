@@ -23,7 +23,7 @@ extern "C"
   typedef struct qi_future_t_s  qi_future_t;
 
 
-  QIMESSAGING_API typedef void (*qi_object_method_t)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
+  typedef void (*qi_object_method_t)(const char *complete_signature, qi_message_t *msg, qi_message_t *ret, void *data);
   QIMESSAGING_API qi_object_t *qi_object_create(const char *name);
   QIMESSAGING_API void         qi_object_destroy(qi_object_t *object);
 
