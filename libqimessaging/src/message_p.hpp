@@ -34,7 +34,7 @@ namespace qi
     ~MessagePrivate();
 
     void                       complete();
-    void                      *getHeader();
+    inline void               *getHeader() { return reinterpret_cast<void *>(&header); }
 
     Buffer        buffer;
     MessageHeader header;

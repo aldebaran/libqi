@@ -158,11 +158,6 @@ namespace qi {
     return _p->buffer;
   }
 
-  void *MessagePrivate::getHeader()
-  {
-    return reinterpret_cast<void *>(&header);
-  }
-
   void Message::buildReplyFrom(const Message &call)
   {
     setId(call.id());
