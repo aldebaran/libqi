@@ -38,12 +38,14 @@ namespace qi
     virtual bool waitForDisconnected(int msecs = 30000);
     virtual bool waitForId(int id, int msecs = 30000);
 
-    virtual void addCallbacks(TransportSocketInterface *delegate);
+    virtual void addCallbacks(TransportSocketInterface *delegate, void *data);
     virtual void removeCallbacks(TransportSocketInterface *delegate);
     virtual bool isConnected() const;
     virtual void destroy() = 0;
   public:
-    std::vector<TransportSocketInterface *> tcd;
+
+    typedef std::vector< std::pair<TransportSocketInterface *, void *> > TransportSocketInterfaceVector;
+    TransportSocketInterfaceVector          tcd;
     boost::recursive_mutex                  mtxCallback;
     bool                                    connected;
     int                                     status;

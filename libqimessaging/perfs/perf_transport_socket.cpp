@@ -25,7 +25,7 @@ static const int gThreadCount = 1;
 
 class TSIRead: public qi::TransportSocketInterface
 {
-  void onSocketReadyRead(qi::TransportSocket *client, int id)
+  void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
   {
     qi::Message msg;
     client->read(id, &msg);
@@ -40,7 +40,7 @@ class TSIReply: public qi::TransportSocketInterface,
     socket->addCallbacks(this);
   }
 
-  void onSocketReadyRead(qi::TransportSocket *client, int id)
+  void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
   {
     qi::Message msg;
     client->read(id, &msg);

@@ -93,7 +93,7 @@ namespace qi {
     delete _p;
   }
 
-  void SessionPrivate::onSocketConnected(TransportSocket *client)
+  void SessionPrivate::onSocketConnected(TransportSocket *client, void *data)
   {
     // Come from connection between transport socket and service
     std::map<void *, boost::shared_ptr<ServiceRequest> >::iterator it = _futureConnect.find(client);
@@ -135,7 +135,7 @@ namespace qi {
     }
   }
 
-  void SessionPrivate::onSocketConnectionError(TransportSocket *client)
+  void SessionPrivate::onSocketConnectionError(TransportSocket *client, void *data)
   {
     boost::mutex::scoped_lock l(_mutexFuture);
     std::map<void *, boost::shared_ptr<ServiceRequest> >::iterator it = _futureConnect.find(client);
@@ -203,7 +203,7 @@ namespace qi {
       (*it)->onSessionDisconnected(_self->_self);
   }
 
-  void SessionPrivate::onSocketDisconnected(TransportSocket *client)
+  void SessionPrivate::onSocketDisconnected(TransportSocket *client, void *data)
   {
     if (_clients.find(client) != _clients.end())
     {
@@ -446,7 +446,7 @@ namespace qi {
     qiLogError("qimessaging") << "Session::Private: onSocketReadyRead: unknown message id " << id;
   }
 
-  void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id)
+  void SessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
   {
     if (_clients.find(client) != _clients.end())
     {
@@ -683,7 +683,7 @@ namespace qi {
     return future;
   }
 
-  void SessionPrivate::onSocketTimeout(TransportSocket *client, int id)
+  void SessionPrivate::onSocketTimeout(TransportSocket *client, int id, void *data)
   {
     {
       boost::mutex::scoped_lock l(_mutexFuture);

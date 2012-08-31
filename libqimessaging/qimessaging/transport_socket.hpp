@@ -23,14 +23,14 @@ namespace qi
   {
   public:
     virtual ~TransportSocketInterface() = 0;
-    inline virtual void onSocketConnected(TransportSocket *QI_UNUSED(client))         {};
-    inline virtual void onSocketConnectionError(TransportSocket *QI_UNUSED(client))   {};
-    inline virtual void onSocketDisconnected(TransportSocket *QI_UNUSED(client))      {};
-    inline virtual void onSocketWriteDone(TransportSocket *QI_UNUSED(client))         {};
+    inline virtual void onSocketConnected(TransportSocket *QI_UNUSED(client), void *data)         {};
+    inline virtual void onSocketConnectionError(TransportSocket *QI_UNUSED(client), void *data)   {};
+    inline virtual void onSocketDisconnected(TransportSocket *QI_UNUSED(client), void *data)      {};
+    inline virtual void onSocketWriteDone(TransportSocket *QI_UNUSED(client), void *data)         {};
     inline virtual void onSocketReadyRead(TransportSocket *QI_UNUSED(client),
-                                          int QI_UNUSED(id)) {};
+                                          int QI_UNUSED(id), void *data) {};
     inline virtual void onSocketTimeout(TransportSocket *QI_UNUSED(client),
-                                        int  QI_UNUSED(id)) {};
+                                        int  QI_UNUSED(id), void *data) {};
   };
 
   class Session;
@@ -56,7 +56,7 @@ namespace qi
     bool read(int id, qi::Message *msg);
     bool send(const qi::Message &msg);
 
-    void addCallbacks(TransportSocketInterface *delegate);
+    void addCallbacks(TransportSocketInterface *delegate, void *data = 0);
     void removeCallbacks(TransportSocketInterface *delegate);
     bool isConnected() const;
     int  status() const;

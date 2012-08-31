@@ -166,26 +166,26 @@ namespace qi
         msg = NULL;
         cond.notify_all();
       }
-      std::vector<TransportSocketInterface *> localCallbacks;
+      TransportSocketInterfaceVector localCallbacks;
       boost::recursive_mutex::scoped_lock l(mtxCallback);
       localCallbacks = tcd;
       ScopeAtomicSetter bs(inMethod);
-      std::vector<TransportSocketInterface *>::const_iterator it;
+      TransportSocketInterfaceVector::const_iterator it;
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-        (*it)->onSocketReadyRead(self, msgId);
+        it->first->onSocketReadyRead(self, msgId, it->second);
     }
   }
 
   void TransportSocketLibEvent::onWriteDone()
   {
-    std::vector<TransportSocketInterface *> localCallbacks;
+    TransportSocketInterfaceVector localCallbacks;
     boost::recursive_mutex::scoped_lock l(mtxCallback);
     localCallbacks = tcd;
 
     ScopeAtomicSetter bs(inMethod);
-    std::vector<TransportSocketInterface *>::const_iterator it;
+    TransportSocketInterfaceVector::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->onSocketWriteDone(self);
+      it->first->onSocketWriteDone(self, it->second);
   }
 
   void TransportSocketLibEvent::writecb(struct bufferevent *QI_UNUSED(bev),
@@ -211,15 +211,15 @@ namespace qi
       return;
     boost::recursive_mutex::scoped_lock l(mtxCallback);
 
-    std::vector<TransportSocketInterface *>::const_iterator it;
-    std::vector<TransportSocketInterface *> localCallbacks;
+    TransportSocketInterfaceVector::const_iterator it;
+    TransportSocketInterfaceVector localCallbacks;
     localCallbacks = tcd;
 
     if (events & BEV_EVENT_CONNECTED)
     {
       connected = true;
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-        (*it)->onSocketConnected(self);
+        it->first->onSocketConnected(self, it->second);
     }
     else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
     {
@@ -240,11 +240,11 @@ namespace qi
       cond.notify_all();
       ScopeAtomicSetter bs(inMethod);
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-        (*it)->onSocketConnectionError(self);
+        it->first->onSocketConnectionError(self, it->second);
       if (wasco)
       {
         for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-          (*it)->onSocketDisconnected(self);
+          it->first->onSocketDisconnected(self, it->second);
       }
       cleanPendingMessages();
 
@@ -321,7 +321,7 @@ namespace qi
   {
     std::map<unsigned int, TransportSocketPrivate::PendingMessage>::iterator it;
     boost::mutex::scoped_lock ll(mtx);
-    std::vector<TransportSocketInterface *> localCallbacks;
+    TransportSocketInterfaceVector localCallbacks;
     boost::recursive_mutex::scoped_lock l(mtxCallback);
     localCallbacks = tcd;
     for (it = msgSend.begin();it != msgSend.end(); ++it)
@@ -330,11 +330,11 @@ namespace qi
       {
         // Call onSocketTimeout callback
         ScopeAtomicSetter bs(inMethod);
-        for (std::vector<TransportSocketInterface *>::const_iterator it2 = localCallbacks.begin();
+        for (TransportSocketInterfaceVector::const_iterator it2 = localCallbacks.begin();
              it2 != localCallbacks.end();
              ++it2)
         {
-          (*it2)->onSocketTimeout(self, it->first);
+          it2->first->onSocketTimeout(self, it->first, it2->second);
         }
         qiLogError("qimessaging.TransportSocket") << "Message timed out: "
           << it->first;
@@ -345,7 +345,7 @@ namespace qi
 
   void TransportSocketLibEvent::cleanPendingMessages()
   {
-    std::vector<TransportSocketInterface *> localCallbacks;
+    TransportSocketInterfaceVector localCallbacks;
     boost::recursive_mutex::scoped_lock l(mtxCallback);
     localCallbacks = tcd;
 
@@ -364,11 +364,11 @@ namespace qi
         msgSend.erase(msgSendIt);
       }
 
-      for (std::vector<TransportSocketInterface*>::const_iterator localCallbacksIt = localCallbacks.begin();
+      for (TransportSocketInterfaceVector::const_iterator localCallbacksIt = localCallbacks.begin();
            localCallbacksIt != localCallbacks.end();
            ++localCallbacksIt)
       {
-        (*localCallbacksIt)->onSocketTimeout(self, id);
+        localCallbacksIt->first->onSocketTimeout(self, id, localCallbacksIt->second);
       }
     }
   }

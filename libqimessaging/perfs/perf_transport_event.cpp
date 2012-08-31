@@ -50,7 +50,7 @@ public:
     socket->addCallbacks(this);
   }
 
-  virtual void onSocketReadyRead(qi::TransportSocket *client, int id)
+  virtual void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
   {
     qi::Message msg;
     client->read(id, &msg);
@@ -69,15 +69,15 @@ public:
 
   }
 
-  virtual void onSocketWriteDone(qi::TransportSocket *QI_UNUSED(client))
+  virtual void onSocketWriteDone(qi::TransportSocket *QI_UNUSED(client), void *data)
   {
   }
 
-  virtual void onSocketConnected(qi::TransportSocket *QI_UNUSED(client))
+  virtual void onSocketConnected(qi::TransportSocket *QI_UNUSED(client), void *data)
   {
   }
 
-  virtual void onSocketDisconnected(qi::TransportSocket *QI_UNUSED(client))
+  virtual void onSocketDisconnected(qi::TransportSocket *QI_UNUSED(client), void *data)
   {
   }
 

@@ -57,20 +57,18 @@ public:
     _originalSocket->disconnect();
   }
 
-  void onSocketConnected(qi::TransportSocket *) { }
+  void onSocketConnected(qi::TransportSocket *, void *data) { }
 
-  void onSocketConnectionError(qi::TransportSocket *) { }
+  void onSocketConnectionError(qi::TransportSocket *, void *data) { }
 
-  void onSocketDisconnected(qi::TransportSocket *socket)
+  void onSocketDisconnected(qi::TransportSocket *socket, void *data)
   {
     _state = State_Disconnected;
     _updated = true;
   }
 
-  void onSocketWriteDone(qi::TransportSocket *) { }
-
   void onSocketReadyRead(qi::TransportSocket *socket,
-                         int QI_UNUSED(id))
+                         int QI_UNUSED(id), void *data)
   {
     _lastPingTime = time(0);
     _updated = true;
@@ -120,11 +118,11 @@ public:
     socket->addCallbacks(this);
   }
 
-  void onSocketDisconnected(qi::TransportSocket *socket)
+  void onSocketDisconnected(qi::TransportSocket *socket, void *data)
   {
   }
 
-  void onSocketReadyRead(qi::TransportSocket *socket, int id)
+  void onSocketReadyRead(qi::TransportSocket *socket, int id, void *data)
   {
     qi::Message msg;
     socket->read(id, &msg);
@@ -175,10 +173,6 @@ public:
         qiLogError("lb") << "query failed: " << sqlite3_errmsg(_db);
       }
     }
-  }
-
-  void onSocketWriteDone(qi::TransportSocket *socket)
-  {
   }
 
   void refresh()

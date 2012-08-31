@@ -36,10 +36,10 @@ namespace qi
     ~ServiceDirectoryPrivate();
 
     virtual void newConnection(TransportServer* server, TransportSocket *socket);
-    virtual void onSocketReadyRead(TransportSocket *socket, int id);
-    virtual void onSocketWriteDone(TransportSocket *client);
-    virtual void onSocketConnected(TransportSocket *client);
-    virtual void onSocketDisconnected(TransportSocket *client);
+    virtual void onSocketReadyRead(TransportSocket *socket, int id, void *data);
+    virtual void onSocketWriteDone(TransportSocket *client, void *data);
+    virtual void onSocketConnected(TransportSocket *client, void *data);
+    virtual void onSocketDisconnected(TransportSocket *client, void *data);
 
     std::vector<ServiceInfo> services();
     ServiceInfo              service(const std::string &name);
@@ -114,7 +114,7 @@ namespace qi
     _clients.insert(socket);
   }
 
-  void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id)
+  void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *data)
   {
     currentSocket  = socket;
 
@@ -128,21 +128,21 @@ namespace qi
     currentSocket  = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *socket)
+  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *socket, void *data)
   {
     currentSocket = socket;
 
     currentSocket = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *socket)
+  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *socket, void *data)
   {
     currentSocket = socket;
 
     currentSocket = 0;
   }
 
-  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *socket)
+  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *socket, void *data)
   {
     boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     _clients.erase(socket);

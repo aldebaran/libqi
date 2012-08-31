@@ -31,18 +31,18 @@ QiSessionPrivate::~QiSessionPrivate() {
 }
 
 void QiSessionPrivate::onServiceRegistered(qi::Session *QI_UNUSED(session),
-                                          const std::string &serviceName)
+                                           const std::string &serviceName)
 {
   emit(_self->serviceRegistered(QString::fromUtf8(serviceName.c_str())));
 }
 
 void QiSessionPrivate::onServiceUnregistered(qi::Session *QI_UNUSED(session),
-                                            const std::string &serviceName)
+                                             const std::string &serviceName)
 {
   emit(_self->serviceUnregistered(QString::fromUtf8(serviceName.c_str())));
 }
 
-void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client) {
+void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client, void *data) {
   QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
 
   if (it == _futureConnect.end())
@@ -59,7 +59,7 @@ void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client) {
   client->send(msg);
 }
 
-void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client) {
+void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client, void *data) {
   QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
 
   if (it == _futureConnect.end())
@@ -69,7 +69,7 @@ void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client) {
   _futureConnect.remove(client);
 }
 
-void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id) {
+void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id, void *data) {
   qi::Message                                                        msg;
   QMap<int, ServiceRequest>::iterator                                it;
   QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > >::iterator it2;

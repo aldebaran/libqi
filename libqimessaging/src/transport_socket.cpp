@@ -108,9 +108,9 @@ namespace qi
     return _p->send(msg);
   }
 
-  void TransportSocket::addCallbacks(TransportSocketInterface *delegate)
+  void TransportSocket::addCallbacks(TransportSocketInterface *delegate, void *data)
   {
-    _p->addCallbacks(delegate);
+    _p->addCallbacks(delegate, data);
   }
 
   void TransportSocket::removeCallbacks(TransportSocketInterface *delegate)

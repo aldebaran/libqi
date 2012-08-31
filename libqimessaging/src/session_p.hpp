@@ -67,11 +67,11 @@ namespace qi {
                                                 qi::Future<unsigned int> future);
     qi::Future<void>            unregisterService(unsigned int idx);
 
-    virtual void onSocketConnected(TransportSocket *client);
-    virtual void onSocketConnectionError(TransportSocket *client);
-    virtual void onSocketDisconnected(TransportSocket *client);
-    virtual void onSocketReadyRead(TransportSocket *client, int id);
-    virtual void onSocketTimeout(TransportSocket *client, int id);
+    virtual void onSocketConnected(TransportSocket *client, void *data);
+    virtual void onSocketConnectionError(TransportSocket *client, void *data);
+    virtual void onSocketDisconnected(TransportSocket *client, void *data);
+    virtual void onSocketReadyRead(TransportSocket *client, int id, void *data);
+    virtual void onSocketTimeout(TransportSocket *client, int id, void *data);
 
     void serviceEndpointEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);
     void serviceMetaobjectEnd(int id, qi::TransportSocket *client, qi::Message *msg, boost::shared_ptr<ServiceRequest> sr);

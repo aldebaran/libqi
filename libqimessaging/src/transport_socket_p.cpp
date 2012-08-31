@@ -122,12 +122,12 @@ namespace qi
     return false;
   }
 
-  void TransportSocketPrivate::addCallbacks(TransportSocketInterface *delegate)
+  void TransportSocketPrivate::addCallbacks(TransportSocketInterface *delegate, void *data)
   {
     if (delegate)
     {
       boost::recursive_mutex::scoped_lock l(mtxCallback);
-      tcd.push_back(delegate);
+      tcd.push_back(std::make_pair(delegate, data));
     }
     else
       qiLogError("") << "Trying to set invalid callback on TransportSoket.";
@@ -138,10 +138,10 @@ namespace qi
     if (delegate)
     {
       boost::recursive_mutex::scoped_lock l(mtxCallback);
-      std::vector<TransportSocketInterface *>::iterator it;
+      TransportSocketInterfaceVector::iterator it;
       for (it = tcd.begin(); it != tcd.end(); ++it)
       {
-        if (*it == delegate)
+        if (it->first == delegate)
         {
           tcd.erase(it);
           break;

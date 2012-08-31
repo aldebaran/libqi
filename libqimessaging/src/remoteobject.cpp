@@ -30,7 +30,7 @@ RemoteObject::~RemoteObject()
   delete _ts;
 }
 
-void RemoteObject::onSocketTimeout(TransportSocket *client, int id)
+void RemoteObject::onSocketTimeout(TransportSocket *client, int id, void *data)
 {
   {
     boost::mutex::scoped_lock lock(_mutex);
@@ -43,7 +43,7 @@ void RemoteObject::onSocketTimeout(TransportSocket *client, int id)
   }
 }
 
-void RemoteObject::onSocketReadyRead(TransportSocket *client, int id)
+void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data)
 {
   qi::FunctorResult                          promise;
   qi::Message                                msg;

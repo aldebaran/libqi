@@ -47,9 +47,9 @@ protected:
   virtual void newConnection(TransportServer* server, TransportSocket *socket);
 
   //SocketInterface
-  virtual void onSocketReadyRead(TransportSocket *client, int id);
-  virtual void onSocketConnected(TransportSocket *client);
-  virtual void onSocketDisconnected(TransportSocket *socket);
+  virtual void onSocketReadyRead(TransportSocket *client, int id, void *data);
+  virtual void onSocketConnected(TransportSocket *client, void *data);
+  virtual void onSocketDisconnected(TransportSocket *socket, void *data);
 
 public:
   Type                               _type;
@@ -334,7 +334,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
 /*
  * Called for any incoming message.
  */
-void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
+void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *data)
 {
   qi::Message msg;
   socket->read(id, &msg);
@@ -411,7 +411,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id)
  * the ReverseGateway has reached a RemoteGateway.
  */
 // S.2/
-void GatewayPrivate::onSocketConnected(TransportSocket *service)
+void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
 {
   for (std::map< unsigned int, TransportSocket * >::const_iterator it = _services.begin();
        it != _services.end();
@@ -460,7 +460,7 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service)
   }
 }
 
-void GatewayPrivate::onSocketDisconnected(TransportSocket *socket)
+void GatewayPrivate::onSocketDisconnected(TransportSocket *socket, void *data)
 {
   // Was it a Service?
   for (std::map< unsigned int, qi::TransportSocket* >::iterator it = _services.begin();

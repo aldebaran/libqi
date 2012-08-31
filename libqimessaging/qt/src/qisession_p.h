@@ -31,9 +31,11 @@ public:
   QiSessionPrivate(QiSession *self);
   ~QiSessionPrivate();
 
-  virtual void onSocketConnected(qi::TransportSocket *client);
-  virtual void onSocketReadyRead(qi::TransportSocket *client, int id);
-  virtual void onSocketConnectionError(qi::TransportSocket *client);
+  virtual void onSocketConnected(qi::TransportSocket *client, void *data);
+  virtual void onSocketReadyRead(qi::TransportSocket *client, int id, void *data);
+  virtual void onSocketConnectionError(qi::TransportSocket *client, void *data);
+
+  //Session
   virtual void onServiceRegistered(qi::Session *QI_UNUSED(session),
                                   const std::string &serviceName);
   virtual void onServiceUnregistered(qi::Session *QI_UNUSED(session),
