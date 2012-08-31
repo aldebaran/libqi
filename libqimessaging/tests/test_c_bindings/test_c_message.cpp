@@ -7,7 +7,23 @@
 
 #include <qimessaging/c/api_c.h>
 #include <qimessaging/c/qi_c.h>
+#include <qimessaging/datastream.hpp>
+#include <c/src/message_c_p.h>
 #include <gtest/gtest.h>
+
+qi::IDataStream &get_is(qi_message_data_t *m)
+{
+  if (!m->is)
+    m->is = new qi::IDataStream(*m->buff);
+  return *(m->is);
+}
+
+qi::ODataStream &get_os(qi_message_data_t *m)
+{
+  if (!m->os)
+    m->os = new qi::ODataStream(*m->buff);
+  return *(m->os);
+}
 
 TEST(TestMessage, SimpleOperation)
 {
@@ -100,22 +116,91 @@ TEST(TestMessage, SimpleRead)
   data = qi_message_read_raw(m, &size);
   memcpy(&magic, data, 4);
   ASSERT_EQ(0x42DEAD42, magic);
-  ASSERT_EQ(4, size);
+  ASSERT_EQ((unsigned int) 4, size);
 
   qi_message_destroy(m);
 }
 
 TEST(TestMessage, TestList)
 {
-  ASSERT_TRUE(false);
-}
+  std::list<int> value;
+  std::list<int>::iterator it, it2;
 
-TEST(TestMessage, TestTuple)
-{
-  ASSERT_TRUE(false);
+  qi_message_t* m= qi_message_create();
+
+  value.push_back(1);
+  value.push_back(2);
+  value.push_back(3);
+  value.push_back(4);
+  value.push_back(5);
+
+  get_os((qi_message_data_t*) m) << value;
+  // Our buffer travel around...
+
+  // Toh ! a C client :
+  // Get list back
+  std::list<int> mirror;
+  unsigned int i = 0;
+  unsigned int size = qi_message_read_list_size(m);
+  ASSERT_EQ(value.size(), size);
+
+  while (i < size)
+  {
+    mirror.push_back(qi_message_read_int32(m));
+    i++;
+  }
+
+  // Compare
+  ASSERT_EQ(value.size(), mirror.size());
+  it2 = mirror.begin();
+  for (it = value.begin(); it != value.end(); ++it)
+  {
+    ASSERT_EQ(*it, *it2);
+    ASSERT_TRUE(it2 != mirror.end());
+    ++it2;
+  }
+
+  qi_message_destroy(m);
 }
 
 TEST(TestMessage, TestMap)
 {
-  ASSERT_TRUE(false);
+  std::map<std::string, int> value;
+  std::map<std::string, int>::iterator it, it2;
+
+  qi_message_t* m= qi_message_create();
+
+  value["Foo"] = 0;
+  value["Bar"] = 1;
+  value["Cham"] = 2;
+  value["Pion"] = 3;
+
+  get_os((qi_message_data_t *) m) << value;
+
+  // Our buffer travel around...
+
+  // Toh ! a C client :
+  // Get list back
+  std::map<std::string, int> mirror;
+  unsigned int i = 0;
+  unsigned int size = qi_message_read_list_size(m);
+  ASSERT_EQ(value.size(), size);
+
+  while (i < size)
+  {
+    mirror[qi_message_read_string(m)] = qi_message_read_int32(m);
+    i++;
+  }
+
+  // Compare
+  ASSERT_EQ(value.size(), mirror.size());
+  it2 = mirror.begin();
+  for (it = value.begin(); it != value.end(); ++it)
+  {
+    ASSERT_EQ(*it, *it2);
+    ASSERT_TRUE(it2 != mirror.end());
+    ++it2;
+  }
+
+  qi_message_destroy(m);
 }
