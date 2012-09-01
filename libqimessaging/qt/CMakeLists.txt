@@ -7,17 +7,21 @@ include(qibuild/modules/qt-tools)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(H_TO_MOC
+        qimessaging/qt/QiTransportSocket
+        src/qitransportsocket_p.h
         qimessaging/qt/qisession.h)
 
 set(H   qimessaging/qt/api.h
         qimessaging/qt/qidatastream.h
         qimessaging/qt/qiserver.h
+        qimessaging/qt/QiTransportSocket
         qimessaging/qt/qisession.h)
 
 set(H_P src/qiremoteobject_p.h
         src/qisession_p.h
         src/qmetaobjectbuilder_p.h
         src/qimetatype_p.h
+        src/qitransportsocket_p.h
         src/qiqobject.h
         )
 
@@ -26,6 +30,7 @@ set(SRC src/qisession.cpp
         src/qiremoteobject.cpp
         src/qmetaobjectbuilder.cpp
         src/qimetatype.cpp
+        src/qitransportsocket.cpp
         src/qiqobject.cpp)
 
 
