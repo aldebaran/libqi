@@ -29,11 +29,6 @@ namespace qi {
     return ++id;
   }
 
-  void MessagePrivate::complete()
-  {
-    header.size = buffer.size();
-  }
-
   MessagePrivate::MessagePrivate()
   {
     memset(&header, 0, sizeof(MessagePrivate::MessageHeader));
