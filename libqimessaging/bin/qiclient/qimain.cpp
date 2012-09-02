@@ -10,6 +10,7 @@
 #include <map>
 
 #include <qi/os.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 
 #include <boost/program_options.hpp>
@@ -57,6 +58,8 @@ void call(const std::string &addr)
 
 int main(int argc, char *argv[])
 {
+  qi::Application a(argc, argv);
+
   // declare the program options
   po::options_description desc("Usage:\n  qi masterAddress [options]\nOptions");
   desc.add_options()
