@@ -31,7 +31,6 @@ namespace qi {
 
   MetaObject& MetaObject::operator=(const MetaObject &other)
   {
-    _p = new MetaObjectPrivate();
     *_p = *(other._p);
     return (*this);
   }
