@@ -3,260 +3,35 @@
 *  - Cedric Gestes <gestes@aldebaran-robotics.com>
 *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
 *
-*  Copyright (C) 2010, 2011 Aldebaran Robotics
+*  Copyright (C) 2010-2012 Aldebaran Robotics
 */
 
-#include <qimessaging/value.hpp>
+#include <qimessaging/details/value.hpp>
 #include <cassert>
 
 namespace qi {
-
-
-  Value::Value() {
-    clear();
-    _private.type = Invalid;
-  }
-
-  Value::Value(Type t) {
-    setType(t);
-  }
-
-  Value::Value(bool b) {
-    clear();
-    _private.type = Value::Bool;
-    _private.data.b = b;
-  }
-
-  Value::Value(char c) {
-    clear();
-    _private.type = Value::Char;
-    _private.data.c = c;
-  }
-
-  Value::Value(int i) {
-    clear();
-    _private.type = Value::Int32;
-    _private.data.i = i;
-  }
-
-  Value::Value(unsigned int i) {
-    clear();
-    _private.type = Value::UInt32;
-    _private.data.ui = i;
-  }
-
-  Value::Value(long long l) {
-    clear();
-    _private.type = Value::Int64;
-    _private.data.l = l;
-  }
-
-  Value::Value(unsigned long long l) {
-    clear();
-    _private.type = Value::UInt64;
-    _private.data.ul = l;
-  }
-
-  Value::Value(float f) {
-    clear();
-    _private.type = Value::Float;
-    _private.data.f = f;
-  }
-
-  Value::Value(double d) {
-    clear();
-    _private.type = Value::Double;
-    _private.data.d = d;
-  }
-
-  Value::Value(const char *str) {
-    clear();
-    _private.type = Value::String;
-    _private.data.ptr = new std::string(str);
-  }
-
-  Value::Value(const std::string &str) {
-    clear();
-    _private.type = Value::String;
-    _private.data.ptr = new std::string(str);
-  }
-
-  Value::Value(const std::list<Value> &l) {
-    clear();
-    _private.type = Value::List;
-    _private.data.ptr = new std::list<Value>(l);
-  }
-
-  Value::Value(const std::vector<Value> &v) {
-    clear();
-    _private.type = Value::Vector;
-    _private.data.ptr = new std::vector<Value>(v);
-  }
-
-  Value::Value(const std::map<std::string, Value> &m) {
-    clear();
-    _private.type = Value::Map;
-    _private.data.ptr = new std::map<std::string, Value>(m);
-  }
-
-#ifdef QI_QT
-  Value::Value(const QList<Value> &l);
-  Value::Value(const QVector<Value> &l);
-  Value::Value(const QMap<QString, Value> &l);
-#endif
-
-  void Value::setType(const Type &t) {
-    clear();
-    _private.type = t;
-    switch (t) {
-      case Value::Invalid:
-      case Value::Bool:
-      case Value::Char:
-      case Value::Int32:
-      case Value::UInt32:
-      case Value::Int64:
-      case Value::UInt64:
-      case Value::Float:
-      case Value::Double:
-      case Value::QString:
-      case Value::QList:
-      case Value::QVector:
-      case Value::QMap:
-      case Value::Struct:
-        assert(false);
-        break;
-      case Value::String:
-        _private.data.ptr = new std::string();
-        break;
-      case Value::List:
-        _private.data.ptr = new ValueList();
-        break;
-      case Value::Vector:
-        _private.data.ptr = new ValueVector();
-        break;
-      case Value::Map:
-        _private.data.ptr = new ValueMap();
-        break;
-    }
-  }
-
-  bool                         Value::toBool() const {
-    if (_private.type == Value::Bool)
-      return _private.data.b;
-    qiLogDebug("qi::Value") << "value can't be converted to bool";
-    return 0;
-  }
-
-  char                         Value::toChar() const {
-    if (_private.type == Value::Char)
-      return _private.data.c;
-    qiLogDebug("qi::Value") << "value can't be converted to char";
-    return 0;
-  }
-
-  int                          Value::toInt32() const {
-    if (_private.type == Value::Int32)
-      return _private.data.i;
-    qiLogDebug("qi::Value") << "value can't be converted to int32";
-    return 0;
-  }
-
-  unsigned int                 Value::toUInt32() const {
-    if (_private.type == Value::UInt32)
-      return _private.data.ui;
-    qiLogDebug("qi::Value") << "value can't be converted to uint32";
-    return 0;
-
-  }
-
-  long long                    Value::toInt64() const {
-    if (_private.type == Value::Int32)
-      return _private.data.i;
-    if (_private.type == Value::Int64)
-      return _private.data.l;
-    qiLogDebug("qi::Value") << "value can't be converted to int64";
-    return 0;
-  }
-
-  unsigned long long           Value::toUInt64() const {
-    if (_private.type == Value::UInt32)
-      return _private.data.ui;
-    if (_private.type == Value::UInt64)
-      return _private.data.ul;
-    qiLogDebug("qi::Value") << "value can't be converted to uint64";
-    return 0;
-  }
-
-  float                        Value::toFloat() const {
-    if (_private.type == Value::Float)
-      return _private.data.f;
-    qiLogDebug("qi::Value") << "value can't be converted to float";
-    return 0;
-  }
-
-  double                       Value::toDouble() const {
-    if (_private.type == Value::Float)
-      return _private.data.f;
-    if (_private.type == Value::Double)
-      return _private.data.d;
-    qiLogDebug("qi::Value") << "value can't be converted to double";
-    return 0;
-  }
-
-  std::string                  Value::toString() const {
-    if (_private.type == Value::String)
-      return *reinterpret_cast<std::string *>(_private.data.ptr);
-    qiLogDebug("qi::Value") << "value can't be converted to string";
-    return std::string();
-  }
-
-  std::list<Value>             Value::toList() const {
-    if (_private.type == Value::List)
-      return *reinterpret_cast< std::list<Value> *>(_private.data.ptr);
-    qiLogDebug("qi::Value") << "value can't be converted to list";
-    return std::list<Value>();
-  }
-
-  std::vector<Value>           Value::toVector() const {
-    if (_private.type == Value::Vector)
-      return *reinterpret_cast< std::vector<Value> *>(_private.data.ptr);
-    qiLogDebug("qi::Value") << "value can't be converted to vector";
-    return std::vector<Value>();
-  }
-
-  std::map<std::string, Value> Value::toMap() const {
-    if (_private.type == Value::Map)
-      return *reinterpret_cast< std::map<std::string, Value> *>(_private.data.ptr);
-    qiLogDebug("qi::Value") << "value can't be converted to map";
-    return std::map<std::string, Value>();
-  }
-
-#ifdef QI_QT
-  QString                      Value::toQString();
-  QList<Value>                 Value::toQList();
-  QVector<Value>               Value::toQVector();
-  QMap<QString, Value>         Value::toQMap();
-#endif
+  namespace detail {
 
   void Value::clear() {
-    switch (_private.type) {
-      case Value::String:
-        delete reinterpret_cast< std::string *>(_private.data.ptr);;
-      case Value::List:
-        delete reinterpret_cast< std::list<std::string> *>(_private.data.ptr);;
-      case Value::Vector:
-        delete reinterpret_cast< std::vector<std::string> *>(_private.data.ptr);;
-      case Value::Map:
-        delete reinterpret_cast< std::map<std::string, Value> *>(_private.data.ptr);;
+    switch(type) {
+    case String:
+      delete data.str;
+      break;
+    case List:
+      delete data.list;
+      break;
+    case Map:
+      delete data.map;
+      break;
     }
-    _private.type = Value::Invalid;
-    _private.data.ptr = 0;
+    data.ptr = 0;
+    type = Invalid;
   }
-
-  Value::Type Value::type() const {
-    return (Value::Type) _private.type;
+  
+  Value::~Value()
+  {
+    clear();
   }
-
-
+  }
 }
 

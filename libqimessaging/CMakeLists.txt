@@ -43,7 +43,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/functor.hxx
                    qimessaging/details/callfunctor.hpp
                    qimessaging/details/makefunctor.hpp
-                   qimessaging/value.hpp
+                   qimessaging/details/value.hpp
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
                    qimessaging/file.hpp
@@ -53,7 +53,7 @@ set(PUBLIC_HEADERS
                    qimessaging/metaevent.hpp
                    qimessaging/metamethod.hpp
                    qimessaging/metaobjectbuilder.hpp
-                   qimessaging/value.hxx
+                   qimessaging/details/value.hxx
                    qimessaging/service_directory.hpp
                    qimessaging/functor.hpp
                    qimessaging/signature.hpp

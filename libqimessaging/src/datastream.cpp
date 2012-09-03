@@ -184,7 +184,7 @@ namespace qi {
     return *this;
   }
 
-  IDataStream &operator>>(qi::IDataStream &sd, qi::Value &val)
+  IDataStream &operator>>(qi::IDataStream &sd, qi::detail::Value &val)
   {
     std::string sig;
     qi::uint32_t type;
@@ -192,111 +192,54 @@ namespace qi {
     sd >> sig;
     sd >> type;
     switch(type) {
-      case qi::Value::Bool:
-        val._private.type = qi::Value::Bool;
-        sd >> val._private.data.b;
+      case qi::detail::Value::Double:
+        double d;
+        sd >> d;
+        val.setDouble(d);
         return sd;
-      case qi::Value::Char:
-        val._private.type = qi::Value::Char;
-        sd >> val._private.data.c;
+      case qi::detail::Value::String:
+        {
+        std::string s;
+        sd >> s;
+        val.setString(s);
         return sd;
-      case qi::Value::Int32:
-        val._private.type = qi::Value::Int32;
-        sd >> val._private.data.i;
+        }
+      case qi::detail::Value::List:
+        val.setList(detail::Value::ValueList());
+        sd >> *val.data.list;
         return sd;
-      case Value::UInt32:
-      case Value::Int64:
-      case Value::UInt64:
-        qiLogError("datasteam") << "not implemented";
-        sd.setStatus(IDataStream::Status_ReadError);
-        return sd;
-      case qi::Value::Float:
-        val._private.type = qi::Value::Float;
-        sd >> val._private.data.f;
-        return sd;
-      case qi::Value::Double:
-        val._private.type = qi::Value::Double;
-        sd >> val._private.data.d;
-        return sd;
-      case qi::Value::String:
-        val.setType(qi::Value::String);
-        sd >> *val.value<std::string>();
-        return sd;
-      case qi::Value::List:
-        val.setType(qi::Value::List);
-        sd >> *val.value< std::list<qi::Value> >();
-        return sd;
-      case qi::Value::Vector:
-        val.setType(qi::Value::Vector);
-        sd >> *val.value< std::vector<qi::Value> >();
-        return sd;
-      case qi::Value::Map:
-        val.setType(qi::Value::Map);
-        sd >> *val.value< std::map<std::string, qi::Value> >();
+      case qi::detail::Value::Map:
+        val.setMap(detail::Value::ValueMap());
+        sd >> *val.data.map;
         return sd;
     };
     return sd;
   }
 
-  qi::ODataStream &operator<<(qi::ODataStream &sd, const qi::Value &val)
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const qi::detail::Value &val)
   {
-    switch(val.type()) {
-      case qi::Value::Bool:
-        sd << "Ib";
-        sd << (qi::uint32_t)val.type();
-        sd << val._private.data.b;
-        return sd;
-      case qi::Value::Char:
-        sd << "Ic";
-        sd << (qi::uint32_t)val.type();
-        sd << val._private.data.c;
-        return sd;
-      case qi::Value::Int32:
-        sd << "Ii";
-        sd << (qi::uint32_t)val.type();
-        sd << val._private.data.i;
-        return sd;
-      case Value::UInt32:
-      case Value::Int64:
-      case Value::UInt64:
-        qiLogError("datasteam") << "not implemented";
-        sd.setStatus(ODataStream::Status_WriteError);
-        return sd;
-      case qi::Value::Float:
-        sd << "If";
-        sd << (qi::uint32_t)val.type();
-        sd << val._private.data.f;
-        return sd;
-      case qi::Value::Double:
+    switch(val.type) {
+      case qi::detail::Value::Double:
         sd << "Id";
-        sd << (qi::uint32_t)val.type();
-        sd << val._private.data.d;
+        sd << (qi::uint32_t)val.type;
+        sd << val.data.d;
         return sd;
-      case qi::Value::String:{
+      case qi::detail::Value::String:{
         sd << "Is";
-        sd << (qi::uint32_t)val.type();
-        sd << *val.value< std::string >();
+        sd << (qi::uint32_t)val.type;
+        sd << val.toString();
         return sd;
       }
-      case qi::Value::List:{
+      case qi::detail::Value::List:{
         sd << "I[m]";
-        sd << (qi::uint32_t)val.type();
-        const std::list<qi::Value> *le = val.value< std::list<qi::Value> >();
-        sd << *le;
+        sd << (qi::uint32_t)val.type;
+        sd << *val.data.list;
         return sd;
       }
-      case qi::Value::Vector: {
-        sd << "I[m]";
-        sd << (qi::uint32_t)val.type();
-        const std::vector<qi::Value> *ve = val.value< std::vector<qi::Value> >();
-        sd << *ve;
-        return sd;
-      }
-      case qi::Value::Map: {
+      case qi::detail::Value::Map: {
         sd << "I{sm}";
-        sd << (qi::uint32_t)val.type();
-        const std::map<std::string, qi::Value> *me = val.value< std::map<std::string, qi::Value> >();
-        sd << *me;
+        sd << (qi::uint32_t)val.type;
+        sd << *val.data.map;
         return sd;
       }
       default:
@@ -305,7 +248,7 @@ namespace qi {
     return sd;
   }
 
-  qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::Value &value) {
+  qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::detail::Value &value) {
     sd.write(qi::Signature::Type_Dynamic);
     return sd;
   }

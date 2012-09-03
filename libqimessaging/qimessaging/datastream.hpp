@@ -16,7 +16,7 @@
 #include <vector>
 #include <map>
 #include <qimessaging/api.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/details/value.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qimessaging/signature.hpp>
@@ -273,8 +273,8 @@ namespace qi {
     return sd;
   };
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::Value &value);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::Value &value);
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::detail::Value &value);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::detail::Value &value);
   //QIMESSAGING_API qi::SignatureStream &operator>>(qi::SignatureStream &sd, const qi::Value &value);
 
 
