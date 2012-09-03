@@ -71,6 +71,13 @@ namespace qi {
         std::pair<FutureInterface<T> *, void *> itf = std::make_pair(p_interface, data);
         boost::mutex::scoped_lock l(_mutexCallback);
         _callback.push_back(itf);
+        if (isReady())
+        {
+          if (hasError())
+            p_interface->onFutureFailed(error(), data);
+          else
+          p_interface->onFutureFinished(_value, data);
+        }
       }
 
       void removeCallbacks(FutureInterface<T> *p_interface) {
