@@ -25,6 +25,10 @@ RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::Me
 
 RemoteObject::~RemoteObject()
 {
+  if (_ts) {
+    _ts->disconnect();
+    _ts->removeCallbacks(this);
+  }
   delete _ts;
 }
 
