@@ -51,6 +51,7 @@ void call(const std::string &addr)
   std::string result = obj->call<std::string>("reply", "plaf");
   std::cout << result << std::endl;
 
+  delete obj;
   session.close();
   session.waitForDisconnected();
 }
