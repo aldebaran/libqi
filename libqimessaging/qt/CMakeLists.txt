@@ -11,6 +11,8 @@ set(H_TO_MOC
         src/qitransportsocket_p.h
         qimessaging/qt/QiTransportServer
         src/qitransportserver_p.h
+        qimessaging/qt/QiGateway
+        src/qigateway_p.h
         qimessaging/qt/qisession.h)
 
 set(H   qimessaging/qt/api.h
@@ -18,6 +20,7 @@ set(H   qimessaging/qt/api.h
         qimessaging/qt/qiserver.h
         qimessaging/qt/QiTransportSocket
         qimessaging/qt/QiTransportServer
+        qimessaging/qt/QiGateway
         qimessaging/qt/qisession.h)
 
 set(H_P src/qiremoteobject_p.h
@@ -26,6 +29,7 @@ set(H_P src/qiremoteobject_p.h
         src/qimetatype_p.h
         src/qitransportsocket_p.h
         src/qitransportserver_p.h
+        src/qigateway_p.h
         src/qiqobject.h
         )
 
@@ -36,6 +40,7 @@ set(SRC src/qisession.cpp
         src/qimetatype.cpp
         src/qitransportsocket.cpp
         src/qitransportserver.cpp
+        src/qigateway.cpp
         src/qiqobject.cpp)
 
 
@@ -47,3 +52,5 @@ qi_use_lib(qimessaging-qt qimessaging QT_QTCORE QT_QTNETWORK)
 
 qi_install_header(${H} KEEP_RELATIVE_PATHS)
 qi_stage_lib(qimessaging-qt)
+
+add_subdirectory("bin")
