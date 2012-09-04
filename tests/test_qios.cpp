@@ -15,6 +15,7 @@
 # include <sys/socket.h>
 #endif
 
+#include <fstream>
 #include <cstdio>
 
 #include <gtest/gtest.h>
@@ -60,7 +61,7 @@ public:
   static const char       a_accent[4];
 };
 
-// "é" in utf-8 w. french locale.
+// "" in utf-8 w. french locale.
 const char QiOSTests::a_accent[4] =  { '/', 0xc3, 0xa9, '\0' } ;
 
 TEST_F(QiOSTests, LowLevelAccent)
@@ -287,6 +288,31 @@ TEST(QiOs, hostIPAddrs)
 
   ifsMap = qi::os::hostIPAddrs();
   ASSERT_TRUE(ifsMap.empty() == false);
+}
+
+TEST(QiOs, getMachineId)
+{
+  int status = 0;
+  std::string bin = qi::path::findBin("check_machineid");
+  int childPid = qi::os::spawnlp(bin.c_str(), NULL);
+  ASSERT_NE(-1, childPid);
+
+  int error = qi::os::waitpid(childPid, &status);
+  EXPECT_EQ(0, error);
+  EXPECT_EQ(0, status);
+
+  std::string uuid1 = qi::os::getMachineId();
+  std::string uuid2;
+
+  std::string uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
+  std::ifstream uuid2file(uuid2FileName.c_str());
+
+  ASSERT_TRUE(uuid2file);
+
+  uuid2file >> uuid2;
+  uuid2file.close();
+
+  ASSERT_TRUE(uuid1.compare(uuid2) == 0);
 }
 
 #ifdef _MSC_VER

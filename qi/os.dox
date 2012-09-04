@@ -83,6 +83,14 @@
   \ingroup qios
         An empty string is returned on failure.
   \return The system's hostname
+
+\fn std::string qi::os::getMachineId();
+  \brief Returns an unique uuid for the machine.
+  \ingroup qios
+        The UUID is stored on disk and will stay unchanged as long as it is not removed.
+        All programs running on the same machine will have the same UUID returned.
+        An empty string is returned on failure.
+  \return The uuid of the machine
 */
 
 
