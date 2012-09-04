@@ -119,6 +119,7 @@ void QiGatewayPrivate::processServiceMessage(QiTransportSocket* socket,
     std::vector<std::string> eps;
     eps.push_back(_server.listeningUrl().toString().toUtf8().constData());
     serviceInfo.setEndpoints(eps);
+    serviceInfo.setMachineId(qi::os::getMachineId());
 
     qi::Message ans;
     qi::Buffer buf;

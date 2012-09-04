@@ -932,7 +932,7 @@ namespace qi {
     qi::ServiceInfo si;
     si.setName(name);
     si.setProcessId(qi::os::getpid());
-    si.setMachineId("TODO");
+    si.setMachineId(qi::os::getMachineId());
 
     {
       std::vector<qi::Url> epsUrl = _p->_ts.endpoints();

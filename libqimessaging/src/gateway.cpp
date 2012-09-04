@@ -273,6 +273,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
           eps.push_back((*tsEpsIt).str());
         }
         result.setEndpoints(eps);
+        result.setMachineId(qi::os::getMachineId());
       }
 
       // create new message for the client

@@ -37,6 +37,7 @@ namespace qi
     ServiceInfo si;
     si.setName("serviceDirectory");
     si.setServiceId(1);
+    si.setMachineId(qi::os::getMachineId());
     unsigned int regid = registerService(si);
     serviceReady(1);
     //serviceDirectory must have id '1'
