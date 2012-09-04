@@ -255,7 +255,8 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
         ans.buildReplyFrom(*msg);
         ans.setType(qi::Message::Type_Error);
         ans.setId(itReq->second.first);
-        itReq->second.second->send(ans);
+        if (itReq->second.second)
+          itReq->second.second->send(ans);
         return;
       }
 
