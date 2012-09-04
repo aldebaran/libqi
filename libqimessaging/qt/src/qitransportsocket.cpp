@@ -26,14 +26,17 @@ QiTransportSocketPrivate::~QiTransportSocketPrivate()
   if (_msg)
   {
     delete _msg;
+    _msg = 0;
   }
 
   foreach (qi::Message* msg, _pendingMessages)
   {
     delete msg;
+    msg = 0;
   }
 
   delete _device;
+  _device = 0;
 }
 
 void QiTransportSocketPrivate::read()
@@ -83,6 +86,7 @@ void QiTransportSocketPrivate::read()
         _pendingMessages.append(_msg);
 
         _readHdr = true;
+        _msg = 0;
 
         emit readyRead();
       }
