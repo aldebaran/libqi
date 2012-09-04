@@ -182,14 +182,16 @@ TEST(TestMessage, TestMap)
   // Toh ! a C client :
   // Get list back
   std::map<std::string, int> mirror;
-  unsigned int i = 0;
+  unsigned int i;
   unsigned int size = qi_message_read_list_size(m);
   ASSERT_EQ(value.size(), size);
 
-  while (i < size)
+  for (i = 0; i < size; ++i)
   {
-    mirror[qi_message_read_string(m)] = qi_message_read_int32(m);
-    i++;
+    char *k = qi_message_read_string(m);
+    unsigned int v = qi_message_read_int32(m);
+    mirror[k] = v;
+    qi_message_free_string(k);
   }
 
   // Compare
