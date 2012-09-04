@@ -12,6 +12,9 @@
 # include <boost/shared_ptr.hpp>
 # include <qimessaging/api.hpp>
 
+# include <vector>
+# include <qi/types.hpp>
+# include <qi/log.hpp>
 # include <cstddef>
 
 namespace qi
