@@ -130,11 +130,37 @@ namespace qi {
 
   void Message::setFunction(qi::uint32_t function)
   {
+    if (type() == Type_Event)
+    {
+      qiLogDebug("Message") << "called setFunction() on Type_Event message";
+    }
     _p->header.action = function;
   }
 
   unsigned int Message::function() const
   {
+    if (type() == Type_Event)
+    {
+      qiLogDebug("Message") << "called function() on Type_Event message";
+    }
+    return _p->header.action;
+  }
+
+  void Message::setEvent(qi::uint32_t event)
+  {
+    if (type() != Type_Event)
+    {
+      qiLogDebug("Message") << "called setEvent() on non Type_Event message";
+    }
+    _p->header.action = event;
+  }
+
+  unsigned int Message::event() const
+  {
+    if (type() != Type_Event)
+    {
+      qiLogDebug("Message") << "called event() on non Type_Event message";
+    }
     return _p->header.action;
   }
 
