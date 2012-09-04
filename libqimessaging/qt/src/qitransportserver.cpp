@@ -58,20 +58,20 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
 {
   if (listenUrl.scheme() == "tcp")
   {
-    QUrl listenUrl(listenUrl);
+    QUrl listeningUrl(listenUrl);
 
-    if (listenUrl.port() == 0)
+    if (listeningUrl.port() == 0)
     {
-      listenUrl.setPort(qi::os::findAvailablePort(0));
+      listeningUrl.setPort(qi::os::findAvailablePort(0));
     }
 
-    _p->_listeningUrl = listenUrl;
-    QHostAddress host(listenUrl.host());
+    _p->_listeningUrl = listeningUrl;
+    QHostAddress host(listeningUrl.host());
     QObject::connect(&_p->_server, SIGNAL(newConnection()),
                      _p, SLOT(acceptConnection()));
     QObject::connect(_p, SIGNAL(newConnection()),
                      _p->_self, SIGNAL(newConnection()));
-    return _p->_server.listen(host, listenUrl.port());
+    return _p->_server.listen(host, listeningUrl.port());
   }
 
   qiLogError("QiTransportServer") << "Protocol `"
