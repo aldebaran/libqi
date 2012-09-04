@@ -248,6 +248,11 @@ char *qi_message_read_string(qi_message_t *msg)
 #endif
 }
 
+void qi_message_free_string(char *str) {
+  if (str)
+    free(str);
+}
+
 char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
@@ -260,6 +265,11 @@ char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
 #else
   return strdup(s.c_str());
 #endif
+}
+
+void qi_message_free_raw(char *raw) {
+  if (raw)
+    free(raw);
 }
 
 unsigned int  qi_message_read_list_size(qi_message_t *msg)

@@ -51,7 +51,9 @@ extern "C"
   QIMESSAGING_API float              qi_message_read_float(qi_message_t  *msg);
   QIMESSAGING_API double             qi_message_read_double(qi_message_t *msg);
   QIMESSAGING_API char              *qi_message_read_string(qi_message_t *msg);
+  QIMESSAGING_API void               qi_message_free_string(char *str);
   QIMESSAGING_API char              *qi_message_read_raw(qi_message_t    *msg, unsigned int *size);
+  QIMESSAGING_API void               qi_message_free_raw(char *raw);
   QIMESSAGING_API unsigned int       qi_message_read_list_size(qi_message_t *msg);
   QIMESSAGING_API unsigned int       qi_message_read_map_size(qi_message_t *msg);
   QIMESSAGING_API unsigned int       qi_message_read_tuple_size(qi_message_t *msg);
