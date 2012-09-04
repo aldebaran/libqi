@@ -88,6 +88,23 @@ TEST(TransportServer, HasPendingConnection)
   ASSERT_TRUE(server.hasPendingConnections());
 }
 
+TEST(TransportServer, ListenPort0)
+{
+  QString service = QString("tcp://0.0.0.0:0");
+
+  QiTransportServer server;
+  server.listen(service);
+
+  QObject::connect(&server, SIGNAL(newConnection()), app, SLOT(quit()));
+
+  QiTransportSocket socket;
+  socket.connectToHost(server.listeningUrl());
+
+  app->exec();
+
+  ASSERT_TRUE(server.hasPendingConnections());
+}
+
 TEST(TransportServer, NextPendingConnection)
 {
   unsigned short port = qi::os::findAvailablePort(0);
