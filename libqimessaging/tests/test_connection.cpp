@@ -23,6 +23,11 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
+static qi::Buffer replyBuf(const qi::Buffer& arg)
+{
+  return arg;
+}
+
 static std::string connectionAddr;
 
 class TestConnection
@@ -86,6 +91,21 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
   EXPECT_EQ("question3", result);
 }
 
+TEST(QiMessagingConnexion, testBuffer)
+{
+  TestConnection tc;
+  ASSERT_TRUE(tc.init());
+  qi::Buffer buf;
+  std::string challenge = "foo*******************************";
+  qi::ODataStream out(buf);
+  out << challenge;
+  qi::Buffer result = tc.obj->call<qi::Buffer>("replyBuf", buf);
+  std::string reply;
+  qi::IDataStream in(result);
+  in >> reply;
+  ASSERT_EQ(challenge, reply);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
@@ -102,6 +122,7 @@ int main(int argc, char **argv) {
   qi::Session       session;
   qi::Object        obj;
   obj.advertiseMethod("reply", &reply);
+  obj.advertiseMethod("replyBuf", &replyBuf);
 
   session.connect(sdAddr.str());
   session.waitForConnected();
