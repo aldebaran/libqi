@@ -58,6 +58,13 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
 {
   if (listenUrl.scheme() == "tcp")
   {
+    QUrl listenUrl(listenUrl);
+
+    if (listenUrl.port() == 0)
+    {
+      listenUrl.setPort(qi::os::findAvailablePort(0));
+    }
+
     _p->_listeningUrl = listenUrl;
     QHostAddress host(listenUrl.host());
     QObject::connect(&_p->_server, SIGNAL(newConnection()),
