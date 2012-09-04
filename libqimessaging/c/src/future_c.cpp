@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Pierre Roullon <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011 Aldebararan Robotics
+** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
 
 #include <list>
@@ -97,7 +97,7 @@ int     qi_future_is_ready(qi_future_t *fut)
   return data->future->isReady();
 }
 
-qi_message_t *qi_future_get_value(qi_future_t *fut)
+void *qi_future_get_value(qi_future_t *fut)
 {
   qi_future_data_t      *data = reinterpret_cast<qi_future_data_t*>(fut);
 

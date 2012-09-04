@@ -2,7 +2,7 @@
 ** Author(s):
 **  - Pierre Roullon <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011 Aldebararan Robotics
+** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
 
 #ifndef _QIMESSAGING_FUTURE_H_
@@ -36,7 +36,7 @@ extern "C"
   QIMESSAGING_API void          qi_future_wait(qi_future_t *fut);
   QIMESSAGING_API int           qi_future_is_error(qi_future_t *fut);
   QIMESSAGING_API int           qi_future_is_ready(qi_future_t *fut);
-  QIMESSAGING_API qi_message_t* qi_future_get_value(qi_future_t *fut);
+  QIMESSAGING_API void*         qi_future_get_value(qi_future_t *fut);
 
   QIMESSAGING_API const char*   qi_future_get_error(qi_future_t *fut);
 
