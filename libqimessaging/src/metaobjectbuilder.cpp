@@ -40,7 +40,7 @@ namespace qi {
     return (1);
   }
 
-  int MetaObjectBuilder::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
+  int MetaObjectBuilder::xAdvertiseMethod(const std::string &sigret, const std::string& signature, MetaFunction functor) {
     boost::recursive_mutex::scoped_lock sl(_p->_metaObject->_p->_mutexMethod);
 
     std::map<std::string, unsigned int>::iterator it;

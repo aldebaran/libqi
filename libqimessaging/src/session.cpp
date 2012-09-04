@@ -18,31 +18,19 @@
 
 namespace qi {
 
-  // Grah give me boost::bind!
-  class EventForwarder: public Functor
+  static MetaFunctionResult forwardEvent(const MetaFunctionParameters& params,
+    unsigned int service, unsigned int event, TransportSocket* client)
   {
-  public:
-    EventForwarder(unsigned int service, unsigned int event,
-                   TransportSocket* client)
-      : _service(service)
-      , _event(event)
-      , _client(client)
-    {}
-    virtual void call(const qi::FunctorParameters &params, qi::FunctorResult result) const
-    {
-      qi::Message msg;
-      msg.setBuffer(params.buffer());
-      msg.setService(_service);
-      msg.setFunction(_event);
-      msg.setType(Message::Type_Event);
-      msg.setObject(Message::Object_Main);
-      _client->send(msg);
-    }
-  private:
-    unsigned int _service;
-    unsigned int _event;
-    TransportSocket* _client;
-  };
+    qi::Message msg;
+    msg.setBuffer(params.getBuffer());
+    msg.setService(service);
+    msg.setFunction(event);
+    msg.setType(Message::Type_Event);
+    msg.setObject(Message::Object_Main);
+    client->send(msg);
+    return MetaFunctionResult();
+  }
+
 
   SessionInterface::~SessionInterface() {
   }
@@ -267,7 +255,7 @@ namespace qi {
 
             // locate object, register locally and bounce to an event message
             unsigned int linkId = it->second->connect(event,
-              new EventForwarder(service, event, client));
+                boost::bind(&forwardEvent, _1, service, event, client));
             _self->_links[client][service][remoteLinkId] = SessionPrivate::RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
             {
@@ -335,15 +323,13 @@ namespace qi {
     {
     case Message::Type_Call:
       {
-         qi::FunctorParameters ds(msg.buffer());
-         ServerFunctorResult promise(client, msg);
-         obj->metaCall(msg.function(), ds, promise, qi::Object::MetaCallType_Queued);
+           qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::Object::MetaCallType_Queued);
+           fut.addCallbacks(new detail::ServerResult(client, msg));
       }
       break;
     case Message::Type_Event:
       {
-        qi::FunctorParameters ds(msg.buffer());
-        obj->metaEmit(msg.function(), ds);
+          obj->metaEmit(msg.function(), MetaFunctionParameters(msg.buffer()));
       }
       break;
     }
@@ -415,7 +401,7 @@ namespace qi {
 
 
     // Request for register/unregister methods
-    std::map<int, qi::FunctorResult>::iterator futureFunctorIt;
+    std::map<int, qi::Promise<MetaFunctionResult> >::iterator futureFunctorIt;
     {
       boost::mutex::scoped_lock l(_self->_mutexFuture);
       futureFunctorIt = _self->_futureFunctor.find(id);
@@ -460,21 +446,16 @@ namespace qi {
 
   void SessionPrivate::serviceRegisterUnregisterEnd(int id,
                                                     qi::Message *msg,
-                                                    qi::FunctorResult promise)
+                                                    qi::Promise<MetaFunctionResult> promise)
   {
-    if (!promise.isValid())
-    {
-      qiLogError("qimessaging.sessionprivate") << "No promise found for req id:" << id;
-      return;
-    }
-
     switch (msg->type())
     {
     case qi::Message::Type_Reply:
-      promise.setValue(msg->buffer());
-      break;
     case qi::Message::Type_Event:
-      promise.setValue(msg->buffer());
+      {
+        MetaFunctionResult res(msg->buffer());
+        promise.setValue(res);
+      }
       break;
     default:
       {
@@ -528,7 +509,6 @@ namespace qi {
             ++sr->attempts;
           }
         }
-        break;
       }
     }
     if (!sr->attempts)
@@ -589,9 +569,9 @@ namespace qi {
       promise.setError("Serialization error");
   }
 
-  qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si,
-                                                           qi::Future<unsigned int> future)
+  qi::Future<unsigned int> SessionPrivate::registerService(const qi::ServiceInfo &si)
   {
+    qi::Promise<unsigned int> ret;
     qi::Message msg;
     msg.setType(qi::Message::Type_Call);
     msg.setService(qi::Message::Service_ServiceDirectory);
@@ -605,12 +585,11 @@ namespace qi {
     if (d.status() == qi::ODataStream::Status_Ok)
     {
       msg.setBuffer(buf);
-
-      qi::FunctorResult        ret;
-      qi::makeFunctorResult<unsigned int>(&ret, &future);
+      Promise<MetaFunctionResult> promise;
+      promise.future().addCallbacks(new detail::FutureAdapter<unsigned int>(ret));
       {
         boost::mutex::scoped_lock l(_mutexFuture);
-        _futureFunctor[msg.id()] = ret;
+        _futureFunctor[msg.id()] = promise;
       }
 
       if (!_serviceSocket.send(msg))
@@ -626,24 +605,15 @@ namespace qi {
         ret.setError(ss.str());
       }
     } else {
-      qi::Promise<unsigned int> prom;
-      // FIXME: Maybe there is a better way
-      // save all callbacks
-      std::vector<std::pair<FutureInterface<unsigned int> *, void *> > callbacks = future.callbacks();
 
-      future = prom.future();
-
-      std::vector<std::pair<FutureInterface<unsigned int> *, void *> >::iterator it;
-      for (it = callbacks.begin(); it != callbacks.end(); ++it)
-        future.addCallbacks(it->first, it->second);
-
-      prom.setError("serialization error");
+      ret.setError("serialization error");
     }
-    return future;
+    return ret.future();
   }
 
   qi::Future<void> SessionPrivate::unregisterService(unsigned int idx)
   {
+    qi::Promise<void> ret;
     qi::Message msg;
     qi::Buffer  buf;
     msg.setType(qi::Message::Type_Call);
@@ -658,12 +628,12 @@ namespace qi {
     if (d.status() == qi::ODataStream::Status_Ok)
     {
       msg.setBuffer(buf);
+      qi::Promise<MetaFunctionResult> promise;
+      promise.future().addCallbacks(new detail::FutureAdapter<void>(ret));
 
-      qi::FunctorResult ret;
-      qi::makeFunctorResult<void>(&ret, &future);
       {
         boost::mutex::scoped_lock l(_mutexFuture);
-        _futureFunctor[msg.id()] = ret;
+        _futureFunctor[msg.id()] = promise;
       }
 
       if (!_serviceSocket.send(msg))
@@ -680,14 +650,14 @@ namespace qi {
         ret.setError(ss.str());
       }
     }
-    return future;
+    return ret.future();
   }
 
   void SessionPrivate::onSocketTimeout(TransportSocket *client, int id, void *data)
   {
     {
       boost::mutex::scoped_lock l(_mutexFuture);
-      std::map<int, qi::FunctorResult>::iterator it = _futureFunctor.find(id);
+      std::map<int, Promise<MetaFunctionResult> >::iterator it = _futureFunctor.find(id);
       if (it != _futureFunctor.end())
       {
         it->second.setError("network timeout");
@@ -951,10 +921,8 @@ namespace qi {
       _p->_servicesObject[obj] = si;
     }
 
-    qi::Future<unsigned int> future;
+    qi::Future<unsigned int> future =  _p->registerService(si);
     future.addCallbacks(_p, obj);
-    future = _p->registerService(si, future);
-
     return future;
   }
 

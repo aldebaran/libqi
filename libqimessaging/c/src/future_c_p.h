@@ -10,13 +10,14 @@
 # define   	_QIMESSAGING_FUTURE_C_P_H_
 
 #include <list>
+#include <qimessaging/metafunction.hpp>
+
 class CFunctorResult;
 class FutureCallbackForwarder;
 
 typedef struct
 {
-  qi::Future<void *>                  *future;
-  CFunctorResult                      *functor;
+  qi::Future<void*>                   *future;
   std::list<FutureCallbackForwarder *> callbacks;
 } qi_future_data_t;
 
@@ -54,5 +55,6 @@ public:
 private:
   std::list<qi_future_callback_t>   _callbacks;
 };
+
 
 #endif

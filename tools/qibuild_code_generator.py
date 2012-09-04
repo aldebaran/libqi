@@ -62,8 +62,5 @@ if __name__ == "__main__":
     #print "cd", os.path.dirname(__file__)
     #os.chdir(os.path.dirname(__file__))
     numArgs = 10 # This results in n-1 arguments
-    generate_file("qimessaging/details/boostfunctor.hxx.in"    , "qimessaging/details/boostfunctor.hxx"    , numArgs)
-    generate_file("qimessaging/details/functor.hxx.in"          , "qimessaging/details/functor.hxx"          , numArgs)
     generate_file("qimessaging/details/makefunctor.hpp.in"      , "qimessaging/details/makefunctor.hpp"      , numArgs)
-    generate_file("qimessaging/details/callfunctor.hpp.in"      , "qimessaging/details/callfunctor.hpp"      , numArgs)
-    generate_file("qimessaging/object.hxx.in"                   , "qimessaging/object.hxx"                   , numArgs)
+

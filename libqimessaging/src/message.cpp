@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <qimessaging/metavalue.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 

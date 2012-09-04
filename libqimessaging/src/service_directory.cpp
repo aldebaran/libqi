@@ -86,10 +86,9 @@ namespace qi
 
     qi::Message msg;
     socket->read(id, &msg);
-    FunctorParameters din(msg.buffer());
-
-    ServerFunctorResult fr(socket, msg);
-    metaCall(msg.function(), din, fr);
+    qiLogDebug("ServiceDirectory") << "Processing message " << msg.function();
+    qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()));
+    res.addCallbacks(new detail::ServerResult(socket, msg));
 
     currentSocket  = 0;
   }

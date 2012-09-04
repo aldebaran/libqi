@@ -63,8 +63,7 @@ namespace qi {
     SessionPrivate(qi::Session *session);
     virtual ~SessionPrivate();
 
-    qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si,
-                                                qi::Future<unsigned int> future);
+    qi::Future<unsigned int>    registerService(const qi::ServiceInfo &si);
     qi::Future<void>            unregisterService(unsigned int idx);
 
     virtual void onSocketConnected(TransportSocket *client, void *data);
@@ -83,12 +82,11 @@ namespace qi {
 
     void servicesEnd(qi::TransportSocket *client, qi::Message *msg,
                      qi::Promise<std::vector<qi::ServiceInfo> > &si);
-
+    void serviceRegisterUnregisterEnd(int id, qi::Message *msg, qi::Promise<MetaFunctionResult> promise);
     void servicesEnd(qi::TransportSocket *QI_UNUSED(client),
                      qi::Message *msg,
                      qi::Session::ServiceLocality locality,
                      qi::Promise<std::vector<qi::ServiceInfo> > &promise);
-    void serviceRegisterUnregisterEnd(int id, qi::Message *msg,  qi::FunctorResult promise);
     void serviceReady(unsigned int idx);
 
     virtual void newConnection(TransportServer* server, TransportSocket *client);
@@ -109,9 +107,11 @@ namespace qi {
     // Associate serviceRequest with the connection currently connecting.
     std::map<void *, boost::shared_ptr<ServiceRequest> >        _futureConnect;
 
-    typedef std::pair<Session::ServiceLocality, qi::Promise<std::vector<qi::ServiceInfo> > > ServicesPromiseLocality;
+    std::map<int, qi::Promise<MetaFunctionResult> >             _futureFunctor;
+    typedef std::pair<Session::ServiceLocality,
+                      qi::Promise<std::vector<qi::ServiceInfo> > >
+            ServicesPromiseLocality;
     std::map<int, ServicesPromiseLocality>                      _futureServices;
-    std::map<int, qi::FunctorResult>                            _futureFunctor;
     boost::mutex                                                _mutexServiceReady;
     std::vector<unsigned int>                                   _serviceReady;
 

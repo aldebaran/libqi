@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>

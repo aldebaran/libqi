@@ -6,9 +6,9 @@
 #include <iostream>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/metafunction.hpp>
 
 #ifndef __METAMETHOD_P_HPP__
 #define __METAMETHOD_P_HPP__
@@ -17,7 +17,7 @@ namespace qi {
 
   class MetaMethodPrivate {
   public:
-    MetaMethodPrivate(const std::string &sigret, const std::string &sig, const qi::Functor *functor);
+    MetaMethodPrivate(const std::string &sigret, const std::string &sig, MetaFunction functor);
     MetaMethodPrivate();
     MetaMethodPrivate(const MetaMethodPrivate &rhs);
     MetaMethodPrivate &operator=(const MetaMethodPrivate &rhs);
@@ -30,7 +30,7 @@ namespace qi {
   public:
     std::string        _signature;
     std::string        _sigret;
-    boost::shared_ptr<const qi::Functor> _functor;
+    MetaFunction       _functor;
     unsigned int       _uid;
   };
 

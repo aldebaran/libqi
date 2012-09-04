@@ -6,8 +6,11 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
+#include <qimessaging/metavalue.hpp>
 #include <qimessaging/message.hpp>
+
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/details/value.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <vector>

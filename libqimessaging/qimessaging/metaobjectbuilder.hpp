@@ -23,7 +23,6 @@
 
 namespace qi {
 
-  class Functor;
   class MetaObject;
   class MetaObjectBuilderPrivate;
   class QIMESSAGING_API MetaObjectBuilder {
@@ -38,7 +37,7 @@ namespace qi {
     template<typename T>
     inline unsigned int advertiseMethod(const std::string& name, boost::function<T> func);
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, qi::MetaFunction func);
     int xForgetMethod(const std::string &meth);
 
     template<typename FUNCTION_TYPE>

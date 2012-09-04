@@ -163,7 +163,7 @@ namespace qi {
     return _p->_builder.xForgetMethod(meth);
   }
 
-  int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, const qi::Functor* functor) {
+  int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, MetaFunction functor) {
     return _p->_builder.xAdvertiseMethod(sigret, signature, functor);
   }
 
@@ -171,14 +171,24 @@ namespace qi {
     return _p->_builder.xAdvertiseEvent(signature);
   }
 
-  void Object::metaCall(unsigned int method, const FunctorParameters &in, qi::FunctorResult out, MetaCallType callType)
+  static void functor_call(MetaFunction f,
+    MetaFunctionParameters arg,
+    qi::Promise<MetaFunctionResult> out)
   {
+    out.setValue(f(arg));
+    // MetaFunctionParameters destructor will kill the arg copy
+  }
+
+  qi::Future<MetaFunctionResult>
+  Object::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
+  {
+    qi::Promise<MetaFunctionResult> out;
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
       std::stringstream ss;
       ss << "Can't find methodID: " << method;
       out.setError(ss.str());
-      return;
+      return out.future();
     }
     if (mm->_p->_functor)
     {
@@ -195,35 +205,32 @@ namespace qi {
         break;
       }
       if (synchronous)
-        mm->_p->_functor->call(in, out);
+        out.setValue(mm->_p->_functor(params));
       else
-        _p->_eventLoop->asyncCall(0,
-          boost::bind(&Functor::call,
+      {
+        // We need to copy arguments.
+        MetaFunctionParameters pCopy = params.copy();
+        eventLoop()->asyncCall(0,
+          boost::bind(&functor_call,
             mm->_p->_functor,
-            in, out));
+            pCopy, out));
+      }
     }
     else {
       std::stringstream ss;
       ss << "No valid functor for methodid: " << method;
       out.setError(ss.str());
     }
+    return out.future();
   }
 
-  class DropResult: public FunctorResultBase
-  {
-  public:
-    virtual void setValue(const qi::Buffer &buffer) {}
-    virtual void setError(const std::string &sig, const qi::Buffer &msg)
-    {
-      qiLogError("object") << "Event handler returned an error";
-    }
-  };
-  void Object::metaEmit(unsigned int event, const FunctorParameters &args)
+  void Object::metaEmit(unsigned int event, const MetaFunctionParameters& args)
   {
     //std::cerr <<"metaemit on " << this <<" from " << pthread_self() << std::endl;
     trigger(event, args);
   }
-  void Object::trigger(unsigned int event, const FunctorParameters &args)
+
+  void Object::trigger(unsigned int event, const MetaFunctionParameters &args)
   {
     // Note: Not thread-safe, event/method may die while we hold it.
     MetaEvent* ev = metaObject().event(event);
@@ -237,7 +244,7 @@ namespace qi {
       }
       else
       {
-        metaCall(event, args, FunctorResult(boost::shared_ptr<FunctorResultBase>(new DropResult)));
+        metaCall(event, args);
         return;
       }
     }
@@ -253,8 +260,10 @@ namespace qi {
     }
   }
 
-  void Object::xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out)
+  qi::Future<MetaFunctionResult>
+  Object::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
   {
+    qi::Promise<MetaFunctionResult> out;
     int methodId = metaObject().methodId(signature);
     if (methodId < 0) {
       std::stringstream ss;
@@ -269,7 +278,7 @@ namespace qi {
       }
       qiLogError("object") << ss.str();
       out.setError(ss.str());
-      return;
+      return out.future();
     }
     if (retsig != "v") {
       qi::MetaMethod *mm = metaObject().method(methodId);
@@ -278,25 +287,23 @@ namespace qi {
         ss << "method " << signature << "(id: " << methodId << ") disapeared mysteriously!";
         qiLogError("object") << ss.str();
         out.setError(ss.str());
-        return;
+        return out.future();
       }
       if (mm->sigreturn() != retsig) {
         std::stringstream ss;
         ss << "signature mismatch for return value:" << std::endl
                              << "we want: " << retsig << " " << signature << std::endl
                              << "we had:" << mm->sigreturn() << " " << mm->signature();
-        qiLogError("object") << ss;
-        out.setError(ss.str());
-        return;
+        qiLogWarning("object") << ss;
+        //out.setError(ss.str());
+        //return out.future();
       }
     }
     //TODO: check for metacall to return false when not able to send the answer
-    metaCall(methodId, in, out);
-    return;
+    return metaCall(methodId, args);
   }
-
   /// Resolve signature and bounce
-  bool Object::xMetaEmit(const std::string &signature, const FunctorParameters &in) {
+  bool Object::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
     int eventId = metaObject().eventId(signature);
     if (eventId < 0)
       eventId = metaObject().methodId(signature);
@@ -318,7 +325,7 @@ namespace qi {
   }
 
   /// Resolve signature and bounce
-  unsigned int Object::xConnect(const std::string &signature, const Functor* functor,
+  unsigned int Object::xConnect(const std::string &signature, MetaFunction functor,
                                 EventLoop* ctx)
   {
     int eventId = metaObject().eventId(signature);
@@ -338,7 +345,7 @@ namespace qi {
     return connect(eventId, functor, ctx);
   }
 
-  unsigned int Object::connect(unsigned int event, const Functor* functor, EventLoop* ctx)
+  unsigned int Object::connect(unsigned int event, MetaFunction functor, EventLoop* ctx)
   {
     return connect(event, EventSubscriber(functor, ctx));
   }
@@ -374,10 +381,7 @@ namespace qi {
     }
     return uid;
   }
-  static void delete_functor(const Functor* ptr)
-  {
-    delete ptr;
-  }
+
   bool Object::disconnect(unsigned int linkId)
   {
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
@@ -390,12 +394,6 @@ namespace qi {
       if (j != it->second.end())
       {
         EventSubscriber& sub = j->second;
-        // We have ownership of the handler, despite all the copies.
-        if (sub.handler && sub.eventLoop && !sub.eventLoop->isInEventLoopThread())
-          sub.eventLoop->asyncCall(0,
-            boost::bind(delete_functor, sub.handler));
-        else
-          delete sub.handler;
         // If target is an object, deregister from it
         if (sub.target)
         {
@@ -501,4 +499,28 @@ namespace qi {
       _eventsNameToIdx[i->second.signature()] = i->second.uid();
     }
   }
-};
+
+  void Object::emitEvent(const std::string& eventName,
+    qi::AutoMetaValue p1,
+      qi::AutoMetaValue p2,
+      qi::AutoMetaValue p3,
+      qi::AutoMetaValue p4,
+      qi::AutoMetaValue p5,
+      qi::AutoMetaValue p6,
+      qi::AutoMetaValue p7,
+      qi::AutoMetaValue p8)
+  {
+    qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::MetaValue> params;
+    for (unsigned i=0; i<8; ++i)
+      if (vals[i]->value)
+        params.push_back(*vals[i]);
+     // Signature construction
+    std::string signature = eventName + "::(";
+    for (unsigned i=0; i< params.size(); ++i)
+      signature += params[i].signature();
+    signature += ")";
+    xMetaEmit(signature, MetaFunctionParameters(params, true));
+  }
+}
+

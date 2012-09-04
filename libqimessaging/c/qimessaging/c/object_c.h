@@ -29,6 +29,7 @@ extern "C"
 
   QIMESSAGING_API int          qi_object_register_method(qi_object_t *object, const char *complete_signature, qi_object_method_t func, void *data);
 
+  /// Return a future that contains a qi_message_t
   QIMESSAGING_API qi_future_t *qi_object_call(qi_object_t *object, const char *signature, qi_message_t *message);
 
 #ifdef __cplusplus

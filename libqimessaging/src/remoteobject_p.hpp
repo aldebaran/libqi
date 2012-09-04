@@ -24,18 +24,19 @@ namespace qi {
     explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject *mo);
     ~RemoteObject();
 
-  protected:
-    virtual void onSocketReadyRead(TransportSocket *client, int id, void *data);
-    virtual void onSocketTimeout(TransportSocket *client, int id, void *data);
-    virtual void metaCall(unsigned int method, const qi::FunctorParameters &in, qi::FunctorResult out, MetaCallType callType);
-    virtual void metaEmit(unsigned int event, const FunctorParameters &args);
+    virtual void onSocketReadyRead(TransportSocket *client, int id, void*);
+    virtual void onSocketTimeout(TransportSocket *client, int id, void*);
+
+    virtual void metaEmit(unsigned int event, const MetaFunctionParameters& args);
+    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, MetaCallType callType = MetaCallType_Auto);
+
     virtual unsigned int connect(unsigned int event, const EventSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
 
   protected:
     qi::TransportSocket                           *_ts;
     unsigned int                                   _service;
-    std::map<int, qi::FunctorResult>               _promises;
+    std::map<int, qi::Promise<MetaFunctionResult> >         _promises;
     boost::mutex                                   _mutex;
   };
 

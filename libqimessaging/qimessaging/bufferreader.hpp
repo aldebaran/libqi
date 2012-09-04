@@ -2,7 +2,11 @@
  *
  *  Copyright (C) 2012 Aldebaran Robotics
  */
-#pragma once
+
+
+// Leave this above the header gard, it fixes include ordering problems
+#include <qimessaging/metavalue.hpp>
+
 #ifndef _QIMESSAGING_BUFFERREADER_HPP_
 #define _QIMESSAGING_BUFFERREADER_HPP_
 

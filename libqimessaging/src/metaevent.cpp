@@ -45,31 +45,29 @@ namespace qi {
     return _p->uid();
   }
 
-  class DropResult: public FunctorResultBase
+  static void functor_call2(MetaFunction f,
+    const MetaFunctionParameters& args)
   {
-  public:
-    virtual void setValue(const qi::Buffer &buffer) {}
-    virtual void setError(const std::string &sig, const qi::Buffer& msg)
-    {
-      qiLogError("object") << "Event handler returned an error";
-    }
-  };
+    f(args);
+  }
 
-  void EventSubscriber::call(const FunctorParameters &args)
+  void EventSubscriber::call(const MetaFunctionParameters& args)
   {
-    FunctorResult dummy(
-      boost::shared_ptr<FunctorResultBase>(new DropResult()));
     if (handler)
     {
       if (eventLoop)
+      {
+        MetaFunctionParameters copy = args.copy();
         eventLoop->asyncCall(0,
-          boost::bind(&Functor::call, handler, args, dummy));
+          boost::bind(&functor_call2, handler, copy));
+      }
       else
-        handler->call(args, dummy);
+        handler(args);
     }
     if (target)
       target->metaEmit(method, args);
   }
+
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
     stream << meta._p->_signature;

@@ -10,6 +10,7 @@
 #define _QIMESSAGING_SERVICE_INFO_HPP_
 
 #include <qimessaging/api.hpp>
+#include <qimessaging/metavalue.hpp>
 #include <string>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/signature.hpp>
@@ -50,5 +51,8 @@ namespace qi
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const ServiceInfo &sinfo);
 
 }; // !qi
+
+QI_METATYPE_NOT_CONVERTIBLE(ServiceInfo);
+QI_METATYPE_NOT_CONVERTIBLE(std::vector<ServiceInfo>);
 
 #endif  // _QIMESSAGING_SERVICE_INFO_HPP_

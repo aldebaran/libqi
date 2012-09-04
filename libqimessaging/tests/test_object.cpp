@@ -39,6 +39,17 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj.call<int>("objtest", 21, 21));
   EXPECT_EQ(42, obj.call<int>("testBind", 21));
   EXPECT_EQ(42, obj.call<int>("testBind2", 21));
+  EXPECT_EQ(42, obj.call<unsigned int>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<char>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<double>("test", 21, 21));
+  /* Re-enable when signature adaptation works
+  EXPECT_EQ(42, obj.call<int>("test", (char)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (unsigned char)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (short)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (unsigned short)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (float)21, 21));
+  EXPECT_EQ(42, obj.call<int>("test", (double)21, 21));
+  */
 
   gGlobalResult = 0;
   obj.call<void>("vtest", 21, 21).wait();
@@ -59,12 +70,14 @@ Point point(int x, int y)
   Point p; p.x = x; p.y = y; return p;
 }
 
+QI_METATYPE_NOT_CONVERTIBLE(Point)
 QI_REGISTER_STRUCT(Point, x, y);
 
 struct Test
 {
   float x;
 };
+
 /// Test the split form of the macro.
 QI_REGISTER_STRUCT_DECLARE(Test)
 QI_REGISTER_STRUCT_IMPLEMENT(Test, x)
@@ -102,6 +115,7 @@ struct Complex
   std::list<std::vector<int> > stuff;
 };
 
+QI_METATYPE_NOT_CONVERTIBLE(::Complex)
 // Test the sub macros
 QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
 QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)

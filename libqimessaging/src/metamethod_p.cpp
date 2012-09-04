@@ -15,7 +15,7 @@ namespace qi {
   {
   }
 
-  MetaMethodPrivate::MetaMethodPrivate(const std::string &sigret, const std::string &sig, const qi::Functor *functor)
+  MetaMethodPrivate::MetaMethodPrivate(const std::string &sigret, const std::string &sig, MetaFunction functor)
     : _signature(sig),
       _sigret(sigret),
       _functor(functor),

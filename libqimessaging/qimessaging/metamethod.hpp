@@ -6,12 +6,13 @@
 #ifndef _QIMESSAGING_METAMETHOD_HPP_
 #define _QIMESSAGING_METAMETHOD_HPP_
 
+#include <qimessaging/metafunction.hpp>
 namespace qi {
 
   class MetaMethodPrivate;
   class QIMESSAGING_API MetaMethod {
   public:
-    MetaMethod(const std::string &sigret, const std::string &sig, const qi::Functor *functor);
+    MetaMethod(const std::string &sigret, const std::string &sig, MetaFunction functor);
     MetaMethod();
     MetaMethod(const MetaMethod &other);
     MetaMethod& operator=(const MetaMethod &other);
@@ -19,7 +20,7 @@ namespace qi {
 
     const std::string &signature() const;
     const std::string &sigreturn() const;
-    const qi::Functor *functor() const;
+    MetaFunction      &functor() const;
     unsigned int       uid() const;
 
   protected:

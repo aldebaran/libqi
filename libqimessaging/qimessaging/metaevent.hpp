@@ -7,6 +7,7 @@
 #define _QIMESSAGING_METAEVENT_HPP_
 
 #include <qimessaging/signature.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi {
 

@@ -5,12 +5,15 @@
 ** Copyright (C) 2012 hcuche
 */
 
-#pragma once
+// Leave this above the header gard, it fixes include ordering problems
+# include <qimessaging/metavalue.hpp>
+
 #ifndef _QIMESSAGING_BUFFER_HPP_
 #define _QIMESSAGING_BUFFER_HPP_
 
 # include <boost/shared_ptr.hpp>
 # include <qimessaging/api.hpp>
+# include <qimessaging/metavalue.hpp>
 
 # include <vector>
 # include <qi/types.hpp>

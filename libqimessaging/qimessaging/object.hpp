@@ -12,7 +12,8 @@
 #include <map>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/makefunctor.hpp>
+#include <qimessaging/metavalue.hpp>
+#include <qimessaging/metafunction.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 #include <qimessaging/metaevent.hpp>
@@ -20,6 +21,11 @@
 #include <qimessaging/event_loop.hpp>
 #include <qimessaging/metaobjectbuilder.hpp>
 
+
+#include <boost/function_types/function_arity.hpp>
+#include <boost/function_types/function_type.hpp>
+#include <boost/function_types/result_type.hpp>
+#include <boost/function_types/parameter_types.hpp>
 
 namespace qi {
 
@@ -31,12 +37,11 @@ namespace qi {
   {
     EventSubscriber()
     : handler(0), eventLoop(0), target(0), method(0) {}
-    EventSubscriber(const Functor* func, EventLoop* ctx)
+    EventSubscriber(MetaFunction func, EventLoop* ctx)
     : handler(func), eventLoop(ctx), target(0), method(0) {}
     EventSubscriber(Object * target, unsigned int method)
     : handler(0), eventLoop(0), target(target), method(method) {}
-    void call(const FunctorParameters& args);
-
+    void call(const MetaFunctionParameters& args);
     // Source information
     Object*            eventSource;
     unsigned int       event;
@@ -45,7 +50,7 @@ namespace qi {
 
     // Target information
     //   Mode 1: Direct functor call
-    const Functor*     handler;
+    MetaFunction       handler;
     EventLoop*         eventLoop;
     //  Mode 2: metaCall
     Object*            target;
@@ -82,7 +87,6 @@ namespace qi {
     MetaObjectPrivate   *_p;
   };
 
-
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta);
@@ -116,64 +120,41 @@ namespace qi {
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
     template<typename T>
     inline unsigned int advertiseMethod(const std::string& name, boost::function<T> func);
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, const Functor *functor);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaFunction func);
     int xForgetMethod(const std::string &meth);
 
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
     int xAdvertiseEvent(const std::string& signature);
 
+    template <typename RETURN_TYPE> qi::Future<RETURN_TYPE> call(const std::string& methodName,
+      qi::AutoMetaValue p1 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p2 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p3 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p4 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p5 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p6 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p7 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p8 = qi::AutoMetaValue());
 
-    template <typename RETURN_TYPE>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName);
-    template <typename RETURN_TYPE, typename P0>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0);
-    template <typename RETURN_TYPE, typename P0, typename P1>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
-    template <typename RETURN_TYPE, typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
-    qi::Future<RETURN_TYPE> call(const std::string& methodName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
-
-    virtual void metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
-    void xMetaCall(const std::string &retsig, const std::string &signature, const FunctorParameters &in, FunctorResult out);
+    qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
 
 
-    inline
-    void emitEvent(const std::string& eventName);
-    template <typename P0>
-    void emitEvent(const std::string& eventName, const P0 &p0);
-    template <typename P0, typename P1>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1);
-    template <typename P0, typename P1, typename P2>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2);
-    template <typename P0, typename P1, typename P2, typename P3>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3);
-    template <typename P0, typename P1, typename P2, typename P3, typename P4>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5);
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6);
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7);
-    template <typename P0, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6, typename P7, typename P8>
-    void emitEvent(const std::string& eventName, const P0 &p0, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4, const P5 &p5, const P6 &p6, const P7 &p7, const P8 &p8);
+    void emitEvent(const std::string& eventName,
+       qi::AutoMetaValue p1 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p2 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p3 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p4 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p5 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p6 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p7 = qi::AutoMetaValue(),
+      qi::AutoMetaValue p8 = qi::AutoMetaValue());
 
-    virtual void metaEmit(unsigned int event, const FunctorParameters &args);
+    virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     //// Resolve and bounce to metaEmit
-    bool xMetaEmit(const std::string &signature, const FunctorParameters &in);
+    bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
 
     /** Connect an event to an arbitrary callback.
      *
@@ -183,9 +164,9 @@ namespace qi {
     template <typename FUNCTOR_TYPE>
     unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback,
                          EventLoop* ctx = getDefaultObjectEventLoop());
-    unsigned int xConnect(const std::string &signature, const Functor* functor,
+    unsigned int xConnect(const std::string &signature, MetaFunction functor,
                           EventLoop* ctx = getDefaultObjectEventLoop());
-    unsigned int connect(unsigned int event, const Functor* Functor,
+    unsigned int connect(unsigned int event, MetaFunction Functor,
                          EventLoop* ctx = getDefaultObjectEventLoop());
 
     /// Calls given functor when event is fired. Takes ownership of functor.
@@ -196,9 +177,7 @@ namespace qi {
 
     MetaObjectBuilder &metaObjectBuilder();
 
-
-
-    //return the list of all subscriber to an event
+   //return the list of all subscriber to an event
     std::vector<EventSubscriber> subscribers(int eventId) const;
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
@@ -214,8 +193,7 @@ namespace qi {
      */
 
     /// Trigger event handlers
-    void trigger(unsigned int event, const FunctorParameters &in);
-
+    void trigger(unsigned int event, const MetaFunctionParameters& params);
     void moveToEventLoop(EventLoop* ctx);
     EventLoop* eventLoop();
 
@@ -267,6 +245,8 @@ namespace qi {
   }
 
 };
+
+QI_METATYPE_NOT_CONVERTIBLE(MetaObject);
 
 /** Register struct with QI binding system.
  * Once called, your structure can be passed as argument to call(), and method

@@ -13,7 +13,6 @@
 #include <qimessaging/object.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
-#include <qimessaging/functor.hpp>
 
 namespace qi {
 

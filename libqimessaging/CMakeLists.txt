@@ -37,11 +37,7 @@ qi_add_probes(src/tp_qimessaging.in.h
               INSTRUMENTED_FILES src/session.cpp)
 
 set(PUBLIC_HEADERS
-                   qimessaging/details/functorresult.hxx
-                   qimessaging/details/boostfunctor.hxx
                    qimessaging/details/future.hxx
-                   qimessaging/details/functor.hxx
-                   qimessaging/details/callfunctor.hpp
                    qimessaging/details/makefunctor.hpp
                    qimessaging/details/value.hpp
                    qimessaging/url.hpp
@@ -55,7 +51,6 @@ set(PUBLIC_HEADERS
                    qimessaging/metaobjectbuilder.hpp
                    qimessaging/details/value.hxx
                    qimessaging/service_directory.hpp
-                   qimessaging/functor.hpp
                    qimessaging/signature.hpp
                    qimessaging/api.hpp
                    qimessaging/message.hpp
@@ -87,6 +82,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metaevent.cpp
                                    src/metaevent_p.cpp
                                    src/metaevent_p.hpp
+                                   src/metafunction.cpp
                                    src/object_p.hpp
                                    src/object.cpp
                                    src/object_p.cpp
@@ -121,7 +117,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/url.cpp
                                    src/future.cpp
                                    src/server_functor_result_future_p.hpp
-                                   src/functor.cpp
                                    src/signature.cpp)
 
 

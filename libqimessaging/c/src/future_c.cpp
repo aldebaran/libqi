@@ -48,7 +48,6 @@ qi_future_t* qi_promise_get_future(qi_promise_t *pr)
   qi::Promise<void *> *promise = reinterpret_cast<qi::Promise<void *> *>(pr);
   qi_future_data_t*     data = new qi_future_data_t;
 
-  data->functor = 0;
   data->future = new qi::Future<void *>();
   *data->future = promise->future();
 
@@ -63,7 +62,6 @@ void    qi_future_destroy(qi_future_t *fut)
   for (it = data->callbacks.begin(); it != data->callbacks.end(); ++it)
     delete (*it);
 
-  delete data->functor;
 }
 
 void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *miscdata)

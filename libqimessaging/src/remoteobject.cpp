@@ -36,7 +36,7 @@ void RemoteObject::onSocketTimeout(TransportSocket *client, int id, void *data)
 {
   {
     boost::mutex::scoped_lock lock(_mutex);
-    std::map<int, qi::FunctorResult>::iterator it = _promises.find(id);
+    std::map<int, qi::Promise<MetaFunctionResult> >::iterator it = _promises.find(id);
     if (it != _promises.end())
     {
       it->second.setError("network timeout");
@@ -47,28 +47,31 @@ void RemoteObject::onSocketTimeout(TransportSocket *client, int id, void *data)
 
 void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data)
 {
-  qi::FunctorResult                          promise;
+  qi::Promise<MetaFunctionResult>                     promise;
+  bool found = false;
   qi::Message                                msg;
-  std::map<int, qi::FunctorResult>::iterator it;
+  std::map<int, qi::Promise<MetaFunctionResult> >::iterator it;
 
   client->read(id, &msg);
-
+  qiLogDebug("RemoteObject") << "msg " << msg.type() << " " << msg.buffer().size();
   {
     boost::mutex::scoped_lock lock(_mutex);
     it = _promises.find(id);
     if (it != _promises.end()) {
       promise = _promises[id];
       _promises.erase(it);
+      found = true;
     }
   }
 
   switch (msg.type()) {
     case qi::Message::Type_Reply:
-      if (!promise.isValid()) {
+      if (!found) {
         qiLogError("remoteobject") << "no promise found for req id:" << id;
         return;
       }
-      promise.setValue(msg.buffer());
+      promise.setValue(MetaFunctionResult(msg.buffer()));
+
       return;
     case qi::Message::Type_Error: {
       qi::IDataStream ds(msg.buffer());
@@ -76,11 +79,11 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data
       std::string    sig;
       ds >> sig;
       ds >> buf;
-      promise.setError(sig, buf);
+      promise.setError(sig);
       return;
     }
     case qi::Message::Type_Event:
-      trigger(msg.function(), FunctorParameters(msg.buffer()));
+      trigger(msg.function(), MetaFunctionParameters(msg.buffer()));
       return;
     default:
       qiLogError("remoteobject") << "Message (#" << id << ") type not handled: " << msg.type();
@@ -89,10 +92,12 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data
 
 }
 
-void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, FunctorResult out, MetaCallType callType)
+
+qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, MetaCallType callType)
 {
+  qi::Promise<MetaFunctionResult> out;
   qi::Message msg;
-  msg.setBuffer(in.buffer());
+  msg.setBuffer(in.getBuffer());
   msg.setType(qi::Message::Type_Call);
   msg.setService(_service);
   msg.setObject(qi::Message::Object_Main);
@@ -128,11 +133,11 @@ void RemoteObject::metaCall(unsigned int method, const FunctorParameters &in, Fu
       _promises.erase(msg.id());
     }
 
-    return;
   }
+  return out.future();
 }
 
-void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
+void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
 {
   // Bounce the emit request to server
   // TODO: one optimisation that could be done is to trigger the local
@@ -141,7 +146,7 @@ void RemoteObject::metaEmit(unsigned int event, const FunctorParameters &args)
   // event back to us.
   qiLogError("Not implemented yet lol");
   qi::Message msg;
-  msg.setBuffer(args.buffer());
+  msg.setBuffer(args.getBuffer());
   msg.setType(Message::Type_Event);
   msg.setService(_service);
   msg.setObject(qi::Message::Object_Main);

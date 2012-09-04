@@ -9,44 +9,43 @@
 # define SERVER_FUNCTOR_RETURN_FUTURE_P_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <qimessaging/functor.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 
 namespace qi {
 
   namespace detail {
-    class ServerFunctorResultPromise : public FunctorResultBase {
+    class ServerResult: public FutureInterface<MetaFunctionResult>
+    {
     public:
-      ServerFunctorResultPromise(TransportSocket *client, const qi::Message &req)
+      ServerResult(TransportSocket *client, const qi::Message &req)
         : _client(client)
       {
         _retval.buildReplyFrom(req);
       };
-
-      inline virtual void setValue(const qi::Buffer &result) {
+      virtual void onFutureFinished(const MetaFunctionResult &value, void *data)
+      {
+        _retval.setBuffer(value.getBuffer());
+        _client->send(_retval);
+        delete this;
+      }
+      virtual void onFutureFailed(const std::string &error, void *data)
+      {
+        qiLogDebug("Future") << "Future finished in error " << error;
+        qi::Buffer result;
+        qi::ODataStream ods(result);
+        ods << error;
         _retval.setBuffer(result);
         _client->send(_retval);
-      }
-
-      inline virtual void setError(const std::string &sig, const qi::Buffer &error) {
-        _retval.setBuffer(error);
-        _client->send(_retval);
+        delete this;
       }
 
     private:
       qi::Message          _retval;
       qi::TransportSocket *_client;
     };
-  }
 
-  class ServerFunctorResult : public FunctorResult {
-  public:
-    ServerFunctorResult(TransportSocket *client, const qi::Message &req) {
-      boost::shared_ptr<detail::ServerFunctorResultPromise> p(new detail::ServerFunctorResultPromise(client, req));
-      _p = p;
-    };
-  };
+  }
 
 }
 

@@ -6,8 +6,10 @@
 #include <iostream>
 #include <string>
 #include <boost/thread/recursive_mutex.hpp>
+
+#include <qi/atomic.hpp>
+
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/makefunctor.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 #include <qimessaging/object.hpp>

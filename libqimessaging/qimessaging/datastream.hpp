@@ -7,7 +7,9 @@
  */
 
 
-#pragma once
+// Leave this above the header gard, it fixes include ordering problems
+# include <qimessaging/metavalue.hpp>
+
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
 #define _QIMESSAGING_DATASTREAM_HPP_
 

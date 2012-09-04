@@ -230,54 +230,13 @@ MetaValue MetaFunctionResult::getValue() const
     return MetaValue();
 }
 
-/*
-struct ArgTransformer
-{
-  template <typename Sig>
-  struct result;
-  
-  template <class Self, typename T>
-  struct result< Self(T) >
-  {
-    typedef typename boost::add_reference<
-    typename boost::remove_pointer<T>::type>::type type;
-  };
-
-  template<typename T>
-  const T&
-  operator() (const T& tadam) const
-  {
-    return tadam;
-  }
-};
-template<typename T> MetaFunctionResult call(boost::function<T> f, const MetaFunctionParameters& params)
-{
-  typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-  typedef typename  boost::mpl::transform_view<ArgsType,
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > >::type BareArgsType;
-  
-    boost::fusion::invoke_function_object(f,
-    boost::fusion::transform(
-      boost::fusion::as_vector(BareArgsType()),
-      ArgTransformer()
-      )
-  );
 }
 
-
-template<typename T> MetaFunction makeMetaFunction(boost::function<T> f)
-{
-}
-
-void test()
-{
-  boost::function< int(int, double, std::string)> f;
-  boost::fusion::invoke_function_object(f,
-    boost::fusion::make_vector(1, 1.0, "foo"));
-  call(f, MetaFunctionParameters());
-} */
-
-
-
-}
+QI_REGISTER_MAPPING("i", qi::int32_t);
+QI_REGISTER_MAPPING("I", qi::uint32_t);
+QI_REGISTER_MAPPING("d", double);
+QI_REGISTER_MAPPING("[d]", std::vector<double>);
+QI_REGISTER_MAPPING("[i]", std::vector<int>);
+QI_REGISTER_MAPPING("s", std::string);
+QI_REGISTER_MAPPING("[s]", std::vector<std::string>);
+QI_REGISTER_MAPPING("r", qi::Buffer);
