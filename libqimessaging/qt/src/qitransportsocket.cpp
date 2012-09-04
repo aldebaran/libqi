@@ -109,7 +109,10 @@ QiTransportSocket::~QiTransportSocket()
 
 void QiTransportSocket::close()
 {
-  _p->_device->close();
+  if (_p->_device)
+  {
+    _p->_device->close();
+  }
 }
 
 void QiTransportSocket::write(const qi::Message& message)
@@ -161,6 +164,11 @@ QUrl QiTransportSocket::peer()
 
 QiTransportSocket::SocketState QiTransportSocket::state() const
 {
+  if (!_p->_device)
+  {
+    return SocketState_Unconnected;
+  }
+
   /*
    * This function must return a SocketState, which is mirroring the values
    * of QAbstractSocket.
