@@ -23,11 +23,6 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
-static qi::Buffer replyBuf(const qi::Buffer& arg)
-{
-  return arg;
-}
-
 static std::string connectionAddr;
 
 class TestConnection
@@ -91,6 +86,25 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
   EXPECT_EQ("question3", result);
 }
 
+static qi::Buffer replyBufBA(const unsigned int&, const qi::Buffer& arg, const int&)
+{
+  return arg;
+}
+static qi::Buffer replyBufB(const int&, const qi::Buffer& arg)
+{
+  std::cerr <<"B " << arg.size() << std::endl;
+  return arg;
+}
+static qi::Buffer replyBufA(const qi::Buffer& arg, const int&)
+{
+  std::cerr <<"A " << arg.size() << std::endl;
+  return arg;
+}
+static qi::Buffer replyBuf(const qi::Buffer& arg)
+{
+  return arg;
+}
+
 TEST(QiMessagingConnexion, testBuffer)
 {
   TestConnection tc;
@@ -99,11 +113,42 @@ TEST(QiMessagingConnexion, testBuffer)
   std::string challenge = "foo*******************************";
   qi::ODataStream out(buf);
   out << challenge;
-  qi::Buffer result = tc.obj->call<qi::Buffer>("replyBuf", buf);
+  qiLogDebug("test") << "call BA";
+  qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
   qi::IDataStream in(result);
   in >> reply;
   ASSERT_EQ(challenge, reply);
+  qiLogDebug("test") << "call BA";
+  result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
+  {
+    std::string reply;
+    qi::IDataStream in(result);
+    in >> reply;
+    ASSERT_EQ(challenge, reply);
+  }
+  qiLogDebug("test") << "call A";
+  result = tc.obj->call<qi::Buffer>("replyBufA", buf, 1);
+  {
+    std::string reply;
+    qi::IDataStream in(result);
+    in >> reply;
+    ASSERT_EQ(challenge, reply);
+  }
+  result = tc.obj->call<qi::Buffer>("replyBuf", buf);
+   {
+    std::string reply;
+    qi::IDataStream in(result);
+    in >> reply;
+    ASSERT_EQ(challenge, reply);
+  }
+  result = tc.obj->call<qi::Buffer>("replyBufB", 1, buf);
+  {
+    std::string reply;
+    qi::IDataStream in(result);
+    in >> reply;
+    ASSERT_EQ(challenge, reply);
+  }
 }
 
 int main(int argc, char **argv) {
@@ -123,6 +168,9 @@ int main(int argc, char **argv) {
   qi::Object        obj;
   obj.advertiseMethod("reply", &reply);
   obj.advertiseMethod("replyBuf", &replyBuf);
+  obj.advertiseMethod("replyBufA", &replyBufA);
+  obj.advertiseMethod("replyBufB", &replyBufB);
+  obj.advertiseMethod("replyBufBA", &replyBufBA);
 
   session.connect(sdAddr.str());
   session.waitForConnected();
