@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	METAOBJECTBUILDER_P_HPP_
-# define   	METAOBJECTBUILDER_P_HPP_
+#ifndef    METAOBJECTBUILDER_P_HPP_
+# define    METAOBJECTBUILDER_P_HPP_
 
 namespace qi {
 
@@ -22,4 +22,4 @@ namespace qi {
   };
 }
 
-#endif	    /* !METAOBJECTBUILDER_P_PP_ */
+#endif     /* !METAOBJECTBUILDER_P_PP_ */

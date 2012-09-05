@@ -42,4 +42,4 @@ namespace qi
   };
 }
 
-#endif	    // !BUFFER_P_HPP_
+#endif     // !BUFFER_P_HPP_

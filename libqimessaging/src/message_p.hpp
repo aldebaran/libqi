@@ -43,4 +43,4 @@ namespace qi
   };
 }
 
-#endif	    // !MESSAGE_P_HPP_
+#endif     // !MESSAGE_P_HPP_
