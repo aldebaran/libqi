@@ -25,7 +25,7 @@ namespace qi {
     ~ServiceDirectoryPrivate();
 
     //TransportServer
-    virtual void newConnection(TransportServer* server, TransportSocket *socket);
+    virtual void onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data);
 
     //TransportSocket
     virtual void onSocketReadyRead(TransportSocket *socket, int id, void *data);

@@ -48,7 +48,7 @@ public:
     return &_remoteGateway;
   }
 
-  void newConnection(qi::TransportServer* server, qi::TransportSocket *socket)
+  void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
   {
     _state = State_Connected;
     _socket = socket;
@@ -113,7 +113,7 @@ public:
     return _server.listen();
   }
 
-  void newConnection(qi::TransportServer* server, qi::TransportSocket *socket)
+  void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
   {
     socket->addCallbacks(this);
   }

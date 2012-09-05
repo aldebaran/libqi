@@ -43,7 +43,7 @@ public:
     _numBytes = 0;
   }
 
-  virtual void newConnection(qi::TransportServer* server, qi::TransportSocket *socket)
+  virtual void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
   {
     if (!socket)
       return;

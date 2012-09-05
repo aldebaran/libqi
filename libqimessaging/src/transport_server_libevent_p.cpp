@@ -75,7 +75,7 @@ namespace qi
     }
     std::vector<TransportServerInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->newConnection(self, ts);
+      (*it)->onTransportServerNewConnection(self, ts, 0);
   }
 
   void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {
@@ -89,7 +89,7 @@ namespace qi
     }
     std::vector<TransportServerInterface *>::const_iterator it;
     for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->error(self, err);
+      (*it)->onTransportServerError(self, err, 0);
   }
 
   void TransportServerLibEventPrivate::close() {

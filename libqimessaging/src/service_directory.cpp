@@ -71,7 +71,7 @@ namespace qi
     delete session;
   }
 
-  void ServiceDirectoryPrivate::newConnection(TransportServer* server, TransportSocket *socket)
+  void ServiceDirectoryPrivate::onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data)
   {
     boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     if (!socket)

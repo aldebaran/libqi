@@ -17,6 +17,8 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/event_loop.hpp>
+# include <vector>
+# include <qimessaging/url.hpp>
 
 namespace qi {
 
@@ -26,8 +28,8 @@ namespace qi {
   class QIMESSAGING_API TransportServerInterface {
   public:
     virtual ~TransportServerInterface() = 0;
-    virtual void newConnection(TransportServer* server, TransportSocket *socket) = 0;
-    virtual void error(TransportServer* server, int err) {}
+    virtual void onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data) = 0;
+    virtual void onTransportServerError(TransportServer* server, int error, void *data) {}
   };
 
   class Session;

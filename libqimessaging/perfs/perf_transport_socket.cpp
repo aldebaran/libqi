@@ -35,7 +35,7 @@ class TSIRead: public qi::TransportSocketInterface
 class TSIReply: public qi::TransportSocketInterface,
                 public qi::TransportServerInterface
 {
-  void newConnection(qi::TransportServer* server, qi::TransportSocket *socket)
+  void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
   {
     socket->addCallbacks(this);
   }
