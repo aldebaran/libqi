@@ -231,9 +231,9 @@ namespace qi
       // notify every session that the service is unregistered
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
-      msg.setService(idx);
+      msg.setService(qi::Message::Service_Server);
       msg.setObject(qi::Message::Object_Main);
-      msg.setFunction(qi::Message::ServiceDirectoryFunction_UnregisterService);
+      msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceUnregistered);
 
       qi::Buffer     buf;
       qi::ODataStream d(buf);
@@ -283,9 +283,9 @@ namespace qi
     {
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
-      msg.setService(idx);
+      msg.setService(qi::Message::Service_Server);
       msg.setObject(qi::Message::Object_Main);
-      msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
+      msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceRegistered);
 
       qi::Buffer     buf;
       qi::ODataStream d(buf);

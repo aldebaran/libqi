@@ -64,10 +64,10 @@ namespace qi {
       ServerFunction_Connect           = 4,
     };
 
-    enum ServerEvent
+    enum ServiceDirectoryEvent
     {
-      ServerEvent_ServiceRegistered   = 1,
-      ServerEvent_ServiceUnregistered = 2,
+      ServiceDirectoryEvent_ServiceRegistered   = 6,
+      ServiceDirectoryEvent_ServiceUnregistered = 7,
     };
 
     enum Type
