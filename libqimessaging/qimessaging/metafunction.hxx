@@ -219,7 +219,7 @@ template<typename SEQ, typename F> static MetaValue apply(SEQ sequence,
    boost::fusion::for_each(sequence, argumentTransformer);
    MetaValueCopy res;
   // Invoke our function pointer.
-  res, boost::fusion::invoke_function_object(function,
+   res(), boost::fusion::invoke_function_object(function,
     boost::fusion::transform(sequence,
       PtrToConstRef()));
   return res;

@@ -68,13 +68,15 @@ public:
  *
  *  Usage:
  *    MetaValueCopy val;
- *    val , functionCall(arg);
+ *    val(), functionCall(arg);
  *
+ *  in val(), parenthesis are useful to avoid compiler warning "val not used" when handling void.
  */
 class MetaValueCopy: public MetaValue
 {
 public:
   template<typename T> void operator,(const T& any);
+  MetaValueCopy &operator()() { return *this; }
 };
 
 
