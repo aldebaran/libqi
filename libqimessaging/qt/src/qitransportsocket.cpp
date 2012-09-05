@@ -150,6 +150,8 @@ qi::Message *QiTransportSocket::read()
 
 void QiTransportSocket::connectToHost(const QUrl& address)
 {
+  qiLogDebug("QiTransportSocket") << "Connecting to " << address.toString().toUtf8().constData();
+
   if (address.scheme() == "tcp")
   {
     QTcpSocket* socket = new QTcpSocket(this);
@@ -174,10 +176,12 @@ void QiTransportSocket::connectToHost(const QUrl& address)
     _p->_peer = address;
     _p->_device = socket;
   }
-
-  qiLogError("QiTransportServer") << "Protocol `"
-                                  << address.scheme().toUtf8().constData()
-                                  << "' is not supported, can't connect";
+  else
+  {
+    qiLogError("QiTransportServer") << "Protocol `"
+                                    << address.scheme().toUtf8().constData()
+                                    << "' is not supported, can't connect";
+  }
 }
 
 QUrl QiTransportSocket::peer()
