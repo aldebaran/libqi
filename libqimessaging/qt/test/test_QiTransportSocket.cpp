@@ -197,6 +197,8 @@ TEST(TransportSocket, ReadVerifyHeader)
   QiTransportServer server;
   server.listen(serverUrl);
 
+  ASSERT_TRUE(server.isListening());
+
   QiTransportSocket socket;
   QObject::connect(&socket, SIGNAL(connected()), app, SLOT(quit()));
 
@@ -205,6 +207,7 @@ TEST(TransportSocket, ReadVerifyHeader)
   app->exec();
 
   ASSERT_EQ(socket.state(), QiTransportSocket::SocketState_Connected);
+  ASSERT_TRUE(server.hasPendingConnections());
 
   QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
   QiTransportSocket* remoteSocket = server.nextPendingConnection();
