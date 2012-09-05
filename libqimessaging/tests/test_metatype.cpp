@@ -104,11 +104,11 @@ public:
   virtual qi::MetaValue call(const std::vector<qi::MetaValue>& args) = 0;
   /* NOTE: We could try to avoid the call() below by making a non-template
    * that bounces to the previous, but it has issues since it requires
-   * implementing 'std::vector<MetaValue> deserialize(buffer, sig);' : 
+   * implementing 'std::vector<MetaValue> deserialize(buffer, sig);' :
    * - less efficient: we would need a fixed mapping signature type->default
    *   MetaType we deserialize in, so if we chose vector and the target
    *   takes list, we do an extra conversion
-   * - 
+   * -
    */
   virtual qi::Buffer call(const qi::Buffer& serializedData) = 0;
 };
@@ -156,17 +156,17 @@ public:
 };
 
 template<typename T>
-Function* makeFunction(T f)
-{
-  return makeBoostFunction(boost::function<typename boost::remove_pointer<T>::type>(f));
-}
-
-template<typename T>
 Function* makeBoostFunction(boost::function<T> fun)
 {
   FunctionImpl<boost::function<T> >* res = new FunctionImpl<boost::function<T> >();
   res->fun = fun;
   return res;
+}
+
+template<typename T>
+Function* makeFunction(T f)
+{
+  return makeBoostFunction(boost::function<typename boost::remove_pointer<T>::type>(f));
 }
 
 void sleep_call_args(Function* fun, const std::vector<qi::MetaValue>& arg,
@@ -201,7 +201,7 @@ qi::Future<qi::Buffer> serializeCall(Function* fun,
   boost::thread bt(boost::bind(sleep_call_buf, fun, b, prom));
   return prom.future();
 }
-  
+
 enum CallMode {
   DIRECT,
   COPY,
@@ -381,7 +381,7 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
   res.addCallbacks(new FutureAdapterBuf<R>(prom, sigRet), 0);
   return prom.future();
 }
-  
+
 Function* f_iadd = makeFunction(iadd);
 Function* f_fadd = makeFunction(fadd);
 Function* f_isum = makeFunction(isum);

@@ -128,14 +128,14 @@ namespace qi {
     int xAdvertiseEvent(const std::string& signature);
 
     template <typename RETURN_TYPE> qi::Future<RETURN_TYPE> call(const std::string& methodName,
-      qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p8 = qi::AutoMetaValue());
+                                                                 qi::AutoMetaValue p1 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p2 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p3 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p4 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p5 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p6 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p7 = qi::AutoMetaValue(),
+                                                                 qi::AutoMetaValue p8 = qi::AutoMetaValue());
 
     virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
@@ -143,14 +143,14 @@ namespace qi {
 
 
     void emitEvent(const std::string& eventName,
-       qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p8 = qi::AutoMetaValue());
+                   qi::AutoMetaValue p1 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p2 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p3 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p4 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p5 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p6 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p7 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p8 = qi::AutoMetaValue());
 
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     //// Resolve and bounce to metaEmit
