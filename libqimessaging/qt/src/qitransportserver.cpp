@@ -76,7 +76,7 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
 
   qiLogError("QiTransportServer") << "Protocol `"
                                   << listenUrl.scheme().toUtf8().constData()
-                                  << "' is not supported.";
+                                  << "' is not supported, can't listen";
 
   return false;
 }

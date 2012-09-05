@@ -177,7 +177,7 @@ void QiTransportSocket::connectToHost(const QUrl& address)
 
   qiLogError("QiTransportServer") << "Protocol `"
                                   << address.scheme().toUtf8().constData()
-                                  << "' is not supported.";
+                                  << "' is not supported, can't connect";
 }
 
 QUrl QiTransportSocket::peer()
