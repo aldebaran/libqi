@@ -33,7 +33,10 @@ namespace qi {
           MetaValue val =  future.getValue();
           typedef std::pair<const T*, bool>  ConvType;
           ConvType resConv = val.template as<T>();
-          prom.setValue(*resConv.first);
+          if (resConv.first)
+            prom.setValue(*resConv.first);
+          else
+            prom.setError("Unable to convert call result to target type");
           if (resConv.second)
             delete const_cast<T*>(resConv.first);
         }
