@@ -51,7 +51,8 @@ void QiTransportSocketPrivate::read()
 
     if (_readHdr)
     {
-      if (_device->bytesAvailable() >= sizeof(qi::MessagePrivate::MessageHeader))
+      if (_device->bytesAvailable()
+            >= static_cast<qint64>(sizeof(qi::MessagePrivate::MessageHeader)))
       {
         _device->read(static_cast<char*>(_msg->_p->getHeader()),
                       sizeof(qi::MessagePrivate::MessageHeader));
@@ -75,7 +76,8 @@ void QiTransportSocketPrivate::read()
     {
       qint64 bufferSize = static_cast<qi::MessagePrivate::MessageHeader*>(_msg->_p->getHeader())->size;
 
-      if (_device->bytesAvailable() >= bufferSize)
+      if (_device->bytesAvailable()
+            >= static_cast<qint64>(bufferSize))
       {
         qi::Buffer buffer;
         buffer.reserve(bufferSize);
@@ -134,7 +136,7 @@ void QiTransportSocket::write(const qi::Message& message)
 
   writtenSize = _p->_device->write(static_cast<char*>(message._p->buffer.data()),
                                    message._p->buffer.size());
-  if (writtenSize != message._p->buffer.size())
+  if (writtenSize != static_cast<qint64>(message._p->buffer.size()))
   {
     qiLogError("QiTransportSocket") << "write error, (" << writtenSize << ")";
   }
