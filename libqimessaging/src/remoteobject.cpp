@@ -104,6 +104,10 @@ qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const
   //todo handle failure
   msg.setFunction(method);
 
+  if (!_ts->isConnected()) {
+    out.setError("Not connected");
+    return out.future();
+  }
   //allocated from caller, owned by us then. (clean up by onReadyRead)
 
   {

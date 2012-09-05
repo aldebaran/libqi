@@ -39,9 +39,9 @@ namespace qi {
     void                     unregisterService(const unsigned int &idx);
     TransportSocket         *socket() { return currentSocket; }
     void                     serviceReady(const unsigned int &idx);
+
   public:
-    Session                                               *session;
-    qi::TransportServer                                   *ts;
+    qi::TransportServer                                    _server;
     std::map<unsigned int, ServiceInfo>                    pendingServices;
     std::map<unsigned int, ServiceInfo>                    connectedServices;
     std::map<std::string, unsigned int>                    nameToIdx;

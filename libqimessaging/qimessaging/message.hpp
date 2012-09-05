@@ -60,7 +60,8 @@ namespace qi {
     {
       ServerFunction_RegisterEvent     = 1,
       ServerFunction_UnregisterEvent   = 2,
-      ServerFunction_Connect           = 3,
+      ServerFunction_MetaObject        = 3,
+      ServerFunction_Connect           = 4,
     };
 
     enum ServerEvent

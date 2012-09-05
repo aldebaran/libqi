@@ -29,11 +29,11 @@ namespace qi
 {
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-  :  session(new Session)
-    , ts(0)
+    : _server()
     , servicesCount(0)
     , currentSocket(0)
   {
+    _server.addCallbacks(this);
     ServiceInfo si;
     si.setName("serviceDirectory");
     si.setServiceId(1);
@@ -67,8 +67,6 @@ namespace qi
       }
       _clients.clear();
     } // Lock must not be held while deleting session, or deadlock
-    delete ts;
-    delete session;
   }
 
   void ServiceDirectoryPrivate::onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data)
@@ -322,12 +320,10 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
   eps.push_back(address.str());
   si.setEndpoints(eps);
-  _p->ts = new qi::TransportServer(address);
-  _p->ts->addCallbacks(_p);
 
-  if (_p->ts->listen())
+  if (_p->_server.listen(address))
   {
-    qiLogVerbose("qimessaging.ServiceDirectory") << "Started ServiceDirectory at " << _p->ts->listenUrl().str();
+    qiLogVerbose("qimessaging.ServiceDirectory") << "Started ServiceDirectory at " << _p->_server.listenUrl().str();
 
     return true;
   }
@@ -340,11 +336,11 @@ bool ServiceDirectory::listen(const qi::Url &address)
 }
 
 void ServiceDirectory::close() {
-  _p->ts->close();
+  _p->_server.close();
 }
 
 qi::Url ServiceDirectory::listenUrl() const {
-  return _p->ts->listenUrl();
+  return _p->_server.listenUrl();
 }
 
 

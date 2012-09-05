@@ -26,29 +26,29 @@ namespace qi {
   {
   public:
     virtual ~SessionInterface() = 0;
-    inline virtual void onSessionConnected(Session *QI_UNUSED(session))
+    inline virtual void onSessionConnected(Session *QI_UNUSED(session), void *data)
     {
       qiLogVerbose("session.hpp") << "onSessionConnected not implemented";
     }
 
-    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session))
+    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session), void *data)
     {
       qiLogVerbose("session.hpp") << "onSessionConnectionError not implemented";
     }
 
-    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session))
+    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session), void *data)
     {
       qiLogVerbose("session.hpp") << "onSessionDisconnected not implemented";
     }
 
     inline virtual void onServiceRegistered(Session *QI_UNUSED(session),
-                                            const std::string &QI_UNUSED(serviceName))
+                                            const std::string &QI_UNUSED(serviceName), void *data)
     {
       qiLogVerbose("session.hpp") << "onServiceRegistered not implemented";
     }
 
     inline virtual void onServiceUnregistered(Session *QI_UNUSED(session),
-                                              const std::string &QI_UNUSED(serviceName))
+                                              const std::string &QI_UNUSED(serviceName), void *data)
     {
       qiLogVerbose("session.hpp") << "onServiceUnregistered not implemented";
     }
@@ -65,11 +65,17 @@ namespace qi {
       ServiceLocality_Remote = 2
     };
 
+    void addCallbacks(SessionInterface *delegate, void *data);
+    void removeCallbacks(SessionInterface *delegate);
+
+    //Client
     bool connect(const qi::Url &serviceDirectoryURL);
     bool isConnected() const;
-
+    qi::Url url() const;
     bool waitForConnected(int msecs = 30000);
     bool waitForDisconnected(int msecs = 30000);
+
+
     bool waitForServiceReady(const std::string &service, int msecs = 30000);
 
     qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
@@ -78,19 +84,16 @@ namespace qi {
                                       ServiceLocality locality = ServiceLocality_All,
                                       const std::string &protocol  = std::string("any"));
 
-    void addCallbacks(SessionInterface *delegate);
-    void removeCallbacks(SessionInterface *delegate);
+    //Server
+    bool    listen(const std::string &address);
+    qi::Url listenUrl() const;
 
-    qi::Url url() const;
+    //close both client and server side
+    void    close();
 
-    bool listen(const std::string &address);
-    void close();
-
-    qi::Future<unsigned int> registerService(const std::string &name,
-                                             qi::Object *obj);
+    qi::Future<unsigned int> registerService(const std::string &name, qi::Object *object);
     qi::Future<void>         unregisterService(unsigned int idx);
 
-    qi::Url                       listenUrl() const;
 
     /// Load a module and register an instance of each declared object as a service.
     std::vector<std::string>      loadService(const std::string& name, int flags = -1);

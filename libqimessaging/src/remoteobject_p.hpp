@@ -33,8 +33,10 @@ namespace qi {
     virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
 
-  protected:
+  public:
     qi::TransportSocket                           *_ts;
+
+  protected:
     unsigned int                                   _service;
     std::map<int, qi::Promise<MetaFunctionResult> >         _promises;
     boost::mutex                                   _mutex;

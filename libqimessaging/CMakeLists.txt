@@ -94,9 +94,19 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/remoteobject_p.hpp
                                    src/service_directory.cpp
                                    src/service_directory_p.hpp
+                                   src/service_directory_client.hpp
+                                   src/service_directory_client.cpp
                                    src/service_info.cpp
                                    src/session.cpp
                                    src/session_p.hpp
+                                   src/server_client.hpp
+                                   src/server_client.cpp
+                                   src/session_service.hpp
+                                   src/session_service.cpp
+                                   src/session_services.hpp
+                                   src/session_services.cpp
+                                   src/session_server.hpp
+                                   src/session_server.cpp
                                    src/service_watcher.hpp
                                    src/service_watcher.cpp
                                    src/signal.cpp

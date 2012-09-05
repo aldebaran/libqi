@@ -18,7 +18,7 @@
 
 QiSessionPrivate::QiSessionPrivate(QiSession *self) {
   _session = new qi::Session();
-  _session->addCallbacks(this);
+  _session->addCallbacks(this, 0);
   _self = self;
   _serviceSocket = new qi::TransportSocket();
   _serviceSocket->addCallbacks(this);
@@ -31,13 +31,15 @@ QiSessionPrivate::~QiSessionPrivate() {
 }
 
 void QiSessionPrivate::onServiceRegistered(qi::Session *QI_UNUSED(session),
-                                           const std::string &serviceName)
+                                           const std::string &serviceName,
+                                           void *data)
 {
   emit(_self->serviceRegistered(QString::fromUtf8(serviceName.c_str())));
 }
 
 void QiSessionPrivate::onServiceUnregistered(qi::Session *QI_UNUSED(session),
-                                             const std::string &serviceName)
+                                             const std::string &serviceName,
+                                             void *data)
 {
   emit(_self->serviceUnregistered(QString::fromUtf8(serviceName.c_str())));
 }

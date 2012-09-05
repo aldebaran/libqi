@@ -131,14 +131,14 @@ public:
     qi::ODataStream d(b);
     si.setName(name);
     si.setProcessId(qi::os::getpid());
-    si.setMachineId("TODO");
+    si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(_p->_endpoints);
     d << si;
     msg.setBuffer(b);
-    _p->_session->_p->_serviceSocket.send(msg);
-    _p->_session->_p->_serviceSocket.waitForId(msg.id());
+    _p->_session->_p->_sdClient._socket->send(msg);
+    _p->_session->_p->_sdClient._socket->waitForId(msg.id());
     qi::Message ans;
-    _p->_session->_p->_serviceSocket.read(msg.id(), &ans);
+    _p->_session->_p->_sdClient._socket->read(msg.id(), &ans);
     qi::IDataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;

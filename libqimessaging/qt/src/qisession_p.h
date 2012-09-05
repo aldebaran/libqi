@@ -37,9 +37,11 @@ public:
 
   //Session
   virtual void onServiceRegistered(qi::Session *QI_UNUSED(session),
-                                  const std::string &serviceName);
+                                   const std::string &serviceName,
+                                   void *data);
   virtual void onServiceUnregistered(qi::Session *QI_UNUSED(session),
-                                    const std::string &serviceName);
+                                     const std::string &serviceName,
+                                     void *data);
 
   void service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
   void service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
