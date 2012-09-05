@@ -223,6 +223,9 @@ template<> class MetaTypeImpl<T>:                \
     MetaTypeDefaultSerialize<T>                  \
   >{}; }
 
+/// Declare that a type has no metatype and cannot be converted to MetaValue
+#define QI_NO_METATYPE(T) namespace qi {template<> class MetaTypeImpl<T> {};}
+
 /// Get metaType from a value. No need to delete the result
 template<typename T> MetaType* metaTypeOf(const T& v)
 {

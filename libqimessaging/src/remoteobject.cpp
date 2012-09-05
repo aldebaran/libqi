@@ -156,7 +156,7 @@ void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters
   }
 }
 
-unsigned int RemoteObject::connect(unsigned int event, const EventSubscriber& sub)
+unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
 {
   // Bind the function locally.
   unsigned int uid = Object::connect(event, sub);
@@ -175,25 +175,22 @@ unsigned int RemoteObject::connect(unsigned int event, const EventSubscriber& su
   if (!_ts->send(msg)) {
     qiLogError("remoteobject") << "error while registering event";
   }
+  qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
   return uid;
 }
 
 bool RemoteObject::disconnect(unsigned int linkId)
 {
-  unsigned int event = -1;
-  // Figure out which event this link is associated to
-  std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
-  for (it = _p->_subscribers.begin(); it != _p->_subscribers.end(); ++it)
+  unsigned int event = linkId >> 16;
+  unsigned int link = linkId & 0xFFFF;
+
+  ObjectPrivate::SignalSubscriberMap::iterator i = _p->_subscribers.find(event);
+  if (i == _p->_subscribers.end())
   {
-    ObjectPrivate::SubscriberMap::iterator jt = it->second.find(linkId);
-    if (jt != it->second.end())
-    {
-      event = it->first;
-      break;
-    }
-  }
-  if (event == (unsigned int)-1)
+    qiLogWarning("qi.object") << "Disconnect on non instanciated signal";
     return false;
+  }
+
   if (Object::disconnect(linkId))
   {
     // Tell the remote we are no longer interested.
@@ -212,7 +209,10 @@ bool RemoteObject::disconnect(unsigned int linkId)
     return true;
   }
   else
+  {
+    qiLogWarning("remoteobject") << "Disconnect failure on " << linkId;
     return false;
+  }
 }
 
 }

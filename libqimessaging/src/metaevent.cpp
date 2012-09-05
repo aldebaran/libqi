@@ -45,29 +45,6 @@ namespace qi {
     return _p->uid();
   }
 
-  static void functor_call2(MetaFunction f,
-    const MetaFunctionParameters& args)
-  {
-    f(args);
-  }
-
-  void EventSubscriber::call(const MetaFunctionParameters& args)
-  {
-    if (handler)
-    {
-      if (eventLoop)
-      {
-        MetaFunctionParameters copy = args.copy();
-        eventLoop->asyncCall(0,
-          boost::bind(&functor_call2, handler, copy));
-      }
-      else
-        handler(args);
-    }
-    if (target)
-      target->metaEmit(method, args);
-  }
-
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaEvent &meta) {
     stream << meta._p->_signature;

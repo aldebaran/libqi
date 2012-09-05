@@ -30,7 +30,7 @@ namespace qi {
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& args);
     virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, MetaCallType callType = MetaCallType_Auto);
 
-    virtual unsigned int connect(unsigned int event, const EventSubscriber& sub);
+    virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
 
   protected:

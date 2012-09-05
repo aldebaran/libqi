@@ -13,6 +13,7 @@
 #include "src/metamethod_p.hpp"
 #include "src/metaevent_p.hpp"
 #include "src/object_p.hpp"
+#include <qimessaging/signal.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/object_factory.hpp>
 #include <qimessaging/event_loop.hpp>
@@ -110,27 +111,19 @@ namespace qi {
         // Notify events that have subscribers that call us that we are dead
         // We need to make a copy of the vector, since disconnect will
         // remove entries from it.
-        std::vector<EventSubscriber> regs = _p->_registrations;
-        std::vector<EventSubscriber>::iterator i;
+        std::vector<SignalSubscriber> regs = _p->_registrations;
+        std::vector<SignalSubscriber>::iterator i;
         for (i = regs.begin(); i != regs.end(); ++i)
-          i->eventSource->disconnect(i->linkId);
+          i->source->disconnect(i->linkId);
       }
-      // First get the link ids, then disconnect as calling disconnect
-      // while iterating might kill us (if subscriber is on same object).
-      std::vector<unsigned int> links;
+
+      boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
+      // Then remove _registrations with one of our event as source
+      //MetaObject::EventMap::iterator ii;
+      std::map<unsigned int, SignalBase*>::iterator ii;
+      for (ii = _p->_subscribers.begin(); ii!= _p->_subscribers.end(); ++ii)
       {
-        boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-        // Then remove _registrations with one of our event as source
-        //MetaObject::EventMap::iterator ii;
-        std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator ii;
-        for (ii = _p->_subscribers.begin(); ii!= _p->_subscribers.end(); ++ii)
-        {
-          ObjectPrivate::SubscriberMap::iterator j;
-          for (j = ii->second.begin(); j != ii->second.end(); ++j)
-            links.push_back(j->second.linkId);
-        }
-        for (unsigned int i = 0; i < links.size(); ++i)
-          disconnect(links[i]);
+        delete ii->second;
       }
     }
   }
@@ -253,15 +246,11 @@ namespace qi {
       }
     }
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
+    std::map<unsigned int, SignalBase*>::iterator it;
     it = _p->_subscribers.find(event);
     if (it == _p->_subscribers.end())
       return;
-    ObjectPrivate::SubscriberMap::iterator il;
-    for (il = it->second.begin(); il != it->second.end(); ++il)
-    {
-      il->second.call(args);
-    }
+    it->second->trigger(args);
   }
 
   qi::Future<MetaFunctionResult>
@@ -351,10 +340,10 @@ namespace qi {
 
   unsigned int Object::connect(unsigned int event, MetaFunction functor, EventLoop* ctx)
   {
-    return connect(event, EventSubscriber(functor, ctx));
+    return connect(event, SignalSubscriber(functor, ctx));
   }
 
-  unsigned int Object::connect(unsigned int event, const EventSubscriber& sub)
+  unsigned int Object::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (_p->_dying)
     {
@@ -368,55 +357,34 @@ namespace qi {
       qiLogError("object") << "No such event " << event;
       return 0;
     }
-    // Should we validate event here too?
-    unsigned int uid = ++MetaObjectPrivate::uid;
-    // Use [] directly, will create the entry (copy) if not present.
-    _p->_subscribers[event][uid] = sub;
-    // Get the subscrber copy in our map:
-    EventSubscriber& s = _p->_subscribers[event][uid];
-    s.linkId = uid;
-    s.eventSource = this;
-    s.event = event;
-    // Notify the target of this subscribers
-    if (s.target)
+
+    // Fetch the signal associated with this event, for this instance
+    boost::recursive_mutex::scoped_lock sl2(_p->_mutexRegistration);
+    ObjectPrivate::SignalSubscriberMap::iterator i = _p->_subscribers.find(event);
+    if (i == _p->_subscribers.end())
     {
-      boost::recursive_mutex::scoped_lock sl(s.target->_p->_mutexRegistration);
-      s.target->_p->_registrations.push_back(s);
+      // Lazy-creation of the signalbase
+      _p->_subscribers[event] = new SignalBase(ev->signature());
+      i = _p->_subscribers.find(event);
     }
-    return uid;
+    SignalBase::Link l = i->second->connect(sub);
+    if (l > 0xFFFF)
+      qiLogError("object") << "Signal id too big";
+    return (event << 16) + l;
   }
 
   bool Object::disconnect(unsigned int linkId)
   {
+    unsigned int event = linkId >> 16;
+    unsigned int link = linkId & 0xFFFF;
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-    // Look it up.
-    // FIXME: Maybe store the event id inside the link id for faster lookup?
-    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it;
-    for (it = _p->_subscribers.begin(); it != _p->_subscribers.end(); ++it)
+    ObjectPrivate::SignalSubscriberMap::iterator i = _p->_subscribers.find(event);
+    if (i == _p->_subscribers.end())
     {
-      ObjectPrivate::SubscriberMap::iterator j = it->second.find(linkId);
-      if (j != it->second.end())
-      {
-        EventSubscriber& sub = j->second;
-        // If target is an object, deregister from it
-        if (sub.target)
-        {
-          boost::recursive_mutex::scoped_lock sl(sub.target->_p->_mutexRegistration);
-          std::vector<EventSubscriber>& regs = sub.target->_p->_registrations;
-          // Look it up in vector, then swap with last.
-          for (unsigned int i=0; i< regs.size(); ++i)
-            if (sub.linkId == regs[i].linkId)
-            {
-              regs[i] = regs[regs.size()-1];
-              regs.pop_back();
-              break;
-            }
-        }
-        it->second.erase(j);
-        return true;
-      }
+      qiLogWarning("qi.object") << "Disconnect on non instanciated signal";
+      return false;
     }
-    return false;
+    return i->second->disconnect(link);
   }
 
   unsigned int Object::connect(unsigned int signal,
@@ -428,7 +396,7 @@ namespace qi {
       qiLogError("object") << "No such event " << signal;
       return 0;
     }
-    return connect(signal, EventSubscriber(target, slot));
+    return connect(signal, SignalSubscriber(target, slot));
   }
 
   EventLoop* Object::eventLoop()
@@ -441,16 +409,14 @@ namespace qi {
     _p->_eventLoop = ctx;
   }
 
-  std::vector<EventSubscriber> Object::subscribers(int eventId) const
+  std::vector<SignalSubscriber> Object::subscribers(int eventId) const
   {
-    std::vector<EventSubscriber> res;
-    std::map<unsigned int, ObjectPrivate::SubscriberMap>::iterator it = _p->_subscribers.find(eventId);
-    ObjectPrivate::SubscriberMap::iterator jt;
+    std::vector<SignalSubscriber> res;
+    std::map<unsigned int, SignalBase*>::iterator it = _p->_subscribers.find(eventId);
     if (it == _p->_subscribers.end())
       return res;
-    for (jt = it->second.begin(); jt != it->second.end(); ++jt)
-      res.push_back(jt->second);
-    return res;
+    else
+      return it->second->subscribers();
   }
 
 

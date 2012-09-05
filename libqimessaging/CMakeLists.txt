@@ -56,6 +56,7 @@ set(PUBLIC_HEADERS
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
                    qimessaging/metafunction.hxx
+                   qimessaging/signal.hpp
                    qimessaging/transport_server.hpp
                    qimessaging/transport_socket.hpp
                    qimessaging/future.hpp
@@ -98,6 +99,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/session_p.hpp
                                    src/service_watcher.hpp
                                    src/service_watcher.cpp
+                                   src/signal.cpp
                                    src/signature_convertor.cpp
                                    src/signature_convertor.hpp
                                    src/signature_iterator.cpp

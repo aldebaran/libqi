@@ -83,13 +83,10 @@ public:
 qi::ODataStream& operator << (qi::ODataStream& od, const MetaValue& mv);
 
 
-// Prevent MetaType on a MetaValue just in case
-template<> class MetaTypeImpl<MetaValue>:  public MetaType
-{
-
-};
 }
 
+QI_NO_METATYPE(qi::MetaValue)
+QI_NO_METATYPE(std::vector<qi::MetaValue>)
 #include <qimessaging/metavalue.hxx>
 
 #endif

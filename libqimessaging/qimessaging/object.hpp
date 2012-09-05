@@ -19,6 +19,7 @@
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/event_loop.hpp>
+#include <qimessaging/signal.hpp>
 #include <qimessaging/metaobjectbuilder.hpp>
 
 
@@ -28,35 +29,6 @@
 #include <boost/function_types/parameter_types.hpp>
 
 namespace qi {
-
-  /** Event subscriber info.
-   *
-   * Only one of handler or target must be set.
-   */
-  struct EventSubscriber
-  {
-    EventSubscriber()
-    : handler(0), eventLoop(0), target(0), method(0) {}
-    EventSubscriber(MetaFunction func, EventLoop* ctx)
-    : handler(func), eventLoop(ctx), target(0), method(0) {}
-    EventSubscriber(Object * target, unsigned int method)
-    : handler(0), eventLoop(0), target(target), method(method) {}
-    void call(const MetaFunctionParameters& args);
-    // Source information
-    Object*            eventSource;
-    unsigned int       event;
-     /// Uid that can be passed to Object::disconnect()
-    unsigned int       linkId;
-
-    // Target information
-    //   Mode 1: Direct functor call
-    MetaFunction       handler;
-    EventLoop*         eventLoop;
-    //  Mode 2: metaCall
-    Object*            target;
-    unsigned int       method;
-  };
-
 
   class MetaObjectPrivate;
   class QIMESSAGING_API MetaObject {
@@ -170,7 +142,7 @@ namespace qi {
                          EventLoop* ctx = getDefaultObjectEventLoop());
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual unsigned int connect(unsigned int event, const EventSubscriber& subscriber);
+    virtual unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
 
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(unsigned int linkId);
@@ -178,7 +150,7 @@ namespace qi {
     MetaObjectBuilder &metaObjectBuilder();
 
    //return the list of all subscriber to an event
-    std::vector<EventSubscriber> subscribers(int eventId) const;
+    std::vector<SignalSubscriber> subscribers(int eventId) const;
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
      * If target is a proxy and this is server-side, the event will be

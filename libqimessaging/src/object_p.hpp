@@ -16,7 +16,7 @@
 #include <qimessaging/metaevent.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/metaobjectbuilder.hpp>
-
+#include <qimessaging/signal.hpp>
 #ifndef _QIMESSAGING_OBJECTPRIVATE_HPP_
 #define _QIMESSAGING_OBJECTPRIVATE_HPP_
 
@@ -35,14 +35,14 @@ namespace qi {
     bool                                _dying;
 
     // Links that target us. Needed to be able to disconnect upon destruction
-    std::vector<EventSubscriber>  _registrations;
+    std::vector<SignalSubscriber>             _registrations;
     boost::recursive_mutex              _mutexRegistration;
     // Event loop in which calls are made
     EventLoop                          *_eventLoop;
 
-    typedef std::map<unsigned int, EventSubscriber> SubscriberMap;
-    //eventid -> linkid -> Subscriber
-    std::map<unsigned int, SubscriberMap> _subscribers;
+    typedef std::map<unsigned int, SignalBase*> SignalSubscriberMap;
+    //eventid -> linkid -> SignalSubscriber
+    SignalSubscriberMap _subscribers;
 
 
     void setMetaObject(qi::MetaObject *);
