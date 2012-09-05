@@ -8,6 +8,38 @@
 #include "src/qitransportserver_p.h"
 #include "src/qitransportsocket_p.h"
 #include <QTcpSocket>
+#include <QSslSocket>
+#include <QSslKey>
+
+QTcpSocket* QTcpServerSsl::nextPendingConnection()
+{
+  return _pendingConnections.empty() ? 0 : _pendingConnections.dequeue();
+}
+
+void QTcpServerSsl::incomingConnection(int sd)
+{
+  QSslSocket* serverSocket = new QSslSocket;
+
+  if (serverSocket->setSocketDescriptor(sd))
+  {
+
+    if (_ssl)
+    {
+      // ignore invalid certificates
+      serverSocket->ignoreSslErrors();
+      serverSocket->setProtocol(QSsl::TlsV1SslV3);
+      serverSocket->setLocalCertificate(QSslCertificate(_certificate.constData()));
+      serverSocket->setPrivateKey(QSslKey(_key.constData(), QSsl::Rsa));
+      serverSocket->startServerEncryption();
+    }
+
+    _pendingConnections.enqueue(serverSocket);
+  }
+  else
+  {
+    delete serverSocket;
+  }
+}
 
 QiTransportServerPrivate::QiTransportServerPrivate(QObject* parent,
                                                    QiTransportServer* self)
@@ -28,17 +60,27 @@ QiTransportServerPrivate::~QiTransportServerPrivate()
 
 void QiTransportServerPrivate::acceptConnection()
 {
-  QTcpSocket* qsocket = _server.nextPendingConnection();
-  if (qsocket == 0) // shouldn't happen
+  if (_listeningUrl.scheme() == "tcp" || _listeningUrl.scheme() == "tcps")
   {
+    QTcpSocket* qsocket = _server.nextPendingConnection();
+    if (qsocket == 0) // shouldn't happen
+    {
+      qiLogError("QiGateway") << "no pending socket from backend!";
+      return;
+    }
+
+    QiTransportSocket* socket = new QiTransportSocket();
+    connect(qsocket, SIGNAL(disconnected()), socket, SIGNAL(disconnected()));
+    connect(qsocket, SIGNAL(readyRead()), socket->_p, SLOT(read()));
+    socket->_p->_device = qsocket;
+    _pendingConnections.enqueue(socket);
+  }
+  else
+  {
+    qiLogError("QiTransportServer") << "new incoming connection, but protocol `"
+                                    << _listeningUrl.scheme().toUtf8().constData() << " is unknown";
     return;
   }
-
-  QiTransportSocket* socket = new QiTransportSocket();
-  connect(qsocket, SIGNAL(disconnected()), socket, SIGNAL(disconnected()));
-  connect(qsocket, SIGNAL(readyRead()), socket->_p, SLOT(read()));
-  socket->_p->_device = qsocket;
-  _pendingConnections.enqueue(socket);
 
   emit newConnection();
 }
@@ -56,7 +98,9 @@ QiTransportServer::~QiTransportServer()
 
 bool QiTransportServer::listen(const QUrl &listenUrl)
 {
-  if (listenUrl.scheme() == "tcp")
+  qiLogDebug("QiTransportSocket") << "Will listen on " << listenUrl.toString().toUtf8().constData();
+
+  if (listenUrl.scheme() == "tcp" || listenUrl.scheme() == "tcps")
   {
     QUrl listeningUrl(listenUrl);
 
@@ -71,6 +115,8 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
                      _p, SLOT(acceptConnection()));
     QObject::connect(_p, SIGNAL(newConnection()),
                      _p->_self, SIGNAL(newConnection()));
+
+    _p->_server._ssl = listenUrl.scheme() == "tcps";
     return _p->_server.listen(host, listeningUrl.port());
   }
 
@@ -104,4 +150,11 @@ QiTransportSocket* QiTransportServer::nextPendingConnection()
 bool QiTransportServer::isListening() const
 {
   return _p->_server.isListening();
+}
+
+void QiTransportServer::setIdentity(const QByteArray& key,
+                                    const QByteArray& certificate)
+{
+  _p->_server._key = key;
+  _p->_server._certificate = certificate;
 }

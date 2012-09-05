@@ -207,9 +207,12 @@ TEST(TransportSocket, ReadVerifyHeader)
   app->exec();
 
   ASSERT_EQ(socket.state(), QiTransportSocket::SocketState_Connected);
+
+  QObject::connect(&server, SIGNAL(newConnection()), app, SLOT(quit()));
+  app->exec();
+
   ASSERT_TRUE(server.hasPendingConnections());
 
-  QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
   QiTransportSocket* remoteSocket = server.nextPendingConnection();
 
   ASSERT_TRUE(remoteSocket != 0);
@@ -222,6 +225,9 @@ TEST(TransportSocket, ReadVerifyHeader)
   msg.setService(qi::Message::Service_Server);
   msg.setObject(qi::Message::Object_Main);
   msg.setFunction(qi::Message::Function_MetaObject);
+
+  QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
+
   remoteSocket->write(msg);
 
   app->exec();
@@ -251,9 +257,10 @@ TEST(TransportSocket, ReadWrite)
 
   ASSERT_EQ(socket.state(), QiTransportSocket::SocketState_Connected);
 
-  QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
-  QiTransportSocket* remoteSocket = server.nextPendingConnection();
+  QObject::connect(&server, SIGNAL(newConnection()), app, SLOT(quit()));
+  app->exec();
 
+  QiTransportSocket* remoteSocket = server.nextPendingConnection();
   ASSERT_TRUE(remoteSocket != 0);
 
   qi::Buffer buf;
@@ -264,8 +271,9 @@ TEST(TransportSocket, ReadWrite)
   msg.setService(qi::Message::Service_Server);
   msg.setObject(qi::Message::Object_Main);
   msg.setFunction(qi::Message::Function_MetaObject);
-  remoteSocket->write(msg);
 
+  QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
+  remoteSocket->write(msg);
   app->exec();
 
   qi::Message* ans = socket.read();

@@ -13,6 +13,21 @@
 # include <QTcpServer>
 # include <QQueue>
 
+class QTcpServerSsl : public QTcpServer
+{
+  Q_OBJECT
+
+public:
+  QTcpSocket* nextPendingConnection();
+  virtual void incomingConnection(int sd);
+
+  QQueue<QTcpSocket*> _pendingConnections;
+  bool                _ssl;
+  QByteArray          _key;
+  QByteArray          _certificate;
+};
+
+
 class QiTransportServerPrivate : public QObject
 {
   Q_OBJECT
@@ -23,7 +38,7 @@ public:
   virtual ~QiTransportServerPrivate();
 
   QiTransportServer         *_self;
-  QTcpServer                 _server;
+  QTcpServerSsl              _server; // also handles non-encrypted TCP
   QQueue<QiTransportSocket*> _pendingConnections;
   QUrl                       _listeningUrl;
 

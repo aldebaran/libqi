@@ -12,6 +12,7 @@
 # include <qimessaging/qt/QiTransportSocket>
 
 # include <QObject>
+# include <QByteArray>
 
 class QiTransportServerPrivate;
 
@@ -30,6 +31,9 @@ public:
   bool hasPendingConnections() const;
   QiTransportSocket* nextPendingConnection();
   bool isListening() const;
+
+  void setIdentity(const QByteArray& key,
+                   const QByteArray& certificate);
 
 signals:
   void newConnection();

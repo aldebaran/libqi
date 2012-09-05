@@ -167,6 +167,7 @@ void QiTransportSocket::connectToHost(const QUrl& address)
   else if (address.scheme() == "tcps")
   {
     QSslSocket* socket = new QSslSocket(this);
+    socket->ignoreSslErrors();
     connect(socket, SIGNAL(encrypted()), this, SIGNAL(connected()));
     connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     connect(socket, SIGNAL(readyRead()), _p, SLOT(read()));
