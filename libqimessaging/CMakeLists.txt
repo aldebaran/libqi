@@ -38,7 +38,6 @@ qi_add_probes(src/tp_qimessaging.in.h
 
 set(PUBLIC_HEADERS
                    qimessaging/details/future.hxx
-                   qimessaging/details/makefunctor.hpp
                    qimessaging/details/value.hpp
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
@@ -54,6 +53,8 @@ set(PUBLIC_HEADERS
                    qimessaging/signature.hpp
                    qimessaging/api.hpp
                    qimessaging/message.hpp
+                   qimessaging/metafunction.hpp
+                   qimessaging/metafunction.hxx
                    qimessaging/transport_server.hpp
                    qimessaging/transport_socket.hpp
                    qimessaging/future.hpp

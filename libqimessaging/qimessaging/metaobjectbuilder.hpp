@@ -19,7 +19,7 @@
 
 #include <boost/function.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/details/makefunctor.hpp>
+#include <qimessaging/metafunction.hpp>
 
 namespace qi {
 
