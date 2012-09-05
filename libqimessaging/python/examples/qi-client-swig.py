@@ -1,53 +1,56 @@
 #!/usr/bin/env python
 ##
-## Author(s):
-##  - Pierre Roullon <proullon@aldebaran-robotics.com>
-##
 ## Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 ##
 
+import sys
+
 import _qi
-from ctypes import *
+from qimessaging import Application
 
-def callReply(sdAddr):
-    print("Connecting to serviceTest")
-
+def call_reply(sd_addr):
     session = _qi.qi_session_create()
-    _qi.qi_session_connect(session, sdAddr)
+    _qi.qi_session_connect(session, sd_addr)
 
     if _qi.qi_session_wait_for_connected(session, 1000) == False:
-        print("Cannot connect to service directory")
-        return 1
+        print "Cannot connect to service directory"
+        sys.exit()
 
     obj = _qi.qi_session_get_service(session, "serviceTest")
-    if obj == 0:
-        print("Oops, cannot get service serviceTest")
-        return 1
+    if obj is None:
+        print "Oops, cannot get service serviceTest"
+        sys.exit()
 
     message = _qi.qi_message_create()
-    _qi.qi_message_write_string(message, "plaf")
-    future = _qi.qi_object_call(obj, "reply::s(s)", message)
+    _qi.qi_message_write_string(message, "king")
+    future = _qi.qi_object_call(obj, "reply::(s)", message)
 
     _qi.qi_future_wait(future);
 
-    if _qi.qi_future_is_error(future) == True:
-        print("An error occured :", _qi.qi_future_get_error())
-        return 1
+    if _qi.qi_future_is_error(future):
+        print "An error occured : %s" % _qi.qi_future_get_error(future)
+        sys.exit()
 
-    if _qi.qi_future_is_ready(future) == True and _qi.qi_future_is_error(future) == False:
-        answer = _qi.qi_future_get_value(future)
+    if _qi.qi_future_is_ready(future) and not _qi.qi_future_is_error(future):
+        answer = _qi.qi_message_cast(_qi.qi_future_get_value(future))
         value = _qi.qi_message_read_string(answer);
-        print("Reply :", value)
+        print "Reply : %s" % value
 
-    _qi.qi_session_disconnect(session)
-    return 0
+    _qi.qi_session_close(session)
 
-def main(argc, argv):
-    print("qi-client.py")
-    # Todo : Parse argument
-    print("Assuming master-address is tcp://127.0.0.1:5555")
-    sdAddr = "tcp://127.0.0.1:5555"
-    return callReply(sdAddr)
+
+def get_servicedirectory_address(argv):
+    if len(argv) != 2:
+        print('Usage : python2 qi-client.py directory-address')
+        print('Assuming service directory address is tcp://127.0.0.1:5555')
+        return "tcp://127.0.0.1:5555"
+
+    return argv[1]
+
+def main(argv):
+    sd_addr = get_servicedirectory_address(argv)
+    return call_reply(sd_addr)
 
 if __name__ == "__main__":
-    main(0, 0)
+    app = Application(sys.argv)
+    main(sys.argv)

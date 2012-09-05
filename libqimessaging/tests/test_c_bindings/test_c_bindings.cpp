@@ -82,11 +82,9 @@ TEST(TestCBindings, CallReply)
   message = qi_message_create();
   assert(message != 0);
 
-  int payload_size = 0;
   char* result = 0;
 
-  // compute payload and call
-  payload_size = strlen("plaf") + 4;
+  // call
   qi_message_write_string(message, "plaf");
   qi_future_t* fut = qi_object_call(object, "reply::s(s)", message);
 

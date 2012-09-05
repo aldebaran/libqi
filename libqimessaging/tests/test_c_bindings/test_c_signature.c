@@ -9,7 +9,7 @@
 
 #define check(retcode, str, ptr) \
 { \
-  printf("current signature: %s, pointer: %d ret: %d\n", sig->current, qi_signature_is_pointer(sig), ret); \
+  printf("current signature: %s, pointer: %d ret: %d\n", qi_signature_current(sig), qi_signature_is_pointer(sig), ret); \
   assert(ret == retcode); \
   verify(sig, str, ptr); \
   printf("\n");\
@@ -18,10 +18,10 @@
 void verify(qi_signature_t *sig, char *current, int ispointer)
 {
   assert(sig);
-  if (sig->current)
-    assert(!strcmp(sig->current, current));
+  if (qi_signature_current(sig))
+    assert(!strcmp(qi_signature_current(sig), current));
   else
-    assert(sig->current == current);
+    assert(qi_signature_current(sig) == current);
   assert(qi_signature_is_pointer(sig) == ispointer);
 }
 

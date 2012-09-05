@@ -16,8 +16,32 @@
 #include <qimessaging/session.hpp>
 
 std::string reply(const std::string &msg) {
-  std::cout << "Message recv:" << msg << std::endl;
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
   return msg + "bim";
+}
+
+std::string reply(const int &msg) {
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
+  std::stringstream ss;
+
+  ss << msg << "bim";
+  return ss.str();
+}
+
+std::string reply(const std::string &msg, const double &value) {
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value << std::endl;
+  std::stringstream ss;
+
+  ss << msg << value;
+  return ss.str();
+}
+
+std::string reply(const std::string &msg, const float &value) {
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value << std::endl;
+  std::stringstream ss;
+
+  ss << msg << value;
+  return ss.str();
 }
 
 namespace po = boost::program_options;
@@ -66,7 +90,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
     {
-      std::cout << desc << "\n";
+      qiLogInfo("qimessaging.ServiceTest") << desc;
       return 0;
     }
 
@@ -75,7 +99,11 @@ int main(int argc, char *argv[])
       std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
       qi::Object        obj;
-      obj.advertiseMethod("reply", &reply);
+
+      obj.advertiseMethod<std::string (const std::string&)>("reply", &reply);
+      obj.advertiseMethod<std::string (const int&)>("reply", &reply);
+      obj.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
+      obj.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
 
       session.connect(masterAddress);
       session.waitForConnected();
@@ -105,12 +133,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-      std::cout << desc << "\n";
+      qiLogInfo("qimessaging.ServiceTest") << desc;
     }
   }
   catch (const boost::program_options::error&)
   {
-    std::cout << desc << "\n";
+    qiLogInfo("qimessaging.ServiceTest") << desc;
   }
 
   return 0;
