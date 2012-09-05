@@ -9,6 +9,7 @@
 #include <qimessaging/qt/QiTransportSocket>
 #include "src/qitransportsocket_p.h"
 #include <QTcpSocket>
+#include <QSslSocket>
 #include <QHostAddress>
 #include <qimessaging/message.hpp>
 #include <qimessaging/buffer.hpp>
@@ -161,6 +162,22 @@ void QiTransportSocket::connectToHost(const QUrl& address)
     _p->_peer = address;
     _p->_device = socket;
   }
+  else if (address.scheme() == "tcps")
+  {
+    QSslSocket* socket = new QSslSocket(this);
+    connect(socket, SIGNAL(encrypted()), this, SIGNAL(connected()));
+    connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    connect(socket, SIGNAL(readyRead()), _p, SLOT(read()));
+
+    socket->setProtocol(QSsl::TlsV1SslV3);
+    socket->connectToHostEncrypted(address.host(), address.port());
+    _p->_peer = address;
+    _p->_device = socket;
+  }
+
+  qiLogError("QiTransportServer") << "Protocol `"
+                                  << address.scheme().toUtf8().constData()
+                                  << "' is not supported.";
 }
 
 QUrl QiTransportSocket::peer()
