@@ -11,8 +11,9 @@
 #include <boost/thread.hpp>
 #include <qi/os.hpp>
 #include <qi/atomic.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/future.hpp>
-
+#include <qimessaging/event_loop.hpp>
 
 class TestFuture : public ::testing::Test
 {
@@ -159,4 +160,136 @@ TEST_F(TestFuture, TestError) {
   EXPECT_STREQ("chiche", gGlobalE.c_str());
   EXPECT_TRUE(fut.isReady());
   EXPECT_TRUE(fut.hasError());
+}
+
+void unlock(qi::Promise<int> prom, bool* tag)
+{
+  *tag = true;
+  prom.setValue(1);
+}
+
+TEST(TestFutureSync, Basic)
+{
+  qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop();
+  ASSERT_FALSE(eventLoop->isInEventLoopThread());
+
+  {
+    qi::FutureSync<int> fs;
+    ASSERT_TRUE(!fs.isReady());
+  } // unbound futuresync should not block
+
+  bool tag = false;
+  {
+    qi::FutureSync<int> fs;
+    qi::Promise<int> p;
+    fs = p.future();
+    eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+  }
+  ASSERT_TRUE(tag); // fs should block at end of scope, so we reach here after unlock
+
+  tag = false;
+  { // This scope is a synchro point to avoid tests running in //
+    qi::Promise<int> p;
+    qi::FutureSync<int> syncPoint = p.future();
+    {
+      qi::FutureSync<int> fs;
+      fs = p.future();
+      fs.async();
+      eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+    }
+    ASSERT_FALSE(tag); // fs is async: we exit immediately
+  }
+  ASSERT_TRUE(tag); // validate our synchro point worked
+
+  tag = false;
+  { // This scope is a synchro point to avoid tests running in //
+    qi::Promise<int> p;
+    qi::FutureSync<int> syncPoint = p.future();
+    {
+      qi::FutureSync<int> fs;
+      fs = p.future();
+      qi::Future<int> fa = fs;
+      eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+    }
+    ASSERT_FALSE(tag); // fs was copied: blocking disabled
+  }
+  ASSERT_TRUE(tag); // validate our synchro point worked
+
+  ASSERT_TRUE(true);
+}
+
+qi::FutureSync<int> getSync(bool* tag)
+{
+  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::Promise<int> promise;
+  el->asyncCall(50000, boost::bind(unlock, promise, tag));
+  return promise.future();
+}
+
+qi::FutureSync<int> getSync2(bool* tag)
+{
+  qi::EventLoop* el = qi::getDefaultObjectEventLoop();
+  qi::Promise<int> promise;
+  el->asyncCall(50000, boost::bind(unlock, promise, tag));
+  return promise.future().sync();
+}
+
+qi::FutureSync<int> getGetSync(bool* tag)
+{
+  return getSync(tag);
+}
+
+qi::FutureSync<int> getGetSync2(bool* tag)
+{
+  return getSync2(tag);
+}
+
+TEST(TestFutureSync, InSitu)
+{
+  /* Check that whatever we do, a function returning a FutureSync is not
+  * stuck if we take the sync, and blocks if we ignore it
+  */
+  bool tag = false;
+  {
+    qi::FutureSync<int> fs = getSync(&tag);
+    ASSERT_FALSE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+  {
+    qi::FutureSync<int> fs = getSync2(&tag);
+    ASSERT_FALSE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+  {
+    qi::FutureSync<int> fs = getGetSync(&tag);
+    ASSERT_FALSE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+  {
+    qi::FutureSync<int> fs = getGetSync2(&tag);
+    ASSERT_FALSE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+  {
+    getSync(&tag);
+    ASSERT_TRUE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+  {
+    getSync2(&tag);
+    ASSERT_TRUE(tag);
+  }
+  ASSERT_TRUE(tag);
+  tag = false;
+}
+
+int main(int argc, char **argv) {
+  qi::Application app(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

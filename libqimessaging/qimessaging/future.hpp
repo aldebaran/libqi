@@ -29,6 +29,7 @@ namespace qi {
 
   template <typename T> class FutureInterface;
   template <typename T> class Future;
+  template <typename T> class FutureSync;
   template <typename T> class Promise;
 
   namespace detail {
@@ -61,6 +62,18 @@ namespace qi {
       _p = boost::shared_ptr< detail::FutureState<T> >(new detail::FutureState<T>(this));
     }
 
+    Future(const FutureSync<T>& b)
+    {
+      *this = b;
+    }
+
+    Future<T>& operator = (const FutureSync<T>& b)
+    {
+      b._sync = false;
+      _p = b._p;
+      return *this;
+    }
+
     const ValueType &value() const    { return _p->value(); }
     ValueType &value()                { return _p->value(); }
     operator const ValueType&() const { return _p->value(); }
@@ -85,9 +98,75 @@ namespace qi {
       return _p->callbacks();
     }
 
+    FutureSync<T> sync()
+    {
+      return FutureSync<T>(*this);
+    };
+
     friend class Promise<T>;
-  private:
+  protected:
     boost::shared_ptr< detail::FutureState<T> > _p;
+    friend class FutureSync<T>;
+  };
+
+  template<typename T> class FutureSync: public Future<T>
+  {
+  public:
+    // This future cannot be set, so sync starts at false
+    FutureSync() : _sync(false) {}
+
+    FutureSync(const Future<T>& b)
+    : _sync(true)
+    {
+      *this = b;
+      this->_p = b._p;
+    }
+
+    FutureSync(const FutureSync<T>& b)
+    : _sync(true)
+    {
+      *this = b;
+      this->_p = b._p;
+      b._sync = false;
+    }
+
+    explicit FutureSync<T>(const typename Future<T>::ValueType& v)
+    : _sync(false)
+    {
+      Promise<T> promise;
+      promise.setValue(v);
+      *this = promise.future();
+    }
+
+    FutureSync<T>& operator = (const FutureSync<T>& b)
+    {
+      this->_p = b._p;
+      _sync = true;
+      b._sync = false;
+      return *this;
+    }
+
+    FutureSync<T>& operator = (const Future<T>& b)
+    {
+     this->_p = b._p;
+      _sync = true;
+      return *this;
+    }
+
+    ~FutureSync()
+    {
+      if (_sync)
+        this->wait();
+    }
+
+    Future<T> async()
+    {
+      return *this;
+    }
+
+  private:
+    mutable bool _sync;
+    friend class Future<T>;
   };
 
 
