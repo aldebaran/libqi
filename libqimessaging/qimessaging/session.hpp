@@ -65,7 +65,7 @@ namespace qi {
       ServiceLocality_Remote = 2
     };
 
-    void addCallbacks(SessionInterface *delegate, void *data);
+    void addCallbacks(SessionInterface *delegate, void *data = 0);
     void removeCallbacks(SessionInterface *delegate);
 
     //Client
