@@ -76,6 +76,9 @@ public:
   /// Make a copy of storage if needed to garantee validity after async call.
   MetaFunctionParameters copy() const;
 
+  /// Copy and convert storage to given signature
+  MetaFunctionParameters convert(const qi::Signature& signature) const;
+
   /// Convert storage from serialization to value. Sub-optimal.
   void convertToValues() const;
   /// Convert storage to buffer by serializing value.

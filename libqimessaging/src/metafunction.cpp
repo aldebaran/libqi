@@ -198,6 +198,33 @@ void MetaFunctionParameters::convertToBuffer() const
     storage->parameterValues[i].serialize(out);
 }
 
+MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) const
+{
+  std::vector<MetaValue> dst;
+  const std::vector<MetaValue>& src = getValues();
+  if (sig.size() != src.size())
+  {
+    qiLogError("qi.metafunction") << "convert: signature/params size mismatch"
+      << sig.toString() << " " << sig.size() << " " << src.size();
+    return MetaFunctionParameters();
+  }
+  Signature::iterator i = sig.begin();
+  int idx = 0;
+  for (;i != sig.end(); ++i,++idx)
+  {
+    MetaType* compatible = qi::MetaType::getCompatibleTypeWithSignature(*i);
+    if (!compatible)
+    {
+      qiLogError("qi.metafunction") <<"convert: unknown type " << *i;
+      compatible = src[idx].type;
+    }
+    dst.push_back(src[idx].convert(*compatible));
+  }
+  MetaFunctionParameters res(dst, false);
+  res.storage->deleteOnDestruction = true;
+  return res;
+}
+
 MetaFunctionParameters::Mode MetaFunctionParameters::getMode() const
 {
   if (storage && !storage->parameterValues.empty())
