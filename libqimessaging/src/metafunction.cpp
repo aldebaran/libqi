@@ -235,7 +235,9 @@ MetaValue MetaFunctionResult::getValue() const
 QI_REGISTER_MAPPING("i", qi::int32_t);
 QI_REGISTER_MAPPING("I", qi::uint32_t);
 QI_REGISTER_MAPPING("d", double);
+QI_REGISTER_MAPPING("f", float);
 QI_REGISTER_MAPPING("[d]", std::vector<double>);
+QI_REGISTER_MAPPING("[f]", std::vector<float>);
 QI_REGISTER_MAPPING("[i]", std::vector<int>);
 QI_REGISTER_MAPPING("s", std::string);
 QI_REGISTER_MAPPING("[s]", std::vector<std::string>);
