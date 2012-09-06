@@ -155,6 +155,29 @@ namespace qi {
     data.map = new ValueMap(v);
   }
 
+  inline Value::Value(const Value& b)
+  : type(Invalid)
+  {
+    *this = b;
+  }
+  inline Value& Value::operator=(const Value& b)
+  {
+    switch (b.type)
+    {
+    case Double: setDouble(b.toDouble()); break;
+    case String: setString(b.toString()); break;
+    case List:   setList  (b.toList());   break;
+    case Map:    setMap   (b.toMap());    break;
+
+    case Invalid:
+    case Opaque:
+      type = b.type;
+      data.ptr = b.data.ptr;
+      break;
+    }
+    return *this;
+  }
+
   inline void Value::setDouble(double d)
   {
     clear();

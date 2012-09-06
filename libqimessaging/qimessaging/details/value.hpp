@@ -40,11 +40,13 @@ namespace qi {
     };
 
     Value();
+    Value(const Value& b);
     Value(double d);
     Value(const std::string& s);
     Value(const ValueList& v);
     Value(const ValueMap& v);
     ~Value();
+    Value& operator = (const Value& b);
 
     void setDouble(double d);
     void setString(const std::string& s);
