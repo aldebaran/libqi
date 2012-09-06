@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ##
 ## Author(s):
 ##  - Pierre Roullon <proullon@aldebaran-robotics.com>
@@ -8,9 +7,9 @@
 
 import _qi
 
-class Application
-    def __init__(self):
-        self.app = _qi.qi_application_create()
+class Application:
+    def __init__(self, args):
+        self.app = _qi.py_application_create(args)
 
     def run(self):
         _qi.qi_application_run(self.app)

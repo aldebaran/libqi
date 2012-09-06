@@ -1,20 +1,21 @@
-#!/usr/bin/env python
 ##
 ## Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 ##
 
 import sys
+import qimessaging
 
-from qimessaging import Session
-from qimessaging import Message
 from qimessaging import Application
-from qimessaging import Object
-
+from qimessaging import Session
 
 def init_session(sd_addr):
 
     session = Session()
-    session.connect(sd_addr)
+    try:
+        session.connect(sd_addr)
+    except qimessaging.ConnectionError as e:
+        print e
+        return None
 
     if not session.wait_for_connected():
         print "Cannot connect to service directory"
@@ -33,34 +34,15 @@ def get_service(session, service_name):
 
 
 def call_reply(obj):
-    print "\n\nSynchronous call : ('reply', 2)"
+    print "Synchronous call :"
 
-    value = obj.call("reply", 2)
-
-    if value and obj.get_last_error() is not None:
-        print "Oops, call failed : %s" % obj.get_last_error()
-        pass
+    try:
+        value = obj.call("reply::(s)", "titi")
+    except qimessaging.CallError as e:
+        print e
+        return
 
     print 'Reply : %s' % value
-
-def a_call_reply(obj):
-    print "Asynchronous call :"
-
-    message = Message()
-    message.write_string("plaf")
-    future = obj.async_call("reply::(s)", message)
-
-    future.wait()
-
-    if future.is_error():
-        print "Oops, an error occured : %s" % future.get_error()
-        pass
-
-    if future.is_ready() and not future.is_error():
-        answer = future.get_value()
-        value = answer.read_string();
-        print 'Reply : %s' % value
-
 
 def get_servicedirectory_address(argv):
     if len(argv) != 2:
@@ -74,18 +56,16 @@ def  main(argv):
     sd_addr = get_servicedirectory_address(argv)
 
     session = init_session(sd_addr)
-    if session is None:
+    if not session:
         sys.exit()
 
     obj = get_service(session, "serviceTest")
-    if obj is None:
+    if not obj:
         sys.exit()
 
-    a_call_reply(obj)
     call_reply(obj)
 
-    print "\n"
-    session.disconnect()
+    session.close()
     sys.exit()
 
 if __name__ == "__main__":

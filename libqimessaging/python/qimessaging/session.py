@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ##
 ## Author(s):
 ##  - Pierre Roullon <proullon@aldebaran-robotics.com>
@@ -7,43 +6,52 @@
 ##
 
 import _qi
+from .object import Object
+
+class ConnectionError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
 
 class Session:
     def __init__(self):
         self.session = _qi.qi_session_create()
 
     def connect(self, address):
-        return _qi.qi_session_connect(self.session, address)
+        if _qi.qi_session_connect(self.session, address) == 1:
+            raise ConnectionError('Cannot connect to ' + address)
 
     def listen(self, address):
-        return _qi.qi_session_listen(self.session, address)
+        if _qi.qi_session_listen(self.session, address) == 1:
+            return True
+        return False
 
-    def registerService(self, name, obj):
+    def register_service(self, name, obj):
         return _qi.qi_session_register_service(self.session, name, obj)
 
-    def unregistedService(self, idx):
+    def unregister_service(self, idx):
         _qi.qi_session_unregister_service(self.session, idx)
 
-    def waitForConnected(self, msecs):
-        _qi.qi_session_wait_for_connected(self.session, msecs)
+    def wait_for_connected(self, msecs = 3000):
+        if _qi.qi_session_wait_for_connected(self.session, msecs) == 1:
+            return True
+        return False
 
     def service(self, name):
-        return _qi.qi_session_get_service(self.session, name)
+        obj = _qi.qi_session_get_service(self.session, name)
 
-    def disconnect(self):
-        _qi.qi_session_disconnect(self.session)
+        if not obj:
+            return None
 
-    def waitForDisconnected(self, msecs):
+        return Object(obj)
+
+    def wait_for_disconnected(self, msecs):
         _qi.qi_session_wait_for_disconnected(self.session, msecs)
+
+    def close(self):
+        _qi.qi_session_close(self.session)
 
     def __del__(self):
         _qi.qi_session_destroy(self.session)
-
-
-# Goal :
-
-#def main():
-#    ses = qi.Session();
-#    ses.connect("tcp://blabla:9559");
-#    obj = ses.service("Memory")
-#    obj.call("toto", 2, 4)
