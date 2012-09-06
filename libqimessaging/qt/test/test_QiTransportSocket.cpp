@@ -39,6 +39,20 @@ TEST(TransportSocket, StateConnected)
   ASSERT_EQ(socket.state(), QiTransportSocket::SocketState_Connected);
 }
 
+TEST(TransportSocket, StateConnectedSslWeb)
+{
+  QString serverUrl = QString("tcps://www.google.fr:443");
+
+  QiTransportSocket socket;
+  QObject::connect(&socket, SIGNAL(connected()), app, SLOT(quit()));
+
+  socket.connectToHost(serverUrl);
+
+  app->exec();
+
+  ASSERT_EQ(socket.state(), QiTransportSocket::SocketState_Connected);
+}
+
 TEST(TransportSocket, StateAfterClose)
 {
   unsigned short port = qi::os::findAvailablePort(0);
