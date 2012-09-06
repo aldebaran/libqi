@@ -42,14 +42,15 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(static_cast<unsigned int>(42), obj.call<unsigned int>("test", 21, 21));
   EXPECT_EQ(42, obj.call<char>("test", 21, 21));
   EXPECT_EQ(42, obj.call<double>("test", 21, 21));
-  /* Re-enable when signature adaptation works
+
+#ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
   EXPECT_EQ(42, obj.call<int>("test", (char)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (unsigned char)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (short)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (unsigned short)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (float)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (double)21, 21));
-  */
+#endif
 
   gGlobalResult = 0;
   obj.call<void>("vtest", 21, 21).wait();

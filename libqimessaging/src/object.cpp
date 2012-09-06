@@ -256,8 +256,31 @@ namespace qi {
   qi::Future<MetaFunctionResult>
   Object::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
   {
+    const MetaFunctionParameters* newArgs = 0;
     qi::Promise<MetaFunctionResult> out;
     int methodId = metaObject().methodId(signature);
+#ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
+    if (methodId < 0) {
+
+      // Try to find an other method with compatible signature
+      std::vector<qi::MetaMethod> mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
+      Signature sargs(signatureSplit(signature)[2]);
+      for (unsigned i=0; i<mml.size(); ++i)
+      {
+        Signature s(signatureSplit(mml[i].signature())[2]);
+        if (sargs.isConvertibleTo(s))
+        {
+          qiLogVerbose("qi.object")
+            << "Signature mismatch, but found compatible type "
+            << mml[i].signature() <<" for " << signature;
+          methodId = mml[i].uid();
+          // Signature is wrapped in a tuple, unwrap
+          newArgs = new MetaFunctionParameters(args.convert(s.begin().children()));
+          break;
+        }
+      }
+    }
+#endif
     if (methodId < 0) {
       std::stringstream ss;
       ss << "Can't find method: " << signature << std::endl
@@ -293,7 +316,14 @@ namespace qi {
       }
     }
     //TODO: check for metacall to return false when not able to send the answer
-    return metaCall(methodId, args);
+    if (newArgs)
+    {
+      qi::Future<MetaFunctionResult> res = metaCall(methodId, *newArgs);
+      delete newArgs;
+      return res;
+    }
+    else
+      return metaCall(methodId, args);
   }
   /// Resolve signature and bounce
   bool Object::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
