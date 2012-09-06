@@ -34,6 +34,19 @@ namespace qi {
     return res;
   }
 
+
+  template<typename T> struct NullConverter
+  {
+    static inline void writeValue(const T&, Value&)
+    {
+      qiLogError("qi.value") << "writeValue not implemented on this type";
+    }
+    static inline void readValue(const Value&, T&)
+    {
+      qiLogError("qi.value") << "readValue not implemented on this type";
+    }
+  };
+
   template<typename T> struct IntegralConverter
   {
     static inline void writeValue(const T& src, Value& dst)
@@ -47,17 +60,35 @@ namespace qi {
     }
   };
 
-  template<typename T, typename B, int U> struct InheritIf
+  template<typename T, typename B, typename F> struct InheritIfElse
   {
   };
 
-  template<typename T, int U> struct InheritIf<T, boost::true_type, U>: public T
+  template<typename T, typename F> struct InheritIfElse<T, boost::true_type, F>: public T
   {
+  };
+
+  template<typename T, typename F> struct InheritIfElse<T, boost::false_type, F>: public F
+  {
+  };
+
+  template<typename A, typename B> struct META_OR
+  {
+    typedef boost::true_type type;
+  };
+
+  template<> struct META_OR<boost::false_type, boost::false_type>
+  {
+    typedef boost::false_type type;
   };
 
   template<typename T> struct ValueConverterDefault
-  : public InheritIf<IntegralConverter<T>, typename boost::is_integral<T>::type, 0 >
-  , public InheritIf<IntegralConverter<T>, typename boost::is_floating_point<T>::type, 1>
+  : public InheritIfElse<
+      IntegralConverter<T>,
+      typename META_OR<
+        typename boost::is_integral<T>::type,
+        typename boost::is_floating_point<T>::type>::type,
+      NullConverter<T> >
   {
   };
 
