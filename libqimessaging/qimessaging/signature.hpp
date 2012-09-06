@@ -121,6 +121,8 @@ namespace qi {
     std::string toQtSignature(bool constify = false) const;
     std::string toString() const;
 
+    bool isConvertibleTo(const Signature& b) const;
+
   protected:
     boost::shared_ptr<SignaturePrivate> _p;
   };
