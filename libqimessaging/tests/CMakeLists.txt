@@ -10,7 +10,7 @@ add_subdirectory(test_c_bindings)
 
 qi_create_lib(testmodule  SRC testmodule.cpp DEPENDS QI QIMESSAGING)
 
-#qi_create_gtest(test_module              SRC test_module.cpp             DEPENDS QI QIMESSAGING GTEST TIMEOUT 30)
+qi_create_gtest(test_module              SRC test_module.cpp             DEPENDS QI QIMESSAGING GTEST TIMEOUT 30)
 qi_create_gtest(test_url                 SRC test_url.cpp                DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 qi_create_gtest(test_object              SRC test_object.cpp             DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 #qi_create_gtest(test_message_visitor    SRC test_message_visitor.cpp    DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)

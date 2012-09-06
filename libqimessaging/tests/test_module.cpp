@@ -19,7 +19,9 @@ TEST(Module, Load)
   boost::filesystem::path p(qi::Application::program());
   session->loadService(
     p.parent_path().string() + "/../lib/testmodule");
-  qi::os::msleep(500);
+
+  session->waitForServiceReady("test", 3000);
+
   qi::Object* o = session->service("test");
   ASSERT_TRUE(o);
   int res = o->call<int>("testMethod", 12);
@@ -34,6 +36,7 @@ int main(int argc, char **argv) {
   sd.listen("tcp://localhost:0");
   s.connect(sd.listenUrl());
   s.listen("tcp://localhost:0");
+  s.waitForConnected();
   session = &s;
   return RUN_ALL_TESTS();
 }
