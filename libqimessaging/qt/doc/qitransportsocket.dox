@@ -1,0 +1,120 @@
+// -*- C++ -*-
+
+/*!
+ * \file      qitransportsocket.h
+ * \author    Laurent Lec
+ * \copyright (C) Aldebaran Robotics
+ * \date      2012
+ * \since     1.18
+ *
+ * \class     QiTransportSocket
+ * \brief     Qt implementation of QiMessaging transport sockets.
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::QiTransportSocket(QObject* parent = 0)
+ * \brief     Creates a new transport socket.
+ * \param[in] parent This argument is passed to QObject's constructor.
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::~QiTransportSocket()
+ * \brief     Closes and destroys the socket.
+ * \note      Pending messages are discarded.
+ * \see       QiTransportSocket::close()
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::write(const qi::Message& message)
+ * \brief     Writes \a message to the socket.
+ * \param[in] message Message to write
+ * \since     1.18
+ *
+ * \fn        qi::Message* QiTransportSocket::read()
+ * \brief     Reads a message from the socket.
+ * \warning   The user must take care of its deletion.
+ * \return    A pending message or 0 if there is none.
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::close()
+ * \brief     Flushes unsent messages and closes the socket.
+ * \note      Pending messages can still be retrieved after the socket is closed.
+ * \note      Calling this function will trigger the QiTransportSocket::disconnected()
+ *            signal.
+ * \see       QiTransportSocket::disconnected()
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::connectToHost(const QUrl& address)
+ * \brief     Connects the socket to the given \a address.
+ * \param[in] address Address of the remote transport server.
+ * \note      Supported protocols (schemes) are "tcp" and "tcps" (SSL over TCP).
+ * \see       QiTransportSocket::connected()
+ * \since     1.18
+ *
+ * \fn        QUrl QiTransportSocket::peer();
+ * \brief     The URL to which the socket is connected.
+ * \return    The QUrl is empty if the socket state is not \link
+ *            SocketState_Connected \endlink, otherwise, it returns the address
+ *            given to connectToHost().
+ * \since     1.18
+ *
+ * \enum      QiTransportSocket::SocketState
+ * \brief     This enum describes the different states in which a transport socket can be.
+ * \note      These values are imported for Qt QAbstractSocket.\
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Unconnected
+ * \brief     The socket is not connected.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_HostLookup
+ * \brief     The socket is performing a host name lookup.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Connecting
+ * \brief     The socket has started establishing a connection.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Connected
+ * \brief     A connection is established.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Bound
+ * \brief     The socket is bound to an address and port (for servers).
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Listening
+ * \brief     For internal use only.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Closing
+ * \brief     The socket is about to close (data may still be waiting to be written).
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Unknown
+ * \brief     The socket state is unknown. This should not happen.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::SocketState_Connected
+ * \brief     A connection is established.
+ * \since     1.18
+ *
+ * \fn        SocketState QiTransportSocket::state()
+ * \brief     The state of the socket.
+ * \see       QiTransportSocket::SocketState
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::readyRead()
+ * \brief     This signal is emitted once every time a new qi::Message is received.
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::connected()
+ * \brief     This signal is emitted after connectToHost() has been called and a
+ *            connection has been successfully established.
+ * \since     1.18
+ *
+ * \fn        QiTransportSocket::disconnected()
+ * \brief     This signal is emitted when the socket has been disconnected.
+ * \since     1.18
+ *
+ * \var       QiTransportSocket::_p
+ * \brief     Private implementation of QiTransportSocket.
+ * \since     1.18
+ */
