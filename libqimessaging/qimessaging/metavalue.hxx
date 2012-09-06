@@ -9,14 +9,6 @@
 
 namespace qi {
 
-inline
-qi::ODataStream& operator << (qi::ODataStream& od, const MetaValue& mv)
-{
-  if (mv.type)
-    mv.type->serialize(od, mv.value);
-  return od;
-}
-
 template<typename T>
 MetaValue toMetaValue(const T& v)
 {

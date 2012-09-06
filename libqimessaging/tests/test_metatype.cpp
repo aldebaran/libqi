@@ -63,11 +63,13 @@ double fsum(const std::vector<double>& v)
 
 int iadd(int i)
 {
+  qiLogDebug("test") << "iadd " << i;
   return i+1;
 }
 
 double fadd(double j)
 {
+  qiLogDebug("test") << "fadd " << j;
   return j+1;
 }
 
@@ -144,11 +146,12 @@ public:
       >::type>::type P1;
     P1 p1;
     s >> p1;
+    qiLogDebug("test") << "deserialize arg as " << p1;
     qi::MetaValueCopy ret;
     ret, fun(p1);
     qi::Buffer res;
     qi::ODataStream o(res);
-    o << ret;
+    ret.serialize(o);
     ret.destroy();
     return res;
   }
@@ -326,7 +329,7 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
       qi::ODataStream ds(buf);
       // FIXME: validate signature
       for (unsigned i=0; i<params.size(); ++i)
-        ds << params[i];
+        params[i].serialize(ds);
       qi::Promise<R> prom;
       qi::Future<qi::Buffer> res = serializeCall(ptr, buf);
       res.addCallbacks(new FutureAdapterBuf<R>(prom, ""), 0);
@@ -362,7 +365,7 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
   for (unsigned i=0; i<params.size(); ++i, ++it)
   {
     if (*it == params[i].signature())
-      ds << params[i];
+      params[i].serialize(ds);
     else
     { // We first need to convert MetaValue to a type that has the correct
       // netsignature if we can
@@ -372,7 +375,7 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
         throw std::runtime_error("proper fucked");
       }
       qi::MetaValue converted = params[i].convert(*compatible);
-      ds << converted;
+      converted.serialize(ds);
       converted.destroy();
     }
   }
