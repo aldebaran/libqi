@@ -68,9 +68,10 @@ public:
 
   enum Mode
   {
-    MODE_BUFFER,
-    MODE_METAVALUE
+    Mode_MetaValue,
+    Mode_Buffer
   };
+
   /// Return the mode available without conversion
   Mode getMode() const;
   /// Make a copy of storage if needed to garantee validity after async call.

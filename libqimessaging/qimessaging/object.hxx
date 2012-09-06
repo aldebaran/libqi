@@ -28,7 +28,7 @@ namespace qi {
       ~FutureAdapter() {}
       virtual void onFutureFinished(const qi::MetaFunctionResult &future, void *data)
       {
-        if (future.getMode() == MetaFunctionResult::MODE_METAVALUE)
+        if (future.getMode() == MetaFunctionResult::Mode_MetaValue)
         {
           MetaValue val =  future.getValue();
           typedef std::pair<const T*, bool>  ConvType;

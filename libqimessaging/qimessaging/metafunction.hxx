@@ -127,10 +127,10 @@ struct ArgTransformer
     idx = 0;
     switch(params.getMode())
     {
-    case MetaFunctionParameters::MODE_METAVALUE:
+    case MetaFunctionParameters::Mode_MetaValue:
       in = 0;
       break;
-    case MetaFunctionParameters::MODE_BUFFER:
+    case MetaFunctionParameters::Mode_Buffer:
       idx = -1;
       in = new IDataStream(params.getBuffer());
     }
@@ -164,7 +164,7 @@ struct ArgTransformer
   operator() (T* &v) const
   {
     qiLogDebug("qi.bind") << " ArgTransformer(" << this <<") on " << typeid(&v).name();
-    if (params.getMode() == MetaFunctionParameters::MODE_METAVALUE)
+    if (params.getMode() == MetaFunctionParameters::Mode_MetaValue)
     {
       std::pair<const T*, bool> res = params.getValues()[idx++].template as<T>();
       if(res.second)

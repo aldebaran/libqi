@@ -228,9 +228,9 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
 MetaFunctionParameters::Mode MetaFunctionParameters::getMode() const
 {
   if (storage && !storage->parameterValues.empty())
-    return MODE_METAVALUE;
+    return Mode_MetaValue;
   else
-    return MODE_BUFFER;
+    return Mode_Buffer;
 }
 
 
