@@ -38,6 +38,7 @@ namespace qi {
     template <typename T>
     class FutureState : public FutureBase {
     public:
+      typedef typename FutureType<T>::type ValueType;
       typedef typename std::vector<std::pair<FutureInterface<T> *, void *> >::iterator futureInterfaceListIterator;
 
       FutureState(Future<T> *fut)
@@ -46,7 +47,7 @@ namespace qi {
       {
       }
 
-      void setValue(const T &value)
+      void setValue(const ValueType &value)
       {
         _value = value;
         futureInterfaceListIterator iter;
@@ -96,137 +97,17 @@ namespace qi {
         return _callback;
       }
 
-      const T &value() const    { wait(); return _value; }
-      T &value()                { wait(); return _value; }
+      const ValueType &value() const    { wait(); return _value; }
+      ValueType &value()                { wait(); return _value; }
 
     private:
       Future<T>                        *_self;
-      T                                 _value;
+      ValueType                         _value;
       std::vector<std::pair<FutureInterface<T> *, void *> > _callback;
       boost::mutex                                          _mutexCallback;
     };
   } // namespace detail
 
-  namespace detail {
-    //void specialisation: do not hold anything only used for synchronisation
-    template <>
-    class FutureState<void> : public FutureBase {
-    public:
-      FutureState(Future<void> *fut)
-        : _self(fut)
-      {
-      }
-
-      void setValue(const void *QI_UNUSED(value))
-      {
-        boost::mutex::scoped_lock l(_mutexCallback);
-        std::vector<std::pair<FutureInterface<void> *, void *> >::iterator iter;
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          (*iter).first->onFutureFinished((*iter).second);
-        }
-        reportReady();
-      }
-
-      void setError(const std::string &message)
-      {
-        boost::mutex::scoped_lock l(_mutexCallback);
-        std::vector<std::pair<FutureInterface<void> *, void *> >::iterator iter;
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          (*iter).first->onFutureFailed(message, (*iter).second);
-        }
-        reportError(message);
-      }
-
-      void addCallbacks(FutureInterface<void> *p_interface, void *data) {
-        std::pair<FutureInterface<void> *, void *> itf = std::make_pair(p_interface, data);
-        boost::mutex::scoped_lock l(_mutexCallback);
-        _callback.push_back(itf);
-      }
-
-      void removeCallbacks(FutureInterface<void> *p_interface) {
-        boost::mutex::scoped_lock l(_mutexCallback);
-        std::vector<std::pair<FutureInterface<void> *, void *> >::iterator iter;
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          if ((*iter).first == p_interface) {
-            _callback.erase(iter);
-            break;
-          }
-        }
-      }
-
-      std::vector<std::pair<FutureInterface<void> *, void *> > callbacks()
-      {
-        return _callback;
-      }
-
-      void value() const    { wait(); }
-
-    private:
-      Future<void>                        *_self;
-      std::vector<std::pair<FutureInterface<void> *, void *> > _callback;
-      boost::mutex                                             _mutexCallback;
-    };
-  }
-
-  //void specialisation: do not hold anything only used for synchronisation
-  template <>
-  class Future<void> {
-  public:
-    Future()
-      : _p(boost::shared_ptr< detail::FutureState<void> >())
-    {
-      _p = boost::shared_ptr< detail::FutureState<void> >(new detail::FutureState<void>(this));
-    }
-
-    void value() const    { _p->wait(); }
-
-    bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
-    bool isReady() const                       { return _p->isReady(); }
-
-    bool hasError() const                      { return _p->hasError(); }
-    const std::string &error() const           { return _p->error(); }
-
-    void addCallbacks(FutureInterface<void> *p_interface, void *data = 0) {
-      _p->addCallbacks(p_interface, data);
-    }
-
-    void removeCallbacks(FutureInterface<void> *p_interface) {
-      _p->removeCallbacks(p_interface);
-    }
-
-    std::vector<std::pair<FutureInterface<void> *, void *> > callbacks()
-    {
-      return _p->callbacks();
-    }
-
-    friend class Promise<void>;
-  private:
-    boost::shared_ptr< detail::FutureState<void> > _p;
-  };
-
-  template <>
-  class Promise<void> {
-  public:
-    Promise() { }
-
-    void setValue(const void *value) {
-      _f._p->setValue(value);
-    }
-
-    void setError(const std::string &message) {
-      _f._p->setError(message);
-    }
-
-    void reset() {
-      _f._p->reset();
-    }
-
-    Future<void> future() { return _f; }
-
-  protected:
-    Future<void> _f;
-  };
-
-};
+}
 
 #endif

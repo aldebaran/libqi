@@ -16,14 +16,23 @@
 
 namespace qi {
 
+  template<typename T> struct FutureType
+  {
+    typedef T type;
+  };
+
+  // Hold a void* for Future<void>
+  template<> struct FutureType<void>
+  {
+    typedef void* type;
+  };
+
   template <typename T> class FutureInterface;
   template <typename T> class Future;
-  template <>           class Future<void>;
   template <typename T> class Promise;
 
   namespace detail {
     template <typename T> class FutureState;
-    template <>           class FutureState<void>;
   }
 
 
@@ -31,16 +40,9 @@ namespace qi {
   template <typename T>
   class FutureInterface {
   public:
+    typedef typename FutureType<T>::type ValueType;
     virtual ~FutureInterface() = 0;
-    virtual void onFutureFinished(const T &value, void *data) = 0;
-    virtual void onFutureFailed(const std::string &error, void *data) = 0;
-  };
-
-  template <>
-  class FutureInterface<void> {
-  public:
-    virtual ~FutureInterface() = 0;
-    virtual void onFutureFinished(void *data) = 0;
+    virtual void onFutureFinished(const ValueType &value, void *data) = 0;
     virtual void onFutureFailed(const std::string &error, void *data) = 0;
   };
 
@@ -52,16 +54,17 @@ namespace qi {
   template <typename T>
   class Future {
   public:
+    typedef typename FutureType<T>::type ValueType;
     Future()
       : _p(boost::shared_ptr< detail::FutureState<T> >())
     {
       _p = boost::shared_ptr< detail::FutureState<T> >(new detail::FutureState<T>(this));
     }
 
-    const T &value() const    { return _p->value(); }
-    T &value()                { return _p->value(); }
-    operator const T&() const { return _p->value(); }
-    operator T&()             { return _p->value(); }
+    const ValueType &value() const    { return _p->value(); }
+    ValueType &value()                { return _p->value(); }
+    operator const ValueType&() const { return _p->value(); }
+    operator ValueType&()             { return _p->value(); }
 
     bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
     bool isReady() const                       { return _p->isReady(); }
@@ -91,9 +94,11 @@ namespace qi {
   template <typename T>
   class Promise {
   public:
+    typedef typename FutureType<T>::type ValueType;
+
     Promise() { }
 
-    void setValue(const T &value) {
+    void setValue(const ValueType &value) {
       _f._p->setValue(value);
     }
 
