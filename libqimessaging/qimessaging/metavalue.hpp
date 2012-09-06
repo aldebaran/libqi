@@ -85,8 +85,6 @@ qi::ODataStream& operator << (qi::ODataStream& od, const MetaValue& mv);
 
 }
 
-QI_NO_METATYPE(qi::MetaValue)
-QI_NO_METATYPE(std::vector<qi::MetaValue>)
 #include <qimessaging/metavalue.hxx>
 
 #endif

@@ -154,13 +154,18 @@ namespace qi {
 
   };
 
-
+  class MetaValue;
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &buffer);
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &buffer);
 
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
 
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::MetaValue &value);
+
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::MetaValue &value);
+
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::MetaValue &value);
 
   template<typename T>
   qi::ODataStream &operator<<(qi::ODataStream &sd, const std::list<T> &v) {

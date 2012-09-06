@@ -300,5 +300,34 @@ namespace qi {
     return _reader.read(size);
   }
 
+  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::MetaValue &value)
+  {
+    os.write(Signature::Type_Dynamic);
+    return os;
+  }
+
+  qi::IDataStream &operator>>(qi::IDataStream &stream, qi::MetaValue &value)
+  {
+    std::string signature;
+    stream >> signature;
+    MetaType* type = MetaType::getCompatibleTypeWithSignature(signature);
+    if (!type)
+      qiLogError("qi.datastream") << "Could not find metatype for signature " << signature;
+    else
+    {
+      value.type = type;
+      value.value = value.type->deserialize(stream);
+    }
+    return stream;
+  }
+
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::MetaValue &value)
+  {
+    stream << value.signature();
+    value.serialize(stream);
+    return stream;
+  }
+
+
 }
 
