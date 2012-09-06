@@ -15,6 +15,7 @@ qi_submodule_create("qi-messaging-c"  qimessaging/c/api_c.h
                                       qimessaging/c/application_c.h
 
                                       src/message_c_p.h
+                                      src/signature_c_p.h
                                       src/object_c_p.h
                                       src/future_c_p.h
                                       src/message_c.cpp

@@ -53,10 +53,7 @@ void test() {
   sig = qi_signature_create("s*[s]{ss}*");
   ret = qi_signature_next(sig); check(0, "s*", 1);
   ret = qi_signature_next(sig); check(0, "[s]", 0);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
   ret = qi_signature_next(sig); check(0, "{ss}*", 1);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
   ret = qi_signature_next(sig); check(1, "", 0);
   ret = qi_signature_next(sig); check(1, "", 0);
   qi_signature_destroy(sig);
@@ -66,10 +63,7 @@ void test() {
   sig = qi_signature_create_subsignature("[s*[s]{ss}*]*");
   ret = qi_signature_next(sig); check(0, "s*", 1);
   ret = qi_signature_next(sig); check(0, "[s]", 0);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
   ret = qi_signature_next(sig); check(0, "{ss}*", 1);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
-  //ret = qi_signature_next(sig); check(0, 1, "s", 0);
   ret = qi_signature_next(sig); check(1, "", 0);
   ret = qi_signature_next(sig); check(1, "", 0);
   qi_signature_destroy(sig);
@@ -90,6 +84,5 @@ void test_split() {
 
 int main(void) {
   test_split();
-  //test();
   return 0;
 }

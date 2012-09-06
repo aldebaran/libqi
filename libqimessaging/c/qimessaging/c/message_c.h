@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_message_t_s {} qi_message_t;
+  typedef struct qi_message_t_s qi_message_t;
 
   QIMESSAGING_API qi_message_t *qi_message_create();
   QIMESSAGING_API void          qi_message_destroy(qi_message_t *msg);

@@ -57,24 +57,15 @@ public:
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_message_t *message)
 {
   qi::Object *obj = reinterpret_cast<qi::Object *>(object);
-  std::vector<std::string>  sigInfo;
-  std::string fullSignature(signature_c);
 
-  if (!obj || !signature_c || !message)
-  {
-    printf("Invalid parameter\n");
-    return 0;
-  }
+  // Get sigreturn for functor result
+  int methodId = obj->metaObject().methodId(signature_c);
+  qi::MetaMethod *mm = obj->metaObject().method(methodId);
 
-  sigInfo = qi::signatureSplit(fullSignature);
-
-  //get buffer from message
+  // Get buffer from message
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(message);
 
-  fullSignature = sigInfo[1];
-  fullSignature.append("::");
-  fullSignature.append(sigInfo[2]);
-  qi::Future<qi::MetaFunctionResult> res = obj->xMetaCall(sigInfo[0], fullSignature, qi::MetaFunctionParameters(*m->buff));
+  qi::Future<qi::MetaFunctionResult> res = obj->xMetaCall(mm->sigreturn(), signature_c, qi::MetaFunctionParameters(*m->buff));
   qi::Promise<void*> promise;
   qi_future_data_t*  data = new qi_future_data_t;
   res.addCallbacks(new QiFutureCAdapter(promise));
@@ -90,13 +81,13 @@ qi::MetaFunctionResult c_call(
   const qi::MetaFunctionParameters& params)
 {
   qi_message_data_t* message_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
-    qi_message_data_t* answer_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
+  qi_message_data_t* answer_c = (qi_message_data_t *) malloc(sizeof(qi_message_data_t));
 
-    memset(message_c, 0, sizeof(qi_message_data_t));
-    memset(answer_c, 0, sizeof(qi_message_data_t));
+   memset(message_c, 0, sizeof(qi_message_data_t));
+   memset(answer_c, 0, sizeof(qi_message_data_t));
 
-    message_c->buff = new qi::Buffer(params.getBuffer());
-    answer_c->buff = new qi::Buffer();
+   message_c->buff = new qi::Buffer(params.getBuffer());
+   answer_c->buff = new qi::Buffer();
 
     if (func)
       func(complete_sig.c_str(), (qi_message_t *) message_c, reinterpret_cast<qi_message_t *>(answer_c), data);
@@ -107,8 +98,7 @@ qi::MetaFunctionResult c_call(
     qi_message_destroy((qi_message_t *) message_c);
     qi_message_destroy((qi_message_t *) answer_c);
     return res;
-}
-
+ }
 
 
 int          qi_object_register_method(qi_object_t *object, const char *complete_signature, qi_object_method_t func, void *data)

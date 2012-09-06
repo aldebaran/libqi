@@ -2,267 +2,171 @@
 **
 ** Author(s):
 **  - Cedric GESTES <gestes@aldebaran-robotics.com>
+**  - Pierre ROULLON <proullon@aldebaran-robotics.com>
 **
-** Copyright (C) 2010, 2011 Aldebaran Robotics
+** Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
+#include <qimessaging/signature.hpp>
 #include <qimessaging/c/signature_c.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "signature_c_p.h"
 
-static int _qi_signature_find_end(qi_signature_t *QI_UNUSED(sig), char **pcurrent, const char **psignature, char copen, char close)
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <vector>
+#include <string>
+
+
+//return:
+// pointer to current on success
+// 0 on failure
+const char* qi_signature_current(qi_signature_t *sig)
 {
-  int         opencount  = 1;
-  int         closecount = 0;
-  char       *current    = *pcurrent;
-  const char *signature  = *psignature;
-
-  *current = *signature;
-  signature++;
-  current++;
-  while ((*signature != 0) && (opencount != closecount))
-  {
-    if (*signature == copen)
-      opencount++;
-    if (*signature == close)
-      closecount++;
-    *current = *signature;
-    signature++;
-    current++;
-  }
-  *pcurrent   = current;
-  *psignature = signature;
-
-  return 0;
+  return sig->_it.signature().c_str();
 }
 
-// go forward, add a 0, go forward, add a 0, bouhhh a 1! AHHHHHH scary!
-static int _qi_signature_split(qi_signature_t *sig, const char *signature, const char *end)
+qi_signature_type qi_signature_current_type(qi_signature_t *sig)
 {
-  char *current = sig->_signature;
-
-  while(*signature) {
-    if (end && signature >= end)
-      break;
-    //verify that the current signature is correct
-    switch(*signature) {
-    case QI_VOID   :
-    case QI_BOOL   :
-    case QI_CHAR   :
-    case QI_INT    :
-    case QI_FLOAT  :
-    case QI_DOUBLE :
-    case QI_STRING :
-    case QI_MESSAGE:
-    //case QI_POINTER:
-      *current = *signature;
-      current++;
-      signature++;
-      break;
-    case QI_LIST   :
-      _qi_signature_find_end(sig, &current, &signature, QI_LIST, QI_LIST_END);
-      break;
-    case QI_MAP    :
-      _qi_signature_find_end(sig, &current, &signature, QI_MAP, QI_MAP_END);
-      break;
-    case QI_TUPPLE :
-      _qi_signature_find_end(sig, &current, &signature, QI_TUPPLE, QI_TUPPLE_END);
-      break;
-    default:
-      return 2;
-    }
-
-    *current = 0;
-    current++;
-  }
-  sig->_end = current - 1;
-  return 0;
+  return (qi_signature_type) sig->_it.signature().c_str()[0];
 }
 
-//return 0 on success
-//qi_signature_t *qi_signature_create(const char *signature)
+//return pointer on struct qi_signature_t containing qi::Signature and qi::Signature::iterator.
+// iterator is set to signature->begin()
+//return 0 on failure
 qi_signature_t *qi_signature_create(const char *signature)
 {
-  int             size;
   qi_signature_t *sig;
 
   if (!signature)
     return 0;
 
-  size = strlen(signature) * 2;
-  sig  = new qi_signature_t();
+  sig  = new qi_signature_t(signature);
+  sig->_it = sig->_sig.begin();
 
-
-  sig->_signature               = (char *)malloc(size);
-  sig->current                  = 0;
-  sig->_end                     = sig->_signature + size;
-  sig->_status                  = _qi_signature_split(sig, signature, 0);
   return sig;
 }
 
 qi_signature_t *qi_signature_create_subsignature(const char *signature)
 {
-  int             size;
-  qi_signature_t *sig;
+  std::string sig(signature);
+  qi_signature_type  endType;
 
   if (!signature)
     return 0;
-  size = strlen(signature);
-  if (size < 3)
+
+  switch (*signature)
+  {
+  case QI_TUPPLE:
+    endType = QI_TUPPLE_END;
+    break;
+  case QI_LIST:
+    endType = QI_LIST_END;
+    break;
+  case QI_MAP:
+    endType = QI_MAP_END;
+    break;
+  default:
     return 0;
-  sig  = new qi_signature_t();
+  }
 
-  if (signature[size - 1] == QI_POINTER)
-    size--;
-  size -= 2;
+  unsigned int end = sig.find_first_of(endType);
+  if (end > sig.size() || end < 0)
+    return 0;
 
-  sig->_signature               = (char *)malloc(size);
-  sig->current                  = 0;
-  sig->_end                     = sig->_signature + size;
-  sig->_status                  = _qi_signature_split(sig, signature + 1, signature + 1 + size);
-  return sig;
+  return qi_signature_create(sig.substr(1, end - 1).c_str());
 }
 
 
 void qi_signature_destroy(qi_signature_t *sig)
 {
-  if (!sig)
-    return;
-  free(sig->_signature);
   delete sig;
 }
 
 int qi_signature_is_pointer(const qi_signature_t *sig)
 {
-  if (sig && sig->current && sig->_status != 2 && sig->current != sig->_end)
-    return sig->current[strlen(sig->current) - 1] == QI_POINTER;
-  return 0;
+  return sig->_it.pointer();
 }
 
 //return
 // 0 on success
 // 1 on EOL
 // 2 on error
-int qi_signature_next(qi_signature_t *sig) {
-  if (!sig)
-    return 2;
+int qi_signature_next(qi_signature_t *sig)
+{
 
-  if (sig->_status == 2)
-    return 2;
-
-  if (sig->current >= sig->_end)
+  if (sig->_it == sig->_sig.end())
     return 1;
 
-  if (sig->_status == 0) {
-    sig->current = sig->_signature;
-    sig->_status = 1;
-    return 0;
-  }
+  if (sig->_sig.isValid() == false)
+    return 2;
 
-  sig->current += strlen(sig->current) + 1;
-  if (sig->current >= sig->_end)
-  {
-    sig->current = sig->_end;
-    return 1;
-  }
+  sig->_it++;
   return 0;
 }
 
 //return the number of first level element in the signature
 int qi_signature_count(qi_signature_t *sig)
 {
-  char *it;
-  int   count = 0;
-
-  if (!sig || !sig->_signature)
-    return -1;
-
-  it = sig->_signature;
-  while(it <= sig->_end) {
-    if (*it == 0)
-      count++;
-    ++it;
-  }
-  return count;
+  return sig->_sig.size();
 }
 
 
 // copy the name to buffer
 // return the size copied
 // -1 on error
-int qi_signature_get_name(const char *complete_sig, char *buffer, int size) {
-  const char *ret;
-  int   len;
-  ret = strstr(complete_sig, "::");
+int qi_signature_get_name(const char *complete_sig, char *buffer, int size)
+{
+  std::string   sig(complete_sig);
+  std::vector<std::string>  splitedSig;
 
+  splitedSig = qi::signatureSplit(sig);
+  const char *name = splitedSig[1].c_str();
 
-  if (!ret) {
-    buffer[0] = 0;
-    return 0;
-  }
+  void* ret = ::memccpy(buffer, name, 0, size);
 
-  len = ret - complete_sig;
-  if (len > size)
-    return -1;
-
-  strncpy(buffer, complete_sig, len + 1);
-  buffer[len] = 0;
-  return len;
-}
-
-// copy the name to buffer
-// return the size copied
-// -1 on error
-int qi_signature_get_return(const char *complete_sig, char *buffer, int size) {
-  const char *start, *ret;
-  int   len;
-  start = strstr(complete_sig, (const char *)"::");
-
-  if (!start)
-    start = complete_sig;
-  else
-    start += 2;
-
-  ret = strstr(start, ":");
-  if (!ret) {
-    buffer[0] = 0;
-    return 0;
-  }
-  len = ret - start;
-  if (len > size)
-    return -1;
-
-  strncpy(buffer, start, len);
-  buffer[len] = 0;
-  return len;
-}
-
-// copy the name to buffer
-// return the size copied
-// -1 on error
-int qi_signature_get_params(const char *complete_sig, char *buffer, int size) {
-  const char *start, *ret;
-  int   len;
-  start = strstr(complete_sig, "::");
-
-  if (!start)
-    start = complete_sig;
-  else
-    start += 2;
-
-  ret = strstr(start, ":");
   if (!ret)
-    ret = start;
-  else
-    ret += 1;
-  len = strlen(ret);
-  if (len > size)
     return -1;
 
-  strncpy(buffer, ret, len + 1);
-  buffer[len] = 0;
-  return len;
+  return (int) ((char *) ret - name);
+}
+
+// copy the name to buffer
+// return the size copied
+// -1 on error
+int qi_signature_get_return(const char *complete_sig, char *buffer, int size)
+{
+  std::string   sig(complete_sig);
+  std::vector<std::string>  splitedSig;
+
+  splitedSig = qi::signatureSplit(sig);
+  const char *name = splitedSig[0].c_str();
+
+  void* ret = ::memccpy(buffer, name, 0, size);
+
+  if (!ret)
+    return -1;
+
+  return (int) ((char *) ret - name);
+}
+
+// copy the name to buffer
+// return the size copied
+// -1 on error
+int qi_signature_get_params(const char *complete_sig, char *buffer, int size)
+{
+  std::string   sig(complete_sig);
+  std::vector<std::string>  splitedSig;
+
+  splitedSig = qi::signatureSplit(sig);
+  const char *name = splitedSig[2].c_str();
+
+  void* ret = ::memccpy(buffer, name, 0, size);
+
+  if (!ret)
+    return -1;
+
+  return (int) ((char *) ret - name);
 }
 
 

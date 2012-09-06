@@ -7,93 +7,72 @@
 */
 
 #ifndef _QIMESSAGING_SIGNATURE_H_
-#define _QIMESSAGING_SIGNATURE_H_
+# define _QIMESSAGING_SIGNATURE_H_
 
-#include <qimessaging/c/api_c.h>
+# include <qimessaging/c/api_c.h>
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 extern "C"
 {
-#endif
+# endif
 
-  enum QiSignatureType {
-    QI_NONE       = 0,
-    QI_BOOL       = 'b',
+enum qi_signature_type {
+  QI_NONE       = 0,
+  QI_BOOL       = 'b',
 
-    QI_VOID       = 'v',
+  QI_VOID       = 'v',
 
-    QI_CHAR       = 'c',
-    QI_UCHAR      = 'C',
+  QI_CHAR       = 'c',
+  QI_UCHAR      = 'C',
 
-    QI_SHORT      = 'w',
-    QI_USHORT     = 'W',
+  QI_SHORT      = 'w',
+  QI_USHORT     = 'W',
 
-    QI_INT        = 'i',
-    QI_UINT       = 'I',
+  QI_INT        = 'i',
+  QI_UINT       = 'I',
 
-    QI_LONG       = 'l',
-    QI_ULONG      = 'L',
+  QI_LONG       = 'l',
+  QI_ULONG      = 'L',
 
-    QI_FLOAT      = 'f',
-    QI_DOUBLE     = 'd',
+  QI_FLOAT      = 'f',
+  QI_DOUBLE     = 'd',
 
-    QI_STRING     = 's',
-    QI_LIST       = '[',
-    QI_LIST_END   = ']',
+  QI_STRING     = 's',
+  QI_LIST       = '[',
+  QI_LIST_END   = ']',
 
-    QI_MAP        = '{',
-    QI_MAP_END    = '}',
+  QI_MAP        = '{',
+  QI_MAP_END    = '}',
 
-    QI_TUPPLE     = '(',
-    QI_TUPPLE_END = ')',
+  QI_TUPPLE     = '(',
+  QI_TUPPLE_END = ')',
 
-    QI_MESSAGE    = 'm',
+  QI_MESSAGE    = 'm',
 
-    QI_RAW        = 'r',
+  QI_RAW        = 'r',
 
-    QI_UNKNOWN    = 'X',
-    QI_POINTER    = '*'
-  };
+  QI_UNKNOWN    = 'X',
+  QI_POINTER    = '*'
+};
 
+typedef struct qi_signature_t_s qi_signature_t;
 
-  typedef struct signature {
-    char *current;
+QIMESSAGING_API qi_signature_t*        qi_signature_create(const char *signature);
+QIMESSAGING_API qi_signature_t*        qi_signature_create_subsignature(const char *signature);
+QIMESSAGING_API void                   qi_signature_destroy(qi_signature_t *sig);
 
-    // private
-    char *_signature;
-    char *_end;
-    char  _status;
-  } qi_signature_t;
-
-
-  QIMESSAGING_API qi_signature_t *qi_signature_create(const char *signature);
-  QIMESSAGING_API qi_signature_t *qi_signature_create_subsignature(const char *signature);
-  QIMESSAGING_API void            qi_signature_destroy(qi_signature_t *sig);
-
-  //return the number of first level element in the signature
-  QIMESSAGING_API int qi_signature_count(qi_signature_t *sig);
-
-  //return:
-  // 0 on success
-  // 1 on EOL
-  // 2 on error
-  QIMESSAGING_API int qi_signature_next(qi_signature_t *sig);
-
-  //return:
-  // 0 if the current type is not a pointer or on error
-  // 1 if the current type is a pointer
-  QIMESSAGING_API int qi_signature_is_pointer(const qi_signature_t *sig);
-
-  // copy the name to buffer
-  // return the size copied
-  // -1 on error
-  QIMESSAGING_API int qi_signature_get_name(const char *complete_sig, char *buffer, int size);
-  QIMESSAGING_API int qi_signature_get_return(const char *complete_sig, char *buffer, int size);
-  QIMESSAGING_API int qi_signature_get_params(const char *complete_sig, char *buffer, int size);
+QIMESSAGING_API int                    qi_signature_count(qi_signature_t *sig);
+QIMESSAGING_API int                    qi_signature_next(qi_signature_t *sig);
+QIMESSAGING_API const char*            qi_signature_current(qi_signature_t *sig);
+QIMESSAGING_API enum qi_signature_type qi_signature_current_type(qi_signature_t *sig);
+QIMESSAGING_API int                    qi_signature_is_pointer(const qi_signature_t *sig);
+QIMESSAGING_API int                    qi_signature_get_name(const char *complete_sig, char *buffer, int size);
+QIMESSAGING_API int                    qi_signature_get_return(const char *complete_sig, char *buffer, int size);
+QIMESSAGING_API int                    qi_signature_get_params(const char *complete_sig, char *buffer, int size);
 
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 }
-#endif
+# endif
 
 #endif  // _QIMESSAGING_SIGNATURE_H_
