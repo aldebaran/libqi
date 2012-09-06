@@ -118,6 +118,12 @@ void QiTransportSocket::close()
 {
   if (_p->_device)
   {
+    QAbstractSocket* socket = dynamic_cast<QAbstractSocket*>(_p->_device);
+    if (socket)
+    {
+      socket->flush();
+    }
+
     _p->_device->close();
   }
 }
