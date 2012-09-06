@@ -127,7 +127,7 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
   return false;
 }
 
-QUrl QiTransportServer::listeningUrl()
+QUrl QiTransportServer::listeningUrl() const
 {
   return _p->_listeningUrl;
 }

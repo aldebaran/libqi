@@ -191,7 +191,7 @@ void QiTransportSocket::connectToHost(const QUrl& address)
   }
 }
 
-QUrl QiTransportSocket::peer()
+QUrl QiTransportSocket::peer() const
 {
   return _p->_peer;
 }

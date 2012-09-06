@@ -25,7 +25,7 @@ public:
   virtual ~QiTransportServer();
 
   bool listen(const QUrl& listenURL);
-  QUrl listeningUrl();
+  QUrl listeningUrl() const;
   void close();
 
   bool hasPendingConnections() const;

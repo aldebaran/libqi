@@ -28,7 +28,7 @@ public:
   qi::Message* read();
   void close();
   void connectToHost(const QUrl& address);
-  QUrl peer();
+  QUrl peer() const;
 
   enum SocketState
   {
