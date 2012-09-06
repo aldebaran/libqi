@@ -39,7 +39,7 @@ class MetaTypeCArrayValue
 public:
   bool toValue(const void* ptr, detail::Value& val)
   {
-    val = std::string((const char*)ptr, I);
+    val = std::string((const char*)ptr, I-1);
     return true;
   }
   void* fromValue(const detail::Value& val)
