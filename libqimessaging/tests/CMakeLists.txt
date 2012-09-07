@@ -4,8 +4,6 @@
 #add_subdirectory(test_transport)
 #add_subdirectory(test_transport_publish)
 
-# This is not a test
-add_subdirectory(test_c_bindings)
 #add_subdirectory(test_endpoint_context)
 
 qi_create_lib(testmodule  SRC testmodule.cpp DEPENDS QI QIMESSAGING)

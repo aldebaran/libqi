@@ -24,3 +24,6 @@ qi_submodule_create("qi-messaging-c"  qimessaging/c/api_c.h
                                       src/future_c.cpp
                                       src/application_c.cpp
                                       src/signature_c.cpp)
+
+# Test directory
+add_subdirectory(test)
