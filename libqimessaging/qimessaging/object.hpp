@@ -99,7 +99,7 @@ namespace qi {
     inline unsigned int advertiseEvent(const std::string& eventName);
     int xAdvertiseEvent(const std::string& signature);
 
-    template <typename RETURN_TYPE> qi::Future<RETURN_TYPE> call(const std::string& methodName,
+    template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
                                                                  qi::AutoMetaValue p1 = qi::AutoMetaValue(),
                                                                  qi::AutoMetaValue p2 = qi::AutoMetaValue(),
                                                                  qi::AutoMetaValue p3 = qi::AutoMetaValue(),

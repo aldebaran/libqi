@@ -20,7 +20,7 @@ static qi::Promise<bool> payload;
 void onFire1(const int& pl)
 {
   if (pl)
-    oclient2->call<void>("onFire2", pl-1);
+    oclient2->call<void>("onFire2", pl-1).async();
   else
     payload.setValue(true);
 }
@@ -28,7 +28,7 @@ void onFire1(const int& pl)
 void onFire2(const int& pl)
 {
   if (pl)
-    oclient1->call<void>("onFire1", pl-1);
+    qi::Future<void> unused = oclient1->call<void>("onFire1", pl-1);
   else
     payload.setValue(true);
 }

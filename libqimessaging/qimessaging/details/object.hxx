@@ -77,7 +77,7 @@ namespace qi {
   }
 
   template<typename R>
-  qi::Future<R> Object::call(const std::string& methodName,
+  qi::FutureSync<R> Object::call(const std::string& methodName,
     qi::AutoMetaValue p1,
       qi::AutoMetaValue p2,
       qi::AutoMetaValue p3,
