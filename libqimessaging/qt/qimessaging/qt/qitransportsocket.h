@@ -8,15 +8,14 @@
 #ifndef QITRANSPORTSOCKET_H_
 # define QITRANSPORTSOCKET_H_
 
-# include <qimessaging/api.hpp>
+# include <qimessaging/qt/api.h>
 # include <qimessaging/message.hpp>
-# include <QObject>
 # include <QAbstractSocket>
 # include <QUrl>
 
 class QiTransportSocketPrivate;
 
-class QIMESSAGING_API QiTransportSocket : public QObject
+class QIMESSAGING_QT_API QiTransportSocket : public QObject
 {
   Q_OBJECT
 

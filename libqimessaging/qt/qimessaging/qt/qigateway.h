@@ -1,5 +1,3 @@
-// -*- C++ -*-
-
 /*
 ** Author(s):
 **  - Laurent LEC <llec@aldebaran-robotics.com>
@@ -10,13 +8,11 @@
 #ifndef QIGATEWAY_H_
 # define QIGATEWAY_H_
 
-# include <qimessaging/api.hpp>
 # include <qimessaging/qt/QiTransportSocket>
-# include <QUrl>
 
 class QiGatewayPrivate;
 
-class QIMESSAGING_API QiGateway : public QObject
+class QIMESSAGING_QT_API QiGateway : public QObject
 {
   Q_OBJECT
 
