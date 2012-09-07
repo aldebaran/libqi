@@ -159,7 +159,6 @@ int main_client(std::string QI_UNUSED(str))
 {
   qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
-  session.waitForConnected();
 
   qi::Object *sock = session.service("serviceTest");
 
@@ -230,7 +229,6 @@ int main_server()
   obj.advertiseMethod("reply", &reply);
 
   session.connect("tcp://127.0.0.1:5555");
-  session.waitForConnected();
 
   std::vector<std::string> endpoints;
   endpoints.push_back("tcp://127.0.0.1:9559");

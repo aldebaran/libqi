@@ -106,7 +106,6 @@ int main(int argc, char *argv[])
       obj.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
 
       session.connect(masterAddress);
-      session.waitForConnected();
 
       session.listen("tcp://0.0.0.0:0");
       unsigned int id = session.registerService("serviceTest", &obj);

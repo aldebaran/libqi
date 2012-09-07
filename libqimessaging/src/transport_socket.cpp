@@ -50,13 +50,13 @@ namespace qi
     _p->destroy();
   }
 
-  bool TransportSocket::connect(const qi::Url &url, qi::EventLoop* ctx)
+  qi::FutureSync<bool> TransportSocket::connect(const qi::Url &url, qi::EventLoop* ctx)
   {
     TransportSocketPrivate *save = _p;
     _p->status = 0;
     if (url.protocol() != "tcp") {
       qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket: " << url.protocol();
-      return false;
+      return Future<bool>(false);
     }
 
     _p = new qi::TransportSocketLibEvent(this);
@@ -74,19 +74,9 @@ namespace qi
     return _p->url;
   }
 
-  void TransportSocket::disconnect()
+  qi::FutureSync<void> TransportSocket::disconnect()
   {
-    _p->disconnect();
-  }
-
-  bool TransportSocket::waitForConnected(int msecs)
-  {
-    return _p->waitForConnected(msecs);
-  }
-
-  bool TransportSocket::waitForDisconnected(int msecs)
-  {
-    return _p->waitForDisconnected(msecs);
+    return _p->disconnect();
   }
 
   int TransportSocket::status() const {

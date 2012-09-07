@@ -21,7 +21,6 @@ void call(const std::string &addr)
 {
   qi::Session session;
   session.connect(addr);
-  session.waitForConnected();
 
 #if 0
   std::vector<qi::ServiceInfo> servs = session.services();
@@ -53,7 +52,6 @@ void call(const std::string &addr)
 
   delete obj;
   session.close();
-  session.waitForDisconnected();
 }
 
 

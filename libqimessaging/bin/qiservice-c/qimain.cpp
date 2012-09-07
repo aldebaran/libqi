@@ -43,7 +43,6 @@ int		main(int argc, char **argv)
   qi_session_t* session = qi_session_create();
 
   qi_session_connect(session, sd_addr);
-  qi_session_wait_for_connected(session, 3000);
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
   unsigned int id = qi_session_register_service(session, "serviceTest", object);

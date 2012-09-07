@@ -36,7 +36,6 @@ public:
   ~TestConnection()
   {
     session.close();
-    session.waitForDisconnected();
 
     delete obj;
     obj = NULL;
@@ -45,7 +44,6 @@ public:
   bool init()
   {
     session.connect(connectionAddr);
-    session.waitForConnected();
     obj = session.service("serviceTest");
 
     if (!obj)
@@ -173,7 +171,6 @@ int main(int argc, char **argv) {
   obj.advertiseMethod("replyBufBA", &replyBufBA);
 
   session.connect(sdAddr.str());
-  session.waitForConnected();
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
@@ -198,7 +195,6 @@ int main(int argc, char **argv) {
   int res = RUN_ALL_TESTS();
   sd.close();
   session.close();
-  session.waitForDisconnected();
 
 
   return res;

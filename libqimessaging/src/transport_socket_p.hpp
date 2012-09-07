@@ -28,14 +28,11 @@ namespace qi
     TransportSocketPrivate(TransportSocket *socket);
     virtual ~TransportSocketPrivate();
 
-    virtual bool connect(const qi::Url &url, EventLoop* ctx)  = 0;
-    virtual void disconnect()                 = 0;
+    virtual qi::FutureSync<bool> connect(const qi::Url &url, EventLoop* ctx)  = 0;
+    virtual qi::FutureSync<void> disconnect()                 = 0;
     virtual bool send(const qi::Message &msg) = 0;
     virtual bool read(int id, qi::Message *msg);
 
-    // if msecs < 0 no timeout
-    virtual bool waitForConnected(int msecs = 30000);
-    virtual bool waitForDisconnected(int msecs = 30000);
     virtual bool waitForId(int id, int msecs = 30000);
 
     virtual void addCallbacks(TransportSocketInterface *delegate, void *data);

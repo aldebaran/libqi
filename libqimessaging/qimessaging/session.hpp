@@ -69,12 +69,9 @@ namespace qi {
     void removeCallbacks(SessionInterface *delegate);
 
     //Client
-    bool connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
     bool isConnected() const;
     qi::Url url() const;
-    bool waitForConnected(int msecs = 30000);
-    bool waitForDisconnected(int msecs = 30000);
-
 
     bool waitForServiceReady(const std::string &service, int msecs = 30000);
 
@@ -89,7 +86,7 @@ namespace qi {
     qi::Url listenUrl() const;
 
     //close both client and server side
-    void    close();
+    qi::FutureSync<void>    close();
 
     qi::Future<unsigned int> registerService(const std::string &name, qi::Object *object);
     qi::Future<void>         unregisterService(unsigned int idx);

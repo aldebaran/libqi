@@ -218,6 +218,7 @@ namespace qi
     if (events & BEV_EVENT_CONNECTED)
     {
       connected = true;
+      connectPromise.setValue(true);
       for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
         it->first->onSocketConnected(self, it->second);
     }
@@ -249,6 +250,8 @@ namespace qi
       cleanPendingMessages();
 
       status = errno;
+      disconnectPromise.setValue(0);
+      connectPromise.setError(strerror(errno));
       // check errno to see what error occurred
       qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
     }
@@ -392,19 +395,21 @@ namespace qi
   void connect_dec(TransportSocketLibEvent* ptr, qi::Url url, EventLoop* ctx)
   {
     --ptr->inMethod;
-    ptr->connect(url, ctx);
+    ptr->connect(url, ctx).async();
   }
 
-  bool TransportSocketLibEvent::connect(const qi::Url &url,
+  qi::FutureSync<bool> TransportSocketLibEvent::connect(const qi::Url &url,
     EventLoop* ctx)
   {
+    connectPromise.reset();
+    disconnectPromise.reset();
     this->context = ctx;
     if (!context->isInEventLoopThread())
     {
       ++inMethod;
       context->asyncCall(1,
         boost::bind(connect_dec, this, url, ctx));
-      return true;
+      return connectPromise.future();
     }
     const std::string &address = url.host();
     struct evutil_addrinfo *ai = NULL;
@@ -413,7 +418,8 @@ namespace qi
 
     if (url.port() == 0) {
       qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << url.str();
-      return false;
+      connectPromise.setError("Bad address " + url.str());
+      return connectPromise.future();
     }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << url.host() << ":" << url.port();
     if (!isConnected())
@@ -432,7 +438,8 @@ namespace qi
       if (err != 0)
       {
         qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
-        return (false);
+        connectPromise.setValue(false);
+        return connectPromise.future();
       }
 
       if (!clean_event)
@@ -445,17 +452,16 @@ namespace qi
       int result = bufferevent_socket_connect(bev, ai->ai_addr, ai->ai_addrlen);
 
       evutil_freeaddrinfo(ai);
-      if (result == 0)
-        return true;
-
-      return false;
+      if (result)
+        connectPromise.setValue(false);
+      return connectPromise.future();
     }
     else
     {
       qiLogError("qimessaging.TransportSocketLibevent") << "socket is already connected.";
     }
-
-    return false;
+    connectPromise.setValue(false);
+    return connectPromise.future();
   }
 
   void TransportSocketLibEvent::destroy()
@@ -495,7 +501,7 @@ namespace qi
     ptr->disconnect();
   }
 
-  void TransportSocketLibEvent::disconnect()
+  qi::FutureSync<void> TransportSocketLibEvent::disconnect()
   {
     boost::recursive_mutex::scoped_lock sl(mutex);
     if (!context->isInEventLoopThread())
@@ -503,7 +509,7 @@ namespace qi
       ++inMethod;
       context->asyncCall(1,
         boost::bind(disconnect_dec, this));
-      return;
+      return disconnectPromise.future();
     }
     if (clean_event) {
       event_del(clean_event);
@@ -525,13 +531,16 @@ namespace qi
        bufferevent_setcb(bev, 0, 0, 0, 0);
        bufferevent_free(bev);
        bev = NULL;
-       connected = false;
        cleanPendingMessages();
+       connected = false;
+       disconnectPromise.setValue(0);
     }
+    else disconnectPromise.setValue(0);
     //else
     //{
     //  qiLogError("qimessaging.TransportSocketLibevent") << "socket is not connected.";
     //}
+    return disconnectPromise.future();
   }
 
   void send_dec(TransportSocketLibEvent* sock,

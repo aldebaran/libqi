@@ -24,20 +24,22 @@ namespace qi
   {
   }
 
-  bool TransportSocketDummyPrivate::connect(const qi::Url &,
+  qi::FutureSync<bool> TransportSocketDummyPrivate::connect(const qi::Url &,
     EventLoop*)
   {
     qiLogWarning("TransportSocket") << "You are currently running on dummy"
                                     << " TransportSocket! "
                                     << "You can not connect to anything!";
-    return false;
+
+    return qi::FutureSync<bool>(false);
   }
 
-  void TransportSocketDummyPrivate::disconnect()
+  qi::FutureSync<void> TransportSocketDummyPrivate::disconnect()
   {
     qiLogWarning("TransportSocket") << "You are currently running on dummy"
                                     << " TransportSocket! "
                                     << "You can not disconnect from something!";
+    return qi::FutureSync<void>(0);
   }
 
   bool TransportSocketDummyPrivate::send(const qi::Message &QI_UNUSED(msg))

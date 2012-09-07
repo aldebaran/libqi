@@ -161,12 +161,12 @@ bool QiSession::disconnect()
 
 bool QiSession::waitForConnected(int msecs)
 {
-  return _p->_serviceSocket->waitForConnected(msecs);
+  return true; // Dead class
 }
 
 bool QiSession::waitForDisconnected(int msecs)
 {
-  return _p->_serviceSocket->waitForDisconnected(msecs);
+  return true; // dead class
 }
 
 //1 call: req epinfo to the master

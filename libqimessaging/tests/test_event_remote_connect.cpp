@@ -46,9 +46,7 @@ protected:
     // Two objects with a fire event and a onFire method.
     ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
     ASSERT_TRUE(session1.connect(sd.listenUrl()));
-    ASSERT_TRUE(session1.waitForConnected());
     ASSERT_TRUE(session2.connect(sd.listenUrl()));
-    ASSERT_TRUE(session2.waitForConnected());
     e1 = oserver1.advertiseEvent<void (*)(const int&)>("fire1");
     e2 = oserver2.advertiseEvent<void (*)(const int&)>("fire2");
     m1 = oserver1.advertiseMethod("onFire1", &onFire1);
@@ -60,7 +58,6 @@ protected:
     EXPECT_EQ(1U, session1.services(qi::Session::ServiceLocality_Local).value().size());
     EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
-    ASSERT_TRUE(sclient.waitForConnected());
     std::vector<qi::ServiceInfo> services = sclient.services();
     EXPECT_EQ(3U, services.size());
     oclient1 = sclient.service("coin1");

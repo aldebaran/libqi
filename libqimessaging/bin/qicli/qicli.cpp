@@ -126,7 +126,6 @@ static void cmd_session(const command           &cmd,
     else
     {
       session.connect(*it);
-      session.waitForConnected();
     }
   }
   else if (*it == "services")
@@ -200,7 +199,6 @@ static void from_argv(int   argc,
   command cmd;
 
   session.connect(argv[1]);
-  session.waitForConnected();
 
   for (int i = 2;
        i < argc;

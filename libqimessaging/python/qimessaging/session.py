@@ -34,21 +34,11 @@ class Session:
     def unregister_service(self, idx):
         _qi.qi_session_unregister_service(self.session, idx)
 
-    def wait_for_connected(self, msecs = 3000):
-        if _qi.qi_session_wait_for_connected(self.session, msecs) == 1:
-            return True
-        return False
-
     def service(self, name):
         obj = _qi.qi_session_get_service(self.session, name)
 
         if not obj:
             return None
-
-        return Object(obj)
-
-    def wait_for_disconnected(self, msecs):
-        _qi.qi_session_wait_for_disconnected(self.session, msecs)
 
     def close(self):
         _qi.qi_session_close(self.session)

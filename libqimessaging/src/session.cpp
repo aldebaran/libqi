@@ -34,7 +34,6 @@ namespace qi {
 
   SessionPrivate::~SessionPrivate() {
     _sdClient.disconnect();
-    _sdClient.waitForDisconnected();
     _server.close();
   }
 
@@ -50,7 +49,6 @@ namespace qi {
   Session::~Session()
   {
     close();
-    waitForDisconnected();
     delete _p;
   }
 
@@ -66,7 +64,7 @@ namespace qi {
   }
 
   // ###### Client
-  bool Session::connect(const qi::Url &serviceDirectoryURL)
+  qi::FutureSync<bool> Session::connect(const qi::Url &serviceDirectoryURL)
   {
     return _p->_sdClient.connect(serviceDirectoryURL);
   }
@@ -77,17 +75,6 @@ namespace qi {
 
   qi::Url Session::url() const {
     return _p->_sdClient.url();
-  }
-
-  bool Session::waitForConnected(int msecs)
-  {
-    return _p->_sdClient.waitForConnected(msecs);
-  }
-
-
-  bool Session::waitForDisconnected(int msecs)
-  {
-    return _p->_sdClient.waitForDisconnected(msecs);
   }
 
   bool Session::waitForServiceReady(const std::string &service, int msecs) {
@@ -116,10 +103,10 @@ namespace qi {
     return _p->_server.listen(address);
   }
 
-  void Session::close()
+  qi::FutureSync<void> Session::close()
   {
     _p->_server.close();
-    _p->_sdClient.disconnect();
+    return _p->_sdClient.disconnect();
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,

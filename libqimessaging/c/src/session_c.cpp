@@ -27,13 +27,6 @@ void qi_session_connect(qi_session_t *session, const char *address)
   s->connect(address);
 }
 
-int qi_session_wait_for_connected(qi_session_t *session, int msecs)
-{
-  qi::Session *s = reinterpret_cast<qi::Session*>(session);
-
-  return (int) s->waitForConnected(msecs);
-}
-
 void qi_session_destroy(qi_session_t *session)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
@@ -46,13 +39,6 @@ void qi_session_close(qi_session_t *session)
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
   s->close();
-}
-
-void qi_session_wait_for_disconnected(qi_session_t *session, int msecs)
-{
-  qi::Session *s = reinterpret_cast<qi::Session*>(session);
-
-  s->waitForDisconnected(msecs);
 }
 
 int qi_session_get_service_id(qi_session_t *session, const char *service_name)

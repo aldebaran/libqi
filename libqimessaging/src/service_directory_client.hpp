@@ -21,12 +21,10 @@ namespace qi {
     ServiceDirectoryClient();
     ~ServiceDirectoryClient();
 
-    bool connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
     bool isConnected() const;
     qi::Url url() const;
-    bool waitForConnected(int msecs = 30000);
-    void disconnect();
-    bool waitForDisconnected(int msecs = 30000);
+    qi::FutureSync<void> disconnect();
 
     void addCallbacks(SessionInterface *delegate, void *data);
     void removeCallbacks(SessionInterface *delegate);

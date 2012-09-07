@@ -42,9 +42,7 @@ TEST(Test, Recurse)
   // Two objects with a fire event and a onFire method.
   ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
   ASSERT_TRUE(session1.connect(sd.listenUrl()));
-  ASSERT_TRUE(session1.waitForConnected());
   ASSERT_TRUE(session2.connect(sd.listenUrl()));
-  ASSERT_TRUE(session2.waitForConnected());
   oserver1.advertiseMethod("onFire1", &onFire1);
   oserver2.advertiseMethod("onFire2", &onFire2);
   ASSERT_TRUE(session1.listen("tcp://0.0.0.0:0"));
@@ -69,9 +67,7 @@ TEST(Test, Recurse)
   ASSERT_TRUE(payload.future().wait(3000));
 
   session1.close();
-  session1.waitForDisconnected();
   session2.close();
-  session2.waitForDisconnected();
   delete oclient1;
   delete oclient2;
   sd.close();

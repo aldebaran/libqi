@@ -48,7 +48,6 @@ public:
                unsigned short port)
   {
     tc->connect(address, port, nthd->getEventBase());
-    tc->waitForConnected(300);
   }
 
   void setThread(qi::NetworkThread *n)

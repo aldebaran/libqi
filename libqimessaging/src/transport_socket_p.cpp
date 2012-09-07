@@ -25,44 +25,6 @@ namespace qi
     delete msg;
   }
 
-// if msecs < 0 no timeout
-  bool TransportSocketPrivate::waitForConnected(int msecs)
-  {
-    // no timeout
-    if (msecs < 0)
-    {
-      while (!isConnected() && status == 0)
-        ;
-      return true;
-    }
-
-    while ((!isConnected() && status == 0) && msecs > 0)
-    {
-      qi::os::msleep(1);
-      msecs--;
-    }
-    return isConnected();
-  }
-
-  bool TransportSocketPrivate::waitForDisconnected(int msecs)
-  {
-    // no timeout
-    if (msecs < 0)
-    {
-      while (isConnected())
-        ;
-      return true;
-    }
-
-    while (isConnected() && msecs > 0)
-    {
-      qi::os::msleep(1);
-      msecs--;
-    }
-
-    return !isConnected();
-  }
-
   bool TransportSocketPrivate::waitForId(int id, int msecs)
   {
     if (!isConnected())

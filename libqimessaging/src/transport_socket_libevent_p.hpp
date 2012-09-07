@@ -34,8 +34,8 @@ namespace qi
     void setFD(int fd);
     virtual ~TransportSocketLibEvent();
 
-    virtual bool connect(const qi::Url &url, EventLoop* ctx);
-    virtual void disconnect();
+    virtual qi::FutureSync<bool> connect(const qi::Url &url, EventLoop* ctx);
+    virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void destroy();
     void readcb(struct bufferevent *bev,
@@ -70,6 +70,8 @@ namespace qi
     struct event       *clean_event;
     qi::atomic<long>   inMethod; // used for reentrency and async method tracking
     EventLoop* context;
+    qi::Promise<bool>  connectPromise;
+    qi::Promise<void>  disconnectPromise;
   };
 
 }

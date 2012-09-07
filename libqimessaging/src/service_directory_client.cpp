@@ -49,19 +49,9 @@ namespace qi {
     //do not delete _socket it is deleted by _object at the moment.
   }
 
-  bool ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)
+  qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)
   {
     return _socket->connect(serviceDirectoryURL);
-  }
-
-  bool ServiceDirectoryClient::waitForConnected(int msecs)
-  {
-    return _socket->waitForConnected(msecs);
-  }
-
-  bool ServiceDirectoryClient::waitForDisconnected(int msecs)
-  {
-    return _socket->waitForDisconnected(msecs);
   }
 
   bool ServiceDirectoryClient::isConnected() const {
@@ -111,8 +101,8 @@ namespace qi {
       it->first->onSessionDisconnected(_session, it->second);
   }
 
-  void ServiceDirectoryClient::disconnect() {
-    _socket->disconnect();
+  qi::FutureSync<void> ServiceDirectoryClient::disconnect() {
+    return _socket->disconnect();
   }
 
   qi::Url ServiceDirectoryClient::url() const {

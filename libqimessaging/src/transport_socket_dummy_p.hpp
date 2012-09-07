@@ -27,8 +27,8 @@ namespace qi
     TransportSocketDummyPrivate(TransportSocket *socket);
     virtual ~TransportSocketDummyPrivate();
 
-    virtual bool connect(const qi::Url &url, EventLoop* ctx);
-    virtual void disconnect();
+    virtual qi::FutureSync<bool> connect(const qi::Url &url, EventLoop* ctx);
+    virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void destroy();
   };

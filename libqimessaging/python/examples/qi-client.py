@@ -16,11 +16,6 @@ def init_session(sd_addr):
     except qimessaging.ConnectionError as e:
         print e
         return None
-
-    if not session.wait_for_connected():
-        print "Cannot connect to service directory"
-        return None
-
     return session
 
 def get_service(session, service_name):

@@ -59,7 +59,6 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 
   qi::Session session;
   session.connect("tcp://"+host+":"+port);
-  session.waitForConnected();
   qi::Future< qi::Object * > fobj =  session.service("serviceTest");
   qi::Object *obj = fobj.value();
   if (!obj)
@@ -207,7 +206,6 @@ int main_server(std::string host, std::string port)
   obj.advertiseMethod("reply", &reply);
   obj.advertiseMethod("replyBuf", &replyBuf);
   session.connect("tcp://127.0.0.1:"+port);
-  session.waitForConnected();
 
   session.listen("tcp://0.0.0.0:0");
   session.registerService("serviceTest", &obj);

@@ -17,7 +17,6 @@ int make_call(char *addr)
   qi_session_t* session = qi_session_create();
 
   qi_session_connect(session, addr);
-  qi_session_wait_for_connected(session, 3000);
 
   qi_object_t* object = qi_session_get_service(session, "serviceTest");
 

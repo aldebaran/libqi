@@ -116,17 +116,9 @@ namespace qi {
         ts = new qi::TransportSocket();
         ts->addCallbacks(this, data);
         sr->socket = ts;
-        if (!ts->connect(url))
-        {
-          // Synchronous failure, do nothing, try next
-          delete ts;
-          continue;
-        }
-        else
-        {
-          // The connect may still fail asynchronously.
-          ++sr->attempts;
-        }
+        ts->connect(url).async();
+        // The connect may still fail asynchronously.
+        ++sr->attempts;
       }
       break;
     }

@@ -29,67 +29,55 @@ static std::string connectionAddr;
 TEST(QiSession, simpleConnectionToSd)
 {
   qi::Session session;
-  session.connect(connectionAddr);
-  ASSERT_TRUE(session.waitForConnected(1000));
+  bool connected = session.connect(connectionAddr);
+  ASSERT_TRUE(connected);
 
   EXPECT_TRUE(session.isConnected());
 
   session.close();
-  bool disconnected = session.waitForDisconnected(1000);
 
-  EXPECT_TRUE(disconnected);
+  EXPECT_TRUE(!session.isConnected());
 }
 
 TEST(QiSession, simpleConnectionToNonReachableSd)
 {
   qi::Session session;
   session.connect("tcp://127.0.1.123:1245");
-  bool connected = session.waitForConnected(500);
 
-  EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
-
-  EXPECT_TRUE(disconnected);
+  EXPECT_FALSE(session.isConnected());
 }
 
 TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 {
   qi::Session session;
-  session.connect("tcp://0.0.0.0:0");
-  bool connected = session.waitForConnected(500);
+  bool connected = session.connect("tcp://0.0.0.0:0");
 
   EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
-
-  EXPECT_TRUE(disconnected);
+  EXPECT_FALSE(session.isConnected());
 }
 
 TEST(QiSession, simpleConnectionToInvalidSd)
 {
   qi::Session session;
-  session.connect("invalidAddress");
-  bool connected = session.waitForConnected(500);
+  bool connected = session.connect("invalidAddress");
 
   EXPECT_FALSE(connected);
   EXPECT_FALSE(session.isConnected());
 
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
-
-  EXPECT_TRUE(disconnected);
+  EXPECT_FALSE(session.isConnected());
 }
 
 TEST(QiSession, getSimpleService)
 {
   qi::Session session;
-  session.connect(connectionAddr);
-  bool connected = session.waitForConnected(1000);
+  bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
   qi::Object obj;
@@ -109,33 +97,27 @@ TEST(QiSession, getSimpleService)
 
   delete object;
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
+  EXPECT_FALSE(session.isConnected());
 
-  EXPECT_TRUE(disconnected);
 }
 
 TEST(QiSession, getUnregisterService)
 {
   qi::Session session;
-  session.connect(connectionAddr);
-  bool connected = session.waitForConnected(1000);
-
+  bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
   qi::Object *object = session.service("serviceTest");
   EXPECT_FALSE(object);
 
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
-
-  EXPECT_TRUE(disconnected);
+  EXPECT_FALSE(session.isConnected());
 }
 
 TEST(QiSession, getCloseService)
 {
   qi::Session session, client;
-  session.connect(connectionAddr);
-  bool connected = session.waitForConnected(1000);
+  bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
   qi::Object obj;
@@ -150,16 +132,13 @@ TEST(QiSession, getCloseService)
   session.close();
 
   client.connect(connectionAddr);
-  connected = client.waitForConnected(1000);
-  EXPECT_TRUE(connected);
+  EXPECT_TRUE(client.isConnected());
 
   qi::Object *object = client.service("serviceTest");
   EXPECT_FALSE(object);
 
   session.close();
-  bool disconnected = session.waitForDisconnected(500);
-
-  EXPECT_TRUE(disconnected);
+  EXPECT_FALSE(session.isConnected());
 }
 
 int main(int argc, char **argv)

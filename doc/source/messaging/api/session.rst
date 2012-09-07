@@ -26,7 +26,6 @@ A service will need a session to register itself to a service directory.
 
   qi::Session session;
   session.connect(serviceDirectoryURL);
-  session.waitForConnected();
   ...
   qi::Server srv;
   srv.listen(&session, endpoints);
@@ -42,7 +41,6 @@ A client will use a session to retrieve the list of surrounding services, and ge
 
   qi::Session session;
   session.connect(serviceDirectoryURL);
-  session.waitForConnected();
 
   qi::Object *obj = session.service("serviceTest");
 
@@ -81,18 +79,6 @@ Classes
   .. cpp:function:: bool join()
 
     Block until session terminates.
-
-  .. cpp:function:: bool waitForConnected(int msecs = 30000)
-
-    Block until session is connected.
-
-    :param msecs: length of the timeout
-
-  .. cpp:function:: bool waitForDisconnected(int msecs = 30000)
-
-    Block until session is disconnected.
-
-    :param msecs: length of the timeout
 
   .. cpp:function:: qi::Future< std::vector<ServiceInfo> > services()
 

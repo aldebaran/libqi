@@ -36,7 +36,6 @@ int main(int argc, char **argv) {
   sd.listen("tcp://localhost:0");
   s.connect(sd.listenUrl());
   s.listen("tcp://localhost:0");
-  s.waitForConnected();
   session = &s;
   return RUN_ALL_TESTS();
 }

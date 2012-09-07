@@ -81,7 +81,6 @@ int main_client(bool shared)
   const unsigned int nbThreads = 4;
   qi::Session session;
   session.connect("tcp://127.0.0.1:5555");
-  session.waitForConnected();
   qi::Object *obj = 0;
   boost::thread thd[nbThreads];
 
@@ -168,7 +167,6 @@ int main_server()
   obj.advertiseMethod("reply", &reply);
 
   session.connect("tcp://127.0.0.1:5555");
-  session.waitForConnected();
 
   session.listen("tcp://127.0.0.1:9559");
   session.registerService("serviceTest", &obj);

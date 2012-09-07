@@ -74,6 +74,13 @@ namespace qi {
       return *this;
     }
 
+    explicit Future<T>(const ValueType& v)
+    {
+      Promise<T> promise;
+      promise.setValue(v);
+      *this = promise.future();
+    }
+
     const ValueType &value() const    { return _p->value(); }
     ValueType &value()                { return _p->value(); }
     operator const ValueType&() const { return _p->value(); }

@@ -516,7 +516,6 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
   }
 
   sdSocket->connect(address);
-  sdSocket->waitForConnected();
 
   if (!sdSocket->isConnected())
   {

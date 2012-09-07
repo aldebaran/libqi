@@ -59,7 +59,6 @@ int thd_client(qi::TransportSocket *socket)
   if (!socket)
   {
     ts.connect("tcp://127.0.0.1:5555");
-    ts.waitForConnected(30);
     socket = &ts;
     socket->addCallbacks(&tsi);
   }
@@ -98,7 +97,6 @@ int main_client(bool shared)
   {
     qiLogInfo("perf_transport_socket") << "Socket will be shared";
     socket.connect("tcp://127.0.0.1:5555");
-    socket.waitForConnected(30);
     socket.addCallbacks(&tsi);
   }
   else

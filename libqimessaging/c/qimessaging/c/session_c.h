@@ -34,7 +34,7 @@ extern "C"
    * \param session session to connect
    * \param address address to connect to
    * \ingroup qiCapi
-   */
+   */ // P.R. FIXME: make asynchronous, return a future, make a _sync version
   QIMESSAGING_API void qi_session_connect(qi_session_t *session, const char   *address);
 
   /* \brief active server side of session
@@ -53,21 +53,13 @@ extern "C"
    */
   QIMESSAGING_API void qi_session_unregister_service(qi_session_t *session, unsigned int idx);
 
-  /** \brief wait for the connection completion
-   *
-   * \param session the connecting session
-   * \param msecs waiting timeout
-   * \ingroup qiCapi
-   */
-  QIMESSAGING_API int qi_session_wait_for_connected(qi_session_t *session, int msecs);
-
   /** \brief get a service
    *
    * \param session session
    * \param name name of the service
    * \return a pointer to related object, or NULL on error.
    * \ingroup qiCapi
-   */
+   */ // P.R. FIXME: make asynchronous, return a future, make a _sync version
   QIMESSAGING_API qi_object_t *qi_session_get_service(qi_session_t *session, const char *name);
 
   /** \brief destroy a qi connection
@@ -83,14 +75,6 @@ extern "C"
    * \ingroup qiCapi
    */
   QIMESSAGING_API void qi_session_close(qi_session_t *session);
-
-  /** \brief wait for the disconnection completion
-   *
-   * \param session disconnecting session
-   * \param msecs waiting timeout
-   * \ingroup qiCapi
-   */
-  QIMESSAGING_API void qi_session_wait_for_disconnected(qi_session_t *session, int msecs);
 
   /* \brief retrieve the list of available services
    *

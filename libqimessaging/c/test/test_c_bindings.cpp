@@ -56,7 +56,6 @@ TEST(TestCBindings, ConnectSession)
   assert(session != 0);
 
   qi_session_connect(session, connectionAddr.c_str());
-  qi_session_wait_for_connected(session, 3000);
 
   assert(qi_session_listen(session, "tcp://0.0.0.0:0"));
 
@@ -69,7 +68,6 @@ TEST(TestCBindings, InitClient)
   assert(client_session != 0);
 
   qi_session_connect(client_session, connectionAddr.c_str());
-  qi_session_wait_for_connected(client_session, 3000);
 
   remote = qi_session_get_service(client_session, "serviceTest");
   assert(remote != 0);

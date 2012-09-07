@@ -9,6 +9,7 @@
 #ifndef _QIMESSAGING_TRANSPORT_SOCKET_HPP_
 #define _QIMESSAGING_TRANSPORT_SOCKET_HPP_
 
+# include <qimessaging/future.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
@@ -43,14 +44,10 @@ namespace qi
     TransportSocket();
     virtual ~TransportSocket();
 
-    bool connect(const qi::Url &url,
+    qi::FutureSync<bool> connect(const qi::Url &url,
       qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
-    void disconnect();
+    qi::FutureSync<void> disconnect();
 
-
-    // if msecs < 0 no timeout
-    bool waitForConnected(int msecs = 30000);
-    bool waitForDisconnected(int msecs = 30000);
     bool waitForId(int id, int msecs = 30000);
 
     bool read(int id, qi::Message *msg);
