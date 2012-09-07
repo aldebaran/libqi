@@ -39,23 +39,27 @@ qi_add_probes(src/tp_qimessaging.in.h
 set(PUBLIC_HEADERS
                    qimessaging/details/future.hxx
                    qimessaging/details/value.hpp
+                   qimessaging/details/metatype.hxx
+                   qimessaging/details/metafunction.hxx
+                   qimessaging/details/metavalue.hxx
+                   qimessaging/details/value.hxx
+                   qimessaging/details/object.hxx
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
                    qimessaging/file.hpp
                    qimessaging/object.hpp
-                   qimessaging/object.hxx
                    qimessaging/object_factory.hpp
                    qimessaging/session.hpp
                    qimessaging/metaevent.hpp
                    qimessaging/metamethod.hpp
                    qimessaging/metaobjectbuilder.hpp
-                   qimessaging/details/value.hxx
                    qimessaging/service_directory.hpp
                    qimessaging/signature.hpp
                    qimessaging/api.hpp
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
-                   qimessaging/metafunction.hxx
+                   qimessaging/metatype.hpp
+                   qimessaging/metavalue.hpp
                    qimessaging/signal.hpp
                    qimessaging/transport_server.hpp
                    qimessaging/transport_socket.hpp

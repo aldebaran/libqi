@@ -243,5 +243,5 @@ QI_METATYPE_NOT_CONVERTIBLE(MetaObject);
   QI_DATASTREAM_STRUCT_PRIVATE_ACCESS(Cname)      \
   QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname)
 
-#include <qimessaging/object.hxx>
+#include <qimessaging/details/object.hxx>
 #endif  // _QIMESSAGING_OBJECT_HPP_

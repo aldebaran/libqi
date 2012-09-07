@@ -244,6 +244,6 @@ template<typename T> MetaType* metaTypeOf()
 
 QI_METATYPE_NOT_CONVERTIBLE(Buffer);
 
-#include <qimessaging/metatype.hxx>
+#include <qimessaging/details/metatype.hxx>
 
 #endif

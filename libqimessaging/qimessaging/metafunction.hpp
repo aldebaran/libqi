@@ -113,7 +113,7 @@ template<typename C, typename F> MetaFunction makeFunctor(C* inst, F func);
 
 
 
-#include "qimessaging/metafunction.hxx"
+#include "qimessaging/details/metafunction.hxx"
 
 
 #endif

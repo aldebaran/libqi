@@ -85,6 +85,6 @@ qi::ODataStream& operator << (qi::ODataStream& od, const MetaValue& mv);
 
 }
 
-#include <qimessaging/metavalue.hxx>
+#include <qimessaging/details/metavalue.hxx>
 
 #endif
