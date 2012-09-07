@@ -70,7 +70,7 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
       retcode = qi_signature_next(subsig);
       if (retcode != 0)
         return 0;
-      ret = qi_value_to_python_list(subsig->current, msg);
+      ret = qi_value_to_python_list(qi_signature_current(subsig), msg);
       qi_signature_destroy(subsig);
       return ret;
     }
@@ -82,11 +82,11 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
       retcode = qi_signature_next(subsig);
       if (retcode != 0)
         return 0;
-      k = subsig->current;
+      k = qi_signature_current(subsig);
       retcode = qi_signature_next(subsig);
       if (retcode != 0)
         return 0;
-      v = subsig->current;
+      v = qi_signature_current(subsig);
       ret = qi_value_to_python_dict(k, v, msg);
       qi_signature_destroy(subsig);
       return ret;
@@ -116,12 +116,12 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   retcode = qi_signature_next(sig);
   if (retcode != 0 || items < 0)
     return 0;
-  if (!sig->current || !*(sig->current)) {
+  if (!qi_signature_current(sig) || !*(qi_signature_current(sig))) {
     Py_INCREF(Py_None);
     return Py_None;
   }
   while (retcode == 0) {
-    PyObject *obj = qi_value_to_python(sig->current, msg);
+    PyObject *obj = qi_value_to_python(qi_signature_current(sig), msg);
     retcode = qi_signature_next(sig);
     if (retcode == 2) {
       Py_XDECREF(obj);
@@ -157,13 +157,13 @@ PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t *msg)
   if (retcode != 0 || items < 0)
     return 0;
   ret = PyTuple_New(items);
-  if (!sig->current || !*(sig->current)) {
+  if (!qi_signature_current(sig) || !*(qi_signature_current(sig))) {
     Py_INCREF(Py_None);
     PyTuple_SetItem(ret, 0, Py_None);
     return ret;
   }
   while (retcode == 0) {
-    PyObject *obj = qi_value_to_python(sig->current, msg);
+    PyObject *obj = qi_value_to_python(qi_signature_current(sig), msg);
     retcode = qi_signature_next(sig);
     if (retcode == 2) {
       Py_XDECREF(obj);
@@ -229,7 +229,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
         retcode = qi_signature_next(subsig);
         if (retcode != 0)
           return retcode;
-        qi_value_to_message(subsig->current, currentObj, msg);
+        qi_value_to_message(qi_signature_current(subsig), currentObj, msg);
         qi_signature_destroy(subsig);
         Py_XDECREF(currentObj);
         currentObj = PyIter_Next(iter);
@@ -254,18 +254,18 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
 
       //TODO: assert size = iter count
       while (PyDict_Next(data, &pos, &key, &value)) {
-        char *k = 0;
-        char *v = 0;
+        const char *k = 0;
+        const char *v = 0;
         qi_signature_t *subsig = qi_signature_create_subsignature(sig);
         retcode = qi_signature_next(subsig);
         if (retcode != 0)
           return retcode;
-        k = subsig->current;
+        k = qi_signature_current(subsig);
 
         retcode = qi_signature_next(subsig);
         if (retcode != 0)
           return retcode;
-        v = subsig->current;
+        v = qi_signature_current(subsig);
 
         qi_value_to_message(k, key, msg);
         qi_value_to_message(v, value, msg);
@@ -279,7 +279,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
       retcode = qi_signature_next(subsig);
       if (retcode != 0)
         return retcode;
-      qi_python_to_message(subsig->current, msg, data);
+      qi_python_to_message(qi_signature_current(subsig), msg, data);
       qi_signature_destroy(subsig);
       return 0;
     }
@@ -321,7 +321,7 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
   PyObject *currentObj = PyIter_Next(iter);
   retcode = qi_signature_next(sig);
   while(retcode == 0 && currentObj) {
-    qi_value_to_message(sig->current, currentObj, msg);
+    qi_value_to_message(qi_signature_current(sig), currentObj, msg);
     Py_XDECREF(currentObj);
     currentObj = PyIter_Next(iter);
     retcode = qi_signature_next(sig);
