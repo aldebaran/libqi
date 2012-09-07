@@ -1,5 +1,8 @@
 <project name="qimessaging">
   <depends buildtime="true" runtime="true" names="qissh zeromq boost libqi sqlite"/>
   <depends buildtime="true" names="python gtest zlib uuid pthread qiprobes"/>
-  <sphinxdoc name="qimessaging" src="doc" />
+  <sphinxdoc name="qimessaging"        src="doc"               dest="ref/libqimessaging"     />
+  <doxydoc   name="libqimessaging-cpp" src="libqimessaging"    dest="ref/libqimessaging/cpp" />
+  <doxydoc   name="libqimessaging-qt"  src="libqimessaging/qt" dest="ref/libqimessaging/qt"  />
+  <doxydoc   name="libqimessaging-c"   src="libqimessaging/c"  dest="ref/libqimessaging/c"   />
 </project>
