@@ -1,6 +1,3 @@
-# ignore everything except doxyfile
-*
-!doxyfile
-
-# never ignore .gitignore
-!.gitignore
+# ignore doxygen generated files
+html/
+doxygen*
