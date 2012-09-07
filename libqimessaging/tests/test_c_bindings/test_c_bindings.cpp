@@ -86,7 +86,7 @@ TEST(TestCBindings, CallReply)
 
   // call
   qi_message_write_string(message, "plaf");
-  qi_future_t* fut = qi_object_call(object, "reply::s(s)", message);
+  qi_future_t* fut = qi_object_call(object, "reply::(s)", message);
 
   qi_future_wait(fut);
   qi_message_t *msg = 0;
