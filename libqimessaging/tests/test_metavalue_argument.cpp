@@ -100,6 +100,22 @@ TEST_F(TestObject, meta)
     * So call(AutoMetaValue(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
+  target->call<void>("value", 12).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  {
+    int myint = 12;
+    qi::Future<void> fut = target->call<void>("value", myint);
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
+  {
+    int myint = 12;
+    qi::Future<void> fut = target->call<void>("value", MetaValue(AutoMetaValue(myint)));
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
@@ -108,9 +124,13 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.toDouble(), 12);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
+  target->call<void>("value", "foo").wait();
+  ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  ASSERT_EQ(v.as<std::vector<double> >(), in);
+  target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<MetaValue> args;
   args.push_back(AutoMetaValue(12));
@@ -127,6 +147,22 @@ TEST_F(TestObject, meta)
   // Plugin copy test
   target = &oserver;
   {
+  target->call<void>("value", 12).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  {
+    int myint = 12;
+    qi::Future<void> fut = target->call<void>("value", myint);
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
+  {
+    int myint = 12;
+    qi::Future<void> fut = target->call<void>("value", MetaValue(AutoMetaValue(myint)));
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
@@ -135,9 +171,13 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.toDouble(), 12);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
+  target->call<void>("value", "foo").wait();
+  ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
   target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  ASSERT_EQ(v.as<std::vector<double> >(), in);
+  target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<MetaValue> args;
   args.push_back(AutoMetaValue(12));

@@ -112,10 +112,24 @@ template<typename C, typename F> MetaFunction makeFunctor(C* inst, F func)
 }
 
 namespace detail {
-template<typename T> static void deletor(const T* ptr)
+template<typename T> static void deletor(T* ptr)
 {
-  delete const_cast<T*>(ptr);
+  delete ptr;
 }
+
+template<> inline void deletor<MetaValue>(MetaValue* ptr)
+{
+  ptr->destroy();
+  delete ptr;
+}
+
+template<> inline void deletor<std::vector<MetaValue> >(std::vector<MetaValue>* ptr)
+{
+  for (unsigned i=0; i<ptr->size(); ++i)
+    (*ptr)[i].destroy();
+  delete ptr;
+}
+
 struct ArgTransformer
 {
   ArgTransformer(std::vector<boost::function<void()> >* d,

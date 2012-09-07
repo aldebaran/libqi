@@ -9,6 +9,30 @@
 
 namespace qi {
 
+
+class MetaValueClone
+{
+public:
+  void* clone(void* src)
+  {
+    return new MetaValue(((MetaValue*)src)->clone());
+  }
+
+  void destroy(void* ptr)
+  {
+    ((MetaValue*)ptr)->destroy();
+    delete (MetaValue*)ptr;
+  }
+};
+
+template<> class MetaTypeImpl<MetaValue>:
+  public DefaultMetaTypeImpl<
+    MetaValue,
+    MetaValueClone,
+    MetaTypeDefaultValue<MetaValue>,
+    MetaTypeDefaultSerialize<MetaValue>
+    > {};
+
 template<typename T>
 MetaValue toMetaValue(const T& v)
 {
@@ -45,6 +69,19 @@ std::pair<const T*, bool> MetaValue::as() const
 inline
 MetaValue MetaValue::convert(MetaType& targetType) const
 {
+  if (targetType.info() == metaTypeOf<MetaValue>()->info())
+  {
+    // Target is metavalue: special case
+    MetaValue res;
+    res.type = &targetType;
+    res.value = new MetaValue(clone());
+    return res;
+  }
+  if (type->info() == metaTypeOf<MetaValue>()->info())
+  { // Source is metavalue: special case
+    MetaValue* metaval = (MetaValue*)value;
+    return metaval->convert(targetType);
+  }
   MetaValue res;
   //std::cerr <<"convert " << targetType.info().name() <<" "
   //<< type->info().name() << std::endl;

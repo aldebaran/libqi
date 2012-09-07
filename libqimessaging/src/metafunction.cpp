@@ -269,3 +269,4 @@ QI_REGISTER_MAPPING("[i]", std::vector<int>);
 QI_REGISTER_MAPPING("s", std::string);
 QI_REGISTER_MAPPING("[s]", std::vector<std::string>);
 QI_REGISTER_MAPPING("r", qi::Buffer);
+QI_REGISTER_MAPPING("m", qi::MetaValue);
