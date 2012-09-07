@@ -1,0 +1,6 @@
+# ignore everything except doxyfile
+*
+!doxyfile
+
+# never ignore .gitignore
+!.gitignore
