@@ -23,6 +23,8 @@ namespace qi {
     case Map:
       delete data.map;
       break;
+    default:
+      break;
     }
     data.ptr = 0;
     type = Invalid;

@@ -186,7 +186,6 @@ unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& s
 bool RemoteObject::disconnect(unsigned int linkId)
 {
   unsigned int event = linkId >> 16;
-  unsigned int link = linkId & 0xFFFF;
 
   ObjectPrivate::SignalSubscriberMap::iterator i = _p->_subscribers.find(event);
   if (i == _p->_subscribers.end())

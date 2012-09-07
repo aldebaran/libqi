@@ -39,7 +39,7 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj.call<int>("objtest", 21, 21));
   EXPECT_EQ(42, obj.call<int>("testBind", 21));
   EXPECT_EQ(42, obj.call<int>("testBind2", 21));
-  EXPECT_EQ(42, obj.call<unsigned int>("test", 21, 21));
+  EXPECT_EQ(static_cast<unsigned int>(42), obj.call<unsigned int>("test", 21, 21));
   EXPECT_EQ(42, obj.call<char>("test", 21, 21));
   EXPECT_EQ(42, obj.call<double>("test", 21, 21));
   /* Re-enable when signature adaptation works

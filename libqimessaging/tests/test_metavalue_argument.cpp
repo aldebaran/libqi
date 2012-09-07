@@ -139,7 +139,7 @@ TEST_F(TestObject, meta)
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.type, detail::Value::List);
   detail::Value::ValueList res = v.toList();
-  ASSERT_EQ(3, res.size());
+  ASSERT_EQ(static_cast<size_t>(3), res.size());
   ASSERT_EQ(12, res[0].toDouble());
   ASSERT_EQ("foo", res[1].toString());
   ASSERT_EQ(in, res[2].as<std::vector<double> >());
@@ -186,7 +186,7 @@ TEST_F(TestObject, meta)
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.type, detail::Value::List);
   detail::Value::ValueList res = v.toList();
-  ASSERT_EQ(3, res.size());
+  ASSERT_EQ(static_cast<size_t>(3), res.size());
   ASSERT_EQ(12, res[0].toDouble());
   ASSERT_EQ("foo", res[1].toString());
   ASSERT_EQ(in, res[2].as<std::vector<double> >());

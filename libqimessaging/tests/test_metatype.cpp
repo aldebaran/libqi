@@ -35,7 +35,7 @@ TEST(MetaType, InOut)
   using namespace qi;
   int i = 12;
   ASSERT_EQ(toMetaValue(i).as<int>(), mp((const int*)&i, false) );
-  ASSERT_TRUE(resIs(toMetaValue(i).as<unsigned int>(), 12));
+  ASSERT_TRUE(resIs(toMetaValue(i).as<unsigned int>(), static_cast<unsigned int>(12)));
 
   std::vector<int> vi;
   vi.push_back(5);
@@ -336,6 +336,10 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
       return prom.future();
     }
   }
+
+  // so that the compiler doesn't whine.
+  qi::Promise<R> prom;
+  return prom.future();
 }
 
 QI_REGISTER_MAPPING("i", qi::int32_t);
