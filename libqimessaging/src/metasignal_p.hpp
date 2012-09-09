@@ -6,23 +6,23 @@
 #include <iostream>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/metaevent.hpp>
+#include <qimessaging/metasignal.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 
 
-#ifndef __METAEVENT_P_HPP__
-#define __METAEVENT_P_HPP__
+#ifndef __METASIGNAL_P_HPP__
+#define __METASIGNAL_P_HPP__
 
 namespace qi {
 
   class Object;
-  class MetaEventPrivate {
+  class MetaSignalPrivate {
   public:
-    explicit MetaEventPrivate(const std::string &sig);
-    MetaEventPrivate();
-    MetaEventPrivate(const MetaEventPrivate &rhs);
-    MetaEventPrivate &operator=(const MetaEventPrivate &rhs);
+    explicit MetaSignalPrivate(const std::string &sig);
+    MetaSignalPrivate();
+    MetaSignalPrivate(const MetaSignalPrivate &rhs);
+    MetaSignalPrivate &operator=(const MetaSignalPrivate &rhs);
 
     const std::string &signature() const { return _signature; }
     unsigned int      uid() const { return _uid; }

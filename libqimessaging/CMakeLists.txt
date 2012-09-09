@@ -55,7 +55,7 @@ set(PUBLIC_HEADERS
                    qimessaging/object.hpp
                    qimessaging/object_factory.hpp
                    qimessaging/session.hpp
-                   qimessaging/metaevent.hpp
+                   qimessaging/metasignal.hpp
                    qimessaging/metamethod.hpp
                    qimessaging/metaobject.hpp
                    qimessaging/metaobjectbuilder.hpp
@@ -94,9 +94,9 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metamethod.cpp
                                    src/metamethod_p.cpp
                                    src/metamethod_p.hpp
-                                   src/metaevent.cpp
-                                   src/metaevent_p.cpp
-                                   src/metaevent_p.hpp
+                                   src/metasignal.cpp
+                                   src/metasignal_p.cpp
+                                   src/metasignal_p.hpp
                                    src/metaobject.cpp
                                    src/metaobject_p.hpp
                                    src/metafunction.cpp

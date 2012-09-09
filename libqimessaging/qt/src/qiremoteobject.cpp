@@ -32,7 +32,7 @@ QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest,
   mob.setClassName(dest.c_str());
 
   qi::MetaObject::MethodMap::const_iterator it;
-  for (it = metaobject.methods().begin(); it != metaobject.methods().end(); ++it) {
+  for (it = metaobject.methodMap().begin(); it != metaobject.methodMap().end(); ++it) {
     const qi::MetaMethod &mm = it->second;
     QString retSig;
     QString funSig;

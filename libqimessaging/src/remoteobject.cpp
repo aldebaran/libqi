@@ -7,7 +7,7 @@
 
 #include "remoteobject_p.hpp"
 #include "src/object_p.hpp"
-#include "src/metaevent_p.hpp"
+#include "src/metasignal_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qi/log.hpp>

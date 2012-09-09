@@ -10,7 +10,7 @@
 
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/metamethod.hpp>
-#include <qimessaging/metaevent.hpp>
+#include <qimessaging/metasignal.hpp>
 
 namespace qi {
 
@@ -23,22 +23,23 @@ namespace qi {
     ~MetaObject();
 
     int methodId(const std::string &name);
-    int eventId(const std::string &name);
+    int signalId(const std::string &name);
 
     typedef std::map<unsigned int, MetaMethod> MethodMap;
-    MethodMap methods() const;
+    MethodMap methodMap() const;
 
-    typedef std::map<unsigned int, MetaEvent> EventMap;
-    EventMap events() const;
+    //not called signals because it conflict with Qt keywords :S
+    typedef std::map<unsigned int, MetaSignal> SignalMap;
+    SignalMap signalMap() const;
 
-    MetaMethod *method(unsigned int id);
-    const MetaMethod *method(unsigned int id) const;
+    MetaMethod*       method(unsigned int id);
+    const MetaMethod* method(unsigned int id) const;
 
-    MetaEvent *event(unsigned int id);
-    const MetaEvent *event(unsigned int id) const;
+    MetaSignal*       signal(unsigned int id);
+    const MetaSignal* signal(unsigned int id) const;
 
     std::vector<MetaMethod> findMethod(const std::string &name);
-    std::vector<MetaEvent> findEvent(const std::string &name);
+    std::vector<MetaSignal> findSignal(const std::string &name);
 
     MetaObjectPrivate   *_p;
   };

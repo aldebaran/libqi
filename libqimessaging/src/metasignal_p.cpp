@@ -3,30 +3,30 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <src/metaevent_p.hpp>
+#include <src/metasignal_p.hpp>
 #include <qimessaging/object.hpp>
 
 namespace qi {
 
-  MetaEventPrivate::MetaEventPrivate()
+  MetaSignalPrivate::MetaSignalPrivate()
     : _signature(),
       _uid(0)
   {
   }
 
-  MetaEventPrivate::MetaEventPrivate(const std::string &sig)
+  MetaSignalPrivate::MetaSignalPrivate(const std::string &sig)
     : _signature(sig),
       _uid(0)
   {
   }
 
-  MetaEventPrivate::MetaEventPrivate(const MetaEventPrivate &rhs)
+  MetaSignalPrivate::MetaSignalPrivate(const MetaSignalPrivate &rhs)
   {
     _signature = rhs._signature;
     _uid = rhs._uid;
   }
 
-  MetaEventPrivate& MetaEventPrivate::operator=(const MetaEventPrivate &rhs)
+  MetaSignalPrivate& MetaSignalPrivate::operator=(const MetaSignalPrivate &rhs)
   {
     _signature = rhs._signature;
     _uid = rhs._uid;

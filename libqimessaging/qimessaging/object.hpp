@@ -16,7 +16,7 @@
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
-#include <qimessaging/metaevent.hpp>
+#include <qimessaging/metasignal.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/event_loop.hpp>

@@ -43,7 +43,7 @@ namespace qi {
     mob.xAdvertiseMethod(ret, sig, 0);
 
 
-    MetaObject::MethodMap mm = mo->methods();
+    MetaObject::MethodMap mm = mo->methodMap();
     MetaObject::MethodMap::iterator it;
     for (it = mm.begin(); it != mm.end(); ++it) {
       std::cout << "id: " << it->first << " : " << it->second.signature() << std::endl;

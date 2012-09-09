@@ -8,7 +8,7 @@
 #include <iostream>
 #include <qi/application.hpp>
 #include "src/metamethod_p.hpp"
-#include "src/metaevent_p.hpp"
+#include "src/metasignal_p.hpp"
 #include "src/object_p.hpp"
 #include "src/metaobject_p.hpp"
 #include <qimessaging/signal.hpp>
@@ -44,7 +44,7 @@ namespace qi {
 
       boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
       // Then remove _registrations with one of our event as source
-      //MetaObject::EventMap::iterator ii;
+      //MetaObject::SignalMap::iterator ii;
       std::map<unsigned int, SignalBase*>::iterator ii;
       for (ii = _p->_subscribers.begin(); ii!= _p->_subscribers.end(); ++ii)
       {
@@ -155,7 +155,7 @@ namespace qi {
   void Object::trigger(unsigned int event, const MetaFunctionParameters &args)
   {
     // Note: Not thread-safe, event/method may die while we hold it.
-    MetaEvent* ev = metaObject().event(event);
+    MetaSignal* ev = metaObject().signal(event);
     if (!ev)
     {
       MetaMethod* me = metaObject().method(event);
@@ -252,15 +252,15 @@ namespace qi {
   }
   /// Resolve signature and bounce
   bool Object::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
-    int eventId = metaObject().eventId(signature);
+    int eventId = metaObject().signalId(signature);
     if (eventId < 0)
       eventId = metaObject().methodId(signature);
     if (eventId < 0) {
       std::stringstream ss;
       ss << "Can't find event: " << signature << std::endl
       << "  Candidate(s):" << std::endl;
-      std::vector<MetaEvent>           mml = metaObject().findEvent(qi::signatureSplit(signature)[1]);
-      std::vector<MetaEvent>::const_iterator it;
+      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
+      std::vector<MetaSignal>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
         ss << "  " << it->signature() << std::endl;
@@ -276,13 +276,13 @@ namespace qi {
   unsigned int Object::xConnect(const std::string &signature, MetaFunction functor,
                                 EventLoop* ctx)
   {
-    int eventId = metaObject().eventId(signature);
+    int eventId = metaObject().signalId(signature);
     if (eventId < 0) {
       std::stringstream ss;
       ss << "Can't find event: " << signature << std::endl
       << "  Candidate(s):" << std::endl;
-      std::vector<MetaEvent>           mml = metaObject().findEvent(qi::signatureSplit(signature)[1]);
-      std::vector<MetaEvent>::const_iterator it;
+      std::vector<MetaSignal>           mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
+      std::vector<MetaSignal>::const_iterator it;
 
       for (it = mml.begin(); it != mml.end(); ++it) {
         ss << "  " << it->signature() << std::endl;
@@ -306,7 +306,7 @@ namespace qi {
       return 0;
     }
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
-    MetaEvent* ev = metaObject().event(event);
+    MetaSignal* ev = metaObject().signal(event);
     if (!ev)
     {
       qiLogError("object") << "No such event " << event;
@@ -345,7 +345,7 @@ namespace qi {
   unsigned int Object::connect(unsigned int signal,
       qi::Object* target, unsigned int slot)
   {
-    MetaEvent* ev = metaObject().event(signal);
+    MetaSignal* ev = metaObject().signal(signal);
     if (!ev)
     {
       qiLogError("object") << "No such event " << signal;

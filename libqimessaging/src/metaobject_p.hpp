@@ -9,7 +9,7 @@
 # define   METAOBJECT_P_HPP_
 
 #include <qi/atomic.hpp>
-#include <qimessaging/metaevent.hpp>
+#include <qimessaging/metasignal.hpp>
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -40,12 +40,12 @@ namespace qi {
       return idFromName(_methodsNameToIdx, name);
     }
 
-    inline int eventId(const std::string &name) {
+    inline int signalId(const std::string &name) {
       return idFromName(_eventsNameToIdx, name);
     }
 
     std::vector<MetaMethod> findMethod(const std::string &name);
-    std::vector<MetaEvent> findEvent(const std::string &name);
+    std::vector<MetaSignal> findSignal(const std::string &name);
 
     /*
      * When a member is added, serialization and deserialization
@@ -57,7 +57,7 @@ namespace qi {
     unsigned int                        _nextNumber;
 
     NameToIdx                           _eventsNameToIdx;
-    MetaObject::EventMap                _events;
+    MetaObject::SignalMap                _events;
 
     // Recompute data cached in *ToIdx
     void refreshCache();

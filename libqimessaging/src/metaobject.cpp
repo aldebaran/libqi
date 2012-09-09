@@ -44,16 +44,16 @@ namespace qi {
     return ret;
   }
 
-  std::vector<MetaEvent> MetaObjectPrivate::findEvent(const std::string &name)
+  std::vector<MetaSignal> MetaObjectPrivate::findSignal(const std::string &name)
   {
     boost::recursive_mutex::scoped_lock sl(_mutexEvent);
-    std::vector<MetaEvent>           ret;
-    MetaObject::EventMap::iterator it;
+    std::vector<MetaSignal>           ret;
+    MetaObject::SignalMap::iterator it;
     std::string cname(name);
     cname += "::";
 
     for (it = _events.begin(); it != _events.end(); ++it) {
-      MetaEvent &mm = it->second;
+      MetaSignal &mm = it->second;
       if (boost::starts_with(mm.signature(), cname))
         ret.push_back(mm);
     }
@@ -72,7 +72,7 @@ namespace qi {
     {
       boost::recursive_mutex::scoped_lock sl(_mutexEvent);
       _eventsNameToIdx.clear();
-      for (MetaObject::EventMap::iterator i = _events.begin();
+      for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
       _eventsNameToIdx[i->second.signature()] = i->second.uid();
     }
@@ -118,17 +118,17 @@ namespace qi {
     return &i->second;
   }
 
-  MetaEvent *MetaObject::event(unsigned int id) {
+  MetaSignal *MetaObject::signal(unsigned int id) {
     boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
-    EventMap::iterator i = _p->_events.find(id);
+    SignalMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
     return &i->second;
   }
 
-  const MetaEvent *MetaObject::event(unsigned int id) const {
+  const MetaSignal *MetaObject::signal(unsigned int id) const {
     boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
-    EventMap::const_iterator i = _p->_events.find(id);
+    SignalMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
     return &i->second;
@@ -139,16 +139,16 @@ namespace qi {
     return _p->methodId(name);
   }
 
-  int MetaObject::eventId(const std::string &name)
+  int MetaObject::signalId(const std::string &name)
   {
-    return _p->eventId(name);
+    return _p->signalId(name);
   }
 
-  MetaObject::MethodMap MetaObject::methods() const {
+  MetaObject::MethodMap MetaObject::methodMap() const {
     return _p->_methods;
   }
 
-  MetaObject::EventMap MetaObject::events() const {
+  MetaObject::SignalMap MetaObject::signalMap() const {
     return _p->_events;
   }
 
@@ -157,9 +157,9 @@ namespace qi {
     return _p->findMethod(name);
   }
 
-  std::vector<MetaEvent> MetaObject::findEvent(const std::string &name)
+  std::vector<MetaSignal> MetaObject::findSignal(const std::string &name)
   {
-    return _p->findEvent(name);
+    return _p->findSignal(name);
   }
 
 

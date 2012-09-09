@@ -21,7 +21,7 @@ TEST(TestObject, Simple)
 {
   qi::Object obj;
   obj.advertiseEvent<void (*)(int)>("fire");
-  EXPECT_EQ(1U, obj.metaObject().events().size());
+  EXPECT_EQ(1U, obj.metaObject().signalMap().size());
   int linkId = obj.connect("fire", &onFire, 0);
   obj.emitEvent("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000));

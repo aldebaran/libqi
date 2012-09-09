@@ -10,7 +10,7 @@
 #include <qimessaging/object.hpp>
 #include "object_p.hpp"
 #include "metamethod_p.hpp"
-#include "metaevent_p.hpp"
+#include "metasignal_p.hpp"
 #include "metaobjectbuilder_p.hpp"
 #include "metaobject_p.hpp"
 
@@ -82,7 +82,7 @@ namespace qi {
       return it->second;
     }
     unsigned int idx = _p->_metaObject->_p->_nextNumber++;
-    MetaEvent me(signature);
+    MetaSignal me(signature);
     me._p->_uid = idx;
     _p->_metaObject->_p->_events[idx] = me;
     _p->_metaObject->_p->_eventsNameToIdx[signature] = idx;
