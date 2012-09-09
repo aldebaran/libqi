@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef QITRANSPORTSERVER_H_
 # define QITRANSPORTSERVER_H_
 

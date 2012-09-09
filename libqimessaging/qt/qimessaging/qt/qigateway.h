@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef QIGATEWAY_H_
 # define QIGATEWAY_H_
 

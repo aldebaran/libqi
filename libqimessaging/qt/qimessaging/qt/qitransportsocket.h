@@ -5,6 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#pragma once
 #ifndef QITRANSPORTSOCKET_H_
 # define QITRANSPORTSOCKET_H_
 

@@ -1,18 +1,20 @@
 /*
- *  Copyright (C) 2011 Aldebaran Robotics
- */
+** Author(s):
+**  - Laurent LEC <llec@aldebaran-robotics.com>
+**
+** Copyright (C) 2012 Aldebaran Robotics
+*/
 
 #pragma once
-#ifndef _QIMESSAGING_QT_API_HPP_
-#define _QIMESSAGING_QT_API_HPP_
+#ifndef QIMESSAGING_QT_API_H_
+# define QIMESSAGING_QT_API_H_
 
-#include <qi/macro.hpp>
+# include <qi/macro.hpp>
 
-#ifdef qimessaging_qt_EXPORTS
-# define QIMESSAGING_QT_API QI_EXPORT_API
-#else
-# define QIMESSAGING_QT_API QI_IMPORT_API
-#endif
+# ifdef qimessaging_qt_EXPORTS
+#  define QIMESSAGING_QT_API QI_EXPORT_API
+# else
+#  define QIMESSAGING_QT_API QI_IMPORT_API
+# endif
 
-#endif  // _QIMESSAGING_QT_API_HPP_
-
+#endif /* ifndef QIMESSAGING_QT_API_H_ */
