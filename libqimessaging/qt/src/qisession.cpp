@@ -34,14 +34,14 @@ void QiSessionPrivate::onServiceRegistered(qi::Session *QI_UNUSED(session),
                                            const std::string &serviceName,
                                            void *data)
 {
-  emit(_self->serviceRegistered(QString::fromUtf8(serviceName.c_str())));
+  Q_EMIT _self->serviceRegistered(QString::fromUtf8(serviceName.c_str()));
 }
 
 void QiSessionPrivate::onServiceUnregistered(qi::Session *QI_UNUSED(session),
                                              const std::string &serviceName,
                                              void *data)
 {
-  emit(_self->serviceUnregistered(QString::fromUtf8(serviceName.c_str())));
+  Q_EMIT _self->serviceUnregistered(QString::fromUtf8(serviceName.c_str()));
 }
 
 void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client, void *data) {
