@@ -17,7 +17,6 @@ namespace qi {
     qi::MetaObjectBuilder  mob(mo);
 
     //Do not look at the following 5 lines... and yes I know what I'am doing here.
-    mob.advertiseMethod("__metaObject",      (qi::Object *)0, &ServiceDirectoryPrivate::metaObject);
     mob.advertiseMethod("service",           (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::service);
     mob.advertiseMethod("services",          (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::services);
     mob.advertiseMethod("registerService",   (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::registerService);

@@ -18,7 +18,6 @@ namespace qi {
     std::string ret;
     std::string sig;
 
-    mob.xAdvertiseMethod("", "__metaObject::()", 0);
 
     ret = qi::signatureFromType<unsigned int>::value();
     sig = "registerEvent::(";

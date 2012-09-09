@@ -53,9 +53,14 @@ void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client, void *data
   ServiceRequest &sr = it.value();
   qi::Message msg;
   msg.setType(qi::Message::Type_Call);
-  msg.setService(sr.serviceId);
+  msg.setService(qi::Message::Service_Server);
   msg.setObject(qi::Message::Object_Main);
-  msg.setFunction(qi::Message::Function_MetaObject);
+  msg.setFunction(qi::Message::ServerFunction_MetaObject);
+  qi::Buffer     buf;
+  qi::ODataStream ds(buf);
+  ds << sr.serviceId;
+  ds << qi::Message::Object_Main;
+  msg.setBuffer(buf);
   _futureService[msg.id()] = sr;
   _futureConnect.remove(client);
   client->send(msg);

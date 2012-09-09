@@ -25,7 +25,6 @@ namespace qi {
   Object::Object()
     : _p(new ObjectPrivate())
   {
-    advertiseMethod("__metaobject", this, &Object::metaObject);
   }
 
   Object::~Object() {

@@ -42,32 +42,27 @@ namespace qi {
       Object_Main = 1
     };
 
-    enum Function
-    {
-      Function_MetaObject = 0
-    };
-
     enum ServiceDirectoryFunction
     {
-      ServiceDirectoryFunction_Service           = 1,
-      ServiceDirectoryFunction_Services          = 2,
-      ServiceDirectoryFunction_RegisterService   = 3,
-      ServiceDirectoryFunction_UnregisterService = 4,
-      ServiceDirectoryFunction_ServiceReady      = 5,
-    };
-
-    enum ServerFunction
-    {
-      ServerFunction_RegisterEvent     = 1,
-      ServerFunction_UnregisterEvent   = 2,
-      ServerFunction_MetaObject        = 3,
-      ServerFunction_Connect           = 4,
+      ServiceDirectoryFunction_Service           = 0,
+      ServiceDirectoryFunction_Services          = 1,
+      ServiceDirectoryFunction_RegisterService   = 2,
+      ServiceDirectoryFunction_UnregisterService = 3,
+      ServiceDirectoryFunction_ServiceReady      = 4,
     };
 
     enum ServiceDirectoryEvent
     {
-      ServiceDirectoryEvent_ServiceRegistered   = 6,
-      ServiceDirectoryEvent_ServiceUnregistered = 7,
+      ServiceDirectoryEvent_ServiceRegistered   = 5,
+      ServiceDirectoryEvent_ServiceUnregistered = 6,
+    };
+
+    enum ServerFunction
+    {
+      ServerFunction_RegisterEvent     = 0,
+      ServerFunction_UnregisterEvent   = 1,
+      ServerFunction_MetaObject        = 2,
+      ServerFunction_Connect           = 3,
     };
 
     enum Type
