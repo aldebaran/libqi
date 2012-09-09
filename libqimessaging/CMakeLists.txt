@@ -57,6 +57,7 @@ set(PUBLIC_HEADERS
                    qimessaging/session.hpp
                    qimessaging/metaevent.hpp
                    qimessaging/metamethod.hpp
+                   qimessaging/metaobject.hpp
                    qimessaging/metaobjectbuilder.hpp
                    qimessaging/service_directory.hpp
                    qimessaging/signature.hpp
@@ -96,6 +97,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metaevent.cpp
                                    src/metaevent_p.cpp
                                    src/metaevent_p.hpp
+                                   src/metaobject.cpp
+                                   src/metaobject_p.hpp
                                    src/metafunction.cpp
                                    src/object_p.hpp
                                    src/object.cpp

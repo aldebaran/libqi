@@ -6,13 +6,11 @@
 */
 
 #include <iostream>
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <qi/application.hpp>
-
 #include "src/metamethod_p.hpp"
 #include "src/metaevent_p.hpp"
 #include "src/object_p.hpp"
+#include "src/metaobject_p.hpp"
 #include <qimessaging/signal.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/object_factory.hpp>
@@ -23,78 +21,6 @@ namespace qi {
   ObjectInterface::~ObjectInterface() {
   }
 
-  MetaObject::MetaObject()
-  {
-    _p = new MetaObjectPrivate();
-  }
-
-  MetaObject::MetaObject(const MetaObject &other)
-  {
-    _p = new MetaObjectPrivate();
-    *_p = *(other._p);
-  }
-
-  MetaObject& MetaObject::operator=(const MetaObject &other)
-  {
-    *_p = *(other._p);
-    return (*this);
-  }
-
-  MetaMethod *MetaObject::method(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
-    MethodMap::iterator i = _p->_methods.find(id);
-    if (i == _p->_methods.end())
-      return 0;
-    return &i->second;
-  }
-
-  const MetaMethod *MetaObject::method(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
-    MethodMap::const_iterator i = _p->_methods.find(id);
-    if (i == _p->_methods.end())
-      return 0;
-    return &i->second;
-  }
-
-  MetaEvent *MetaObject::event(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
-    EventMap::iterator i = _p->_events.find(id);
-    if (i == _p->_events.end())
-      return 0;
-    return &i->second;
-  }
-
-  const MetaEvent *MetaObject::event(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
-    EventMap::const_iterator i = _p->_events.find(id);
-    if (i == _p->_events.end())
-      return 0;
-    return &i->second;
-  }
-
-  int MetaObject::methodId(const std::string &name)
-  {
-    return _p->methodId(name);
-  }
-
-  int MetaObject::eventId(const std::string &name)
-  {
-    return _p->eventId(name);
-  }
-
-  MetaObject::MethodMap MetaObject::methods() const {
-    return _p->_methods;
-  }
-
-  MetaObject::EventMap MetaObject::events() const {
-    return _p->_events;
-  }
-
-
-  MetaObject::~MetaObject()
-  {
-    delete _p;
-  }
 
   Object::Object()
     : _p(new ObjectPrivate())
@@ -487,7 +413,6 @@ namespace qi {
     {
       boost::recursive_mutex::scoped_lock sl(_mutexMethod);
       _methodsNameToIdx.clear();
-      for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       _methodsNameToIdx[i->second.signature()] = i->second.uid();
     }

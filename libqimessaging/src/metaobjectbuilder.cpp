@@ -12,6 +12,7 @@
 #include "metamethod_p.hpp"
 #include "metaevent_p.hpp"
 #include "metaobjectbuilder_p.hpp"
+#include "metaobject_p.hpp"
 
 namespace qi {
 
