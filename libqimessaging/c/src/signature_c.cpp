@@ -71,7 +71,7 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
   }
 
   unsigned int end = sig.find_first_of(endType);
-  if (end > sig.size() || end < 0)
+  if (end > sig.size() || end == std::string::npos)
     return 0;
 
   return qi_signature_create(sig.substr(1, end - 1).c_str());
