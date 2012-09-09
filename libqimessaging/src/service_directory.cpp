@@ -18,7 +18,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
 #include "src/transport_server_p.hpp"
-#include "src/server_functor_result_future_p.hpp"
+#include "src/server_result.hpp"
 #include "src/session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -86,7 +86,7 @@ namespace qi
     socket->read(id, &msg);
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.function();
     qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()));
-    res.addCallbacks(new detail::ServerResult(socket, msg));
+    res.addCallbacks(new ServerResult(socket, msg));
 
     currentSocket  = 0;
   }

@@ -18,7 +18,7 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/session.hpp>
-#include "src/server_functor_result_future_p.hpp"
+#include "src/server_result.hpp"
 #include "src/service_watcher.hpp"
 #include "src/service_directory_client.hpp"
 #include "src/session_server.hpp"

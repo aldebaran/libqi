@@ -11,7 +11,7 @@
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
 #include "session_server.hpp"
-#include "src/server_functor_result_future_p.hpp"
+#include "src/server_result.hpp"
 #include "src/transport_server_p.hpp"
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
@@ -237,7 +237,7 @@ namespace qi {
     case Message::Type_Call:
       {
          qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::Object::MetaCallType_Queued);
-         fut.addCallbacks(new detail::ServerResult(client, msg));
+         fut.addCallbacks(new ServerResult(client, msg));
       }
       break;
     case Message::Type_Event:

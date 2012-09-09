@@ -144,7 +144,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/file.cpp
                                    src/url.cpp
                                    src/future.cpp
-                                   src/server_functor_result_future_p.hpp
+                                   src/server_result.hpp
                                    src/signature.cpp)
 
 
