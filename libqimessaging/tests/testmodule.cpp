@@ -13,13 +13,12 @@ int testMethod(const int& v)
   return v+1;
 }
 
-qi::Object* setup(const std::string&)
+qi::Object setup(const std::string&)
 {
   qiLogDebug("testmodule") << "setup";
   qi::ObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
-  qi::Object* e = new qi::Object(ob.object());
-  return e;
+  return ob.object();
 }
 
 QI_REGISTER_OBJECT_FACTORY("test", &setup);

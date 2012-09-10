@@ -103,6 +103,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/object_p.hpp
                                    src/object.cpp
                                    src/object_p.cpp
+                                   src/object_factory.cpp
                                    src/objectbuilder.cpp
                                    src/objectbuilder_p.hpp
                                    src/remoteobject.cpp
