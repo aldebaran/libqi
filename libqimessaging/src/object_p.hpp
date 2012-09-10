@@ -3,6 +3,9 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#ifndef _QIMESSAGING_OBJECTPRIVATE_HPP_
+#define _QIMESSAGING_OBJECTPRIVATE_HPP_
+
 #include <iostream>
 #include <string>
 #include <boost/thread/recursive_mutex.hpp>
@@ -15,14 +18,9 @@
 #include <qimessaging/object.hpp>
 #include <qimessaging/metasignal.hpp>
 #include <qimessaging/metamethod.hpp>
-#include <qimessaging/metaobjectbuilder.hpp>
 #include <qimessaging/signal.hpp>
-#ifndef _QIMESSAGING_OBJECTPRIVATE_HPP_
-#define _QIMESSAGING_OBJECTPRIVATE_HPP_
 
 namespace qi {
-
-
 
   class EventLoop;
   class ObjectPrivate {
