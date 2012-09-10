@@ -76,9 +76,9 @@ TEST_F(TestFile, BasicMemoryFile)
   qi::File f;
   f.open(qi::Flag_Read | qi::Flag_Write | qi::Flag_Truncate);
 
-  ASSERT_TRUE(!!qi::Flag_Read & f.flags());
+  ASSERT_TRUE(!!(qi::Flag_Read & f.flags()));
   ASSERT_TRUE(qi::Flag_Write & f.flags());
-  ASSERT_TRUE(!!qi::Flag_Truncate & f.flags());
+  ASSERT_TRUE(!!(qi::Flag_Truncate & f.flags()));
   ASSERT_FALSE(qi::Flag_Create & f.flags());
   ASSERT_FALSE(qi::Flag_Invalid & f.flags());
 }
@@ -100,7 +100,7 @@ TEST_F(TestFile, BasicDiskFile)
   ASSERT_EQ(a_content, std::string(r));
   delete[] r;
 
-  ASSERT_TRUE(!!qi::Flag_Read & f.flags());
+  ASSERT_TRUE(!!(qi::Flag_Read & f.flags()));
   ASSERT_FALSE(qi::Flag_Write & f.flags());
   ASSERT_FALSE(qi::Flag_Truncate & f.flags());
   ASSERT_FALSE(qi::Flag_Create & f.flags());
@@ -133,7 +133,7 @@ TEST_F(TestFile, fileStream)
   ASSERT_EQ(a_content, std::string(r));
   delete[] r;
 
-  ASSERT_TRUE(!!qi::Flag_Read & fres.flags());
+  ASSERT_TRUE(!!(qi::Flag_Read & fres.flags()));
   ASSERT_FALSE(qi::Flag_Write & fres.flags());
   ASSERT_FALSE(qi::Flag_Truncate & fres.flags());
   ASSERT_FALSE(qi::Flag_Create & fres.flags());
