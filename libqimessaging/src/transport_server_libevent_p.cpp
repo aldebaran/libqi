@@ -150,7 +150,7 @@ namespace qi
         break;
       }
 
-      port = qi::os::findAvailablePort(port);
+      port = qi::os::findAvailablePort(port + 1);
     }
     while (port != 0);
 
