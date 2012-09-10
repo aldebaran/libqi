@@ -200,25 +200,36 @@ namespace qi {
     return sd;
   }
 
-  ODataStream &ODataStream::operator<<(const qi::detail::Value &val)
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const qi::detail::Value &val)
   {
     switch(val.type) {
       case qi::detail::Value::Double:
-        *this << "Id" << (qi::uint32_t)val.type << val.data.d;
-        break;
-      case qi::detail::Value::String:
-        *this << "Is" << (qi::uint32_t)val.type << val.toString();
-        break;
-      case qi::detail::Value::List:
-        *this << "I[m]" << (qi::uint32_t)val.type << *val.data.list;
-        break;
-      case qi::detail::Value::Map:
-        *this << "I{sm}" << (qi::uint32_t)val.type << *val.data.map;
-        break;
+        sd << "Id";
+        sd << (qi::uint32_t)val.type;
+        sd << val.data.d;
+        return sd;
+      case qi::detail::Value::String:{
+        sd << "Is";
+        sd << (qi::uint32_t)val.type;
+        sd << val.toString();
+        return sd;
+      }
+      case qi::detail::Value::List:{
+        sd << "I[m]";
+        sd << (qi::uint32_t)val.type;
+        sd << *val.data.list;
+        return sd;
+      }
+      case qi::detail::Value::Map: {
+        sd << "I{sm}";
+        sd << (qi::uint32_t)val.type;
+        sd << *val.data.map;
+        return sd;
+      }
       default:
-        break;
+        return sd;
     };
-    return *this;
+    return sd;
   }
 
   qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::detail::Value &value) {
@@ -226,12 +237,13 @@ namespace qi {
     return sd;
   }
 
-  ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {
-    *this << (uint32_t)meta.size();
-    getBuffer().subBuffers().push_back(std::make_pair(getBuffer().size(), meta));
-    qiLogDebug("DataStream") << "Serializing buffer " << meta.size()
-                             << " at " << getBuffer().size();
-    return *this;
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &meta) {
+    qi::Buffer& parent = stream.getBuffer();
+    stream << (uint32_t)meta.size();
+    parent.subBuffers().push_back(std::make_pair(stream.getBuffer().size(),
+      meta));
+    qiLogDebug("DataStream") << "Serializing buffer " << meta.size() <<" at " << stream.getBuffer().size();
+    return stream;
   }
 
   qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer) {
@@ -239,10 +251,10 @@ namespace qi {
     return os;
   }
 
-  IDataStream &IDataStream::operator>>(qi::Buffer &meta) {
-    BufferReader& reader = getBufferReader();
+  qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &meta) {
+    BufferReader& reader = stream.getBufferReader();
     uint32_t sz;
-    *this >> sz;
+    stream >> sz;
     if (reader.hasSubBuffer())
     {
       meta = reader.getSubBuffer();
@@ -254,9 +266,9 @@ namespace qi {
       qiLogDebug("DataStream") << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
-      memcpy(ptr, read(sz), sz);
+      memcpy(ptr, stream.read(sz), sz);
     }
-    return *this;
+    return stream;
   }
 
   size_t IDataStream::read(void *data, size_t size)
@@ -275,26 +287,26 @@ namespace qi {
     return os;
   }
 
-  IDataStream &IDataStream::operator>>(MetaValue &value)
+  qi::IDataStream &operator>>(qi::IDataStream &stream, qi::MetaValue &value)
   {
     std::string signature;
-    *this >> signature;
+    stream >> signature;
     MetaType* type = MetaType::getCompatibleTypeWithSignature(signature);
     if (!type)
       qiLogError("qi.datastream") << "Could not find metatype for signature " << signature;
     else
     {
       value.type = type;
-      value.value = value.type->deserialize(*this);
+      value.value = value.type->deserialize(stream);
     }
-    return *this;
+    return stream;
   }
 
-  ODataStream &ODataStream::operator<<(const MetaValue &value)
+  qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::MetaValue &value)
   {
-    *this << value.signature();
-    value.serialize(*this);
-    return *this;
+    stream << value.signature();
+    value.serialize(stream);
+    return stream;
   }
 
 

@@ -79,6 +79,10 @@ public:
   MetaValueCopy &operator()() { return *this; }
 };
 
+
+qi::ODataStream& operator << (qi::ODataStream& od, const MetaValue& mv);
+
+
 }
 
 #include <qimessaging/details/metavalue.hxx>

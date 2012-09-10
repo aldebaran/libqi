@@ -54,8 +54,6 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-  class MetaValue;
-
   /** This class provides data serialization, using
    * a qi::Buffer as a backend.
    *
@@ -92,22 +90,10 @@ namespace qi {
     IDataStream& operator>>(float    &f);
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
-
-    IDataStream &operator>>(qi::MetaValue &value);
-    IDataStream &operator>>(const detail::Value &val);
-    IDataStream &operator>>(qi::Buffer &buffer);
-
-    template<typename T>
-    IDataStream &operator>>(std::list<T> &v);
-    template<typename T>
-    IDataStream &operator>>(std::vector<T> &v);
-    template<typename K, typename V>
-    IDataStream &operator>>(std::map<K, V>  &m);
-
         //read raw data
     size_t read(void *data, size_t len);
     void* read(size_t len);
-    Status status() const { return _status; }
+    Status status() const { return _status; };
     void setStatus(Status status) { _status = status; }
     BufferReader& getBufferReader() { return _reader;}
   private:
@@ -155,18 +141,7 @@ namespace qi {
     ODataStream& operator<<(const char *);
     ODataStream& operator<<(const std::string& i);
 
-    ODataStream &operator<<(const MetaValue &value);
-    ODataStream &operator<<(const detail::Value &val);
-    ODataStream &operator<<(const Buffer &buffer);
-
-    template<typename T>
-    ODataStream &operator<<(const std::list<T> &v);
-    template<typename T>
-    ODataStream &operator<<(const std::vector<T> &v);
-    template<typename K, typename V>
-    ODataStream &operator<<(const std::map<K, V> &m);
-
-    Status status() const { return _status; }
+    Status status() const { return _status; };
     void setStatus(Status status) { _status = status; }
 
     Buffer& getBuffer() { return _buffer;}
@@ -179,28 +154,38 @@ namespace qi {
 
   };
 
+  class MetaValue;
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::Buffer &buffer);
+
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::Buffer &buffer);
+
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
+
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, qi::MetaValue &value);
+
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const qi::MetaValue &value);
+
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::MetaValue &value);
 
   template<typename T>
-  ODataStream &ODataStream::operator<<(const std::list<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::list<T> &v) {
     typedef std::list<T> _typefordebug;
     typename std::list<T>::const_iterator it = v.begin();
     typename std::list<T>::const_iterator end = v.end();
 
-    *this << (qi::uint32_t)v.size();
+    sd << (qi::uint32_t)v.size();
     for (; it != end; ++it) {
-      *this << *it;
+      sd << *it;
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
-    return *this;
+    return sd;
   }
 
   template<typename T>
-  IDataStream &IDataStream::operator>>(std::list<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::list<T> &v) {
     typedef std::list<T> _typefordebug;
     qi::uint32_t sz = 0;
-    *this >> sz;
+    sd >> sz;
     v.clear();
     if (sz) {
       try {
@@ -208,38 +193,39 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
                                     << sz;
-        setStatus(IDataStream::Status_ReadError);
-        return *this;
+        sd.setStatus(IDataStream::Status_ReadError);
+        return sd;
       }
       typename std::list<T>::iterator it = v.begin();
       typename std::list<T>::iterator end = v.end();
       for (; it != end; ++it) {
-        *this >> *it;
+        sd >> *it;
       }
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
-    return *this;
+    return sd;
   }
 
+
   template<typename T>
-  ODataStream &ODataStream::operator<<(const std::vector<T> &v) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
     typename std::vector<T>::const_iterator it = v.begin();
     typename std::vector<T>::const_iterator end = v.end();
 
-    *this << (qi::uint32_t)v.size();
+    sd << (qi::uint32_t)v.size();
     for (; it != end; ++it) {
-      *this << *it;
+      sd << *it;
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
-    return *this;
+    return sd;
   }
 
   template<typename T>
-  IDataStream &IDataStream::operator>>(std::vector<T> &v) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::vector<T> &v) {
     typedef std::vector<T> _typefordebug;
     qi::uint32_t sz = 0;
-    *this >> sz;
+    sd >> sz;
     v.clear();
     if (sz) {
       try {
@@ -247,52 +233,58 @@ namespace qi {
       } catch (const std::exception &) {
         qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
                                     << sz;
-        setStatus(IDataStream::Status_ReadError);
-        return *this;
+        sd.setStatus(IDataStream::Status_ReadError);
+        return sd;
       }
       typename std::vector<T>::iterator it = v.begin();
       typename std::vector<T>::iterator end = v.end();
       for (; it != end; ++it) {
-        *this >> *it;
+        sd >> *it;
       }
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
-    return *this;
+    return sd;
   }
 
   template<typename K, typename V>
-  ODataStream &ODataStream::operator<<(const std::map<K, V> &m) {
+  qi::ODataStream &operator<<(qi::ODataStream &sd, const std::map<K, V> &m) {
     typedef  std::map<K,V> _typefordebug;
     typename std::map<K,V>::const_iterator it = m.begin();
     typename std::map<K,V>::const_iterator end = m.end();
 
-    *this << (qi::uint32_t)m.size();
+    sd << (qi::uint32_t)m.size();
 
     for (; it != end; ++it) {
-      *this << it->first;
-      *this << it->second;
+      sd << it->first;
+      sd << it->second;
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);
-    return *this;
+    return sd;
   }
 
   template<typename K, typename V>
-  IDataStream &IDataStream::operator>>(std::map<K, V>  &m) {
+  qi::IDataStream &operator>>(qi::IDataStream &sd, std::map<K, V>  &m) {
     typedef  std::map<K,V> _typefordebug;
     qi::uint32_t sz = 0;
-    *this >> sz;
+    sd >> sz;
     m.clear();
 
     for(qi::uint32_t i=0; i < sz; ++i) {
       K k;
       V v;
-      *this >> k;
-      *this >> v;
+      sd >> k;
+      sd >> v;
       m[k] = v;
     }
     __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, m);
-    return *this;
-  }
+    return sd;
+  };
+
+  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &sd, qi::detail::Value &value);
+  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &sd, const qi::detail::Value &value);
+  //QIMESSAGING_API qi::SignatureStream &operator>>(qi::SignatureStream &sd, const qi::Value &value);
+
+
 }
 
 /** Make a class serializable throug {IO}DataStream.
