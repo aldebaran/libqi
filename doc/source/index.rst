@@ -21,6 +21,13 @@ Standards
  - :ref:`Binary Message <std-binary-message>`:  describe the network binary network protocol used in qiMessaging.
  - :ref:`std-code-convention` : code convention
 
+References
+----------
+
+ - `C++ reference <./cpp/index.html>`_
+ - `C++ Qt reference <./qt/index.html>`_
+ - `C reference <./c/index.html>`_
+
 Topics
 ------
 
@@ -154,5 +161,3 @@ Indices and tables
     - connectivity
     - core overview: basic services
     - application architecture: service, behavior, threads, shared memory
-
-
