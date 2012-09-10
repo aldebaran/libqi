@@ -83,14 +83,6 @@ namespace qi {
     unsigned int       method;
   };
 
-
-  template<typename T>
-  class QIMESSAGING_API Signal: public SignalBase
-  {
-  public:
-    Signal();
-  };
-
   template<typename FUNCTION_TYPE>
   inline SignalBase::Link SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
   {
@@ -122,11 +114,16 @@ namespace qi {
   }
 
   template<typename T>
-  inline Signal<T>::Signal()
-  : SignalBase(detail::functionArgumentSignature<T>())
+  class Signal: public SignalBase
   {
+  public:
+    inline Signal()
+      : SignalBase(detail::functionArgumentSignature<T>())
+    {
 
-  }
+    }
+  };
+
 }
 
 QI_NO_METATYPE(qi::SignalBase)

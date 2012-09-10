@@ -38,7 +38,7 @@ MetaValue toMetaValue(const T& v)
 {
   MetaValue res;
   res.type = metaTypeOf(v);
-  res.value = const_cast<T*>(&v);
+  res.value = (void *) const_cast<T*>(&v);
   return res;
 }
 

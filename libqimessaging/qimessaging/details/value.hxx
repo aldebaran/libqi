@@ -56,7 +56,7 @@ namespace qi {
     static inline void readValue(const Value& src, T& dst)
     {
       double d = src.toDouble();
-      dst = d;
+      dst = static_cast<T>(d);
     }
   };
 
