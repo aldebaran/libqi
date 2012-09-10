@@ -20,8 +20,8 @@
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/event_loop.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/signal.hpp>
-#include <qimessaging/metaobjectbuilder.hpp>
 
 
 #include <boost/function_types/function_arity.hpp>
@@ -30,7 +30,6 @@
 #include <boost/function_types/parameter_types.hpp>
 
 namespace qi {
-
 
   class QIMESSAGING_API ObjectInterface {
   public:
@@ -42,6 +41,7 @@ namespace qi {
   class QIMESSAGING_API Object {
   public:
     Object();
+    Object(qi::MetaObject metaobject);
     virtual ~Object();
 
     enum MetaCallType {
@@ -50,23 +50,12 @@ namespace qi {
       MetaCallType_Queued = 2,
     };
 
+    bool isValid() const;
+
     void addCallbacks(ObjectInterface *callbacks, void *data = 0);
     void removeCallbacks(ObjectInterface *callbacks);
 
     MetaObject &metaObject();
-
-    template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
-    template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
-    template<typename T>
-    inline unsigned int advertiseMethod(const std::string& name, boost::function<T> func);
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaFunction func);
-    int xForgetMethod(const std::string &meth);
-
-    template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseEvent(const std::string& eventName);
-    int xAdvertiseEvent(const std::string& signature);
 
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
                                                                  qi::AutoMetaValue p1 = qi::AutoMetaValue(),
@@ -116,8 +105,6 @@ namespace qi {
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(unsigned int linkId);
 
-    MetaObjectBuilder &metaObjectBuilder();
-
    //return the list of all subscriber to an event
     std::vector<SignalSubscriber> subscribers(int eventId) const;
     /** Connect an event to a method.
@@ -127,7 +114,7 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    unsigned int connect(unsigned int signal, qi::Object* target, unsigned int slot);
+    unsigned int connect(unsigned int signal, qi::Object target, unsigned int slot);
     /** Same as connect(signal, target, slot) but with reverse signature,
      * so that we can advertise this method.
      *
@@ -141,29 +128,38 @@ namespace qi {
     boost::shared_ptr<ObjectPrivate> _p;
   };
 
-  template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int Object::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
-  {
-    return metaObjectBuilder().advertiseMethod<OBJECT_TYPE, METHOD_TYPE>(name, object, method);
-  }
+  /** Event subscriber info.
+  *
+  * Only one of handler or target must be set.
+  */
+ struct QIMESSAGING_API SignalSubscriber
+ {
+   SignalSubscriber()
+     : handler(0), eventLoop(0), target(), method(0)
+   {}
 
-  template <typename FUNCTION_TYPE>
-  inline unsigned int Object::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
-  {
-    return metaObjectBuilder().advertiseMethod<FUNCTION_TYPE>(name, function);
-  }
+   SignalSubscriber(MetaFunction func, EventLoop* ctx)
+     : handler(func), eventLoop(ctx), target(), method(0)
+   {}
 
-  template<typename T>
-  inline unsigned int Object::advertiseMethod(const std::string& name, boost::function<T> function)
-  {
-    return metaObjectBuilder().advertiseMethod<T>(name, function);
-  }
+   SignalSubscriber(Object target, unsigned int method)
+     : handler(0), eventLoop(0), target(target), method(method)
+   {}
 
-  template<typename FUNCTION_TYPE>
-  inline unsigned int Object::advertiseEvent(const std::string& eventName)
-  {
-    return metaObjectBuilder().advertiseEvent<FUNCTION_TYPE>(eventName);
-  }
+   void call(const MetaFunctionParameters& args);
+   // Source information
+   SignalBase*        source;
+   /// Uid that can be passed to Object::disconnect()
+   SignalBase::Link  linkId;
+
+   // Target information
+   //   Mode 1: Direct functor call
+   MetaFunction       handler;
+   EventLoop*         eventLoop;
+   //  Mode 2: metaCall
+   Object             target;
+   unsigned int       method;
+ };
 
   template <typename FUNCTION_TYPE>
   unsigned int Object::connect(const std::string& eventName,

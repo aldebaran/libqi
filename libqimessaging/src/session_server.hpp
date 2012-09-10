@@ -17,6 +17,7 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport_server.hpp>
+#include <qi/atomic.hpp>
 
 namespace qi {
 
@@ -56,12 +57,12 @@ namespace qi {
     bool listen(const std::string &address);
     void close();
 
-    qi::Future<unsigned int> registerService(const std::string &name, qi::Object *obj);
+    qi::Future<unsigned int> registerService(const std::string &name, const qi::Object &obj);
     qi::Future<void>         unregisterService(unsigned int idx);
 
     std::vector<qi::ServiceInfo>  registeredServices();
     qi::ServiceInfo               registeredService(const std::string &service);
-    qi::Object                   *registeredServiceObject(const std::string &service);
+    qi::Object                    registeredServiceObject(const std::string &service);
 
     qi::Url                       listenUrl() const;
 
@@ -76,10 +77,14 @@ namespace qi {
     Links                                   _links;
 
     std::set<TransportSocket*>              _clients;
-    std::map<unsigned int, qi::Object*>     _services;
-    std::map<std::string, qi::Object*>      _servicesByName;
+    std::map<unsigned int, qi::Object>      _services;
+    std::map<std::string, qi::Object>       _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
-    std::map<qi::Object*, qi::ServiceInfo>  _servicesObject;
+    //used by registerService
+    typedef std::map<long, std::pair<qi::Object, qi::ServiceInfo> > RegisterServiceMap;
+    RegisterServiceMap _servicesObject;
+    qi::atomic<long>                        _servicesObjectIndex;
+
     std::map<unsigned int, std::string>     _servicesIndex;
     TransportServer                         _server;
     boost::mutex                            _mutexServices;

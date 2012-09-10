@@ -77,9 +77,9 @@ namespace qi {
 
     qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::Future< qi::Object* > service(const std::string &service,
-                                      ServiceLocality locality = ServiceLocality_All,
-                                      const std::string &protocol  = std::string("any"));
+    qi::Future< qi::Object > service(const std::string &service,
+                                     ServiceLocality locality = ServiceLocality_All,
+                                     const std::string &protocol  = std::string("any"));
 
     //Server
     bool    listen(const std::string &address);
@@ -88,7 +88,7 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
-    qi::Future<unsigned int> registerService(const std::string &name, qi::Object *object);
+    qi::Future<unsigned int> registerService(const std::string &name, const qi::Object &object);
     qi::Future<void>         unregisterService(unsigned int idx);
 
 

@@ -19,8 +19,9 @@ void onFire(const int& pl)
 
 TEST(TestObject, Simple)
 {
-  qi::Object obj;
-  obj.advertiseEvent<void (*)(int)>("fire");
+  qi::ObjectBuilder ob;
+  ob.advertiseEvent<void (*)(int)>("fire");
+  qi::Object obj(ob.object());
   EXPECT_EQ(1U, obj.metaObject().signalMap().size());
   int linkId = obj.connect("fire", &onFire, 0);
   obj.emitEvent("fire", 42);
@@ -40,8 +41,9 @@ TEST(TestObject, Simple)
 TEST(TestObject, EmitMethod)
 {
   lastPayload = 0;
-  qi::Object obj;
-  obj.advertiseMethod("fire", &onFire);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("fire", &onFire);
+  qi::Object obj(ob.object());
   pPayload.reset();
   obj.emitEvent("fire", 23);
   EXPECT_TRUE(pPayload.future().wait(2000));

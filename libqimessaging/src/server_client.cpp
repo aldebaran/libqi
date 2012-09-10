@@ -11,13 +11,11 @@
 
 namespace qi {
 
-  static qi::MetaObject *serverMetaObject() {
-    qi::MetaObject*        mo = new qi::MetaObject();
-    qi::MetaObjectBuilder  mob(mo);
+  static qi::MetaObject serverMetaObject() {
+    qi::ObjectBuilder  ob;
 
     std::string ret;
     std::string sig;
-
 
     ret = qi::signatureFromType<unsigned int>::value();
     sig = "registerEvent::(";
@@ -25,7 +23,7 @@ namespace qi {
     qi::signatureFromType<unsigned int>::value(sig);
     qi::signatureFromType<unsigned int>::value(sig);
     sig += ")";
-    mob.xAdvertiseMethod(ret, sig, 0);
+    ob.xAdvertiseMethod(ret, sig, 0);
 
     ret = qi::signatureFromType<bool>::value();
     sig = "unregisterEvent::(";
@@ -33,26 +31,20 @@ namespace qi {
     qi::signatureFromType<unsigned int>::value(sig);
     qi::signatureFromType<unsigned int>::value(sig);
     sig += ")";
-    mob.xAdvertiseMethod(ret, sig, 0);
+    ob.xAdvertiseMethod(ret, sig, 0);
 
     ret = qi::signatureFromType<qi::MetaObject>::value();
     sig = "metaObject::(";
     qi::signatureFromType<unsigned int>::value(sig);
     qi::signatureFromType<unsigned int>::value(sig);
     sig += ")";
-    mob.xAdvertiseMethod(ret, sig, 0);
+    ob.xAdvertiseMethod(ret, sig, 0);
 
-
-    MetaObject::MethodMap mm = mo->methodMap();
-    MetaObject::MethodMap::iterator it;
-    for (it = mm.begin(); it != mm.end(); ++it) {
-      std::cout << "id: " << it->first << " : " << it->second.signature() << std::endl;
-    }
-
-    assert(mo->methodId("registerEvent::(III)") == qi::Message::ServerFunction_RegisterEvent);
-    assert(mo->methodId("unregisterEvent::(III)") == qi::Message::ServerFunction_UnregisterEvent);
-    assert(mo->methodId("metaObject::(II)") == qi::Message::ServerFunction_MetaObject);
-    return mo;
+    qi::MetaObject m = ob.object().metaObject();
+    assert(m.methodId("registerEvent::(III)") == qi::Message::ServerFunction_RegisterEvent);
+    assert(m.methodId("unregisterEvent::(III)") == qi::Message::ServerFunction_UnregisterEvent);
+    assert(m.methodId("metaObject::(II)") == qi::Message::ServerFunction_MetaObject);
+    return m;
   }
 
   ServerClient::ServerClient(qi::TransportSocket *socket)

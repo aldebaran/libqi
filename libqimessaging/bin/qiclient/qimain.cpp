@@ -30,9 +30,9 @@ void call(const std::string &addr)
   std::cout << std::endl;
 #endif
 
-  qi::Object *obj = session.service("serviceTest");
+  qi::Object obj = session.service("serviceTest");
 
-  if (obj == 0)
+  if (!obj.isValid())
   {
       std::cerr << "obj == 0" << std::endl;
       return;
@@ -47,10 +47,9 @@ void call(const std::string &addr)
     ++i;
   }
 #endif
-  std::string result = obj->call<std::string>("reply", "plaf");
+  std::string result = obj.call<std::string>("reply", "plaf");
   std::cout << result << std::endl;
 
-  delete obj;
   session.close();
 }
 

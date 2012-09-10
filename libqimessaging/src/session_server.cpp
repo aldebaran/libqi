@@ -79,12 +79,12 @@ namespace qi {
       for (PerServiceLinks::iterator j = i->second.begin();
         j != i->second.end(); ++j)
       {
-        std::map<unsigned int, qi::Object*>::iterator iservice = _services.find(j->first);
+        std::map<unsigned int, qi::Object>::iterator iservice = _services.find(j->first);
         // If the service is still there, disconnect one by one.
         if (iservice != _services.end())
           for (ServiceLinks::iterator k = j->second.begin();
             k != j->second.end(); ++k)
-            iservice->second->disconnect(k->second.localLinkId);
+            iservice->second.disconnect(k->second.localLinkId);
       }
       _links.erase(i);
     }
@@ -96,11 +96,11 @@ namespace qi {
   void Session_Server::onSocketReadyRead(TransportSocket *client, int id, void *data) {
     qi::Message msg;
     client->read(id, &msg);
-    qi::Object *obj;
+    qi::Object obj;
 
     {
       boost::mutex::scoped_lock sl(_mutexServices);
-      std::map<unsigned int, qi::Object*>::iterator it;
+      std::map<unsigned int, qi::Object>::iterator it;
       if (msg.service() == Message::Service_Server)
       {
         // Accept register/unregister event as emit or as call
@@ -143,7 +143,7 @@ namespace qi {
             ds >> event >> remoteLinkId;
 
             // locate object, register locally and bounce to an event message
-            unsigned int linkId = it->second->connect(event,
+            unsigned int linkId = it->second.connect(event,
               boost::bind(&forwardEvent, _1, service, event, client));
             _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
@@ -171,7 +171,7 @@ namespace qi {
             }
             else
             {
-              it->second->disconnect(i->second.localLinkId);
+              it->second.disconnect(i->second.localLinkId);
             }
             if (msg.type() == Message::Type_Call)
             {
@@ -203,7 +203,7 @@ namespace qi {
               retval.buildReplyFrom(msg);
               Buffer buf;
               ODataStream ds(buf);
-              ds << obj->metaObject();
+              ds << obj.metaObject();
               retval.setBuffer(buf);
               client->send(retval);
             }
@@ -214,7 +214,7 @@ namespace qi {
       } // msg.service() == Server
       it = _services.find(msg.service());
       obj = it->second;
-      if (it == _services.end() || !obj)
+      if (it == _services.end() || !obj.isValid())
       {
         if (msg.type() == qi::Message::Type_Call) {
           qi::Message retval;
@@ -236,13 +236,13 @@ namespace qi {
     {
     case Message::Type_Call:
       {
-         qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::Object::MetaCallType_Queued);
+         qi::Future<MetaFunctionResult> fut = obj.metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::Object::MetaCallType_Queued);
          fut.addCallbacks(new ServerResult(client, msg));
       }
       break;
     case Message::Type_Event:
       {
-        obj->metaEmit(msg.function(), MetaFunctionParameters(msg.buffer()));
+        obj.metaEmit(msg.function(), MetaFunctionParameters(msg.buffer()));
       }
       break;
     }
@@ -252,38 +252,37 @@ namespace qi {
   void Session_Server::onFutureFailed(const std::string &error, void *data)
   {
     qi::ServiceInfo si;
-    qi::Object     *obj = static_cast<qi::Object *>(data);
-
-    std::map<qi::Object *, qi::ServiceInfo>::iterator it = _servicesObject.find(obj);
+    long id = reinterpret_cast<long>(data);
+    RegisterServiceMap::iterator it = _servicesObject.find(id);
     if (it != _servicesObject.end())
       _servicesObject.erase(it);
   }
 
   void Session_Server::onFutureFinished(const unsigned int &idx,
-                                       void               *data)
+                                        void               *data)
   {
-    qi::Object     *obj = static_cast<qi::Object *>(data);
+    long id = reinterpret_cast<long>(data);
     qi::ServiceInfo si;
-    std::map<qi::Object *, qi::ServiceInfo>::iterator it;
+    RegisterServiceMap::iterator it;
 
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-      it = _servicesObject.find(obj);
+      it = _servicesObject.find(id);
       if (it != _servicesObject.end())
-        si = _servicesObject[obj];
+        si = it->second.second;
     }
     si.setServiceId(idx);
 
     {
       boost::mutex::scoped_lock sl(_mutexServices);
-      _services[idx] = obj;
+      _services[idx] = it->second.first;
     }
     // ack the Service directory to tell that we are ready
     _sdClient->serviceReady(idx);
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       _servicesInfo[si.name()] = si;
-      _servicesByName[si.name()] = obj;
+      _servicesByName[si.name()] = it->second.first;
       _servicesIndex[idx] = si.name();
       _servicesObject.erase(it);
     }
@@ -305,7 +304,7 @@ namespace qi {
   }
 
   qi::Future<unsigned int> Session_Server::registerService(const std::string &name,
-                                                           qi::Object        *obj)
+                                                           const qi::Object  &obj)
   {
     if (_server.endpoints().empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
@@ -329,14 +328,15 @@ namespace qi {
       si.setEndpoints(epsStr);
     }
 
+    long id = ++_servicesObjectIndex;
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-      _servicesObject[obj] = si;
+      _servicesObject[id] = std::make_pair(obj, si);
     }
 
     qi::Future<unsigned int> future;
     future = _sdClient->registerService(si);
-    future.addCallbacks(this, obj);
+    future.addCallbacks(this, reinterpret_cast<void *>(id));
 
     return future;
   };
@@ -394,15 +394,15 @@ namespace qi {
     return qi::ServiceInfo();
   }
 
-  qi::Object *Session_Server::registeredServiceObject(const std::string &service) {
-    std::map<std::string, qi::Object *>::iterator it;
+  qi::Object Session_Server::registeredServiceObject(const std::string &service) {
+    std::map<std::string, qi::Object>::iterator it;
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       it = _servicesByName.find(service);
       if (it != _servicesByName.end())
         return it->second;
     }
-    return 0;
+    return Object();
   }
 
   qi::Url Session_Server::listenUrl() const {

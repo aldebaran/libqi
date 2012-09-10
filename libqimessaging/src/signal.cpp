@@ -84,22 +84,21 @@ namespace qi {
       else
         handler(args);
     }
-    if (target)
-      target->metaEmit(method, args);
+    if (target.isValid())
+      target.metaEmit(method, args);
   }
 
-  SignalBase::Link
-  SignalBase::connect(MetaFunction callback, EventLoop* ctx)
+  SignalBase::Link SignalBase::connect(MetaFunction callback, EventLoop* ctx)
   {
     return connect(SignalSubscriber(callback, ctx));
   }
-  SignalBase::Link
-  SignalBase::connect(qi::Object* o, unsigned int slot)
+
+  SignalBase::Link SignalBase::connect(qi::Object o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
-  SignalBase::Link
-  SignalBase::connect(const SignalSubscriber& src)
+
+  SignalBase::Link SignalBase::connect(const SignalSubscriber& src)
   {
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     Link res = ++linkUid;
@@ -107,11 +106,11 @@ namespace qi {
     SignalSubscriber& s = _p->subscriberMap[res];
     s.linkId = res;
     s.source = this;
-    if (s.target)
+    if (s.target.isValid())
     {
-      Object* o = s.target;
-      boost::recursive_mutex::scoped_lock sl(o->_p->_mutexRegistration);
-      o->_p->_registrations.push_back(s);
+      Object o = s.target;
+      boost::recursive_mutex::scoped_lock sl(o._p->_mutexRegistration);
+      o._p->_registrations.push_back(s);
     }
     return res;
   }
@@ -130,10 +129,10 @@ namespace qi {
       return false;
     SignalSubscriber s = i->second;
     _p->subscriberMap.erase(i);
-    if (s.target)
+    if (s.target.isValid())
     {
-      boost::recursive_mutex::scoped_lock sl(s.target->_p->_mutexRegistration);
-      std::vector<SignalSubscriber>& regs = s.target->_p->_registrations;
+      boost::recursive_mutex::scoped_lock sl(s.target._p->_mutexRegistration);
+      std::vector<SignalSubscriber>& regs = s.target._p->_registrations;
       // Look it up in vector, then swap with last.
       for (unsigned int i=0; i< regs.size(); ++i)
         if (s.linkId == regs[i].linkId)

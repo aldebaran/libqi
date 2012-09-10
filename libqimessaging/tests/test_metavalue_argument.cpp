@@ -48,6 +48,11 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
+    qi::ObjectBuilder ob;
+    ob.advertiseEvent<void (*)(const int&)>("fire");
+    ob.advertiseMethod("value", &value);
+    ob.advertiseMethod("value", &valueList);
+    oserver = ob.object();
   }
 
 protected:
@@ -55,12 +60,8 @@ protected:
   {
     ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
     ASSERT_TRUE(session.connect(sd.listenUrl()));
-
-    oserver.advertiseEvent<void (*)(const int&)>("fire");
-    oserver.advertiseMethod("value", &value);
-    oserver.advertiseMethod("value", &valueList);
     ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session.registerService("coin", &oserver).wait(), 0);
+    ASSERT_GT(session.registerService("coin", oserver).wait(), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
@@ -84,7 +85,7 @@ public:
   qi::Session          session;
   qi::Object           oserver;
   qi::Session          sclient;
-  qi::Object          *oclient;
+  qi::Object           oclient;
 };
 
 
@@ -92,49 +93,49 @@ TEST_F(TestObject, meta)
 {
   using namespace qi;
   // Remote test
-  Object* target = oclient;
+  Object target = oclient;
   {
     /* WATCH OUT, qi::AutoMetaValue(12) is what call expects!
     * So call(AutoMetaValue(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
-  target->call<void>("value", 12).wait();
+  target.call<void>("value", 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", myint);
+    qi::Future<void> fut = target.call<void>("value", myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", MetaValue(AutoMetaValue(myint)));
+    qi::Future<void> fut = target.call<void>("value", MetaValue(AutoMetaValue(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>("value", "foo").wait();
+  target.call<void>("value", "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  target->call<void>("value", in).wait();
+  target.call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<MetaValue> args;
   args.push_back(AutoMetaValue(12));
   args.push_back(AutoMetaValue("foo"));
   args.push_back(AutoMetaValue(in));
-  target->call<void>("value", args).wait();
+  target.call<void>("value", args).wait();
   ASSERT_EQ(v.type, detail::Value::List);
   detail::Value::ValueList res = v.toList();
   ASSERT_EQ(static_cast<size_t>(3), res.size());
@@ -143,45 +144,45 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(in, res[2].as<std::vector<double> >());
   }
   // Plugin copy test
-  target = &oserver;
+  target = oserver;
   {
-  target->call<void>("value", 12).wait();
+  target.call<void>("value", 12).wait();
   ASSERT_EQ(v.toDouble(), 12);
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", myint);
+    qi::Future<void> fut = target.call<void>("value", myint);
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", MetaValue(AutoMetaValue(myint)));
+    qi::Future<void> fut = target.call<void>("value", MetaValue(AutoMetaValue(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
-  target->call<void>("value", "foo").wait();
+  target.call<void>("value", "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  target->call<void>("value", in).wait();
+  target.call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<MetaValue> args;
   args.push_back(AutoMetaValue(12));
   args.push_back(AutoMetaValue("foo"));
   args.push_back(AutoMetaValue(in));
-  target->call<void>("value", args).wait();
+  target.call<void>("value", args).wait();
   ASSERT_EQ(v.type, detail::Value::List);
   detail::Value::ValueList res = v.toList();
   ASSERT_EQ(static_cast<size_t>(3), res.size());

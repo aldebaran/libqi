@@ -34,14 +34,14 @@ namespace qi {
       , sclient(0)
     {}
 
-    qi::Promise<qi::Object *> promise;
-    std::string               name;
-    unsigned int              serviceId;
-    std::string               protocol;
-    bool                      connected; // True if the service server was reached
-    unsigned int              attempts;  // Number of connection attempts pending.
-    TransportSocket*          socket;
-    ServerClient             *sclient;
+    qi::Promise<qi::Object> promise;
+    std::string             name;
+    unsigned int            serviceId;
+    std::string             protocol;
+    bool                    connected; // True if the service server was reached
+    unsigned int            attempts;  // Number of connection attempts pending.
+    TransportSocket*        socket;
+    ServerClient           *sclient;
   };
 
   class Session_Service : public FutureInterface<qi::ServiceInfo>,
@@ -54,9 +54,9 @@ namespace qi {
       , _server(server)
     {}
 
-    qi::Future< qi::Object* > service(const std::string &service,
-                                      Session::ServiceLocality locality,
-                                      const std::string &protocol);
+    qi::Future<qi::Object> service(const std::string &service,
+                                   Session::ServiceLocality locality,
+                                   const std::string &protocol);
 
   protected:
     //FutureInterface

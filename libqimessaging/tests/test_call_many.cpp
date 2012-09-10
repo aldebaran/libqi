@@ -11,16 +11,15 @@
 #include <qi/application.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/session.hpp>
-
 #include <qimessaging/service_directory.hpp>
 
-qi::Object          *oclient1, *oclient2;
+qi::Object          oclient1, oclient2;
 static qi::Promise<bool> payload;
 
 void onFire1(const int& pl)
 {
   if (pl)
-    oclient2->call<void>("onFire2", pl-1).async();
+    oclient2.call<void>("onFire2", pl-1).async();
   else
     payload.setValue(true);
 }
@@ -28,27 +27,28 @@ void onFire1(const int& pl)
 void onFire2(const int& pl)
 {
   if (pl)
-    qi::Future<void> unused = oclient1->call<void>("onFire1", pl-1);
+    qi::Future<void> unused = oclient1.call<void>("onFire1", pl-1);
   else
     payload.setValue(true);
 }
 
 TEST(Test, Recurse)
 {
-  qi::ServiceDirectory sd;
-  qi::Session          session1, session2;
-  qi::Object           oserver1, oserver2;
+  qi::ServiceDirectory  sd;
+  qi::Session           session1, session2;
+  qi::ObjectBuilder     ob1, ob2;
+  ob1.advertiseMethod("onFire1", &onFire1);
+  ob2.advertiseMethod("onFire2", &onFire2);
+  qi::Object    oserver1(ob1.object()), oserver2(ob2.object());
 
   // Two objects with a fire event and a onFire method.
   ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
   ASSERT_TRUE(session1.connect(sd.listenUrl()));
   ASSERT_TRUE(session2.connect(sd.listenUrl()));
-  oserver1.advertiseMethod("onFire1", &onFire1);
-  oserver2.advertiseMethod("onFire2", &onFire2);
   ASSERT_TRUE(session1.listen("tcp://0.0.0.0:0"));
   ASSERT_TRUE(session2.listen("tcp://0.0.0.0:0"));
-  ASSERT_GT(session1.registerService("coin1", &oserver1).wait(), 0);
-  ASSERT_GT(session2.registerService("coin2", &oserver2).wait(), 0);
+  ASSERT_GT(session1.registerService("coin1", oserver1).wait(), 0);
+  ASSERT_GT(session2.registerService("coin2", oserver2).wait(), 0);
   EXPECT_EQ(1U, session1.services(qi::Session::ServiceLocality_Local).value().size());
   EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
   oclient1 = session2.service("coin1");
@@ -63,13 +63,11 @@ TEST(Test, Recurse)
     std::cerr << "Valgrind detected, reducing iteration count" << std::endl;
     niter = 50;
   }
-  oclient1->call<void>("onFire1", niter);
+  oclient1.call<void>("onFire1", niter);
   ASSERT_TRUE(payload.future().wait(3000));
 
   session1.close();
   session2.close();
-  delete oclient1;
-  delete oclient2;
   sd.close();
 }
 

@@ -21,12 +21,13 @@
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
+#include <qimessaging/object.hpp>
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 static bool clientDone = false;
 
-int client_calls(qi::Session *session, qi::Object *obj)
+int client_calls(qi::Session *session, qi::Object obj)
 {
 #if 0
   cpu_set_t mask;
@@ -37,11 +38,11 @@ int client_calls(qi::Session *session, qi::Object *obj)
   qiLogInfo("sched") << "::" << pthread_setaffinity_np(pthread_self(), len, &mask);
 #endif
 
-  if (!obj)
+  if (!obj.isValid())
   {
     obj = session->service("serviceTest");
 
-    if (!obj)
+    if (!obj.isValid())
     {
       std::cerr << "cant get serviceTest" << std::endl;
       return -1;
@@ -66,7 +67,7 @@ int client_calls(qi::Session *session, qi::Object *obj)
         c++;
       requeststr[2] = c;
 
-      std::string result = obj->call<std::string>("reply", requeststr);
+      std::string result = obj.call<std::string>("reply", requeststr);
       if (result != requeststr)
         qiLogInfo("perf_transport_thd") << "error content" << std::endl;
     }
@@ -81,7 +82,7 @@ int main_client(bool shared)
   const unsigned int nbThreads = 4;
   qi::Session session;
   session.connect("tcp://127.0.0.1:5555");
-  qi::Object *obj = 0;
+  qi::Object obj;
   boost::thread thd[nbThreads];
 
   qiLogInfo("perf_transport_thd") << "Will spawn " << nbThreads << " threads";
@@ -92,7 +93,7 @@ int main_client(bool shared)
 
     obj = session.service("serviceTest");
 
-    if (!obj)
+    if (!obj.isValid())
     {
       std::cerr << "cant get serviceTest" << std::endl;
       return -1;
@@ -162,14 +163,16 @@ int main_server()
   sd.listen("tcp://127.0.0.1:5555");
   std::cout << "Service Directory ready." << std::endl;
 
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+
   qi::Session       session;
-  qi::Object        obj;
-  obj.advertiseMethod("reply", &reply);
+  qi::Object obj(ob.object());
 
   session.connect("tcp://127.0.0.1:5555");
 
   session.listen("tcp://127.0.0.1:9559");
-  session.registerService("serviceTest", &obj);
+  session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready." << std::endl;
 
   while (!clientDone)

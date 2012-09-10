@@ -8,17 +8,13 @@
 #ifndef    METAOBJECTBUILDER_P_HPP_
 # define    METAOBJECTBUILDER_P_HPP_
 
+#include <qimessaging/metaobject.hpp>
 namespace qi {
 
   class MetaObject;
-  class MetaObjectBuilderPrivate {
+  class ObjectBuilderPrivate {
   public:
-    MetaObjectBuilderPrivate(MetaObject *meta)
-      : _metaObject(meta)
-    {}
-
-    //not owned by us
-    MetaObject *_metaObject;
+    MetaObject _metaObject;
   };
 }
 

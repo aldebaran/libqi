@@ -85,16 +85,10 @@ namespace qi {
     ServiceRequest *sr = serviceRequest(data);
     if (!sr)
       return;
-
-    //sr->socket->removeCallbacks(this);
-    qi::MetaObject *pmo = new qi::MetaObject;
-    *pmo = mo;
-    qi::RemoteObject *robj = new qi::RemoteObject(sr->socket, sr->serviceId, pmo);
-    qi::Object *obj;
-    obj = robj;
+    qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
     //remove the callback of ServerClient before returning the object
     sr->socket->removeCallbacks(&sr->sclient->_object);
-    sr->promise.setValue(obj);
+    sr->promise.setValue(robj);
     removeRequest(data);
   }
 
@@ -138,11 +132,11 @@ namespace qi {
     removeRequest(data);
   }
 
-  qi::Future< qi::Object * > Session_Service::service(const std::string &service,
-                                                      Session::ServiceLocality locality,
-                                                      const std::string &type)
+  qi::Future<qi::Object> Session_Service::service(const std::string &service,
+                                                  Session::ServiceLocality locality,
+                                                  const std::string &type)
   {
-    qi::Future< qi::Object * > result;
+    qi::Future<qi::Object> result;
     if (locality == Session::ServiceLocality_Local) {
       qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
     }

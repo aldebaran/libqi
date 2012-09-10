@@ -21,6 +21,7 @@
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
+#include <qimessaging/object.hpp>
 
 static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
@@ -42,9 +43,10 @@ qi::Buffer replyBuf(const qi::Buffer& buf)
 
 int main_local()
 {
-  qi::Object        obj;
-  obj.advertiseMethod("reply", &reply);
-  obj.advertiseMethod("replyBuf", &replyBuf);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  ob.advertiseMethod("replyBuf", &replyBuf);
+  qi::Object obj(ob.object());
   run_client(&obj);
   return 0;
 }
@@ -59,14 +61,13 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 
   qi::Session session;
   session.connect("tcp://"+host+":"+port);
-  qi::Future< qi::Object * > fobj =  session.service("serviceTest");
-  qi::Object *obj = fobj.value();
-  if (!obj)
+  qi::Object obj =  session.service("serviceTest");
+  if (!obj.isValid())
   {
     std::cerr << "cant get serviceTest" << std::endl;
     return -1;
   }
-  return run_client(obj);
+  return run_client(&obj);
 }
 
 
@@ -202,13 +203,15 @@ int main_server(std::string host, std::string port)
   std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
 
   qi::Session       session;
-  qi::Object        obj;
-  obj.advertiseMethod("reply", &reply);
-  obj.advertiseMethod("replyBuf", &replyBuf);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  ob.advertiseMethod("replyBuf", &replyBuf);
+  qi::Object obj(ob.object());
+
   session.connect("tcp://127.0.0.1:"+port);
 
   session.listen("tcp://0.0.0.0:0");
-  session.registerService("serviceTest", &obj);
+  session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready." << std::endl;
   serverReady = true;
   while (!clientDone)

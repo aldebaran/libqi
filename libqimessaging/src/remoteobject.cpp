@@ -15,12 +15,12 @@
 
 namespace qi {
 
-RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject *mo)
-  : _ts(ts)
+RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo)
+  : Object(mo)
+  , _ts(ts)
   , _service(service)
 {
   _ts->addCallbacks(this);
-  _p->setMetaObject(mo);
 }
 
 RemoteObject::~RemoteObject()

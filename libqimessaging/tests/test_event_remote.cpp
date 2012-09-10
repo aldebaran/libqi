@@ -27,6 +27,9 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
+    qi::ObjectBuilder ob;
+    ob.advertiseEvent<void (*)(const int&)>("fire");
+    oserver = new qi::Object(ob.object());
   }
 
 protected:
@@ -36,10 +39,9 @@ protected:
 
     ASSERT_TRUE(session.connect(sd.listenUrl()));
     ASSERT_TRUE(session.isConnected());
-    oserver.advertiseEvent<void (*)(const int&)>("fire");
 
     ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session.registerService("coin", &oserver).wait(), 0);
+    ASSERT_GT(session.registerService("coin", *oserver).wait(), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
@@ -61,18 +63,18 @@ public:
   qi::Promise<int>     prom;
   qi::ServiceDirectory sd;
   qi::Session          session;
-  qi::Object           oserver;
+  qi::Object          *oserver;
   qi::Session          sclient;
-  qi::Object          *oclient;
+  qi::Object           oclient;
 };
 
 
 TEST_F(TestObject, Simple)
 {
-  int linkId = oclient->connect("fire", &onFire);
+  int linkId = oclient.connect("fire", &onFire);
   qi::os::msleep(800);
   EXPECT_LT(0, linkId);
-  oserver.emitEvent("fire", 42);
+  oserver->emitEvent("fire", 42);
   ASSERT_TRUE(payload->future().wait(2000));
   EXPECT_EQ(42, payload->future().value());
 }
@@ -80,10 +82,10 @@ TEST_F(TestObject, Simple)
 
 TEST_F(TestObject, RemoteEmit)
 {
-  int linkId = oclient->connect("fire", &onFire);
+  int linkId = oclient.connect("fire", &onFire);
   qi::os::msleep(800);
   EXPECT_LT(0, linkId);
-  oclient->emitEvent("fire", 43);
+  oclient.emitEvent("fire", 43);
   ASSERT_TRUE(payload->future().wait(2000));
   EXPECT_EQ(43, payload->future().value());
 }
@@ -96,25 +98,25 @@ TEST_F(TestObject, CoDeco)
   for (unsigned i=0; i<5; ++i)
   {
     payload->reset();
-    int linkId = oclient->connect("fire", &onFire);
+    int linkId = oclient.connect("fire", &onFire);
     int exp;
     qi::os::msleep(800);
     EXPECT_GE(linkId, 0);
-    oserver.emitEvent("fire", (int)(50 + i));
+    oserver->emitEvent("fire", (int)(50 + i));
     ASSERT_TRUE(payload->future().wait(2000));
     exp = 50 + i;
     EXPECT_EQ(exp, payload->future().value());
 
     payload->reset();
-    oserver.emitEvent("fire", (int)(51 + i));
+    oserver->emitEvent("fire", (int)(51 + i));
     ASSERT_TRUE(payload->future().wait(2000));
     exp = 51 + i;
     EXPECT_EQ(exp, payload->future().value());
 
-    oclient->disconnect(linkId);
+    oclient.disconnect(linkId);
 
     payload->reset();
-    oserver.emitEvent("fire", (int)(50 + i));
+    oserver->emitEvent("fire", (int)(50 + i));
     ASSERT_FALSE(payload->future().wait(200));
   }
 }

@@ -25,33 +25,25 @@ void reply(const char *signature, qi_message_t *message, qi_message_t *answer, v
   qi_message_write_string(answer, rep);
 }
 
-
-qi_message_t*         message;
-qi_application_t*     app;
-qi_session_t*         session;
-qi_session_t*         client_session;
-qi_object_t*          object;
-qi_object_t*          remote;
-qi::ServiceDirectory*  sd;
 std::string           connectionAddr;
-int                   id;
 
-TEST(TestCBindings, InitService)
+
+TEST(TestCBindings, Call)
 {
-  assert(app != 0);
-  object = qi_object_create("replyObj");
-  assert(object != 0);
-}
 
-TEST(TestCBindings, BindMethod)
-{
-  qi_object_register_method(object, "reply::s(s)", &reply, 0);
+  qi_message_t*         message;
+  qi_session_t*         session;
+  qi_session_t*         client_session;
+  qi_object_builder_t*  ob;
+  qi_object_t*          object;
+  qi_object_t*          remote;
 
-  // TODO find a way to test this
-}
+  int                   id;
 
-TEST(TestCBindings, ConnectSession)
-{
+  ob = qi_object_builder_create();
+  qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
+  object = qi_object_builder_get_object(ob);
+
   session = qi_session_create();
   assert(session != 0);
 
@@ -60,10 +52,6 @@ TEST(TestCBindings, ConnectSession)
   assert(qi_session_listen(session, "tcp://0.0.0.0:0"));
 
   id = qi_session_register_service(session, "serviceTest", object);
-}
-
-TEST(TestCBindings, InitClient)
-{
   client_session = qi_session_create();
   assert(client_session != 0);
 
@@ -73,10 +61,7 @@ TEST(TestCBindings, InitClient)
   assert(remote != 0);
 
   assert(qi_session_get_service(client_session, "pute") == 0);
-}
 
-TEST(TestCBindings, CallReply)
-{
   message = qi_message_create();
   assert(message != 0);
 
@@ -97,21 +82,19 @@ TEST(TestCBindings, CallReply)
 
   result = qi_message_read_string(msg);
   assert(strcmp(result, "plafbim") == 0);
-}
 
-TEST(TestCBindings, TearDown)
-{
-  sd->close();
   qi_message_destroy(message);
   qi_session_unregister_service(session, id);
   qi_session_destroy(session);
   qi_session_destroy(client_session);
+  qi_object_builder_destroy(ob);
   qi_object_destroy(object);
   qi_object_destroy(remote);
-  qi_application_destroy(app);
 }
 
 int main(int argc, char **argv) {
+  qi_application_t*     app;
+  qi::ServiceDirectory*  sd;
   app = qi_application_create(&argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -125,5 +108,8 @@ int main(int argc, char **argv) {
   sd->listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
 
-  return RUN_ALL_TESTS();
+  int ret = RUN_ALL_TESTS();
+  sd->close();
+  qi_application_destroy(app);
+  return ret;
 }

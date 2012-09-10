@@ -28,8 +28,20 @@
 namespace qi
 {
 
+  qi::MetaObject createSDP(ServiceDirectoryPrivate *self) {
+    qi::ObjectBuilder ob;
+
+    ob.advertiseMethod("service", self, &ServiceDirectoryPrivate::service);
+    ob.advertiseMethod("services", self, &ServiceDirectoryPrivate::services);
+    ob.advertiseMethod("registerService", self, &ServiceDirectoryPrivate::registerService);
+    ob.advertiseMethod("unregisterService", self, &ServiceDirectoryPrivate::unregisterService);
+    ob.advertiseMethod("serviceReady", self, &ServiceDirectoryPrivate::serviceReady);
+    return ob.object().metaObject();
+  }
+
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : _server()
+    : Object(createSDP(this))
+    , _server()
     , servicesCount(0)
     , currentSocket(0)
   {
@@ -48,11 +60,6 @@ namespace qi
     /*
      * Order is important. See qi::Message::ServiceDirectoryFunctions.
      */
-    advertiseMethod("service", this, &ServiceDirectoryPrivate::service);
-    advertiseMethod("services", this, &ServiceDirectoryPrivate::services);
-    advertiseMethod("registerService", this, &ServiceDirectoryPrivate::registerService);
-    advertiseMethod("unregisterService", this, &ServiceDirectoryPrivate::unregisterService);
-    advertiseMethod("serviceReady", this, &ServiceDirectoryPrivate::serviceReady);
   }
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()

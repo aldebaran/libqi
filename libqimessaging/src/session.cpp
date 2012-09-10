@@ -90,9 +90,9 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::Future< qi::Object * > Session::service(const std::string &service,
-                                              ServiceLocality locality,
-                                              const std::string &type)
+  qi::Future< qi::Object > Session::service(const std::string &service,
+                                            ServiceLocality locality,
+                                            const std::string &type)
   {
     return _p->_serviceHandler.service(service, locality, type);
   }
@@ -110,7 +110,7 @@ namespace qi {
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,
-                                                    qi::Object *obj)
+                                                    const qi::Object  &obj)
   {
     return _p->_server.registerService(name, obj);
   }

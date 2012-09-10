@@ -160,7 +160,7 @@ int main_client(std::string QI_UNUSED(str))
   qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
 
-  qi::Object *sock = session.service("serviceTest");
+  qi::Object sock = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -170,7 +170,7 @@ int main_client(std::string QI_UNUSED(str))
 
     for (int j = 0; j < gLoopCount; ++j)
     {
-      sock->emitEvent("New event");
+      sock.emitEvent("New event");
     }
   }
   return 0;
@@ -224,10 +224,10 @@ int main_server()
   std::cout << "Service Directory ready." << std::endl;
 
   qi::Session session;
-  qi::Object  obj;
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::Object  obj(ob.object());
   ServerEvent srv;
-  obj.advertiseMethod("reply", &reply);
-
   session.connect("tcp://127.0.0.1:5555");
 
   std::vector<std::string> endpoints;

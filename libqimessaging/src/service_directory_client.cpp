@@ -6,32 +6,31 @@
 */
 
 #include "service_directory_client.hpp"
-#include <qimessaging/metaobjectbuilder.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include "src/service_directory_p.hpp"
 
 namespace qi {
 
-  static qi::MetaObject *serviceDirectoryMetaObject() {
-    qi::MetaObject * mo = new qi::MetaObject();
-
-    qi::MetaObjectBuilder  mob(mo);
+  static qi::MetaObject serviceDirectoryMetaObject() {
+    qi::ObjectBuilder  ob;
 
     //Do not look at the following 5 lines... and yes I know what I'am doing here.
-    mob.advertiseMethod("service",           (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::service);
-    mob.advertiseMethod("services",          (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::services);
-    mob.advertiseMethod("registerService",   (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::registerService);
-    mob.advertiseMethod("unregisterService", (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::unregisterService);
-    mob.advertiseMethod("serviceReady",      (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::serviceReady);
-    mob.advertiseEvent<void (std::string)>("serviceAdded");
-    mob.advertiseEvent<void (std::string)>("serviceRemoved");
+    ob.advertiseMethod("service",           (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::service);
+    ob.advertiseMethod("services",          (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::services);
+    ob.advertiseMethod("registerService",   (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::registerService);
+    ob.advertiseMethod("unregisterService", (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::unregisterService);
+    ob.advertiseMethod("serviceReady",      (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::serviceReady);
+    ob.advertiseEvent<void (std::string)>("serviceAdded");
+    ob.advertiseEvent<void (std::string)>("serviceRemoved");
 
+    qi::MetaObject m = ob.object().metaObject();
     //verify that we respect the WIRE protocol
-    assert(mo->methodId("service::(s)") == qi::Message::ServiceDirectoryFunction_Service);
-    assert(mo->methodId("services::()") == qi::Message::ServiceDirectoryFunction_Services);
-    assert(mo->methodId("registerService::((sIsI[s]))") == qi::Message::ServiceDirectoryFunction_RegisterService);
-    assert(mo->methodId("unregisterService::(I)") == qi::Message::ServiceDirectoryFunction_UnregisterService);
-    assert(mo->methodId("serviceReady::(I)") == qi::Message::ServiceDirectoryFunction_ServiceReady);
-    return mo;
+    assert(m.methodId("service::(s)") == qi::Message::ServiceDirectoryFunction_Service);
+    assert(m.methodId("services::()") == qi::Message::ServiceDirectoryFunction_Services);
+    assert(m.methodId("registerService::((sIsI[s]))") == qi::Message::ServiceDirectoryFunction_RegisterService);
+    assert(m.methodId("unregisterService::(I)") == qi::Message::ServiceDirectoryFunction_UnregisterService);
+    assert(m.methodId("serviceReady::(I)") == qi::Message::ServiceDirectoryFunction_ServiceReady);
+    return m;
   }
 
   ServiceDirectoryClient::ServiceDirectoryClient()

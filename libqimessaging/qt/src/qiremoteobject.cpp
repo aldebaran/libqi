@@ -28,8 +28,8 @@ public:
 QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject)
   : _p (new QiRemoteObjectPrivate)
 {
-  QMetaObjectBuilder mob;
-  mob.setClassName(dest.c_str());
+  QMetaObjectBuilder ob;
+  ob.setClassName(dest.c_str());
 
   qi::MetaObject::MethodMap::const_iterator it;
   for (it = metaobject.methodMap().begin(); it != metaobject.methodMap().end(); ++it) {
@@ -39,14 +39,14 @@ QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest,
     qi_SignatureToMetaMethod(mm.signature(), &retSig, &funSig);
     //qDebug() << "Ret: " << retSig;
     //qDebug() << "Fun: " << funSig;
-    QMetaMethodBuilder mmb = mob.addMethod(funSig.toUtf8(), retSig.toUtf8());
+    QMetaMethodBuilder mmb = ob.addMethod(funSig.toUtf8(), retSig.toUtf8());
     mmb.setTag(mm.signature().c_str());
   }
 
   _p->socket = ts;
   _p->dest = dest;
   _p->serviceId = serviceId;
-  _p->meta = mob.toMetaObject();
+  _p->meta = ob.toMetaObject();
 }
 
 QiRemoteObject::~QiRemoteObject()

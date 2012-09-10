@@ -65,7 +65,9 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
     return 0;
   }
 
-  qi_object_t * obj = (qi_object_t *) (void *) s->service(name);
+  qi_object_t *obj = qi_object_create();
+  qi::Object *o = reinterpret_cast<qi::Object *>(obj);
+  *o = s->service(name);
   return obj;
 }
 
@@ -109,7 +111,7 @@ int qi_session_register_service(qi_session_t *session, const char *name, qi_obje
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
   qi::Object  *obj = reinterpret_cast<qi::Object *>(object);
 
-  return s->registerService(name, obj);
+  return s->registerService(name, *obj);
 }
 
 void qi_session_unregister_service(qi_session_t *session, unsigned int idx)

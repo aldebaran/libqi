@@ -16,8 +16,9 @@ int testMethod(const int& v)
 qi::Object* setup(const std::string&)
 {
   qiLogDebug("testmodule") << "setup";
-  qi::Object* e = new qi::Object();
-  e->advertiseMethod("testMethod", testMethod);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("testMethod", testMethod);
+  qi::Object* e = new qi::Object(ob.object());
   return e;
 }
 

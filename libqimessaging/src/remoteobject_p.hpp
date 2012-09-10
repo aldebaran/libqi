@@ -10,8 +10,8 @@
 #define _SRC_REMOTEOBJECT_P_HPP_
 
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/object.hpp>
 #include <qimessaging/transport_socket.hpp>
+#include <qimessaging/object.hpp>
 #include <boost/thread/mutex.hpp>
 #include <string>
 
@@ -21,7 +21,7 @@ namespace qi {
 
   class RemoteObject : public qi::Object, public qi::TransportSocketInterface {
   public:
-    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject *mo);
+    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
     ~RemoteObject();
 
     virtual void onSocketReadyRead(TransportSocket *client, int id, void*);

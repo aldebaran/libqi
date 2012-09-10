@@ -80,8 +80,9 @@ TEST(QiSession, getSimpleService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::Object obj;
-  obj.advertiseMethod("reply", &reply);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::Object obj(ob.object());
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
@@ -89,16 +90,13 @@ TEST(QiSession, getSimpleService)
 
   session.listen(serviceAddr.str());
   // Wait for service id, otherwise register is asynchronous.
-  session.registerService("serviceTest", &obj).wait();
+  session.registerService("serviceTest", obj).wait();
   ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
-  qi::Object *object = session.service("serviceTest");
-  EXPECT_TRUE(object);
-
-  delete object;
+  qi::Object object = session.service("serviceTest");
+  EXPECT_TRUE(object.isValid());
   session.close();
   EXPECT_FALSE(session.isConnected());
-
 }
 
 TEST(QiSession, getUnregisterService)
@@ -107,8 +105,8 @@ TEST(QiSession, getUnregisterService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::Object *object = session.service("serviceTest");
-  EXPECT_FALSE(object);
+  qi::Object object = session.service("serviceTest");
+  EXPECT_FALSE(object.isValid());
 
   session.close();
   EXPECT_FALSE(session.isConnected());
@@ -120,22 +118,23 @@ TEST(QiSession, getCloseService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::Object obj;
-  obj.advertiseMethod("reply", &reply);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::Object obj(ob.object());
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
   session.listen(serviceAddr.str());
-  session.registerService("serviceTest", &obj);
+  session.registerService("serviceTest", obj);
   session.close();
 
   client.connect(connectionAddr);
   EXPECT_TRUE(client.isConnected());
 
-  qi::Object *object = client.service("serviceTest");
-  EXPECT_FALSE(object);
+  qi::Object object = client.service("serviceTest");
+  EXPECT_FALSE(object.isValid());
 
   session.close();
   EXPECT_FALSE(session.isConnected());

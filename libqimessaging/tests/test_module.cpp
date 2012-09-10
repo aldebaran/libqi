@@ -22,9 +22,9 @@ TEST(Module, Load)
 
   session->waitForServiceReady("test", 3000);
 
-  qi::Object* o = session->service("test");
-  ASSERT_TRUE(o);
-  int res = o->call<int>("testMethod", 12);
+  qi::Object o = session->service("test");
+  ASSERT_TRUE(o.isValid());
+  int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
 }
 

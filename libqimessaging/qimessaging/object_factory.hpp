@@ -10,7 +10,7 @@ namespace qi {
   QIMESSAGING_API bool registerObjectFactory(const std::string& name,
     boost::function<qi::Object*(const std::string&)> factory);
 
-  QIMESSAGING_API qi::Object* createObject(const std::string& name);
+  QIMESSAGING_API qi::Object createObject(const std::string& name);
 
   /// Get all factory names. Order is guaranteed to be the registration order
   QIMESSAGING_API std::vector<std::string> listObjectFactories();

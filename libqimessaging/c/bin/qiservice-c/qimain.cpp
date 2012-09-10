@@ -37,14 +37,15 @@ int		main(int argc, char **argv)
   else
     sd_addr = argv[1];
 
-  qi_object_t*  object = qi_object_create("lol");
-  qi_object_register_method(object, "reply::s(s)", &reply, 0);
+  qi_object_builder_t* ob = qi_object_builder_create();
+  qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
 
   qi_session_t* session = qi_session_create();
 
   qi_session_connect(session, sd_addr);
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
+  qi_object_t *object = qi_object_builder_get_object(ob);
   unsigned int id = qi_session_register_service(session, "serviceTest", object);
 
   if (!id)
@@ -57,6 +58,8 @@ int		main(int argc, char **argv)
 
   qi_application_run(app);
   qi_session_unregister_service(session, id);
+  qi_object_builder_destroy(ob);
+  qi_object_destroy(object);
   qi_session_destroy(session);
   qi_application_destroy(app);
   return (0);

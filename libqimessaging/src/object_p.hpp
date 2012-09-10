@@ -28,6 +28,7 @@ namespace qi {
   class ObjectPrivate {
   public:
     ObjectPrivate();
+    ObjectPrivate(const qi::MetaObject &meta);
     ~ObjectPrivate();
 
     std::map<ObjectInterface *, void *> _callbacks;
@@ -35,7 +36,7 @@ namespace qi {
     bool                                _dying;
 
     // Links that target us. Needed to be able to disconnect upon destruction
-    std::vector<SignalSubscriber>             _registrations;
+    std::vector<SignalSubscriber>       _registrations;
     boost::recursive_mutex              _mutexRegistration;
     // Event loop in which calls are made
     EventLoop                          *_eventLoop;
@@ -45,15 +46,11 @@ namespace qi {
     SignalSubscriberMap _subscribers;
 
 
-    void setMetaObject(qi::MetaObject *);
-
-    inline MetaObject* metaObject() { return _meta; }
+    //TODO: remove, this should move to metatype.
+    inline MetaObject &metaObject() { return _meta; }
 
   private:
-    MetaObject                         *_meta;
-
-  public:
-    MetaObjectBuilder                   _builder;
+    qi::MetaObject _meta;
   };
 
 };

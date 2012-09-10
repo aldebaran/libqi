@@ -29,16 +29,13 @@ class TestConnection
 {
 public:
   TestConnection()
-    : obj(NULL)
+    : obj()
   {
   }
 
   ~TestConnection()
   {
     session.close();
-
-    delete obj;
-    obj = NULL;
   }
 
   bool init()
@@ -46,7 +43,7 @@ public:
     session.connect(connectionAddr);
     obj = session.service("serviceTest");
 
-    if (!obj)
+    if (!obj.isValid())
     {
       qiLogError("test.connection") << "can't get serviceTest" << std::endl;
       return false;
@@ -56,7 +53,7 @@ public:
   }
 
 public:
-  qi::Object *obj;
+  qi::Object obj;
 
 private:
   qi::Session session;
@@ -67,7 +64,7 @@ TEST(QiMessagingConnexion, testSyncSendOneMessage)
   TestConnection tc;
   ASSERT_TRUE(tc.init());
 
-  std::string result = tc.obj->call<std::string>("reply", "question");
+  std::string result = tc.obj.call<std::string>("reply", "question");
   EXPECT_EQ("question", result);
 }
 
@@ -76,11 +73,11 @@ TEST(QiMessagingConnexion, testSyncSendMessages)
   TestConnection tc;
   ASSERT_TRUE(tc.init());
 
-  std::string result = tc.obj->call<std::string>("reply", "question1");
+  std::string result = tc.obj.call<std::string>("reply", "question1");
   EXPECT_EQ("question1", result);
-  result = tc.obj->call<std::string>("reply", "question2");
+  result = tc.obj.call<std::string>("reply", "question2");
   EXPECT_EQ("question2", result);
-  result = tc.obj->call<std::string>("reply", "question3");
+  result = tc.obj.call<std::string>("reply", "question3");
   EXPECT_EQ("question3", result);
 }
 
@@ -112,13 +109,13 @@ TEST(QiMessagingConnexion, testBuffer)
   qi::ODataStream out(buf);
   out << challenge;
   qiLogDebug("test") << "call BA";
-  qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
+  qi::Buffer result = tc.obj.call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
   qi::IDataStream in(result);
   in >> reply;
   ASSERT_EQ(challenge, reply);
   qiLogDebug("test") << "call BA";
-  result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
+  result = tc.obj.call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
   {
     std::string reply;
     qi::IDataStream in(result);
@@ -126,21 +123,21 @@ TEST(QiMessagingConnexion, testBuffer)
     ASSERT_EQ(challenge, reply);
   }
   qiLogDebug("test") << "call A";
-  result = tc.obj->call<qi::Buffer>("replyBufA", buf, 1);
+  result = tc.obj.call<qi::Buffer>("replyBufA", buf, 1);
   {
     std::string reply;
     qi::IDataStream in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }
-  result = tc.obj->call<qi::Buffer>("replyBuf", buf);
+  result = tc.obj.call<qi::Buffer>("replyBuf", buf);
    {
     std::string reply;
     qi::IDataStream in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }
-  result = tc.obj->call<qi::Buffer>("replyBufB", 1, buf);
+  result = tc.obj.call<qi::Buffer>("replyBufB", 1, buf);
   {
     std::string reply;
     qi::IDataStream in(result);
@@ -163,12 +160,13 @@ int main(int argc, char **argv) {
   sd.listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
-  qi::Object        obj;
-  obj.advertiseMethod("reply", &reply);
-  obj.advertiseMethod("replyBuf", &replyBuf);
-  obj.advertiseMethod("replyBufA", &replyBufA);
-  obj.advertiseMethod("replyBufB", &replyBufB);
-  obj.advertiseMethod("replyBufBA", &replyBufBA);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  ob.advertiseMethod("replyBuf", &replyBuf);
+  ob.advertiseMethod("replyBufA", &replyBufA);
+  ob.advertiseMethod("replyBufB", &replyBufB);
+  ob.advertiseMethod("replyBufBA", &replyBufBA);
+  qi::Object        obj(ob.object());
 
   session.connect(sdAddr.str());
 
@@ -177,7 +175,7 @@ int main(int argc, char **argv) {
   serviceAddr << "tcp://127.0.0.1:" << servicePort;
 
   session.listen(serviceAddr.str());
-  unsigned int id = session.registerService("serviceTest", &obj);
+  unsigned int id = session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready:" << id << std::endl;
 
 #ifdef WITH_GATEWAY_

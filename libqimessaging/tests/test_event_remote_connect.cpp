@@ -38,6 +38,13 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
+    qi::ObjectBuilder obs1, obs2;
+    e1 = obs1.advertiseEvent<void (*)(const int&)>("fire1");
+    e2 = obs2.advertiseEvent<void (*)(const int&)>("fire2");
+    m1 = obs1.advertiseMethod("onFire1", &onFire1);
+    m2 = obs2.advertiseMethod("onFire2", &onFire2);
+    oserver1 = obs1.object();
+    oserver2 = obs2.object();
   }
 
 protected:
@@ -47,14 +54,10 @@ protected:
     ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
     ASSERT_TRUE(session1.connect(sd.listenUrl()));
     ASSERT_TRUE(session2.connect(sd.listenUrl()));
-    e1 = oserver1.advertiseEvent<void (*)(const int&)>("fire1");
-    e2 = oserver2.advertiseEvent<void (*)(const int&)>("fire2");
-    m1 = oserver1.advertiseMethod("onFire1", &onFire1);
-    m2 = oserver2.advertiseMethod("onFire2", &onFire2);
     ASSERT_TRUE(session1.listen("tcp://0.0.0.0:0"));
     ASSERT_TRUE(session2.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session1.registerService("coin1", &oserver1).wait(), 0);
-    ASSERT_GT(session2.registerService("coin2", &oserver2).wait(), 0);
+    ASSERT_GT(session1.registerService("coin1", oserver1).wait(), 0);
+    ASSERT_GT(session2.registerService("coin2", oserver2).wait(), 0);
     EXPECT_EQ(1U, session1.services(qi::Session::ServiceLocality_Local).value().size());
     EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
@@ -69,8 +72,6 @@ protected:
   void TearDown()
   {
     payload1 = payload2 = 0;
-    delete oclient1;
-    delete oclient2;
     sclient.close();
     session1.close();
     session2.close();
@@ -85,7 +86,7 @@ public:
   qi::Session          session1, session2;
   qi::Object           oserver1, oserver2;
   qi::Session          sclient;
-  qi::Object          *oclient1, *oclient2;
+  qi::Object           oclient1, oclient2;
 };
 
 
@@ -93,15 +94,15 @@ public:
 
 TEST_F(TestObject, Connect1)
 {
-  oclient1->connect(e1, oclient1, m1);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.connect(e1, oclient1, m1);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
 
 TEST_F(TestObject, Connect2)
 {
-  oclient1->connect(e1, oclient1, m1);
+  oclient1.connect(e1, oclient1, m1);
   qi::os::msleep(800);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
@@ -111,7 +112,7 @@ TEST_F(TestObject, Connect2)
 
 TEST_F(TestObject, Connect3)
 {
-  oclient1->connect(e1, &oserver1, m1);
+  oclient1.connect(e1, oserver1, m1);
   qi::os::msleep(800);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
@@ -120,8 +121,8 @@ TEST_F(TestObject, Connect3)
 
 TEST_F(TestObject, Connect4)
 {
-  oclient1->connect(e1, &oserver1, m1);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.connect(e1, oserver1, m1);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
@@ -130,7 +131,7 @@ TEST_F(TestObject, Connect5)
 {
   oserver1.connect(e1, oclient1, m1);
   qi::os::msleep(800);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
@@ -145,7 +146,7 @@ TEST_F(TestObject, Connect6)
 
 TEST_F(TestObject, Connect7)
 {
-  oserver1.connect(e1, &oserver1, m1);
+  oserver1.connect(e1, oserver1, m1);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
   EXPECT_EQ(12, payload1->future().value());
@@ -153,9 +154,9 @@ TEST_F(TestObject, Connect7)
 
 TEST_F(TestObject, Connect8)
 {
-  oserver1.connect(e1, &oserver1, m1);
+  oserver1.connect(e1, oserver1, m1);
   qi::os::msleep(800);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload1->future().wait(2000));
   EXPECT_EQ(12, payload1->future().value());
 }
@@ -170,15 +171,15 @@ TEST_F(TestObject, Connect8)
 
 TEST_F(TestObject, Connect10)
 {
-  oclient1->connect(e1, oclient2, m2);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.connect(e1, oclient2, m2);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
 
 TEST_F(TestObject, Connect11)
 {
-  oclient1->connect(e1, oclient2, m2);
+  oclient1.connect(e1, oclient2, m2);
   qi::os::msleep(800);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
@@ -188,7 +189,7 @@ TEST_F(TestObject, Connect11)
 
 TEST_F(TestObject, Connect12)
 {
-  oclient1->connect(e1, &oserver2, m2);
+  oclient1.connect(e1, oserver2, m2);
   qi::os::msleep(800);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
@@ -197,8 +198,8 @@ TEST_F(TestObject, Connect12)
 
 TEST_F(TestObject, Connect13)
 {
-  oclient1->connect(e1, &oserver2, m2);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.connect(e1, oserver2, m2);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
@@ -207,7 +208,7 @@ TEST_F(TestObject, Connect14)
 {
   oserver1.connect(e1, oclient2, m2);
   qi::os::msleep(800);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
   EXPECT_EQ(12, payload2->future().value());
 }
@@ -222,7 +223,7 @@ TEST_F(TestObject, Connect15)
 
 TEST_F(TestObject, Connect16)
 {
-  oserver1.connect(e1, &oserver2, m2);
+  oserver1.connect(e1, oserver2, m2);
   oserver1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
   EXPECT_EQ(12, payload2->future().value());
@@ -230,9 +231,9 @@ TEST_F(TestObject, Connect16)
 
 TEST_F(TestObject, Connect17)
 {
-  oserver1.connect(e1, &oserver2, m2);
+  oserver1.connect(e1, oserver2, m2);
   qi::os::msleep(800);
-  oclient1->emitEvent("fire1", 12);
+  oclient1.emitEvent("fire1", 12);
   ASSERT_TRUE(payload2->future().wait(2000));
   EXPECT_EQ(12, payload2->future().value());
 }

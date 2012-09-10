@@ -37,18 +37,20 @@ C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
 
 TEST(TestObject, Simple) {
-  qi::Object obj;
-  Foo        foo;
+  Foo                   foo;
+  qi::ObjectBuilder ob;
 
-  obj.advertiseMethod("test", &fun);
-  obj.advertiseMethod("vtest", &vfun);
-  obj.advertiseMethod("objtest", &foo, &Foo::fun);
-  obj.advertiseMethod("objvtest", &foo, &Foo::vfun);
-  obj.advertiseMethod("testBind", (boost::function<int(const int&)>)boost::bind(&fun, 21, _1));
-  obj.advertiseMethod("testBind2", (boost::function<int(int)>)boost::bind(&fun, 21, _1));
-  obj.advertiseMethod("ptrtest", &ptrfun);
-  obj.advertiseMethod("reftest", &reffun);
-  obj.advertiseMethod("valuetest", &valuefun);
+  ob.advertiseMethod("test", &fun);
+  ob.advertiseMethod("vtest", &vfun);
+  ob.advertiseMethod("objtest", &foo, &Foo::fun);
+  ob.advertiseMethod("objvtest", &foo, &Foo::vfun);
+  ob.advertiseMethod("testBind", (boost::function<int(const int&)>)boost::bind(&fun, 21, _1));
+  ob.advertiseMethod("testBind2", (boost::function<int(int)>)boost::bind(&fun, 21, _1));
+  ob.advertiseMethod("ptrtest", &ptrfun);
+  ob.advertiseMethod("reftest", &reffun);
+  ob.advertiseMethod("valuetest", &valuefun);
+  qi::Object obj(ob.object());
+
 
   EXPECT_EQ(42, obj.call<int>("test", 21, 21));
   EXPECT_EQ(42, obj.call<int>("objtest", 21, 21));
@@ -114,8 +116,9 @@ Point swapPoint(const Point& b)
 
 TEST(TestObject, SerializeSimple)
 {
-  qi::Object obj;
-  obj.advertiseMethod("swapPoint", &swapPoint);
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("swapPoint", &swapPoint);
+  qi::Object obj(ob.object());
   Point p;
   p.x = 1; p.y = 2;
   Point res = obj.call<Point>("swapPoint", p);
@@ -163,8 +166,9 @@ TEST(TestObject, SerializeComplex)
   v.push_back(3);
   comp.stuff.push_back(v);
 
-  qi::Object obj;
-  unsigned id = obj.advertiseMethod("echo", &echoBack);
+  qi::ObjectBuilder ob;
+  unsigned id = ob.advertiseMethod("echo", &echoBack);
+  qi::Object obj(ob.object());
   std::cerr << obj.metaObject().methodMap()[id].signature() << std::endl;
   Complex res = obj.call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);

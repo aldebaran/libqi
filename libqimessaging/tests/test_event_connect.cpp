@@ -24,37 +24,38 @@ void onFire2(const int& pl)
 
 void testDelete(bool afirst, bool disconnectFirst)
 {
-  qi::Object& a = *new qi::Object();
-  qi::Object& b = *new qi::Object();
-  unsigned int fireId = a.advertiseEvent<void (*)(int)>("fire");
-  unsigned int onFireId = b.advertiseMethod("onFire", &onFire);
-  unsigned int onFireId2 = b.advertiseMethod("onFire2", &onFire2);
-  unsigned int linkId = a.connect(fireId, &b, onFireId);
-  a.connect(fireId, &b, onFireId2);
-  std::vector<qi::SignalSubscriber> subs = a.subscribers(fireId);
+  qi::ObjectBuilder oba, obb;
+  unsigned int fireId = oba.advertiseEvent<void (*)(int)>("fire");
+  unsigned int onFireId = obb.advertiseMethod("onFire", &onFire);
+  unsigned int onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
+  qi::Object *a = new qi::Object(oba.object());
+  qi::Object *b = new qi::Object(obb.object());
+  unsigned int linkId = a->connect(fireId, *b, onFireId);
+  a->connect(fireId, *b, onFireId2);
+  std::vector<qi::SignalSubscriber> subs = a->subscribers(fireId);
   EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
-  a.emitEvent("fire", 12);
+  a->emitEvent("fire", 12);
   EXPECT_EQ(12, lastPayload);
   EXPECT_EQ(12, lastPayload2);
   if (disconnectFirst)
   {
-    a.disconnect(linkId);
-    a.emitEvent("fire", 13);
+    a->disconnect(linkId);
+    a->emitEvent("fire", 13);
     EXPECT_EQ(12, lastPayload);
     EXPECT_EQ(13, lastPayload2);
   }
   if (afirst)
   {
-    delete &a;
-    delete &b;
+    delete a;
+    delete b;
   }
   else
   {
-    delete &b;
-    a.emitEvent("fire", 12);
-    delete &a;
+    delete b;
+    a->emitEvent("fire", 12);
+    delete a;
   }
   ++completed;
 }

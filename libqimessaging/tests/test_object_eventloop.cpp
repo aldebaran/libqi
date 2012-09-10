@@ -65,10 +65,11 @@ void fireSameThreadIn(qi::Object* obj, qi::EventLoop* el, void* tid)
 
 qi::Object* makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
 {
-  qi::Object* res = new qi::Object();
+  qi::ObjectBuilder ob;
+  ob.advertiseMethod("sameThread", &sameThread);
+  ob.advertiseEvent<void (unsigned long)>("fire");
+  qi::Object* res = new qi::Object(ob.object());
   res->moveToEventLoop(el);
-  res->advertiseMethod("sameThread", &sameThread);
-  res->advertiseEvent<void (unsigned long)>("fire");
   return res;
 }
 

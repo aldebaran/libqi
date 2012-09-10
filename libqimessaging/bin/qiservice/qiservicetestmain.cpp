@@ -14,6 +14,7 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
+#include <qimessaging/object.hpp>
 
 std::string reply(const std::string &msg) {
   qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
@@ -98,17 +99,17 @@ int main(int argc, char *argv[])
     {
       std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
-      qi::Object        obj;
-
-      obj.advertiseMethod<std::string (const std::string&)>("reply", &reply);
-      obj.advertiseMethod<std::string (const int&)>("reply", &reply);
-      obj.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
-      obj.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+      qi::ObjectBuilder ob;
+      ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
+      ob.advertiseMethod<std::string (const int&)>("reply", &reply);
+      ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
+      ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
+      qi::Object obj(ob.object());
 
       session.connect(masterAddress);
 
       session.listen("tcp://0.0.0.0:0");
-      unsigned int id = session.registerService("serviceTest", &obj);
+      unsigned int id = session.registerService("serviceTest", obj);
 
 #if 0
       // test unregistration

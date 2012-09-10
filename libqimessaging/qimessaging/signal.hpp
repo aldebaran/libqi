@@ -32,9 +32,8 @@ namespace qi {
     template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
     Link connect(OBJECT_TYPE c, FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
-    Link connect(qi::Object* target, unsigned int slot);
-    Link connect(MetaFunction callback,
-                 EventLoop* ctx = getDefaultObjectEventLoop());
+    Link connect(qi::Object target, unsigned int slot);
+    Link connect(MetaFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);
     bool disconnect(const Link& link);
 
@@ -53,34 +52,6 @@ namespace qi {
 
   protected:
     SignalBasePrivate* _p;
-  };
-
-   /** Event subscriber info.
-   *
-   * Only one of handler or target must be set.
-   */
-  struct QIMESSAGING_API SignalSubscriber
-  {
-    SignalSubscriber()
-    : handler(0), eventLoop(0), target(0), method(0) {}
-    SignalSubscriber(MetaFunction func, EventLoop* ctx)
-    : handler(func), eventLoop(ctx), target(0), method(0) {}
-    SignalSubscriber(Object * target, unsigned int method)
-    : handler(0), eventLoop(0), target(target), method(method) {}
-
-    void call(const MetaFunctionParameters& args);
-    // Source information
-    SignalBase*        source;
-    /// Uid that can be passed to Object::disconnect()
-    SignalBase::Link  linkId;
-
-    // Target information
-    //   Mode 1: Direct functor call
-    MetaFunction       handler;
-    EventLoop*         eventLoop;
-    //  Mode 2: metaCall
-    Object*            target;
-    unsigned int       method;
   };
 
   template<typename FUNCTION_TYPE>

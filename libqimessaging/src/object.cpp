@@ -21,14 +21,22 @@ namespace qi {
   ObjectInterface::~ObjectInterface() {
   }
 
+  Object::Object(qi::MetaObject metaObject)
+    : _p(new ObjectPrivate(metaObject))
+  {
+  }
 
   Object::Object()
-    : _p(new ObjectPrivate())
+    : _p()
   {
   }
 
   Object::~Object() {
     {
+      if (!_p) {
+        qiLogWarning("qi.object") << "Operating on invalid Object..";
+        return;
+      }
       _p->_dying = true;
       {
         boost::recursive_mutex::scoped_lock sl(_p->_mutexRegistration);
@@ -53,8 +61,16 @@ namespace qi {
     }
   }
 
+  bool Object::isValid() const {
+    return !!_p;
+  }
+
   void Object::addCallbacks(ObjectInterface *callbacks, void *data)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return;
+    }
     {
       boost::mutex::scoped_lock l(_p->_callbacksMutex);
       _p->_callbacks[callbacks] = data;
@@ -63,6 +79,10 @@ namespace qi {
 
   void Object::removeCallbacks(ObjectInterface *callbacks)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return;
+    }
     std::map<ObjectInterface *, void *>::iterator it;
     {
       boost::mutex::scoped_lock l(_p->_callbacksMutex);
@@ -73,38 +93,30 @@ namespace qi {
   }
 
   MetaObject &Object::metaObject() {
-    return *_p->metaObject();
-  }
-
-  MetaObjectBuilder &Object::metaObjectBuilder() {
-    return _p->_builder;
-  }
-
-  int Object::xForgetMethod(const std::string &meth)
-  {
-    return _p->_builder.xForgetMethod(meth);
-  }
-
-  int Object::xAdvertiseMethod(const std::string &sigret, const std::string& signature, MetaFunction functor) {
-    return _p->_builder.xAdvertiseMethod(sigret, signature, functor);
-  }
-
-  int Object::xAdvertiseEvent(const std::string& signature) {
-    return _p->_builder.xAdvertiseEvent(signature);
+    if (!_p) {
+      static qi::MetaObject fail;
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return fail;
+    }
+    return _p->metaObject();
   }
 
   static void functor_call(MetaFunction f,
-    MetaFunctionParameters arg,
-    qi::Promise<MetaFunctionResult> out)
+                           MetaFunctionParameters arg,
+                           qi::Promise<MetaFunctionResult> out)
   {
     out.setValue(f(arg));
-    // MetaFunctionParameters destructor will kill the arg copy
   }
 
   qi::Future<MetaFunctionResult>
   Object::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
   {
     qi::Promise<MetaFunctionResult> out;
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      out.setError("Invalid object");
+      return out.future();
+    }
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
       std::stringstream ss;
@@ -148,12 +160,15 @@ namespace qi {
 
   void Object::metaEmit(unsigned int event, const MetaFunctionParameters& args)
   {
-    //std::cerr <<"metaemit on " << this <<" from " << pthread_self() << std::endl;
     trigger(event, args);
   }
 
   void Object::trigger(unsigned int event, const MetaFunctionParameters &args)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return;
+    }
     // Note: Not thread-safe, event/method may die while we hold it.
     MetaSignal* ev = metaObject().signal(event);
     if (!ev)
@@ -181,8 +196,13 @@ namespace qi {
   qi::Future<MetaFunctionResult>
   Object::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
   {
-    const MetaFunctionParameters* newArgs = 0;
     qi::Promise<MetaFunctionResult> out;
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      out.setError("Invalid object");
+      return out.future();
+    }
+    const MetaFunctionParameters* newArgs = 0;
     int methodId = metaObject().methodId(signature);
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
     if (methodId < 0) {
@@ -252,6 +272,10 @@ namespace qi {
   }
   /// Resolve signature and bounce
   bool Object::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return false;
+    }
     int eventId = metaObject().signalId(signature);
     if (eventId < 0)
       eventId = metaObject().methodId(signature);
@@ -276,6 +300,11 @@ namespace qi {
   unsigned int Object::xConnect(const std::string &signature, MetaFunction functor,
                                 EventLoop* ctx)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return -1;
+    }
+
     int eventId = metaObject().signalId(signature);
     if (eventId < 0) {
       std::stringstream ss;
@@ -295,11 +324,19 @@ namespace qi {
 
   unsigned int Object::connect(unsigned int event, MetaFunction functor, EventLoop* ctx)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return -1;
+    }
     return connect(event, SignalSubscriber(functor, ctx));
   }
 
   unsigned int Object::connect(unsigned int event, const SignalSubscriber& sub)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return -1;
+    }
     if (_p->_dying)
     {
       qiLogError("object") << "Cannot connect to dying object";
@@ -330,6 +367,10 @@ namespace qi {
 
   bool Object::disconnect(unsigned int linkId)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return false;
+    }
     unsigned int event = linkId >> 16;
     unsigned int link = linkId & 0xFFFF;
     boost::recursive_mutex::scoped_lock sl(metaObject()._p->_mutexEvent);
@@ -342,9 +383,12 @@ namespace qi {
     return i->second->disconnect(link);
   }
 
-  unsigned int Object::connect(unsigned int signal,
-      qi::Object* target, unsigned int slot)
+  unsigned int Object::connect(unsigned int signal, qi::Object target, unsigned int slot)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return -1;
+    }
     MetaSignal* ev = metaObject().signal(signal);
     if (!ev)
     {
@@ -356,17 +400,29 @@ namespace qi {
 
   EventLoop* Object::eventLoop()
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return 0;
+    }
     return _p->_eventLoop;
   }
 
   void Object::moveToEventLoop(EventLoop* ctx)
   {
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return;
+    }
     _p->_eventLoop = ctx;
   }
 
   std::vector<SignalSubscriber> Object::subscribers(int eventId) const
   {
     std::vector<SignalSubscriber> res;
+    if (!_p) {
+      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      return res;
+    }
     std::map<unsigned int, SignalBase*>::iterator it = _p->_subscribers.find(eventId);
     if (it == _p->_subscribers.end())
       return res;
@@ -375,54 +431,6 @@ namespace qi {
   }
 
 
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
-    stream << meta._p->_methods;
-    stream << meta._p->_events;
-    stream << meta._p->_nextNumber;
-    return stream;
-  }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta) {
-    stream >> meta._p->_methods;
-    stream >> meta._p->_events;
-    stream >> meta._p->_nextNumber;
-    meta._p->refreshCache();
-    return stream;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta) {
-    stream & meta._p->_methods;
-    stream & meta._p->_events;
-    stream & meta._p->_nextNumber;
-    return stream;
-  }
-
-  std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name)
-  {
-    return _p->findMethod(name);
-  }
-
-  std::vector<MetaEvent> MetaObject::findEvent(const std::string &name)
-  {
-    return _p->findEvent(name);
-  }
-
-  void MetaObjectPrivate::refreshCache()
-  {
-    {
-      boost::recursive_mutex::scoped_lock sl(_mutexMethod);
-      _methodsNameToIdx.clear();
-        i != _methods.end(); ++i)
-      _methodsNameToIdx[i->second.signature()] = i->second.uid();
-    }
-    {
-      boost::recursive_mutex::scoped_lock sl(_mutexEvent);
-      _eventsNameToIdx.clear();
-      for (MetaObject::EventMap::iterator i = _events.begin();
-        i != _events.end(); ++i)
-      _eventsNameToIdx[i->second.signature()] = i->second.uid();
-    }
-  }
 
   // Factory system
   // We need thread-safeness, and we can be used at static init.
@@ -431,7 +439,7 @@ namespace qi {
   static boost::recursive_mutex *_f_mutex_struct = 0;
   static boost::recursive_mutex *_f_mutex_load = 0;
   static std::vector<std::string>* _f_keys = 0;
-  typedef std::map<std::string, boost::function<qi::Object*(const std::string&)> > FactoryMap;
+  typedef std::map<std::string, boost::function<qi::Object (const std::string&)> > FactoryMap;
   static FactoryMap* _f_map = 0;
   static void _f_init()
   {
@@ -444,8 +452,7 @@ namespace qi {
     }
   }
 
-  bool registerObjectFactory(const std::string& name,
-    boost::function<qi::Object*(const std::string&)> factory)
+  bool registerObjectFactory(const std::string& name, boost::function<qi::Object (const std::string&)> factory)
   {
     qiLogDebug("qi.factory") << "registering " << name;
     _f_init();
@@ -459,13 +466,13 @@ namespace qi {
     return true;
   }
 
-  Object* createObject(const std::string& name)
+  Object createObject(const std::string& name)
   {
     _f_init();
     boost::recursive_mutex::scoped_lock sl(*_f_mutex_struct);
     FactoryMap::iterator i = _f_map->find(name);
     if (i == _f_map->end())
-      return 0;
+      return Object();
     return (i->second)(name);
   }
 
@@ -476,8 +483,7 @@ namespace qi {
     return *_f_keys;
   }
 
-  std::vector<std::string> loadObject(const std::string& name,
-    int flags)
+  std::vector<std::string> loadObject(const std::string& name, int flags)
   {
     /* Do not hold mutex_struct while calling dlopen/loadModule,
     * just in case static initialization of the module happens
@@ -501,14 +507,14 @@ namespace qi {
   }
 
   void Object::emitEvent(const std::string& eventName,
-    qi::AutoMetaValue p1,
-      qi::AutoMetaValue p2,
-      qi::AutoMetaValue p3,
-      qi::AutoMetaValue p4,
-      qi::AutoMetaValue p5,
-      qi::AutoMetaValue p6,
-      qi::AutoMetaValue p7,
-      qi::AutoMetaValue p8)
+                         qi::AutoMetaValue p1,
+                         qi::AutoMetaValue p2,
+                         qi::AutoMetaValue p3,
+                         qi::AutoMetaValue p4,
+                         qi::AutoMetaValue p5,
+                         qi::AutoMetaValue p6,
+                         qi::AutoMetaValue p7,
+                         qi::AutoMetaValue p8)
   {
     qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::MetaValue> params;

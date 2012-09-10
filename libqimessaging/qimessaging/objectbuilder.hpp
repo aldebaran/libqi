@@ -21,15 +21,16 @@
 #include <qimessaging/signature.hpp>
 #include <qimessaging/metafunction.hpp>
 #include <sstream>
+#include <qimessaging/object.hpp>
 
 namespace qi {
 
   class MetaObject;
-  class MetaObjectBuilderPrivate;
-  class QIMESSAGING_API MetaObjectBuilder {
+  class ObjectBuilderPrivate;
+  class QIMESSAGING_API ObjectBuilder {
   public:
-    MetaObjectBuilder(qi::MetaObject *metaObject);
-    ~MetaObjectBuilder();
+    ObjectBuilder();
+    ~ObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
@@ -45,10 +46,10 @@ namespace qi {
     inline unsigned int advertiseEvent(const std::string& eventName);
     int xAdvertiseEvent(const std::string& signature);
 
-
+    qi::Object object();
   public:
-    MetaObjectBuilderPrivate *_p;
-    QI_DISALLOW_COPY_AND_ASSIGN(MetaObjectBuilder);
+    ObjectBuilderPrivate *_p;
+    QI_DISALLOW_COPY_AND_ASSIGN(ObjectBuilder);
   };
 
 
@@ -68,7 +69,7 @@ namespace qi {
 
 
   template <typename FUNCTION_TYPE>
-  inline unsigned int MetaObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
     std::stringstream   signature;
 
@@ -91,7 +92,7 @@ namespace qi {
   }
 
   template<typename T>
-  inline unsigned int MetaObjectBuilder::advertiseMethod(const std::string& name,
+  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name,
     boost::function<T> function)
   {
     std::stringstream   signature;
@@ -113,7 +114,7 @@ namespace qi {
   }
 
   template<typename FUNCTION_TYPE>
-  inline unsigned int MetaObjectBuilder::advertiseEvent(const std::string& eventName)
+  inline unsigned int ObjectBuilder::advertiseEvent(const std::string& eventName)
   {
     std::stringstream   signature;
     signature << eventName << "::(";
@@ -130,7 +131,7 @@ namespace qi {
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int MetaObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
   {
     std::stringstream   signature;
     std::string         sigret;
