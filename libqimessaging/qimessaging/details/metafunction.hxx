@@ -113,23 +113,41 @@ template<typename C, typename F> MetaFunction makeFunctor(C* inst, F func)
 }
 
 namespace detail {
-template<typename T> static void deletor(T* ptr)
+
+// We need a metatype deletor and a type deletor
+
+
+template<typename T> inline void deletor(MetaType* type, void* ptr)
+{
+  type->destroy(ptr);
+}
+
+template<> inline void deletor<std::vector<MetaValue> >(MetaType* type, void* ptr)
+{
+  std::vector<MetaValue>* val = (std::vector<MetaValue>*)ptr;
+  for (unsigned i=0; i<val->size(); ++i)
+    (*val)[i].destroy();
+  type->destroy(ptr);
+}
+
+
+
+
+template<typename T> inline void deletorT(T* ptr)
 {
   delete ptr;
 }
 
-template<> inline void deletor<MetaValue>(MetaValue* ptr)
-{
-  ptr->destroy();
-  delete ptr;
+template<> inline void deletorT<MetaValue>(MetaValue* ptr)
+{ // Bounce to the other one
+  deletor<MetaValue>(metaTypeOf<MetaValue>(), ptr);
 }
 
-template<> inline void deletor<std::vector<MetaValue> >(std::vector<MetaValue>* ptr)
+template<> inline void deletorT<std::vector<MetaValue> >(std::vector<MetaValue>* ptr)
 {
-  for (unsigned i=0; i<ptr->size(); ++i)
-    (*ptr)[i].destroy();
-  delete ptr;
+  deletor<std::vector<MetaValue> >(metaTypeOf<std::vector<MetaValue> >(), (void*)ptr);
 }
+
 
 struct ArgTransformer
 {
@@ -183,17 +201,26 @@ struct ArgTransformer
     {
       std::pair<const T*, bool> res = params.getValues()[idx++].template as<T>();
       if(res.second)
-        deletors.push_back(boost::bind(&deletor<T>, const_cast<T*>(res.first)));
+        deletors.push_back(boost::bind(&deletorT<T>, const_cast<T*>(res.first)));
       v = const_cast<T*>(res.first);
     }
     else
     {
-      T* ptr = new T();
-      qiLogDebug("qi.bind") <<" deserializing a " << typeid(*ptr).name() <<" at " << in->getBufferReader().position();
-      (*in) >> (*ptr);
-      deletors.push_back(boost::bind(&deletor<T>, ptr));
-      v = ptr;
+      qiLogDebug("qi.bind") <<" deserializing a " << typeid(v).name() <<" at " << in->getBufferReader().position();
+      // Serialize operator might not exist, go through MetaType
+      MetaType* type = metaTypeOf<T>();
+      void* value = type->deserialize(*in);
+      if (!value)
+      {
+        qiLogError("qi.bin") << "Deserialization failure";
+      }
+      else
+      {
+        deletors.push_back(boost::bind(&deletor<T>, type, value));
+        v = (T*)value;
+      }
     }
+    qiLogDebug("qi.bind") << "value is " << v;
   }
 
   mutable MetaFunctionParameters params;

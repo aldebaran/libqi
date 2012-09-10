@@ -23,6 +23,18 @@ struct Foo {
   void vfun(const int &p0,const int &p1) { gGlobalResult = p0 + p1; }
 };
 
+class C
+{
+public:
+  bool operator == (const C& b) const { return baz == b.baz;}
+  C() : baz(0) {}
+  C(int v) : baz(v) {}
+  int baz;
+};
+
+C* ptrfun(C* ptr) { return ptr;}
+C& reffun(const C& ref) { return const_cast<C&>(ref);}
+C valuefun(C val) { return val;}
 
 TEST(TestObject, Simple) {
   qi::Object obj;
@@ -34,6 +46,9 @@ TEST(TestObject, Simple) {
   obj.advertiseMethod("objvtest", &foo, &Foo::vfun);
   obj.advertiseMethod("testBind", (boost::function<int(const int&)>)boost::bind(&fun, 21, _1));
   obj.advertiseMethod("testBind2", (boost::function<int(int)>)boost::bind(&fun, 21, _1));
+  obj.advertiseMethod("ptrtest", &ptrfun);
+  obj.advertiseMethod("reftest", &reffun);
+  obj.advertiseMethod("valuetest", &valuefun);
 
   EXPECT_EQ(42, obj.call<int>("test", 21, 21));
   EXPECT_EQ(42, obj.call<int>("objtest", 21, 21));
@@ -42,6 +57,8 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(static_cast<unsigned int>(42), obj.call<unsigned int>("test", 21, 21));
   EXPECT_EQ(42, obj.call<char>("test", 21, 21));
   EXPECT_EQ(42, obj.call<double>("test", 21, 21));
+  EXPECT_EQ(42, obj.call<long>("test", 21, 21));
+  EXPECT_EQ(42UL, obj.call<unsigned long>("test", 21, 21));
 
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
   EXPECT_EQ(42, obj.call<int>("test", (char)21, 21));
@@ -50,6 +67,7 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj.call<int>("test", (unsigned short)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (float)21, 21));
   EXPECT_EQ(42, obj.call<int>("test", (double)21, 21));
+    EXPECT_EQ(42, obj.call<int>("test", (long)21, 21));
 #endif
 
   gGlobalResult = 0;
@@ -58,6 +76,10 @@ TEST(TestObject, Simple) {
   gGlobalResult = 0;
   obj.call<void>("objvtest", 21, 21).wait();
   EXPECT_EQ(42, gGlobalResult);
+
+  C f(42);
+  EXPECT_EQ(&f, obj.call<C*>("ptrtest", &f).value());
+  EXPECT_EQ(f, obj.call<C>("valuetest", f).value());
 }
 
 struct Point

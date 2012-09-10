@@ -41,10 +41,19 @@ namespace qi {
         }
         else
         {
-          T tmp;
           IDataStream in(future.getBuffer());
-          in >> tmp;
-          prom.setValue(tmp);
+          // Not all types are serializable, go through MetaType
+          MetaType* type = metaTypeOf<T>();
+          void* ptr = type->deserialize(in);
+          if (!ptr)
+          {
+            prom.setError("Could not deserialize result");
+          }
+          else
+          {
+            prom.setValue(*(T*)ptr);
+            type->destroy(ptr);
+          }
         }
         delete this;
       }
@@ -98,7 +107,9 @@ namespace qi {
       signature += params[i].signature();
     signature += ")";
     std::string sigret;
-    signatureFromType<R>::value(sigret);
+    // Go through MetaType::signature which can return unknown, since
+    // signatureFroType will produce a static assert
+    sigret = metaTypeOf<R>()->signature();
     // Future adaptation
     qi::Promise<R> res;
     // Mark params as being on the stack

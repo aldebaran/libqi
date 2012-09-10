@@ -20,6 +20,7 @@
 #include <boost/function.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/metafunction.hpp>
+#include <sstream>
 
 namespace qi {
 
@@ -53,16 +54,15 @@ namespace qi {
 
   namespace detail {
     struct signature_function_arg_apply {
-      signature_function_arg_apply(qi::SignatureStream &val)
-        : val(val)
+      signature_function_arg_apply(std::ostream* val)
+        : val(*val)
       {}
 
       template<typename T> void operator()(T *x) {
-        static T v;
-        val & v;
+        val << metaTypeOf<T>()->signature();
       }
 
-      qi::SignatureStream &val;
+      std::ostream &val;
     };
   }
 
@@ -71,20 +71,21 @@ namespace qi {
   inline unsigned int MetaObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
     std::stringstream   signature;
-    qi::SignatureStream sigs;
+
     std::string         sigret;
 
+    signature << name << "::(";
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
     boost::mpl::for_each<
       boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
 
-    signature << name << "::(" << sigs.str() << ")";
+    signature << ")";
 
     typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
-    signatureFromType<ResultType>::value(sigret);
+    sigret = metaTypeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
@@ -94,20 +95,19 @@ namespace qi {
     boost::function<T> function)
   {
     std::stringstream   signature;
-    qi::SignatureStream sigs;
     std::string         sigret;
-
+    signature << name << "::(";
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     boost::mpl::for_each<
       boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
 
-    signature << name << "::(" << sigs.str() << ")";
+    signature << ")";
 
     typedef typename boost::function_types::result_type<T>::type ResultType;
-    signatureFromType<ResultType>::value(sigret);
+    sigret = metaTypeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
@@ -116,16 +116,15 @@ namespace qi {
   inline unsigned int MetaObjectBuilder::advertiseEvent(const std::string& eventName)
   {
     std::stringstream   signature;
-    qi::SignatureStream sigs;
-
+    signature << eventName << "::(";
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
     boost::mpl::for_each<
       boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
 
-    signature << eventName << "::(" << sigs.str() << ")";
+    signature << ")";
 
     return xAdvertiseEvent(signature.str());
   }
@@ -134,9 +133,8 @@ namespace qi {
   inline unsigned int MetaObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
   {
     std::stringstream   signature;
-    qi::SignatureStream sigs;
     std::string         sigret;
-
+    signature << name << "::(";
     typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
     typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
 
@@ -144,11 +142,12 @@ namespace qi {
       boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-    signature << name << "::(" << sigs.str() << ")";
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
+    signature << ")";
 
     typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
-    signatureFromType<ResultType>::value(sigret);
+
+    sigret = metaTypeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(object, method));
   }

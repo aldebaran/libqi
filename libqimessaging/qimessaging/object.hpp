@@ -202,16 +202,16 @@ namespace qi {
                                EventLoop* ctx)
   {
     std::stringstream   signature;
-    qi::SignatureStream sigs;
+    signature << eventName << "::(";
 
     typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
     boost::mpl::for_each<
       boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
         boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
+        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
 
-    signature << eventName << "::(" << sigs.str() << ")";
+    signature << ")";
 
     return xConnect(signature.str(), makeFunctor(callback), ctx);
   }
