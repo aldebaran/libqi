@@ -146,7 +146,34 @@ public:
     s >> *val;
     return val;
   }
+  std::string signature()
+  {
+    return signatureFromType<T>::value();
+  }
 };
+
+template<typename T> class MetaTypeNoSerialize
+{
+public:
+  void serialize(ODataStream& s, const void* ptr)
+  {
+    qiLogWarning("qi.meta") << "type not serializable";
+  }
+
+  void* deserialize(IDataStream& s)
+  {
+    qiLogWarning("qi.meta") << "type not serializable";
+    T* val = new T();
+    return val;
+  }
+  std::string signature()
+  {
+    std::string res;
+    res += (char)Signature::Type_Unknown;
+    return res;
+  }
+};
+
 
 /* MetaTypeImpl implementation that bounces to the various aspect
  * subclasses.
@@ -155,8 +182,8 @@ public:
  * for better reuse, without the cost of a second virtual call.
  */
 template<typename T, typename Cloner    = MetaTypeDefaultClone<T>
-                   , typename Value     = MetaTypeDefaultValue<T>
-                   , typename Serialize = MetaTypeDefaultSerialize<T>
+                   , typename Value     = MetaTypeNoValue<T>
+                   , typename Serialize = MetaTypeNoSerialize<T>
          > class DefaultMetaTypeImpl
 : public Cloner
 , public Value
@@ -190,7 +217,7 @@ template<typename T, typename Cloner    = MetaTypeDefaultClone<T>
 
   virtual std::string signature()
   {
-    return signatureFromType<T>::value();
+    return Serialize::signature();
   }
 
   virtual void  serialize(ODataStream& s, const void* ptr)
@@ -211,10 +238,20 @@ template<typename T> class MetaTypeImpl: public DefaultMetaTypeImpl<T>
 {
 };
 
+/// Declare a type that is convertible to Value, and serializable
+#define QI_METATYPE_CONVERTIBLE_SERIALIZABLE(T)  \
+namespace qi {                                   \
+template<> class MetaTypeImpl<T>:                \
+  public DefaultMetaTypeImpl<T,                  \
+    MetaTypeDefaultClone<T>,                     \
+    MetaTypeDefaultValue<T>,                     \
+    MetaTypeDefaultSerialize<T>                  \
+  >{}; }
+
 /** Declare that a type is not convertible to Value.
  *  Must be called outside any namespace.
  */
-#define QI_METATYPE_NOT_CONVERTIBLE(T)           \
+#define QI_METATYPE_SERIALIZABLE(T)              \
 namespace qi {                                   \
 template<> class MetaTypeImpl<T>:                \
   public DefaultMetaTypeImpl<T,                  \
@@ -243,7 +280,7 @@ template<typename T> MetaType* metaTypeOf(const T& v)
 
 }
 
-QI_METATYPE_NOT_CONVERTIBLE(Buffer);
+QI_METATYPE_SERIALIZABLE(Buffer);
 
 #include <qimessaging/details/metatype.hxx>
 

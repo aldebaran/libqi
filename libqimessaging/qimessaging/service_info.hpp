@@ -52,7 +52,6 @@ namespace qi
 
 }; // !qi
 
-QI_METATYPE_NOT_CONVERTIBLE(ServiceInfo);
-QI_METATYPE_NOT_CONVERTIBLE(std::vector<ServiceInfo>);
+QI_METATYPE_SERIALIZABLE(ServiceInfo);
 
 #endif  // _QIMESSAGING_SERVICE_INFO_HPP_

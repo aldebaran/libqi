@@ -71,7 +71,7 @@ Point point(int x, int y)
   Point p; p.x = x; p.y = y; return p;
 }
 
-QI_METATYPE_NOT_CONVERTIBLE(Point)
+QI_METATYPE_SERIALIZABLE(Point)
 QI_REGISTER_STRUCT(Point, x, y);
 
 struct Test
@@ -116,7 +116,7 @@ struct Complex
   std::list<std::vector<int> > stuff;
 };
 
-QI_METATYPE_NOT_CONVERTIBLE(::Complex)
+QI_METATYPE_SERIALIZABLE(::Complex)
 // Test the sub macros
 QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
 QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)

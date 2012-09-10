@@ -218,7 +218,7 @@ namespace qi {
 
 };
 
-QI_METATYPE_NOT_CONVERTIBLE(MetaObject);
+QI_METATYPE_SERIALIZABLE(MetaObject);
 
 /** Register struct with QI binding system.
  * Once called, your structure can be passed as argument to call(), and method

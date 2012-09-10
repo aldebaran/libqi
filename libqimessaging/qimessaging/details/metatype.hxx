@@ -7,10 +7,82 @@
 #ifndef _QI_MESSAGING_METATYPE_HXX_
 #define _QI_MESSAGING_METATYPE_HXX_
 
+#include <qi/types.hpp>
 #include <cstring>
+#include <map>
+#include <vector>
+#include <list>
 /* This file contains the default-provided MetaType specialisations
  *
  */
+
+/** Integral types.
+ * Since long is neither int32 nor uint32 on 32 bit platforms,
+ * use all known native types instead of size/signedness explicit
+ * types.
+ */
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(char);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(signed char);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned char);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(short);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned short);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(int);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned int);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(long);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned long);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(long long);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned long long);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(float);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(double);
+QI_METATYPE_CONVERTIBLE_SERIALIZABLE(std::string);
+
+#define _CONTAINER(c) namespace qi {             \
+template<typename T> class MetaTypeImpl<c<T> >:  \
+  public DefaultMetaTypeImpl<c<T>,               \
+  MetaTypeDefaultClone<c<T> >,                   \
+  MetaTypeDefaultValue<c<T> >,                   \
+  MetaTypeDefaultSerialize<c<T> >                \
+> {}; }
+
+_CONTAINER(std::list);
+_CONTAINER(std::vector);
+
+#undef _CONTAINER
+
+#define _MAP(c) namespace qi {                                \
+template<typename K, typename V> class MetaTypeImpl<c<K,V> >:  \
+  public DefaultMetaTypeImpl<c<K,V>,               \
+  MetaTypeDefaultClone<c<K,V> >,                   \
+  MetaTypeDefaultValue<c<K,V> >,                   \
+  MetaTypeDefaultSerialize<c<K,V> >                \
+> {}; }
+
+_MAP(std::map);
+#undef _MAP
+
+namespace qi {
+// void
+template<> class MetaTypeImpl<void>: public MetaType
+{
+public:
+  const std::type_info& info()
+  {
+    return typeid(void);
+  }
+  std::string signature()                  { return "\0"; }
+  void* clone(void*)                       { return 0;}
+  void destroy(void* ptr)                  {}
+  bool toValue(const void *ptr, detail::Value & v) {v.clear(); return true;}
+  void* fromValue(const detail::Value & v) { return 0;}
+  void serialize(ODataStream&, const void*){}
+  void* deserialize(IDataStream&)          { return 0;}
+};
+
+//reference
+
+template<typename T> class MetaTypeImpl<T&>
+ : public MetaTypeImpl<T> {};
+}
 
 namespace qi  {
 /* C array. We badly need this because the type of literal string "foo"
@@ -73,6 +145,10 @@ public:
     char* res = new char[I];
     strncpy(res, str.c_str(), str.length());
     return res;
+  }
+  std::string signature()
+  {
+    return signatureFromType<std::string>::value();
   }
 };
 
