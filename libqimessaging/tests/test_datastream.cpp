@@ -483,6 +483,7 @@ struct Point
 };
 
 QI_DATASTREAM_STRUCT(Point, x, y)
+QI_SIGNATURE_STRUCT(Point, x, y)
 
 struct Complex
 {
