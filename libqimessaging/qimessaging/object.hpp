@@ -42,6 +42,8 @@ namespace qi {
   public:
     Object();
     Object(qi::MetaObject metaobject);
+    Object(qi::ObjectPrivate *pimpl);
+
     virtual ~Object();
 
     enum MetaCallType {

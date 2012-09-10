@@ -43,8 +43,10 @@ namespace qi {
   {
     boost::mutex::scoped_lock sl(_callbacksMutex);
     _callbacks.clear();
-    _object._ts = 0;
+    boost::shared_ptr<qi::RemoteObjectPrivate> rop;
+    rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(_object._p);
     //do not delete _socket it is deleted by _object at the moment.
+    rop->_ts = 0;
   }
 
   qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)

@@ -124,7 +124,6 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
   signature = sigInfo[1];
   signature.append("::");
   signature.append(sigInfo[2]);
-  //TODO
   ob->xAdvertiseMethod(sigInfo[0], signature,
     boost::bind(&c_call, std::string(complete_signature), func, data, _1));
   return 0;

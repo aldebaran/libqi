@@ -14,32 +14,41 @@
 #include <qimessaging/object.hpp>
 #include <boost/thread/mutex.hpp>
 #include <string>
+#include "src/object_p.hpp"
 
 namespace qi {
 
   class TransportSocket;
 
-  class RemoteObject : public qi::Object, public qi::TransportSocketInterface {
+  class RemoteObjectPrivate : public qi::ObjectPrivate, public qi::TransportSocketInterface {
   public:
-    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
-    ~RemoteObject();
+    RemoteObjectPrivate(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
+    ~RemoteObjectPrivate();
 
+  protected:
     virtual void onSocketReadyRead(TransportSocket *client, int id, void*);
     virtual void onSocketTimeout(TransportSocket *client, int id, void*);
 
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& args);
-    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, qi::Object::MetaCallType callType = qi::Object::MetaCallType_Auto);
 
     virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
 
   public:
-    qi::TransportSocket                           *_ts;
+    qi::TransportSocket                            *_ts;
 
   protected:
-    unsigned int                                   _service;
-    std::map<int, qi::Promise<MetaFunctionResult> >         _promises;
-    boost::mutex                                   _mutex;
+    unsigned int                                    _service;
+    std::map<int, qi::Promise<MetaFunctionResult> > _promises;
+    boost::mutex                                    _mutex;
+  };
+
+
+  class RemoteObject : public qi::Object {
+  public:
+    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
+    ~RemoteObject();
   };
 
 }

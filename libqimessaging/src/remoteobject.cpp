@@ -16,23 +16,33 @@
 namespace qi {
 
 RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo)
-  : Object(mo)
-  , _ts(ts)
-  , _service(service)
+  : Object(new RemoteObjectPrivate(ts, service, mo))
 {
-  _ts->addCallbacks(this);
 }
 
 RemoteObject::~RemoteObject()
+{
+}
+
+RemoteObjectPrivate::RemoteObjectPrivate(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo)
+  : ObjectPrivate(mo)
+  , _ts(ts)
+  , _service(service)
+{
+  ts->addCallbacks(this);
+}
+
+RemoteObjectPrivate::~RemoteObjectPrivate()
 {
   if (_ts) {
     _ts->disconnect();
     _ts->removeCallbacks(this);
   }
+  //TODO: please leak!
   delete _ts;
 }
 
-void RemoteObject::onSocketTimeout(TransportSocket *client, int id, void *data)
+void RemoteObjectPrivate::onSocketTimeout(TransportSocket *client, int id, void *data)
 {
   {
     boost::mutex::scoped_lock lock(_mutex);
@@ -45,7 +55,7 @@ void RemoteObject::onSocketTimeout(TransportSocket *client, int id, void *data)
   }
 }
 
-void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data)
+void RemoteObjectPrivate::onSocketReadyRead(TransportSocket *client, int id, void *data)
 {
   qi::Promise<MetaFunctionResult>                     promise;
   bool found = false;
@@ -89,11 +99,10 @@ void RemoteObject::onSocketReadyRead(TransportSocket *client, int id, void *data
       qiLogError("remoteobject") << "Message (#" << id << ") type not handled: " << msg.type();
       return;
   }
-
 }
 
 
-qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, MetaCallType callType)
+qi::Future<MetaFunctionResult> RemoteObjectPrivate::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, qi::Object::MetaCallType callType)
 {
   qi::Promise<MetaFunctionResult> out;
   qi::Message msg;
@@ -141,7 +150,7 @@ qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const
   return out.future();
 }
 
-void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
+void RemoteObjectPrivate::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
 {
   // Bounce the emit request to server
   // TODO: one optimisation that could be done is to trigger the local
@@ -160,10 +169,10 @@ void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters
   }
 }
 
-unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
+unsigned int RemoteObjectPrivate::connect(unsigned int event, const SignalSubscriber& sub)
 {
   // Bind the function locally.
-  unsigned int uid = Object::connect(event, sub);
+  unsigned int uid = ObjectPrivate::connect(event, sub);
   // Notify the Service that we are interested in its event.
   // Provide our uid as payload
   qi::Message msg;
@@ -183,18 +192,18 @@ unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& s
   return uid;
 }
 
-bool RemoteObject::disconnect(unsigned int linkId)
+bool RemoteObjectPrivate::disconnect(unsigned int linkId)
 {
   unsigned int event = linkId >> 16;
 
-  ObjectPrivate::SignalSubscriberMap::iterator i = _p->_subscribers.find(event);
-  if (i == _p->_subscribers.end())
+  ObjectPrivate::SignalSubscriberMap::iterator i = _subscribers.find(event);
+  if (i == _subscribers.end())
   {
     qiLogWarning("qi.object") << "Disconnect on non instanciated signal";
     return false;
   }
 
-  if (Object::disconnect(linkId))
+  if (ObjectPrivate::disconnect(linkId))
   {
     // Tell the remote we are no longer interested.
     qi::Message msg;

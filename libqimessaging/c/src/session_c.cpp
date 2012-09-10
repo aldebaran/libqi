@@ -68,6 +68,10 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
   qi_object_t *obj = qi_object_create();
   qi::Object *o = reinterpret_cast<qi::Object *>(obj);
   *o = s->service(name);
+  if (!o->isValid()) {
+    qi_object_destroy(obj);
+    return 0;
+  }
   return obj;
 }
 

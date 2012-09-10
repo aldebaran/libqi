@@ -27,25 +27,60 @@ namespace qi {
   public:
     ObjectPrivate();
     ObjectPrivate(const qi::MetaObject &meta);
-    ~ObjectPrivate();
+    virtual ~ObjectPrivate();
 
-    std::map<ObjectInterface *, void *> _callbacks;
-    boost::mutex                        _callbacksMutex;
-    bool                                _dying;
+    void addCallbacks(ObjectInterface *callbacks, void *data = 0);
+    void removeCallbacks(ObjectInterface *callbacks);
 
+    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, qi::Object::MetaCallType callType = qi::Object::MetaCallType_Auto);
+    qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
+
+    void emitEvent(const std::string& eventName,
+                   qi::AutoMetaValue p1 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p2 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p3 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p4 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p5 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p6 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p7 = qi::AutoMetaValue(),
+                   qi::AutoMetaValue p8 = qi::AutoMetaValue());
+
+    virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
+    bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
+    template <typename FUNCTOR_TYPE>
+    unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback,
+                         EventLoop* ctx = getDefaultObjectEventLoop());
+    unsigned int xConnect(const std::string &signature, MetaFunction functor,
+                          EventLoop* ctx = getDefaultObjectEventLoop());
+    unsigned int connect(unsigned int event, MetaFunction Functor,
+                         EventLoop* ctx = getDefaultObjectEventLoop());
+    virtual unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
+    virtual bool disconnect(unsigned int linkId);
+    std::vector<SignalSubscriber> subscribers(int eventId) const;
+    unsigned int connect(unsigned int signal, qi::Object target, unsigned int slot);
+    void trigger(unsigned int event, const MetaFunctionParameters& params);
+    void moveToEventLoop(EventLoop* ctx);
+    EventLoop* eventLoop();
+
+    //TODO: remove, this should move to metatype.
+    inline MetaObject &metaObject() { return _meta; }
+
+  public:
     // Links that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       _registrations;
     boost::recursive_mutex              _mutexRegistration;
-    // Event loop in which calls are made
-    EventLoop                          *_eventLoop;
+
+  protected:
+    std::map<ObjectInterface *, void *> _callbacks;
+    boost::mutex                        _callbacksMutex;
+    bool                                _dying;
 
     typedef std::map<unsigned int, SignalBase*> SignalSubscriberMap;
     //eventid -> linkid -> SignalSubscriber
     SignalSubscriberMap _subscribers;
 
-
-    //TODO: remove, this should move to metatype.
-    inline MetaObject &metaObject() { return _meta; }
+    // Event loop in which calls are made
+    EventLoop                          *_eventLoop;
 
   private:
     qi::MetaObject _meta;

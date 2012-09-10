@@ -87,7 +87,11 @@ namespace qi {
       return;
     qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
     //remove the callback of ServerClient before returning the object
-    sr->socket->removeCallbacks(&sr->sclient->_object);
+    boost::shared_ptr<qi::RemoteObjectPrivate> rop;
+    rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(sr->sclient->_object._p);
+    sr->socket->removeCallbacks(rop.get());
+    //delete sr->sclient;
+    //sr->sclient = 0;
     sr->promise.setValue(robj);
     removeRequest(data);
   }

@@ -48,7 +48,7 @@ void call(const std::string &addr)
   }
 #endif
   std::string result = obj.call<std::string>("reply", "plaf");
-  std::cout << result << std::endl;
+  std::cout << "result:" << result << std::endl;
 
   session.close();
 }

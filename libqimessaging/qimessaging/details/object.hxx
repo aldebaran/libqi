@@ -95,6 +95,11 @@ namespace qi {
       qi::AutoMetaValue p7,
       qi::AutoMetaValue p8)
   {
+    qi::Promise<R> res;
+    if (!_p) {
+      res.setError("Invalid Object");
+      return res.future();
+    }
     qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::MetaValue> params;
     for (unsigned i=0; i<8; ++i)
@@ -111,7 +116,6 @@ namespace qi {
     // signatureFroType will produce a static assert
     sigret = metaTypeOf<R>()->signature();
     // Future adaptation
-    qi::Promise<R> res;
     // Mark params as being on the stack
     MetaFunctionParameters p(params, true);
     qi::Future<qi::MetaFunctionResult> fmeta = xMetaCall(sigret, signature, p);
