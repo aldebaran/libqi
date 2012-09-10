@@ -37,7 +37,7 @@ template<typename T>
 MetaValue toMetaValue(const T& v)
 {
   MetaValue res;
-  res.type = metaTypeOf(v);
+  res.type = metaTypeOf<T>();
   res.value = (void *) const_cast<T*>(&v);
   return res;
 }
