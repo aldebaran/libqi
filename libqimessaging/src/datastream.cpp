@@ -38,7 +38,7 @@
 
 namespace qi {
 
-  template <typename T, typename T2>
+  template <typename T, typename T2, char S>
   static inline qi::IDataStream& deserialize(qi::IDataStream* ds, T &b)
   {
     T2 res;
@@ -50,41 +50,45 @@ namespace qi {
     return *ds;
   }
 
-  template <typename T, typename T2>
-  static inline qi::ODataStream& serialize(qi::ODataStream* ds, T &b)
+  template <typename T, typename T2, char S>
+  static inline qi::ODataStream& serialize(qi::ODataStream* ds, T &b, bool inner)
   {
     T2 val = b;
     int ret = ds->write((const char*)&val, sizeof(val));
+    if (!inner)
+    {
+      ds->getBuffer().signature() << S;
+    }
     if (ret == -1)
       ds->setStatus(ds->Status_WriteError);
     __QI_DEBUG_SERIALIZATION_DATA_W(Type, b);
     return *ds;
   }
 
-#define QI_SIMPLE_SERIALIZER_IMPL(Type, TypeCast, Signature)  \
-  IDataStream& IDataStream::operator>>(Type &b)               \
-  {                                                           \
-    return deserialize<Type, TypeCast>(this, b);              \
-  }                                                           \
-  ODataStream& ODataStream::operator<<(Type b)                \
-  {                                                           \
-    return serialize<Type, TypeCast>(this, b);                \
+#define QI_SIMPLE_SERIALIZER_IMPL(Type, TypeCast, Signature)                   \
+  IDataStream& IDataStream::operator>>(Type &b)                                \
+  {                                                                            \
+    return deserialize<Type, TypeCast, Signature>(this, b);                    \
+  }                                                                            \
+  ODataStream& ODataStream::operator<<(Type b)                                 \
+  {                                                                            \
+    return serialize<Type, TypeCast, Signature>(this, b, _innerSerialization); \
   }
 
-  QI_SIMPLE_SERIALIZER_IMPL(bool, bool, "b")
-  QI_SIMPLE_SERIALIZER_IMPL(char, char, "c")
-  QI_SIMPLE_SERIALIZER_IMPL(signed char, signed char, "c")
-  QI_SIMPLE_SERIALIZER_IMPL(unsigned char, unsigned char, "C")
-  QI_SIMPLE_SERIALIZER_IMPL(short, short, "w")
-  QI_SIMPLE_SERIALIZER_IMPL(unsigned short, unsigned short, "W")
-  QI_SIMPLE_SERIALIZER_IMPL(int, int, "i")
-  QI_SIMPLE_SERIALIZER_IMPL(unsigned int, unsigned int, "I")
-  QI_SIMPLE_SERIALIZER_IMPL(long, qi::int64_t, "l")
-  QI_SIMPLE_SERIALIZER_IMPL(unsigned long, qi::uint64_t, "L")
-  QI_SIMPLE_SERIALIZER_IMPL(long long, long long, "l")
-  QI_SIMPLE_SERIALIZER_IMPL(unsigned long long, unsigned long long, "L")
-  QI_SIMPLE_SERIALIZER_IMPL(float, float, "f")
-  QI_SIMPLE_SERIALIZER_IMPL(double, double, "d")
+  QI_SIMPLE_SERIALIZER_IMPL(bool, bool, 'b')
+  QI_SIMPLE_SERIALIZER_IMPL(char, char, 'c')
+  QI_SIMPLE_SERIALIZER_IMPL(signed char, signed char, 'c')
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned char, unsigned char, 'C')
+  QI_SIMPLE_SERIALIZER_IMPL(short, short, 'w')
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned short, unsigned short, 'W')
+  QI_SIMPLE_SERIALIZER_IMPL(int, int, 'i')
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned int, unsigned int, 'I')
+  QI_SIMPLE_SERIALIZER_IMPL(long, qi::int64_t, 'l')
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned long, qi::uint64_t, 'L')
+  QI_SIMPLE_SERIALIZER_IMPL(long long, long long, 'l')
+  QI_SIMPLE_SERIALIZER_IMPL(unsigned long long, unsigned long long, 'L')
+  QI_SIMPLE_SERIALIZER_IMPL(float, float, 'f')
+  QI_SIMPLE_SERIALIZER_IMPL(double, double, 'd')
 
   IDataStream::IDataStream(const qi::Buffer& buffer)
   : _status(Status_Ok)
@@ -113,6 +117,10 @@ namespace qi {
   int ODataStream::write(const char *str, size_t len)
   {
     if (len) {
+      if (!_innerSerialization)
+      {
+        getBuffer().signature() << 'r';
+      }
       if (_buffer.write(str, len) < 0)
       {
         setStatus(Status_WriteError);
@@ -127,6 +135,10 @@ namespace qi {
   {
     *this << (qi::uint32_t)len;
     if (len) {
+      if (!_innerSerialization)
+      {
+        getBuffer().signature() << 's';
+      }
       if (_buffer.write(str, len) != (int)len)
         setStatus(Status_WriteError);
       __QI_DEBUG_SERIALIZATION_DATA_W(std::string, str);
@@ -204,15 +216,31 @@ namespace qi {
   {
     switch(val.type) {
       case qi::detail::Value::Double:
+        if (!_innerSerialization)
+        {
+          getBuffer().signature() << "Id";
+        }
         *this << "Id" << (qi::uint32_t)val.type << val.data.d;
         break;
       case qi::detail::Value::String:
+        if (!_innerSerialization)
+        {
+          getBuffer().signature() << "Is";
+        }
         *this << "Is" << (qi::uint32_t)val.type << val.toString();
         break;
       case qi::detail::Value::List:
+        if (!_innerSerialization)
+        {
+          getBuffer().signature() << "I[m]";
+        }
         *this << "I[m]" << (qi::uint32_t)val.type << *val.data.list;
         break;
       case qi::detail::Value::Map:
+        if (!_innerSerialization)
+        {
+          getBuffer().signature() << "I{sm}";
+        }
         *this << "I{sm}" << (qi::uint32_t)val.type << *val.data.map;
         break;
       default:
@@ -227,8 +255,19 @@ namespace qi {
   }
 
   ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {
+    if (!_innerSerialization)
+    {
+      getBuffer().signature() << "r";
+    }
+
+    bool wasInnerSerialization = _innerSerialization;
+    _innerSerialization = true;
+
     *this << (uint32_t)meta.size();
     getBuffer().subBuffers().push_back(std::make_pair(getBuffer().size(), meta));
+
+    _innerSerialization = wasInnerSerialization;
+
     qiLogDebug("DataStream") << "Serializing buffer " << meta.size()
                              << " at " << getBuffer().size();
     return *this;
@@ -292,11 +331,33 @@ namespace qi {
 
   ODataStream &ODataStream::operator<<(const MetaValue &value)
   {
+    getBuffer().signature() << "m";
     *this << value.signature();
     value.serialize(*this);
     return *this;
   }
 
+  void ODataStream::beginList(uint32_t size, std::string elementSignature)
+  {
+    getBuffer().signature() << "[" << elementSignature;
+    *this << size;
+  }
+
+  void ODataStream::endList()
+  {
+    getBuffer().signature() << "]";
+  }
+
+  void ODataStream::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
+  {
+    getBuffer().signature() << "{" << keySignature << valueSignature << "}";
+    *this << size;
+  }
+
+  void ODataStream::endMap()
+  {
+    getBuffer().signature() << "}";
+  }
 
 }
 

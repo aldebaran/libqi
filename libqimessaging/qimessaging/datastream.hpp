@@ -166,6 +166,11 @@ namespace qi {
     template<typename K, typename V>
     ODataStream &operator<<(const std::map<K, V> &m);
 
+    void beginList(qi::uint32_t size, std::string elementSignature);
+    void endList();
+    void beginMap(qi::uint32_t size, std::string keySignature, std::string valueSignature);
+    void endMap();
+
     Status status() const { return _status; }
     void setStatus(Status status) { _status = status; }
 
@@ -173,8 +178,11 @@ namespace qi {
   private:
     Status      _status;
     Buffer _buffer;
+    bool        _innerSerialization;
+
     /// <summary>Default constructor. </summary>
     ODataStream()
+      : _innerSerialization(false)
     {}
 
   };
@@ -188,10 +196,17 @@ namespace qi {
     typename std::list<T>::const_iterator it = v.begin();
     typename std::list<T>::const_iterator end = v.end();
 
-    *this << (qi::uint32_t)v.size();
+    beginList(v.size(), qi::signatureFromType<T>::value());
+
+    bool wasInnerSerialization = _innerSerialization;
+    _innerSerialization = true;
     for (; it != end; ++it) {
       *this << *it;
     }
+    _innerSerialization = wasInnerSerialization;
+
+    endList();
+
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
     return *this;
   }
@@ -227,10 +242,17 @@ namespace qi {
     typename std::vector<T>::const_iterator it = v.begin();
     typename std::vector<T>::const_iterator end = v.end();
 
-    *this << (qi::uint32_t)v.size();
+    beginList(v.size(), qi::signatureFromType<T>::value());
+
+    bool wasInnerSerialization = _innerSerialization;
+    _innerSerialization = true;
     for (; it != end; ++it) {
       *this << *it;
     }
+    _innerSerialization = wasInnerSerialization;
+
+    endList();
+
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
     return *this;
   }
@@ -266,12 +288,18 @@ namespace qi {
     typename std::map<K,V>::const_iterator it = m.begin();
     typename std::map<K,V>::const_iterator end = m.end();
 
-    *this << (qi::uint32_t)m.size();
+    beginMap(m.size(), qi::signatureFromType<K>::value(), qi::signatureFromType<V>::value());
 
+    bool wasInnerSerialization = _innerSerialization;
+    _innerSerialization = true;
     for (; it != end; ++it) {
       *this << it->first;
       *this << it->second;
     }
+    _innerSerialization = wasInnerSerialization;
+
+    endMap();
+
     __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);
     return *this;
   }

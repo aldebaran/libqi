@@ -235,4 +235,14 @@ namespace qi
     printf("\n");
   }
 
+  std::stringstream& Buffer::signature()
+  {
+    return _p->signature;
+  }
+
+  const std::stringstream& Buffer::signature() const
+  {
+    return _p->signature;
+  }
+
 } // !qi
