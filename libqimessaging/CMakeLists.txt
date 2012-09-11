@@ -166,6 +166,7 @@ if(WITH_PYTHON)
   add_subdirectory("python")
 endif()
 add_subdirectory("c/test")
+add_subdirectory("c/bin")
 add_subdirectory("tests")
 
 message(STATUS "")
