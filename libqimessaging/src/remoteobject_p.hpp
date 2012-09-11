@@ -25,7 +25,10 @@ namespace qi {
     RemoteObjectPrivate(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
     ~RemoteObjectPrivate();
 
+    void close();
+
   protected:
+
     virtual void onSocketReadyRead(TransportSocket *client, int id, void*);
     virtual void onSocketTimeout(TransportSocket *client, int id, void*);
 
@@ -47,8 +50,11 @@ namespace qi {
 
   class RemoteObject : public qi::Object {
   public:
-    explicit RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
+    RemoteObject();
+    RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo);
     ~RemoteObject();
+
+    void close();
   };
 
 }
