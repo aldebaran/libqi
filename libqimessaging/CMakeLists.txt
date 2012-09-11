@@ -84,6 +84,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/event_loop_p.hpp
                                    src/gateway.cpp
                                    src/message.cpp
+                                   src/message_p.hpp
                                    src/metamethod.cpp
                                    src/metamethod_p.cpp
                                    src/metamethod_p.hpp
