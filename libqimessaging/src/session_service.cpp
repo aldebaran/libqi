@@ -12,6 +12,25 @@
 
 namespace qi {
 
+  Session_Service::~Session_Service()
+  {
+    close();
+  }
+
+  void Session_Service::close() {
+    //cleanup all RemoteObject
+    //they are not valid anymore after this function
+    {
+      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      RemoteObjectMap::iterator it = _remoteObjects.begin();
+      for (; it != _remoteObjects.end(); ++it) {
+        it->second.close();
+      }
+      _remoteObjects.clear();
+    }
+  }
+
+
   ServiceRequest *Session_Service::serviceRequest(void *data)
   {
     {
@@ -85,14 +104,29 @@ namespace qi {
     ServiceRequest *sr = serviceRequest(data);
     if (!sr)
       return;
-    qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
-    //remove the callback of ServerClient before returning the object
-    boost::shared_ptr<qi::RemoteObjectPrivate> rop;
-    rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(sr->sclient->_object._p);
-    sr->socket->removeCallbacks(rop.get());
-    //delete sr->sclient;
-    //sr->sclient = 0;
-    sr->promise.setValue(robj);
+    {
+      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      RemoteObjectMap::iterator it = _remoteObjects.find(sr->name);
+      if (it != _remoteObjects.end()) {
+        //another object have been registered before us, return it
+        //the new socket will be closed when the request is deleted
+        qiLogVerbose("session_service") << "A request for the service " << sr->name << " have been discarded, "
+                                        << "the remoteobject on the service was already available.";
+        sr->promise.setValue(it->second);
+      } else {
+        qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
+        //remove the callback of ServerClient before returning the object
+        boost::shared_ptr<qi::RemoteObjectPrivate> rop;
+        rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(sr->sclient->_object._p);
+        sr->socket->removeCallbacks(rop.get());
+        //avoid deleting the socket in removeRequest (RemoteObject will do it)
+        sr->socket = 0;
+        //register the remote object in the cache
+        _remoteObjects[sr->name] = robj;
+        sr->promise.setValue(robj);
+      }
+    }
+
     removeRequest(data);
   }
 
@@ -145,10 +179,16 @@ namespace qi {
       qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
     }
 
+    //look for already registered remote objects
+    {
+      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      RemoteObjectMap::iterator it = _remoteObjects.find(service);
+      if (it != _remoteObjects.end())
+        return qi::Future<qi::Object>(it->second);
+    }
+
     qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);
-
     ServiceRequest *rq = new ServiceRequest(service, type);
-
     long requestId = ++_requestsIndex;
 
     {

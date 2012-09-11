@@ -13,6 +13,7 @@
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/session.hpp>
 #include <qi/atomic.hpp>
+#include "src/remoteobject_p.hpp"
 
 namespace qi {
 
@@ -53,6 +54,9 @@ namespace qi {
       : _sdClient(sdClient)
       , _server(server)
     {}
+    ~Session_Service();
+
+    void close();
 
     qi::Future<qi::Object> service(const std::string &service,
                                    Session::ServiceLocality locality,
@@ -78,6 +82,11 @@ namespace qi {
     boost::mutex                    _requestsMutex;
     std::map<long, ServiceRequest*> _requests;
     qi::atomic<long>                _requestsIndex;
+
+    //maintain a cache of remote object
+    typedef std::map<std::string, qi::RemoteObject> RemoteObjectMap;
+    RemoteObjectMap                 _remoteObjects;
+    boost::mutex                    _remoteObjectsMutex;
 
   private:
     ServiceDirectoryClient *_sdClient;

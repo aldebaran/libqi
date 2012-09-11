@@ -105,6 +105,7 @@ namespace qi {
 
   qi::FutureSync<void> Session::close()
   {
+    _p->_serviceHandler.close();
     _p->_server.close();
     return _p->_sdClient.disconnect();
   }
