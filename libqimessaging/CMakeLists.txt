@@ -2,6 +2,7 @@
 ## Author(s):
 ##  - Cedric GESTES      <gestes@aldebaran-robotics.com>
 ##  - Chris Kilner       <ckilner@aldebaran-robotics.com>
+##  - Laurent LEC        <llec@aldebaran-robotics.com>
 ##
 ## Copyright (C) 2009, 2010, 2011, 2012 Aldebaran Robotics
 ##
@@ -143,7 +144,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
 add_subdirectory(c)
 
 qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
-                 #qi-cbinding
                  SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT)
 if(WIN32)
   qi_use_lib(qimessaging WSA)
@@ -151,10 +151,7 @@ endif(WIN32)
 
 qi_stage_lib(qimessaging)
 
-#add_subdirectory(test)
 qi_add_subdirectory(examples WITH_EXAMPLES)
-qi_add_subdirectory(perfs    WITH_PERF)
-#add_subdirectory(bin)
 #qi_gen_doc(DOXYFILES "Doxyfile")
 
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
