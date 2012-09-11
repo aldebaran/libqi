@@ -10,7 +10,6 @@
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/event_loop.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/metaobjectbuilder.hpp>
 
 namespace qi {
 
@@ -66,30 +65,12 @@ namespace qi {
     return connect(makeFunctor(inst, fun), ctx);
   }
 
-  namespace detail {
-
-    template<typename T> inline
-    std::string functionArgumentSignature()
-    {
-      qi::SignatureStream sigs;
-
-      typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-      boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-      boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(sigs));
-
-      return sigs.str();
-    }
-  }
-
   template<typename T>
   class Signal: public SignalBase
   {
   public:
     inline Signal()
-      : SignalBase(detail::functionArgumentSignature<T>())
+      : SignalBase(detail::functionArgumentsSignature<T>())
     {
 
     }

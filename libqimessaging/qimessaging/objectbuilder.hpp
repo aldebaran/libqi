@@ -10,12 +10,6 @@
 
 #include <qimessaging/api.hpp>
 #include <string>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/transform_view.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/add_pointer.hpp>
-#include <boost/function_types/parameter_types.hpp>
-#include <boost/function_types/result_type.hpp>
 
 #include <boost/function.hpp>
 #include <qimessaging/signature.hpp>
@@ -51,22 +45,6 @@ namespace qi {
     ObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(ObjectBuilder);
   };
-
-
-  namespace detail {
-    struct signature_function_arg_apply {
-      signature_function_arg_apply(std::ostream* val)
-        : val(*val)
-      {}
-
-      template<typename T> void operator()(T *x) {
-        val << metaTypeOf<T>()->signature();
-      }
-
-      std::ostream &val;
-    };
-  }
-
 
   template <typename FUNCTION_TYPE>
   inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)

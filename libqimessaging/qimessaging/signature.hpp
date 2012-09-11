@@ -303,5 +303,4 @@ namespace qi {
     return stream;                                                                \
   }
 
-
 #endif  // _QIMESSAGING_SIGNATURE_HPP_
