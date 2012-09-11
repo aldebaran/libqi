@@ -10,6 +10,8 @@
 cmake_minimum_required(VERSION 2.6.4)
 project(libqimessaging)
 
+qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
+
 enable_testing()
 
 qi_add_optional_package(PYTHON)
@@ -18,6 +20,8 @@ option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 
 qi_add_optional_package(QISSH)
+
+add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
 if (WIN32)
   add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
