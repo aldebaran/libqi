@@ -12,6 +12,8 @@
 #include <qimessaging/qt/QiTransportSocket>
 #include <qimessaging/qt/QiTransportServer>
 
+#include "test_QiTransportSocket.hpp"
+
 static QCoreApplication* app = 0;
 
 TEST(TransportSocket, StateUnconnected)
