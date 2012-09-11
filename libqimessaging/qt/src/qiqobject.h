@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	QIREMOTEOBJECT_P_H_
-# define   	QIREMOTEOBJECT_P_H_
+#ifndef   QIREMOTEOBJECT_P_H_
+# define  QIREMOTEOBJECT_P_H_
 
 #include <qimessaging/object.hpp>
 #include <QtCore/qobject.h>
@@ -20,4 +20,4 @@ protected:
   QiObjectPrivate *_p;
 };
 
-#endif 	    /* !QIREMOTEOBJECT_P_H_ */
+#endif  /* !QIREMOTEOBJECT_P_H_ */
