@@ -72,7 +72,17 @@ namespace qi {
     inline Signal()
       : SignalBase(detail::functionArgumentsSignature<T>())
     {
+    }
 
+    inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
+    {
+      return SignalBase::connect(f, ctx);
+    }
+
+    template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
+    inline SignalBase::Link connect(OBJECT_TYPE inst, FUNCTION_TYPE fun, EventLoop* ctx=getDefaultObjectEventLoop())
+    {
+      return SignalBase::connect(inst, fun, ctx);
     }
   };
 
