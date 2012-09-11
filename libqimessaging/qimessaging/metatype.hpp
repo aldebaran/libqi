@@ -268,7 +268,7 @@ template<> class MetaTypeImpl<T>:                \
 /// Get metaType from a type. No need to delete the result
 template<typename T> MetaType* metaTypeOf()
 {
-  static MetaTypeImpl<T> res;
+  static MetaTypeImpl<typename boost::remove_const<T>::type> res;
   return &res;
 }
 
