@@ -21,7 +21,7 @@ namespace qi {
   class SignalBasePrivate
   {
   public:
-    SignalSubscriberMap              subscriberMap;
+    SignalSubscriberMap        subscriberMap;
     std::string                signature;
     boost::recursive_mutex     mutex;
   };
@@ -44,7 +44,7 @@ namespace qi {
       if (vals[i]->value)
         params.push_back(*vals[i]);
     // Signature construction
-    std::string signature;
+    std::string signature = "(";
     for (unsigned i=0; i< params.size(); ++i)
       signature += params[i].signature();
     signature += ")";

@@ -184,14 +184,14 @@ namespace qi  {
     std::string functionArgumentsSignature()
     {
       std::stringstream sigs;
-
+      sigs << "(";
       typedef typename boost::function_types::parameter_types<T>::type ArgsType;
       boost::mpl::for_each<
       boost::mpl::transform_view<ArgsType,
       boost::add_pointer<
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&sigs));
-
+      sigs << ")";
       return sigs.str();
     }
 
