@@ -105,6 +105,7 @@ namespace qi {
     qiLogDebug("qi.EventLoop") << this << "run ending";
     bufferevent_free(bev);
     event_base_free(base);
+    _base = 0;
     {
       boost::recursive_mutex::scoped_lock sl(_mutex);
       _running = false;
@@ -163,6 +164,10 @@ namespace qi {
   EventLoop::AsyncCallHandle EventLoopPrivate::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
     EventLoop::AsyncCallHandle res;
+    if (!_base) {
+      qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
+      return res;
+    }
     struct timeval period;
     period.tv_sec = usDelay / 1000000ULL;
     period.tv_usec = usDelay % 1000000ULL;
