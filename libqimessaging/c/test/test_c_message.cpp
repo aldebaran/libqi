@@ -183,7 +183,7 @@ TEST(TestMessage, TestMap)
   // Get list back
   std::map<std::string, int> mirror;
   unsigned int i;
-  unsigned int size = qi_message_read_list_size(m);
+  unsigned int size = qi_message_read_map_size(m);
   ASSERT_EQ(value.size(), size);
 
   for (i = 0; i < size; ++i)

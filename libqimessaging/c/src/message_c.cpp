@@ -282,7 +282,7 @@ unsigned int  qi_message_read_map_size(qi_message_t *msg)
   return qi_message_read_uint32(msg);
 }
 
-unsigned int  qi_message_read_tuple_size(qi_message_t *msg)
+unsigned int  qi_message_read_tupple_size(qi_message_t *msg)
 {
   return qi_message_read_uint32(msg);
 }

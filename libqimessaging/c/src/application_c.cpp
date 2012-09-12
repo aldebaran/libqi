@@ -29,3 +29,10 @@ void              qi_application_run(qi_application_t *application)
 
   app->run();
 }
+
+void              qi_application_stop(qi_application_t *application)
+{
+  qi::Application* app = reinterpret_cast<qi::Application *>(application);
+
+  app->stop();
+}

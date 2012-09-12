@@ -18,10 +18,11 @@ extern "C"
 
   typedef struct qi_application_t_s {} qi_application_t;
 
-  //argc is a pointer because the fonction remove consumed arguments
+  /*! \warning Must be the first thing called by main function. */
   QIMESSAGING_API qi_application_t *qi_application_create(int *argc, char **argv);
   QIMESSAGING_API void              qi_application_destroy(qi_application_t *app);
   QIMESSAGING_API void              qi_application_run(qi_application_t *app);
+  QIMESSAGING_API void              qi_application_stop(qi_application_t *app);
 
 #ifdef __cplusplus
 }

@@ -39,6 +39,8 @@ TEST(TestFuture, SimpleType)
 
   int *result = (int *) qi_future_get_value(future);
   EXPECT_EQ(42, *result);
+
+  qi_future_destroy(future);
   qi_promise_destroy(promise);
 }
 
@@ -55,6 +57,9 @@ TEST(TestFuture, Error)
 
   std::string error(qi_future_get_error(future));
   ASSERT_TRUE(error.compare("it's friday") == 0);
+
+  qi_future_destroy(future);
+  qi_promise_destroy(promise);
 }
 
 TEST(TestFuture, IsCallbackCalled)

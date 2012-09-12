@@ -102,6 +102,9 @@ int qi_signature_next(qi_signature_t *sig)
     return 2;
 
   sig->_it++;
+
+  if (sig->_it == sig->_sig.end())
+    return 1;
   return 0;
 }
 
