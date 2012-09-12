@@ -15,13 +15,13 @@ extern "C"
 {
 #endif
 
+  typedef void (*qi_future_callback_t)(const void* value, char success, void *data);
+
   typedef struct qi_future_t_s  {} qi_future_t;
   typedef struct qi_promise_t_s {} qi_promise_t;
 
-  //forward declaration
+  /* Forward declaration of qi_message_t structure */
   typedef struct qi_message_t_s    qi_message_t;
-
-  typedef void (*qi_future_callback_t)(const void* value, char success, void *data);
 
   QIMESSAGING_API qi_promise_t* qi_promise_create();
   QIMESSAGING_API void          qi_promise_destroy(qi_promise_t *pr);

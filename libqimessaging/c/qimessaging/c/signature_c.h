@@ -17,41 +17,65 @@ extern "C"
 # endif
 
 enum qi_signature_type {
+  /*! Signature is bad formated. */
   QI_NONE       = 0,
+  /*! Boolean value. */
   QI_BOOL       = 'b',
 
+  /*! Void return type. */
   QI_VOID       = 'v',
 
+  /*! Character. */
   QI_CHAR       = 'c',
+  /*! Unsigned 8 bits value. */
   QI_UCHAR      = 'C',
 
+  /*! 16 bits value. */
   QI_SHORT      = 'w',
+  /*! Unsigned 16 bits value. */
   QI_USHORT     = 'W',
 
+  /*! 32 bits value. */
   QI_INT        = 'i',
+  /*! Unsigned 32 bits value. */
   QI_UINT       = 'I',
 
+  /*! 64 bits value. */
   QI_LONG       = 'l',
+  /*! Unsigned 64 bits value. */
   QI_ULONG      = 'L',
 
+  /*! 32 bits non integer value. */
   QI_FLOAT      = 'f',
+  /*! 64 bits non integer value. */
   QI_DOUBLE     = 'd',
 
+  /*! String value. */
   QI_STRING     = 's',
+  /*! List begining marker. */
   QI_LIST       = '[',
+  /*! List ending marker. */
   QI_LIST_END   = ']',
 
+  /*! Map begining marker. */
   QI_MAP        = '{',
+  /*! Map ending marker. */
   QI_MAP_END    = '}',
 
+  /*! Tupple begining marker. */
   QI_TUPPLE     = '(',
+  /*! Map ending marker. */
   QI_TUPPLE_END = ')',
 
+  /*! QiMessaging message. */
   QI_MESSAGE    = 'm',
 
+  /*! Raw data. */
   QI_RAW        = 'r',
 
+  /*! Unknown type. */
   QI_UNKNOWN    = 'X',
+  /*! Pointer. */
   QI_POINTER    = '*'
 };
 
