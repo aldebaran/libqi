@@ -67,14 +67,11 @@ namespace qi {
   }
 
   template<typename T>
-  class Signal: public SignalBase
+  class Signal: public SignalBase, public boost::function<T>
   {
   public:
-    inline Signal()
-      : SignalBase(detail::functionArgumentsSignature<T>())
-    {
-    }
-
+    Signal();
+    using boost::function<T>::operator();
     inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
     {
       return SignalBase::connect(f, ctx);
@@ -88,6 +85,8 @@ namespace qi {
   };
 
 }
+
+#include <qimessaging/details/signal.hxx>
 
 QI_NO_TYPE(qi::SignalBase)
 
