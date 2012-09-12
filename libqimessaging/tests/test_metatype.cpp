@@ -8,6 +8,7 @@
 # include <boost/function_types/parameter_types.hpp>
 # include <boost/type_traits/remove_const.hpp>
 # include <boost/type_traits/remove_reference.hpp>
+# include <boost/type_traits/remove_pointer.hpp>
 
 
 #include <qi/application.hpp>
