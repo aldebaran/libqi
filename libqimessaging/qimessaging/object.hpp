@@ -12,7 +12,7 @@
 #include <map>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
@@ -60,14 +60,14 @@ namespace qi {
     MetaObject &metaObject();
 
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
-                                                                 qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-                                                                 qi::AutoMetaValue p8 = qi::AutoMetaValue());
+                                                                 qi::AutoValue p1 = qi::AutoValue(),
+                                                                 qi::AutoValue p2 = qi::AutoValue(),
+                                                                 qi::AutoValue p3 = qi::AutoValue(),
+                                                                 qi::AutoValue p4 = qi::AutoValue(),
+                                                                 qi::AutoValue p5 = qi::AutoValue(),
+                                                                 qi::AutoValue p6 = qi::AutoValue(),
+                                                                 qi::AutoValue p7 = qi::AutoValue(),
+                                                                 qi::AutoValue p8 = qi::AutoValue());
 
     virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
@@ -75,14 +75,14 @@ namespace qi {
 
 
     void emitEvent(const std::string& eventName,
-                   qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p8 = qi::AutoMetaValue());
+                   qi::AutoValue p1 = qi::AutoValue(),
+                   qi::AutoValue p2 = qi::AutoValue(),
+                   qi::AutoValue p3 = qi::AutoValue(),
+                   qi::AutoValue p4 = qi::AutoValue(),
+                   qi::AutoValue p5 = qi::AutoValue(),
+                   qi::AutoValue p6 = qi::AutoValue(),
+                   qi::AutoValue p7 = qi::AutoValue(),
+                   qi::AutoValue p8 = qi::AutoValue());
 
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     //// Resolve and bounce to metaEmit
@@ -129,6 +129,10 @@ namespace qi {
 
     boost::shared_ptr<ObjectPrivate> _p;
   };
+
+  template<typename T>
+  Value makeObjectValue(T* ptr);
+
 
   /** Event subscriber info.
   *
@@ -185,7 +189,7 @@ namespace qi {
 
 };
 
-QI_METATYPE_SERIALIZABLE(MetaObject);
+QI_TYPE_SERIALIZABLE(MetaObject);
 
 /** Register struct with QI binding system.
  * Once called, your structure can be passed as argument to call(), and method

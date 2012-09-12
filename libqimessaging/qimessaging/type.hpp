@@ -1,10 +1,10 @@
-#ifndef _QIMESSAGING_METATYPE_HPP_
-#define _QIMESSAGING_METATYPE_HPP_
+#ifndef _QIMESSAGING_TYPE_HPP_
+#define _QIMESSAGING_TYPE_HPP_
 
 #include <typeinfo>
 #include <boost/preprocessor.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/value.hpp>
+#include <qimessaging/details/dynamic_value.hpp>
 
 namespace qi{
 
@@ -23,18 +23,19 @@ namespace qi{
  *  - process change: Values are serialized.
  *
  */
-class QIMESSAGING_API MetaType
+class QIMESSAGING_API Type
 {
 public:
   virtual const std::type_info& info() =0;
+  const char* infoString() { return info().name();} // for easy gdb access
   /// @return the serialization signature used by this type.
   virtual std::string signature()=0;
 
   virtual void* clone(void*)=0;
   virtual void destroy(void*)=0;
 
-  virtual bool  toValue(const void*, qi::detail::Value&)=0;
-  virtual void* fromValue(const qi::detail::Value&)=0;
+  virtual bool  toValue(const void*, qi::detail::DynamicValue&)=0;
+  virtual void* fromValue(const qi::detail::DynamicValue&)=0;
 
   // Default impl does toValue.serialize()
   virtual void  serialize(ODataStream& s, const void*)=0;
@@ -44,39 +45,39 @@ public:
   /* When someone makes a call with arguments that do not match the
    * target signature (ex: int vs float), we want to handle it.
    * For this, given the known correct signature S and known incorrect
-   * MetaValue v, we want to be able to obtain a new MetaType T that
+   * Value v, we want to be able to obtain a new Type T that
    * serializes with type S, and then try to convert o into type T.
    *
-   * For this we need a map<Signature, MetaType> that we will feed with
+   * For this we need a map<Signature, Type> that we will feed with
    * known types.
    *
    */
-  typedef std::map<std::string, MetaType*> MetaTypeSignatureMap;
-  static MetaTypeSignatureMap& metaTypeSignatureMap()
+  typedef std::map<std::string, Type*> TypeSignatureMap;
+  static TypeSignatureMap& typeSignatureMap()
   {
-    static MetaTypeSignatureMap res;
+    static TypeSignatureMap res;
     return res;
   }
 
-  static MetaType* getCompatibleTypeWithSignature(const std::string& sig)
+  static Type* getCompatibleTypeWithSignature(const std::string& sig)
   {
-    MetaTypeSignatureMap::iterator i = metaTypeSignatureMap().find(sig);
-    if (i == metaTypeSignatureMap().end())
+    TypeSignatureMap::iterator i = typeSignatureMap().find(sig);
+    if (i == typeSignatureMap().end())
       return 0;
     else
       return i->second;
   }
 
   static bool registerCompatibleType(const std::string& sig,
-    MetaType* mt)
+    Type* mt)
   {
-    metaTypeSignatureMap()[sig] = mt;
+    typeSignatureMap()[sig] = mt;
     return true;
   }
 
   #define QI_REGISTER_MAPPING(sig, type) \
-  static bool BOOST_PP_CAT(_qireg_map_ , __LINE__) = ::qi::MetaType::registerCompatibleType(sig, \
-    ::qi::metaTypeOf<type>());
+  static bool BOOST_PP_CAT(_qireg_map_ , __LINE__) = ::qi::Type::registerCompatibleType(sig, \
+    ::qi::typeOf<type>());
 };
 
 
@@ -86,7 +87,7 @@ public:
  *
  */
 
-template<typename T> class MetaTypeDefaultClone
+template<typename T> class TypeDefaultClone
 {
 public:
   void* clone(void* src)
@@ -100,39 +101,39 @@ public:
   }
 };
 
-template<typename T>class MetaTypeDefaultValue
+template<typename T>class TypeDefaultValue
 {
 public:
-  bool toValue(const void* ptr, qi::detail::Value& val)
+  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
-    detail::ValueConverter<T>::writeValue(*(T*)ptr, val);
+    detail::DynamicValueConverter<T>::writeDynamicValue(*(T*)ptr, val);
     return true;
   }
 
-  void* fromValue(const qi::detail::Value& val)
+  void* fromValue(const qi::detail::DynamicValue& val)
   {
     T* res = new T();
-    detail::ValueConverter<T>::readValue(val, *res);
+    detail::DynamicValueConverter<T>::readDynamicValue(val, *res);
     return res;
   }
 };
 
-template<typename T>class MetaTypeNoValue
+template<typename T>class TypeNoValue
 {
 public:
-  bool toValue(const void* ptr, qi::detail::Value& val)
+  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
     return false;
   }
 
-  void* fromValue(const qi::detail::Value& val)
+  void* fromValue(const qi::detail::DynamicValue& val)
   {
     T* res = new T();
     return res;
   }
 };
 
-template<typename T> class MetaTypeDefaultSerialize
+template<typename T> class TypeDefaultSerialize
 {
 public:
   void  serialize(ODataStream& s, const void* ptr)
@@ -152,7 +153,7 @@ public:
   }
 };
 
-template<typename T> class MetaTypeNoSerialize
+template<typename T> class TypeNoSerialize
 {
 public:
   void serialize(ODataStream& s, const void* ptr)
@@ -175,20 +176,20 @@ public:
 };
 
 
-/* MetaTypeImpl implementation that bounces to the various aspect
+/* TypeImpl implementation that bounces to the various aspect
  * subclasses.
  *
  * That way we can split the various aspects in different classes
  * for better reuse, without the cost of a second virtual call.
  */
-template<typename T, typename Cloner    = MetaTypeDefaultClone<T>
-                   , typename Value     = MetaTypeNoValue<T>
-                   , typename Serialize = MetaTypeNoSerialize<T>
-         > class DefaultMetaTypeImpl
+template<typename T, typename Cloner    = TypeDefaultClone<T>
+                   , typename Value     = TypeNoValue<T>
+                   , typename Serialize = TypeNoSerialize<T>
+         > class DefaultTypeImpl
 : public Cloner
 , public Value
 , public Serialize
-, public MetaType
+, public virtual Type
 {
   virtual const std::type_info& info()
   {
@@ -205,12 +206,12 @@ template<typename T, typename Cloner    = MetaTypeDefaultClone<T>
     Cloner::destroy(ptr);
   }
 
-  virtual bool toValue(const void* ptr, qi::detail::Value& val)
+  virtual bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
     return Value::toValue(ptr, val);
   }
 
-  virtual void* fromValue(const qi::detail::Value& val)
+  virtual void* fromValue(const qi::detail::DynamicValue& val)
   {
     return Value::fromValue(val);
   }
@@ -231,57 +232,57 @@ template<typename T, typename Cloner    = MetaTypeDefaultClone<T>
   }
 };
 
-/* MetaType "factory". Specialize this class to provide a custom
- * MetaType for a given type.
+/* Type "factory". Specialize this class to provide a custom
+ * Type for a given type.
  */
-template<typename T> class MetaTypeImpl: public DefaultMetaTypeImpl<T>
+template<typename T> class TypeImpl: public virtual DefaultTypeImpl<T>
 {
 };
 
 /// Declare a type that is convertible to Value, and serializable
-#define QI_METATYPE_CONVERTIBLE_SERIALIZABLE(T)  \
+#define QI_TYPE_CONVERTIBLE_SERIALIZABLE(T)  \
 namespace qi {                                   \
-template<> class MetaTypeImpl<T>:                \
-  public DefaultMetaTypeImpl<T,                  \
-    MetaTypeDefaultClone<T>,                     \
-    MetaTypeDefaultValue<T>,                     \
-    MetaTypeDefaultSerialize<T>                  \
+template<> class TypeImpl<T>:                \
+  public DefaultTypeImpl<T,                  \
+    TypeDefaultClone<T>,                     \
+    TypeDefaultValue<T>,                     \
+    TypeDefaultSerialize<T>                  \
   >{}; }
 
 /** Declare that a type is not convertible to Value.
  *  Must be called outside any namespace.
  */
-#define QI_METATYPE_SERIALIZABLE(T)              \
+#define QI_TYPE_SERIALIZABLE(T)              \
 namespace qi {                                   \
-template<> class MetaTypeImpl<T>:                \
-  public DefaultMetaTypeImpl<T,                  \
-    MetaTypeDefaultClone<T>,                     \
-    MetaTypeNoValue<T>,                          \
-    MetaTypeDefaultSerialize<T>                  \
+template<> class TypeImpl<T>:                \
+  public DefaultTypeImpl<T,                  \
+    TypeDefaultClone<T>,                     \
+    TypeNoValue<T>,                          \
+    TypeDefaultSerialize<T>                  \
   >{}; }
 
-/// Declare that a type has no metatype and cannot be used in a MetaValue
-#define QI_NO_METATYPE(T) namespace qi {template<> class MetaTypeImpl<T> {};}
+/// Declare that a type has no metatype and cannot be used in a Value
+#define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
 
 
-/// Get metaType from a type. No need to delete the result
-template<typename T> MetaType* metaTypeOf()
+/// Get type from a type. No need to delete the result
+template<typename T> Type* typeOf()
 {
-  static MetaTypeImpl<typename boost::remove_const<T>::type> res;
+  static TypeImpl<typename boost::remove_const<T>::type> res;
   return &res;
 }
 
-/// Get metaType from a value. No need to delete the result
-template<typename T> MetaType* metaTypeOf(const T& v)
+/// Get type from a value. No need to delete the result
+template<typename T> Type* typeOf(const T& v)
 {
-  return metaTypeOf<T>();
+  return typeOf<T>();
 }
 
 }
 
-QI_METATYPE_SERIALIZABLE(Buffer);
+QI_TYPE_SERIALIZABLE(Buffer);
 
-#include <qimessaging/details/metatype.hxx>
+#include <qimessaging/details/type.hxx>
 
 #endif

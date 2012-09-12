@@ -97,7 +97,7 @@ MetaFunctionParameters::MetaFunctionParameters(Buffer b)
   storage->parameterBuffer = b;
 }
 
-MetaFunctionParameters::MetaFunctionParameters(const std::vector<MetaValue>& value, bool invalidate)
+MetaFunctionParameters::MetaFunctionParameters(const std::vector<Value>& value, bool invalidate)
 : invalidateOnDestruction(false)
 {
   _initStorage();
@@ -114,7 +114,7 @@ void MetaFunctionParameters::_initStorage()
   storage->deleteOnDestruction = false;
 }
 
-const std::vector<MetaValue>& MetaFunctionParameters::getValues() const
+const std::vector<Value>& MetaFunctionParameters::getValues() const
 {
   if (!storage || !storage->valid)
   {
@@ -122,7 +122,7 @@ const std::vector<MetaValue>& MetaFunctionParameters::getValues() const
       qiLogError("qi.meta") << "getValues() on uninitialized storage";
     else
       qiLogError("qi.meta") << "getValues() on invalidated storage";
-    static std::vector<MetaValue> dummy;
+    static std::vector<Value> dummy;
     return dummy;
   }
   if (storage->parameterValues.empty() && storage->parameterBuffer.size())
@@ -170,16 +170,16 @@ void MetaFunctionParameters::convertToValues() const
   Signature::iterator i;
   for (i = s.begin(); i!= s.end(); ++i)
   {
-    MetaType* m = MetaType::getCompatibleTypeWithSignature(*i);
+    Type* m = Type::getCompatibleTypeWithSignature(*i);
     if (!m)
     {
       qiLogError("qi.meta") << "Unable to find MetaType compatible with " << *i;
-      storage->parameterValues.push_back(MetaValue());
+      storage->parameterValues.push_back(Value());
     }
     else
     {
       void* val = m->deserialize(in);
-      MetaValue mv;
+      Value mv;
       mv.type = m;
       mv.value = val;
       storage->parameterValues.push_back(mv);
@@ -200,8 +200,8 @@ void MetaFunctionParameters::convertToBuffer() const
 
 MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) const
 {
-  std::vector<MetaValue> dst;
-  const std::vector<MetaValue>& src = getValues();
+  std::vector<Value> dst;
+  const std::vector<Value>& src = getValues();
   if (sig.size() != src.size())
   {
     qiLogError("qi.metafunction") << "convert: signature/params size mismatch"
@@ -212,7 +212,7 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
   int idx = 0;
   for (;i != sig.end(); ++i,++idx)
   {
-    MetaType* compatible = qi::MetaType::getCompatibleTypeWithSignature(*i);
+    Type* compatible = qi::Type::getCompatibleTypeWithSignature(*i);
     if (!compatible)
     {
       qiLogError("qi.metafunction") <<"convert: unknown type " << *i;
@@ -228,7 +228,7 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
 MetaFunctionParameters::Mode MetaFunctionParameters::getMode() const
 {
   if (storage && !storage->parameterValues.empty())
-    return Mode_MetaValue;
+    return Mode_Value;
   else
     return Mode_Buffer;
 }
@@ -242,19 +242,19 @@ MetaFunctionResult::MetaFunctionResult(Buffer buffer)
 :MetaFunctionParameters(buffer)
 {}
 
-MetaFunctionResult::MetaFunctionResult(const MetaValue& mv)
-: MetaFunctionParameters(std::vector<MetaValue>(&mv, &mv+1))
+MetaFunctionResult::MetaFunctionResult(const Value& mv)
+: MetaFunctionParameters(std::vector<Value>(&mv, &mv+1))
 {
   storage->deleteOnDestruction = true;
 }
 
-MetaValue MetaFunctionResult::getValue() const
+Value MetaFunctionResult::getValue() const
 {
-  const std::vector<MetaValue>& v = getValues();
+  const std::vector<Value>& v = getValues();
   if (!v.empty())
     return v[0];
   else
-    return MetaValue();
+    return Value();
 }
 
 }
@@ -269,4 +269,4 @@ QI_REGISTER_MAPPING("[i]", std::vector<int>);
 QI_REGISTER_MAPPING("s", std::string);
 QI_REGISTER_MAPPING("[s]", std::vector<std::string>);
 QI_REGISTER_MAPPING("r", qi::Buffer);
-QI_REGISTER_MAPPING("m", qi::MetaValue);
+QI_REGISTER_MAPPING("m", qi::Value);

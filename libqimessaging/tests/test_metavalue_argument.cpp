@@ -15,7 +15,7 @@
 
 
 
-qi::detail::Value v;
+qi::detail::DynamicValue v;
 static qi::Promise<int> *payload;
 
 void onFire(const int& pl)
@@ -25,18 +25,18 @@ void onFire(const int& pl)
   payload->setValue(pl);
 }
 
-void value(qi::MetaValue mv)
+void value(qi::Value mv)
 {
   mv.type->toValue(mv.value, v);
   payload->setValue(0);
 }
 
-void valueList(std::vector<qi::MetaValue> mv)
+void valueList(std::vector<qi::Value> mv)
 {
-  qi::detail::Value::ValueList vl;
+  qi::detail::DynamicValue::DynamicValueList vl;
   for (unsigned i=0; i<mv.size(); ++i)
   {
-    vl.push_back(qi::detail::Value());
+    vl.push_back(qi::detail::DynamicValue());
     mv[i].type->toValue(mv[i].value, vl.back());
   }
   v.setList(vl);
@@ -95,8 +95,8 @@ TEST_F(TestObject, meta)
   // Remote test
   Object target = oclient;
   {
-    /* WATCH OUT, qi::AutoMetaValue(12) is what call expects!
-    * So call(AutoMetaValue(12)) will *not* call with the value
+    /* WATCH OUT, qi::AutoValue(12) is what call expects!
+    * So call(AutoValue(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
   target.call<void>("value", 12).wait();
@@ -110,34 +110,34 @@ TEST_F(TestObject, meta)
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target.call<void>("value", MetaValue(AutoMetaValue(myint)));
+    qi::Future<void> fut = target.call<void>("value", Value(AutoValue(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
   target.call<void>("value", "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target.call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<MetaValue> args;
-  args.push_back(AutoMetaValue(12));
-  args.push_back(AutoMetaValue("foo"));
-  args.push_back(AutoMetaValue(in));
+  std::vector<Value> args;
+  args.push_back(AutoValue(12));
+  args.push_back(AutoValue("foo"));
+  args.push_back(AutoValue(in));
   target.call<void>("value", args).wait();
-  ASSERT_EQ(v.type, detail::Value::List);
-  detail::Value::ValueList res = v.toList();
+  ASSERT_EQ(v.type, detail::DynamicValue::List);
+  detail::DynamicValue::DynamicValueList res = v.toList();
   ASSERT_EQ(static_cast<size_t>(3), res.size());
   ASSERT_EQ(12, res[0].toDouble());
   ASSERT_EQ("foo", res[1].toString());
@@ -157,34 +157,34 @@ TEST_F(TestObject, meta)
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target.call<void>("value", MetaValue(AutoMetaValue(myint)));
+    qi::Future<void> fut = target.call<void>("value", Value(AutoValue(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.toDouble(), 12);
   }
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12.0))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(12.0f))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(12.0f))).wait();
   ASSERT_EQ(v.toDouble(), 12);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue("foo"))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue("foo"))).wait();
   ASSERT_EQ(v.toString(), "foo");
   target.call<void>("value", "foo").wait();
   ASSERT_EQ(v.toString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target.call<void>("value", qi::MetaValue(qi::AutoMetaValue(in))).wait();
+  target.call<void>("value", qi::Value(qi::AutoValue(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target.call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<MetaValue> args;
-  args.push_back(AutoMetaValue(12));
-  args.push_back(AutoMetaValue("foo"));
-  args.push_back(AutoMetaValue(in));
+  std::vector<Value> args;
+  args.push_back(AutoValue(12));
+  args.push_back(AutoValue("foo"));
+  args.push_back(AutoValue(in));
   target.call<void>("value", args).wait();
-  ASSERT_EQ(v.type, detail::Value::List);
-  detail::Value::ValueList res = v.toList();
+  ASSERT_EQ(v.type, detail::DynamicValue::List);
+  detail::DynamicValue::DynamicValueList res = v.toList();
   ASSERT_EQ(static_cast<size_t>(3), res.size());
   ASSERT_EQ(12, res[0].toDouble());
   ASSERT_EQ("foo", res[1].toString());

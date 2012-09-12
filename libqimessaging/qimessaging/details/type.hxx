@@ -4,8 +4,8 @@
 
 #pragma once
 
-#ifndef _QI_MESSAGING_METATYPE_HXX_
-#define _QI_MESSAGING_METATYPE_HXX_
+#ifndef _QI_MESSAGING_TYPE_HXX_
+#define _QI_MESSAGING_TYPE_HXX_
 
 #include <qi/types.hpp>
 #include <cstring>
@@ -19,7 +19,7 @@
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/result_type.hpp>
 
-/* This file contains the default-provided MetaType specialisations
+/* This file contains the default-provided Type specialisations
  *
  */
 
@@ -28,27 +28,27 @@
  * use all known native types instead of size/signedness explicit
  * types.
  */
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(char);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(signed char);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned char);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(short);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned short);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(int);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned int);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(long);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned long);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(long long);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(unsigned long long);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(float);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(double);
-QI_METATYPE_CONVERTIBLE_SERIALIZABLE(std::string);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(char);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(signed char);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned char);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(short);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned short);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(int);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned int);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(long);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned long);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(long long);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned long long);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(float);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(double);
+QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
 
 #define _CONTAINER(c) namespace qi {             \
-  template<typename T> class MetaTypeImpl<c<T> >:  \
-  public DefaultMetaTypeImpl<c<T>,               \
-  MetaTypeDefaultClone<c<T> >,                   \
-  MetaTypeDefaultValue<c<T> >,                   \
-  MetaTypeDefaultSerialize<c<T> >                \
+  template<typename T> class TypeImpl<c<T> >:  \
+  public DefaultTypeImpl<c<T>,               \
+  TypeDefaultClone<c<T> >,                   \
+  TypeDefaultValue<c<T> >,                   \
+  TypeDefaultSerialize<c<T> >                \
   > {}; }
 
 _CONTAINER(std::list);
@@ -57,11 +57,11 @@ _CONTAINER(std::vector);
 #undef _CONTAINER
 
 #define _MAP(c) namespace qi {                                \
-  template<typename K, typename V> class MetaTypeImpl<c<K,V> >:  \
-  public DefaultMetaTypeImpl<c<K,V>,               \
-  MetaTypeDefaultClone<c<K,V> >,                   \
-  MetaTypeDefaultValue<c<K,V> >,                   \
-  MetaTypeDefaultSerialize<c<K,V> >                \
+  template<typename K, typename V> class TypeImpl<c<K,V> >:  \
+  public DefaultTypeImpl<c<K,V>,               \
+  TypeDefaultClone<c<K,V> >,                   \
+  TypeDefaultValue<c<K,V> >,                   \
+  TypeDefaultSerialize<c<K,V> >                \
   > {}; }
 
 _MAP(std::map);
@@ -69,26 +69,26 @@ _MAP(std::map);
 
 namespace qi {
   // void
-  template<> class MetaTypeImpl<void>: public MetaType
+  template<> class TypeImpl<void>: public Type
   {
   public:
     const std::type_info& info()
     {
       return typeid(void);
     }
-    std::string signature()                  { return "\0"; }
+    std::string signature()                  { return Signature::fromType(Signature::Type_Void).toString(); }
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
-    bool toValue(const void *ptr, detail::Value & v) {v.clear(); return true;}
-    void* fromValue(const detail::Value & v) { return 0;}
+    bool toValue(const void *ptr, detail::DynamicValue & v) {v.clear(); return true;}
+    void* fromValue(const detail::DynamicValue & v) { return 0;}
     void serialize(ODataStream&, const void*){}
     void* deserialize(IDataStream&)          { return 0;}
   };
 
   //reference
 
-  template<typename T> class MetaTypeImpl<T&>
-      : public MetaTypeImpl<T> {};
+  template<typename T> class TypeImpl<T&>
+      : public TypeImpl<T> {};
 }
 
 namespace qi  {
@@ -97,7 +97,7 @@ namespace qi  {
 *
 */
   template<int I>
-  class MetaTypeCArrayClone
+  class TypeCArrayClone
   {
   public:
     void* clone(void* src)
@@ -113,20 +113,20 @@ namespace qi  {
   };
 
   template<int I>
-  class MetaTypeCArrayValue
+  class TypeCArrayValue
   {
   public:
-    bool toValue(const void* ptr, detail::Value& val)
+    bool toValue(const void* ptr, detail::DynamicValue& val)
     {
       val = std::string((const char*)ptr, I-1);
       return true;
     }
-    void* fromValue(const detail::Value& val)
+    void* fromValue(const detail::DynamicValue& val)
     {
       std::string s = val.toString();
       if (s.length() != I)
       {
-        qiLogError("MetaType") << "C string cast fail between char["
+        qiLogError("Type") << "C string cast fail between char["
                                << I  <<"] and " << s;
         return 0;
       }
@@ -136,7 +136,7 @@ namespace qi  {
     }
   };
 
-  template<int I> class MetaTypeCArraySerialize
+  template<int I> class TypeCArraySerialize
   {
   public:
     void  serialize(ODataStream& s, const void* ptr)
@@ -159,11 +159,11 @@ namespace qi  {
     }
   };
 
-  template<int I> class MetaTypeImpl<char [I]>
-      :public  DefaultMetaTypeImpl<char[I],
-      MetaTypeCArrayClone<I>,
-      MetaTypeCArrayValue<I>,
-      MetaTypeCArraySerialize<I>
+  template<int I> class TypeImpl<char [I]>
+      :public  DefaultTypeImpl<char[I],
+      TypeCArrayClone<I>,
+      TypeCArrayValue<I>,
+      TypeCArraySerialize<I>
       >{};
 
 
@@ -174,7 +174,7 @@ namespace qi  {
       {}
 
       template<typename T> void operator()(T *x) {
-        val << qi::metaTypeOf<T>()->signature();
+        val << qi::typeOf<T>()->signature();
       }
 
       std::ostream &val;

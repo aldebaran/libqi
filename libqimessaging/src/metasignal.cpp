@@ -3,6 +3,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+
 #include "src/metasignal_p.hpp"
 #include <qimessaging/metasignal.hpp>
 #include <qimessaging/object.hpp>

@@ -6,11 +6,11 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/value.hpp>
+#include <qimessaging/details/dynamic_value.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <vector>
@@ -181,7 +181,7 @@ namespace qi {
     return *this;
   }
 
-  IDataStream &operator>>(qi::IDataStream &sd, qi::detail::Value &val)
+  IDataStream &operator>>(qi::IDataStream &sd, qi::detail::DynamicValue &val)
   {
     std::string sig;
     qi::uint32_t type;
@@ -189,55 +189,55 @@ namespace qi {
     sd >> sig;
     sd >> type;
     switch(type) {
-      case qi::detail::Value::Double:
+      case qi::detail::DynamicValue::Double:
         double d;
         sd >> d;
         val.setDouble(d);
         return sd;
-      case qi::detail::Value::String:
+      case qi::detail::DynamicValue::String:
         {
         std::string s;
         sd >> s;
         val.setString(s);
         return sd;
         }
-      case qi::detail::Value::List:
-        val.setList(detail::Value::ValueList());
+      case qi::detail::DynamicValue::List:
+        val.setList(detail::DynamicValue::DynamicValueList());
         sd >> *val.data.list;
         return sd;
-      case qi::detail::Value::Map:
-        val.setMap(detail::Value::ValueMap());
+      case qi::detail::DynamicValue::Map:
+        val.setMap(detail::DynamicValue::DynamicValueMap());
         sd >> *val.data.map;
         return sd;
     };
     return sd;
   }
 
-  ODataStream &ODataStream::operator<<(const qi::detail::Value &val)
+  ODataStream &ODataStream::operator<<(const qi::detail::DynamicValue &val)
   {
     switch(val.type) {
-      case qi::detail::Value::Double:
+      case qi::detail::DynamicValue::Double:
         if (!_innerSerialization)
         {
           getBuffer().signature() << "Id";
         }
         *this << "Id" << (qi::uint32_t)val.type << val.data.d;
         break;
-      case qi::detail::Value::String:
+      case qi::detail::DynamicValue::String:
         if (!_innerSerialization)
         {
           getBuffer().signature() << "Is";
         }
         *this << "Is" << (qi::uint32_t)val.type << val.toString();
         break;
-      case qi::detail::Value::List:
+      case qi::detail::DynamicValue::List:
         if (!_innerSerialization)
         {
           getBuffer().signature() << "I[m]";
         }
         *this << "I[m]" << (qi::uint32_t)val.type << *val.data.list;
         break;
-      case qi::detail::Value::Map:
+      case qi::detail::DynamicValue::Map:
         if (!_innerSerialization)
         {
           getBuffer().signature() << "I{sm}";
@@ -250,7 +250,7 @@ namespace qi {
     return *this;
   }
 
-  qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::detail::Value &value) {
+  qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::detail::DynamicValue &value) {
     sd.write(qi::Signature::Type_Dynamic);
     return sd;
   }
@@ -309,17 +309,17 @@ namespace qi {
     return _reader.read(size);
   }
 
-  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::MetaValue &value)
+  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Value &value)
   {
     os.write(Signature::Type_Dynamic);
     return os;
   }
 
-  IDataStream &IDataStream::operator>>(MetaValue &value)
+  IDataStream &IDataStream::operator>>(Value &value)
   {
     std::string signature;
     *this >> signature;
-    MetaType* type = MetaType::getCompatibleTypeWithSignature(signature);
+    Type* type = Type::getCompatibleTypeWithSignature(signature);
     if (!type)
       qiLogError("qi.datastream") << "Could not find metatype for signature " << signature;
     else
@@ -330,7 +330,7 @@ namespace qi {
     return *this;
   }
 
-  ODataStream &ODataStream::operator<<(const MetaValue &value)
+  ODataStream &ODataStream::operator<<(const Value &value)
   {
     getBuffer().signature() << "m";
     *this << value.signature();

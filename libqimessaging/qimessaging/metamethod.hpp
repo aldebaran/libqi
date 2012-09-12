@@ -7,25 +7,30 @@
 #define _QIMESSAGING_METAMETHOD_HPP_
 
 #include <qimessaging/metafunction.hpp>
+#include <qimessaging/method_type.hpp>
+
+
 namespace qi {
 
-  class MetaMethodPrivate;
+  typedef boost::function<MetaFunctionResult(Value, const MetaFunctionParameters&)> MetaCallable;
+
   class QIMESSAGING_API MetaMethod {
   public:
-    MetaMethod(const std::string &sigret, const std::string &sig, MetaFunction functor);
-    MetaMethod();
-    MetaMethod(const MetaMethod &other);
-    MetaMethod& operator=(const MetaMethod &other);
-    ~MetaMethod();
+    MetaMethod() {};
+    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature, MetaCallable value);
+    MetaMethod(const std::string& name, unsigned int uid, MethodValue value);
+    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature, MetaFunction val);
 
-    const std::string &signature() const;
-    const std::string &sigreturn() const;
-    MetaFunction      &functor() const;
+    std::string signature() const;
+    std::string sigreturn() const;
+    const MetaCallable& functor() const;
     unsigned int       uid() const;
 
   protected:
-  public:
-    MetaMethodPrivate   *_p;
+    MetaCallable      _functor;
+    unsigned int      _uid;
+    std::string       _signature;
+    std::string       _sigreturn;
   };
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta);

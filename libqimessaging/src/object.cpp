@@ -183,14 +183,14 @@ namespace qi {
   }
 
   void Object::emitEvent(const std::string& eventName,
-                         qi::AutoMetaValue p1,
-                         qi::AutoMetaValue p2,
-                         qi::AutoMetaValue p3,
-                         qi::AutoMetaValue p4,
-                         qi::AutoMetaValue p5,
-                         qi::AutoMetaValue p6,
-                         qi::AutoMetaValue p7,
-                         qi::AutoMetaValue p8)
+                         qi::AutoValue p1,
+                         qi::AutoValue p2,
+                         qi::AutoValue p3,
+                         qi::AutoValue p4,
+                         qi::AutoValue p5,
+                         qi::AutoValue p6,
+                         qi::AutoValue p7,
+                         qi::AutoValue p8)
   {
     if (!_p) {
       qiLogWarning("qi.object") << "Operating on invalid Object..";

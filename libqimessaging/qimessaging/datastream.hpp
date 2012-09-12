@@ -8,7 +8,7 @@
 
 
 // Leave this above the header gard, it fixes include ordering problems
-# include <qimessaging/metavalue.hpp>
+# include <qimessaging/value.hpp>
 
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
 #define _QIMESSAGING_DATASTREAM_HPP_
@@ -18,7 +18,7 @@
 #include <vector>
 #include <map>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/value.hpp>
+#include <qimessaging/details/dynamic_value.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qimessaging/signature.hpp>
@@ -54,7 +54,7 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-  class MetaValue;
+  class Value;
 
   /** This class provides data serialization, using
    * a qi::Buffer as a backend.
@@ -93,8 +93,8 @@ namespace qi {
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
 
-    IDataStream &operator>>(qi::MetaValue &value);
-    IDataStream &operator>>(const detail::Value &val);
+    IDataStream &operator>>(qi::Value &value);
+    IDataStream &operator>>(const detail::DynamicValue &val);
     IDataStream &operator>>(qi::Buffer &buffer);
 
     template<typename T>
@@ -155,8 +155,8 @@ namespace qi {
     ODataStream& operator<<(const char *);
     ODataStream& operator<<(const std::string& i);
 
-    ODataStream &operator<<(const MetaValue &value);
-    ODataStream &operator<<(const detail::Value &val);
+    ODataStream &operator<<(const Value &value);
+    ODataStream &operator<<(const detail::DynamicValue &val);
     ODataStream &operator<<(const Buffer &buffer);
 
     template<typename T>
@@ -186,7 +186,7 @@ namespace qi {
   };
 
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::MetaValue &value);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Value &value);
 
   template<typename T>
   ODataStream &ODataStream::operator<<(const std::list<T> &v) {

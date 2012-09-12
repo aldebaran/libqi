@@ -10,6 +10,8 @@
 #endif
 #define BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY 10
 
+#include <qimessaging/method_type.hpp>
+
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
@@ -121,14 +123,14 @@ namespace detail {
 // We need a metatype deletor and a type deletor
 
 
-template<typename T> inline void deletor(MetaType* type, void* ptr)
+template<typename T> inline void deletor(Type* type, void* ptr)
 {
   type->destroy(ptr);
 }
 
-template<> inline void deletor<std::vector<MetaValue> >(MetaType* type, void* ptr)
+template<> inline void deletor<std::vector<Value> >(Type* type, void* ptr)
 {
-  std::vector<MetaValue>* val = (std::vector<MetaValue>*)ptr;
+  std::vector<Value>* val = (std::vector<Value>*)ptr;
   for (unsigned i=0; i<val->size(); ++i)
     (*val)[i].destroy();
   type->destroy(ptr);
@@ -142,14 +144,14 @@ template<typename T> inline void deletorT(T* ptr)
   delete ptr;
 }
 
-template<> inline void deletorT<MetaValue>(MetaValue* ptr)
+template<> inline void deletorT<Value>(Value* ptr)
 { // Bounce to the other one
-  deletor<MetaValue>(metaTypeOf<MetaValue>(), ptr);
+  deletor<Value>(typeOf<Value>(), ptr);
 }
 
-template<> inline void deletorT<std::vector<MetaValue> >(std::vector<MetaValue>* ptr)
+template<> inline void deletorT<std::vector<Value> >(std::vector<Value>* ptr)
 {
-  deletor<std::vector<MetaValue> >(metaTypeOf<std::vector<MetaValue> >(), (void*)ptr);
+  deletor<std::vector<Value> >(typeOf<std::vector<Value> >(), (void*)ptr);
 }
 
 
@@ -164,7 +166,7 @@ struct ArgTransformer
     idx = 0;
     switch(params.getMode())
     {
-    case MetaFunctionParameters::Mode_MetaValue:
+    case MetaFunctionParameters::Mode_Value:
       in = 0;
       break;
     case MetaFunctionParameters::Mode_Buffer:
@@ -201,7 +203,7 @@ struct ArgTransformer
   operator() (T* &v) const
   {
     qiLogDebug("qi.bind") << " ArgTransformer(" << this <<") on " << typeid(&v).name();
-    if (params.getMode() == MetaFunctionParameters::Mode_MetaValue)
+    if (params.getMode() == MetaFunctionParameters::Mode_Value)
     {
       std::pair<const T*, bool> res = params.getValues()[idx++].template as<T>();
       if(res.second)
@@ -212,7 +214,7 @@ struct ArgTransformer
     {
       qiLogDebug("qi.bind") <<" deserializing a " << typeid(v).name() <<" at " << in->getBufferReader().position();
       // Serialize operator might not exist, go through MetaType
-      MetaType* type = metaTypeOf<T>();
+      Type* type = typeOf<T>();
       void* value = type->deserialize(*in);
       if (!value)
       {
@@ -234,36 +236,15 @@ struct ArgTransformer
   std::vector<boost::function<void()> >& deletors;
 };
 
-struct PtrToConstRef
-{
-  template <typename Sig>
-  struct result;
-
-  template <class Self, typename T>
-  struct result< Self(T) >
-  {
-    typedef typename boost::add_reference<
-    typename boost::add_const<
-    typename boost::remove_pointer<
-    typename boost::remove_reference<T>::type>::type>::type>::type type;
-  };
-  template<typename T>
-  const T& operator() (T* ptr) const
-  {
-    return *ptr;
-  }
-};
-
-
 /* Use a helper function to avoid having to express the type SEQ,
  */
-template<typename SEQ, typename F> static MetaValue apply(SEQ sequence,
+template<typename SEQ, typename F> static Value apply(SEQ sequence,
   ArgTransformer& argumentTransformer,
   F& function)
 {
   // Deserialize arguments
    boost::fusion::for_each(sequence, argumentTransformer);
-   MetaValueCopy res;
+   ValueCopy res;
   // Invoke our function pointer.
    res(), boost::fusion::invoke_function_object(function,
     boost::fusion::transform(sequence,
@@ -290,13 +271,13 @@ metacallBounce(boost::function<T> f, const MetaFunctionParameters& params)
   // Destruction operatiorns to perform when done
   std::vector<boost::function<void() > > deletors;
 
-  MetaValueCopy res;
+  ValueCopy res;
   ArgTransformer argumentTransformer(&deletors, params);
   qiLogDebug("qi.bind") << "ArgTransformer(" << &argumentTransformer <<") is go";
 
   // Create a vector of T* with whatever value. Since we cannot express its
   // type, do the rest in a helper function.
-  MetaValue result = apply(
+  Value result = apply(
     boost::fusion::as_vector(PtrArgsType()),
     argumentTransformer, f);
   // Apply registered destruction functions

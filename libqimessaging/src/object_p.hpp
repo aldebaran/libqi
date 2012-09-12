@@ -36,14 +36,14 @@ namespace qi {
     qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
 
     void emitEvent(const std::string& eventName,
-                   qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-                   qi::AutoMetaValue p8 = qi::AutoMetaValue());
+                   qi::AutoValue p1 = qi::AutoValue(),
+                   qi::AutoValue p2 = qi::AutoValue(),
+                   qi::AutoValue p3 = qi::AutoValue(),
+                   qi::AutoValue p4 = qi::AutoValue(),
+                   qi::AutoValue p5 = qi::AutoValue(),
+                   qi::AutoValue p6 = qi::AutoValue(),
+                   qi::AutoValue p7 = qi::AutoValue(),
+                   qi::AutoValue p8 = qi::AutoValue());
 
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
@@ -81,7 +81,7 @@ namespace qi {
 
     // Event loop in which calls are made
     EventLoop                          *_eventLoop;
-
+    Value  _instance;
   private:
     qi::MetaObject _meta;
   };

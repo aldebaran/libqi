@@ -10,7 +10,7 @@
 #define _QIMESSAGING_SERVICE_INFO_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 #include <string>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/signature.hpp>
@@ -52,6 +52,6 @@ namespace qi
 
 }; // !qi
 
-QI_METATYPE_SERIALIZABLE(ServiceInfo);
+QI_TYPE_SERIALIZABLE(ServiceInfo);
 
 #endif  // _QIMESSAGING_SERVICE_INFO_HPP_

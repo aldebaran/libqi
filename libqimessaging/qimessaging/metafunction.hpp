@@ -8,8 +8,8 @@
 #ifndef _QI_MESSAGING_METAFUNCTION_HH_
 #define _QI_MESSAGING_METAFUNCTION_HH_
 #include <qimessaging/buffer.hpp>
-#include <qimessaging/metatype.hpp>
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/type.hpp>
+#include <qimessaging/value.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -23,15 +23,15 @@
 
 namespace qi {
 
-/// Internal class that stores MetaValues in various forms.
+/// Internal class that stores Values and/or Buffer in various forms.
 class QIMESSAGING_API MetaStorage
 {
 public:
-  /* Lifetime of MetaValue is a bit tricky, as a MetaValue can be on the stack,
+  /* Lifetime of Value is a bit tricky, as a Value can be on the stack,
    * or allocated.
    */
   ~MetaStorage();
-  std::vector<MetaValue> parameterValues;
+  std::vector<Value> parameterValues;
   Buffer                 parameterBuffer;
   std::string            signature;
   bool                   valid;
@@ -54,7 +54,7 @@ public:
    * when this instance of MetaFunctionParameters is destroyed. Use this
    * when values are on a stack.
    */
-  explicit MetaFunctionParameters(const std::vector<MetaValue>& value, bool invalidateOnDestruction=false);
+  explicit MetaFunctionParameters(const std::vector<Value>& value, bool invalidateOnDestruction=false);
   /// Set from a buffer
   explicit MetaFunctionParameters(Buffer);
 
@@ -63,12 +63,12 @@ public:
    * The signature is required to convert buffer to values.
    */
   void setSignature(const std::string& sig);
-  const std::vector<MetaValue>& getValues() const;
+  const std::vector<Value>& getValues() const;
   const Buffer& getBuffer() const;
 
   enum Mode
   {
-    Mode_MetaValue,
+    Mode_Value,
     Mode_Buffer
   };
 
@@ -96,10 +96,10 @@ class QIMESSAGING_API MetaFunctionResult: public MetaFunctionParameters
 public:
   MetaFunctionResult();
   /// Takes ownership of value.
-  MetaFunctionResult(const MetaValue& value);
+  MetaFunctionResult(const Value& value);
   MetaFunctionResult(Buffer);
   /// Return the value without copying it: Valid until storage goes.
-  MetaValue getValue() const;
+  Value getValue() const;
 };
 
 typedef boost::function<MetaFunctionResult(const MetaFunctionParameters&)> MetaFunction;

@@ -1,283 +1,164 @@
 /*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010-2012 Aldebaran Robotics
+** Copyright (C) 2012 Aldebaran Robotics
 */
 
-
 #pragma once
-#ifndef _QIMESSAGING_VALUE_HXX_
-#define _QIMESSAGING_VALUE_HXX_
 
-#include <cstring>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
+#ifndef _QI_MESSAGING_VALLUE_HXX_
+#define _QI_MESSAGING_VALUE_HXX_
 
-#include <qi/log.hpp>
 namespace qi {
 
-  namespace detail {
 
-  template <typename T>
-  inline void Value::set(const T& v)
+class ValueClone
+{
+public:
+  void* clone(void* src)
   {
-    ValueConverter<T>::writeValue(v, *this);
+    return new Value(((Value*)src)->clone());
   }
 
-  template<typename T>
-  inline T Value::as() const
+  void destroy(void* ptr)
   {
-    T res;
-    ValueConverter<T>::readValue(*this, res);
-    return res;
+    ((Value*)ptr)->destroy();
+    delete (Value*)ptr;
   }
+};
 
+class ValueValue
+{
+public:
 
-  template<typename T> struct NullConverter
+  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
-    static inline void writeValue(const T&, Value&)
-    {
-      qiLogError("qi.value") << "writeValue not implemented on this type";
-    }
-    static inline void readValue(const Value&, T&)
-    {
-      qiLogError("qi.value") << "readValue not implemented on this type";
-    }
-  };
-
-  template<typename T> struct IntegralConverter
-  {
-    static inline void writeValue(const T& src, Value& dst)
-    {
-      dst.setDouble((double)src);
-    }
-    static inline void readValue(const Value& src, T& dst)
-    {
-      double d = src.toDouble();
-      dst = static_cast<T>(d);
-    }
-  };
-
-  template<typename T, typename B, typename F> struct InheritIfElse
-  {
-  };
-
-  template<typename T, typename F> struct InheritIfElse<T, boost::true_type, F>: public T
-  {
-  };
-
-  template<typename T, typename F> struct InheritIfElse<T, boost::false_type, F>: public F
-  {
-  };
-
-  template<typename A, typename B> struct META_OR
-  {
-    typedef boost::true_type type;
-  };
-
-  template<> struct META_OR<boost::false_type, boost::false_type>
-  {
-    typedef boost::false_type type;
-  };
-
-  template<typename T> struct ValueConverterDefault
-  : public InheritIfElse<
-      IntegralConverter<T>,
-      typename META_OR<
-        typename boost::is_integral<T>::type,
-        typename boost::is_floating_point<T>::type>::type,
-      NullConverter<T> >
-  {
-  };
-
-  template<typename T> inline void ValueConverter<T>::writeValue(const T& src, Value& dst)
-  {
-    ValueConverterDefault<T>::writeValue(src, dst);
+    Value* m = (Value*)ptr;
+    return m->type->toValue(m->value, val);
   }
-  template<typename T> inline void ValueConverter<T>::readValue(const Value& src, T& dst)
+  void* fromValue(const qi::detail::DynamicValue& val)
   {
-    ValueConverterDefault<T>::readValue(src, dst);
+    Value v = ::qi::toValue(val);
+    return new Value(v.clone());
   }
+};
 
-  /// Container support
-  template<typename T> struct ContainerValueConverter
+template<> class TypeImpl<Value>:
+  public DefaultTypeImpl<
+    Value,
+    ValueClone,
+    ValueValue,
+    TypeDefaultSerialize<Value>
+    > {};
+
+template<typename T>
+Value toValue(const T& v)
+{
+  Value res;
+  res.type = typeOf<typename boost::remove_const<T>::type>();
+  res.value = (void *) const_cast<T*>(&v);
+  return res;
+}
+
+inline
+Value Value::clone() const
+{
+  Value res;
+  res.type = type;
+  res.value = type?res.type->clone(value):0;
+  return res;
+}
+
+template<typename T>
+std::pair<const T*, bool> Value::as() const
+{
+  Type* targetType =  typeOf<T>();
+  if (type->info() == targetType->info())
+    return std::make_pair((const T*)value, false);
+  else
   {
-    static inline void writeValue(const T& src, Value& dst)
-    {
-      dst.setList(Value::ValueList());
-      Value::ValueList& vl = *dst.data.list;
-      for (typename T::const_iterator i = src.begin(); i!=src.end(); ++i)
-      {
-        vl.push_back(Value());
-        ValueConverter<typename T::value_type>::writeValue(*i, vl.back());
-      }
-    }
-    static inline void readValue(const Value& src, T& dst)
-    {
-      const Value::ValueList& vl = src.toList();
-      for (Value::ValueList::const_iterator i = vl.begin(); i!= vl.end(); ++i)
-      {
-        typename T::value_type elem;
-        ValueConverter<typename T::value_type>::readValue(*i, elem);
-        dst.push_back(elem);
-      }
-    }
-  };
-
-  template<typename T> struct ValueConverter<std::vector<T> >
-  : public ContainerValueConverter<std::vector<T> > {};
-
-  template<typename T> struct ValueConverter<std::list<T> >
-  : public ContainerValueConverter<std::list<T> > {};
-
-  template<> struct ValueConverter<std::string>
-  {
-    static inline void writeValue(const std::string& src, Value& dst)
-    {
-      dst.setString(src);
-    }
-    static inline void readValue(const Value& src, std::string& dst)
-    {
-      dst = src.toString();
-    }
-  };
-
-  template<> struct ValueConverter<char*>
-  {
-    static inline void writeValue(const char*& src, Value& dst)
-    {
-      dst.setString(src);
-    }
-    static inline void readValue(const Value& src, char*& dst)
-    {
-      dst = strdup(src.toString().c_str());
-    }
-  };
-
-  inline Value::Value()
-  : type(Invalid)
-  {
-    data.ptr = 0;
-  }
-
-  inline Value::Value(double d)
-  : type(Double)
-  {
-    data.d = d;
-  }
-
-  inline Value::Value(const std::string& s)
-  : type(String)
-  {
-    data.str = new std::string(s);
-  }
-
-  inline Value::Value(const ValueList& v)
-  : type(List)
-  {
-    data.list = new ValueList(v);
-  }
-
-  inline Value::Value(const ValueMap& v)
-  : type(Map)
-  {
-    data.map = new ValueMap(v);
-  }
-
-  inline Value::Value(const Value& b)
-  : type(Invalid)
-  {
-    *this = b;
-  }
-  inline Value& Value::operator=(const Value& b)
-  {
-    switch (b.type)
-    {
-    case Double: setDouble(b.toDouble()); break;
-    case String: setString(b.toString()); break;
-    case List:   setList  (b.toList());   break;
-    case Map:    setMap   (b.toMap());    break;
-
-    case Invalid:
-    case Opaque:
-      type = b.type;
-      data.ptr = b.data.ptr;
-      break;
-    }
-    return *this;
-  }
-
-  inline void Value::setDouble(double d)
-  {
-    clear();
-    type = Double;
-    data.d = d;
-  }
-
-  inline void Value::setString(const std::string& s)
-  {
-    clear();
-    type = String;
-    data.str = new std::string(s);
-  }
-
-  inline void Value::setList(const ValueList& s)
-  {
-    clear();
-    type = List;
-    data.list = new ValueList(s);
-  }
-
-  inline void Value::setMap(const ValueMap& s)
-  {
-    clear();
-    type = Map;
-    data.map = new ValueMap(s);
-  }
-
-
-  inline double Value::toDouble() const
-  {
-    if (type != Double)
-      qiLogError("qi.Value") << "Invalid toDouble on type " << type;
-    return data.d;
-  }
-
-  inline std::string Value::toString() const
-  {
-    if (type != String)
-    {
-      qiLogError("qi.Value") << "Invalid toString on type " << type;
-      return "";
-    }
-    return *data.str;
-  }
-
-  inline const Value::ValueList& Value::toList() const
-  {
-    if (type != List)
-    {
-      qiLogError("qi.Value") << "Invalid toList on type " << type;
-      static  Value::ValueList res;
-      return res;
-    }
-    return *data.list;
-  }
-
-  inline const Value::ValueMap& Value::toMap() const
-  {
-    if (type != Map)
-    {
-      qiLogError("qi.Value") << "Invalid toMap on type " << type;
-      static Value::ValueMap res;
-      return res;
-    }
-    return *data.map;
-  }
-
+    Value mv = convert(*targetType);
+    return std::make_pair((const T*)mv.value, true);
   }
 }
 
-#endif  // _QIMESSAGING_VALUE_HXX_
+/** Type conversion. Will always make a copy.
+ */
+inline
+Value Value::convert(Type& targetType) const
+{
+  if (targetType.info() == typeOf<Value>()->info())
+  {
+    // Target is metavalue: special case
+    Value res;
+    res.type = &targetType;
+    res.value = new Value(clone());
+    return res;
+  }
+  if (type->info() == typeOf<Value>()->info())
+  { // Source is metavalue: special case
+    Value* metaval = (Value*)value;
+    return metaval->convert(targetType);
+  }
+  Value res;
+  //std::cerr <<"convert " << targetType.info().name() <<" "
+  //<< type->info().name() << std::endl;
+  if (targetType.info() == type->info())
+  { // Same type, just clone
+    res.type = type;
+    res.value = res.type->clone(value);
+  }
+  else
+  { // Different type, go through value
+    res.type = &targetType;
+    qi::detail::DynamicValue temp;
+    type->toValue(value, temp);
+    //std::cerr <<"Temp value has " << temp << std::endl;
+    res.value = res.type->fromValue(temp);
+  }
+  return res;
+}
+
+inline AutoValue::AutoValue(const AutoValue& b)
+{
+  value = b.value;
+  type = b.type;
+}
+
+template<typename T> AutoValue::AutoValue(const T& ptr)
+{
+  *(Value*)this = toValue(ptr);
+}
+
+inline AutoValue::AutoValue()
+{
+  value = type = 0;
+}
+
+namespace detail
+{
+  /** This class can be used to convert the return value of an arbitrary function
+  * into a Value. It handles functions returning void.
+  *
+  *  Usage:
+  *    ValueCopy val;
+  *    val(), functionCall(arg);
+  *
+  *  in val(), parenthesis are useful to avoid compiler warning "val not used" when handling void.
+  */
+  class ValueCopy: public Value
+  {
+  public:
+    template<typename T> void operator,(const T& any);
+    ValueCopy &operator()() { return *this; }
+  };
+
+  template<typename T> void ValueCopy::operator,(const T& any)
+  {
+    *(Value*)this = toValue(any);
+    *(Value*)this = clone();
+  }
+}
+
+
+}
+
+#endif

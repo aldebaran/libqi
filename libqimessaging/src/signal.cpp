@@ -9,7 +9,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 
 #include <qimessaging/signal.hpp>
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 
 #include "src/object_p.hpp"
 #include "src/signal_p.hpp"
@@ -20,17 +20,17 @@ namespace qi {
   static qi::atomic<long> linkUid = 1;
 
   void SignalBase::operator()(
-      qi::AutoMetaValue p1,
-      qi::AutoMetaValue p2,
-      qi::AutoMetaValue p3,
-      qi::AutoMetaValue p4,
-      qi::AutoMetaValue p5,
-      qi::AutoMetaValue p6,
-      qi::AutoMetaValue p7,
-      qi::AutoMetaValue p8)
+      qi::AutoValue p1,
+      qi::AutoValue p2,
+      qi::AutoValue p3,
+      qi::AutoValue p4,
+      qi::AutoValue p5,
+      qi::AutoValue p6,
+      qi::AutoValue p7,
+      qi::AutoValue p8)
   {
-    qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::MetaValue> params;
+    qi::AutoValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::Value> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);

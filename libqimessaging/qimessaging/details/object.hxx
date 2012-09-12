@@ -16,6 +16,15 @@
 
 
 namespace qi {
+
+  template<typename T>
+  Value makeObjectValue(T* ptr)
+  {
+    Value res = toValue(ptr).clone();
+    qiLogDebug("meta") <<"metaobject on " << ptr <<" " << res.value;
+    return res;
+  }
+
   namespace detail
   {
 
@@ -27,9 +36,9 @@ namespace qi {
       ~FutureAdapter() {}
       virtual void onFutureFinished(const qi::MetaFunctionResult &future, void *data)
       {
-        if (future.getMode() == MetaFunctionResult::Mode_MetaValue)
+        if (future.getMode() == MetaFunctionResult::Mode_Value)
         {
-          MetaValue val =  future.getValue();
+          Value val =  future.getValue();
           typedef std::pair<const T*, bool>  ConvType;
           ConvType resConv = val.template as<T>();
           if (resConv.first)
@@ -43,7 +52,7 @@ namespace qi {
         {
           IDataStream in(future.getBuffer());
           // Not all types are serializable, go through MetaType
-          MetaType* type = metaTypeOf<T>();
+          Type* type = typeOf<T>();
           void* ptr = type->deserialize(in);
           if (!ptr)
           {
@@ -86,22 +95,22 @@ namespace qi {
 
   template<typename R>
   qi::FutureSync<R> Object::call(const std::string& methodName,
-    qi::AutoMetaValue p1,
-      qi::AutoMetaValue p2,
-      qi::AutoMetaValue p3,
-      qi::AutoMetaValue p4,
-      qi::AutoMetaValue p5,
-      qi::AutoMetaValue p6,
-      qi::AutoMetaValue p7,
-      qi::AutoMetaValue p8)
+    qi::AutoValue p1,
+      qi::AutoValue p2,
+      qi::AutoValue p3,
+      qi::AutoValue p4,
+      qi::AutoValue p5,
+      qi::AutoValue p6,
+      qi::AutoValue p7,
+      qi::AutoValue p8)
   {
     qi::Promise<R> res;
     if (!_p) {
       res.setError("Invalid Object");
       return res.future();
     }
-    qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::MetaValue> params;
+    qi::AutoValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::Value> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);
@@ -114,7 +123,7 @@ namespace qi {
     std::string sigret;
     // Go through MetaType::signature which can return unknown, since
     // signatureFroType will produce a static assert
-    sigret = metaTypeOf<R>()->signature();
+    sigret = typeOf<R>()->signature();
     // Future adaptation
     // Mark params as being on the stack
     MetaFunctionParameters p(params, true);

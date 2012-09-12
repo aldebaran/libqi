@@ -123,6 +123,7 @@ namespace qi {
 
     bool isConvertibleTo(const Signature& b) const;
 
+    static Signature fromType(Type t);
   protected:
     boost::shared_ptr<SignaturePrivate> _p;
   };

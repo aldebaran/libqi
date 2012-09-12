@@ -14,7 +14,7 @@
 #include <qi/application.hpp>
 #include <qimessaging/future.hpp>
 
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 
 #include <gtest/gtest.h>
 
@@ -31,19 +31,19 @@ template<typename T, typename U> inline bool resIs(
   return ok;
 }
 
-TEST(MetaType, InOut)
+TEST(Type, InOut)
 {
   using namespace qi;
   int i = 12;
-  ASSERT_EQ(toMetaValue(i).as<int>(), mp((const int*)&i, false) );
-  ASSERT_TRUE(resIs(toMetaValue(i).as<unsigned int>(), static_cast<unsigned int>(12)));
+  ASSERT_EQ(toValue(i).as<int>(), mp((const int*)&i, false) );
+  ASSERT_TRUE(resIs(toValue(i).as<unsigned int>(), static_cast<unsigned int>(12)));
 
   std::vector<int> vi;
   vi.push_back(5);
   vi.push_back(28);
   std::list<int> li(vi.begin(), vi.end());
-  ASSERT_TRUE(resIs(toMetaValue(vi).as<std::list<int> >(), li));
-  ASSERT_TRUE(resIs(toMetaValue(li).as<std::vector<int> >(), vi));
+  ASSERT_TRUE(resIs(toValue(vi).as<std::list<int> >(), li));
+  ASSERT_TRUE(resIs(toValue(li).as<std::vector<int> >(), vi));
 }
 
 int isum(std::vector<int> v)
@@ -75,7 +75,7 @@ double fadd(double j)
 }
 
 template<typename R, typename P>
-R magicCall(boost::function<R (P)> func, qi::AutoMetaValue p1)
+R magicCall(boost::function<R (P)> func, qi::AutoValue p1)
 {
   std::pair<const P*, bool> res = p1.as<P>();
   R result = func(*res.first);
@@ -85,7 +85,7 @@ R magicCall(boost::function<R (P)> func, qi::AutoMetaValue p1)
 }
 
 
-TEST(MetaType, Call)
+TEST(Type, Call)
 {
   int i = 11;
   double f = 11.0;
@@ -104,12 +104,12 @@ template<typename T> std::ostream& operator << (std::ostream& o,
 class Function
 {
 public:
-  virtual qi::MetaValue call(const std::vector<qi::MetaValue>& args) = 0;
+  virtual qi::Value call(const std::vector<qi::Value>& args) = 0;
   /* NOTE: We could try to avoid the call() below by making a non-template
    * that bounces to the previous, but it has issues since it requires
-   * implementing 'std::vector<MetaValue> deserialize(buffer, sig);' :
+   * implementing 'std::vector<Value> deserialize(buffer, sig);' :
    * - less efficient: we would need a fixed mapping signature type->default
-   *   MetaType we deserialize in, so if we chose vector and the target
+   *   Type we deserialize in, so if we chose vector and the target
    *   takes list, we do an extra conversion
    * -
    */
@@ -121,16 +121,16 @@ template<typename T> class FunctionImpl: public Function {};
 template<typename T> class FunctionImpl<boost::function<T> >: public Function
 {
 public:
-  virtual qi::MetaValue call(const std::vector<qi::MetaValue>& args)
+  virtual qi::Value call(const std::vector<qi::Value>& args)
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     typedef typename  boost::remove_const<
       typename boost::remove_reference<
       typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
       >::type>::type P1;
-      std::pair<const P1*, bool> p1 = const_cast<qi::MetaValue&>(args[0]).as<P1>();
+      std::pair<const P1*, bool> p1 = const_cast<qi::Value&>(args[0]).as<P1>();
     //std::cerr <<"call arg " << p1.second <<" " << *p1.first << std::endl;
-    qi::MetaValueCopy ret;
+    qi::detail::ValueCopy ret;
     ret, fun(*p1.first);
     if (p1.second) // We had to copy arg to convert it, delete
       delete p1.first;
@@ -148,7 +148,7 @@ public:
     P1 p1;
     s >> p1;
     qiLogDebug("test") << "deserialize arg as " << p1;
-    qi::MetaValueCopy ret;
+    qi::detail::ValueCopy ret;
     ret, fun(p1);
     qi::Buffer res;
     qi::ODataStream o(res);
@@ -173,13 +173,13 @@ Function* makeFunction(T f)
   return makeBoostFunction(boost::function<typename boost::remove_pointer<T>::type>(f));
 }
 
-void sleep_call_args(Function* fun, const std::vector<qi::MetaValue>& arg,
-  qi::Promise<qi::MetaValue> res)
+void sleep_call_args(Function* fun, const std::vector<qi::Value>& arg,
+  qi::Promise<qi::Value> res)
 {
   qi::os::msleep(100);
   res.setValue(fun->call(arg));
   for (unsigned i=0; i<arg.size(); ++i)
-    const_cast<qi::MetaValue&>(arg[i]).destroy();
+    const_cast<qi::Value&>(arg[i]).destroy();
 }
 
 void sleep_call_buf(Function* fun, qi::Buffer arg,
@@ -190,10 +190,10 @@ void sleep_call_buf(Function* fun, qi::Buffer arg,
 }
 
 
-qi::Future<qi::MetaValue> asyncCall(Function* fun,
-  const std::vector<qi::MetaValue>& arg)
+qi::Future<qi::Value> asyncCall(Function* fun,
+  const std::vector<qi::Value>& arg)
 {
-  qi::Promise<qi::MetaValue> prom;
+  qi::Promise<qi::Value> prom;
   boost::thread bt(boost::bind(sleep_call_args, fun, arg, prom));
   return prom.future();
 }
@@ -213,22 +213,22 @@ enum CallMode {
 };
 
 template<typename T> class FutureAdapter
-: public qi::FutureInterface<qi::MetaValue>
+: public qi::FutureInterface<qi::Value>
 {
 public:
   FutureAdapter(qi::Promise<T> prom) :prom(prom) {}
   ~FutureAdapter() {}
-  virtual void onFutureFinished(const qi::MetaValue &future, void *data)
+  virtual void onFutureFinished(const qi::Value &future, void *data)
   {
     // convert MetaData to target type
     typedef std::pair<const T*, bool>  ConvType;
-    ConvType resConv =  const_cast<qi::MetaValue&>(future).template as<T>();
+    ConvType resConv =  const_cast<qi::Value&>(future).template as<T>();
     //std::cerr <<"FutureIface conversion " << resConv.second <<" "
     //<< *resConv.first << std::endl;
     prom.setValue(*resConv.first);
     if (resConv.second)
       delete resConv.first;
-    const_cast<qi::MetaValue&>(future).destroy();
+    const_cast<qi::Value&>(future).destroy();
   }
   virtual void onFutureFailed(const std::string &error, void *data)
   {
@@ -252,14 +252,14 @@ public:
     if (qi::signatureFromType<T>::value() != sig)
     {
       // Cant deserialize into T, wrong sig
-      qi::MetaType* compatType = qi::MetaType::getCompatibleTypeWithSignature(sig);
+      qi::Type* compatType = qi::Type::getCompatibleTypeWithSignature(sig);
       if (!compatType)
       {
         prom.setError("Type doh!");
         return;
       }
       void* compatValPtr = compatType->deserialize(id);
-      qi::MetaValue compatVal;
+      qi::Value compatVal;
       compatVal.type = compatType;
       compatVal.value = compatValPtr;
       std::pair<const T*, bool>  res = compatVal.template as<T>();
@@ -286,13 +286,13 @@ public:
 
 
 // FIXME: reduce the template part by doing the futureAdapter first,
-// and bounce to a non-template qi::Future<MetaValue> metaCall(...)
+// and bounce to a non-template qi::Future<Value> metaCall(...)
 template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
-  qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-  qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-  qi::AutoMetaValue p3 = qi::AutoMetaValue())
+  qi::AutoValue p1 = qi::AutoValue(),
+  qi::AutoValue p2 = qi::AutoValue(),
+  qi::AutoValue p3 = qi::AutoValue())
 {
-  std::vector<qi::MetaValue> params;
+  std::vector<qi::Value> params;
   // Wrong I know
   if (p1.value)
     params.push_back(p1);
@@ -305,7 +305,7 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
   case DIRECT:
     {
       qi::Promise<R> prom;
-      qi::MetaValue res = ptr->call(params);
+      qi::Value res = ptr->call(params);
       std::pair<const R*, bool> resConv = res.template as<R>();
       std::cerr <<"ret " << resConv.second <<" " << *resConv.first << std::endl;
       prom.setValue(*resConv.first);
@@ -316,11 +316,11 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
     }
   case COPY:
     {
-      std::vector<qi::MetaValue> pCopy;
+      std::vector<qi::Value> pCopy;
       for (unsigned i=0; i<params.size(); ++i)
         pCopy.push_back(params[i].clone());
       qi::Promise<R> prom;
-      qi::Future<qi::MetaValue> res=asyncCall(ptr, pCopy);
+      qi::Future<qi::Value> res=asyncCall(ptr, pCopy);
       res.addCallbacks(new FutureAdapter<R>(prom), 0);
       return prom.future();
     }
@@ -351,11 +351,11 @@ QI_REGISTER_MAPPING("[i]", std::vector<int>);
 
 template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
   std::string sigString, std::string sigRet,
-  qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-  qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-  qi::AutoMetaValue p3 = qi::AutoMetaValue())
+  qi::AutoValue p1 = qi::AutoValue(),
+  qi::AutoValue p2 = qi::AutoValue(),
+  qi::AutoValue p3 = qi::AutoValue())
 {
-  std::vector<qi::MetaValue> params;
+  std::vector<qi::Value> params;
   // Wrong I know
   if (p1.value)
     params.push_back(p1);
@@ -372,14 +372,14 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
     if (*it == params[i].signature())
       params[i].serialize(ds);
     else
-    { // We first need to convert MetaValue to a type that has the correct
+    { // We first need to convert Value to a type that has the correct
       // netsignature if we can
-      qi::MetaType* compatible = qi::MetaType::getCompatibleTypeWithSignature(*it);
+      qi::Type* compatible = qi::Type::getCompatibleTypeWithSignature(*it);
       if (!compatible)
       { // Dont know how to handle this type.
         throw std::runtime_error("proper fucked");
       }
-      qi::MetaValue converted = params[i].convert(*compatible);
+      qi::Value converted = params[i].convert(*compatible);
       converted.serialize(ds);
       converted.destroy();
     }
@@ -395,7 +395,7 @@ Function* f_fadd = makeFunction(fadd);
 Function* f_isum = makeFunction(isum);
 Function* f_fsum = makeFunction(fsum);
 
-TEST(MetaType, CallDirect)
+TEST(Type, CallDirect)
 {
   ASSERT_EQ(6, 0+metaCall<int>(f_iadd, DIRECT, 5).value());
   ASSERT_EQ(6, 0+metaCall<int>(f_iadd, DIRECT, 5.0).value());
@@ -413,7 +413,7 @@ TEST(MetaType, CallDirect)
   ASSERT_EQ(3, 0+metaCall<int>(f_fsum, DIRECT, fv).value());
 }
 
-TEST(MetaType, CallCopy)
+TEST(Type, CallCopy)
 { // cant realy factor or macro, or locations of error will be useless
   ASSERT_EQ(6, metaCall<int>(f_iadd, COPY, 5).value());
   ASSERT_EQ(6, metaCall<int>(f_iadd, COPY, 5.0).value());
@@ -431,7 +431,7 @@ TEST(MetaType, CallCopy)
   ASSERT_EQ(3, metaCall<int>(f_fsum, COPY, fv).value());
 }
 
-TEST(MetaType, CallSerialize)
+TEST(Type, CallSerialize)
 { // cant realy factor or macro, or locations of error will be useless
   ASSERT_EQ(6, metaAdaptCall<int>   (f_iadd, "i", "i",5  ).value());
   ASSERT_EQ(6, metaAdaptCall<int>   (f_iadd, "i", "i",5.0).value());

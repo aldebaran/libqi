@@ -9,6 +9,7 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 
+#include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <qimessaging/object.hpp>
@@ -35,6 +36,75 @@ public:
 C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
+
+std::vector<qi::Value> convert(qi::AutoValue v1 = qi::AutoValue(),
+  qi::AutoValue v2 = qi::AutoValue(),
+  qi::AutoValue v3 = qi::AutoValue(),
+  qi::AutoValue v4 = qi::AutoValue(),
+  qi::AutoValue v5 = qi::AutoValue())
+{
+  std::vector<qi::Value> res;
+  if (v1.value)
+    res.push_back(v1);
+  if (v2.value)
+    res.push_back(v2);
+  if (v3.value)
+    res.push_back(v3);
+  return res;
+}
+
+class Adder
+{
+public:
+  Adder() {
+    qiLogDebug("Adder") << "constructor(default) " << this;
+  v = -1;
+  }
+  Adder(const Adder& b)
+  {
+    qiLogDebug("Adder") << "constructor(copy) " << this;
+    v = b.v+1;
+  }
+  Adder(int v)
+  : v(v) {
+    qiLogDebug("Adder") << "constructor(int) " << this;
+  }
+  int add(int v2)
+  {
+    qiLogDebug("adder") << this <<' ' << v << ' ' << v2;
+    return v+v2;
+  }
+  int v;
+};
+
+template<typename T> bool checkValue(qi::Value v, const T& val)
+{
+  std::pair<const T*, bool> r = v.as<T>();
+  if (!r.first)
+    return false;
+  bool ok = *r.first == val;
+  if (!ok)
+    qiLogError("checkValue") << "expected: " << val <<"  actual: " << *r.first;
+  if (r.second)
+    delete r.first;
+  return ok;
+}
+
+TEST(TestObject, Typing)
+{
+  qi::FunctionValue fv = qi::makeFunctionValue(&vfun);
+  qi::FunctionValue fv2 = qi::makeFunctionValue(&fun);
+  qi::MethodValue mv = qi::makeMethodValue(&Foo::fun);
+  std::vector<qi::Value> args1 = convert(1, 2);
+  qi::Value res = fv2.call(args1);
+  ASSERT_TRUE(checkValue(res, 3));
+
+  qi::MethodValue adderAdd = qi::makeMethodValue(&Adder::add);
+  Adder add1(1);
+  std::vector<qi::Value> argsAdd = convert(41);
+  res = adderAdd.call(qi::makeObjectValue(&add1), argsAdd);
+  ASSERT_TRUE(checkValue(res, 42));
+}
 
 TEST(TestObject, Simple) {
   Foo                   foo;
@@ -95,7 +165,7 @@ Point point(int x, int y)
   Point p; p.x = x; p.y = y; return p;
 }
 
-QI_METATYPE_SERIALIZABLE(Point)
+QI_TYPE_SERIALIZABLE(Point)
 QI_REGISTER_STRUCT(Point, x, y);
 
 struct Test
@@ -141,7 +211,7 @@ struct Complex
   std::list<std::vector<int> > stuff;
 };
 
-QI_METATYPE_SERIALIZABLE(::Complex)
+QI_TYPE_SERIALIZABLE(::Complex)
 // Test the sub macros
 QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
 QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)

@@ -8,8 +8,8 @@
 
 
 #pragma once
-#ifndef _QIMESSAGING_VALUE_HPP_
-#define _QIMESSAGING_VALUE_HPP_
+#ifndef _QIMESSAGING_DYNAMICVALUE_HPP_
+#define _QIMESSAGING_DYNAMICVALUE_HPP_
 
 #include <qi/types.hpp>
 
@@ -26,10 +26,10 @@ namespace qi {
   /** Generic type used as common ground for conversions.
   *
   */
-  class QIMESSAGING_API Value {
+  class QIMESSAGING_API DynamicValue {
   public:
-    typedef std::vector<Value> ValueList;
-    typedef std::map<std::string, Value> ValueMap;
+    typedef std::vector<DynamicValue> DynamicValueList;
+    typedef std::map<std::string, DynamicValue> DynamicValueMap;
     enum Type {
       Invalid,
       Double,
@@ -39,24 +39,24 @@ namespace qi {
       Opaque
     };
 
-    Value();
-    Value(const Value& b);
-    Value(double d);
-    Value(const std::string& s);
-    Value(const ValueList& v);
-    Value(const ValueMap& v);
-    ~Value();
-    Value& operator = (const Value& b);
+    DynamicValue();
+    DynamicValue(const DynamicValue& b);
+    DynamicValue(double d);
+    DynamicValue(const std::string& s);
+    DynamicValue(const DynamicValueList& v);
+    DynamicValue(const DynamicValueMap& v);
+    ~DynamicValue();
+    DynamicValue& operator = (const DynamicValue& b);
 
     void setDouble(double d);
     void setString(const std::string& s);
-    void setList(const ValueList& v);
-    void setMap(const ValueMap& m);
+    void setList(const DynamicValueList& v);
+    void setMap(const DynamicValueMap& m);
 
     double           toDouble() const;
     std::string      toString() const;
-    const ValueList& toList()   const;
-    const ValueMap&  toMap()    const;
+    const DynamicValueList& toList()   const;
+    const DynamicValueMap&  toMap()    const;
 
     void clear();
 
@@ -67,22 +67,22 @@ namespace qi {
       double                        d;
       void                         *ptr;
       std::string                  *str;
-      std::vector<Value>           *list;
-      std::map<std::string, Value> *map;
+      std::vector<DynamicValue>           *list;
+      std::map<std::string, DynamicValue> *map;
     } data;
     Type type;
   };
 
   // Custom conversion to-from value
-  template<typename T> struct ValueConverter
+  template<typename T> struct DynamicValueConverter
   {
-    static void writeValue(const T& src, Value& dst);
-    static void readValue(const Value& src, T& dst);
+    static void writeDynamicValue(const T& src, DynamicValue& dst);
+    static void readDynamicValue(const DynamicValue& src, T& dst);
   };
 
   }
 }
 
-#include <qimessaging/details/value.hxx>
+#include <qimessaging/details/dynamic_value.hxx>
 
 #endif  // _QIMESSAGING_VALUE_HPP_

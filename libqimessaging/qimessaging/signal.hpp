@@ -38,14 +38,14 @@ namespace qi {
 
     void trigger(const MetaFunctionParameters& params);
     void operator()(
-      qi::AutoMetaValue p1 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p2 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p3 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p4 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p5 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p6 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p7 = qi::AutoMetaValue(),
-      qi::AutoMetaValue p8 = qi::AutoMetaValue());
+      qi::AutoValue p1 = qi::AutoValue(),
+      qi::AutoValue p2 = qi::AutoValue(),
+      qi::AutoValue p3 = qi::AutoValue(),
+      qi::AutoValue p4 = qi::AutoValue(),
+      qi::AutoValue p5 = qi::AutoValue(),
+      qi::AutoValue p6 = qi::AutoValue(),
+      qi::AutoValue p7 = qi::AutoValue(),
+      qi::AutoValue p8 = qi::AutoValue());
 
     std::vector<SignalSubscriber> subscribers();
 
@@ -88,6 +88,6 @@ namespace qi {
 
 }
 
-QI_NO_METATYPE(qi::SignalBase)
+QI_NO_TYPE(qi::SignalBase)
 
 #endif

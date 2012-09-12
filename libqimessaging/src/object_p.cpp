@@ -8,7 +8,6 @@
 #include "src/object_p.hpp"
 #include "src/objectbuilder_p.hpp"
 #include "src/metaobject_p.hpp"
-#include "src/metamethod_p.hpp"
 
 namespace qi {
 
@@ -71,11 +70,13 @@ namespace qi {
     }
   }
 
-  static void functor_call(MetaFunction f,
-                           MetaFunctionParameters arg,
-                           qi::Promise<MetaFunctionResult> out)
+  static void functor_call(
+    Value instance,
+    MetaCallable f,
+    MetaFunctionParameters arg,
+    qi::Promise<MetaFunctionResult> out)
   {
-    out.setValue(f(arg));
+    out.setValue(f(instance, arg));
   }
 
   qi::Future<MetaFunctionResult>
@@ -89,36 +90,30 @@ namespace qi {
       out.setError(ss.str());
       return out.future();
     }
-    if (mm->_p->_functor)
+
+    bool synchronous = true;
+    switch (callType)
     {
-      bool synchronous = true;
-      switch (callType)
-      {
-        case qi::Object::MetaCallType_Direct:
-          break;
-        case qi::Object::MetaCallType_Auto:
-          synchronous = !_eventLoop ||  _eventLoop->isInEventLoopThread();
-          break;
-        case qi::Object::MetaCallType_Queued:
-          synchronous = !_eventLoop;
-          break;
-      }
-      if (synchronous)
-        out.setValue(mm->_p->_functor(params));
-      else
-      {
-        // We need to copy arguments.
-        MetaFunctionParameters pCopy = params.copy();
-        eventLoop()->asyncCall(0,
-                               boost::bind(&functor_call,
-                                           mm->_p->_functor,
-                                           pCopy, out));
-      }
+    case qi::Object::MetaCallType_Direct:
+      break;
+    case qi::Object::MetaCallType_Auto:
+      synchronous = !_eventLoop ||  _eventLoop->isInEventLoopThread();
+      break;
+    case qi::Object::MetaCallType_Queued:
+      synchronous = !_eventLoop;
+      break;
     }
-    else {
-      std::stringstream ss;
-      ss << "No valid functor for methodid: " << method;
-      out.setError(ss.str());
+    if (synchronous)
+      out.setValue(mm->functor()(_instance, params));
+    else
+    {
+      // We need to copy arguments.
+      MetaFunctionParameters pCopy = params.copy();
+      eventLoop()->asyncCall(0,
+        boost::bind(&functor_call,
+          _instance,
+          mm->functor(),
+          pCopy, out));
     }
     return out.future();
   }
@@ -350,17 +345,17 @@ namespace qi {
   }
 
   void ObjectPrivate::emitEvent(const std::string& eventName,
-                                qi::AutoMetaValue p1,
-                                qi::AutoMetaValue p2,
-                                qi::AutoMetaValue p3,
-                                qi::AutoMetaValue p4,
-                                qi::AutoMetaValue p5,
-                                qi::AutoMetaValue p6,
-                                qi::AutoMetaValue p7,
-                                qi::AutoMetaValue p8)
+                                qi::AutoValue p1,
+                                qi::AutoValue p2,
+                                qi::AutoValue p3,
+                                qi::AutoValue p4,
+                                qi::AutoValue p5,
+                                qi::AutoValue p6,
+                                qi::AutoValue p7,
+                                qi::AutoValue p8)
   {
-    qi::AutoMetaValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::MetaValue> params;
+    qi::AutoValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::Value> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);

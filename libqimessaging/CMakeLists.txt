@@ -42,11 +42,11 @@ qi_add_probes(src/tp_qimessaging.in.h
 
 set(PUBLIC_HEADERS
                    qimessaging/details/future.hxx
-                   qimessaging/details/value.hpp
-                   qimessaging/details/metatype.hxx
+                   qimessaging/details/dynamic_value.hpp
+                   qimessaging/details/type.hxx
                    qimessaging/details/metafunction.hxx
-                   qimessaging/details/metavalue.hxx
                    qimessaging/details/value.hxx
+                   qimessaging/details/dynamic_value.hxx
                    qimessaging/details/object.hxx
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
@@ -63,8 +63,12 @@ set(PUBLIC_HEADERS
                    qimessaging/api.hpp
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
-                   qimessaging/metatype.hpp
-                   qimessaging/metavalue.hpp
+                   qimessaging/type.hpp
+                   qimessaging/value.hpp
+                   qimessaging/function_type.hpp
+                   qimessaging/details/function_type.hxx
+                   qimessaging/method_type.hpp
+                   qimessaging/details/method_type.hxx
                    qimessaging/signal.hpp
                    qimessaging/transport_server.hpp
                    qimessaging/transport_socket.hpp
@@ -87,14 +91,13 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/datastream.cpp
                                    src/event_loop.cpp
                                    src/event_loop_p.hpp
+                                   src/function_type.cpp
                                    src/gateway.cpp
                                    src/message.cpp
                                    src/message_p.hpp
                                    src/messagedispatcher.hpp
                                    src/messagedispatcher.cpp
                                    src/metamethod.cpp
-                                   src/metamethod_p.cpp
-                                   src/metamethod_p.hpp
                                    src/metasignal.cpp
                                    src/metasignal_p.cpp
                                    src/metasignal_p.hpp

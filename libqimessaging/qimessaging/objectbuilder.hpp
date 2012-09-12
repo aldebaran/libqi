@@ -64,7 +64,7 @@ namespace qi {
     signature << ")";
 
     typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
-    sigret = metaTypeOf<ResultType>()->signature();
+    sigret = typeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
@@ -86,7 +86,7 @@ namespace qi {
     signature << ")";
 
     typedef typename boost::function_types::result_type<T>::type ResultType;
-    sigret = metaTypeOf<ResultType>()->signature();
+    sigret = typeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
   }
@@ -126,7 +126,7 @@ namespace qi {
 
     typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
 
-    sigret = metaTypeOf<ResultType>()->signature();
+    sigret = typeOf<ResultType>()->signature();
 
     return xAdvertiseMethod(sigret, signature.str(), makeFunctor(object, method));
   }

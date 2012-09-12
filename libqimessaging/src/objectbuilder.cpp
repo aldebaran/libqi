@@ -9,7 +9,6 @@
 #include <boost/thread.hpp>
 #include <qimessaging/object.hpp>
 #include "object_p.hpp"
-#include "metamethod_p.hpp"
 #include "metasignal_p.hpp"
 #include "objectbuilder_p.hpp"
 #include "metaobject_p.hpp"
@@ -49,17 +48,14 @@ namespace qi {
     if (it != _p->_metaObject._p->_methodsNameToIdx.end())
     {
       unsigned int uid = it->second;
-      MetaMethod mm(sigret, signature, functor);
-      mm._p->_uid = uid;
+      MetaMethod mm(uid, sigret, signature, functor);
       // find it
       _p->_metaObject._p->_methods[uid] = mm;
       qiLogVerbose("qi.Object") << "rebinding method:" << signature;
       return uid;
     }
-
-    MetaMethod mm(sigret, signature, functor);
     unsigned int idx = _p->_metaObject._p->_nextNumber++;
-    mm._p->_uid = idx;
+    MetaMethod mm(idx,sigret, signature, functor);
     _p->_metaObject._p->_methods[idx] = mm;
     _p->_metaObject._p->_methodsNameToIdx[signature] = idx;
     qiLogVerbose("qi.Object") << "binding method:" << signature;

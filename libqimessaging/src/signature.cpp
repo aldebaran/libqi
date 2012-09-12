@@ -129,4 +129,10 @@ bool qi::Signature::isConvertibleTo(const qi::Signature& b) const
   return true;
 }
 
+Signature Signature::fromType(Signature::Type t)
+{
+  char res[2] = { (char)t, 0};
+  return Signature(res);
+}
+
 }

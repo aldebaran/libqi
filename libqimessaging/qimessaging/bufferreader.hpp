@@ -5,7 +5,7 @@
 
 
 // Leave this above the header gard, it fixes include ordering problems
-#include <qimessaging/metavalue.hpp>
+#include <qimessaging/value.hpp>
 
 #ifndef _QIMESSAGING_BUFFERREADER_HPP_
 #define _QIMESSAGING_BUFFERREADER_HPP_
