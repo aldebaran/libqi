@@ -12,19 +12,10 @@
 #include <qimessaging/metavalue.hpp>
 
 #include "src/object_p.hpp"
+#include "src/signal_p.hpp"
 
 namespace qi {
 
-
-  typedef std::map<SignalBase::Link, SignalSubscriber> SignalSubscriberMap;
-
-  class SignalBasePrivate
-  {
-  public:
-    SignalSubscriberMap        subscriberMap;
-    std::string                signature;
-    boost::recursive_mutex     mutex;
-  };
 
   static qi::atomic<long> linkUid = 1;
 
@@ -121,20 +112,20 @@ namespace qi {
     _p->signature = sig;
   }
 
-  bool SignalBase::disconnect(const Link& l)
+  bool SignalBasePrivate::disconnect(const SignalBase::Link& l)
   {
-    boost::recursive_mutex::scoped_lock sl(_p->mutex);
-    SignalSubscriberMap::iterator i = _p->subscriberMap.find(l);
-    if (i == _p->subscriberMap.end())
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    SignalSubscriberMap::iterator it = subscriberMap.find(l);
+    if (it == subscriberMap.end())
       return false;
-    SignalSubscriber s = i->second;
-    _p->subscriberMap.erase(i);
+    SignalSubscriber s = it->second;
+    subscriberMap.erase(it);
     if (s.target.isValid())
     {
       boost::recursive_mutex::scoped_lock sl(s.target._p->_mutexRegistration);
       std::vector<SignalSubscriber>& regs = s.target._p->_registrations;
       // Look it up in vector, then swap with last.
-      for (unsigned int i=0; i< regs.size(); ++i)
+      for (unsigned int i = 0; i < regs.size(); ++i)
         if (s.linkId == regs[i].linkId)
         {
           regs[i] = regs[regs.size()-1];
@@ -144,6 +135,11 @@ namespace qi {
     }
     return true;
   }
+
+  bool SignalBase::disconnect(const Link &link) {
+    return _p->disconnect(link);
+  }
+
 
   SignalBase::~SignalBase()
   {
@@ -167,4 +163,14 @@ namespace qi {
       res.push_back(i->second);
     return res;
   }
+
+  void SignalBasePrivate::reset() {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    SignalSubscriberMap::iterator it = subscriberMap.begin();
+    while (it != subscriberMap.end()) {
+      disconnect(it->first);
+      it = subscriberMap.begin();
+    }
+  }
+
 }

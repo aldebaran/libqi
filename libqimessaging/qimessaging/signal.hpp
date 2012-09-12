@@ -49,7 +49,7 @@ namespace qi {
 
     std::vector<SignalSubscriber> subscribers();
 
-  protected:
+  public:
     SignalBasePrivate* _p;
   };
 
