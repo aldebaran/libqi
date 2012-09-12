@@ -45,25 +45,25 @@ TEST(TestCBindings, Call)
   object = qi_object_builder_get_object(ob);
 
   session = qi_session_create();
-  assert(session != 0);
+  ASSERT_TRUE(session != 0);
 
   qi_session_connect(session, connectionAddr.c_str());
 
-  assert(qi_session_listen(session, "tcp://0.0.0.0:0"));
+  ASSERT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
 
   id = qi_session_register_service(session, "serviceTest", object);
   client_session = qi_session_create();
-  assert(client_session != 0);
+  ASSERT_TRUE(client_session != 0);
 
   qi_session_connect(client_session, connectionAddr.c_str());
 
   remote = qi_session_get_service(client_session, "serviceTest");
-  assert(remote != 0);
+  ASSERT_TRUE(remote != 0);
 
-  assert(qi_session_get_service(client_session, "pute") == 0);
+  ASSERT_TRUE(qi_session_get_service(client_session, "pute") == 0);
 
   message = qi_message_create();
-  assert(message != 0);
+  ASSERT_TRUE(message != 0);
 
   char* result = 0;
 
@@ -74,14 +74,14 @@ TEST(TestCBindings, Call)
   qi_future_wait(fut);
   qi_message_t *msg = 0;
 
-  assert((bool) qi_future_is_error(fut) == false);
-  assert((bool) qi_future_is_ready(fut) == true);
+  ASSERT_TRUE((bool) qi_future_is_error(fut) == false);
+  ASSERT_TRUE((bool) qi_future_is_ready(fut) == true);
 
   msg = (qi_message_t*) qi_future_get_value(fut);
-  assert(msg != 0);
+  ASSERT_TRUE(msg != 0);
 
   result = qi_message_read_string(msg);
-  assert(strcmp(result, "plafbim") == 0);
+  ASSERT_TRUE(strcmp(result, "plafbim") == 0);
 
   qi_message_destroy(message);
   qi_session_unregister_service(session, id);
