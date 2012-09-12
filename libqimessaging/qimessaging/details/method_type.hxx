@@ -21,12 +21,17 @@ namespace qi
       typedef typename boost::add_pointer<typename boost::remove_reference<ClassRefType>::type>::type ClassPtrType;
       // Argument list, changing ClassRef to ClassPtr
       typedef typename boost::mpl::push_front<
-      typename ::boost::mpl::pop_front<ArgsType>::type,
+        typename ::boost::mpl::pop_front<ArgsType>::type,
       ClassPtrType>::type ArgsTypeFixed;
       // Push result type in front
       typedef typename ::boost::mpl::push_front<ArgsTypeFixed, RetType>::type FullType;
       // Synthetise result function type
       typedef typename ::boost::function_types::function_type<FullType>::type type;
+      // Compute bound type
+      typedef typename boost::mpl::push_front<
+        typename boost::mpl::pop_front<ArgsType>::type, RetType>::type BoundTypeSeq;
+      // Synthetise method type
+      typedef typename ::boost::function_types::function_type<BoundTypeSeq>::type BoundType;
     };
   } // namespace detail
 
@@ -74,6 +79,15 @@ namespace qi
     result.type = methodTypeOf<Linearized>();
     return result;
   }
+
+  inline FunctionValue MethodValue::toFunction()
+  {
+    FunctionValue res;
+    res.type = dynamic_cast<FunctionType*>(type);
+    res.value = value;
+    return res;
+  }
+
 } // namespace qi
 
 #endif

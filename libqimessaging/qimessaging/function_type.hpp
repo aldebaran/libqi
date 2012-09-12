@@ -31,9 +31,11 @@ namespace qi {
     void*         value;
   };
 
-  template<typename T>
-  FunctionValue makeFunctionValue(boost::function<T> f);
+  template<typename T> FunctionValue makeFunctionValue(boost::function<T> f);
   template<typename F> FunctionValue makeFunctionValue(F func);
+
+  template<typename O, typename F> FunctionValue makeFunctionValue(O o, F f);
+
 }
 
 #include <qimessaging/details/function_type.hxx>

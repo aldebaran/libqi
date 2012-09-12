@@ -162,5 +162,67 @@ namespace qi
     typename boost::remove_pointer<F>::type>(func));
   }
 
+
+namespace detail
+{
+  /* Call a boost::function<F> binding the first argument.
+  * Can't be done just with boost::bind without code generation.
+  */
+  template<typename F>
+  struct FusedBindOne
+  {
+    template <class Seq>
+    struct result
+    {
+      typedef typename boost::function_types::result_type<F>::type type;
+    };
+
+    template <class Seq>
+    typename result<Seq>::type
+    operator()(Seq const & s) const
+    {
+      return ::boost::fusion::invoke_function_object(func,
+        ::boost::fusion::push_front(s, boost::ref(const_cast<ArgType&>(*arg1))));
+    }
+    ::boost::function<F> func;
+    typedef typename boost::remove_reference<
+      typename ::boost::mpl::front<
+        typename ::boost::function_types::parameter_types<F>::type
+        >::type>::type ArgType;
+    void setArg(ArgType* val) { arg1 = val;}
+    ArgType* arg1;
+
+  };
+
+}
+
+template<typename C, typename F> FunctionValue makeFunctionValue(C* inst, F func)
+{
+  // Return type
+  typedef typename ::boost::function_types::result_type<F>::type RetType;
+  // All arguments including class pointer
+  typedef typename ::boost::function_types::parameter_types<F>::type MemArgsType;
+  // Pop class pointer
+  typedef typename ::boost::mpl::pop_front< MemArgsType >::type ArgsType;
+  // Synthethise exposed function type
+  typedef typename ::boost::mpl::push_front<ArgsType, RetType>::type ResultMPLType;
+  typedef typename ::boost::function_types::function_type<ResultMPLType>::type ResultType;
+  // Synthethise non-member function equivalent type of F
+  typedef typename ::boost::mpl::push_front<MemArgsType, RetType>::type MemMPLType;
+  typedef typename ::boost::function_types::function_type<MemMPLType>::type LinearizedType;
+  // See func as R (C*, OTHER_ARGS)
+  boost::function<LinearizedType> memberFunction = func;
+  boost::function<ResultType> res;
+  // Create the fusor
+  detail::FusedBindOne<LinearizedType> fusor;
+  // Bind member function and instance
+  fusor.setArg(inst);
+  fusor.func = memberFunction;
+  // Convert it to a boost::function
+  res = boost::fusion::make_unfused(fusor);
+
+  return makeFunctionValue(res);
+}
+
 } // namespace qi
 #endif

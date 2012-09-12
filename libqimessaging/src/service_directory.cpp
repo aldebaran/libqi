@@ -17,6 +17,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include "src/transport_server_p.hpp"
 #include "src/server_result.hpp"
 #include "src/session_p.hpp"
@@ -29,24 +30,25 @@
 namespace qi
 {
 
-  qi::MetaObject createSDP(ServiceDirectoryPrivate *self) {
-    qi::ObjectBuilder ob;
+  qi::Object createSDP(ServiceDirectoryPrivate* self) {
+    qi::StaticObjectBuilder ob;
 
-    ob.advertiseMethod("service", self, &ServiceDirectoryPrivate::service);
-    ob.advertiseMethod("services", self, &ServiceDirectoryPrivate::services);
-    ob.advertiseMethod("registerService", self, &ServiceDirectoryPrivate::registerService);
-    ob.advertiseMethod("unregisterService", self, &ServiceDirectoryPrivate::unregisterService);
-    ob.advertiseMethod("serviceReady", self, &ServiceDirectoryPrivate::serviceReady);
-    return ob.object().metaObject();
+    ob.advertiseMethod("service", &ServiceDirectoryPrivate::service);
+    ob.advertiseMethod("services", &ServiceDirectoryPrivate::services);
+    ob.advertiseMethod("registerService", &ServiceDirectoryPrivate::registerService);
+    ob.advertiseMethod("unregisterService", &ServiceDirectoryPrivate::unregisterService);
+    ob.advertiseMethod("serviceReady", &ServiceDirectoryPrivate::serviceReady);
+    return ob.makeObject<ServiceDirectoryPrivate>(self);
   }
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : Object(createSDP(this))
-    , _server()
+    : _server()
     , servicesCount(0)
     , currentSocket()
   {
     _server.newConnection.connect(boost::bind(&ServiceDirectoryPrivate::onTransportServerNewConnection, this, _1));
+    (*(Object*)this) = createSDP(this);
+
     ServiceInfo si;
     si.setName("serviceDirectory");
     si.setServiceId(1);

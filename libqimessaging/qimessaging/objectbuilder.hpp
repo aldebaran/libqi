@@ -15,120 +15,157 @@
 #include <qimessaging/signature.hpp>
 #include <qimessaging/metafunction.hpp>
 #include <sstream>
+#include <qimessaging/type.hpp>
 #include <qimessaging/object.hpp>
 
+#include <qimessaging/staticobjecttype.hpp>
 namespace qi {
 
   class MetaObject;
-  class ObjectBuilderPrivate;
-  class QIMESSAGING_API ObjectBuilder {
+
+  class SignalBase;
+  class ObjectType;
+  class Type;
+  template<typename T> class Signal;
+  class StaticObjectBuilderPrivate;
+  class DynamicObjectBuilderPrivate;
+
+  class QIMESSAGING_API DynamicObjectBuilder
+  {
   public:
-    ObjectBuilder();
-    ~ObjectBuilder();
+    DynamicObjectBuilder();
+    ~DynamicObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
-    template<typename T>
-    inline unsigned int advertiseMethod(const std::string& name, boost::function<T> func);
-
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, qi::MetaFunction func);
-    int xForgetMethod(const std::string &meth);
-
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
+
+
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func);
     int xAdvertiseEvent(const std::string& signature);
 
     qi::Object object();
   public:
-    ObjectBuilderPrivate *_p;
-    QI_DISALLOW_COPY_AND_ASSIGN(ObjectBuilder);
+    DynamicObjectBuilderPrivate *_p;
+    QI_DISALLOW_COPY_AND_ASSIGN(DynamicObjectBuilder);
   };
 
+  class QIMESSAGING_API StaticObjectBuilder
+  {
+  public:
+    StaticObjectBuilder();
+    ~StaticObjectBuilder();
+
+    typedef boost::function<SignalBase* (void*)> SignalMemberGetter;
+
+    // input: template-based
+
+    /// Declare the class type for which this StaticBuilder is.
+    template<typename T> void  buildFor();
+    template <typename FUNCTION_TYPE>
+    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    template <typename C, typename T>
+    inline unsigned int advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor);
+    template <typename T>
+    inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter);
+
+    // input: type-erased
+
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MethodValue func);
+    int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter);
+    void xBuildFor(Type* type);
+
+    // output
+    const MetaObject& metaObject();
+    template<typename T> Object makeObject(T* ptr);
+    template<typename T> ObjectType* type();
+
+  private:
+    ObjectType* &_type();
+    void _init();
+    StaticObjectBuilderPrivate* _p;
+  };
+
+  template<typename T> void StaticObjectBuilder::buildFor()
+  {
+    xBuildFor(typeOf<T>());
+  }
+
   template <typename FUNCTION_TYPE>
-  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  unsigned int StaticObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
-    std::stringstream   signature;
-
-    std::string         sigret;
-
-    signature << name << "::(";
-    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
-
-    signature << ")";
-
-    typedef typename boost::function_types::result_type<FUNCTION_TYPE>::type     ResultType;
-    sigret = typeOf<ResultType>()->signature();
-
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
+    // FIXME validate type
+    return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
+      name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
+      makeMethodValue(function));
   }
 
-  template<typename T>
-  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name,
-    boost::function<T> function)
+  template <typename FUNCTION_TYPE>
+  unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
-    std::stringstream   signature;
-    std::string         sigret;
-    signature << name << "::(";
-    typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
-
-    signature << ")";
-
-    typedef typename boost::function_types::result_type<T>::type ResultType;
-    sigret = typeOf<ResultType>()->signature();
-
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(function));
-  }
-
-  template<typename FUNCTION_TYPE>
-  inline unsigned int ObjectBuilder::advertiseEvent(const std::string& eventName)
-  {
-    std::stringstream   signature;
-    signature << eventName << "::(";
-    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
-
-    signature << ")";
-
-    return xAdvertiseEvent(signature.str());
+    // FIXME validate type
+    return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
+      name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
+      makeCallable(function));
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int ObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+  inline unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
   {
-    std::stringstream   signature;
-    std::string         sigret;
-    signature << name << "::(";
-    typedef typename boost::function_types::parameter_types<METHOD_TYPE>::type MemArgsType;
-    typedef typename boost::mpl::pop_front< MemArgsType >::type                ArgsType;
+    return xAdvertiseMethod(detail::FunctionSignature<METHOD_TYPE >::sigreturn(),
+      name + "::" + detail::FunctionSignature<METHOD_TYPE >::signature(),
+      makeCallable(makeFunctionValue(object, method)));
+  }
 
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
-    signature << ")";
+  template <typename C, typename T>
+  SignalBase signalAccess(Signal<T> C::* ptr, void* instance)
+  {
+    C* c = reinterpret_cast<C*>(instance);
+    return (*c).*ptr;
+  }
 
-    typedef typename boost::function_types::result_type<METHOD_TYPE>::type     ResultType;
+  template <typename C, typename T>
+  unsigned int StaticObjectBuilder::advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor)
+  {
+    // FIXME validate type
+    SignalMemberGetter fun = boost::bind(&signalAccess<C, T>, signalAccessor, _1);
+    return xAdvertiseEvent(eventName + "::" + detail::FunctionSignature<T>::signature(), fun);
+  }
 
-    sigret = typeOf<ResultType>()->signature();
+  template <typename T> unsigned int StaticObjectBuilder::advertiseEvent(const std::string& name, SignalMemberGetter getter)
+  {
+    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter);
+  }
 
-    return xAdvertiseMethod(sigret, signature.str(), makeFunctor(object, method));
+  template <typename T> unsigned int DynamicObjectBuilder::advertiseEvent(const std::string& name)
+  {
+    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature());
+  }
+
+  template<typename T> Object StaticObjectBuilder::makeObject(T* ptr)
+  {
+    // FIXME validate type
+    Object o;
+    o.type = type<T>();
+    T** nptr = new T*;
+    *nptr = ptr;
+    o.value = nptr;
+    return o;
+  }
+
+  template<typename T> ObjectType* StaticObjectBuilder::type()
+  {
+    ObjectType* &t = _type();
+    if (!t)
+    {
+      t = new StaticObject<T>();
+      _init();
+    }
+    return t;
+
   }
 
 }

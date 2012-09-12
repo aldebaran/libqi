@@ -89,6 +89,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/buffer_p.hpp
                                    src/bufferreader.cpp
                                    src/datastream.cpp
+                                   src/dynamicobject.cpp
                                    src/event_loop.cpp
                                    src/event_loop_p.hpp
                                    src/function_type.cpp
@@ -106,7 +107,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metafunction.cpp
                                    src/object_p.hpp
                                    src/object.cpp
-                                   src/object_p.cpp
                                    src/object_factory.cpp
                                    src/objectbuilder.cpp
                                    src/objectbuilder_p.hpp
@@ -134,6 +134,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/signature_convertor.cpp
                                    src/signature_convertor.hpp
                                    src/signature_iterator.cpp
+                                   src/staticobjecttype.cpp
                                    src/transport_server.cpp
                                    src/transport_server_p.hpp
                                    src/transport_server_libevent_p.cpp

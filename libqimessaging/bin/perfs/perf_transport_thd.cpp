@@ -22,6 +22,7 @@
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
@@ -163,7 +164,7 @@ int main_server()
   sd.listen("tcp://127.0.0.1:5555");
   std::cout << "Service Directory ready." << std::endl;
 
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
 
   qi::Session       session;

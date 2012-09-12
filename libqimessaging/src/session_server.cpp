@@ -145,7 +145,7 @@ namespace qi {
 
             // locate object, register locally and bounce to an event message
             unsigned int linkId = it->second.connect(event,
-              boost::bind(&forwardEvent, _1, service, event, client));
+              (MetaCallable) boost::bind(&forwardEvent, _1, service, event, client));
             _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
             {
@@ -215,7 +215,7 @@ namespace qi {
       } // msg.service() == Server
       it = _services.find(msg.service());
       obj = it->second;
-      if (it == _services.end() || !obj.isValid())
+      if (it == _services.end() || !obj.type || !obj.value)
       {
         if (msg.type() == qi::Message::Type_Call) {
           qi::Message retval;
@@ -237,7 +237,7 @@ namespace qi {
     {
     case Message::Type_Call:
       {
-         qi::Future<MetaFunctionResult> fut = obj.metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::Object::MetaCallType_Queued);
+         qi::Future<MetaFunctionResult> fut = obj.metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::MetaCallType_Queued);
          fut.addCallbacks(new ServerResult(client, msg));
       }
       break;

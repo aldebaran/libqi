@@ -8,39 +8,21 @@
 #include "server_client.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/signature.hpp>
+#include <qimessaging/objectbuilder.hpp>
+
 
 namespace qi {
 
   static qi::MetaObject serverMetaObject() {
-    qi::ObjectBuilder  ob;
+    qi::StaticObjectBuilder  ob;
+    StaticObjectBuilder::SignalMemberGetter dummy;
 
-    std::string ret;
-    std::string sig;
+    ob.advertiseMethod("registerEvent", &ServerClient::registerEvent);
+    ob.advertiseMethod("unregisterEvent", &ServerClient::unregisterEvent);
+    ob.advertiseMethod("metaObject", &ServerClient::metaObject);
 
-    ret = qi::signatureFromType<unsigned int>::value();
-    sig = "registerEvent::(";
-    qi::signatureFromType<unsigned int>::value(sig);
-    qi::signatureFromType<unsigned int>::value(sig);
-    qi::signatureFromType<unsigned int>::value(sig);
-    sig += ")";
-    ob.xAdvertiseMethod(ret, sig, 0);
 
-    ret = qi::signatureFromType<bool>::value();
-    sig = "unregisterEvent::(";
-    qi::signatureFromType<unsigned int>::value(sig);
-    qi::signatureFromType<unsigned int>::value(sig);
-    qi::signatureFromType<unsigned int>::value(sig);
-    sig += ")";
-    ob.xAdvertiseMethod(ret, sig, 0);
-
-    ret = qi::signatureFromType<qi::MetaObject>::value();
-    sig = "metaObject::(";
-    qi::signatureFromType<unsigned int>::value(sig);
-    qi::signatureFromType<unsigned int>::value(sig);
-    sig += ")";
-    ob.xAdvertiseMethod(ret, sig, 0);
-
-    qi::MetaObject m = ob.object().metaObject();
+    qi::MetaObject m = ob.metaObject();
     assert(m.methodId("registerEvent::(III)") == qi::Message::ServerFunction_RegisterEvent);
     assert(m.methodId("unregisterEvent::(III)") == qi::Message::ServerFunction_UnregisterEvent);
     assert(m.methodId("metaObject::(II)") == qi::Message::ServerFunction_MetaObject);
@@ -48,8 +30,9 @@ namespace qi {
   }
 
   ServerClient::ServerClient(TransportSocketPtr socket)
-    : _object(socket, qi::Message::Service_Server, serverMetaObject())
+    : _remoteObject(socket, qi::Message::Service_Server, serverMetaObject())
   {
+    _object = makeDynamicObject(&_remoteObject);
   }
 
   ServerClient::~ServerClient()

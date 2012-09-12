@@ -10,58 +10,47 @@
 namespace qi {
 
   MetaSignal::MetaSignal()
-    : _p(new MetaSignalPrivate())
   {
   }
 
-  MetaSignal::MetaSignal(const std::string &sig)
-    : _p(new MetaSignalPrivate(sig))
+  MetaSignal::MetaSignal(unsigned int uid, const std::string &sig)
+  : _uid(uid)
+  , _signature(sig)
   {
   }
 
-  MetaSignal::MetaSignal(const MetaSignal &other)
-    : _p(new MetaSignalPrivate())
-  {
-    *_p = *(other._p);
-  }
-
-  MetaSignal& MetaSignal::operator=(const MetaSignal &other)
-  {
-    *_p = *(other._p);
-    return (*this);
-  }
 
   MetaSignal::~MetaSignal()
   {
-    delete _p;
   }
 
   const std::string &MetaSignal::signature() const
   {
-    return _p->signature();
+    return _signature;
   }
 
   unsigned int       MetaSignal::uid() const
   {
-    return _p->uid();
+    return _uid;
   }
 
 
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaSignal &meta) {
-    stream << meta._p->_signature;
-    stream << meta._p->_uid;
+    stream << meta.signature();
+    stream << meta.uid();
     return stream;
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, MetaSignal &meta) {
-    stream >> meta._p->_signature;
-    stream >> meta._p->_uid;
+    std::string sig; unsigned int uid;
+    stream >> sig >> uid;
+    meta = MetaSignal(uid, sig);
     return stream;
   }
 
   qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaSignal &meta) {
-    stream & meta._p->_signature;
-    stream & meta._p->_uid;
+    stream & meta.signature();
+    stream & meta.uid();
     return stream;
   }
 

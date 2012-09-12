@@ -20,7 +20,6 @@
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/event_loop.hpp>
-#include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/signal.hpp>
 
 
@@ -31,49 +30,98 @@
 
 namespace qi {
 
+  class SignalSubscriber;
   class QIMESSAGING_API ObjectInterface {
   public:
     virtual ~ObjectInterface() = 0;
     virtual void onObjectDestroyed(Object *object, void *data) = 0;
   };
 
-  class ObjectPrivate;
-  class QIMESSAGING_API Object {
+  class ManageablePrivate;
+
+ /** User classes can inherit from Manageable to benefit from additional features:
+  * - Automatic signal disconnection when the object is deleted
+  * - Event loop management
+  */
+ class QIMESSAGING_API Manageable
+ {
+ public:
+   Manageable();
+   ~Manageable();
+
+   void addCallbacks(ObjectInterface *callbacks, void *data = 0);
+   void removeCallbacks(ObjectInterface *callbacks);
+
+   // Remember than this is the target of subscriber
+   void addRegistration(const SignalSubscriber& subscriber);
+   // Notify that a registered subscriber got disconnected
+   void removeRegistration(unsigned int linkId);
+
+   EventLoop* eventLoop() const;
+   void moveToEventLoop(EventLoop* eventLoop);
+
+   ManageablePrivate* _p;
+ };
+
+ enum MetaCallType {
+   MetaCallType_Auto   = 0,
+   MetaCallType_Direct = 1,
+   MetaCallType_Queued = 2,
+ };
+
+ /* We will have 3 implementations for 3 classes of C++ class:
+ * - DynamicObject
+ * - T where T inherits from Manageable
+ * - T
+ * If the class does not inherit from Manageable, some features will be lost:
+ *   - Automatic signal disconnection on object destruction
+ *   - EventLoop support. emit will use the default policy
+ *
+ *
+ *  NOTE: no SignalBase accessor at this point, but the backend is such that it would be possible
+ *   but if we do that, virtual emit/connect/disconnect must go away, as they could be bypassed
+ *  ->RemoteObject, ALBridge will have to adapt
+ *
+ */
+
+  class QIMESSAGING_API ObjectType: public virtual Type
+  {
+  public:
+    virtual const MetaObject& metaObject(void* instance) = 0;
+    virtual qi::Future<MetaFunctionResult> metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
+    virtual void metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params)=0;
+    virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)=0;
+    /// Disconnect an event link. Returns if disconnection was successful.
+    virtual bool disconnect(void* instance, unsigned int linkId)=0;
+    /// @return the manageable interface for this instance, or 0 if not available
+    virtual Manageable* manageable(void* instance) = 0;
+  };
+
+  /* ObjectValue
+  *  static version wrapping class C: Type<C>
+  *  dynamic version: Type<DynamicObject>
+  *
+  * All the methods are convenience wrappers that bounce to the ObjectType
+  */
+  class QIMESSAGING_API Object
+  {
   public:
     Object();
-    Object(qi::MetaObject metaobject);
-    Object(qi::ObjectPrivate *pimpl);
-
-    virtual ~Object();
-
-    enum MetaCallType {
-      MetaCallType_Auto   = 0,
-      MetaCallType_Direct = 1,
-      MetaCallType_Queued = 2,
-    };
-
-    bool isValid() const;
-
-    void addCallbacks(ObjectInterface *callbacks, void *data = 0);
-    void removeCallbacks(ObjectInterface *callbacks);
-
-    MetaObject &metaObject();
-
+    ~Object();
+    const MetaObject &metaObject();
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
-                                                                 qi::AutoValue p1 = qi::AutoValue(),
-                                                                 qi::AutoValue p2 = qi::AutoValue(),
-                                                                 qi::AutoValue p3 = qi::AutoValue(),
-                                                                 qi::AutoValue p4 = qi::AutoValue(),
-                                                                 qi::AutoValue p5 = qi::AutoValue(),
-                                                                 qi::AutoValue p6 = qi::AutoValue(),
-                                                                 qi::AutoValue p7 = qi::AutoValue(),
-                                                                 qi::AutoValue p8 = qi::AutoValue());
+      qi::AutoValue p1 = qi::AutoValue(),
+      qi::AutoValue p2 = qi::AutoValue(),
+      qi::AutoValue p3 = qi::AutoValue(),
+      qi::AutoValue p4 = qi::AutoValue(),
+      qi::AutoValue p5 = qi::AutoValue(),
+      qi::AutoValue p6 = qi::AutoValue(),
+      qi::AutoValue p7 = qi::AutoValue(),
+      qi::AutoValue p8 = qi::AutoValue());
 
-    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
     qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
-
-
     void emitEvent(const std::string& eventName,
                    qi::AutoValue p1 = qi::AutoValue(),
                    qi::AutoValue p2 = qi::AutoValue(),
@@ -83,12 +131,9 @@ namespace qi {
                    qi::AutoValue p6 = qi::AutoValue(),
                    qi::AutoValue p7 = qi::AutoValue(),
                    qi::AutoValue p8 = qi::AutoValue());
-
-    virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);
-    //// Resolve and bounce to metaEmit
+    void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
-
-    /** Connect an event to an arbitrary callback.
+        /** Connect an event to an arbitrary callback.
      *
      * If you are within a service, it is recommended that you connect the
      * event to one of your Slots instead of using this method.
@@ -96,19 +141,15 @@ namespace qi {
     template <typename FUNCTOR_TYPE>
     unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback,
                          EventLoop* ctx = getDefaultObjectEventLoop());
-    unsigned int xConnect(const std::string &signature, MetaFunction functor,
-                          EventLoop* ctx = getDefaultObjectEventLoop());
-    unsigned int connect(unsigned int event, MetaFunction Functor,
-                         EventLoop* ctx = getDefaultObjectEventLoop());
+
+
+    unsigned int xConnect(const std::string &signature, const SignalSubscriber& functor);
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
+    unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
 
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual bool disconnect(unsigned int linkId);
-
-   //return the list of all subscriber to an event
-    std::vector<SignalSubscriber> subscribers(int eventId) const;
+    bool disconnect(unsigned int linkId);
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
      * If target is a proxy and this is server-side, the event will be
@@ -117,39 +158,38 @@ namespace qi {
      * the current process.
      */
     unsigned int connect(unsigned int signal, qi::Object target, unsigned int slot);
-    /** Same as connect(signal, target, slot) but with reverse signature,
-     * so that we can advertise this method.
-     *
-     */
 
-    /// Trigger event handlers
-    void trigger(unsigned int event, const MetaFunctionParameters& params);
     void moveToEventLoop(EventLoop* ctx);
     EventLoop* eventLoop();
-
-    boost::shared_ptr<ObjectPrivate> _p;
+    bool isValid() { return type && value;}
+    ObjectType*  type;
+    void*        value;
   };
 
   template<typename T>
   Value makeObjectValue(T* ptr);
 
 
-  /** Event subscriber info.
+    /** Event subscriber info.
   *
   * Only one of handler or target must be set.
   */
  struct QIMESSAGING_API SignalSubscriber
  {
    SignalSubscriber()
-     : handler(0), eventLoop(0), target(), method(0)
+     : eventLoop(0), target(), method(0)
    {}
 
-   SignalSubscriber(MetaFunction func, EventLoop* ctx)
+   SignalSubscriber(FunctionValue func, EventLoop* ctx = getDefaultObjectEventLoop())
+     : handler(makeCallable(func)), eventLoop(ctx), target(), method(0)
+   {}
+
+   SignalSubscriber(MetaCallable func, EventLoop* ctx = getDefaultObjectEventLoop())
      : handler(func), eventLoop(ctx), target(), method(0)
    {}
 
    SignalSubscriber(Object target, unsigned int method)
-     : handler(0), eventLoop(0), target(target), method(method)
+     : eventLoop(0), target(target), method(method)
    {}
 
    void call(const MetaFunctionParameters& args);
@@ -160,32 +200,29 @@ namespace qi {
 
    // Target information
    //   Mode 1: Direct functor call
-   MetaFunction       handler;
+   MetaCallable       handler;
    EventLoop*         eventLoop;
    //  Mode 2: metaCall
    Object             target;
    unsigned int       method;
  };
 
+
   template <typename FUNCTION_TYPE>
   unsigned int Object::connect(const std::string& eventName,
                                FUNCTION_TYPE callback,
                                EventLoop* ctx)
   {
-    std::stringstream   signature;
-    signature << eventName << "::(";
-
-    typedef typename boost::function_types::parameter_types<FUNCTION_TYPE>::type ArgsType;
-    boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-        boost::add_pointer<
-        boost::remove_const<
-        boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&signature));
-
-    signature << ")";
-
-    return xConnect(signature.str(), makeFunctor(callback), ctx);
+    return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
+      SignalSubscriber(makeCallable(callback), ctx));
   }
+
+  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
+    FunctionValue func, const std::vector<Value>& params, MetaCallType callType);
+  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
+    FunctionValue func, const MetaFunctionParameters& params, MetaCallType callType);
+  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
+    MetaCallable func, const MetaFunctionParameters& params, MetaCallType callType);
 
 };
 

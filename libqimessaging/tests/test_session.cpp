@@ -13,6 +13,7 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
@@ -80,7 +81,7 @@ TEST(QiSession, getSimpleService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::Object obj(ob.object());
 
@@ -118,7 +119,7 @@ TEST(QiSession, getCloseService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::Object obj(ob.object());
 

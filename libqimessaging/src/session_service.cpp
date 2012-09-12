@@ -10,6 +10,7 @@
 #include "session_server.hpp"
 #include "server_client.hpp"
 #include "signal_p.hpp"
+#include "src/remoteobject_p.hpp"
 
 namespace qi {
 
@@ -25,7 +26,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.begin();
       for (; it != _remoteObjects.end(); ++it) {
-        it->second.close();
+        reinterpret_cast<RemoteObject*>(it->second.value)->close();
       }
       _remoteObjects.clear();
     }
@@ -62,7 +63,8 @@ namespace qi {
       }
       if (it->second) {
         ServerClient *sc = it->second->sclient;
-        delete sc;
+        // LEAK, but socket ownership will be refactored and the pb will go away
+        //delete sc;
         it->second->sclient = 0;
       }
       delete it->second;
@@ -121,21 +123,21 @@ namespace qi {
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
+        RemoteObject* robj = new RemoteObject(sr->socket, sr->serviceId, mo);
+        Object o = makeDynamicObject(robj);
+        // The remoteobject in sr->client.remoteObject is still on
         //remove the callback of ServerClient before returning the object
         //TODO: belong to TransportSocketCache
         sr->socket->connected._p->reset();
         sr->socket->disconnected._p->reset();
         sr->socket->messageReady._p->reset();
 
-        qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
-        boost::shared_ptr<qi::RemoteObjectPrivate> rop;
-        rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(sr->sclient->_object._p);
 
         //avoid deleting the socket in removeRequest (RemoteObject will do it)
         sr->socket.reset();
         //register the remote object in the cache
-        _remoteObjects[sr->name] = robj;
-        sr->promise.setValue(robj);
+        _remoteObjects[sr->name] = o;
+        sr->promise.setValue(o);
       }
     }
 

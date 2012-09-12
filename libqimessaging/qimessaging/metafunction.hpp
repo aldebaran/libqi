@@ -7,9 +7,13 @@
 
 #ifndef _QI_MESSAGING_METAFUNCTION_HH_
 #define _QI_MESSAGING_METAFUNCTION_HH_
+
+#include <qimessaging/future.hpp>
+
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/value.hpp>
+#include <qimessaging/method_type.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -64,6 +68,7 @@ public:
    */
   void setSignature(const std::string& sig);
   const std::vector<Value>& getValues() const;
+  const std::vector<Value> getValues(const std::vector<Type*> & argumentsType) const;
   const Buffer& getBuffer() const;
 
   enum Mode
@@ -102,16 +107,16 @@ public:
   Value getValue() const;
 };
 
-typedef boost::function<MetaFunctionResult(const MetaFunctionParameters&)> MetaFunction;
+/** Callable is the primary callback interface when 'dynamic' functions
+ * can be needed: it takes the whole argument list as a MetaFunctionParameters.
+ *
+ */
+typedef boost::function<MetaFunctionResult(const MetaFunctionParameters&)> MetaCallable;
 
-
-template<typename F> MetaFunction makeFunctor(boost::function<F> func);
-template<typename F> MetaFunction makeFunctor(F func);
-template<typename C, typename F> MetaFunction makeFunctor(C* inst, F func);
+template<typename T> MetaCallable makeCallable(T fun);
+QIMESSAGING_API MetaCallable makeCallable(FunctionValue function);
 
 }
-
-
 
 #include "qimessaging/details/metafunction.hxx"
 

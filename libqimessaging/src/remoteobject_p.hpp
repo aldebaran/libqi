@@ -12,6 +12,7 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/dynamicobject.hpp>
 #include <qimessaging/signal.hpp>
 
 #include "src/messagedispatcher.hpp"
@@ -24,10 +25,13 @@ namespace qi {
 
   class TransportSocket;
 
-  class RemoteObjectPrivate : public qi::ObjectPrivate {
+
+
+  class RemoteObject : public qi::DynamicObject {
   public:
-    RemoteObjectPrivate(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo);
-    ~RemoteObjectPrivate();
+    RemoteObject();
+    RemoteObject(qi::TransportSocketPtr ts, unsigned int service, qi::MetaObject mo);
+    ~RemoteObject();
 
     void close();
 
@@ -36,29 +40,17 @@ namespace qi {
     void onMessagePending(const qi::Message &msg);
 
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& args);
-    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, qi::Object::MetaCallType callType = qi::Object::MetaCallType_Auto);
-
+    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
     virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
-
   public:
     TransportSocketPtr          _socket;
 
   protected:
     unsigned int                                    _service;
     std::map<int, qi::Promise<MetaFunctionResult> > _promises;
-    boost::mutex                                    _mutex;
+    boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
-  };
-
-
-  class RemoteObject : public qi::Object {
-  public:
-    RemoteObject();
-    RemoteObject(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo);
-    ~RemoteObject();
-
-    void close();
   };
 
 }

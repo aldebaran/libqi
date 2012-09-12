@@ -134,12 +134,12 @@ namespace qi {
     return &i->second;
   }
 
-  int MetaObject::methodId(const std::string &name)
+  int MetaObject::methodId(const std::string &name) const
   {
     return _p->methodId(name);
   }
 
-  int MetaObject::signalId(const std::string &name)
+  int MetaObject::signalId(const std::string &name) const
   {
     return _p->signalId(name);
   }
@@ -152,12 +152,12 @@ namespace qi {
     return _p->_events;
   }
 
-  std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name)
+  std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name) const
   {
     return _p->findMethod(name);
   }
 
-  std::vector<MetaSignal> MetaObject::findSignal(const std::string &name)
+  std::vector<MetaSignal> MetaObject::findSignal(const std::string &name) const
   {
     return _p->findSignal(name);
   }
@@ -185,5 +185,6 @@ namespace qi {
     stream & meta._p->_nextNumber;
     return stream;
   }
+
 
 }

@@ -24,7 +24,8 @@ namespace qi {
     qi::Future<qi::MetaObject> metaObject(unsigned int serviceId, unsigned int objectId);
 
   public:
-    qi::RemoteObject     _object;
+    qi::RemoteObject     _remoteObject;
+    qi::Object           _object;
   };
 }
 

@@ -52,7 +52,7 @@ static void cmd_service(const command           &cmd,
       {
         services[*it] = obj;
 
-        qi::MetaObject &mobj = obj.metaObject();
+        const qi::MetaObject &mobj = obj.metaObject();
         qi::MetaObject::MethodMap methods = mobj.methodMap();
         for (qi::MetaObject::MethodMap::const_iterator it2 = methods.begin();
              it2 != methods.end();

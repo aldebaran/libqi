@@ -24,6 +24,7 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/url.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include "../src/session_p.hpp"
 
 static int gLoopCount = 10000;
@@ -211,7 +212,7 @@ int main_server()
   std::cout << "Service Directory ready." << std::endl;
 
   qi::Session session;
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::Object  obj(ob.object());
   ServerEvent srv;

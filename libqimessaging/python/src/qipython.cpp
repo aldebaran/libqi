@@ -490,7 +490,7 @@ static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const 
   int nb_matching_methods = 0;
   qi::MetaMethod last_matching_method;
   qi::Object*               obj = reinterpret_cast<qi::Object*>(object_c);
-  qi::MetaObject            &meta = obj->metaObject();
+  const qi::MetaObject&     meta = obj->metaObject();
 
   // #0 Debug log
   qiLogDebug("qimessaging.python.qi_generic_call") << "Still " << candidates.size() << " candidates for " << sig << std::endl;
@@ -514,7 +514,7 @@ static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const 
 
   // #1.1 If there is only one signature matching, bingo !
   if (nb_matching_methods == 1)
-    return meta.method(meta.methodId(last_matching_method.signature()));
+    return const_cast<qi::MetaMethod*>(meta.method(meta.methodId(last_matching_method.signature())));
 
   // #1.2 If there is no matching method, raise
   if (candidates.size() == 0)
@@ -530,8 +530,8 @@ static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *sig
 {
   std::vector<std::string>  sigInfo;
   qi::Object*               obj = reinterpret_cast<qi::Object*>(object_c);
-  qi::MetaObject            &meta = obj->metaObject();
-  qi::MetaMethod*           mm;
+  const qi::MetaObject            &meta = obj->metaObject();
+  const qi::MetaMethod*           mm;
 
   // #1 : Check if user give us complete signature
   sigInfo = signatureSplit(signature);
@@ -540,13 +540,13 @@ static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *sig
   {
      if ((mm = meta.method(meta.methodId(signature))) == 0)
        qi_raise("_qimessaging.CallError", "No metamethod fetching signature");
-    return mm;
+    return const_cast<qi::MetaMethod*>(mm);
   }
 
   // #2 : Get all function with same name. If only one, bingo.
   std::vector<qi::MetaMethod> mml = meta.findMethod(signature);
   if (mml.size() == 1)
-    return meta.method(meta.methodId(mml[0].signature()));
+    return const_cast<qi::MetaMethod*>(meta.method(meta.methodId(mml[0].signature())));
 
   // #2.1 : If no function left, raise
   if (mml.size() == 0)
@@ -561,7 +561,7 @@ static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *sig
     if (nb_args == ((*it).signature().size() - sigInfo[1].size() - 4))
       candidates.push_back((*it));
   if (candidates.size() == 1)
-    return meta.method(meta.methodId(candidates[0].signature()));
+    return const_cast<qi::MetaMethod*>(meta.method(meta.methodId(candidates[0].signature())));
 
   // #3.1 : If no function left, raise
   if (candidates.size() == 0)

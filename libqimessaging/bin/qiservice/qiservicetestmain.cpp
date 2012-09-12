@@ -15,6 +15,7 @@
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 
 std::string reply(const std::string &msg) {
   qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
     {
       std::string masterAddress = vm["master-address"].as<std::string>();
       qi::Session       session;
-      qi::ObjectBuilder ob;
+      qi::DynamicObjectBuilder ob;
       ob.advertiseMethod<std::string (const std::string&)>("reply", &reply);
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);

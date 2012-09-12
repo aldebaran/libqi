@@ -82,7 +82,7 @@ namespace qi {
     qi::atomic<long>                _requestsIndex;
 
     //maintain a cache of remote object
-    typedef std::map<std::string, qi::RemoteObject> RemoteObjectMap;
+    typedef std::map<std::string, Object> RemoteObjectMap;
     RemoteObjectMap                 _remoteObjects;
     boost::mutex                    _remoteObjectsMutex;
 

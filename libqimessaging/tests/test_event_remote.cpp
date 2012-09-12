@@ -10,6 +10,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
 
@@ -27,7 +28,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
-    qi::ObjectBuilder ob;
+    qi::DynamicObjectBuilder ob;
     ob.advertiseEvent<void (*)(const int&)>("fire");
     oserver = new qi::Object(ob.object());
   }

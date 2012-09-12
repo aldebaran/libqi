@@ -25,6 +25,7 @@ namespace po = boost::program_options;
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 
 static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
@@ -46,7 +47,7 @@ qi::Buffer replyBuf(const qi::Buffer& buf)
 
 int main_local()
 {
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::Object obj(ob.object());
@@ -206,7 +207,7 @@ int main_server(std::string host, std::string port)
   std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
 
   qi::Session       session;
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::Object obj(ob.object());
@@ -294,7 +295,10 @@ int main(int argc, char **argv)
     } while (!serverReady); // be nice for valgrind
     boost::thread threadServer2(boost::bind(&main_gateway, host, port));
     qi::os::sleep(1);
-    start_client(gThreadCount, host, "12345");
+    std::string port = "12345";
+    if (getenv("NO_GATEWAY"))
+      port = sdPort;
+    start_client(gThreadCount, host, port);
   }
   return 0;
 }

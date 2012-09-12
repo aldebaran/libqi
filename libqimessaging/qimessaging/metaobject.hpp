@@ -15,15 +15,16 @@
 namespace qi {
 
   class MetaObjectPrivate;
-  class QIMESSAGING_API MetaObject {
+  /// Description of the signals and methods accessible on an ObjectType
+  class QIMESSAGING_API MetaObject  {
   public:
     MetaObject();
     MetaObject(const MetaObject &other);
     MetaObject& operator=(const MetaObject &other);
     ~MetaObject();
 
-    int methodId(const std::string &name);
-    int signalId(const std::string &name);
+    int methodId(const std::string &name) const;
+    int signalId(const std::string &name) const;
 
     typedef std::map<unsigned int, MetaMethod> MethodMap;
     MethodMap methodMap() const;
@@ -38,13 +39,13 @@ namespace qi {
     MetaSignal*       signal(unsigned int id);
     const MetaSignal* signal(unsigned int id) const;
 
-    std::vector<MetaMethod> findMethod(const std::string &name);
-    std::vector<MetaSignal> findSignal(const std::string &name);
+    std::vector<MetaMethod> findMethod(const std::string &name) const;
+    std::vector<MetaSignal> findSignal(const std::string &name) const;
 
     MetaObjectPrivate   *_p;
   };
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
+   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta);
 

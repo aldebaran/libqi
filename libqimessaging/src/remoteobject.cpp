@@ -15,50 +15,30 @@
 
 namespace qi {
 
-  RemoteObject::RemoteObject()
-    : Object()
-  {
-  }
-
   RemoteObject::RemoteObject(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo)
-    : Object(new RemoteObjectPrivate(socket, service, mo))
-  {
-  }
-
-  RemoteObject::~RemoteObject()
-  {
-  }
-
-  void RemoteObject::close() {
-    boost::shared_ptr<RemoteObjectPrivate> p = boost::dynamic_pointer_cast<RemoteObjectPrivate>(_p);
-    if (p)
-      p->close();
-  }
-
-
-  //### RemoteObjectPrivate
-
-  RemoteObjectPrivate::RemoteObjectPrivate(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo)
-    : ObjectPrivate(mo)
-    , _socket(socket)
+    : _socket(socket)
     , _service(service)
   {
-    _linkMessageDispatcher = _socket->messagePendingConnect(service, boost::bind<void>(&RemoteObjectPrivate::onMessagePending, this, _1));
+    _linkMessageDispatcher = _socket->messagePendingConnect(service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+    setMetaObject(mo);
   }
 
-  RemoteObjectPrivate::~RemoteObjectPrivate()
+  //### RemoteObject
+
+
+  RemoteObject::~RemoteObject()
   {
     //close may already have been called. (by Session_Service.close)
     close();
   }
 
-  void RemoteObjectPrivate::onMessagePending(const qi::Message &msg)
+  void RemoteObject::onMessagePending(const qi::Message &msg)
   {
     qi::Promise<MetaFunctionResult>                           promise;
     bool                                                      found = false;
     std::map<int, qi::Promise<MetaFunctionResult> >::iterator it;
 
-    qiLogDebug("RemoteObject") << "msg " << msg.type() << " " << msg.buffer().size();
+    qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
     {
       boost::mutex::scoped_lock lock(_mutex);
       it = _promises.find(msg.id());
@@ -72,7 +52,8 @@ namespace qi {
     switch (msg.type()) {
       case qi::Message::Type_Reply:
         if (!found) {
-          qiLogError("remoteobject") << "no promise found for req id:" << msg.id();
+          qiLogError("remoteobject") << "no promise found for req id:" << msg.id()
+          << "  obj: " << msg.service() << "  func: " << msg.function();
           return;
         }
         promise.setValue(MetaFunctionResult(msg.buffer()));
@@ -87,9 +68,17 @@ namespace qi {
         promise.setError(sig);
         return;
       }
-      case qi::Message::Type_Event:
-        trigger(msg.function(), MetaFunctionParameters(msg.buffer()));
+      case qi::Message::Type_Event: {
+        SignalBase* sb = getSignal(msg.event());
+        if (sb)
+          sb->trigger(MetaFunctionParameters(msg.buffer()));
+        else
+        {
+          qiLogWarning("remoteobject") << "Event message on unknown signal " << msg.event();
+          qiLogDebug("remoteobject") << metaObject().signalMap().size();
+        }
         return;
+      }
       default:
         qiLogError("remoteobject") << "Message (#" << msg.id() << ") type not handled: " << msg.type();
         return;
@@ -97,7 +86,7 @@ namespace qi {
   }
 
 
-  qi::Future<MetaFunctionResult> RemoteObjectPrivate::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, qi::Object::MetaCallType callType)
+  qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, MetaCallType callType)
   {
     qi::Promise<MetaFunctionResult> out;
     qi::Message msg;
@@ -106,7 +95,8 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(qi::Message::Object_Main);
     msg.setFunction(method);
-
+    qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " "
+     << msg.function() <<" " << msg.id();
     {
       boost::mutex::scoped_lock lock(_mutex);
       if (_promises.find(msg.id()) != _promises.end())
@@ -139,14 +129,13 @@ namespace qi {
     return out.future();
   }
 
-  void RemoteObjectPrivate::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
+  void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
   {
     // Bounce the emit request to server
     // TODO: one optimisation that could be done is to trigger the local
     // subscribers immediately.
     // But it is a bit complex, because the server will bounce the
     // event back to us.
-    qiLogError("Not implemented yet lol");
     qi::Message msg;
     msg.setBuffer(args.getBuffer());
     msg.setType(Message::Type_Event);
@@ -154,16 +143,18 @@ namespace qi {
     msg.setObject(qi::Message::Object_Main);
     msg.setFunction(event);
     if (!_socket->send(msg)) {
-      qiLogError("remoteobject") << "error while registering event";
+      qiLogError("remoteobject") << "error while emiting event";
     }
   }
 
-  unsigned int RemoteObjectPrivate::connect(unsigned int event, const SignalSubscriber& sub)
+  unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
-    // Bind the function locally.
-    unsigned int uid = ObjectPrivate::connect(event, sub);
+    // Bind the subscriber locally.
+    unsigned int uid = DynamicObject::connect(event, sub);
     // Notify the Service that we are interested in its event.
     // Provide our uid as payload
+    // We send one message per connect, even on the same event: the remot
+    // end is doing the refcounting
     qi::Message msg;
     qi::Buffer buf;
     qi::ODataStream ds(buf);
@@ -181,18 +172,17 @@ namespace qi {
     return uid;
   }
 
-  bool RemoteObjectPrivate::disconnect(unsigned int linkId)
+  bool RemoteObject::disconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
-
-    ObjectPrivate::SignalSubscriberMap::iterator i = _subscribers.find(event);
-    if (i == _subscribers.end())
+    //disconnect locally
+    bool ok = DynamicObject::disconnect(linkId);
+    if (!ok)
     {
-      qiLogWarning("qi.object") << "Disconnect on non instanciated signal";
+      qiLogWarning("qi.object") << "Disconnection failure for " << linkId;
       return false;
     }
-
-    if (ObjectPrivate::disconnect(linkId))
+    else
     {
       // Tell the remote we are no longer interested.
       qi::Message msg;
@@ -205,18 +195,13 @@ namespace qi {
       msg.setObject(Message::Object_Main);
       msg.setFunction(Message::ServerFunction_UnregisterEvent);
       if (!_socket->send(msg)) {
-        qiLogError("remoteobject") << "error while registering event";
+        qiLogError("remoteobject") << "error while disconnecting signal";
       }
       return true;
     }
-    else
-    {
-      qiLogWarning("remoteobject") << "Disconnect failure on " << linkId;
-      return false;
-    }
   }
 
-  void RemoteObjectPrivate::close() {
+  void RemoteObject::close() {
     _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
   }
 

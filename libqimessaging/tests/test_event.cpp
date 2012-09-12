@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 
 static int lastPayload = 0;
 static qi::Promise<int> pPayload;
@@ -19,7 +20,7 @@ void onFire(const int& pl)
 
 TEST(TestObject, Simple)
 {
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseEvent<void (*)(int)>("fire");
   qi::Object obj(ob.object());
   EXPECT_EQ(1U, obj.metaObject().signalMap().size());
@@ -41,7 +42,7 @@ TEST(TestObject, Simple)
 TEST(TestObject, EmitMethod)
 {
   lastPayload = 0;
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("fire", &onFire);
   qi::Object obj(ob.object());
   pPayload.reset();

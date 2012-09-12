@@ -55,7 +55,7 @@ namespace qi {
       i->second.call(params);
   }
 
-  static void functor_call(MetaFunction f,
+  static void functor_call(MetaCallable f,
     const MetaFunctionParameters& args)
   {
     f(args);
@@ -79,7 +79,7 @@ namespace qi {
       target.metaEmit(method, args);
   }
 
-  SignalBase::Link SignalBase::connect(MetaFunction callback, EventLoop* ctx)
+  SignalBase::Link SignalBase::connect(FunctionValue callback, EventLoop* ctx)
   {
     return connect(SignalSubscriber(callback, ctx));
   }
@@ -100,8 +100,9 @@ namespace qi {
     if (s.target.isValid())
     {
       Object o = s.target;
-      boost::recursive_mutex::scoped_lock sl(o._p->_mutexRegistration);
-      o._p->_registrations.push_back(s);
+      Manageable* m = o.type->manageable(o.value);
+      if (m)
+        m->addRegistration(s);
     }
     return res;
   }
@@ -122,16 +123,9 @@ namespace qi {
     subscriberMap.erase(it);
     if (s.target.isValid())
     {
-      boost::recursive_mutex::scoped_lock sl(s.target._p->_mutexRegistration);
-      std::vector<SignalSubscriber>& regs = s.target._p->_registrations;
-      // Look it up in vector, then swap with last.
-      for (unsigned int i = 0; i < regs.size(); ++i)
-        if (s.linkId == regs[i].linkId)
-        {
-          regs[i] = regs[regs.size()-1];
-          regs.pop_back();
-          break;
-        }
+      Manageable* m = s.target.type->manageable(s.target.value);
+      if (m)
+        m->removeRegistration(l);
     }
     return true;
   }

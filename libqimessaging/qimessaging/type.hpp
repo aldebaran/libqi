@@ -80,7 +80,6 @@ public:
     ::qi::typeOf<type>());
 };
 
-
 /** Meta-type specialization.
  *  Use the aspect pattern, make a class per feature group
  *  (Clone, Value, Serialize)
@@ -93,6 +92,20 @@ public:
   void* clone(void* src)
   {
     return new T(*(T*)src);
+  }
+
+  void destroy(void* ptr)
+  {
+    delete (T*)ptr;
+  }
+};
+
+template<typename T> class TypeNoClone
+{
+public:
+  void* clone(void* src)
+  {
+    return src;
   }
 
   void destroy(void* ptr)
@@ -123,11 +136,13 @@ template<typename T>class TypeNoValue
 public:
   bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
+    qiLogWarning("qi.type") << "toValue not implemented for type ";
     return false;
   }
 
   void* fromValue(const qi::detail::DynamicValue& val)
   {
+    qiLogWarning("qi.type") << "fromValue not implemented for type ";
     T* res = new T();
     return res;
   }

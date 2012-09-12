@@ -12,22 +12,18 @@
 
 namespace qi {
 
-  typedef boost::function<MetaFunctionResult(Value, const MetaFunctionParameters&)> MetaCallable;
-
+  /// Representation of a method in an Object.
   class QIMESSAGING_API MetaMethod {
   public:
     MetaMethod() {};
-    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature, MetaCallable value);
-    MetaMethod(const std::string& name, unsigned int uid, MethodValue value);
-    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature, MetaFunction val);
+    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature);
 
     std::string signature() const;
     std::string sigreturn() const;
-    const MetaCallable& functor() const;
+
     unsigned int       uid() const;
 
   protected:
-    MetaCallable      _functor;
     unsigned int      _uid;
     std::string       _signature;
     std::string       _sigreturn;

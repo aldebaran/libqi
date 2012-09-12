@@ -26,6 +26,8 @@ namespace qi
     }
     std::string signature() const { return type->signature();}
     std::string sigreturn() const { return type->sigreturn();}
+    ///@return equivalent function value
+    FunctionValue toFunction();
     MethodType* type;
     void*       value;
   };

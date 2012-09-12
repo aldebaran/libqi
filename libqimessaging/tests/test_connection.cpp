@@ -13,6 +13,7 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/application.hpp>
@@ -160,7 +161,7 @@ int main(int argc, char **argv) {
   sd.listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   ob.advertiseMethod("replyBufA", &replyBufA);

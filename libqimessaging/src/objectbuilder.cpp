@@ -8,88 +8,116 @@
 #include <qimessaging/objectbuilder.hpp>
 #include <boost/thread.hpp>
 #include <qimessaging/object.hpp>
-#include "object_p.hpp"
-#include "metasignal_p.hpp"
-#include "objectbuilder_p.hpp"
+#include <qimessaging/dynamicobject.hpp>
+
 #include "metaobject_p.hpp"
 
 namespace qi {
 
-  ObjectBuilder::ObjectBuilder()
-    : _p(new ObjectBuilderPrivate())
+  class StaticObjectBuilderPrivate
+  {
+  public:
+    StaticObjectBuilderPrivate() : type(0), classType(0)  {}
+    ObjectTypeData data;
+    ObjectType*    type;
+    Type*          classType;
+    MetaObject     metaObject;
+  };
+
+  StaticObjectBuilder::StaticObjectBuilder()
+  : _p(new StaticObjectBuilderPrivate())
   {
   }
 
-  ObjectBuilder::~ObjectBuilder()
+  StaticObjectBuilder::~StaticObjectBuilder()
   {
     delete _p;
   }
 
-  int ObjectBuilder::xForgetMethod(const std::string &meth)
+  int StaticObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, MethodValue func)
   {
-    boost::recursive_mutex::scoped_lock sl(_p->_metaObject._p->_mutexMethod);
-    std::map<std::string, unsigned int>::iterator it;
-
-    it = _p->_metaObject._p->_methodsNameToIdx.find(meth);
-    if (it != _p->_metaObject._p->_methodsNameToIdx.end())
-    {
-      _p->_metaObject._p->_methodsNameToIdx.erase(it);
-      return (0);
-    }
-
-    return (1);
+    unsigned int nextId = _p->metaObject._p->_methods.size()
+      +  _p->metaObject._p->_events.size();
+    MetaMethod mm(nextId, retsig, signature);
+    _p->metaObject._p->_methods[mm.uid()] = mm;
+    _p->data.methodMap[mm.uid()] = func;
+    return nextId;
   }
 
-  int ObjectBuilder::xAdvertiseMethod(const std::string &sigret, const std::string& signature, MetaFunction functor) {
-    boost::recursive_mutex::scoped_lock sl(_p->_metaObject._p->_mutexMethod);
-
-    std::map<std::string, unsigned int>::iterator it;
-    it = _p->_metaObject._p->_methodsNameToIdx.find(signature);
-    if (it != _p->_metaObject._p->_methodsNameToIdx.end())
-    {
-      unsigned int uid = it->second;
-      MetaMethod mm(uid, sigret, signature, functor);
-      // find it
-      _p->_metaObject._p->_methods[uid] = mm;
-      qiLogVerbose("qi.Object") << "rebinding method:" << signature;
-      return uid;
-    }
-    unsigned int idx = _p->_metaObject._p->_nextNumber++;
-    MetaMethod mm(idx,sigret, signature, functor);
-    _p->_metaObject._p->_methods[idx] = mm;
-    _p->_metaObject._p->_methodsNameToIdx[signature] = idx;
-    qiLogVerbose("qi.Object") << "binding method:" << signature;
-    return idx;
+  int StaticObjectBuilder::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter)
+  {
+    unsigned int nextId = _p->metaObject._p->_methods.size()
+      +  _p->metaObject._p->_events.size();
+    MetaSignal ms(nextId, signature);
+    _p->metaObject._p->_events[nextId] = ms;
+    _p->data.signalGetterMap[nextId] = getter;
+    return nextId;
   }
 
-  int ObjectBuilder::xAdvertiseEvent(const std::string& signature) {
-    boost::recursive_mutex::scoped_lock sl(_p->_metaObject._p->_mutexEvent);
-    if (signature.empty())
-    {
-      qiLogError("qi.Object") << "Event has empty signature.";
-      return -1;
-    }
-    std::map<std::string, unsigned int>::iterator it;
-
-    it = _p->_metaObject._p->_eventsNameToIdx.find(signature);
-    if (it != _p->_metaObject._p->_eventsNameToIdx.end())
-    { // Event already there.
-      qiLogError("qi.Object") << "event already there";
-      return it->second;
-    }
-    unsigned int idx = _p->_metaObject._p->_nextNumber++;
-    MetaSignal me(signature);
-    me._p->_uid = idx;
-    _p->_metaObject._p->_events[idx] = me;
-    _p->_metaObject._p->_eventsNameToIdx[signature] = idx;
-    qiLogVerbose("qi.Object") << "binding event:" << signature <<" with id "
-    << idx;
-    return idx;
+  void StaticObjectBuilder::xBuildFor(Type* type)
+  {
+    _p->classType = type;
   }
 
-  qi::Object ObjectBuilder::object() {
-    qi::Object obj(_p->_metaObject);
-    return obj;
+  ObjectType* & StaticObjectBuilder::_type()
+  {
+    return _p->type;
+  }
+  void StaticObjectBuilder::_init()
+  {
+    _p->metaObject._p->refreshCache();
+    dynamic_cast<StaticObjectTypeBase*>(_p->type)->initialize(_p->metaObject, _p->data);
+  }
+
+  const MetaObject& StaticObjectBuilder::metaObject()
+  {
+    _p->metaObject._p->refreshCache();
+    return _p->metaObject;
+  }
+
+  class DynamicObjectBuilderPrivate
+  {
+  public:
+    DynamicObjectBuilderPrivate() : object(new DynamicObject())  {}
+    ~DynamicObjectBuilderPrivate() {}
+    DynamicObject* object;
+    MetaObject     metaObject;
+  };
+
+  DynamicObjectBuilder::DynamicObjectBuilder()
+  {
+    _p = new DynamicObjectBuilderPrivate;
+  }
+
+  DynamicObjectBuilder::~DynamicObjectBuilder()
+  {
+    delete _p;
+  }
+
+  int DynamicObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func)
+  {
+    unsigned int nextId = _p->metaObject._p->_methods.size()
+      +  _p->metaObject._p->_events.size();
+    MetaMethod mm(nextId, retsig, signature);
+    _p->metaObject._p->_methods[mm.uid()] = mm;
+    _p->object->setMethod(nextId, func);
+    return nextId;
+  }
+
+  int DynamicObjectBuilder::xAdvertiseEvent(const std::string& signature)
+  {
+    unsigned int nextId = _p->metaObject._p->_methods.size()
+      +  _p->metaObject._p->_events.size();
+    MetaSignal ms(nextId, signature);
+    _p->metaObject._p->_events[nextId] = ms;
+    return nextId;
+  }
+
+  Object DynamicObjectBuilder::object()
+  {
+    _p->metaObject._p->refreshCache();
+    _p->object->setMetaObject(_p->metaObject);
+    return makeDynamicObject(_p->object);
   }
 
 }

@@ -9,6 +9,7 @@
 #include <qimessaging/value.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
+#include <qimessaging/objectbuilder.hpp>
 
 #include <qimessaging/c/object_c.h>
 #include <qimessaging/c/message_c.h>
@@ -59,7 +60,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
 
   // Get sigreturn for functor result
   int methodId = obj->metaObject().methodId(signature_c);
-  qi::MetaMethod *mm = obj->metaObject().method(methodId);
+  const qi::MetaMethod *mm = obj->metaObject().method(methodId);
 
   // Get buffer from message
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(message);
@@ -77,13 +78,13 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
 
 qi_object_builder_t *qi_object_builder_create()
 {
-  qi::ObjectBuilder *ob = new qi::ObjectBuilder();
+  qi::DynamicObjectBuilder *ob = new qi::DynamicObjectBuilder();
   return (qi_object_builder_t *) ob;
 }
 
 void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
 {
-  qi::ObjectBuilder *ob = reinterpret_cast<qi::ObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   delete ob;
 }
 
@@ -116,7 +117,7 @@ qi::MetaFunctionResult c_call(
 
 int          qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
-  qi::ObjectBuilder *ob = reinterpret_cast<qi::ObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder  *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   std::string signature(complete_signature);
   std::vector<std::string>  sigInfo;
 
@@ -130,7 +131,7 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 }
 
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
-  qi::ObjectBuilder *ob = reinterpret_cast<qi::ObjectBuilder *>(object_builder);
+  qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
   qi::Object *o = reinterpret_cast<qi::Object *>(obj);
   *o = ob->object();

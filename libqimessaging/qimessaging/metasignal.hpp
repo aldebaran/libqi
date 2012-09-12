@@ -11,23 +11,20 @@
 
 namespace qi {
 
-  class MetaSignalPrivate;
-  class Object;
-  class EventLoop;
+
+  /// Representation of a Signal in an Object.
   class QIMESSAGING_API MetaSignal {
   public:
-    MetaSignal(const std::string &sig);
+    MetaSignal(unsigned int uid, const std::string &sig);
     MetaSignal();
-    MetaSignal(const MetaSignal &other);
-    MetaSignal& operator=(const MetaSignal &other);
     ~MetaSignal();
 
     const std::string &signature() const;
     unsigned int       uid() const;
 
   protected:
-  public:
-    MetaSignalPrivate   *_p;
+    unsigned int _uid;
+    std::string  _signature;
   };
 
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaSignal &meta);

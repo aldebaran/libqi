@@ -13,18 +13,20 @@
 namespace qi {
 
   static qi::MetaObject serviceDirectoryMetaObject() {
-    qi::ObjectBuilder  ob;
 
+    // We just want the MetaType, so we can use any builder
+    qi::StaticObjectBuilder ob;
+    StaticObjectBuilder::SignalMemberGetter dummy;
     //Do not look at the following 5 lines... and yes I know what I'am doing here.
-    ob.advertiseMethod("service",           (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::service);
-    ob.advertiseMethod("services",          (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::services);
-    ob.advertiseMethod("registerService",   (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::registerService);
-    ob.advertiseMethod("unregisterService", (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::unregisterService);
-    ob.advertiseMethod("serviceReady",      (ServiceDirectoryPrivate *)0, &ServiceDirectoryPrivate::serviceReady);
-    ob.advertiseEvent<void (std::string)>("serviceAdded");
-    ob.advertiseEvent<void (std::string)>("serviceRemoved");
+    ob.advertiseMethod("service",           &ServiceDirectoryPrivate::service);
+    ob.advertiseMethod("services",          &ServiceDirectoryPrivate::services);
+    ob.advertiseMethod("registerService",   &ServiceDirectoryPrivate::registerService);
+    ob.advertiseMethod("unregisterService", &ServiceDirectoryPrivate::unregisterService);
+    ob.advertiseMethod("serviceReady",      &ServiceDirectoryPrivate::serviceReady);
+    ob.advertiseEvent<void (std::string)>("serviceAdded", dummy);
+    ob.advertiseEvent<void (std::string)>("serviceRemoved", dummy);
 
-    qi::MetaObject m = ob.object().metaObject();
+    qi::MetaObject m = ob.metaObject();
     //verify that we respect the WIRE protocol
     assert(m.methodId("service::(s)") == qi::Message::ServiceDirectoryFunction_Service);
     assert(m.methodId("services::()") == qi::Message::ServiceDirectoryFunction_Services);
@@ -36,9 +38,10 @@ namespace qi {
 
   ServiceDirectoryClient::ServiceDirectoryClient()
     : _socket(qi::TcpTransportSocketPtr(new TcpTransportSocket()))
-    , _object(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
+    , _remoteObject(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
     //TODO: add callback on the socket for SessionDisconnected
+    _object = makeDynamicObject(&_remoteObject);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()

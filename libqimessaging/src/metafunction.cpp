@@ -133,6 +133,53 @@ const std::vector<Value>& MetaFunctionParameters::getValues() const
   return storage->parameterValues;
 }
 
+const std::vector<Value> MetaFunctionParameters::getValues(const std::vector<Type*>& types) const
+{
+  if (!storage || !storage->valid)
+  {
+    if (!storage)
+      qiLogError("qi.meta") << "getValues() on uninitialized storage";
+    else
+      qiLogError("qi.meta") << "getValues() on invalidated storage";
+    static std::vector<Value> dummy;
+    return dummy;
+  }
+  if (storage->parameterValues.empty() && storage->parameterBuffer.size())
+  {
+    qiLogDebug("qi.meta") << "Generating values from serialization";
+    IDataStream in(storage->parameterBuffer);
+    std::vector<Value> res;
+    for (unsigned i=0; i<types.size(); ++i)
+    {
+      void* val = types[i]->deserialize(in);
+      Value v;
+      v.type = types[i];
+      v.value = val;
+      res.push_back(v);
+    }
+    return res;
+  }
+  else
+  {
+    if (storage->parameterValues.size() != types.size())
+    {
+      qiLogWarning("qi.functionparameters") << "Arity mismatch";
+    }
+    std::vector<Value> res;
+    for (unsigned i=0; i<std::min(types.size(), storage->parameterValues.size())
+      ; ++i)
+    {
+
+      Value c = storage->parameterValues[i].convert(*types[i]);
+      qiLogDebug("qi.functionparameters") <<"convert "
+       << storage->parameterValues[i].type->infoString() <<" "
+       << c.type->infoString() << " " << c.value;
+      res.push_back(c);
+    }
+    return res;
+  }
+}
+
 const Buffer& MetaFunctionParameters::getBuffer() const
 {
   if (!storage)

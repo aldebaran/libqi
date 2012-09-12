@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 #include <qimessaging/object.hpp>
+#include <qimessaging/objectbuilder.hpp>
 #include <qi/application.hpp>
 
 
@@ -65,7 +66,7 @@ void fireSameThreadIn(qi::Object* obj, qi::EventLoop* el, void* tid)
 
 qi::Object* makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
 {
-  qi::ObjectBuilder ob;
+  qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseEvent<void (unsigned long)>("fire");
   qi::Object* res = new qi::Object(ob.object());

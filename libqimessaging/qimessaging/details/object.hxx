@@ -105,7 +105,7 @@ namespace qi {
       qi::AutoValue p8)
   {
     qi::Promise<R> res;
-    if (!_p) {
+    if (!value || !type) {
       res.setError("Invalid Object");
       return res.future();
     }
