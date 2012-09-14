@@ -1,0 +1,17 @@
+// -*- C++ -*-
+
+  /*!
+  * \file api_c.h
+  * \brief Declare necessary macros
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \def QIMESSAGING_API
+  * \brief Indicates to compiler that symbols has to be exported
+  * \see Windows : __declspec(dllexport)
+         Unix : __attribute__ ((visibility("default"))
+  * \since 1.18

@@ -1,0 +1,313 @@
+// -*- C -*-
+
+  /*!
+  * \file message_c.h
+  * \brief Create and manipulate QiMessaging messages.
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \typedef qi_message_t
+  * \brief Contains QiMessaging message, message writer and message reader.
+  * \see qi::Signature
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_create()
+  * \brief Allocate and initialize a QiMessaging message.
+  * \return Pointer on new qi_message_t on success, 0 on failure.
+  * \note This pointer must be free using qi_message_destroy
+  * \see qi::Message
+  * \see qi_message_destroy
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_destroy(qi_message_t *msg)
+  * \brief Free and destroy a qi_message_t.
+  * \param[in] msg : Pointer to message to destroy.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_bool(qi_message_t *msg, char b)
+  * \brief Write a boolean value into message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_BOOL
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_int8(qi_message_t *msg, char b)
+  * \brief Write an 8 bit integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_CHAR
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_int16(qi_message_t *msg, short b)
+  * \brief Write a 16 bit integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_SHORT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_int32(qi_message_t *msg, int b)
+  * \brief Write a 32 bit integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_INT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_int64(qi_message_t *msg, long long b)
+  * \brief Write a 64 bit integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_LONG
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_uint8(qi_message_t *msg, unsigned char b)
+  * \brief Write an 8 bit unsigned integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_UCHAR
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_uint16(qi_message_t *msg, unsigned short b)
+  * \brief Write a 16 bit unsigned integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_USHORT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_uint32(qi_message_t *msg, unsigned int b)
+  * \brief Write a 32 bit unsigned integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_UINT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_uint64(qi_message_t *msg, unsigned long long b)
+  * \brief Write a 64 bit unsigned integer value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_ULONG
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_float(qi_message_t *msg, float f)
+  * \brief Write a 32 bit decimal floating value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] f : Value of floating number to add into message.
+  * \see QI_FLOAT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_double(qi_message_t *msg, double d)
+  * \brief Write a 64 bit decimal floating value in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] d : Value of floating number to add into message.
+  * \see QI_DOUBLE
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_string(qi_message_t *msg, const char *s)
+  * \brief Write a string in message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] b : Value to add into message.
+  * \see QI_STRING
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
+  * \brief Write raw data into message.
+  * \param[out] msg : Pointer to message to use.
+  * \param[in] s : Buffer to write into message.
+  * \param[in] size : Size of buffer.
+  * \see QI_RAW
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_bool(qi_message_t *msg)
+  * \brief Read and consume an 8 bits integer from message.
+  * \param[in] msg : Source message.
+  * \return 8 bits integer.
+  * \see QI_BOOL
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_int8(qi_message_t *msg)
+  * \brief Read and consume a character from message.
+  * \param[in] msg : Source message.
+  * \return 8 bits integer.
+  * \see QI_CHAR
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_int16(qi_message_t *msg)
+  * \brief Read and consume a short from message.
+  * \param[in] msg : Source message.
+  * \return 16 bits integer.
+  * \see QI_SHORT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_int32(qi_message_t *msg)
+  * \brief Read and consume a int from message.
+  * \param[in] msg : Source message.
+  * \return 32 bits integer.
+  * \see QI_INT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_int64(qi_message_t *msg)
+  * \brief Read and consume a long long from message.
+  * \param[in] msg : Source message.
+  * \return 64 bits integer.
+  * \see QI_LONG
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_uint8(qi_message_t *msg)
+  * \brief Read and consume an unsigned character from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 8 bits integer.
+  * \see QI_UCHAR
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_uint16(qi_message_t *msg)
+  * \brief Read and consume an unsigned short from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 16 bits integer.
+  * \see QI_USHORT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_uint32(qi_message_t *msg)
+  * \brief Read and consume an unsigned int from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 32 bits integer.
+  * \see QI_UINT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_uint64(qi_message_t *msg)
+  * \brief Read and consume an unsigned long long from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 64 bits integer.
+  * \see QI_ULONG
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_float(qi_message_t *msg)
+  * \brief Read and consume a float from message.
+  * \param[in] msg : Source message.
+  * \return 32 bits floating number.
+  * \see QI_FLOAT
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_double(qi_message_t *msg)
+  * \brief Read and consume a double from message.
+  * \param[in] msg : Source message.
+  * \return 64 bits floating number.
+  * \see QI_DOUBLE
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_string(qi_message_t *msg)
+  * \brief Read and consume a string from message.
+  * \param[in] msg : Source message.
+  * \return Pointer to character string.
+  * \see QI_STRING
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_raw(qi_message_t *msg, unsigned int *size)
+  * \brief Read and consume raw data from message.
+  * \param[in] msg : Source message.
+  * \param[out] size : Size actually read.
+  * \return Pointer to raw buffer.
+  * \see QI_RAW
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_list_size(qi_message_t *msg)
+  * \brief Read and consume list size from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 32 bits integer.
+  * \see QI_LIST
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_map_size(qi_message_t *msg)
+  * \brief Read and consume map size from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 32 bits integer.
+  * \see QI_MAP
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_read_tupple_size(qi_message_t *msg)
+  * \brief Read and consume tupple size from message.
+  * \param[in] msg : Source message.
+  * \return Unsigned 32 bits integer.
+  * \see QI_TUPPLE
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_free_raw(char *raw)
+  * \brief Free raw buffer returned by qi_message_read_raw.
+  * \param[in] raw : Pointer to raw buffer.
+  * \see QI_RAW
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_message_free_string(char *string)
+  * \brief Free character string returned by qi_message_read_string.
+  * \param[in] raw : Pointer to character string.
+  * \see QI_RAW
+  * \since 1.18
+  */

@@ -1,0 +1,104 @@
+// -*- C -*-
+
+/*!
+ * \file object_c.h
+ * \brief QiMessaging objects manipulation.
+ * \author Pierre Roullon
+ * \copyright (C) Aldebaran Robotics
+ * \date 2012
+ * \since 1.18
+ */
+
+/*!
+ * \struct qi_object_t
+ * \brief Opaque pointer to qi::Object for QiMessaging C bindings object handling.
+ * \ingroup Object
+ * \since 1.18
+ */
+
+/*!
+ * \struct qi_object_builder_t
+ * \brief Opaque pointer on qi::ObjectBuilder for QiMessaging C bindings object creation.
+ * \ingroup ObjectBuilder
+ * \since 1.18
+ */
+
+/*!
+ * \typedef qi_object_method_t
+ * \brief Typedef for bound qi_object_t method signature.
+ * \param[in] complete_signature : Method signature.
+ * \param[in] msg : Message containing all parameters.
+ * \param[out] ret : Method return value.
+ * \param[in] data : Pointer to data given on qi_object_builder_register_method
+ * \see qi_object_builder_register_method
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_create()
+ * \ingroup Object
+ * \brief Allocate and initialize an empty QiMessaging object.
+ * \note Returned pointer must be destroyed using qi_object_destroy.
+ * \see qi::Object
+ * \see qi_object_destroy
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_destroy(qi_object_t *object)
+ * \ingroup Object
+ * \brief Free a QiMessaging object.
+ * \param[in] object : Object to destroy.
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_call(qi_object_t *object, const char *signature, qi_message_t *message)
+ * \ingroup Object
+ * \brief Call a function bound on given object and return a future on function return value.
+ * \param[in] object : Object to use.
+ * \param[in] signature : Signature of function to call.
+ * \param[in] message : Arguments for called function.
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_builder_create()
+ * \ingroup ObjectBuilder
+ * \brief Allocate and initialise a QiMessaging object builder.
+ * \note Returned pointer must be destroyed using qi_object_builder_destroy.
+ * \see qi::ObjectBuilder
+ * \see qi_object_builder_destroy
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_builder_destroy(qi_object_builder_t *object)
+ * \ingroup ObjectBuilder
+ * \brief Free a QiMessaging object builder.
+ * \param[in] object : Object builder to destroy.
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_builder_register_method(qi_object_builder_t *object, const char *complete_signature, qi_object_method_t func, void *data)
+ * \ingroup ObjectBuilder
+ * \brief Register given function to given object builder.
+ * Function will be advertised to the world with given signature.
+ * \param[in] object : Object to use.
+ * \param[in] complete_signature : Signature of function to register.
+ * \param[in] func : Pointer on function to register.
+ * \param[in] data : Pointer on data corresponding to 4th argument of function.
+ * \see qi_object_method_t
+ * \note This function never fail.
+ * \since 1.18
+ */
+
+/*!
+ * \fn qi_object_builder_get_object(qi_object_builder_t *object_builder)
+ * \ingroup ObjectBuilder
+ * \brief Allocate, initialise and return a QiMessaging object instance from given object builder.
+ * \param[in] object_builder : Object builder to use.
+ * \return Pointer on object instance on success, 0 on failure.
+ * \since 1.18
+ */

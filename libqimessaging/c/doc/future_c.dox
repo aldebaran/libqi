@@ -1,0 +1,146 @@
+// -*- C -*-
+
+  /*!
+  * \file future_c.h
+  * \brief Allow easy asynchronous calls handling and synchronisation.
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_future_t
+  * \ingroup Future
+  * \brief C wrapper around qi::Future, qi_future represents a future return value of a QiMessaging call.
+  *        qi_promise_t is an internal C wrapper used to set future value when call is done.
+  * \note There is no function qi_future_create because a future is created by qi::Promise
+  * \see qi_object_call
+  * \see qi_promise_get_future
+  * \see qi::Future
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_promise_t
+  * \brief Internal part of qi_future, promise is used by qimessaging to control qi_future returned to user
+  * \see qi::Future
+  * \since 1.18
+  */
+
+  /*!
+  * \typedef qi_future_callback_t
+  * \brief Typedef for qi_future_t callback signature.
+  * The function is called when future is set, either value or error.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_promise_create()
+  * \brief Allocate and  a qi_promise_t.
+  * \note Returned qi_promise_t must be destroy with qi_promise_destroy
+  * \see qi_promise_destroy
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_promise_destroy(qi_promise_t *promise)
+  * \brief Free qi_promise allocated with qi_promise_create.
+  * \param[in] promise : Promise to free.
+  * \see qi_promise_create
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_promise_set_value(qi_promise_t *pr, void *value)
+  * \brief Set promise value.
+  * \param[in] pr : Promise to update.
+  * \param[in] value : Value to set.
+  * \note Whenever promise value is set, value of related future is also set.
+  * qi_future_wait() will therefore be triggered.
+  * \see qi_future_wait
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_promise_set_error(qi_promise_t *pr, const char *error)
+  * \brief Set promise error message.
+  * \param[in] pr : Promise to update.
+  * \param[in] error : Error message to set.
+  * \note Whenever promise error message is set, error message of related future is also set.
+  * Function qi_future_wait will therefore be triggered.
+  * \see qi_future_wait
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_promise_get_future(qi_promise_t *pr)
+  * \brief Create and  new future bound to given promise.
+  * \param[in] pr : Promise to use.
+  * \return Valid qi_future_t. This function never fail
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_destroy(qi_future_t *fut)
+  * \brief Free future returned by qi_promise_get_future.
+  * \param[in] fut : Pointer on qi_future_t to be free.
+  * \see qi_future_wait
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *data)
+  * \brief Add a callback to given future.
+  *  Callback will be called whenever future value or error is set.
+  *
+  * \param[in] fut : Future for which the callback is set.
+  * \param[in] cb : Pointer to callback function.
+  * \param[in] miscdata : Argument passed to callback.
+  *
+  * \see qi_future_callback_t
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_wait(qi_future_t *fut)
+  * \brief Wait until future value or error is set.
+  * \param[in] fut : Future to wait.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_is_error(qi_future_t *fut)
+  * \brief Check whether future encountered an error.
+  * \param[in] fut : Future to check.
+  * \return 0 on error, 1 on success.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_is_ready(qi_future_t *fut)
+  * \brief Check whether future value is set.
+  * \param[in] fut : Future to use.
+  * \return 0 on error, 1 on success.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_get_value(qi_future_t *fut)
+  * \brief Getter on future value.
+  *  If call is not finished, return 0.
+  *
+  * \param[in] fut : Future to use.
+  * \return 0 on error, pointer to value on success.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_future_get_error(qi_future_t *fut)
+  * \brief Getter on future error message.
+  *  If no error is set, return 0.
+  *
+  * \param[in] fut : Future to use.
+  * \return 0 on error, pointer to error message on success.
+  * \since 1.18
+  */

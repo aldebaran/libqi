@@ -1,0 +1,53 @@
+// -*- C++ -*-
+
+  /*!
+  * \file application_c.h
+  * \brief Ease startup and teardown of an executable.
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_application_t
+  * \brief C wrapper around qi::Application
+  * \see qi::Application
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_application_create(int *argc, char **argv)
+  * \brief Allocate an application and initialize application.
+  * \param[out] argc : The number of arguments. May be modified by callee if some arguments are consumed by the qi::Application.
+  * \param[out] argv : Main arguments.
+  *
+  * \note Returned pointer must be destroyed using qi_application_destroy
+  * \see qi_application_destroy
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_application_destroy(qi_application_t *app)
+  * \brief Free qi_application_t allocated with qi_application_create.
+  * \see qi_application_create
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_application_run(qi_application_t *app)
+  * \brief Waits until one of those conditions becomes true:
+  *    - stop() is called.
+  *    - TERM or QUIT signal is received.
+  *    - the Application instance is destroyed, which means main() is exiting.
+  *
+  * \see qi_application_stop
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_application_stop(qi_application_t *app)
+  * \brief Tear down application.
+  * Function qi_application_run() will return.
+  * \since 1.18
+  */

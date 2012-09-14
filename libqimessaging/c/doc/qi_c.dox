@@ -1,0 +1,10 @@
+// -*- C -*-
+
+  /*!
+  * \file qi_c.h
+  * \brief Contains all necessary includes to use QiMessaging C bindings.
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */

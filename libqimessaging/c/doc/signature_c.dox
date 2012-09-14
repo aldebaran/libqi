@@ -1,0 +1,161 @@
+// -*- C -*-
+
+  /*!
+  * \file signature_c.h
+  * \brief Enhance function signatures manipulation
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \enum qi_signature_type
+  * \brief Used to parse qimessaging method signatures.
+  *        Enum values refer to characters values used in signature
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_signature_t
+  * \brief C wrapper around qi::Signature
+  * \see qi::Signature
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_create(const char *signature)
+  * \brief Allocate and initialize a qi_signature_t.
+  * \note Returned pointer must be destroyed using qi_signature_destroy
+  *
+  * \param[in] signature : Signature to use.
+  *
+  * \return pointertoqi_signature_t on sucess, NULL on failure
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_create_subsignature(const char *signature)
+  * \brief Create signature from signature containing a complex type, such as a tupple, map or list.
+  *
+  * \param[in] signature : Signature to use.
+  *
+  * \return pointertoqi_signature_t on sucess, NULL on failure
+  * \since 1.18
+  *
+  * \code {.cpp}
+  // #1: Creating a method signature taking a string, a tuple and a boolean
+  qi_signature_t* signature = qi_signature_create("s(sbi)b");
+
+  // #2: Having fun with signature
+  // some foo...
+  qi_signature_next(signature); // signature iterator is now on tuple (sbi)
+  // some bar...
+
+  // #3: Create a subsignature for tuple only
+  qi_signature_t* subsignature = qi_signature_create_subsignature(qi_signature_current(signature));
+
+  printf("Tuple signature : %s\n", qi_signature_current(subsignature)); // Will print : "Tuple signature : sbi"
+  qi_signature_destroy(signature);
+  qi_signature_destroy(subsignature);
+  * \endcode
+  */
+
+  /*!
+  * \fn qi_signature_destroy(qi_signature_t *sig)
+  * \brief Liberate ressoures allocated by qi_signature_create()
+  * \see qi_signature_create
+  *
+  * \param[in] sig : Signature to use.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_count(qi_signature_t *sig)
+  * \brief Count the number of first level elements in the signature
+  *
+  * \param[in] sig : Signature to use.
+  *
+  * \return number of element, -1 on failure
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_next(qi_signature_t *sig)
+  * \brief Move signature iterator to the next element. All other iterators are invalidated.
+  * \see qi::Signature::Iterator
+  *
+  * \param[in] sig Signature to use.
+  *
+  * \return 0 on success, 1 on end, 2 on error
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_current(qi_signature_t *sig)
+  * \brief Return element under current iterator.
+  *        The user should not free returned value.
+  *
+  * \param[in] sig : Signature to use.
+  * \note If qi_signature_next() is called, the iterator is invalidated.
+  * \return Pointer to current element on success, NULL on error
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_current_type(qi_signature_t *sig)
+  * \brief Return element type under current iterator.
+  *
+  * \param[in] sig : Signature to use.
+  *
+  * \note If qi_signature_next() is called, the iterator is invalidated.
+  * \return qi_signature_type enum of current element on success
+  * \see qi_signature_type
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_is_pointer(const qi_signature_t *sig)
+  * \brief return type of current element of signature
+  *
+  * \param[in] sig : Signature to use.
+  *
+  * \return 1 if the current element is a pointer, 0 on failure and error
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_get_name(const char *complete_sig, char *buffer, int size)
+  * \brief copy method name into buffer
+  *
+  * \param[in] complete_sig : Complete method signature.
+  * \param[out] buffer : Buffer where name will be copied.
+  * \param[in] size : Maximum length copied.
+  *
+  * \return The number of bytes copies on success, -1 on error
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_get_return(const char *complete_sig, char *buffer, int size)
+  * \brief copy return signature into buffer
+  *
+  * \param[in] complete_sig : Complete method signature.
+  * \param[out] buffer : Buffer where return signature will be copied.
+  * \param[in] size : Maximum length copied.
+  *
+  * \return The number of bytes copies on success, -1 on error
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signature_get_params(const char *complete_sig, char *buffer, int size)
+  * \brief copy method parameters signature into buffer
+  *
+  * \param[in] complete_sig : Complete method signature.
+  * \param[out] buffer : Buffer where parameters will be copied.
+  * \param[in] size : Maximum length copied.
+  *
+  * \return The number of bytes copies on success, -1 on error
+  * \since 1.18
+  */

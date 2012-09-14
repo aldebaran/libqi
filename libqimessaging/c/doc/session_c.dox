@@ -1,0 +1,120 @@
+// -*- C -*-
+
+  /*!
+  * \file session_c.h
+  * \brief Functions used to create and connect to QiMessage services.
+  * \author Pierre Roullon
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_session_t_s
+  * \brief Empty structure used as opaque pointer for QiMessaging C bindings.
+  * \since 1.18
+  */
+
+  /*!
+  * \typedef qi_session_t
+  * \brief Opaque pointer on qi::Session for QiMessaging C bindings session handling.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_create()
+  * \brief Allocate and initialise qi_session_t.
+  * \return Pointer QiMessaging session on sucess, 0 on error.
+  * \note This pointer must be destroy using qi_session_destroy.
+  * \see qi_session_destroy
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_destroy(qi_session_t *session)
+  * \brief Free a qi_session_t.
+  * \param[in] session : Session to destroy.
+  * \see qi_session_create
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_connect(qi_session_t *session, const char *address)
+  * \brief Connect to QiMessaging service directory.
+  *
+  * \param[in] session : Session to connect.
+  * \param[in] address : Address of the Service Directory.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_listen(qi_session_t *session, const char *address)
+  * \brief Make the registered services of the Session available on given address.
+  *
+  * \param[in]  session : Listening session.
+  * \param[in]  address : Address to listen on.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object)
+  * \brief Expose an object to the world.
+  *
+  * \param[in] session : Session to use.
+  * \param[in] name : Name of the module.
+  * \param[in] object : Object to register.
+  * \return ID of the service, -1 on failure.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_unregister_service(qi_session_t *session, unsigned int idx)
+  * \brief Hide an object previously exposed to the world.
+  *
+  * \param[in] session : Session to use.
+  * \param[in] idx : Id of service to unregister.
+  *
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_get_service(qi_session_t *session, const char *name)
+  * \brief Get a proxy to a service.
+  *
+  * \param[in] session : Session to use.
+  * \param[in] name : Name of the service.
+  * \return Pointer to related object, 0 on error.
+  *
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_close(qi_session_t *session)
+  * \brief Disconnect session.
+  *
+  * \param[in] session : Session to use.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_get_services(qi_session_t *session)
+  * \brief Retrieve the list of available services.
+  *
+  * \note The returned list is an array of char* terminated
+  * by a NULL pointer.
+  * The list must be freed using qi_session_free_services_list.
+  *
+  * \see qi_session_free_services_list
+  * \param[in] session : Session on which the list is retrieved.
+  * \return List of services names.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_session_free_services_list(const char **list)
+  * \brief Free list created by qi_session_get_services.
+  *
+  * \see qi_session_get_services
+  * \param[in] list : List to free.
+  * \since 1.18
+  */
