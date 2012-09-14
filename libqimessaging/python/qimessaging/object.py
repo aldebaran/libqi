@@ -5,27 +5,47 @@
 ## Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 ##
 
+""" QiMessaging object class
+"""
+
 import _qi
 
 class CallError(Exception):
+    """ CallError exception raised by Object.call() method
+    """
     def __init__(self, value):
-       self.value = value
+        """ Constructor of CallError exception
+        """
+        self._value = value
+
     def __str__(self):
-        return repr(self.value)
+        """ Getter on error value, Python style.
+        """
+        return repr(self._value)
 
 class Object:
-
+    """ Main class of QiMessaging
+    """
     def __init__(self, qi_object = None):
-        if qi_object is None:
-            self.obj = _qi.qi_object_create("obj")
-        else:
-            self.obj = qi_object
+        """ Object constructor.
 
-    def register_method(self, signature, func, data):
-        _qi.qi_object_register_method(self.obj, signature, func, data)
+        If qi_object is not set, create empty object.
+        """
+        if qi_object is None:
+            self._obj = _qi.qi_object_create("obj")
+        else:
+            self._obj = qi_object
 
     def call(self, name, *args):
-        return _qi.qi_generic_call(self.obj, name, args)
+        """ Call remote method with given arguments.
+
+        .. Args::
+            name : Function name.
+            args : Tuple containing giver arguments.
+        """
+        return _qi.qi_generic_call(self._obj, name, args)
 
     def __del__(self):
-        _qi.qi_object_destroy(self.obj)
+        """ Object destructor, also destroy C++ object.
+        """
+        _qi.qi_object_destroy(self._obj)
