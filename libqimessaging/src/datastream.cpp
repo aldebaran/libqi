@@ -97,7 +97,8 @@ namespace qi {
   }
 
   ODataStream::ODataStream(qi::Buffer &buffer)
-  : _status(Status_Ok)
+  : _status(Status_Ok),
+    _innerSerialization(false)
   {
     if (!buffer._p)
       buffer._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());

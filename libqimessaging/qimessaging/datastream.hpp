@@ -180,10 +180,8 @@ namespace qi {
     Buffer _buffer;
     bool        _innerSerialization;
 
-    /// <summary>Default constructor. </summary>
-    ODataStream()
-      : _innerSerialization(false)
-    {}
+    //No default CTOR
+    ODataStream() {}
 
   };
 
