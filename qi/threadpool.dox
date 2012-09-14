@@ -1,0 +1,148 @@
+// -*- mode:c++; -*-
+
+/** \class qi::ThreadPool qi/threadpool.hpp
+ * \brief Pool of workers
+ * \ingroup qiThreadPool
+ */
+
+/**
+ * \fn qi::ThreadPool::ThreadPool(unsigned int, unsigned int,
+                                  unsigned int, unsigned int,
+                                  unsigned int)
+ * \brief ThreadPool constructor
+ * \param minWorkers Minimum number of workers in the pool at any time
+ * \param maxWorkers Maximum number of workers allowed in the pool
+ * \param minIdleWorkers Minimum number of inactive workers and ready to execute a task
+ * immediately
+ * \param maxIdleWorkers Maximum number of workers inactive
+ *
+ * \ingroup qiThreadPool
+ */
+
+/**
+ * \fn qi::ThreadPool::~ThreadPool()
+ * \brief ThreadPool destructor
+ *
+ * The destructor will quit all threads and return.
+ * All tasks left in the queue are dropped. To be sure that all tasks are
+ * completed use qi::ThreadPool::waitForAll()
+ *
+ * \ingroup qiThreadPool
+ * \see qi::ThreadPool::size(), qi::ThreadPool::waitForAll()
+ */
+
+
+ /**
+ * \fn unsigned int qi::ThreadPool::size()
+ * \brief Returns the number of workers in the pool.
+ * \return Number of workers
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn unsigned int qi::ThreadPool::active()
+ * \brief Returns the number of active workers in the pool.
+ * \return Number of active workers
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn void qi::ThreadPool::setMaxWorkers(unsigned int n)
+ * \brief Resizes the pool
+ * \param n New number of max workers in the pool
+ *
+ * This function will increase or decrease the number of maximum workers
+ * in the pool. It is impossible to set the maximum workers value to a lower
+ * value than the minimum
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn void qi::ThreadPool::setMinWorkers(unsigned int n)
+ * \brief Sets minimum number of workers in the pool
+ * \param n New number of min workers in the pool
+ *
+ * This function will spwan new workers if minWorkers is increased.
+ * It is impossible to set the maximum workers value to a greater
+ * value than maximum workers
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn void qi::ThreadPool::setMaxIdleWorkers(unsigned int n)
+ * \brief Sets max idle workers
+ * \param n New number of max idle workers in the pool
+ *
+ * This function will change the maximum of workers inactive in the pool
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn void qi::ThreadPool::setMinIdleWorkers(unsigned int n)
+ * \brief Sets min idle workers
+ * \param n New number of min idle workers in the pool
+ *
+ * This function will change the minIdleWorkers number. It will spwan new
+ * workers if necessary and ensure that any time n workers are
+ * ready to handle a task
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn unsigned int qi::ThreadPool::getMaxWorkers()
+ * \brief Returns maximum number of workers in the pool
+ * \return Maximum number of workers
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn unsigned int qi::ThreadPool::getMinWorkers()
+ * \brief Returns minimum number of workers in the pool
+ * \return Minimum number of workers
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn unsigned int qi::ThreadPool::getMaxIdleWorkers()
+ * \brief Returns maximum number of inactive workers in the pool
+ * \return Maximum mumber of inactive workers
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn unsigned int qi::ThreadPool::getMinIdleWorkers()
+ * \brief Returns minimum number of inactive workers in the pool
+ * \return Minimum number of inactive workers
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn void qi::ThreadPool::waitForAll()
+ * \brief Sleeps until all tasks are completed
+ *
+ * If all workers are inactive and there is no tasks left returns immediatly.
+ * Otherwise sleep until all tasks in the pool are completed.
+ *
+ * \ingroup qiThreadPool
+ */
+
+ /**
+ * \fn bool qi::ThreadPool::schedule(boost::function<void(void)>& f)
+ * \brief Adds a task to the pool.
+ * \param f Boost function with type void(void) that represents the task.
+ * \return True if the task has been added to the tasks queue.
+ *
+ * Adds a task to the pool. The task will begin immediatly if there is
+ * at least one idle worker. Otherwise the tasks will be executed as soon
+ * as all tasks scheduled before have begun and a worker is idle.
+ *
+ * \ingroup qiThreadPool
+ */

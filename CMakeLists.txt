@@ -57,6 +57,7 @@ set(H
   qi/path.hpp
   qi/shared_ptr.hpp
   qi/qi.hpp
+  qi/threadpool.hpp
   )
 
 set(C
@@ -76,6 +77,8 @@ set(C
   src/os.cpp
   src/utils.hpp
   src/utils.cpp
+  src/threadpool.cpp
+  src/threadpool_p.hpp
   )
 
 if (WIN32)
