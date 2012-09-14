@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
 
       session.listen("tcp://0.0.0.0:0");
       unsigned int id = session.registerService("serviceTest", obj);
+      std::cout << "Service Registered with id: " << id << std::endl;
 
 #if 0
       // test unregistration
