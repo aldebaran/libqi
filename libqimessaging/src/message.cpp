@@ -22,8 +22,6 @@
 
 namespace qi {
 
-
-
   unsigned int newMessageId()
   {
     static qi::atomic<long> id(0);
@@ -220,4 +218,9 @@ namespace qi {
 
     return true;
   }
+
+  MessageAddress Message::address() const {
+    return MessageAddress(_p->header.type, _p->header.id, _p->header.service, _p->header.object, _p->header.action);
+  }
+
 }

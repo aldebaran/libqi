@@ -21,6 +21,35 @@
 
 namespace qi {
 
+  class QIMESSAGING_API MessageAddress {
+  public:
+    MessageAddress()
+      : type(0)
+      , messageId(0)
+      , serviceId(0)
+      , objectId(0)
+      , functionId(0)
+    {}
+
+    MessageAddress(unsigned int type,
+                   unsigned int messageId,
+                   unsigned int serviceId,
+                   unsigned int objectId,
+                   unsigned int functionId)
+      : type(type)
+      , messageId(messageId)
+      , serviceId(serviceId)
+      , objectId(objectId)
+      , functionId(functionId)
+    {}
+
+    unsigned int type;
+    unsigned int messageId;
+    unsigned int serviceId;
+    unsigned int objectId;
+    unsigned int functionId;
+  };
+
   /** \class qi::Message
     * This class represent a network message
     */
@@ -110,6 +139,8 @@ namespace qi {
 
     void         buildReplyFrom(const Message &call);
     void         buildForwardFrom(const Message &msg);
+
+    MessageAddress address()const;
 
     bool         isValid();
 
