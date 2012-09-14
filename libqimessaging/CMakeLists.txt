@@ -91,6 +91,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/gateway.cpp
                                    src/message.cpp
                                    src/message_p.hpp
+                                   src/messagedispatcher.hpp
+                                   src/messagedispatcher.cpp
                                    src/metamethod.cpp
                                    src/metamethod_p.cpp
                                    src/metamethod_p.hpp
@@ -147,7 +149,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/url.cpp
                                    src/future.cpp
                                    src/server_result.hpp
-                                   src/signature.cpp)
+                                   src/signature.cpp
+                                   )
 
 
 add_subdirectory(c)
