@@ -153,7 +153,7 @@ namespace qi
   static void functor_call(FunctionValue func, MetaFunctionParameters params,
     qi::Promise<MetaFunctionResult> out)
   {
-    out.setValue(func.call(params.getValues(func.type->argumentsType())));
+    out.setValue(callFunction(func, params));
   }
 
   qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
@@ -174,7 +174,7 @@ namespace qi
       break;
     }
     if (synchronous)
-      out.setValue(func.call(params.getValues(func.type->argumentsType())));
+      out.setValue(callFunction(func, params));
     else
     {
       MetaFunctionParameters pCopy = params.copy();

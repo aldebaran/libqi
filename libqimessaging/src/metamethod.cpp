@@ -8,11 +8,12 @@
 namespace qi {
 
 
-  MetaFunctionResult functionvalue_bounce(FunctionValue val,
+  MetaFunctionResult callFunction(FunctionValue val,
     const MetaFunctionParameters& parameters)
   {
     if (parameters.getMode() == MetaFunctionParameters::Mode_Value)
     {
+      // Let call() handle conversion
       Value res = val.call(parameters.getValues());
       return MetaFunctionResult(res);
     }
@@ -29,13 +30,49 @@ namespace qi {
         args.push_back(v);
       }
       Value res = val.call(args);
+      for (unsigned i=0; i<args.size(); ++i)
+        args[i].destroy();
+      return MetaFunctionResult(res);
+    }
+  }
+
+  MetaFunctionResult callMethod(MethodValue val,
+    Value instance, const MetaFunctionParameters& parameters)
+  {
+    if (parameters.getMode() == MetaFunctionParameters::Mode_Value)
+    {
+      const std::vector<Value>& v = parameters.getValues();
+      std::vector<Value> bindSelf;
+      bindSelf.push_back(instance);
+      bindSelf.insert(bindSelf.end(), &v[0], &v[v.size()]);
+
+      // Let call() handle conversion
+      Value res = val.toFunction().call(bindSelf);
+      return MetaFunctionResult(res);
+    }
+    else
+    {
+      IDataStream in(parameters.getBuffer());
+      const std::vector<Type*>& argTypes = val.type->argumentsType();
+      std::vector<Value> args;
+      args.push_back(instance);
+      for (unsigned i=1; i<argTypes.size(); ++i)
+      {
+        Value v;
+        v.type = argTypes[i];
+        v.value = v.type->deserialize(in);
+        args.push_back(v);
+      }
+      Value res = val.toFunction().call(args);
+      for (unsigned i=1; i<args.size(); ++i)
+        args[i].destroy();
       return MetaFunctionResult(res);
     }
   }
 
   MetaCallable makeCallable(FunctionValue value)
   {
-    return boost::bind(&functionvalue_bounce, value, _1);
+    return boost::bind(&callFunction, value, _1);
   }
 
   MetaMethod::MetaMethod(unsigned int uid,

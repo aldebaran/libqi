@@ -68,7 +68,6 @@ public:
    */
   void setSignature(const std::string& sig);
   const std::vector<Value>& getValues() const;
-  const std::vector<Value> getValues(const std::vector<Type*> & argumentsType) const;
   const Buffer& getBuffer() const;
 
   enum Mode
@@ -106,6 +105,9 @@ public:
   /// Return the value without copying it: Valid until storage goes.
   Value getValue() const;
 };
+
+MetaFunctionResult QIMESSAGING_API callFunction(FunctionValue function, const MetaFunctionParameters& params);
+MetaFunctionResult QIMESSAGING_API callMethod(MethodValue function, Value instance, const MetaFunctionParameters& params);
 
 /** Callable is the primary callback interface when 'dynamic' functions
  * can be needed: it takes the whole argument list as a MetaFunctionParameters.

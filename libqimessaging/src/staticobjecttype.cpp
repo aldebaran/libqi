@@ -45,22 +45,11 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
   Manageable* m = manageable(instance);
   EventLoop* el = m?m->eventLoop():0;
   MethodValue method = i->second;
-  // Linearize function
-  FunctionValue func = method.toFunction();
-  std::vector<Type*> types = method.type->argumentsType();
-  std::vector<Type*> typeArgs;
-  typeArgs.insert(typeArgs.end(), &types[1], &types[types.size()]);
-
-  // Convert params if required
-  std::vector<Value> values = params.getValues(typeArgs);
-  // Push this in front
   Value self;
   self.type = this;
   self.value = instance;
-  std::vector<Value> nargs;
-  nargs.push_back(self);
-  nargs.insert(nargs.end(), values.begin(), values.end());
-  return ::qi::metaCall(el, func, nargs, callType);
+  return ::qi::metaCall(el, (MetaCallable)boost::bind(callMethod, method, self, _1),
+    params, callType);
 }
 
 static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)
