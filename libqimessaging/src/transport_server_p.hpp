@@ -25,10 +25,8 @@ namespace qi {
   class TransportServerPrivate
   {
   public:
-    TransportServerPrivate(TransportServer* self, const qi::Url &url,
-      EventLoop* ctx)
+    TransportServerPrivate(TransportServer* self, const qi::Url &url, EventLoop* ctx)
       : self(self)
-      , tsi(0)
       , context(ctx)
       , listenUrl(url)
     {}
@@ -43,7 +41,6 @@ namespace qi {
 
   public:
     TransportServer                        *self;
-    std::vector<TransportServerInterface *> tsi;
     boost::mutex                            mutexCallback;
     qi::EventLoop                          *context;
     qi::Url                                 listenUrl;
@@ -51,8 +48,7 @@ namespace qi {
 
   protected:
     TransportServerPrivate()
-      : tsi(0)
-      , context(0)
+      : context(0)
       , listenUrl("")
     {};
   };

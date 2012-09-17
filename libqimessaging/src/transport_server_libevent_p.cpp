@@ -63,33 +63,14 @@ namespace qi
   void TransportServerLibEventPrivate::accept(evutil_socket_t        fd,
                                               struct evconnlistener *listener)
   {
-    qi::TransportSocket *ts = new qi::TransportSocket();
-    if (ts->_p)
-      delete ts->_p;
-    ts->_p = new qi::TransportSocketLibEvent(ts, fd, context);
-
-    std::vector<TransportServerInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(mutexCallback);
-      localCallbacks = tsi;
-    }
-    std::vector<TransportServerInterface *>::const_iterator it;
-    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->onTransportServerNewConnection(self, ts, 0);
+    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(fd, context));
+    self->newConnection(socket);
   }
 
   void TransportServerLibEventPrivate::accept_error(struct evconnlistener *listener) {
-    std::cout << "accept error" << std::endl;
     int err = errno;
-    qiLogError("qimessaging.transportserver", "Got an error %d (%s) on the listener.", err, evutil_socket_error_to_string(err));
-    std::vector<TransportServerInterface *> localCallbacks;
-    {
-      boost::mutex::scoped_lock l(mutexCallback);
-      localCallbacks = tsi;
-    }
-    std::vector<TransportServerInterface *>::const_iterator it;
-    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      (*it)->onTransportServerError(self, err, 0);
+    qiLogVerbose("qimessaging.transportserver", "Got an error %d (%s) on the listener.", err, evutil_socket_error_to_string(err));
+    self->acceptError(err);
   }
 
   void TransportServerLibEventPrivate::close() {
