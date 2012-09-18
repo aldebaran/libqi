@@ -110,7 +110,10 @@ public:
 
   void destroy(void* ptr)
   {
-    delete (T*)ptr;
+    /* Assume a TypeNoClone is not serializable
+     * So it cannot have been allocated by us.
+     * So the destroy comes after a clone->ignore it
+     */
   }
 };
 
