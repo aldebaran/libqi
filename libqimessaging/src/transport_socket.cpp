@@ -46,6 +46,7 @@ namespace qi
   TransportSocket::~TransportSocket()
   {
     delete _p;
+    _p = 0;
   }
 
 

@@ -334,18 +334,18 @@ bool ServiceDirectory::listen(const qi::Url &address)
 }
 
 void ServiceDirectory::close() {
-  _p->_server.close();
   {
     boost::recursive_mutex::scoped_lock sl(_p->_clientsMutex);
     for (std::set<TransportSocketPtr>::iterator it = _p->_clients.begin();
          it != _p->_clients.end(); ++it)
     {
-      (*it)->disconnected._p.reset();
-      (*it)->messageReady._p.reset();
+      (*it)->disconnected._p->reset();
+      (*it)->messageReady._p->reset();
       (*it)->disconnect();
     }
     _p->_clients.clear();
   } // Lock must not be held while deleting session, or deadlock
+  _p->_server.close();
 }
 
 qi::Url ServiceDirectory::listenUrl() const {

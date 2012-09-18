@@ -20,7 +20,7 @@ namespace qi {
   class QIMESSAGING_API SignalBase
   {
   public:
-    SignalBase(const std::string& signature);
+    explicit SignalBase(const std::string& signature);
     ~SignalBase();
 
     typedef unsigned int Link;
