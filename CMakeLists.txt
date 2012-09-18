@@ -10,4 +10,6 @@ cmake_minimum_required(VERSION 2.6.4)
 project(qimessaging)
 find_package(qibuild)
 
+enable_testing()
+
 add_subdirectory("libqimessaging")

@@ -12,7 +12,6 @@ project(libqimessaging)
 
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
-enable_testing()
 
 qi_add_optional_package(PYTHON)
 set(WITH_PYTHON ON)
