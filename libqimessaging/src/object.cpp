@@ -6,7 +6,7 @@
 */
 
 #include <iostream>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include "src/object_p.hpp"
 
 namespace qi {
@@ -15,13 +15,13 @@ namespace qi {
   }
 
 
-  Object::Object()
+  GenericObject::GenericObject()
   :type(0)
   , value(0)
   {
   }
 
-  Object::~Object() {
+  GenericObject::~GenericObject() {
   }
 
   Manageable::Manageable()
@@ -87,40 +87,40 @@ namespace qi {
     return _p->eventLoop;
   }
 
-  const MetaObject &Object::metaObject() {
+  const MetaObject &GenericObject::metaObject() {
     if (!type || !value) {
       static qi::MetaObject fail;
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return fail;
     }
     return type->metaObject(value);
   }
 
   qi::Future<MetaFunctionResult>
-  Object::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
+  GenericObject::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
   {
     qi::Promise<MetaFunctionResult> out;
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
       return out.future();
     }
     return type->metaCall(value, method, params, callType);
   }
 
-  void Object::metaEmit(unsigned int event, const MetaFunctionParameters& args)
+  void GenericObject::metaEmit(unsigned int event, const MetaFunctionParameters& args)
   {
     if (!type || !value)
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
     type->metaEmit(value, event, args);
   }
 
   qi::Future<MetaFunctionResult>
-  Object::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
+  GenericObject::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
   {
     qi::Promise<MetaFunctionResult> out;
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
       return out.future();
     }
@@ -193,9 +193,9 @@ namespace qi {
       return metaCall(methodId, args);
   }
   /// Resolve signature and bounce
-  bool Object::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
+  bool GenericObject::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
     if (!value || !type) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return false;
     }
        int eventId = metaObject().signalId(signature);
@@ -219,10 +219,10 @@ namespace qi {
   }
 
   /// Resolve signature and bounce
-  unsigned int Object::xConnect(const std::string &signature, const SignalSubscriber& functor)
+  unsigned int GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return -1;
     }
     int eventId = metaObject().signalId(signature);
@@ -242,41 +242,41 @@ namespace qi {
     return connect(eventId, functor);
   }
 
-  unsigned int Object::connect(unsigned int event, const SignalSubscriber& sub)
+  unsigned int GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return -1;
     }
     return type->connect(value, event, sub);
   }
 
-  bool Object::disconnect(unsigned int linkId)
+  bool GenericObject::disconnect(unsigned int linkId)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return false;
     }
     return type->disconnect(value, linkId);
   }
 
-  unsigned int Object::connect(unsigned int signal, qi::Object target, unsigned int slot)
+  unsigned int GenericObject::connect(unsigned int signal, qi::GenericObject target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }
 
   /*
-  std::vector<SignalSubscriber> Object::subscribers(int eventId) const
+  std::vector<SignalSubscriber> GenericObject::subscribers(int eventId) const
   {
     std::vector<SignalSubscriber> res;
     if (!_p) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return res;
     }
     return _p->subscribers(eventId);
   }*/
 
-  void Object::emitEvent(const std::string& eventName,
+  void GenericObject::emitEvent(const std::string& eventName,
                          qi::AutoGenericValue p1,
                          qi::AutoGenericValue p2,
                          qi::AutoGenericValue p3,
@@ -287,7 +287,7 @@ namespace qi {
                          qi::AutoGenericValue p8)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return;
     }
     qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
@@ -303,10 +303,10 @@ namespace qi {
     xMetaEmit(signature, MetaFunctionParameters(params, true));
   }
 
-  EventLoop* Object::eventLoop()
+  EventLoop* GenericObject::eventLoop()
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return 0;
     }
     Manageable* m = type->manageable(value);
@@ -315,10 +315,10 @@ namespace qi {
     return m->eventLoop();
   }
 
-  void Object::moveToEventLoop(EventLoop* ctx)
+  void GenericObject::moveToEventLoop(EventLoop* ctx)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid Object..";
+      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return;
     }
     Manageable* m = type->manageable(value);

@@ -11,7 +11,7 @@
 
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/dynamicobject.hpp>
 #include <qimessaging/signal.hpp>
 

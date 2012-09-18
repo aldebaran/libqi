@@ -15,7 +15,7 @@
 #include <boost/thread.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/transport_server.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/session.hpp>
 #include "src/server_result.hpp"

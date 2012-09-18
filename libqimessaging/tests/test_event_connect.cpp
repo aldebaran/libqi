@@ -6,7 +6,7 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 #include <qi/application.hpp>
 
@@ -29,8 +29,8 @@ void testDelete(bool afirst, bool disconnectFirst)
   unsigned int fireId = oba.advertiseEvent<void (*)(int)>("fire");
   unsigned int onFireId = obb.advertiseMethod("onFire", &onFire);
   unsigned int onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
-  qi::Object *a = new qi::Object(oba.object());
-  qi::Object *b = new qi::Object(obb.object());
+  qi::GenericObject *a = new qi::GenericObject(oba.object());
+  qi::GenericObject *b = new qi::GenericObject(obb.object());
   unsigned int linkId = a->connect(fireId, *b, onFireId);
   a->connect(fireId, *b, onFireId2);
   //std::vector<qi::SignalSubscriber> subs = a->subscribers(fireId);

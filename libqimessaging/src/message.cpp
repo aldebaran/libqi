@@ -209,10 +209,10 @@ namespace qi {
       return false;
     }
 
-    if (object() == qi::Message::Object_None)
+    if (object() == qi::Message::GenericObject_None)
     {
       qiLogError("qimessaging.TransportSocket")  << "Message dropped (object is 0)" << std::endl;
-      assert(object() != qi::Message::Object_None);
+      assert(object() != qi::Message::GenericObject_None);
       return false;
     }
 

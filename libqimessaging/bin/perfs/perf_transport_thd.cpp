@@ -21,14 +21,14 @@
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 static bool clientDone = false;
 
-int client_calls(qi::Session *session, qi::Object obj)
+int client_calls(qi::Session *session, qi::GenericObject obj)
 {
 #if 0
   cpu_set_t mask;
@@ -83,14 +83,14 @@ int main_client(bool shared)
   const unsigned int nbThreads = 4;
   qi::Session session;
   session.connect("tcp://127.0.0.1:5555");
-  qi::Object obj;
+  qi::GenericObject obj;
   boost::thread thd[nbThreads];
 
   qiLogInfo("perf_transport_thd") << "Will spawn " << nbThreads << " threads";
 
   if (shared)
   {
-    qiLogInfo("perf_transport_thd") << "qi::Object will be shared";
+    qiLogInfo("perf_transport_thd") << "qi::GenericObject will be shared";
 
     obj = session.service("serviceTest");
 
@@ -102,7 +102,7 @@ int main_client(bool shared)
   }
   else
   {
-    qiLogInfo("perf_transport_thd") << "qi::Object won't' be shared";
+    qiLogInfo("perf_transport_thd") << "qi::GenericObject won't' be shared";
   }
 
   for (unsigned int i = 0; i < nbThreads; i++)
@@ -168,7 +168,7 @@ int main_server()
   ob.advertiseMethod("reply", &reply);
 
   qi::Session       session;
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
 
   session.connect("tcp://127.0.0.1:5555");
 

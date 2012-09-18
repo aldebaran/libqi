@@ -10,7 +10,7 @@
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericvalue.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/function_type.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/signal.hpp>
@@ -262,10 +262,10 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance);
   }
 
-  Object makeDynamicObject(DynamicObject* obj)
+  GenericObject makeDynamicObject(DynamicObject* obj)
   {
     static DynamicObjectType* type = new DynamicObjectType();
-    Object result;
+    GenericObject result;
     result.type = type;
     result.value = obj;
     return result;

@@ -6,13 +6,13 @@
 #define _QIMESSAGING_OBJECT_FACTORY_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 
 namespace qi {
 
-  QIMESSAGING_API bool registerObjectFactory(const std::string& name, boost::function<qi::Object (const std::string&)> factory);
+  QIMESSAGING_API bool registerObjectFactory(const std::string& name, boost::function<qi::GenericObject (const std::string&)> factory);
 
-  QIMESSAGING_API qi::Object createObject(const std::string& name);
+  QIMESSAGING_API qi::GenericObject createObject(const std::string& name);
 
   /// Get all factory names. Order is guaranteed to be the registration order
   QIMESSAGING_API std::vector<std::string> listObjectFactories();

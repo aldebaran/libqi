@@ -48,7 +48,7 @@ namespace qi {
     TransportSocketPtr   _socket;
   private:
     qi::RemoteObject     _remoteObject;
-    qi::Object           _object;
+    qi::GenericObject           _object;
   };
 }
 

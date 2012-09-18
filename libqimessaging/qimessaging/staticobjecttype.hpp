@@ -11,7 +11,7 @@
 #include <qimessaging/type.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/metafunction.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 
 namespace qi
 {

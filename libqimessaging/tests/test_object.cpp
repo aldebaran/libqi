@@ -12,7 +12,7 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 
 static int gGlobalResult = 0;
@@ -120,7 +120,7 @@ TEST(TestObject, Simple) {
   ob.advertiseMethod("ptrtest", &ptrfun);
   ob.advertiseMethod("reftest", &reffun);
   ob.advertiseMethod("valuetest", &valuefun);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
 
 
   EXPECT_EQ(42, obj.call<int>("test", 21, 21));
@@ -189,7 +189,7 @@ TEST(TestObject, SerializeSimple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
   Point p;
   p.x = 1; p.y = 2;
   Point res = obj.call<Point>("swapPoint", p);
@@ -239,7 +239,7 @@ TEST(TestObject, SerializeComplex)
 
   qi::DynamicObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
   std::cerr << obj.metaObject().methodMap()[id].signature() << std::endl;
   Complex res = obj.call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);

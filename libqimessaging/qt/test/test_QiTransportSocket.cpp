@@ -153,7 +153,7 @@ TEST(TransportSocket, ReadyRead)
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_Server);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServerFunction_MetaObject);
   remoteSocket->write(msg);
 
@@ -192,7 +192,7 @@ TEST(TransportSocket, Read)
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_Server);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServerFunction_MetaObject);
   remoteSocket->write(msg);
 
@@ -239,7 +239,7 @@ TEST(TransportSocket, ReadVerifyHeader)
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_Server);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServerFunction_MetaObject);
 
   QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));
@@ -285,7 +285,7 @@ TEST(TransportSocket, ReadWrite)
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_Server);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServerFunction_MetaObject);
 
   QObject::connect(&socket, SIGNAL(readyRead()), app, SLOT(quit()));

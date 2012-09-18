@@ -47,7 +47,7 @@
     <Compile Include="Convertor.cs" />
     <Compile Include="Future.cs" />
     <Compile Include="Message.cs" />
-    <Compile Include="Object.cs" />
+    <Compile Include="GenericObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session.cs" />
   </ItemGroup>

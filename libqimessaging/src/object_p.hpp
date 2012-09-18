@@ -15,7 +15,7 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/metasignal.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/signal.hpp>

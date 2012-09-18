@@ -61,7 +61,7 @@ int thd_client(qi::TransportSocketPtr socket)
   qi::Message msg;
   msg.setBuffer(buf);
   msg.setType(qi::Message::Type_Call);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(1);
 
   for (int i = 0; i < 12; ++i)

@@ -1,9 +1,9 @@
-qi::Object
+qi::GenericObject
 ==========
 
 .. code-block:: c++
 
-  #include <qimessaging/object.hpp>
+  #include <qimessaging/genericobject.hpp>
 
 .. cpp:namespace:: qi
 
@@ -15,7 +15,7 @@ Brief
 Details
 -------
 
-Object are bloated
+GenericObject are bloated
 
 Example
 -------
@@ -35,11 +35,11 @@ Classes
   .. todo:: clean the class and document
 
 
-.. cpp:class:: Object
+.. cpp:class:: GenericObject
 
-  .. cpp:function:: Object()
+  .. cpp:function:: GenericObject()
 
-  .. cpp:function:: virtual ~Object()
+  .. cpp:function:: virtual ~GenericObject()
 
   .. cpp:function:: MetaObject &metaObject()
 

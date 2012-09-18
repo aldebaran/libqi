@@ -94,7 +94,7 @@ namespace qi {
   }
 
   template<typename R>
-  qi::FutureSync<R> Object::call(const std::string& methodName,
+  qi::FutureSync<R> GenericObject::call(const std::string& methodName,
     qi::AutoGenericValue p1,
       qi::AutoGenericValue p2,
       qi::AutoGenericValue p3,
@@ -106,7 +106,7 @@ namespace qi {
   {
     qi::Promise<R> res;
     if (!value || !type) {
-      res.setError("Invalid Object");
+      res.setError("Invalid GenericObject");
       return res.future();
     }
     qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};

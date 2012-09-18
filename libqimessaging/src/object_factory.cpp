@@ -18,7 +18,7 @@ namespace qi {
   static boost::recursive_mutex *_f_mutex_struct = 0;
   static boost::recursive_mutex *_f_mutex_load = 0;
   static std::vector<std::string>* _f_keys = 0;
-  typedef std::map<std::string, boost::function<qi::Object (const std::string&)> > FactoryMap;
+  typedef std::map<std::string, boost::function<qi::GenericObject (const std::string&)> > FactoryMap;
   static FactoryMap* _f_map = 0;
   static void _f_init()
   {
@@ -31,7 +31,7 @@ namespace qi {
     }
   }
 
-  bool registerObjectFactory(const std::string& name, boost::function<qi::Object (const std::string&)> factory)
+  bool registerObjectFactory(const std::string& name, boost::function<qi::GenericObject (const std::string&)> factory)
   {
     qiLogDebug("qi.factory") << "registering " << name;
     _f_init();
@@ -45,13 +45,13 @@ namespace qi {
     return true;
   }
 
-  Object createObject(const std::string& name)
+  GenericObject createObject(const std::string& name)
   {
     _f_init();
     boost::recursive_mutex::scoped_lock sl(*_f_mutex_struct);
     FactoryMap::iterator i = _f_map->find(name);
     if (i == _f_map->end())
-      return Object();
+      return GenericObject();
     return (i->second)(name);
   }
 

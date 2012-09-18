@@ -10,7 +10,7 @@
 #include <map>
 #include <set>
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_directory.hpp>
@@ -30,7 +30,7 @@
 namespace qi
 {
 
-  qi::Object createSDP(ServiceDirectoryPrivate* self) {
+  qi::GenericObject createSDP(ServiceDirectoryPrivate* self) {
     qi::StaticObjectBuilder ob;
 
     ob.advertiseMethod("service", &ServiceDirectoryPrivate::service);
@@ -47,7 +47,7 @@ namespace qi
     , currentSocket()
   {
     _server.newConnection.connect(boost::bind(&ServiceDirectoryPrivate::onTransportServerNewConnection, this, _1));
-    (*(Object*)this) = createSDP(this);
+    (*(GenericObject*)this) = createSDP(this);
 
     ServiceInfo si;
     si.setName("serviceDirectory");
@@ -229,7 +229,7 @@ namespace qi
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
       msg.setService(qi::Message::Service_Server);
-      msg.setObject(qi::Message::Object_Main);
+      msg.setObject(qi::Message::GenericObject_Main);
       msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceUnregistered);
 
       qi::Buffer     buf;
@@ -283,7 +283,7 @@ namespace qi
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
       msg.setService(qi::Message::Service_Server);
-      msg.setObject(qi::Message::Object_Main);
+      msg.setObject(qi::Message::GenericObject_Main);
       msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceRegistered);
 
       qi::Buffer     buf;

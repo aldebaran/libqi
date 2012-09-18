@@ -6,7 +6,7 @@
 
 #include "src/metasignal_p.hpp"
 #include <qimessaging/metasignal.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 namespace qi {
 
   MetaSignal::MetaSignal()

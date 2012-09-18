@@ -10,7 +10,7 @@
 #include <Python.h>
 
 #include "qipython.hpp"
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/c/qi_c.h>
 #include <qi/log.hpp>
@@ -489,7 +489,7 @@ static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const 
 {
   int nb_matching_methods = 0;
   qi::MetaMethod last_matching_method;
-  qi::Object*               obj = reinterpret_cast<qi::Object*>(object_c);
+  qi::GenericObject*               obj = reinterpret_cast<qi::GenericObject*>(object_c);
   const qi::MetaObject&     meta = obj->metaObject();
 
   // #0 Debug log
@@ -529,7 +529,7 @@ static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const 
 static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *signature, unsigned int nb_args, PyObject *args)
 {
   std::vector<std::string>  sigInfo;
-  qi::Object*               obj = reinterpret_cast<qi::Object*>(object_c);
+  qi::GenericObject*               obj = reinterpret_cast<qi::GenericObject*>(object_c);
   const qi::MetaObject            &meta = obj->metaObject();
   const qi::MetaMethod*           mm;
 

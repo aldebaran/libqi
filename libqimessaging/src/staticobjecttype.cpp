@@ -24,7 +24,7 @@ StaticObjectTypeBase::metaObject(void* )
 
 Manageable* StaticObjectTypeBase::manageable(void*)
 {
-  qiLogDebug("qi.staticobject") << "Object not manageable";
+  qiLogDebug("qi.staticobject") << "GenericObject not manageable";
   return 0;
 }
 

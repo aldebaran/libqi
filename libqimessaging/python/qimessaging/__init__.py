@@ -14,9 +14,9 @@ Provided features are very close to C++, Python style.
 from .session import Session
 from .session import ConnectionError
 from .application import Application
-from .object import Object
+from .object import GenericObject
 from .object import CallError
 from .future import Future
 from .object_builder import ObjectBuilder
 
-__all__ = ('Session', 'Future', 'Object', 'Application', 'ObjectBuilder')
+__all__ = ('Session', 'Future', 'GenericObject', 'Application', 'ObjectBuilder')

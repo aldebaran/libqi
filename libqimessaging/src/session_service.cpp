@@ -105,7 +105,7 @@ namespace qi {
 
     sr->sclient   = new qi::ServerClient(client);
 
-    qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::Object_Main);
+    qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::GenericObject_Main);
     fut.addCallbacks(this, data);
   }
 
@@ -124,7 +124,7 @@ namespace qi {
         sr->promise.setValue(it->second);
       } else {
         RemoteObject* robj = new RemoteObject(sr->socket, sr->serviceId, mo);
-        Object o = makeDynamicObject(robj);
+        GenericObject o = makeDynamicObject(robj);
         // The remoteobject in sr->client.remoteObject is still on
         //remove the callback of ServerClient before returning the object
         //TODO: belong to TransportSocketCache
@@ -199,12 +199,12 @@ namespace qi {
     removeRequest(data);
   }
 
-  qi::Future<qi::Object> Session_Service::service(const std::string &service,
+  qi::Future<qi::GenericObject> Session_Service::service(const std::string &service,
                                                   Session::ServiceLocality locality,
                                                   const std::string &type)
   {
     qiLogVerbose("session.service") << "Getting service " << service;
-    qi::Future<qi::Object> result;
+    qi::Future<qi::GenericObject> result;
     if (locality == Session::ServiceLocality_Local) {
       qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
     }
@@ -214,7 +214,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
-        return qi::Future<qi::Object>(it->second);
+        return qi::Future<qi::GenericObject>(it->second);
       }
     }
 

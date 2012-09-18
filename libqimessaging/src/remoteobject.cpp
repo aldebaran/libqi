@@ -93,7 +93,7 @@ namespace qi {
     msg.setBuffer(in.getBuffer());
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
-    msg.setObject(qi::Message::Object_Main);
+    msg.setObject(qi::Message::GenericObject_Main);
     msg.setFunction(method);
     qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " "
      << msg.function() <<" " << msg.id();
@@ -140,7 +140,7 @@ namespace qi {
     msg.setBuffer(args.getBuffer());
     msg.setType(Message::Type_Event);
     msg.setService(_service);
-    msg.setObject(qi::Message::Object_Main);
+    msg.setObject(qi::Message::GenericObject_Main);
     msg.setFunction(event);
     if (!_socket->send(msg)) {
       qiLogError("remoteobject") << "error while emiting event";
@@ -160,7 +160,7 @@ namespace qi {
     qi::ODataStream ds(buf);
     ds << _service << event << uid;
     msg.setBuffer(buf);
-    msg.setObject(qi::Message::Object_Main);
+    msg.setObject(qi::Message::GenericObject_Main);
     msg.setType(Message::Type_Event);
     msg.setService(Message::Service_Server);
     msg.setFunction(Message::ServerFunction_RegisterEvent);
@@ -192,7 +192,7 @@ namespace qi {
       msg.setBuffer(buf);
       msg.setType(Message::Type_Event);
       msg.setService(Message::Service_Server);
-      msg.setObject(Message::Object_Main);
+      msg.setObject(Message::GenericObject_Main);
       msg.setFunction(Message::ServerFunction_UnregisterEvent);
       if (!_socket->send(msg)) {
         qiLogError("remoteobject") << "error while disconnecting signal";

@@ -38,7 +38,7 @@ namespace qi_service_dotnet
 
 
             // Declare an object and a method
-            QiMessaging.Object obj = new QiMessaging.Object();
+            QiMessaging.GenericObject obj = new QiMessaging.GenericObject();
             QiMethod method = new QiMethod(reply);
             QiMessaging.Buffer buff = new QiMessaging.Buffer();
 

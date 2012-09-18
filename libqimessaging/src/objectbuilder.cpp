@@ -7,7 +7,7 @@
 
 #include <qimessaging/objectbuilder.hpp>
 #include <boost/thread.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/dynamicobject.hpp>
 
 #include "metaobject_p.hpp"
@@ -113,7 +113,7 @@ namespace qi {
     return nextId;
   }
 
-  Object DynamicObjectBuilder::object()
+  GenericObject DynamicObjectBuilder::object()
   {
     _p->metaObject._p->refreshCache();
     _p->object->setMetaObject(_p->metaObject);

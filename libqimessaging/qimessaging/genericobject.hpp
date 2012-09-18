@@ -34,7 +34,7 @@ namespace qi {
   class QIMESSAGING_API ObjectInterface {
   public:
     virtual ~ObjectInterface() = 0;
-    virtual void onObjectDestroyed(Object *object, void *data) = 0;
+    virtual void onObjectDestroyed(GenericObject *object, void *data) = 0;
   };
 
   class ManageablePrivate;
@@ -103,11 +103,11 @@ namespace qi {
   *
   * All the methods are convenience wrappers that bounce to the ObjectType
   */
-  class QIMESSAGING_API Object
+  class QIMESSAGING_API GenericObject
   {
   public:
-    Object();
-    ~Object();
+    GenericObject();
+    ~GenericObject();
     const MetaObject &metaObject();
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
       qi::AutoGenericValue p1 = qi::AutoGenericValue(),
@@ -157,7 +157,7 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    unsigned int connect(unsigned int signal, qi::Object target, unsigned int slot);
+    unsigned int connect(unsigned int signal, qi::GenericObject target, unsigned int slot);
 
     void moveToEventLoop(EventLoop* ctx);
     EventLoop* eventLoop();
@@ -188,14 +188,14 @@ namespace qi {
      : handler(func), eventLoop(ctx), target(), method(0)
    {}
 
-   SignalSubscriber(Object target, unsigned int method)
+   SignalSubscriber(GenericObject target, unsigned int method)
      : eventLoop(0), target(target), method(method)
    {}
 
    void call(const MetaFunctionParameters& args);
    // Source information
    SignalBase*        source;
-   /// Uid that can be passed to Object::disconnect()
+   /// Uid that can be passed to GenericObject::disconnect()
    SignalBase::Link  linkId;
 
    // Target information
@@ -203,13 +203,13 @@ namespace qi {
    MetaCallable       handler;
    EventLoop*         eventLoop;
    //  Mode 2: metaCall
-   Object             target;
+   GenericObject             target;
    unsigned int       method;
  };
 
 
   template <typename FUNCTION_TYPE>
-  unsigned int Object::connect(const std::string& eventName,
+  unsigned int GenericObject::connect(const std::string& eventName,
                                FUNCTION_TYPE callback,
                                EventLoop* ctx)
   {
@@ -251,5 +251,5 @@ QI_TYPE_SERIALIZABLE(MetaObject);
   QI_DATASTREAM_STRUCT_PRIVATE_ACCESS(Cname)      \
   QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname)
 
-#include <qimessaging/details/object.hxx>
+#include <qimessaging/details/genericobject.hxx>
 #endif  // _QIMESSAGING_OBJECT_HPP_

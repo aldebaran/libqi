@@ -65,10 +65,10 @@ namespace qi {
       Service_ServiceDirectory = 1,
     };
 
-    enum Object
+    enum GenericObject
     {
-      Object_None = 0,
-      Object_Main = 1
+      GenericObject_None = 0,
+      GenericObject_Main = 1
     };
 
     enum ServiceDirectoryFunction

@@ -53,7 +53,7 @@ Classes
   .. cpp:function:: void stop()
 
 
-  .. cpp:function:: int registerService(const std::string &name, qi::Object *obj)
+  .. cpp:function:: int registerService(const std::string &name, qi::GenericObject *obj)
 
     :param name: name of the service
     :param obj: the service to bind

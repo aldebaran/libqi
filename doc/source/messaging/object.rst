@@ -1,7 +1,7 @@
-Object reflection
+GenericObject reflection
 =================
 
-Object reflection
+GenericObject reflection
 -----------------
 
 what do we expect from an object?

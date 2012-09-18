@@ -67,7 +67,7 @@ public:
   }
 
 public:
-  std::map<unsigned int, qi::Object*> _services;
+  std::map<unsigned int, qi::GenericObject*> _services;
   qi::TransportServer                *_ts;
   std::vector<std::string>            _endpoints;
   qi::Session                        *_session;
@@ -103,13 +103,13 @@ public:
   }
 
 
-  unsigned int registerService(const std::string &name, qi::Object *obj)
+  unsigned int registerService(const std::string &name, qi::GenericObject *obj)
   {
     qi::Message     msg;
     qi::ServiceInfo si;
     msg.setType(qi::Message::Type_Event);
     msg.setService(qi::Message::Service_ServiceDirectory);
-    msg.setObject(qi::Message::Object_Main);
+    msg.setObject(qi::Message::GenericObject_Main);
     msg.setFunction(qi::Message::ServiceDirectoryFunction_RegisterService);
 
     qi::Buffer b;
@@ -148,7 +148,7 @@ int main_client(std::string QI_UNUSED(str))
   qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
 
-  qi::Object sock = session.service("serviceTest");
+  qi::GenericObject sock = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -214,7 +214,7 @@ int main_server()
   qi::Session session;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::Object  obj(ob.object());
+  qi::GenericObject  obj(ob.object());
   ServerEvent srv;
   session.connect("tcp://127.0.0.1:5555");
 

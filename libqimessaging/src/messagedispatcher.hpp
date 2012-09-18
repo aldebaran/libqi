@@ -7,7 +7,7 @@
 #ifndef QI_MESSAGEDISPATCHER_HPP
 #define QI_MESSAGEDISPATCHER_HPP
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/message.hpp>

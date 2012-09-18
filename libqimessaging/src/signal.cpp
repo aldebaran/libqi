@@ -84,7 +84,7 @@ namespace qi {
     return connect(SignalSubscriber(callback, ctx));
   }
 
-  SignalBase::Link SignalBase::connect(qi::Object o, unsigned int slot)
+  SignalBase::Link SignalBase::connect(qi::GenericObject o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
@@ -99,7 +99,7 @@ namespace qi {
     s.source = this;
     if (s.target.isValid())
     {
-      Object o = s.target;
+      GenericObject o = s.target;
       Manageable* m = o.type->manageable(o.value);
       if (m)
         m->addRegistration(s);

@@ -8,7 +8,7 @@
 #include <boost/thread.hpp>
 
 #include <gtest/gtest.h>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 #include <qi/application.hpp>
 
@@ -33,7 +33,7 @@ void vSameThread(const unsigned long& tid)
   result.setValue(sameThread(tid));
 }
 
-void call_samethread(qi::Object* obj, qi::Promise<bool> res,
+void call_samethread(qi::GenericObject* obj, qi::Promise<bool> res,
   void* tid)
 {
   if (!tid)
@@ -42,7 +42,7 @@ void call_samethread(qi::Object* obj, qi::Promise<bool> res,
 }
 
 // Calls the sameThread method in givent event loop.
-qi::Future<bool> callSameThreadIn(qi::Object* obj,
+qi::Future<bool> callSameThreadIn(qi::GenericObject* obj,
   qi::EventLoop* el, void* tid)
 {
   qi::Promise<bool> p;
@@ -51,7 +51,7 @@ qi::Future<bool> callSameThreadIn(qi::Object* obj,
   return p.future();
 }
 
-void fire_samethread(qi::Object* obj, void* tid)
+void fire_samethread(qi::GenericObject* obj, void* tid)
 {
   if (!tid)
     tid = new TID(boost::this_thread::get_id());
@@ -59,17 +59,17 @@ void fire_samethread(qi::Object* obj, void* tid)
 }
 
 // Fire sameThread in given event loop
-void fireSameThreadIn(qi::Object* obj, qi::EventLoop* el, void* tid)
+void fireSameThreadIn(qi::GenericObject* obj, qi::EventLoop* el, void* tid)
 {
   el->asyncCall(0, boost::bind(fire_samethread, obj, tid));
 }
 
-qi::Object* makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
+qi::GenericObject* makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseEvent<void (unsigned long)>("fire");
-  qi::Object* res = new qi::Object(ob.object());
+  qi::GenericObject* res = new qi::GenericObject(ob.object());
   res->moveToEventLoop(el);
   return res;
 }
@@ -77,7 +77,7 @@ qi::Object* makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
 TEST(TestEventLoop, Basic)
 {
   void* mainId = new TID(boost::this_thread::get_id());
-  qi::Object* o1 = makeObj();
+  qi::GenericObject* o1 = makeObj();
   ASSERT_FALSE(o1->call<bool>("sameThread", (unsigned long)mainId));
   ASSERT_FALSE(callSameThreadIn(o1, qi::getDefaultNetworkEventLoop(),
     mainId));
@@ -90,7 +90,7 @@ TEST(TestEventLoop, Basic)
 TEST(TestEventLoop, Event)
 {
   unsigned long mainId = (unsigned long)(void*)new TID(boost::this_thread::get_id());
-  qi::Object* o1 = makeObj();
+  qi::GenericObject* o1 = makeObj();
   o1->connect("fire", &vSameThread);
   o1->emitEvent("fire", mainId);
   ASSERT_TRUE(result.future().wait(3000));

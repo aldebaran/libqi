@@ -13,7 +13,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/future.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 
 #include <vector>
 #include <string>
@@ -77,7 +77,7 @@ namespace qi {
 
     qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::Future< qi::Object > service(const std::string &service,
+    qi::Future< qi::GenericObject > service(const std::string &service,
                                      ServiceLocality locality = ServiceLocality_All,
                                      const std::string &protocol  = std::string("any"));
 
@@ -88,7 +88,7 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
-    qi::Future<unsigned int> registerService(const std::string &name, const qi::Object &object);
+    qi::Future<unsigned int> registerService(const std::string &name, const qi::GenericObject &object);
     qi::Future<void>         unregisterService(unsigned int idx);
 
 

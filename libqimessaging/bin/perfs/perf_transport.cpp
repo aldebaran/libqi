@@ -24,7 +24,7 @@ namespace po = boost::program_options;
 
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 
 static int gLoopCount = getenv("VALGRIND")?500:10000;
@@ -33,7 +33,7 @@ static bool allInOne = false; // True if sd/server/client are in this process
 static std::string sdPort;
 static bool clientDone = false;
 static bool serverReady = false;
-int run_client(qi::Object* obj);
+int run_client(qi::GenericObject* obj);
 
 std::string reply(const std::string &msg)
 {
@@ -50,7 +50,7 @@ int main_local()
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
   run_client(&obj);
   return 0;
 }
@@ -65,7 +65,7 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 
   qi::Session session;
   session.connect("tcp://"+host+":"+port);
-  qi::Object obj =  session.service("serviceTest");
+  qi::GenericObject obj =  session.service("serviceTest");
   if (!obj.isValid())
   {
     std::cerr << "cant get serviceTest" << std::endl;
@@ -75,7 +75,7 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
 }
 
 
-int run_client(qi::Object* obj)
+int run_client(qi::GenericObject* obj)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   int rstart = 0;
@@ -110,7 +110,7 @@ int run_client(qi::Object* obj)
   return 0;
 }
 
-int run_client_string(qi::Object* obj)
+int run_client_string(qi::GenericObject* obj)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   int rstart = 0;
@@ -210,7 +210,7 @@ int main_server(std::string host, std::string port)
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
 
   session.connect("tcp://127.0.0.1:"+port);
 

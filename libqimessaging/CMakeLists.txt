@@ -47,12 +47,12 @@ set(PUBLIC_HEADERS
                    qimessaging/details/metafunction.hxx
                    qimessaging/details/genericvalue.hxx
                    qimessaging/details/dynamic_value.hxx
-                   qimessaging/details/object.hxx
+                   qimessaging/details/genericobject.hxx
                    qimessaging/details/signal.hxx
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
                    qimessaging/file.hpp
-                   qimessaging/object.hpp
+                   qimessaging/genericobject.hpp
                    qimessaging/objectbuilder.hpp
                    qimessaging/object_factory.hpp
                    qimessaging/session.hpp

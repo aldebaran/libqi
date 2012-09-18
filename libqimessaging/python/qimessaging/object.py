@@ -23,7 +23,7 @@ class CallError(Exception):
         """
         return repr(self._value)
 
-class Object:
+class GenericObject:
     """ Main class of QiMessaging
     """
     def __init__(self, qi_object = None):

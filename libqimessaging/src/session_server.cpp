@@ -7,7 +7,7 @@
 */
 
 #include <set>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/service_info.hpp>
 #include "session_server.hpp"
@@ -28,7 +28,7 @@ namespace qi {
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
-    msg.setObject(Message::Object_Main);
+    msg.setObject(Message::GenericObject_Main);
     client->send(msg);
     return MetaFunctionResult();
   }
@@ -83,7 +83,7 @@ namespace qi {
       for (PerServiceLinks::iterator j = i->second.begin();
         j != i->second.end(); ++j)
       {
-        std::map<unsigned int, qi::Object>::iterator iservice = _services.find(j->first);
+        std::map<unsigned int, qi::GenericObject>::iterator iservice = _services.find(j->first);
         // If the service is still there, disconnect one by one.
         if (iservice != _services.end())
           for (ServiceLinks::iterator k = j->second.begin();
@@ -97,11 +97,11 @@ namespace qi {
 
 
   void Session_Server::onMessageReady(const qi::Message &msg, TransportSocketPtr client) {
-    qi::Object obj;
+    qi::GenericObject obj;
 
     {
       boost::mutex::scoped_lock sl(_mutexServices);
-      std::map<unsigned int, qi::Object>::iterator it;
+      std::map<unsigned int, qi::GenericObject>::iterator it;
       if (msg.service() == Message::Service_Server)
       {
         // Accept register/unregister event as emit or as call
@@ -306,7 +306,7 @@ namespace qi {
   }
 
   qi::Future<unsigned int> Session_Server::registerService(const std::string &name,
-                                                           const qi::Object  &obj)
+                                                           const qi::GenericObject  &obj)
   {
     if (_server.endpoints().empty()) {
       qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
@@ -404,15 +404,15 @@ namespace qi {
     return qi::ServiceInfo();
   }
 
-  qi::Object Session_Server::registeredServiceObject(const std::string &service) {
-    std::map<std::string, qi::Object>::iterator it;
+  qi::GenericObject Session_Server::registeredServiceObject(const std::string &service) {
+    std::map<std::string, qi::GenericObject>::iterator it;
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
       it = _servicesByName.find(service);
       if (it != _servicesByName.end())
         return it->second;
     }
-    return Object();
+    return GenericObject();
   }
 
   qi::Url Session_Server::listenUrl() const {

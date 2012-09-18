@@ -105,7 +105,7 @@ Classes
         List     = '[',
         Map      = '{',
         Tuple    = '(',
-        Object   = '@'
+        GenericObject   = '@'
       };
 
   .. cpp:function:: Signature(const char *fullSignature = 0)

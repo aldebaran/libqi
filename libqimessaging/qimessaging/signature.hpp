@@ -254,7 +254,7 @@ namespace qi {
   };
 
 
-  /// Take the signature of an instanciated Object, it could be a references or a pointer.
+  /// Take the signature of an instanciated GenericObject, it could be a references or a pointer.
   /// \ingroup Signature
   /// \include example_qi_signature_instance.cpp
   class signatureFromObject {

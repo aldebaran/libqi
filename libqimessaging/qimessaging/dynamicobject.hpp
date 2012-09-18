@@ -48,8 +48,8 @@ namespace qi
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };
 
-  //Make an Object of DynamicObject kind from a DynamicObject
-  QIMESSAGING_API Object makeDynamicObject(DynamicObject* obj);
+  //Make an GenericObject of DynamicObject kind from a DynamicObject
+  QIMESSAGING_API GenericObject makeDynamicObject(DynamicObject* obj);
 
 }
 #endif

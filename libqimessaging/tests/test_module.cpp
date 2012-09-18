@@ -9,7 +9,7 @@
 
 #include <qi/application.hpp>
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/object_factory.hpp>
@@ -23,7 +23,7 @@ TEST(Module, Load)
 
   session->waitForServiceReady("test", 3000);
 
-  qi::Object o = session->service("test");
+  qi::GenericObject o = session->service("test");
   ASSERT_TRUE(o.isValid());
   int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);

@@ -7,7 +7,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 
 static int lastPayload = 0;
@@ -22,7 +22,7 @@ TEST(TestObject, Simple)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseEvent<void (*)(int)>("fire");
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
   EXPECT_EQ(1U, obj.metaObject().signalMap().size());
   int linkId = obj.connect("fire", &onFire, 0);
   obj.emitEvent("fire", 42);
@@ -44,7 +44,7 @@ TEST(TestObject, EmitMethod)
   lastPayload = 0;
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("fire", &onFire);
-  qi::Object obj(ob.object());
+  qi::GenericObject obj(ob.object());
   pPayload.reset();
   obj.emitEvent("fire", 23);
   EXPECT_TRUE(pPayload.future().wait(2000));

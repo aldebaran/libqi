@@ -30,7 +30,7 @@ void call(const std::string &addr)
   std::cout << std::endl;
 #endif
 
-  qi::Object obj = session.service("serviceTest");
+  qi::GenericObject obj = session.service("serviceTest");
 
   if (!obj.isValid())
   {

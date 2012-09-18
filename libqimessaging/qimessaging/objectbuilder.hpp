@@ -16,7 +16,7 @@
 #include <qimessaging/metafunction.hpp>
 #include <sstream>
 #include <qimessaging/type.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 
 #include <qimessaging/staticobjecttype.hpp>
 namespace qi {
@@ -47,7 +47,7 @@ namespace qi {
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func);
     int xAdvertiseEvent(const std::string& signature);
 
-    qi::Object object();
+    qi::GenericObject object();
   public:
     DynamicObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(DynamicObjectBuilder);
@@ -80,7 +80,7 @@ namespace qi {
 
     // output
     const MetaObject& metaObject();
-    template<typename T> Object makeObject(T* ptr);
+    template<typename T> GenericObject makeObject(T* ptr);
     template<typename T> ObjectType* type();
 
   private:
@@ -145,10 +145,10 @@ namespace qi {
     return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature());
   }
 
-  template<typename T> Object StaticObjectBuilder::makeObject(T* ptr)
+  template<typename T> GenericObject StaticObjectBuilder::makeObject(T* ptr)
   {
     // FIXME validate type
-    Object o;
+    GenericObject o;
     o.type = type<T>();
     T** nptr = new T*;
     *nptr = ptr;

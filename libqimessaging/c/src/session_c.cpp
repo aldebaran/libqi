@@ -65,7 +65,7 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
   }
 
   qi_object_t *obj = qi_object_create();
-  qi::Object *o = reinterpret_cast<qi::Object *>(obj);
+  qi::GenericObject *o = reinterpret_cast<qi::GenericObject *>(obj);
   *o = s->service(name);
   if (!o->isValid()) {
     qi_object_destroy(obj);
@@ -112,7 +112,7 @@ bool qi_session_listen(qi_session_t *session, const char *address)
 int qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
-  qi::Object  *obj = reinterpret_cast<qi::Object *>(object);
+  qi::GenericObject  *obj = reinterpret_cast<qi::GenericObject *>(object);
 
   return s->registerService(name, *obj);
 }

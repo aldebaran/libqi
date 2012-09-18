@@ -6,7 +6,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transport_server.hpp>
@@ -193,7 +193,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
     // this will allow S.1 to be handle correctly
     sdMsg.setType(Message::Type_Call);
     sdMsg.setService(Message::Service_ServiceDirectory);
-    sdMsg.setObject(Message::Object_Main);
+    sdMsg.setObject(Message::GenericObject_Main);
     sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
 
     _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, TransportSocketPtr());
@@ -353,7 +353,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
         ans.setService(qi::Message::Service_Server);
         ans.setType(qi::Message::Type_Reply);
         ans.setFunction(qi::Message::ServerFunction_Connect);
-        ans.setObject(qi::Message::Object_Main);
+        ans.setObject(qi::Message::GenericObject_Main);
         qi::ODataStream d(buf);
         d << "";
         socket->send(ans);
@@ -430,7 +430,7 @@ void GatewayPrivate::onSocketConnected(TransportSocketPtr service)
       msg.setService(qi::Message::Service_Server);
       msg.setType(qi::Message::Type_Call);
       msg.setFunction(qi::Message::ServerFunction_Connect);
-      msg.setObject(qi::Message::Object_Main);
+      msg.setObject(qi::Message::GenericObject_Main);
 
       socket->send(msg);
       _clients.push_back(socket);

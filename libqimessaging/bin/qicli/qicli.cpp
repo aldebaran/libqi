@@ -9,11 +9,11 @@
 #include <istream>
 #include <sstream>
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/session.hpp>
 
 qi::Session session;
-std::map<const std::string, qi::Object> services;
+std::map<const std::string, qi::GenericObject> services;
 
 typedef std::vector<std::string> command;
 
@@ -47,7 +47,7 @@ static void cmd_service(const command           &cmd,
       }
 
       std::cout << "  methods:" << std::endl;
-      qi::Object obj = session.service(*it);
+      qi::GenericObject obj = session.service(*it);
       if (obj.isValid())
       {
         services[*it] = obj;

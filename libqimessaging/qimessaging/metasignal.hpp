@@ -12,7 +12,7 @@
 namespace qi {
 
 
-  /// Representation of a Signal in an Object.
+  /// Representation of a Signal in an GenericObject.
   class QIMESSAGING_API MetaSignal {
   public:
     MetaSignal(unsigned int uid, const std::string &sig);

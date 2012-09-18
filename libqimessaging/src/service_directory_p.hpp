@@ -10,13 +10,13 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/transport_socket.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
 
 namespace qi {
 
-  class ServiceDirectoryPrivate : public Object
+  class ServiceDirectoryPrivate : public GenericObject
   {
   public:
     ServiceDirectoryPrivate();

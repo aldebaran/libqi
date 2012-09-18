@@ -13,7 +13,7 @@
 
 namespace qi {
 
-  class Object;
+  class GenericObject;
   class SignalBasePrivate;
   struct SignalSubscriber;
 
@@ -31,7 +31,7 @@ namespace qi {
     template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
     Link connect(OBJECT_TYPE c, FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
-    Link connect(qi::Object target, unsigned int slot);
+    Link connect(qi::GenericObject target, unsigned int slot);
     Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(MetaCallable callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);

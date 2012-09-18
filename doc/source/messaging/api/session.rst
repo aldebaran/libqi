@@ -21,7 +21,7 @@ A service will need a session to register itself to a service directory.
 
 .. code-block:: c++
 
-  qi::Object obj;
+  qi::GenericObject obj;
   obj.advertiseMethod("reply", &reply);
 
   qi::Session session;
@@ -35,14 +35,14 @@ A service will need a session to register itself to a service directory.
   session.disconnect();
 
 
-A client will use a session to retrieve the list of surrounding services, and get a qi::Object bound to their methods.
+A client will use a session to retrieve the list of surrounding services, and get a qi::GenericObject bound to their methods.
 
 .. code-block:: c++
 
   qi::Session session;
   session.connect(serviceDirectoryURL);
 
-  qi::Object *obj = session.service("serviceTest");
+  qi::GenericObject *obj = session.service("serviceTest");
 
   std::string result = obj->call<std::string>("reply", "plaf");
   std::cout << "answer:" << result << std::endl;
@@ -100,12 +100,12 @@ Classes
 
       This function is provided to those who directly want to work with a TransportSocket. Its use is not recommended, unless you really know what you are doing.
 
-  .. cpp:function:: qi::Future< qi::Object* > service(const std::string &service, qi::Url::Protocol  type = qi::Url::Protocol_Any)
+  .. cpp:function:: qi::Future< qi::GenericObject* > service(const std::string &service, qi::Url::Protocol  type = qi::Url::Protocol_Any)
 
-    Connect to the service *name* and return its corresponding qi::Object.
+    Connect to the service *name* and return its corresponding qi::GenericObject.
     If *type* is provided, the socket will use the given protocol if available, or fail otherwise.
 
     :param service: the service to connect to
     :param type: type of connection which must be used
-    :return: a qi::Object corresponding to the service
+    :return: a qi::GenericObject corresponding to the service
 

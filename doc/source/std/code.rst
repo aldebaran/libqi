@@ -244,7 +244,7 @@ even more harder:
 
 .. code-block:: c++
 
-  //Object that throw in operator= sometime
+  //GenericObject that throw in operator= sometime
   class EvilObject;
   std::list<EvilObject> evilList;
 

@@ -5,7 +5,7 @@
 ** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
 
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
@@ -43,20 +43,20 @@ public:
 
 qi_object_t *qi_object_create()
 {
-  qi::Object *obj = new qi::Object();
+  qi::GenericObject *obj = new qi::GenericObject();
   return (qi_object_t *) obj;
 }
 
 void        qi_object_destroy(qi_object_t *object)
 {
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
+  qi::GenericObject *obj = reinterpret_cast<qi::GenericObject *>(object);
 
   delete obj;
 }
 
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_message_t *message)
 {
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
+  qi::GenericObject *obj = reinterpret_cast<qi::GenericObject *>(object);
 
   // Get sigreturn for functor result
   int methodId = obj->metaObject().methodId(signature_c);
@@ -133,7 +133,7 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::DynamicObjectBuilder *ob = reinterpret_cast<qi::DynamicObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
-  qi::Object *o = reinterpret_cast<qi::Object *>(obj);
+  qi::GenericObject *o = reinterpret_cast<qi::GenericObject *>(obj);
   *o = ob->object();
   return obj;
 }

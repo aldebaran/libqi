@@ -10,7 +10,7 @@
 #include <QtCore/qvector.h>
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/session.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/qt/qidatastream.h>
 #include "src/qiremoteobject_p.h"
@@ -51,12 +51,12 @@ void QiSessionPrivate::onSocketConnected(qi::TransportSocketPtr client) {
   qi::Message msg;
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_Server);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServerFunction_MetaObject);
   qi::Buffer      buf;
   qi::ODataStream ds(buf);
   ds << sr.serviceId;
-  ds << qi::Message::Object_Main;
+  ds << qi::Message::GenericObject_Main;
   msg.setBuffer(buf);
   _futureService[msg.id()] = sr;
   _futureConnect.remove(client);
@@ -193,7 +193,7 @@ QFuture<QObject *> QiSession::service(const QString &name, const QString &type) 
 
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_ServiceDirectory);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServiceDirectoryFunction_Service);
   qi::ODataStream dr(buf);
   dr << name.toUtf8().constData();
@@ -210,7 +210,7 @@ QFuture< QVector<qi::ServiceInfo> > QiSession::services()
   futi.reportStarted();
   msg.setType(qi::Message::Type_Call);
   msg.setService(qi::Message::Service_ServiceDirectory);
-  msg.setObject(qi::Message::Object_Main);
+  msg.setObject(qi::Message::GenericObject_Main);
   msg.setFunction(qi::Message::ServiceDirectoryFunction_Services);
   _p->_futureServices[msg.id()] = futi;
   _p->_serviceSocket->send(msg);

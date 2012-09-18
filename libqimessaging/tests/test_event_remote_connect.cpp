@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
@@ -85,9 +85,9 @@ public:
   qi::Promise<int>     prom1, prom2;
   qi::ServiceDirectory sd;
   qi::Session          session1, session2;
-  qi::Object           oserver1, oserver2;
+  qi::GenericObject           oserver1, oserver2;
   qi::Session          sclient;
-  qi::Object           oclient1, oclient2;
+  qi::GenericObject           oclient1, oclient2;
 };
 
 

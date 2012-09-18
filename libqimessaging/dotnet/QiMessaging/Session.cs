@@ -30,7 +30,7 @@ namespace QiMessaging
             return _p.Connect(addr);
         }
 
-        public int RegisterService(string name, Object service)
+        public int RegisterService(string name, GenericObject service)
         {
             return _p.RegisterService(name, service);
         }
@@ -40,7 +40,7 @@ namespace QiMessaging
             _p.UnregisterService(idx);
         }
 
-        public Object Service(string name)
+        public GenericObject Service(string name)
         {
             return _p.Service(name);
         }
@@ -90,7 +90,7 @@ namespace QiMessaging
             return qi_session_connect(session, address);
         }
 
-        public int RegisterService(string name, Object service)
+        public int RegisterService(string name, GenericObject service)
         {
             return qi_session_register_service(session, Convertor.ToQim(name), service.Origin().Origin());
         }
@@ -100,7 +100,7 @@ namespace QiMessaging
             qi_session_unregister_service(session, idx);
         }
 
-        public Object Service(string name)
+        public GenericObject Service(string name)
         {
             qi_object_t* obj = qi_session_get_service(session, name);
 
@@ -108,7 +108,7 @@ namespace QiMessaging
                 return null;
 
             ObjectPrivate p = new ObjectPrivate(obj);
-            return new Object(p);
+            return new GenericObject(p);
         }
 
         public void Listen(string addr)

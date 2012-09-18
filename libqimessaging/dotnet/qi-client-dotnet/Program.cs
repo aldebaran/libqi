@@ -29,7 +29,7 @@ namespace qi_client_dotnet
                 return;
             }
 
-            QiMessaging.Object obj = session.Service("serviceTest");
+            QiMessaging.GenericObject obj = session.Service("serviceTest");
 
             if (obj == null)
             {

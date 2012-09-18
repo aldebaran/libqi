@@ -12,7 +12,7 @@
 
 namespace qi {
 
-  /// Representation of a method in an Object.
+  /// Representation of a method in an GenericObject.
   class QIMESSAGING_API MetaMethod {
   public:
     MetaMethod() {};

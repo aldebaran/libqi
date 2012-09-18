@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 
 #include <qimessaging/session.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
@@ -54,7 +54,7 @@ public:
   }
 
 public:
-  qi::Object obj;
+  qi::GenericObject obj;
 
 private:
   qi::Session session;
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
   ob.advertiseMethod("replyBufA", &replyBufA);
   ob.advertiseMethod("replyBufB", &replyBufB);
   ob.advertiseMethod("replyBufBA", &replyBufBA);
-  qi::Object        obj(ob.object());
+  qi::GenericObject        obj(ob.object());
 
   session.connect(sdAddr.str());
 

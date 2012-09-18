@@ -9,7 +9,7 @@
 # define    SERVER_CLIENT_HPP_
 
 #include <qimessaging/future.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include "remoteobject_p.hpp"
 
 namespace qi {
@@ -25,7 +25,7 @@ namespace qi {
 
   public:
     qi::RemoteObject     _remoteObject;
-    qi::Object           _object;
+    qi::GenericObject           _object;
   };
 }
 

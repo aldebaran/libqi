@@ -14,7 +14,7 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 
 std::string reply(const std::string &msg) {
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
-      qi::Object obj(ob.object());
+      qi::GenericObject obj(ob.object());
 
       session.connect(masterAddress);
 

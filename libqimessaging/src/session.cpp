@@ -10,7 +10,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transport_socket.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/service_info.hpp>
 #include <qimessaging/object_factory.hpp>
 #include "src/remoteobject_p.hpp"
@@ -90,7 +90,7 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::Future< qi::Object > Session::service(const std::string &service,
+  qi::Future< qi::GenericObject > Session::service(const std::string &service,
                                             ServiceLocality locality,
                                             const std::string &type)
   {
@@ -111,7 +111,7 @@ namespace qi {
   }
 
   qi::Future<unsigned int> Session::registerService(const std::string &name,
-                                                    const qi::Object  &obj)
+                                                    const qi::GenericObject  &obj)
   {
     return _p->_server.registerService(name, obj);
   }

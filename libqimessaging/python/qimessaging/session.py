@@ -20,7 +20,7 @@ Only connected to service directory, get services from other applications.
 """
 
 import _qi
-from .object import Object
+from .object import GenericObject
 
 class ConnectionError(Exception):
     """ Raised by Session constructor and Session.connect

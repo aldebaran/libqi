@@ -16,7 +16,7 @@
 
 namespace qi {
 
-  class Object;
+  class GenericObject;
   class MetaSignalPrivate {
   public:
     explicit MetaSignalPrivate(const std::string &sig);

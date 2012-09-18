@@ -20,14 +20,14 @@ public struct BoundMethod { };
 
 namespace QiMessaging
 {
-    public class Object
+    public class GenericObject
     {
-        public Object()
+        public GenericObject()
         {
             _p = new ObjectPrivate();
         }
 
-        public Object(ObjectPrivate p)
+        public GenericObject(ObjectPrivate p)
         {
             _p = p;
         }

@@ -9,7 +9,7 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/object.hpp>
+#include <qimessaging/genericobject.hpp>
 #include <qimessaging/objectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
@@ -30,7 +30,7 @@ public:
   {
     qi::DynamicObjectBuilder ob;
     ob.advertiseEvent<void (*)(const int&)>("fire");
-    oserver = new qi::Object(ob.object());
+    oserver = new qi::GenericObject(ob.object());
   }
 
 protected:
@@ -64,9 +64,9 @@ public:
   qi::Promise<int>     prom;
   qi::ServiceDirectory sd;
   qi::Session          session;
-  qi::Object          *oserver;
+  qi::GenericObject          *oserver;
   qi::Session          sclient;
-  qi::Object           oclient;
+  qi::GenericObject           oclient;
 };
 
 
