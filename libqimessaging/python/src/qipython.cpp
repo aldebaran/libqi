@@ -25,6 +25,19 @@ static int       qi_python_to_message(const char *signature, qi_message_t *msg, 
 static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg);
 static PyObject *qi_message_to_python_tuple(qi_signature_t *sig, qi_message_t *msg);
 
+// qi::signatureSplit return an empty sigv[1] when signature is not a full signature (method::(sss))
+// For python bindings, when signature is not valid, we assume parameter was method name.
+static std::vector<std::string>  signatureSplit(const std::string &signature)
+{
+  std::vector<std::string> sigv;
+
+  sigv = qi::signatureSplit(signature);
+
+  if (sigv[1].compare("") == 0)
+    sigv[1] = signature;
+
+  return sigv;
+}
 
 static void*     qi_raise(const char *exception_class, const char *error_message)
 {
@@ -467,7 +480,7 @@ static qi::MetaMethod*             qi_get_convertible_method(qi::Object *object,
   for (std::vector<qi::MetaMethod>::iterator it = candidates.begin(); it != candidates.end(); ++it)
   {
     // #2.1 Get paramter signature.
-    sigv = qi::signatureSplit((*it).signature());
+    sigv = signatureSplit((*it).signature());
 
     if (signature.isConvertibleTo(sigv[2]) == true)
       return meta.method(meta.methodId((*it).signature()));
@@ -526,7 +539,7 @@ static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *sig
   qi::MetaMethod*           mm;
 
   // #1 : Check if user give us complete signature
-  sigInfo = qi::signatureSplit(signature);
+  sigInfo = signatureSplit(signature);
 
   if (sigInfo[2].compare("") != 0)
   {
@@ -575,7 +588,7 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
     return NULL; // Exception should have been raised
 
   qi_message_t* msg = qi_message_create();
-  std::vector<std::string> sigv = qi::signatureSplit(mm->signature());
+  std::vector<std::string> sigv = signatureSplit(mm->signature());
 
   if (qi_python_to_message(sigv[2].c_str(), msg, args) != 0)
   {
@@ -590,7 +603,7 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
 
 static void __python_callback(const char *signature, qi_message_t *msg, qi_message_t *answer, void *data)
 {
-  std::vector<std::string> sigv = qi::signatureSplit(signature);
+  std::vector<std::string> sigv = signatureSplit(signature);
   PyObject* param;
   PyObject* ret;
   PyObject* func;
@@ -645,7 +658,7 @@ PyObject* qi_object_methods_vector(qi_object_t *object)
   for (qi::MetaObject::MethodMap::iterator it = mmm.begin(); it != mmm.end(); ++it)
   {
     // #1.1 Split signature to get name.
-    std::vector<std::string> sigv = qi::signatureSplit((*it).second.signature());
+    std::vector<std::string> sigv = signatureSplit((*it).second.signature());
 
     // #1.2 If there is already a signature with same name, replace with name only.
     if (parsedMap.find(sigv[1]) != parsedMap.end())
