@@ -50,7 +50,7 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
 
   public:
-    SignalBasePrivate* _p;
+    boost::shared_ptr<SignalBasePrivate> _p;
   };
 
   template<typename FUNCTION_TYPE>

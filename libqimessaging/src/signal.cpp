@@ -107,8 +107,8 @@ namespace qi {
   }
 
   SignalBase::SignalBase(const std::string& sig)
+    : _p(new SignalBasePrivate)
   {
-    _p = new SignalBasePrivate;
     _p->signature = sig;
   }
 
@@ -140,7 +140,6 @@ namespace qi {
     return _p->disconnect(link);
   }
 
-
   SignalBase::~SignalBase()
   {
     SignalSubscriberMap::iterator i;
@@ -151,7 +150,6 @@ namespace qi {
     }
     for (unsigned i=0; i<links.size(); ++i)
       disconnect(links[i]);
-    delete _p;
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
