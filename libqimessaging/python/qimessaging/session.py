@@ -75,15 +75,44 @@ class Session:
         """
         _qi.qi_session_unregister_service(self._session, idx)
 
+
+    def _addfunc(self, name, signature, obj):
+        def innerfunc(*args):
+             return obj.call(signature, *args)
+        innerfunc.__doc__ = "Docstring or %s" % name
+        innerfunc.__name__ = name
+        setattr(obj, innerfunc.__name__, innerfunc)
+
     def service(self, name):
         """ Ask to service directory for a service.
-        """
-        obj = _qi.qi_session_get_service(self._session, name)
 
-        if not obj:
+        On success, dynamicaly add remote methods to Python object.
+        Generated method are a wrapper around Object.call method.
+        """
+        #1 Get C object.
+        obj_c = _qi.qi_session_get_service(self._session, name)
+
+        #1.1 One failure, return None.
+        if not obj_c:
             return None
 
-        return Object(obj)
+        #2 Create Python object from C object.
+        obj = Object(obj_c)
+
+        #3 Get all remote methods signature.
+        methods = _qi.qi_object_methods_vector(obj_c)
+
+        #4 Create Python methods
+        for m in methods:
+            # 4.1 Set method signature and name.
+            signature = m
+            name = m.rsplit("::", 2)[0]
+
+            #4.2 Add method in object. NB: overloaded functions are merged, signature becomes function name.
+            # Disambiguation is done at call.
+            self._addfunc(name, signature, obj)
+
+        return obj
 
     def close(self):
         """ Disconnect from service directory.

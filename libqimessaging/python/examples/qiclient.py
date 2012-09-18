@@ -28,7 +28,7 @@ def get_service(session, service_name):
 def call_reply(obj):
     """ Synchronous call to serviceTest.reply::s(s)
     """
-    value = obj.call("reply::(s)", "plaf")
+    value = obj.reply("plaf");
 
     print 'Reply : %s' % value
 
@@ -68,7 +68,7 @@ def  main():
 
     #5 Cleanup
     session.close()
-    sys.exit()
+    _application.stop()
 
 if __name__ == "__main__":
     main()

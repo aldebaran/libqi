@@ -48,6 +48,5 @@ class Application:
 
     def __del__(self):
         """ Release allocated ressources
-
         """
         _qi.qi_application_destroy(self._app)

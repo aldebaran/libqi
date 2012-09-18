@@ -17,6 +17,7 @@ extern "C" {
   qi_application_t *py_application_create(PyObject *args);
   PyObject*         qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *args);
   void              qi_bind_method(qi_object_builder_t *builder, char *signature, PyObject *object);
+  PyObject         *qi_object_methods_vector(qi_object_t *object);
 }
 
 #endif      /* !QIPYTHON_H_ */
