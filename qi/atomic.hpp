@@ -16,10 +16,14 @@
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
 
-extern "C" long __cdecl _InterlockedIncrement(long volatile *);
-extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 extern "C" short __cdecl _InterlockedIncrement16(short volatile *);
 extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
+extern "C" long __cdecl _InterlockedIncrement(long volatile *);
+extern "C" long __cdecl _InterlockedDecrement(long volatile *);
+/*
+ * No extern with 64, it seems that intrinsic version of these
+ * functions are not always avaiblables
+ */
 #endif
 
 #include <qi/config.hpp>
@@ -27,7 +31,7 @@ extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
 namespace qi
 {
   /**
-    * Warning : On windows, only short and long instanciation can be used
+    * Warning : on Windows 1 byte atomic operations are not availables
     */
   template <typename T>
   class atomic
@@ -71,6 +75,7 @@ namespace qi
 #endif
 
 #ifdef _MSC_VER
+
   template<>
   inline short atomic<short>::operator++()
   {
@@ -81,6 +86,18 @@ namespace qi
   inline short atomic<short>::operator--()
   {
     return _InterlockedDecrement16(&_value);
+  }
+
+  template<>
+  inline unsigned short atomic<unsigned short>::operator++()
+  {
+    return _InterlockedIncrement16(reinterpret_cast<short*>(&_value));
+  }
+
+  template<>
+  inline unsigned short atomic<unsigned short>::operator--()
+  {
+    return _InterlockedDecrement16(reinterpret_cast<short*>(&_value));
   }
 
   template <>
@@ -94,6 +111,66 @@ namespace qi
   {
     return _InterlockedDecrement(&_value);
   }
+
+  template <>
+  inline unsigned long atomic<unsigned long>::operator++()
+  {
+    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template <>
+  inline unsigned long atomic<unsigned long>::operator--()
+  {
+    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+  }
+  template <>
+  inline int atomic<int>::operator++()
+  {
+    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template <>
+  inline int atomic<int>::operator--()
+  {
+    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template <>
+  inline unsigned int atomic<unsigned int>::operator++()
+  {
+    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template <>
+  inline unsigned int atomic<unsigned int>::operator--()
+  {
+    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template <>
+  inline long long atomic<long long>::operator++()
+  {
+    return InterlockedIncrement64(&_value);
+  }
+
+  template <>
+  inline long long atomic<long long>::operator--()
+  {
+    return InterlockedDecrement64(&_value);
+  }
+
+  template <>
+  inline unsigned long long atomic<unsigned long long>::operator++()
+  {
+    return InterlockedIncrement64(reinterpret_cast<long long*>(&_value));
+  }
+
+  template <>
+  inline unsigned long long atomic<unsigned long long>::operator--()
+  {
+    return InterlockedDecrement64(reinterpret_cast<long long*>(&_value));
+  }
+
 #endif
 }
 
