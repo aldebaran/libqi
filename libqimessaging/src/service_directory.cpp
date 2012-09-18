@@ -24,6 +24,7 @@
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
 #include "src/service_directory_p.hpp"
+#include "src/signal_p.hpp"
 
 namespace qi
 {
@@ -43,9 +44,9 @@ namespace qi
     : Object(createSDP(this))
     , _server()
     , servicesCount(0)
-    , currentSocket(0)
+    , currentSocket()
   {
-    _server.addCallbacks(this);
+    _server.newConnection.connect(boost::bind(&ServiceDirectoryPrivate::onTransportServerNewConnection, this, _1));
     ServiceInfo si;
     si.setName("serviceDirectory");
     si.setServiceId(1);
@@ -66,60 +67,47 @@ namespace qi
   {
     {
       boost::recursive_mutex::scoped_lock sl(_clientsMutex);
-      for (std::set<TransportSocket*>::iterator i = _clients.begin();
+      for (std::set<TransportSocketPtr>::iterator i = _clients.begin();
         i!= _clients.end(); ++i)
       {
-        (*i)->removeCallbacks(this);
-        delete *i;
+        //TODO: do not call reset. (SD should be a server, server should handle that properly)
+        (*i)->disconnected._p->reset();
+        (*i)->messageReady._p->reset();
+        (*i)->disconnect();
       }
       _clients.clear();
     } // Lock must not be held while deleting session, or deadlock
   }
 
-  void ServiceDirectoryPrivate::onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data)
+  void ServiceDirectoryPrivate::onTransportServerNewConnection(TransportSocketPtr socket)
   {
     boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     if (!socket)
       return;
-    socket->addCallbacks(this);
+    socket->disconnected.connect(boost::bind<void>(&ServiceDirectoryPrivate::onSocketDisconnected, this, _1, socket));
+    socket->messageReady.connect(boost::bind<void>(&ServiceDirectoryPrivate::onMessageReady, this, _1, socket));
     _clients.insert(socket);
   }
 
-  void ServiceDirectoryPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *data)
+  void ServiceDirectoryPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket)
   {
     currentSocket  = socket;
 
-    qi::Message msg;
-    socket->read(id, &msg);
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.function();
-    qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()));
+    qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
     res.addCallbacks(new ServerResult(socket, msg));
 
-    currentSocket  = 0;
+    currentSocket.reset();
   }
 
-  void ServiceDirectoryPrivate::onSocketWriteDone(TransportSocket *socket, void *data)
-  {
-    currentSocket = socket;
-
-    currentSocket = 0;
-  }
-
-  void ServiceDirectoryPrivate::onSocketConnected(TransportSocket *socket, void *data)
-  {
-    currentSocket = socket;
-
-    currentSocket = 0;
-  }
-
-  void ServiceDirectoryPrivate::onSocketDisconnected(TransportSocket *socket, void *data)
+  void ServiceDirectoryPrivate::onSocketDisconnected(int error, TransportSocketPtr socket)
   {
     boost::recursive_mutex::scoped_lock sl(_clientsMutex);
     _clients.erase(socket);
     currentSocket = socket;
 
     // if services were connected behind the socket
-    std::map<TransportSocket*, std::vector<unsigned int> >::iterator it;
+    std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
     if ((it = socketToIdx.find(socket)) == socketToIdx.end())
     {
       return;
@@ -139,8 +127,7 @@ namespace qi
       unregisterService(*it2);
     }
     socketToIdx.erase(it);
-    currentSocket = 0;
-    delete socket;
+    currentSocket.reset();
   }
 
   std::vector<ServiceInfo> ServiceDirectoryPrivate::services()
@@ -348,6 +335,17 @@ bool ServiceDirectory::listen(const qi::Url &address)
 
 void ServiceDirectory::close() {
   _p->_server.close();
+  {
+    boost::recursive_mutex::scoped_lock sl(_p->_clientsMutex);
+    for (std::set<TransportSocketPtr>::iterator it = _p->_clients.begin();
+         it != _p->_clients.end(); ++it)
+    {
+      (*it)->disconnected._p.reset();
+      (*it)->messageReady._p.reset();
+      (*it)->disconnect();
+    }
+    _p->_clients.clear();
+  } // Lock must not be held while deleting session, or deadlock
 }
 
 qi::Url ServiceDirectory::listenUrl() const {

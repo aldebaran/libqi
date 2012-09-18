@@ -35,7 +35,7 @@
 #include <qimessaging/transport_socket.hpp>
 #include "src/transport_server_libevent_p.hpp"
 #include "src/transport_server_dummy_p.hpp"
-#include "src/transport_socket_libevent_p.hpp"
+#include "src/tcptransportsocket_p.hpp"
 
 namespace qi
 {

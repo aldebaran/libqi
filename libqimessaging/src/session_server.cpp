@@ -16,11 +16,12 @@
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
 #include "service_directory_client.hpp"
+#include "src/signal_p.hpp"
 
 namespace qi {
 
   static MetaFunctionResult forwardEvent(const MetaFunctionParameters& params,
-                                         unsigned int service, unsigned int event, TransportSocket* client)
+                                         unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
     msg.setBuffer(params.getBuffer());
@@ -38,33 +39,36 @@ namespace qi {
     , _dying(false)
     , _sdClient(sdClient)
   {
-    _server.addCallbacks(this);
+    _server.newConnection.connect(boost::bind<void>(&Session_Server::onTransportServerNewConnection, this, _1));
   }
 
   Session_Server::~Session_Server()
   {
     _dying = true;
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
-    for (std::set<TransportSocket*>::iterator i = _clients.begin();
+    for (std::set<TransportSocketPtr>::iterator i = _clients.begin();
       i != _clients.end(); ++i)
     {
       // We do not want onSocketDisconnected called
-      (*i)->removeCallbacks(this);
-      delete *i;
+      //TODO: move that logic into TransportServer.
+      (*i)->disconnected._p->reset();
+      (*i)->messageReady._p->reset();
+      (*i)->disconnect();
     }
   }
 
 
-  void Session_Server::onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data)
+  void Session_Server::onTransportServerNewConnection(TransportSocketPtr socket)
   {
     boost::recursive_mutex::scoped_lock sl(_mutexOthers);
     if (!socket)
       return;
     _clients.insert(socket);
-    socket->addCallbacks(this);
+    socket->disconnected.connect(boost::bind<void>(&Session_Server::onSocketDisconnected, this, socket, _1));
+    socket->messageReady.connect(boost::bind<void>(&Session_Server::onMessageReady, this, _1, socket));
   }
 
-  void Session_Server::onSocketDisconnected(TransportSocket* client, void *data)
+  void Session_Server::onSocketDisconnected(TransportSocketPtr client, int error)
   {
     // The check below must be done before holding the lock.
     if (_dying)
@@ -88,14 +92,11 @@ namespace qi {
       }
       _links.erase(i);
     }
-    delete client;
   }
 
 
 
-  void Session_Server::onSocketReadyRead(TransportSocket *client, int id, void *data) {
-    qi::Message msg;
-    client->read(id, &msg);
+  void Session_Server::onMessageReady(const qi::Message &msg, TransportSocketPtr client) {
     qi::Object obj;
 
     {
@@ -222,7 +223,7 @@ namespace qi {
           qi::Buffer error;
           qi::ODataStream ds(error);
           std::stringstream ss;
-          ss << "can't find service id: " << id;
+          ss << "can't find service id: " << msg.id();
           ds << ss.str();
           retval.setBuffer(error);
           client->send(retval);
@@ -278,6 +279,7 @@ namespace qi {
       _services[idx] = it->second.first;
     }
     // ack the Service directory to tell that we are ready
+    //TODO: async handle.
     _sdClient->serviceReady(idx);
     {
       boost::recursive_mutex::scoped_lock sl(_mutexOthers);
@@ -367,6 +369,14 @@ namespace qi {
   };
 
   void Session_Server::close() {
+    std::set<TransportSocketPtr>::iterator it;
+
+    //TODO move that logic into TransportServer
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+      (*it)->disconnected._p->reset();
+      (*it)->connected._p->reset();
+      (*it)->messageReady._p->reset();
+    }
     _server.close();
   }
 

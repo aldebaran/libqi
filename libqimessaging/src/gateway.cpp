@@ -13,13 +13,13 @@
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 
-#include "src/transport_socket_libevent_p.hpp"
+#include "src/tcptransportsocket_p.hpp"
 #include "src/session_p.hpp"
 
 namespace qi
 {
 
-class GatewayPrivate: public TransportServerInterface, public TransportSocketInterface
+class GatewayPrivate
 {
 public:
   enum Type
@@ -35,42 +35,38 @@ public:
   bool attachToServiceDirectory(const Url &address);
   bool listen(const Url &address);
   bool connect(const Url &address);
-  void addCallbacks(TransportServerInterface *tsrvi,
-                    TransportSocketInterface *tscki);
 
 protected:
-  void handleMsgFromClient(TransportSocket *client, qi::Message *msg);
-  void handleMsgFromService(TransportSocket *service, qi::Message *msg);
-  void forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg);
+  void handleMsgFromClient(TransportSocketPtr client, const qi::Message *msg);
+  void handleMsgFromService(TransportSocketPtr service, const qi::Message *msg);
+  void forwardClientMessage(TransportSocketPtr client, TransportSocketPtr service, const Message *msg);
 
   //ServerInterface
-  virtual void onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data);
+  void onTransportServerNewConnection(TransportSocketPtr socket);
 
   //SocketInterface
-  virtual void onSocketReadyRead(TransportSocket *client, int id, void *data);
-  virtual void onSocketConnected(TransportSocket *client, void *data);
-  virtual void onSocketDisconnected(TransportSocket *socket, void *data);
+  void onMessageReady(const qi::Message &msg, TransportSocketPtr socket, unsigned int id);
+  void onSocketConnected(TransportSocketPtr client);
+  void onSocketDisconnected(TransportSocketPtr socket);
 
 public:
   Type                               _type;
   TransportServer                   *_transportServer;
   Session                            _session;
 
-  /* Map from ServiceId to associated TransportSocket */
-  std::map< unsigned int, qi::TransportSocket* > _services;
+  /* Map from ServiceId to associated TransportSocketPtr */
+  std::map< unsigned int, qi::TransportSocketPtr > _services;
 
   /* Vector of all the TransportSocket of the clients */
-  std::list<TransportSocket*>                    _clients;
+  std::list<TransportSocketPtr>                    _clients;
 
   /* For each service, map a received Message and its TransportSocket to the rewritten id */
-  std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > > _serviceToClient;
+  std::map< TransportSocketPtr, std::map< int, std::pair<int, TransportSocketPtr> > > _serviceToClient;
 
   /* Map of vectors of pending messages for each service */
-  std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> >  >  _pendingMessage;
+  std::map< unsigned int, std::vector< std::pair<const Message*, TransportSocketPtr> >  >  _pendingMessage;
 
-  std::list<TransportSocket*> _remoteGateways;
-
-  std::list<TransportSocketInterface*> _transportSocketCallbacks;
+  std::list<TransportSocketPtr> _remoteGateways;
 
   Url _attachAddress;
 };
@@ -78,38 +74,35 @@ public:
 GatewayPrivate::GatewayPrivate()
 : _transportServer(0)
 {
-  _transportSocketCallbacks.push_back(this);
 }
 
 GatewayPrivate::~GatewayPrivate()
 {
-  _transportSocketCallbacks.clear();
-  for (std::list<TransportSocket*>::iterator clientIt = _clients.begin();
-       clientIt != _clients.end();
-       ++clientIt)
-  {
-    delete *clientIt;
+  std::list<TransportSocketPtr>::iterator clientIt;
+  for (clientIt = _clients.begin(); clientIt != _clients.end(); ++clientIt) {
+    (*clientIt)->disconnect();
   }
+  _clients.clear();
 
-  for (std::map< unsigned int, qi::TransportSocket* >::iterator servicesIt = _services.begin();
-       servicesIt != _services.end();
-       ++servicesIt)
-  {
-    delete servicesIt->second;
+  std::map< unsigned int, qi::TransportSocketPtr >::iterator servicesIt;
+  for (servicesIt = _services.begin(); servicesIt != _services.end(); ++servicesIt) {
+    servicesIt->second->disconnect();
   }
+  _services.clear();
 
-  for (std::list<TransportSocket*>::iterator remoteGatewaysIt = _remoteGateways.begin();
-       remoteGatewaysIt != _remoteGateways.end();
-       ++remoteGatewaysIt)
-  {
-    delete *remoteGatewaysIt;
+  std::list<TransportSocketPtr>::iterator remoteGatewaysIt;
+  for (remoteGatewaysIt = _remoteGateways.begin(); remoteGatewaysIt != _remoteGateways.end(); ++remoteGatewaysIt) {
+    (*remoteGatewaysIt)->disconnect();
   }
+  _remoteGateways.clear();
 
-  for (std::map< unsigned int, std::vector< std::pair<Message*, TransportSocket*> > >::iterator _pendingMessageIt = _pendingMessage.begin();
+
+
+  for (std::map< unsigned int, std::vector< std::pair<const Message*, TransportSocketPtr> > >::iterator _pendingMessageIt = _pendingMessage.begin();
        _pendingMessageIt != _pendingMessage.end();
        _pendingMessageIt++)
   {
-    for (std::vector< std::pair<Message*, TransportSocket*> >::iterator msgTsVecIt = _pendingMessageIt->second.begin();
+    for (std::vector< std::pair<const Message*, TransportSocketPtr> >::iterator msgTsVecIt = _pendingMessageIt->second.begin();
          msgTsVecIt != _pendingMessageIt->second.end();
          msgTsVecIt++)
     {
@@ -120,22 +113,15 @@ GatewayPrivate::~GatewayPrivate()
   delete _transportServer;
 }
 
-void GatewayPrivate::onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data)
+void GatewayPrivate::onTransportServerNewConnection(TransportSocketPtr socket)
 {
   if (!socket)
     return;
 
-  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-       it != _transportSocketCallbacks.end();
-       ++it)
-  {
-    socket->addCallbacks(*it);
-  }
-
   _clients.push_back(socket);
 }
 
-void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSocket *service, Message *msg)
+void GatewayPrivate::forwardClientMessage(TransportSocketPtr client, TransportSocketPtr service, const Message *msg)
 {
   // Create new message with unique ID
   Message  msgToService;
@@ -143,7 +129,7 @@ void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSock
   msgToService.buildForwardFrom(*msg);
 
   // Store message to map call msg with return msg from the service
-  std::map< int, std::pair<int, TransportSocket *> > &reqIdMap = _serviceToClient[service];
+  std::map< int, std::pair<int, TransportSocketPtr> > &reqIdMap = _serviceToClient[service];
   reqIdMap[msgToService.id()] = std::make_pair(msg->id(), client);
 
   // Send to the service
@@ -156,10 +142,10 @@ void GatewayPrivate::forwardClientMessage(TransportSocket *client, TransportSock
  * C2: the destination service is unknown, we try to establish connection,
  *     and we enqueue the message, which will be sent in S2.
  */
-void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
+void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message const* msg)
 {
   // Search service
-  std::map<unsigned int, TransportSocket*>::iterator it = _services.find(msg->service());
+  std::map<unsigned int, TransportSocketPtr>::iterator it = _services.find(msg->service());
 
   /* C1 */
   if (it != _services.end() && it->second->isConnected())
@@ -184,14 +170,14 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
       {
         qiLogInfo("gateway") << "Retry to connect to Service Directory on "
                              << _attachAddress.str();
-        TransportSocket *sdSocket = new qi::TransportSocket();
+        TransportSocketPtr sdSocket = qi::makeTransportSocket(_attachAddress.protocol());
         _services[qi::Message::Service_ServiceDirectory] = sdSocket;
-        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-             it != _transportSocketCallbacks.end();
-             ++it)
-        {
-          sdSocket->addCallbacks(*it);
-        }
+//        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+//             it != _transportSocketCallbacks.end();
+//             ++it)
+//        {
+//          sdSocket->addCallbacks(*it);
+//        }
         sdSocket->connect(_attachAddress);
       }
       return;
@@ -210,7 +196,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
     sdMsg.setObject(Message::Object_Main);
     sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
 
-    _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, (TransportSocket*) 0);
+    _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, TransportSocketPtr());
 
     _services[Message::Service_ServiceDirectory]->send(sdMsg);
 
@@ -221,10 +207,10 @@ void GatewayPrivate::handleMsgFromClient(TransportSocket *client, Message *msg)
 // S.1/ New message from sd for us => Change endpoint (gateway), enter S.3
 // S.2/ New service connected          => forward pending msg to service, enter S.3
 // S.3/ New message from service       => forward to client, (end)
-void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg)
+void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Message *msg)
 {
   // get the map of request => client
-  std::map< TransportSocket *, std::map< int, std::pair<int, TransportSocket *> > >::iterator it;
+  std::map< TransportSocketPtr, std::map< int, std::pair<int, TransportSocketPtr> > >::iterator it;
   it = _serviceToClient.find(service);
   // Must not fail
   if (it == _serviceToClient.end())
@@ -233,8 +219,8 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
     return;
   }
 
-  std::map< int, std::pair<int, TransportSocket *> > &request = it->second;
-  std::map< int, std::pair<int, TransportSocket *> >::const_iterator itReq;
+  std::map< int, std::pair<int, TransportSocketPtr> > &request = it->second;
+  std::map< int, std::pair<int, TransportSocketPtr> >::const_iterator itReq;
   itReq = request.find(msg->id());
   if (itReq != request.end())
   {
@@ -292,7 +278,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       unsigned int serviceId = result.serviceId();
 
       // Check if the gateway is connected to the requested service
-      std::map<unsigned int, TransportSocket*>::const_iterator it;
+      std::map<unsigned int, TransportSocketPtr>::const_iterator it;
       it = _services.find(serviceId);
       // Service connected
       if (it != _services.end())
@@ -306,15 +292,15 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
       {
         qi::Url url(endpoints[0]);
         // Connect to the service
-        TransportSocket *service = new TransportSocket();
+        TransportSocketPtr service = qi::makeTransportSocket(url.protocol());
         service->connect(url);
 
-        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-             it != _transportSocketCallbacks.end();
-             ++it)
-        {
-          service->addCallbacks(*it);
-        }
+//        for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+//             it != _transportSocketCallbacks.end();
+//             ++it)
+//        {
+//          service->addCallbacks(*it);
+//        }
 
         _services[serviceId] = service;
       }
@@ -336,11 +322,8 @@ void GatewayPrivate::handleMsgFromService(TransportSocket *service, Message *msg
 /*
  * Called for any incoming message.
  */
-void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *data)
+void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket, unsigned int id)
 {
-  qi::Message msg;
-  socket->read(id, &msg);
-
   /*
    * A ReverseGateway connected. This is our endpoint for the Service
    * Directory.
@@ -356,7 +339,7 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *da
        * it is known as a client. We need to fix it by removing its
        * TransportSocket fro the _clients vector.
        */
-      std::list<TransportSocket *>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
+      std::list<TransportSocketPtr>::iterator it = std::find(_clients.begin(), _clients.end(), socket);
       _clients.erase(it);
 
       if (_services.find(Message::Service_ServiceDirectory) == _services.end())
@@ -413,9 +396,9 @@ void GatewayPrivate::onSocketReadyRead(TransportSocket *socket, int id, void *da
  * the ReverseGateway has reached a RemoteGateway.
  */
 // S.2/
-void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
+void GatewayPrivate::onSocketConnected(TransportSocketPtr service)
 {
-  for (std::map< unsigned int, TransportSocket * >::const_iterator it = _services.begin();
+  for (std::map< unsigned int, TransportSocketPtr >::const_iterator it = _services.begin();
        it != _services.end();
        ++it)
   {
@@ -424,8 +407,8 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
     {
       unsigned int serviceId = it->first;
       qiLogInfo("gateway") << "Connected to service #" << serviceId;
-      std::vector< std::pair<qi::Message*, TransportSocket*> >  &pmv = _pendingMessage[serviceId];
-      std::vector< std::pair<qi::Message*, TransportSocket*> > ::iterator itPending;
+      std::vector< std::pair<const qi::Message*, TransportSocketPtr> >  &pmv = _pendingMessage[serviceId];
+      std::vector< std::pair<const qi::Message*, TransportSocketPtr> > ::iterator itPending;
 
       for (itPending = pmv.begin(); itPending != pmv.end(); ++itPending)
       {
@@ -435,13 +418,13 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
     }
   }
 
-  for (std::list<TransportSocket*>::iterator it = _remoteGateways.begin();
+  for (std::list<TransportSocketPtr>::iterator it = _remoteGateways.begin();
        it != _remoteGateways.end();
        ++it)
   {
     if (*it == service)
     {
-      TransportSocket *ts = *it;
+      TransportSocketPtr socket = *it;
 
       qi::Message msg;
       msg.setService(qi::Message::Service_Server);
@@ -449,8 +432,8 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
       msg.setFunction(qi::Message::ServerFunction_Connect);
       msg.setObject(qi::Message::Object_Main);
 
-      ts->send(msg);
-      _clients.push_back(ts);
+      socket->send(msg);
+      _clients.push_back(socket);
       _remoteGateways.erase(it);
       break;
     }
@@ -462,10 +445,10 @@ void GatewayPrivate::onSocketConnected(TransportSocket *service, void *data)
   }
 }
 
-void GatewayPrivate::onSocketDisconnected(TransportSocket *socket, void *data)
+void GatewayPrivate::onSocketDisconnected(TransportSocketPtr socket)
 {
   // Was it a Service?
-  for (std::map< unsigned int, qi::TransportSocket* >::iterator it = _services.begin();
+  for (std::map< unsigned int, qi::TransportSocketPtr >::iterator it = _services.begin();
        it != _services.end();
        )
   {
@@ -485,7 +468,7 @@ void GatewayPrivate::onSocketDisconnected(TransportSocket *socket, void *data)
       _services.erase(it++);
 
       // Remove the corresponding message routing table
-      std::map< TransportSocket*, std::map< int, std::pair<int, TransportSocket*> > >::iterator it2 = _serviceToClient.find(socket);
+      std::map< TransportSocketPtr, std::map< int, std::pair<int, TransportSocketPtr> > >::iterator it2 = _serviceToClient.find(socket);
       if (it2 != _serviceToClient.end())
       {
         _serviceToClient.erase(it2);
@@ -506,14 +489,14 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 {
   _attachAddress = address;
 
-  TransportSocket *sdSocket = new qi::TransportSocket();
+  TransportSocketPtr sdSocket = qi::makeTransportSocket(address.protocol());
   _services[qi::Message::Service_ServiceDirectory] = sdSocket;
-  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-       it != _transportSocketCallbacks.end();
-       ++it)
-  {
-    sdSocket->addCallbacks(*it);
-  }
+//  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+//       it != _transportSocketCallbacks.end();
+//       ++it)
+//  {
+//    sdSocket->addCallbacks(*it);
+//  }
 
   sdSocket->connect(address);
 
@@ -530,7 +513,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 bool GatewayPrivate::listen(const Url &address)
 {
   _transportServer = new qi::TransportServer(address);
-  _transportServer->addCallbacks(this);
+  _transportServer->newConnection.connect(boost::bind<void>(&GatewayPrivate::onTransportServerNewConnection, this, _1));
   return _transportServer->listen();
 }
 
@@ -538,25 +521,19 @@ bool GatewayPrivate::connect(const qi::Url &connectURL)
 {
   qiLogInfo("gateway") << "Connecting to remote gateway: " << connectURL.str();
 
-  qi::TransportSocket *ts = new qi::TransportSocket();
-  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
-       it != _transportSocketCallbacks.end();
-       ++it)
-  {
-    ts->addCallbacks(*it);
-  }
-  ts->connect(connectURL);
-  _remoteGateways.push_back(ts);
+  qi::TransportSocketPtr socket = qi::makeTransportSocket(connectURL.protocol());
+//  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();
+//       it != _transportSocketCallbacks.end();
+//       ++it)
+//  {
+//    ts->addCallbacks(*it);
+//  }
+  socket->connect(connectURL);
+  _remoteGateways.push_back(socket);
 
   return true;
 }
 
-void GatewayPrivate::addCallbacks(qi::TransportServerInterface *tsrvi,
-                                  qi::TransportSocketInterface *tscki)
-{
-  _transportServer->addCallbacks(tsrvi);
-  _transportSocketCallbacks.push_back(tscki);
-}
 
 /* Gateway bindings */
 Gateway::Gateway()
@@ -595,12 +572,6 @@ RemoteGateway::~RemoteGateway()
 bool RemoteGateway::listen(const qi::Url &address)
 {
   return _p->listen(address);
-}
-
-void RemoteGateway::addCallbacks(TransportServerInterface *tsrvi,
-                                 TransportSocketInterface *tscki)
-{
-  _p->addCallbacks(tsrvi, tscki);
 }
 
 /* ReverseGateway bindings */

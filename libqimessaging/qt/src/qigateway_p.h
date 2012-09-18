@@ -43,7 +43,7 @@ private:
 
   void processClientMessage(QiTransportSocket* socket,
                             const qi::Message* msg);
-  void processServiceMessage(QiTransportSocket *socket,
+  void processServiceMessage(QiTransportSocket* socket,
                              const qi::Message& msg);
   void connectToService(unsigned int serviceId,
                         const QUrl&  url);

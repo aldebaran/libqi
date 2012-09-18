@@ -14,26 +14,12 @@
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/event_loop.hpp>
+# include <qimessaging/signal.hpp>
+# include "src/messagedispatcher.hpp"
 # include <string>
 
 namespace qi
 {
-  class TransportSocket;
-
-  class QIMESSAGING_API TransportSocketInterface
-  {
-  public:
-    virtual ~TransportSocketInterface() = 0;
-    inline virtual void onSocketConnected(TransportSocket *QI_UNUSED(client), void *data)         {};
-    inline virtual void onSocketConnectionError(TransportSocket *QI_UNUSED(client), void *data)   {};
-    inline virtual void onSocketDisconnected(TransportSocket *QI_UNUSED(client), void *data)      {};
-    inline virtual void onSocketWriteDone(TransportSocket *QI_UNUSED(client), void *data)         {};
-    inline virtual void onSocketReadyRead(TransportSocket *QI_UNUSED(client),
-                                          int QI_UNUSED(id), void *data) {};
-    inline virtual void onSocketTimeout(TransportSocket *QI_UNUSED(client),
-                                        int  QI_UNUSED(id), void *data) {};
-  };
-
   class Session;
   class TransportSocketPrivate;
   class QIMESSAGING_API TransportSocket
@@ -41,28 +27,34 @@ namespace qi
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
   public:
-    TransportSocket();
+    explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
     virtual ~TransportSocket();
 
-    qi::FutureSync<bool> connect(const qi::Url &url,
-      qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
-    qi::FutureSync<void> disconnect();
+    virtual qi::FutureSync<bool> connect(const qi::Url &url)         = 0;
+    virtual qi::FutureSync<void> disconnect()                        = 0;
 
-    bool waitForId(int id, int msecs = 30000);
+    virtual bool send(const qi::Message &msg)                        = 0;
 
-    bool read(int id, qi::Message *msg);
-    bool send(const qi::Message &msg);
-
-    void addCallbacks(TransportSocketInterface *delegate, void *data = 0);
-    void removeCallbacks(TransportSocketInterface *delegate);
-    bool isConnected() const;
-    int  status() const;
+    bool    isConnected() const;
+    int     status() const;
     qi::Url url() const;
 
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun);
+    bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
+
   public:
+    qi::Signal<void ()>            connected;
+    qi::Signal<void (int error)>   disconnected;
+    qi::Signal<void (qi::Message)> messageReady;
+
+  protected:
+    explicit TransportSocket(TransportSocketPrivate *p);
     TransportSocketPrivate *_p;
   };
 
+  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
+
+  QIMESSAGING_API TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
 }
 
 #endif  // _QIMESSAGING_TRANSPORT_SOCKET_HPP_

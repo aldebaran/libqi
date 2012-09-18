@@ -39,8 +39,6 @@ namespace qi
 
     bool listen(const qi::Url &address);
     void join();
-    void addCallbacks(TransportServerInterface *tsrvi,
-                      TransportSocketInterface *tscki);
 
   private:
     GatewayPrivate *_p;

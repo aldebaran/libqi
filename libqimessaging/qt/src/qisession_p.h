@@ -24,16 +24,16 @@ namespace qi {
   class NetworkThread;
 };
 
-class QiSessionPrivate : public qi::TransportSocketInterface,
-                         public qi::SessionInterface
+class QiSessionPrivate : public qi::SessionInterface
 {
 public:
   QiSessionPrivate(QiSession *self);
   ~QiSessionPrivate();
 
-  virtual void onSocketConnected(qi::TransportSocket *client, void *data);
-  virtual void onSocketReadyRead(qi::TransportSocket *client, int id, void *data);
-  virtual void onSocketConnectionError(qi::TransportSocket *client, void *data);
+  void onSocketConnected(qi::TransportSocketPtr client);
+  void onSocketDisconnected(qi::TransportSocketPtr client, int error);
+  void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr client);
+  void onMessageTimeout(qi::TransportSocketPtr client, unsigned int id);
 
   //Session
   virtual void onServiceRegistered(qi::Session *QI_UNUSED(session),
@@ -43,17 +43,17 @@ public:
                                      const std::string &serviceName,
                                      void *data);
 
-  void service_ep_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
-  void service_mo_end(int id, qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr);
-  void services_end(qi::TransportSocket *client, qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut);
+  void service_ep_end(int id, qi::TransportSocketPtr client, const qi::Message *msg, ServiceRequest &sr);
+  void service_mo_end(int id, qi::TransportSocketPtr client, const qi::Message *msg, ServiceRequest &sr);
+  void services_end(qi::TransportSocketPtr client, const qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut);
 
 public:
-  qi::TransportSocket                                     *_serviceSocket;
+  qi::TransportSocketPtr                                   _serviceSocket;
   qi::Session                                             *_session;
   QiSession                                               *_self;
 
   QMap<int, ServiceRequest>                                _futureService;
-  QMap<void *, ServiceRequest>                             _futureConnect;
+  QMap<qi::TransportSocketPtr, ServiceRequest>             _futureConnect;
   QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > > _futureServices;
 };
 

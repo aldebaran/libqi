@@ -47,17 +47,13 @@ namespace qi {
     return m;
   }
 
-  ServerClient::ServerClient(qi::TransportSocket *socket)
+  ServerClient::ServerClient(TransportSocketPtr socket)
     : _object(socket, qi::Message::Service_Server, serverMetaObject())
   {
   }
 
   ServerClient::~ServerClient()
   {
-    boost::shared_ptr<qi::RemoteObjectPrivate> rop;
-    rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(_object._p);
-    //do not delete _socket it is deleted by _object at the moment.
-    rop->_ts = 0;
   }
 
   qi::Future<unsigned int> ServerClient::registerEvent(unsigned int serviceId, unsigned eventId, unsigned int linkId) {

@@ -76,7 +76,7 @@ public:
 
 private:
   qi::NetworkThread   *nthd;
-  qi::TransportSocket *tc;
+  qi::TransportSocketPtr tc;
 };
 
 

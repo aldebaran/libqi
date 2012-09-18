@@ -32,7 +32,7 @@ static bool clientDone = false;
 #include <iostream>
 
 
-class ServerEventPrivate : public qi::TransportServerInterface, public qi::TransportSocketInterface {
+class ServerEventPrivate {
 public:
   ServerEventPrivate()
   {
@@ -43,17 +43,13 @@ public:
     _numBytes = 0;
   }
 
-  virtual void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
+  void onTransportServerNewConnection(qi::TransportSocketPtr socket)
   {
-    if (!socket)
-      return;
-    socket->addCallbacks(this);
+    socket->messageReady.connect(boost::bind<void>(&ServerEventPrivate::onMessageReady, this, _1, socket));
   }
 
-  virtual void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
+  void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr client)
   {
-    qi::Message msg;
-    client->read(id, &msg);
     _msgRecv++;
     size_t s = msg.buffer().size();
     if (s != _numBytes)
@@ -67,18 +63,6 @@ public:
       _dp->start(gLoopCount, _numBytes);
     }
 
-  }
-
-  virtual void onSocketWriteDone(qi::TransportSocket *QI_UNUSED(client), void *data)
-  {
-  }
-
-  virtual void onSocketConnected(qi::TransportSocket *QI_UNUSED(client), void *data)
-  {
-  }
-
-  virtual void onSocketDisconnected(qi::TransportSocket *QI_UNUSED(client), void *data)
-  {
   }
 
 public:
@@ -113,7 +97,7 @@ public:
     qi::Url urlo(_p->_endpoints[0]);
     _p->_ts = new qi::TransportServer(urlo);
 
-    _p->_ts->addCallbacks(_p);
+    _p->_ts->newConnection.connect(boost::bind<void>(&ServerEventPrivate::onTransportServerNewConnection, _p, _1));
     _p->_ts->listen();
   }
 
@@ -136,9 +120,12 @@ public:
     d << si;
     msg.setBuffer(b);
     _p->_session->_p->_sdClient._socket->send(msg);
-    _p->_session->_p->_sdClient._socket->waitForId(msg.id());
+    //_p->_session->_p->_sdClient._socket->waitForId(msg.id());
+    //yes but I will fix it later
+    qi::os::sleep(1);
     qi::Message ans;
-    _p->_session->_p->_sdClient._socket->read(msg.id(), &ans);
+    //TODO dont do that
+    //_p->_session->_p->_sdClient._socket->read(&ans);
     qi::IDataStream dout(ans.buffer());
     unsigned int idx = 0;
     dout >> idx;

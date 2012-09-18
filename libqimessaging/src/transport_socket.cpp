@@ -21,102 +21,63 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <qimessaging/transport_socket.hpp>
+#include "src/tcptransportsocket.hpp"
 #include "src/message_p.hpp"
 #include "src/buffer_p.hpp"
-#include "src/transport_socket_libevent_p.hpp"
-#include "src/transport_socket_dummy_p.hpp"
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
+#include "src/transport_socket_p.hpp"
 
 namespace qi
 {
-  TransportSocketInterface::~TransportSocketInterface()
+
+  TransportSocket::TransportSocket(qi::EventLoop *eventLoop)
+    : _p(new TransportSocketPrivate(this, eventLoop))
   {
   }
 
-  TransportSocket::TransportSocket()
-    : _p(new TransportSocketDummyPrivate(this))
+  TransportSocket::TransportSocket(TransportSocketPrivate *p)
+    : _p(p)
   {
   }
 
   TransportSocket::~TransportSocket()
   {
-    {
-      boost::recursive_mutex::scoped_lock l(_p->mtxCallback);
-      _p->tcd.clear();
-    }
-    _p->destroy();
+    delete _p;
   }
 
-  qi::FutureSync<bool> TransportSocket::connect(const qi::Url &url, qi::EventLoop* ctx)
-  {
-    TransportSocketPrivate *save = _p;
-    _p->status = 0;
-    if (url.protocol() != "tcp") {
-      qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket: " << url.protocol();
-      return Future<bool>(false);
-    }
-
-    _p = new qi::TransportSocketLibEvent(this);
-    _p->tcd = save->tcd;
-    _p->connected = save->connected;
-    _p->readHdr = save->readHdr;
-    _p->msg = save->msg;
-    _p->self = save->self;
-    _p->url = url;
-    delete save;
-    return _p->connect(url, ctx);
-  }
 
   qi::Url TransportSocket::url() const {
-    return _p->url;
-  }
-
-  qi::FutureSync<void> TransportSocket::disconnect()
-  {
-    return _p->disconnect();
+    return _p->_url;
   }
 
   int TransportSocket::status() const {
-    return _p->status;
-  }
-
-  bool TransportSocket::waitForId(int id, int msecs)
-  {
-    return _p->waitForId(id, msecs);
-  }
-
-  bool TransportSocket::read(int id, qi::Message *msg)
-  {
-    return _p->read(id, msg);
-  }
-
-  bool TransportSocket::send(const qi::Message &msg)
-  {
-    return _p->send(msg);
-  }
-
-  void TransportSocket::addCallbacks(TransportSocketInterface *delegate, void *data)
-  {
-    _p->addCallbacks(delegate, data);
-  }
-
-  void TransportSocket::removeCallbacks(TransportSocketInterface *delegate)
-  {
-    if (_p == NULL)
-    {
-      qiLogError("qimessaging.TransportSocket") << "socket is not connected.";
-      return;
-    }
-    _p->removeCallbacks(delegate);
+    return _p->_status;
   }
 
   bool TransportSocket::isConnected() const
   {
-    return _p->isConnected();
+    return _p->_connected;
   }
 
+  qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun) {
+    return _p->_dispatcher.messagePendingConnect(serviceId, fun);
+  }
+
+  bool                 TransportSocket::messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId) {
+    return _p->_dispatcher.messagePendingDisconnect(serviceId, linkId);
+  }
+
+  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {
+    TransportSocketPtr ret;
+
+    if (protocol != "tcp") {
+      qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket: " << protocol;
+      return ret;
+    }
+    return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop));
+  }
 }
 

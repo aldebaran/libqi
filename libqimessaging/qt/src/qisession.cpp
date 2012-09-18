@@ -20,14 +20,11 @@ QiSessionPrivate::QiSessionPrivate(QiSession *self) {
   _session = new qi::Session();
   _session->addCallbacks(this, 0);
   _self = self;
-  _serviceSocket = new qi::TransportSocket();
-  _serviceSocket->addCallbacks(this);
 }
 
 QiSessionPrivate::~QiSessionPrivate() {
   _serviceSocket->disconnect();
   delete _session;
-  delete _serviceSocket;
 }
 
 void QiSessionPrivate::onServiceRegistered(qi::Session *QI_UNUSED(session),
@@ -44,8 +41,8 @@ void QiSessionPrivate::onServiceUnregistered(qi::Session *QI_UNUSED(session),
   Q_EMIT _self->serviceUnregistered(QString::fromUtf8(serviceName.c_str()));
 }
 
-void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client, void *data) {
-  QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+void QiSessionPrivate::onSocketConnected(qi::TransportSocketPtr client) {
+  QMap<qi::TransportSocketPtr, ServiceRequest>::iterator it = _futureConnect.find(client);
 
   if (it == _futureConnect.end())
     return;
@@ -66,8 +63,8 @@ void QiSessionPrivate::onSocketConnected(qi::TransportSocket *client, void *data
   client->send(msg);
 }
 
-void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client, void *data) {
-  QMap<void *, ServiceRequest>::iterator it = _futureConnect.find(client);
+void QiSessionPrivate::onSocketDisconnected(qi::TransportSocketPtr client, int error) {
+  QMap<qi::TransportSocketPtr, ServiceRequest>::iterator it = _futureConnect.find(client);
 
   if (it == _futureConnect.end())
     return;
@@ -76,21 +73,19 @@ void QiSessionPrivate::onSocketConnectionError(qi::TransportSocket *client, void
   _futureConnect.remove(client);
 }
 
-void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id, void *data) {
-  qi::Message                                                        msg;
+void QiSessionPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketPtr client) {
   QMap<int, ServiceRequest>::iterator                                it;
   QMap<int, QFutureInterface< QVector<qi::ServiceInfo> > >::iterator it2;
-  client->read(id, &msg);
 
-  it = _futureService.find(id);
+  it = _futureService.find(msg.id());
   if (it != _futureService.end()) {
     if (client == _serviceSocket)
-      service_ep_end(id, client, &msg, it.value());
+      service_ep_end(msg.id(), client, &msg, it.value());
     else
-      service_mo_end(id, client, &msg, it.value());
+      service_mo_end(msg.id(), client, &msg, it.value());
     return;
   }
-  it2 = _futureServices.find(id);
+  it2 = _futureServices.find(msg.id());
   if (it2 != _futureServices.end()) {
     services_end(client, &msg, it2.value());
     _futureServices.erase(it2);
@@ -99,7 +94,7 @@ void QiSessionPrivate::onSocketReadyRead(qi::TransportSocket *client, int id, vo
 }
 
 //rep from master (endpoint)
-void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, ServiceRequest &sr) {
+void QiSessionPrivate::service_ep_end(int id, qi::TransportSocketPtr QI_UNUSED(client), const qi::Message *msg, ServiceRequest &sr) {
   qi::ServiceInfo      si;
   qi::IDataStream       d(msg->buffer());
   d >> si;
@@ -110,12 +105,15 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(cli
     qi::Url url(*it);
     if (sr.protocol == "any" || sr.protocol == QString::fromStdString(url.protocol()))
     {
-      qi::TransportSocket* ts = NULL;
-      ts = new qi::TransportSocket();
-      ts->addCallbacks(this);
-      _futureConnect[ts] = sr;
+      qi::TransportSocketPtr socket;
+      socket = qi::makeTransportSocket(url.protocol());
+      socket->connected.connect(boost::bind<void>(&QiSessionPrivate::onSocketConnected, this, _serviceSocket));
+      socket->disconnected.connect(boost::bind<void>(&QiSessionPrivate::onSocketDisconnected, this, _serviceSocket, _1));
+      socket->messageReady.connect(boost::bind<void>(&QiSessionPrivate::onMessageReady, this, _1, _serviceSocket));
+
+      _futureConnect[socket] = sr;
       _futureService.remove(id);
-      ts->connect(url);
+      socket->connect(url);
       return;
     }
     _futureService.remove(id);
@@ -124,17 +122,17 @@ void QiSessionPrivate::service_ep_end(int id, qi::TransportSocket *QI_UNUSED(cli
   }
 }
 
-void QiSessionPrivate::service_mo_end(int QI_UNUSED(id), qi::TransportSocket *client, qi::Message *msg, ServiceRequest &sr) {
+void QiSessionPrivate::service_mo_end(int QI_UNUSED(id), qi::TransportSocketPtr client, const qi::Message *msg, ServiceRequest &sr) {
   qi::MetaObject mo;
   qi::IDataStream ds(msg->buffer());
   ds >> mo;
   //remove the delegate on us, now the socket is owned by QiRemoteObject
-  client->removeCallbacks(this);
+  //TODO: client->removeCallbacks(this);
   QiRemoteObject *robj = new QiRemoteObject(client, sr.name.toUtf8().constData(), sr.serviceId, mo);
   sr.fu.reportResult(robj);
 }
 
-void QiSessionPrivate::services_end(qi::TransportSocket *QI_UNUSED(client), qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
+void QiSessionPrivate::services_end(qi::TransportSocketPtr QI_UNUSED(client), const qi::Message *msg, QFutureInterface< QVector<qi::ServiceInfo> > &fut) {
   QVector<qi::ServiceInfo> result;
   qi::IDataStream d(msg->buffer());
   d >> result;
@@ -155,6 +153,11 @@ QiSession::~QiSession()
 
 bool QiSession::connect(const QString &masterAddress)
 {
+  _p->_serviceSocket = qi::makeTransportSocket(qi::Url(masterAddress.toStdString()).protocol());
+  _p->_serviceSocket->connected.connect(boost::bind<void>(&QiSessionPrivate::onSocketConnected, this->_p, _p->_serviceSocket));
+  _p->_serviceSocket->disconnected.connect(boost::bind<void>(&QiSessionPrivate::onSocketDisconnected, this->_p, _p->_serviceSocket, _1));
+  _p->_serviceSocket->messageReady.connect(boost::bind<void>(&QiSessionPrivate::onMessageReady, this->_p, _1, _p->_serviceSocket));
+
   return _p->_serviceSocket->connect(masterAddress.toUtf8().constData());
 }
 

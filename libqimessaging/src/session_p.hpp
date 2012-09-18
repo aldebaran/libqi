@@ -38,7 +38,6 @@ namespace qi {
     Session_Server         _server;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
-    //Session_Client         _client;
     ServiceWatcher         _watcher;
   };
 }

@@ -5,13 +5,15 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef   	QIREMOTEOBJECT_P_H_
-# define   	QIREMOTEOBJECT_P_H_
+#ifndef   QIREMOTEOBJECT_P_H_
+# define  QIREMOTEOBJECT_P_H_
 
 #include <QtCore/qobject.h>
+#include <boost/shared_ptr.hpp>
 
 namespace qi {
   class TransportSocket;
+  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
   class MetaObject;
 };
 
@@ -21,7 +23,7 @@ class QiRemoteObject : public QObject {
   //DO NOT ADD Q_OBJECT HERE
 
 public:
-  explicit QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject);
+  explicit QiRemoteObject(qi::TransportSocketPtr ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject);
   virtual ~QiRemoteObject();
 
   // provide custom Q_OBJECT implementation
@@ -33,4 +35,4 @@ protected:
   QiRemoteObjectPrivate *_p;
 };
 
-#endif 	    /* !QIREMOTEOBJECT_P_H_ */
+#endif  /* !QIREMOTEOBJECT_P_H_ */

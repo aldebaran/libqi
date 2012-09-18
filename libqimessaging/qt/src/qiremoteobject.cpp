@@ -18,14 +18,14 @@
 
 class QiRemoteObjectPrivate {
 public:
-  qi::TransportSocket *socket;
+  qi::TransportSocketPtr socket;
   std::string          dest;
   QMetaObject         *meta;
   unsigned int         serviceId;
 };
 
 
-QiRemoteObject::QiRemoteObject(qi::TransportSocket *ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject)
+QiRemoteObject::QiRemoteObject(qi::TransportSocketPtr ts, const std::string &dest, unsigned int serviceId, const qi::MetaObject &metaobject)
   : _p (new QiRemoteObjectPrivate)
 {
   QMetaObjectBuilder ob;
@@ -89,8 +89,8 @@ int                QiRemoteObject::qt_metacall(QMetaObject::Call c, int id, void
   msg.setFunction(id - _p->meta->methodOffset());
   _p->socket->send(msg);
 
-  _p->socket->waitForId(msg.id());
-  _p->socket->read(msg.id(), &retmsg);
+  //_p->socket->waitForId(msg.id());
+  //_p->socket->read(msg.id(), &retmsg);
 
   qi::IDataStream retv(retmsg.buffer());
 

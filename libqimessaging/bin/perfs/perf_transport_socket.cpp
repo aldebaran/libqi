@@ -23,44 +23,35 @@
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 
-class TSIRead: public qi::TransportSocketInterface
+void TSIOnMessageReady(const qi::Message &QI_UNUSED(msg))
 {
-  void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
-  {
-    qi::Message msg;
-    client->read(id, &msg);
-  }
-};
+}
 
-class TSIReply: public qi::TransportSocketInterface,
-                public qi::TransportServerInterface
+class TSIReply
 {
-  void onTransportServerNewConnection(qi::TransportServer* server, qi::TransportSocket *socket, void *data)
+public:
+  void onTransportServerNewConnection(qi::TransportSocketPtr socket)
   {
-    socket->addCallbacks(this);
+    socket->messageReady.connect(boost::bind<void>(&TSIReply::onMessageReady, this, _1, socket));
   }
 
-  void onSocketReadyRead(qi::TransportSocket *client, int id, void *data)
+  void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket)
   {
-    qi::Message msg;
-    client->read(id, &msg);
     qi::Message ret;
     ret.buildReplyFrom(msg);
-    client->send(ret);
+    socket->send(ret);
   }
 };
 
-int thd_client(qi::TransportSocket *socket)
+int thd_client(qi::TransportSocketPtr socket)
 {
   qi::Session session;
-  qi::TransportSocket ts;
-  TSIRead tsi;
 
   if (!socket)
   {
-    ts.connect("tcp://127.0.0.1:5555");
-    socket = &ts;
-    socket->addCallbacks(&tsi);
+    socket = qi::makeTransportSocket("tcp");
+    socket->connect("tcp://127.0.0.1:5555");
+    socket->messageReady.connect(boost::bind<void>(&TSIOnMessageReady, _1));
   }
 
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
@@ -88,16 +79,16 @@ int thd_client(qi::TransportSocket *socket)
 int main_client(bool shared)
 {
   const int count = 4;
-  qi::TransportSocket socket;
+  qi::TransportSocketPtr socket;
   qi::Session session;
-  TSIRead tsi;
   boost::thread thd[count];
 
   if (shared)
   {
+    socket = qi::makeTransportSocket("tcp");
     qiLogInfo("perf_transport_socket") << "Socket will be shared";
-    socket.connect("tcp://127.0.0.1:5555");
-    socket.addCallbacks(&tsi);
+    socket->connect("tcp://127.0.0.1:5555");
+    socket->messageReady.connect(boost::bind<void>(&TSIOnMessageReady, _1));
   }
   else
   {
@@ -106,7 +97,7 @@ int main_client(bool shared)
 
   for (int i = 0; i < count; ++i)
   {
-    thd[i] = boost::thread(boost::bind(&thd_client, shared ? &socket : 0));
+    thd[i] = boost::thread(boost::bind(&thd_client, socket));
   }
 
   for (int i = 0; i < count; ++i)
@@ -123,7 +114,7 @@ int main_server()
   qi::TransportServer server;
   qi::Session session;
   server.listen("tcp://127.0.0.1:5555");
-  server.addCallbacks(&tsi);
+  server.newConnection.connect(boost::bind(&TSIReply::onTransportServerNewConnection, tsi, _1));
   qiLogInfo("server") << "Now listening on tcp://127.0.0.1:5555";
   while (true)
     qi::os::sleep(60);

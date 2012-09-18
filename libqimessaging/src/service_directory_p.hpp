@@ -16,28 +16,24 @@
 
 namespace qi {
 
-  class ServiceDirectoryPrivate : public TransportServerInterface,
-                                  public TransportSocketInterface,
-                                  public Object
+  class ServiceDirectoryPrivate : public Object
   {
   public:
     ServiceDirectoryPrivate();
     ~ServiceDirectoryPrivate();
 
     //TransportServer
-    virtual void onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data);
+    void onTransportServerNewConnection(TransportSocketPtr socket);
 
     //TransportSocket
-    virtual void onSocketReadyRead(TransportSocket *socket, int id, void *data);
-    virtual void onSocketWriteDone(TransportSocket *client, void *data);
-    virtual void onSocketConnected(TransportSocket *client, void *data);
-    virtual void onSocketDisconnected(TransportSocket *client, void *data);
+    void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket);
+    void onSocketDisconnected(int error, TransportSocketPtr client);
 
     std::vector<ServiceInfo> services();
     ServiceInfo              service(const std::string &name);
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
-    TransportSocket         *socket() { return currentSocket; }
+    TransportSocketPtr       socket() { return currentSocket; }
     void                     serviceReady(const unsigned int &idx);
 
   public:
@@ -45,10 +41,10 @@ namespace qi {
     std::map<unsigned int, ServiceInfo>                    pendingServices;
     std::map<unsigned int, ServiceInfo>                    connectedServices;
     std::map<std::string, unsigned int>                    nameToIdx;
-    std::map<TransportSocket*, std::vector<unsigned int> > socketToIdx;
+    std::map<TransportSocketPtr, std::vector<unsigned int> > socketToIdx;
     unsigned int                                           servicesCount;
-    TransportSocket                                       *currentSocket;
-    std::set<TransportSocket*>                             _clients;
+    TransportSocketPtr                                     currentSocket;
+    std::set<TransportSocketPtr>                           _clients;
     boost::recursive_mutex                                 _clientsMutex;
   }; // !ServiceDirectoryPrivate
 

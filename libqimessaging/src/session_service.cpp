@@ -9,6 +9,7 @@
 #include "service_directory_client.hpp"
 #include "session_server.hpp"
 #include "server_client.hpp"
+#include "signal_p.hpp"
 
 namespace qi {
 
@@ -69,31 +70,37 @@ namespace qi {
       _requests.erase(it);
     }
   }
-  void Session_Service::onSocketDisconnected(TransportSocket *client, void *data) {
-    delete client;
+
+  void Session_Service::onSocketDisconnected(TransportSocketPtr client, int error, void *data) {
+    ServiceRequest *sr = serviceRequest(data);
+    if (!sr)
+      return;
+    sr->attempts--;
+    if (sr->attempts <= 0) {
+      sr->promise.setError("Impossible to connect to the requested service.");
+      removeRequest(data);
+    }
   }
 
-  void Session_Service::onSocketConnectionError(TransportSocket *client, void *data) {
-    delete client;
-}
-
-  void Session_Service::onSocketConnected(TransportSocket *client, void *data)
+  void Session_Service::onSocketConnected(TransportSocketPtr client, void *data)
   {
     ServiceRequest *sr = serviceRequest(data);
     if (!sr)
       return;
 
+    //warning this is a hack, remove the use of reset. (use TransportSocketCache, that handle that)
+    client->messageReady._p->reset();
+    client->connected._p->reset();
+    client->disconnected._p->reset();
     if (sr->connected)
     {
       // An other attempt got here first, disconnect and drop
       client->disconnect();
-      client->removeCallbacks(this);
-      delete client;
       return;
     }
     sr->connected = true;
-    sr->socket    = client;
-    client->removeCallbacks(this);
+    //sr->socket.push_back(client;
+
     sr->sclient   = new qi::ServerClient(client);
 
     qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::Object_Main);
@@ -114,13 +121,18 @@ namespace qi {
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
-        qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
         //remove the callback of ServerClient before returning the object
+        //TODO: belong to TransportSocketCache
+        sr->socket->connected._p->reset();
+        sr->socket->disconnected._p->reset();
+        sr->socket->messageReady._p->reset();
+
+        qi::RemoteObject robj(sr->socket, sr->serviceId, mo);
         boost::shared_ptr<qi::RemoteObjectPrivate> rop;
         rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(sr->sclient->_object._p);
-        sr->socket->removeCallbacks(rop.get());
+
         //avoid deleting the socket in removeRequest (RemoteObject will do it)
-        sr->socket = 0;
+        sr->socket.reset();
         //register the remote object in the cache
         _remoteObjects[sr->name] = robj;
         sr->promise.setValue(robj);
@@ -137,6 +149,20 @@ namespace qi {
       return;
     sr->attempts = 0;
     sr->serviceId = si.serviceId();
+
+    {
+      //try to reuse a cached connection
+      TransportSocketMap::iterator             tsmit;
+      std::vector<std::string>::const_iterator it;
+      for (it = si.endpoints().begin(); it != si.endpoints().end(); ++it) {
+        tsmit = _sockets.find(*it);
+        if (tsmit != _sockets.end()) {
+          qiLogInfo("qi.session_service") << "reusing socket for endpoint: " << *it;
+          onSocketConnected(tsmit->second, data);
+        }
+      }
+    }
+
     // Attempt to connect to all endpoints.
     std::vector<std::string>::const_iterator it;
     for (it = si.endpoints().begin(); it != si.endpoints().end(); ++it)
@@ -144,11 +170,12 @@ namespace qi {
       qi::Url url(*it);
       if (sr->protocol == "any" || sr->protocol == url.protocol())
       {
-        qi::TransportSocket *ts = NULL;
-        ts = new qi::TransportSocket();
-        ts->addCallbacks(this, data);
-        sr->socket = ts;
-        ts->connect(url).async();
+        qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
+        //ts->addCallbacks(this, data);
+        socket->connected.connect(boost::bind(&Session_Service::onSocketConnected, this, socket, data));
+        socket->disconnected.connect(boost::bind(&Session_Service::onSocketDisconnected, this, socket, _1, data));
+        sr->socket = socket;
+        socket->connect(url).async();
         // The connect may still fail asynchronously.
         ++sr->attempts;
       }
@@ -174,6 +201,7 @@ namespace qi {
                                                   Session::ServiceLocality locality,
                                                   const std::string &type)
   {
+    qiLogVerbose("session.service") << "Getting service " << service;
     qi::Future<qi::Object> result;
     if (locality == Session::ServiceLocality_Local) {
       qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
@@ -183,8 +211,9 @@ namespace qi {
     {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
-      if (it != _remoteObjects.end())
+      if (it != _remoteObjects.end()) {
         return qi::Future<qi::Object>(it->second);
+      }
     }
 
     qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);

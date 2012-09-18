@@ -33,12 +33,12 @@
 
 #include <qimessaging/transport_server.hpp>
 #include <qimessaging/transport_socket.hpp>
+#include "src/tcptransportsocket.hpp"
 
 #include <qimessaging/event_loop.hpp>
 
 #include "src/event_loop_p.hpp"
 #include "src/transport_server_p.hpp"
-#include "src/transport_socket_libevent_p.hpp"
 #include "src/transport_server_libevent_p.hpp"
 
 namespace qi

@@ -20,7 +20,7 @@ namespace qi {
   class ServerResult: public FutureInterface<MetaFunctionResult>
   {
   public:
-    ServerResult(TransportSocket *client, const qi::Message &req)
+    ServerResult(TransportSocketPtr client, const qi::Message &req)
       : _client(client)
       {
         _retval.buildReplyFrom(req);
@@ -43,8 +43,8 @@ namespace qi {
     }
 
   private:
-    qi::Message          _retval;
-    qi::TransportSocket *_client;
+    qi::Message            _retval;
+    qi::TransportSocketPtr _client;
   };
 
 }

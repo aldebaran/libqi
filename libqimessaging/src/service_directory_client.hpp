@@ -36,7 +36,7 @@ namespace qi {
     qi::Future< void >                     serviceReady(const unsigned int &idx);
 
   protected:
-    void onSocketDisconnected(TransportSocket *client, void *data);
+    void onSocketDisconnected(TransportSocketPtr client, void *data);
 
   private:
     std::vector< std::pair<qi::SessionInterface *, void *> > _callbacks;
@@ -45,7 +45,7 @@ namespace qi {
     //stored only for callbacks
     qi::Session         *_session;
   public:
-    qi::TransportSocket *_socket;
+    TransportSocketPtr   _socket;
   private:
     qi::RemoteObject     _object;
   };

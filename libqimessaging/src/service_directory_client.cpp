@@ -8,6 +8,7 @@
 #include "service_directory_client.hpp"
 #include <qimessaging/objectbuilder.hpp>
 #include "src/service_directory_p.hpp"
+#include "src/tcptransportsocket.hpp"
 
 namespace qi {
 
@@ -34,19 +35,16 @@ namespace qi {
   }
 
   ServiceDirectoryClient::ServiceDirectoryClient()
-    : _socket(new qi::TransportSocket)
+    : _socket(qi::TcpTransportSocketPtr(new TcpTransportSocket()))
     , _object(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
+    //TODO: add callback on the socket for SessionDisconnected
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
     boost::mutex::scoped_lock sl(_callbacksMutex);
     _callbacks.clear();
-    boost::shared_ptr<qi::RemoteObjectPrivate> rop;
-    rop = boost::dynamic_pointer_cast<qi::RemoteObjectPrivate>(_object._p);
-    //do not delete _socket it is deleted by _object at the moment.
-    rop->_ts = 0;
   }
 
   qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)
@@ -89,7 +87,8 @@ namespace qi {
       }
     }
   }
-  void ServiceDirectoryClient::onSocketDisconnected(TransportSocket *client, void *data)
+
+  void ServiceDirectoryClient::onSocketDisconnected(TransportSocketPtr client, void *data)
   {
     std::vector< std::pair<qi::SessionInterface *, void *> > localCallbacks;
     {

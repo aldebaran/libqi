@@ -20,8 +20,8 @@ namespace qi {
   {
   }
 
-  RemoteObject::RemoteObject(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo)
-    : Object(new RemoteObjectPrivate(ts, service, mo))
+  RemoteObject::RemoteObject(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo)
+    : Object(new RemoteObjectPrivate(socket, service, mo))
   {
   }
 
@@ -38,12 +38,12 @@ namespace qi {
 
   //### RemoteObjectPrivate
 
-  RemoteObjectPrivate::RemoteObjectPrivate(qi::TransportSocket *ts, unsigned int service, qi::MetaObject mo)
+  RemoteObjectPrivate::RemoteObjectPrivate(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo)
     : ObjectPrivate(mo)
-    , _ts(ts)
+    , _socket(socket)
     , _service(service)
   {
-    ts->addCallbacks(this);
+    _linkMessageDispatcher = _socket->messagePendingConnect(service, boost::bind<void>(&RemoteObjectPrivate::onMessagePending, this, _1));
   }
 
   RemoteObjectPrivate::~RemoteObjectPrivate()
@@ -52,33 +52,18 @@ namespace qi {
     close();
   }
 
-  void RemoteObjectPrivate::onSocketTimeout(TransportSocket *client, int id, void *data)
+  void RemoteObjectPrivate::onMessagePending(const qi::Message &msg)
   {
-    {
-      boost::mutex::scoped_lock lock(_mutex);
-      std::map<int, qi::Promise<MetaFunctionResult> >::iterator it = _promises.find(id);
-      if (it != _promises.end())
-      {
-        it->second.setError("network timeout");
-        _promises.erase(it);
-      }
-    }
-  }
-
-  void RemoteObjectPrivate::onSocketReadyRead(TransportSocket *client, int id, void *data)
-  {
-    qi::Promise<MetaFunctionResult>                     promise;
-    bool found = false;
-    qi::Message                                msg;
+    qi::Promise<MetaFunctionResult>                           promise;
+    bool                                                      found = false;
     std::map<int, qi::Promise<MetaFunctionResult> >::iterator it;
 
-    client->read(id, &msg);
     qiLogDebug("RemoteObject") << "msg " << msg.type() << " " << msg.buffer().size();
     {
       boost::mutex::scoped_lock lock(_mutex);
-      it = _promises.find(id);
+      it = _promises.find(msg.id());
       if (it != _promises.end()) {
-        promise = _promises[id];
+        promise = _promises[msg.id()];
         _promises.erase(it);
         found = true;
       }
@@ -87,7 +72,7 @@ namespace qi {
     switch (msg.type()) {
       case qi::Message::Type_Reply:
         if (!found) {
-          qiLogError("remoteobject") << "no promise found for req id:" << id;
+          qiLogError("remoteobject") << "no promise found for req id:" << msg.id();
           return;
         }
         promise.setValue(MetaFunctionResult(msg.buffer()));
@@ -106,7 +91,7 @@ namespace qi {
         trigger(msg.function(), MetaFunctionParameters(msg.buffer()));
         return;
       default:
-        qiLogError("remoteobject") << "Message (#" << id << ") type not handled: " << msg.type();
+        qiLogError("remoteobject") << "Message (#" << msg.id() << ") type not handled: " << msg.type();
         return;
     }
   }
@@ -120,14 +105,7 @@ namespace qi {
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(qi::Message::Object_Main);
-    //todo handle failure
     msg.setFunction(method);
-
-    if (!_ts->isConnected()) {
-      out.setError("Not connected");
-      return out.future();
-    }
-    //allocated from caller, owned by us then. (clean up by onReadyRead)
 
     {
       boost::mutex::scoped_lock lock(_mutex);
@@ -138,9 +116,11 @@ namespace qi {
       }
       _promises[msg.id()] = out;
     }
-    if (!_ts->send(msg)) {
+
+    //error will come back as a error message
+    if (!_socket->send(msg)) {
       qiLogError("remoteobject") << "error while sending answer";
-      qi::MetaMethod *meth = metaObject().method(method);
+      qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
       if (meth) {
         ss << "Network error while sending data to method: '";
@@ -155,7 +135,6 @@ namespace qi {
         boost::mutex::scoped_lock lock(_mutex);
         _promises.erase(msg.id());
       }
-
     }
     return out.future();
   }
@@ -174,7 +153,7 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(qi::Message::Object_Main);
     msg.setFunction(event);
-    if (!_ts->send(msg)) {
+    if (!_socket->send(msg)) {
       qiLogError("remoteobject") << "error while registering event";
     }
   }
@@ -195,7 +174,7 @@ namespace qi {
     msg.setService(Message::Service_Server);
     msg.setFunction(Message::ServerFunction_RegisterEvent);
 
-    if (!_ts->send(msg)) {
+    if (!_socket->send(msg)) {
       qiLogError("remoteobject") << "error while registering event";
     }
     qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
@@ -225,7 +204,7 @@ namespace qi {
       msg.setService(Message::Service_Server);
       msg.setObject(Message::Object_Main);
       msg.setFunction(Message::ServerFunction_UnregisterEvent);
-      if (!_ts->send(msg)) {
+      if (!_socket->send(msg)) {
         qiLogError("remoteobject") << "error while registering event";
       }
       return true;
@@ -238,12 +217,7 @@ namespace qi {
   }
 
   void RemoteObjectPrivate::close() {
-    if (_ts) {
-      _ts->disconnect();
-      _ts->removeCallbacks(this);
-    }
-    delete _ts;
-    _ts = 0;
+    _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
   }
 
 }

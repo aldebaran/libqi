@@ -31,23 +31,22 @@ namespace qi {
       , protocol(protocol)
       , connected(false)
       , attempts(0)
-      , socket(0)
+      , socket()
       , sclient(0)
     {}
 
-    qi::Promise<qi::Object> promise;
-    std::string             name;
-    unsigned int            serviceId;
-    std::string             protocol;
-    bool                    connected; // True if the service server was reached
-    unsigned int            attempts;  // Number of connection attempts pending.
-    TransportSocket*        socket;
-    ServerClient           *sclient;
+    qi::Promise<qi::Object>       promise;
+    std::string                   name;
+    unsigned int                  serviceId;
+    std::string                   protocol;
+    bool                          connected; // True if the service server was reached
+    unsigned int                  attempts;  // Number of connection attempts pending.
+    TransportSocketPtr            socket;
+    ServerClient                 *sclient;
   };
 
   class Session_Service : public FutureInterface<qi::ServiceInfo>,
-                          public FutureInterface<qi::MetaObject>,
-                          public TransportSocketInterface
+                          public FutureInterface<qi::MetaObject>
   {
   public:
     Session_Service(ServiceDirectoryClient *sdClient, Session_Server *server)
@@ -69,9 +68,8 @@ namespace qi {
     virtual void onFutureFinished(const qi::MetaObject &value, void *data);
 
     //TransportSocket
-    void onSocketConnected(TransportSocket *client, void *data);
-    void onSocketConnectionError(TransportSocket *QI_UNUSED(client), void *data);
-    void onSocketDisconnected(TransportSocket *QI_UNUSED(client), void *data);
+    void onSocketConnected(qi::TransportSocketPtr socket, void *data);
+    void onSocketDisconnected(qi::TransportSocketPtr socket, int error, void *data);
 
 
   protected:
@@ -88,9 +86,13 @@ namespace qi {
     RemoteObjectMap                 _remoteObjects;
     boost::mutex                    _remoteObjectsMutex;
 
+    //maintain a cache of remote connections
+    typedef std::map<std::string, qi::TransportSocketPtr> TransportSocketMap;
+    TransportSocketMap              _sockets;
+
   private:
-    ServiceDirectoryClient *_sdClient;
-    Session_Server         *_server;
+    ServiceDirectoryClient *_sdClient;  //not owned by us
+    Session_Server         *_server;    //not owned by us
   };
 
 }

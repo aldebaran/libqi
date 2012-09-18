@@ -17,6 +17,7 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/event_loop.hpp>
+# include <qimessaging/signal.hpp>
 # include <vector>
 # include <qimessaging/url.hpp>
 
@@ -24,15 +25,8 @@ namespace qi {
 
   class TransportSocket;
   class TransportServer;
-
-  class QIMESSAGING_API TransportServerInterface {
-  public:
-    virtual ~TransportServerInterface() = 0;
-    virtual void onTransportServerNewConnection(TransportServer* server, TransportSocket *socket, void *data) = 0;
-    virtual void onTransportServerError(TransportServer* server, int error, void *data) {}
-  };
-
   class Session;
+  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
   class TransportServerPrivate;
 
   class QIMESSAGING_API TransportServer
@@ -45,8 +39,6 @@ namespace qi {
                     qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
     virtual ~TransportServer();
 
-    void addCallbacks(TransportServerInterface *delegate);
-    void removeCallbacks(TransportServerInterface *delegate);
 
     bool listen();
     bool listen(const qi::Url &url,
@@ -56,6 +48,11 @@ namespace qi {
     qi::Url listenUrl() const;
     std::vector<qi::Url> endpoints() const;
 
+  public:
+    qi::Signal<void (TransportSocketPtr)> newConnection;
+    qi::Signal<void (int error)>          acceptError;
+
+  public:
     TransportServerPrivate *_p;
   };
 

@@ -17,14 +17,11 @@ namespace qi {
   class TransportSocket;
   class ServerClient {
   public:
-    ServerClient(qi::TransportSocket *socket);
+    ServerClient(TransportSocketPtr socket);
     ~ServerClient();
     qi::Future<unsigned int>   registerEvent(unsigned int serviceId, unsigned eventId, unsigned int linkId);
     qi::Future<bool>           unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId);
     qi::Future<qi::MetaObject> metaObject(unsigned int serviceId, unsigned int objectId);
-
-  private:
-    qi::TransportSocket *_socket;
 
   public:
     qi::RemoteObject     _object;
