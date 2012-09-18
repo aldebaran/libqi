@@ -232,7 +232,8 @@ namespace qi
     connectedServices.erase(it2);
 
     // Find and remove serviceId into socketToIdx map
-    std::map<TransportSocket *, std::vector<unsigned int> >::iterator socketIt;
+#if 0
+    std::map<TransportSocketPtr , std::vector<unsigned int> >::iterator socketIt;
     for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
     {
       // notify every session that the service is unregistered
@@ -257,8 +258,8 @@ namespace qi
 
       std::vector<unsigned int>::iterator serviceIdxIt;
       for (serviceIdxIt = socketIt->second.begin();
-        serviceIdxIt != socketIt->second.end();
-        ++serviceIdxIt)
+           serviceIdxIt != socketIt->second.end();
+           ++serviceIdxIt)
       {
         if (*serviceIdxIt == idx)
         {
@@ -267,6 +268,7 @@ namespace qi
         }
       }
     }
+#endif
   }
 
   void ServiceDirectoryPrivate::serviceReady(const unsigned int &idx)
@@ -285,7 +287,8 @@ namespace qi
     connectedServices[idx] = itService->second;
     pendingServices.erase(itService);
 
-    std::map<TransportSocket*, std::vector<unsigned int> >::iterator socketIt;
+#if 0
+    std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator socketIt;
     for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
     {
       qi::Message msg;
@@ -307,6 +310,7 @@ namespace qi
         }
       }
     }
+#endif
   }
 
 ServiceDirectory::ServiceDirectory()
