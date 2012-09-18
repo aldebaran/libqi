@@ -34,7 +34,7 @@ namespace qi {
     delete _p;
   }
 
-  int StaticObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, MethodValue func)
+  int StaticObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func)
   {
     unsigned int nextId = _p->metaObject._p->_methods.size()
       +  _p->metaObject._p->_events.size();

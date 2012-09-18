@@ -8,7 +8,7 @@
 namespace qi {
 
 
-  MetaFunctionResult callFunction(FunctionValue val,
+  MetaFunctionResult callFunction(GenericFunction val,
     const MetaFunctionParameters& parameters)
   {
     if (parameters.getMode() == MetaFunctionParameters::Mode_GenericValue)
@@ -36,7 +36,7 @@ namespace qi {
     }
   }
 
-  MetaFunctionResult callMethod(MethodValue val,
+  MetaFunctionResult callMethod(GenericMethod val,
     GenericValue instance, const MetaFunctionParameters& parameters)
   {
     if (parameters.getMode() == MetaFunctionParameters::Mode_GenericValue)
@@ -70,7 +70,7 @@ namespace qi {
     }
   }
 
-  MetaCallable makeCallable(FunctionValue value)
+  MetaCallable makeCallable(GenericFunction value)
   {
     return boost::bind(&callFunction, value, _1);
   }

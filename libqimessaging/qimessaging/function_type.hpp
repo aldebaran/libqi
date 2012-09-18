@@ -21,20 +21,20 @@ namespace qi {
 
   template<typename T> FunctionType* makeFunctionType();
 
-  class QIMESSAGING_API FunctionValue
+  class QIMESSAGING_API GenericFunction
   {
   public:
-    FunctionValue();
-    FunctionValue(const GenericValue & v);
+    GenericFunction();
+    GenericFunction(const GenericValue & v);
     GenericValue call(const std::vector<GenericValue>& args);
     FunctionType* type;
     void*         value;
   };
 
-  template<typename T> FunctionValue makeFunctionValue(boost::function<T> f);
-  template<typename F> FunctionValue makeFunctionValue(F func);
+  template<typename T> GenericFunction makeGenericFunction(boost::function<T> f);
+  template<typename F> GenericFunction makeGenericFunction(F func);
 
-  template<typename O, typename F> FunctionValue makeFunctionValue(O o, F f);
+  template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
 
 }
 

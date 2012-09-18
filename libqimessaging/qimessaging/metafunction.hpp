@@ -106,8 +106,8 @@ public:
   GenericValue getValue() const;
 };
 
-MetaFunctionResult QIMESSAGING_API callFunction(FunctionValue function, const MetaFunctionParameters& params);
-MetaFunctionResult QIMESSAGING_API callMethod(MethodValue function, GenericValue instance, const MetaFunctionParameters& params);
+MetaFunctionResult QIMESSAGING_API callFunction(GenericFunction function, const MetaFunctionParameters& params);
+MetaFunctionResult QIMESSAGING_API callMethod(GenericMethod function, GenericValue instance, const MetaFunctionParameters& params);
 
 /** Callable is the primary callback interface when 'dynamic' functions
  * can be needed: it takes the whole argument list as a MetaFunctionParameters.
@@ -116,7 +116,7 @@ MetaFunctionResult QIMESSAGING_API callMethod(MethodValue function, GenericValue
 typedef boost::function<MetaFunctionResult(const MetaFunctionParameters&)> MetaCallable;
 
 template<typename T> MetaCallable makeCallable(T fun);
-QIMESSAGING_API MetaCallable makeCallable(FunctionValue function);
+QIMESSAGING_API MetaCallable makeCallable(GenericFunction function);
 
 }
 

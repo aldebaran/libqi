@@ -150,14 +150,14 @@ namespace qi
     return s->disconnect(link);
   }
 
-  static void functor_call(FunctionValue func, MetaFunctionParameters params,
+  static void functor_call(GenericFunction func, MetaFunctionParameters params,
     qi::Promise<MetaFunctionResult> out)
   {
     out.setValue(callFunction(func, params));
   }
 
   qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const MetaFunctionParameters& params, MetaCallType callType)
+    GenericFunction func, const MetaFunctionParameters& params, MetaCallType callType)
   {
 
     qi::Promise<MetaFunctionResult> out;
@@ -187,7 +187,7 @@ namespace qi
   }
 
   qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const std::vector<GenericValue>& params, MetaCallType callType)
+    GenericFunction func, const std::vector<GenericValue>& params, MetaCallType callType)
   {
     MetaFunctionParameters p(params, false);
     return metaCall(el, func, p, callType);

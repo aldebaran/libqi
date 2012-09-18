@@ -44,7 +44,7 @@ template<typename T> struct MakeCallableSwitch<T, true>
 {
   MetaCallable operator()(T fun)
   {
-    return makeCallable(makeMethodValue(fun));
+    return makeCallable(makeGenericMethod(fun));
   }
 };
 
@@ -52,7 +52,7 @@ template<typename T> struct MakeCallableSwitch<T, false>
 {
   MetaCallable operator()(T fun)
   {
-  return makeCallable(makeFunctionValue(fun));
+  return makeCallable(makeGenericFunction(fun));
   }
 };
 

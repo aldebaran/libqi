@@ -180,7 +180,7 @@ namespace qi {
      : eventLoop(0), target(), method(0)
    {}
 
-   SignalSubscriber(FunctionValue func, EventLoop* ctx = getDefaultObjectEventLoop())
+   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
      : handler(makeCallable(func)), eventLoop(ctx), target(), method(0)
    {}
 
@@ -218,9 +218,9 @@ namespace qi {
   }
 
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const std::vector<GenericValue>& params, MetaCallType callType);
+    GenericFunction func, const std::vector<GenericValue>& params, MetaCallType callType);
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const MetaFunctionParameters& params, MetaCallType callType);
+    GenericFunction func, const MetaFunctionParameters& params, MetaCallType callType);
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
     MetaCallable func, const MetaFunctionParameters& params, MetaCallType callType);
 

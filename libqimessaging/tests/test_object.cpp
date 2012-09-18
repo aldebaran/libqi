@@ -93,14 +93,14 @@ template<typename T> bool checkValue(qi::GenericValue v, const T& val)
 
 TEST(TestObject, Typing)
 {
-  qi::FunctionValue fv = qi::makeFunctionValue(&vfun);
-  qi::FunctionValue fv2 = qi::makeFunctionValue(&fun);
-  qi::MethodValue mv = qi::makeMethodValue(&Foo::fun);
+  qi::GenericFunction fv = qi::makeGenericFunction(&vfun);
+  qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
+  qi::GenericMethod mv = qi::makeGenericMethod(&Foo::fun);
   std::vector<qi::GenericValue> args1 = convert(1, 2);
   qi::GenericValue res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
-  qi::MethodValue adderAdd = qi::makeMethodValue(&Adder::add);
+  qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValue> argsAdd = convert(41);
   res = adderAdd.call(qi::makeObjectValue(&add1), argsAdd);

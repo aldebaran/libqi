@@ -74,7 +74,7 @@ namespace qi {
 
     // input: type-erased
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MethodValue func);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func);
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter);
     void xBuildFor(Type* type);
 
@@ -100,7 +100,7 @@ namespace qi {
     // FIXME validate type
     return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
       name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeMethodValue(function));
+      makeGenericMethod(function));
   }
 
   template <typename FUNCTION_TYPE>
@@ -117,7 +117,7 @@ namespace qi {
   {
     return xAdvertiseMethod(detail::FunctionSignature<METHOD_TYPE >::sigreturn(),
       name + "::" + detail::FunctionSignature<METHOD_TYPE >::signature(),
-      makeCallable(makeFunctionValue(object, method)));
+      makeCallable(makeGenericFunction(object, method)));
   }
 
   template <typename C, typename T>

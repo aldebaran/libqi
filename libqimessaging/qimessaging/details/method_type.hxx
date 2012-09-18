@@ -67,22 +67,22 @@ namespace qi
     return &result;
   }
   template<typename M>
-  MethodValue makeMethodValue(const M& method)
+  GenericMethod makeGenericMethod(const M& method)
   {
     // convert M to a boost::function with an extra arg object_type
     typedef typename detail::MethodToFunctionTrait<M>::type Linearized;
     boost::function<Linearized> f = method;
 
-    FunctionValue fv = makeFunctionValue(f);
-    MethodValue result;
+    GenericFunction fv = makeGenericFunction(f);
+    GenericMethod result;
     result.value = fv.value;
     result.type = methodTypeOf<Linearized>();
     return result;
   }
 
-  inline FunctionValue MethodValue::toFunction()
+  inline GenericFunction GenericMethod::toFunction()
   {
-    FunctionValue res;
+    GenericFunction res;
     res.type = dynamic_cast<FunctionType*>(type);
     res.value = value;
     return res;

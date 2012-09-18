@@ -44,7 +44,7 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
 
   Manageable* m = manageable(instance);
   EventLoop* el = m?m->eventLoop():0;
-  MethodValue method = i->second;
+  GenericMethod method = i->second;
   GenericValue self;
   self.type = this;
   self.value = instance;

@@ -79,7 +79,7 @@ namespace qi {
       target.metaEmit(method, args);
   }
 
-  SignalBase::Link SignalBase::connect(FunctionValue callback, EventLoop* ctx)
+  SignalBase::Link SignalBase::connect(GenericFunction callback, EventLoop* ctx)
   {
     return connect(SignalSubscriber(callback, ctx));
   }

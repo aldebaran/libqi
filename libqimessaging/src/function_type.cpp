@@ -31,16 +31,16 @@ namespace qi
     return result;
   }
 
-  FunctionValue::FunctionValue()
+  GenericFunction::GenericFunction()
   : type(type), value(value) {}
 
-  FunctionValue::FunctionValue(const GenericValue & v)
+  GenericFunction::GenericFunction(const GenericValue & v)
   {
     type = dynamic_cast<FunctionType*>(v.type);
     value = type?v.value:0;
   }
 
-  GenericValue FunctionValue::call(const std::vector<GenericValue>& args)
+  GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
   {
     return type->call(value, args);
   }

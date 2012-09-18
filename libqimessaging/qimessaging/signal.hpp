@@ -32,7 +32,7 @@ namespace qi {
     Link connect(OBJECT_TYPE c, FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
     Link connect(qi::Object target, unsigned int slot);
-    Link connect(FunctionValue callback, EventLoop* ctx = getDefaultObjectEventLoop());
+    Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(MetaCallable callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);
     bool disconnect(const Link& link);
@@ -57,13 +57,13 @@ namespace qi {
   template<typename FUNCTION_TYPE>
   inline SignalBase::Link SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
   {
-    return connect(makeFunctionValue(callback), ctx);
+    return connect(makeGenericFunction(callback), ctx);
   }
 
   template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
   inline SignalBase::Link SignalBase::connect(OBJECT_TYPE inst, FUNCTION_TYPE fun, EventLoop* ctx)
   {
-    return connect(makeFunctionValue(inst, fun), ctx);
+    return connect(makeGenericFunction(inst, fun), ctx);
   }
 
   template<typename T>

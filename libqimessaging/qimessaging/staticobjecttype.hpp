@@ -28,7 +28,7 @@ struct ObjectTypeData
   typedef std::map<unsigned int, SignalGetter> SignalGetterMap;
   SignalGetterMap signalGetterMap;
 
-  typedef std::map<unsigned int, MethodValue> MethodMap;
+  typedef std::map<unsigned int, GenericMethod> MethodMap;
   MethodMap methodMap;
 };
 

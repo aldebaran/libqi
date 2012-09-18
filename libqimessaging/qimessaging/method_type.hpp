@@ -16,7 +16,7 @@ namespace qi
       const std::vector<GenericValue>& args) = 0;
   };
 
-  class QIMESSAGING_API MethodValue
+  class QIMESSAGING_API GenericMethod
   {
   public:
     GenericValue call(GenericValue object,
@@ -27,7 +27,7 @@ namespace qi
     std::string signature() const { return type->signature();}
     std::string sigreturn() const { return type->sigreturn();}
     ///@return equivalent function value
-    FunctionValue toFunction();
+    GenericFunction toFunction();
     MethodType* type;
     void*       value;
   };
@@ -35,7 +35,7 @@ namespace qi
   template<typename T> MethodType* methodTypeOf();
 
   template<typename M>
-  MethodValue makeMethodValue(const M& method);
+  GenericMethod makeGenericMethod(const M& method);
 }
 
 #include <qimessaging/details/method_type.hxx>

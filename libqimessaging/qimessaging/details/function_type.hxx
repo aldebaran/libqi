@@ -148,17 +148,17 @@ namespace qi
   }
 
   template<typename T>
-  FunctionValue makeFunctionValue(boost::function<T> f)
+  GenericFunction makeGenericFunction(boost::function<T> f)
   {
-    FunctionValue res;
+    GenericFunction res;
     res.value = new boost::function<T>(f);
     res.type = makeFunctionType<T>();
     return res;
   }
 
-  template<typename F> FunctionValue makeFunctionValue(F func)
+  template<typename F> GenericFunction makeGenericFunction(F func)
   {
-  return makeFunctionValue(boost::function<
+  return makeGenericFunction(boost::function<
     typename boost::remove_pointer<F>::type>(func));
   }
 
@@ -196,7 +196,7 @@ namespace detail
 
 }
 
-template<typename C, typename F> FunctionValue makeFunctionValue(C* inst, F func)
+template<typename C, typename F> GenericFunction makeGenericFunction(C* inst, F func)
 {
   // Return type
   typedef typename ::boost::function_types::result_type<F>::type RetType;
@@ -221,7 +221,7 @@ template<typename C, typename F> FunctionValue makeFunctionValue(C* inst, F func
   // Convert it to a boost::function
   res = boost::fusion::make_unfused(fusor);
 
-  return makeFunctionValue(res);
+  return makeGenericFunction(res);
 }
 
 } // namespace qi
