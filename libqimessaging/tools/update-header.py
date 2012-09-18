@@ -3,7 +3,7 @@
 ## Author(s):
 ##  - Cedric GESTES <gestes@aldebaran-robotics.com>
 ##
-## Copyright (C) 2010 Aldebaran Robotics
+## Copyright (C) 2010, 2012 Aldebaran Robotics
 ##
 
 #this tools, rewrite c/c++ headers
@@ -47,26 +47,11 @@ def write_header(fname, header, body):
             f.write(l)
 
 def get_cpp_header():
-    val = random.randint(0, 1)
-    if val:
-        return """/*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
+    return """\
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
-"""
-    else:
-        return """/*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
-*/
-
 """
 
 
