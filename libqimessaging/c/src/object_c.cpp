@@ -6,7 +6,7 @@
 */
 
 #include <qimessaging/object.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/objectbuilder.hpp>

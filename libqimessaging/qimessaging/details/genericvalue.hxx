@@ -15,13 +15,13 @@ class ValueClone
 public:
   void* clone(void* src)
   {
-    return new Value(((Value*)src)->clone());
+    return new GenericValue(((GenericValue*)src)->clone());
   }
 
   void destroy(void* ptr)
   {
-    ((Value*)ptr)->destroy();
-    delete (Value*)ptr;
+    ((GenericValue*)ptr)->destroy();
+    delete (GenericValue*)ptr;
   }
 };
 
@@ -31,51 +31,51 @@ public:
 
   bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
-    Value* m = (Value*)ptr;
+    GenericValue* m = (GenericValue*)ptr;
     return m->type->toValue(m->value, val);
   }
   void* fromValue(const qi::detail::DynamicValue& val)
   {
-    Value v = ::qi::toValue(val);
-    return new Value(v.clone());
+    GenericValue v = ::qi::toValue(val);
+    return new GenericValue(v.clone());
   }
 };
 
-template<> class TypeImpl<Value>:
+template<> class TypeImpl<GenericValue>:
   public DefaultTypeImpl<
-    Value,
+    GenericValue,
     ValueClone,
     ValueValue,
-    TypeDefaultSerialize<Value>
+    TypeDefaultSerialize<GenericValue>
     > {};
 
 template<typename T>
-Value toValue(const T& v)
+GenericValue toValue(const T& v)
 {
-  Value res;
+  GenericValue res;
   res.type = typeOf<typename boost::remove_const<T>::type>();
   res.value = (void *) const_cast<T*>(&v);
   return res;
 }
 
 inline
-Value Value::clone() const
+GenericValue GenericValue::clone() const
 {
-  Value res;
+  GenericValue res;
   res.type = type;
   res.value = type?res.type->clone(value):0;
   return res;
 }
 
 template<typename T>
-std::pair<const T*, bool> Value::as() const
+std::pair<const T*, bool> GenericValue::as() const
 {
   Type* targetType =  typeOf<T>();
   if (type->info() == targetType->info())
     return std::make_pair((const T*)value, false);
   else
   {
-    Value mv = convert(*targetType);
+    GenericValue mv = convert(*targetType);
     return std::make_pair((const T*)mv.value, true);
   }
 }
@@ -83,22 +83,22 @@ std::pair<const T*, bool> Value::as() const
 /** Type conversion. Will always make a copy.
  */
 inline
-Value Value::convert(Type& targetType) const
+GenericValue GenericValue::convert(Type& targetType) const
 {
-  if (targetType.info() == typeOf<Value>()->info())
+  if (targetType.info() == typeOf<GenericValue>()->info())
   {
     // Target is metavalue: special case
-    Value res;
+    GenericValue res;
     res.type = &targetType;
-    res.value = new Value(clone());
+    res.value = new GenericValue(clone());
     return res;
   }
-  if (type->info() == typeOf<Value>()->info())
+  if (type->info() == typeOf<GenericValue>()->info())
   { // Source is metavalue: special case
-    Value* metaval = (Value*)value;
+    GenericValue* metaval = (GenericValue*)value;
     return metaval->convert(targetType);
   }
-  Value res;
+  GenericValue res;
   //std::cerr <<"convert " << targetType.info().name() <<" "
   //<< type->info().name() << std::endl;
   if (targetType.info() == type->info())
@@ -117,18 +117,18 @@ Value Value::convert(Type& targetType) const
   return res;
 }
 
-inline AutoValue::AutoValue(const AutoValue& b)
+inline AutoGenericValue::AutoGenericValue(const AutoGenericValue& b)
 {
   value = b.value;
   type = b.type;
 }
 
-template<typename T> AutoValue::AutoValue(const T& ptr)
+template<typename T> AutoGenericValue::AutoGenericValue(const T& ptr)
 {
-  *(Value*)this = toValue(ptr);
+  *(GenericValue*)this = toValue(ptr);
 }
 
-inline AutoValue::AutoValue()
+inline AutoGenericValue::AutoGenericValue()
 {
   value = type = 0;
 }
@@ -136,7 +136,7 @@ inline AutoValue::AutoValue()
 namespace detail
 {
   /** This class can be used to convert the return value of an arbitrary function
-  * into a Value. It handles functions returning void.
+  * into a GenericValue. It handles functions returning void.
   *
   *  Usage:
   *    ValueCopy val;
@@ -144,17 +144,17 @@ namespace detail
   *
   *  in val(), parenthesis are useful to avoid compiler warning "val not used" when handling void.
   */
-  class ValueCopy: public Value
+  class GenericValueCopy: public GenericValue
   {
   public:
     template<typename T> void operator,(const T& any);
-    ValueCopy &operator()() { return *this; }
+    GenericValueCopy &operator()() { return *this; }
   };
 
-  template<typename T> void ValueCopy::operator,(const T& any)
+  template<typename T> void GenericValueCopy::operator,(const T& any)
   {
-    *(Value*)this = toValue(any);
-    *(Value*)this = clone();
+    *(GenericValue*)this = toValue(any);
+    *(GenericValue*)this = clone();
   }
 }
 

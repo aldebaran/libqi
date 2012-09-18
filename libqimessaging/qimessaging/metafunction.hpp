@@ -12,7 +12,7 @@
 
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/type.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/method_type.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -31,11 +31,11 @@ namespace qi {
 class QIMESSAGING_API MetaStorage
 {
 public:
-  /* Lifetime of Value is a bit tricky, as a Value can be on the stack,
+  /* Lifetime of GenericValue is a bit tricky, as a GenericValue can be on the stack,
    * or allocated.
    */
   ~MetaStorage();
-  std::vector<Value> parameterValues;
+  std::vector<GenericValue> parameterValues;
   Buffer                 parameterBuffer;
   std::string            signature;
   bool                   valid;
@@ -58,7 +58,7 @@ public:
    * when this instance of MetaFunctionParameters is destroyed. Use this
    * when values are on a stack.
    */
-  explicit MetaFunctionParameters(const std::vector<Value>& value, bool invalidateOnDestruction=false);
+  explicit MetaFunctionParameters(const std::vector<GenericValue>& value, bool invalidateOnDestruction=false);
   /// Set from a buffer
   explicit MetaFunctionParameters(Buffer);
 
@@ -67,12 +67,12 @@ public:
    * The signature is required to convert buffer to values.
    */
   void setSignature(const std::string& sig);
-  const std::vector<Value>& getValues() const;
+  const std::vector<GenericValue>& getValues() const;
   const Buffer& getBuffer() const;
 
   enum Mode
   {
-    Mode_Value,
+    Mode_GenericValue,
     Mode_Buffer
   };
 
@@ -100,14 +100,14 @@ class QIMESSAGING_API MetaFunctionResult: public MetaFunctionParameters
 public:
   MetaFunctionResult();
   /// Takes ownership of value.
-  MetaFunctionResult(const Value& value);
+  MetaFunctionResult(const GenericValue& value);
   MetaFunctionResult(Buffer);
   /// Return the value without copying it: Valid until storage goes.
-  Value getValue() const;
+  GenericValue getValue() const;
 };
 
 MetaFunctionResult QIMESSAGING_API callFunction(FunctionValue function, const MetaFunctionParameters& params);
-MetaFunctionResult QIMESSAGING_API callMethod(MethodValue function, Value instance, const MetaFunctionParameters& params);
+MetaFunctionResult QIMESSAGING_API callMethod(MethodValue function, GenericValue instance, const MetaFunctionParameters& params);
 
 /** Callable is the primary callback interface when 'dynamic' functions
  * can be needed: it takes the whole argument list as a MetaFunctionParameters.

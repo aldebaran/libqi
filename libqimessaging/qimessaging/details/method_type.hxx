@@ -49,10 +49,10 @@ namespace qi
       nargs.insert(nargs.end(), args.begin(), args.end());
       return FunctionTypeImpl<T>::call(method, nargs);
     }
-    Value call(void* method, Value object,
-      const std::vector<Value>& args)
+    GenericValue call(void* method, GenericValue object,
+      const std::vector<GenericValue>& args)
     {
-      std::vector<Value> nargs;
+      std::vector<GenericValue> nargs;
       nargs.reserve(args.size()+1);
       nargs.push_back(object);
       nargs.insert(nargs.end(), args.begin(), args.end());

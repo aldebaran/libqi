@@ -12,7 +12,7 @@ namespace qi{
  *
  *  - cloning/destruction in clone() and destroy()
  *  - type conversion is made by going through the generic container
- *    Value, using the toValue() and fromValue() functions,
+ *    GenericValue, using the toValue() and fromValue() functions,
  *  - Serialization through serialize() and deserialize() to transmit
  *    the value through some kind of pipe.
  *
@@ -39,13 +39,13 @@ public:
 
   // Default impl does toValue.serialize()
   virtual void  serialize(ODataStream& s, const void*)=0;
-  // Default impl does deserialize(Value&) then fromValue
+  // Default impl does deserialize(GenericValue&) then fromValue
   virtual void* deserialize(IDataStream& s)=0;
 
   /* When someone makes a call with arguments that do not match the
    * target signature (ex: int vs float), we want to handle it.
    * For this, given the known correct signature S and known incorrect
-   * Value v, we want to be able to obtain a new Type T that
+   * GenericValue v, we want to be able to obtain a new Type T that
    * serializes with type S, and then try to convert o into type T.
    *
    * For this we need a map<Signature, Type> that we will feed with
@@ -82,7 +82,7 @@ public:
 
 /** Meta-type specialization.
  *  Use the aspect pattern, make a class per feature group
- *  (Clone, Value, Serialize)
+ *  (Clone, GenericValue, Serialize)
  *
  */
 
@@ -257,7 +257,7 @@ template<typename T> class TypeImpl: public virtual DefaultTypeImpl<T>
 {
 };
 
-/// Declare a type that is convertible to Value, and serializable
+/// Declare a type that is convertible to GenericValue, and serializable
 #define QI_TYPE_CONVERTIBLE_SERIALIZABLE(T)  \
 namespace qi {                                   \
 template<> class TypeImpl<T>:                \
@@ -267,7 +267,7 @@ template<> class TypeImpl<T>:                \
     TypeDefaultSerialize<T>                  \
   >{}; }
 
-/** Declare that a type is not convertible to Value.
+/** Declare that a type is not convertible to GenericValue.
  *  Must be called outside any namespace.
  */
 #define QI_TYPE_SERIALIZABLE(T)              \

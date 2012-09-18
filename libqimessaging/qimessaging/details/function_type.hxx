@@ -103,7 +103,7 @@ namespace qi
     template<typename SEQ, typename F> void* apply(SEQ sequence,
       F& function, const std::vector<void*> args)
     {
-      ValueCopy res;
+      GenericValueCopy res;
       boost::fusion::for_each(sequence, Transformer(&args));
       res, boost::fusion::invoke_function_object(function,
         boost::fusion::transform(sequence,

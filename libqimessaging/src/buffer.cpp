@@ -6,7 +6,7 @@
 **  - hcuche <hcuche@aldebaran-robotics.com>
 */
 
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qi/log.hpp>
 

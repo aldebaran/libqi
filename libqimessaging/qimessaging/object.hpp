@@ -12,7 +12,7 @@
 #include <map>
 #include <string>
 #include <qimessaging/api.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
@@ -110,27 +110,27 @@ namespace qi {
     ~Object();
     const MetaObject &metaObject();
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
-      qi::AutoValue p1 = qi::AutoValue(),
-      qi::AutoValue p2 = qi::AutoValue(),
-      qi::AutoValue p3 = qi::AutoValue(),
-      qi::AutoValue p4 = qi::AutoValue(),
-      qi::AutoValue p5 = qi::AutoValue(),
-      qi::AutoValue p6 = qi::AutoValue(),
-      qi::AutoValue p7 = qi::AutoValue(),
-      qi::AutoValue p8 = qi::AutoValue());
+      qi::AutoGenericValue p1 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p2 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p3 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p4 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p5 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p6 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p7 = qi::AutoGenericValue(),
+      qi::AutoGenericValue p8 = qi::AutoGenericValue());
 
     qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
     qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
     void emitEvent(const std::string& eventName,
-                   qi::AutoValue p1 = qi::AutoValue(),
-                   qi::AutoValue p2 = qi::AutoValue(),
-                   qi::AutoValue p3 = qi::AutoValue(),
-                   qi::AutoValue p4 = qi::AutoValue(),
-                   qi::AutoValue p5 = qi::AutoValue(),
-                   qi::AutoValue p6 = qi::AutoValue(),
-                   qi::AutoValue p7 = qi::AutoValue(),
-                   qi::AutoValue p8 = qi::AutoValue());
+                   qi::AutoGenericValue p1 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p2 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p3 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p4 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p5 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p6 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p7 = qi::AutoGenericValue(),
+                   qi::AutoGenericValue p8 = qi::AutoGenericValue());
     void metaEmit(unsigned int event, const MetaFunctionParameters& params);
     bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
         /** Connect an event to an arbitrary callback.
@@ -167,7 +167,7 @@ namespace qi {
   };
 
   template<typename T>
-  Value makeObjectValue(T* ptr);
+  GenericValue makeObjectValue(T* ptr);
 
 
     /** Event subscriber info.
@@ -218,7 +218,7 @@ namespace qi {
   }
 
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const std::vector<Value>& params, MetaCallType callType);
+    FunctionValue func, const std::vector<GenericValue>& params, MetaCallType callType);
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
     FunctionValue func, const MetaFunctionParameters& params, MetaCallType callType);
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,

@@ -12,15 +12,15 @@ namespace qi
     virtual void* call(void* method, void* object,
       const std::vector<void*>& args) = 0;
     /// Convert and call
-    virtual Value call(void* method, Value object,
-      const std::vector<Value>& args) = 0;
+    virtual GenericValue call(void* method, GenericValue object,
+      const std::vector<GenericValue>& args) = 0;
   };
 
   class QIMESSAGING_API MethodValue
   {
   public:
-    Value call(Value object,
-      const std::vector<Value> args)
+    GenericValue call(GenericValue object,
+      const std::vector<GenericValue> args)
     {
       return type->call(value, object, args);
     }

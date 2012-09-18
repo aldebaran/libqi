@@ -9,7 +9,7 @@
 #include <cassert>
 #include <cstring>
 
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 

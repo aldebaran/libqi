@@ -36,7 +36,7 @@ Could be used to get/set the *user* preferences of the Robot. This include syste
     settingsMap(groupname)
 
     setSetting(groupname, name, value);
-    Value setting(groupname, name);
+    GenericValue setting(groupname, name);
 
 
 SystemManager

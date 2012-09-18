@@ -7,9 +7,9 @@
 #include <boost/make_shared.hpp>
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/type.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/object.hpp>
 #include <qimessaging/function_type.hpp>
 #include <qimessaging/metaobject.hpp>
@@ -187,7 +187,7 @@ namespace qi
   }
 
   qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    FunctionValue func, const std::vector<Value>& params, MetaCallType callType)
+    FunctionValue func, const std::vector<GenericValue>& params, MetaCallType callType)
   {
     MetaFunctionParameters p(params, false);
     return metaCall(el, func, p, callType);

@@ -6,7 +6,7 @@
 *  Copyright (C) 2010, 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/datastream.hpp>
@@ -309,13 +309,13 @@ namespace qi {
     return _reader.read(size);
   }
 
-  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Value &value)
+  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::GenericValue &value)
   {
     os.write(Signature::Type_Dynamic);
     return os;
   }
 
-  IDataStream &IDataStream::operator>>(Value &value)
+  IDataStream &IDataStream::operator>>(GenericValue &value)
   {
     std::string signature;
     *this >> signature;
@@ -330,7 +330,7 @@ namespace qi {
     return *this;
   }
 
-  ODataStream &ODataStream::operator<<(const Value &value)
+  ODataStream &ODataStream::operator<<(const GenericValue &value)
   {
     getBuffer().signature() << "m";
     *this << value.signature();

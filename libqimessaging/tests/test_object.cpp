@@ -38,13 +38,13 @@ C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
 
-std::vector<qi::Value> convert(qi::AutoValue v1 = qi::AutoValue(),
-  qi::AutoValue v2 = qi::AutoValue(),
-  qi::AutoValue v3 = qi::AutoValue(),
-  qi::AutoValue v4 = qi::AutoValue(),
-  qi::AutoValue v5 = qi::AutoValue())
+std::vector<qi::GenericValue> convert(qi::AutoGenericValue v1 = qi::AutoGenericValue(),
+  qi::AutoGenericValue v2 = qi::AutoGenericValue(),
+  qi::AutoGenericValue v3 = qi::AutoGenericValue(),
+  qi::AutoGenericValue v4 = qi::AutoGenericValue(),
+  qi::AutoGenericValue v5 = qi::AutoGenericValue())
 {
-  std::vector<qi::Value> res;
+  std::vector<qi::GenericValue> res;
   if (v1.value)
     res.push_back(v1);
   if (v2.value)
@@ -78,7 +78,7 @@ public:
   int v;
 };
 
-template<typename T> bool checkValue(qi::Value v, const T& val)
+template<typename T> bool checkValue(qi::GenericValue v, const T& val)
 {
   std::pair<const T*, bool> r = v.as<T>();
   if (!r.first)
@@ -96,13 +96,13 @@ TEST(TestObject, Typing)
   qi::FunctionValue fv = qi::makeFunctionValue(&vfun);
   qi::FunctionValue fv2 = qi::makeFunctionValue(&fun);
   qi::MethodValue mv = qi::makeMethodValue(&Foo::fun);
-  std::vector<qi::Value> args1 = convert(1, 2);
-  qi::Value res = fv2.call(args1);
+  std::vector<qi::GenericValue> args1 = convert(1, 2);
+  qi::GenericValue res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
   qi::MethodValue adderAdd = qi::makeMethodValue(&Adder::add);
   Adder add1(1);
-  std::vector<qi::Value> argsAdd = convert(41);
+  std::vector<qi::GenericValue> argsAdd = convert(41);
   res = adderAdd.call(qi::makeObjectValue(&add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }

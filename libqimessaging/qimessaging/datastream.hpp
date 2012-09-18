@@ -8,7 +8,7 @@
 
 
 // Leave this above the header gard, it fixes include ordering problems
-# include <qimessaging/value.hpp>
+# include <qimessaging/genericvalue.hpp>
 
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
 #define _QIMESSAGING_DATASTREAM_HPP_
@@ -54,7 +54,7 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-  class Value;
+  class GenericValue;
 
   /** This class provides data serialization, using
    * a qi::Buffer as a backend.
@@ -93,7 +93,7 @@ namespace qi {
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
 
-    IDataStream &operator>>(qi::Value &value);
+    IDataStream &operator>>(qi::GenericValue &value);
     IDataStream &operator>>(const detail::DynamicValue &val);
     IDataStream &operator>>(qi::Buffer &buffer);
 
@@ -155,7 +155,7 @@ namespace qi {
     ODataStream& operator<<(const char *);
     ODataStream& operator<<(const std::string& i);
 
-    ODataStream &operator<<(const Value &value);
+    ODataStream &operator<<(const GenericValue &value);
     ODataStream &operator<<(const detail::DynamicValue &val);
     ODataStream &operator<<(const Buffer &buffer);
 
@@ -186,7 +186,7 @@ namespace qi {
   };
 
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Value &value);
+  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::GenericValue &value);
 
   template<typename T>
   ODataStream &ODataStream::operator<<(const std::list<T> &v) {

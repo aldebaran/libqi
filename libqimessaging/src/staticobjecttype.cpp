@@ -45,7 +45,7 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
   Manageable* m = manageable(instance);
   EventLoop* el = m?m->eventLoop():0;
   MethodValue method = i->second;
-  Value self;
+  GenericValue self;
   self.type = this;
   self.value = instance;
   return ::qi::metaCall(el, (MetaCallable)boost::bind(callMethod, method, self, _1),

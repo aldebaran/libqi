@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/datastream.hpp>
 #include <vector>
 #include <map>
@@ -16,7 +16,7 @@ class ALMemoryTest {
 
   template <typename T>
   T get(std::string QI_UNUSED(name)) {
-    qi::Value v;
+    qi::GenericValue v;
     //v = get(name);
     //return v.to<T>();
   }
@@ -30,7 +30,7 @@ TEST(TestValue, BasicType) {
   float f = 42.;
   double d = 42.;
 
-  qi::Value v(b);
+  qi::GenericValue v(b);
   EXPECT_EQ(true, v.toBool());
   v.clear();
   EXPECT_FALSE(v.toBool());
@@ -46,8 +46,8 @@ TEST(TestValue, BasicType) {
 
 
 TEST(TestValue, WowType) {
-  qi::Value v(qi::Value::List);
-  qi::Value v2("titi toto");
+  qi::GenericValue v(qi::GenericValue::List);
+  qi::GenericValue v2("titi toto");
   qi::ValueList *vl = v.value<qi::ValueList>();
   vl->push_back(v2);
 
@@ -58,12 +58,12 @@ TEST(TestValue, WowType) {
 }
 
 TEST(TestValue, TestSerialize) {
-  qi::Value v(qi::Value::Map);
-  qi::Value v2;
+  qi::GenericValue v(qi::GenericValue::Map);
+  qi::GenericValue v2;
 
   qi::ValueMap *vm1 = v.value<qi::ValueMap>();
-  (*vm1)["toto"] = qi::Value("coco");
-  (*vm1)["tata"] = qi::Value("caca");
+  (*vm1)["toto"] = qi::GenericValue("coco");
+  (*vm1)["tata"] = qi::GenericValue("caca");
 
   qi::Buffer     buf;
   qi::DataStream ms(buf);
@@ -84,11 +84,11 @@ TEST(TestValue, TestSerialize) {
 }
 
 TEST(TestValue, TestSerializeVector) {
-  qi::Value v(qi::Value::Vector);
-  qi::Value v2;
+  qi::GenericValue v(qi::GenericValue::Vector);
+  qi::GenericValue v2;
 
-  v.value<qi::ValueVector>()->push_back(qi::Value("coco"));
-  v.value<qi::ValueVector>()->push_back(qi::Value("caca"));
+  v.value<qi::ValueVector>()->push_back(qi::GenericValue("coco"));
+  v.value<qi::ValueVector>()->push_back(qi::GenericValue("caca"));
 
   qi::Buffer     buf;
   qi::DataStream ms(buf);
@@ -116,7 +116,7 @@ struct Point2D {
 QI_REFLECT(Point2D, ((int, x))((int, y)));
 
 TEST(TestValue, StructType) {
-  qi::Value v;
+  qi::GenericValue v;
   Point2D p;
   Point2D p2;
   p.x = 41;

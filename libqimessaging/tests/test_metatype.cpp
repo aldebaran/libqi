@@ -14,7 +14,7 @@
 #include <qi/application.hpp>
 #include <qimessaging/future.hpp>
 
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 
 #include <gtest/gtest.h>
 
@@ -75,7 +75,7 @@ double fadd(double j)
 }
 
 template<typename R, typename P>
-R magicCall(boost::function<R (P)> func, qi::AutoValue p1)
+R magicCall(boost::function<R (P)> func, qi::AutoGenericValue p1)
 {
   std::pair<const P*, bool> res = p1.as<P>();
   R result = func(*res.first);
@@ -104,10 +104,10 @@ template<typename T> std::ostream& operator << (std::ostream& o,
 class Function
 {
 public:
-  virtual qi::Value call(const std::vector<qi::Value>& args) = 0;
+  virtual qi::GenericValue call(const std::vector<qi::GenericValue>& args) = 0;
   /* NOTE: We could try to avoid the call() below by making a non-template
    * that bounces to the previous, but it has issues since it requires
-   * implementing 'std::vector<Value> deserialize(buffer, sig);' :
+   * implementing 'std::vector<GenericValue> deserialize(buffer, sig);' :
    * - less efficient: we would need a fixed mapping signature type->default
    *   Type we deserialize in, so if we chose vector and the target
    *   takes list, we do an extra conversion
@@ -121,16 +121,16 @@ template<typename T> class FunctionImpl: public Function {};
 template<typename T> class FunctionImpl<boost::function<T> >: public Function
 {
 public:
-  virtual qi::Value call(const std::vector<qi::Value>& args)
+  virtual qi::GenericValue call(const std::vector<qi::GenericValue>& args)
   {
     typedef typename boost::function_types::parameter_types<T>::type ArgsType;
     typedef typename  boost::remove_const<
       typename boost::remove_reference<
       typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
       >::type>::type P1;
-      std::pair<const P1*, bool> p1 = const_cast<qi::Value&>(args[0]).as<P1>();
+      std::pair<const P1*, bool> p1 = const_cast<qi::GenericValue&>(args[0]).as<P1>();
     //std::cerr <<"call arg " << p1.second <<" " << *p1.first << std::endl;
-    qi::detail::ValueCopy ret;
+    qi::detail::GenericValueCopy ret;
     ret, fun(*p1.first);
     if (p1.second) // We had to copy arg to convert it, delete
       delete p1.first;
@@ -148,7 +148,7 @@ public:
     P1 p1;
     s >> p1;
     qiLogDebug("test") << "deserialize arg as " << p1;
-    qi::detail::ValueCopy ret;
+    qi::detail::GenericValueCopy ret;
     ret, fun(p1);
     qi::Buffer res;
     qi::ODataStream o(res);
@@ -173,13 +173,13 @@ Function* makeFunction(T f)
   return makeBoostFunction(boost::function<typename boost::remove_pointer<T>::type>(f));
 }
 
-void sleep_call_args(Function* fun, const std::vector<qi::Value>& arg,
-  qi::Promise<qi::Value> res)
+void sleep_call_args(Function* fun, const std::vector<qi::GenericValue>& arg,
+  qi::Promise<qi::GenericValue> res)
 {
   qi::os::msleep(100);
   res.setValue(fun->call(arg));
   for (unsigned i=0; i<arg.size(); ++i)
-    const_cast<qi::Value&>(arg[i]).destroy();
+    const_cast<qi::GenericValue&>(arg[i]).destroy();
 }
 
 void sleep_call_buf(Function* fun, qi::Buffer arg,
@@ -190,10 +190,10 @@ void sleep_call_buf(Function* fun, qi::Buffer arg,
 }
 
 
-qi::Future<qi::Value> asyncCall(Function* fun,
-  const std::vector<qi::Value>& arg)
+qi::Future<qi::GenericValue> asyncCall(Function* fun,
+  const std::vector<qi::GenericValue>& arg)
 {
-  qi::Promise<qi::Value> prom;
+  qi::Promise<qi::GenericValue> prom;
   boost::thread bt(boost::bind(sleep_call_args, fun, arg, prom));
   return prom.future();
 }
@@ -213,22 +213,22 @@ enum CallMode {
 };
 
 template<typename T> class FutureAdapter
-: public qi::FutureInterface<qi::Value>
+: public qi::FutureInterface<qi::GenericValue>
 {
 public:
   FutureAdapter(qi::Promise<T> prom) :prom(prom) {}
   ~FutureAdapter() {}
-  virtual void onFutureFinished(const qi::Value &future, void *data)
+  virtual void onFutureFinished(const qi::GenericValue &future, void *data)
   {
     // convert MetaData to target type
     typedef std::pair<const T*, bool>  ConvType;
-    ConvType resConv =  const_cast<qi::Value&>(future).template as<T>();
+    ConvType resConv =  const_cast<qi::GenericValue&>(future).template as<T>();
     //std::cerr <<"FutureIface conversion " << resConv.second <<" "
     //<< *resConv.first << std::endl;
     prom.setValue(*resConv.first);
     if (resConv.second)
       delete resConv.first;
-    const_cast<qi::Value&>(future).destroy();
+    const_cast<qi::GenericValue&>(future).destroy();
   }
   virtual void onFutureFailed(const std::string &error, void *data)
   {
@@ -259,7 +259,7 @@ public:
         return;
       }
       void* compatValPtr = compatType->deserialize(id);
-      qi::Value compatVal;
+      qi::GenericValue compatVal;
       compatVal.type = compatType;
       compatVal.value = compatValPtr;
       std::pair<const T*, bool>  res = compatVal.template as<T>();
@@ -286,13 +286,13 @@ public:
 
 
 // FIXME: reduce the template part by doing the futureAdapter first,
-// and bounce to a non-template qi::Future<Value> metaCall(...)
+// and bounce to a non-template qi::Future<GenericValue> metaCall(...)
 template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
-  qi::AutoValue p1 = qi::AutoValue(),
-  qi::AutoValue p2 = qi::AutoValue(),
-  qi::AutoValue p3 = qi::AutoValue())
+  qi::AutoGenericValue p1 = qi::AutoGenericValue(),
+  qi::AutoGenericValue p2 = qi::AutoGenericValue(),
+  qi::AutoGenericValue p3 = qi::AutoGenericValue())
 {
-  std::vector<qi::Value> params;
+  std::vector<qi::GenericValue> params;
   // Wrong I know
   if (p1.value)
     params.push_back(p1);
@@ -305,7 +305,7 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
   case DIRECT:
     {
       qi::Promise<R> prom;
-      qi::Value res = ptr->call(params);
+      qi::GenericValue res = ptr->call(params);
       std::pair<const R*, bool> resConv = res.template as<R>();
       std::cerr <<"ret " << resConv.second <<" " << *resConv.first << std::endl;
       prom.setValue(*resConv.first);
@@ -316,11 +316,11 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
     }
   case COPY:
     {
-      std::vector<qi::Value> pCopy;
+      std::vector<qi::GenericValue> pCopy;
       for (unsigned i=0; i<params.size(); ++i)
         pCopy.push_back(params[i].clone());
       qi::Promise<R> prom;
-      qi::Future<qi::Value> res=asyncCall(ptr, pCopy);
+      qi::Future<qi::GenericValue> res=asyncCall(ptr, pCopy);
       res.addCallbacks(new FutureAdapter<R>(prom), 0);
       return prom.future();
     }
@@ -351,11 +351,11 @@ QI_REGISTER_MAPPING("[i]", std::vector<int>);
 
 template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
   std::string sigString, std::string sigRet,
-  qi::AutoValue p1 = qi::AutoValue(),
-  qi::AutoValue p2 = qi::AutoValue(),
-  qi::AutoValue p3 = qi::AutoValue())
+  qi::AutoGenericValue p1 = qi::AutoGenericValue(),
+  qi::AutoGenericValue p2 = qi::AutoGenericValue(),
+  qi::AutoGenericValue p3 = qi::AutoGenericValue())
 {
-  std::vector<qi::Value> params;
+  std::vector<qi::GenericValue> params;
   // Wrong I know
   if (p1.value)
     params.push_back(p1);
@@ -372,14 +372,14 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
     if (*it == params[i].signature())
       params[i].serialize(ds);
     else
-    { // We first need to convert Value to a type that has the correct
+    { // We first need to convert GenericValue to a type that has the correct
       // netsignature if we can
       qi::Type* compatible = qi::Type::getCompatibleTypeWithSignature(*it);
       if (!compatible)
       { // Dont know how to handle this type.
         throw std::runtime_error("proper fucked");
       }
-      qi::Value converted = params[i].convert(*compatible);
+      qi::GenericValue converted = params[i].convert(*compatible);
       converted.serialize(ds);
       converted.destroy();
     }

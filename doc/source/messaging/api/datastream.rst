@@ -187,18 +187,18 @@ Classes
   :param v: the map to read
   :return: the datastream
 
-.. cpp:function:: qi::DataStream &operator<<(qi::DataStream &sd, const qi::Value &value)
+.. cpp:function:: qi::DataStream &operator<<(qi::DataStream &sd, const qi::GenericValue &value)
 
-  Serialize qi::Value into datastream.
+  Serialize qi::GenericValue into datastream.
 
   :param sd: the datastream
-  :param v: the qi::Value to write
+  :param v: the qi::GenericValue to write
   :return: the datastream
 
-.. cpp:function:: qi::DataStream &operator>>(qi::DataStream &sd, qi::Value &value)
+.. cpp:function:: qi::DataStream &operator>>(qi::DataStream &sd, qi::GenericValue &value)
 
-  Deserialize qi::Value from datastream.
+  Deserialize qi::GenericValue from datastream.
 
   :param sd: the datastream
-  :param v: the qi::Value to read
+  :param v: the qi::GenericValue to read
   :return: the datastream

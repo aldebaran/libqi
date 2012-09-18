@@ -11,25 +11,25 @@ namespace qi {
   MetaFunctionResult callFunction(FunctionValue val,
     const MetaFunctionParameters& parameters)
   {
-    if (parameters.getMode() == MetaFunctionParameters::Mode_Value)
+    if (parameters.getMode() == MetaFunctionParameters::Mode_GenericValue)
     {
       // Let call() handle conversion
-      Value res = val.call(parameters.getValues());
+      GenericValue res = val.call(parameters.getValues());
       return MetaFunctionResult(res);
     }
     else
     {
       IDataStream in(parameters.getBuffer());
       const std::vector<Type*>& argTypes = val.type->argumentsType();
-      std::vector<Value> args;
+      std::vector<GenericValue> args;
       for (unsigned i=0; i<argTypes.size(); ++i)
       {
-        Value v;
+        GenericValue v;
         v.type = argTypes[i];
         v.value = v.type->deserialize(in);
         args.push_back(v);
       }
-      Value res = val.call(args);
+      GenericValue res = val.call(args);
       for (unsigned i=0; i<args.size(); ++i)
         args[i].destroy();
       return MetaFunctionResult(res);
@@ -37,33 +37,33 @@ namespace qi {
   }
 
   MetaFunctionResult callMethod(MethodValue val,
-    Value instance, const MetaFunctionParameters& parameters)
+    GenericValue instance, const MetaFunctionParameters& parameters)
   {
-    if (parameters.getMode() == MetaFunctionParameters::Mode_Value)
+    if (parameters.getMode() == MetaFunctionParameters::Mode_GenericValue)
     {
-      const std::vector<Value>& v = parameters.getValues();
-      std::vector<Value> bindSelf;
+      const std::vector<GenericValue>& v = parameters.getValues();
+      std::vector<GenericValue> bindSelf;
       bindSelf.push_back(instance);
       bindSelf.insert(bindSelf.end(), &v[0], &v[v.size()]);
 
       // Let call() handle conversion
-      Value res = val.toFunction().call(bindSelf);
+      GenericValue res = val.toFunction().call(bindSelf);
       return MetaFunctionResult(res);
     }
     else
     {
       IDataStream in(parameters.getBuffer());
       const std::vector<Type*>& argTypes = val.type->argumentsType();
-      std::vector<Value> args;
+      std::vector<GenericValue> args;
       args.push_back(instance);
       for (unsigned i=1; i<argTypes.size(); ++i)
       {
-        Value v;
+        GenericValue v;
         v.type = argTypes[i];
         v.value = v.type->deserialize(in);
         args.push_back(v);
       }
-      Value res = val.toFunction().call(args);
+      GenericValue res = val.toFunction().call(args);
       for (unsigned i=1; i<args.size(); ++i)
         args[i].destroy();
       return MetaFunctionResult(res);

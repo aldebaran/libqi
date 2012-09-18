@@ -9,7 +9,7 @@ namespace qi {
   {
   public:
     virtual void* call(void* func, const std::vector<void*>& args)=0;
-    Value call(void* func, const std::vector<Value>& args);
+    GenericValue call(void* func, const std::vector<GenericValue>& args);
     Type* resultType();
     const std::vector<Type*>& argumentsType();
     std::string signature() const;
@@ -25,8 +25,8 @@ namespace qi {
   {
   public:
     FunctionValue();
-    FunctionValue(const Value & v);
-    Value call(const std::vector<Value>& args);
+    FunctionValue(const GenericValue & v);
+    GenericValue call(const std::vector<GenericValue>& args);
     FunctionType* type;
     void*         value;
   };

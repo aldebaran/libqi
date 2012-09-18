@@ -45,7 +45,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/dynamic_value.hpp
                    qimessaging/details/type.hxx
                    qimessaging/details/metafunction.hxx
-                   qimessaging/details/value.hxx
+                   qimessaging/details/genericvalue.hxx
                    qimessaging/details/dynamic_value.hxx
                    qimessaging/details/object.hxx
                    qimessaging/details/signal.hxx
@@ -65,7 +65,7 @@ set(PUBLIC_HEADERS
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
                    qimessaging/type.hpp
-                   qimessaging/value.hpp
+                   qimessaging/genericvalue.hpp
                    qimessaging/function_type.hpp
                    qimessaging/details/function_type.hxx
                    qimessaging/method_type.hpp

@@ -14,19 +14,19 @@ namespace qi {
  *  Operator = makes a shallow copy.
  *
  */
-class QIMESSAGING_API Value
+class QIMESSAGING_API GenericValue
 {
 public:
-  Value() : value(0), type(0) {}
+  GenericValue() : value(0), type(0) {}
   void*          value;
   Type*      type;
 
   // TODO Make bouncers to type methods here
-  /// Convert Value to concrete type. Returns the value and a
+  /// Convert GenericValue to concrete type. Returns the value and a
   /// bool that is true if value is a copy and must be deleted.
   template<typename T> std::pair<const T*, bool> as() const;
-  Value convert(Type& targetType) const;
-  Value clone() const;
+  GenericValue convert(Type& targetType) const;
+  GenericValue clone() const;
   void serialize(ODataStream& os) const { if(type) type->serialize(os, value);}
   std::string signature() const
   {
@@ -43,10 +43,10 @@ public:
 };
 
 /// Convert any value to the correct associated Value
-template<typename T> Value toValue(const T& v);
+template<typename T> GenericValue toValue(const T& v);
 
 
-/** Generates Value from everything transparently.
+/** Generates GenericValue from everything transparently.
  * To be used as type of meta-function call argument
  *
  *  Example:
@@ -54,18 +54,18 @@ template<typename T> Value toValue(const T& v);
  *  can be called with any argument type:
  *    metaCall("foo", 12);
  */
-class AutoValue: public Value
+class AutoGenericValue: public GenericValue
 {
 public:
-  AutoValue();
-  AutoValue(const AutoValue& b);
+  AutoGenericValue ();
+  AutoGenericValue(const AutoGenericValue & b);
 
-  template<typename T> AutoValue(const T& ptr);
+  template<typename T> AutoGenericValue(const T& ptr);
 };
 
 
 }
 
-#include <qimessaging/details/value.hxx>
+#include <qimessaging/details/genericvalue.hxx>
 
 #endif

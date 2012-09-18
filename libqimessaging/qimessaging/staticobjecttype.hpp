@@ -7,7 +7,7 @@
 #define _QIMESSAGING_STATICOBJECTTYPE_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/metafunction.hpp>

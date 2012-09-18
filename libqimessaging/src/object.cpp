@@ -277,21 +277,21 @@ namespace qi {
   }*/
 
   void Object::emitEvent(const std::string& eventName,
-                         qi::AutoValue p1,
-                         qi::AutoValue p2,
-                         qi::AutoValue p3,
-                         qi::AutoValue p4,
-                         qi::AutoValue p5,
-                         qi::AutoValue p6,
-                         qi::AutoValue p7,
-                         qi::AutoValue p8)
+                         qi::AutoGenericValue p1,
+                         qi::AutoGenericValue p2,
+                         qi::AutoGenericValue p3,
+                         qi::AutoGenericValue p4,
+                         qi::AutoGenericValue p5,
+                         qi::AutoGenericValue p6,
+                         qi::AutoGenericValue p7,
+                         qi::AutoGenericValue p8)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid Object..";
       return;
     }
-    qi::AutoValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::Value> params;
+    qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::GenericValue> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);

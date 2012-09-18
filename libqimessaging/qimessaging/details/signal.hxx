@@ -14,7 +14,7 @@ namespace qi
   {
     struct Appender
   {
-    inline Appender(std::vector<Value>*target)
+    inline Appender(std::vector<GenericValue>*target)
     :target(target)
     {
     }
@@ -22,10 +22,10 @@ namespace qi
     void
     operator() (const T &v) const
     {
-      target->push_back(AutoValue(v));
+      target->push_back(AutoGenericValue(v));
     }
 
-    std::vector<Value>* target;
+    std::vector<GenericValue>* target;
   };
   template<typename T>
   struct FusedEmit
@@ -47,7 +47,7 @@ namespace qi
     typename result<Seq>::type
     operator()(Seq const & s) const
     {
-      std::vector<Value> args;
+      std::vector<GenericValue> args;
       boost::fusion::for_each(s, Appender(&args));
       _signal.trigger(MetaFunctionParameters(args));
     }

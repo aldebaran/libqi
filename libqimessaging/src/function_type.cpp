@@ -3,11 +3,11 @@
 
 namespace qi
 {
-  inline Value FunctionType::call(void* func,
-    const std::vector<Value>& args)
+  inline GenericValue FunctionType::call(void* func,
+    const std::vector<GenericValue>& args)
   {
     const std::vector<Type*> target = argumentsType();
-    std::vector<Value> toDestroy;
+    std::vector<GenericValue> toDestroy;
     std::vector<void*> convertedArgs;
     for (unsigned i=0; i<target.size(); ++i)
     {
@@ -17,13 +17,13 @@ namespace qi
       else
       {
         qiLogDebug("meta") << "needs conversion";
-        Value v = args[i].convert(*target[i]);
+        GenericValue v = args[i].convert(*target[i]);
         toDestroy.push_back(v);
         convertedArgs.push_back(v.value);
       }
     }
     void* res = call(func, convertedArgs);
-    Value result;
+    GenericValue result;
     result.type = resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroy.size(); ++i)
@@ -34,13 +34,13 @@ namespace qi
   FunctionValue::FunctionValue()
   : type(type), value(value) {}
 
-  FunctionValue::FunctionValue(const Value & v)
+  FunctionValue::FunctionValue(const GenericValue & v)
   {
     type = dynamic_cast<FunctionType*>(v.type);
     value = type?v.value:0;
   }
 
-  Value FunctionValue::call(const std::vector<Value>& args)
+  GenericValue FunctionValue::call(const std::vector<GenericValue>& args)
   {
     return type->call(value, args);
   }

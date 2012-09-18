@@ -10,7 +10,7 @@
 #define _QIMESSAGING_SERVICE_INFO_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/value.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <string>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/signature.hpp>
