@@ -22,7 +22,7 @@
 static PyObject *qi_message_to_python(const char *signature, qi_message_t *msg);
 static int       qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data);
 static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg);
-static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t *msg);
+static PyObject *qi_message_to_python_tuple(qi_signature_t *sig, qi_message_t *msg);
 
 
 static void*     qi_raise(const char *exception_class, const char *error_message)
@@ -119,14 +119,17 @@ static PyObject *qi_value_to_python(const char *sig, qi_message_t *msg)
       qi_signature_destroy(subsig);
       return ret;
     }
-  case QI_TUPPLE:
-      //TODO
-      return 0;
-  case QI_MESSAGE:
-      //TODO
-      return 0;
-  default:
+  case QI_TUPLE:
+  {
+    //TODO
+    qiLogFatal("qimessaging.python.qi_value_to_python") << "Returning NULL instead of tuple value.";
     return 0;
+  }
+  default:
+  {
+    qiLogFatal("qimessaging.python.qi_value_to_python") << "Returning NULL, no matching type.";
+    return 0;
+  }
   }
   return 0;
 }
@@ -151,7 +154,7 @@ static PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
 
   qi_signature_type type = qi_signature_current_type(sig);
 
-  if (items == 1 && type != QI_TUPPLE)
+  if (items == 1 && type != QI_TUPLE)
     return (qi_value_to_python(qi_signature_current(sig), msg));
 
   qi_signature_t *subsig = qi_signature_create_subsignature(signature);
@@ -160,7 +163,7 @@ static PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   return ret;
 }
 
-static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t *msg)
+static PyObject *qi_message_to_python_tuple(qi_signature_t *sig, qi_message_t *msg)
 {
   PyObject       *ret     = 0;
   qi_signature_t *sig     = 0;
@@ -178,6 +181,7 @@ static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t 
   if (!*(qi_signature_current(sig))) {
     Py_INCREF(Py_None);
     PyTuple_SetItem(ret, 0, Py_None);
+
     return ret;
   }
   while (retcode == 0) {
@@ -292,7 +296,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
       }
       return 0;
     }
-  case QI_TUPPLE:
+  case QI_TUPLE:
     {
       qi_signature_t *subsig = qi_signature_create_subsignature(sig);
       retcode = qi_signature_next(subsig);
@@ -456,7 +460,6 @@ static qi::MetaMethod*             qi_get_method(qi_object_t *object_c, const ch
   for (std::vector<qi::MetaMethod>::iterator it = mml.begin(); it != mml.end(); ++it)
     if (nb_args == ((*it).signature().size() - sigInfo[1].size() - 4))
       candidates.push_back((*it));
-
   if (candidates.size() == 1)
     return meta.method(meta.methodId(candidates[0].signature()));
 
@@ -509,7 +512,7 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
     return;
   }
 
-  // #2 Convert parameters (qi_message_t msg) in python tupple (PyObject param)
+  // #2 Convert parameters (qi_message_t msg) in python tuple (PyObject param)
   if ((param = qi_message_to_python(sigv[2].c_str(), msg)) == Py_None || !param)
   {
     qiLogError("qimessaging.python.__python_callback") << "Generic callback : Cannot convert parameter in pyhton. [" << sigv[2] << "]";

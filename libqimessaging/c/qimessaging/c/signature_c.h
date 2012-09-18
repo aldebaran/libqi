@@ -62,10 +62,10 @@ enum qi_signature_type {
   /*! Map ending marker. */
   QI_MAP_END    = '}',
 
-  /*! Tupple begining marker. */
-  QI_TUPPLE     = '(',
+  /*! Tuple begining marker. */
+  QI_TUPLE     = '(',
   /*! Map ending marker. */
-  QI_TUPPLE_END = ')',
+  QI_TUPLE_END = ')',
 
   /*! QiMessaging message. */
   QI_MESSAGE    = 'm',

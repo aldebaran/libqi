@@ -36,7 +36,7 @@
 
   /*!
   * \fn qi_signature_create_subsignature(const char *signature)
-  * \brief Create signature from signature containing a complex type, such as a tupple, map or list.
+  * \brief Create signature from signature containing a complex type, such as a tuple, map or list.
   *
   * \param[in] signature : Signature to use.
   *

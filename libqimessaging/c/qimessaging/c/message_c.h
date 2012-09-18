@@ -54,7 +54,7 @@ extern "C"
 
   QIMESSAGING_API unsigned int       qi_message_read_list_size(qi_message_t *msg);
   QIMESSAGING_API unsigned int       qi_message_read_map_size(qi_message_t *msg);
-  QIMESSAGING_API unsigned int       qi_message_read_tupple_size(qi_message_t *msg);
+  QIMESSAGING_API unsigned int       qi_message_read_tuple_size(qi_message_t *msg);
 
   QIMESSAGING_API void               qi_message_free_raw(char *raw);
   QIMESSAGING_API void               qi_message_free_string(char *str);

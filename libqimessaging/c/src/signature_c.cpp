@@ -57,8 +57,8 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
 
   switch (*signature)
   {
-  case QI_TUPPLE:
-    endType = QI_TUPPLE_END;
+  case QI_TUPLE:
+    endType = QI_TUPLE_END;
     break;
   case QI_LIST:
     endType = QI_LIST_END;
