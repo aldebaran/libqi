@@ -93,6 +93,7 @@ public:
 TEST_F(TestObject, meta)
 {
   using namespace qi;
+  int64_t time = os::ustime();
   // Remote test
   GenericObject target = oclient;
   {
@@ -144,6 +145,8 @@ TEST_F(TestObject, meta)
   ASSERT_EQ("foo", res[1].toString());
   ASSERT_EQ(in, res[2].as<std::vector<double> >());
   }
+  qiLogVerbose("test") << "remote us: " << os::ustime() - time;
+  time = os::ustime();
   // Plugin copy test
   target = oserver;
   {
@@ -191,6 +194,57 @@ TEST_F(TestObject, meta)
   ASSERT_EQ("foo", res[1].toString());
   ASSERT_EQ(in, res[2].as<std::vector<double> >());
   }
+  qiLogVerbose("test") << "plugin async us: " << os::ustime() - time;
+  time = os::ustime();
+  // plugin direct test
+  target.moveToEventLoop(0);
+  {
+  target.call<void>("value", 12).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  {
+    int myint = 12;
+    qi::Future<void> fut = target.call<void>("value", myint);
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
+  {
+    int myint = 12;
+    qi::Future<void> fut = target.call<void>("value", GenericValue(AutoGenericValue(myint)));
+    myint = 5;
+    fut.wait();
+    ASSERT_EQ(v.toDouble(), 12);
+  }
+  target.call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  target.call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  target.call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
+  ASSERT_EQ(v.toDouble(), 12);
+  target.call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
+  ASSERT_EQ(v.toString(), "foo");
+  target.call<void>("value", "foo").wait();
+  ASSERT_EQ(v.toString(), "foo");
+  std::vector<double> in;
+  in.push_back(1); in.push_back(2);
+  target.call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
+  ASSERT_EQ(v.as<std::vector<double> >(), in);
+  target.call<void>("value", in).wait();
+  ASSERT_EQ(v.as<std::vector<double> >(), in);
+  std::vector<GenericValue> args;
+  args.push_back(AutoGenericValue(12));
+  args.push_back(AutoGenericValue("foo"));
+  args.push_back(AutoGenericValue(in));
+  target.call<void>("value", args).wait();
+  ASSERT_EQ(v.type, detail::DynamicValue::List);
+  detail::DynamicValue::DynamicValueList res = v.toList();
+  ASSERT_EQ(static_cast<size_t>(3), res.size());
+  ASSERT_EQ(12, res[0].toDouble());
+  ASSERT_EQ("foo", res[1].toString());
+  ASSERT_EQ(in, res[2].as<std::vector<double> >());
+  }
+  qiLogVerbose("test") << "plugin sync us: " << os::ustime() - time;
+  time = os::ustime();
 }
 
 
