@@ -17,7 +17,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/service_info.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/objecttypebuilder.hpp>
 #include "src/transport_server_p.hpp"
 #include "src/server_result.hpp"
 #include "src/session_p.hpp"
@@ -31,14 +31,14 @@ namespace qi
 {
 
   qi::GenericObject createSDP(ServiceDirectoryPrivate* self) {
-    qi::StaticObjectBuilder ob;
+    qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
 
     ob.advertiseMethod("service", &ServiceDirectoryPrivate::service);
     ob.advertiseMethod("services", &ServiceDirectoryPrivate::services);
     ob.advertiseMethod("registerService", &ServiceDirectoryPrivate::registerService);
     ob.advertiseMethod("unregisterService", &ServiceDirectoryPrivate::unregisterService);
     ob.advertiseMethod("serviceReady", &ServiceDirectoryPrivate::serviceReady);
-    return ob.makeObject<ServiceDirectoryPrivate>(self);
+    return ob.object(self);
   }
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()

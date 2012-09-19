@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/staticobjecttype.hpp>
+#include "staticobjecttype.hpp"
 #include <qimessaging/signal.hpp>
 
 namespace qi
@@ -22,10 +22,15 @@ StaticObjectTypeBase::metaObject(void* )
   return _metaObject;
 }
 
-Manageable* StaticObjectTypeBase::manageable(void*)
+Manageable* StaticObjectTypeBase::manageable(void* instance)
 {
-  qiLogDebug("qi.staticobject") << "GenericObject not manageable";
-  return 0;
+  if (!_data.asManageable)
+  {
+    qiLogDebug("qi.staticobject") << "GenericObject not manageable";
+    return 0;
+  }
+  else
+    return _data.asManageable(instance);
 }
 
 qi::Future<MetaFunctionResult>
@@ -98,6 +103,11 @@ bool StaticObjectTypeBase::disconnect(void* instance, unsigned int linkId)
   if (!sb)
     return false;
   return sb->disconnect(link);
+}
+
+const std::type_info& StaticObjectTypeBase::info()
+{
+  return *_data.typeInfo;
 }
 
 }

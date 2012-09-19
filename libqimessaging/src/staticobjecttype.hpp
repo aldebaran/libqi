@@ -30,16 +30,24 @@ struct ObjectTypeData
 
   typedef std::map<unsigned int, GenericMethod> MethodMap;
   MethodMap methodMap;
+
+  boost::function<Manageable* (void*)> asManageable;
+  std::type_info* typeInfo;
 };
 
 
 /** One instance of this class represents one C++ class
  *
+ * To avoid exposing this class, which means not being templated by the class
+ * type, we just store the two things we need in an erased way:
+ * - Manageable accessor
+ * - typeinfo
  */
-class StaticObjectTypeBase: public virtual ObjectType
+class StaticObjectTypeBase: public virtual ObjectType, public virtual TypeImpl<void*>
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
+  virtual const std::type_info& info();
   virtual const MetaObject& metaObject(void* instance);
   virtual qi::Future<MetaFunctionResult> metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
   virtual void metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params);
@@ -53,28 +61,6 @@ private:
   MetaObject     _metaObject;
   ObjectTypeData _data;
 };
-
-template<typename T>
-class StaticManageableObjectTypeBase: public virtual StaticObjectTypeBase
-{
-public:
-  virtual Manageable* manageable(void* instance)
-  {
-    return reinterpret_cast<T*>(instance);
-  }
-};
-
-// FIXME: un-template by reimplementing Type and bouncing, so that this can
-// go  in a private header.
-template<typename T>
-class StaticObject
-:public virtual boost::mpl::if_<
-         boost::is_base_of<Manageable, T>,
-         StaticManageableObjectTypeBase<T>,
-         StaticObjectTypeBase>::type
-, public virtual TypeImpl<T*>
-{};
-
 
 }
 #endif

@@ -16,7 +16,9 @@ namespace qi
         convertedArgs.push_back(args[i].value);
       else
       {
-        qiLogDebug("meta") << "needs conversion";
+        qiLogDebug("meta") << "needs conversion "
+        << args[i].type->infoString() << " -> "
+        << target[i]->infoString();
         GenericValue v = args[i].convert(*target[i]);
         toDestroy.push_back(v);
         convertedArgs.push_back(v.value);

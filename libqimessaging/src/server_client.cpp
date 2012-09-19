@@ -8,14 +8,14 @@
 #include "server_client.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/objecttypebuilder.hpp>
 
 
 namespace qi {
 
   static qi::MetaObject serverMetaObject() {
-    qi::StaticObjectBuilder  ob;
-    StaticObjectBuilder::SignalMemberGetter dummy;
+    qi::ObjectTypeBuilder<ServerClient>  ob;
+    ObjectTypeBuilderBase::SignalMemberGetter dummy;
 
     ob.advertiseMethod("registerEvent", &ServerClient::registerEvent);
     ob.advertiseMethod("unregisterEvent", &ServerClient::unregisterEvent);

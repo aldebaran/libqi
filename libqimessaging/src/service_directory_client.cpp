@@ -6,7 +6,7 @@
 */
 
 #include "service_directory_client.hpp"
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/objecttypebuilder.hpp>
 #include "src/service_directory_p.hpp"
 #include "src/tcptransportsocket.hpp"
 
@@ -15,8 +15,8 @@ namespace qi {
   static qi::MetaObject serviceDirectoryMetaObject() {
 
     // We just want the MetaType, so we can use any builder
-    qi::StaticObjectBuilder ob;
-    StaticObjectBuilder::SignalMemberGetter dummy;
+    qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
+    ObjectTypeBuilderBase::SignalMemberGetter dummy;
     //Do not look at the following 5 lines... and yes I know what I'am doing here.
     ob.advertiseMethod("service",           &ServiceDirectoryPrivate::service);
     ob.advertiseMethod("services",          &ServiceDirectoryPrivate::services);
