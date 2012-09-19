@@ -105,7 +105,7 @@ namespace qi
     {
       GenericValueCopy res;
       boost::fusion::for_each(sequence, Transformer(&args));
-      res, boost::fusion::invoke_function_object(function,
+      res(), boost::fusion::invoke_function_object(function,
         boost::fusion::transform(sequence,
           PtrToConstRef()));
     return res.value;
