@@ -49,9 +49,9 @@ namespace qi
     {
       std::vector<GenericValue> args;
       boost::fusion::for_each(s, Appender(&args));
-      _signal.trigger(MetaFunctionParameters(args));
+      _signal.trigger(MetaFunctionParameters(args, true));
     }
-    Signal<T>& _signal;
+    mutable Signal<T> _signal;
   };
   } // detail
 
