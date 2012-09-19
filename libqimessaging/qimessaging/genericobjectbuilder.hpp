@@ -40,4 +40,4 @@ class QIMESSAGING_API GenericObjectBuilder
 
 #include <qimessaging/details/genericobjectbuilder.hxx>
 
-#endif
+#endif  // _QIMESSAGING_GENERICOBJECTBUILDER_HPP_

@@ -52,4 +52,4 @@ namespace qi
   QIMESSAGING_API GenericObject makeDynamicObject(DynamicObject* obj);
 
 }
-#endif
+#endif  // _QIMESSAGING_DYNAMICOBJECT_HPP_

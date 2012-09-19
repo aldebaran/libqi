@@ -3,8 +3,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_EXECUTIONCONTEXT_HPP_
-#define _QIMESSAGING_EXECUTIONCONTEXT_HPP_
+#ifndef _QIMESSAGING_EVENTLOOP_HPP_
+#define _QIMESSAGING_EVENTLOOP_HPP_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -58,4 +58,4 @@ namespace qi
   QIMESSAGING_API EventLoop* getDefaultObjectEventLoop();
 }
 
-#endif
+#endif  // _QIMESSAGING_EVENTLOOP_HPP_

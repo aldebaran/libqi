@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_TRANSPORT_SOCKET_HPP_
-#define _QIMESSAGING_TRANSPORT_SOCKET_HPP_
+#ifndef _QIMESSAGING_TRANSPORTSOCKET_HPP_
+#define _QIMESSAGING_TRANSPORTSOCKET_HPP_
 
 # include <qimessaging/future.hpp>
 # include <qimessaging/api.hpp>
@@ -57,4 +57,4 @@ namespace qi
   QIMESSAGING_API TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_SOCKET_HPP_
+#endif  // _QIMESSAGING_TRANSPORTSOCKET_HPP_

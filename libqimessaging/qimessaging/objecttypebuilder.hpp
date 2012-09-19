@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef  _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
-# define _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
+#ifndef _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
+#define _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
 
 #include <qimessaging/api.hpp>
 #include <string>
@@ -76,4 +76,4 @@ namespace qi {
 
 #include <qimessaging/details/objecttypebuilder.hxx>
 
-#endif /* !METAOBJECTBUILDER_PP_ */
+#endif  // _QIMESSAGING_OBJECTTYPEBUILDER_HPP_

@@ -303,4 +303,4 @@ QI_TYPE_SERIALIZABLE(Buffer);
 
 #include <qimessaging/details/type.hxx>
 
-#endif
+#endif  // _QIMESSAGING_TYPE_HPP_

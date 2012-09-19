@@ -2,8 +2,8 @@
 *  Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef _QIMESSAGING_SIGNAL_HXX_
-#define _QIMESSAGING_SIGNAL_HXX_
+#ifndef _QIMESSAGING_DETAILS_SIGNAL_HXX_
+#define _QIMESSAGING_DETAILS_SIGNAL_HXX_
 
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
@@ -63,4 +63,4 @@ namespace qi
     * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);
   }
 } // qi
-#endif
+#endif  // _QIMESSAGING_DETAILS_SIGNAL_HXX_

@@ -39,4 +39,4 @@ namespace qi
 
 #include <qimessaging/details/methodtype.hxx>
 
-#endif
+#endif  // _QIMESSAGING_METHODTYPE_HPP_

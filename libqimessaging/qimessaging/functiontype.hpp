@@ -40,4 +40,4 @@ namespace qi {
 
 #include <qimessaging/details/functiontype.hxx>
 
-#endif
+#endif  // _QIMESSAGING_FUNCTIONTYPE_HPP_

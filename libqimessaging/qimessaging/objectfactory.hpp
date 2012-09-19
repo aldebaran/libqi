@@ -2,8 +2,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef _QIMESSAGING_OBJECT_FACTORY_HPP_
-#define _QIMESSAGING_OBJECT_FACTORY_HPP_
+#ifndef _QIMESSAGING_OBJECTFACTORY_HPP_
+#define _QIMESSAGING_OBJECTFACTORY_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/genericobject.hpp>
@@ -24,4 +24,4 @@ namespace qi {
 #define QI_REGISTER_OBJECT_FACTORY(name, func) \
   static bool _register_factory_ ## __LINE__ = ::qi::registerObjectFactory(name, func)
 
-#endif
+#endif  // _QIMESSAGING_OBJECTFACTORY_HPP_

@@ -1,5 +1,5 @@
-#ifndef _QIMESSAGING_FUNCTIONTYPE_HXX_
-#define _QIMESSAGING_FUNCTIONTYPE_HXX_
+#ifndef _QIMESSAGING_DETAILS_FUNCTIONTYPE_HXX_
+#define _QIMESSAGING_DETAILS_FUNCTIONTYPE_HXX_
 
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/for_each.hpp>
@@ -225,4 +225,4 @@ template<typename C, typename F> GenericFunction makeGenericFunction(C* inst, F 
 }
 
 } // namespace qi
-#endif
+#endif  // _QIMESSAGING_DETAILS_FUNCTIONTYPE_HXX_

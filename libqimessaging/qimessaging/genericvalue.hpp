@@ -4,8 +4,8 @@
 
 #pragma once
 
-#ifndef _QI_MESSAGING_VALUE_HH_
-#define _QI_MESSAGING_VALUE_HH_
+#ifndef _QIMESSAGING_GENERICVALUE_HPP_
+#define _QIMESSAGING_GENERICVALUE_HPP_
 
 #include <qimessaging/type.hpp>
 namespace qi {
@@ -68,4 +68,4 @@ public:
 
 #include <qimessaging/details/genericvalue.hxx>
 
-#endif
+#endif  // _QIMESSAGING_GENERICVALUE_HPP_

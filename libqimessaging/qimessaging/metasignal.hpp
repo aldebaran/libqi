@@ -33,4 +33,4 @@ namespace qi {
 
 }; // namespace qi
 
-#endif
+#endif  // _QIMESSAGING_METASIGNAL_HPP_

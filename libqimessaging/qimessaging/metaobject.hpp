@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#ifndef    METAOBJECT_HPP_
-# define   METAOBJECT_HPP_
+#ifndef _QIMESSAGING_METAOBJECT_HPP_
+#define _QIMESSAGING_METAOBJECT_HPP_
 
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/metamethod.hpp>
@@ -51,4 +51,4 @@ namespace qi {
 
 };
 
-#endif /* !METAOBJECT_PP_ */
+#endif  // _QIMESSAGING_METAOBJECT_HPP_

@@ -1,5 +1,5 @@
-#ifndef _QIMESSAGING_METHODTYPE_HXX_
-#define _QIMESSAGING_METHODTYPE_HXX_
+#ifndef _QIMESSAGING_DETAILS_METHODTYPE_HXX_
+#define _QIMESSAGING_DETAILS_METHODTYPE_HXX_
 
 namespace qi
 {
@@ -90,4 +90,4 @@ namespace qi
 
 } // namespace qi
 
-#endif
+#endif  // _QIMESSAGING_DETAILS_METHODTYPE_HXX_

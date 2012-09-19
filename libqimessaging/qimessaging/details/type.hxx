@@ -4,8 +4,8 @@
 
 #pragma once
 
-#ifndef _QI_MESSAGING_TYPE_HXX_
-#define _QI_MESSAGING_TYPE_HXX_
+#ifndef _QIMESSAGING_DETAILS_TYPE_HXX_
+#define _QIMESSAGING_DETAILS_TYPE_HXX_
 
 #include <qi/types.hpp>
 #include <cstring>
@@ -265,4 +265,4 @@ namespace qi  {
   }
 
 }
-#endif
+#endif  // _QIMESSAGING_DETAILS_TYPE_HXX_

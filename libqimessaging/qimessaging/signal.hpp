@@ -79,4 +79,4 @@ namespace qi {
 
 QI_NO_TYPE(qi::SignalBase)
 
-#endif
+#endif  // _QIMESSAGING_SIGNAL_HPP_

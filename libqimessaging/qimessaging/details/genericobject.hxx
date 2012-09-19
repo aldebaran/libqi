@@ -9,8 +9,8 @@
 */
 
 #pragma once
-#ifndef _QI_MESSAGING_OBJECT_HXX_
-#define _QI_MESSAGING_OBJECT_HXX_
+#ifndef _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
+#define _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
 
 #include <qimessaging/buffer.hpp>
 
@@ -132,4 +132,4 @@ namespace qi {
     return res.future();
   }
 }
-#endif  // _QI_MESSAGING_OBJECT_HXX_
+#endif  // _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_

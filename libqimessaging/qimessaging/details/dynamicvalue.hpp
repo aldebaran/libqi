@@ -8,8 +8,8 @@
 
 
 #pragma once
-#ifndef _QIMESSAGING_DYNAMICVALUE_HPP_
-#define _QIMESSAGING_DYNAMICVALUE_HPP_
+#ifndef _QIMESSAGING_DETAILS_DYNAMICVALUE_HPP_
+#define _QIMESSAGING_DETAILS_DYNAMICVALUE_HPP_
 
 #include <qi/types.hpp>
 
@@ -85,4 +85,4 @@ namespace qi {
 
 #include <qimessaging/details/dynamicvalue.hxx>
 
-#endif  // _QIMESSAGING_VALUE_HPP_
+#endif  // _QIMESSAGING_DETAILS_DYNAMICVALUE_HPP_

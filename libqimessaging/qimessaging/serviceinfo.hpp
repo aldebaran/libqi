@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_SERVICE_INFO_HPP_
-#define _QIMESSAGING_SERVICE_INFO_HPP_
+#ifndef _QIMESSAGING_SERVICEINFO_HPP_
+#define _QIMESSAGING_SERVICEINFO_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/genericvalue.hpp>
@@ -54,4 +54,4 @@ namespace qi
 
 QI_TYPE_SERIALIZABLE(ServiceInfo);
 
-#endif  // _QIMESSAGING_SERVICE_INFO_HPP_
+#endif  // _QIMESSAGING_SERVICEINFO_HPP_

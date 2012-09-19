@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_SERVICE_DIRECTORY_HPP_
-#define _QIMESSAGING_SERVICE_DIRECTORY_HPP_
+#ifndef _QIMESSAGING_SERVICEDIRECTORY_HPP_
+#define _QIMESSAGING_SERVICEDIRECTORY_HPP_
 
 #include <qimessaging/url.hpp>
 
@@ -30,4 +30,4 @@ namespace qi
   }; // !ServiceDirectory
 }; // !qi
 
-#endif  // _QIMESSAGING_SERVICE_DIRECTORY_HPP_
+#endif  // _QIMESSAGING_SERVICEDIRECTORY_HPP_

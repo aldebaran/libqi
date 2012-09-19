@@ -11,8 +11,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_TRANSPORT_SERVER_HPP_
-#define _QIMESSAGING_TRANSPORT_SERVER_HPP_
+#ifndef _QIMESSAGING_TRANSPORTSERVER_HPP_
+#define _QIMESSAGING_TRANSPORTSERVER_HPP_
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
@@ -58,4 +58,4 @@ namespace qi {
 
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_SERVER_HPP_
+#endif  // _QIMESSAGING_TRANSPORTSERVER_HPP_

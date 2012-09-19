@@ -5,8 +5,8 @@
 
 #pragma once
 
-#ifndef _QI_MESSAGING_METAFUNCTION_HH_
-#define _QI_MESSAGING_METAFUNCTION_HH_
+#ifndef _QIMESSAGING_METAFUNCTION_HPP_
+#define _QIMESSAGING_METAFUNCTION_HPP_
 
 #include <qimessaging/future.hpp>
 
@@ -123,4 +123,4 @@ QIMESSAGING_API MetaCallable makeCallable(GenericFunction function);
 #include "qimessaging/details/metafunction.hxx"
 
 
-#endif
+#endif  // _QIMESSAGING_METAFUNCTION_HPP_

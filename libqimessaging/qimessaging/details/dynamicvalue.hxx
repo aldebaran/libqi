@@ -8,8 +8,8 @@
 
 
 #pragma once
-#ifndef _QIMESSAGING_DYNAMICVALUE_HXX_
-#define _QIMESSAGING_DYNAMICVALUE_HXX_
+#ifndef _QIMESSAGING_DETAILS_DYNAMICVALUE_HXX_
+#define _QIMESSAGING_DETAILS_DYNAMICVALUE_HXX_
 
 #include <cstring>
 #include <boost/type_traits/is_integral.hpp>
@@ -280,4 +280,4 @@ namespace qi {
   }
 }
 
-#endif  // _QIMESSAGING_VALUE_HXX_
+#endif  // _QIMESSAGING_DETAILS_DYNAMICVALUE_HXX_

@@ -35,4 +35,4 @@ namespace qi {
   };
 }
 
-#endif
+#endif  // _QIMESSAGING_BUFFERREADER_HPP_

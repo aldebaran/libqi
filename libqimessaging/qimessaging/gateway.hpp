@@ -8,7 +8,7 @@
 
 #pragma once
 #ifndef _QIMESSAGING_GATEWAY_HPP_
-# define _QIMESSAGING_GATEWAY_HPP_
+#define _QIMESSAGING_GATEWAY_HPP_
 
 # include <qimessaging/url.hpp>
 # include <qimessaging/transportserver.hpp>

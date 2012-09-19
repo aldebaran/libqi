@@ -36,4 +36,4 @@ namespace qi {
 }; // namespace qi
 
 
-#endif // __METAMETHOD_HPP__
+#endif  // _QIMESSAGING_METAMETHOD_HPP_

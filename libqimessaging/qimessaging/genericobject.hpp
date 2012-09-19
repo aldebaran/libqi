@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _QIMESSAGING_OBJECT_HPP_
-#define _QIMESSAGING_OBJECT_HPP_
+#ifndef _QIMESSAGING_GENERICOBJECT_HPP_
+#define _QIMESSAGING_GENERICOBJECT_HPP_
 
 #include <map>
 #include <string>
@@ -252,4 +252,4 @@ QI_TYPE_SERIALIZABLE(MetaObject);
   QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname)
 
 #include <qimessaging/details/genericobject.hxx>
-#endif  // _QIMESSAGING_OBJECT_HPP_
+#endif  // _QIMESSAGING_GENERICOBJECT_HPP_

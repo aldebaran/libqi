@@ -4,7 +4,7 @@
 
 #pragma once
 
-#ifndef _QI_MESSAGING_VALLUE_HXX_
+#ifndef _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
 #define _QI_MESSAGING_VALUE_HXX_
 
 namespace qi {
@@ -161,4 +161,4 @@ namespace detail
 
 }
 
-#endif
+#endif  // _QIMESSAGING_DETAILS_GENERICVALUE_HXX_

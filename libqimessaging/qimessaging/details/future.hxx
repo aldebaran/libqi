@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Cedric GESTES
 */
 
-#ifndef _QIMESSAGING_DETAILS_FUTURE_HPP_
-#define _QIMESSAGING_DETAILS_FUTURE_HPP_
+#ifndef _QIMESSAGING_DETAILS_FUTURE_HXX_
+#define _QIMESSAGING_DETAILS_FUTURE_HXX_
 
 #include <vector>
 #include <utility> // pair
@@ -110,4 +110,4 @@ namespace qi {
 
 }
 
-#endif
+#endif  // _QIMESSAGING_DETAILS_FUTURE_HXX_
