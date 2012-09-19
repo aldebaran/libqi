@@ -31,7 +31,7 @@ TEST(TestSignal, TestCompilation)
   qi::Promise<void>      prom;
 
   //do not count
-  s.connect(f, &Foo::func);
+  s.connect(qi::makeGenericFunction(f, &Foo::func));
   s.connect(boost::bind<void>(&Foo::func, f, _1));
 
   s.connect(boost::bind(&foo, &res, 12, _1));
@@ -54,6 +54,51 @@ TEST(TestSignal, TestCompilation)
   ASSERT_FALSE(prom.future().hasError());
 }
 
+void write42(boost::shared_ptr<int> ptr)
+{
+  *ptr = 42;
+}
+
+TEST(TestSignal, SharedPtr)
+{
+  // Redundant with Copy test, but just to be sure, check that shared_ptr
+  // is correctly transmited.
+  qi::Signal<void (boost::shared_ptr<int>)> sig;
+  sig.connect(qi::makeGenericFunction(&write42), qi::getDefaultObjectEventLoop());
+  {
+    boost::shared_ptr<int> ptr(new int(12));
+    sig(ptr);
+  };
+}
+
+void byRef(int& i, bool* done)
+{
+  qiLogDebug("test") <<"byRef " << &i;
+  i = 12;
+  *done = true;
+}
+
+TEST(TestSignal, Copy)
+{
+  // Check that reference argument type are copied when an async call is made
+  qi::Signal<void (int&, bool*)> sig;
+  qiLogDebug("test") << "sync";
+  sig.connect(qi::makeGenericFunction(byRef), 0);
+  bool done = false;
+  int i = 0;
+  sig(i, &done);
+  ASSERT_TRUE(done); //synchronous
+  ASSERT_EQ(12, i); // byref
+  qiLogDebug("test") << "async";
+  sig =  qi::Signal<void (int&, bool*)>();
+  sig.connect(qi::makeGenericFunction(byRef), qi::getDefaultObjectEventLoop());
+  i = 0;
+  done = false;
+  sig(i, &done);
+  for (unsigned c=0; !done && c<100;++c) qi::os::msleep(10);
+  ASSERT_TRUE(done);
+  ASSERT_EQ(0, i); // async: was copied
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
