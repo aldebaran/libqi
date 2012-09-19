@@ -21,11 +21,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "src/tcptransportsocket.hpp"
-#include "src/transport_socket_p.hpp"
+#include "src/transportsocket_p.hpp"
 #include "src/tcptransportsocket_p.hpp"
 #include "src/message_p.hpp"
 #include "src/buffer_p.hpp"
-#include "src/event_loop_p.hpp"
+#include "src/eventloop_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/types.hpp>
@@ -33,7 +33,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 
 #define MAX_LINE 16384
 

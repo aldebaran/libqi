@@ -1,7 +1,7 @@
 #ifndef _QIMESSAGING_METHODTYPE_HPP_
 #define _QIMESSAGING_METHODTYPE_HPP_
 
-#include <qimessaging/function_type.hpp>
+#include <qimessaging/functiontype.hpp>
 
 namespace qi
 {
@@ -37,6 +37,6 @@ namespace qi
   GenericMethod makeGenericMethod(const M& method);
 }
 
-#include <qimessaging/details/method_type.hxx>
+#include <qimessaging/details/methodtype.hxx>
 
 #endif

@@ -9,7 +9,7 @@
 #include <qimessaging/c/qi_c.h>
 #include <qi/os.hpp>
 #include <gtest/gtest.h>
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 #include <string>
 #include <iostream>
 

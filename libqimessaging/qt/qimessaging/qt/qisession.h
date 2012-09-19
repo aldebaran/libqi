@@ -10,7 +10,7 @@
 # define   	QT_QITRANSPORTSESSION_H_
 
 #include <qimessaging/qt/api.h>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/url.hpp>
 #include <QtCore/qobject.h>
 #include <QtCore/qfuture.h>

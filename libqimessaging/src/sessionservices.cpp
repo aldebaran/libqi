@@ -5,9 +5,9 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "session_services.hpp"
-#include "service_directory_client.hpp"
-#include "session_server.hpp"
+#include "sessionservices.hpp"
+#include "servicedirectoryclient.hpp"
+#include "sessionserver.hpp"
 
 namespace qi {
 

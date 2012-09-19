@@ -83,6 +83,6 @@ namespace qi {
   }
 }
 
-#include <qimessaging/details/dynamic_value.hxx>
+#include <qimessaging/details/dynamicvalue.hxx>
 
 #endif  // _QIMESSAGING_VALUE_HPP_

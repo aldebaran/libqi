@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/datastream.hpp>
 
 namespace qi

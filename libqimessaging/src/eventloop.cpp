@@ -11,9 +11,9 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 
-#include "src/event_loop_p.hpp"
+#include "src/eventloop_p.hpp"
 
 namespace qi {
 

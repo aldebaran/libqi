@@ -9,7 +9,7 @@
 #include "src/object_p.hpp"
 #include "src/metasignal_p.hpp"
 #include <qimessaging/message.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 

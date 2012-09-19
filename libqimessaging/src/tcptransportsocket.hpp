@@ -9,8 +9,8 @@
 #ifndef _QIMESSAGING_TCP_TRANSPORT_SOCKET_HPP_
 #define _QIMESSAGING_TCP_TRANSPORT_SOCKET_HPP_
 
-# include <qimessaging/transport_socket.hpp>
-# include <qimessaging/event_loop.hpp>
+# include <qimessaging/transportsocket.hpp>
+# include <qimessaging/eventloop.hpp>
 
 namespace qi
 {

@@ -5,7 +5,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "server_client.hpp"
+#include "serverclient.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/objecttypebuilder.hpp>

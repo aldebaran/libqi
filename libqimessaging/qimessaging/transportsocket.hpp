@@ -13,7 +13,7 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
-# include <qimessaging/event_loop.hpp>
+# include <qimessaging/eventloop.hpp>
 # include <qimessaging/signal.hpp>
 # include "src/messagedispatcher.hpp"
 # include <string>

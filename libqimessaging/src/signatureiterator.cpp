@@ -11,7 +11,7 @@
 #include <sstream>
 #include <qimessaging/signature.hpp>
 #include <qi/log.hpp>
-#include "src/signature_convertor.hpp"
+#include "src/signatureconvertor.hpp"
 
 namespace qi {
 

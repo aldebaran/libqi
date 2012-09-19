@@ -13,7 +13,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/metafunction.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportsocket.hpp>
 
 namespace qi {
 

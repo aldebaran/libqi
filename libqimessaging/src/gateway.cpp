@@ -9,7 +9,7 @@
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transportserver.hpp>
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 

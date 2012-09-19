@@ -9,7 +9,7 @@
 # define SERVICE_DIRECTORY_CLIENT_HPP_
 
 #include <vector>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
 #include "remoteobject_p.hpp"
 

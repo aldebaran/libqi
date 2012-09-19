@@ -6,7 +6,7 @@
 *  Copyright (C) 2010-2012 Aldebaran Robotics
 */
 
-#include <qimessaging/details/dynamic_value.hpp>
+#include <qimessaging/details/dynamicvalue.hpp>
 #include <cassert>
 
 namespace qi {

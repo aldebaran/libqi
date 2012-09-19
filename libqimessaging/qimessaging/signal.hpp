@@ -8,7 +8,7 @@
 #define _QIMESSAGING_SIGNAL_HPP_
 
 #include <qimessaging/metafunction.hpp>
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 #include <qimessaging/signature.hpp>
 
 namespace qi {

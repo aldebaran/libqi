@@ -4,7 +4,7 @@
 #include <typeinfo>
 #include <boost/preprocessor.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/dynamic_value.hpp>
+#include <qimessaging/details/dynamicvalue.hpp>
 
 namespace qi{
 

@@ -12,7 +12,7 @@
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 
 qi::GenericObject          oclient1, oclient2;
 static qi::Promise<bool> payload;

@@ -6,7 +6,7 @@
 #include <qi/application.hpp>
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/object_factory.hpp>
+#include <qimessaging/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 
 int testMethod(const int& v)

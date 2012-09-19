@@ -11,8 +11,8 @@
 
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/service_directory.hpp>
-#include <qimessaging/object_factory.hpp>
+#include <qimessaging/servicedirectory.hpp>
+#include <qimessaging/objectfactory.hpp>
 
 qi::Session* session;
 TEST(Module, Load)

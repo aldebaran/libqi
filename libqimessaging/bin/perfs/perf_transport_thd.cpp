@@ -15,11 +15,11 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include <qimessaging/session.hpp>
 #include "dataperftimer.hpp"
 
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>

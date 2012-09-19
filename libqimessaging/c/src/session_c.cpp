@@ -10,7 +10,7 @@
 #include <qimessaging/c/qi_c.h>
 #include <qimessaging/c/session_c.h>
 #include <qimessaging/session.hpp>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 
 qi_session_t *qi_session_create()
 {

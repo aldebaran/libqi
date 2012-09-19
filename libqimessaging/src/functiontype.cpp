@@ -1,5 +1,5 @@
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/function_type.hpp>
+#include <qimessaging/functiontype.hpp>
 
 namespace qi
 {

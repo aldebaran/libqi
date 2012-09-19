@@ -5,9 +5,9 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "service_directory_client.hpp"
+#include "servicedirectoryclient.hpp"
 #include <qimessaging/objecttypebuilder.hpp>
-#include "src/service_directory_p.hpp"
+#include "src/servicedirectory_p.hpp"
 #include "src/tcptransportsocket.hpp"
 
 namespace qi {

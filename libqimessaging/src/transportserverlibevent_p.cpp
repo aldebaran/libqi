@@ -31,15 +31,15 @@
 #include <arpa/inet.h>
 #endif
 
-#include <qimessaging/transport_server.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportserver.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include "src/tcptransportsocket.hpp"
 
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 
-#include "src/event_loop_p.hpp"
-#include "src/transport_server_p.hpp"
-#include "src/transport_server_libevent_p.hpp"
+#include "src/eventloop_p.hpp"
+#include "src/transportserver_p.hpp"
+#include "src/transportserverlibevent_p.hpp"
 
 namespace qi
 {

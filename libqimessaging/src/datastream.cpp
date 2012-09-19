@@ -10,7 +10,7 @@
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/dynamic_value.hpp>
+#include <qimessaging/details/dynamicvalue.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <vector>

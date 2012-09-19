@@ -38,6 +38,6 @@ namespace qi {
 
 }
 
-#include <qimessaging/details/function_type.hxx>
+#include <qimessaging/details/functiontype.hxx>
 
 #endif

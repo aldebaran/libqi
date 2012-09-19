@@ -12,7 +12,7 @@
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 
 #include <boost/program_options.hpp>
 

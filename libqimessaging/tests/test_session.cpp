@@ -14,7 +14,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>

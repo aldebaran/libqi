@@ -16,7 +16,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transportserver.hpp>
 #include <qi/atomic.hpp>
 
 namespace qi {

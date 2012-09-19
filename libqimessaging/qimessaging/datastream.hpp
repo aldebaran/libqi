@@ -18,7 +18,7 @@
 #include <vector>
 #include <map>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/dynamic_value.hpp>
+#include <qimessaging/details/dynamicvalue.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qimessaging/signature.hpp>

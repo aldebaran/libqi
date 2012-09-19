@@ -13,7 +13,7 @@
 #include <qi/atomic.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/future.hpp>
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 
 class TestFuture : public ::testing::Test
 {

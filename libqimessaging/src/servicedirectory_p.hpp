@@ -8,8 +8,8 @@
 #ifndef  SERVICE_DIRECTORY_P_HPP_
 # define SERVICE_DIRECTORY_P_HPP_
 
-#include <qimessaging/transport_server.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportserver.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include <qimessaging/genericobject.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>

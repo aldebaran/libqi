@@ -11,7 +11,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qmap.h>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportsocket.hpp>
 
 struct ServiceRequest {
   QFutureInterface<QObject *> fu;

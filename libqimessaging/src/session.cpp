@@ -9,10 +9,10 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/service_info.hpp>
-#include <qimessaging/object_factory.hpp>
+#include <qimessaging/serviceinfo.hpp>
+#include <qimessaging/objectfactory.hpp>
 #include "src/remoteobject_p.hpp"
 #include "src/session_p.hpp"
 #include "src/object_p.hpp"

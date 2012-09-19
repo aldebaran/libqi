@@ -13,7 +13,7 @@
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericvalue.hpp>
-#include <qimessaging/method_type.hpp>
+#include <qimessaging/methodtype.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 

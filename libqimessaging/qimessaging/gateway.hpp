@@ -11,8 +11,8 @@
 # define _QIMESSAGING_GATEWAY_HPP_
 
 # include <qimessaging/url.hpp>
-# include <qimessaging/transport_server.hpp>
-# include <qimessaging/transport_socket.hpp>
+# include <qimessaging/transportserver.hpp>
+# include <qimessaging/transportsocket.hpp>
 
 namespace qi
 {

@@ -8,14 +8,14 @@
 
 #include <set>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/transport_server.hpp>
-#include <qimessaging/service_info.hpp>
-#include "session_server.hpp"
-#include "src/server_result.hpp"
-#include "src/transport_server_p.hpp"
+#include <qimessaging/transportserver.hpp>
+#include <qimessaging/serviceinfo.hpp>
+#include "sessionserver.hpp"
+#include "src/serverresult.hpp"
+#include "src/transportserver_p.hpp"
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
-#include "service_directory_client.hpp"
+#include "servicedirectoryclient.hpp"
 #include "src/signal_p.hpp"
 
 namespace qi {

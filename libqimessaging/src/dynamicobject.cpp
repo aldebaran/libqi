@@ -11,7 +11,7 @@
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/function_type.hpp>
+#include <qimessaging/functiontype.hpp>
 #include <qimessaging/metaobject.hpp>
 #include <qimessaging/signal.hpp>
 #include <qimessaging/dynamicobject.hpp>

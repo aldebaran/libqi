@@ -10,8 +10,8 @@
 #define _QIMESSAGING_SESSION_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/transport_socket.hpp>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/transportsocket.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/future.hpp>
 #include <qimessaging/genericobject.hpp>
 

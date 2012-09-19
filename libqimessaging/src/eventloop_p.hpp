@@ -3,7 +3,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 
 namespace qi {
   class AsyncCallHandlePrivate

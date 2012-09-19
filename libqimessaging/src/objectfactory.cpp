@@ -5,7 +5,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/object_factory.hpp>
+#include <qimessaging/objectfactory.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <qi/application.hpp>
 

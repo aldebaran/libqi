@@ -13,16 +13,16 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qimessaging/transport_server.hpp>
-#include <qimessaging/transport_socket.hpp>
+#include <qimessaging/transportserver.hpp>
+#include <qimessaging/transportsocket.hpp>
 
 #include <qimessaging/session.hpp>
 #include "dataperftimer.hpp"
 
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 
-#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transportserver.hpp>
 #include <qimessaging/url.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>
 #include "../src/session_p.hpp"

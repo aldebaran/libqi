@@ -5,10 +5,10 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "session_service.hpp"
-#include "service_directory_client.hpp"
-#include "session_server.hpp"
-#include "server_client.hpp"
+#include "sessionservice.hpp"
+#include "servicedirectoryclient.hpp"
+#include "sessionserver.hpp"
+#include "serverclient.hpp"
 #include "signal_p.hpp"
 #include "src/remoteobject_p.hpp"
 

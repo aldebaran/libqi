@@ -19,7 +19,7 @@
 #include <qimessaging/metasignal.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <qimessaging/metaobject.hpp>
-#include <qimessaging/event_loop.hpp>
+#include <qimessaging/eventloop.hpp>
 #include <qimessaging/signal.hpp>
 
 

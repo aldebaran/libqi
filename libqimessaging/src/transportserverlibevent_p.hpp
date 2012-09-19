@@ -11,7 +11,7 @@
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
-# include "src/transport_server_p.hpp"
+# include "src/transportserver_p.hpp"
 
 # include <event2/event.h>
 # include <event2/bufferevent.h>

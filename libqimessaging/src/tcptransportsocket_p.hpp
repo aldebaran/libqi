@@ -15,10 +15,10 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
-# include <qimessaging/transport_socket.hpp>
-# include <qimessaging/event_loop.hpp>
+# include <qimessaging/transportsocket.hpp>
+# include <qimessaging/eventloop.hpp>
 
-# include "src/transport_socket_p.hpp"
+# include "src/transportsocket_p.hpp"
 # include <event2/util.h>
 
 

@@ -11,20 +11,20 @@
 #include <set>
 
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/transport_server.hpp>
-#include <qimessaging/transport_socket.hpp>
-#include <qimessaging/service_directory.hpp>
+#include <qimessaging/transportserver.hpp>
+#include <qimessaging/transportsocket.hpp>
+#include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/objecttypebuilder.hpp>
-#include "src/transport_server_p.hpp"
-#include "src/server_result.hpp"
+#include "src/transportserver_p.hpp"
+#include "src/serverresult.hpp"
 #include "src/session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
-#include "src/service_directory_p.hpp"
+#include "src/servicedirectory_p.hpp"
 #include "src/signal_p.hpp"
 
 namespace qi

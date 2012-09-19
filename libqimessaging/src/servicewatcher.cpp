@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "service_watcher.hpp"
-#include <qimessaging/service_info.hpp>
+#include "servicewatcher.hpp"
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
 
 namespace qi {

@@ -8,7 +8,7 @@
 #include <qi/log.hpp>
 #include "src/qigateway_p.h"
 #include <qimessaging/message.hpp>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 
 
 QiGatewayPrivate::QiGatewayPrivate(QObject *parent, Type type)

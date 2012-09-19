@@ -13,17 +13,17 @@
 #include <set>
 #include <vector>
 #include <boost/thread.hpp>
-#include <qimessaging/transport_socket.hpp>
-#include <qimessaging/transport_server.hpp>
+#include <qimessaging/transportsocket.hpp>
+#include <qimessaging/transportserver.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/service_info.hpp>
+#include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
-#include "src/server_result.hpp"
-#include "src/service_watcher.hpp"
-#include "src/service_directory_client.hpp"
-#include "src/session_server.hpp"
-#include "src/session_service.hpp"
-#include "src/session_services.hpp"
+#include "src/serverresult.hpp"
+#include "src/servicewatcher.hpp"
+#include "src/servicedirectoryclient.hpp"
+#include "src/sessionserver.hpp"
+#include "src/sessionservice.hpp"
+#include "src/sessionservices.hpp"
 
 namespace qi {
 
