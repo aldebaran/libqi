@@ -1,3 +1,9 @@
+#pragma once
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
 #ifndef _QIMESSAGING_TYPE_HPP_
 #define _QIMESSAGING_TYPE_HPP_
 

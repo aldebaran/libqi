@@ -1,7 +1,9 @@
+#pragma once
 /*
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
+
 #ifndef _QIMESSAGING_DETAILS_OBJECTTYPEBUILDER_HXX_
 #define _QIMESSAGING_DETAILS_OBJECTTYPEBUILDER_HXX_
 

@@ -1,10 +1,9 @@
+#pragma once
 /*
- *
- *  Copyright (C) 2012 Aldebaran Robotics
- */
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 
-
-// Leave this above the header gard, it fixes include ordering problems
 #include <qimessaging/genericvalue.hpp>
 
 #ifndef _QIMESSAGING_BUFFERREADER_HPP_

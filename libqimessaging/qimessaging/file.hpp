@@ -1,12 +1,9 @@
+#pragma once
 /*
-*  Author(s):
-*  - Herve Cuche <hcuche@aldebaran-robotics.com>
-*
-*  Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
 #ifndef _QIMESSAGING_FILE_HPP_
 #define _QIMESSAGING_FILE_HPP_
 

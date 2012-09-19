@@ -1,8 +1,8 @@
-/*
-** Copyright (C) 2012 Aldebaran Robotics
-*/
-
 #pragma once
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 
 #ifndef _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
 #define _QI_MESSAGING_VALUE_HXX_

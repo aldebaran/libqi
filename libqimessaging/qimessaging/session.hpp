@@ -1,11 +1,9 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#pragma once
 #ifndef _QIMESSAGING_SESSION_HPP_
 #define _QIMESSAGING_SESSION_HPP_
 

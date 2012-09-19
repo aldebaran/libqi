@@ -1,12 +1,9 @@
+#pragma once
 /*
-*  Author(s):
-*  - Laurent Lec <llec@aldebaran-robotics.com>
-*
-*  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
 #ifndef _QIMESSAGING_URL_HPP_
 #define _QIMESSAGING_URL_HPP_
 

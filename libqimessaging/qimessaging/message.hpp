@@ -1,14 +1,9 @@
+#pragma once
 /*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Laurent Lec   <llec@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
 #ifndef _QIMESSAGING_MESSAGE_HPP_
 #define _QIMESSAGING_MESSAGE_HPP_
 

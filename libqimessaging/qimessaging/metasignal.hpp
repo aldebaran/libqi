@@ -1,6 +1,7 @@
+#pragma once
 /*
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
 #ifndef _QIMESSAGING_METASIGNAL_HPP_

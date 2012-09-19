@@ -1,8 +1,9 @@
-/*
- *  Copyright (C) 2011 Aldebaran Robotics
- */
-
 #pragma once
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
 #ifndef _QIMESSAGING_API_HPP_
 #define _QIMESSAGING_API_HPP_
 

@@ -1,13 +1,9 @@
+#pragma once
 /*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010-2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
 #ifndef _QIMESSAGING_DETAILS_DYNAMICVALUE_HPP_
 #define _QIMESSAGING_DETAILS_DYNAMICVALUE_HPP_
 

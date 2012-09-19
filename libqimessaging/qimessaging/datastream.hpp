@@ -1,13 +1,9 @@
+#pragma once
 /*
- *  Author(s):
- *  - Chris  Kilner <ckilner@aldebaran-robotics.com>
- *  - Cedric Gestes <gestes@aldebaran-robotics.com>
- *
- *  Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
- */
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 
-
-// Leave this above the header gard, it fixes include ordering problems
 # include <qimessaging/genericvalue.hpp>
 
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
