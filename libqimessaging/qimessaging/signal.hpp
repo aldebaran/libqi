@@ -25,11 +25,8 @@ namespace qi {
 
     typedef unsigned int Link;
 
-    template<typename FUNCTION_TYPE> Link connect(FUNCTION_TYPE f,
-      EventLoop* ctx = getDefaultObjectEventLoop());
-
-    template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
-    Link connect(OBJECT_TYPE c, FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
+    template<typename FUNCTION_TYPE>
+    Link connect(FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
     Link connect(qi::GenericObject target, unsigned int slot);
     Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
@@ -60,12 +57,6 @@ namespace qi {
     return connect(makeGenericFunction(callback), ctx);
   }
 
-  template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
-  inline SignalBase::Link SignalBase::connect(OBJECT_TYPE inst, FUNCTION_TYPE fun, EventLoop* ctx)
-  {
-    return connect(makeGenericFunction(inst, fun), ctx);
-  }
-
   template<typename T>
   class Signal: public SignalBase, public boost::function<T>
   {
@@ -76,11 +67,9 @@ namespace qi {
     {
       return SignalBase::connect(f, ctx);
     }
-
-    template<typename OBJECT_TYPE, typename FUNCTION_TYPE>
-    inline SignalBase::Link connect(OBJECT_TYPE inst, FUNCTION_TYPE fun, EventLoop* ctx=getDefaultObjectEventLoop())
+    inline SignalBase::Link connect(GenericFunction f, EventLoop* ctx=getDefaultObjectEventLoop())
     {
-      return SignalBase::connect(inst, fun, ctx);
+      return SignalBase::connect(f, ctx);
     }
   };
 
