@@ -29,7 +29,7 @@ namespace qi {
       if (! testDescription.empty()) {
         qiLogInfo("DataPerfTimer") << testDescription;
       }
-      qiLogInfo("DataPerfTimer") << "bytes, msg/s, Mb/s, period (us)";
+      qiLogInfo("DataPerfTimer") << "bytes, msg/s, Mb/s, period (us), cpu/total";
     }
 
     void DataPerfTimer::start(
@@ -57,31 +57,24 @@ namespace qi {
         fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
       }
       fPeriod = (double)wallClockElapsed * 1000.0 * 1000.0 / fLoopCount;
+      fCpu = (double)cpuElapsed / (double)wallClockElapsed * 100;
       if (shouldPrint)
-        print(false);
-
-      fMsgPs = 1.0 / (cpuElapsed / (1.0 * fLoopCount));
-      if (fMsgSize > 0) {
-        fMgbPs = (fMsgPs * fMsgSize) / (1024.0 * 1024.0);
-      }
-      fPeriod = (double)cpuElapsed * 1000.0 / fLoopCount * 1000.0;
-      if (shouldPrint)
-        print(true);
+        print();
     }
 
-    void DataPerfTimer::print(bool cpu)
+    void DataPerfTimer::print()
     {
-      std::string str = "wallclock: ";
-      if (cpu)
-        str = "cpu      : ";
       if (fMsgSize > 0) {
-        qiLogInfo("DataPerfTimer") << str
+        qiLogInfo("DataPerfTimer") << "wallclock: "
                   << std::fixed << std::setprecision(2) << fMsgSize << " b, "
                   << fMsgPs << " msg/s, "
                   << std::setprecision(12) << fMgbPs << " MB/s, "
-                  << std::setprecision(0) << fPeriod << " us";
+                  << std::setprecision(0) << fPeriod << " us, "
+                  << std::setprecision(1) << fCpu << " %";
       } else {
-        qiLogInfo("DataPerfTimer") << str << std::setprecision(12) << fMsgPs  << " msg/s";
+        qiLogInfo("DataPerfTimer") << "wallclock: " << std::setprecision(12)
+                  << fMsgPs  << " msg/s"
+                  << fCpu << " %";
       }
     }
   }

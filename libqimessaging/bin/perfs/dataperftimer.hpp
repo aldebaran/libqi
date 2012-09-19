@@ -57,7 +57,7 @@ namespace qi {
 
     protected:
       void printHeader(const std::string& testDescription = "");
-      void print(bool cpu);
+      void print();
 
       //cpu time
       boost::timer    fRt;
@@ -69,6 +69,7 @@ namespace qi {
       double          fMsgPs;
       double          fMgbPs;
       double          fPeriod;
+      double          fCpu;
     };
   }
 }
