@@ -448,11 +448,11 @@ static std::string                qi_pyobject_signature(PyObject *object)
   return sig.str();
 }
 
-static qi::MetaMethod*             qi_get_convertible_method(qi::Object *object, const char *name, PyObject *args, std::vector<qi::MetaMethod> &candidates)
+static qi::MetaMethod*             qi_get_convertible_method(qi::GenericObject *object, const char *name, PyObject *args, std::vector<qi::MetaMethod> &candidates)
 {
   std::string  sig;
   std::string  parameters;
-  qi::MetaObject &meta = object->metaObject();
+  const qi::MetaObject &meta = object->metaObject();
   std::vector<std::string> sigv;
 
   // #1 Deduce logical signature from parameters.
@@ -478,7 +478,7 @@ static qi::MetaMethod*             qi_get_convertible_method(qi::Object *object,
     sigv = signatureSplit((*it).signature());
 
     if (signature.isConvertibleTo(sigv[2]) == true)
-      return meta.method(meta.methodId((*it).signature()));
+      return const_cast<qi::MetaMethod*>(meta.method(meta.methodId((*it).signature())));
   }
 
   qi_raise("_qimessaging.CallError", "Cannot find any suitable method");
@@ -643,7 +643,7 @@ void qi_bind_method(qi_object_builder_t *builder, char *signature, PyObject *met
 
 PyObject* qi_object_methods_vector(qi_object_t *object)
 {
-  qi::Object *obj = reinterpret_cast<qi::Object *>(object);
+  qi::GenericObject *obj = reinterpret_cast<qi::GenericObject *>(object);
   std::string signature("(");
   qi_message_t* message = qi_message_create();
   qi::MetaObject::MethodMap mmm = obj->metaObject().methodMap();
