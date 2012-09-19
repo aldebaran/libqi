@@ -10,7 +10,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
 
@@ -39,7 +39,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
-    qi::DynamicObjectBuilder obs1, obs2;
+    qi::GenericObjectBuilder obs1, obs2;
     e1 = obs1.advertiseEvent<void (*)(const int&)>("fire1");
     e2 = obs2.advertiseEvent<void (*)(const int&)>("fire2");
     m1 = obs1.advertiseMethod("onFire1", &onFire1);

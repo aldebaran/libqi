@@ -28,30 +28,6 @@ namespace qi {
   class Type;
   template<typename T> class Signal;
   class StaticObjectBuilderPrivate;
-  class DynamicObjectBuilderPrivate;
-
-  class QIMESSAGING_API DynamicObjectBuilder
-  {
-  public:
-    DynamicObjectBuilder();
-    ~DynamicObjectBuilder();
-
-    template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
-    template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
-    template<typename FUNCTION_TYPE>
-    inline unsigned int advertiseEvent(const std::string& eventName);
-
-
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func);
-    int xAdvertiseEvent(const std::string& signature);
-
-    qi::GenericObject object();
-  public:
-    DynamicObjectBuilderPrivate *_p;
-    QI_DISALLOW_COPY_AND_ASSIGN(DynamicObjectBuilder);
-  };
 
   class QIMESSAGING_API StaticObjectBuilder
   {
@@ -103,22 +79,9 @@ namespace qi {
       makeGenericMethod(function));
   }
 
-  template <typename FUNCTION_TYPE>
-  unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
-  {
-    // FIXME validate type
-    return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
-      name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeCallable(function));
-  }
 
-  template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int DynamicObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
-  {
-    return xAdvertiseMethod(detail::FunctionSignature<METHOD_TYPE >::sigreturn(),
-      name + "::" + detail::FunctionSignature<METHOD_TYPE >::signature(),
-      makeCallable(makeGenericFunction(object, method)));
-  }
+
+
 
   template <typename C, typename T>
   SignalBase signalAccess(Signal<T> C::* ptr, void* instance)
@@ -140,10 +103,7 @@ namespace qi {
     return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter);
   }
 
-  template <typename T> unsigned int DynamicObjectBuilder::advertiseEvent(const std::string& name)
-  {
-    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature());
-  }
+
 
   template<typename T> GenericObject StaticObjectBuilder::makeObject(T* ptr)
   {

@@ -10,7 +10,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
 
@@ -37,7 +37,7 @@ TEST(Test, Recurse)
 {
   qi::ServiceDirectory  sd;
   qi::Session           session1, session2;
-  qi::DynamicObjectBuilder     ob1, ob2;
+  qi::GenericObjectBuilder     ob1, ob2;
   ob1.advertiseMethod("onFire1", &onFire1);
   ob2.advertiseMethod("onFire2", &onFire2);
   qi::GenericObject    oserver1(ob1.object()), oserver2(ob2.object());

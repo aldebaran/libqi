@@ -25,7 +25,7 @@ namespace po = boost::program_options;
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 
 static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
@@ -47,7 +47,7 @@ qi::Buffer replyBuf(const qi::Buffer& buf)
 
 int main_local()
 {
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::GenericObject obj(ob.object());
@@ -207,7 +207,7 @@ int main_server(std::string host, std::string port)
   std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
 
   qi::Session       session;
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::GenericObject obj(ob.object());

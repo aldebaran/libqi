@@ -13,7 +13,7 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/service_directory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
@@ -81,7 +81,7 @@ TEST(QiSession, getSimpleService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::GenericObject obj(ob.object());
 
@@ -119,7 +119,7 @@ TEST(QiSession, getCloseService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::GenericObject obj(ob.object());
 

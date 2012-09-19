@@ -13,7 +13,7 @@
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 
 static int gGlobalResult = 0;
 
@@ -109,7 +109,7 @@ TEST(TestObject, Typing)
 
 TEST(TestObject, Simple) {
   Foo                   foo;
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
 
   ob.advertiseMethod("test", &fun);
   ob.advertiseMethod("vtest", &vfun);
@@ -187,7 +187,7 @@ Point swapPoint(const Point& b)
 
 TEST(TestObject, SerializeSimple)
 {
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
   qi::GenericObject obj(ob.object());
   Point p;
@@ -237,7 +237,7 @@ TEST(TestObject, SerializeComplex)
   v.push_back(3);
   comp.stuff.push_back(v);
 
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   unsigned id = ob.advertiseMethod("echo", &echoBack);
   qi::GenericObject obj(ob.object());
   std::cerr << obj.metaObject().methodMap()[id].signature() << std::endl;

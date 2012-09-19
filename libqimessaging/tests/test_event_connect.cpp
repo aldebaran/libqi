@@ -7,7 +7,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qi/application.hpp>
 
 static int lastPayload = 0;
@@ -25,7 +25,7 @@ void onFire2(const int& pl)
 
 void testDelete(bool afirst, bool disconnectFirst)
 {
-  qi::DynamicObjectBuilder oba, obb;
+  qi::GenericObjectBuilder oba, obb;
   unsigned int fireId = oba.advertiseEvent<void (*)(int)>("fire");
   unsigned int onFireId = obb.advertiseMethod("onFire", &onFire);
   unsigned int onFireId2 = obb.advertiseMethod("onFire2", &onFire2);

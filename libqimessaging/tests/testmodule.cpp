@@ -5,7 +5,7 @@
 
 #include <qi/application.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/object_factory.hpp>
 #include <qimessaging/session.hpp>
 
@@ -17,7 +17,7 @@ int testMethod(const int& v)
 qi::GenericObject setup(const std::string&)
 {
   qiLogDebug("testmodule") << "setup";
-  qi::DynamicObjectBuilder ob;
+  qi::GenericObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
   return ob.object();
 }

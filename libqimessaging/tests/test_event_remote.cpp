@@ -10,7 +10,7 @@
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/genericobject.hpp>
-#include <qimessaging/objectbuilder.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/service_directory.hpp>
 
@@ -28,7 +28,7 @@ class TestObject: public ::testing::Test
 public:
   TestObject()
   {
-    qi::DynamicObjectBuilder ob;
+    qi::GenericObjectBuilder ob;
     ob.advertiseEvent<void (*)(const int&)>("fire");
     oserver = new qi::GenericObject(ob.object());
   }

@@ -48,12 +48,14 @@ set(PUBLIC_HEADERS
                    qimessaging/details/genericvalue.hxx
                    qimessaging/details/dynamic_value.hxx
                    qimessaging/details/genericobject.hxx
+                   qimessaging/details/genericobjectbuilder.hxx
                    qimessaging/details/signal.hxx
                    qimessaging/url.hpp
                    qimessaging/event_loop.hpp
                    qimessaging/file.hpp
                    qimessaging/genericobject.hpp
                    qimessaging/objectbuilder.hpp
+                   qimessaging/genericobjectbuilder.hpp
                    qimessaging/object_factory.hpp
                    qimessaging/session.hpp
                    qimessaging/metasignal.hpp
@@ -95,6 +97,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/event_loop_p.hpp
                                    src/function_type.cpp
                                    src/gateway.cpp
+                                   src/genericobjectbuilder.cpp
                                    src/message.cpp
                                    src/message_p.hpp
                                    src/messagedispatcher.hpp
