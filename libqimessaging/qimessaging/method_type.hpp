@@ -19,15 +19,14 @@ namespace qi
   class QIMESSAGING_API GenericMethod
   {
   public:
-    GenericValue call(GenericValue object,
-      const std::vector<GenericValue> args)
+    GenericValue call(GenericValue object, const std::vector<GenericValue> args)
     {
       return type->call(value, object, args);
     }
     std::string signature() const { return type->signature();}
     std::string sigreturn() const { return type->sigreturn();}
     ///@return equivalent function value
-    GenericFunction toFunction();
+    GenericFunction toGenericFunction();
     MethodType* type;
     void*       value;
   };

@@ -80,7 +80,7 @@ namespace qi
     return result;
   }
 
-  inline GenericFunction GenericMethod::toFunction()
+  inline GenericFunction GenericMethod::toGenericFunction()
   {
     GenericFunction res;
     res.type = dynamic_cast<FunctionType*>(type);

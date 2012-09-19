@@ -47,7 +47,7 @@ namespace qi {
       bindSelf.insert(bindSelf.end(), &v[0], &v[v.size()]);
 
       // Let call() handle conversion
-      GenericValue res = val.toFunction().call(bindSelf);
+      GenericValue res = val.toGenericFunction().call(bindSelf);
       return MetaFunctionResult(res);
     }
     else
@@ -63,7 +63,7 @@ namespace qi {
         v.value = v.type->deserialize(in);
         args.push_back(v);
       }
-      GenericValue res = val.toFunction().call(args);
+      GenericValue res = val.toGenericFunction().call(args);
       for (unsigned i=1; i<args.size(); ++i)
         args[i].destroy();
       return MetaFunctionResult(res);
