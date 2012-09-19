@@ -1,6 +1,7 @@
+#pragma once
 /*
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
 #include <iostream>
@@ -11,8 +12,8 @@
 #include <qimessaging/future.hpp>
 
 
-#ifndef __METASIGNAL_P_HPP__
-#define __METASIGNAL_P_HPP__
+#ifndef _SRC_METASIGNAL_P_HPP_
+#define _SRC_METASIGNAL_P_HPP_
 
 namespace qi {
 
@@ -34,4 +35,4 @@ namespace qi {
 
 };
 
-#endif
+#endif  // _SRC_METASIGNAL_P_HPP_

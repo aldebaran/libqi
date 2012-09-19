@@ -1,15 +1,11 @@
+#pragma once
 /*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
-#ifndef _SRC_SIGNATURE_CONVERTOR_HPP_
-#define _SRC_SIGNATURE_CONVERTOR_HPP_
+#ifndef _SRC_SIGNATURECONVERTOR_HPP_
+#define _SRC_SIGNATURECONVERTOR_HPP_
 
 # include <string>
 # include <qimessaging/signature.hpp>
@@ -49,4 +45,4 @@ namespace qi {
 };
 
 
-#endif  // _SRC_SIGNATURE_CONVERTOR_HPP_
+#endif  // _SRC_SIGNATURECONVERTOR_HPP_

@@ -1,7 +1,7 @@
 /*
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <event2/event.h>
 #include <event2/bufferevent.h>
 #include <event2/thread.h>

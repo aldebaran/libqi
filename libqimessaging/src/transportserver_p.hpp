@@ -1,13 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#pragma once
-#ifndef _QIMESSAGING_TRANSPORT_SERVER_P_HPP_
-#define _QIMESSAGING_TRANSPORT_SERVER_P_HPP_
+#ifndef _SRC_TRANSPORTSERVER_P_HPP_
+#define _SRC_TRANSPORTSERVER_P_HPP_
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
@@ -55,4 +53,4 @@ namespace qi {
 
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_SERVER_P_HPP_
+#endif  // _SRC_TRANSPORTSERVER_P_HPP_

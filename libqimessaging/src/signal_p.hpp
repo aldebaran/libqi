@@ -1,9 +1,11 @@
+#pragma once
 /*
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef  QI_SIGNAL_P_HPP_
-# define QI_SIGNAL_P_HPP_
+#ifndef _SRC_SIGNAL_P_HPP_
+#define _SRC_SIGNAL_P_HPP_
 
 #include <qimessaging/signal.hpp>
 namespace qi {
@@ -24,4 +26,4 @@ namespace qi {
 
 }
 
-#endif /* !QI_SIGNAL_P_PP_ */
+#endif  // _SRC_SIGNAL_P_HPP_

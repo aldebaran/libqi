@@ -1,12 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef    SESSION_SERVICES_HPP_
-# define    SESSION_SERVICES_HPP_
+#ifndef _SRC_SESSIONSERVICES_HPP_
+#define _SRC_SESSIONSERVICES_HPP_
 
 #include <qimessaging/future.hpp>
 #include <vector>
@@ -61,4 +60,4 @@ namespace qi {
 
 }
 
-#endif     /* !SESSION_SERVICES_PP_ */
+#endif  // _SRC_SESSIONSERVICES_HPP_

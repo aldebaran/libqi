@@ -1,10 +1,7 @@
 /*
-*  Author(s):
-*  - Herve Cuche <hcuche@aldebaran-robotics.com>
-*
-*  Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <iostream>
 #include <boost/filesystem.hpp>
 

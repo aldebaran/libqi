@@ -1,10 +1,7 @@
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Cedric GESTES
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include "remoteobject_p.hpp"
 #include "src/object_p.hpp"
 #include "src/metasignal_p.hpp"

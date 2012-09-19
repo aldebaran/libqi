@@ -1,12 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef    METAOBJECT_P_HPP_
-# define   METAOBJECT_P_HPP_
+#ifndef _SRC_METAOBJECT_P_HPP_
+#define _SRC_METAOBJECT_P_HPP_
 
 #include <qi/atomic.hpp>
 #include <qimessaging/metasignal.hpp>
@@ -70,4 +69,4 @@ namespace qi {
 
 }
 
-#endif /* !METAOBJECT_P_PP_ */
+#endif  // _SRC_METAOBJECT_P_HPP_

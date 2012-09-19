@@ -1,15 +1,11 @@
+#pragma once
 /*
-*  Author(s):
-*  - Chris  Kilner <ckilner@aldebaran-robotics.com>
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2010 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-
-#pragma once
-#ifndef _QIMESSAGING_SERVER_HPP_
-#define _QIMESSAGING_SERVER_HPP_
+#ifndef _SRC_SESSIONSERVER_HPP_
+#define _SRC_SESSIONSERVER_HPP_
 
 #include <string>
 #include <set>
@@ -97,4 +93,4 @@ namespace qi {
   };
 }
 
-#endif  // _QIMESSAGING_SERVER_HPP_
+#endif  // _SRC_SESSIONSERVER_HPP_

@@ -1,12 +1,11 @@
+#pragma once
 /*
-**  Author(s):
-**  - Cedric Gestes <gestes@aldebaran-robotics.com>
-**
 **  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef    SERVER_CLIENT_HPP_
-# define    SERVER_CLIENT_HPP_
+#ifndef _SRC_SERVERCLIENT_HPP_
+#define _SRC_SERVERCLIENT_HPP_
 
 #include <qimessaging/future.hpp>
 #include <qimessaging/genericobject.hpp>
@@ -29,4 +28,4 @@ namespace qi {
   };
 }
 
-#endif     /* !SERVER_CLIENT_PP_ */
+#endif  // _SRC_SERVERCLIENT_HPP_

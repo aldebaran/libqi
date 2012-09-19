@@ -1,11 +1,7 @@
 /*
-** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
-**  - Laurent Lec <llec@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>

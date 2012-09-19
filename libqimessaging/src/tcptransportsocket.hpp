@@ -1,13 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#pragma once
-#ifndef _QIMESSAGING_TCP_TRANSPORT_SOCKET_HPP_
-#define _QIMESSAGING_TCP_TRANSPORT_SOCKET_HPP_
+#ifndef _SRC_TCPTRANSPORTSOCKET_HPP_
+#define _SRC_TCPTRANSPORTSOCKET_HPP_
 
 # include <qimessaging/transportsocket.hpp>
 # include <qimessaging/eventloop.hpp>
@@ -34,4 +32,4 @@ namespace qi
 
 }
 
-#endif  // _QIMESSAGING_TRANSPORT_SOCKET_HPP_
+#endif  // _SRC_TCPTRANSPORTSOCKET_HPP_

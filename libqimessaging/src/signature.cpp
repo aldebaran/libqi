@@ -1,10 +1,7 @@
 /*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*
-*  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <cstring>
 
 #include <qimessaging/signature.hpp>

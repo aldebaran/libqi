@@ -1,15 +1,7 @@
 /*
- ** transport-server.cpp
- ** Login : <hcuche@hcuche-de>
- ** Started on  Wed Jan 11 10:19:42 2012 Herve Cuche
- ** $Id$
- **
- ** Author(s):
- **  - Herve Cuche <hcuche@aldebaran-robotics.com>
- **
- ** Copyright (C) 2012 Herve Cuche
- */
-
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 #include <iostream>
 #include <qi/log.hpp>
 

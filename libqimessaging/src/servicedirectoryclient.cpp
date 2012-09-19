@@ -1,10 +1,7 @@
 /*
-** Author(s):
-**  -  <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include "servicedirectoryclient.hpp"
 #include <qimessaging/objecttypebuilder.hpp>
 #include "src/servicedirectory_p.hpp"

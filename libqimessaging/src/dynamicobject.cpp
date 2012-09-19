@@ -1,7 +1,7 @@
 /*
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <map>
 
 #include <boost/make_shared.hpp>

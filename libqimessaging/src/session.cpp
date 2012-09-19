@@ -1,11 +1,7 @@
 /*
-*  Author(s):
-*  - Cedric Gestes <gestes@aldebaran-robotics.com>
-*  - Herve Cuche <hcuche@aldebaran-robotics.com>
-*
-*  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>

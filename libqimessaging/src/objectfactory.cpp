@@ -1,10 +1,7 @@
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <qimessaging/objectfactory.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <qi/application.hpp>

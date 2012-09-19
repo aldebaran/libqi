@@ -1,11 +1,11 @@
+#pragma once
 /*
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#pragma once
-
-#ifndef QI_MESSAGEDISPATCHER_HPP
-#define QI_MESSAGEDISPATCHER_HPP
+#ifndef _SRC_MESSAGEDISPATCHER_HPP_
+#define _SRC_MESSAGEDISPATCHER_HPP_
 
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/signal.hpp>
@@ -53,4 +53,4 @@ namespace qi {
 
 }
 
-#endif // MESSAGEDISPATCHER_HPP
+#endif  // _SRC_MESSAGEDISPATCHER_HPP_

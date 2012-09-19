@@ -1,13 +1,11 @@
+#pragma once
 /*
-**
-** Author(s):
-**  - Herve CUCHE <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran-robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef MESSAGE_P_HPP_
-# define MESSAGE_P_HPP_
+#ifndef _SRC_MESSAGE_P_HPP_
+#define _SRC_MESSAGE_P_HPP_
 
 # include <boost/cstdint.hpp>
 # include <qimessaging/buffer.hpp>
@@ -43,4 +41,4 @@ namespace qi
   };
 }
 
-#endif     // !MESSAGE_P_HPP_
+#endif  // _SRC_MESSAGE_P_HPP_

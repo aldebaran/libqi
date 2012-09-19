@@ -1,13 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Herve CUCHE <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran-robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#pragma once
-#ifndef BUFFER_P_HPP_
-# define BUFFER_P_HPP_
+#ifndef _SRC_BUFFER_P_HPP_
+#define _SRC_BUFFER_P_HPP_
 
 #define STATIC_BLOCK 768
 #define BLOCK   4096
@@ -45,4 +43,4 @@ namespace qi
   };
 }
 
-#endif     // !BUFFER_P_HPP_
+#endif  // _SRC_BUFFER_P_HPP_

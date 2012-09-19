@@ -1,12 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef  SESSION_WATCHER_HPP_
-# define SESSION_WATCHER_HPP_
+#ifndef _SRC_SERVICEWATCHER_HPP_
+#define _SRC_SERVICEWATCHER_HPP_
 
 #include <boost/thread/mutex.hpp>
 #include <map>
@@ -36,4 +35,4 @@ namespace qi {
 
 }
 
-#endif
+#endif  // _SRC_SERVICEWATCHER_HPP_

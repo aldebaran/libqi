@@ -1,15 +1,7 @@
 /*
-** transport-client.cpp
-** Login : <hcuche@hcuche-de>
-** Started on  Thu Jan  5 15:21:13 2012 Herve Cuche
-** $Id$
-**
-** Author(s):
-**  - Herve Cuche <hcuche@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Herve Cuche
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include <iostream>
 #include <cstring>
 #include <map>

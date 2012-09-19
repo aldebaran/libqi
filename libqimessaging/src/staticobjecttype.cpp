@@ -1,8 +1,7 @@
 /*
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
-
 #include "staticobjecttype.hpp"
 #include <qimessaging/signal.hpp>
 

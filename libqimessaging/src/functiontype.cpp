@@ -1,3 +1,7 @@
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/functiontype.hpp>
 

@@ -1,5 +1,11 @@
-#ifndef _QIMESSAGING_EXECUTIONCONTEXT_P_HPP_
-#define _QIMESSAGING_EXECUTIONCONTEXT_P_HPP_
+#pragma once
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
+#ifndef _SRC_EVENTLOOP_P_HPP_
+#define _SRC_EVENTLOOP_P_HPP_
 
 #include <boost/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -40,4 +46,4 @@ namespace qi {
   };
 }
 
-#endif
+#endif  // _SRC_EVENTLOOP_P_HPP_

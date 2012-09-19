@@ -1,10 +1,11 @@
+#pragma once
 /*
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_OBJECTPRIVATE_HPP_
-#define _QIMESSAGING_OBJECTPRIVATE_HPP_
+#ifndef _SRC_OBJECT_P_HPP_
+#define _SRC_OBJECT_P_HPP_
 
 #include <iostream>
 #include <string>
@@ -38,4 +39,4 @@ namespace qi {
 
 };
 
-#endif
+#endif  // _SRC_OBJECT_P_HPP_

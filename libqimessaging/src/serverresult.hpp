@@ -1,12 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef  SERVER_FUNCTOR_RETURN_FUTURE_P_HPP_
-# define SERVER_FUNCTOR_RETURN_FUTURE_P_HPP_
+#ifndef _SRC_SERVERRESULT_HPP_
+#define _SRC_SERVERRESULT_HPP_
 
 #include <boost/shared_ptr.hpp>
 #include <qimessaging/future.hpp>
@@ -49,4 +48,4 @@ namespace qi {
 
 }
 
-#endif
+#endif  // _SRC_SERVERRESULT_HPP_

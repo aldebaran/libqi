@@ -1,10 +1,11 @@
+#pragma once
 /*
-
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_STATICOBJECTTYPE_HPP_
-#define _QIMESSAGING_STATICOBJECTTYPE_HPP_
+#ifndef _SRC_STATICOBJECTTYPE_HPP_
+#define _SRC_STATICOBJECTTYPE_HPP_
 
 #include <qimessaging/api.hpp>
 #include <qimessaging/genericvalue.hpp>
@@ -63,4 +64,4 @@ private:
 };
 
 }
-#endif
+#endif  // _SRC_STATICOBJECTTYPE_HPP_

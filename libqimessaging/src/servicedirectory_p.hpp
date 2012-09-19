@@ -1,12 +1,11 @@
+#pragma once
 /*
-** Author(s):
-**  - Cedric GESTES <gestes@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-#ifndef  SERVICE_DIRECTORY_P_HPP_
-# define SERVICE_DIRECTORY_P_HPP_
+#ifndef _SRC_SERVICEDIRECTORY_P_HPP_
+#define _SRC_SERVICEDIRECTORY_P_HPP_
 
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
@@ -50,4 +49,4 @@ namespace qi {
 
 }
 
-#endif /* !SERVICE_DIRECTORY_P_PP_ */
+#endif  // _SRC_SERVICEDIRECTORY_P_HPP_
