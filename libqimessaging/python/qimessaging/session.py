@@ -68,7 +68,7 @@ class Session:
     def register_service(self, name, obj):
         """ Register given service and expose it to the world.
         """
-        return _qi.qi_session_register_service(self._session, name, obj.origin())
+        return _qi.qi_session_register_service(self._session, name, obj._obj)
 
     def unregister_service(self, idx):
         """ Unregister service, it is not visible anymore.
