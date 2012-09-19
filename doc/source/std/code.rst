@@ -94,6 +94,31 @@ Public headers must be enclosed within brackets <> when included.
 On the other hand, private headers must be enclosed within double quotes "" when
 included.
 
+Header include statement
+------------------------
+
+* If a header is **not provided by the project**, then the include statement
+  **must** be:
+
+  .. code-block:: cpp
+
+    #include <bar/foo.h>
+
+* Else if a header is **provided by the project** and **gets installed**, so this is a
+  *public header*, then the include statement **must** be:
+
+  .. code-block:: cpp
+
+    #include <bar/foo.h>
+
+* Otherwise, this is a *private header* **provided by the project** and
+  **only used in this project** (e.i. *never gets installed*), then the include
+  statement **must** be:
+
+  .. code-block:: cpp
+
+    #include "bar/foo.h"
+
 Export symbol
 -------------
 
