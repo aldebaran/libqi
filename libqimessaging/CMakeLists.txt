@@ -42,46 +42,46 @@ qi_add_probes(src/tp_qimessaging.in.h
 
 set(PUBLIC_HEADERS
                    qimessaging/details/future.hxx
-                   qimessaging/details/dynamic_value.hpp
+                   qimessaging/details/dynamicvalue.hpp
                    qimessaging/details/type.hxx
                    qimessaging/details/metafunction.hxx
                    qimessaging/details/genericvalue.hxx
-                   qimessaging/details/dynamic_value.hxx
+                   qimessaging/details/dynamicvalue.hxx
                    qimessaging/details/genericobject.hxx
                    qimessaging/details/genericobjectbuilder.hxx
                    qimessaging/details/objecttypebuilder.hxx
                    qimessaging/details/signal.hxx
                    qimessaging/url.hpp
-                   qimessaging/event_loop.hpp
+                   qimessaging/eventloop.hpp
                    qimessaging/file.hpp
                    qimessaging/genericobject.hpp
                    qimessaging/objecttypebuilder.hpp
                    qimessaging/genericobjectbuilder.hpp
-                   qimessaging/object_factory.hpp
+                   qimessaging/objectfactory.hpp
                    qimessaging/session.hpp
                    qimessaging/metasignal.hpp
                    qimessaging/metamethod.hpp
                    qimessaging/metaobject.hpp
-                   qimessaging/service_directory.hpp
+                   qimessaging/servicedirectory.hpp
                    qimessaging/signature.hpp
                    qimessaging/api.hpp
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
                    qimessaging/type.hpp
                    qimessaging/genericvalue.hpp
-                   qimessaging/function_type.hpp
-                   qimessaging/details/function_type.hxx
-                   qimessaging/method_type.hpp
-                   qimessaging/details/method_type.hxx
+                   qimessaging/functiontype.hpp
+                   qimessaging/details/functiontype.hxx
+                   qimessaging/methodtype.hpp
+                   qimessaging/details/methodtype.hxx
                    qimessaging/signal.hpp
-                   qimessaging/transport_server.hpp
-                   qimessaging/transport_socket.hpp
+                   qimessaging/transportserver.hpp
+                   qimessaging/transportsocket.hpp
                    qimessaging/future.hpp
                    qimessaging/datastream.hpp
                    qimessaging/bufferreader.hpp
                    qimessaging/buffer.hpp
                    qimessaging/gateway.hpp
-                   qimessaging/service_info.hpp
+                   qimessaging/serviceinfo.hpp
 )
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
@@ -94,9 +94,9 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/bufferreader.cpp
                                    src/datastream.cpp
                                    src/dynamicobject.cpp
-                                   src/event_loop.cpp
-                                   src/event_loop_p.hpp
-                                   src/function_type.cpp
+                                   src/eventloop.cpp
+                                   src/eventloop_p.hpp
+                                   src/functiontype.cpp
                                    src/gateway.cpp
                                    src/genericobjectbuilder.cpp
                                    src/message.cpp
@@ -112,41 +112,41 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metafunction.cpp
                                    src/object_p.hpp
                                    src/object.cpp
-                                   src/object_factory.cpp
+                                   src/objectfactory.cpp
                                    src/objecttypebuilder.cpp
                                    src/remoteobject.cpp
                                    src/remoteobject_p.hpp
-                                   src/service_directory.cpp
-                                   src/service_directory_p.hpp
-                                   src/service_directory_client.hpp
-                                   src/service_directory_client.cpp
-                                   src/service_info.cpp
+                                   src/servicedirectory.cpp
+                                   src/servicedirectory_p.hpp
+                                   src/servicedirectoryclient.hpp
+                                   src/servicedirectoryclient.cpp
+                                   src/serviceinfo.cpp
                                    src/session.cpp
                                    src/session_p.hpp
-                                   src/server_client.hpp
-                                   src/server_client.cpp
-                                   src/session_service.hpp
-                                   src/session_service.cpp
-                                   src/session_services.hpp
-                                   src/session_services.cpp
-                                   src/session_server.hpp
-                                   src/session_server.cpp
-                                   src/service_watcher.hpp
-                                   src/service_watcher.cpp
+                                   src/serverclient.hpp
+                                   src/serverclient.cpp
+                                   src/sessionservice.hpp
+                                   src/sessionservice.cpp
+                                   src/sessionservices.hpp
+                                   src/sessionservices.cpp
+                                   src/sessionserver.hpp
+                                   src/sessionserver.cpp
+                                   src/servicewatcher.hpp
+                                   src/servicewatcher.cpp
                                    src/signal.cpp
                                    src/signal_p.hpp
-                                   src/signature_convertor.cpp
-                                   src/signature_convertor.hpp
-                                   src/signature_iterator.cpp
+                                   src/signatureconvertor.cpp
+                                   src/signatureconvertor.hpp
+                                   src/signatureiterator.cpp
                                    src/staticobjecttype.cpp
-                                   src/transport_server.cpp
-                                   src/transport_server_p.hpp
-                                   src/transport_server_libevent_p.cpp
-                                   src/transport_server_libevent_p.hpp
-                                   src/transport_server_dummy_p.cpp
-                                   src/transport_server_dummy_p.hpp
-                                   src/transport_socket.cpp
-                                   src/transport_socket_p.hpp
+                                   src/transportserver.cpp
+                                   src/transportserver_p.hpp
+                                   src/transportserverlibevent_p.cpp
+                                   src/transportserverlibevent_p.hpp
+                                   src/transportserverdummy_p.cpp
+                                   src/transportserverdummy_p.hpp
+                                   src/transportsocket.cpp
+                                   src/transportsocket_p.hpp
                                    src/tcptransportsocket.cpp
                                    src/tcptransportsocket.hpp
                                    src/tcptransportsocket_p.cpp
@@ -155,7 +155,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/file.cpp
                                    src/url.cpp
                                    src/future.cpp
-                                   src/server_result.hpp
+                                   src/serverresult.hpp
                                    src/signature.cpp
                                    )
 
