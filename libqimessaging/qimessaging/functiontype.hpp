@@ -14,7 +14,7 @@ namespace qi {
   class QIMESSAGING_API FunctionType: public virtual Type
   {
   public:
-    virtual void* call(void* func, const std::vector<void*>& args)=0;
+    virtual void* call(void* func, const std::vector<void*>& args) = 0;
     GenericValue call(void* func, const std::vector<GenericValue>& args);
     Type* resultType();
     const std::vector<Type*>& argumentsType();

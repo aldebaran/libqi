@@ -8,44 +8,41 @@
 
 namespace qi {
 
-  void Session_Services::onFutureFailed(const std::string &error, void *data) {
-    ServicesRequest *rq = request(data);
-    if (!rq)
-      return;
-    rq->promise.setError(error);
-    removeRequest(data);
-  }
 
-  void Session_Services::onFutureFinished(const std::vector<qi::ServiceInfo> &value, void *data) {
-    ServicesRequest *rq = request(data);
+  void Session_Services::onFutureFinished(qi::Future<ServiceInfoVector> value, long requestId) {
+    ServicesRequest *rq = request(requestId);
     if (!rq)
       return;
+    if (value.hasError()) {
+      rq->promise.setError(value.error());
+      removeRequest(requestId);
+    }
     std::vector<qi::ServiceInfo> result;
     if (rq->locality == qi::Session::ServiceLocality_All)
     {
       result = _server->registeredServices();
     }
-    result.insert(result.end(), value.begin(), value.end());
+    result.insert(result.end(), value.value().begin(), value.value().end());
     rq->promise.setValue(result);
-    removeRequest(data);
+    removeRequest(requestId);
   }
 
-  ServicesRequest *Session_Services::request(void *data) {
+  ServicesRequest *Session_Services::request(long requestId) {
     {
       boost::mutex::scoped_lock sl(_requestMutex);
       std::map<long, ServicesRequest*>::iterator it;
-      it = _request.find(reinterpret_cast<long>(data));
+      it = _request.find(requestId);
       if (it != _request.end())
         return it->second;
     }
     return 0;
   }
 
-  void Session_Services::removeRequest(void *data) {
+  void Session_Services::removeRequest(long requestId) {
     {
       boost::mutex::scoped_lock sl(_requestMutex);
       std::map<long, ServicesRequest*>::iterator it;
-      it = _request.find(reinterpret_cast<long>(data));
+      it = _request.find(requestId);
       if (it != _request.end()) {
         delete it->second;
         _request.erase(it);
@@ -68,7 +65,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_requestMutex);
       _request[requestId] = new ServicesRequest(promise, locality);
     }
-    fut.addCallbacks(this, reinterpret_cast<void *>(requestId));
+    fut.connect(boost::bind<void>(&Session_Services::onFutureFinished, this, _1, requestId));
     return promise.future();
   }
 

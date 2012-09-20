@@ -28,7 +28,7 @@
 
 namespace qi {
 
-  class SignalSubscriber;
+  struct SignalSubscriber;
   class QIMESSAGING_API ObjectInterface {
   public:
     virtual ~ObjectInterface() = 0;

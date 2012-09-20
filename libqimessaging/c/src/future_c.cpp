@@ -71,7 +71,7 @@ void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *
 
   data->callbacks.push_back(forwarder);
   forwarder->addCallback(cb);
-  data->future->addCallbacks(forwarder, miscdata);
+  data->future->connect(boost::bind<void>(&FutureCallbackForwarder::onResult, forwarder, _1, miscdata), 0);
 }
 
 void    qi_future_wait(qi_future_t *fut)

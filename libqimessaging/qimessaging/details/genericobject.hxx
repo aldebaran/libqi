@@ -8,7 +8,8 @@
 #define _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
 
 #include <qimessaging/buffer.hpp>
-
+#include <qimessaging/future.hpp>
+#include <qimessaging/metafunction.hpp>
 
 namespace qi {
 
@@ -42,70 +43,61 @@ namespace qi {
   namespace detail
   {
 
-    template<typename T> class FutureAdapter
-    : public qi::FutureInterface<qi::MetaFunctionResult>
-    {
-    public:
-      FutureAdapter(qi::Promise<T> prom) :prom(prom) {}
-      ~FutureAdapter() {}
-      virtual void onFutureFinished(const qi::MetaFunctionResult &future, void *data)
+    template <typename T>
+    inline void futureAdapter(qi::Future<qi::MetaFunctionResult> metaFut, qi::Promise<T> promise) {
+
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
+      }
+
+      //put metaFutureResult in promise<T>
+      if (metaFut.value().getMode() == MetaFunctionResult::Mode_GenericValue)
       {
-        if (future.getMode() == MetaFunctionResult::Mode_GenericValue)
+        GenericValue val =  metaFut.value().getValue();
+        typedef std::pair<const T*, bool>  ConvType;
+        ConvType resConv = val.template to<T>();
+        if (resConv.first)
+          promise.setValue(*resConv.first);
+        else
+          promise.setError("Unable to convert call result to target type");
+        if (resConv.second)
+          delete const_cast<T*>(resConv.first);
+      }
+      else
+      {
+        IDataStream in(metaFut.value().getBuffer());
+        // Not all types are serializable, go through MetaType
+        Type* type = typeOf<T>();
+        void* ptr = type->deserialize(in);
+        if (!ptr)
         {
-          GenericValue val =  future.getValue();
-          typedef std::pair<const T*, bool>  ConvType;
-          ConvType resConv = val.template to<T>();
-          if (resConv.first)
-            prom.setValue(*resConv.first);
-          else
-            prom.setError("Unable to convert call result to target type");
-          if (resConv.second)
-            delete const_cast<T*>(resConv.first);
+          promise.setError("Could not deserialize result");
         }
         else
         {
-          IDataStream in(future.getBuffer());
-          // Not all types are serializable, go through MetaType
-          Type* type = typeOf<T>();
-          void* ptr = type->deserialize(in);
-          if (!ptr)
-          {
-            prom.setError("Could not deserialize result");
-          }
-          else
-          {
-            prom.setValue(*(T*)ptr);
-            type->destroy(ptr);
-          }
+          promise.setValue(*(T*)ptr);
+          type->destroy(ptr);
         }
-        delete this;
       }
-      virtual void onFutureFailed(const std::string &error, void *data)
-      {
-        prom.setError(error);
-        delete this;
+    }
+
+    template <>
+    inline void futureAdapter<void>(qi::Future<qi::MetaFunctionResult> metaFut, qi::Promise<void> promise) {
+
+      //error handling
+      if (metaFut.hasError()) {
+        promise.setError(metaFut.error());
+        return;
       }
-      qi::Promise<T> prom;
-    };
-    template<> class FutureAdapter<void>
-    : public qi::FutureInterface<qi::MetaFunctionResult>
-    {
-    public:
-      FutureAdapter(qi::Promise<void> prom) :prom(prom) {}
-      ~FutureAdapter() {}
-      virtual void onFutureFinished(const qi::MetaFunctionResult &future, void *data)
-      {
-        prom.setValue(0);
-        delete this;
-      }
-      virtual void onFutureFailed(const std::string &error, void *data)
-      {
-        prom.setError(error);
-        delete this;
-      }
-      qi::Promise<void> prom;
-    };
+      promise.setValue(0);
+    }
+
   }
+
+
+
 
   template<typename R>
   qi::FutureSync<R> GenericObject::call(const std::string& methodName,
@@ -142,7 +134,10 @@ namespace qi {
     // Mark params as being on the stack
     MetaFunctionParameters p(params, true);
     qi::Future<qi::MetaFunctionResult> fmeta = xMetaCall(sigret, signature, p);
-    fmeta.addCallbacks(new detail::FutureAdapter<R>(res));
+    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));
+
+
+
     return res.future();
   }
 }

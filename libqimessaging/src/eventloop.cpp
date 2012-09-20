@@ -121,6 +121,7 @@ namespace qi {
 
   void EventLoopPrivate::stop()
   {
+    qiLogDebug("qi.EventLoop") << this << "stopping";
     event_base* base = 0;
     { // Ensure no multipe calls are made.
       boost::recursive_mutex::scoped_lock sl(_mutex);

@@ -107,7 +107,7 @@ namespace qi {
   }
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name,
-                                                    const qi::GenericObject  &obj)
+                                                        const qi::GenericObject  &obj)
   {
     return _p->_server.registerService(name, obj);
   }

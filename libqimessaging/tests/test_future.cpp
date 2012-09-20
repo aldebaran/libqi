@@ -38,38 +38,36 @@ std::string TestFuture::gGlobalS;
 std::string TestFuture::gGlobalE;
 qi::atomic<long> TestFuture::gSuccess;
 
-class TestFutureI : public qi::FutureInterface<int> {
+class TestFutureI {
 public:
   TestFutureI(int &gGlobalI, std::string &gGlobalE)
     : gGlobalI(gGlobalI),
       gGlobalE(gGlobalE)
   {}
 
-  void onFutureFinished(const int &future, void *QI_UNUSED(data)) {
-    gGlobalI = future;
-  }
-
-  void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
-    gGlobalE = error;
+  void onFutureFinished(qi::Future<int> future) {
+    if (future.hasError())
+      gGlobalE = future.error();
+    else
+      gGlobalI = future.value();
   }
 
   int         &gGlobalI;
   std::string &gGlobalE;
 };
 
-class TestFutureS : public qi::FutureInterface<std::string> {
+class TestFutureS {
 public:
   TestFutureS(std::string &gGlobalS, std::string &gGlobalE)
     : gGlobalS(gGlobalS),
       gGlobalE(gGlobalE)
   {}
 
-  void onFutureFinished(const std::string &future, void *QI_UNUSED(data)) {
-    gGlobalS = future;
-  }
-
-  void onFutureFailed(const std::string &error, void *QI_UNUSED(data)) {
-    gGlobalE = error;
+  void onFutureFinished(qi::Future<std::string> future) {
+    if (future.hasError())
+      gGlobalE = future.error();
+    else
+      gGlobalS = future.value();
   }
 
   std::string &gGlobalS;
@@ -83,11 +81,12 @@ TEST_F(TestFuture, SimpleType) {
 
   qi::Future<int>  fut = pro.future();
 
-  fut.addCallbacks(&tf);
+  fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1), 0);
 
   EXPECT_EQ(0, gGlobalI);
   EXPECT_FALSE(fut.isReady());
   pro.setValue(42);
+  fut.wait(1000);
   EXPECT_TRUE(fut.isReady());
   EXPECT_EQ(42, fut.value());
   EXPECT_EQ(42, gGlobalI);
@@ -100,7 +99,7 @@ TEST_F(TestFuture, ComplexType) {
 
   qi::Future<std::string>  fut = pro.future();
 
-  fut.addCallbacks(&tf);
+  fut.connect(boost::bind(&TestFutureS::onFutureFinished, tf, _1), 0);
 
   EXPECT_STREQ("", gGlobalS.c_str());
   EXPECT_FALSE(fut.isReady());
@@ -150,7 +149,7 @@ TEST_F(TestFuture, TestError) {
   qi::Promise<int> pro;
 
   qi::Future<int>  fut = pro.future();
-  fut.addCallbacks(&tf);
+  fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1), 0);
 
   EXPECT_STREQ("", gGlobalE.c_str());
   EXPECT_FALSE(fut.hasError());

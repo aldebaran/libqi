@@ -44,6 +44,8 @@ namespace qi
     void                     *_reserved;
   };
 
+  typedef std::vector<qi::ServiceInfo> ServiceInfoVector;
+
   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const ServiceInfo &sinfo);
   QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, ServiceInfo &sinfo);
   QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const ServiceInfo &sinfo);

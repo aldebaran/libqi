@@ -44,8 +44,7 @@ namespace qi {
     ServerClient                 *sclient;
   };
 
-  class Session_Service : public FutureInterface<qi::ServiceInfo>,
-                          public FutureInterface<qi::MetaObject>
+  class Session_Service
   {
   public:
     Session_Service(ServiceDirectoryClient *sdClient, Session_Server *server)
@@ -57,23 +56,22 @@ namespace qi {
     void close();
 
     qi::Future<qi::GenericObject> service(const std::string &service,
-                                   Session::ServiceLocality locality,
-                                   const std::string &protocol);
+                                          Session::ServiceLocality locality,
+                                          const std::string &protocol);
 
   protected:
     //FutureInterface
-    virtual void onFutureFailed(const std::string &error, void *data);
-    virtual void onFutureFinished(const qi::ServiceInfo &value, void *data);
-    virtual void onFutureFinished(const qi::MetaObject &value, void *data);
+    void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId);
+    void onMetaObjectResult(qi::Future<qi::MetaObject> value, long requestId);
 
     //TransportSocket
-    void onSocketConnected(qi::TransportSocketPtr socket, void *data);
-    void onSocketDisconnected(qi::TransportSocketPtr socket, int error, void *data);
+    void onSocketConnected(qi::TransportSocketPtr socket, long requestId);
+    void onSocketDisconnected(qi::TransportSocketPtr socket, int error, long requestId);
 
 
   protected:
-    ServiceRequest *serviceRequest(void *data);
-    void            removeRequest(void *data);
+    ServiceRequest *serviceRequest(long requestId);
+    void            removeRequest(long requestId);
 
   protected:
     boost::mutex                    _requestsMutex;

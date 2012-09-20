@@ -52,6 +52,9 @@ namespace qi {
     void FutureBase::reportReady() {
       boost::mutex::scoped_lock lock(_p->_mutex);
       _p->_isReady = true;
+    }
+
+    void FutureBase::notifyReady() {
       _p->_cond.notify_all();
     }
 
@@ -60,7 +63,6 @@ namespace qi {
       _p->_hasError = true;
       _p->_isReady = true;
       _p->_error = message;
-      _p->_cond.notify_all();
     }
 
     bool FutureBase::isReady() const {

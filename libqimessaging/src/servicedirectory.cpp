@@ -94,7 +94,7 @@ namespace qi
 
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.function();
     qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
-    res.addCallbacks(new ServerResult(socket, msg));
+    res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.replyAddress()));
 
     currentSocket.reset();
   }

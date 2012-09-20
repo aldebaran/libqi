@@ -31,7 +31,7 @@ namespace qi {
 
   class ServiceDirectoryClient;
   class Session_Server;
-  class Session_Services : public qi::FutureInterface< std::vector<qi::ServiceInfo> > {
+  class Session_Services {
   public:
     Session_Services(ServiceDirectoryClient *sdClient, Session_Server *server)
       : _sdClient(sdClient)
@@ -42,14 +42,15 @@ namespace qi {
 
   protected:
     //FutureInterface
-    virtual void onFutureFailed(const std::string &error, void *data);
-    virtual void onFutureFinished(const std::vector<qi::ServiceInfo> &value, void *data);
+    void onFutureFinished(qi::Future<qi::ServiceInfoVector> value, long requestId);
 
   protected:
-    ServicesRequest *request(void *data);
-    void             removeRequest(void *data);
+    ServicesRequest *request(long requestId);
+    void             removeRequest(long requestId);
 
   protected:
+    typedef std::map<long, ServicesRequest*> ServicesRequestPtrMap;
+
     std::map<long, ServicesRequest*>  _request;
     boost::mutex                      _requestMutex;
     qi::atomic<long>                  _requestIndex;

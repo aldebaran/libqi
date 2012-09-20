@@ -18,28 +18,16 @@
 #include "object_c_p.h"
 #include "future_c_p.h"
 
-class QiFutureCAdapter: public qi::FutureInterface<qi::MetaFunctionResult>
-{
-public:
-  QiFutureCAdapter(qi::Promise<void*>& prom)
-  : promise(prom)
-  {}
-  virtual void onFutureFinished(const qi::MetaFunctionResult &result, void *data)
-  {
-    qi_message_t* msg = qi_message_create();
-    qi_message_data_t* msgData = (qi_message_data_t*)msg;
-    *msgData->buff = result.getBuffer();
-    promise.setValue(msg);
-    delete this;
+void qiFutureCAdapter(qi::Future<qi::MetaFunctionResult> result, qi::Promise<void*> promise) {
+  if (result.hasError()) {
+    promise.setError(result.error());
+    return;
   }
-  virtual void onFutureFailed(const std::string &error, void *data)
-  {
-    promise.setError(error);
-    delete this;
-  }
-  qi::Promise<void*> promise;
-};
-
+  qi_message_t* msg = qi_message_create();
+  qi_message_data_t* msgData = (qi_message_data_t*)msg;
+  *msgData->buff = result.value().getBuffer();
+  promise.setValue(msg);
+}
 
 qi_object_t *qi_object_create()
 {
@@ -68,7 +56,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   qi::Future<qi::MetaFunctionResult> res = obj->xMetaCall(mm->sigreturn(), signature_c, qi::MetaFunctionParameters(*m->buff));
   qi::Promise<void*> promise;
   qi_future_data_t*  data = new qi_future_data_t;
-  res.addCallbacks(new QiFutureCAdapter(promise));
+  res.connect(boost::bind<void>(&qiFutureCAdapter, _1, promise));
   data->future = new qi::Future<void*>();
   *data->future = promise.future();
   return (qi_future_t *) data;

@@ -234,7 +234,7 @@ namespace qi {
     case Message::Type_Call:
       {
          qi::Future<MetaFunctionResult> fut = obj.metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::MetaCallType_Queued);
-         fut.addCallbacks(new ServerResult(client, msg));
+         fut.connect(boost::bind<void>(&serverResultAdapter, _1, client, msg.replyAddress()));
       }
       break;
     case Message::Type_Event:
@@ -246,20 +246,9 @@ namespace qi {
 
   };
 
-  void Session_Server::onFutureFailed(const std::string &error, void *data)
+  void Session_Server::onFutureFinished(qi::Future<unsigned int> fut, long id, qi::Promise<unsigned int> result)
   {
-    qi::ServiceInfo si;
-    long id = reinterpret_cast<long>(data);
-    RegisterServiceMap::iterator it = _servicesObject.find(id);
-    if (it != _servicesObject.end())
-      _servicesObject.erase(it);
-  }
-
-  void Session_Server::onFutureFinished(const unsigned int &idx,
-                                        void               *data)
-  {
-    long id = reinterpret_cast<long>(data);
-    qi::ServiceInfo si;
+    qi::ServiceInfo              si;
     RegisterServiceMap::iterator it;
 
     {
@@ -267,7 +256,14 @@ namespace qi {
       it = _servicesObject.find(id);
       if (it != _servicesObject.end())
         si = it->second.second;
+      if (fut.hasError()) {
+        _servicesObject.erase(id);
+        result.setError(fut.error());
+        return;
+      }
     }
+    unsigned int idx = fut.value();
+
     si.setServiceId(idx);
 
     {
@@ -284,6 +280,7 @@ namespace qi {
       _servicesIndex[idx] = si.name();
       _servicesObject.erase(it);
     }
+    result.setValue(idx);
   }
 
 
@@ -332,11 +329,12 @@ namespace qi {
       _servicesObject[id] = std::make_pair(obj, si);
     }
 
+    qi::Promise<unsigned int> prom;
     qi::Future<unsigned int> future;
     future = _sdClient->registerService(si);
-    future.addCallbacks(this, reinterpret_cast<void *>(id));
+    future.connect(boost::bind<void>(&Session_Server::onFutureFinished, this, _1, id, prom));
 
-    return future;
+    return prom.future();
   };
 
   qi::Future<void> Session_Server::unregisterService(unsigned int idx)

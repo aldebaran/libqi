@@ -11,6 +11,7 @@
 
 #include <list>
 #include <qimessaging/metafunction.hpp>
+#include <qimessaging/future.hpp>
 
 class CFunctorResult;
 class FutureCallbackForwarder;
@@ -22,31 +23,29 @@ typedef struct
 } qi_future_data_t;
 
 //Needed to bridge C callback on C++ Future callbacks;
-class FutureCallbackForwarder : public qi::FutureInterface<void *>
+class FutureCallbackForwarder
 {
 public:
   FutureCallbackForwarder() {}
   virtual ~FutureCallbackForwarder() {}
 
-  virtual void onFutureFailed(const std::string &error, void *data)
+  virtual void onResult(qi::Future<void *> value, void *data)
   {
     std::list<qi_future_callback_t>::iterator it;
 
-    for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
+    if (value.hasError())
     {
-      (*(*it))(0, 0, data);
+      for (it = _callbacks.begin(); it != _callbacks.end(); ++it) {
+        (*(*it))(0, 0, data);
+      }
+      return;
     }
-  }
-
-  virtual void onFutureFinished(void*const &value, void *data)
-  {
-    std::list<qi_future_callback_t>::iterator it;
-
     for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
     {
       (*(*it))(value, 1, data);
     }
   }
+
   void addCallback(qi_future_callback_t callback)
   {
     _callbacks.push_back(callback);

@@ -29,6 +29,8 @@ namespace qi {
     protected:
       void reportReady();
       void reportError(const std::string &message);
+      void notifyReady();
+
     public:
       FutureBasePrivate *_p;
     };
@@ -38,72 +40,50 @@ namespace qi {
     class FutureState : public FutureBase {
     public:
       typedef typename FutureType<T>::type ValueType;
-      typedef typename std::vector<std::pair<FutureInterface<T> *, void *> >::iterator futureInterfaceListIterator;
 
-      FutureState(Future<T> *fut)
-        : _self(fut),
-          _value()
+      FutureState()
+        : _value()
       {
       }
 
-      void setValue(const ValueType &value)
+      void setValue(qi::Future<T> future, const ValueType &value)
       {
         _value = value;
-        futureInterfaceListIterator iter;
-        boost::mutex::scoped_lock l(_mutexCallback);
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          (*iter).first->onFutureFinished(_value, (*iter).second);
-        }
         reportReady();
+        _onResult(future);
+        notifyReady();
       }
 
-      void setError(const std::string &message)
+      void setError(qi::Future<T> future, const std::string &message)
       {
-        futureInterfaceListIterator iter;
-        boost::mutex::scoped_lock l(_mutexCallback);
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          (*iter).first->onFutureFailed(message, (*iter).second);
-        }
         reportError(message);
+        _onResult(future);
+        notifyReady();
       }
 
-      void addCallbacks(FutureInterface<T> *p_interface, void *data) {
-        std::pair<FutureInterface<T> *, void *> itf = std::make_pair(p_interface, data);
-        boost::mutex::scoped_lock l(_mutexCallback);
-        _callback.push_back(itf);
-        if (isReady())
-        {
-          if (hasError())
-            p_interface->onFutureFailed(error(), data);
+      unsigned int connect(qi::Future<T> future, boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evloop) {
+        _onResult.connect(fun, evloop);
+        //result already ready, notify the callback
+        //TODO: if evLoop use it
+        if (isReady()) {
+          if (evloop)
+            evloop->asyncCall(1, boost::bind<void>(fun, future));
           else
-          p_interface->onFutureFinished(_value, data);
+            fun(future);
         }
       }
 
-      void removeCallbacks(FutureInterface<T> *p_interface) {
-        boost::mutex::scoped_lock l(_mutexCallback);
-        futureInterfaceListIterator iter;
-        for (iter = _callback.begin(); iter != _callback.end(); ++iter) {
-          if ((*iter).first == p_interface) {
-            _callback.erase(iter);
-            break;
-          }
-        }
+      bool disconnect(unsigned int i) {
+        return _onResult.disconnect(i);
       }
 
-      std::vector<std::pair<FutureInterface<T> *, void *> > callbacks()
-      {
-        return _callback;
-      }
 
       const ValueType &value() const    { wait(); return _value; }
       ValueType &value()                { wait(); return _value; }
 
     private:
-      Future<T>                        *_self;
+      qi::Signal<void (qi::Future<T>)>  _onResult;
       ValueType                         _value;
-      std::vector<std::pair<FutureInterface<T> *, void *> > _callback;
-      boost::mutex                                          _mutexCallback;
     };
   } // namespace detail
 

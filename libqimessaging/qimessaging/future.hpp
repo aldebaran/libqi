@@ -55,9 +55,8 @@ namespace qi {
   public:
     typedef typename FutureType<T>::type ValueType;
     Future()
-      : _p(boost::shared_ptr< detail::FutureState<T> >())
+      : _p(new detail::FutureState<T>())
     {
-      _p = boost::shared_ptr< detail::FutureState<T> >(new detail::FutureState<T>(this));
     }
 
     Future(const FutureSync<T>& b)
@@ -90,27 +89,20 @@ namespace qi {
 
     const std::string &error() const           { return _p->error(); }
 
-    void addCallbacks(FutureInterface<T> *p_interface, void *data = 0) {
-      _p->addCallbacks(p_interface, data);
-    }
-
-    void removeCallbacks(FutureInterface<T> *p_interface) {
-      _p->removeCallbacks(p_interface);
-    }
-
-    std::vector<std::pair<FutureInterface<T> *, void *> > callbacks()
-    {
-      return _p->callbacks();
-    }
 
     FutureSync<T> sync()
     {
       return FutureSync<T>(*this);
     };
 
-    friend class Promise<T>;
+  public: //Signals
+    unsigned int connect(boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evLoop = 0) { _p->connect(*this, fun, evLoop); }
+    bool disconnect(unsigned int i) { _p->disconnect(i); }
+    //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
+
   protected:
     boost::shared_ptr< detail::FutureState<T> > _p;
+    friend class Promise<T>;
     friend class FutureSync<T>;
   };
 
@@ -183,11 +175,11 @@ namespace qi {
     Promise() { }
 
     void setValue(const ValueType &value) {
-      _f._p->setValue(value);
+      _f._p->setValue(_f, value);
     }
 
     void setError(const std::string &msg) {
-      _f._p->setError(msg);
+      _f._p->setError(_f, msg);
     }
 
     void reset() {

@@ -30,11 +30,10 @@ namespace qi {
   }
 
 
-  ServiceRequest *Session_Service::serviceRequest(void *data)
+  ServiceRequest *Session_Service::serviceRequest(long requestId)
   {
     {
       boost::mutex::scoped_lock                 sl(_requestsMutex);
-      long                                      requestId = reinterpret_cast<long>(data);
       std::map<long, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
@@ -46,11 +45,10 @@ namespace qi {
     }
   }
 
-  void Session_Service::removeRequest(void *data)
+  void Session_Service::removeRequest(long requestId)
   {
     {
       boost::mutex::scoped_lock                 l(_requestsMutex);
-      long                                      requestId = reinterpret_cast<long>(data);
       std::map<long, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
@@ -70,20 +68,20 @@ namespace qi {
     }
   }
 
-  void Session_Service::onSocketDisconnected(TransportSocketPtr client, int error, void *data) {
-    ServiceRequest *sr = serviceRequest(data);
+  void Session_Service::onSocketDisconnected(TransportSocketPtr client, int error, long requestId) {
+    ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
     sr->attempts--;
     if (sr->attempts <= 0) {
       sr->promise.setError("Impossible to connect to the requested service.");
-      removeRequest(data);
+      removeRequest(requestId);
     }
   }
 
-  void Session_Service::onSocketConnected(TransportSocketPtr client, void *data)
+  void Session_Service::onSocketConnected(TransportSocketPtr client, long requestId)
   {
-    ServiceRequest *sr = serviceRequest(data);
+    ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
 
@@ -103,11 +101,12 @@ namespace qi {
     sr->sclient   = new qi::ServerClient(client);
 
     qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::GenericObject_Main);
-    fut.addCallbacks(this, data);
+    //fut.addCallbacks(this, data);
+    fut.connect(boost::bind<void>(&Session_Service::onMetaObjectResult, this, _1, requestId));
   }
 
-  void Session_Service::onFutureFinished(const qi::MetaObject &mo, void *data) {
-    ServiceRequest *sr = serviceRequest(data);
+  void Session_Service::onMetaObjectResult(qi::Future<qi::MetaObject> mo, long requestId) {
+    ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
     {
@@ -138,14 +137,15 @@ namespace qi {
       }
     }
 
-    removeRequest(data);
+    removeRequest(requestId);
   }
 
   // We received a ServiceInfo, and want to establish a connection
-  void Session_Service::onFutureFinished(const qi::ServiceInfo &si, void *data) {
-    ServiceRequest *sr = serviceRequest(data);
+  void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId) {
+    ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
+    qi::ServiceInfo &si = result.value();
     sr->attempts = 0;
     sr->serviceId = si.serviceId();
 
@@ -157,7 +157,7 @@ namespace qi {
         tsmit = _sockets.find(*it);
         if (tsmit != _sockets.end()) {
           qiLogInfo("qi.session_service") << "reusing socket for endpoint: " << *it;
-          onSocketConnected(tsmit->second, data);
+          onSocketConnected(tsmit->second, requestId);
         }
       }
     }
@@ -171,8 +171,8 @@ namespace qi {
       {
         qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
         //ts->addCallbacks(this, data);
-        socket->connected.connect(boost::bind(&Session_Service::onSocketConnected, this, socket, data));
-        socket->disconnected.connect(boost::bind(&Session_Service::onSocketDisconnected, this, socket, _1, data));
+        socket->connected.connect(boost::bind(&Session_Service::onSocketConnected, this, socket, requestId));
+        socket->disconnected.connect(boost::bind(&Session_Service::onSocketDisconnected, this, socket, _1, requestId));
         sr->socket = socket;
         socket->connect(url).async();
         // The connect may still fail asynchronously.
@@ -184,21 +184,13 @@ namespace qi {
     // All attempts failed synchronously.
     if (!sr->attempts) {
       sr->promise.setError("No service found");
-      removeRequest(data);
+      removeRequest(requestId);
     }
   }
 
-  void Session_Service::onFutureFailed(const std::string &error, void *data) {
-    ServiceRequest *sr = serviceRequest(data);
-    if (!sr)
-      return;
-    sr->promise.setError(error);
-    removeRequest(data);
-  }
-
   qi::Future<qi::GenericObject> Session_Service::service(const std::string &service,
-                                                  Session::ServiceLocality locality,
-                                                  const std::string &type)
+                                                         Session::ServiceLocality locality,
+                                                         const std::string &type)
   {
     qiLogVerbose("session.service") << "Getting service " << service;
     qi::Future<qi::GenericObject> result;
@@ -225,7 +217,7 @@ namespace qi {
     }
     result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
-    fut.addCallbacks(this, reinterpret_cast<void *>(requestId));
+    fut.connect(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId));
     return result;
   }
 

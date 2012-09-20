@@ -43,7 +43,7 @@ namespace qi {
   typedef std::map<TransportSocketPtr, PerServiceLinks > Links;
 
 
-  class QIMESSAGING_API Session_Server : public FutureInterface<unsigned int> {
+  class QIMESSAGING_API Session_Server {
   public:
     Session_Server(ServiceDirectoryClient *_sdClient);
     virtual ~Session_Server();
@@ -69,8 +69,7 @@ namespace qi {
     void onSocketDisconnected(TransportSocketPtr socket, int error);
 
     //Future
-    virtual void onFutureFinished(const unsigned int &future, void *data);
-    virtual void onFutureFailed(const std::string &error, void *data);
+    void onFutureFinished(qi::Future<unsigned int> future, long id, qi::Promise<unsigned int> result);
 
   private:
     Links                                   _links;

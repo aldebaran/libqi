@@ -16,36 +16,20 @@
 
 namespace qi {
 
-  class ServerResult: public FutureInterface<MetaFunctionResult>
-  {
-  public:
-    ServerResult(TransportSocketPtr client, const qi::Message &req)
-      : _client(client)
-      {
-        _retval.buildReplyFrom(req);
-      };
-    virtual void onFutureFinished(const MetaFunctionResult &value, void *data)
-    {
-      _retval.setBuffer(value.getBuffer());
-      _client->send(_retval);
-      delete this;
-      }
-    virtual void onFutureFailed(const std::string &error, void *data)
-    {
-      qiLogDebug("Future") << "Future finished in error " << error;
-      qi::Buffer result;
+  inline void serverResultAdapter(qi::Future<MetaFunctionResult> future, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
+    qi::Message ret(replyaddr);
+
+    if (future.hasError()) {
+      qi::Buffer      result;
       qi::ODataStream ods(result);
-      ods << error;
-      _retval.setBuffer(result);
-      _client->send(_retval);
-      delete this;
+      ods << future.error();
+      ret.setBuffer(result);
+      socket->send(ret);
+      return;
     }
-
-  private:
-    qi::Message            _retval;
-    qi::TransportSocketPtr _client;
-  };
-
+    ret.setBuffer(future.value().getBuffer());
+    socket->send(ret);
+  }
 }
 
 #endif  // _SRC_SERVERRESULT_HPP_

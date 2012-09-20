@@ -215,78 +215,64 @@ enum CallMode {
   SERIALIZE
 };
 
-template<typename T> class FutureAdapter
-: public qi::FutureInterface<qi::GenericValue>
+template<typename T>
+void futureAdapter(qi::Future<qi::GenericValue> future, qi::Promise<T> promise)
 {
-public:
-  FutureAdapter(qi::Promise<T> prom) :prom(prom) {}
-  ~FutureAdapter() {}
-  virtual void onFutureFinished(const qi::GenericValue &future, void *data)
-  {
-    // convert MetaData to target type
-    typedef std::pair<const T*, bool>  ConvType;
-    ConvType resConv =  const_cast<qi::GenericValue&>(future).template to<T>();
-    //std::cerr <<"FutureIface conversion " << resConv.second <<" "
-    //<< *resConv.first << std::endl;
-    prom.setValue(*resConv.first);
-    if (resConv.second)
+  if (future.hasError()) {
+    promise.setError(future.error());
+    return;
+  }
+
+  // convert MetaData to target type
+  typedef std::pair<const T*, bool>  ConvType;
+  ConvType resConv =  const_cast<qi::GenericValue&>(future.value()).template to<T>();
+  //std::cerr <<"FutureIface conversion " << resConv.second <<" "
+  //<< *resConv.first << std::endl;
+  promise.setValue(*resConv.first);
+  if (resConv.second)
       delete resConv.first;
-    const_cast<qi::GenericValue&>(future).destroy();
-  }
-  virtual void onFutureFailed(const std::string &error, void *data)
-  {
-    prom.setError(error);
-  }
-  qi::Promise<T> prom;
-};
+  const_cast<qi::GenericValue&>(future.value()).destroy();
+}
 
-template<typename T> class FutureAdapterBuf
-: public qi::FutureInterface<qi::Buffer>
+
+template<typename T>
+void futureAdapterBuf(qi::Future<qi::Buffer> future, qi::Promise<T> promise, const std::string &sig)
 {
-public:
-  FutureAdapterBuf(qi::Promise<T> prom, std::string sig)
-  :prom(prom),sig(sig) {}
-  ~FutureAdapterBuf() {}
-  virtual void onFutureFinished(const qi::Buffer &future, void *data)
-  {
-    qi::IDataStream id(future);
-    T val;
-    // Effective serialized net-type is in sig and we want a T
-    if (qi::signatureFromType<T>::value() != sig)
-    {
-      // Cant deserialize into T, wrong sig
-      qi::Type* compatType = qi::Type::getCompatibleTypeWithSignature(sig);
-      if (!compatType)
-      {
-        prom.setError("Type doh!");
-        return;
-      }
-      void* compatValPtr = compatType->deserialize(id);
-      qi::GenericValue compatVal;
-      compatVal.type = compatType;
-      compatVal.value = compatValPtr;
-      std::pair<const T*, bool>  res = compatVal.template to<T>();
-      //std::cerr <<"deserialize conversion " << res.second <<" "
-      //<< *res.first << std::endl;
-      prom.setValue(*res.first);
-      //std::cerr <<"val " << prom.future().value() << std::endl;
-      if (res.second)
-        delete res.first;
-      compatVal.destroy();
-      qi::os::msleep(300);
-    }
-    else
-      id >> val;
-    prom.setValue(val);
+  if (future.hasError()) {
+    promise.setError(future.error());
+    return;
   }
-  virtual void onFutureFailed(const std::string &error, void *data)
-  {
-    prom.setError(error);
-  }
-  qi::Promise<T> prom;
-  std::string sig;
-};
 
+  qi::IDataStream id(future);
+  T val;
+  // Effective serialized net-type is in sig and we want a T
+  if (qi::signatureFromType<T>::value() != sig)
+  {
+    // Cant deserialize into T, wrong sig
+    qi::Type* compatType = qi::Type::getCompatibleTypeWithSignature(sig);
+    if (!compatType)
+    {
+      promise.setError("Type doh!");
+      return;
+    }
+    void* compatValPtr = compatType->deserialize(id);
+    qi::GenericValue compatVal;
+    compatVal.type = compatType;
+    compatVal.value = compatValPtr;
+    std::pair<const T*, bool>  res = compatVal.template to<T>();
+    //std::cerr <<"deserialize conversion " << res.second <<" "
+    //<< *res.first << std::endl;
+    promise.setValue(*res.first);
+    //std::cerr <<"val " << prom.future().value() << std::endl;
+    if (res.second)
+      delete res.first;
+    compatVal.destroy();
+    qi::os::msleep(300);
+  }
+  else
+    id >> val;
+  promise.setValue(val);
+}
 
 // FIXME: reduce the template part by doing the futureAdapter first,
 // and bounce to a non-template qi::Future<GenericValue> metaCall(...)
@@ -324,7 +310,7 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
         pCopy.push_back(params[i].clone());
       qi::Promise<R> prom;
       qi::Future<qi::GenericValue> res=asyncCall(ptr, pCopy);
-      res.addCallbacks(new FutureAdapter<R>(prom), 0);
+      res.connect(boost::bind<void>(&futureAdapter<R>, _1, prom));
       return prom.future();
     }
   case SERIALIZE:
@@ -336,7 +322,8 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
         params[i].serialize(ds);
       qi::Promise<R> prom;
       qi::Future<qi::Buffer> res = serializeCall(ptr, buf);
-      res.addCallbacks(new FutureAdapterBuf<R>(prom, ""), 0);
+      res.connect(boost::bind<void>(&futureAdapterBuf<R>, _1, prom, ""));
+      //res.addCallbacks(new FutureAdapterBuf<R>(prom, ""), 0);
       return prom.future();
     }
   }
@@ -390,7 +377,8 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
   }
   qi::Promise<R> prom;
   qi::Future<qi::Buffer> res = serializeCall(ptr, buf);
-  res.addCallbacks(new FutureAdapterBuf<R>(prom, sigRet), 0);
+  //res.addCallbacks(new FutureAdapterBuf<R>(prom, sigRet), 0);
+  res.connect(boost::bind<void>(&futureAdapterBuf<R>, _1, prom, sigRet));
   return prom.future();
 }
 
