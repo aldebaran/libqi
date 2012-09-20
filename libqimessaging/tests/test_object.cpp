@@ -294,10 +294,52 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
-  //go is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  //GenericObject is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
+  // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
+
+  ASSERT_EQ(4, oa1.call<int>("increment", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment2", 3));
+}
+
+class MAdder: public Adder, public qi::Manageable
+{
+public:
+  MAdder() {}
+  MAdder(int i ) : Adder(i) {}
+};
+
+TEST(TestObject, ObjectTypeBuilderManageable)
+{
+  // We test both async calls, and an extra inheritance layer
+  qi::ObjectTypeBuilder<MAdder> builder;
+  builder.inherits<Adder>();
+  builder.advertiseMethod("add", &Adder::add);
+  builder.advertiseMethod("addTwo", &Adder::addTwo);
+  builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);
+  builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
+  builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
+  builder.advertiseMethod("addAdderByConstPtr", &Adder::addAdderByConstPtr);
+  builder.advertiseMethod("increment", &Adder::increment);
+  builder.advertiseMethod("increment2", &Incrementer::increment);
+  MAdder a1(1);
+  MAdder a2(2);
+  qi::GenericObject oa1 = builder.object(&a1);
+  qi::GenericObject oa2 = builder.object(&a2);
+  ASSERT_TRUE(oa1.eventLoop()); // object not manageable
+  ASSERT_EQ(2, oa1.call<int>("add", 1));
+  ASSERT_EQ(3, oa2.call<int>("add", 1));
+  ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
+
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
+  //byvalue parent cast not supported ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
+  //GenericObject is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
+  //byval cast not supported ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
   // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
 
   ASSERT_EQ(4, oa1.call<int>("increment", 3));

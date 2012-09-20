@@ -85,14 +85,19 @@ namespace qi {
   unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
   {
     // Intercept advertise to auto-register parent type if this is a parent method
+    // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
+    // as a child
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
       typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
     return ObjectTypeBuilderBase::advertiseMethod(name, function);
   }
 
-
-
+  template<typename T>
+  void ObjectTypeBuilder<T>::registerType()
+  {
+    detail::typeOfBackend<T*>(type());
+  }
 
   template <typename C, typename T>
   SignalBase signalAccess(Signal<T> C::* ptr, void* instance)

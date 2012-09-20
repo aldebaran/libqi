@@ -81,6 +81,7 @@ namespace qi {
       StaticObjectTypeBase* t = new StaticObjectTypeBase();
       t->initialize(metaObject(), _p->data);
       _p->type = t;
+      registerType();
     }
     return _p->type;
   }

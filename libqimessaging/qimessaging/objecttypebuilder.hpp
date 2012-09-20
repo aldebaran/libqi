@@ -61,6 +61,8 @@ namespace qi {
     GenericObject object(void* ptr);
     ObjectType* type();
 
+    /// Register type to typeof. Called by type()
+    virtual void registerType() {};
   private:
     ObjectTypeBuilderPrivate* _p;
   };
@@ -78,6 +80,9 @@ namespace qi {
 
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+
+    /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
+    virtual void registerType();
 
   };
 }
