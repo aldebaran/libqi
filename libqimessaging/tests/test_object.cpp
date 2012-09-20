@@ -271,10 +271,13 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
-  /* Not working yet
   ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
-  */
+  //go is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
+  // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
 }
 
 int main(int argc, char **argv)
