@@ -74,6 +74,8 @@ namespace qi {
       buildFor<T>();
     }
 
+    template<typename U> void inherits();
+
     template <typename FUNCTION_TYPE>
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
 

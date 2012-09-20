@@ -54,6 +54,18 @@ namespace qi {
       typename boost::remove_reference<U>::type>::type>(), offset);
   }
 
+  template<typename T>
+  template<typename U>
+  void ObjectTypeBuilder<T>::inherits()
+  {
+    T* ptr = (T*)(void*)0x10000;
+    U* pptr = ptr;
+    int offset = (long)(void*)pptr - (long)(void*) ptr;
+    qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr << " " << offset;
+    qiLogDebug("qi.meta") << typeid(ptr).name() << " " << typeid(pptr).name();
+    return ObjectTypeBuilderBase::inherits<U>(offset);
+  }
+
   namespace detail
   {
     template<typename F, typename T> void checkRegisterParent(
@@ -64,13 +76,7 @@ namespace qi {
       typedef typename boost::function_types::parameter_types<F>::type ArgsType;
       typedef typename boost::mpl::front<ArgsType>::type DecoratedClassType;
       typedef typename boost::remove_reference<DecoratedClassType>::type ClassType;
-      // Test pointer offset
-      T* ptr = (T*)(void*)0x10000;
-      ClassType* pptr = ptr;
-      int offset = (long)(void*)pptr - (long)(void*) ptr;
-      qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr << " " << offset;
-      qiLogDebug("qi.meta") << typeid(ptr).name() << " " << typeid(pptr).name();
-      builder.template inherits<ClassType>(offset);
+      builder.template inherits<ClassType>();
     }
   };
 
