@@ -68,7 +68,14 @@ namespace qi
         return *ptr;
       }
     };
-
+    template<typename T> struct remove_constptr
+    {
+      typedef T type;
+    };
+    template<typename T> struct remove_constptr<const T*>
+    {
+      typedef T* type;
+    };
     struct fill_arguments
     {
       inline fill_arguments(std::vector<Type*>* target)
@@ -76,8 +83,11 @@ namespace qi
 
       template<typename T> void operator()(T*) const
       {
-        target->push_back(typeOf<typename
-          boost::remove_const<typename boost::remove_reference<T>::type>::type>());
+        target->push_back(typeOf<
+          typename remove_constptr<
+            typename boost::remove_const<
+               typename boost::remove_reference<T>::type
+            >::type>::type>());
       }
       std::vector<Type*>* target;
     };
