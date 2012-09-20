@@ -86,7 +86,7 @@ namespace qi {
     //close both client and server side
     qi::FutureSync<void>    close();
 
-    qi::Future<unsigned int> registerService(const std::string &name, const qi::GenericObject &object);
+    qi::FutureSync<unsigned int> registerService(const std::string &name, const qi::GenericObject &object);
     qi::Future<void>         unregisterService(unsigned int idx);
 
 

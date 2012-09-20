@@ -106,7 +106,7 @@ namespace qi {
     return _p->_sdClient.disconnect();
   }
 
-  qi::Future<unsigned int> Session::registerService(const std::string &name,
+  qi::FutureSync<unsigned int> Session::registerService(const std::string &name,
                                                     const qi::GenericObject  &obj)
   {
     return _p->_server.registerService(name, obj);
