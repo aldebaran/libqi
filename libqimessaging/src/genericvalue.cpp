@@ -47,10 +47,13 @@ GenericValue GenericValue::convert(Type& targetType) const
   ObjectType* osrc = dynamic_cast<ObjectType*>(type);
   qiLogDebug("qi.meta") << "inheritance check "
     << osrc <<" " << (osrc?osrc->inherits(&targetType):false);
-  if (osrc && osrc->inherits(&targetType))
+  int inheritOffset = 0;
+  if (osrc && (inheritOffset =  osrc->inherits(&targetType)) != -1)
   {
-    res.type = type;
-    res.value = res.type->clone(value);
+    res.type = &targetType;
+    void* ptr = (* (void**)value);
+    ptr = (void*) ((long)ptr + inheritOffset);
+    res.value = res.type->clone(&ptr);
     return res;
   }
 

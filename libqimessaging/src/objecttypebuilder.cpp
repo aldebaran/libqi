@@ -85,14 +85,15 @@ namespace qi {
     return _p->type;
   }
 
-  void ObjectTypeBuilderBase::inherits(Type* type)
+  void ObjectTypeBuilderBase::inherits(Type* type, int offset)
   {
-    std::vector<Type*>& p = _p->data.parentTypes;
-    if (type != _p->classType && std::find(p.begin(), p.end(), type) == p.end())
+    std::vector<std::pair<Type*, int> >& p = _p->data.parentTypes;
+    if (type != _p->classType && std::find(p.begin(), p.end(),
+      std::make_pair(type, offset)) == p.end())
     {
       qiLogVerbose("qi.meta") << "Declaring inheritance "
       << _p->classType->infoString() << " <- " << type->infoString();
-      p.push_back(type);
+      p.push_back(std::make_pair(type, offset));
     }
   }
 }

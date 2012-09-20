@@ -327,7 +327,7 @@ namespace qi {
     m->moveToEventLoop(ctx);
   }
 
-  bool ObjectType::inherits(Type* other)
+  int ObjectType::inherits(Type* other)
   {
     /* A registered class C can have to Type* around:
     * - TypeImpl<C*>
@@ -335,15 +335,25 @@ namespace qi {
     * So assume that any of them can be in the parentTypes list.
     */
     if (this == other)
-      return true;
-    const std::vector<Type*>& parents = parentTypes();
+      return 0;
+    const std::vector<std::pair<Type*, int> >& parents = parentTypes();
     for (unsigned i=0; i<parents.size(); ++i)
     {
-      ObjectType* op = dynamic_cast<ObjectType*>(parents[i]);
-      if (parents[i] == other || ( op && op->inherits(other)))
-        return true;
+      if (parents[i].first == other)
+        return parents[i].second;
+      ObjectType* op = dynamic_cast<ObjectType*>(parents[i].first);
+      if (op)
+      {
+        int offset = op->inherits(other);
+        if (offset != -1)
+        {
+          qiLogDebug("qi.meta") << "Inheritance offsets " << parents[i].second
+           << " " << offset;
+          return parents[i].second + offset;
+        }
+      }
     }
-    return false;
+    return -1;
   }
 }
 

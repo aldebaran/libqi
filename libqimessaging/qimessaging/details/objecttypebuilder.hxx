@@ -47,11 +47,11 @@ namespace qi {
   }
 
   template<typename U>
-  void ObjectTypeBuilderBase::inherits()
+  void ObjectTypeBuilderBase::inherits(int offset)
   {
     return inherits(typeOf<
       typename boost::add_pointer<
-      typename boost::remove_reference<U>::type>::type>());
+      typename boost::remove_reference<U>::type>::type>(), offset);
   }
 
   namespace detail
@@ -67,12 +67,10 @@ namespace qi {
       // Test pointer offset
       T* ptr = (T*)(void*)0x10000;
       ClassType* pptr = ptr;
-      qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr;
-      if ((void*)ptr != (void*)pptr)
-      {
-        qiLogError("qi.meta") << "Offset detected in inheritance";
-      }
-      builder.template inherits<ClassType>();
+      int offset = (long)(void*)pptr - (long)(void*) ptr;
+      qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr << " " << offset;
+      qiLogDebug("qi.meta") << typeid(ptr).name() << " " << typeid(pptr).name();
+      builder.template inherits<ClassType>(offset);
     }
   };
 

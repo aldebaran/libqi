@@ -47,14 +47,14 @@ namespace qi {
     template <typename T>
     inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter);
 
-    template<typename P> void inherits();
+    template<typename P> void inherits(int offset);
 
     // input: type-erased
 
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func);
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter);
     void xBuildFor(Type* type, boost::function<Manageable* (void*)> asManageable);
-    void inherits(Type* parentType);
+    void inherits(Type* parentType, int offset);
 
     // output
     const MetaObject& metaObject();

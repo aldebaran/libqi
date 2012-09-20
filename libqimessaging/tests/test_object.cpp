@@ -72,8 +72,8 @@ public:
 };
 
 class Adder:
-  //public EvilPadder<1>, public Incrementer, public EvilPadder<2>
-  public Incrementer
+  public EvilPadder<1>, public Incrementer, public EvilPadder<2>
+  //public Incrementer
 {
 public:
   Adder() {

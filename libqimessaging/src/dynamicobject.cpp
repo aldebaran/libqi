@@ -60,7 +60,7 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(void* instance, unsigned int linkId);
     virtual Manageable* manageable(void* intance);
-    virtual const std::vector<Type*>& parentTypes();
+    virtual const std::vector<std::pair<Type*, int> >& parentTypes();
   };
 
   DynamicObject::DynamicObject()
@@ -261,9 +261,9 @@ namespace qi
       ->disconnect(linkId);
   }
 
-  const std::vector<Type*>& DynamicObjectType::parentTypes()
+  const std::vector<std::pair<Type*, int> >& DynamicObjectType::parentTypes()
   {
-    static std::vector<Type*> empty;
+    static std::vector<std::pair<Type*, int> > empty;
     return empty;
   }
 
