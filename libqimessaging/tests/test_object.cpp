@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/genericobjectbuilder.hpp>
+#include <qimessaging/objecttypebuilder.hpp>
 
 static int gGlobalResult = 0;
 
@@ -75,6 +76,14 @@ public:
     qiLogDebug("adder") << this <<' ' << v << ' ' << v2;
     return v+v2;
   }
+  static int addTwo(int v1, int v2)
+  {
+    return v1+v2;
+  }
+  int addAdderByRef(Adder& b) { return v + b.v;}
+  int addAdderByConstRef(const Adder& b) { return v + b.v;}
+  int addAdderByPtr(Adder* b) { return v + b->v;}
+  int addAdderByConstPtr(const Adder* b) { return v + b->v;}
   int v;
 };
 
@@ -243,6 +252,29 @@ TEST(TestObject, SerializeComplex)
   std::cerr << obj.metaObject().methodMap()[id].signature() << std::endl;
   Complex res = obj.call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
+}
+
+TEST(TestObject, ObjectTypeBuilder)
+{
+  qi::ObjectTypeBuilder<Adder> builder;
+  builder.advertiseMethod("add", &Adder::add);
+  builder.advertiseMethod("addTwo", &Adder::addTwo);
+  builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);
+  builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
+  builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
+  builder.advertiseMethod("addAdderByConstPtr", &Adder::addAdderByConstPtr);
+  Adder a1(1);
+  Adder a2(2);
+  qi::GenericObject oa1 = builder.object(&a1);
+  qi::GenericObject oa2 = builder.object(&a2);
+  ASSERT_EQ(2, oa1.call<int>("add", 1));
+  ASSERT_EQ(3, oa2.call<int>("add", 1));
+  ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
+  /* Not working yet
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
+  */
 }
 
 int main(int argc, char **argv)
