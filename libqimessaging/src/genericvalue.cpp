@@ -40,18 +40,29 @@ GenericValue GenericValue::convert(Type& targetType) const
   { // Same type, just clone
     res.type = type;
     res.value = res.type->clone(value);
+    return res;
   }
-  else
-  { // Different type, go through value
-    res.type = &targetType;
-    qi::detail::DynamicValue temp;
-    type->toValue(value, temp);
-    if (temp.type == detail::DynamicValue::Invalid)
-      qiLogWarning("qi.meta") << "Cast error " << type->infoString()
-        << " -> " << targetType.infoString();
-    //std::cerr <<"Temp value has " << temp << std::endl;
-    res.value = res.type->fromValue(temp);
+  // Different type
+  // Try inheritance
+  ObjectType* osrc = dynamic_cast<ObjectType*>(type);
+  qiLogDebug("qi.meta") << "inheritance check "
+    << osrc <<" " << (osrc?osrc->inherits(&targetType):false);
+  if (osrc && osrc->inherits(&targetType))
+  {
+    res.type = type;
+    res.value = res.type->clone(value);
+    return res;
   }
+
+  // Nothing else worked, go through value
+  res.type = &targetType;
+  qi::detail::DynamicValue temp;
+  type->toValue(value, temp);
+  if (temp.type == detail::DynamicValue::Invalid)
+    qiLogWarning("qi.meta") << "Cast error " << type->infoString()
+  << " -> " << targetType.infoString();
+  //std::cerr <<"Temp value has " << temp << std::endl;
+  res.value = res.type->fromValue(temp);
   return res;
 }
 

@@ -34,6 +34,7 @@ struct ObjectTypeData
 
   boost::function<Manageable* (void*)> asManageable;
   std::type_info* typeInfo;
+  std::vector<Type*> parentTypes;
 };
 
 
@@ -57,7 +58,7 @@ public:
   virtual bool disconnect(void* instance, unsigned int linkId);
   /// @return the manageable interface for this instance, or 0 if not available
   virtual Manageable* manageable(void* instance);
-
+  virtual const std::vector<Type*>& parentTypes();
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

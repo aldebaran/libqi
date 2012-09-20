@@ -60,6 +60,7 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(void* instance, unsigned int linkId);
     virtual Manageable* manageable(void* intance);
+    virtual const std::vector<Type*>& parentTypes();
   };
 
   DynamicObject::DynamicObject()
@@ -235,6 +236,7 @@ namespace qi
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
+
   qi::Future<MetaFunctionResult> DynamicObjectType::metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
@@ -246,15 +248,23 @@ namespace qi
     reinterpret_cast<DynamicObject*>(instance)
       ->metaEmit(signal, params);
   }
+
   unsigned int DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->connect(event, subscriber);
   }
+
   bool DynamicObjectType::disconnect(void* instance, unsigned int linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->disconnect(linkId);
+  }
+
+  const std::vector<Type*>& DynamicObjectType::parentTypes()
+  {
+    static std::vector<Type*> empty;
+    return empty;
   }
 
   Manageable* DynamicObjectType::manageable(void* instance)

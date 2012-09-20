@@ -8,7 +8,7 @@
 
 namespace qi
 {
-  
+
   class GenericObjectBuilderPrivate
   {
   public:

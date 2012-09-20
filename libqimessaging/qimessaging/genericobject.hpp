@@ -93,6 +93,9 @@ namespace qi {
     virtual bool disconnect(void* instance, unsigned int linkId)=0;
     /// @return the manageable interface for this instance, or 0 if not available
     virtual Manageable* manageable(void* instance) = 0;
+    virtual const std::vector<Type*>& parentTypes() = 0;
+
+    bool inherits(Type* other);
   };
 
   /* ObjectValue

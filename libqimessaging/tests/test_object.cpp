@@ -55,7 +55,25 @@ std::vector<qi::GenericValue> convert(qi::AutoGenericValue v1 = qi::AutoGenericV
   return res;
 }
 
-class Adder
+template<int I>
+class EvilPadder
+{
+public:
+  char padding[I];
+};
+
+class Incrementer
+{
+public:
+  Incrementer() : inc(1) {}
+  // Ensure we use this
+  int increment(int v) { return v+inc;}
+  int inc;
+};
+
+class Adder:
+  //public EvilPadder<1>, public Incrementer, public EvilPadder<2>
+  public Incrementer
 {
 public:
   Adder() {
@@ -263,10 +281,13 @@ TEST(TestObject, ObjectTypeBuilder)
   builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
   builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
   builder.advertiseMethod("addAdderByConstPtr", &Adder::addAdderByConstPtr);
+  builder.advertiseMethod("increment", &Adder::increment);
+  builder.advertiseMethod("increment2", &Incrementer::increment);
   Adder a1(1);
   Adder a2(2);
   qi::GenericObject oa1 = builder.object(&a1);
   qi::GenericObject oa2 = builder.object(&a2);
+  ASSERT_TRUE(!oa1.eventLoop()); // object not manageable
   ASSERT_EQ(2, oa1.call<int>("add", 1));
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
@@ -278,7 +299,11 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
   // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
+
+  ASSERT_EQ(4, oa1.call<int>("increment", 3));
+  ASSERT_EQ(4, oa1.call<int>("increment2", 3));
 }
+
 
 int main(int argc, char **argv)
 {

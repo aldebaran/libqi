@@ -326,5 +326,24 @@ namespace qi {
     }
     m->moveToEventLoop(ctx);
   }
+
+  bool ObjectType::inherits(Type* other)
+  {
+    /* A registered class C can have to Type* around:
+    * - TypeImpl<C*>
+    * - The staticObjectType that was created by the builder.
+    * So assume that any of them can be in the parentTypes list.
+    */
+    if (this == other)
+      return true;
+    const std::vector<Type*>& parents = parentTypes();
+    for (unsigned i=0; i<parents.size(); ++i)
+    {
+      ObjectType* op = dynamic_cast<ObjectType*>(parents[i]);
+      if (parents[i] == other || ( op && op->inherits(other)))
+        return true;
+    }
+    return false;
+  }
 }
 

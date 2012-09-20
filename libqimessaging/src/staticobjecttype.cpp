@@ -104,6 +104,11 @@ bool StaticObjectTypeBase::disconnect(void* instance, unsigned int linkId)
   return sb->disconnect(link);
 }
 
+const std::vector<Type*>& StaticObjectTypeBase::parentTypes()
+{
+  return _data.parentTypes;
+}
+
 const std::type_info& StaticObjectTypeBase::info()
 {
   return *_data.typeInfo;

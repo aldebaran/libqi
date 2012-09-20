@@ -46,6 +46,46 @@ namespace qi {
       makeGenericMethod(function));
   }
 
+  template<typename U>
+  void ObjectTypeBuilderBase::inherits()
+  {
+    return inherits(typeOf<
+      typename boost::add_pointer<
+      typename boost::remove_reference<U>::type>::type>());
+  }
+
+  namespace detail
+  {
+    template<typename F, typename T> void checkRegisterParent(
+      ObjectTypeBuilder<T>& , boost::false_type) {}
+    template<typename F, typename T> void checkRegisterParent(
+      ObjectTypeBuilder<T>& builder, boost::true_type)
+    {
+      typedef typename boost::function_types::parameter_types<F>::type ArgsType;
+      typedef typename boost::mpl::front<ArgsType>::type DecoratedClassType;
+      typedef typename boost::remove_reference<DecoratedClassType>::type ClassType;
+      // Test pointer offset
+      T* ptr = (T*)(void*)0x10000;
+      ClassType* pptr = ptr;
+      qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr;
+      if ((void*)ptr != (void*)pptr)
+      {
+        qiLogError("qi.meta") << "Offset detected in inheritance";
+      }
+      builder.template inherits<ClassType>();
+    }
+  };
+
+  template <typename T>
+  template <typename FUNCTION_TYPE>
+  unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  {
+    // Intercept advertise to auto-register parent type if this is a parent method
+    detail::checkRegisterParent<FUNCTION_TYPE>(
+      *this,
+      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+    return ObjectTypeBuilderBase::advertiseMethod(name, function);
+  }
 
 
 
