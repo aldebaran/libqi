@@ -291,11 +291,7 @@ template<> class TypeImpl<T>:                \
 
 
 /// Get type from a type. No need to delete the result
-template<typename T> Type* typeOf()
-{
-  static TypeImpl<typename boost::remove_const<T>::type> res;
-  return &res;
-}
+template<typename T> Type* typeOf();
 
 /// Get type from a value. No need to delete the result
 template<typename T> Type* typeOf(const T& v)

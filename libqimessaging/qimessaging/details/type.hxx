@@ -168,6 +168,22 @@ namespace qi  {
       TypeCArraySerialize<I>
       >{};
 
+  namespace detail {
+    template<typename T> Type* typeOfBackend(Type* set = 0)
+    {
+      static Type* ptr = 0;
+      if (!ptr)
+        ptr = new TypeImpl<T>();
+      if (set)
+        ptr = set;
+      return ptr;
+    }
+  }
+
+  template<typename T> Type* typeOf()
+  {
+    return detail::typeOfBackend<typename boost::remove_const<T>::type>();
+  }
 
   namespace detail {
     struct signature_function_arg_apply {
