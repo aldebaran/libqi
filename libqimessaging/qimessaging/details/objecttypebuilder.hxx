@@ -15,7 +15,7 @@ namespace qi {
     template<typename T>
     Manageable* manageable(void* instance)
     {
-      return reinterpret_cast<T*>(instance);
+      return reinterpret_cast<T*>(*(void**)instance);
     }
 
     template<typename T, typename U> boost::function<Manageable*(void*)>
