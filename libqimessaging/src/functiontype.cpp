@@ -7,7 +7,7 @@
 
 namespace qi
 {
-  inline GenericValue FunctionType::call(void* func,
+  GenericValue FunctionType::call(void* func,
     const std::vector<GenericValue>& args)
   {
     const std::vector<Type*> target = argumentsType();
