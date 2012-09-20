@@ -25,6 +25,7 @@ public:
   /// Convert GenericValue to concrete type. Returns the value and a
   /// bool that is true if value is a copy and must be deleted.
   template<typename T> std::pair<const T*, bool> as() const;
+  /// @return converted value which is allways a copy.
   GenericValue convert(Type& targetType) const;
   GenericValue clone() const;
   void serialize(ODataStream& os) const { if(type) type->serialize(os, value);}

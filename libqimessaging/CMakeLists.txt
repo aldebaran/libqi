@@ -99,6 +99,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/functiontype.cpp
                                    src/gateway.cpp
                                    src/genericobjectbuilder.cpp
+                                   src/genericvalue.cpp
                                    src/message.cpp
                                    src/message_p.hpp
                                    src/messagedispatcher.hpp
