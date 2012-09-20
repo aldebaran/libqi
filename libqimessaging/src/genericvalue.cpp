@@ -5,6 +5,7 @@
 */
 
 #include <qimessaging/genericvalue.hpp>
+#include <qimessaging/genericobject.hpp>
 
 namespace qi
 {
@@ -23,6 +24,14 @@ GenericValue GenericValue::convert(Type& targetType) const
   { // Source is metavalue: special case
     GenericValue* metaval = (GenericValue*)value;
     return metaval->convert(targetType);
+  }
+  else if (type->info() == typeOf<GenericObject>()->info())
+  {
+    GenericObject* obj = (GenericObject*)value;
+    GenericValue v;
+    v.type = obj->type;
+    v.value = obj->value;
+    return v.convert(targetType);
   }
   GenericValue res;
   //std::cerr <<"convert " << targetType.info().name() <<" "
