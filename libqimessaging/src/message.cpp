@@ -54,10 +54,18 @@ namespace qi {
     return *this;
   }
 
+  Message::Message(const MessageAddress &address)
+    : _p(new qi::MessagePrivate())
+  {
+    setAddress(address);
+  }
+
+
   Message::~Message()
   {
     delete _p;
   }
+
 
   std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
     os << "message {" << std::endl
@@ -216,8 +224,25 @@ namespace qi {
     return true;
   }
 
+  void Message::setAddress(const MessageAddress &address) {
+    _p->header.type = address.type;
+    _p->header.id = address.messageId;
+    _p->header.service = address.serviceId;
+    _p->header.object = address.objectId;
+    _p->header.action = address.functionId;
+  }
+
   MessageAddress Message::address() const {
     return MessageAddress(_p->header.type, _p->header.id, _p->header.service, _p->header.object, _p->header.action);
+  }
+
+  MessageAddress Message::replyAddress() const {
+    if (_p->header.type != Message::Type_Call) {
+      qiLogWarning("message") << "Can't build a reply address for a message of type " << _p->header.type
+                              << " expected Type_Call";
+      return MessageAddress();
+    }
+    return MessageAddress(Type_Reply, _p->header.id, _p->header.service, _p->header.object, _p->header.action);
   }
 
 }

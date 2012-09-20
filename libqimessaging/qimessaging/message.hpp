@@ -103,8 +103,11 @@ namespace qi {
 
     ~Message();
     Message();
+    Message(const MessageAddress &address);
     Message(const Message &msg);
     Message &operator=(const Message &msg);
+
+    void setAddress(const MessageAddress &address);
 
     void         setId(unsigned int id);
     unsigned int id() const;
@@ -135,7 +138,8 @@ namespace qi {
     void         buildReplyFrom(const Message &call);
     void         buildForwardFrom(const Message &msg);
 
-    MessageAddress address()const;
+    MessageAddress address() const;
+    MessageAddress replyAddress() const;
 
     bool         isValid();
 
