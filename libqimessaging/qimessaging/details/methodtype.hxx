@@ -7,6 +7,13 @@
 #ifndef _QIMESSAGING_DETAILS_METHODTYPE_HXX_
 #define _QIMESSAGING_DETAILS_METHODTYPE_HXX_
 
+#include <boost/function_types/function_type.hpp>
+#include <boost/function_types/result_type.hpp>
+#include <boost/function_types/parameter_types.hpp>
+
+#include <boost/fusion/functional/generation/make_unfused.hpp>
+#include <boost/fusion/functional/invocation/invoke_function_object.hpp>
+
 namespace qi
 {
   namespace detail
@@ -72,18 +79,68 @@ namespace qi
     static MethodTypeImpl<T> result;
     return &result;
   }
+
+  namespace detail
+  {
+
+    // Drop first arg and make the call
+    template<typename T> struct DropArg
+    {
+      template <class Seq>
+      struct result
+      {
+        typedef typename boost::function_types::result_type<T>::type type;
+      };
+      template <class Seq>
+      typename result<Seq>::type
+      operator()(Seq const & s) const
+      {
+        return boost::fusion::invoke_function_object(fun,
+          boost::fusion::pop_front(s));
+      };
+      DropArg(boost::function<T> fun) : fun(fun) {}
+      boost::function<T> fun;
+    };
+
+    template<typename T>
+    GenericMethod makeGenericMethodSwitch(const T& method, boost::true_type)
+    {
+      // convert M to a boost::function with an extra arg object_type
+      typedef typename detail::MethodToFunctionTrait<T>::type Linearized;
+      boost::function<Linearized> f = method;
+
+      GenericFunction fv = makeGenericFunction(f);
+      GenericMethod result;
+      result.value = fv.value;
+      result.type = methodTypeOf<Linearized>();
+      return result;
+    }
+
+    template<typename T>
+    GenericMethod makeGenericMethodSwitch(T method, boost::false_type)
+    {
+      typedef typename boost::function_types::function_type<
+      typename boost::function_types::components<T>::type>::type FunctionType;
+      typedef typename boost::function_types::parameter_types<FunctionType >::type ArgsType;
+      typedef typename boost::mpl::push_front<ArgsType, void*>::type NArgsType;
+      typedef typename boost::function_types::result_type<T>::type ResType;
+      typedef typename boost::mpl::push_front<NArgsType, ResType>::type FullType;
+      typedef typename boost::function_types::function_type<FullType>::type DropperType;
+      boost::function<FunctionType> bmethod (method);
+      boost::function<DropperType> f = boost::fusion::make_unfused(DropArg<FunctionType>(bmethod));
+      GenericMethod result;
+      result.type = methodTypeOf<DropperType>();
+      result.value = new boost::function<DropperType>(f);
+      return result;
+    }
+  }
+
   template<typename M>
   GenericMethod makeGenericMethod(const M& method)
   {
-    // convert M to a boost::function with an extra arg object_type
-    typedef typename detail::MethodToFunctionTrait<M>::type Linearized;
-    boost::function<Linearized> f = method;
-
-    GenericFunction fv = makeGenericFunction(f);
-    GenericMethod result;
-    result.value = fv.value;
-    result.type = methodTypeOf<Linearized>();
-    return result;
+    // Handle static methods
+    return detail::makeGenericMethodSwitch<M>(method,
+      typename boost::function_types::is_member_function_pointer<M>::type());
   }
 
   inline GenericFunction GenericMethod::toGenericFunction()
