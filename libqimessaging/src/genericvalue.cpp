@@ -37,6 +37,9 @@ GenericValue GenericValue::convert(Type& targetType) const
     res.type = &targetType;
     qi::detail::DynamicValue temp;
     type->toValue(value, temp);
+    if (temp.type == detail::DynamicValue::Invalid)
+      qiLogWarning("qi.meta") << "Cast error " << type->infoString()
+        << " -> " << targetType.infoString();
     //std::cerr <<"Temp value has " << temp << std::endl;
     res.value = res.type->fromValue(temp);
   }
