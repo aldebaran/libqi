@@ -4,8 +4,6 @@
 **  See COPYING for the license
 */
 
-# include <qimessaging/genericvalue.hpp>
-
 #ifndef _QIMESSAGING_BUFFER_HPP_
 #define _QIMESSAGING_BUFFER_HPP_
 

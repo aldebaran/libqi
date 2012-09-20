@@ -4,7 +4,6 @@
 **  See COPYING for the license
 */
 
-# include <qimessaging/genericvalue.hpp>
 
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
 #define _QIMESSAGING_DATASTREAM_HPP_
@@ -20,6 +19,7 @@
 #include <qimessaging/signature.hpp>
 #include <qi/types.hpp>
 #include <qi/preproc.hpp>
+
 namespace qi {
 
 #if 0

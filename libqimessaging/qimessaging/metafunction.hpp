@@ -7,8 +7,6 @@
 #ifndef _QIMESSAGING_METAFUNCTION_HPP_
 #define _QIMESSAGING_METAFUNCTION_HPP_
 
-#include <qimessaging/future.hpp>
-
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericvalue.hpp>

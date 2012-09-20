@@ -10,6 +10,7 @@
 #include <qimessaging/metafunction.hpp>
 #include <qimessaging/eventloop.hpp>
 #include <qimessaging/signature.hpp>
+#include <qimessaging/functiontype.hpp>
 
 namespace qi {
 

@@ -29,6 +29,7 @@
 #include <boost/fusion/functional/adapter/unfused.hpp>
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/generation/make_fused.hpp>
+#include <qimessaging/genericvalue.hpp>
 
 namespace qi
 {
