@@ -337,9 +337,10 @@ namespace qi {
     if (this == other)
       return 0;
     const std::vector<std::pair<Type*, int> >& parents = parentTypes();
+    qiLogDebug("qi.meta") << infoString() <<" has " << parents.size() <<" parents";
     for (unsigned i=0; i<parents.size(); ++i)
     {
-      if (parents[i].first == other)
+      if (parents[i].first->info() == other->info())
         return parents[i].second;
       ObjectType* op = dynamic_cast<ObjectType*>(parents[i].first);
       if (op)
@@ -352,6 +353,8 @@ namespace qi {
           return parents[i].second + offset;
         }
       }
+      qiLogDebug("qi.meta") << parents[i].first->infoString() << " does not match " << other->infoString()
+      <<" " << ((bool)op == (bool)dynamic_cast<ObjectType*>(other));
     }
     return -1;
   }
