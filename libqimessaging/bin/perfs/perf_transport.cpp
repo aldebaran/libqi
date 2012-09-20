@@ -51,6 +51,8 @@ int main_local()
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::GenericObject obj(ob.object());
+  if (getenv("SYNCHRONOUS"))
+    obj.moveToEventLoop(0);
   run_client(&obj);
   return 0;
 }
@@ -62,10 +64,14 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
   if (port.empty())
     port = allInOne?sdPort:std::string("5555");
 
-
+  if (getenv("VALGRIND"))
+    qi::os::msleep(3000);
   qi::Session session;
+  std::cerr <<"Connection to sd... " << std::endl;
   session.connect("tcp://"+host+":"+port);
+  std::cerr <<"Getting service... " << std::endl;
   qi::GenericObject obj =  session.service("serviceTest");
+  std::cerr <<"Done" << std::endl;
   if (!obj.isValid())
   {
     std::cerr << "cant get serviceTest" << std::endl;
@@ -227,7 +233,10 @@ int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
 
-  po::options_description desc(std::string("Usage:\n ")+argv[0]+"\nOptions");
+  std::string usage = "If no mode is specified, run client and server in same process\n" \
+                      "Environment used: VALGRIND, NO_GATEWAY, SYNCHRONOUS\n";
+
+  po::options_description desc(std::string("Usage:\n ")+argv[0]+"\nOptions\n" + usage);
   desc.add_options()
     ("help", "Print this help.")
     ("all", "(default) Run all in the same process.")
@@ -293,7 +302,8 @@ int main(int argc, char **argv)
     do {
       qi::os::msleep(500); // give it time to listen
     } while (!serverReady); // be nice for valgrind
-    boost::thread threadServer2(boost::bind(&main_gateway, host, port));
+    if (!getenv("NO_GATEWAY"))
+      boost::thread threadServer2(boost::bind(&main_gateway, host, port));
     qi::os::sleep(1);
     std::string port = "12345";
     if (getenv("NO_GATEWAY"))
