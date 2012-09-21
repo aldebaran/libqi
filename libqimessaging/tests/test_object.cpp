@@ -313,7 +313,7 @@ public:
 
 TEST(TestObject, ObjectTypeBuilderManageable)
 {
-  // We test both async calls, and an extra inheritance layer
+  // We test both async calls, and calling methods with inherited argument type
   qi::ObjectTypeBuilder<MAdder> builder;
   builder.inherits<Adder>();
   builder.advertiseMethod("add", &Adder::add);
@@ -328,7 +328,7 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   MAdder a2(2);
   qi::GenericObject oa1 = builder.object(&a1);
   qi::GenericObject oa2 = builder.object(&a2);
-  ASSERT_TRUE(oa1.eventLoop()); // object not manageable
+  ASSERT_TRUE(oa1.eventLoop()); // object manageable
   ASSERT_EQ(2, oa1.call<int>("add", 1));
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
