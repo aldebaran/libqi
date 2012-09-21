@@ -127,6 +127,19 @@ namespace qi
           PtrToConstRef()));
     return res.value;
     }
+    template<typename T> struct Ident
+    {
+    };
+
+    struct checkForNonConstRef
+    {
+      template<typename T> void operator()(Ident<T>)
+      {
+        if (boost::is_reference<T>::value && !boost::is_const<
+          typename boost::remove_reference<T>::type>::value)
+          qiLogWarning("qi.meta") << "Function argument is a non-const reference: " << typeid(T).name();
+      }
+    };
   } // namespace detail
 
 
@@ -138,7 +151,14 @@ namespace qi
     FunctionTypeImpl()
     {
       _resultType = typeOf<typename boost::function_types::result_type<T>::type >();
+
       typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+      // Detect and warn about non-const reference arguments
+      boost::mpl::for_each<
+         boost::mpl::transform_view<ArgsType,
+           detail::Ident<boost::mpl::_1>
+           > >(detail::checkForNonConstRef());
+      // Generate and store a Type* for each argument
       boost::mpl::for_each<
         boost::mpl::transform_view<ArgsType,
         boost::add_pointer<
