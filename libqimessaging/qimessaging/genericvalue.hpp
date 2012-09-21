@@ -28,19 +28,9 @@ public:
   /// @return converted value which is allways a copy.
   GenericValue convert(Type& targetType) const;
   GenericValue clone() const;
-  void serialize(ODataStream& os) const { if(type) type->serialize(os, value);}
-  std::string signature() const
-  {
-    if (!type)
-      return "";
-    else
-      return type->signature();
-  }
-  void destroy()
-  {
-    if (type && value)
-      type->destroy(value);
-  }
+  void serialize(ODataStream& os) const;
+  std::string signature() const;
+  void destroy();
 };
 
 /// Convert any value to the correct associated Value

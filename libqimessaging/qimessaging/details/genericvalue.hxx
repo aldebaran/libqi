@@ -96,6 +96,26 @@ inline AutoGenericValue::AutoGenericValue()
   value = type = 0;
 }
 
+inline std::string GenericValue::signature() const
+{
+  if (!type)
+      return "";
+    else
+      return type->signature();
+}
+
+inline void GenericValue::destroy()
+{
+  if (type && value)
+    type->destroy(value);
+}
+
+inline void GenericValue::serialize(ODataStream& os) const
+{
+  if (type)
+    type->serialize(os, value);
+}
+
 namespace detail
 {
   /** This class can be used to convert the return value of an arbitrary function
