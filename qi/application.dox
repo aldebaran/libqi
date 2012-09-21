@@ -1,0 +1,85 @@
+// -*- mode:c++; -*-
+
+/** \class qi::Application qi/application.hpp
+ * \brief Class handling startup and teardown of an application.
+ *
+ * The qi::Application class is designed to ease
+ * startup and teardown of an executable.
+ *
+ * All executables using qi classes should create an instance of qi::Application
+ * on the stack of the main() function.
+ *
+ * \ingroup qi::Application
+ */
+
+/**
+ * \fn qi::Application::Application(int argc, char** argv)
+ * \brief Application constructor. Must be the first thing called by main().
+ * \ingroup qi::Application
+ */
+
+/**
+ * \fn bool qi::Application::initialized()
+ * \brief Return whether the Application instance was created.
+ * \ingroup qi::Application
+ */
+
+/**
+ * \fn int qi::Application::argc()
+ * \brief Get argc.
+ * \ingroup qi::Application
+ * \return argc if Application was initialized, -1 otherwise.
+ */
+
+ /**
+ * \fn const char** qi::Application::argv()
+ * \brief Get argv
+ * \ingroup qi::Application
+ * \return argv if Application was initialized, 0 otherwise.
+ */
+
+ /**
+ * \fn const char *qi::Application::program()
+ * \brief Return the current program.
+ * \ingroup qi::Application
+ * Computed using specific OS API:
+ *
+ * - Apple  : _NSGetExecutablePath
+ * - Linux  : reading "/proc/self/exe"
+ * - Windows: GetModuleFileName
+ *
+ * If the former API fail it will try to guess the value from argv[0].
+ * For this method to work qi::init(argc, argv) should have been called in main().
+ *  \return full path to the current running program
+ */
+
+ /**
+ * \fn bool qi::Application::run()
+ * \brief Loop forever.
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn bool qi::Application::atEnter(boost::function<void()> func)
+ * \brief Register a function to be executed at Application creation.
+ * \ingroup qi::Application
+ */
+
+ /**
+ * \fn bool qi::Application::atExit(boost::function<void()> func)
+ * \brief Register a function to be executed at Application destruction.
+ * \ingroup qi::Application
+ */
+
+ /**
+  * \def QI_AT_ENTER(func)
+  * \brief calls qi::Application::atEnter(func) at static initialization time.
+  * \ingroup qi::Application
+  */
+
+   /**
+  * \def QI_AT_EXIT(func)
+  * \brief calls qi::Application::atExit(func) at static initialization time.
+  * \ingroup qi::Application
+  */
+

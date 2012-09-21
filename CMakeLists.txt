@@ -41,6 +41,7 @@ if(USE_BOOST_LOCK_FREE)
 endif()
 
 set(H
+  qi/application.hpp
   qi/atomic.hpp
   qi/config.hpp
   qi/error.hpp

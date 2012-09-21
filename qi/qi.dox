@@ -35,37 +35,26 @@
 
 /**
  * \fn void qi::init(int, char *[])
- * \brief Store argc and argv
+ * \deprecated 1.16, use qi::Application
  * \ingroup qi
  */
 
 /**
  * \fn QI_API int qi::argc()
- * \brief Get argc
+ * \deprecated 1.16 use qi::Application::argc
  * \ingroup qi
- * \return return argc if qi::init is call, -1 otherwise
  */
 
 /**
  * \fn const char** qi::argv()
- * \brief Get argv
+ * \deprecated 1.16 use qi::Application::argv
  * \ingroup qi
- * \return return argv if qi::init is call, NULL otherwise
  */
 
 /**
  * \fn const char *qi::program()
- * \brief Return the current program.
  * \ingroup qi
- * Computed using specific OS API:
- *
- * - Apple  : _NSGetExecutablePath
- * - Linux  : reading "/proc/self/exe"
- * - Windows: GetModuleFileName
- *
- * If the former API fail it will try to guess the value from argv[0].
- * For this method to work qi::init(argc, argv) should have been called in the main.
- *  \return full path to the current running program
+ * \deprecated 1.16, use qi::Application::program
  */
 
 

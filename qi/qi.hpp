@@ -12,10 +12,10 @@
 
 namespace qi {
 
-  QI_API void init(int argc, char *argv[]);
-  QI_API int argc();
-  QI_API const char** argv();
-  QI_API const char *program();
+  QI_API QI_API_DEPRECATED void init(int argc, char *argv[]);
+  QI_API QI_API_DEPRECATED int argc();
+  QI_API QI_API_DEPRECATED const char** argv();
+  QI_API QI_API_DEPRECATED const char *program();
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
   QI_API const codecvt_type &unicodeFacet();

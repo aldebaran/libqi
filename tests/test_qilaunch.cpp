@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 #include <qi/qi.hpp>
@@ -218,7 +219,7 @@ TEST(system, InvalidBin)
 
 int main(int argc, char* argv[])
 {
-  qi::init(argc, (char**)argv);
+  qi::Application app(argc, argv);
   binDir = qi::path::findBin("testlaunch");
   loopBinDir = qi::path::findBin("testlaunchloop");
 

@@ -7,6 +7,7 @@
 #include "src/sdklayout.hpp"
 #include "src/filesystem.hpp"
 
+#include <qi/application.hpp>
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
@@ -123,7 +124,7 @@ namespace qi
     if (gInstance == NULL) {
       std::string prefix;
       std::string mode;
-      const char *program = qi::program();
+      const char *program = qi::Application::program();
 
       if (!boost::filesystem::exists(program)) {
         mode = "error";

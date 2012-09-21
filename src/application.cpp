@@ -6,6 +6,7 @@
 
 #include <fstream>
 
+#include <qi/application.hpp>
 #include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -24,8 +25,20 @@
 namespace qi {
   static int         globalArgc = -1;
   static char**      globalArgv = 0;
+  static bool        globalInitialized = false;
+
   static std::string globalPrefix;
   static std::string globalProgram;
+  typedef std::vector<boost::function<void()> > FunctionList;
+  static FunctionList* globalAtExit = 0;
+  static FunctionList* globalAtEnter = 0;
+
+  template<typename T> static T& lazyGet(T* & ptr)
+  {
+    if (!ptr)
+      ptr = new T;
+    return *ptr;
+  }
 
   static std::string guess_app_from_path(int argc, const char *argv[])
   {
@@ -70,11 +83,8 @@ namespace qi {
     return std::string();
   }
 
-  void init(int argc, char *argv[])
+  Application::Application(int& argc, char **&argv)
   {
-    globalArgc = argc;
-    globalArgv = argv;
-
     //Feed qi::path prefix from share/qi/path.conf if present
     //(automatically created when using qiBuild)
     std::string pathConf = ::qi::path::findData("qi", "path.conf");
@@ -96,16 +106,54 @@ namespace qi {
         }
       }
     }
+    if (globalInitialized)
+      qiLogError("Application") << "Application was already initialized";
+    globalInitialized = true;
+    globalArgc = argc;
+    globalArgv = argv;
+    FunctionList& fl = lazyGet(globalAtEnter);
+    for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
+      (*i)();
   }
 
-  int argc()
+  Application::~Application()
+  {
+    FunctionList& fl = lazyGet(globalAtExit);
+    for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
+      (*i)();
+  }
+
+  void Application::run()
+  {
+    while (true)
+      os::sleep(1000);
+  }
+
+  bool Application::initialized()
+  {
+    return globalInitialized;
+  }
+
+  int Application::argc()
   {
     return globalArgc;
   }
 
-  const char** argv()
+  const char** Application::argv()
   {
     return (const char**)globalArgv;
+  }
+
+  bool Application::atEnter(boost::function<void()> func)
+  {
+    lazyGet(globalAtEnter).push_back(func);
+    return true;
+  }
+
+  bool Application::atExit(boost::function<void()> func)
+  {
+    lazyGet(globalAtExit).push_back(func);
+    return true;
   }
 
 /*
@@ -129,7 +177,7 @@ namespace qi {
   not all shells do this, and it could be set to anything or be left over
   from a parent process which did not change it before executing your program.
 */
-  const char *program()
+  const char *Application::program()
   {
     try
     {
@@ -150,7 +198,8 @@ namespace qi {
         }
         else
         {
-          globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+          globalProgram = guess_app_from_path(::qi::Application::argc(),
+            ::qi::Application::argv());
         }
         free(fname);
       }
@@ -161,7 +210,8 @@ namespace qi {
       if (!boost::filesystem::is_empty(fname))
         globalProgram = fname.string().c_str();
       else
-        globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+        globalProgram = guess_app_from_path(::qi::Application::argc(),
+          ::qi::Application::argv());
 #elif _WIN32
       WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
@@ -174,10 +224,12 @@ namespace qi {
       else
       {
         // GetModuleFileName failed, trying to guess from argc, argv...
-        globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+        globalProgram = guess_app_from_path(::qi::Application::argc(),
+          ::qi::Application::argv());
       }
 #else
-      globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
+      globalProgram = guess_app_from_path(::qi::Application::argc(),
+        ::qi::Application::argv());
 #endif
       return globalProgram.c_str();
     }
@@ -187,4 +239,18 @@ namespace qi {
     }
   }
 
+  int argc()
+  {
+    return Application::argc();
+  }
+  const char** argv()
+  {
+    return Application::argv();
+  }
+  void init(int argc, char* argv[])
+  {
+    qiLogError("qi") << "qi::init() is deprecated, use qi::Application";
+    globalArgc = argc;
+    globalArgv = argv;
+  }
 }

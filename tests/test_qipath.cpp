@@ -14,6 +14,7 @@
 #include <locale>
 
 #include "../src/sdklayout.hpp"
+#include <qi/application.hpp>
 #include <qi/qi.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
@@ -425,7 +426,7 @@ TEST(qiPath, dataInSubfolder)
 
 int main(int argc, char* argv[])
 {
-  qi::init(argc, argv);
+  qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

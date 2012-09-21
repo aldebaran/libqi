@@ -7,6 +7,7 @@
 #include <iostream>
 #include <numeric>
 
+#include <qi/application.hpp>
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
@@ -35,7 +36,7 @@ namespace qi {
 
     void initSDKlayout()
     {
-      const char *program = qi::program();
+      const char *program = qi::Application::program();
 
       if (!boost::filesystem::exists(program)) {
         _mode = "error";
