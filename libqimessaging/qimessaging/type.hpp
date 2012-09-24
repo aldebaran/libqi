@@ -151,9 +151,8 @@ public:
 
   static void* fromValue(const qi::detail::DynamicValue& val)
   {
-    qiLogWarning("qi.type") << "fromValue not implemented for type ";
-    T* res = new T();
-    return res;
+    qiLogWarning("qi.type") << "fromValue not implemented for type " << typeid(T).name();
+    return 0; // We may not have a default constructor
   }
 };
 
@@ -187,11 +186,10 @@ public:
 
   static void* deserialize(IDataStream& s)
   {
-    qiLogWarning("qi.meta") << "type not serializable";
-    T* val = new T();
-    return val;
+    qiLogWarning("qi.meta") << "deserialize not implemented for " << typeid(T).name();
+    return 0;
   }
-  std::string signature()
+ static  std::string signature()
   {
     std::string res;
     res += (char)Signature::Type_Unknown;
