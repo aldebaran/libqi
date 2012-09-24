@@ -34,22 +34,6 @@ namespace qi {
     template <typename T> class FutureState;
   }
 
-
-
-  template <typename T>
-  class FutureInterface {
-  public:
-    typedef typename FutureType<T>::type ValueType;
-    virtual ~FutureInterface() = 0;
-    virtual void onFutureFinished(const ValueType &value, void *data) = 0;
-    virtual void onFutureFailed(const std::string &error, void *data) = 0;
-  };
-
-  //pure virtual destructor need an implementation
-  template <typename T>
-  FutureInterface<T>::~FutureInterface()
-  {}
-
   template <typename T>
   class Future {
   public:
