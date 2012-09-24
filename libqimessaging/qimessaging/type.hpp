@@ -287,8 +287,13 @@ template<> class TypeImpl<T>:                \
 #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
 
+/// Type factory getter. All other type access mechanism bounce here
+QIMESSAGING_API Type*  getType(const std::type_info& type);
+/// Type factory setter
+QIMESSAGING_API bool registerType(const std::type_info& typeId, Type* type);
 
-/// Get type from a type. No need to delete the result
+/** Get type from a type. Will return a static TypeImpl<T> if T is not registered
+ */
 template<typename T> Type* typeOf();
 
 /// Get type from a value. No need to delete the result

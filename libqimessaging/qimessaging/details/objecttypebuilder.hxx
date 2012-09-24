@@ -96,7 +96,7 @@ namespace qi {
   template<typename T>
   void ObjectTypeBuilder<T>::registerType()
   {
-    detail::typeOfBackend<T*>(type());
+    ::qi::registerType(typeid(T), type());
   }
 
   template <typename C, typename T>

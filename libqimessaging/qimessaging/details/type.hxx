@@ -169,14 +169,23 @@ namespace qi  {
       >{};
 
   namespace detail {
-    template<typename T> Type* typeOfBackend(Type* set = 0)
+    template<typename T> inline Type* typeOfBackend()
     {
-      static Type* ptr = 0;
-      if (!ptr)
-        ptr = new TypeImpl<T>();
-      if (set)
-        ptr = set;
-      return ptr;
+      Type* result = getType(typeid(T));
+      if (!result)
+      {
+        // Is this realy a problem?
+        qiLogVerbose("qi.meta") << "typeOf request for unregistered type "
+          << typeid(T).name();
+        static Type* defaultResult = 0;
+        if (!defaultResult)
+          defaultResult = new TypeImpl<T>();
+        result = defaultResult;
+      }
+      if (typeid(T).name() != result->infoString())
+        qiLogError("qi.meta") << "typeOfBackend: type mismatch " << typeid(T).name() << " "
+       << result <<" " << result->infoString();
+      return result;
     }
   }
 
