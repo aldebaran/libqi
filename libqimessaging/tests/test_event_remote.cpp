@@ -42,7 +42,7 @@ protected:
     ASSERT_TRUE(session.isConnected());
 
     ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session.registerService("coin", *oserver).wait(), 0);
+    ASSERT_GT(session.registerService("coin", *oserver), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
