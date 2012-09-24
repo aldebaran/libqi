@@ -31,6 +31,7 @@ namespace qi {
     RemoteObject(qi::TransportSocketPtr ts, unsigned int service, qi::MetaObject mo);
     ~RemoteObject();
 
+    void setTransportSocket(qi::TransportSocketPtr p) { _socket = p; }
     void close();
 
   protected:

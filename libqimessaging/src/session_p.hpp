@@ -32,6 +32,7 @@ namespace qi {
     virtual ~SessionPrivate();
 
   public:
+    TransportSocketPtr     _sdSocket;
     ServiceDirectoryClient _sdClient;
     Session_Server         _server;
     Session_Service        _serviceHandler;

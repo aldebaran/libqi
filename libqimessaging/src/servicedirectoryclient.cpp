@@ -10,11 +10,9 @@
 namespace qi {
 
   static qi::MetaObject serviceDirectoryMetaObject() {
-
-    // We just want the MetaType, so we can use any builder
     qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
     ObjectTypeBuilderBase::SignalMemberGetter dummy;
-    //Do not look at the following 5 lines... and yes I know what I'am doing here.
+
     ob.advertiseMethod("service",           &ServiceDirectoryPrivate::service);
     ob.advertiseMethod("services",          &ServiceDirectoryPrivate::services);
     ob.advertiseMethod("registerService",   &ServiceDirectoryPrivate::registerService);
@@ -37,9 +35,6 @@ namespace qi {
     : _socket(qi::TcpTransportSocketPtr(new TcpTransportSocket()))
     , _remoteObject(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
-    //TODO: add callback on the socket for SessionDisconnected
-    //_socket->connected.connect(connected);
-    //_socket->disconnected.connect(disconnected);
     _object = makeDynamicObject(&_remoteObject);
   }
 
@@ -47,21 +42,9 @@ namespace qi {
   {
   }
 
-  qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)
-  {
-    return _socket->connect(serviceDirectoryURL);
-  }
-
-  bool ServiceDirectoryClient::isConnected() const {
-    return _socket->isConnected();
-  }
-
-  qi::FutureSync<void> ServiceDirectoryClient::disconnect() {
-    return _socket->disconnect();
-  }
-
-  qi::Url ServiceDirectoryClient::url() const {
-    return _socket->url();
+  void ServiceDirectoryClient::setTransportSocket(qi::TransportSocketPtr socket) {
+    _socket = socket;
+    _remoteObject.setTransportSocket(socket);
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {

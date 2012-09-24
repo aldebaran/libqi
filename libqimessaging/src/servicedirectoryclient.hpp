@@ -20,10 +20,7 @@ namespace qi {
     ServiceDirectoryClient();
     ~ServiceDirectoryClient();
 
-    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
-    bool isConnected() const;
-    qi::Url url() const;
-    qi::FutureSync<void> disconnect();
+    void setTransportSocket(qi::TransportSocketPtr socket);
 
     qi::Future< std::vector<ServiceInfo> > services();
     qi::Future< ServiceInfo >              service(const std::string &name);
@@ -36,9 +33,11 @@ namespace qi {
 
   public:
     TransportSocketPtr   _socket;
+
+
   private:
     qi::RemoteObject     _remoteObject;
-    qi::GenericObject           _object;
+    qi::GenericObject    _object;
   };
 }
 
