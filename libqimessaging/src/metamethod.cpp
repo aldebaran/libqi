@@ -40,21 +40,13 @@ namespace qi {
   {
     if (parameters.getMode() == MetaFunctionParameters::Mode_GenericValue)
     {
-      const std::vector<GenericValue>& v = parameters.getValues();
-      std::vector<GenericValue> bindSelf;
-      bindSelf.push_back(instance);
-      bindSelf.insert(bindSelf.end(), &v[0], &v[v.size()]);
-
-      // Let call() handle conversion
-      GenericValue res = val.toGenericFunction().call(bindSelf);
-      return MetaFunctionResult(res);
+      return MetaFunctionResult(val.call(instance, parameters.getValues()));
     }
     else
     {
       IDataStream in(parameters.getBuffer());
       const std::vector<Type*>& argTypes = val.type->argumentsType();
       std::vector<GenericValue> args;
-      args.push_back(instance);
       for (unsigned i=1; i<argTypes.size(); ++i)
       {
         GenericValue v;
@@ -62,8 +54,8 @@ namespace qi {
         v.value = v.type->deserialize(in);
         args.push_back(v);
       }
-      GenericValue res = val.toGenericFunction().call(args);
-      for (unsigned i=1; i<args.size(); ++i)
+      GenericValue res = val.call(instance, args);
+      for (unsigned i=0; i<args.size(); ++i)
         args[i].destroy();
       return MetaFunctionResult(res);
     }
