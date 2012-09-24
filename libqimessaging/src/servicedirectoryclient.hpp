@@ -25,9 +25,6 @@ namespace qi {
     qi::Url url() const;
     qi::FutureSync<void> disconnect();
 
-    void addCallbacks(SessionInterface *delegate, void *data);
-    void removeCallbacks(SessionInterface *delegate);
-
     qi::Future< std::vector<ServiceInfo> > services();
     qi::Future< ServiceInfo >              service(const std::string &name);
     qi::Future< unsigned int >             registerService(const ServiceInfo &svcinfo);
@@ -37,12 +34,6 @@ namespace qi {
   protected:
     void onSocketDisconnected(TransportSocketPtr client, void *data);
 
-  private:
-    std::vector< std::pair<qi::SessionInterface *, void *> > _callbacks;
-    boost::mutex                                             _callbacksMutex;
-
-    //stored only for callbacks
-    qi::Session         *_session;
   public:
     TransportSocketPtr   _socket;
   private:

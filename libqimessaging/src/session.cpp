@@ -16,9 +16,6 @@
 namespace qi {
 
 
-  SessionInterface::~SessionInterface() {
-  }
-
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _sdClient()
     , _server(&_sdClient)
@@ -46,17 +43,6 @@ namespace qi {
   {
     close();
     delete _p;
-  }
-
-  // ###### Callbacks
-  void Session::addCallbacks(SessionInterface *delegate, void *data)
-  {
-    _p->_sdClient.addCallbacks(delegate, data);
-  }
-
-  void Session::removeCallbacks(SessionInterface *delegate)
-  {
-    _p->_sdClient.removeCallbacks(delegate);
   }
 
   // ###### Client

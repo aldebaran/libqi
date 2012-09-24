@@ -24,7 +24,7 @@ namespace qi {
   class NetworkThread;
 };
 
-class QiSessionPrivate : public qi::SessionInterface
+class QiSessionPrivate
 {
 public:
   QiSessionPrivate(QiSession *self);

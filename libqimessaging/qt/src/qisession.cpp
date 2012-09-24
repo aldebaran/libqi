@@ -18,7 +18,7 @@
 
 QiSessionPrivate::QiSessionPrivate(QiSession *self) {
   _session = new qi::Session();
-  _session->addCallbacks(this, 0);
+  //_session->addCallbacks(this, 0);
   _self = self;
 }
 

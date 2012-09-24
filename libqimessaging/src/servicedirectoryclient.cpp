@@ -38,13 +38,13 @@ namespace qi {
     , _remoteObject(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
     //TODO: add callback on the socket for SessionDisconnected
+    //_socket->connected.connect(connected);
+    //_socket->disconnected.connect(disconnected);
     _object = makeDynamicObject(&_remoteObject);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
-    boost::mutex::scoped_lock sl(_callbacksMutex);
-    _callbacks.clear();
   }
 
   qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL)
@@ -54,50 +54,6 @@ namespace qi {
 
   bool ServiceDirectoryClient::isConnected() const {
     return _socket->isConnected();
-  }
-
-
-  void ServiceDirectoryClient::addCallbacks(SessionInterface *delegate, void *data)
-  {
-    if (!delegate) {
-      qiLogError("qimessaging.Session") << "Trying to set invalid callback on the session.";
-      return;
-    }
-    {
-      boost::mutex::scoped_lock l(_callbacksMutex);
-      _callbacks.push_back(std::make_pair(delegate, data));
-    }
-  }
-
-  void ServiceDirectoryClient::removeCallbacks(SessionInterface *delegate)
-  {
-    if (!delegate) {
-      qiLogError("qimessaging.Session") << "Trying to erase invalid callback on the session.";
-      return;
-    }
-    {
-      boost::mutex::scoped_lock l(_callbacksMutex);
-      std::vector< std::pair<SessionInterface *, void *> >::iterator it;
-      for (it = _callbacks.begin(); it != _callbacks.end(); ++it)
-      {
-        if (it->first == delegate) {
-          _callbacks.erase(it);
-          break;
-        }
-      }
-    }
-  }
-
-  void ServiceDirectoryClient::onSocketDisconnected(TransportSocketPtr client, void *data)
-  {
-    std::vector< std::pair<qi::SessionInterface *, void *> > localCallbacks;
-    {
-      boost::mutex::scoped_lock l(_callbacksMutex);
-      localCallbacks = _callbacks;
-    }
-    std::vector< std::pair<qi::SessionInterface *, void *> >::const_iterator it;
-    for (it = localCallbacks.begin(); it != localCallbacks.end(); ++it)
-      it->first->onSessionDisconnected(_session, it->second);
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::disconnect() {

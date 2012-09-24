@@ -19,39 +19,6 @@
 namespace qi {
 
   class SessionPrivate;
-
-  class QIMESSAGING_API SessionInterface
-  {
-  public:
-    virtual ~SessionInterface() = 0;
-    inline virtual void onSessionConnected(Session *QI_UNUSED(session), void *data)
-    {
-      qiLogVerbose("session.hpp") << "onSessionConnected not implemented";
-    }
-
-    inline virtual void onSessionConnectionError(Session *QI_UNUSED(session), void *data)
-    {
-      qiLogVerbose("session.hpp") << "onSessionConnectionError not implemented";
-    }
-
-    inline virtual void onSessionDisconnected(Session *QI_UNUSED(session), void *data)
-    {
-      qiLogVerbose("session.hpp") << "onSessionDisconnected not implemented";
-    }
-
-    inline virtual void onServiceRegistered(Session *QI_UNUSED(session),
-                                            const std::string &QI_UNUSED(serviceName), void *data)
-    {
-      qiLogVerbose("session.hpp") << "onServiceRegistered not implemented";
-    }
-
-    inline virtual void onServiceUnregistered(Session *QI_UNUSED(session),
-                                              const std::string &QI_UNUSED(serviceName), void *data)
-    {
-      qiLogVerbose("session.hpp") << "onServiceUnregistered not implemented";
-    }
-  };
-
   class QIMESSAGING_API Session {
   public:
     Session();
@@ -62,9 +29,6 @@ namespace qi {
       ServiceLocality_Local  = 1,
       ServiceLocality_Remote = 2
     };
-
-    void addCallbacks(SessionInterface *delegate, void *data = 0);
-    void removeCallbacks(SessionInterface *delegate);
 
     //Client
     qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
@@ -93,6 +57,13 @@ namespace qi {
     /// Load a module and register an instance of each declared object as a service.
     std::vector<std::string>      loadService(const std::string& name, int flags = -1);
 
+  public:
+    qi::Signal<void (std::string)> serviceRegistered;
+    qi::Signal<void (std::string)> serviceUnregistered;
+    qi::Signal<void ()>            connected;
+    qi::Signal<void (int error)>   disconnected;
+
+  public:
     SessionPrivate      *_p;
   };
 }
