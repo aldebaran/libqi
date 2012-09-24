@@ -366,12 +366,9 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
     currentObj = PyIter_Next(iter);
     retcode = qi_signature_next(sig);
   }
-  if (currentObj)
-    Py_XDECREF(currentObj);
 
   if (currentObj)
     Py_XDECREF(currentObj);
-
   Py_XDECREF(iter);
   qi_signature_destroy(sig);
   return retcode == 2 ? 2 : 0;
@@ -393,7 +390,7 @@ qi_application_t *py_application_create(PyObject *args)
     return 0;
   }
 
-  argv = (char **) malloc((argc + 1) * sizeof(*argv));
+  argv = new char*[argc + 1];
   PyObject *it = PyIter_Next(iter);
   i = 0;
   while (it)
@@ -408,9 +405,7 @@ qi_application_t *py_application_create(PyObject *args)
 
   // #3 Free C arguements
   i = 0;
-  while (i < argc - 1)
-    free(argv[i++]);
-  free(argv);
+  delete[] argv;
 
   return app;
 }
