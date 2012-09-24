@@ -217,7 +217,7 @@ template<typename T, typename Cloner    = TypeDefaultClone<T>
 {
   virtual const std::type_info& info()
   {
-    static T v; return typeid(v);
+    return typeid(T);
   }
 
   virtual void* clone(void* src)
