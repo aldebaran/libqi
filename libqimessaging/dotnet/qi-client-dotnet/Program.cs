@@ -10,7 +10,7 @@ namespace qi_client_dotnet
     {
         static void Main(string[] args)
         {
-            Application app = new Application(args);
+            Application _app = new Application(args);
             string connectionAddr;
 
             if (args.Length != 2)
@@ -23,20 +23,24 @@ namespace qi_client_dotnet
                 connectionAddr = args[1];
 
             Session session = new Session();
-            session.Connect(connectionAddr);
+            if (session.Connect(connectionAddr) == false)
+            {
+                Console.WriteLine("Cannot connect to service directory (" + connectionAddr + ")");
+                return;
+            }
 
             QiMessaging.Object obj = session.Service("serviceTest");
 
             if (obj == null)
             {
-                Console.WriteLine("Ooops, can't get service");
+                Console.WriteLine("Service serviceTest is not reachable.");
                 return;
             }
 
             Message message = new Message();
             message.WriteString("plaf");
             // It's gonna be...
-            Future future = obj.Call("reply::s(s)", message);
+            Future future = obj.Call("reply::(s)", message);
 
             // wait for it
             future.Wait();
