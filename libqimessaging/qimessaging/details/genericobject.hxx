@@ -20,6 +20,25 @@ namespace qi {
     return res;
   }
 
+  // We need to specialize Type on genericobject to make a copy
+  template<> class TypeDefaultClone<GenericObject>
+  {
+  public:
+    static void* clone(void* src)
+    {
+      GenericObject* osrc = (GenericObject*)src;
+      GenericObject* res = new GenericObject(*osrc);
+      res->value = res->type->clone(res->value);
+      return res;
+     }
+    static void destroy(void* ptr)
+    {
+      GenericObject* go = (GenericObject*)ptr;
+      go->type->destroy(go->value);
+      delete (GenericObject*)ptr;
+    }
+  };
+
   namespace detail
   {
 
