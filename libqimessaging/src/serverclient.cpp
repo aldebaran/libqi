@@ -48,4 +48,5 @@ namespace qi {
     return _object.call<qi::MetaObject>("metaObject", serviceId, objectId);
   };
 
+  template<> struct TypeDefaultClone<ServerClient>: public TypeNoClone<ServerClient>{};
 }

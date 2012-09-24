@@ -13,10 +13,9 @@ namespace qi {
   class ObjectTypeBuilderPrivate
   {
   public:
-    ObjectTypeBuilderPrivate() : type(0), classType(0)  {}
+    ObjectTypeBuilderPrivate() : type(0)  {}
     ObjectTypeData data;
     ObjectType*    type;
-    Type*          classType;
     MetaObject     metaObject;
   };
 
@@ -52,9 +51,8 @@ namespace qi {
 
   void ObjectTypeBuilderBase::xBuildFor(Type* type, boost::function<Manageable* (void*)> asManageable)
   {
-    _p->classType = type;
     _p->data.asManageable = asManageable;
-    _p->data.typeInfo = const_cast<std::type_info*>(&type->info());
+    _p->data.classType = type;
   }
 
 
@@ -68,9 +66,7 @@ namespace qi {
   {
     GenericObject o;
     o.type = type();
-    void** nptr = new void*;
-    *nptr = ptr;
-    o.value = nptr;
+    o.value = ptr;
     return o;
   }
 
@@ -89,11 +85,11 @@ namespace qi {
   void ObjectTypeBuilderBase::inherits(Type* type, int offset)
   {
     std::vector<std::pair<Type*, int> >& p = _p->data.parentTypes;
-    if (type != _p->classType && std::find(p.begin(), p.end(),
+    if (type->info() != _p->data.classType->info() && std::find(p.begin(), p.end(),
       std::make_pair(type, offset)) == p.end())
     {
       qiLogVerbose("qi.meta") << "Declaring inheritance "
-      << _p->classType->infoString() << " <- " << type->infoString();
+      << _p->data.classType->infoString() << " <- " << type->infoString();
       p.push_back(std::make_pair(type, offset));
     }
   }

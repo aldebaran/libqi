@@ -111,7 +111,34 @@ const std::vector<std::pair<Type*, int> >& StaticObjectTypeBase::parentTypes()
 
 const std::type_info& StaticObjectTypeBase::info()
 {
-  return *_data.typeInfo;
+  return _data.classType->info();
+}
+
+void* StaticObjectTypeBase::clone(void* inst)
+{
+  return _data.classType->clone(inst);
+}
+
+void StaticObjectTypeBase::destroy(void* inst)
+{
+  _data.classType->destroy(inst);
+}
+
+bool  StaticObjectTypeBase::toValue(const void* a, qi::detail::DynamicValue& b)
+{
+  return _data.classType->toValue(a, b);
+}
+void* StaticObjectTypeBase::fromValue(const qi::detail::DynamicValue& a)
+{
+  return _data.classType->fromValue(a);
+}
+void  StaticObjectTypeBase::serialize(ODataStream& s, const void* p)
+{
+  _data.classType->serialize(s, p);
+}
+void* StaticObjectTypeBase::deserialize(IDataStream& s)
+{
+  return _data.classType->deserialize(s);
 }
 
 }

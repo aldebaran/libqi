@@ -33,7 +33,7 @@ struct ObjectTypeData
   MethodMap methodMap;
 
   boost::function<Manageable* (void*)> asManageable;
-  std::type_info* typeInfo;
+  Type* classType;
   std::vector<std::pair<Type*, int> > parentTypes;
 };
 
@@ -59,6 +59,12 @@ public:
   /// @return the manageable interface for this instance, or 0 if not available
   virtual Manageable* manageable(void* instance);
   virtual const std::vector<std::pair<Type*, int> >& parentTypes();
+  virtual void* clone(void* inst);
+  virtual void destroy(void*);
+  virtual bool  toValue(const void*, qi::detail::DynamicValue&);
+  virtual void* fromValue(const qi::detail::DynamicValue&);
+  virtual void  serialize(ODataStream& s, const void*);
+  virtual void* deserialize(IDataStream& s);
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

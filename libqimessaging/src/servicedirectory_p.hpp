@@ -47,6 +47,7 @@ namespace qi {
     boost::recursive_mutex                                 _clientsMutex;
   }; // !ServiceDirectoryPrivate
 
+  template<> struct TypeDefaultClone<ServiceDirectoryPrivate>: public TypeNoClone<ServiceDirectoryPrivate>{};
 }
 
 #endif  // _SRC_SERVICEDIRECTORY_P_HPP_

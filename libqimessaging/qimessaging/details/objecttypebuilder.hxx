@@ -15,7 +15,7 @@ namespace qi {
     template<typename T>
     Manageable* manageable(void* instance)
     {
-      return reinterpret_cast<T*>(*(void**)instance);
+      return reinterpret_cast<T*>(instance);
     }
 
     template<typename T, typename U> boost::function<Manageable*(void*)>
@@ -33,7 +33,14 @@ namespace qi {
 
   template<typename T> void ObjectTypeBuilderBase::buildFor()
   {
-    xBuildFor(typeOf<T*>(),
+    // We are erasing T here: we must pass everything the builder need to know about t:
+    // - manageable accessor
+    // - typeid
+    // - cloner/deleter
+    // - serializer, ...
+    // => wee need all Type* methods, but we do not want another Type*
+    // to anwser to typeOf<T>
+    xBuildFor(new DefaultTypeImpl<T>(),
       detail::getAsManageable<T>(typename boost::is_base_of<Manageable, T>::type()));
   }
 
@@ -50,8 +57,7 @@ namespace qi {
   void ObjectTypeBuilderBase::inherits(int offset)
   {
     return inherits(typeOf<
-      typename boost::add_pointer<
-      typename boost::remove_reference<U>::type>::type>(), offset);
+      typename boost::remove_reference<U>::type>(), offset);
   }
 
   template<typename T>

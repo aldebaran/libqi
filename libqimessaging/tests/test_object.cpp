@@ -98,16 +98,19 @@ public:
   {
     return v1+v2;
   }
-  int addAdderByRef(Adder& b) { return v + b.v;}
-  int addAdderByConstRef(const Adder& b) { return v + b.v;}
-  int addAdderByPtr(Adder* b) { return v + b->v;}
-  int addAdderByConstPtr(const Adder* b) { return v + b->v;}
+  // NO_SEGV will return a dummy value when 0 ptr instead of segv
+  #define CHECK(ptr) if ((!this || !ptr)&&getenv("NO_SEGV")) return -1
+  int addAdderByRef(Adder& b) { CHECK(&b); return v + b.v;}
+  int addAdderByConstRef(const Adder& b) {  CHECK(&b); return v + b.v;}
+  int addAdderByPtr(Adder* b) { CHECK(b); return v + b->v;}
+  int addAdderByConstPtr(const Adder* b) { CHECK(b); return v + b->v;}
+  #undef CHEK
   int v;
 };
 
 template<typename T> bool checkValue(qi::GenericValue v, const T& val)
 {
-  std::pair<const T*, bool> r = v.as<T>();
+  std::pair<const T*, bool> r = v.to<T>();
   if (!r.first)
     return false;
   bool ok = *r.first == val;
@@ -120,8 +123,11 @@ template<typename T> bool checkValue(qi::GenericValue v, const T& val)
 
 TEST(TestObject, Typing)
 {
+  qiLogDebug("test") << "vfun";
   qi::GenericFunction fv = qi::makeGenericFunction(&vfun);
+  qiLogDebug("test") << "fun";
   qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
+  qiLogDebug("test") << "Foo::fun";
   qi::GenericMethod mv = qi::makeGenericMethod(&Foo::fun);
   std::vector<qi::GenericValue> args1 = convert(1, 2);
   qi::GenericValue res = fv2.call(args1);
@@ -292,13 +298,17 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
-  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
+  //GenericObject is T not T*
+  //ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
+  qiLogDebug("test") << "NEXT";
   ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
-  //GenericObject is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
+  qiLogDebug("test") << "NEXT";
+  ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
-  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
+  // GenericObject is T not T*
+  //ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
   ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
-  // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
 
   ASSERT_EQ(4, oa1.call<int>("increment", 3));
   ASSERT_EQ(4, oa1.call<int>("increment2", 3));
@@ -333,19 +343,25 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   ASSERT_EQ(3, oa2.call<int>("add", 1));
   ASSERT_EQ(5, oa1.call<int>("addTwo", 3, 2));
 
-  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", &a2));
-  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
-  //byvalue parent cast not supported ASSERT_EQ(3, oa1.call<int>("addAdderByRef", a2));
-  //GenericObject is T*, not T ASSERT_EQ(3, oa1.call<int>("addAdderByRef", oa2));
-  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", &a2));
-  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
-  //byval cast not supported ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", a2));
-  // same as above ASSERT_EQ(3, oa1.call<int>("addAdderByConstRef", oa2));
+  // ptr cast not supported, cast ourselve
+  ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", (Adder*)&a2));
+  // Generic object is T not T*
+  // ASSERT_EQ(3, oa1.call<int>("addAdderByPtr", oa2));
+  // Copies a2
+  ASSERT_EQ(4, oa1.call<int>("addAdderByRef", a2));
+  // Copies a2
+  ASSERT_EQ(4, oa1.call<int>("addAdderByRef", oa2));
+  // Ptr cast not implemented, cast ourselve
+  ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", (Adder*)&a2));
+  // GenericObject is T not T*
+  //ASSERT_EQ(3, oa1.call<int>("addAdderByConstPtr", oa2));
+
+  ASSERT_EQ(4, oa1.call<int>("addAdderByConstRef", a2));
+  ASSERT_EQ(4, oa1.call<int>("addAdderByConstRef", oa2));
 
   ASSERT_EQ(4, oa1.call<int>("increment", 3));
   ASSERT_EQ(4, oa1.call<int>("increment2", 3));
 }
-
 
 int main(int argc, char **argv)
 {

@@ -35,7 +35,7 @@ namespace qi
       // Argument list, changing ClassRef to ClassPtr
       typedef typename boost::mpl::push_front<
         typename ::boost::mpl::pop_front<ArgsType>::type,
-      ClassPtrType>::type ArgsTypeFixed;
+      ClassRefType>::type ArgsTypeFixed;
       // Push result type in front
       typedef typename ::boost::mpl::push_front<ArgsTypeFixed, RetType>::type FullType;
       // Synthetise result function type
