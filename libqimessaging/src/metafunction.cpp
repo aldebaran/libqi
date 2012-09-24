@@ -218,7 +218,7 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
       qiLogError("qi.metafunction") <<"convert: unknown type " << *i;
       compatible = src[idx].type;
     }
-    dst.push_back(src[idx].convert(*compatible));
+    dst.push_back(src[idx].convertCopy(compatible));
   }
   MetaFunctionParameters res(dst, false);
   res.storage->deleteOnDestruction = true;

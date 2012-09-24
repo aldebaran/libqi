@@ -23,9 +23,10 @@ namespace qi
         qiLogDebug("meta") << "needs conversion "
         << args[i].type->infoString() << " -> "
         << target[i]->infoString();
-        GenericValue v = args[i].convert(*target[i]);
-        toDestroy.push_back(v);
-        convertedArgs.push_back(v.value);
+        std::pair<GenericValue,bool> v = args[i].convert(target[i]);
+        if (v.second)
+          toDestroy.push_back(v.first);
+        convertedArgs.push_back(v.first.value);
       }
     }
     void* res = call(func, convertedArgs);

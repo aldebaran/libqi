@@ -1,4 +1,7 @@
-
+/* Old test to prototype metaType system.
+* A lot of stuffs there are now implemented in qimessaging
+*
+*/
 # include <boost/function.hpp>
 # include <boost/bind.hpp>
 # include <boost/thread.hpp>
@@ -35,15 +38,15 @@ TEST(Type, InOut)
 {
   using namespace qi;
   int i = 12;
-  ASSERT_EQ(toValue(i).as<int>(), mp((const int*)&i, false) );
-  ASSERT_TRUE(resIs(toValue(i).as<unsigned int>(), static_cast<unsigned int>(12)));
+  ASSERT_EQ(toValue(i).to<int>(), mp((const int*)&i, false) );
+  ASSERT_TRUE(resIs(toValue(i).to<unsigned int>(), static_cast<unsigned int>(12)));
 
   std::vector<int> vi;
   vi.push_back(5);
   vi.push_back(28);
   std::list<int> li(vi.begin(), vi.end());
-  ASSERT_TRUE(resIs(toValue(vi).as<std::list<int> >(), li));
-  ASSERT_TRUE(resIs(toValue(li).as<std::vector<int> >(), vi));
+  ASSERT_TRUE(resIs(toValue(vi).to<std::list<int> >(), li));
+  ASSERT_TRUE(resIs(toValue(li).to<std::vector<int> >(), vi));
 }
 
 int isum(std::vector<int> v)
@@ -77,7 +80,7 @@ double fadd(double j)
 template<typename R, typename P>
 R magicCall(boost::function<R (P)> func, qi::AutoGenericValue p1)
 {
-  std::pair<const P*, bool> res = p1.as<P>();
+  std::pair<const P*, bool> res = p1.to<P>();
   R result = func(*res.first);
   if (res.second)
     delete res.first;
@@ -128,7 +131,7 @@ public:
       typename boost::remove_reference<
       typename boost::mpl::at<ArgsType, boost::mpl::int_<0> >::type
       >::type>::type P1;
-      std::pair<const P1*, bool> p1 = const_cast<qi::GenericValue&>(args[0]).as<P1>();
+      std::pair<const P1*, bool> p1 = const_cast<qi::GenericValue&>(args[0]).to<P1>();
     //std::cerr <<"call arg " << p1.second <<" " << *p1.first << std::endl;
     qi::detail::GenericValueCopy ret;
     ret, fun(*p1.first);
@@ -222,7 +225,7 @@ public:
   {
     // convert MetaData to target type
     typedef std::pair<const T*, bool>  ConvType;
-    ConvType resConv =  const_cast<qi::GenericValue&>(future).template as<T>();
+    ConvType resConv =  const_cast<qi::GenericValue&>(future).template to<T>();
     //std::cerr <<"FutureIface conversion " << resConv.second <<" "
     //<< *resConv.first << std::endl;
     prom.setValue(*resConv.first);
@@ -262,7 +265,7 @@ public:
       qi::GenericValue compatVal;
       compatVal.type = compatType;
       compatVal.value = compatValPtr;
-      std::pair<const T*, bool>  res = compatVal.template as<T>();
+      std::pair<const T*, bool>  res = compatVal.template to<T>();
       //std::cerr <<"deserialize conversion " << res.second <<" "
       //<< *res.first << std::endl;
       prom.setValue(*res.first);
@@ -306,7 +309,7 @@ template<typename R> qi::Future<R> metaCall(Function* ptr, CallMode mode,
     {
       qi::Promise<R> prom;
       qi::GenericValue res = ptr->call(params);
-      std::pair<const R*, bool> resConv = res.template as<R>();
+      std::pair<const R*, bool> resConv = res.template to<R>();
       std::cerr <<"ret " << resConv.second <<" " << *resConv.first << std::endl;
       prom.setValue(*resConv.first);
       if (resConv.second)
@@ -379,9 +382,10 @@ template<typename R> qi::Future<R> metaAdaptCall(Function* ptr,
       { // Dont know how to handle this type.
         throw std::runtime_error("proper fucked");
       }
-      qi::GenericValue converted = params[i].convert(*compatible);
-      converted.serialize(ds);
-      converted.destroy();
+      std::pair<qi::GenericValue, bool> converted = params[i].convert(compatible);
+      converted.first.serialize(ds);
+      if (converted.second)
+        converted.first.destroy();
     }
   }
   qi::Promise<R> prom;
@@ -449,7 +453,6 @@ TEST(Type, CallSerialize)
   ASSERT_EQ(3, metaAdaptCall<int>(f_fsum, "[d]", "d", iv).value());
   ASSERT_EQ(3, metaAdaptCall<int>(f_fsum, "[d]", "d", fv).value());
 }
-
 
 
 int main(int argc, char **argv) {

@@ -17,20 +17,24 @@ namespace qi {
 class QIMESSAGING_API GenericValue
 {
 public:
-  GenericValue() : value(0), type(0) {}
-  void*          value;
-  Type*      type;
+  GenericValue();
 
-  // TODO Make bouncers to type methods here
   /// Convert GenericValue to concrete type. Returns the value and a
   /// bool that is true if value is a copy and must be deleted.
-  template<typename T> std::pair<const T*, bool> as() const;
-  /// @return converted value which is allways a copy.
-  GenericValue convert(Type& targetType) const;
+  template<typename T> std::pair<const T*, bool> to() const;
+
+  /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
+  std::pair<GenericValue, bool> convert(Type* targetType) const;
+
+  /// Helper function that converts and always clone
+  GenericValue convertCopy(Type* targetType) const;
   GenericValue clone() const;
   void serialize(ODataStream& os) const;
   std::string signature() const;
   void destroy();
+
+  void*   value;
+  Type*   type;
 };
 
 /// Convert any value to the correct associated Value

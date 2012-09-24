@@ -54,7 +54,7 @@ namespace qi {
         {
           GenericValue val =  future.getValue();
           typedef std::pair<const T*, bool>  ConvType;
-          ConvType resConv = val.template as<T>();
+          ConvType resConv = val.template to<T>();
           if (resConv.first)
             prom.setValue(*resConv.first);
           else

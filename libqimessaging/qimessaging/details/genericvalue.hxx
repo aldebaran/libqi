@@ -68,15 +68,16 @@ GenericValue GenericValue::clone() const
 }
 
 template<typename T>
-std::pair<const T*, bool> GenericValue::as() const
+std::pair<const T*, bool> GenericValue::to() const
 {
   Type* targetType =  typeOf<T>();
   if (type->info() == targetType->info())
     return std::make_pair((const T*)value, false);
   else
   {
-    GenericValue mv = convert(*targetType);
-    return std::make_pair((const T*)mv.value, true);
+    std::pair<GenericValue, bool> mv = convert(targetType);
+    // NOTE: asserts that Type stores in value a pointer to T
+    return std::make_pair((const T*)mv.first.value, mv.second);
   }
 }
 
@@ -114,6 +115,12 @@ inline void GenericValue::serialize(ODataStream& os) const
 {
   if (type)
     type->serialize(os, value);
+}
+
+inline GenericValue::GenericValue()
+: value(0)
+, type(0)
+{
 }
 
 namespace detail
