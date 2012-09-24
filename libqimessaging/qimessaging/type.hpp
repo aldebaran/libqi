@@ -95,12 +95,12 @@ public:
 template<typename T> class TypeDefaultClone
 {
 public:
-  void* clone(void* src)
+  static void* clone(void* src)
   {
     return new T(*(T*)src);
   }
 
-  void destroy(void* ptr)
+  static void destroy(void* ptr)
   {
     delete (T*)ptr;
   }
@@ -109,12 +109,12 @@ public:
 template<typename T> class TypeNoClone
 {
 public:
-  void* clone(void* src)
+  static void* clone(void* src)
   {
     return src;
   }
 
-  void destroy(void* ptr)
+  static void destroy(void* ptr)
   {
     /* Assume a TypeNoClone is not serializable
      * So it cannot have been allocated by us.
@@ -126,13 +126,13 @@ public:
 template<typename T>class TypeDefaultValue
 {
 public:
-  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
+  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
     detail::DynamicValueConverter<T>::writeDynamicValue(*(T*)ptr, val);
     return true;
   }
 
-  void* fromValue(const qi::detail::DynamicValue& val)
+  static void* fromValue(const qi::detail::DynamicValue& val)
   {
     T* res = new T();
     detail::DynamicValueConverter<T>::readDynamicValue(val, *res);
@@ -143,13 +143,13 @@ public:
 template<typename T>class TypeNoValue
 {
 public:
-  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
+  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
-    qiLogWarning("qi.type") << "toValue not implemented for type ";
+    qiLogWarning("qi.type") << "toValue not implemented for type " << typeid(T).name();
     return false;
   }
 
-  void* fromValue(const qi::detail::DynamicValue& val)
+  static void* fromValue(const qi::detail::DynamicValue& val)
   {
     qiLogWarning("qi.type") << "fromValue not implemented for type ";
     T* res = new T();
@@ -160,18 +160,18 @@ public:
 template<typename T> class TypeDefaultSerialize
 {
 public:
-  void  serialize(ODataStream& s, const void* ptr)
+  static void  serialize(ODataStream& s, const void* ptr)
   {
     s << *(T*)ptr;
   }
 
-  void* deserialize(IDataStream& s)
+  static void* deserialize(IDataStream& s)
   {
     T* val = new T();
     s >> *val;
     return val;
   }
-  std::string signature()
+  static std::string signature()
   {
     return signatureFromType<T>::value();
   }
@@ -180,12 +180,12 @@ public:
 template<typename T> class TypeNoSerialize
 {
 public:
-  void serialize(ODataStream& s, const void* ptr)
+  static void serialize(ODataStream& s, const void* ptr)
   {
-    qiLogWarning("qi.meta") << "type not serializable";
+    qiLogWarning("qi.meta") << "serialize not implemented for " << typeid(T).name();
   }
 
-  void* deserialize(IDataStream& s)
+  static void* deserialize(IDataStream& s)
   {
     qiLogWarning("qi.meta") << "type not serializable";
     T* val = new T();
