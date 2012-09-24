@@ -10,6 +10,7 @@ using System;
 using System.Runtime.InteropServices;
 
 public struct qi_object_t { };
+public struct qi_object_builder_t { };
 public struct qi_future_t { };
 public struct qi_promise_t { };
 public struct qi_message_t { };
@@ -21,9 +22,9 @@ namespace QiMessaging
 {
     public class Object
     {
-        public Object(string name)
+        public Object()
         {
-            _p = new ObjectPrivate(name);
+            _p = new ObjectPrivate();
         }
 
         public Object(ObjectPrivate p)
@@ -62,30 +63,48 @@ namespace QiMessaging
     public unsafe class ObjectPrivate
     {
         [DllImport("qimessaging.dll")]
-        public static extern qi_object_t *qi_object_create(String name);
+        public static extern qi_object_t *qi_object_create();
 
         [DllImport("qimessaging.dll")]
         public static extern void qi_object_destroy(qi_object_t *obj);
 
-        [DllImport("qimessaging.dll", EntryPoint="qi_object_register_method")]
-        public static extern int  qi_object_register_method(qi_object_t *obj, string completeSig, QiMethod pfn, void *data);
-
         [DllImport("qimessaging.dll", EntryPoint = "qi_object_call")]
         public static extern qi_future_t *qi_object_call(qi_object_t *obj, string signature, qi_message_t *message);
 
-        public ObjectPrivate(String name)
+        [DllImport("qimessaging.dll")]
+        public static extern qi_object_builder_t *qi_object_builder_create();
+
+        [DllImport("qimessaging.dll")]
+        public static extern void qi_object_builder_destroy(qi_object_builder_t *builder);
+
+        [DllImport("qimessaging.dll")]
+        public static extern int  qi_object_builder_register_method(qi_object_builder_t *builder, string completeSig, QiMethod pfn, void *data);
+
+        [DllImport("qimessaging.dll")]
+        public static extern qi_object_t *qi_object_builder_get_object(qi_object_builder_t *builder);
+
+        public ObjectPrivate()
         {
-            obj = qi_object_create(name);
+            obj = null;
+            builder = qi_object_builder_create();
         }
 
         public ObjectPrivate(qi_object_t* cObject)
         {
             obj = cObject;
+            builder = null;
         }
 
-        public bool RegisterMethod(String completeSignature, QiMethod pfn, void* param = null)
+        public bool RegisterMethod (String completeSignature, QiMethod pfn, void* param = null)
         {
-            if (qi_object_register_method(obj, completeSignature, pfn, param) == 1)
+            if (obj != null)
+            {
+                qi_object_destroy(obj);
+                obj = null;
+                builder = qi_object_builder_create();
+            }
+
+            if (qi_object_builder_register_method(builder, completeSignature, pfn, param) == 1)
                 return true;
 
             return false;
@@ -94,12 +113,19 @@ namespace QiMessaging
         public Future Call(String completeSignature, Message message)
         {
             qi_future_t* fut;
+
+            if (obj == null)
+                obj = qi_object_builder_get_object(builder);
+
             fut = qi_object_call(obj, completeSignature, message.Origin().Origin());
             return new Future(fut);
         }
 
         public qi_object_t* Origin()
         {
+            if (obj == null)
+                obj = qi_object_builder_get_object(builder);
+
             return obj;
         }
 
@@ -107,8 +133,11 @@ namespace QiMessaging
         {
             if(obj != null)
                 qi_object_destroy(obj);
+            if (builder != null)
+                qi_object_builder_destroy(builder);
         }
 
+        private qi_object_builder_t *builder;
         private qi_object_t *obj;
     }
 }

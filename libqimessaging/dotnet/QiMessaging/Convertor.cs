@@ -10,8 +10,6 @@ namespace QiMessaging
     {
         public static string ToQim(string s_unicode)
         {
-            Encoding utf_8 = Encoding.UTF8;
-
             // Convert a string to utf-8 bytes.
             byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes(s_unicode);
 
@@ -56,7 +54,6 @@ namespace QiMessaging
             int i = 0;
             while (i < size)
             {
-                Console.WriteLine(value[i]);
                 array[i] = ToCharPtr(value[i]);
                 i++;
             }

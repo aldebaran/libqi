@@ -10,7 +10,7 @@ namespace qi_client_dotnet
     {
         static void Main(string[] args)
         {
-            Application app = new Application(ref args);
+            Application app = new Application(args);
             string connectionAddr;
 
             if (args.Length != 2)
@@ -24,7 +24,6 @@ namespace qi_client_dotnet
 
             Session session = new Session();
             session.Connect(connectionAddr);
-            session.WaitForConnected(3000);
 
             QiMessaging.Object obj = session.Service("serviceTest");
 

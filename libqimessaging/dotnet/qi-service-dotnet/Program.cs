@@ -22,22 +22,23 @@ namespace qi_service_dotnet
 
         static int Main(string[] args)
         {
-            Application app = new Application(ref args);
+            Application app = new Application(args);
             string SDAddr = "tcp://127.0.0.1:5555";
             string serviceName = "serviceTest";
 
-            if (args.Length != 2)
+            if (args.Length < 1)
             {
                 Console.WriteLine("Usage : ./qi-service-c master-address service-name");
                 Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
             }
             else
             {
-                SDAddr = args[1];
+                SDAddr = args[0];
             }
 
+
             // Declare an object and a method
-            QiMessaging.Object obj = new QiMessaging.Object("Reply");
+            QiMessaging.Object obj = new QiMessaging.Object();
             QiMethod method = new QiMethod(reply);
             QiMessaging.Buffer buff = new QiMessaging.Buffer();
 
@@ -46,8 +47,7 @@ namespace qi_service_dotnet
             Session session = new Session();
 
             // Set up your session
-            session.Connect(SDAddr);
-            if (session.WaitForConnected(3000) == false)
+            if (session.Connect(SDAddr) == false)
             {
                 Console.WriteLine("Ooops, cannot connect to service directory (" + SDAddr + ")");
                 return 1;
