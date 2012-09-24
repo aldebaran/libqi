@@ -32,8 +32,7 @@ namespace qi {
   }
 
   ServiceDirectoryClient::ServiceDirectoryClient()
-    : _socket(qi::TcpTransportSocketPtr(new TcpTransportSocket()))
-    , _remoteObject(_socket, qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
+    : _remoteObject(qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
     _object = makeDynamicObject(&_remoteObject);
   }
@@ -43,7 +42,6 @@ namespace qi {
   }
 
   void ServiceDirectoryClient::setTransportSocket(qi::TransportSocketPtr socket) {
-    _socket = socket;
     _remoteObject.setTransportSocket(socket);
   }
 

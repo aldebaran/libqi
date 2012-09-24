@@ -119,7 +119,7 @@ namespace qi {
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
-        RemoteObject* robj = new RemoteObject(sr->socket, sr->serviceId, mo);
+        RemoteObject* robj = new RemoteObject(sr->serviceId, mo, sr->socket);
         GenericObject o = makeDynamicObject(robj);
         // The remoteobject in sr->client.remoteObject is still on
         //remove the callback of ServerClient before returning the object

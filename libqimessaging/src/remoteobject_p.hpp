@@ -28,10 +28,10 @@ namespace qi {
   class RemoteObject : public qi::DynamicObject {
   public:
     RemoteObject();
-    RemoteObject(qi::TransportSocketPtr ts, unsigned int service, qi::MetaObject mo);
+    RemoteObject(unsigned int service, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     ~RemoteObject();
 
-    void setTransportSocket(qi::TransportSocketPtr p) { _socket = p; }
+    void setTransportSocket(qi::TransportSocketPtr socket);
     void close();
 
   protected:

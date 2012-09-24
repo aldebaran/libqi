@@ -27,7 +27,7 @@ namespace qi {
   }
 
   ServerClient::ServerClient(TransportSocketPtr socket)
-    : _remoteObject(socket, qi::Message::Service_Server, serverMetaObject())
+    : _remoteObject(qi::Message::Service_Server, serverMetaObject(), socket)
   {
     _object = makeDynamicObject(&_remoteObject);
   }

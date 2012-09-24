@@ -120,7 +120,7 @@ public:
     si.setEndpoints(_p->_endpoints);
     d << si;
     msg.setBuffer(b);
-    _p->_session->_p->_sdClient._socket->send(msg);
+    _p->_session->_p->_sdSocket->send(msg);
     //_p->_session->_p->_sdClient._socket->waitForId(msg.id());
     //yes but I will fix it later
     qi::os::sleep(1);

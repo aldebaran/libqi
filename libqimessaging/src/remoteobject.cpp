@@ -12,16 +12,24 @@
 
 namespace qi {
 
-  RemoteObject::RemoteObject(TransportSocketPtr socket, unsigned int service, qi::MetaObject mo)
+  RemoteObject::RemoteObject(unsigned int service, qi::MetaObject metaObject, TransportSocketPtr socket)
     : _socket(socket)
     , _service(service)
+    , _linkMessageDispatcher(0)
   {
-    _linkMessageDispatcher = _socket->messagePendingConnect(service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
-    setMetaObject(mo);
+    setMetaObject(metaObject);
+    setTransportSocket(socket);
   }
 
   //### RemoteObject
 
+  void RemoteObject::setTransportSocket(qi::TransportSocketPtr socket) {
+    if (_socket)
+      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+    _socket = socket;
+    if (socket)
+      _linkMessageDispatcher = _socket->messagePendingConnect(_service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+  }
 
   RemoteObject::~RemoteObject()
   {
@@ -105,7 +113,7 @@ namespace qi {
     }
 
     //error will come back as a error message
-    if (!_socket->send(msg)) {
+    if (!_socket || !_socket->send(msg)) {
       qiLogError("remoteobject") << "error while sending answer";
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
@@ -199,7 +207,8 @@ namespace qi {
   }
 
   void RemoteObject::close() {
-    _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+    if (_socket)
+      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
   }
 
 }

@@ -99,7 +99,7 @@ namespace qi {
     _p->_serviceHandler.close();
     _p->_server.close();
     if (!_p->_sdSocket)
-      return qi::Future<void>();
+      return qi::Future<void>(0);
     return _p->_sdSocket->disconnect();
   }
 

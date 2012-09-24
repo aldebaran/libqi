@@ -28,13 +28,6 @@ namespace qi {
     qi::Future< void >                     unregisterService(const unsigned int &idx);
     qi::Future< void >                     serviceReady(const unsigned int &idx);
 
-  protected:
-    void onSocketDisconnected(TransportSocketPtr client, void *data);
-
-  public:
-    TransportSocketPtr   _socket;
-
-
   private:
     qi::RemoteObject     _remoteObject;
     qi::GenericObject    _object;
