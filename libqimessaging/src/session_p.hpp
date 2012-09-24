@@ -22,6 +22,7 @@
 #include "src/sessionserver.hpp"
 #include "src/sessionservice.hpp"
 #include "src/sessionservices.hpp"
+#include "src/transportsocketcache.hpp"
 
 namespace qi {
 
@@ -38,6 +39,7 @@ namespace qi {
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
     ServiceWatcher         _watcher;
+    TransportSocketCache   _socketsCache;
   };
 }
 

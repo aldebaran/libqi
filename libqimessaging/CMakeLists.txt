@@ -148,6 +148,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/transportserverdummy_p.hpp
                                    src/transportsocket.cpp
                                    src/transportsocket_p.hpp
+                                   src/transportsocketcache.cpp
+                                   src/transportsocketcache.hpp
                                    src/tcptransportsocket.cpp
                                    src/tcptransportsocket.hpp
                                    src/tcptransportsocket_p.cpp

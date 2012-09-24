@@ -68,40 +68,21 @@ namespace qi {
     }
   }
 
-  void Session_Service::onSocketDisconnected(TransportSocketPtr client, int error, long requestId) {
+  void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
-    sr->attempts--;
-    if (sr->attempts <= 0) {
-      sr->promise.setError("Impossible to connect to the requested service.");
+
+    if (value.hasError()) {
+      sr->promise.setError(value.error());
       removeRequest(requestId);
-    }
-  }
-
-  void Session_Service::onSocketConnected(TransportSocketPtr client, long requestId)
-  {
-    ServiceRequest *sr = serviceRequest(requestId);
-    if (!sr)
-      return;
-
-    //warning this is a hack, remove the use of reset. (use TransportSocketCache, that handle that)
-    client->messageReady._p->reset();
-    client->connected._p->reset();
-    client->disconnected._p->reset();
-    if (sr->connected)
-    {
-      // An other attempt got here first, disconnect and drop
-      client->disconnect();
       return;
     }
-    sr->connected = true;
-    //sr->socket.push_back(client;
 
-    sr->sclient   = new qi::ServerClient(client);
+    sr->sclient = new qi::ServerClient(value.value());
+    sr->socket = value.value();
 
     qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::GenericObject_Main);
-    //fut.addCallbacks(this, data);
     fut.connect(boost::bind<void>(&Session_Service::onMetaObjectResult, this, _1, requestId));
   }
 
@@ -109,6 +90,13 @@ namespace qi {
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
+
+    if (mo.hasError()) {
+      sr->promise.setError(mo.error());
+      removeRequest(requestId);
+      return;
+    }
+
     {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(sr->name);
@@ -145,47 +133,25 @@ namespace qi {
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
-    qi::ServiceInfo &si = result.value();
-    sr->attempts = 0;
-    sr->serviceId = si.serviceId();
-
-    {
-      //try to reuse a cached connection
-      TransportSocketMap::iterator             tsmit;
-      std::vector<std::string>::const_iterator it;
-      for (it = si.endpoints().begin(); it != si.endpoints().end(); ++it) {
-        tsmit = _sockets.find(*it);
-        if (tsmit != _sockets.end()) {
-          qiLogInfo("qi.session_service") << "reusing socket for endpoint: " << *it;
-          onSocketConnected(tsmit->second, requestId);
-        }
-      }
-    }
-
-    // Attempt to connect to all endpoints.
-    std::vector<std::string>::const_iterator it;
-    for (it = si.endpoints().begin(); it != si.endpoints().end(); ++it)
-    {
-      qi::Url url(*it);
-      if (sr->protocol == "any" || sr->protocol == url.protocol())
-      {
-        qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
-        //ts->addCallbacks(this, data);
-        socket->connected.connect(boost::bind(&Session_Service::onSocketConnected, this, socket, requestId));
-        socket->disconnected.connect(boost::bind(&Session_Service::onSocketDisconnected, this, socket, _1, requestId));
-        sr->socket = socket;
-        socket->connect(url).async();
-        // The connect may still fail asynchronously.
-        ++sr->attempts;
-      }
-      break;
-    }
-
-    // All attempts failed synchronously.
-    if (!sr->attempts) {
-      sr->promise.setError("No service found");
+    if (result.hasError()) {
+      sr->promise.setError(result.error());
       removeRequest(requestId);
+      return;
     }
+    qi::ServiceInfo &si = result.value();
+    sr->serviceId = si.serviceId();
+    //empty serviceInfo
+    if (!si.endpoints().size()) {
+      std::stringstream ss;
+      ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
+      qiLogVerbose("session.service") << ss.str();
+      sr->promise.setError(ss.str());
+      removeRequest(requestId);
+      return;
+    }
+
+    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si.endpoints());
+    fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 
   qi::Future<qi::GenericObject> Session_Service::service(const std::string &service,

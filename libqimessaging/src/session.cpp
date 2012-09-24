@@ -19,7 +19,7 @@ namespace qi {
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _sdClient()
     , _server(&_sdClient)
-    , _serviceHandler(&_sdClient, &_server)
+    , _serviceHandler(&_socketsCache, &_sdClient, &_server)
     , _servicesHandler(&_sdClient, &_server)
     , _watcher(session)
   {

@@ -13,11 +13,13 @@
 #include <qimessaging/session.hpp>
 #include <qi/atomic.hpp>
 #include "src/remoteobject_p.hpp"
+#include "src/transportsocketcache.hpp"
 
 namespace qi {
 
   class GenericObject;
   class ServiceDirectoryClient;
+  class TransportSocketCache;
   class Session_Server;
   class ServerClient;
 
@@ -29,7 +31,6 @@ namespace qi {
       , serviceId(0)
       , protocol(protocol)
       , connected(false)
-      , attempts(0)
       , socket()
       , sclient(0)
     {}
@@ -39,7 +40,6 @@ namespace qi {
     unsigned int                  serviceId;
     std::string                   protocol;
     bool                          connected; // True if the service server was reached
-    unsigned int                  attempts;  // Number of connection attempts pending.
     TransportSocketPtr            socket;
     ServerClient                 *sclient;
   };
@@ -47,8 +47,9 @@ namespace qi {
   class Session_Service
   {
   public:
-    Session_Service(ServiceDirectoryClient *sdClient, Session_Server *server)
-      : _sdClient(sdClient)
+    Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, Session_Server *server)
+      : _socketCache(socketCache)
+      , _sdClient(sdClient)
       , _server(server)
     {}
     ~Session_Service();
@@ -63,11 +64,7 @@ namespace qi {
     //FutureInterface
     void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId);
     void onMetaObjectResult(qi::Future<qi::MetaObject> value, long requestId);
-
-    //TransportSocket
-    void onSocketConnected(qi::TransportSocketPtr socket, long requestId);
-    void onSocketDisconnected(qi::TransportSocketPtr socket, int error, long requestId);
-
+    void onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId);
 
   protected:
     ServiceRequest *serviceRequest(long requestId);
@@ -83,11 +80,8 @@ namespace qi {
     RemoteObjectMap                 _remoteObjects;
     boost::mutex                    _remoteObjectsMutex;
 
-    //maintain a cache of remote connections
-    typedef std::map<std::string, qi::TransportSocketPtr> TransportSocketMap;
-    TransportSocketMap              _sockets;
-
   private:
+    TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     Session_Server         *_server;    //not owned by us
   };
