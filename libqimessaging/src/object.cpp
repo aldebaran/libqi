@@ -107,8 +107,10 @@ namespace qi {
 
   void GenericObject::metaEmit(unsigned int event, const MetaFunctionParameters& args)
   {
-    if (!type || !value)
+    if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      return;
+    }
     type->metaEmit(value, event, args);
   }
 
