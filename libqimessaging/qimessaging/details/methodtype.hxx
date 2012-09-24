@@ -122,7 +122,9 @@ namespace qi
       typedef typename boost::function_types::function_type<
       typename boost::function_types::components<T>::type>::type FunctionType;
       typedef typename boost::function_types::parameter_types<FunctionType >::type ArgsType;
-      typedef typename boost::mpl::push_front<ArgsType, void*>::type NArgsType;
+      // We will drop the first argument, but the system will still try to
+      // convert it, so use an always-compatible conversion target: GenericValue
+      typedef typename boost::mpl::push_front<ArgsType, GenericValue>::type NArgsType;
       typedef typename boost::function_types::result_type<T>::type ResType;
       typedef typename boost::mpl::push_front<NArgsType, ResType>::type FullType;
       typedef typename boost::function_types::function_type<FullType>::type DropperType;
