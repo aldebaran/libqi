@@ -20,7 +20,7 @@ void f2(qi::atomic<unsigned int>& number)
 TEST(QiThreadPool, IntenseThreadCreationAndDestruction)
 {
   qi::atomic<unsigned int> number;
-  qi::ThreadPool* pool = new qi::ThreadPool(0, 100, 0, 0, 100);
+  qi::ThreadPool* pool = new qi::ThreadPool(0, 100, 0, 0);
   boost::function<void()> test = boost::bind(&f2, boost::ref(number));
 
   for (unsigned int i = 0; i < 10; i++)
