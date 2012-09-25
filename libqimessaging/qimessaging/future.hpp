@@ -80,8 +80,8 @@ namespace qi {
     };
 
   public: //Signals
-    unsigned int connect(boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evLoop = 0) { _p->connect(*this, fun, evLoop); }
-    bool disconnect(unsigned int i) { _p->disconnect(i); }
+    unsigned int connect(boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evLoop = 0) { return _p->connect(*this, fun, evLoop); }
+    bool disconnect(unsigned int i) { return _p->disconnect(i); }
     //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
 
   protected:
