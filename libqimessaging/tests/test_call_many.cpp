@@ -65,7 +65,7 @@ TEST(Test, Recurse)
     niter = 50;
   }
   oclient1.call<void>("onFire1", niter);
-  ASSERT_TRUE(payload.future().wait(3000));
+  ASSERT_TRUE(payload.future().wait(8000));
 
   session1.close();
   session2.close();
