@@ -109,7 +109,7 @@ namespace qi {
     return _p->_server.registerService(name, obj);
   }
 
-  qi::Future<void> Session::unregisterService(unsigned int idx)
+  qi::FutureSync<void> Session::unregisterService(unsigned int idx)
   {
     return _p->_server.unregisterService(idx);
   }

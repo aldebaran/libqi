@@ -51,7 +51,7 @@ namespace qi {
     qi::FutureSync<void>    close();
 
     qi::FutureSync<unsigned int> registerService(const std::string &name, const qi::GenericObject &object);
-    qi::Future<void>         unregisterService(unsigned int idx);
+    qi::FutureSync<void>         unregisterService(unsigned int idx);
 
 
     /// Load a module and register an instance of each declared object as a service.
