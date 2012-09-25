@@ -13,6 +13,9 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 
 #include <qi/application.hpp>
 #include <qimessaging/transport_socket.hpp>
@@ -222,40 +225,62 @@ int main_server(std::string host, std::string port)
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
-  if (argc > 1
-    && (argv[1] == std::string("--help") || argv[1] == std::string("-h")))
+
+  po::options_description desc(std::string("Usage:\n ")+argv[0]+"\nOptions");
+  desc.add_options()
+    ("help", "Print this help.")
+    ("all", "(default) Run all in the same process.")
+    ("client", "Run as a client.")
+    ("server", "Run as a server.")
+    ("gateway", "Run as a gateway.")
+    ("local", "Run in local.")
+    ("host", po::value<std::string>(), "Adresse of the host.")
+    ("port", po::value<std::string>(), "Port of the server.")
+    ("thread", po::value<int>()->default_value(1, "1"),
+     "Number of thread to launch for clients");
+
+
+  po::variables_map vm;
+  po::store(po::command_line_parser(argc, argv)
+            .options(desc).run(), vm);
+  po::notify(vm);
+
+  if (vm.count("help"))
   {
-    std::cerr << argv[0]
-      << "[--client threadcount | --server | --gateway] [sdHost] [sdPort]\n"
-      << "\t If no mode is specified, run client and server in same process"
-      << std::endl;
-    exit(1);
+    std::cout << desc << std::endl;
+    return EXIT_SUCCESS;
   }
+  if (vm.count("client") + vm.count("server") + vm.count("all") + vm.count("gateway") + vm.count("local") > 1) {
+    std::cerr << desc << std::endl << "You must put at most one option between [all|client|server|gateway|local]" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if (vm.count("host") > 1 || vm.count("port") > 1) {
+    std::cerr << desc << std::endl << "[host] and [port] must at most appear one time." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   std::string host, port;
-  if (argc > 2)
-    host = argv[2];
-  if (argc > 3)
-    port = argv[3];
-  if (argc > 1 && !strcmp(argv[1], "--client"))
+
+  if (vm.count("host"))
+    host = vm["host"].as<std::string>();
+
+  if (vm.count("port"))
+    port = vm["port"].as<std::string>();
+
+  if (vm.count("client"))
   {
-    int threadc = 1;
-    if (argc > 2)
-      threadc = atoi(argv[2]);
-    if (argc > 3)
-      host = argv[3];
-    if (argc > 4)
-    port = argv[4];
+    int threadc = vm["thread"].as<int>();
     start_client(threadc, host, port);
   }
-  else if (argc > 1 && !strcmp(argv[1], "--server"))
+  else if (vm.count("server"))
   {
     return main_server(host, port);
   }
-  else if (argc > 1 && !strcmp(argv[1], "--gateway"))
+  else if (vm.count("gateway"))
   {
     return main_gateway(host, port);
   }
-  else if (argc > 1 && !strcmp(argv[1], "--local"))
+  else if (vm.count("local"))
   {
     return main_local();
   }
