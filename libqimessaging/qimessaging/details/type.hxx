@@ -30,17 +30,6 @@
  * use all known native types instead of size/signedness explicit
  * types.
  */
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(char);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(signed char);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned char);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(short);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned short);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(int);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned int);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(long);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned long);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(long long);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(unsigned long long);
 QI_TYPE_CONVERTIBLE_SERIALIZABLE(float);
 QI_TYPE_CONVERTIBLE_SERIALIZABLE(double);
 QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
@@ -206,6 +195,11 @@ namespace qi  {
   template<typename T> Type* typeOf()
   {
     return detail::typeOfBackend<typename boost::remove_const<T>::type>();
+  }
+
+  inline Type::Kind Type::kind() const
+  {
+    return Unknown;
   }
 
   namespace detail {

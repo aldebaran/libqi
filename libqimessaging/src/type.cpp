@@ -43,13 +43,14 @@ namespace qi {
   /// Type factory setter
   QIMESSAGING_API bool registerType(const std::type_info& typeId, Type* type)
   {
-    qiLogDebug("qi.meta") << "registerType "  << typeId.name() << " " << (void*)type;
+    qiLogDebug("qi.meta") << "registerType "  << typeId.name() << " "
+     << type->kind() <<" " << (void*)type;
     TypeFactory::iterator i = typeFactory().find(TypeInfoKey(typeId));
     if (i != typeFactory().end())
     {
       if (i->second)
         qiLogWarning("qi.meta") << "registerType: previous registration present for "
-          << typeId.name()<< " " << (void*)i->second;
+          << typeId.name()<< " " << (void*)i->second << " " << i->second->kind();
       else
         qiLogWarning("qi.meta") << "registerType: access to type factory before"
           " registration detected for type " << typeId.name();

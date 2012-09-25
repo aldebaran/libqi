@@ -54,6 +54,19 @@ public:
   // Default impl does deserialize(GenericValue&) then fromValue
   virtual void* deserialize(IDataStream& s)=0;
 
+  enum Kind
+  {
+    Void,
+    Int,
+    Float,
+    String,
+    List,
+    Map,
+    Object,
+    Unknown,
+  };
+  virtual Kind kind() const;
+
   /* When someone makes a call with arguments that do not match the
    * target signature (ex: int vs float), we want to handle it.
    * For this, given the known correct signature S and known incorrect

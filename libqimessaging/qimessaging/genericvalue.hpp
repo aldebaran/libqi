@@ -10,6 +10,11 @@
 #include <qimessaging/type.hpp>
 namespace qi {
 
+class GenericList;
+class GenericMap;
+class GenericObject;
+
+
 /** Class that holds any value, with informations to manipulate it.
  *  Operator = makes a shallow copy.
  *
@@ -32,6 +37,20 @@ public:
   void serialize(ODataStream& os) const;
   std::string signature() const;
   void destroy();
+  Type::Kind kind() const;
+
+  int64_t asInt() const;
+  float   asFloat() const;
+  double  asDouble() const;
+
+  std::string asString() const;
+
+  GenericList asList() const;
+  GenericMap  asMap() const;
+  GenericObject asObject() const;
+
+  template<typename T, Type::Kind k> T as() const;
+  template<typename T> T as() const;
 
   void*   value;
   Type*   type;

@@ -77,6 +77,7 @@ set(PUBLIC_HEADERS
                    qimessaging/signal.hpp
                    qimessaging/transportserver.hpp
                    qimessaging/transportsocket.hpp
+                   qimessaging/typeint.hpp
                    qimessaging/future.hpp
                    qimessaging/datastream.hpp
                    qimessaging/bufferreader.hpp
@@ -156,6 +157,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/tcptransportsocket_p.cpp
                                    src/tcptransportsocket_p.hpp
                                    src/type.cpp
+				   src/typeint.cpp
                                    src/value.cpp
                                    src/file.cpp
                                    src/url.cpp

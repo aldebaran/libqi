@@ -8,6 +8,9 @@
 #define _QI_MESSAGING_VALUE_HXX_
 
 #include <boost/type_traits/remove_const.hpp>
+
+#include <qimessaging/typeint.hpp>
+
 namespace qi {
 
 
@@ -143,6 +146,97 @@ inline GenericValue::GenericValue()
 , type(0)
 {
 }
+
+inline Type::Kind GenericValue::kind() const
+{
+ if (!type)
+   return Type::Void;
+ else
+   return type->kind();
+}
+
+
+// Kind -> handler Type (TypeInt, TypeList...)  accessor
+
+class KindNotConvertible;
+
+template<Type::Kind T> struct TypeOfKind
+{
+  typedef KindNotConvertible type;
+};
+
+#define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
+
+TYPE_OF_KIND(Type::Int, TypeInt);
+//TYPE_OF_KIND(Type::String, TypeString);
+
+#undef TYPE_OF_KIND
+
+
+// Type -> Kind  accessor
+
+namespace detail
+{
+  struct Nothing {};
+  template<Type::Kind k> struct MakeKind
+  {
+    static const Type::Kind value = k;
+  };
+
+  template<typename C, typename T, typename F> struct IfElse
+  {
+  };
+
+  template<typename T, typename F> struct IfElse<boost::true_type, T, F>
+  {
+    typedef T type;
+  };
+
+  template<typename T, typename F> struct IfElse<boost::false_type, T, F>
+  {
+    typedef F type;
+  };
+
+}
+
+#define IF(cond, type) \
+public detail::IfElse<cond, typename detail::MakeKind<type>, detail::Nothing>::type
+
+template<typename T> struct KindOfType
+: IF(typename boost::is_integral<T>::type, Type::Int)
+, IF(typename boost::is_floating_point<T>::type, Type::Float)
+{
+};
+
+#undef IF
+
+template<typename T, Type::Kind k>
+inline T GenericValue::as() const
+{
+  if (kind() != k)
+  {
+    qiLogWarning("qi.GenericValue") << "as: type " << kind() <<" not convertible to kind " << k;
+    return T();
+  }
+  return dynamic_cast<typename TypeOfKind<k>::type*>(type)->get(value);
+}
+
+template<typename T>
+inline T GenericValue::as() const
+{
+  return as<T, KindOfType<T>::value>();
+}
+
+inline int64_t GenericValue::asInt() const
+{
+  return as<int64_t, Type::Int>();
+}
+
+inline std::string GenericValue::asString() const
+{
+  return ""; // as<std::string, Type::String>();
+}
+
 
 namespace detail
 {

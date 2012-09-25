@@ -368,6 +368,17 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   ASSERT_EQ(4, oa1->call<int>("increment2", 3));
 }
 
+
+TEST(TestObject, TypeType)
+{
+  using namespace qi;
+  std::vector<GenericValue> vals = convert(12);
+  GenericValue val = vals[0];
+  qiLogDebug("test") << "type ptr " << val.type->infoString() << " "
+  <<(void*)val.type;
+  ASSERT_EQ(Type::Int, val.kind());
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);

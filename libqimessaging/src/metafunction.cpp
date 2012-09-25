@@ -265,8 +265,7 @@ GenericValue MetaFunctionResult::getValue() const
 
 }
 
-QI_REGISTER_MAPPING("i", qi::int32_t);
-QI_REGISTER_MAPPING("I", qi::uint32_t);
+
 QI_REGISTER_MAPPING("d", double);
 QI_REGISTER_MAPPING("f", float);
 QI_REGISTER_MAPPING("[d]", std::vector<double>);
