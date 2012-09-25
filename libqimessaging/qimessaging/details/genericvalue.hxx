@@ -168,6 +168,7 @@ template<Type::Kind T> struct TypeOfKind
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
 TYPE_OF_KIND(Type::Int, TypeInt);
+TYPE_OF_KIND(Type::Float,  TypeFloat);
 //TYPE_OF_KIND(Type::String, TypeString);
 
 #undef TYPE_OF_KIND
@@ -218,7 +219,7 @@ inline T GenericValue::as() const
     qiLogWarning("qi.GenericValue") << "as: type " << kind() <<" not convertible to kind " << k;
     return T();
   }
-  return dynamic_cast<typename TypeOfKind<k>::type*>(type)->get(value);
+  return dynamic_cast<const typename TypeOfKind<k>::type*>(type)->get(value);
 }
 
 template<typename T>
@@ -231,6 +232,17 @@ inline int64_t GenericValue::asInt() const
 {
   return as<int64_t, Type::Int>();
 }
+
+inline float GenericValue::asFloat() const
+{
+  return as<float, Type::Float>();
+}
+
+inline double GenericValue::asDouble() const
+{
+  return as<double, Type::Float>();
+}
+
 
 inline std::string GenericValue::asString() const
 {

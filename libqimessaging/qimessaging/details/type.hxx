@@ -25,13 +25,6 @@
  *
  */
 
-/** Integral types.
- * Since long is neither int32 nor uint32 on 32 bit platforms,
- * use all known native types instead of size/signedness explicit
- * types.
- */
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(float);
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(double);
 QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
 
 #define _CONTAINER(c) namespace qi {             \
@@ -297,6 +290,37 @@ namespace qi  {
       return sigs.str();
     }
 
+    // bouncer to correct Cloner based on access type
+    template<typename T> class TypeAutoClone
+    {
+    };
+    template<typename T> class TypeAutoClone<TypeDirectAccess<T> >
+    : public TypeNoClone<TypeDirectAccess<T> > {};
+    template<typename T> class TypeAutoClone<TypeDefaultAccess<T> >
+    : public TypeDefaultClone<TypeDefaultAccess<T> > {};
+
+    // Bouncer to DefaultAccess or DirectAccess based on type size
+    template<typename T,
+             template<typename> class Cloner=TypeNoClone,
+             template<typename> class Value=TypeNoValue,
+             template<typename> class Serialize=TypeNoSerialize>
+    class TypeImplBySize
+    {
+    public:
+      typedef typename boost::mpl::if_c<
+        sizeof(T) <= sizeof(void*),
+        DefaultTypeImpl<T,
+                        TypeDirectAccess<T>,
+                        Cloner<TypeDirectAccess<T> >,
+                        Value<TypeDirectAccess<T>  >,
+                        Serialize<TypeDirectAccess<T>  > >,
+        DefaultTypeImpl<T,
+                        TypeDefaultAccess<T>,
+                        Cloner<TypeDefaultAccess<T> >,
+                        Value<TypeDefaultAccess<T>  >,
+                        Serialize<TypeDefaultAccess<T>  > >
+                        >::type type;
+    };
   }
 
 }
