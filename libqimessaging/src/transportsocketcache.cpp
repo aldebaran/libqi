@@ -45,6 +45,7 @@ namespace qi {
   //will return the first connected socket among all provided endpoints
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const std::vector<std::string> &endpoints) {
 
+    //TODO: handle multiples endpoints..
     return socket(endpoints.at(0));
 
     //yes maybe one day we will do some crazy stuff... but tonight...

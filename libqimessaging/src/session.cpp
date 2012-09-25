@@ -121,8 +121,8 @@ namespace qi {
   }
 
   qi::Future< qi::GenericObject > Session::service(const std::string &service,
-                                            ServiceLocality locality,
-                                            const std::string &type)
+                                                   ServiceLocality locality,
+                                                   const std::string &type)
   {
     return _p->_serviceHandler.service(service, locality, type);
   }

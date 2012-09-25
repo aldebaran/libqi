@@ -160,8 +160,17 @@ namespace qi {
   {
     qiLogVerbose("session.service") << "Getting service " << service;
     qi::Future<qi::GenericObject> result;
-    if (locality == Session::ServiceLocality_Local) {
-      qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
+    if (locality != Session::ServiceLocality_Remote) {
+      //qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
+      //look for local object registered in the server
+      qi::GenericObject go = _server->registeredServiceObject(service);
+      if (go.isValid())
+        return qi::Future<qi::GenericObject>(go);
+      if (locality == Session::ServiceLocality_Local) {
+        qi::Promise<qi::GenericObject> prom;
+        prom.setError(std::string("No local object found for ") + service);
+        return prom.future();
+      }
     }
 
     //look for already registered remote objects

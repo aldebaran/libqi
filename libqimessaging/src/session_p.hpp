@@ -42,6 +42,8 @@ namespace qi {
 
   public:
     Session               *_self;
+
+    //session have a transportsocket not belonging to transportsocketcache
     TransportSocketPtr     _sdSocket;
     unsigned int           _sdSocketConnectedLink;
     unsigned int           _sdSocketDisconnectedLink;
