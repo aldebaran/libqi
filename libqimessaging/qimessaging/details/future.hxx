@@ -62,7 +62,7 @@ namespace qi {
       }
 
       unsigned int connect(qi::Future<T> future, boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evloop) {
-        _onResult.connect(fun, evloop);
+        unsigned int res = _onResult.connect(fun, evloop);
         //result already ready, notify the callback
         //TODO: if evLoop use it
         if (isReady()) {
@@ -71,6 +71,7 @@ namespace qi {
           else
             fun(future);
         }
+        return res;
       }
 
       bool disconnect(unsigned int i) {
