@@ -16,6 +16,7 @@
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
+#include <qimessaging/signal.hpp>
 #include "src/serverresult.hpp"
 #include "src/servicewatcher.hpp"
 #include "src/servicedirectoryclient.hpp"
@@ -32,8 +33,19 @@ namespace qi {
     SessionPrivate(qi::Session *session);
     virtual ~SessionPrivate();
 
+    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<void> close();
+    bool isConnected() const;
+
+    void onConnected();
+    void onDisconnected(int error);
+
   public:
+    Session               *_self;
     TransportSocketPtr     _sdSocket;
+    unsigned int           _sdSocketConnectedLink;
+    unsigned int           _sdSocketDisconnectedLink;
+
     ServiceDirectoryClient _sdClient;
     Session_Server         _server;
     Session_Service        _serviceHandler;
