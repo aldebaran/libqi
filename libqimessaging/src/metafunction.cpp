@@ -145,6 +145,12 @@ const Buffer& MetaFunctionParameters::getBuffer() const
   {
     qiLogDebug("qi.meta") << "Generating serialization from values.";
     convertToBuffer();
+    qiLogDebug("qi.meta") << "Generated buffer of size "
+      << storage->parameterBuffer.size() << " from " << storage->parameterValues.size()
+      << " arguments";
+    if (!storage->parameterBuffer.size() && !storage->parameterValues.empty()
+      && std::string(storage->parameterValues[0].type->infoString()) != "v")
+      qiLogWarning("qi.meta") << "Empty serialization.";
   }
   return storage->parameterBuffer;
 }

@@ -22,7 +22,7 @@ namespace qi {
   }
 
   // We need to specialize Type on genericobject to make a copy
-  template<> class TypeDefaultClone<GenericObject>
+  template<> class TypeDefaultClone<TypeDefaultAccess<GenericObject> >
   {
   public:
     static void* clone(void* src)
@@ -56,29 +56,33 @@ namespace qi {
       if (metaFut.value().getMode() == MetaFunctionResult::Mode_GenericValue)
       {
         GenericValue val =  metaFut.value().getValue();
-        typedef std::pair<const T*, bool>  ConvType;
-        ConvType resConv = val.template to<T>();
-        if (resConv.first)
-          promise.setValue(*resConv.first);
-        else
+          Type* targetType = typeOf<T>();
+          std::pair<GenericValue, bool> conv = val.convert(targetType);
+          if (!conv.first.type)
           promise.setError("Unable to convert call result to target type");
-        if (resConv.second)
-          delete const_cast<T*>(resConv.first);
+          else
+          {
+            T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
+            promise.setValue(*res);
+          }
+          if (conv.second)
+            conv.first.destroy();
       }
       else
       {
         IDataStream in(metaFut.value().getBuffer());
         // Not all types are serializable, go through MetaType
         Type* type = typeOf<T>();
-        void* ptr = type->deserialize(in);
-        if (!ptr)
+          void* storage = type->deserialize(in);
+          if (!storage)
         {
           promise.setError("Could not deserialize result");
         }
         else
         {
-          promise.setValue(*(T*)ptr);
-          type->destroy(ptr);
+            void* ptr = type->ptrFromStorage(&storage);
+            promise.setValue(*(T*)ptr);
+            type->destroy(storage);
         }
       }
     }
@@ -118,7 +122,7 @@ namespace qi {
     qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::GenericValue> params;
     for (unsigned i=0; i<8; ++i)
-      if (vals[i]->value)
+      if (vals[i]->type) // 0 is a perfectly legal value
         params.push_back(*vals[i]);
 
     // Signature construction

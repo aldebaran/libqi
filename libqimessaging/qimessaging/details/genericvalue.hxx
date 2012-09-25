@@ -7,6 +7,7 @@
 #ifndef _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
 #define _QI_MESSAGING_VALUE_HXX_
 
+#include <boost/type_traits/remove_const.hpp>
 namespace qi {
 
 
@@ -44,17 +45,37 @@ public:
 template<> class TypeImpl<GenericValue>:
   public DefaultTypeImpl<
     GenericValue,
+    TypeDefaultAccess<GenericValue>,
     ValueClone,
     ValueValue,
-    TypeDefaultSerialize<GenericValue>
+    TypeDefaultSerialize<TypeDefaultAccess<GenericValue> >
     > {};
+
+namespace detail
+{
+  template<typename T> struct TypeCopy
+  {
+    void operator()(T &dst, const T &src)
+    {
+      dst = src;
+    }
+  };
+
+  template<int I> struct TypeCopy<char[I] >
+  {
+    void operator() (char* dst, const char* src)
+    {
+      memcpy(dst, src, I);
+    }
+  };
+}
 
 template<typename T>
 GenericValue toValue(const T& v)
 {
   GenericValue res;
   res.type = typeOf<typename boost::remove_const<T>::type>();
-  res.value = (void *) const_cast<T*>(&v);
+  res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
   return res;
 }
 
@@ -72,12 +93,12 @@ std::pair<const T*, bool> GenericValue::to() const
 {
   Type* targetType =  typeOf<T>();
   if (type->info() == targetType->info())
-    return std::make_pair((const T*)value, false);
+    return std::make_pair((const T*)type->ptrFromStorage((void**)&value), false);
   else
   {
     std::pair<GenericValue, bool> mv = convert(targetType);
-    // NOTE: asserts that Type stores in value a pointer to T
-    return std::make_pair((const T*)mv.first.value, mv.second);
+    // NOTE: delete theResult.first will not do, destroy must be called,
+    return std::make_pair((const T*)mv.first.type->ptrFromStorage(&mv.first.value), mv.second);
   }
 }
 

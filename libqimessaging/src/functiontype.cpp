@@ -15,7 +15,9 @@ namespace qi
     std::vector<void*> convertedArgs;
     for (unsigned i=0; i<target.size(); ++i)
     {
-      qiLogDebug("meta") << "argument " << i << " " << args[i].value;
+      qiLogDebug("meta") << "argument " << i
+         << " " << args[i].type->infoString() << ' ' << args[i].value
+         << " to " << target[i]->infoString();
       if (args[i].type->info() == target[i]->info())
         convertedArgs.push_back(args[i].value);
       else

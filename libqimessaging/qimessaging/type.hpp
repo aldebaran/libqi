@@ -37,6 +37,12 @@ public:
   /// @return the serialization signature used by this type.
   virtual std::string signature()=0;
 
+  // Initialize and return a new storage, from nothing or a T*
+  virtual void* initializeStorage(void* ptr=0)=0;
+  // Get pointer to type from pointer to storage
+  // No reference to avoid the case where the compiler makes a copy on the stack
+  virtual void* ptrFromStorage(void**)=0;
+
   virtual void* clone(void*)=0;
   virtual void destroy(void*)=0;
 
@@ -86,27 +92,84 @@ public:
     ::qi::typeOf<type>());
 };
 
+
+namespace detail {
+  template<typename T> struct TypeFactory
+  {
+    void* operator()() { return new T();}
+  };
+};
+#define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
+namespace qi { namespace detail { \
+template<> struct TypeFactory<T> { void* operator()() { return 0;}};}}
 /** Meta-type specialization.
  *  Use the aspect pattern, make a class per feature group
  *  (Clone, GenericValue, Serialize)
  *
  */
 
-template<typename T> class TypeDefaultClone
+/// Access API that stores a T* in storage
+template<typename T> class TypeDefaultAccess
 {
 public:
-  static void* clone(void* src)
+  typedef T type;
+  static void* ptrFromStorage(void** storage)
   {
-    return new T(*(T*)src);
+    return *storage;
   }
-
-  static void destroy(void* ptr)
+  static void* initializeStorage(void* ptr=0)
   {
-    delete (T*)ptr;
+    if (ptr)
+      return ptr;
+    void* res = detail::TypeFactory<T>()();
+    if (!res)
+      qiLogError("qi.meta") << "initializeStorage error on " << typeid(T).name();
+    return res;
   }
 };
 
-template<typename T> class TypeNoClone
+/// Access api that stores T in storage
+template<typename T> class TypeDirectAccess
+{
+public:
+  typedef T type;
+  static void* ptrFromStorage(void** storage)
+  {
+    return storage;
+  }
+  static void* initializeStorage(void* ptr=0)
+  {
+    if (ptr)
+    {
+      T val = *(T*)ptr;
+      return *(void**)&val;
+    }
+    else
+      return 0;
+  }
+};
+
+template<typename A> class TypeDefaultClone
+{
+public:
+  typedef typename A::type type;
+  static void* clone(void* src)
+  {
+    const type* ptr = (const type*)A::ptrFromStorage(&src);
+    void* res = A::initializeStorage();
+    type* tres = (type*)A::ptrFromStorage(&res);
+    *tres = *ptr;
+    return res;
+  }
+
+  static void destroy(void* src)
+  {
+    type* ptr = (type*)A::ptrFromStorage(&src);
+    delete ptr;
+  }
+};
+
+template<typename A> class TypeNoClone
 {
 public:
   static void* clone(void* src)
@@ -123,56 +186,66 @@ public:
   }
 };
 
-template<typename T>class TypeDefaultValue
+template<typename A>class TypeDefaultValue
 {
 public:
-  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
+  typedef typename A::type type;
+  static bool toValue(const void* src, qi::detail::DynamicValue& val)
   {
-    detail::DynamicValueConverter<T>::writeDynamicValue(*(T*)ptr, val);
+    const type* ptr = (const type*)A::ptrFromStorage((void**)&src);
+    detail::DynamicValueConverter<type>::writeDynamicValue(*ptr, val);
     return true;
   }
 
   static void* fromValue(const qi::detail::DynamicValue& val)
   {
-    T* res = new T();
-    detail::DynamicValueConverter<T>::readDynamicValue(val, *res);
-    return res;
+    void* storage;
+    storage = A::initializeStorage();
+    void* vptr = A::ptrFromStorage(&storage);
+    qiLogDebug("wtf") << storage << ' ' << &storage << ' ' << vptr;
+    detail::DynamicValueConverter<type>::readDynamicValue(val, *(type*)vptr);
+    return storage;
   }
 };
 
-template<typename T>class TypeNoValue
+
+template<typename A>class TypeNoValue
 {
 public:
+  typedef typename A::type type;
   static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
-    qiLogWarning("qi.type") << "toValue not implemented for type " << typeid(T).name();
+    qiLogWarning("qi.type") << "toValue not implemented for type " << typeid(type).name();
     return false;
   }
 
   static void* fromValue(const qi::detail::DynamicValue& val)
   {
-    qiLogWarning("qi.type") << "fromValue not implemented for type " << typeid(T).name();
+    qiLogWarning("qi.type") << "fromValue not implemented for type " << typeid(type).name();
     return 0; // We may not have a default constructor
   }
 };
 
-template<typename T> class TypeDefaultSerialize
+template<typename A> class TypeDefaultSerialize
 {
 public:
-  static void  serialize(ODataStream& s, const void* ptr)
+  typedef typename A::type type;
+  static void  serialize(ODataStream& s, const void* src)
   {
-    s << *(T*)ptr;
+    const type* ptr = (const type*)A::ptrFromStorage((void**)&src);
+    s << *ptr;
   }
 
   static void* deserialize(IDataStream& s)
   {
-    T* val = new T();
-    s >> *val;
-    return val;
+    void* storage = A::initializeStorage();
+    type* ptr = (type*)A::ptrFromStorage(&storage);
+    s >> *ptr;
+    return storage;
   }
   static std::string signature()
   {
-    return signatureFromType<T>::value();
+    return signatureFromType<type>::value();
   }
 };
 
@@ -204,15 +277,26 @@ public:
  * That way we can split the various aspects in different classes
  * for better reuse, without the cost of a second virtual call.
  */
-template<typename T, typename Cloner    = TypeDefaultClone<T>
-                   , typename Value     = TypeNoValue<T>
-                   , typename Serialize = TypeNoSerialize<T>
+template<typename T, typename Access    = TypeDefaultAccess<T>
+                   , typename Cloner    = TypeDefaultClone<Access>
+                   , typename Value     = TypeNoValue<Access>
+                   , typename Serialize = TypeNoSerialize<Access>
          > class DefaultTypeImpl
 : public Cloner
 , public Value
 , public Serialize
 , public virtual Type
 {
+  virtual void* initializeStorage(void* ptr=0)
+  {
+    return Access::initializeStorage(ptr);
+  }
+
+  virtual void* ptrFromStorage(void** storage)
+  {
+    return Access::ptrFromStorage(storage);
+  }
+
   virtual const std::type_info& info()
   {
     return typeid(T);
@@ -266,9 +350,10 @@ template<typename T> class TypeImpl: public virtual DefaultTypeImpl<T>
 namespace qi {                                   \
 template<> class TypeImpl<T>:                \
   public DefaultTypeImpl<T,                  \
-    TypeDefaultClone<T>,                     \
-    TypeDefaultValue<T>,                     \
-    TypeDefaultSerialize<T>                  \
+    TypeDefaultAccess<T>,                    \
+    TypeDefaultClone<TypeDefaultAccess<T> >, \
+    TypeDefaultValue<TypeDefaultAccess<T> >,  \
+    TypeDefaultSerialize<TypeDefaultAccess<T> >  \
   >{}; }
 
 /** Declare that a type is not convertible to GenericValue.
@@ -278,14 +363,20 @@ template<> class TypeImpl<T>:                \
 namespace qi {                                   \
 template<> class TypeImpl<T>:                \
   public DefaultTypeImpl<T,                  \
-    TypeDefaultClone<T>,                     \
-    TypeNoValue<T>,                          \
-    TypeDefaultSerialize<T>                  \
+    TypeDefaultAccess<T>,                    \
+    TypeDefaultClone<TypeDefaultAccess<T> >, \
+    TypeNoValue<TypeDefaultAccess<T> >,       \
+    TypeDefaultSerialize<TypeDefaultAccess<T> >   \
   >{}; }
 
 /// Declare that a type has no metatype and cannot be used in a Value
 #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
+/// Declare that a type with default TypeImpl is not clonable
+#define QI_TYPE_NOT_CLONABLE(T) \
+namespace qi {    \
+  template<> struct TypeDefaultClone<TypeDefaultAccess<T> >: public TypeNoClone<TypeDefaultAccess<T> >{}; \
+}
 
 /// Type factory getter. All other type access mechanism bounce here
 QIMESSAGING_API Type*  getType(const std::type_info& type);

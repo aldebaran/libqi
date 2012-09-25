@@ -114,6 +114,16 @@ const std::type_info& StaticObjectTypeBase::info()
   return _data.classType->info();
 }
 
+void* StaticObjectTypeBase::initializeStorage(void* ptr)
+{
+  return _data.classType->initializeStorage(ptr);
+}
+
+void* StaticObjectTypeBase::ptrFromStorage(void** ptr)
+{
+  return _data.classType->ptrFromStorage(ptr);
+}
+
 void* StaticObjectTypeBase::clone(void* inst)
 {
   return _data.classType->clone(inst);

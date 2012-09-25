@@ -48,9 +48,10 @@ QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
 #define _CONTAINER(c) namespace qi {             \
   template<typename T> class TypeImpl<c<T> >:  \
   public DefaultTypeImpl<c<T>,               \
-  TypeDefaultClone<c<T> >,                   \
-  TypeDefaultValue<c<T> >,                   \
-  TypeDefaultSerialize<c<T> >                \
+  TypeDefaultAccess<T>,                      \
+  TypeDefaultClone<TypeDefaultAccess<c<T> > >,\
+  TypeDefaultValue<TypeDefaultAccess<c<T> > >,\
+  TypeDefaultSerialize<TypeDefaultAccess<c<T> > >\
   > {}; }
 
 _CONTAINER(std::list);
@@ -61,9 +62,10 @@ _CONTAINER(std::vector);
 #define _MAP(c) namespace qi {                                \
   template<typename K, typename V> class TypeImpl<c<K,V> >:  \
   public DefaultTypeImpl<c<K,V>,               \
-  TypeDefaultClone<c<K,V> >,                   \
-  TypeDefaultValue<c<K,V> >,                   \
-  TypeDefaultSerialize<c<K,V> >                \
+  TypeDefaultAccess<c<K,V> >,                  \
+  TypeDefaultClone    <TypeDefaultAccess<c<K,V> > >,\
+  TypeDefaultValue    <TypeDefaultAccess<c<K,V> > >,\
+  TypeDefaultSerialize<TypeDefaultAccess<c<K,V> > >\
   > {}; }
 
 _MAP(std::map);
@@ -78,6 +80,8 @@ namespace qi {
     {
       return typeid(void);
     }
+    void* initializeStorage(void*) { return 0;}
+    void* ptrFromStorage(void** ) { return 0;}
     std::string signature()                  { return Signature::fromType(Signature::Type_Void).toString(); }
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
@@ -163,10 +167,20 @@ namespace qi  {
 
   template<int I> class TypeImpl<char [I]>
       :public  DefaultTypeImpl<char[I],
+      TypeDefaultAccess<char[I]>,
       TypeCArrayClone<I>,
       TypeCArrayValue<I>,
       TypeCArraySerialize<I>
       >{};
+
+  // pointer type
+  template<typename T> class TypeImpl<T*>
+  : public DefaultTypeImpl<T*,
+    TypeDirectAccess<T*>,
+    TypeNoClone<TypeDirectAccess<T*> >,
+    TypeNoValue<TypeDirectAccess<T*> >,
+    TypeNoSerialize<TypeDirectAccess<T*> >
+    > {};
 
   namespace detail {
     template<typename T> inline Type* typeOfBackend()

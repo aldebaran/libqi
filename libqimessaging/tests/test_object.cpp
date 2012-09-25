@@ -77,17 +77,22 @@ class Adder:
 {
 public:
   Adder() {
-    qiLogDebug("Adder") << "constructor(default) " << this;
+    qiLogDebug("Adder") << this << " constructor(default) " << this;
   v = -1;
   }
   Adder(const Adder& b)
   {
-    qiLogDebug("Adder") << "constructor(copy) " << this;
+    qiLogDebug("Adder") << this << " constructor(copy) " << this;
     v = b.v+1;
   }
   Adder(int v)
   : v(v) {
-    qiLogDebug("Adder") << "constructor(int) " << this;
+    qiLogDebug("Adder") << this << " constructor(int) " << this;
+  }
+  void operator = (const Adder& b)
+  {
+    qiLogDebug("Adder") << this << " = operator " << &b;
+    v = b.v+1;
   }
   int add(int v2)
   {

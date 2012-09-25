@@ -63,9 +63,12 @@ namespace qi
         >::type type;
       };
       template<typename T>
-      T& operator() (T* ptr) const
+      T& operator() (T* const &ptr) const
       {
-        return *ptr;
+        // Careful here, a wrong cast will create a variable on the stack, but
+        // we need to pass &ptr
+        void* res  = typeOf<T>()->ptrFromStorage((void**)&ptr);
+        return *(T*)res;
       }
     };
     template<typename T> struct remove_constptr

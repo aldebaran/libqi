@@ -48,7 +48,8 @@ namespace qi {
     qi::ObjectPtr                                          _object;
   }; // !ServiceDirectoryPrivate
 
-  template<> struct TypeDefaultClone<ServiceDirectoryPrivate>: public TypeNoClone<ServiceDirectoryPrivate>{};
 }
+
+QI_TYPE_NOT_CLONABLE(qi::ServiceDirectoryPrivate);
 
 #endif  // _SRC_SERVICEDIRECTORY_P_HPP_

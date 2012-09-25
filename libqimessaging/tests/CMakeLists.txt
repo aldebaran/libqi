@@ -31,7 +31,6 @@ qi_create_gtest(test_event_remote_connect SRC test_event_remote_connect.cpp DEPE
 qi_create_gtest(test_session              SRC test_session.cpp              DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_call_many            SRC test_call_many.cpp            DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_object_eventloop     SRC test_object_eventloop.cpp     DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
-qi_create_gtest(test_metatype             SRC test_metatype                 DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_metavalue_argument   SRC test_metavalue_argument.cpp   DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_signal               SRC test_signal.cpp               DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 

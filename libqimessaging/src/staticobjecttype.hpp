@@ -59,6 +59,8 @@ public:
   /// @return the manageable interface for this instance, or 0 if not available
   virtual Manageable* manageable(void* instance);
   virtual const std::vector<std::pair<Type*, int> >& parentTypes();
+  virtual void* initializeStorage(void*);
+  virtual void* ptrFromStorage(void**);
   virtual void* clone(void* inst);
   virtual void destroy(void*);
   virtual bool  toValue(const void*, qi::detail::DynamicValue&);
