@@ -272,13 +272,12 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance);
   }
 
-  GenericObject makeDynamicObject(DynamicObject* obj)
+  ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj)
   {
+    ObjectPtr op;
     static DynamicObjectType* type = new DynamicObjectType();
-    GenericObject result;
-    result.type = type;
-    result.value = obj;
-    return result;
+    op = ObjectPtr(new GenericObject(type, obj));
+    return op;
   }
 
 }

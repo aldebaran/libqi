@@ -29,21 +29,21 @@ void testDelete(bool afirst, bool disconnectFirst)
   unsigned int fireId = oba.advertiseEvent<void (*)(int)>("fire");
   unsigned int onFireId = obb.advertiseMethod("onFire", &onFire);
   unsigned int onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
-  qi::GenericObject *a = new qi::GenericObject(oba.object());
-  qi::GenericObject *b = new qi::GenericObject(obb.object());
-  unsigned int linkId = a->connect(fireId, *b, onFireId);
-  a->connect(fireId, *b, onFireId2);
-  //std::vector<qi::SignalSubscriber> subs = a->subscribers(fireId);
+  qi::ObjectPtr *a = new qi::ObjectPtr(oba.object());
+  qi::ObjectPtr *b = new qi::ObjectPtr(obb.object());
+  unsigned int linkId = (*a)->connect(fireId, *b, onFireId);
+  (*a)->connect(fireId, *b, onFireId2);
+  //std::vector<qi::SignalSubscriber> subs = (*a)->subscribers(fireId);
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());
   // Subs ordering is unspecified
   //EXPECT_EQ(subs[0].method + subs[1].method, onFireId + onFireId2);
-  a->emitEvent("fire", 12);
+  (*a)->emitEvent("fire", 12);
   EXPECT_EQ(12, lastPayload);
   EXPECT_EQ(12, lastPayload2);
   if (disconnectFirst)
   {
-    a->disconnect(linkId);
-    a->emitEvent("fire", 13);
+    (*a)->disconnect(linkId);
+    (*a)->emitEvent("fire", 13);
     EXPECT_EQ(12, lastPayload);
     EXPECT_EQ(13, lastPayload2);
   }
@@ -55,7 +55,7 @@ void testDelete(bool afirst, bool disconnectFirst)
   else
   {
     delete b;
-    a->emitEvent("fire", 12);
+    (*a)->emitEvent("fire", 12);
     delete a;
   }
   ++completed;

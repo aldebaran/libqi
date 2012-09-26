@@ -31,20 +31,20 @@ void qiFutureCAdapter(qi::Future<qi::MetaFunctionResult> result, qi::Promise<voi
 
 qi_object_t *qi_object_create()
 {
-  qi::GenericObject *obj = new qi::GenericObject();
+  qi::ObjectPtr *obj = new qi::ObjectPtr();
   return (qi_object_t *) obj;
 }
 
 void        qi_object_destroy(qi_object_t *object)
 {
-  qi::GenericObject *obj = reinterpret_cast<qi::GenericObject *>(object);
+  qi::ObjectPtr *obj = reinterpret_cast<qi::ObjectPtr *>(object);
 
   delete obj;
 }
 
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_message_t *message)
 {
-  qi::GenericObject *obj = reinterpret_cast<qi::GenericObject *>(object);
+  qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
 
   // Get sigreturn for functor result
   int methodId = obj->metaObject().methodId(signature_c);
@@ -121,7 +121,8 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
-  qi::GenericObject *o = reinterpret_cast<qi::GenericObject *>(obj);
-  *o = ob->object();
+  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
+
+  o = ob->object();
   return obj;
 }

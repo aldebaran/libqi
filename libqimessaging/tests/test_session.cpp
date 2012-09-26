@@ -83,7 +83,7 @@ TEST(QiSession, getSimpleService)
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::GenericObject obj(ob.object());
+  qi::ObjectPtr obj(ob.object());
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
@@ -94,8 +94,8 @@ TEST(QiSession, getSimpleService)
   session.registerService("serviceTest", obj).wait();
   ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
-  qi::GenericObject object = session.service("serviceTest");
-  EXPECT_TRUE(object.isValid());
+  qi::ObjectPtr object = session.service("serviceTest");
+  EXPECT_TRUE(object);
   session.close();
   EXPECT_FALSE(session.isConnected());
 }
@@ -106,8 +106,8 @@ TEST(QiSession, getUnregisterService)
   bool connected = session.connect(connectionAddr);
   EXPECT_TRUE(connected);
 
-  qi::GenericObject object = session.service("serviceTest");
-  EXPECT_FALSE(object.isValid());
+  qi::ObjectPtr object = session.service("serviceTest");
+  EXPECT_FALSE(object);
 
   session.close();
   EXPECT_FALSE(session.isConnected());
@@ -121,7 +121,7 @@ TEST(QiSession, getCloseService)
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::GenericObject obj(ob.object());
+  qi::ObjectPtr obj(ob.object());
 
   unsigned int servicePort = qi::os::findAvailablePort(0);
   std::stringstream serviceAddr;
@@ -134,8 +134,8 @@ TEST(QiSession, getCloseService)
   client.connect(connectionAddr);
   EXPECT_TRUE(client.isConnected());
 
-  qi::GenericObject object = client.service("serviceTest");
-  EXPECT_FALSE(object.isValid());
+  qi::ObjectPtr object = client.service("serviceTest");
+  EXPECT_FALSE(object);
 
   session.close();
   EXPECT_FALSE(session.isConnected());

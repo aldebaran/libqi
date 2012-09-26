@@ -34,7 +34,7 @@ namespace qi {
   ServiceDirectoryClient::ServiceDirectoryClient()
     : _remoteObject(qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
-    _object = makeDynamicObject(&_remoteObject);
+    _object = makeDynamicObjectPtr(&_remoteObject);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
@@ -46,23 +46,23 @@ namespace qi {
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
-    return _object.call< std::vector<ServiceInfo> >("services");
+    return _object->call< std::vector<ServiceInfo> >("services");
   }
 
   qi::Future<ServiceInfo>              ServiceDirectoryClient::service(const std::string &name) {
-    return _object.call< ServiceInfo >("service", name);
+    return _object->call< ServiceInfo >("service", name);
   }
 
   qi::Future<unsigned int>             ServiceDirectoryClient::registerService(const ServiceInfo &svcinfo) {
-    return _object.call< unsigned int >("registerService", svcinfo);
+    return _object->call< unsigned int >("registerService", svcinfo);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::unregisterService(const unsigned int &idx) {
-    return _object.call<void>("unregisterService", idx);
+    return _object->call<void>("unregisterService", idx);
   }
 
   qi::Future<void>                     ServiceDirectoryClient::serviceReady(const unsigned int &idx) {
-    return _object.call<void>("serviceReady", idx);
+    return _object->call<void>("serviceReady", idx);
   }
 
 

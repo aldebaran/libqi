@@ -195,8 +195,7 @@ namespace qi
 
   template<typename F> GenericFunction makeGenericFunction(F func)
   {
-  return makeGenericFunction(boost::function<
-    typename boost::remove_pointer<F>::type>(func));
+    return makeGenericFunction(boost::function<typename boost::remove_pointer<F>::type>(func));
   }
 
 

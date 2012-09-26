@@ -33,7 +33,7 @@ static bool allInOne = false; // True if sd/server/client are in this process
 static std::string sdPort;
 static bool clientDone = false;
 static bool serverReady = false;
-int run_client(qi::GenericObject* obj);
+int run_client(qi::ObjectPtr obj);
 
 std::string reply(const std::string &msg)
 {
@@ -50,10 +50,10 @@ int main_local()
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::GenericObject obj(ob.object());
+  qi::ObjectPtr obj(ob.object());
   if (getenv("SYNCHRONOUS"))
-    obj.moveToEventLoop(0);
-  run_client(&obj);
+    obj->moveToEventLoop(0);
+  run_client(obj);
   return 0;
 }
 
@@ -70,18 +70,18 @@ int main_client(std::string QI_UNUSED(src), std::string host, std::string port)
   std::cerr <<"Connection to sd... " << std::endl;
   session.connect("tcp://"+host+":"+port);
   std::cerr <<"Getting service... " << std::endl;
-  qi::GenericObject obj =  session.service("serviceTest");
+  qi::ObjectPtr obj =  session.service("serviceTest");
   std::cerr <<"Done" << std::endl;
-  if (!obj.isValid())
+  if (!obj)
   {
     std::cerr << "cant get serviceTest" << std::endl;
     return -1;
   }
-  return run_client(&obj);
+  return run_client(obj);
 }
 
 
-int run_client(qi::GenericObject* obj)
+int run_client(qi::ObjectPtr obj)
 {
   qi::perf::DataPerfTimer dp ("Transport synchronous call");
   int rstart = 0;
@@ -216,7 +216,7 @@ int main_server(std::string host, std::string port)
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::GenericObject obj(ob.object());
+  qi::ObjectPtr obj(ob.object());
 
   session.connect("tcp://127.0.0.1:"+port);
 

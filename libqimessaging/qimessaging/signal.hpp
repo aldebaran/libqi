@@ -15,6 +15,7 @@
 namespace qi {
 
   class GenericObject;
+  typedef boost::shared_ptr<GenericObject> ObjectPtr;
   class SignalBasePrivate;
   struct SignalSubscriber;
 
@@ -29,7 +30,7 @@ namespace qi {
     template<typename FUNCTION_TYPE>
     Link connect(FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
-    Link connect(qi::GenericObject target, unsigned int slot);
+    Link connect(qi::ObjectPtr target, unsigned int slot);
     Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(MetaCallable callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);

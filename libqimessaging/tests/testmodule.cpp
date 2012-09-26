@@ -14,7 +14,7 @@ int testMethod(const int& v)
   return v+1;
 }
 
-qi::GenericObject setup(const std::string&)
+qi::ObjectPtr setup(const std::string&)
 {
   qiLogDebug("testmodule") << "setup";
   qi::GenericObjectBuilder ob;

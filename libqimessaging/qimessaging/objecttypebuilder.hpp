@@ -58,7 +58,7 @@ namespace qi {
 
     // output
     const MetaObject& metaObject();
-    GenericObject object(void* ptr);
+    ObjectPtr object(void* ptr);
     ObjectType* type();
 
     /// Register type to typeof. Called by type()

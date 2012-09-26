@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const int&)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
-      qi::GenericObject obj(ob.object());
+      qi::ObjectPtr obj(ob.object());
 
       session.connect(masterAddress);
 

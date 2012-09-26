@@ -31,7 +31,7 @@ class QIMESSAGING_API GenericObjectBuilder
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func);
     int xAdvertiseEvent(const std::string& signature);
 
-    qi::GenericObject object();
+    qi::ObjectPtr object();
   public:
     GenericObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(GenericObjectBuilder);

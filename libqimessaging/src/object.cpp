@@ -12,9 +12,9 @@ namespace qi {
   }
 
 
-  GenericObject::GenericObject()
-  :type(0)
-  , value(0)
+  GenericObject::GenericObject(ObjectType *type, void *value)
+  : type(type)
+  , value(value)
   {
   }
 
@@ -259,7 +259,7 @@ namespace qi {
     return type->disconnect(value, linkId);
   }
 
-  unsigned int GenericObject::connect(unsigned int signal, qi::GenericObject target, unsigned int slot)
+  unsigned int GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }

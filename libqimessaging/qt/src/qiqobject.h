@@ -12,7 +12,7 @@
 #include <QtCore/qobject.h>
 
 class QiObjectPrivate;
-class QiObject : public qi::GenericObject {
+class QiObject {
 public:
   QiObject(QObject *object);
 

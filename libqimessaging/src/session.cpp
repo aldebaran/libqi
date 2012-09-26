@@ -120,9 +120,9 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::Future< qi::GenericObject > Session::service(const std::string &service,
-                                                   ServiceLocality locality,
-                                                   const std::string &type)
+  qi::Future< qi::ObjectPtr > Session::service(const std::string &service,
+                                               ServiceLocality locality,
+                                               const std::string &type)
   {
     return _p->_serviceHandler.service(service, locality, type);
   }
@@ -133,8 +133,7 @@ namespace qi {
     return _p->_server.listen(address);
   }
 
-  qi::FutureSync<unsigned int> Session::registerService(const std::string &name,
-                                                        const qi::GenericObject  &obj)
+  qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
     return _p->_server.registerService(name, obj);
   }

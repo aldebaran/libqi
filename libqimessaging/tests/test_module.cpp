@@ -23,9 +23,9 @@ TEST(Module, Load)
 
   session->waitForServiceReady("test", 3000);
 
-  qi::GenericObject o = session->service("test");
-  ASSERT_TRUE(o.isValid());
-  int res = o.call<int>("testMethod", 12);
+  qi::ObjectPtr o = session->service("test");
+  ASSERT_TRUE(o);
+  int res = o->call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
 }
 

@@ -51,7 +51,7 @@ namespace qi
   };
 
   //Make an GenericObject of DynamicObject kind from a DynamicObject
-  QIMESSAGING_API GenericObject makeDynamicObject(DynamicObject* obj);
+  QIMESSAGING_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj);
 
 }
 #endif  // _QIMESSAGING_DYNAMICOBJECT_HPP_

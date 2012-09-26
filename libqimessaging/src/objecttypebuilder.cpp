@@ -62,12 +62,10 @@ namespace qi {
     return _p->metaObject;
   }
 
-  GenericObject ObjectTypeBuilderBase::object(void* ptr)
+  ObjectPtr ObjectTypeBuilderBase::object(void* ptr)
   {
-    GenericObject o;
-    o.type = type();
-    o.value = ptr;
-    return o;
+    ObjectPtr ret = ObjectPtr(new GenericObject(type(), ptr));
+    return ret;
   }
 
   ObjectType* ObjectTypeBuilderBase::type()

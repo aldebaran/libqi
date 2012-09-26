@@ -27,7 +27,7 @@
 namespace qi
 {
 
-  qi::GenericObject createSDP(ServiceDirectoryPrivate* self) {
+  qi::ObjectPtr createSDP(ServiceDirectoryPrivate* self) {
     qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
 
     ob.advertiseMethod("service", &ServiceDirectoryPrivate::service);
@@ -43,8 +43,8 @@ namespace qi
     , servicesCount(0)
     , currentSocket()
   {
+    _object = createSDP(this);
     _server.newConnection.connect(boost::bind(&ServiceDirectoryPrivate::onTransportServerNewConnection, this, _1));
-    (*(GenericObject*)this) = createSDP(this);
 
     ServiceInfo si;
     si.setName("serviceDirectory");
@@ -56,7 +56,7 @@ namespace qi
     assert(regid == 1);
     // Make calls synchronous on net event loop so that the 'currentSocket' hack
     // works.
-    moveToEventLoop(getDefaultNetworkEventLoop());
+    _object->moveToEventLoop(getDefaultNetworkEventLoop());
     /*
      * Order is important. See qi::Message::ServiceDirectoryFunctions.
      */
@@ -93,7 +93,7 @@ namespace qi
     currentSocket  = socket;
 
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.function();
-    qi::Future<MetaFunctionResult> res = metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
+    qi::Future<MetaFunctionResult> res = _object->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
     res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.replyAddress()));
 
     currentSocket.reset();

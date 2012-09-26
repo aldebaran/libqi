@@ -23,7 +23,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.begin();
       for (; it != _remoteObjects.end(); ++it) {
-        reinterpret_cast<RemoteObject*>(it->second.value)->close();
+        reinterpret_cast<RemoteObject*>(it->second->value)->close();
       }
       _remoteObjects.clear();
     }
@@ -108,7 +108,7 @@ namespace qi {
         sr->promise.setValue(it->second);
       } else {
         RemoteObject* robj = new RemoteObject(sr->serviceId, mo, sr->socket);
-        GenericObject o = makeDynamicObject(robj);
+        ObjectPtr o = makeDynamicObjectPtr(robj);
         // The remoteobject in sr->client.remoteObject is still on
         //remove the callback of ServerClient before returning the object
         //TODO: belong to TransportSocketCache
@@ -154,20 +154,20 @@ namespace qi {
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 
-  qi::Future<qi::GenericObject> Session_Service::service(const std::string &service,
-                                                         Session::ServiceLocality locality,
-                                                         const std::string &type)
+  qi::Future<qi::ObjectPtr> Session_Service::service(const std::string &service,
+                                                     Session::ServiceLocality locality,
+                                                     const std::string &type)
   {
     qiLogVerbose("session.service") << "Getting service " << service;
-    qi::Future<qi::GenericObject> result;
+    qi::Future<qi::ObjectPtr> result;
     if (locality != Session::ServiceLocality_Remote) {
       //qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
       //look for local object registered in the server
-      qi::GenericObject go = _server->registeredServiceObject(service);
-      if (go.isValid())
-        return qi::Future<qi::GenericObject>(go);
+      qi::ObjectPtr go = _server->registeredServiceObject(service);
+      if (go)
+        return qi::Future<qi::ObjectPtr>(go);
       if (locality == Session::ServiceLocality_Local) {
-        qi::Promise<qi::GenericObject> prom;
+        qi::Promise<qi::ObjectPtr> prom;
         prom.setError(std::string("No local object found for ") + service);
         return prom.future();
       }
@@ -178,7 +178,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
-        return qi::Future<qi::GenericObject>(it->second);
+        return qi::Future<qi::ObjectPtr>(it->second);
       }
     }
 

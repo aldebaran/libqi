@@ -22,19 +22,19 @@ TEST(TestObject, Simple)
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseEvent<void (*)(int)>("fire");
-  qi::GenericObject obj(ob.object());
-  EXPECT_EQ(1U, obj.metaObject().signalMap().size());
-  int linkId = obj.connect("fire", &onFire, 0);
-  obj.emitEvent("fire", 42);
+  qi::ObjectPtr obj(ob.object());
+  EXPECT_EQ(1U, obj->metaObject().signalMap().size());
+  int linkId = obj->connect("fire", &onFire, 0);
+  obj->emitEvent("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000));
   EXPECT_EQ(42, lastPayload);
   pPayload.reset();
-  obj.emitEvent("fire", 51);
+  obj->emitEvent("fire", 51);
   EXPECT_TRUE(pPayload.future().wait(2000));
   EXPECT_EQ(51, lastPayload);
   pPayload.reset();
-  obj.disconnect(linkId);
-  obj.emitEvent("fire", 42);
+  obj->disconnect(linkId);
+  obj->emitEvent("fire", 42);
   EXPECT_FALSE(pPayload.future().wait(200));
   EXPECT_EQ(51, lastPayload);
 }
@@ -44,9 +44,9 @@ TEST(TestObject, EmitMethod)
   lastPayload = 0;
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("fire", &onFire);
-  qi::GenericObject obj(ob.object());
+  qi::ObjectPtr obj(ob.object());
   pPayload.reset();
-  obj.emitEvent("fire", 23);
+  obj->emitEvent("fire", 23);
   EXPECT_TRUE(pPayload.future().wait(2000));
   EXPECT_EQ(23, pPayload.future().value());
 }

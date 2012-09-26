@@ -30,7 +30,7 @@ public:
   {
     qi::GenericObjectBuilder ob;
     ob.advertiseEvent<void (*)(const int&)>("fire");
-    oserver = new qi::GenericObject(ob.object());
+    oserver = ob.object();
   }
 
 protected:
@@ -42,7 +42,7 @@ protected:
     ASSERT_TRUE(session.isConnected());
 
     ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session.registerService("coin", *oserver), 0);
+    ASSERT_GT(session.registerService("coin", oserver), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     ASSERT_TRUE(sclient.connect(sd.listenUrl()));
@@ -64,15 +64,15 @@ public:
   qi::Promise<int>     prom;
   qi::ServiceDirectory sd;
   qi::Session          session;
-  qi::GenericObject          *oserver;
+  qi::ObjectPtr        oserver;
   qi::Session          sclient;
-  qi::GenericObject           oclient;
+  qi::ObjectPtr        oclient;
 };
 
 
 TEST_F(TestObject, Simple)
 {
-  int linkId = oclient.connect("fire", &onFire);
+  int linkId = oclient->connect("fire", &onFire);
   qi::os::msleep(800);
   EXPECT_LT(0, linkId);
   oserver->emitEvent("fire", 42);
@@ -83,10 +83,10 @@ TEST_F(TestObject, Simple)
 
 TEST_F(TestObject, RemoteEmit)
 {
-  int linkId = oclient.connect("fire", &onFire);
+  int linkId = oclient->connect("fire", &onFire);
   qi::os::msleep(800);
   EXPECT_LT(0, linkId);
-  oclient.emitEvent("fire", 43);
+  oclient->emitEvent("fire", 43);
   ASSERT_TRUE(payload->future().wait(2000));
   EXPECT_EQ(43, payload->future().value());
 }
@@ -99,7 +99,7 @@ TEST_F(TestObject, CoDeco)
   for (unsigned i=0; i<5; ++i)
   {
     payload->reset();
-    int linkId = oclient.connect("fire", &onFire);
+    int linkId = oclient->connect("fire", &onFire);
     int exp;
     qi::os::msleep(800);
     EXPECT_GE(linkId, 0);
@@ -114,7 +114,7 @@ TEST_F(TestObject, CoDeco)
     exp = 51 + i;
     EXPECT_EQ(exp, payload->future().value());
 
-    oclient.disconnect(linkId);
+    oclient->disconnect(linkId);
 
     payload->reset();
     oserver->emitEvent("fire", (int)(50 + i));

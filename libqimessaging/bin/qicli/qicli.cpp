@@ -13,7 +13,7 @@
 #include <qimessaging/session.hpp>
 
 qi::Session session;
-std::map<const std::string, qi::GenericObject> services;
+std::map<const std::string, qi::ObjectPtr> services;
 
 typedef std::vector<std::string> command;
 
@@ -47,12 +47,12 @@ static void cmd_service(const command           &cmd,
       }
 
       std::cout << "  methods:" << std::endl;
-      qi::GenericObject obj = session.service(*it);
-      if (obj.isValid())
+      qi::ObjectPtr obj = session.service(*it);
+      if (obj)
       {
         services[*it] = obj;
 
-        const qi::MetaObject &mobj = obj.metaObject();
+        const qi::MetaObject &mobj = obj->metaObject();
         qi::MetaObject::MethodMap methods = mobj.methodMap();
         for (qi::MetaObject::MethodMap::const_iterator it2 = methods.begin();
              it2 != methods.end();

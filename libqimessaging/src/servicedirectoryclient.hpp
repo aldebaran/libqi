@@ -29,8 +29,8 @@ namespace qi {
     qi::Future< void >                     serviceReady(const unsigned int &idx);
 
   private:
-    qi::RemoteObject     _remoteObject;
-    qi::GenericObject    _object;
+    qi::RemoteObject _remoteObject;
+    qi::ObjectPtr    _object;
   };
 }
 

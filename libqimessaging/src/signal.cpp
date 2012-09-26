@@ -74,8 +74,8 @@ namespace qi {
       else
         handler(args);
     }
-    if (target.isValid())
-      target.metaEmit(method, args);
+    if (target)
+      target->metaEmit(method, args);
   }
 
   SignalBase::Link SignalBase::connect(GenericFunction callback, EventLoop* ctx)
@@ -83,7 +83,7 @@ namespace qi {
     return connect(SignalSubscriber(callback, ctx));
   }
 
-  SignalBase::Link SignalBase::connect(qi::GenericObject o, unsigned int slot)
+  SignalBase::Link SignalBase::connect(qi::ObjectPtr o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
@@ -96,10 +96,10 @@ namespace qi {
     SignalSubscriber& s = _p->subscriberMap[res];
     s.linkId = res;
     s.source = this;
-    if (s.target.isValid())
+    if (s.target)
     {
-      GenericObject o = s.target;
-      Manageable* m = o.type->manageable(o.value);
+      ObjectPtr o = s.target;
+      Manageable* m = o->type->manageable(o->value);
       if (m)
         m->addRegistration(s);
     }
@@ -120,9 +120,9 @@ namespace qi {
       return false;
     SignalSubscriber s = it->second;
     subscriberMap.erase(it);
-    if (s.target.isValid())
+    if (s.target)
     {
-      Manageable* m = s.target.type->manageable(s.target.value);
+      Manageable* m = s.target->type->manageable(s.target->value);
       if (m)
         m->removeRegistration(l);
     }

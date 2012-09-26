@@ -47,10 +47,10 @@ namespace qi
     return nextId;
   }
 
-  GenericObject GenericObjectBuilder::object()
+  ObjectPtr GenericObjectBuilder::object()
   {
     _p->metaObject._p->refreshCache();
     _p->object->setMetaObject(_p->metaObject);
-    return makeDynamicObject(_p->object);
+    return makeDynamicObjectPtr(_p->object);
   }
 }

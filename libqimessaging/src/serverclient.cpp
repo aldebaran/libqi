@@ -29,7 +29,7 @@ namespace qi {
   ServerClient::ServerClient(TransportSocketPtr socket)
     : _remoteObject(qi::Message::Service_Server, serverMetaObject(), socket)
   {
-    _object = makeDynamicObject(&_remoteObject);
+    _object = makeDynamicObjectPtr(&_remoteObject);
   }
 
   ServerClient::~ServerClient()
@@ -37,15 +37,15 @@ namespace qi {
   }
 
   qi::Future<unsigned int> ServerClient::registerEvent(unsigned int serviceId, unsigned eventId, unsigned int linkId) {
-    return _object.call<unsigned int>("registerEvent", serviceId, eventId, linkId);
+    return _object->call<unsigned int>("registerEvent", serviceId, eventId, linkId);
   }
 
   qi::Future<bool> ServerClient::unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId) {
-    return _object.call<bool>("unregisterEvent", serviceId, eventId, linkId);
+    return _object->call<bool>("unregisterEvent", serviceId, eventId, linkId);
   }
 
   qi::Future<qi::MetaObject> ServerClient::metaObject(unsigned int serviceId, unsigned int objectId) {
-    return _object.call<qi::MetaObject>("metaObject", serviceId, objectId);
+    return _object->call<qi::MetaObject>("metaObject", serviceId, objectId);
   };
 
   template<> struct TypeDefaultClone<ServerClient>: public TypeNoClone<ServerClient>{};

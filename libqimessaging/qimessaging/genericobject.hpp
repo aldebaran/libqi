@@ -99,6 +99,9 @@ namespace qi {
     int inherits(Type* other);
   };
 
+  class GenericObject;
+  typedef boost::shared_ptr<GenericObject> ObjectPtr;
+
   /* ObjectValue
   *  static version wrapping class C: Type<C>
   *  dynamic version: Type<DynamicObject>
@@ -108,7 +111,7 @@ namespace qi {
   class QIMESSAGING_API GenericObject
   {
   public:
-    GenericObject();
+    GenericObject(ObjectType *type, void *value);
     ~GenericObject();
     const MetaObject &metaObject();
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
@@ -159,11 +162,11 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    unsigned int connect(unsigned int signal, qi::GenericObject target, unsigned int slot);
+    unsigned int connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
 
     void moveToEventLoop(EventLoop* ctx);
     EventLoop* eventLoop();
-    bool isValid() { return type && value;}
+    //bool isValid() { return type && value;}
     ObjectType*  type;
     void*        value;
   };
@@ -190,7 +193,7 @@ namespace qi {
      : handler(func), eventLoop(ctx), target(), method(0)
    {}
 
-   SignalSubscriber(GenericObject target, unsigned int method)
+   SignalSubscriber(qi::ObjectPtr target, unsigned int method)
      : eventLoop(0), target(target), method(method)
    {}
 
@@ -205,7 +208,7 @@ namespace qi {
    MetaCallable       handler;
    EventLoop*         eventLoop;
    //  Mode 2: metaCall
-   GenericObject             target;
+   ObjectPtr          target;
    unsigned int       method;
  };
 
@@ -226,7 +229,9 @@ namespace qi {
   QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
     MetaCallable func, const MetaFunctionParameters& params, MetaCallType callType);
 
+
 };
+
 
 QI_TYPE_SERIALIZABLE(MetaObject);
 

@@ -67,7 +67,7 @@ public:
   }
 
 public:
-  std::map<unsigned int, qi::GenericObject*> _services;
+  std::map<unsigned int, qi::ObjectPtr> _services;
   qi::TransportServer                *_ts;
   std::vector<std::string>            _endpoints;
   qi::Session                        *_session;
@@ -103,7 +103,7 @@ public:
   }
 
 
-  unsigned int registerService(const std::string &name, qi::GenericObject *obj)
+  unsigned int registerService(const std::string &name, qi::ObjectPtr obj)
   {
     qi::Message     msg;
     qi::ServiceInfo si;
@@ -148,7 +148,7 @@ int main_client(std::string QI_UNUSED(str))
   qi::Session  session;
   session.connect("tcp://127.0.0.1:5555");
 
-  qi::GenericObject sock = session.service("serviceTest");
+  qi::ObjectPtr obj = session.service("serviceTest");
 
   for (int i = 0; i < 12; ++i)
   {
@@ -158,7 +158,7 @@ int main_client(std::string QI_UNUSED(str))
 
     for (int j = 0; j < gLoopCount; ++j)
     {
-      sock.emitEvent("New event");
+      obj->emitEvent("New event");
     }
   }
   return 0;
@@ -214,14 +214,14 @@ int main_server()
   qi::Session session;
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
-  qi::GenericObject  obj(ob.object());
+  qi::ObjectPtr  obj(ob.object());
   ServerEvent srv;
   session.connect("tcp://127.0.0.1:5555");
 
   std::vector<std::string> endpoints;
   endpoints.push_back("tcp://127.0.0.1:9559");
   srv.listen(&session, endpoints);
-  srv.registerService("serviceTest", &obj);
+  srv.registerService("serviceTest", obj);
   std::cout << "serviceTest ready." << std::endl;
 
   while (!clientDone)

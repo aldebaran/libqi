@@ -51,12 +51,12 @@ namespace qi {
     bool listen(const std::string &address);
     void close();
 
-    qi::Future<unsigned int> registerService(const std::string &name, const qi::GenericObject &obj);
+    qi::Future<unsigned int> registerService(const std::string &name, qi::ObjectPtr obj);
     qi::Future<void>         unregisterService(unsigned int idx);
 
     std::vector<qi::ServiceInfo>  registeredServices();
     qi::ServiceInfo               registeredService(const std::string &service);
-    qi::GenericObject                    registeredServiceObject(const std::string &service);
+    qi::ObjectPtr                 registeredServiceObject(const std::string &service);
 
     qi::Url                       listenUrl() const;
 
@@ -75,11 +75,11 @@ namespace qi {
     Links                                   _links;
 
     std::set<TransportSocketPtr>            _clients;
-    std::map<unsigned int, qi::GenericObject>      _services;
-    std::map<std::string, qi::GenericObject>       _servicesByName;
+    std::map<unsigned int, qi::ObjectPtr>   _services;
+    std::map<std::string, qi::ObjectPtr>    _servicesByName;
     std::map<std::string, qi::ServiceInfo>  _servicesInfo;
     //used by registerService
-    typedef std::map<long, std::pair<qi::GenericObject, qi::ServiceInfo> > RegisterServiceMap;
+    typedef std::map<long, std::pair<qi::ObjectPtr, qi::ServiceInfo> > RegisterServiceMap;
     RegisterServiceMap _servicesObject;
     qi::atomic<long>                        _servicesObjectIndex;
 

@@ -15,7 +15,7 @@
 
 namespace qi {
 
-  class ServiceDirectoryPrivate : public GenericObject
+  class ServiceDirectoryPrivate //: public GenericObject
   {
   public:
     ServiceDirectoryPrivate();
@@ -45,6 +45,7 @@ namespace qi {
     TransportSocketPtr                                     currentSocket;
     std::set<TransportSocketPtr>                           _clients;
     boost::recursive_mutex                                 _clientsMutex;
+    qi::ObjectPtr                                          _object;
   }; // !ServiceDirectoryPrivate
 
   template<> struct TypeDefaultClone<ServiceDirectoryPrivate>: public TypeNoClone<ServiceDirectoryPrivate>{};

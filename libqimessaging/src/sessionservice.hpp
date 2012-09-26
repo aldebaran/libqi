@@ -35,7 +35,7 @@ namespace qi {
       , sclient(0)
     {}
 
-    qi::Promise<qi::GenericObject> promise;
+    qi::Promise<qi::ObjectPtr>    promise;
     std::string                   name;
     unsigned int                  serviceId;
     std::string                   protocol;
@@ -56,9 +56,9 @@ namespace qi {
 
     void close();
 
-    qi::Future<qi::GenericObject> service(const std::string &service,
-                                          Session::ServiceLocality locality,
-                                          const std::string &protocol);
+    qi::Future<qi::ObjectPtr> service(const std::string &service,
+                                      Session::ServiceLocality locality,
+                                      const std::string &protocol);
 
   protected:
     //FutureInterface
@@ -76,7 +76,7 @@ namespace qi {
     qi::atomic<long>                _requestsIndex;
 
     //maintain a cache of remote object
-    typedef std::map<std::string, GenericObject> RemoteObjectMap;
+    typedef std::map<std::string, ObjectPtr> RemoteObjectMap;
     RemoteObjectMap                 _remoteObjects;
     boost::mutex                    _remoteObjectsMutex;
 
