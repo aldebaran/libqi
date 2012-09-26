@@ -290,16 +290,21 @@ public:
  * That way we can split the various aspects in different classes
  * for better reuse, without the cost of a second virtual call.
  */
-template<typename T, typename Access    = TypeDefaultAccess<T>
-                   , typename Cloner    = TypeDefaultClone<Access>
-                   , typename Value     = TypeNoValue<Access>
-                   , typename Serialize = TypeNoSerialize<Access>
+template<typename T, typename _Access    = TypeDefaultAccess<T>
+                   , typename _Cloner    = TypeDefaultClone<_Access>
+                   , typename _Value     = TypeNoValue<_Access>
+                   , typename _Serialize = TypeNoSerialize<_Access>
          > class DefaultTypeImpl
-: public Cloner
-, public Value
-, public Serialize
+: public _Cloner
+, public _Value
+, public _Serialize
 , public virtual Type
 {
+public:
+  typedef _Access Access;
+  typedef _Cloner Cloner;
+  typedef _Value  Value;
+  typedef _Serialize Serialize;
   virtual void* initializeStorage(void* ptr=0)
   {
     return Access::initializeStorage(ptr);
