@@ -248,6 +248,90 @@ TEST_F(TestObject, meta)
 }
 
 
+std::pair<qi::GenericValue, bool> c1 (const qi::GenericValue& src, qi::Type* dst)
+{
+  return src.convert(dst);
+}
+
+std::pair<qi::GenericValue, bool> c2 (const qi::GenericValue& src, qi::Type* dst)
+{
+  return src.convert2(dst);
+}
+
+template<typename D, typename S>
+qi::uint64_t benchConvOne(const S& src,
+  std::pair<qi::GenericValue, bool> (*conv)(const qi::GenericValue&, qi::Type*)
+  , unsigned niter = 10000)
+{
+  using namespace qi;
+  qi::uint64_t start = os::ustime();
+  for (unsigned i=0; i<niter;++i)
+  {
+    GenericValue gsrc = toValue(src);
+    Type* tdst = typeOf<D>();
+    std::pair<GenericValue, bool> result = conv(gsrc, tdst);
+    if (result.second)
+      result.first.destroy();
+  }
+  return os::ustime() - start;
+}
+
+template<typename D, typename S> void benchConv(const std::string& what, const S& src, unsigned niter = 10000)
+{
+  using namespace qi;
+  GenericValue gsrc = toValue(src);
+  Type* tdst = typeOf<D>();
+  std::pair<GenericValue, bool> result1 = c1(gsrc, tdst);
+  std::pair<GenericValue, bool> result2 = c2(gsrc, tdst);
+  D* r1 = (D*)(result1.first.type->ptrFromStorage(&result1.first.value));
+  D* r2 = (D*)(result2.first.type->ptrFromStorage(&result2.first.value));
+  if (*r1 != *r2)
+  {
+    qiLogError("qi.test") << "Result mismatch for " << what;
+  }
+  qi::uint64_t res[2];
+  res[1] = benchConvOne<D>(src, &c2, niter);
+  res[0] = benchConvOne<D>(src, &c1, niter);
+  qiLogInfo("qi.test") << what <<" " << res[0] << " " << res[1] << std::endl;
+}
+
+#define BENCH(type, typestring, val)               \
+  benchConv<int>(typestring "->i", val);           \
+  benchConv<unsigned int>(typestring "->I", val);  \
+  benchConv<long long>(typestring "->ll", val);    \
+  benchConv<float>(typestring "->f", val);         \
+  benchConv<double>(typestring "->d", val);        \
+  benchConv<char>(typestring "->c", val);
+
+
+TEST(GenericValue, converters)
+{
+  std::vector<int> vi;
+  for (unsigned i=0; i<10; ++i)
+    vi.push_back(i);
+  benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
+  benchConv<float>("int" "->f", 12);
+  BENCH(int, "i", 12);
+  BENCH(float, "f", 1.0f);
+  BENCH(double, "d", 1.0);
+  BENCH(char, "c", 1.0);
+  BENCH(unsigned long, "L", 1.0);
+
+  benchConv<std::vector<int> >("v[i] -> v[i]", vi);
+  benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
+  benchConv<std::vector<double> >("v[i] -> v[d]", vi);
+  benchConv<std::list<int> >("v[i] -> l[i]", vi);
+  benchConv<std::list<unsigned int> >("v[i] -> l[I]", vi);
+  benchConv<std::list<double> >("v[i] -> l[d]", vi);
+  for (unsigned i=0; i<100; ++i)
+    vi.push_back(i);
+  benchConv<std::vector<int> >("v[i] -> v[i]", vi);
+  benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
+  benchConv<std::vector<double> >("v[i] -> v[d]", vi);
+  benchConv<std::list<int> >("v[i] -> l[i]", vi);
+  benchConv<std::list<unsigned int> >("v[i] -> l[I]", vi);
+  benchConv<std::list<double> >("v[i] -> l[d]", vi);
+}
 int main(int argc, char *argv[])
 {
 #if defined(__APPLE__) || defined(__linux__)

@@ -32,7 +32,8 @@ public:
 
   /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
   std::pair<GenericValue, bool> convert(Type* targetType) const;
-
+  // kind-based converter
+  std::pair<GenericValue, bool> convert2(Type* targetType) const;
   /// Helper function that converts and always clone
   GenericValue convertCopy(Type* targetType) const;
   GenericValue clone() const;
