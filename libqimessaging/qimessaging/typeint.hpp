@@ -108,14 +108,14 @@ TypeListImpl<C, T>::begin(void* storage)
   // ptr->begin() gives us an iterator on the stack.
   // So we need to clone it. Hopefuly sizeof iterator is small, so it fits in
   // a byvalue GenericValue
-  return ::qi::toValue(ptr->begin()).clone().asIterator();
+  return ::qi::toValue(ptr->begin()).clone().asIterator(false);
 }
 
 template<template<typename U> class C, typename T> GenericIterator
 TypeListImpl<C, T>::end(void* storage)
 {
   C<T>* ptr = (C<T>*)ptrFromStorage(&storage);
-  return ::qi::toValue(ptr->end()).clone().asIterator();
+  return ::qi::toValue(ptr->end()).clone().asIterator(false);
 }
 
 template<template<typename U> class C, typename T> void
