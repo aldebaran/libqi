@@ -1,50 +1,15 @@
+#pragma once
 /*
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#ifndef _QI_MESSAGING_TYPEINT_HPP_
-#define _QI_MESSAGING_TYPEINT_HPP_
-#include <qimessaging/type.hpp>
+
+#ifndef _QIMESSAGING_TYPELIST_HPP_
+#define _QIMESSAGING_TYPELIST_HPP_
 
 namespace qi
 {
-  class GenericIterator;
-class QIMESSAGING_API TypeInt: public Type
-{
-public:
-  virtual int64_t get(void* value) const = 0;
-  virtual void set(void** storage, int64_t value) = 0;
-  virtual Kind kind() const { return Int;}
-};
-
-class QIMESSAGING_API TypeFloat: public Type
-{
-public:
-  virtual double get(void* value) const = 0;
-  virtual void set(void** storage, double value) = 0;
-  virtual Kind kind() const { return Float;}
-};
-
-class QIMESSAGING_API TypeIterator: public Type
-{
-public:
-  virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
-  virtual void  next(void** storage) = 0;
-  virtual bool equals(void* s1, void* s2) = 0;
-};
-
-class QIMESSAGING_API TypeList: public Type
-{
-public:
-  virtual Type* elementType(void* storage) const = 0;
-  virtual GenericIterator begin(void* storage) = 0; // Must be destroyed
-  virtual GenericIterator end(void* storage) = 0;  //idem
-  virtual void pushBack(void* storage, void* valueStorage) = 0;
-  virtual Kind kind() const { return List;}
-};
-
-
-// List container
+  // List container
 template<template<typename U> class C, typename T> class TypeListImpl:
 public TypeList,
 public DefaultTypeImplMethods<typename C<T>::type,
@@ -168,7 +133,6 @@ template<typename T> struct tlist1: public std::list<T>{};
 // There is no way to register a template container type :(
 template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<vector1, T> {};
 template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<list1, T> {};
-
-
 }
+
 #endif

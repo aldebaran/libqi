@@ -9,7 +9,7 @@
 
 #include <boost/type_traits/remove_const.hpp>
 
-#include <qimessaging/typeint.hpp>
+#include <qimessaging/typespecialized.hpp>
 
 namespace qi {
 

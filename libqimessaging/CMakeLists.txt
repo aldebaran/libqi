@@ -46,6 +46,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/type.hxx
                    qimessaging/details/metafunction.hxx
                    qimessaging/details/genericvalue.hxx
+                   qimessaging/details/genericvaluespecialized.hxx
                    qimessaging/details/dynamicvalue.hxx
                    qimessaging/details/genericobject.hxx
                    qimessaging/details/genericobjectbuilder.hxx
@@ -55,6 +56,8 @@ set(PUBLIC_HEADERS
                    qimessaging/eventloop.hpp
                    qimessaging/file.hpp
                    qimessaging/dynamicobject.hpp
+                   qimessaging/genericvalue.hpp
+                   qimessaging/genericvaluespecialized.hpp
                    qimessaging/genericobject.hpp
                    qimessaging/objecttypebuilder.hpp
                    qimessaging/genericobjectbuilder.hpp
@@ -69,7 +72,7 @@ set(PUBLIC_HEADERS
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
                    qimessaging/type.hpp
-                   qimessaging/genericvalue.hpp
+                   qimessaging/typespecialized.hpp
                    qimessaging/functiontype.hpp
                    qimessaging/details/functiontype.hxx
                    qimessaging/methodtype.hpp

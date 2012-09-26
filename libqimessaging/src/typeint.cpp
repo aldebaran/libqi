@@ -1,4 +1,4 @@
-#include <qimessaging/typeint.hpp>
+#include <qimessaging/typespecialized.hpp>
 #include <qimessaging/genericvaluespecialized.hpp>
 
 namespace qi {
