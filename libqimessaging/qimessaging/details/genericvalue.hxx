@@ -17,12 +17,12 @@ namespace qi {
 class ValueClone
 {
 public:
-  void* clone(void* src)
+  static void* clone(void* src)
   {
     return new GenericValue(((GenericValue*)src)->clone());
   }
 
-  void destroy(void* ptr)
+  static void destroy(void* ptr)
   {
     ((GenericValue*)ptr)->destroy();
     delete (GenericValue*)ptr;
@@ -33,12 +33,12 @@ class ValueValue
 {
 public:
 
-  bool toValue(const void* ptr, qi::detail::DynamicValue& val)
+  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
     GenericValue* m = (GenericValue*)ptr;
     return m->type->toValue(m->value, val);
   }
-  void* fromValue(const qi::detail::DynamicValue& val)
+  static void* fromValue(const qi::detail::DynamicValue& val)
   {
     GenericValue v = ::qi::toValue(val);
     return new GenericValue(v.clone());

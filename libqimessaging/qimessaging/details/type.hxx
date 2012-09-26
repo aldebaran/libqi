@@ -74,13 +74,13 @@ namespace qi  {
   class TypeCArrayClone
   {
   public:
-    void* clone(void* src)
+    static void* clone(void* src)
     {
       char* res = new char[I];
       memcpy(res, src, I);
       return res;
     }
-    void destroy(void* ptr)
+    static void destroy(void* ptr)
     {
       delete[]  (char*)ptr;
     }
@@ -90,12 +90,12 @@ namespace qi  {
   class TypeCArrayValue
   {
   public:
-    bool toValue(const void* ptr, detail::DynamicValue& val)
+    static bool toValue(const void* ptr, detail::DynamicValue& val)
     {
       val = std::string((const char*)ptr, I-1);
       return true;
     }
-    void* fromValue(const detail::DynamicValue& val)
+    static void* fromValue(const detail::DynamicValue& val)
     {
       std::string s = val.toString();
       if (s.length() != I)
@@ -113,11 +113,11 @@ namespace qi  {
   template<int I> class TypeCArraySerialize
   {
   public:
-    void  serialize(ODataStream& s, const void* ptr)
+    static void  serialize(ODataStream& s, const void* ptr)
     {
       s << (const char*)ptr;
     }
-    void* deserialize(IDataStream& s)
+    static void* deserialize(IDataStream& s)
     {
       std::string str;
       s >> str;
@@ -127,7 +127,7 @@ namespace qi  {
       strncpy(res, str.c_str(), str.length());
       return res;
     }
-    std::string signature()
+    static std::string signature()
     {
       return signatureFromType<std::string>::value();
     }
