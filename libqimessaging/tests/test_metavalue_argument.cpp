@@ -93,7 +93,7 @@ public:
 TEST_F(TestObject, meta)
 {
   using namespace qi;
-  int64_t time = os::ustime();
+  qi::int64_t time = os::ustime();
   // Remote test
   GenericObject target = oclient;
   {
