@@ -98,7 +98,8 @@ TypeListImpl<C, T>::TypeListImpl()
 template<template<typename U> class C, typename T> Type*
 TypeListImpl<C, T>::elementType(void*) const
 {
-  return typeOf<T>();
+  static Type* result = typeOf<T>();
+  return result;
 }
 
 template<template<typename U> class C, typename T> GenericIterator
@@ -121,9 +122,9 @@ TypeListImpl<C, T>::end(void* storage)
 template<template<typename U> class C, typename T> void
 TypeListImpl<C, T>::pushBack(void* storage, void* valueStorage)
 {
+  static Type* elemType = typeOf<T>();
   C<T>* ptr = (C<T>*) ptrFromStorage(&storage);
-  typedef typename C<T>::value_type ValueType;
-  ptr->push_back(*(ValueType*)typeOf<ValueType>()->ptrFromStorage(&valueStorage));
+  ptr->push_back(*(T*)elemType->ptrFromStorage(&valueStorage));
 }
 
 
