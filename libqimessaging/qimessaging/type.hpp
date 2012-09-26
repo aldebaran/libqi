@@ -284,9 +284,11 @@ public:
 };
 
 
-/* TypeImpl implementation that bounces to the various aspect
+/* implementation of Type methods that bounces to the various aspect
  * subclasses.
  *
+ * It does not inherit from Type on purpose, to avoid diamond inheritance
+ * when specializing the type interface
  * That way we can split the various aspects in different classes
  * for better reuse, without the cost of a second virtual call.
  */
@@ -294,67 +296,87 @@ template<typename T, typename _Access    = TypeDefaultAccess<T>
                    , typename _Cloner    = TypeDefaultClone<_Access>
                    , typename _Value     = TypeNoValue<_Access>
                    , typename _Serialize = TypeNoSerialize<_Access>
-         > class DefaultTypeImpl
-: public _Cloner
-, public _Value
-, public _Serialize
-, public virtual Type
+         > class DefaultTypeImplMethods
 {
 public:
   typedef _Access Access;
   typedef _Cloner Cloner;
   typedef _Value  Value;
   typedef _Serialize Serialize;
-  virtual void* initializeStorage(void* ptr=0)
+  static void* initializeStorage(void* ptr=0)
   {
     return Access::initializeStorage(ptr);
   }
 
-  virtual void* ptrFromStorage(void** storage)
+  static void* ptrFromStorage(void** storage)
   {
     return Access::ptrFromStorage(storage);
   }
 
-  virtual const std::type_info& info()
+  static const std::type_info& info()
   {
     return typeid(T);
   }
 
-  virtual void* clone(void* src)
+  static void* clone(void* src)
   {
     return Cloner::clone(src);
   }
 
-  virtual void destroy(void* ptr)
+  static void destroy(void* ptr)
   {
     Cloner::destroy(ptr);
   }
 
-  virtual bool toValue(const void* ptr, qi::detail::DynamicValue& val)
+  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
   {
     return Value::toValue(ptr, val);
   }
 
-  virtual void* fromValue(const qi::detail::DynamicValue& val)
+  static void* fromValue(const qi::detail::DynamicValue& val)
   {
     return Value::fromValue(val);
   }
 
-  virtual std::string signature()
+  static std::string signature()
   {
     return Serialize::signature();
   }
 
-  virtual void  serialize(ODataStream& s, const void* ptr)
+  static void  serialize(ODataStream& s, const void* ptr)
   {
     Serialize::serialize(s, ptr);
   }
 
-  virtual void* deserialize(IDataStream& s)
+  static void* deserialize(IDataStream& s)
   {
     return Serialize::deserialize(s);
   }
 };
+
+#define _QI_BOUNCE_TYPE_METHODS(Bounce)                                                             \
+virtual const std::type_info& info() { return Bounce::info();}                                      \
+virtual std::string signature() { return Bounce::signature();}                                      \
+virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}              \
+virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}                          \
+virtual void* clone(void* ptr) { return Bounce::clone(ptr);}                                        \
+virtual void destroy(void* ptr) { return Bounce::destroy(ptr);}                                     \
+virtual bool  toValue(const void* s, qi::detail::DynamicValue& v) { return Bounce::toValue(s, v);}  \
+virtual void* fromValue(const qi::detail::DynamicValue& v) { return Bounce::fromValue(v);}          \
+virtual void  serialize(ODataStream& s, const void* p) { return Bounce::serialize(s, p);}           \
+virtual void* deserialize(IDataStream& s) { return Bounce::deserialize(s);}
+
+template<typename T, typename _Access    = TypeDefaultAccess<T>
+                   , typename _Cloner    = TypeDefaultClone<_Access>
+                   , typename _Value     = TypeNoValue<_Access>
+                   , typename _Serialize = TypeNoSerialize<_Access>
+                   > class DefaultTypeImpl
+                   : public Type
+                   {
+                   public:
+                     typedef DefaultTypeImplMethods<T, _Access, _Cloner, _Value, _Serialize> MethodsImpl;
+                     _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
+                   };
 
 /* Type "factory". Specialize this class to provide a custom
  * Type for a given type.

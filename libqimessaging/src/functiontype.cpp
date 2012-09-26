@@ -54,7 +54,7 @@ namespace qi
     return type->call(value, args);
   }
 
-  std::string FunctionType::signature() const
+  std::string CallableType::signature() const
   {
     std::string res("(");
     for (unsigned i=0; i<_argumentsType.size(); ++i)
@@ -63,7 +63,7 @@ namespace qi
     return res;
   }
 
-  std::string FunctionType::sigreturn() const
+  std::string CallableType::sigreturn() const
   {
     return _resultType->signature();
   }

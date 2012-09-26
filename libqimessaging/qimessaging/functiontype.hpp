@@ -11,11 +11,9 @@
 
 namespace qi {
 
-  class QIMESSAGING_API FunctionType: public virtual Type
+  class QIMESSAGING_API CallableType
   {
   public:
-    virtual void* call(void* func, const std::vector<void*>& args) = 0;
-    GenericValue call(void* func, const std::vector<GenericValue>& args);
     Type* resultType();
     const std::vector<Type*>& argumentsType();
     std::string signature() const;
@@ -23,6 +21,13 @@ namespace qi {
   protected:
     Type*              _resultType;
     std::vector<Type*> _argumentsType;
+  };
+
+  class QIMESSAGING_API FunctionType: public Type, public CallableType
+  {
+  public:
+    virtual void* call(void* func, const std::vector<void*>& args) = 0;
+    GenericValue call(void* func, const std::vector<GenericValue>& args);
   };
 
   template<typename T> FunctionType* makeFunctionType();

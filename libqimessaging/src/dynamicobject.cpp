@@ -49,7 +49,7 @@ namespace qi
     return 0;
   }
 
-  class DynamicObjectType: public virtual ObjectType, public virtual TypeImpl<DynamicObject>
+  class DynamicObjectType: public ObjectType, public DefaultTypeImplMethods<DynamicObject>
   {
   public:
     DynamicObjectType() {}
@@ -61,6 +61,8 @@ namespace qi
     virtual bool disconnect(void* instance, unsigned int linkId);
     virtual Manageable* manageable(void* intance);
     virtual const std::vector<std::pair<Type*, int> >& parentTypes();
+
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
   };
 
   DynamicObject::DynamicObject()

@@ -11,7 +11,7 @@
 
 namespace qi
 {
-  class QIMESSAGING_API MethodType: public virtual FunctionType
+  class QIMESSAGING_API MethodType: public Type, public CallableType
   {
   public:
     /// Call with all values of the correct type
@@ -29,8 +29,8 @@ namespace qi
     {
       return type->call(value, object, args);
     }
-    std::string signature() const { return type->signature();}
-    std::string sigreturn() const { return type->sigreturn();}
+    std::string signature() const { return type->CallableType::signature();}
+    std::string sigreturn() const { return type->CallableType::sigreturn();}
     ///@return equivalent function value
     GenericFunction toGenericFunction();
     MethodType* type;

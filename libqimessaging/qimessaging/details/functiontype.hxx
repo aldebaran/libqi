@@ -33,12 +33,12 @@
 
 namespace qi
 {
-  inline Type* FunctionType::resultType()
+  inline Type* CallableType::resultType()
   {
     return _resultType;
   }
 
-  inline const std::vector<Type*>& FunctionType::argumentsType()
+  inline const std::vector<Type*>& CallableType::argumentsType()
   {
     return _argumentsType;
   }
@@ -147,8 +147,7 @@ namespace qi
 
 
   template<typename T> class FunctionTypeImpl:
-  public virtual FunctionType,
-  public virtual TypeImpl<boost::function<T> >
+  public FunctionType
   {
   public:
     FunctionTypeImpl()
@@ -179,6 +178,7 @@ namespace qi
       boost::add_pointer<boost::mpl::_1> >::type PtrArgsType;
       return detail::apply(boost::fusion::as_vector(PtrArgsType()), *f, args);
     }
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };
 
   template<typename T> FunctionType* makeFunctionType()

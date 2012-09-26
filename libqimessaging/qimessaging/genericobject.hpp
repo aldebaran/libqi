@@ -82,7 +82,7 @@ namespace qi {
  *
  */
 
-  class QIMESSAGING_API ObjectType: public virtual Type
+  class QIMESSAGING_API ObjectType: public Type
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;

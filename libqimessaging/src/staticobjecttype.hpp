@@ -45,7 +45,7 @@ struct ObjectTypeData
  * - Manageable accessor
  * - typeinfo
  */
-class StaticObjectTypeBase: public virtual ObjectType, public virtual TypeImpl<void*>
+class StaticObjectTypeBase: public ObjectType
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
@@ -67,6 +67,7 @@ public:
   virtual void* fromValue(const qi::detail::DynamicValue&);
   virtual void  serialize(ODataStream& s, const void*);
   virtual void* deserialize(IDataStream& s);
+  virtual std::string signature();
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

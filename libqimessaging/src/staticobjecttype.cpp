@@ -151,4 +151,10 @@ void* StaticObjectTypeBase::deserialize(IDataStream& s)
   return _data.classType->deserialize(s);
 }
 
+std::string StaticObjectTypeBase::signature()
+{
+  return _data.classType->signature();
+}
+
+
 }

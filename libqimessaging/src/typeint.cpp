@@ -1,13 +1,13 @@
 #include <qimessaging/typeint.hpp>
+#include <qimessaging/genericvaluespecialized.hpp>
 
 namespace qi {
 
 template<typename T> class TypeIntImpl:
-  public virtual TypeInt,
-  public virtual detail::TypeImplBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+  public TypeInt
 {
 public:
-  typedef typename detail::TypeImplBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
    ImplType;
   virtual int64_t get(void* value) const
   {
@@ -17,7 +17,9 @@ public:
   {
     *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
   }
+  _QI_BOUNCE_TYPE_METHODS(ImplType);
 };
+
 
 #define INTEGRAL_TYPE(t) \
 static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new TypeIntImpl<t>());
@@ -48,11 +50,10 @@ QI_REGISTER_MAPPING("I", qi::uint32_t);
 namespace qi {
 
 
-template<typename T> class TypeFloatImpl: public virtual TypeFloat,
-public virtual detail::TypeImplBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+template<typename T> class TypeFloatImpl: public TypeFloat
 {
 public:
-  typedef typename detail::TypeImplBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
   ImplType;
   virtual double get(void* value) const
   {
@@ -62,6 +63,7 @@ public:
   {
     *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
   }
+  _QI_BOUNCE_TYPE_METHODS(ImplType);
 };
 
 #define FLOAT_TYPE(t) \

@@ -287,20 +287,20 @@ namespace qi  {
 
     // Bouncer to DefaultAccess or DirectAccess based on type size
     template<typename T,
-             template<typename> class Cloner=TypeNoClone,
+             template<typename> class Cloner=TypeAutoClone,
              template<typename> class Value=TypeNoValue,
              template<typename> class Serialize=TypeNoSerialize>
-    class TypeImplBySize
+    class TypeImplMethodsBySize
     {
     public:
       typedef typename boost::mpl::if_c<
         sizeof(T) <= sizeof(void*),
-        DefaultTypeImpl<T,
+        DefaultTypeImplMethods<T,
                         TypeDirectAccess<T>,
                         Cloner<TypeDirectAccess<T> >,
                         Value<TypeDirectAccess<T>  >,
                         Serialize<TypeDirectAccess<T>  > >,
-        DefaultTypeImpl<T,
+        DefaultTypeImplMethods<T,
                         TypeDefaultAccess<T>,
                         Cloner<TypeDefaultAccess<T> >,
                         Value<TypeDefaultAccess<T>  >,

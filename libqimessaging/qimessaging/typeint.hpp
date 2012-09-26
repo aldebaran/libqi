@@ -9,7 +9,7 @@
 namespace qi
 {
   class GenericIterator;
-class QIMESSAGING_API TypeInt: public virtual Type
+class QIMESSAGING_API TypeInt: public Type
 {
 public:
   virtual int64_t get(void* value) const = 0;
@@ -17,7 +17,7 @@ public:
   virtual Kind kind() const { return Int;}
 };
 
-class QIMESSAGING_API TypeFloat: public virtual Type
+class QIMESSAGING_API TypeFloat: public Type
 {
 public:
   virtual double get(void* value) const = 0;
@@ -25,7 +25,7 @@ public:
   virtual Kind kind() const { return Float;}
 };
 
-class QIMESSAGING_API TypeIterator: public virtual Type
+class QIMESSAGING_API TypeIterator: public Type
 {
 public:
   virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
@@ -33,7 +33,7 @@ public:
   virtual bool equals(void* s1, void* s2) = 0;
 };
 
-class QIMESSAGING_API TypeList: public virtual Type
+class QIMESSAGING_API TypeList: public Type
 {
 public:
   virtual Type* elementType(void* storage) const = 0;
@@ -46,8 +46,8 @@ public:
 
 // List container
 template<template<typename U> class C, typename T> class TypeListImpl:
-public virtual TypeList,
-public virtual DefaultTypeImpl<typename C<T>::type,
+public TypeList,
+public DefaultTypeImplMethods<typename C<T>::type,
                                TypeDefaultAccess<typename C<T>::type >,
                                TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
                                TypeDefaultValue<TypeDefaultAccess<typename C<T>::type > >,
@@ -55,24 +55,32 @@ public virtual DefaultTypeImpl<typename C<T>::type,
                                >
 {
 public:
+  typedef DefaultTypeImplMethods<typename C<T>::type,
+                               TypeDefaultAccess<typename C<T>::type >,
+                               TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
+                               TypeDefaultValue<TypeDefaultAccess<typename C<T>::type > >,
+                               TypeDefaultSerialize<TypeDefaultAccess<typename C<T>::type > >
+                               > MethodsImpl;
   TypeListImpl();
   virtual Type* elementType(void* storage) const;
   virtual GenericIterator begin(void* storage);
   virtual GenericIterator end(void* storage);
   virtual void pushBack(void* storage, void* valueStorage);
+  _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
 // container iterator
 template<typename C> class TypeIteratorImpl
-: public virtual TypeIterator
-, public virtual detail::TypeImplBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
+: public TypeIterator
+, public  detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
 {
 public:
-  typedef typename detail::TypeImplBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
   TypeImpl;
   virtual GenericValue dereference(void* storage);
   virtual void  next(void** storage);
   virtual bool equals(void* s1, void* s2);
+  _QI_BOUNCE_TYPE_METHODS(TypeImpl);
 };
 
 

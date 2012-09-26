@@ -50,9 +50,14 @@ namespace qi
 
   template<typename T>
   class MethodTypeImpl:
-    public virtual MethodType,
-    public virtual FunctionTypeImpl<T>
+    public MethodType
   {
+  public:
+    MethodTypeImpl()
+    {
+      // Fill in callable info
+      *(CallableType*)this = FunctionTypeImpl<T>();
+    }
     void* call(void* method, void* object,
       const std::vector<void*>& args)
     {
@@ -60,7 +65,7 @@ namespace qi
       nargs.reserve(args.size()+1);
       nargs.push_back(object);
       nargs.insert(nargs.end(), args.begin(), args.end());
-      return FunctionTypeImpl<T>::call(method, nargs);
+      return FunctionTypeImpl<T>().call(method, nargs);
     }
     GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args)
@@ -69,8 +74,9 @@ namespace qi
       nargs.reserve(args.size()+1);
       nargs.push_back(object);
       nargs.insert(nargs.end(), args.begin(), args.end());
-      return FunctionType::call(method, nargs);
+      return FunctionTypeImpl<T>().FunctionType::call(method, nargs);
     }
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };
 
   template<typename T>
