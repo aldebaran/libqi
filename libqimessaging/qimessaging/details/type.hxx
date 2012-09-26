@@ -27,20 +27,6 @@
 
 QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
 
-#define _CONTAINER(c) namespace qi {             \
-  template<typename T> class TypeImpl<c<T> >:  \
-  public DefaultTypeImpl<c<T>,               \
-  TypeDefaultAccess<T>,                      \
-  TypeDefaultClone<TypeDefaultAccess<c<T> > >,\
-  TypeDefaultValue<TypeDefaultAccess<c<T> > >,\
-  TypeDefaultSerialize<TypeDefaultAccess<c<T> > >\
-  > {}; }
-
-_CONTAINER(std::list);
-_CONTAINER(std::vector);
-
-#undef _CONTAINER
-
 #define _MAP(c) namespace qi {                                \
   template<typename K, typename V> class TypeImpl<c<K,V> >:  \
   public DefaultTypeImpl<c<K,V>,               \

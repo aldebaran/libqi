@@ -13,6 +13,8 @@ namespace qi {
 class GenericList;
 class GenericMap;
 class GenericObject;
+class GenericIterator;
+class GenericList;
 
 
 /** Class that holds any value, with informations to manipulate it.
@@ -48,6 +50,7 @@ public:
   GenericList asList() const;
   GenericMap  asMap() const;
   GenericObject asObject() const;
+  GenericIterator asIterator() const;
 
   template<typename T, Type::Kind k> T as() const;
   template<typename T> T as() const;
