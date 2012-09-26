@@ -5,7 +5,7 @@
 */
 
 #ifndef _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
-#define _QI_MESSAGING_VALUE_HXX_
+#define _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
 
 #include <boost/type_traits/remove_const.hpp>
 
