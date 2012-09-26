@@ -76,8 +76,11 @@ namespace detail
 template<typename T>
 GenericValue toValue(const T& v)
 {
+  static Type* type = 0;
+  if (!type)
+    type = typeOf<typename boost::remove_const<T>::type>();
   GenericValue res;
-  res.type = typeOf<typename boost::remove_const<T>::type>();
+  res.type = type;
   res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
   return res;
 }
