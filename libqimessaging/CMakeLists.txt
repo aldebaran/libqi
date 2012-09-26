@@ -54,6 +54,7 @@ set(PUBLIC_HEADERS
                    qimessaging/url.hpp
                    qimessaging/eventloop.hpp
                    qimessaging/file.hpp
+                   qimessaging/dynamicobject.hpp
                    qimessaging/genericobject.hpp
                    qimessaging/objecttypebuilder.hpp
                    qimessaging/genericobjectbuilder.hpp
