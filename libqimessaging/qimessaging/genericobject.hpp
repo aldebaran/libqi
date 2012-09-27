@@ -95,6 +95,7 @@ namespace qi {
     virtual Manageable* manageable(void* instance) = 0;
     /// @return parent types with associated poniter offset
     virtual const std::vector<std::pair<Type*, int> >& parentTypes() = 0;
+    virtual Type::Kind kind() const { return Type::Object;}
     /// @return -1 if there is no inheritance, or the pointer offset
     int inherits(Type* other);
   };
