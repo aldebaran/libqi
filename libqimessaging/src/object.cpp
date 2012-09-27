@@ -102,7 +102,12 @@ namespace qi {
       out.setError("Invalid object");
       return out.future();
     }
-    return type->metaCall(value, method, params, callType);
+    try {
+      return type->metaCall(value, method, params, callType);
+    } catch (std::runtime_error &e) {
+      out.setError(e.what());
+      return out.future();
+    }
   }
 
   void GenericObject::metaEmit(unsigned int event, const MetaFunctionParameters& args)
