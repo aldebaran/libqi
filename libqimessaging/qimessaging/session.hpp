@@ -21,6 +21,7 @@ namespace qi {
   class SessionPrivate;
   class QIMESSAGING_API Session {
   public:
+    QI_DISALLOW_COPY_AND_ASSIGN(Session);
     Session();
     virtual ~Session();
 
