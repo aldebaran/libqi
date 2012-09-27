@@ -233,7 +233,7 @@ namespace qi {
 
 };
 
-
+QI_TYPE_NOT_CONSTRUCTIBLE(qi::GenericObject);
 QI_TYPE_SERIALIZABLE(MetaObject);
 
 /** Register struct with QI binding system.
