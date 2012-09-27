@@ -356,8 +356,7 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   ASSERT_EQ(4, oa1->call<int>("addAdderByRef", a2));
   // Copies a2
   ASSERT_EQ(4, oa1->call<int>("addAdderByRef", *oa2));
-  // Ptr cast not implemented, cast ourselve
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", (Adder*)&a2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
   //ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
 
