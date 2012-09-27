@@ -29,6 +29,14 @@ public:
   virtual Kind kind() const { return Float;}
 };
 
+class QIMESSAGING_API TypeString: public Type
+{
+public:
+  virtual std::string get(void* value) const = 0;
+  virtual void set(void** storage, const std::string& value) = 0;
+  virtual Kind kind() const { return String;}
+};
+
 class QIMESSAGING_API TypePointer: public Type
 {
 public:
@@ -62,6 +70,7 @@ public:
 
 }
 
+#include <qimessaging/details/typestring.hxx>
 #include <qimessaging/details/typelist.hxx>
 #include <qimessaging/details/typepointer.hxx>
 #endif

@@ -25,19 +25,6 @@
  *
  */
 
-QI_TYPE_CONVERTIBLE_SERIALIZABLE(std::string);
-
-#define _MAP(c) namespace qi {                                \
-  template<typename K, typename V> class TypeImpl<c<K,V> >:  \
-  public DefaultTypeImpl<c<K,V>,               \
-  TypeDefaultAccess<c<K,V> >,                  \
-  TypeDefaultClone    <TypeDefaultAccess<c<K,V> > >,\
-  TypeDefaultValue    <TypeDefaultAccess<c<K,V> > >,\
-  TypeDefaultSerialize<TypeDefaultAccess<c<K,V> > >\
-  > {}; }
-
-_MAP(std::map);
-#undef _MAP
 
 namespace qi {
   // void
@@ -66,80 +53,6 @@ namespace qi {
 }
 
 namespace qi  {
-  /* C array. We badly need this because the type of literal string "foo"
-* is char[4] not char*
-*
-*/
-  template<int I>
-  class TypeCArrayClone
-  {
-  public:
-    static void* clone(void* src)
-    {
-      char* res = new char[I];
-      memcpy(res, src, I);
-      return res;
-    }
-    static void destroy(void* ptr)
-    {
-      delete[]  (char*)ptr;
-    }
-  };
-
-  template<int I>
-  class TypeCArrayValue
-  {
-  public:
-    static bool toValue(const void* ptr, detail::DynamicValue& val)
-    {
-      val = std::string((const char*)ptr, I-1);
-      return true;
-    }
-    static void* fromValue(const detail::DynamicValue& val)
-    {
-      std::string s = val.toString();
-      if (s.length() != I)
-      {
-        qiLogError("Type") << "C string cast fail between char["
-                               << I  <<"] and " << s;
-        return 0;
-      }
-      char* res = new char[I];
-      memcpy(res, s.c_str(), I);
-      return res;
-    }
-  };
-
-  template<int I> class TypeCArraySerialize
-  {
-  public:
-    static void  serialize(ODataStream& s, const void* ptr)
-    {
-      s << (const char*)ptr;
-    }
-    static void* deserialize(IDataStream& s)
-    {
-      std::string str;
-      s >> str;
-      if (str.length() >= I)
-        return 0;
-      char* res = new char[I];
-      strncpy(res, str.c_str(), str.length());
-      return res;
-    }
-    static std::string signature()
-    {
-      return signatureFromType<std::string>::value();
-    }
-  };
-
-  template<int I> class TypeImpl<char [I]>
-      :public  DefaultTypeImpl<char[I],
-      TypeDefaultAccess<char[I]>,
-      TypeCArrayClone<I>,
-      TypeCArrayValue<I>,
-      TypeCArraySerialize<I>
-      >{};
 
   namespace detail {
     template<typename T> inline Type* typeOfBackend()

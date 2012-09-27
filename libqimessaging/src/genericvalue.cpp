@@ -40,6 +40,12 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
       static_cast<TypeInt*>(targetType)->set(&result.value,
         static_cast<TypeInt*>(type)->get(value));
       return std::make_pair(result, true);
+    case Type::String:
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeString*>(targetType)->set(&result.value,
+        static_cast<TypeString*>(type)->get(value));
+      return std::make_pair(result, true);
     case Type::List:
     {
       result.type = targetType;

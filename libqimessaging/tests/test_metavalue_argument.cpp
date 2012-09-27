@@ -317,6 +317,10 @@ TEST(GenericValue, converters)
   BENCH(char, "c", 1.0);
   BENCH(unsigned long, "L", 1.0);
 
+  // STRING BENCH
+  benchConv<std::string>("s -> s", std::string("foo"));
+  benchConv<std::string>("[c] -> s", "foo");
+  // VECTOR BENCH
   benchConv<std::vector<int> >("v[i] -> v[i]", vi);
   benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
   benchConv<std::vector<double> >("v[i] -> v[d]", vi);

@@ -60,6 +60,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/type.hxx
                    qimessaging/details/typelist.hxx
                    qimessaging/details/typepointer.hxx
+                   qimessaging/details/typestring.hxx
                    qimessaging/dynamicobject.hpp
                    qimessaging/eventloop.hpp
                    qimessaging/file.hpp

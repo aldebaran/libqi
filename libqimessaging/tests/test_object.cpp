@@ -377,6 +377,17 @@ TEST(TestObject, TypeType)
   qiLogDebug("test") << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());
+  ASSERT_EQ(12, val.asInt());
+
+  vals = convert(1.5);
+  val = vals[0];
+  ASSERT_EQ(Type::Float, val.kind());
+  ASSERT_EQ(1.5, val.asDouble());
+
+  vals = convert("foo");
+  val = vals[0];
+  ASSERT_EQ(Type::String, val.kind());
+  ASSERT_EQ(std::string("foo"), val.asString());
 }
 
 int main(int argc, char **argv)

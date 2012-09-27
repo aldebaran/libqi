@@ -172,7 +172,7 @@ template<Type::Kind T> struct TypeOfKind
 
 TYPE_OF_KIND(Type::Int, TypeInt);
 TYPE_OF_KIND(Type::Float,  TypeFloat);
-//TYPE_OF_KIND(Type::String, TypeString);
+TYPE_OF_KIND(Type::String, TypeString);
 
 #undef TYPE_OF_KIND
 
@@ -249,7 +249,7 @@ inline double GenericValue::asDouble() const
 
 inline std::string GenericValue::asString() const
 {
-  return ""; // as<std::string, Type::String>();
+  return as<std::string, Type::String>();
 }
 
 
