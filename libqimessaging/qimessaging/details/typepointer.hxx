@@ -38,6 +38,30 @@ namespace qi
   };
 
   template<typename T> class TypeImpl<T*>: public TypePointerImpl<T>{};
+
+  template<typename T> class TypeSharedPointerImpl: public TypePointer
+  {
+  public:
+    Type* pointedType() const
+    {
+      static Type* result = 0;
+      if (!result)
+        result = typeOf<typename T::element_type>();
+      return result;
+    }
+
+    GenericValue dereference(void* storage)
+    {
+      T* ptr = (T*)ptrFromStorage(&storage);
+      GenericValue result;
+      result.type = pointedType();
+      result.value = result.type->initializeStorage(ptr->get());
+      return result;
+    }
+     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<T>);
+  };
+
+  template<typename T> class TypeImpl<boost::shared_ptr<T> >: public TypeSharedPointerImpl<boost::shared_ptr<T> >{};
 }
 
 #endif
