@@ -63,6 +63,7 @@ public:
     List,
     Map,
     Object,
+    Pointer,
     Unknown,
   };
   virtual Kind kind() const;

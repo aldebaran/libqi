@@ -70,8 +70,37 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
       return std::make_pair(lresult, true);
     }
     break;
+  case Type::Pointer:
+    {
+      Type* srcPointedType = static_cast<TypePointer*>(type)->pointedType();
+      Type* dstPointedType = static_cast<TypePointer*>(targetType)->pointedType();
+      // We only try to handle conversion for pointer to objects
+      if (srcPointedType->kind() != Type::Object || dstPointedType->kind() != Type::Object)
+      {
+        // However, we need the full check for exact match here
+        if (type->info() == targetType->info())
+          return std::make_pair(*this, false);
+        else
+          return std::make_pair(GenericValue(), false);
+      }
+      GenericValue pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
+      std::pair<GenericValue, bool> pointedDstPair = pointedSrc.convert2(dstPointedType);
+      if (!pointedDstPair.first.type)
+        return std::make_pair(GenericValue(), false);
+      if (pointedDstPair.second)
+        qiLogError("qi.meta") << "assertion error, allocated converted reference";
+      // We must re-reference
+      GenericValue pointedDst = pointedDstPair.first;
+      void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
+      result.type = targetType;
+      result.value = targetType->initializeStorage(&ptr);
+      return std::make_pair(result, false);
     }
-  }
+    break;
+  default:
+    break;
+  } // switch
+  } // skind == dkind
   if (skind == Type::Float && dkind == Type::Int)
   {
     result.type = targetType;

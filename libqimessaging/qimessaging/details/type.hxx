@@ -141,15 +141,6 @@ namespace qi  {
       TypeCArraySerialize<I>
       >{};
 
-  // pointer type
-  template<typename T> class TypeImpl<T*>
-  : public DefaultTypeImpl<T*,
-    TypeDirectAccess<T*>,
-    TypeNoClone<TypeDirectAccess<T*> >,
-    TypeNoValue<TypeDirectAccess<T*> >,
-    TypeNoSerialize<TypeDirectAccess<T*> >
-    > {};
-
   namespace detail {
     template<typename T> inline Type* typeOfBackend()
     {

@@ -29,6 +29,14 @@ public:
   virtual Kind kind() const { return Float;}
 };
 
+class QIMESSAGING_API TypePointer: public Type
+{
+public:
+  virtual Type* pointedType() const = 0;
+  virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
+  virtual Kind kind() const { return Pointer;}
+};
+
 template<typename T>
 class QIMESSAGING_API TypeIterator: public Type
 {
@@ -55,4 +63,5 @@ public:
 }
 
 #include <qimessaging/details/typelist.hxx>
+#include <qimessaging/details/typepointer.hxx>
 #endif
