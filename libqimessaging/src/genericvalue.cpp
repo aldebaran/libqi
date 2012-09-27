@@ -10,7 +10,7 @@
 namespace qi
 {
 
-std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
+std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
 {
   /* Can have false-negative (same effective type, different Type instances
    * but we do not care, correct check (by comparing info() result
@@ -67,7 +67,7 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
           lresult.pushBack(val);
         else
         {
-          std::pair<GenericValue,bool> c = val.convert2(dstElemType);
+          std::pair<GenericValue,bool> c = val.convert(dstElemType);
           lresult.pushBack(c.first);
           if (c.second)
             c.first.destroy();
@@ -90,7 +90,7 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
           return std::make_pair(GenericValue(), false);
       }
       GenericValue pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
-      std::pair<GenericValue, bool> pointedDstPair = pointedSrc.convert2(dstPointedType);
+      std::pair<GenericValue, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
       if (!pointedDstPair.first.type)
         return std::make_pair(GenericValue(), false);
       if (pointedDstPair.second)
@@ -137,7 +137,7 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
   if (type->info() == genericValueType->info())
   { // Source is metavalue: special case
     GenericValue* metaval = (GenericValue*)value;
-    return metaval->convert2(targetType);
+    return metaval->convert(targetType);
   }
   if (type->info() == genericObjectType->info())
   {
@@ -145,7 +145,7 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
     GenericValue v;
     v.type = obj->type;
     v.value = obj->value;
-    return v.convert2(targetType);
+    return v.convert(targetType);
   }
   if (skind == Type::Object)
   {
@@ -170,7 +170,7 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
   return std::make_pair(GenericValue(), false);
 }
 
-std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
+std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
 {
   if (targetType->info() == typeOf<GenericValue>()->info())
   {
@@ -183,7 +183,7 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
   if (type->info() == typeOf<GenericValue>()->info())
   { // Source is metavalue: special case
     GenericValue* metaval = (GenericValue*)value;
-    return metaval->convert(targetType);
+    return metaval->convert2(targetType);
   }
   if (type->info() == typeOf<GenericObject>()->info())
   {
@@ -191,7 +191,7 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
     GenericValue v;
     v.type = obj->type;
     v.value = obj->value;
-    return v.convert(targetType);
+    return v.convert2(targetType);
   }
   GenericValue res;
   //std::cerr <<"convert " << targetType.info().name() <<" "
