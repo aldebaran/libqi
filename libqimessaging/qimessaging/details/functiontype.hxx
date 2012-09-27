@@ -128,7 +128,7 @@ namespace qi
       res(), boost::fusion::invoke_function_object(function,
         boost::fusion::transform(sequence,
           PtrToConstRef()));
-    return res.value;
+      return res.value;
     }
     template<typename T> struct Ident
     {
