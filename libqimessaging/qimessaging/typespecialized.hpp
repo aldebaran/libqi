@@ -13,6 +13,7 @@ namespace qi
 {
 // Interfaces for specialized types
 class GenericListIterator;
+class GenericMapIterator;
 class QIMESSAGING_API TypeInt: public Type
 {
 public:
@@ -57,6 +58,9 @@ public:
 class QIMESSAGING_API TypeListIterator: public TypeIterator<GenericValue>
 {};
 
+class QIMESSAGING_API TypeMapIterator: public TypeIterator<std::pair<GenericValue, GenericValue> >
+{};
+
 
 class QIMESSAGING_API TypeList: public Type
 {
@@ -68,9 +72,22 @@ public:
   virtual Kind kind() const { return List;}
 };
 
+class QIMESSAGING_API TypeMap: public Type
+{
+public:
+  virtual Type* elementType(void* storage) const = 0;
+  virtual Type* keyType(void* storage) const = 0;
+  virtual GenericMapIterator begin(void* storage) = 0; // Must be destroyed
+  virtual GenericMapIterator end(void* storage) = 0;  //idem
+  virtual void pushBack(void* storage, void* keyStorage, void* valueStorage) = 0;
+  virtual Kind kind() const { return Map;}
+};
+
+
 }
 
 #include <qimessaging/details/typestring.hxx>
 #include <qimessaging/details/typelist.hxx>
+#include <qimessaging/details/typemap.hxx>
 #include <qimessaging/details/typepointer.hxx>
 #endif

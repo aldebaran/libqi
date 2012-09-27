@@ -6,6 +6,8 @@
 
 
 #include <map>
+#include <boost/lexical_cast.hpp>
+
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
@@ -335,6 +337,24 @@ TEST(GenericValue, converters)
   benchConv<std::list<int> >("v[i] -> l[i]", vi);
   benchConv<std::list<unsigned int> >("v[i] -> l[I]", vi);
   benchConv<std::list<double> >("v[i] -> l[d]", vi);
+
+  // MAP BENCH
+  std::map<std::string, unsigned int> map;
+  for (unsigned i=0; i<10; ++i)
+    map[boost::lexical_cast<std::string>(i)] = i;
+
+  benchConv<std::map<std::string, unsigned int> >("m[sI] -> m[sI]", map);
+  benchConv<std::map<std::string, int> >("m[sI] -> m[si]", map);
+  benchConv<std::map<std::string, float> >("m[sI] -> m[sf]", map);
+  benchConv<std::map<std::string, double> >("m[sI] -> m[sd]", map);
+
+  for (unsigned i=0; i<100; ++i)
+    map[boost::lexical_cast<std::string>(i)] = i;
+
+  benchConv<std::map<std::string, unsigned int> >("m[sI] -> m[sI]", map);
+  benchConv<std::map<std::string, int> >("m[sI] -> m[si]", map);
+  benchConv<std::map<std::string, float> >("m[sI] -> m[sf]", map);
+  benchConv<std::map<std::string, double> >("m[sI] -> m[sd]", map);
 }
 int main(int argc, char *argv[])
 {
