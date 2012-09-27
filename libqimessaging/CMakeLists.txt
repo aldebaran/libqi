@@ -41,52 +41,52 @@ qi_add_probes(src/tp_qimessaging.in.h
               INSTRUMENTED_FILES src/session.cpp)
 
 set(PUBLIC_HEADERS
-                   qimessaging/details/future.hxx
+                   qimessaging/api.hpp
+                   qimessaging/buffer.hpp
+                   qimessaging/bufferreader.hpp
+                   qimessaging/datastream.hpp
                    qimessaging/details/dynamicvalue.hpp
-                   qimessaging/details/type.hxx
-                   qimessaging/details/metafunction.hxx
+                   qimessaging/details/dynamicvalue.hxx
+                   qimessaging/details/functiontype.hxx
+                   qimessaging/details/future.hxx
+                   qimessaging/details/genericobjectbuilder.hxx
+                   qimessaging/details/genericobject.hxx
                    qimessaging/details/genericvalue.hxx
                    qimessaging/details/genericvaluespecialized.hxx
-                   qimessaging/details/dynamicvalue.hxx
-                   qimessaging/details/genericobject.hxx
-                   qimessaging/details/genericobjectbuilder.hxx
+                   qimessaging/details/metafunction.hxx
+                   qimessaging/details/methodtype.hxx
                    qimessaging/details/objecttypebuilder.hxx
                    qimessaging/details/signal.hxx
-                   qimessaging/url.hpp
+                   qimessaging/details/type.hxx
+                   qimessaging/details/typelist.hxx
+                   qimessaging/dynamicobject.hpp
                    qimessaging/eventloop.hpp
                    qimessaging/file.hpp
-                   qimessaging/dynamicobject.hpp
+                   qimessaging/functiontype.hpp
+                   qimessaging/future.hpp
+                   qimessaging/gateway.hpp
+                   qimessaging/genericobjectbuilder.hpp
+                   qimessaging/genericobject.hpp
                    qimessaging/genericvalue.hpp
                    qimessaging/genericvaluespecialized.hpp
-                   qimessaging/genericobject.hpp
-                   qimessaging/objecttypebuilder.hpp
-                   qimessaging/genericobjectbuilder.hpp
-                   qimessaging/objectfactory.hpp
-                   qimessaging/session.hpp
-                   qimessaging/metasignal.hpp
-                   qimessaging/metamethod.hpp
-                   qimessaging/metaobject.hpp
-                   qimessaging/servicedirectory.hpp
-                   qimessaging/signature.hpp
-                   qimessaging/api.hpp
                    qimessaging/message.hpp
                    qimessaging/metafunction.hpp
-                   qimessaging/type.hpp
-                   qimessaging/typespecialized.hpp
-                   qimessaging/functiontype.hpp
-                   qimessaging/details/functiontype.hxx
+                   qimessaging/metamethod.hpp
+                   qimessaging/metaobject.hpp
+                   qimessaging/metasignal.hpp
                    qimessaging/methodtype.hpp
-                   qimessaging/details/methodtype.hxx
+                   qimessaging/objectfactory.hpp
+                   qimessaging/objecttypebuilder.hpp
+                   qimessaging/servicedirectory.hpp
+                   qimessaging/serviceinfo.hpp
+                   qimessaging/session.hpp
                    qimessaging/signal.hpp
+                   qimessaging/signature.hpp
                    qimessaging/transportserver.hpp
                    qimessaging/transportsocket.hpp
-                   qimessaging/typeint.hpp
-                   qimessaging/future.hpp
-                   qimessaging/datastream.hpp
-                   qimessaging/bufferreader.hpp
-                   qimessaging/buffer.hpp
-                   qimessaging/gateway.hpp
-                   qimessaging/serviceinfo.hpp
+                   qimessaging/type.hpp
+                   qimessaging/typespecialized.hpp
+                   qimessaging/url.hpp
 )
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
