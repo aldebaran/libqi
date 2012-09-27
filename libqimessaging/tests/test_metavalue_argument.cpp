@@ -326,6 +326,7 @@ TEST(GenericValue, converters)
   benchConv<std::vector<int> >("v[i] -> v[i]", vi);
   benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
   benchConv<std::vector<double> >("v[i] -> v[d]", vi);
+  benchConv<std::vector<float> >("v[i] -> v[f]", vi);
   benchConv<std::list<int> >("v[i] -> l[i]", vi);
   benchConv<std::list<unsigned int> >("v[i] -> l[I]", vi);
   benchConv<std::list<double> >("v[i] -> l[d]", vi);
@@ -334,6 +335,7 @@ TEST(GenericValue, converters)
   benchConv<std::vector<int> >("v[i] -> v[i]", vi);
   benchConv<std::vector<unsigned int> >("v[i] -> v[I]", vi);
   benchConv<std::vector<double> >("v[i] -> v[d]", vi);
+  benchConv<std::vector<float> >("v[i] -> v[f]", vi);
   benchConv<std::list<int> >("v[i] -> l[i]", vi);
   benchConv<std::list<unsigned int> >("v[i] -> l[I]", vi);
   benchConv<std::list<double> >("v[i] -> l[d]", vi);
