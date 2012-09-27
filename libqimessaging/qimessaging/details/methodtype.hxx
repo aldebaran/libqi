@@ -70,6 +70,13 @@ namespace qi
     GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args)
     {
+      if (object.kind() == Type::Pointer)
+      {
+        // Be nice and dereference it
+        GenericValue deref;
+        deref = static_cast<TypePointer*>(object.type)->dereference(object.value);
+        object = deref;
+      }
       std::vector<GenericValue> nargs;
       nargs.reserve(args.size()+1);
       nargs.push_back(object);
