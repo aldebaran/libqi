@@ -13,7 +13,6 @@ namespace qi {
 class GenericList;
 class GenericMap;
 class GenericObject;
-class GenericIterator;
 class GenericList;
 
 
@@ -51,7 +50,6 @@ public:
   GenericList asList() const;
   GenericMap  asMap() const;
   GenericObject asObject() const;
-  GenericIterator asIterator(bool check = true) const;
 
   template<typename T, Type::Kind k> T as() const;
   template<typename T> T as() const;

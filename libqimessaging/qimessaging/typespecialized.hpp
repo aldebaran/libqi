@@ -12,7 +12,7 @@
 namespace qi
 {
 // Interfaces for specialized types
-class GenericIterator;
+class GenericListIterator;
 class QIMESSAGING_API TypeInt: public Type
 {
 public:
@@ -29,20 +29,25 @@ public:
   virtual Kind kind() const { return Float;}
 };
 
+template<typename T>
 class QIMESSAGING_API TypeIterator: public Type
 {
 public:
-  virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
+  virtual T dereference(void* storage) = 0; // must not be destroyed
   virtual void  next(void** storage) = 0;
   virtual bool equals(void* s1, void* s2) = 0;
 };
+
+class QIMESSAGING_API TypeListIterator: public TypeIterator<GenericValue>
+{};
+
 
 class QIMESSAGING_API TypeList: public Type
 {
 public:
   virtual Type* elementType(void* storage) const = 0;
-  virtual GenericIterator begin(void* storage) = 0; // Must be destroyed
-  virtual GenericIterator end(void* storage) = 0;  //idem
+  virtual GenericListIterator begin(void* storage) = 0; // Must be destroyed
+  virtual GenericListIterator end(void* storage) = 0;  //idem
   virtual void pushBack(void* storage, void* valueStorage) = 0;
   virtual Kind kind() const { return List;}
 };

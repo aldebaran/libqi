@@ -11,21 +11,28 @@
 
 namespace qi
 {
+  template<typename T>
   class GenericIterator: public GenericValue
   {
   public:
     void operator ++();
     void operator ++(int);
-    GenericValue operator *();
+    T operator *();
     bool operator ==(const GenericIterator& b) const;
     inline bool operator !=(const GenericIterator& b) const;
   };
 
+  class GenericListIterator: public GenericIterator<GenericValue>
+  {};
+
+  class GenericMapIterator: public GenericIterator<std::pair<GenericValue, GenericValue> >
+  {};
+
   class GenericList: public GenericValue
   {
   public:
-    GenericIterator begin();
-    GenericIterator end();
+    GenericListIterator begin();
+    GenericListIterator end();
     void pushBack(GenericValue val);
     Type* elementType();
   };

@@ -52,8 +52,8 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
       GenericList lresult;
       lresult.type = targetListType;
       lresult.value = storage;
-      GenericIterator i = lsrc.begin();
-      GenericIterator iend = lsrc.end();
+      GenericListIterator i = lsrc.begin();
+      GenericListIterator iend = lsrc.end();
       for (; i!= iend; ++i)
       {
         GenericValue val = *i;
@@ -121,8 +121,8 @@ std::pair<GenericValue, bool> GenericValue::convert2(Type* targetType) const
     int inheritOffset = 0;
     if (osrc && (inheritOffset =  osrc->inherits(targetType)) != -1)
     {
+      // We return a Value that point to the same data as this.
       result.type = targetType;
-      // We *must* clone, destroy will be called
       result.value = (void*)((long)value + inheritOffset);
       return std::make_pair(result, false);
     }

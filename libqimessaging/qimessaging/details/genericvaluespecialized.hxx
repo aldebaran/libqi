@@ -9,41 +9,46 @@
 namespace qi
 {
 
-inline void GenericIterator::operator ++()
+template<typename T>
+inline void GenericIterator<T>::operator ++()
 {
-  static_cast<TypeIterator*>(type)->next(&value);
+  static_cast<TypeIterator<T>*>(type)->next(&value);
 }
 
-inline void GenericIterator::operator ++(int)
+template<typename T>
+inline void GenericIterator<T>::operator ++(int)
 {
-  static_cast<TypeIterator*>(type)->next(&value);
+  static_cast<TypeIterator<T>*>(type)->next(&value);
 }
 
-inline GenericValue GenericIterator::operator *()
+template<typename T>
+inline T GenericIterator<T>::operator *()
 {
-  return static_cast<TypeIterator*>(type)->dereference(value);
+  return static_cast<TypeIterator<T>*>(type)->dereference(value);
 }
 
-inline bool GenericIterator::operator ==(const GenericIterator& b) const
+template<typename T>
+inline bool GenericIterator<T>::operator ==(const GenericIterator& b) const
 {
   // Assume both iterators come from the same container instance
   // in which case they have the same type*
   if (type != b.type)
     return false;
-  return static_cast<TypeIterator*>(type)->equals(value, b.value);
+  return static_cast<TypeIterator<T>*>(type)->equals(value, b.value);
 }
 
-inline bool  GenericIterator::operator !=(const GenericIterator& b) const
+template<typename T>
+inline bool  GenericIterator<T>::operator !=(const GenericIterator& b) const
 {
   return ! (*this==b);
 }
 
-inline GenericIterator GenericList::begin()
+inline GenericListIterator GenericList::begin()
 {
   return static_cast<TypeList*>(type)->begin(value);
 }
 
-inline GenericIterator GenericList::end()
+inline GenericListIterator GenericList::end()
 {
   return static_cast<TypeList*>(type)->end(value);
 }
@@ -67,14 +72,6 @@ inline void GenericList::pushBack(GenericValue val)
     if (conv.second)
       conv.first.destroy();
   }
-}
-inline GenericIterator GenericValue::asIterator(bool check) const
-{
-  GenericIterator result;
-  result.type = check?dynamic_cast<TypeIterator*>(type): static_cast<TypeIterator*>(type);
-  if (result.type)
-    result.value = value;
-  return result;
 }
 
 inline GenericList GenericValue::asList() const

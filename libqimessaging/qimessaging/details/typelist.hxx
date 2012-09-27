@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPELIST_HPP_
-#define _QIMESSAGING_TYPELIST_HPP_
+#ifndef _QIMESSAGING_TYPELIST_HXX_
+#define _QIMESSAGING_TYPELIST_HXX_
 
 namespace qi
 {
@@ -28,15 +28,15 @@ public:
                                > MethodsImpl;
   TypeListImpl();
   virtual Type* elementType(void* storage) const;
-  virtual GenericIterator begin(void* storage);
-  virtual GenericIterator end(void* storage);
+  virtual GenericListIterator begin(void* storage);
+  virtual GenericListIterator end(void* storage);
   virtual void pushBack(void* storage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
-// container iterator
-template<typename C> class TypeIteratorImpl
-: public TypeIterator
+// list iterator
+template<typename C> class TypeListIteratorImpl
+: public TypeListIterator
 , public  detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
 {
 public:
@@ -56,7 +56,7 @@ template<template<typename U> class C, typename T>
 TypeListImpl<C, T>::TypeListImpl()
 {
   // register our iterator type
-  registerType(typeid(typename C<T>::iterator), new TypeIteratorImpl<C<T> >());
+  registerType(typeid(typename C<T>::iterator), new TypeListIteratorImpl<C<T> >());
 }
 
 
@@ -67,21 +67,35 @@ TypeListImpl<C, T>::elementType(void*) const
   return result;
 }
 
-template<template<typename U> class C, typename T> GenericIterator
+template<template<typename U> class C, typename T> GenericListIterator
 TypeListImpl<C, T>::begin(void* storage)
 {
+  static Type* iterType = typeOf<typename C<T>::iterator>();
   C<T>* ptr = (C<T>*)ptrFromStorage(&storage);
   // ptr->begin() gives us an iterator on the stack.
   // So we need to clone it. Hopefuly sizeof iterator is small, so it fits in
   // a byvalue GenericValue
-  return ::qi::toValue(ptr->begin()).clone().asIterator(false);
+  GenericListIterator result;
+  GenericValue val;
+  val.type = iterType;
+  typename C<T>::iterator res = ptr->begin(); // do not inline below!
+  val.value = iterType->initializeStorage(&res);
+  *(GenericValue*)&result = val.clone();
+  return result;
 }
 
-template<template<typename U> class C, typename T> GenericIterator
+template<template<typename U> class C, typename T> GenericListIterator
 TypeListImpl<C, T>::end(void* storage)
 {
+  static Type* iterType = typeOf<typename C<T>::iterator>();
   C<T>* ptr = (C<T>*)ptrFromStorage(&storage);
-  return ::qi::toValue(ptr->end()).clone().asIterator(false);
+  GenericListIterator result;
+  GenericValue val;
+  val.type = iterType;
+  typename C<T>::iterator res = ptr->end(); // do not inline below!
+  val.value = iterType->initializeStorage(&res);
+  *(GenericValue*)&result = val.clone();
+  return result;
 }
 
 template<template<typename U> class C, typename T> void
@@ -93,20 +107,20 @@ TypeListImpl<C, T>::pushBack(void* storage, void* valueStorage)
 }
 
 
-template<typename C> GenericValue TypeIteratorImpl<C>::dereference(void* storage)
+template<typename C> GenericValue TypeListIteratorImpl<C>::dereference(void* storage)
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
   return ::qi::toValue(val); // Value is in the container, no need to clone
 }
 
-template<typename C> void TypeIteratorImpl<C>::next(void** storage)
+template<typename C> void TypeListIteratorImpl<C>::next(void** storage)
 {
   typename C::iterator* ptr = (typename C::iterator*)TypeImpl::Access::ptrFromStorage(storage);
   ++(*ptr);
 }
 
-template<typename C>  bool TypeIteratorImpl<C>::equals(void* s1, void* s2)
+template<typename C>  bool TypeListIteratorImpl<C>::equals(void* s1, void* s2)
 {
   typename C::iterator* ptr1 = (typename C::iterator*)TypeImpl::Access::ptrFromStorage(&s1);
   typename C::iterator* ptr2 = (typename C::iterator*)TypeImpl::Access::ptrFromStorage(&s2);
