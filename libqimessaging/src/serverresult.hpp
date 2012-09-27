@@ -22,7 +22,9 @@ namespace qi {
     if (future.hasError()) {
       qi::Buffer      result;
       qi::ODataStream ods(result);
+      ods << qi::signatureFromType<std::string>::value();
       ods << future.error();
+      ret.setType(qi::Message::Type_Error);
       ret.setBuffer(result);
       socket->send(ret);
       return;

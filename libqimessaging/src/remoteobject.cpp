@@ -66,11 +66,17 @@ namespace qi {
         return;
       case qi::Message::Type_Error: {
         qi::IDataStream ds(msg.buffer());
-        qi::Buffer     buf;
+        std::string    err;
         std::string    sig;
         ds >> sig;
-        ds >> buf;
-        promise.setError(sig);
+        if (sig != "s") {
+          qiLogError("qi.RemoteObject") << "Invalid error signature: " << sig;
+          //houston we have an error about the error..
+          promise.setError("unknown error");
+          return;
+        }
+        ds >> err;
+        promise.setError(err);
         return;
       }
       case qi::Message::Type_Event: {
