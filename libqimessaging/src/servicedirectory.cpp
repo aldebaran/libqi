@@ -92,6 +92,20 @@ namespace qi
   {
     currentSocket  = socket;
 
+    if (msg.service() != 1) {
+      if (msg.type() == qi::Message::Type_Call) {
+        qi::Message ans(qi::Message::Type_Error, msg.address());
+        qi::Buffer buf;
+        qi::ODataStream od(buf);
+        std::stringstream ss;
+        od << "s";
+        ss << "unknown request at address: " << msg.address();
+        od << ss.str();
+        ans.setBuffer(buf);
+        socket->send(ans);
+      }
+      return;
+    }
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.id() << ' ' << msg.function() << ' ' << msg.buffer().size();
     qi::Future<MetaFunctionResult> res = _object->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
     res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.replyAddress()));
