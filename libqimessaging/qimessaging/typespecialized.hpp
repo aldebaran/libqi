@@ -83,6 +83,16 @@ public:
   virtual Kind kind() const { return Map;}
 };
 
+class QIMESSAGING_API TypeTuple: public Type
+{
+public:
+  virtual std::vector<Type*> memberTypes(void*) = 0;
+  virtual std::vector<void*> get(void* storage); // must not be destroyed
+  virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
+  virtual void set(void** storage, std::vector<void*>);
+  virtual void set(void** storage, unsigned int index, void* valStorage) = 0;
+  virtual Kind kind() const { return Tuple;}
+};
 
 }
 
@@ -90,4 +100,5 @@ public:
 #include <qimessaging/details/typelist.hxx>
 #include <qimessaging/details/typemap.hxx>
 #include <qimessaging/details/typepointer.hxx>
+#include <qimessaging/details/typetuple.hxx>
 #endif

@@ -144,6 +144,41 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
       return std::make_pair(result, false);
     }
     break;
+  case Type::Tuple:
+    {
+      TypeTuple* tsrc = static_cast<TypeTuple*>(type);
+      TypeTuple* tdst = static_cast<TypeTuple*>(targetType);
+      std::vector<void*> sourceData = tsrc->get(value);
+      std::vector<Type*> srcTypes = tsrc->memberTypes(value);
+      std::vector<Type*> dstTypes = tdst->memberTypes(0);
+      if (dstTypes.size() != sourceData.size())
+        return std::make_pair(GenericValue(), false);
+
+      std::vector<void*> targetData;
+      std::vector<bool> mustDestroy;
+      for (unsigned i=0; i<dstTypes.size(); ++i)
+      {
+        std::pair<GenericValue, bool> conv = GenericValue(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
+        if (!conv.first.type)
+        {
+          qiLogWarning("qi.meta") << "Conversion failure in tuple member between "
+            << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
+          return std::make_pair(GenericValue(), false);
+        }
+        targetData.push_back(conv.first.value);
+        mustDestroy.push_back(conv.second);
+      }
+      void* dst = tdst->initializeStorage();
+      tdst->set(&dst, targetData);
+      for (unsigned i=0; i<mustDestroy.size(); ++i)
+      {
+        if (mustDestroy[i])
+          dstTypes[i]->destroy(targetData[i]);
+      }
+      result.type = targetType;
+      result.value = dst;
+      return std::make_pair(result, true);
+    }
   default:
     break;
   } // switch

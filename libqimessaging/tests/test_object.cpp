@@ -200,8 +200,13 @@ Point point(int x, int y)
   Point p; p.x = x; p.y = y; return p;
 }
 
-QI_TYPE_SERIALIZABLE(Point)
+//QI_TYPE_SERIALIZABLE(Point)
 QI_REGISTER_STRUCT(Point, x, y);
+QI_TYPE_STRUCT(Point, x, y);
+
+struct FPoint { float x; float y;};
+QI_REGISTER_STRUCT(FPoint, x, y);
+QI_TYPE_STRUCT(FPoint, x, y);
 
 struct Test
 {
@@ -231,6 +236,13 @@ TEST(TestObject, SerializeSimple)
   ASSERT_EQ(1, res.y);
 }
 
+TEST(TestObject, ConvertSimple)
+{
+  Point p; p.x = 1; p.y = 2;
+  FPoint p2 = qi::toValue(p).as<FPoint>();
+  ASSERT_EQ(p2.x, p.x);
+  ASSERT_EQ(p2.y, p.y);
+}
 
 struct Complex
 {
@@ -246,10 +258,24 @@ struct Complex
   std::list<std::vector<int> > stuff;
 };
 
-QI_TYPE_SERIALIZABLE(::Complex)
+QI_TYPE_STRUCT_DECLARE(Complex)
+QI_TYPE_STRUCT_IMPLEMENT(Complex , points, foo, baz, stuff);
+
 // Test the sub macros
 QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
 QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)
+struct Complex2
+{
+  std::list<FPoint> points;
+  int foo;
+  std::string baz;
+  std::vector<std::list<float> > stuff;
+};
+
+QI_TYPE_STRUCT(Complex2, points, foo, baz, stuff);
+
+//QI_TYPE_SERIALIZABLE(::Complex)
+
 
 
 Complex echoBack(const Complex& c)
@@ -277,6 +303,29 @@ TEST(TestObject, SerializeComplex)
   std::cerr << obj->metaObject().methodMap()[id].signature() << std::endl;
   Complex res = obj->call<Complex>("echo", comp);
   ASSERT_EQ(res, comp);
+}
+
+TEST(TestObject, convertComplex)
+{
+  Complex comp;
+  comp.foo = 1;
+  comp.points.push_back(point(1, 2));
+  comp.points.push_back(point(3, 4));
+  comp.baz = "testbaz";
+  std::vector<int> v;
+  v.push_back(1);
+  v.push_back(2);
+  comp.stuff.push_back(v);
+  v.push_back(3);
+  comp.stuff.push_back(v);
+  Complex2 comp2 = qi::toValue(comp).as<Complex2>();
+  ASSERT_EQ(comp2.foo, comp.foo);
+  ASSERT_EQ(comp.points.size(), comp2.points.size());
+  ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
+  ASSERT_EQ(comp.baz, comp2.baz);
+  ASSERT_EQ(comp.stuff.size(), comp2.stuff.size());
+  ASSERT_EQ(comp.stuff.front().size(), comp2.stuff.front().size());
+  ASSERT_EQ(comp.stuff.front().front(), comp2.stuff.front().front());
 }
 
 TEST(TestObject, ObjectTypeBuilder)

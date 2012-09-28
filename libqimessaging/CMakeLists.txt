@@ -60,6 +60,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/typemap.hxx
                    qimessaging/details/typepointer.hxx
                    qimessaging/details/typestring.hxx
+                   qimessaging/details/typetuple.hxx
                    qimessaging/dynamicobject.hpp
                    qimessaging/eventloop.hpp
                    qimessaging/file.hpp
@@ -162,6 +163,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/tcptransportsocket_p.hpp
                                    src/type.cpp
 				   src/typeint.cpp
+				   src/typetuple.cpp
                                    src/file.cpp
                                    src/url.cpp
                                    src/future.cpp

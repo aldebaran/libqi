@@ -47,6 +47,8 @@ namespace qi
     Type* elementType();
   };
 
+  QIMESSAGING_API GenericValue makeGenericTuple(std::vector<GenericValue> values);
+
 }
 
 #include <qimessaging/details/genericvaluespecialized.hxx>

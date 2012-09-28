@@ -58,6 +58,7 @@ public:
     Map,
     Object,
     Pointer,
+    Tuple,
     Unknown,
   };
   virtual Kind kind() const;
