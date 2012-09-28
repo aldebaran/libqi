@@ -134,14 +134,6 @@ void StaticObjectTypeBase::destroy(void* inst)
   _data.classType->destroy(inst);
 }
 
-bool  StaticObjectTypeBase::toValue(const void* a, qi::detail::DynamicValue& b)
-{
-  return _data.classType->toValue(a, b);
-}
-void* StaticObjectTypeBase::fromValue(const qi::detail::DynamicValue& a)
-{
-  return _data.classType->fromValue(a);
-}
 void  StaticObjectTypeBase::serialize(ODataStream& s, const void* p)
 {
   _data.classType->serialize(s, p);

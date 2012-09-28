@@ -40,8 +40,6 @@ namespace qi {
     std::string signature()                  { return Signature::fromType(Signature::Type_Void).toString(); }
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
-    bool toValue(const void *ptr, detail::DynamicValue & v) {v.clear(); return true;}
-    void* fromValue(const detail::DynamicValue & v) { return 0;}
     void serialize(ODataStream&, const void*){}
     void* deserialize(IDataStream&)          { return 0;}
   };
@@ -192,7 +190,6 @@ namespace qi  {
     // Bouncer to DefaultAccess or DirectAccess based on type size
     template<typename T,
              template<typename> class Cloner=TypeAutoClone,
-             template<typename> class Value=TypeNoValue,
              template<typename> class Serialize=TypeNoSerialize>
     class TypeImplMethodsBySize
     {
@@ -202,12 +199,10 @@ namespace qi  {
         DefaultTypeImplMethods<T,
                         TypeDirectAccess<T>,
                         Cloner<TypeDirectAccess<T> >,
-                        Value<TypeDirectAccess<T>  >,
                         Serialize<TypeDirectAccess<T>  > >,
         DefaultTypeImplMethods<T,
                         TypeDefaultAccess<T>,
                         Cloner<TypeDefaultAccess<T> >,
-                        Value<TypeDefaultAccess<T>  >,
                         Serialize<TypeDefaultAccess<T>  > >
                         >::type type;
     };

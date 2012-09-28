@@ -8,6 +8,7 @@
 #define _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
 
 #include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/is_floating_point.hpp>
 
 #include <qimessaging/typespecialized.hpp>
 
@@ -29,28 +30,12 @@ public:
   }
 };
 
-class ValueValue
-{
-public:
-
-  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
-  {
-    GenericValue* m = (GenericValue*)ptr;
-    return m->type->toValue(m->value, val);
-  }
-  static void* fromValue(const qi::detail::DynamicValue& val)
-  {
-    GenericValue v = ::qi::toValue(val);
-    return new GenericValue(v.clone());
-  }
-};
 
 template<> class TypeImpl<GenericValue>:
   public DefaultTypeImpl<
     GenericValue,
     TypeDefaultAccess<GenericValue>,
     ValueClone,
-    ValueValue,
     TypeDefaultSerialize<TypeDefaultAccess<GenericValue> >
     > {};
 
@@ -92,20 +77,6 @@ GenericValue GenericValue::clone() const
   res.type = type;
   res.value = type?res.type->clone(value):0;
   return res;
-}
-
-template<typename T>
-std::pair<const T*, bool> GenericValue::to() const
-{
-  Type* targetType =  typeOf<T>();
-  if (type->info() == targetType->info())
-    return std::make_pair((const T*)type->ptrFromStorage((void**)&value), false);
-  else
-  {
-    std::pair<GenericValue, bool> mv = convert(targetType);
-    // NOTE: delete theResult.first will not do, destroy must be called,
-    return std::make_pair((const T*)mv.first.type->ptrFromStorage(&mv.first.value), mv.second);
-  }
 }
 
 inline AutoGenericValue::AutoGenericValue(const AutoGenericValue& b)
@@ -170,6 +141,7 @@ template<Type::Kind T> struct TypeOfKind
 
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
+
 TYPE_OF_KIND(Type::Int, TypeInt);
 TYPE_OF_KIND(Type::Float,  TypeFloat);
 TYPE_OF_KIND(Type::String, TypeString);
@@ -214,42 +186,63 @@ template<typename T> struct KindOfType
 
 #undef IF
 
-template<typename T, Type::Kind k>
-inline T GenericValue::as() const
-{
-  if (kind() != k)
+namespace detail {
+
+  // Optimized GenericValue::as<T> for direct access to a subType getter
+  template<typename T, Type::Kind k>
+  inline T valueAs(const GenericValue& v)
   {
-    qiLogWarning("qi.GenericValue") << "as: type " << kind() <<" not convertible to kind " << k;
-    return T();
+    if (v.kind() == k)
+      return static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value);
+    // Fallback to default which will attempt a full conversion.
+    return v.as<T>();
   }
-  return dynamic_cast<const typename TypeOfKind<k>::type*>(type)->get(value);
+}
+
+template<typename T>
+inline T* GenericValue::ptr(bool check)
+{
+  if (check && typeOf<T>()->info() != type->info())
+    return 0;
+  else
+    return (T*)type->ptrFromStorage(&value);
 }
 
 template<typename T>
 inline T GenericValue::as() const
 {
-  return as<T, KindOfType<T>::value>();
+  std::pair<GenericValue, bool> conv = convert(typeOf<T>());
+  if (!conv.first.type)
+  {
+    qiLogWarning("qi.GenericValue") << "Conversion from " << type->infoString()
+    << " to " << typeOf<T>()->infoString() << " failed";
+    return T();
+  }
+  T result = *conv.first.ptr<T>(false);
+  if (conv.second)
+    conv.first.destroy();
+  return result;
 }
 
 inline int64_t GenericValue::asInt() const
 {
-  return as<int64_t, Type::Int>();
+  return detail::valueAs<int64_t, Type::Int>(*this);
 }
 
 inline float GenericValue::asFloat() const
 {
-  return as<float, Type::Float>();
+  return detail::valueAs<float, Type::Float>(*this);
 }
 
 inline double GenericValue::asDouble() const
 {
-  return as<double, Type::Float>();
+  return detail::valueAs<double, Type::Float>(*this);
 }
 
 
 inline std::string GenericValue::asString() const
 {
-  return as<std::string, Type::String>();
+  return detail::valueAs<std::string, Type::String>(*this);
 }
 
 

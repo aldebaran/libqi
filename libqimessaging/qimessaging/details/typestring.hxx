@@ -15,7 +15,6 @@ namespace qi
     typedef DefaultTypeImplMethods<std::string,
     TypeDefaultAccess<std::string>,
     TypeDefaultClone<TypeDefaultAccess<std::string> >,
-    TypeDefaultValue<TypeDefaultAccess<std::string> >,
     TypeDefaultSerialize<TypeDefaultAccess<std::string> >
     > Methods;
     virtual std::string get(void* storage) const
@@ -80,29 +79,6 @@ namespace qi
       delete[]  (char*)ptr;
     }
   };
-template<int I>
-  class TypeCArrayValue
-  {
-  public:
-    static bool toValue(const void* ptr, detail::DynamicValue& val)
-    {
-      val = std::string((const char*)ptr, I-1);
-      return true;
-    }
-    static void* fromValue(const detail::DynamicValue& val)
-    {
-      std::string s = val.toString();
-      if (s.length() != I)
-      {
-        qiLogError("Type") << "C string cast fail between char["
-                               << I  <<"] and " << s;
-        return 0;
-      }
-      char* res = new char[I];
-      memcpy(res, s.c_str(), I);
-      return res;
-    }
-  };
 
   template<int I> class TypeCArraySerialize
   {
@@ -144,7 +120,6 @@ template<int I>
     typedef  DefaultTypeImplMethods<char[I],
       TypeDefaultAccess<char[I]>,
       TypeCArrayClone<I>,
-      TypeCArrayValue<I>,
       TypeCArraySerialize<I>
       > Methods;
       _QI_BOUNCE_TYPE_METHODS(Methods);

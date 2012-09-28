@@ -6,7 +6,6 @@
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/dynamicvalue.hpp>
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <vector>
@@ -175,80 +174,6 @@ namespace qi {
     writeString(s, len);
     __QI_DEBUG_SERIALIZATION_DATA_W(char *, s);
     return *this;
-  }
-
-  IDataStream &operator>>(qi::IDataStream &sd, qi::detail::DynamicValue &val)
-  {
-    std::string sig;
-    qi::uint32_t type;
-    val.clear();
-    sd >> sig;
-    sd >> type;
-    switch(type) {
-      case qi::detail::DynamicValue::Double:
-        double d;
-        sd >> d;
-        val.setDouble(d);
-        return sd;
-      case qi::detail::DynamicValue::String:
-        {
-        std::string s;
-        sd >> s;
-        val.setString(s);
-        return sd;
-        }
-      case qi::detail::DynamicValue::List:
-        val.setList(detail::DynamicValue::DynamicValueList());
-        sd >> *val.data.list;
-        return sd;
-      case qi::detail::DynamicValue::Map:
-        val.setMap(detail::DynamicValue::DynamicValueMap());
-        sd >> *val.data.map;
-        return sd;
-    };
-    return sd;
-  }
-
-  ODataStream &ODataStream::operator<<(const qi::detail::DynamicValue &val)
-  {
-    switch(val.type) {
-      case qi::detail::DynamicValue::Double:
-        if (!_innerSerialization)
-        {
-          getBuffer().signature() << "Id";
-        }
-        *this << "Id" << (qi::uint32_t)val.type << val.data.d;
-        break;
-      case qi::detail::DynamicValue::String:
-        if (!_innerSerialization)
-        {
-          getBuffer().signature() << "Is";
-        }
-        *this << "Is" << (qi::uint32_t)val.type << val.toString();
-        break;
-      case qi::detail::DynamicValue::List:
-        if (!_innerSerialization)
-        {
-          getBuffer().signature() << "I[m]";
-        }
-        *this << "I[m]" << (qi::uint32_t)val.type << *val.data.list;
-        break;
-      case qi::detail::DynamicValue::Map:
-        if (!_innerSerialization)
-        {
-          getBuffer().signature() << "I{sm}";
-        }
-        *this << "I{sm}" << (qi::uint32_t)val.type << *val.data.map;
-        break;
-      default:
-        break;
-    };
-    return *this;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &sd, const qi::detail::DynamicValue &value) {
-    sd.write(qi::Signature::Type_Dynamic);
-    return sd;
   }
 
   ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {

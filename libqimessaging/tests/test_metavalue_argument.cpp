@@ -17,8 +17,7 @@
 #include <qimessaging/servicedirectory.hpp>
 
 
-
-qi::detail::DynamicValue v;
+qi::GenericValue v;
 static qi::Promise<int> *payload;
 
 void onFire(const int& pl)
@@ -30,19 +29,13 @@ void onFire(const int& pl)
 
 void value(qi::GenericValue mv)
 {
-  mv.type->toValue(mv.value, v);
+  v = mv.clone();
   payload->setValue(0);
 }
 
 void valueList(std::vector<qi::GenericValue> mv)
 {
-  qi::detail::DynamicValue::DynamicValueList vl;
-  for (unsigned i=0; i<mv.size(); ++i)
-  {
-    vl.push_back(qi::detail::DynamicValue());
-    mv[i].type->toValue(mv[i].value, vl.back());
-  }
-  v.setList(vl);
+  v = qi::toValue(mv).clone();
   payload->setValue(0);
 }
 
@@ -104,31 +97,31 @@ TEST_F(TestObject, meta)
     * "a metavalue containing 12", it will call with "12".
     */
   target->call<void>("value", 12).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", myint);
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
@@ -140,47 +133,53 @@ TEST_F(TestObject, meta)
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));
   target->call<void>("value", args).wait();
-  ASSERT_EQ(v.type, detail::DynamicValue::List);
-  detail::DynamicValue::DynamicValueList res = v.toList();
-  ASSERT_EQ(static_cast<size_t>(3), res.size());
-  ASSERT_EQ(12, res[0].toDouble());
-  ASSERT_EQ("foo", res[1].toString());
-  ASSERT_EQ(in, res[2].as<std::vector<double> >());
+  ASSERT_EQ(v.kind(), Type::List);
+  GenericList l = v.asList();
+  GenericListIterator i = l.begin();
+  // iterate
+  ASSERT_EQ(12, (*i).asDouble());
+  i++;
+  ASSERT_EQ("foo", (*i).asString());
+  i++;
+  ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
   qiLogVerbose("test") << "remote us: " << os::ustime() - time;
   time = os::ustime();
+
   // Plugin copy test
   target = oserver;
   {
   target->call<void>("value", 12).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", myint);
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
+  ASSERT_EQ(v.as<std::vector<double> >(), in);
+  target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
@@ -189,12 +188,15 @@ TEST_F(TestObject, meta)
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));
   target->call<void>("value", args).wait();
-  ASSERT_EQ(v.type, detail::DynamicValue::List);
-  detail::DynamicValue::DynamicValueList res = v.toList();
-  ASSERT_EQ(static_cast<size_t>(3), res.size());
-  ASSERT_EQ(12, res[0].toDouble());
-  ASSERT_EQ("foo", res[1].toString());
-  ASSERT_EQ(in, res[2].as<std::vector<double> >());
+  ASSERT_EQ(v.kind(), Type::List);
+  GenericList l = v.asList();
+  GenericListIterator i = l.begin();
+  // iterate
+  ASSERT_EQ(12, (*i).asDouble());
+  i++;
+  ASSERT_EQ("foo", (*i).asString());
+  i++;
+  ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
   qiLogVerbose("test") << "plugin async us: " << os::ustime() - time;
   time = os::ustime();
@@ -202,31 +204,31 @@ TEST_F(TestObject, meta)
   target->moveToEventLoop(0);
   {
   target->call<void>("value", 12).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", myint);
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   {
     int myint = 12;
     qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
     myint = 5;
     fut.wait();
-    ASSERT_EQ(v.toDouble(), 12);
+    ASSERT_EQ(v.asDouble(), 12);
   }
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
-  ASSERT_EQ(v.toDouble(), 12);
+  ASSERT_EQ(v.asDouble(), 12);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
-  ASSERT_EQ(v.toString(), "foo");
+  ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
   target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
@@ -238,12 +240,15 @@ TEST_F(TestObject, meta)
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));
   target->call<void>("value", args).wait();
-  ASSERT_EQ(v.type, detail::DynamicValue::List);
-  detail::DynamicValue::DynamicValueList res = v.toList();
-  ASSERT_EQ(static_cast<size_t>(3), res.size());
-  ASSERT_EQ(12, res[0].toDouble());
-  ASSERT_EQ("foo", res[1].toString());
-  ASSERT_EQ(in, res[2].as<std::vector<double> >());
+  ASSERT_EQ(v.kind(), Type::List);
+  GenericList l = v.asList();
+  GenericListIterator i = l.begin();
+  // iterate
+  ASSERT_EQ(12, (*i).asDouble());
+  i++;
+  ASSERT_EQ("foo", (*i).asString());
+  i++;
+  ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
   qiLogVerbose("test") << "plugin sync us: " << os::ustime() - time;
   time = os::ustime();
@@ -253,11 +258,6 @@ TEST_F(TestObject, meta)
 std::pair<qi::GenericValue, bool> c1 (const qi::GenericValue& src, qi::Type* dst)
 {
   return src.convert(dst);
-}
-
-std::pair<qi::GenericValue, bool> c2 (const qi::GenericValue& src, qi::Type* dst)
-{
-  return src.convert2(dst);
 }
 
 template<typename D, typename S>
@@ -281,20 +281,9 @@ qi::uint64_t benchConvOne(const S& src,
 template<typename D, typename S> void benchConv(const std::string& what, const S& src, unsigned niter = 10000)
 {
   using namespace qi;
-  GenericValue gsrc = toValue(src);
-  Type* tdst = typeOf<D>();
-  std::pair<GenericValue, bool> result1 = c1(gsrc, tdst);
-  std::pair<GenericValue, bool> result2 = c2(gsrc, tdst);
-  D* r1 = (D*)(result1.first.type->ptrFromStorage(&result1.first.value));
-  D* r2 = (D*)(result2.first.type->ptrFromStorage(&result2.first.value));
-  if (*r1 != *r2)
-  {
-    qiLogError("qi.test") << "Result mismatch for " << what;
-  }
-  qi::uint64_t res[2];
-  res[1] = benchConvOne<D>(src, &c2, niter);
-  res[0] = benchConvOne<D>(src, &c1, niter);
-  qiLogInfo("qi.test") << what <<" " << res[0] << " " << res[1] << std::endl;
+  qi::uint64_t res;
+  res = benchConvOne<D>(src, &c1, niter);
+  qiLogInfo("qi.test") << what <<" " << res << std::endl;
 }
 
 #define BENCH(type, typestring, val)               \

@@ -15,7 +15,6 @@ public TypeList,
 public DefaultTypeImplMethods<typename C<T>::type,
                                TypeDefaultAccess<typename C<T>::type >,
                                TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
-                               TypeDefaultValue<TypeDefaultAccess<typename C<T>::type > >,
                                TypeDefaultSerialize<TypeDefaultAccess<typename C<T>::type > >
                                >
 {
@@ -23,7 +22,6 @@ public:
   typedef DefaultTypeImplMethods<typename C<T>::type,
                                TypeDefaultAccess<typename C<T>::type >,
                                TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
-                               TypeDefaultValue<TypeDefaultAccess<typename C<T>::type > >,
                                TypeDefaultSerialize<TypeDefaultAccess<typename C<T>::type > >
                                > MethodsImpl;
   TypeListImpl();
@@ -37,10 +35,10 @@ public:
 // list iterator
 template<typename C> class TypeListIteratorImpl
 : public TypeListIterator
-, public  detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
+, public  detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
   TypeImpl;
   virtual GenericValue dereference(void* storage);
   virtual void  next(void** storage);

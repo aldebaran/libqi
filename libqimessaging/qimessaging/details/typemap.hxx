@@ -15,7 +15,6 @@ public TypeMap,
 public DefaultTypeImplMethods<M,
                                TypeDefaultAccess<M>,
                                TypeDefaultClone<TypeDefaultAccess<M> >,
-                               TypeDefaultValue<TypeDefaultAccess<M> >,
                                TypeDefaultSerialize<TypeDefaultAccess<M> >
                                >
 {
@@ -23,7 +22,6 @@ public:
   typedef DefaultTypeImplMethods<M,
                                TypeDefaultAccess<M>,
                                TypeDefaultClone<TypeDefaultAccess<M> >,
-                               TypeDefaultValue<TypeDefaultAccess<M> >,
                                TypeDefaultSerialize<TypeDefaultAccess<M> >
                                > MethodsImpl;
   TypeMapImpl();
@@ -40,7 +38,7 @@ template<typename C> class TypeMapIteratorImpl
 : public TypeMapIterator
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoValue, TypeNoSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
   TypeImpl;
   virtual std::pair<GenericValue, GenericValue> dereference(void* storage);
   virtual void  next(void** storage);

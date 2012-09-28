@@ -45,8 +45,6 @@ set(PUBLIC_HEADERS
                    qimessaging/buffer.hpp
                    qimessaging/bufferreader.hpp
                    qimessaging/datastream.hpp
-                   qimessaging/details/dynamicvalue.hpp
-                   qimessaging/details/dynamicvalue.hxx
                    qimessaging/details/functiontype.hxx
                    qimessaging/details/future.hxx
                    qimessaging/details/genericobjectbuilder.hxx
@@ -164,7 +162,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/tcptransportsocket_p.hpp
                                    src/type.cpp
 				   src/typeint.cpp
-                                   src/value.cpp
                                    src/file.cpp
                                    src/url.cpp
                                    src/future.cpp

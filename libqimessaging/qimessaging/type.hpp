@@ -10,7 +10,6 @@
 #include <typeinfo>
 #include <boost/preprocessor.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/details/dynamicvalue.hpp>
 
 namespace qi{
 
@@ -45,9 +44,6 @@ public:
 
   virtual void* clone(void*)=0;
   virtual void destroy(void*)=0;
-
-  virtual bool  toValue(const void*, qi::detail::DynamicValue&)=0;
-  virtual void* fromValue(const qi::detail::DynamicValue&)=0;
 
   // Default impl does toValue.serialize()
   virtual void  serialize(ODataStream& s, const void*)=0;
@@ -200,46 +196,6 @@ public:
   }
 };
 
-template<typename A>class TypeDefaultValue
-{
-public:
-  typedef typename A::type type;
-  static bool toValue(const void* src, qi::detail::DynamicValue& val)
-  {
-    const type* ptr = (const type*)A::ptrFromStorage((void**)&src);
-    detail::DynamicValueConverter<type>::writeDynamicValue(*ptr, val);
-    return true;
-  }
-
-  static void* fromValue(const qi::detail::DynamicValue& val)
-  {
-    void* storage;
-    storage = A::initializeStorage();
-    void* vptr = A::ptrFromStorage(&storage);
-    qiLogDebug("wtf") << storage << ' ' << &storage << ' ' << vptr;
-    detail::DynamicValueConverter<type>::readDynamicValue(val, *(type*)vptr);
-    return storage;
-  }
-};
-
-
-template<typename A>class TypeNoValue
-{
-public:
-  typedef typename A::type type;
-  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
-  {
-    qiLogWarning("qi.type") << "toValue not implemented for type " << typeid(type).name();
-    return false;
-  }
-
-  static void* fromValue(const qi::detail::DynamicValue& val)
-  {
-    qiLogWarning("qi.type") << "fromValue not implemented for type " << typeid(type).name();
-    return 0; // We may not have a default constructor
-  }
-};
-
 template<typename A> class TypeDefaultSerialize
 {
 public:
@@ -295,14 +251,12 @@ public:
  */
 template<typename T, typename _Access    = TypeDefaultAccess<T>
                    , typename _Cloner    = TypeDefaultClone<_Access>
-                   , typename _Value     = TypeNoValue<_Access>
                    , typename _Serialize = TypeNoSerialize<_Access>
          > class DefaultTypeImplMethods
 {
 public:
   typedef _Access Access;
   typedef _Cloner Cloner;
-  typedef _Value  Value;
   typedef _Serialize Serialize;
   static void* initializeStorage(void* ptr=0)
   {
@@ -329,16 +283,6 @@ public:
     Cloner::destroy(ptr);
   }
 
-  static bool toValue(const void* ptr, qi::detail::DynamicValue& val)
-  {
-    return Value::toValue(ptr, val);
-  }
-
-  static void* fromValue(const qi::detail::DynamicValue& val)
-  {
-    return Value::fromValue(val);
-  }
-
   static std::string signature()
   {
     return Serialize::signature();
@@ -362,20 +306,17 @@ virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(
 virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}                          \
 virtual void* clone(void* ptr) { return Bounce::clone(ptr);}                                        \
 virtual void destroy(void* ptr) { return Bounce::destroy(ptr);}                                     \
-virtual bool  toValue(const void* s, qi::detail::DynamicValue& v) { return Bounce::toValue(s, v);}  \
-virtual void* fromValue(const qi::detail::DynamicValue& v) { return Bounce::fromValue(v);}          \
 virtual void  serialize(ODataStream& s, const void* p) { return Bounce::serialize(s, p);}           \
 virtual void* deserialize(IDataStream& s) { return Bounce::deserialize(s);}
 
 template<typename T, typename _Access    = TypeDefaultAccess<T>
                    , typename _Cloner    = TypeDefaultClone<_Access>
-                   , typename _Value     = TypeNoValue<_Access>
                    , typename _Serialize = TypeNoSerialize<_Access>
                    > class DefaultTypeImpl
                    : public Type
                    {
                    public:
-                     typedef DefaultTypeImplMethods<T, _Access, _Cloner, _Value, _Serialize> MethodsImpl;
+                     typedef DefaultTypeImplMethods<T, _Access, _Cloner, _Serialize> MethodsImpl;
                      _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
                    };
 
@@ -386,18 +327,7 @@ template<typename T> class TypeImpl: public virtual DefaultTypeImpl<T>
 {
 };
 
-/// Declare a type that is convertible to GenericValue, and serializable
-#define QI_TYPE_CONVERTIBLE_SERIALIZABLE(T)  \
-namespace qi {                                   \
-template<> class TypeImpl<T>:                \
-  public DefaultTypeImpl<T,                  \
-    TypeDefaultAccess<T>,                    \
-    TypeDefaultClone<TypeDefaultAccess<T> >, \
-    TypeDefaultValue<TypeDefaultAccess<T> >,  \
-    TypeDefaultSerialize<TypeDefaultAccess<T> >  \
-  >{}; }
-
-/** Declare that a type is not convertible to GenericValue.
+/** Declare that a type is serialisable
  *  Must be called outside any namespace.
  */
 #define QI_TYPE_SERIALIZABLE(T)              \
@@ -406,7 +336,6 @@ template<> class TypeImpl<T>:                \
   public DefaultTypeImpl<T,                  \
     TypeDefaultAccess<T>,                    \
     TypeDefaultClone<TypeDefaultAccess<T> >, \
-    TypeNoValue<TypeDefaultAccess<T> >,       \
     TypeDefaultSerialize<TypeDefaultAccess<T> >   \
   >{}; }
 

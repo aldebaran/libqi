@@ -25,14 +25,14 @@ class QIMESSAGING_API GenericValue
 public:
   GenericValue();
 
-  /// Convert GenericValue to concrete type. Returns the value and a
-  /// bool that is true if value is a copy and must be deleted.
-  template<typename T> std::pair<const T*, bool> to() const;
-
+  /** Return the typed pointer behind a GenericValue. T *must* be the type
+   * of the value.
+   * @return a pointer to the value as a T or 0 if value is not a T.
+   * @param check if false, does not validate type before converting
+   */
+  template<typename T> T* ptr(bool check = true);
   /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
   std::pair<GenericValue, bool> convert(Type* targetType) const;
-  // kind-based converter
-  std::pair<GenericValue, bool> convert2(Type* targetType) const;
   /// Helper function that converts and always clone
   GenericValue convertCopy(Type* targetType) const;
   GenericValue clone() const;
@@ -51,7 +51,6 @@ public:
   GenericMap  asMap() const;
   GenericObject asObject() const;
 
-  template<typename T, Type::Kind k> T as() const;
   template<typename T> T as() const;
 
   void*   value;

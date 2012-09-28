@@ -31,7 +31,6 @@ namespace qi
     typedef DefaultTypeImplMethods<T*,
                                      TypeDirectAccess<T*>,
                                      TypeNoClone<TypeDirectAccess<T*> >,
-                                     TypeNoValue<TypeDirectAccess<T*> >,
                                      TypeNoSerialize<TypeDirectAccess<T*> >
                                      > TypeMethodsImpl;
     _QI_BOUNCE_TYPE_METHODS(TypeMethodsImpl);

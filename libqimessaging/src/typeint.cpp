@@ -7,7 +7,7 @@ template<typename T> class TypeIntImpl:
   public TypeInt
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultSerialize>::type
    ImplType;
   virtual int64_t get(void* value) const
   {
@@ -53,7 +53,7 @@ namespace qi {
 template<typename T> class TypeFloatImpl: public TypeFloat
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultValue, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultSerialize>::type
   ImplType;
   virtual double get(void* value) const
   {

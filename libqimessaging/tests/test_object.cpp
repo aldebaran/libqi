@@ -115,14 +115,10 @@ public:
 
 template<typename T> bool checkValue(qi::GenericValue v, const T& val)
 {
-  std::pair<const T*, bool> r = v.to<T>();
-  if (!r.first)
-    return false;
-  bool ok = *r.first == val;
+  T actual = v.as<T>();
+  bool ok = actual == val;
   if (!ok)
-    qiLogError("checkValue") << "expected: " << val <<"  actual: " << *r.first;
-  if (r.second)
-    delete r.first;
+    qiLogError("checkValue") << "expected: " << val <<"  actual: " << actual;
   return ok;
 }
 

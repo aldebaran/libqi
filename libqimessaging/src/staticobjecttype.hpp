@@ -63,8 +63,6 @@ public:
   virtual void* ptrFromStorage(void**);
   virtual void* clone(void* inst);
   virtual void destroy(void*);
-  virtual bool  toValue(const void*, qi::detail::DynamicValue&);
-  virtual void* fromValue(const qi::detail::DynamicValue&);
   virtual void  serialize(ODataStream& s, const void*);
   virtual void* deserialize(IDataStream& s);
   virtual std::string signature();

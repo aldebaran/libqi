@@ -13,7 +13,6 @@
 #include <vector>
 #include <map>
 #include <qimessaging/api.hpp>
-#include <qimessaging/details/dynamicvalue.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qimessaging/signature.hpp>
@@ -90,7 +89,6 @@ namespace qi {
     IDataStream& operator>>(std::string& i);
 
     IDataStream &operator>>(qi::GenericValue &value);
-    IDataStream &operator>>(const detail::DynamicValue &val);
     IDataStream &operator>>(qi::Buffer &buffer);
 
     template<typename T>
@@ -152,7 +150,6 @@ namespace qi {
     ODataStream& operator<<(const std::string& i);
 
     ODataStream &operator<<(const GenericValue &value);
-    ODataStream &operator<<(const detail::DynamicValue &val);
     ODataStream &operator<<(const Buffer &buffer);
 
     template<typename T>
