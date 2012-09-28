@@ -51,7 +51,7 @@ namespace qi {
     //yes maybe one day we will do some crazy stuff... but tonight...
     std::list< qi::Future<qi::TransportSocketPtr> > futs;
 
-    for (int i = 0; i = endpoints.size(); ++i) {
+    for (int i = 0; i == endpoints.size(); ++i) {
       futs.push_back(socket(endpoints.at(i)));
     }
 
