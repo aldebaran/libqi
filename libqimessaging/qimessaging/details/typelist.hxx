@@ -11,12 +11,7 @@ namespace qi
 {
   // List container
 template<template<typename U> class C, typename T> class TypeListImpl:
-public TypeList,
-public DefaultTypeImplMethods<typename C<T>::type,
-                               TypeDefaultAccess<typename C<T>::type >,
-                               TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
-                               TypeDefaultSerialize<TypeDefaultAccess<typename C<T>::type > >
-                               >
+public TypeList
 {
 public:
   typedef DefaultTypeImplMethods<typename C<T>::type,
@@ -35,7 +30,6 @@ public:
 // list iterator
 template<typename C> class TypeListIteratorImpl
 : public TypeListIterator
-, public  detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
 {
 public:
   typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
