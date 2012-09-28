@@ -278,12 +278,49 @@ qi::uint64_t benchConvOne(const S& src,
   return os::ustime() - start;
 }
 
+template<typename D, typename S> void benchNative(const S& src, unsigned int niter)
+{
+  for (unsigned i=0; i<niter;++i)
+  {
+    D value;
+    value = src;
+    (void)value;
+  }
+}
+
+template<typename D, typename S> void benchNative(const std::vector<S>& src, unsigned int niter)
+{
+  for (unsigned i=0; i<niter;++i)
+  {
+    D dst;
+    for (unsigned i=0; i<src.size(); ++i)
+      dst.push_back(src[i]);
+    (void)dst;
+  }
+}
+
+template<typename D, typename K, typename V> void benchNative(const std::map<K,V>& src, unsigned int niter)
+{
+  for (unsigned i=0; i<niter;++i)
+  {
+    D dst;
+    typename std::map<K, V>::const_iterator it;
+    for (it = src.begin(); it != src.end(); ++it)
+      dst.insert(typename D::value_type(it->first, it->second));
+
+    (void)dst;
+  }
+}
+
 template<typename D, typename S> void benchConv(const std::string& what, const S& src, unsigned niter = 10000)
 {
   using namespace qi;
   qi::uint64_t res;
   res = benchConvOne<D>(src, &c1, niter);
-  qiLogInfo("qi.test") << what <<" " << res << std::endl;
+  qi::uint64_t start = os::ustime();
+  benchNative<D>(src, niter);
+  qi::uint64_t res2 = os::ustime()-start;
+  qiLogInfo("qi.test") << what <<" " << res << " native " << res2 << std::endl;
 }
 
 #define BENCH(type, typestring, val)               \
@@ -346,6 +383,16 @@ TEST(GenericValue, converters)
   benchConv<std::map<std::string, int> >("m[sI] -> m[si]", map);
   benchConv<std::map<std::string, float> >("m[sI] -> m[sf]", map);
   benchConv<std::map<std::string, double> >("m[sI] -> m[sd]", map);
+
+  /*
+  for (unsigned i=0; i<1000; ++i)
+    map[boost::lexical_cast<std::string>(i)] = i;
+
+  benchConv<std::map<std::string, unsigned int> >("m[sI] -> m[sI]", map);
+  benchConv<std::map<std::string, int> >("m[sI] -> m[si]", map);
+  benchConv<std::map<std::string, float> >("m[sI] -> m[sf]", map);
+  benchConv<std::map<std::string, double> >("m[sI] -> m[sd]", map);
+  */
 }
 int main(int argc, char *argv[])
 {
