@@ -16,8 +16,6 @@ namespace qi{
 /** Interface for all the operations we need on any type:
  *
  *  - cloning/destruction in clone() and destroy()
- *  - type conversion is made by going through the generic container
- *    GenericValue, using the toValue() and fromValue() functions,
  *  - Serialization through serialize() and deserialize() to transmit
  *    the value through some kind of pipe.
  *

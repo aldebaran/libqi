@@ -29,7 +29,7 @@ public:
   virtual Type* keyType(void* storage) const;
   virtual GenericMapIterator begin(void* storage);
   virtual GenericMapIterator end(void* storage);
-  virtual void pushBack(void* storage, void* keyStorage, void* valueStorage);
+  virtual void insert(void* storage, void* keyStorage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
@@ -104,7 +104,7 @@ TypeMapImpl<M>::end(void* storage)
 }
 
 template<typename M> void
-TypeMapImpl<M>::pushBack(void* storage, void* keyStorage, void* valueStorage)
+TypeMapImpl<M>::insert(void* storage, void* keyStorage, void* valueStorage)
 {
   static Type* elemType = typeOf<typename M::mapped_type>();
   static Type* keyType = typeOf<typename M::key_type>();

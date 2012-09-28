@@ -37,6 +37,16 @@ namespace qi
     Type* elementType();
   };
 
+  class GenericMap: public GenericValue
+  {
+  public:
+    GenericMapIterator begin();
+    GenericMapIterator end();
+    void insert(GenericValue key, GenericValue val);
+    Type* keyType();
+    Type* elementType();
+  };
+
 }
 
 #include <qimessaging/details/genericvaluespecialized.hxx>

@@ -76,6 +76,47 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
       return std::make_pair(lresult, true);
     }
     break;
+  case Type::Map:
+    {
+      result.type = targetType;
+      GenericMap msrc = asMap();
+
+
+      TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
+      TypeMap* srcMapType = static_cast<TypeMap*>(type);
+
+      Type* srcKeyType = srcMapType->keyType(value);
+      Type* srcElementType = srcMapType->elementType(value);
+
+
+      GenericMap mresult;
+      mresult.type = targetType;
+      mresult.value = targetMapType->initializeStorage();
+      Type* targetKeyType = targetMapType->keyType(mresult.value);
+      Type* targetElementType = targetMapType->elementType(mresult.value);
+
+      bool sameKey = srcKeyType->info() == targetKeyType->info();
+      bool sameElem = srcElementType->info() == targetElementType->info();
+
+      GenericMapIterator i = msrc.begin();
+      GenericMapIterator iend = msrc.end();
+      for (; i != iend; ++i)
+      {
+        std::pair<GenericValue, GenericValue> kv = *i;
+        std::pair<GenericValue, bool> ck, cv;
+        if (!sameKey)
+          ck = kv.first.convert(targetKeyType);
+        if (!sameElem)
+          cv = kv.second.convert(targetElementType);
+        mresult.insert(sameKey?kv.first:ck.first, sameElem?kv.second:cv.first);
+        if (!sameKey && ck.second)
+          ck.first.destroy();
+        if (!sameElem && cv.second)
+          cv.first.destroy();
+      }
+      return std::make_pair(mresult, true);
+    }
+    break;
   case Type::Pointer:
     {
       Type* srcPointedType = static_cast<TypePointer*>(type)->pointedType();

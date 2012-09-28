@@ -83,5 +83,52 @@ inline GenericList GenericValue::asList() const
   return result;
 }
 
+
+inline GenericMapIterator GenericMap::begin()
+{
+  return static_cast<TypeMap*>(type)->begin(value);
+}
+
+inline GenericMapIterator GenericMap::end()
+{
+  return static_cast<TypeMap*>(type)->end(value);
+}
+
+inline Type* GenericMap::keyType()
+{
+  return static_cast<TypeMap*>(type)->keyType(value);
+}
+
+inline Type* GenericMap::elementType()
+{
+  return static_cast<TypeMap*>(type)->elementType(value);
+}
+
+inline void GenericMap::insert(GenericValue key, GenericValue val)
+{
+  std::pair<GenericValue, bool> ck(key, false);
+  std::pair<GenericValue, bool> cv(val, false);
+  if (key.type != keyType())
+    ck = key.convert(keyType());
+  if (val.type != elementType())
+    cv = val.convert(elementType());
+
+  static_cast<TypeMap*>(type)->insert(value, ck.first.value, cv.first.value);
+  if (ck.second)
+    ck.first.destroy();
+  if (cv.second)
+    cv.first.destroy();
+}
+
+
+inline GenericMap GenericValue::asMap() const
+{
+  GenericMap result;
+  result.type = dynamic_cast<TypeMap*>(type);
+  if (result.type)
+    result.value = value;
+  return result;
+}
+
 }
 #endif

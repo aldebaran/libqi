@@ -79,7 +79,7 @@ public:
   virtual Type* keyType(void* storage) const = 0;
   virtual GenericMapIterator begin(void* storage) = 0; // Must be destroyed
   virtual GenericMapIterator end(void* storage) = 0;  //idem
-  virtual void pushBack(void* storage, void* keyStorage, void* valueStorage) = 0;
+  virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
   virtual Kind kind() const { return Map;}
 };
 
