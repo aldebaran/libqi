@@ -25,7 +25,7 @@ class QIMESSAGING_QT_API QiSession : public QObject {
 
 public:
   QiSession();
-  ~QiSession();
+  virtual ~QiSession();
 
 public:
   bool connect(const QString &masterAddress);

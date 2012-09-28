@@ -28,7 +28,7 @@ class QiSessionPrivate
 {
 public:
   QiSessionPrivate(QiSession *self);
-  ~QiSessionPrivate();
+  virtual ~QiSessionPrivate();
 
   void onSocketConnected(qi::TransportSocketPtr client);
   void onSocketDisconnected(qi::TransportSocketPtr client, int error);
