@@ -30,14 +30,15 @@ void call(const std::string &addr)
   std::cout << std::endl;
 #endif
 
-  qi::ObjectPtr obj = session.service("serviceTest");
-
-  if (!obj)
+  qi::Future<qi::ObjectPtr> fut = session.service("serviceTest");
+  fut.wait();
+  if (fut.hasError())
   {
-      std::cerr << "obj == 0" << std::endl;
+      std::cerr << "Error returned:" << fut.error() << std::endl;
       return;
   }
 
+  qi::ObjectPtr obj = fut.value();
 #if 0
   int i = 0;
   while (true) {
