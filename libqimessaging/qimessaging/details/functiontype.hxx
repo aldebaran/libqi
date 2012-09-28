@@ -190,8 +190,9 @@ namespace qi
   template<typename T>
   GenericFunction makeGenericFunction(boost::function<T> f)
   {
+    assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
     GenericFunction res;
-    res.value = new boost::function<T>(f);
+    *(boost::function<T>*)(void*)&res.value = f;
     res.type = makeFunctionType<T>();
     return res;
   }

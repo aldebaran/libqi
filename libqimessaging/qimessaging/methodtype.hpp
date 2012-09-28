@@ -7,6 +7,7 @@
 #ifndef _QIMESSAGING_METHODTYPE_HPP_
 #define _QIMESSAGING_METHODTYPE_HPP_
 
+#include <boost/function.hpp>
 #include <qimessaging/functiontype.hpp>
 
 namespace qi
@@ -22,19 +23,19 @@ namespace qi
       const std::vector<GenericValue>& args) = 0;
   };
 
+  /// Represents a generic member function. Has value semantic.
   class QIMESSAGING_API GenericMethod
   {
   public:
     GenericValue call(GenericValue object, const std::vector<GenericValue> args)
     {
-      return type->call(value, object, args);
+      return type->call(&value, object, args);
     }
     std::string signature() const { return type->CallableType::signature();}
     std::string sigreturn() const { return type->CallableType::sigreturn();}
-    ///@return equivalent function value
-    GenericFunction toGenericFunction();
+
     MethodType* type;
-    void*       value;
+    boost::function<void()> value;
   };
 
   template<typename T> MethodType* methodTypeOf();

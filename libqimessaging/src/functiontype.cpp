@@ -43,15 +43,9 @@ namespace qi
   GenericFunction::GenericFunction()
   : type(type), value(value) {}
 
-  GenericFunction::GenericFunction(const GenericValue & v)
-  {
-    type = dynamic_cast<FunctionType*>(v.type);
-    value = type?v.value:0;
-  }
-
   GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
   {
-    return type->call(value, args);
+    return type->call(&value, args);
   }
 
   std::string CallableType::signature() const

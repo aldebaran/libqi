@@ -145,7 +145,7 @@ namespace qi
       boost::function<DropperType> f = boost::fusion::make_unfused(DropArg<FunctionType>(bmethod));
       GenericMethod result;
       result.type = methodTypeOf<DropperType>();
-      result.value = new boost::function<DropperType>(f);
+      *(boost::function<DropperType>*)(void*)&result.value = boost::function<DropperType>(f);
       return result;
     }
   }
@@ -156,14 +156,6 @@ namespace qi
     // Handle static methods
     return detail::makeGenericMethodSwitch<M>(method,
       typename boost::function_types::is_member_function_pointer<M>::type());
-  }
-
-  inline GenericFunction GenericMethod::toGenericFunction()
-  {
-    GenericFunction res;
-    res.type = dynamic_cast<FunctionType*>(type);
-    res.value = value;
-    return res;
   }
 
 } // namespace qi

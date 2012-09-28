@@ -7,6 +7,8 @@
 #ifndef _QIMESSAGING_FUNCTIONTYPE_HPP_
 #define _QIMESSAGING_FUNCTIONTYPE_HPP_
 
+#include <boost/function.hpp>
+
 #include <qimessaging/type.hpp>
 
 namespace qi {
@@ -32,14 +34,16 @@ namespace qi {
 
   template<typename T> FunctionType* makeFunctionType();
 
+  /** Represents a generic callable function.
+   * This class has value semantic.
+  */
   class QIMESSAGING_API GenericFunction
   {
   public:
     GenericFunction();
-    GenericFunction(const GenericValue & v);
     GenericValue call(const std::vector<GenericValue>& args);
     FunctionType* type;
-    void*         value;
+    boost::function<void ()> value;
   };
 
   template<typename T> GenericFunction makeGenericFunction(boost::function<T> f);
