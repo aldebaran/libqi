@@ -76,6 +76,7 @@ namespace qi {
           return;
         }
         ds >> err;
+        qiLogVerbose("remoteobject") << "Received error message"  << msg.address() << ":" << err;
         promise.setError(err);
         return;
       }
@@ -91,7 +92,7 @@ namespace qi {
         return;
       }
       default:
-        qiLogError("remoteobject") << "Message (#" << msg.id() << ") type not handled: " << msg.type();
+        qiLogError("remoteobject") << "Message " << msg.address() << " type not handled: " << msg.type();
         return;
     }
   }
