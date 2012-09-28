@@ -24,7 +24,7 @@ class QIMESSAGING_API GenericValue
 {
 public:
   GenericValue();
-
+  GenericValue(Type* type, void* value) : type(type), value(value) {}
   /** Return the typed pointer behind a GenericValue. T *must* be the type
    * of the value.
    * @return a pointer to the value as a T or 0 if value is not a T.
@@ -52,9 +52,11 @@ public:
   GenericObject asObject() const;
 
   template<typename T> T as() const;
+  // Helper function to get T from a value
+  template<typename T> T as(const T&) const;
 
-  void*   value;
   Type*   type;
+  void*   value;
 };
 
 /// Convert any value to the correct associated Value

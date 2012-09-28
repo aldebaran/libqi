@@ -116,8 +116,8 @@ inline void GenericValue::serialize(ODataStream& os) const
 }
 
 inline GenericValue::GenericValue()
-: value(0)
-, type(0)
+: type(0)
+, value(0)
 {
 }
 
@@ -206,6 +206,12 @@ inline T* GenericValue::ptr(bool check)
     return 0;
   else
     return (T*)type->ptrFromStorage(&value);
+}
+
+template<typename T>
+inline T GenericValue::as(const T&) const
+{
+  return as<T>();
 }
 
 template<typename T>
