@@ -250,6 +250,15 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
   return res;
 }
 
+void MetaFunctionParameters::pushBack(AutoGenericValue gv) {
+  std::vector<GenericValue> &v = getValues();
+
+  if (storage && storage->deleteOnDestruction)
+    v.push_back(gv.clone());
+  else
+    v.push_back(gv);
+}
+
 MetaFunctionParameters::Mode MetaFunctionParameters::getMode() const
 {
   if (storage && !storage->parameterValues.empty())
@@ -281,6 +290,8 @@ GenericValue MetaFunctionResult::getValue() const
   else
     return GenericValue();
 }
+
+
 
 }
 

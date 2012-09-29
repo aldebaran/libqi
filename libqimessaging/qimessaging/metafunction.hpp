@@ -66,6 +66,9 @@ public:
   void setSignature(const std::string& sig);
   const std::vector<GenericValue>& getValues() const;
   std::vector<GenericValue>& getValues();
+
+  void pushBack(AutoGenericValue gv);
+
   const Buffer& getBuffer() const;
 
   enum Mode
