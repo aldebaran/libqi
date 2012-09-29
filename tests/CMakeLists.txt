@@ -14,7 +14,7 @@ set_target_properties(check_env  PROPERTIES FOLDER tests)
 
 qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
-if(BUILD_TESTS)
+if(TARGET test_qipath_from_bin)
   set_tests_properties(test_qipath_from_bin PROPERTIES
       WORKING_DIRERCTORY ${QI_SDK_DIR}/${QI_SDK_BIN})
 endif()
