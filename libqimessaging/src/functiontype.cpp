@@ -41,7 +41,7 @@ namespace qi
   }
 
   GenericFunction::GenericFunction()
-  : type(type), value(value) {}
+  : type(0), value(0) {}
 
   GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
   {
