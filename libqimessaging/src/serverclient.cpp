@@ -40,8 +40,8 @@ namespace qi {
     return _object->call<unsigned int>("registerEvent", serviceId, eventId, linkId);
   }
 
-  qi::Future<bool> ServerClient::unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId) {
-    return _object->call<bool>("unregisterEvent", serviceId, eventId, linkId);
+  qi::Future<void> ServerClient::unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId) {
+    return _object->call<void>("unregisterEvent", serviceId, eventId, linkId);
   }
 
   qi::Future<qi::MetaObject> ServerClient::metaObject(unsigned int serviceId, unsigned int objectId) {

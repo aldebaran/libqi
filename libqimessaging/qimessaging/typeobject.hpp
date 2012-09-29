@@ -40,9 +40,9 @@ namespace qi {
     virtual const MetaObject& metaObject(void* instance) = 0;
     virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
     virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params)=0;
-    virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)=0;
+    virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)=0;
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual bool disconnect(void* instance, unsigned int linkId)=0;
+    virtual qi::Future<void> disconnect(void* instance, unsigned int linkId)=0;
     /// @return the manageable interface for this instance, or 0 if not available
     virtual Manageable* manageable(void* instance) = 0;
     /// @return parent types with associated poniter offset

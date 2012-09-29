@@ -44,9 +44,9 @@ namespace qi
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaEmit(unsigned int event, const GenericFunctionParameters& params);
     /// Calls given functor when event is fired. Takes ownership of functor.
-    virtual unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
+    virtual qi::Future<unsigned int> connect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual bool disconnect(unsigned int linkId);
+    virtual qi::Future<void> disconnect(unsigned int linkId);
 
 
     boost::shared_ptr<DynamicObjectPrivate> _p;

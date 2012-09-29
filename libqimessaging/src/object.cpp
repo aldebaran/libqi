@@ -239,11 +239,11 @@ namespace qi {
   }
 
   /// Resolve signature and bounce
-  unsigned int GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
+  qi::FutureSync<unsigned int> GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
-      return -1;
+      return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
     int eventId = metaObject().signalId(signature);
     if (eventId < 0) {
@@ -257,30 +257,30 @@ namespace qi {
         ss << "  " << it->signature() << std::endl;
       }
       qiLogError("object") << ss.str();
-      return -1;
+      return qi::makeFutureError<unsigned int>(ss.str());
     }
     return connect(eventId, functor);
   }
 
-  unsigned int GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
+  qi::FutureSync<unsigned int> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
-      return -1;
+      return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
     return type->connect(value, event, sub);
   }
 
-  bool GenericObject::disconnect(unsigned int linkId)
+  qi::FutureSync<void> GenericObject::disconnect(unsigned int linkId)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
-      return false;
+      return qi::makeFutureError<void>("Operating on invalid GenericObject");
     }
     return type->disconnect(value, linkId);
   }
 
-  unsigned int GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
+  qi::FutureSync<unsigned int> GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }

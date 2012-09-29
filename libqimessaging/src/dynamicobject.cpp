@@ -56,9 +56,9 @@ namespace qi
     virtual const MetaObject& metaObject(void* instance);
     virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);
-    virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
+    virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual bool disconnect(void* instance, unsigned int linkId);
+    virtual qi::Future<void> disconnect(void* instance, unsigned int linkId);
     virtual Manageable* manageable(void* intance);
     virtual const std::vector<std::pair<Type*, int> >& parentTypes();
 
@@ -141,25 +141,30 @@ namespace qi
     }
   }
 
-  unsigned int DynamicObject::connect(unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<unsigned int> DynamicObject::connect(unsigned int event, const SignalSubscriber& subscriber)
   {
     SignalBase * s = _p->createSignal(event);
     if (!s)
-      return -1;
+      return qi::makeFutureError<unsigned int>("Cannot find signal");
     SignalBase::Link l = s->connect(subscriber);
      if (l > 0xFFFF)
       qiLogError("object") << "Signal id too big";
-    return (event << 16) + l;
+    return qi::Future<unsigned int>((event << 16) + l);
   }
 
-  bool DynamicObject::disconnect(unsigned int linkId)
+  qi::Future<void> DynamicObject::disconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
     unsigned int link = linkId & 0xFFFF;
+    //TODO: weird to call createSignal in disconnect
     SignalBase* s = _p->createSignal(event);
     if (!s)
-      return false;
-    return s->disconnect(link);
+      return qi::makeFutureError<void>("Cannot find local signal connection.");
+    bool b = s->disconnect(link);
+    if (!b) {
+      return qi::makeFutureError<void>("Cannot find local signal connection.");
+    }
+    return qi::Future<void>(0);
   }
 
   class MFunctorCall
@@ -248,13 +253,13 @@ namespace qi
       ->metaEmit(signal, params);
   }
 
-  unsigned int DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<unsigned int> DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->connect(event, subscriber);
   }
 
-  bool DynamicObjectType::disconnect(void* instance, unsigned int linkId)
+  qi::Future<void> DynamicObjectType::disconnect(void* instance, unsigned int linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->disconnect(linkId);

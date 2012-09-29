@@ -19,7 +19,7 @@ namespace qi {
     ServerClient(TransportSocketPtr socket);
     ~ServerClient();
     qi::Future<unsigned int>   registerEvent(unsigned int serviceId, unsigned eventId, unsigned int linkId);
-    qi::Future<bool>           unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId);
+    qi::Future<void>           unregisterEvent(unsigned int serviceId, unsigned eventId, unsigned linkId);
     qi::Future<qi::MetaObject> metaObject(unsigned int serviceId, unsigned int objectId);
     // metaobject bootstrap hack
     unsigned int   _registerEvent(unsigned int serviceId, unsigned eventId, unsigned int linkId){return 0;};

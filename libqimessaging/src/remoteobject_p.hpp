@@ -13,8 +13,8 @@
 #include <qimessaging/dynamicobject.hpp>
 #include <qimessaging/signal.hpp>
 
-#include "src/messagedispatcher.hpp"
-#include "src/object_p.hpp"
+#include "messagedispatcher.hpp"
+#include "object_p.hpp"
 
 #include <boost/thread/mutex.hpp>
 #include <string>
@@ -22,7 +22,7 @@
 namespace qi {
 
   class TransportSocket;
-
+  class ServerClient;
 
 
   class RemoteObject : public qi::DynamicObject {
@@ -40,16 +40,17 @@ namespace qi {
 
     virtual void metaEmit(unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
-    virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
-    virtual bool disconnect(unsigned int linkId);
-  public:
-    TransportSocketPtr          _socket;
+
+    virtual qi::Future<unsigned int> connect(unsigned int event, const SignalSubscriber& sub);
+    virtual qi::Future<void> disconnect(unsigned int linkId);
 
   protected:
+    TransportSocketPtr                              _socket;
     unsigned int                                    _service;
     std::map<int, qi::Promise<GenericValue> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
+    qi::ServerClient                               *_serverClient;
   };
 
 }

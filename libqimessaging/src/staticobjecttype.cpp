@@ -86,26 +86,30 @@ void StaticObjectTypeBase::metaEmit(void* instance, unsigned int signal,
   sb->trigger(params);
 }
 
-unsigned int StaticObjectTypeBase::connect(void* instance, unsigned int event,
-                                           const SignalSubscriber& subscriber)
+qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, unsigned int event,
+                                                       const SignalSubscriber& subscriber)
 {
   SignalBase* sb = getSignal(_data, instance, event);
-  if (!sb)
-    return -1;
+  if (!sb) {
+    return qi::makeFutureError<unsigned int>("Cant find signal");
+  }
   SignalBase::Link id = sb->connect(subscriber);
   if (id > 0xFFFF)
     qiLogError("meta") << "Signal link id too big";
-  return (event << 16) + id;
+  return qi::Future<unsigned int>((event << 16) + id);
 }
 
-bool StaticObjectTypeBase::disconnect(void* instance, unsigned int linkId)
+qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, unsigned int linkId)
 {
   unsigned int event = linkId >> 16;
   unsigned int link = linkId & 0xFFFF;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
-    return false;
-  return sb->disconnect(link);
+    return qi::makeFutureError<void>("Cant find signal");
+  bool b = sb->disconnect(link);
+  if (!b)
+    return qi::makeFutureError<void>("Cant unregister signal");
+  return qi::Future<void>(0);
 }
 
 const std::vector<std::pair<Type*, int> >& StaticObjectTypeBase::parentTypes()

@@ -3,8 +3,9 @@
 **  See COPYING for the license
 */
 #include "remoteobject_p.hpp"
-#include "src/object_p.hpp"
-#include "src/metasignal_p.hpp"
+#include "object_p.hpp"
+#include "metasignal_p.hpp"
+#include "serverclient.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qi/log.hpp>
@@ -202,58 +203,28 @@ namespace qi {
     }
   }
 
-  unsigned int RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
+  qi::Future<unsigned int> RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     // Bind the subscriber locally.
     unsigned int uid = DynamicObject::connect(event, sub);
-    // Notify the Service that we are interested in its event.
-    // Provide our uid as payload
-    // We send one message per connect, even on the same event: the remot
-    // end is doing the refcounting
-    qi::Message msg;
-    qi::Buffer buf;
-    qi::ODataStream ds(buf);
-    ds << _service << event << uid;
-    msg.setBuffer(buf);
-    msg.setObject(qi::Message::GenericObject_Main);
-    msg.setType(Message::Type_Event);
-    msg.setService(Message::Service_Server);
-    msg.setFunction(Message::ServerFunction_RegisterEvent);
 
-    if (!_socket->send(msg)) {
-      qiLogError("remoteobject") << "error while registering event";
-    }
     qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
-    return uid;
+    return _serverClient->registerEvent(_service, event, uid);
   }
 
-  bool RemoteObject::disconnect(unsigned int linkId)
+  qi::Future<void> RemoteObject::disconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
     //disconnect locally
     bool ok = DynamicObject::disconnect(linkId);
     if (!ok)
     {
-      qiLogWarning("qi.object") << "Disconnection failure for " << linkId;
-      return false;
+      std::stringstream ss;
+      ss << "Disconnection failure for " << linkId;
+      qiLogWarning("qi.object") << ss.str();
+      return qi::makeFutureError<void>(ss.str());
     }
-    else
-    {
-      // Tell the remote we are no longer interested.
-      qi::Message msg;
-      qi::Buffer buf;
-      qi::ODataStream ds(buf);
-      ds << _service << event << linkId;
-      msg.setBuffer(buf);
-      msg.setType(Message::Type_Event);
-      msg.setService(Message::Service_Server);
-      msg.setObject(Message::GenericObject_Main);
-      msg.setFunction(Message::ServerFunction_UnregisterEvent);
-      if (!_socket->send(msg)) {
-        qiLogError("remoteobject") << "error while disconnecting signal";
-      }
-      return true;
-    }
+    return _serverClient->unregisterEvent(_service, event, linkId);
   }
 
   void RemoteObject::close() {

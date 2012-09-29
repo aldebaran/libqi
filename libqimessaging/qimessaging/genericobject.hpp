@@ -74,23 +74,21 @@ namespace qi {
                    qi::AutoGenericValue p8 = qi::AutoGenericValue());
     void metaEmit(unsigned int event, const GenericFunctionParameters& params);
     bool xMetaEmit(const std::string &signature, const GenericFunctionParameters &in);
-        /** Connect an event to an arbitrary callback.
+	/** Connect an event to an arbitrary callback.
      *
      * If you are within a service, it is recommended that you connect the
      * event to one of your Slots instead of using this method.
      */
     template <typename FUNCTOR_TYPE>
-    unsigned int connect(const std::string& eventName, FUNCTOR_TYPE callback,
+    qi::FutureSync<unsigned int> connect(const std::string& eventName, FUNCTOR_TYPE callback,
                          EventLoop* ctx = getDefaultObjectEventLoop());
 
 
-    unsigned int xConnect(const std::string &signature, const SignalSubscriber& functor);
+    qi::FutureSync<unsigned int> xConnect(const std::string &signature, const SignalSubscriber& functor);
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    unsigned int connect(unsigned int event, const SignalSubscriber& subscriber);
+    qi::FutureSync<unsigned int> connect(unsigned int event, const SignalSubscriber& subscriber);
 
-    /// Disconnect an event link. Returns if disconnection was successful.
-    bool disconnect(unsigned int linkId);
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
      * If target is a proxy and this is server-side, the event will be
@@ -98,7 +96,10 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    unsigned int connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
+    qi::FutureSync<unsigned int> connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
+
+    /// Disconnect an event link. Returns if disconnection was successful.
+    qi::FutureSync<void> disconnect(unsigned int linkId);
 
     void moveToEventLoop(EventLoop* ctx);
     EventLoop* eventLoop();
@@ -120,7 +121,7 @@ namespace qi {
    SignalSubscriber()
      : eventLoop(0), target(), method(0), enabled(true), active(0)
    {}
-
+f
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
      : handler(func), eventLoop(ctx), target(), method(0), enabled(true), active(0)
    {}
@@ -148,9 +149,9 @@ namespace qi {
 
 
   template <typename FUNCTION_TYPE>
-  unsigned int GenericObject::connect(const std::string& eventName,
-                               FUNCTION_TYPE callback,
-                               EventLoop* ctx)
+  qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,
+                                                      FUNCTION_TYPE callback,
+                                                      EventLoop* ctx)
   {
     return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
       SignalSubscriber(makeGenericFunction(callback), ctx));
