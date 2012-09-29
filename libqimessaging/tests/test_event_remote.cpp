@@ -49,6 +49,7 @@ protected:
     std::vector<qi::ServiceInfo> services = sclient.services();
     EXPECT_EQ(2U, services.size());
     oclient = sclient.service("coin");
+    ASSERT_TRUE(oclient != 0);
     payload = &prom;
   }
 
