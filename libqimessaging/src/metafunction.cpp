@@ -133,6 +133,25 @@ const std::vector<GenericValue>& MetaFunctionParameters::getValues() const
   return storage->parameterValues;
 }
 
+std::vector<GenericValue> &MetaFunctionParameters::getValues()
+{
+  if (!storage || !storage->valid)
+  {
+    if (!storage)
+      qiLogError("qi.meta") << "getValues() on uninitialized storage";
+    else
+      qiLogError("qi.meta") << "getValues() on invalidated storage";
+    static std::vector<GenericValue> dummy;
+    return dummy;
+  }
+  if (storage->parameterValues.empty() && storage->parameterBuffer.size())
+  {
+    qiLogDebug("qi.meta") << "Generating values from serialization";
+    convertToValues();
+  }
+  return storage->parameterValues;
+}
+
 const Buffer& MetaFunctionParameters::getBuffer() const
 {
   if (!storage)
