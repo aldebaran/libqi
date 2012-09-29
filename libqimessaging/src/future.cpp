@@ -69,7 +69,8 @@ namespace qi {
       return _p->_isReady;
     }
 
-    bool FutureBase::hasError() const {
+    bool FutureBase::hasError(int msecs) const {
+      wait(msecs);
       return _p->_hasError;
     }
 

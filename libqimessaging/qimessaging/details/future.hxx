@@ -22,7 +22,7 @@ namespace qi {
       ~FutureBase();
       bool wait(int msecs = 30000) const;
       bool isReady() const;
-      bool hasError() const;
+      bool hasError(int msecs = 30000) const;
       const std::string &error() const;
       void reset();
 
@@ -88,6 +88,12 @@ namespace qi {
     };
   } // namespace detail
 
+  template <typename T>
+  qi::Future<T> makeFutureError(const std::string &error) {
+    qi::Promise<T> prom;
+    prom.setError(error);
+    return prom.future();
+  }
 }
 
 #endif  // _QIMESSAGING_DETAILS_FUTURE_HXX_

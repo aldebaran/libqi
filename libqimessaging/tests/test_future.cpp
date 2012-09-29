@@ -152,7 +152,6 @@ TEST_F(TestFuture, TestError) {
   fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1), 0);
 
   EXPECT_STREQ("", gGlobalE.c_str());
-  EXPECT_FALSE(fut.hasError());
   EXPECT_FALSE(fut.isReady());
   pro.setError("chiche");
   fut.wait();

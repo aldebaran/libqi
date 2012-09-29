@@ -69,7 +69,7 @@ namespace qi {
 
     bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
     bool isReady() const                       { return _p->isReady(); }
-    bool hasError() const                      { return _p->hasError(); }
+    bool hasError(int msecs=30000) const       { return _p->hasError(msecs); }
 
     const std::string &error() const           { return _p->error(); }
 
@@ -175,6 +175,9 @@ namespace qi {
   protected:
     Future<T> _f;
   };
+
+  template <typename T>
+  qi::Future<T> makeFutureError(const T &value);
 };
 
 #include <qimessaging/details/future.hxx>
