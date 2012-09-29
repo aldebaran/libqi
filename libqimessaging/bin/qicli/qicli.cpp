@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include <qimessaging/genericobject.hpp>
+#include <qimessaging/future.hpp>
 #include <qimessaging/session.hpp>
 
 qi::Session session;
@@ -32,47 +33,41 @@ static void cmd_service(const command           &cmd,
   std::vector<qi::ServiceInfo> servs = session.services();
   for (unsigned int i = 0; i < servs.size(); ++i)
   {
-    if (servs[i].name() == *it)
+    if (servs[i].name() != *it)
+      continue;
+    std::cout << servs[i].name() << std::endl
+              << "  id:       " << servs[i].serviceId() << std::endl
+              << "  machine:  " << servs[i].machineId() << std::endl
+              << "  process:  " << servs[i].processId() << std::endl
+              << "  endpoints:" << std::endl;
+    for (std::vector<std::string>::const_iterator it2 = servs[i].endpoints().begin();
+         it2 != servs[i].endpoints().end();
+         ++it2)
     {
-      std::cout << servs[i].name() << std::endl
-                << "  id:       " << servs[i].serviceId() << std::endl
-                << "  machine:  " << servs[i].machineId() << std::endl
-                << "  process:  " << servs[i].processId() << std::endl
-                << "  endpoints:" << std::endl;
-      for (std::vector<std::string>::const_iterator it2 = servs[i].endpoints().begin();
-           it2 != servs[i].endpoints().end();
-           ++it2)
-      {
-        std::cout << "    " << *it2 << std::endl;
-      }
+      std::cout << "    " << *it2 << std::endl;
+    }
 
-      std::cout << "  methods:" << std::endl;
-      qi::ObjectPtr obj = session.service(*it);
-      if (obj)
-      {
-        services[*it] = obj;
+    std::cout << "  methods:" << std::endl;
+    qi::Future<qi::ObjectPtr> fut = session.service(*it);
+    if (fut.hasError()) {
+      std::cerr << "service: could not get object: " << fut.error() << std::endl;
+      continue;
+    }
 
-        const qi::MetaObject &mobj = obj->metaObject();
-        qi::MetaObject::MethodMap methods = mobj.methodMap();
-        for (qi::MetaObject::MethodMap::const_iterator it2 = methods.begin();
-             it2 != methods.end();
-             ++it2)
-        {
-          std::cout << "    " << it2->second.sigreturn() << " " << it2->second.signature() << std::endl;
-        }
-        std::cout << "  events:" << std::endl;
-        qi::MetaObject::SignalMap events = mobj.signalMap();
-        for (qi::MetaObject::SignalMap::const_iterator it2 = events.begin();
-          it2 != events.end();
-          ++it2)
-        {
-          std::cout << "    " << it2->second.signature() << std::endl;
-        }
-      }
-      else
-      {
-        std::cerr << "service: could not get object" << std::endl;
-      }
+    qi::ObjectPtr obj = fut.value();
+    services[*it] = obj;
+
+    const qi::MetaObject &mobj = obj->metaObject();
+    qi::MetaObject::MethodMap methods = mobj.methodMap();
+    qi::MetaObject::MethodMap::const_iterator it2;
+    for (it2 = methods.begin(); it2 != methods.end(); ++it2) {
+      std::cout << "    " << it2->second.sigreturn() << " " << it2->second.signature() << std::endl;
+    }
+    std::cout << "  events:" << std::endl;
+    qi::MetaObject::SignalMap events = mobj.signalMap();
+    qi::MetaObject::SignalMap::const_iterator it3;
+    for (it3 = events.begin(); it3 != events.end(); ++it3) {
+      std::cout << "    " << it3->second.signature() << std::endl;
     }
   }
 }
