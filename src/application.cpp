@@ -72,6 +72,8 @@ namespace qi {
 
   void init(int argc, char *argv[])
   {
+    globalArgc = argc;
+    globalArgv = argv;
 
     //Feed qi::path prefix from share/qi/path.conf if present
     //(automatically created when using qiBuild)
@@ -94,8 +96,6 @@ namespace qi {
         }
       }
     }
-    globalArgc = argc;
-    globalArgv = argv;
   }
 
   int argc()
@@ -163,13 +163,13 @@ namespace qi {
       else
         globalProgram = guess_app_from_path(::qi::argc(), ::qi::argv());
 #elif _WIN32
-      WCHAR *fname = (WCHAR *) malloc(MAX_PATH);
+      WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
-      if (ret != 0)
+      if (ret > 0)
       {
+        fname[ret] = '\0';
         boost::filesystem::path programPath(fname, qi::unicodeFacet());
         globalProgram = programPath.string(qi::unicodeFacet());
-        free(fname);
       }
       else
       {
