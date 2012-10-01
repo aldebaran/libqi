@@ -12,16 +12,27 @@ namespace qi
   class GenericObjectBuilderPrivate
   {
   public:
-    GenericObjectBuilderPrivate() : object(new DynamicObject())  {}
-    ~GenericObjectBuilderPrivate() {}
+    GenericObjectBuilderPrivate() : object(new DynamicObject())
+    {}
+
+    GenericObjectBuilderPrivate(DynamicObject *dynobject) : object(dynobject)
+    {}
+
+    ~GenericObjectBuilderPrivate()
+    {}
+
     DynamicObject* object;
     MetaObject     metaObject;
   };
 
   GenericObjectBuilder::GenericObjectBuilder()
+    : _p(new GenericObjectBuilderPrivate)
   {
-    _p = new GenericObjectBuilderPrivate;
   }
+
+  GenericObjectBuilder::GenericObjectBuilder(DynamicObject *dynobject)
+    : _p(new GenericObjectBuilderPrivate(dynobject))
+  {}
 
   GenericObjectBuilder::~GenericObjectBuilder()
   {

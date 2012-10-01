@@ -13,11 +13,14 @@
 
 namespace qi {
 
-class GenericObjectBuilderPrivate;
-class QIMESSAGING_API GenericObjectBuilder
+  class DynamicObject;
+  class GenericObjectBuilderPrivate;
+  class QIMESSAGING_API GenericObjectBuilder
   {
   public:
     GenericObjectBuilder();
+    GenericObjectBuilder(DynamicObject *dynobject);
+
     ~GenericObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
