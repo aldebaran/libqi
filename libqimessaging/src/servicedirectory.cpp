@@ -108,7 +108,7 @@ namespace qi
     }
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.id() << ' ' << msg.function() << ' ' << msg.buffer().size();
     qi::Future<MetaFunctionResult> res = _object->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), MetaCallType_Direct);
-    res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.replyAddress()));
+    res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.address()));
 
     currentSocket.reset();
   }

@@ -17,7 +17,7 @@
 namespace qi {
 
   inline void serverResultAdapter(qi::Future<MetaFunctionResult> future, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
-    qi::Message ret(replyaddr);
+    qi::Message ret(Message::Type_Reply, replyaddr);
 
     if (future.hasError()) {
       qi::Buffer      result;

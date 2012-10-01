@@ -37,8 +37,7 @@ public:
 
   void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket)
   {
-    qi::Message ret;
-    ret.buildReplyFrom(msg);
+    qi::Message ret(qi::Message::Type_Reply, msg.address());
     socket->send(ret);
   }
 };

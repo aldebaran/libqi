@@ -19,31 +19,28 @@ namespace qi {
   class QIMESSAGING_API MessageAddress {
   public:
     MessageAddress()
-      : type(0)
-      , messageId(0)
+      : messageId(0)
       , serviceId(0)
       , objectId(0)
       , functionId(0)
     {}
 
-    MessageAddress(unsigned int type,
-                   unsigned int messageId,
+    MessageAddress(unsigned int messageId,
                    unsigned int serviceId,
                    unsigned int objectId,
                    unsigned int functionId)
-      : type(type)
-      , messageId(messageId)
+      : messageId(messageId)
       , serviceId(serviceId)
       , objectId(objectId)
       , functionId(functionId)
     {}
 
-    unsigned int type;
     unsigned int messageId;
     unsigned int serviceId;
     unsigned int objectId;
     unsigned int functionId;
   };
+
 
   /** \class qi::Message
     * This class represent a network message
@@ -103,7 +100,7 @@ namespace qi {
 
     ~Message();
     Message();
-    Message(const MessageAddress &address);
+    Message(Type type, const MessageAddress &address);
     Message(const Message &msg);
     Message &operator=(const Message &msg);
 
@@ -115,8 +112,8 @@ namespace qi {
     void         setVersion(qi::uint16_t type);
     unsigned int version() const;
 
-    void         setType(qi::uint16_t type);
-    unsigned int type() const;
+    void         setType(Type type);
+    Type         type() const;
 
     void         setService(qi::uint32_t service);
     unsigned int service() const;
@@ -135,11 +132,7 @@ namespace qi {
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;
 
-    void         buildReplyFrom(const Message &call);
-    void         buildForwardFrom(const Message &msg);
-
     MessageAddress address() const;
-    MessageAddress replyAddress() const;
 
     bool         isValid();
 
@@ -147,7 +140,8 @@ namespace qi {
     MessagePrivate *_p;
   };
 
-  QIMESSAGING_API std::ostream&   operator<<(std::ostream&   os, const qi::Message& msg);
+  QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
+  QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
 

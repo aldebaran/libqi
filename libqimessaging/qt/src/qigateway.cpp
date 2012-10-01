@@ -121,10 +121,9 @@ void QiGatewayPrivate::processServiceMessage(QiTransportSocket* socket,
     serviceInfo.setEndpoints(eps);
     serviceInfo.setMachineId(qi::os::getMachineId());
 
-    qi::Message ans;
+    qi::Message ans(qi::Message::Type_Reply, msg.address());
     qi::Buffer buf;
     ans.setBuffer(buf);
-    ans.buildReplyFrom(msg);
     qi::ODataStream dsAns(buf);
     dsAns << serviceInfo;
 
@@ -155,9 +154,8 @@ void QiGatewayPrivate::processServiceMessage(QiTransportSocket* socket,
   }
 
   QPair<unsigned int, QiTransportSocket*>& src = _routingTable[socket][msg.id()];
-  qi::Message ans;
+  qi::Message ans(qi::Message::Type_Reply, msg.address());
   ans.setBuffer(msg.buffer());
-  ans.buildReplyFrom(msg);
   ans.setId(src.first);
   src.second->write(ans);
 }
@@ -210,9 +208,8 @@ void QiGatewayPrivate::routeMessage(QiTransportSocket* src,
                                     const qi::Message& msg)
 {
   // Create new message with unique ID
-  qi::Message  fmsg;
+  qi::Message  fmsg(msg.type(), msg.address());
   fmsg.setBuffer(msg.buffer());
-  fmsg.buildForwardFrom(msg);
 
   // Store message to map call msg with return msg from the service
   _routingTable[dst][fmsg.id()] = qMakePair(msg.id(), src);

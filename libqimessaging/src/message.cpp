@@ -54,9 +54,10 @@ namespace qi {
     return *this;
   }
 
-  Message::Message(const MessageAddress &address)
+  Message::Message(Type type, const MessageAddress &address)
     : _p(new qi::MessagePrivate())
   {
+    setType(type);
     setAddress(address);
   }
 
@@ -102,14 +103,14 @@ namespace qi {
     return _p->header.version;
   }
 
-  void Message::setType(qi::uint16_t type)
+  void Message::setType(Message::Type type)
   {
     _p->header.type = type;
   }
 
-  unsigned int Message::type() const
+  Message::Type Message::type() const
   {
-    return _p->header.type;
+    return static_cast<Message::Type>(_p->header.type);
   }
 
   void Message::setService(qi::uint32_t service)
@@ -183,23 +184,6 @@ namespace qi {
     return _p->buffer;
   }
 
-  void Message::buildReplyFrom(const Message &call)
-  {
-    setId(call.id());
-    setType(qi::Message::Type_Reply);
-    setService(call.service());
-    setObject(call.object());
-    setFunction(call.function());
-  }
-
-  void Message::buildForwardFrom(const Message &msg)
-  {
-    setType(msg.type());
-    setService(msg.service());
-    setObject(msg.object());
-    setFunction(msg.function());
-  }
-
   bool Message::isValid()
   {
     if (_p->header.magic != qi::MessagePrivate::magic)
@@ -225,7 +209,6 @@ namespace qi {
   }
 
   void Message::setAddress(const MessageAddress &address) {
-    _p->header.type = address.type;
     _p->header.id = address.messageId;
     _p->header.service = address.serviceId;
     _p->header.object = address.objectId;
@@ -233,16 +216,13 @@ namespace qi {
   }
 
   MessageAddress Message::address() const {
-    return MessageAddress(_p->header.type, _p->header.id, _p->header.service, _p->header.object, _p->header.action);
+    return MessageAddress(_p->header.id, _p->header.service, _p->header.object, _p->header.action);
   }
 
-  MessageAddress Message::replyAddress() const {
-    if (_p->header.type != Message::Type_Call) {
-      qiLogWarning("message") << "Can't build a reply address for a message of type " << _p->header.type
-                              << " expected Type_Call";
-      return MessageAddress();
-    }
-    return MessageAddress(Type_Reply, _p->header.id, _p->header.service, _p->header.object, _p->header.action);
+  std::ostream &operator<<(std::ostream &os, const qi::MessageAddress &address) {
+    os << "{" << address.serviceId << "." << address.objectId << "." << address.functionId << ", id:" << address.messageId << "}";
+    return os;
   }
 
 }
+

@@ -105,10 +105,11 @@ namespace qi {
           && msg.type() != Message::Type_Call)
         {
           qiLogError("qi::Server") << "Server service only handles call/emit";
-          qi::Message retval;
-          retval.buildReplyFrom(msg);
+          qi::Message retval(qi::Message::Type_Error, msg.address());
           Buffer buf;
-          ODataStream(buf) << "Server service only handles call/emit";
+          ODataStream od(buf);
+          od << qi::signatureFromType<std::string>::value();
+          od << "Server service only handles call/emit";
           retval.setBuffer(buf);
           client->send(retval);
           return;
@@ -122,10 +123,11 @@ namespace qi {
         {
           if (msg.type() == Message::Type_Call)
           {
-            qi::Message retval;
-            retval.buildReplyFrom(msg);
+            qi::Message retval(qi::Message::Type_Error, msg.address());
             Buffer buf;
-            ODataStream(buf) << "Service not found";
+            ODataStream od(buf);
+            od << qi::signatureFromType<std::string>::value();
+            od << "Service not found";
             retval.setBuffer(buf);
             client->send(retval);
           }
@@ -145,8 +147,7 @@ namespace qi {
             _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
             {
-              qi::Message retval;
-              retval.buildReplyFrom(msg);
+              qi::Message retval(qi::Message::Type_Reply, msg.address());
               Buffer buf;
               ODataStream ds(buf);
               ds << linkId;
@@ -172,11 +173,10 @@ namespace qi {
             }
             if (msg.type() == Message::Type_Call)
             {
-              qi::Message retval;
-              retval.buildReplyFrom(msg);
+              qi::Message retval(qi::Message::Type_Reply, msg.address());
               Buffer buf;
               ODataStream ds(buf);
-              ds << (i == sl.end());
+              ds << (i != sl.end());
               retval.setBuffer(buf);
               client->send(retval);
             }
@@ -196,8 +196,7 @@ namespace qi {
             //if (msg.type() == Message::Type_Call)
 
             {
-              qi::Message retval;
-              retval.buildReplyFrom(msg);
+              qi::Message retval(qi::Message::Type_Reply, msg.address());
               Buffer buf;
               ODataStream ds(buf);
               ds << obj->metaObject();
@@ -214,10 +213,9 @@ namespace qi {
       if (it == _services.end() || !obj->type || !obj->value)
       {
         if (msg.type() == qi::Message::Type_Call) {
-          qi::Message retval;
-          retval.buildReplyFrom(msg);
-          qi::Buffer error;
-          qi::ODataStream ds(error);
+          qi::Message       retval(Message::Type_Error, msg.address());
+          qi::Buffer        error;
+          qi::ODataStream   ds(error);
           std::stringstream ss;
           ss << "can't find service id: " << msg.id();
           ds << ss.str();
@@ -231,17 +229,17 @@ namespace qi {
     }
     switch (msg.type())
     {
-    case Message::Type_Call:
+      case Message::Type_Call:
       {
-         qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::MetaCallType_Queued);
-         fut.connect(boost::bind<void>(&serverResultAdapter, _1, client, msg.replyAddress()));
+        qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::MetaCallType_Queued);
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, client, msg.address()));
       }
-      break;
-    case Message::Type_Event:
+        break;
+      case Message::Type_Event:
       {
         obj->metaEmit(msg.function(), MetaFunctionParameters(msg.buffer()));
       }
-      break;
+        break;
     }
 
   };

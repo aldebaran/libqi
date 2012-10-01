@@ -120,9 +120,8 @@ void GatewayPrivate::onTransportServerNewConnection(TransportSocketPtr socket)
 void GatewayPrivate::forwardClientMessage(TransportSocketPtr client, TransportSocketPtr service, const Message *msg)
 {
   // Create new message with unique ID
-  Message  msgToService;
+  Message  msgToService(Message::Type_Reply, msg->address());
   msgToService.setBuffer(msg->buffer());
-  msgToService.buildForwardFrom(*msg);
 
   // Store message to map call msg with return msg from the service
   std::map< int, std::pair<int, TransportSocketPtr> > &reqIdMap = _serviceToClient[service];
@@ -233,9 +232,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       if (result.name() == "")
       {
         qiLogError("gateway") << "Could not find requested service";
-        Message ans;
-        ans.buildReplyFrom(*msg);
-        ans.setType(qi::Message::Type_Error);
+        Message ans(Message::Type_Error, msg->address());
         ans.setId(itReq->second.first);
         if (itReq->second.second)
           itReq->second.second->send(ans);
@@ -260,10 +257,9 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       }
 
       // create new message for the client
-      Message  ans;
+      Message  ans(Message::Type_Reply, msg->address());
       Buffer   buf;
       ans.setBuffer(buf);
-      ans.buildReplyFrom(*msg);
       ODataStream dsAns(buf);
       dsAns << result;
 
@@ -306,9 +302,8 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
     else //// S.3/
     {
       // id should be rewritten then sent to the client
-      Message ans;
+      Message ans(Message::Type_Reply, msg->address());
       ans.setBuffer(msg->buffer());
-      ans.buildReplyFrom(*msg);
       ans.setId(itReq->second.first);
       itReq->second.second->send(ans);
     }
