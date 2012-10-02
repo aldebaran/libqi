@@ -90,7 +90,7 @@ namespace qi
     _p->methodMap[id] = callable;
   }
 
-  SignalBase* DynamicObject::getSignal(unsigned int id)
+  SignalBase* DynamicObject::signalBase(unsigned int id) const
   {
     DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);
     if (i == _p->signalMap.end())
@@ -99,19 +99,27 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<MetaFunctionResult> DynamicObject::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
+  const qi::MetaCallable &DynamicObject::method(unsigned int methodId) const {
+    DynamicObjectPrivate::MethodMap::iterator it = _p->methodMap.find(methodId);
+    if (it == _p->methodMap.end())
+    {
+      static const qi::MetaCallable empty;
+      return empty;
+    }
+    return it->second;
+  }
+
+  qi::Future<MetaFunctionResult> DynamicObject::metaCall(unsigned int methodId, const MetaFunctionParameters& params, MetaCallType callType)
   {
     qi::Promise<MetaFunctionResult> out;
-    DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
-    if (i == _p->methodMap.end())
-    {
+    const qi::MetaCallable &met = method(methodId);
+    if (!met) {
       std::stringstream ss;
-      ss << "Can't find methodID: " << method;
+      ss << "Can't find methodID: " << methodId;
       out.setError(ss.str());
       return out.future();
     }
-
-    return ::qi::metaCall(eventLoop(), i->second, params, callType);
+    return ::qi::metaCall(eventLoop(), met, params, callType);
   }
 
   void DynamicObject::metaEmit(unsigned int event, const MetaFunctionParameters& params)

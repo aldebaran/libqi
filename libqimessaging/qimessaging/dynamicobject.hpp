@@ -7,9 +7,10 @@
 #ifndef _QIMESSAGING_DYNAMICOBJECT_HPP_
 #define _QIMESSAGING_DYNAMICOBJECT_HPP_
 
+#include <qimessaging/metafunction.hpp>
+
 namespace qi
 {
-
 
   class DynamicObjectPrivate;
 
@@ -37,7 +38,8 @@ namespace qi
     MetaObject &metaObject();
 
     void setMethod(unsigned int id, MetaCallable callable);
-    SignalBase* getSignal(unsigned int id);
+    SignalBase* signalBase(unsigned int id) const;
+    const qi::MetaCallable &method(unsigned int methodId) const;
 
     virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaEmit(unsigned int event, const MetaFunctionParameters& params);

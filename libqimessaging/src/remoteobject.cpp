@@ -81,7 +81,7 @@ namespace qi {
         return;
       }
       case qi::Message::Type_Event: {
-        SignalBase* sb = getSignal(msg.event());
+        SignalBase* sb = signalBase(msg.event());
         if (sb)
           sb->trigger(MetaFunctionParameters(msg.buffer()));
         else
