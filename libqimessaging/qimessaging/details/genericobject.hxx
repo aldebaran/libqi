@@ -73,16 +73,16 @@ namespace qi {
         IDataStream in(metaFut.value().getBuffer());
         // Not all types are serializable, go through MetaType
         Type* type = typeOf<T>();
-          void* storage = type->deserialize(in);
-          if (!storage)
+        void* storage = type->deserialize(in);
+        if (!storage)
         {
           promise.setError("Could not deserialize result");
         }
         else
         {
-            void* ptr = type->ptrFromStorage(&storage);
-            promise.setValue(*(T*)ptr);
-            type->destroy(storage);
+          void* ptr = type->ptrFromStorage(&storage);
+          promise.setValue(*(T*)ptr);
+          type->destroy(storage);
         }
       }
     }
