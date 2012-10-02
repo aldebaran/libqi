@@ -7,6 +7,11 @@
 #ifndef _QIMESSAGING_DETAILS_FUNCTIONTYPE_HXX_
 #define _QIMESSAGING_DETAILS_FUNCTIONTYPE_HXX_
 
+#ifdef BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY
+# undef BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY
+#endif
+#define BOOST_FUSION_INVOKE_FUNCTION_OBJECT_MAX_ARITY 10
+
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
