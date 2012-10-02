@@ -32,24 +32,4 @@ namespace qi {
     return _uid;
   }
 
-
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaSignal &meta) {
-    stream << meta.signature();
-    stream << meta.uid();
-    return stream;
-  }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaSignal &meta) {
-    std::string sig; unsigned int uid;
-    stream >> sig >> uid;
-    meta = MetaSignal(uid, sig);
-    return stream;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaSignal &meta) {
-    stream & meta.signature();
-    stream & meta.uid();
-    return stream;
-  }
-
 };

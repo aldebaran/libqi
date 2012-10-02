@@ -15,29 +15,25 @@
 namespace qi {
 
 
-class ValueClone
-{
-public:
-  static void* clone(void* src)
-  {
-    return new GenericValue(((GenericValue*)src)->clone());
-  }
-
-  static void destroy(void* ptr)
-  {
-    ((GenericValue*)ptr)->destroy();
-    delete (GenericValue*)ptr;
-  }
-};
-
-
 template<> class TypeImpl<GenericValue>:
   public DefaultTypeImpl<
     GenericValue,
-    TypeDefaultAccess<GenericValue>,
-    ValueClone,
-    TypeDefaultSerialize<TypeDefaultAccess<GenericValue> >
-    > {};
+    TypeByPointer<GenericValue>
+    > {
+      virtual void* clone(void* src)
+      {
+        return new GenericValue(((GenericValue*)src)->clone());
+      }
+      virtual void destroy(void* ptr)
+      {
+        ((GenericValue*)ptr)->destroy();
+        delete (GenericValue*)ptr;
+      }
+      virtual Kind kind() const
+      {
+        return Dynamic;
+      }
+    };
 
 namespace detail
 {
@@ -107,12 +103,6 @@ inline void GenericValue::destroy()
 {
   if (type && value)
     type->destroy(value);
-}
-
-inline void GenericValue::serialize(ODataStream& os) const
-{
-  if (type)
-    type->serialize(os, value);
 }
 
 inline GenericValue::GenericValue()
@@ -248,9 +238,13 @@ inline double GenericValue::asDouble() const
 
 inline std::string GenericValue::asString() const
 {
-  return detail::valueAs<std::string, Type::String>(*this);
+  return as<std::string>();
 }
 
+inline void GenericValue::serialize(ODataStream& out) const
+{
+  type->serialize(out, value);
+}
 
 namespace detail
 {

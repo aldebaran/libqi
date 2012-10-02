@@ -18,13 +18,30 @@
 
 static const int gLoopCount   = 1000000;
 
-
+namespace qi
+{
+  // OLD API compat layer for this test.
+  template<typename T> struct signatureFromType
+  {
+    static std::string value()
+    {
+      return typeOf<T>()->signature();
+    }
+  };
+  struct signatureFromObject
+  {
+    template<typename T> static std::string value(const T& ptr)
+    {
+      return typeOf(ptr)->signature();
+    }
+  };
+}
 class noSigForThis;
 
 typedef std::map<int,int> MapInt;
 
 TEST(TestSignature, BasicTypeSignature) {
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<char>::value());
   EXPECT_EQ("C",    qi::signatureFromType<unsigned char>::value());
   EXPECT_EQ("w",    qi::signatureFromType<short>::value());
@@ -63,7 +80,7 @@ TEST(TestSignature, BasicTypeSignature) {
 
 TEST(TestSignature, TypeConstRefPointerMix) {
 
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<char>::value());
   EXPECT_EQ("i",    qi::signatureFromType<int>::value());
   EXPECT_EQ("f",    qi::signatureFromType<float>::value());
@@ -72,7 +89,7 @@ TEST(TestSignature, TypeConstRefPointerMix) {
   EXPECT_EQ("[i]",  qi::signatureFromType< std::vector<int> >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
 
-  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<const bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<const char>::value());
   EXPECT_EQ("i",    qi::signatureFromType<const int>::value());
   EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
@@ -81,7 +98,7 @@ TEST(TestSignature, TypeConstRefPointerMix) {
   EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int > >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt >::value());
 
-  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<const bool&>::value());
   EXPECT_EQ("c",    qi::signatureFromType<const char&>::value());
   EXPECT_EQ("i",    qi::signatureFromType<const int&>::value());
   EXPECT_EQ("f",    qi::signatureFromType<const float&>::value());
@@ -92,10 +109,10 @@ TEST(TestSignature, TypeConstRefPointerMix) {
 }
 
 TEST(TestSignature, Bools) {
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<bool&>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<bool&>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<const bool>::value());
+  EXPECT_EQ("c",    qi::signatureFromType<const bool&>::value());
 }
 
 TEST(TestSignature, Strings) {
@@ -133,14 +150,14 @@ TEST(TestSignature, ComplexTypeSignature) {
 
   //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
   //and obama said: Yes We Can!
-  EXPECT_EQ("{ii}"                        , qi::signatureFromType<MapInt>::value());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::signatureFromType<MapInt2>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectorMapInt2>::value());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::signatureFromType<MapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectMapInt2Ref>::value());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::signatureFromType<VectMapInt2RefConst>::value());
-  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::signatureFromType<VectVectMapInt2ConstRef>::value());
-  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::signatureFromType<FuckinMap>::value());
+  EXPECT_EQ("{ii}"                        , qi::typeOf<MapInt>()->signature());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2>()->signature());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectorMapInt2>()->signature());
+  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2Ref>()->signature());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2Ref>()->signature());
+  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2RefConst>()->signature());
+  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::typeOf<VectVectMapInt2ConstRef>()->signature());
+  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::typeOf<FuckinMap>()->signature());
 }
 
 TEST(TestSignature, FromObject) {
@@ -156,43 +173,6 @@ TEST(TestSignature, ComplexConstRefPtr) {
 }
 
 
-class TestSigClass {};
-qi::SignatureStream &operator&(qi::SignatureStream &os, TestSigClass) {
-  os.write(qi::Signature::Type_UInt16);
-  return os;
-}
-
-class TestSigClassP {};
-qi::SignatureStream &operator&(qi::SignatureStream &os, const TestSigClassP *) {
-  os.write(qi::Signature::Type_UInt16);
-  return os;
-}
-
-class TestSigClassC {};
-qi::SignatureStream &operator&(qi::SignatureStream &os, const TestSigClassC) {
-  os.write(qi::Signature::Type_UInt16);
-  return os;
-}
-
-class TestSigClassCR {};
-qi::SignatureStream &operator&(qi::SignatureStream &os, const TestSigClassCR &) {
-  os.write(qi::Signature::Type_UInt16);
-  return os;
-}
-
-class TestSigClassR {};
-qi::SignatureStream &operator&(qi::SignatureStream &os, TestSigClassR &) {
-  os.write(qi::Signature::Type_UInt16);
-  return os;
-}
-
-TEST(TestSignature, CustomClasses) {
-  EXPECT_EQ("W", qi::signatureFromType<TestSigClass>::value());
-  EXPECT_EQ("W", qi::signatureFromType<TestSigClassR>::value());
-  EXPECT_EQ("W", qi::signatureFromType<TestSigClassC>::value());
-  EXPECT_EQ("W", qi::signatureFromType<TestSigClassCR>::value());
-  EXPECT_EQ("X", qi::signatureFromType<TestSigClassP>::value());
-}
 
 
 //expect that the following test to do not build. (static assert)

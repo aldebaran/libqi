@@ -233,31 +233,6 @@ namespace qi {
 
 };
 
-QI_TYPE_NOT_CONSTRUCTIBLE(qi::GenericObject);
-QI_TYPE_SERIALIZABLE(MetaObject);
-
-/** Register struct with QI binding system.
- * Once called, your structure can be passed as argument to call(), and method
- * using it can be bound with advertiseMethod().
- * Usage: pass the name of the structure, and the list of members.
- */
-#define QI_REGISTER_STRUCT(Cname, ...)        \
-  QI_DATASTREAM_STRUCT(Cname, __VA_ARGS__)    \
-  QI_SIGNATURE_STRUCT(Cname, __VA_ARGS__)
-
-/// Only declare required functions for class registration
-#define QI_REGISTER_STRUCT_DECLARE(Cname)    \
-  QI_DATASTREAM_STRUCT_DECLARE(Cname)        \
-  QI_SIGNATURE_STRUCT_DECLARE(Cname)
-
-/// Implement functions required for class registration
-#define QI_REGISTER_STRUCT_IMPLEMENT(Cname, ...)              \
-  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__) \
-  __QI_SIGNATURE_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
-
-#define QI_REGISTER_STRUCT_PRIVATE_ACCESS(Cname)  \
-  QI_DATASTREAM_STRUCT_PRIVATE_ACCESS(Cname)      \
-  QI_SIGNATURE_STRUCT_PRIVATE_ACCESS(Cname)
 
 #include <qimessaging/details/genericobject.hxx>
 #endif  // _QIMESSAGING_GENERICOBJECT_HPP_

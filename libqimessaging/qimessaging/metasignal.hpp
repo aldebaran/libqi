@@ -26,12 +26,11 @@ namespace qi {
   private:
     unsigned int _uid;
     std::string  _signature;
+    friend class TypeImpl<MetaSignal>;
   };
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaSignal &meta);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaSignal &meta);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaSignal &meta);
-
 }; // namespace qi
+
+QI_TYPE_STRUCT(qi::MetaSignal, _uid, _signature);
 
 #endif  // _QIMESSAGING_METASIGNAL_HPP_

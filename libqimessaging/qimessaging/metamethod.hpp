@@ -28,13 +28,11 @@ namespace qi {
     unsigned int      _uid;
     std::string       _signature;
     std::string       _sigreturn;
+    friend class TypeImpl<MetaMethod>;
   };
-
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaMethod &meta);
 
 }; // namespace qi
 
+QI_TYPE_STRUCT(qi::MetaMethod, _signature, _sigreturn, _uid);
 
 #endif  // _QIMESSAGING_METAMETHOD_HPP_

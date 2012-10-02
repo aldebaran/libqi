@@ -6,6 +6,9 @@
 
 #ifndef _QIMESSAGING_TYPEPOINTER_HXX_
 #define _QIMESSAGING_TYPEPOINTER_HXX_
+
+#include <boost/shared_ptr.hpp>
+
 namespace qi
 {
   template<typename T> class TypePointerImpl: public TypePointer
@@ -29,9 +32,7 @@ namespace qi
     }
 
     typedef DefaultTypeImplMethods<T*,
-                                     TypeDirectAccess<T*>,
-                                     TypeNoClone<TypeDirectAccess<T*> >,
-                                     TypeNoSerialize<TypeDirectAccess<T*> >
+                                     TypeByValue<T*>
                                      > TypeMethodsImpl;
     _QI_BOUNCE_TYPE_METHODS(TypeMethodsImpl);
   };

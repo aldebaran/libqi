@@ -43,6 +43,19 @@ inline bool  GenericIterator<T>::operator !=(const GenericIterator& b) const
   return ! (*this==b);
 }
 
+inline GenericList::GenericList()
+: GenericValue()
+{}
+
+inline GenericList::GenericList(GenericValue& v)
+: GenericValue(v)
+{}
+
+inline GenericList::GenericList(TypeList* type, void* value)
+: GenericValue(type, value)
+{}
+
+
 inline GenericListIterator GenericList::begin()
 {
   return static_cast<TypeList*>(type)->begin(value);
@@ -56,6 +69,11 @@ inline GenericListIterator GenericList::end()
 inline Type* GenericList::elementType()
 {
   return static_cast<TypeList*>(type)->elementType(value);
+}
+
+inline size_t GenericList::size()
+{
+  return static_cast<TypeList*>(type)->size(value);
 }
 
 inline void GenericList::pushBack(GenericValue val)
@@ -84,6 +102,19 @@ inline GenericList GenericValue::asList() const
 }
 
 
+inline GenericMap::GenericMap()
+: GenericValue()
+{}
+
+inline GenericMap::GenericMap(GenericValue& v)
+: GenericValue(v)
+{}
+
+inline GenericMap::GenericMap(TypeMap* type, void* value)
+: GenericValue(type, value)
+{}
+
+
 inline GenericMapIterator GenericMap::begin()
 {
   return static_cast<TypeMap*>(type)->begin(value);
@@ -92,6 +123,11 @@ inline GenericMapIterator GenericMap::begin()
 inline GenericMapIterator GenericMap::end()
 {
   return static_cast<TypeMap*>(type)->end(value);
+}
+
+inline size_t GenericMap::size()
+{
+  return static_cast<TypeMap*>(type)->size(value);
 }
 
 inline Type* GenericMap::keyType()

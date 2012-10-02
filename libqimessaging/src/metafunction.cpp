@@ -21,6 +21,7 @@
 #include <boost/fusion/container/generation/make_vector.hpp>
 #include <boost/fusion/include/make_vector.hpp>
 
+#include <qimessaging/datastream.hpp>
 #include <qimessaging/metafunction.hpp>
 
 namespace qi {
@@ -183,6 +184,9 @@ void MetaFunctionParameters::setSignature(const std::string& s)
 
 void MetaFunctionParameters::convertToValues() const
 {
+  assert(false);
+  // REWRITE
+  /*
   if (!storage || storage->signature.empty())
   {
     qiLogError("qi.meta") << "Signature data unavailable, cannot convert to values.";
@@ -212,6 +216,7 @@ void MetaFunctionParameters::convertToValues() const
   }
   storage->deleteOnDestruction = true;
   assert (!storage->hasInvalidator);
+  */
 }
 
 void MetaFunctionParameters::convertToBuffer() const
@@ -237,7 +242,7 @@ MetaFunctionParameters MetaFunctionParameters::convert(const Signature& sig) con
   int idx = 0;
   for (;i != sig.end(); ++i,++idx)
   {
-    Type* compatible = qi::Type::getCompatibleTypeWithSignature(*i);
+    Type* compatible = qi::Type::fromSignature(*i);
     if (!compatible)
     {
       qiLogError("qi.metafunction") <<"convert: unknown type " << *i;
@@ -295,10 +300,3 @@ GenericValue MetaFunctionResult::getValue() const
 
 }
 
-QI_REGISTER_MAPPING("[d]", std::vector<double>);
-QI_REGISTER_MAPPING("[f]", std::vector<float>);
-QI_REGISTER_MAPPING("[i]", std::vector<int>);
-QI_REGISTER_MAPPING("s", std::string);
-QI_REGISTER_MAPPING("[s]", std::vector<std::string>);
-QI_REGISTER_MAPPING("r", qi::Buffer);
-QI_REGISTER_MAPPING("m", qi::GenericValue);

@@ -18,6 +18,8 @@ class QIMESSAGING_API TypeInt: public Type
 {
 public:
   virtual int64_t get(void* value) const = 0;
+  virtual unsigned int size() const = 0; // size in bytes
+  virtual bool isSigned() const = 0; // return if type is signed
   virtual void set(void** storage, int64_t value) = 0;
   virtual Kind kind() const { return Int;}
 };
@@ -26,15 +28,20 @@ class QIMESSAGING_API TypeFloat: public Type
 {
 public:
   virtual double get(void* value) const = 0;
+  virtual unsigned int size() const = 0; // size in bytes
   virtual void set(void** storage, double value) = 0;
   virtual Kind kind() const { return Float;}
 };
 
+class Buffer;
 class QIMESSAGING_API TypeString: public Type
 {
 public:
-  virtual std::string get(void* value) const = 0;
-  virtual void set(void** storage, const std::string& value) = 0;
+  std::string getString(void* storage) const;
+  virtual std::pair<char*, size_t> get(void* value) const = 0;
+  void set(void** storage, const std::string& value);
+  virtual void set(void** storage, const char* ptr, size_t sz) = 0;
+  virtual Buffer* asBuffer(void* storage) { return 0;}
   virtual Kind kind() const { return String;}
 };
 
@@ -66,6 +73,7 @@ class QIMESSAGING_API TypeList: public Type
 {
 public:
   virtual Type* elementType(void* storage) const = 0;
+  virtual size_t size(void* storage) = 0;
   virtual GenericListIterator begin(void* storage) = 0; // Must be destroyed
   virtual GenericListIterator end(void* storage) = 0;  //idem
   virtual void pushBack(void* storage, void* valueStorage) = 0;
@@ -77,6 +85,7 @@ class QIMESSAGING_API TypeMap: public Type
 public:
   virtual Type* elementType(void* storage) const = 0;
   virtual Type* keyType(void* storage) const = 0;
+  virtual size_t size(void* storage) = 0;
   virtual GenericMapIterator begin(void* storage) = 0; // Must be destroyed
   virtual GenericMapIterator end(void* storage) = 0;  //idem
   virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
@@ -86,19 +95,25 @@ public:
 class QIMESSAGING_API TypeTuple: public Type
 {
 public:
+  std::vector<GenericValue> getValues(void* storage);
   virtual std::vector<Type*> memberTypes(void*) = 0;
   virtual std::vector<void*> get(void* storage); // must not be destroyed
   virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
   virtual void set(void** storage, std::vector<void*>);
-  virtual void set(void** storage, unsigned int index, void* valStorage) = 0;
+  virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
   virtual Kind kind() const { return Tuple;}
 };
 
+///@return a Type of kind List that can contains elements of type elementType.
+QIMESSAGING_API Type* defaultListType(Type* elementType);
+
+///@return a Type of kind Map with given key and element types
+QIMESSAGING_API Type* defaultMapType(Type* keyType, Type* ElementType);
+
+///@return a Type of kind Tuple with givent memberTypes
+QIMESSAGING_API Type* defaultTupleType(std::vector<Type*> memberTypes);
+
 }
 
-#include <qimessaging/details/typestring.hxx>
-#include <qimessaging/details/typelist.hxx>
-#include <qimessaging/details/typemap.hxx>
-#include <qimessaging/details/typepointer.hxx>
-#include <qimessaging/details/typetuple.hxx>
+
 #endif

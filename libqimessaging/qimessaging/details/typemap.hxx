@@ -11,22 +11,16 @@ namespace qi
 {
   // List container
 template<typename M> class TypeMapImpl:
-public TypeMap,
-public DefaultTypeImplMethods<M,
-                               TypeDefaultAccess<M>,
-                               TypeDefaultClone<TypeDefaultAccess<M> >,
-                               TypeDefaultSerialize<TypeDefaultAccess<M> >
-                               >
+public TypeMap
 {
 public:
   typedef DefaultTypeImplMethods<M,
-                               TypeDefaultAccess<M>,
-                               TypeDefaultClone<TypeDefaultAccess<M> >,
-                               TypeDefaultSerialize<TypeDefaultAccess<M> >
+                               TypeByPointer<M>
                                > MethodsImpl;
   TypeMapImpl();
   virtual Type* elementType(void* storage) const;
   virtual Type* keyType(void* storage) const;
+  virtual size_t size(void* storage);
   virtual GenericMapIterator begin(void* storage);
   virtual GenericMapIterator end(void* storage);
   virtual void insert(void* storage, void* keyStorage, void* valueStorage);
@@ -38,7 +32,7 @@ template<typename C> class TypeMapIteratorImpl
 : public TypeMapIterator
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<typename C::iterator>::type
   TypeImpl;
   virtual std::pair<GenericValue, GenericValue> dereference(void* storage);
   virtual void  next(void** storage);
@@ -70,6 +64,13 @@ TypeMapImpl<M>::keyType(void*) const
 {
   static Type* result = typeOf<typename M::key_type>();
   return result;
+}
+
+template<typename M> size_t
+TypeMapImpl<M>::size(void* storage)
+{
+  M* ptr = (M*)ptrFromStorage(&storage);
+  return ptr->size();
 }
 
 template<typename M> GenericMapIterator

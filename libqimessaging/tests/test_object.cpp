@@ -201,11 +201,9 @@ Point point(int x, int y)
 }
 
 //QI_TYPE_SERIALIZABLE(Point)
-QI_REGISTER_STRUCT(Point, x, y);
 QI_TYPE_STRUCT(Point, x, y);
 
 struct FPoint { float x; float y;};
-QI_REGISTER_STRUCT(FPoint, x, y);
 QI_TYPE_STRUCT(FPoint, x, y);
 
 struct Test
@@ -213,9 +211,8 @@ struct Test
   float x;
 };
 
-/// Test the split form of the macro.
-QI_REGISTER_STRUCT_DECLARE(Test)
-QI_REGISTER_STRUCT_IMPLEMENT(Test, x)
+QI_TYPE_STRUCT_DECLARE(Test);
+QI_TYPE_STRUCT_IMPLEMENT(Test, x);
 
 
 
@@ -261,9 +258,7 @@ struct Complex
 QI_TYPE_STRUCT_DECLARE(Complex)
 QI_TYPE_STRUCT_IMPLEMENT(Complex , points, foo, baz, stuff);
 
-// Test the sub macros
-QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
-QI_SIGNATURE_STRUCT(Complex, points, foo, baz, stuff)
+
 struct Complex2
 {
   std::list<FPoint> points;

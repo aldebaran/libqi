@@ -8,16 +8,37 @@
 #define _QIMESSAGING_TYPE_HPP_
 
 #include <typeinfo>
+#include <string>
+
 #include <boost/preprocessor.hpp>
-#include <qimessaging/datastream.hpp>
+#include <boost/type_traits/is_function.hpp>
+#include <boost/mpl/if.hpp>
+
+#include <qi/log.hpp>
+#include <qimessaging/api.hpp>
 
 namespace qi{
+
+class TypeInt;
+class TypeFloat;
+class TypeString;
+class TypePointer;
+class TypeTuple;
+class ObjectType;
+class GenericValue;
+class GenericList;
+class GenericMap;
+class GenericObject;
+class IDataStream;
+class ODataStream;
+class Signature;
 
 /** Interface for all the operations we need on any type:
  *
  *  - cloning/destruction in clone() and destroy()
- *  - Serialization through serialize() and deserialize() to transmit
- *    the value through some kind of pipe.
+ *  - Access to value from storage and storage creation in
+ *    ptrFromStorage() and initializeStorage()
+ *  - Type of specialized interface through kind()
  *
  * Our aim is to transport arbitrary values through:
  *  - synchronous calls: Nothing to do, values are just transported and
@@ -30,10 +51,6 @@ class QIMESSAGING_API Type
 {
 public:
   virtual const std::type_info& info() =0;
-  const char* infoString() { return info().name();} // for easy gdb access
-  /// @return the serialization signature used by this type.
-  virtual std::string signature()=0;
-
   // Initialize and return a new storage, from nothing or a T*
   virtual void* initializeStorage(void* ptr=0)=0;
   // Get pointer to type from pointer to storage
@@ -42,11 +59,6 @@ public:
 
   virtual void* clone(void*)=0;
   virtual void destroy(void*)=0;
-
-  // Default impl does toValue.serialize()
-  virtual void  serialize(ODataStream& s, const void*)=0;
-  // Default impl does deserialize(GenericValue&) then fromValue
-  virtual void* deserialize(IDataStream& s)=0;
 
   enum Kind
   {
@@ -59,58 +71,76 @@ public:
     Object,
     Pointer,
     Tuple,
+    Dynamic,
     Unknown,
   };
   virtual Kind kind() const;
 
-  /* When someone makes a call with arguments that do not match the
-   * target signature (ex: int vs float), we want to handle it.
-   * For this, given the known correct signature S and known incorrect
-   * GenericValue v, we want to be able to obtain a new Type T that
-   * serializes with type S, and then try to convert o into type T.
-   *
-   * For this we need a map<Signature, Type> that we will feed with
-   * known types.
-   *
-   */
-  typedef std::map<std::string, Type*> TypeSignatureMap;
-  static TypeSignatureMap& typeSignatureMap()
-  {
-    static TypeSignatureMap res;
-    return res;
-  }
+  const char* infoString() { return info().name();} // for easy gdb access
 
-  static Type* getCompatibleTypeWithSignature(const std::string& sig)
-  {
-    TypeSignatureMap::iterator i = typeSignatureMap().find(sig);
-    if (i == typeSignatureMap().end())
-      return 0;
-    else
-      return i->second;
-  }
+  std::string signature();
+  static Type* fromSignature(const Signature& sig);
 
-  static bool registerCompatibleType(const std::string& sig,
-    Type* mt)
-  {
-    typeSignatureMap()[sig] = mt;
-    return true;
-  }
+  GenericValue deserialize(IDataStream& in);
+  void serialize(ODataStream& out, void* storage);
 
-  #define QI_REGISTER_MAPPING(sig, type) \
-  static bool BOOST_PP_CAT(_qireg_map_ , __LINE__) = ::qi::Type::registerCompatibleType(sig, \
-    ::qi::typeOf<type>());
+  // Dispatch based on type kind. Must implement TypeDispatcher.
+  template<typename Dispatcher> Dispatcher& dispatch(const Dispatcher& disptacher, void** storage);
+};
+
+class QIMESSAGING_API TypeDispatcher
+{
+public:
+  virtual void visitUnknown(Type* type, void* storage)=0;
+  virtual void visitVoid(Type*)=0;
+  virtual void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)=0;
+  virtual void visitFloat(TypeFloat* type, double value, int byteSize)=0;
+  virtual void visitString(TypeString* type, void* storage)=0;
+  virtual void visitList(GenericList value)=0;
+  virtual void visitMap(GenericMap value)=0;
+  virtual void visitObject(GenericObject value)=0;
+  virtual void visitPointer(TypePointer* type, void* storage, GenericValue pointee)=0;
+  virtual void visitTuple(TypeTuple* type, void* storage)=0;
+  virtual void visitDynamic(Type* type, GenericValue pointee);
 };
 
 
 namespace detail {
-  template<typename T> struct TypeFactory
+  //template<int I> struct Nothing{};
+  template<typename T> struct TypeManagerDefault
   {
-    void* operator()() { return new T();}
+    static void* create() { return new T();}
+    static void createInPlace(void* ptr) { new(ptr)T();}
+    static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
+    static void destroy(void* ptr) { delete (T*)ptr;}
   };
+  template<typename T> struct TypeManagerDefault<const T>: public TypeManagerDefault<T>{};
+  template<typename T>
+  struct TypeManagerNonDefaultConstructible
+  {
+    static void* create() { return 0;}
+    static void createInPlace(void* ptr) {}
+    static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
+    static void destroy(void* ptr) { delete (T*)ptr;}
+  };
+  struct TypeManagerNull
+  {
+    static void* create() { return 0;}
+    static void createInPlace(void* ptr) {}
+    template<typename T1, typename T2>
+    static void copy(const T1& d, const T2&s) {}
+    template<typename T>
+    static void destroy(const T& ptr) {}
+  };
+
+  template<typename T> struct TypeManager
+  : public boost::mpl::if_c<boost::is_function<T>::value,
+  TypeManagerNull, TypeManagerDefault<T> >::type
+  {};
 };
 #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
 namespace qi { namespace detail { \
-template<> struct TypeFactory<T> { void* operator()() { return 0;}};}}
+template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
 /** Meta-type specialization.
  *  Use the aspect pattern, make a class per feature group
  *  (Clone, GenericValue, Serialize)
@@ -118,7 +148,7 @@ template<> struct TypeFactory<T> { void* operator()() { return 0;}};}}
  */
 
 /// Access API that stores a T* in storage
-template<typename T> class TypeDefaultAccess
+template<typename T> class TypeByPointer
 {
 public:
   typedef T type;
@@ -130,15 +160,30 @@ public:
   {
     if (ptr)
       return ptr;
-    void* res = detail::TypeFactory<T>()();
+    void* res = detail::TypeManager<T>::create();
     if (!res)
       qiLogError("qi.meta") << "initializeStorage error on " << typeid(T).name();
     return res;
   }
+  static void* clone(void* src)
+  {
+    const T* ptr = (const T*)ptrFromStorage(&src);
+    void* res = initializeStorage();
+    T* tres = (T*)ptrFromStorage(&res);
+    detail::TypeManager<type>::copy(tres, ptr);
+    return res;
+  }
+  static void destroy(void* src)
+  {
+    T* ptr = (T*)ptrFromStorage(&src);
+    detail::TypeManager<type>::destroy(ptr);
+  }
 };
 
+template<typename T> class TypeByPointer<const T>: public TypeByPointer<T>{};
+
 /// Access api that stores T in storage
-template<typename T> class TypeDirectAccess
+template<typename T> class TypeByValue
 {
 public:
   typedef T type;
@@ -148,96 +193,33 @@ public:
   }
   static void* initializeStorage(void* ptr=0)
   {
+    void* result = 0;
+    T* tresult=(T*)(void*)&result;
     if (ptr)
     {
-      T val = *(T*)ptr;
-      return *(void**)&val;
+      detail::TypeManager<T>::copy(tresult, (T*)ptr);
+      return result;
     }
     else
-      return 0;
+    {
+      detail::TypeManager<T>::createInPlace(tresult);
+      return result;
+    }
   }
-};
-
-template<typename A> class TypeDefaultClone
-{
-public:
-  typedef typename A::type type;
-  static void* clone(void* src)
-  {
-    const type* ptr = (const type*)A::ptrFromStorage(&src);
-    void* res = A::initializeStorage();
-    type* tres = (type*)A::ptrFromStorage(&res);
-    *tres = *ptr;
-    return res;
-  }
-
-  static void destroy(void* src)
-  {
-    type* ptr = (type*)A::ptrFromStorage(&src);
-    delete ptr;
-  }
-};
-
-template<typename A> class TypeNoClone
-{
-public:
   static void* clone(void* src)
   {
     return src;
   }
 
-  static void destroy(void* ptr)
+  static void destroy(void* storage)
   {
-    /* Assume a TypeNoClone is not serializable
-     * So it cannot have been allocated by us.
-     * So the destroy comes after a clone->ignore it
-     */
+    T* ptr = (T*)ptrFromStorage(&storage);
+    ptr->~T();
   }
 };
 
-template<typename A> class TypeDefaultSerialize
-{
-public:
-  typedef typename A::type type;
-  static void  serialize(ODataStream& s, const void* src)
-  {
-    const type* ptr = (const type*)A::ptrFromStorage((void**)&src);
-    s << *ptr;
-  }
-
-  static void* deserialize(IDataStream& s)
-  {
-    void* storage = A::initializeStorage();
-    type* ptr = (type*)A::ptrFromStorage(&storage);
-    s >> *ptr;
-    return storage;
-  }
-  static std::string signature()
-  {
-    return signatureFromType<type>::value();
-  }
-};
-
-template<typename T> class TypeNoSerialize
-{
-public:
-  static void serialize(ODataStream& s, const void* ptr)
-  {
-    qiLogWarning("qi.meta") << "serialize not implemented for " << typeid(T).name();
-  }
-
-  static void* deserialize(IDataStream& s)
-  {
-    qiLogWarning("qi.meta") << "deserialize not implemented for " << typeid(T).name();
-    return 0;
-  }
- static  std::string signature()
-  {
-    std::string res;
-    res += (char)Signature::Type_Unknown;
-    return res;
-  }
-};
+// const ward
+template<typename T> class TypeByValue<const T>: public TypeByValue<T> {};
 
 
 /* implementation of Type methods that bounces to the various aspect
@@ -248,15 +230,12 @@ public:
  * That way we can split the various aspects in different classes
  * for better reuse, without the cost of a second virtual call.
  */
-template<typename T, typename _Access    = TypeDefaultAccess<T>
-                   , typename _Cloner    = TypeDefaultClone<_Access>
-                   , typename _Serialize = TypeNoSerialize<_Access>
+template<typename T, typename _Access    = TypeByPointer<T>
          > class DefaultTypeImplMethods
 {
 public:
   typedef _Access Access;
-  typedef _Cloner Cloner;
-  typedef _Serialize Serialize;
+
   static void* initializeStorage(void* ptr=0)
   {
     return Access::initializeStorage(ptr);
@@ -274,83 +253,63 @@ public:
 
   static void* clone(void* src)
   {
-    return Cloner::clone(src);
+    return Access::clone(src);
   }
 
   static void destroy(void* ptr)
   {
-    Cloner::destroy(ptr);
-  }
-
-  static std::string signature()
-  {
-    return Serialize::signature();
-  }
-
-  static void  serialize(ODataStream& s, const void* ptr)
-  {
-    Serialize::serialize(s, ptr);
-  }
-
-  static void* deserialize(IDataStream& s)
-  {
-    return Serialize::deserialize(s);
+    Access::destroy(ptr);
   }
 };
 
-#define _QI_BOUNCE_TYPE_METHODS(Bounce)                                                             \
-virtual const std::type_info& info() { return Bounce::info();}                                      \
-virtual std::string signature() { return Bounce::signature();}                                      \
-virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}              \
-virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}                          \
-virtual void* clone(void* ptr) { return Bounce::clone(ptr);}                                        \
-virtual void destroy(void* ptr) { return Bounce::destroy(ptr);}                                     \
-virtual void  serialize(ODataStream& s, const void* p) { return Bounce::serialize(s, p);}           \
-virtual void* deserialize(IDataStream& s) { return Bounce::deserialize(s);}
+#define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
+virtual const std::type_info& info() { return Bounce::info();}                           \
+virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
+virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
 
-template<typename T, typename _Access    = TypeDefaultAccess<T>
-                   , typename _Cloner    = TypeDefaultClone<_Access>
-                   , typename _Serialize = TypeNoSerialize<_Access>
-                   > class DefaultTypeImpl
-                   : public Type
-                   {
-                   public:
-                     typedef DefaultTypeImplMethods<T, _Access, _Cloner, _Serialize> MethodsImpl;
-                     _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
-                   };
+
+#define _QI_BOUNCE_TYPE_METHODS(Bounce)  \
+_QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce) \
+virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
+virtual void destroy(void* ptr) { return Bounce::destroy(ptr);}
+
+
+template<typename T, typename _Access    = TypeByPointer<T> >
+class DefaultTypeImpl
+: public Type
+{
+public:
+  typedef DefaultTypeImplMethods<T, _Access> MethodsImpl;
+  _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
+};
 
 /* Type "factory". Specialize this class to provide a custom
  * Type for a given type.
  */
-template<typename T> class TypeImpl: public virtual DefaultTypeImpl<T>
+template<typename T> class TypeImpl: public DefaultTypeImpl<T>
 {
 };
 
-/** Declare that a type is serialisable
- *  Must be called outside any namespace.
- */
-#define QI_TYPE_SERIALIZABLE(T)              \
-namespace qi {                                   \
-template<> class TypeImpl<T>:                \
-  public DefaultTypeImpl<T,                  \
-    TypeDefaultAccess<T>,                    \
-    TypeDefaultClone<TypeDefaultAccess<T> >, \
-    TypeDefaultSerialize<TypeDefaultAccess<T> >   \
-  >{}; }
 
 /// Declare that a type has no metatype and cannot be used in a Value
 #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
 /// Declare that a type with default TypeImpl is not clonable
 #define QI_TYPE_NOT_CLONABLE(T) \
-namespace qi {    \
-  template<> struct TypeDefaultClone<TypeDefaultAccess<T> >: public TypeNoClone<TypeDefaultAccess<T> >{}; \
-}
+namespace qi { namespace detail { \
+template<> struct TypeManager<T>: public TypeManagerNull {};}}
 
 /// Type factory getter. All other type access mechanism bounce here
 QIMESSAGING_API Type*  getType(const std::type_info& type);
 /// Type factory setter
 QIMESSAGING_API bool registerType(const std::type_info& typeId, Type* type);
+
+/// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
+#define QI_TYPE_REGISTER(t) \
+  QI_TYPE_REGISTER_CUSTOM(t, qi::TypeImpl<t>)
+/// Register 'typeimpl' in runtime type factory for 'type'.
+#define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
+static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
 
 /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
  */
@@ -363,8 +322,6 @@ template<typename T> Type* typeOf(const T& v)
 }
 
 }
-
-QI_TYPE_SERIALIZABLE(Buffer);
 
 #include <qimessaging/details/type.hxx>
 

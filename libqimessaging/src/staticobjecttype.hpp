@@ -63,9 +63,6 @@ public:
   virtual void* ptrFromStorage(void**);
   virtual void* clone(void* inst);
   virtual void destroy(void*);
-  virtual void  serialize(ODataStream& s, const void*);
-  virtual void* deserialize(IDataStream& s);
-  virtual std::string signature();
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

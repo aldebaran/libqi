@@ -134,19 +134,4 @@ void StaticObjectTypeBase::destroy(void* inst)
   _data.classType->destroy(inst);
 }
 
-void  StaticObjectTypeBase::serialize(ODataStream& s, const void* p)
-{
-  _data.classType->serialize(s, p);
-}
-void* StaticObjectTypeBase::deserialize(IDataStream& s)
-{
-  return _data.classType->deserialize(s);
-}
-
-std::string StaticObjectTypeBase::signature()
-{
-  return _data.classType->signature();
-}
-
-
 }

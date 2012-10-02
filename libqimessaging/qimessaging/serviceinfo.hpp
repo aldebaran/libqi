@@ -33,8 +33,6 @@ namespace qi
     inline unsigned int                    processId() const   { return _processId; }
     inline const std::vector<std::string> &endpoints() const   { return _endpoints; }
 
-    friend QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, ServiceInfo &sinfo);
-
   protected:
     std::string               _name;
     unsigned int              _serviceId;
@@ -42,16 +40,14 @@ namespace qi
     unsigned int              _processId;
     std::vector<std::string>  _endpoints;
     void                     *_reserved;
+    friend class TypeImpl<ServiceInfo>;
   };
 
   typedef std::vector<qi::ServiceInfo> ServiceInfoVector;
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const ServiceInfo &sinfo);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, ServiceInfo &sinfo);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const ServiceInfo &sinfo);
-
 }; // !qi
 
-QI_TYPE_SERIALIZABLE(ServiceInfo);
+
+QI_TYPE_STRUCT(qi::ServiceInfo, _name, _serviceId, _machineId, _processId, _endpoints);
 
 #endif  // _QIMESSAGING_SERVICEINFO_HPP_

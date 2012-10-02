@@ -5,6 +5,25 @@
 
 #include <qimessaging/signature.hpp>
 
+namespace qi
+{
+  // OLD API compat layer for this test.
+  template<typename T> struct signatureFromType
+  {
+    static std::string value()
+    {
+      return typeOf<T>()->signature();
+    }
+  };
+  struct signatureFromObject
+  {
+    template<typename T> std::string value(const T& ptr)
+    {
+      return typeOf(ptr)->signature();
+    }
+  };
+}
+
 int main()
 {
   typedef std::map<std::string , std::string> StringMap;

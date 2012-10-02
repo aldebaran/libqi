@@ -181,29 +181,15 @@ namespace qi {
     return _p->findSignal(name);
   }
 
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
-    stream << meta._p->_methods;
-    stream << meta._p->_events;
-    stream << (unsigned int) (*meta._p->_index);
-    return stream;
+  MetaObjectPrivate* metaObjectPrivate(MetaObject* p)
+  {
+    return p->_p;
   }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta) {
-    stream >> meta._p->_methods;
-    stream >> meta._p->_events;
-    unsigned int id;
-    stream >> id;
-    meta._p->_index = id;
-    meta._p->refreshCache();
-    return stream;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta) {
-    stream & meta._p->_methods;
-    stream & meta._p->_events;
-    stream.write(qi::Signature::Type_UInt32);
-    return stream;
-  }
-
-
 }
+
+QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _nextNumber);
+QI_TYPE_REGISTER(qi::MetaObjectPrivate);
+
+
+QI_TYPE_STRUCT_BOUNCE(qi::MetaObject, qi::MetaObjectPrivate, qi::metaObjectPrivate);
+QI_TYPE_REGISTER(qi::MetaObject);

@@ -3,6 +3,7 @@
 **  See COPYING for the license
 */
 #include <qimessaging/metamethod.hpp>
+#include <qimessaging/datastream.hpp>
 
 namespace qi {
 
@@ -23,9 +24,7 @@ namespace qi {
       std::vector<GenericValue> args;
       for (unsigned i=0; i<argTypes.size(); ++i)
       {
-        GenericValue v;
-        v.type = argTypes[i];
-        v.value = v.type->deserialize(in);
+        GenericValue v = argTypes[i]->deserialize(in);
         args.push_back(v);
       }
       GenericValue res = val.call(args);
@@ -49,9 +48,7 @@ namespace qi {
       std::vector<GenericValue> args;
       for (unsigned i=1; i<argTypes.size(); ++i)
       {
-        GenericValue v;
-        v.type = argTypes[i];
-        v.value = v.type->deserialize(in);
+        GenericValue v = argTypes[i]->deserialize(in);
         args.push_back(v);
       }
       GenericValue res = val.call(instance, args);
@@ -87,28 +84,6 @@ namespace qi {
   unsigned int       MetaMethod::uid() const
   {
     return _uid;
-  }
-
-  qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaMethod &meta) {
-    stream << meta.signature()
-           << meta.sigreturn()
-           << meta.uid();
-    return stream;
-  }
-
-  qi::IDataStream &operator>>(qi::IDataStream &stream, MetaMethod &meta) {
-    unsigned int uid;
-    std::string signature, sigret;
-    stream >> signature >> sigret >> uid;
-    meta = MetaMethod( uid, sigret, signature);
-    return stream;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaMethod &meta) {
-    stream & meta.signature();
-    stream & meta.sigreturn();
-    stream & meta.uid();
-    return stream;
   }
 
 };

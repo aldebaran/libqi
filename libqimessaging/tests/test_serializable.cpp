@@ -16,12 +16,12 @@ public:
   int x() { return _x; }
   int y() { return _y; }
 
-  QI_REGISTER_STRUCT_PRIVATE_ACCESS(Point2D);
+  QI_TYPE_STRUCT_PRIVATE_ACCESS(Point2D);
 private:
   int _x;
   int _y;
 };
-QI_REGISTER_STRUCT(Point2D, _x, _y);
+QI_TYPE_STRUCT(Point2D, _x, _y);
 
 //(ii)
 struct TimeStamp {
@@ -33,7 +33,7 @@ struct TimeStamp {
   int i;
   int j;
 };
-QI_REGISTER_STRUCT(TimeStamp, i, j);
+QI_TYPE_STRUCT(TimeStamp, i, j);
 
 
 //((ii)(ii))
@@ -46,7 +46,7 @@ struct TimeStampedPoint2D {
   Point2D   p;
   TimeStamp t;
 };
-QI_REGISTER_STRUCT(TimeStampedPoint2D, p, t);
+QI_TYPE_STRUCT(TimeStampedPoint2D, p, t);
 
 
 TEST(testSerializable, POD) {
@@ -73,9 +73,9 @@ TEST(testSerializable, POD) {
   EXPECT_EQ(tsp2d1.p.y(), tsp2d2.p.y());
   EXPECT_EQ(tsp2d1.t.i, tsp2d2.t.i);
   EXPECT_EQ(tsp2d1.t.j, tsp2d2.t.j);
-  EXPECT_EQ("(ii)", qi::signatureFromObject::value(p2d1));
-  EXPECT_EQ("(ii)", qi::signatureFromObject::value(ts1));
-  EXPECT_EQ("((ii)(ii))", qi::signatureFromObject::value(tsp2d1));
+  EXPECT_EQ("(ii)", qi::typeOf(p2d1)->signature());
+  EXPECT_EQ("(ii)", qi::typeOf(ts1)->signature());
+  EXPECT_EQ("((ii)(ii))", qi::typeOf(tsp2d1)->signature());
 }
 
 

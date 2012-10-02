@@ -14,7 +14,7 @@ class GenericList;
 class GenericMap;
 class GenericObject;
 class GenericList;
-
+class ODataStream;
 
 /** Class that holds any value, with informations to manipulate it.
  *  Operator = makes a shallow copy.
@@ -83,6 +83,7 @@ public:
 
 }
 
+#include <qimessaging/genericvaluespecialized.hpp>
 #include <qimessaging/details/genericvalue.hxx>
 
 #endif  // _QIMESSAGING_GENERICVALUE_HPP_

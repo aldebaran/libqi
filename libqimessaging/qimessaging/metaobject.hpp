@@ -44,10 +44,6 @@ namespace qi {
     MetaObjectPrivate   *_p;
   };
 
-   QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta);
-
 };
 
 #endif  // _QIMESSAGING_METAOBJECT_HPP_

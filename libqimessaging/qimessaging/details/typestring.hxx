@@ -9,23 +9,30 @@
 
 namespace qi
 {
+  inline std::string TypeString::getString(void* storage) const
+  {
+    std::pair<char*, size_t> res = get(storage);
+    return std::string(res.first, res.second);
+  }
+  inline void TypeString::set(void** storage, const std::string& val)
+  {
+    set(storage, val.c_str(), val.size());
+  }
   class QIMESSAGING_API TypeStringImpl: public TypeString
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
-    TypeDefaultAccess<std::string>,
-    TypeDefaultClone<TypeDefaultAccess<std::string> >,
-    TypeDefaultSerialize<TypeDefaultAccess<std::string> >
+    TypeByPointer<std::string>
     > Methods;
-    virtual std::string get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage) const
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(&storage);
-      return *ptr;
+      return std::make_pair((char*)ptr->c_str(), ptr->size());
     }
-    virtual void set(void** storage, const std::string& value)
+    virtual void set(void** storage, const char* value, size_t sz)
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(storage);
-      *ptr = value;
+      *ptr = std::string(value, sz);
     }
 
     _QI_BOUNCE_TYPE_METHODS(Methods);
@@ -33,98 +40,59 @@ namespace qi
 
   template<> class TypeImpl<std::string>: public TypeStringImpl{};
 
-  class CStringClone
-  {
-  public:
-    static void* clone(void* src)
-    {
-      return strdup((char*)src);
-    }
-    static void destroy(void* src)
-    {
-      free(src);
-    }
-  };
-
   class QIMESSAGING_API TypeCStringImpl: public TypeString
   {
   public:
-    virtual std::string get(void* storage) const
+    virtual std::pair<char*, size_t> get(void* storage) const
     {
-      return std::string((char*)storage);
+      return std::make_pair((char*)storage, strlen((char*)storage));
     }
-    virtual void set(void** storage, const std::string& str)
+    virtual void set(void** storage, const char* ptr, size_t sz)
     {
-      *(char**)storage = strdup(str.c_str());
+      *(char**)storage = strdup(ptr);
     }
-
-    typedef DefaultTypeImplMethods<char*, TypeDirectAccess<char*>, CStringClone> TypeMethodsImpl;
-    _QI_BOUNCE_TYPE_METHODS(TypeMethodsImpl);
+    virtual void* clone(void* src)
+    {
+      return strdup((char*)src);
+    }
+    virtual void destroy(void* src)
+    {
+      free(src);
+    }
+    typedef DefaultTypeImplMethods<char*, TypeByValue<char*> > Methods;
+    _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
   template<> class TypeImpl<char*>: public TypeCStringImpl{};
 
-  template<int I>
-  class TypeCArrayClone
+
+  template<int I> class TypeImpl<char [I]>: public TypeString
   {
   public:
-    static void* clone(void* src)
+    virtual void* clone(void* src)
     {
       char* res = new char[I];
       memcpy(res, src, I);
       return res;
     }
-    static void destroy(void* ptr)
+    virtual void destroy(void* ptr)
     {
       delete[]  (char*)ptr;
     }
-  };
-
-  template<int I> class TypeCArraySerialize
-  {
-  public:
-    static void  serialize(ODataStream& s, const void* ptr)
+    virtual std::pair<char*, size_t> get(void* storage) const
     {
-      s << (const char*)ptr;
+      return std::make_pair((char*)storage, I-1);
     }
-    static void* deserialize(IDataStream& s)
-    {
-      std::string str;
-      s >> str;
-      if (str.length() >= I)
-        return 0;
-      char* res = new char[I];
-      strncpy(res, str.c_str(), str.length());
-      return res;
-    }
-    static std::string signature()
-    {
-      return signatureFromType<std::string>::value();
-    }
-  };
-
-  template<int I> class TypeImpl<char [I]>: public TypeString
-  {
-  public:
-    virtual std::string get(void* storage) const
-    {
-      char* ptr = (char*) storage;
-      return ptr;
-    }
-    virtual void set(void** storage, const std::string& value)
+    virtual void set(void** storage, const char* ptr, size_t sz)
     {
       // haha...no
       qiLogWarning("qi.meta") << "set on C array not implemented";
     }
 
     typedef  DefaultTypeImplMethods<char[I],
-      TypeDefaultAccess<char[I]>,
-      TypeCArrayClone<I>,
-      TypeCArraySerialize<I>
-      > Methods;
-      _QI_BOUNCE_TYPE_METHODS(Methods);
+      TypeByPointer<char[I]> > Methods;
+      _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 }
 
-QI_REGISTER_MAPPING("s", std::string);
 #endif

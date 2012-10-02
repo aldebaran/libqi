@@ -1,3 +1,6 @@
+#include <boost/type_traits/is_signed.hpp>
+
+#include <qimessaging/type.hpp>
 #include <qimessaging/typespecialized.hpp>
 #include <qimessaging/genericvaluespecialized.hpp>
 
@@ -7,7 +10,7 @@ template<typename T> class TypeIntImpl:
   public TypeInt
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T>::type
    ImplType;
   virtual int64_t get(void* value) const
   {
@@ -17,9 +20,22 @@ public:
   {
     *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
   }
+  virtual unsigned int size() const
+  {
+    return sizeof(T);
+  }
+  virtual bool isSigned() const
+  {
+    return boost::is_signed<T>::value;
+  }
   _QI_BOUNCE_TYPE_METHODS(ImplType);
 };
 
+// bool
+template<> class TypeImpl<bool>: public TypeIntImpl<char>{};
+// Force 64bit long
+template<> class TypeIntImpl<long>: public TypeIntImpl<long long>{};
+template<> class TypeIntImpl<unsigned long>: public TypeIntImpl<unsigned long long>{};
 
 #define INTEGRAL_TYPE(t) \
 static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new TypeIntImpl<t>());
@@ -41,11 +57,11 @@ INTEGRAL_TYPE(long);
 INTEGRAL_TYPE(unsigned long);
 INTEGRAL_TYPE(long long);
 INTEGRAL_TYPE(unsigned long long);
-
 }
 
-QI_REGISTER_MAPPING("i", qi::int32_t);
-QI_REGISTER_MAPPING("I", qi::uint32_t);
+QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeIntImpl<char>);
+
+
 
 
 namespace qi {
@@ -54,7 +70,7 @@ namespace qi {
 template<typename T> class TypeFloatImpl: public TypeFloat
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<T, detail::TypeAutoClone, TypeDefaultSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<T>::type
   ImplType;
   virtual double get(void* value) const
   {
@@ -63,6 +79,10 @@ public:
   virtual void set(void** storage, double value)
   {
     *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
+  }
+  virtual unsigned int size() const
+  {
+    return sizeof(T);
   }
   _QI_BOUNCE_TYPE_METHODS(ImplType);
 };
@@ -74,5 +94,3 @@ FLOAT_TYPE(float);
 FLOAT_TYPE(double);
 }
 
-QI_REGISTER_MAPPING("d", double);
-QI_REGISTER_MAPPING("f", float);

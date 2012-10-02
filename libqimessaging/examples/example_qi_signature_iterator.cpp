@@ -4,6 +4,29 @@
 typedef std::vector<std::string>          StringVect;
 typedef std::vector<StringVect>           StringVectVect;
 typedef std::map<std::string, StringVect> StringVectMap;
+namespace qi
+{
+  // OLD API compat layer for this test.
+  template<typename T> struct signatureFromType
+  {
+    static std::string value()
+    {
+      return typeOf<T>()->signature();
+    }
+    static std::string value(std::string v)
+    {
+      v+= typeOf<T>()->signature();
+      return v;
+    }
+  };
+  struct signatureFromObject
+  {
+    template<typename T> std::string value(const T& ptr)
+    {
+      return typeOf(ptr)->signature();
+    }
+  };
+}
 
 void create_a_signature(std::string &raw_signature)
 {

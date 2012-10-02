@@ -31,6 +31,10 @@ namespace qi
   class GenericList: public GenericValue
   {
   public:
+    GenericList();
+    GenericList(GenericValue&);
+    GenericList(TypeList* type, void* value);
+    size_t size();
     GenericListIterator begin();
     GenericListIterator end();
     void pushBack(GenericValue val);
@@ -40,6 +44,10 @@ namespace qi
   class GenericMap: public GenericValue
   {
   public:
+    GenericMap();
+    GenericMap(GenericValue&);
+    GenericMap(TypeMap* type, void* value);
+    size_t size();
     GenericMapIterator begin();
     GenericMapIterator end();
     void insert(GenericValue key, GenericValue val);
@@ -52,5 +60,7 @@ namespace qi
 }
 
 #include <qimessaging/details/genericvaluespecialized.hxx>
-
+#include <qimessaging/details/typelist.hxx>
+#include <qimessaging/details/typemap.hxx>
+#include <qimessaging/details/typepointer.hxx>
 #endif

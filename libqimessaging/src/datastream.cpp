@@ -93,7 +93,7 @@ namespace qi {
 
   ODataStream::ODataStream(qi::Buffer &buffer)
   : _status(Status_Ok),
-    _innerSerialization(false)
+    _innerSerialization(0)
   {
     if (!buffer._p)
       buffer._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
@@ -182,22 +182,16 @@ namespace qi {
       getBuffer().signature() << "r";
     }
 
-    bool wasInnerSerialization = _innerSerialization;
-    _innerSerialization = true;
+    ++_innerSerialization;
 
     *this << (uint32_t)meta.size();
     getBuffer().subBuffers().push_back(std::make_pair(getBuffer().size(), meta));
 
-    _innerSerialization = wasInnerSerialization;
+    --_innerSerialization;
 
     qiLogDebug("DataStream") << "Serializing buffer " << meta.size()
                              << " at " << getBuffer().size();
     return *this;
-  }
-
-  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer) {
-    os.write(qi::Signature::Type_Raw);
-    return os;
   }
 
   IDataStream &IDataStream::operator>>(qi::Buffer &meta) {
@@ -230,30 +224,25 @@ namespace qi {
     return _reader.read(size);
   }
 
-  qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::GenericValue &value)
-  {
-    os.write(Signature::Type_Dynamic);
-    return os;
-  }
-
   IDataStream &IDataStream::operator>>(GenericValue &value)
   {
     std::string signature;
     *this >> signature;
-    Type* type = Type::getCompatibleTypeWithSignature(signature);
+    Type* type = 0; // Type::getCompatibleTypeWithSignature(signature);
     if (!type)
       qiLogError("qi.datastream") << "Could not find metatype for signature " << signature;
     else
     {
       value.type = type;
-      value.value = value.type->deserialize(*this);
+      value.value = 0; // value.type->deserialize(*this);
     }
     return *this;
   }
 
   ODataStream &ODataStream::operator<<(const GenericValue &value)
   {
-    getBuffer().signature() << "m";
+    if (!_innerSerialization)
+      getBuffer().signature() << "m";
     *this << value.signature();
     value.serialize(*this);
     return *this;
@@ -261,25 +250,38 @@ namespace qi {
 
   void ODataStream::beginList(uint32_t size, std::string elementSignature)
   {
+    ++_innerSerialization;
     getBuffer().signature() << "[" << elementSignature;
     *this << size;
   }
 
   void ODataStream::endList()
   {
+    --_innerSerialization;
     getBuffer().signature() << "]";
   }
 
   void ODataStream::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
   {
+    ++_innerSerialization;
     getBuffer().signature() << "{" << keySignature << valueSignature << "}";
     *this << size;
   }
 
   void ODataStream::endMap()
   {
+    --_innerSerialization;
     getBuffer().signature() << "}";
   }
 
+  void ODataStream::beginTuple(std::string sig)
+  {
+    ++_innerSerialization;
+    getBuffer().signature() << "(" << sig << ")";
+  }
+  void ODataStream::endTuple()
+  {
+    --_innerSerialization;
+  }
 }
 

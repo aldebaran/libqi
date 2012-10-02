@@ -6,6 +6,7 @@
 
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/genericobject.hpp>
+#include <qimessaging/genericvaluespecialized.hpp>
 
 namespace qi
 {
@@ -44,7 +45,7 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
       result.type = targetType;
       result.value = targetType->initializeStorage();
       static_cast<TypeString*>(targetType)->set(&result.value,
-        static_cast<TypeString*>(type)->get(value));
+        static_cast<TypeString*>(type)->getString(value));
       return std::make_pair(result, true);
     case Type::List:
     {
@@ -256,3 +257,5 @@ GenericValue GenericValue::convertCopy(Type* targetType) const
 }
 
 }
+
+QI_TYPE_REGISTER(qi::GenericValue);

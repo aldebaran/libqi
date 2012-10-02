@@ -21,6 +21,8 @@
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/is_member_pointer.hpp>
 
+#include <qimessaging/typespecialized.hpp>
+
 /* This file contains the default-provided Type specialisations
  *
  */
@@ -37,18 +39,18 @@ namespace qi {
     }
     void* initializeStorage(void*) { return 0;}
     void* ptrFromStorage(void** ) { return 0;}
-    std::string signature()                  { return Signature::fromType(Signature::Type_Void).toString(); }
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
-    void serialize(ODataStream&, const void*){}
-    void* deserialize(IDataStream&)          { return 0;}
   };
 
   //reference
 
   template<typename T> class TypeImpl<T&>
       : public TypeImpl<T> {};
+
 }
+
+
 
 namespace qi  {
 
@@ -68,16 +70,35 @@ namespace qi  {
           defaultResult = new TypeImpl<T>();
         result = defaultResult;
       }
+      /*
       if (typeid(T).name() != result->infoString())
-        qiLogError("qi.meta") << "typeOfBackend: type mismatch " << typeid(T).name() << " "
+        qiLogDebug("qi.meta") << "typeOfBackend: type mismatch " << typeid(T).name() << " "
        << result <<" " << result->infoString();
+       */
       return result;
     }
+
+    template<typename T> struct TypeOfAdapter
+    {
+      typedef T type;
+    };
+    template<typename T> struct TypeOfAdapter<T&>
+    {
+      typedef typename TypeOfAdapter<T>::type type;
+    };
+    template<typename T> struct TypeOfAdapter<const T>
+    {
+      typedef typename TypeOfAdapter<T>::type type;
+    };
+    template<typename T> struct TypeOfAdapter<T*>
+    {
+      typedef typename boost::add_pointer<typename boost::remove_const<typename TypeOfAdapter<T>::type>::type>::type type;
+    };
   }
 
   template<typename T> Type* typeOf()
   {
-    return detail::typeOfBackend<typename boost::remove_const<T>::type>();
+    return detail::typeOfBackend<typename detail::TypeOfAdapter<T>::type>();
   }
 
   inline Type::Kind Type::kind() const
@@ -178,35 +199,116 @@ namespace qi  {
       return sigs.str();
     }
 
-    // bouncer to correct Cloner based on access type
-    template<typename T> class TypeAutoClone
-    {
-    };
-    template<typename T> class TypeAutoClone<TypeDirectAccess<T> >
-    : public TypeNoClone<TypeDirectAccess<T> > {};
-    template<typename T> class TypeAutoClone<TypeDefaultAccess<T> >
-    : public TypeDefaultClone<TypeDefaultAccess<T> > {};
-
     // Bouncer to DefaultAccess or DirectAccess based on type size
-    template<typename T,
-             template<typename> class Cloner=TypeAutoClone,
-             template<typename> class Serialize=TypeNoSerialize>
+    template<typename T>
     class TypeImplMethodsBySize
     {
     public:
       typedef typename boost::mpl::if_c<
         sizeof(T) <= sizeof(void*),
         DefaultTypeImplMethods<T,
-                        TypeDirectAccess<T>,
-                        Cloner<TypeDirectAccess<T> >,
-                        Serialize<TypeDirectAccess<T>  > >,
+                        TypeByValue<T>
+                        >,
         DefaultTypeImplMethods<T,
-                        TypeDefaultAccess<T>,
-                        Cloner<TypeDefaultAccess<T> >,
-                        Serialize<TypeDefaultAccess<T>  > >
+                        TypeByPointer<T>
+                        >
                         >::type type;
     };
   }
 
+  template<typename TypeDispatcher> TypeDispatcher& Type::dispatch(const TypeDispatcher & vv, void**storage)
+  {
+    TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
+    switch(kind())
+    {
+    case Void:
+      v.visitVoid(this);
+      break;
+    case Unknown:
+      v.visitUnknown(this, storage);
+      break;
+    case Int:
+      {
+        TypeInt* tint = static_cast<TypeInt*>(this);
+        /* Here we assume that '0' is represented by storage=0 in the byValue case.
+        */
+        v.visitInt(tint, (storage&&*storage)?tint->get(*storage):0, tint->isSigned(), tint->size());
+        break;
+      }
+    case Float:
+      {
+        TypeFloat* tfloat = static_cast<TypeFloat*>(this);
+        v.visitFloat(tfloat, (storage&&*storage)?tfloat->get(*storage):0, tfloat->size());
+        break;
+      }
+    case String:
+      {
+        TypeString* tstring = static_cast<TypeString*>(this);
+        v.visitString(tstring, *storage);
+        break;
+      }
+    case List:
+      {
+        TypeList* tlist = static_cast<TypeList*>(this);
+        v.visitList(GenericList(tlist, *storage));
+        break;
+      }
+    case Map:
+      {
+        TypeMap * tlist = static_cast<TypeMap *>(this);
+        v.visitMap(GenericMap(tlist, *storage));
+        break;
+      }
+    case Object:
+      {
+        v.visitObject(GenericObject(static_cast<ObjectType*>(this), *storage));
+        break;
+      }
+    case Pointer:
+      {
+        TypePointer* tpointer = static_cast<TypePointer*>(this);
+        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValue());
+        break;
+      }
+    case Tuple:
+      {
+      TypeTuple* ttuple = static_cast<TypeTuple*>(this);
+      v.visitTuple(ttuple, *storage);
+      break;
+      }
+    case Dynamic:
+      {
+      GenericValue gv;
+      if (storage && *storage)
+        gv = *(GenericValue*)ptrFromStorage(storage);
+      v.visitDynamic(this, gv);
+      }
+    }
+    return v;
+  }
 }
+
+namespace qi {
+  namespace detail
+  {
+    class TypeInfoKey
+    {
+    public:
+      TypeInfoKey(const std::type_info& ti): ti(ti) {}
+      bool operator < (const TypeInfoKey& b) const
+      {
+        return ti.before(b.ti);
+      }
+      bool operator == (const TypeInfoKey& b) const
+      {
+        return ti == b.ti;
+      }
+      const std::type_info& ti;
+    };
+  }
+}
+
+#include <qimessaging/details/typestring.hxx>
+#include <qimessaging/details/typetuple.hxx>
+
 #endif  // _QIMESSAGING_DETAILS_TYPE_HXX_

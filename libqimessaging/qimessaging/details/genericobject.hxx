@@ -21,24 +21,45 @@ namespace qi {
     return res;
   }
 
-  // We need to specialize Type on genericobject to make a copy
-  template<> class TypeDefaultClone<TypeDefaultAccess<GenericObject> >
+  // We need to specialize Manager on genericobject to make a copy
+  namespace detail {
+  template<> struct TypeManager<GenericObject>: public TypeManagerDefault<GenericObject>
   {
-  public:
-    static void* clone(void* src)
+    static void* create()
+    {
+      return new GenericObject(0, 0);
+    }
+    static void copy(void* dst, const void* src)
+    {
+      TypeManagerDefault<GenericObject>::copy(dst, src);
+      GenericObject* o = (GenericObject*)dst;
+      o->value = o->type->clone(o->value);
+    }
+    static void destroy(void* ptr)
+    {
+      GenericObject* go = (GenericObject*)ptr;
+      go->type->destroy(go->value);
+      delete go;
+    }
+  }; }
+
+  /*
+  template<> class TypeImpl<GenericObject>: public TypeDefaultImpl<GenericObject>
+  {
+    virtual void* clone(void* src)
     {
       GenericObject* osrc = (GenericObject*)src;
       GenericObject* res = new GenericObject(*osrc);
       res->value = res->type->clone(res->value);
       return res;
      }
-    static void destroy(void* ptr)
+    virtual void destroy(void* ptr)
     {
       GenericObject* go = (GenericObject*)ptr;
       go->type->destroy(go->value);
       delete (GenericObject*)ptr;
     }
-  };
+  };*/
 
   namespace detail
   {
@@ -71,18 +92,17 @@ namespace qi {
       else
       {
         IDataStream in(metaFut.value().getBuffer());
-        // Not all types are serializable, go through MetaType
+        // FIXME we assume result has the correct signature here
         Type* type = typeOf<T>();
-        void* storage = type->deserialize(in);
-        if (!storage)
+        GenericValue result = type->deserialize(in);
+        if (!result.type)
         {
           promise.setError("Could not deserialize result");
         }
         else
         {
-          void* ptr = type->ptrFromStorage(&storage);
-          promise.setValue(*(T*)ptr);
-          type->destroy(storage);
+          promise.setValue(result.as<T>());
+          result.destroy();
         }
       }
     }

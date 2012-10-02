@@ -51,4 +51,3 @@ namespace qi {
 }
 
 QI_TYPE_NOT_CLONABLE(qi::ServerClient);
-QI_TYPE_NOT_CONSTRUCTIBLE(qi::ServerClient);

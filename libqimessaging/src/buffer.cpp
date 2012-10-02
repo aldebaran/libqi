@@ -241,4 +241,28 @@ namespace qi
     return _p->signature;
   }
 
+  class TypeBuffer: public TypeString
+  {
+  public:
+    virtual std::pair<char*, size_t> get(void* storage) const
+    {
+      Buffer& b = *(Buffer*)const_cast<TypeBuffer*>(this)->ptrFromStorage(&storage);
+      return std::make_pair((char*)b.data(), b.size());
+    }
+    virtual void set(void** storage, const char* ptr, size_t sz)
+    {
+      Buffer& b = *(Buffer*)ptrFromStorage(storage);
+      memcpy(b.reserve(sz), ptr, sz);
+    }
+    virtual Buffer* asBuffer(void* storage)
+    {
+      Buffer& b = *(Buffer*)ptrFromStorage(&storage);
+      return &b;
+    }
+
+    typedef DefaultTypeImplMethods<Buffer> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
 } // !qi
+
+QI_TYPE_REGISTER_CUSTOM(qi::Buffer, qi::TypeBuffer);

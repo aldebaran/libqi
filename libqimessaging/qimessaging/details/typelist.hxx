@@ -15,11 +15,10 @@ public TypeList
 {
 public:
   typedef DefaultTypeImplMethods<typename C<T>::type,
-                               TypeDefaultAccess<typename C<T>::type >,
-                               TypeDefaultClone<TypeDefaultAccess<typename C<T>::type > >,
-                               TypeDefaultSerialize<TypeDefaultAccess<typename C<T>::type > >
+                               TypeByPointer<typename C<T>::type >
                                > MethodsImpl;
   TypeListImpl();
+  virtual size_t size(void* storage);
   virtual Type* elementType(void* storage) const;
   virtual GenericListIterator begin(void* storage);
   virtual GenericListIterator end(void* storage);
@@ -32,7 +31,7 @@ template<typename C> class TypeListIteratorImpl
 : public TypeListIterator
 {
 public:
-  typedef typename detail::TypeImplMethodsBySize<typename C::iterator, detail::TypeAutoClone, TypeNoSerialize>::type
+  typedef typename detail::TypeImplMethodsBySize<typename C::iterator>::type
   TypeImpl;
   virtual GenericValue dereference(void* storage);
   virtual void  next(void** storage);
@@ -98,6 +97,12 @@ TypeListImpl<C, T>::pushBack(void* storage, void* valueStorage)
   ptr->push_back(*(T*)elemType->ptrFromStorage(&valueStorage));
 }
 
+template<template<typename U> class C, typename T> size_t
+TypeListImpl<C, T>::size(void* storage)
+{
+  C<T>* ptr = (C<T>*) ptrFromStorage(&storage);
+  return ptr->size();
+}
 
 template<typename C> GenericValue TypeListIteratorImpl<C>::dereference(void* storage)
 {

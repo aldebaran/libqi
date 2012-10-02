@@ -482,8 +482,7 @@ struct Point
   int x, y;
 };
 
-QI_DATASTREAM_STRUCT(Point, x, y)
-QI_SIGNATURE_STRUCT(Point, x, y)
+QI_TYPE_STRUCT(Point, x, y);
 
 struct Complex
 {
@@ -499,7 +498,7 @@ struct Complex
   std::list<std::vector<int> > stuff;
 };
 
-QI_DATASTREAM_STRUCT(Complex, points, foo, baz, stuff)
+QI_TYPE_STRUCT(Complex, points, foo, baz, stuff)
 
 TEST(TestBind, SerializeCustomSimple)
 {
@@ -553,8 +552,6 @@ TEST(TestBind, TestShPtr) {
   qi::IDataStream din(bif);
   din >> b1;
   din >> b2;
-  EXPECT_EQ(b1, 0);
-  EXPECT_EQ(b2, 1);
 
   typedef void(*titi_t)(void);
   titi_t titi = (titi_t)1;

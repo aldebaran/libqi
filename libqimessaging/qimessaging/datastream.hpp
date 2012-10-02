@@ -16,6 +16,8 @@
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
 #include <qimessaging/signature.hpp>
+#include <qimessaging/type.hpp>
+#include <qimessaging/genericvalue.hpp>
 #include <qi/types.hpp>
 #include <qi/preproc.hpp>
 
@@ -91,13 +93,6 @@ namespace qi {
     IDataStream &operator>>(qi::GenericValue &value);
     IDataStream &operator>>(qi::Buffer &buffer);
 
-    template<typename T>
-    IDataStream &operator>>(std::list<T> &v);
-    template<typename T>
-    IDataStream &operator>>(std::vector<T> &v);
-    template<typename K, typename V>
-    IDataStream &operator>>(std::map<K, V>  &m);
-
         //read raw data
     size_t read(void *data, size_t len);
     void* read(size_t len);
@@ -152,17 +147,13 @@ namespace qi {
     ODataStream &operator<<(const GenericValue &value);
     ODataStream &operator<<(const Buffer &buffer);
 
-    template<typename T>
-    ODataStream &operator<<(const std::list<T> &v);
-    template<typename T>
-    ODataStream &operator<<(const std::vector<T> &v);
-    template<typename K, typename V>
-    ODataStream &operator<<(const std::map<K, V> &m);
 
     void beginList(qi::uint32_t size, std::string elementSignature);
     void endList();
     void beginMap(qi::uint32_t size, std::string keySignature, std::string valueSignature);
     void endMap();
+    void beginTuple(std::string sig);
+    void endTuple();
 
     Status status() const { return _status; }
     void setStatus(Status status) { _status = status; }
@@ -171,187 +162,27 @@ namespace qi {
   private:
     Status      _status;
     Buffer _buffer;
-    bool        _innerSerialization;
+    unsigned int        _innerSerialization;
 
     //No default CTOR
     ODataStream() {}
 
   };
 
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::Buffer &buffer);
-  QIMESSAGING_API qi::SignatureStream &operator&(qi::SignatureStream &os, const qi::GenericValue &value);
-
   template<typename T>
-  ODataStream &ODataStream::operator<<(const std::list<T> &v) {
-    typedef std::list<T> _typefordebug;
-    typename std::list<T>::const_iterator it = v.begin();
-    typename std::list<T>::const_iterator end = v.end();
-
-    beginList(v.size(), qi::signatureFromType<T>::value());
-
-    bool wasInnerSerialization = _innerSerialization;
-    _innerSerialization = true;
-    for (; it != end; ++it) {
-      *this << *it;
-    }
-    _innerSerialization = wasInnerSerialization;
-
-    endList();
-
-    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
-    return *this;
+  ODataStream& operator<<(ODataStream& out, const T &v) {
+    toValue(v).serialize(out);
+    return out;
   }
 
   template<typename T>
-  IDataStream &IDataStream::operator>>(std::list<T> &v) {
-    typedef std::list<T> _typefordebug;
-    qi::uint32_t sz = 0;
-    *this >> sz;
-    v.clear();
-    if (sz) {
-      try {
-        v.resize(sz);
-      } catch (const std::exception &) {
-        qiLogError("qi.DataStream") << "std::list<T> serialization error, could not resize to "
-                                    << sz;
-        setStatus(IDataStream::Status_ReadError);
-        return *this;
-      }
-      typename std::list<T>::iterator it = v.begin();
-      typename std::list<T>::iterator end = v.end();
-      for (; it != end; ++it) {
-        *this >> *it;
-      }
-    }
-    __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
-    return *this;
-  }
-
-  template<typename T>
-  ODataStream &ODataStream::operator<<(const std::vector<T> &v) {
-    typedef std::vector<T> _typefordebug;
-    typename std::vector<T>::const_iterator it = v.begin();
-    typename std::vector<T>::const_iterator end = v.end();
-
-    beginList(v.size(), qi::signatureFromType<T>::value());
-
-    bool wasInnerSerialization = _innerSerialization;
-    _innerSerialization = true;
-    for (; it != end; ++it) {
-      *this << *it;
-    }
-    _innerSerialization = wasInnerSerialization;
-
-    endList();
-
-    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, v);
-    return *this;
-  }
-
-  template<typename T>
-  IDataStream &IDataStream::operator>>(std::vector<T> &v) {
-    typedef std::vector<T> _typefordebug;
-    qi::uint32_t sz = 0;
-    *this >> sz;
-    v.clear();
-    if (sz) {
-      try {
-        v.resize(sz);
-      } catch (const std::exception &) {
-        qiLogError("qi.DataStream") << "std::vector<T> serialization error, could not resize to "
-                                    << sz;
-        setStatus(IDataStream::Status_ReadError);
-        return *this;
-      }
-      typename std::vector<T>::iterator it = v.begin();
-      typename std::vector<T>::iterator end = v.end();
-      for (; it != end; ++it) {
-        *this >> *it;
-      }
-    }
-    __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, v);
-    return *this;
-  }
-
-  template<typename K, typename V>
-  ODataStream &ODataStream::operator<<(const std::map<K, V> &m) {
-    typedef  std::map<K,V> _typefordebug;
-    typename std::map<K,V>::const_iterator it = m.begin();
-    typename std::map<K,V>::const_iterator end = m.end();
-
-    beginMap(m.size(), qi::signatureFromType<K>::value(), qi::signatureFromType<V>::value());
-
-    bool wasInnerSerialization = _innerSerialization;
-    _innerSerialization = true;
-    for (; it != end; ++it) {
-      *this << it->first;
-      *this << it->second;
-    }
-    _innerSerialization = wasInnerSerialization;
-
-    endMap();
-
-    __QI_DEBUG_SERIALIZATION_CONTAINER_W(_typefordebug, m);
-    return *this;
-  }
-
-  template<typename K, typename V>
-  IDataStream &IDataStream::operator>>(std::map<K, V>  &m) {
-    typedef  std::map<K,V> _typefordebug;
-    qi::uint32_t sz = 0;
-    *this >> sz;
-    m.clear();
-
-    for(qi::uint32_t i=0; i < sz; ++i) {
-      K k;
-      V v;
-      *this >> k;
-      *this >> v;
-      m[k] = v;
-    }
-    __QI_DEBUG_SERIALIZATION_CONTAINER_R(_typefordebug, m);
-    return *this;
+  IDataStream& operator >> (IDataStream& in, T& v)
+  {
+    Type* type = typeOf<T>();
+    GenericValue value = type->deserialize(in);
+    T* ptr = (T*)type->ptrFromStorage(&value.value);
+    v = *ptr;
+    return in;
   }
 }
-
-/** Make a class serializable throug {IO}DataStream.
- * Call with the class name and the list of fields. Each field must
- * itself be serializable.
- */
-#define QI_DATASTREAM_STRUCT(Cname, ...)                        \
-  QI_DATASTREAM_STRUCT_DECLARE(Cname)                           \
-  __QI_DATASTREAM_STRUCT_IMPLEMENT_(inline, Cname, __VA_ARGS__)
-
-/** Only declare serialization operators
- */
-#define QI_DATASTREAM_STRUCT_DECLARE(Cname)                                 \
-  ::qi::ODataStream &operator<<(::qi::ODataStream &sd, const Cname &value); \
-  ::qi::IDataStream &operator>>(::qi::IDataStream &sd, Cname &value);
-
-/** Define serialization operators.
- */
-#define QI_DATASTREAM_STRUCT_IMPLEMENT(Cname, ...)               \
-  __QI_DATASTREAM_STRUCT_IMPLEMENT_(/**/, Cname, __VA_ARGS__)
-
-/** Only declare serialization operators
- */
-#define QI_DATASTREAM_STRUCT_PRIVATE_ACCESS(Cname)                                 \
-  friend ::qi::ODataStream &operator<<(::qi::ODataStream &sd, const Cname &value); \
-  friend ::qi::IDataStream &operator>>(::qi::IDataStream &sd, Cname &value);
-
-
-#define __QI_SERIALIZE_FIELD(_, sep, Field) sep value.Field
-
-#define __QI_DATASTREAM_STRUCT_IMPLEMENT_(inl, Cname, ...)                      \
- inl ::qi::ODataStream &operator<<(::qi::ODataStream &sd, const Cname &value)   \
- {                                                                              \
-   return sd                                                                    \
-   QI_VAARGS_APPLY(__QI_SERIALIZE_FIELD, <<, __VA_ARGS__);                      \
- }                                                                              \
- inl ::qi::IDataStream &operator>>(::qi::IDataStream &sd, Cname &value)         \
- {                                                                              \
-   return sd                                                                    \
-   QI_VAARGS_APPLY(__QI_SERIALIZE_FIELD, >>, __VA_ARGS__);                      \
- }
-
 #endif  // _QIMESSAGING_DATASTREAM_HPP_
