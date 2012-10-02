@@ -75,6 +75,37 @@ TEST(QiSession, simpleConnectionToInvalidSd)
   EXPECT_FALSE(session.isConnected());
 }
 
+TEST(QiSession, testClose)
+{
+  qi::Session session;
+
+  bool connected = session.connect(connectionAddr);
+  ASSERT_TRUE(connected);
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
+
+  unsigned int servicePort = qi::os::findAvailablePort(0);
+  std::stringstream serviceAddr;
+  serviceAddr << "tcp://127.0.0.1:" << servicePort;
+
+  session.listen(serviceAddr.str());
+
+  // Wait for service id, otherwise register is asynchronous.
+  session.registerService("serviceTest", obj).wait();
+  ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
+
+  qi::ObjectPtr object = session.service("serviceTest");
+  EXPECT_TRUE(object);
+
+  session.close();
+  EXPECT_FALSE(session.isConnected());
+
+  std::vector<qi::ServiceInfo> services = session.services();
+  EXPECT_EQ(0, services.size());
+}
+
 TEST(QiSession, getSimpleService)
 {
   qi::Session session;
