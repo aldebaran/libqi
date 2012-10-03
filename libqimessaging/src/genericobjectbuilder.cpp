@@ -22,7 +22,6 @@ namespace qi
     {}
 
     DynamicObject* object;
-    MetaObject     metaObject;
   };
 
   GenericObjectBuilder::GenericObjectBuilder()
@@ -41,27 +40,25 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func)
   {
-    unsigned int nextId = _p->metaObject._p->_methods.size()
-      +  _p->metaObject._p->_events.size();
+    unsigned int nextId = _p->object->metaObject()._p->_methods.size() + _p->object->metaObject()._p->_events.size();
     MetaMethod mm(nextId, retsig, signature);
-    _p->metaObject._p->_methods[mm.uid()] = mm;
+    _p->object->metaObject()._p->_methods[mm.uid()] = mm;
     _p->object->setMethod(nextId, func);
+    _p->object->metaObject()._p->refreshCache();
     return nextId;
   }
 
   int GenericObjectBuilder::xAdvertiseEvent(const std::string& signature)
   {
-    unsigned int nextId = _p->metaObject._p->_methods.size()
-      +  _p->metaObject._p->_events.size();
+    unsigned int nextId = _p->object->metaObject()._p->_methods.size() + _p->object->metaObject()._p->_events.size();
     MetaSignal ms(nextId, signature);
-    _p->metaObject._p->_events[nextId] = ms;
+    _p->object->metaObject()._p->_events[nextId] = ms;
+    _p->object->metaObject()._p->refreshCache();
     return nextId;
   }
 
   ObjectPtr GenericObjectBuilder::object()
   {
-    _p->metaObject._p->refreshCache();
-    _p->object->setMetaObject(_p->metaObject);
     return makeDynamicObjectPtr(_p->object);
   }
 }
