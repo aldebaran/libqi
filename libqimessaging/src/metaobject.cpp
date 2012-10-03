@@ -17,17 +17,23 @@ namespace qi {
 
   MetaObjectPrivate&  MetaObjectPrivate::operator=(const MetaObjectPrivate &rhs)
   {
-    _methodsNameToIdx = rhs._methodsNameToIdx;
-    _methods = rhs._methods;
-    _eventsNameToIdx = rhs._eventsNameToIdx;
-    _events = rhs._events;
-    _nextNumber = rhs._nextNumber;
+    {
+      boost::recursive_mutex::scoped_lock sl(rhs._methodsMutex);
+      _methodsNameToIdx = rhs._methodsNameToIdx;
+      _methods          = rhs._methods;
+    }
+    {
+      boost::recursive_mutex::scoped_lock sl(rhs._eventsMutex);
+      _eventsNameToIdx = rhs._eventsNameToIdx;
+      _events = rhs._events;
+    }
+    _index = rhs._index;
     return (*this);
   }
 
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
-    boost::recursive_mutex::scoped_lock sl(_mutexMethod);
+    boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     std::vector<qi::MetaMethod>           ret;
     MetaObject::MethodMap::iterator it;
     std::string cname(name);
@@ -43,7 +49,7 @@ namespace qi {
 
   std::vector<MetaSignal> MetaObjectPrivate::findSignal(const std::string &name)
   {
-    boost::recursive_mutex::scoped_lock sl(_mutexEvent);
+    boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     std::vector<MetaSignal>           ret;
     MetaObject::SignalMap::iterator it;
     std::string cname(name);
@@ -57,25 +63,41 @@ namespace qi {
     return ret;
   }
 
+  unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature) {
+    boost::recursive_mutex::scoped_lock sl(_eventsMutex);
+    unsigned int id = ++_index;
+    MetaMethod mm(id, sigret, signature);
+    _methods[id] = mm;
+    _methodsNameToIdx[signature] = id;
+    return id;
+  }
+
+  unsigned int MetaObjectPrivate::addSignal(const std::string &sig) {
+    boost::recursive_mutex::scoped_lock sl(_eventsMutex);
+    unsigned int id = ++_index;
+    MetaSignal ms(id, sig);
+    _events[id] = ms;
+    _eventsNameToIdx[sig] = id;
+    return id;
+  }
+
   void MetaObjectPrivate::refreshCache()
   {
     {
-      boost::recursive_mutex::scoped_lock sl(_mutexMethod);
+      boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       _methodsNameToIdx.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
       _methodsNameToIdx[i->second.signature()] = i->second.uid();
     }
     {
-      boost::recursive_mutex::scoped_lock sl(_mutexEvent);
+      boost::recursive_mutex::scoped_lock sl(_eventsMutex);
       _eventsNameToIdx.clear();
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
       _eventsNameToIdx[i->second.signature()] = i->second.uid();
     }
   }
-
-
 
   MetaObject::MetaObject()
   {
@@ -100,7 +122,7 @@ namespace qi {
   }
 
   MetaMethod *MetaObject::method(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
+    boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -108,7 +130,7 @@ namespace qi {
   }
 
   const MetaMethod *MetaObject::method(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexMethod);
+    boost::recursive_mutex::scoped_lock sl(_p->_methodsMutex);
     MethodMap::const_iterator i = _p->_methods.find(id);
     if (i == _p->_methods.end())
       return 0;
@@ -116,7 +138,7 @@ namespace qi {
   }
 
   MetaSignal *MetaObject::signal(unsigned int id) {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
+    boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -124,7 +146,7 @@ namespace qi {
   }
 
   const MetaSignal *MetaObject::signal(unsigned int id) const {
-    boost::recursive_mutex::scoped_lock sl(_p->_mutexEvent);
+    boost::recursive_mutex::scoped_lock sl(_p->_eventsMutex);
     SignalMap::const_iterator i = _p->_events.find(id);
     if (i == _p->_events.end())
       return 0;
@@ -159,19 +181,19 @@ namespace qi {
     return _p->findSignal(name);
   }
 
-
-
   qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta) {
     stream << meta._p->_methods;
     stream << meta._p->_events;
-    stream << meta._p->_nextNumber;
+    stream << (unsigned int) (*meta._p->_index);
     return stream;
   }
 
   qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta) {
     stream >> meta._p->_methods;
     stream >> meta._p->_events;
-    stream >> meta._p->_nextNumber;
+    unsigned int id;
+    stream >> id;
+    meta._p->_index = id;
     meta._p->refreshCache();
     return stream;
   }
@@ -179,7 +201,7 @@ namespace qi {
   qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta) {
     stream & meta._p->_methods;
     stream & meta._p->_events;
-    stream & meta._p->_nextNumber;
+    stream.write(qi::Signature::Type_UInt32);
     return stream;
   }
 

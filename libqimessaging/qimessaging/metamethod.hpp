@@ -24,7 +24,7 @@ namespace qi {
 
     unsigned int       uid() const;
 
-  protected:
+  private:
     unsigned int      _uid;
     std::string       _signature;
     std::string       _sigreturn;

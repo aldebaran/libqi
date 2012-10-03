@@ -18,7 +18,7 @@ namespace qi {
   class MetaObjectPrivate {
   public:
     MetaObjectPrivate()
-    :  _nextNumber(0)
+      : _index(-1)
     {
     };
 
@@ -46,23 +46,31 @@ namespace qi {
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaSignal> findSignal(const std::string &name);
 
+    unsigned int addMethod(const std::string& sigret, const std::string& signature);
+    unsigned int addSignal(const std::string &sig);
+
+    // Recompute data cached in *ToIdx
+    void refreshCache();
+
+  private:
+    friend class MetaObject;
+    friend qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
+    friend qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
+    friend qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta);
+  private:
     /*
      * When a member is added, serialization and deserialization
      * operators _MUST_ be updated.
      */
     NameToIdx                           _methodsNameToIdx;
     MetaObject::MethodMap               _methods;
-
-    unsigned int                        _nextNumber;
+    mutable boost::recursive_mutex      _methodsMutex;
 
     NameToIdx                           _eventsNameToIdx;
-    MetaObject::SignalMap                _events;
+    MetaObject::SignalMap               _events;
+    mutable boost::recursive_mutex      _eventsMutex;
 
-    // Recompute data cached in *ToIdx
-    void refreshCache();
-
-    boost::recursive_mutex              _mutexEvent;
-    boost::recursive_mutex              _mutexMethod;
+    qi::atomic<unsigned int>            _index;
     // Global uid for event subscribers.
     static qi::atomic<long> uid;
   };
