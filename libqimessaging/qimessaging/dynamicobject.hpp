@@ -7,7 +7,7 @@
 #ifndef _QIMESSAGING_DYNAMICOBJECT_HPP_
 #define _QIMESSAGING_DYNAMICOBJECT_HPP_
 
-#include <qimessaging/metafunction.hpp>
+#include <qimessaging/genericobject.hpp>
 
 namespace qi
 {
@@ -39,7 +39,6 @@ namespace qi
 
     void setMethod(unsigned int id, GenericFunction callable);
     SignalBase* signalBase(unsigned int id) const;
-    const qi::MetaCallable &method(unsigned int methodId) const;
 
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaEmit(unsigned int event, const GenericFunctionParameters& params);

@@ -83,20 +83,28 @@ namespace qi {
 
   void MetaObjectPrivate::refreshCache()
   {
+    unsigned int idx = 0;
     {
       boost::recursive_mutex::scoped_lock sl(_methodsMutex);
       _methodsNameToIdx.clear();
       for (MetaObject::MethodMap::iterator i = _methods.begin();
         i != _methods.end(); ++i)
-      _methodsNameToIdx[i->second.signature()] = i->second.uid();
+      {
+        _methodsNameToIdx[i->second.signature()] = i->second.uid();
+        idx = std::max(idx, i->second.uid());
+      }
     }
     {
       boost::recursive_mutex::scoped_lock sl(_eventsMutex);
       _eventsNameToIdx.clear();
       for (MetaObject::SignalMap::iterator i = _events.begin();
         i != _events.end(); ++i)
-      _eventsNameToIdx[i->second.signature()] = i->second.uid();
+      {
+        _eventsNameToIdx[i->second.signature()] = i->second.uid();
+        idx = std::max(idx, i->second.uid());
+      }
     }
+    _index = idx;
   }
 
   MetaObject::MetaObject()
@@ -187,7 +195,7 @@ namespace qi {
   }
 }
 
-QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _nextNumber);
+QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events);
 QI_TYPE_REGISTER(qi::MetaObjectPrivate);
 
 

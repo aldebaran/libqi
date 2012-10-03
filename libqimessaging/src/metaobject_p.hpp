@@ -55,7 +55,6 @@ namespace qi {
     friend class MetaObject;
     friend qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
     friend qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
-    friend qi::SignatureStream &operator&(qi::SignatureStream &stream, const MetaObject &meta);
   private:
     /*
      * When a member is added, serialization and deserialization
@@ -72,6 +71,7 @@ namespace qi {
     qi::atomic<unsigned int>            _index;
     // Global uid for event subscribers.
     static qi::atomic<long> uid;
+    friend class TypeImpl<MetaObjectPrivate>;
   };
 
 }
