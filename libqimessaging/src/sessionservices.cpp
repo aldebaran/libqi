@@ -16,6 +16,7 @@ namespace qi {
     if (value.hasError()) {
       rq->promise.setError(value.error());
       removeRequest(requestId);
+      return;
     }
     std::vector<qi::ServiceInfo> result;
     if (rq->locality == qi::Session::ServiceLocality_All)
