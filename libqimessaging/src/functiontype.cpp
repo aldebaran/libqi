@@ -15,16 +15,16 @@ namespace qi
     std::vector<void*> convertedArgs;
     for (unsigned i=0; i<target.size(); ++i)
     {
-      qiLogDebug("meta") << "argument " << i
-         << " " << args[i].type->infoString() << ' ' << args[i].value
-         << " to " << target[i]->infoString();
+      //qiLogDebug("meta") << "argument " << i
+      //   << " " << args[i].type->infoString() << ' ' << args[i].value
+      //   << " to " << target[i]->infoString();
       if (args[i].type->info() == target[i]->info())
         convertedArgs.push_back(args[i].value);
       else
       {
-        qiLogDebug("meta") << "needs conversion "
-        << args[i].type->infoString() << " -> "
-        << target[i]->infoString();
+        //qiLogDebug("meta") << "needs conversion "
+        //<< args[i].type->infoString() << " -> "
+        //<< target[i]->infoString();
         std::pair<GenericValue,bool> v = args[i].convert(target[i]);
         if (v.second)
           toDestroy.push_back(v.first);

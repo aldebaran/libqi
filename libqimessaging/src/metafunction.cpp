@@ -78,7 +78,7 @@ MetaFunctionParameters MetaFunctionParameters::copy() const
   // Create a new storage, clone data in it
   if (!storage->valid && !storage->parameterBuffer.size())
     qiLogError("qi.meta") << "FunctionParameters were invalidated";
-  qiLogDebug("qi.meta") << "Copying function parameters";
+  //qiLogDebug("qi.meta") << "Copying function parameters";
   MetaFunctionParameters res;
   res._initStorage();
   // We will copy values, mark for destruction
@@ -127,7 +127,7 @@ const std::vector<GenericValue>& MetaFunctionParameters::getValues() const
   }
   if (storage->parameterValues.empty() && storage->parameterBuffer.size())
   {
-    qiLogDebug("qi.meta") << "Generating values from serialization";
+    //qiLogDebug("qi.meta") << "Generating values from serialization";
     convertToValues();
   }
   return storage->parameterValues;
@@ -146,7 +146,7 @@ std::vector<GenericValue> &MetaFunctionParameters::getValues()
   }
   if (storage->parameterValues.empty() && storage->parameterBuffer.size())
   {
-    qiLogDebug("qi.meta") << "Generating values from serialization";
+    //qiLogDebug("qi.meta") << "Generating values from serialization";
     convertToValues();
   }
   return storage->parameterValues;
@@ -162,11 +162,11 @@ const Buffer& MetaFunctionParameters::getBuffer() const
   }
   if (!storage->parameterValues.empty() && !storage->parameterBuffer.size())
   {
-    qiLogDebug("qi.meta") << "Generating serialization from values.";
+    //qiLogDebug("qi.meta") << "Generating serialization from values.";
     convertToBuffer();
-    qiLogDebug("qi.meta") << "Generated buffer of size "
-      << storage->parameterBuffer.size() << " from " << storage->parameterValues.size()
-      << " arguments";
+    //qiLogDebug("qi.meta") << "Generated buffer of size "
+    //  << storage->parameterBuffer.size() << " from " << storage->parameterValues.size()
+    //  << " arguments";
     if (!storage->parameterBuffer.size() && !storage->parameterValues.empty()
       && std::string(storage->parameterValues[0].type->infoString()) != "v")
       qiLogWarning("qi.meta") << "Empty serialization.";
