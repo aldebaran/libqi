@@ -31,20 +31,14 @@ namespace qi {
 
   int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func)
   {
-    unsigned int nextId = _p->metaObject._p->_methods.size()
-      +  _p->metaObject._p->_events.size();
-    MetaMethod mm(nextId, retsig, signature);
-    _p->metaObject._p->_methods[mm.uid()] = mm;
-    _p->data.methodMap[mm.uid()] = func;
+    unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature);
+    _p->data.methodMap[nextId] = func;
     return nextId;
   }
 
   int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter)
   {
-    unsigned int nextId = _p->metaObject._p->_methods.size()
-      +  _p->metaObject._p->_events.size();
-    MetaSignal ms(nextId, signature);
-    _p->metaObject._p->_events[nextId] = ms;
+    unsigned int nextId = _p->metaObject._p->addSignal(signature);
     _p->data.signalGetterMap[nextId] = getter;
     return nextId;
   }
