@@ -11,7 +11,6 @@
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/type.hpp>
 #include <qimessaging/metaobject.hpp>
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/genericobject.hpp>
 
 namespace qi
@@ -49,10 +48,10 @@ class StaticObjectTypeBase: public ObjectType
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
-  virtual const std::type_info& info();
+  virtual TypeInfo info();
   virtual const MetaObject& metaObject(void* instance);
-  virtual qi::Future<MetaFunctionResult> metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-  virtual void metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params);
+  virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+  virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);
   virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual bool disconnect(void* instance, unsigned int linkId);

@@ -83,6 +83,10 @@ namespace qi
       nargs.insert(nargs.end(), args.begin(), args.end());
       return FunctionTypeImpl<T>().FunctionType::call(method, nargs);
     }
+    FunctionType* toFunctionType()
+    {
+      return makeFunctionType<T>();
+    }
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };
 
@@ -158,6 +162,13 @@ namespace qi
       typename boost::function_types::is_member_function_pointer<M>::type());
   }
 
+  inline GenericFunction GenericMethod::toGenericFunction()
+  {
+    GenericFunction result;
+    result.type = type->toFunctionType();
+    result.value = value;
+    return result;
+  }
 } // namespace qi
 
 #endif  // _QIMESSAGING_DETAILS_METHODTYPE_HXX_

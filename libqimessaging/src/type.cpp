@@ -3,6 +3,8 @@
 **  See COPYING for the license
 */
 
+#include <boost/lexical_cast.hpp>
+
 #include <qimessaging/type.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/genericvalue.hpp>
@@ -12,9 +14,57 @@
 namespace qi {
 
 
+  TypeInfo::TypeInfo()
+  : stdInfo(0)
+  {}
 
+  TypeInfo::TypeInfo(const std::type_info& info)
+  : stdInfo(&info)
+  {
+  }
 
-  typedef std::map<detail::TypeInfoKey, Type*> TypeFactory;
+  TypeInfo::TypeInfo(const std::string& str)
+  : stdInfo(0), customInfo(str)
+  {
+  }
+
+  std::string TypeInfo::asString()
+  {
+    if (stdInfo)
+      return stdInfo->name();
+    else
+      return customInfo;
+  }
+
+  bool TypeInfo::operator==(const TypeInfo& b) const
+  {
+    if (!! stdInfo != !! b.stdInfo)
+      return false;
+    if (stdInfo)
+      return *stdInfo == *b.stdInfo;
+    else
+      return customInfo == b.customInfo;
+  }
+
+  bool TypeInfo::operator!=(const TypeInfo& b) const
+  {
+    return ! (*this == b);
+  }
+
+  bool TypeInfo::operator< (const TypeInfo& b) const
+  {
+    if (!! stdInfo != !! b.stdInfo)
+      return stdInfo;
+    else
+    {
+      if (stdInfo)
+        return (*stdInfo).before(*b.stdInfo);
+      else
+        return customInfo < b.customInfo;
+    }
+  }
+
+  typedef std::map<TypeInfo, Type*> TypeFactory;
   static TypeFactory& typeFactory()
   {
     static TypeFactory* res = 0;
@@ -27,7 +77,7 @@ namespace qi {
   {
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
-    return typeFactory()[detail::TypeInfoKey(type)];
+    return typeFactory()[TypeInfo(type)];
   }
 
   /// Type factory setter
@@ -35,7 +85,7 @@ namespace qi {
   {
     qiLogDebug("qi.meta") << "registerType "  << typeId.name() << " "
      << type->kind() <<" " << (void*)type;
-    TypeFactory::iterator i = typeFactory().find(detail::TypeInfoKey(typeId));
+    TypeFactory::iterator i = typeFactory().find(TypeInfo(typeId));
     if (i != typeFactory().end())
     {
       if (i->second)
@@ -45,7 +95,7 @@ namespace qi {
         qiLogWarning("qi.meta") << "registerType: access to type factory before"
           " registration detected for type " << typeId.name();
     }
-    typeFactory()[detail::TypeInfoKey(typeId)] = type;
+    typeFactory()[TypeInfo(typeId)] = type;
     return true;
   }
 
@@ -250,7 +300,8 @@ namespace qi {
     }
     void visitVoid(Type*)
     {
-      qiLogWarning("qi.type") << "Void cannot be deserialized.";
+      result.type = typeOf<void>();
+      result.value = 0;
     }
     void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
     {
@@ -396,14 +447,20 @@ namespace qi {
       return defaultListType(fromSignature(i.children().begin()));
     case Signature::Type_Map:
       return defaultMapType(fromSignature(i.children().begin()),
-        fromSignature(i.children().begin()++));
+        fromSignature(++i.children().begin()));
     case Signature::Type_Tuple:
       {
         std::vector<Type*> types;
         Signature c = i.children();
         for (Signature::iterator child = c.begin(); child != c.end(); child++)
-          types.push_back(fromSignature(child));
-        return defaultTupleType(types);
+        {
+          Type* t = fromSignature(child);
+          qiLogDebug("qi.type") << "FS " << child.signature() << " " << t;
+          types.push_back(t);
+        }
+        Type* res = defaultTupleType(types);
+        qiLogDebug("qi.type") <<"->FS " << i.signature() << " " << res;
+        return res;
       }
     case Signature::Type_Dynamic:
       return typeOf<GenericValue>();
@@ -422,13 +479,24 @@ namespace qi {
   }
 
   // Default list
+  static Type* defaultListIteratorType(Type* element);
 
   class DefaultListIteratorType: public TypeListIteratorImpl<std::vector<void*> >
   {
   public:
+  private:
     DefaultListIteratorType(Type* elementType)
     : _elementType(elementType)
-    {}
+    {
+      // We need an unique name, but elementType->nifo().aString() is not
+      // garanteed unique. So use our address. The factory system ensures
+      // non-duplication.
+      _name = "DefaultListIteratorType<"
+        + _elementType->info().asString()
+        + ">(" + boost::lexical_cast<std::string>(this);
+    }
+    friend Type* defaultListIteratorType(Type*);
+  public:
     GenericValue dereference(void* storage)
     {
       std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)
@@ -438,17 +506,22 @@ namespace qi {
       res.value = *ptr;
       return res;
     }
+    TypeInfo info()
+    {
+      return _name;
+    }
     Type* _elementType;
+    std::string _name;
   };
 
   // We want exactly one instance per element type
   static Type* defaultListIteratorType(Type* element)
   {
-    static std::map<detail::TypeInfoKey, Type*>* map = 0;
+    static std::map<TypeInfo, Type*>* map = 0;
     if (!map)
-      map = new std::map<detail::TypeInfoKey, Type*>();
-    detail::TypeInfoKey key(element->info());
-    std::map<detail::TypeInfoKey, Type*>::iterator it;
+      map = new std::map<TypeInfo, Type*>();
+    TypeInfo key = element->info();
+    std::map<TypeInfo, Type*>::iterator it;
     Type* result;
     it = map->find(key);
     if (it == map->end())
@@ -464,10 +537,17 @@ namespace qi {
   class DefaultListType: public TypeListImpl<vector1, void*>
   {
   public:
+  private:
     DefaultListType(Type* elementType)
     : _elementType(elementType)
     {
+       _name = "DefaultListType<"
+        + _elementType->info().asString()
+        + ">(" + boost::lexical_cast<std::string>(this);
     }
+    friend Type* defaultListType(Type* element);
+  public:
+
     Type* elementType(void* storage) const
     {
       return _elementType;
@@ -493,18 +573,19 @@ namespace qi {
       return result;
     }
     Type* _elementType;
+    std::string _name;
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
-    _QI_BOUNCE_TYPE_METHODS(Methods);
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(Methods);
   };
 
     // We want exactly one instance per element type
   Type* defaultListType(Type* element)
   {
-    static std::map<detail::TypeInfoKey, Type*>* map = 0;
+    static std::map<TypeInfo, Type*>* map = 0;
     if (!map)
-      map = new std::map<detail::TypeInfoKey, Type*>();
-    detail::TypeInfoKey key(element->info());
-    std::map<detail::TypeInfoKey, Type*>::iterator it;
+      map = new std::map<TypeInfo, Type*>();
+    TypeInfo key(element->info());
+    std::map<TypeInfo, Type*>::iterator it;
     Type* result;
     it = map->find(key);
     if (it == map->end())
@@ -518,18 +599,28 @@ namespace qi {
   }
 
 
-   // Default map
+  typedef std::vector<std::pair<void*, void*> > DefaultMapStorage;
+  // Default map, using a vector<pair<void*, void*> > as storage
+  static Type* defaultMapIteratorType(Type* kt, Type* et);
 
-  class DefaultMapIteratorType: public TypeMapIteratorImpl<std::map<void*, void*> >
+  class DefaultMapIteratorType: public TypeMapIterator
   {
   public:
+  private:
     DefaultMapIteratorType(Type* keyType, Type* elementType)
     : _keyType(keyType)
     , _elementType(elementType)
-    {}
+    {
+      _name = "DefaultMapIteratorType<"
+      + keyType->info().asString() + ", "
+      + elementType->info().asString()
+      + "(" + boost::lexical_cast<std::string>(this) + ")";
+    }
+    friend Type* defaultMapIteratorType(Type* kt, Type* et);
+  public:
     std::pair<GenericValue, GenericValue> dereference(void* storage)
     {
-      std::map<void*, void*>::iterator& ptr = *(std::map<void*, void*>::iterator*)
+      DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
         ptrFromStorage(&storage);
       GenericValue k;
       k.type = _keyType;
@@ -539,19 +630,39 @@ namespace qi {
       e.value = ptr->second;
       return std::make_pair(k, e);
     }
+    void next(void** storage)
+    {
+      DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(storage);
+      ++ptr;
+    }
+    bool equals(void* s1, void* s2)
+    {
+      DefaultMapStorage::iterator& p1 = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(&s1);
+      DefaultMapStorage::iterator& p2 = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(&s2);
+      return p1 == p2;
+    }
+    TypeInfo info()
+    {
+      return _name;
+    }
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
     Type* _keyType;
     Type* _elementType;
+    std::string _name;
   };
 
   // We want exactly one instance per element type
   static Type* defaultMapIteratorType(Type* kt, Type* et)
   {
-    typedef std::map<std::pair<detail::TypeInfoKey, detail::TypeInfoKey>, Type*> Map;
+    typedef std::map<std::pair<TypeInfo, TypeInfo>, Type*> Map;
     static Map * map = 0;
     if (!map)
       map = new Map();
-    detail::TypeInfoKey kk(kt->info());
-    detail::TypeInfoKey ek(et->info());
+    TypeInfo kk(kt->info());
+    TypeInfo ek(et->info());
     Map::key_type key(kk, ek);
     Map::iterator it;
     Type* result;
@@ -566,14 +677,21 @@ namespace qi {
     return result;
   }
 
-  class DefaultMapType: public TypeMapImpl<std::map<void*, void*> >
+  class DefaultMapType: public TypeMap
   {
   public:
+  private:
     DefaultMapType(Type* keyType, Type* elementType)
     : _keyType(keyType)
     , _elementType(elementType)
     {
+      _name = "DefaultMapType<"
+      + keyType->info().asString() + ", "
+      + elementType->info().asString()
+      + "(" + boost::lexical_cast<std::string>(this) + ")";
     }
+    friend Type* defaultMapType(Type* kt, Type* et);
+  public:
     Type* elementType(void* storage) const
     {
       return _elementType;
@@ -584,42 +702,58 @@ namespace qi {
     }
     GenericMapIterator begin(void* storage)
     {
-      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       GenericMapIterator result;
       result.type = defaultMapIteratorType(_keyType, _elementType);
-      std::vector<void*>::iterator it = ptr.begin();
+      DefaultMapStorage::iterator it = ptr.begin();
       result.value = result.type->initializeStorage(&it);
       *(GenericValue*)&result = result.clone();
       return result;
     }
     GenericMapIterator end(void* storage)
     {
-      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       GenericMapIterator result;
       result.type = defaultMapIteratorType(_keyType, _elementType);
-      std::vector<void*>::iterator it = ptr.end();
+      DefaultMapStorage::iterator it = ptr.end();
       result.value = result.type->initializeStorage(&it);
-       *(GenericValue*)&result = result.clone();
+      *(GenericValue*)&result = result.clone();
       return result;
+
+    }
+    void insert(void* storage, void* keyStorage, void* valueStorage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      ptr.push_back(std::make_pair(
+        _keyType->clone(keyStorage), _elementType->clone(valueStorage)));
+    }
+    size_t size(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
+      return ptr.size();
+    }
+    TypeInfo info()
+    {
+      return _name;
     }
     Type* _keyType;
     Type* _elementType;
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
-    _QI_BOUNCE_TYPE_METHODS(Methods);
+    std::string _name;
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage>);
   };
 
   // We want exactly one instance per element type
   Type* defaultMapType(Type* kt, Type* et)
   {
-    typedef std::map<std::pair<detail::TypeInfoKey, detail::TypeInfoKey>, Type*> Map;
+    typedef std::map<std::pair<TypeInfo, TypeInfo>, TypeMap*> Map;
     static Map * map = 0;
     if (!map)
       map = new Map();
-    detail::TypeInfoKey kk(kt->info());
-    detail::TypeInfoKey ek(et->info());
+    TypeInfo kk(kt->info());
+    TypeInfo ek(et->info());
     Map::key_type key(kk, ek);
     Map::iterator it;
-    Type* result;
+    TypeMap* result;
     it = map->find(key);
     if (it == map->end())
     {
@@ -627,13 +761,87 @@ namespace qi {
       (*map)[key] = result;
     }
     else
+    {
       result = it->second;
+    }
     return result;
   }
+
+  class DefaultTupleType: public TypeTuple
+  {
+  private:
+    DefaultTupleType(std::vector<Type*> types)
+    : types(types)
+    {
+      _name = "DefaultTupleType<";
+      for (unsigned i=0; i<types.size(); ++i)
+        _name += types[i]->info().asString() + ",";
+      _name += "(" + boost::lexical_cast<std::string>(this) + ")";
+    }
+    friend Type* defaultTupleType(std::vector<Type*> types);
+  public:
+    virtual std::vector<Type*> memberTypes(void*) { return types;}
+    virtual void* get(void* storage, unsigned int index)
+    {
+      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
+      if (ptr.size() < index +1)
+        ptr.resize(index + 1, 0);
+      return ptr[index];
+    }
+    virtual void set(void** storage, unsigned int index, void* valStorage)
+    {
+      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(storage);
+      if (ptr.size() < index +1)
+        ptr.resize(index + 1, 0);
+      ptr[index] = types[index]->clone(valStorage);
+    }
+    TypeInfo info()
+    {
+      return _name;
+    }
+    std::vector<Type*> types;
+    std::string _name;
+    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(Methods);
+  };
+
+  struct InfosKey: public std::vector<Type*>
+  {
+  public:
+    InfosKey(const std::vector<Type*>& b)
+    : std::vector<Type*>(b) {}
+    bool operator < (const InfosKey& b) const
+    {
+      if (size() != b.size())
+        return size() < b.size();
+      for (unsigned i=0; i<size(); ++i)
+      {
+        if ( (*this)[i]->info() != b[i]->info())
+          return (*this)[i]->info() < b[i]->info();
+      }
+      return false;
+    }
+  };
   Type* defaultTupleType(std::vector<Type*> types)
   {
-    qiLogError("qi.type") <<"not implemented lol";
-    return 0;
+    typedef std::map<InfosKey, TypeTuple*> Map;
+    Map* map = 0;
+    if (!map)
+      map = new Map;
+    InfosKey key(types);
+    Map::iterator it = map->find(key);
+    if (it == map->end())
+    {
+      TypeTuple* result = new DefaultTupleType(types);
+      (*map)[key] = result;
+      return result;
+    }
+    else
+    {
+      TypeTuple* res = it->second;
+      assert(res->memberTypes(0).size() == types.size());
+      return res;
+    }
   }
 }
 

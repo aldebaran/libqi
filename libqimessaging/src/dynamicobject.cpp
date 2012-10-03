@@ -27,7 +27,7 @@ namespace qi
     SignalBase* createSignal(unsigned int id);
     bool                                dying;
     typedef std::map<unsigned int, SignalBase*> SignalMap;
-    typedef std::map<unsigned int, MetaCallable> MethodMap;
+    typedef std::map<unsigned int, GenericFunction> MethodMap;
     SignalMap           signalMap;
     MethodMap           methodMap;
     MetaObject          meta;
@@ -54,8 +54,8 @@ namespace qi
   public:
     DynamicObjectType() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<MetaFunctionResult> metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    virtual void metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params);
+    virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);
     virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(void* instance, unsigned int linkId);
@@ -85,7 +85,7 @@ namespace qi
     return _p->meta;
   }
 
-  void DynamicObject::setMethod(unsigned int id, MetaCallable callable)
+  void DynamicObject::setMethod(unsigned int id, GenericFunction callable)
   {
     _p->methodMap[id] = callable;
   }
@@ -99,30 +99,22 @@ namespace qi
       return i->second;
   }
 
-  const qi::MetaCallable &DynamicObject::method(unsigned int methodId) const {
-    DynamicObjectPrivate::MethodMap::iterator it = _p->methodMap.find(methodId);
-    if (it == _p->methodMap.end())
-    {
-      static const qi::MetaCallable empty;
-      return empty;
-    }
-    return it->second;
-  }
-
-  qi::Future<MetaFunctionResult> DynamicObject::metaCall(unsigned int methodId, const MetaFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValue> DynamicObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<MetaFunctionResult> out;
-    const qi::MetaCallable &met = method(methodId);
-    if (!met) {
+    qi::Promise<GenericValue> out;
+    DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
+    if (i == _p->methodMap.end())
+    {
       std::stringstream ss;
-      ss << "Can't find methodID: " << methodId;
+      ss << "Can't find methodID: " << method;
       out.setError(ss.str());
       return out.future();
     }
-    return ::qi::metaCall(eventLoop(), met, params, callType);
+
+    return ::qi::metaCall(eventLoop(), i->second, params, callType);
   }
 
-  void DynamicObject::metaEmit(unsigned int event, const MetaFunctionParameters& params)
+  void DynamicObject::metaEmit(unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
     if (s)
@@ -161,17 +153,18 @@ namespace qi
     return s->disconnect(link);
   }
 
-  static void functor_call(GenericFunction func, MetaFunctionParameters params,
-    qi::Promise<MetaFunctionResult> out)
+  static void functor_call(GenericFunction func, GenericFunctionParameters params,
+    qi::Promise<GenericValue> out, bool noCloneFirst)
   {
-    out.setValue(callFunction(func, params));
+    out.setValue(func.call(params));
+    params.destroy(noCloneFirst);
   }
 
-  qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    GenericFunction func, const MetaFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValue> metaCall(EventLoop* el,
+    GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst)
   {
 
-    qi::Promise<MetaFunctionResult> out;
+    qi::Promise<GenericValue> out;
     bool synchronous = true;
     switch (callType)
     {
@@ -185,57 +178,14 @@ namespace qi
       break;
     }
     if (synchronous)
-      out.setValue(callFunction(func, params));
+      out.setValue(func.call(params));
     else
     {
-      MetaFunctionParameters pCopy = params.copy();
+      GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       el->asyncCall(0,
         boost::bind(&functor_call,
           func,
-          pCopy, out));
-    }
-    return out.future();
-  }
-
-  qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    GenericFunction func, const std::vector<GenericValue>& params, MetaCallType callType)
-  {
-    MetaFunctionParameters p(params, false);
-    return metaCall(el, func, p, callType);
-  }
-
-  static void callable_call(MetaCallable func, MetaFunctionParameters params,
-    qi::Promise<MetaFunctionResult> out)
-  {
-    out.setValue(func(params));
-  }
-
-  qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    MetaCallable func, const MetaFunctionParameters& params, MetaCallType callType)
-  {
-
-    qi::Promise<MetaFunctionResult> out;
-    bool synchronous = true;
-    switch (callType)
-    {
-    case qi::MetaCallType_Direct:
-      break;
-    case qi::MetaCallType_Auto:
-      synchronous = !el ||  el->isInEventLoopThread();
-      break;
-    case qi::MetaCallType_Queued:
-      synchronous = !el;
-      break;
-    }
-    if (synchronous)
-      out.setValue(func(params));
-    else
-    {
-      MetaFunctionParameters pCopy = params.copy();
-      el->asyncCall(0,
-        boost::bind(&callable_call,
-          func,
-          pCopy, out));
+          pCopy, out, noCloneFirst));
     }
     return out.future();
   }
@@ -247,13 +197,13 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<MetaFunctionResult> DynamicObjectType::metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValue> DynamicObjectType::metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaCall(method, params, callType);
   }
 
-  void DynamicObjectType::metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params)
+  void DynamicObjectType::metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params)
   {
     reinterpret_cast<DynamicObject*>(instance)
       ->metaEmit(signal, params);

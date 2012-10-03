@@ -32,12 +32,12 @@ Manageable* StaticObjectTypeBase::manageable(void* instance)
     return _data.asManageable(instance);
 }
 
-qi::Future<MetaFunctionResult>
+qi::Future<GenericValue>
 StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
-                               const MetaFunctionParameters& params,
+                               const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
-  qi::Promise<MetaFunctionResult> out;
+  qi::Promise<GenericValue> out;
   ObjectTypeData::MethodMap::iterator i;
   i = _data.methodMap.find(methodId);
   if (i == _data.methodMap.end())
@@ -52,8 +52,12 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
   GenericValue self;
   self.type = this;
   self.value = instance;
-  return ::qi::metaCall(el, (MetaCallable)boost::bind(callMethod, method, self, _1),
-    params, callType);
+  GenericFunctionParameters p2;
+  p2.reserve(params.size()+1);
+  p2.push_back(self);
+  p2.insert(p2.end(), params.begin(), params.end());
+
+  return ::qi::metaCall(el, method.toGenericFunction(), p2, callType, true);
 }
 
 static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)
@@ -74,7 +78,7 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   return sig;
 }
 void StaticObjectTypeBase::metaEmit(void* instance, unsigned int signal,
-                                    const MetaFunctionParameters& params)
+                                    const GenericFunctionParameters& params)
 {
   SignalBase* sb = getSignal(_data, instance, signal);
   if (!sb)
@@ -109,7 +113,7 @@ const std::vector<std::pair<Type*, int> >& StaticObjectTypeBase::parentTypes()
   return _data.parentTypes;
 }
 
-const std::type_info& StaticObjectTypeBase::info()
+TypeInfo StaticObjectTypeBase::info()
 {
   return _data.classType->info();
 }

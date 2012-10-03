@@ -93,10 +93,10 @@ namespace qi {
     return type->metaObject(value);
   }
 
-  qi::Future<MetaFunctionResult>
-  GenericObject::metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValue>
+  GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<MetaFunctionResult> out;
+    qi::Promise<GenericValue> out;
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
@@ -110,7 +110,7 @@ namespace qi {
     }
   }
 
-  void GenericObject::metaEmit(unsigned int event, const MetaFunctionParameters& args)
+  void GenericObject::metaEmit(unsigned int event, const GenericFunctionParameters& args)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
@@ -119,16 +119,16 @@ namespace qi {
     type->metaEmit(value, event, args);
   }
 
-  qi::Future<MetaFunctionResult>
-  GenericObject::xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& args)
+  qi::Future<GenericValue>
+  GenericObject::xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& args)
   {
-    qi::Promise<MetaFunctionResult> out;
+    qi::Promise<GenericValue> out;
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
       return out.future();
     }
-    const MetaFunctionParameters* newArgs = 0;
+    const GenericFunctionParameters* newArgs = 0;
     int methodId = metaObject().methodId(signature);
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
     if (methodId < 0) {
@@ -146,7 +146,7 @@ namespace qi {
               << mml[i].signature() <<" for " << signature;
           methodId = mml[i].uid();
           // Signature is wrapped in a tuple, unwrap
-          newArgs = new MetaFunctionParameters(args.convert(s.begin().children()));
+          newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
           break;
         }
       }
@@ -189,7 +189,7 @@ namespace qi {
     //TODO: check for metacall to return false when not able to send the answer
     if (newArgs)
     {
-      qi::Future<MetaFunctionResult> res = metaCall(methodId, *newArgs);
+      qi::Future<GenericValue> res = metaCall(methodId, *newArgs);
       delete newArgs;
       return res;
     }
@@ -197,7 +197,7 @@ namespace qi {
       return metaCall(methodId, args);
   }
   /// Resolve signature and bounce
-  bool GenericObject::xMetaEmit(const std::string &signature, const MetaFunctionParameters &in) {
+  bool GenericObject::xMetaEmit(const std::string &signature, const GenericFunctionParameters &in) {
     if (!value || !type) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return false;
@@ -304,7 +304,7 @@ namespace qi {
     for (unsigned i=0; i< params.size(); ++i)
       signature += params[i].signature();
     signature += ")";
-    xMetaEmit(signature, MetaFunctionParameters(params, true));
+    xMetaEmit(signature, GenericFunctionParameters(params));
   }
 
   EventLoop* GenericObject::eventLoop()

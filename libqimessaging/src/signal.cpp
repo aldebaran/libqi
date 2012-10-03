@@ -43,10 +43,10 @@ namespace qi {
       qiLogError("qi.signal") << "Dropping emit: signature mismatch: " << signature <<" " << _p->signature;
       return;
     }
-    trigger(MetaFunctionParameters(params, true));
+    trigger(params);
   }
 
-  void SignalBase::trigger(const MetaFunctionParameters& params)
+  void SignalBase::trigger(const GenericFunctionParameters& params)
   {
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalSubscriberMap::iterator i;
@@ -54,20 +54,21 @@ namespace qi {
       i->second.call(params);
   }
 
-  static void functor_call(MetaCallable f,
-    const MetaFunctionParameters& args)
+  static void functor_call(GenericFunction f,
+    GenericFunctionParameters& args)
   {
     f(args);
+    args.destroy();
   }
 
-  void SignalSubscriber::call(const MetaFunctionParameters& args)
+  void SignalSubscriber::call(const GenericFunctionParameters& args)
   {
-    if (handler)
+    if (handler.type)
     {
       if (eventLoop)
       {
         // Event emission is always asynchronous
-        MetaFunctionParameters copy = args.copy();
+        GenericFunctionParameters copy = args.copy();
         eventLoop->asyncCall(0,
           boost::bind(&functor_call, handler, copy));
       }
@@ -110,6 +111,11 @@ namespace qi {
     : _p(new SignalBasePrivate)
   {
     _p->signature = sig;
+  }
+
+  std::string SignalBase::signature() const
+  {
+    return _p->signature;
   }
 
   bool SignalBasePrivate::disconnect(const SignalBase::Link& l)

@@ -11,7 +11,6 @@
 #include <string>
 #include <qimessaging/api.hpp>
 #include <qimessaging/genericvalue.hpp>
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/future.hpp>
 #include <qimessaging/metasignal.hpp>
@@ -86,8 +85,8 @@ namespace qi {
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;
-    virtual qi::Future<MetaFunctionResult> metaCall(void* instance, unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
-    virtual void metaEmit(void* instance, unsigned int signal, const MetaFunctionParameters& params)=0;
+    virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)=0;
+    virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params)=0;
     virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)=0;
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual bool disconnect(void* instance, unsigned int linkId)=0;
@@ -125,9 +124,9 @@ namespace qi {
       qi::AutoGenericValue p7 = qi::AutoGenericValue(),
       qi::AutoGenericValue p8 = qi::AutoGenericValue());
 
-    qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
-    qi::Future<MetaFunctionResult> xMetaCall(const std::string &retsig, const std::string &signature, const MetaFunctionParameters& params);
+    qi::Future<GenericValue> xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& params);
     void emitEvent(const std::string& eventName,
                    qi::AutoGenericValue p1 = qi::AutoGenericValue(),
                    qi::AutoGenericValue p2 = qi::AutoGenericValue(),
@@ -137,8 +136,8 @@ namespace qi {
                    qi::AutoGenericValue p6 = qi::AutoGenericValue(),
                    qi::AutoGenericValue p7 = qi::AutoGenericValue(),
                    qi::AutoGenericValue p8 = qi::AutoGenericValue());
-    void metaEmit(unsigned int event, const MetaFunctionParameters& params);
-    bool xMetaEmit(const std::string &signature, const MetaFunctionParameters &in);
+    void metaEmit(unsigned int event, const GenericFunctionParameters& params);
+    bool xMetaEmit(const std::string &signature, const GenericFunctionParameters &in);
         /** Connect an event to an arbitrary callback.
      *
      * If you are within a service, it is recommended that you connect the
@@ -187,10 +186,6 @@ namespace qi {
    {}
 
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
-     : handler(makeCallable(func)), eventLoop(ctx), target(), method(0)
-   {}
-
-   SignalSubscriber(MetaCallable func, EventLoop* ctx = getDefaultObjectEventLoop())
      : handler(func), eventLoop(ctx), target(), method(0)
    {}
 
@@ -198,7 +193,7 @@ namespace qi {
      : eventLoop(0), target(target), method(method)
    {}
 
-   void call(const MetaFunctionParameters& args);
+   void call(const GenericFunctionParameters& args);
    // Source information
    SignalBase*        source;
    /// Uid that can be passed to GenericObject::disconnect()
@@ -206,7 +201,7 @@ namespace qi {
 
    // Target information
    //   Mode 1: Direct functor call
-   MetaCallable       handler;
+   GenericFunction    handler;
    EventLoop*         eventLoop;
    //  Mode 2: metaCall
    ObjectPtr          target;
@@ -220,16 +215,11 @@ namespace qi {
                                EventLoop* ctx)
   {
     return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      SignalSubscriber(makeCallable(callback), ctx));
+      SignalSubscriber(makeGenericFunction(callback), ctx));
   }
 
-  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    GenericFunction func, const std::vector<GenericValue>& params, MetaCallType callType);
-  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    GenericFunction func, const MetaFunctionParameters& params, MetaCallType callType);
-  QIMESSAGING_API qi::Future<MetaFunctionResult> metaCall(EventLoop* el,
-    MetaCallable func, const MetaFunctionParameters& params, MetaCallType callType);
-
+ QIMESSAGING_API qi::Future<GenericValue> metaCall(EventLoop* el,
+    GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst=false);
 
 };
 

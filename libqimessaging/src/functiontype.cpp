@@ -61,4 +61,109 @@ namespace qi
   {
     return _resultType->signature();
   }
+
+  GenericFunctionParameters::GenericFunctionParameters()
+  {
+  }
+
+  GenericFunctionParameters::GenericFunctionParameters(const std::vector<GenericValue>& args)
+  :std::vector<GenericValue>(args)
+  {
+  }
+
+  GenericFunctionParameters GenericFunctionParameters::copy(bool notFirst) const
+  {
+    GenericFunctionParameters result;
+    for (unsigned i=0; i<size(); ++i)
+      result.push_back( (!i&&notFirst)? (*this)[i]:(*this)[i].clone());
+    return result;
+  }
+
+  void GenericFunctionParameters::destroy(bool notFirst)
+  {
+    for (unsigned i=notFirst?1:0; i<size(); ++i)
+      (*this)[i].destroy();
+  }
+
+  GenericFunctionParameters
+  GenericFunctionParameters::convert(const Signature& sig) const
+  {
+    GenericFunctionParameters dst;
+    const std::vector<GenericValue>& src = *this;
+    if (sig.size() != src.size())
+    {
+      qiLogError("qi.GenericFunctionParameters") << "convert: signature/params size mismatch"
+      << sig.toString() << " " << sig.size() << " " << src.size();
+      return dst;
+    }
+    Signature::iterator it = sig.begin();
+    int idx = 0;
+    for (;it != sig.end(); ++it,++idx)
+    {
+      Type* compatible = qi::Type::fromSignature(*it);
+      if (!compatible)
+      {
+        qiLogError("qi.GenericFunctionParameters") <<"convert: unknown type " << *it;
+        compatible = src[idx].type;
+      }
+      dst.push_back(src[idx].convertCopy(compatible));
+    }
+    return dst;
+  }
+
+  GenericFunctionParameters
+  GenericFunctionParameters::fromBuffer(const Signature& sig, const qi::Buffer& buffer)
+  {
+    GenericFunctionParameters result;
+    IDataStream in(buffer);
+    Signature::iterator it = sig.begin();
+    while (it != sig.end())
+    {
+      Type* compatible = qi::Type::fromSignature(*it);
+      if (!compatible)
+      {
+        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
+        throw std::runtime_error("Could not construct type for " + *it);
+      }
+      result.push_back(compatible->deserialize(in));
+      ++it;
+    }
+    return result;
+  }
+
+  Buffer GenericFunctionParameters::toBuffer() const
+  {
+    Buffer buf;
+    ODataStream out(buf);
+    for (unsigned i=0; i<size(); ++i)
+      (*this)[i].serialize(out);
+    return buf;
+  }
+
+  class DynamicFunctionType: public FunctionType
+  {
+  public:
+    virtual void* call(void* func, const std::vector<void*>& args)
+    {
+      qiLogError("qi.meta") << "Dynamic function called without type information";
+      return 0;
+    }
+    virtual GenericValue call(void* func, const std::vector<GenericValue>& args)
+    {
+      DynamicFunction* f = (DynamicFunction*)func;
+      return (*f)(args);
+    }
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
+  };
+
+  GenericFunction makeDynamicGenericFunction(DynamicFunction f)
+  {
+    static FunctionType* type = 0;
+    if (!type)
+      type = new DynamicFunctionType();
+    GenericFunction result;
+    result.type = type;
+    *(DynamicFunction*) (void*)&result.value = f;
+    return result;
+  }
 }

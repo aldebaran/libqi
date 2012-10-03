@@ -10,6 +10,7 @@
 #include <vector>
 #include <utility> // pair
 #include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
 
 namespace qi {
 

@@ -38,8 +38,8 @@ namespace qi {
     //MessageDispatcher callback
     void onMessagePending(const qi::Message &msg);
 
-    virtual void metaEmit(unsigned int event, const MetaFunctionParameters& args);
-    virtual qi::Future<MetaFunctionResult> metaCall(unsigned int method, const MetaFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
+    virtual void metaEmit(unsigned int event, const GenericFunctionParameters& args);
+    virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
     virtual unsigned int connect(unsigned int event, const SignalSubscriber& sub);
     virtual bool disconnect(unsigned int linkId);
   public:
@@ -47,7 +47,7 @@ namespace qi {
 
   protected:
     unsigned int                                    _service;
-    std::map<int, qi::Promise<MetaFunctionResult> > _promises;
+    std::map<int, qi::Promise<GenericValue> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
   };

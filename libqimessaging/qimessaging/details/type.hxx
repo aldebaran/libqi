@@ -33,7 +33,7 @@ namespace qi {
   template<> class TypeImpl<void>: public Type
   {
   public:
-    const std::type_info& info()
+    TypeInfo info()
     {
       return typeid(void);
     }
@@ -41,6 +41,7 @@ namespace qi {
     void* ptrFromStorage(void** ) { return 0;}
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
+    Kind kind() const { return Void;}
   };
 
   //reference
@@ -285,26 +286,6 @@ namespace qi  {
       }
     }
     return v;
-  }
-}
-
-namespace qi {
-  namespace detail
-  {
-    class TypeInfoKey
-    {
-    public:
-      TypeInfoKey(const std::type_info& ti): ti(ti) {}
-      bool operator < (const TypeInfoKey& b) const
-      {
-        return ti.before(b.ti);
-      }
-      bool operator == (const TypeInfoKey& b) const
-      {
-        return ti == b.ti;
-      }
-      const std::type_info& ti;
-    };
   }
 }
 

@@ -38,7 +38,7 @@ namespace qi
     delete _p;
   }
 
-  int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func)
+  int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func)
   {
     unsigned int nextId = _p->object->metaObject()._p->addMethod(retsig, signature);
     _p->object->setMethod(nextId, func);

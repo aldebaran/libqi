@@ -7,7 +7,6 @@
 #ifndef _QIMESSAGING_METAMETHOD_HPP_
 #define _QIMESSAGING_METAMETHOD_HPP_
 
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/methodtype.hpp>
 
 

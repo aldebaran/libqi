@@ -7,7 +7,6 @@
 #ifndef _QIMESSAGING_SIGNAL_HPP_
 #define _QIMESSAGING_SIGNAL_HPP_
 
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/eventloop.hpp>
 #include <qimessaging/signature.hpp>
 #include <qimessaging/functiontype.hpp>
@@ -24,6 +23,7 @@ namespace qi {
   public:
     explicit SignalBase(const std::string& signature);
     ~SignalBase();
+    std::string signature() const;
 
     typedef unsigned int Link;
 
@@ -32,11 +32,10 @@ namespace qi {
 
     Link connect(qi::ObjectPtr target, unsigned int slot);
     Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
-    Link connect(MetaCallable callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);
     bool disconnect(const Link& link);
 
-    void trigger(const MetaFunctionParameters& params);
+    void trigger(const GenericFunctionParameters& params);
     void operator()(
       qi::AutoGenericValue p1 = qi::AutoGenericValue(),
       qi::AutoGenericValue p2 = qi::AutoGenericValue(),

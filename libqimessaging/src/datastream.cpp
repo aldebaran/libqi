@@ -179,7 +179,7 @@ namespace qi {
   ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {
     if (!_innerSerialization)
     {
-      getBuffer().signature() << "r";
+      getBuffer().signature() << "s";
     }
 
     ++_innerSerialization;
@@ -250,34 +250,39 @@ namespace qi {
 
   void ODataStream::beginList(uint32_t size, std::string elementSignature)
   {
+    if (!_innerSerialization)
+      getBuffer().signature() << "[" << elementSignature;
     ++_innerSerialization;
-    getBuffer().signature() << "[" << elementSignature;
     *this << size;
   }
 
   void ODataStream::endList()
   {
     --_innerSerialization;
-    getBuffer().signature() << "]";
+    if (!_innerSerialization)
+      getBuffer().signature() << "]";
   }
 
   void ODataStream::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
   {
+    if (!_innerSerialization)
+      getBuffer().signature() << "{" << keySignature << valueSignature << "}";
     ++_innerSerialization;
-    getBuffer().signature() << "{" << keySignature << valueSignature << "}";
-    *this << size;
+     *this << size;
   }
 
   void ODataStream::endMap()
   {
     --_innerSerialization;
-    getBuffer().signature() << "}";
+    if (!_innerSerialization)
+      getBuffer().signature() << "}";
   }
 
   void ODataStream::beginTuple(std::string sig)
   {
+    if (!_innerSerialization)
+       getBuffer().signature() << "(" << sig << ")";
     ++_innerSerialization;
-    getBuffer().signature() << "(" << sig << ")";
   }
   void ODataStream::endTuple()
   {

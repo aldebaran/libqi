@@ -21,6 +21,8 @@ namespace qi
     /// Convert and call
     virtual GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args) = 0;
+    /// Return 'linearized' signature function type
+    virtual FunctionType* toFunctionType() = 0;
   };
 
   /// Represents a generic member function. Has value semantic.
@@ -34,6 +36,7 @@ namespace qi
     std::string signature() const { return type->CallableType::signature();}
     std::string sigreturn() const { return type->CallableType::sigreturn();}
 
+    GenericFunction toGenericFunction();
     MethodType* type;
     boost::function<void()> value;
   };

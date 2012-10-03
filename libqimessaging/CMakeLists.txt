@@ -51,7 +51,6 @@ set(PUBLIC_HEADERS
                    qimessaging/details/genericobject.hxx
                    qimessaging/details/genericvalue.hxx
                    qimessaging/details/genericvaluespecialized.hxx
-                   qimessaging/details/metafunction.hxx
                    qimessaging/details/methodtype.hxx
                    qimessaging/details/objecttypebuilder.hxx
                    qimessaging/details/signal.hxx
@@ -72,7 +71,6 @@ set(PUBLIC_HEADERS
                    qimessaging/genericvalue.hpp
                    qimessaging/genericvaluespecialized.hpp
                    qimessaging/message.hpp
-                   qimessaging/metafunction.hpp
                    qimessaging/metamethod.hpp
                    qimessaging/metaobject.hpp
                    qimessaging/metasignal.hpp
@@ -117,7 +115,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/metasignal_p.hpp
                                    src/metaobject.cpp
                                    src/metaobject_p.hpp
-                                   src/metafunction.cpp
                                    src/object_p.hpp
                                    src/object.cpp
                                    src/objectfactory.cpp

@@ -10,7 +10,7 @@
 # define   	_QIMESSAGING_FUTURE_C_P_H_
 
 #include <list>
-#include <qimessaging/metafunction.hpp>
+#include <qimessaging/type.hpp>
 #include <qimessaging/future.hpp>
 
 class CFunctorResult;

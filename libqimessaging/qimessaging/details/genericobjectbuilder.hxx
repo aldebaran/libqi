@@ -15,7 +15,7 @@ template <typename FUNCTION_TYPE>
     // FIXME validate type
     return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
       name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeCallable(function));
+      makeGenericFunction(function));
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
@@ -23,7 +23,7 @@ template <typename FUNCTION_TYPE>
   {
     return xAdvertiseMethod(detail::FunctionSignature<METHOD_TYPE >::sigreturn(),
       name + "::" + detail::FunctionSignature<METHOD_TYPE >::signature(),
-      makeCallable(makeGenericFunction(object, method)));
+      makeGenericFunction(object, method));
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)

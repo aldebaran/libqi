@@ -16,17 +16,17 @@
 
 namespace qi {
 
-  static MetaFunctionResult forwardEvent(const MetaFunctionParameters& params,
+  static GenericValue forwardEvent(const GenericFunctionParameters& params,
                                          unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
-    msg.setBuffer(params.getBuffer());
+    msg.setBuffer(params.toBuffer());
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
     msg.setObject(Message::GenericObject_Main);
     client->send(msg);
-    return MetaFunctionResult();
+    return GenericValue();
   }
 
 
@@ -108,7 +108,7 @@ namespace qi {
           qi::Message retval(qi::Message::Type_Error, msg.address());
           Buffer buf;
           ODataStream od(buf);
-          od << qi::signatureFromType<std::string>::value();
+          od << qi::typeOf<std::string>()->signature();
           od << "Server service only handles call/emit";
           retval.setBuffer(buf);
           client->send(retval);
@@ -126,7 +126,7 @@ namespace qi {
             qi::Message retval(qi::Message::Type_Error, msg.address());
             Buffer buf;
             ODataStream od(buf);
-            od << qi::signatureFromType<std::string>::value();
+            od << qi::typeOf<std::string>()->signature();
             od << "Service not found";
             retval.setBuffer(buf);
             client->send(retval);
@@ -143,7 +143,7 @@ namespace qi {
 
             // locate object, register locally and bounce to an event message
             unsigned int linkId = it->second->connect(event,
-              (MetaCallable) boost::bind(&forwardEvent, _1, service, event, client));
+              makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, service, event, client)));
             _links[client][service][remoteLinkId] = RemoteLink(linkId, event);
             if (msg.type() == Message::Type_Call)
             {
@@ -231,13 +231,47 @@ namespace qi {
     {
       case Message::Type_Call:
       {
-        qi::Future<MetaFunctionResult> fut = obj->metaCall(msg.function(), MetaFunctionParameters(msg.buffer()), qi::MetaCallType_Queued);
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, client, msg.address()));
+        const MetaMethod* mm = obj->metaObject().method(msg.function());
+        if (!mm)
+        {
+          qiLogError("qi::Server") << "No such method " << msg.function();
+          qi::Promise<GenericValue> prom;
+          prom.setError("No such method");
+          serverResultAdapter(prom.future(), client, msg.address());
+        }
+        else
+        {
+          std::string sig(mm->signature());
+          sig = signatureSplit(sig)[2];
+          sig = sig.substr(1, sig.length()-2);
+          GenericFunctionParameters params = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
+          qi::Future<GenericValue> fut = obj->metaCall(msg.function(), params, qi::MetaCallType_Queued);
+          fut.connect(boost::bind<void>(&serverResultAdapter, _1, client, msg.address()));
+        }
       }
         break;
       case Message::Type_Event:
       {
-        obj->metaEmit(msg.function(), MetaFunctionParameters(msg.buffer()));
+        std::string sig;
+        const MetaSignal* ms = obj->metaObject().signal(msg.event());
+        if (ms)
+          sig = ms->signature();
+        else
+        {
+          const MetaMethod* mm = obj->metaObject().method(msg.event());
+          if (mm)
+            sig = mm->signature();
+          else
+            qiLogError("qi::Server") << "No such signal/method on event message " << msg.event();
+        }
+        if (!sig.empty())
+        {
+          sig = signatureSplit(sig)[2];
+          sig = sig.substr(1, sig.length()-2);
+          GenericFunctionParameters parms = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
+          obj->metaEmit(msg.function(), parms);
+          parms.destroy();
+        }
       }
         break;
     }

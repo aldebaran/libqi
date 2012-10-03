@@ -33,6 +33,28 @@ class IDataStream;
 class ODataStream;
 class Signature;
 
+
+/** This class is used to uniquely identify a type.
+ *
+ */
+class QIMESSAGING_API TypeInfo
+{
+public:
+  TypeInfo();
+  /// Construct a TypeInfo from a std::type_info
+  TypeInfo(const std::type_info& info);
+  /// Contruct a TypeInfo from a custom string.
+  TypeInfo(const std::string& ti);
+  std::string asString();
+
+  bool operator ==(const TypeInfo& b) const;
+  bool operator !=(const TypeInfo& b) const;
+  bool operator < (const TypeInfo& b) const;
+private:
+  const std::type_info* stdInfo;
+  std::string customInfo;
+};
+
 /** Interface for all the operations we need on any type:
  *
  *  - cloning/destruction in clone() and destroy()
@@ -50,7 +72,7 @@ class Signature;
 class QIMESSAGING_API Type
 {
 public:
-  virtual const std::type_info& info() =0;
+  virtual TypeInfo info() =0;
   // Initialize and return a new storage, from nothing or a T*
   virtual void* initializeStorage(void* ptr=0)=0;
   // Get pointer to type from pointer to storage
@@ -76,7 +98,7 @@ public:
   };
   virtual Kind kind() const;
 
-  const char* infoString() { return info().name();} // for easy gdb access
+  std::string infoString() { return info().asString();} // for easy gdb access
 
   std::string signature();
   static Type* fromSignature(const Signature& sig);
@@ -263,7 +285,7 @@ public:
 };
 
 #define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
-virtual const std::type_info& info() { return Bounce::info();}                           \
+virtual TypeInfo info() { return Bounce::info();}                           \
 virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
 virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
 
@@ -271,7 +293,13 @@ virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
 #define _QI_BOUNCE_TYPE_METHODS(Bounce)  \
 _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce) \
 virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
-virtual void destroy(void* ptr) { return Bounce::destroy(ptr);}
+virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
+
+#define _QI_BOUNCE_TYPE_METHODS_NOINFO(Bounce) \
+virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);} \
+virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}             \
+virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
+virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
 
 
 template<typename T, typename _Access    = TypeByPointer<T> >

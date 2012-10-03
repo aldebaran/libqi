@@ -14,9 +14,9 @@ namespace qi {
     qi::ObjectTypeBuilder<ServerClient>  ob;
     ObjectTypeBuilderBase::SignalMemberGetter dummy;
 
-    ob.advertiseMethod("registerEvent", &ServerClient::registerEvent);
-    ob.advertiseMethod("unregisterEvent", &ServerClient::unregisterEvent);
-    ob.advertiseMethod("metaObject", &ServerClient::metaObject);
+    ob.advertiseMethod("registerEvent", &ServerClient::_registerEvent);
+    ob.advertiseMethod("unregisterEvent", &ServerClient::_unregisterEvent);
+    ob.advertiseMethod("metaObject", &ServerClient::_metaObject);
 
 
     qi::MetaObject m = ob.metaObject();

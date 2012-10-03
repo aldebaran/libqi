@@ -9,7 +9,6 @@
 
 #include <qi/atomic.hpp>
 #include <qimessaging/metasignal.hpp>
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/metamethod.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 

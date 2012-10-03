@@ -12,7 +12,6 @@
 
 #include <boost/function.hpp>
 #include <qimessaging/signature.hpp>
-#include <qimessaging/metafunction.hpp>
 #include <sstream>
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericobject.hpp>

@@ -39,9 +39,9 @@ namespace qi {
 
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
-    qi::Promise<MetaFunctionResult>                           promise;
-    bool                                                      found = false;
-    std::map<int, qi::Promise<MetaFunctionResult> >::iterator it;
+    qi::Promise<GenericValue> promise;
+    bool found = false;
+    std::map<int, qi::Promise<GenericValue> >::iterator it;
 
     qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
     {
@@ -56,14 +56,31 @@ namespace qi {
 
     switch (msg.type()) {
       case qi::Message::Type_Reply:
+      {
         if (!found) {
           qiLogError("remoteobject") << "no promise found for req id:" << msg.id()
           << "  obj: " << msg.service() << "  func: " << msg.function();
           return;
         }
-        promise.setValue(MetaFunctionResult(msg.buffer()));
-
+        // Get call signature
+        MetaMethod* mm =  metaObject().method(msg.function());
+        if (!mm)
+        {
+          qiLogError("remoteobject") << "Result for unknown function "
+           << msg.function();
+           promise.setError("Result for unknown function");
+           return;
+        }
+        Type* type = Type::fromSignature(mm->sigreturn());
+        if (!type)
+        {
+          promise.setError("Unable to find a type for signature " + mm->sigreturn());
+          return;
+        }
+        IDataStream in(msg.buffer());
+        promise.setValue(type->deserialize(in));
         return;
+      }
       case qi::Message::Type_Error: {
         qi::IDataStream ds(msg.buffer());
         std::string    err;
@@ -83,7 +100,21 @@ namespace qi {
       case qi::Message::Type_Event: {
         SignalBase* sb = signalBase(msg.event());
         if (sb)
-          sb->trigger(MetaFunctionParameters(msg.buffer()));
+        {
+          try {
+            std::string sig = sb->signature();
+            sig = signatureSplit(sig)[2];
+            sig = sig.substr(1, sig.length()-2);
+            GenericFunctionParameters args
+              = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
+            sb->trigger(args);
+            args.destroy();
+          }
+          catch (const std::exception& e)
+          {
+            qiLogWarning("remoteobject") << "Deserialize error on event: " << e.what();
+          }
+        }
         else
         {
           qiLogWarning("remoteobject") << "Event message on unknown signal " << msg.event();
@@ -98,11 +129,23 @@ namespace qi {
   }
 
 
-  qi::Future<MetaFunctionResult> RemoteObject::metaCall(unsigned int method, const qi::MetaFunctionParameters &in, MetaCallType callType)
+  qi::Future<GenericValue> RemoteObject::metaCall(unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
-    qi::Promise<MetaFunctionResult> out;
+    qi::Promise<GenericValue> out;
     qi::Message msg;
-    msg.setBuffer(in.getBuffer());
+    msg.setBuffer(in.toBuffer());
+#ifndef NDEBUG
+    std::string sig = metaObject().method(method)->signature();
+    sig = signatureSplit(sig)[2];
+    // Remove extra tuple layer
+    sig = sig.substr(1, sig.length()-2);
+    if (sig != msg.buffer().signature().str())
+    {
+      qiLogError("remoteobject") << "call signature mismatch "
+        << sig << ' '
+        << msg.buffer().signature().str();
+    }
+#endif
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
     msg.setObject(qi::Message::GenericObject_Main);
@@ -141,7 +184,7 @@ namespace qi {
     return out.future();
   }
 
-  void RemoteObject::metaEmit(unsigned int event, const qi::MetaFunctionParameters &args)
+  void RemoteObject::metaEmit(unsigned int event, const qi::GenericFunctionParameters &args)
   {
     // Bounce the emit request to server
     // TODO: one optimisation that could be done is to trigger the local
@@ -149,7 +192,7 @@ namespace qi {
     // But it is a bit complex, because the server will bounce the
     // event back to us.
     qi::Message msg;
-    msg.setBuffer(args.getBuffer());
+    msg.setBuffer(args.toBuffer());
     msg.setType(Message::Type_Event);
     msg.setService(_service);
     msg.setObject(qi::Message::GenericObject_Main);

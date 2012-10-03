@@ -8,7 +8,6 @@
 #define _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/metafunction.hpp>
 #include <qimessaging/genericobject.hpp>
 
 namespace qi {
@@ -31,7 +30,7 @@ namespace qi {
     inline unsigned int advertiseEvent(const std::string& eventName);
 
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, MetaCallable func);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func);
     int xAdvertiseEvent(const std::string& signature);
 
     qi::ObjectPtr object();

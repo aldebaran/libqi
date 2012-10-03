@@ -9,7 +9,6 @@
 
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/future.hpp>
-#include <qimessaging/metafunction.hpp>
 
 namespace qi {
 
@@ -43,29 +42,12 @@ namespace qi {
     }
   }; }
 
-  /*
-  template<> class TypeImpl<GenericObject>: public TypeDefaultImpl<GenericObject>
-  {
-    virtual void* clone(void* src)
-    {
-      GenericObject* osrc = (GenericObject*)src;
-      GenericObject* res = new GenericObject(*osrc);
-      res->value = res->type->clone(res->value);
-      return res;
-     }
-    virtual void destroy(void* ptr)
-    {
-      GenericObject* go = (GenericObject*)ptr;
-      go->type->destroy(go->value);
-      delete (GenericObject*)ptr;
-    }
-  };*/
-
   namespace detail
   {
 
     template <typename T>
-    inline void futureAdapter(qi::Future<qi::MetaFunctionResult> metaFut, qi::Promise<T> promise) {
+    inline void futureAdapter(qi::Future<qi::GenericValue> metaFut, qi::Promise<T> promise)
+    {
 
       //error handling
       if (metaFut.hasError()) {
@@ -73,43 +55,23 @@ namespace qi {
         return;
       }
 
-      //put metaFutureResult in promise<T>
-      if (metaFut.value().getMode() == MetaFunctionResult::Mode_GenericValue)
-      {
-        GenericValue val =  metaFut.value().getValue();
-          Type* targetType = typeOf<T>();
-          std::pair<GenericValue, bool> conv = val.convert(targetType);
-          if (!conv.first.type)
-          promise.setError("Unable to convert call result to target type");
-          else
-          {
-            T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
-            promise.setValue(*res);
-          }
-          if (conv.second)
-            conv.first.destroy();
-      }
+      GenericValue val =  metaFut.value();
+      Type* targetType = typeOf<T>();
+      std::pair<GenericValue, bool> conv = val.convert(targetType);
+      if (!conv.first.type)
+        promise.setError("Unable to convert call result to target type");
       else
       {
-        IDataStream in(metaFut.value().getBuffer());
-        // FIXME we assume result has the correct signature here
-        Type* type = typeOf<T>();
-        GenericValue result = type->deserialize(in);
-        if (!result.type)
-        {
-          promise.setError("Could not deserialize result");
-        }
-        else
-        {
-          promise.setValue(result.as<T>());
-          result.destroy();
-        }
+        T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
+        promise.setValue(*res);
       }
+      if (conv.second)
+        conv.first.destroy();
     }
 
     template <>
-    inline void futureAdapter<void>(qi::Future<qi::MetaFunctionResult> metaFut, qi::Promise<void> promise) {
-
+    inline void futureAdapter<void>(qi::Future<qi::GenericValue> metaFut, qi::Promise<void> promise)
+    {
       //error handling
       if (metaFut.hasError()) {
         promise.setError(metaFut.error());
@@ -155,9 +117,7 @@ namespace qi {
     // signatureFroType will produce a static assert
     sigret = typeOf<R>()->signature();
     // Future adaptation
-    // Mark params as being on the stack
-    MetaFunctionParameters p(params, true);
-    qi::Future<qi::MetaFunctionResult> fmeta = xMetaCall(sigret, signature, p);
+    qi::Future<qi::GenericValue> fmeta = xMetaCall(sigret, signature, params);
     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));
 
 

@@ -153,7 +153,10 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
       std::vector<Type*> srcTypes = tsrc->memberTypes(value);
       std::vector<Type*> dstTypes = tdst->memberTypes(0);
       if (dstTypes.size() != sourceData.size())
+      {
+        qiLogWarning("qi.meta") << "Conversion failure: tuple size mismatch";
         return std::make_pair(GenericValue(), false);
+      }
 
       std::vector<void*> targetData;
       std::vector<bool> mustDestroy;

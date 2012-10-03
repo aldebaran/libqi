@@ -48,6 +48,11 @@ namespace qi
     return _argumentsType;
   }
 
+  inline GenericValue GenericFunction::operator()(const std::vector<GenericValue>& args)
+  {
+    return call(args);
+  }
+
   namespace detail
   {
     struct PtrToConstRef

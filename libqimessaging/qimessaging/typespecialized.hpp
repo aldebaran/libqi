@@ -90,6 +90,8 @@ public:
   virtual GenericMapIterator end(void* storage) = 0;  //idem
   virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
   virtual Kind kind() const { return Map;}
+  // Since our typesystem has no erased operator < or operator ==,
+  // TypeMap does not provide a find()
 };
 
 class QIMESSAGING_API TypeTuple: public Type
