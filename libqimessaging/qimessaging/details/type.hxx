@@ -107,15 +107,15 @@ namespace qi  {
 
   namespace detail {
     struct signature_function_arg_apply {
-      signature_function_arg_apply(std::ostream* val)
+      signature_function_arg_apply(std::string* val)
         : val(*val)
       {}
 
       template<typename T> void operator()(T *x) {
-        val << qi::typeOf<T>()->signature();
+        val += qi::typeOf<T>()->signature();
       }
 
-      std::ostream &val;
+      std::string &val;
     };
 
     template<typename T> struct RawFunctionSignature
@@ -127,8 +127,8 @@ namespace qi  {
       }
       static std::string makeSignature()
       {
-        std::stringstream   signature;
-        signature << '(';
+        std::string   signature;
+        signature += '(';
         typedef typename boost::function_types::parameter_types<T>::type ArgsType;
         boost::mpl::for_each<
           boost::mpl::transform_view<ArgsType,
@@ -140,8 +140,8 @@ namespace qi  {
           >
         >
         (qi::detail::signature_function_arg_apply(&signature));
-        signature << ')';
-        return signature.str();
+        signature += ')';
+        return signature;
       }
     };
     template<typename T> struct MemberFunctionSignature
@@ -186,16 +186,21 @@ namespace qi  {
     template<typename T> inline
     std::string functionArgumentsSignature()
     {
-      std::stringstream sigs;
-      sigs << "(";
-      typedef typename boost::function_types::parameter_types<T>::type ArgsType;
-      boost::mpl::for_each<
-      boost::mpl::transform_view<ArgsType,
-      boost::add_pointer<
+      static bool done = false;
+      static std::string sigs;
+      if (!done)
+      {
+        sigs += '(';
+        typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+        boost::mpl::for_each<
+        boost::mpl::transform_view<ArgsType,
+        boost::add_pointer<
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > > (qi::detail::signature_function_arg_apply(&sigs));
-      sigs << ")";
-      return sigs.str();
+        sigs += ')';
+        done = true;
+      }
+      return sigs;
     }
 
     // Bouncer to DefaultAccess or DirectAccess based on type size
