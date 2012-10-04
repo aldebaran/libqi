@@ -45,7 +45,6 @@ static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new TypeI
  * use all known native types instead of size/signedness explicit
  * types.
  */
-INTEGRAL_TYPE(bool);
 INTEGRAL_TYPE(char);
 INTEGRAL_TYPE(signed char);
 INTEGRAL_TYPE(unsigned char);
