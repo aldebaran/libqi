@@ -28,8 +28,24 @@ namespace qi {
     _p->dying = false;
   }
 
+  Manageable::Manageable(const Manageable& b)
+  {
+    _p = new ManageablePrivate();
+    _p->eventLoop = b._p->eventLoop;
+    _p->dying = false;
+  }
+
+  void Manageable::operator = (const Manageable& b)
+  {
+    this->~Manageable();
+    _p = new ManageablePrivate();
+    _p->eventLoop = b._p->eventLoop;
+    _p->dying = false;
+  }
+
   Manageable::~Manageable()
   {
+    _p->dying = true;
     std::vector<SignalSubscriber> copy;
     {
       boost::mutex::scoped_lock sl(_p->registrationsMutex);
@@ -39,6 +55,7 @@ namespace qi {
     {
       copy[i].source->disconnect(copy[i].linkId);
     }
+    delete _p;
   }
 
   void Manageable::addRegistration(const SignalSubscriber& sub)

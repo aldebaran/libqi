@@ -45,6 +45,8 @@ namespace qi {
  public:
    Manageable();
    ~Manageable();
+   Manageable(const Manageable& b);
+   void operator = (const Manageable& b);
 
    void addCallbacks(ObjectInterface *callbacks, void *data = 0);
    void removeCallbacks(ObjectInterface *callbacks);
