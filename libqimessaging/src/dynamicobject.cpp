@@ -90,6 +90,15 @@ namespace qi
     _p->methodMap[id] = callable;
   }
 
+  GenericFunction DynamicObject::method(unsigned int id)
+  {
+    DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(id);
+    if (i == _p->methodMap.end())
+      return GenericFunction();
+    else
+      return i->second;
+  }
+
   SignalBase* DynamicObject::signalBase(unsigned int id) const
   {
     DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);

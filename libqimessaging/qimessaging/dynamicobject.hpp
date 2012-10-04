@@ -38,6 +38,7 @@ namespace qi
     MetaObject &metaObject();
 
     void setMethod(unsigned int id, GenericFunction callable);
+    GenericFunction method(unsigned int id);
     SignalBase* signalBase(unsigned int id) const;
 
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
