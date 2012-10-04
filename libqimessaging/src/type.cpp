@@ -273,8 +273,7 @@ namespace qi {
     }
     void visitDynamic(Type* type, GenericValue pointee)
     {
-      out << pointee.type->signature();
-      pointee.type->serialize(out, pointee.value);
+      out << pointee;
     }
 
     ODataStream& out;
