@@ -67,7 +67,11 @@ namespace qi {
   }                                                                            \
   ODataStream& ODataStream::operator<<(Type b)                                 \
   {                                                                            \
-    return serialize<Type, TypeCast, Signature>(this, b, _innerSerialization); \
+    bool sig = _innerSerialization;                                            \
+    ++_innerSerialization;                                                     \
+    serialize<Type, TypeCast, Signature>(this, b, sig);                        \
+    --_innerSerialization;                                                     \
+    return *this;                                                              \
   }
 
   QI_SIMPLE_SERIALIZER_IMPL(bool, bool, 'b')
@@ -115,7 +119,7 @@ namespace qi {
     if (len) {
       if (!_innerSerialization)
       {
-        getBuffer().signature() << 'r';
+        getBuffer().signature() << 's';
       }
       if (_buffer.write(str, len) < 0)
       {
@@ -129,7 +133,9 @@ namespace qi {
 
   void ODataStream::writeString(const char *str, size_t len)
   {
+    ++_innerSerialization;
     *this << (qi::uint32_t)len;
+    --_innerSerialization;
     if (len) {
       if (!_innerSerialization)
       {
@@ -243,8 +249,10 @@ namespace qi {
   {
     if (!_innerSerialization)
       getBuffer().signature() << "m";
+    ++_innerSerialization;
     *this << value.signature();
     value.serialize(*this);
+    --_innerSerialization;
     return *this;
   }
 
