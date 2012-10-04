@@ -106,6 +106,15 @@ public:
   virtual Kind kind() const { return Tuple;}
 };
 
+class QIMESSAGING_API TypeDynamic: public Type
+{
+public:
+  // Convert storage to a GenericValue, that must be destroyed if res.second is true
+  virtual std::pair<GenericValue, bool> get(void* storage) = 0;
+  virtual void set(void** storage, GenericValue source) = 0;
+  virtual Kind kind() const { return Dynamic;}
+};
+
 ///@return a Type of kind List that can contains elements of type elementType.
 QIMESSAGING_API Type* defaultListType(Type* elementType);
 

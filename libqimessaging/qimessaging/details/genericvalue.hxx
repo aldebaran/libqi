@@ -15,25 +15,29 @@
 namespace qi {
 
 
-template<> class TypeImpl<GenericValue>:
-  public DefaultTypeImpl<
-    GenericValue,
-    TypeByPointer<GenericValue>
-    > {
-      virtual void* clone(void* src)
-      {
-        return new GenericValue(((GenericValue*)src)->clone());
-      }
-      virtual void destroy(void* ptr)
-      {
-        ((GenericValue*)ptr)->destroy();
-        delete (GenericValue*)ptr;
-      }
-      virtual Kind kind() const
-      {
-        return Dynamic;
-      }
-    };
+template<> class TypeImpl<GenericValue>: public TypeDynamic
+{
+  virtual void* clone(void* src)
+  {
+    return new GenericValue(((GenericValue*)src)->clone());
+  }
+  virtual void destroy(void* ptr)
+  {
+    ((GenericValue*)ptr)->destroy();
+    delete (GenericValue*)ptr;
+  }
+  virtual std::pair<GenericValue, bool> get(void* storage)
+  {
+    return std::make_pair(*(GenericValue*)ptrFromStorage(&storage), false);
+  }
+  virtual void set(void** storage, GenericValue src)
+  {
+    GenericValue* val = (GenericValue*)ptrFromStorage(storage);
+    *val = src.clone();
+  }
+  typedef DefaultTypeImplMethods<GenericValue> Methods;
+  _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
+};
 
 namespace detail
 {
