@@ -197,19 +197,49 @@ namespace qi
     return &result;
   }
 
-  template<typename T>
-  GenericFunction makeGenericFunction(boost::function<T> f)
+  namespace detail
   {
-    assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
-    GenericFunction res;
-    *(boost::function<T>*)(void*)&res.value = f;
-    res.type = makeFunctionType<T>();
-    return res;
+    // Use helper structures for which template partial specialisation is possible
+    template<typename T> struct GenericFunctionMaker
+    {
+      static GenericFunction make(T func)
+      {
+        return GenericFunctionMaker<typename boost::function<T> >::make(boost::function<T>(func));
+      }
+    };
+    template<typename T> struct GenericFunctionMaker<T*>
+    {
+      static GenericFunction make(T* func)
+      {
+         return GenericFunctionMaker<typename boost::function<T> >::make(boost::function<T>(func));
+      }
+    };
+    template<typename T> struct GenericFunctionMaker<boost::function<T> >
+    {
+      static GenericFunction make(boost::function<T> func)
+      {
+         assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
+         GenericFunction res;
+         *(boost::function<T>*)(void*)&res.value = func;
+         res.type = makeFunctionType<T>();
+         return res;
+      }
+    };
+    template<typename T> struct GenericFunctionMaker<const T&>
+    : public GenericFunctionMaker<T> {};
+    template<> struct GenericFunctionMaker<GenericFunction>
+    {
+      static GenericFunction make(GenericFunction func)
+      {
+        return func;
+      }
+    };
   }
 
-  template<typename F> GenericFunction makeGenericFunction(F func)
+  template<typename T>
+  GenericFunction makeGenericFunction(const T& f)
   {
-    return makeGenericFunction(boost::function<typename boost::remove_pointer<F>::type>(func));
+    return detail::GenericFunctionMaker<T>::make(f);
   }
 
 
