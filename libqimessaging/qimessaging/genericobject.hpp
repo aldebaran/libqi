@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <qi/atomic.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/signature.hpp>
@@ -184,15 +185,15 @@ namespace qi {
  struct QIMESSAGING_API SignalSubscriber
  {
    SignalSubscriber()
-     : eventLoop(0), target(), method(0)
+     : eventLoop(0), target(), method(0), enabled(true), active(0)
    {}
 
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
-     : handler(func), eventLoop(ctx), target(), method(0)
+     : handler(func), eventLoop(ctx), target(), method(0), enabled(true), active(0)
    {}
 
    SignalSubscriber(qi::ObjectPtr target, unsigned int method)
-     : eventLoop(0), target(target), method(method)
+     : eventLoop(0), target(target), method(method), enabled(true), active(0)
    {}
 
    void call(const GenericFunctionParameters& args);
@@ -208,6 +209,8 @@ namespace qi {
    //  Mode 2: metaCall
    ObjectPtr          target;
    unsigned int       method;
+   bool               enabled; // call will do nothing if false
+   qi::atomic<long>   active;  // true if a call is in progress
  };
 
 

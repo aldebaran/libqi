@@ -55,22 +55,27 @@ namespace qi {
   }
 
   static void functor_call(GenericFunction f,
-    GenericFunctionParameters& args)
+    GenericFunctionParameters& args, SignalSubscriber* s)
   {
-    f(args);
+    if (s->enabled)
+      f(args);
+    --s->active;
     args.destroy();
   }
 
   void SignalSubscriber::call(const GenericFunctionParameters& args)
   {
+    if (!enabled)
+      return;
     if (handler.type)
     {
       if (eventLoop)
       {
+        ++active;
         // Event emission is always asynchronous
         GenericFunctionParameters copy = args.copy();
         eventLoop->asyncCall(0,
-          boost::bind(&functor_call, handler, copy));
+          boost::bind(&functor_call, handler, copy, this));
       }
       else
         handler(args);
@@ -124,11 +129,16 @@ namespace qi {
     SignalSubscriberMap::iterator it = subscriberMap.find(l);
     if (it == subscriberMap.end())
       return false;
-    SignalSubscriber s = it->second;
+    SignalSubscriber& s = it->second;
+    // Ensure no call on subscriber occurrs once this function returns
+    s.enabled = false;
+    while (*s.active)
+      os::msleep(1); // FIXME too long
+    ObjectPtr target = s.target;
     subscriberMap.erase(it);
-    if (s.target)
+    if (target)
     {
-      Manageable* m = s.target->type->manageable(s.target->value);
+      Manageable* m = target->type->manageable(target->value);
       if (m)
         m->removeRegistration(l);
     }
@@ -149,6 +159,7 @@ namespace qi {
     }
     for (unsigned i=0; i<links.size(); ++i)
       disconnect(links[i]);
+
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
