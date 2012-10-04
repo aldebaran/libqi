@@ -17,7 +17,7 @@ class GenericList;
 class ODataStream;
 
 /** Class that holds any value, with informations to manipulate it.
- *  Operator = makes a shallow copy.
+ *  operator=() makes a shallow copy.
  *
  */
 class QIMESSAGING_API GenericValue
@@ -44,15 +44,13 @@ public:
   int64_t asInt() const;
   float   asFloat() const;
   double  asDouble() const;
-
   std::string asString() const;
-
   GenericList asList() const;
   GenericMap  asMap() const;
   GenericObject asObject() const;
 
   template<typename T> T as() const;
-  // Helper function to get T from a value
+  // Helper function to obtain type T from a value. Argument value is not used.
   template<typename T> T as(const T&) const;
 
   Type*   type;

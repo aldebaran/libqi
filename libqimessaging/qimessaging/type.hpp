@@ -76,7 +76,7 @@ public:
   // Initialize and return a new storage, from nothing or a T*
   virtual void* initializeStorage(void* ptr=0)=0;
   // Get pointer to type from pointer to storage
-  // No reference to avoid the case where the compiler makes a copy on the stack
+  // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
   virtual void* ptrFromStorage(void**)=0;
 
   virtual void* clone(void*)=0;
@@ -101,12 +101,17 @@ public:
   std::string infoString() { return info().asString();} // for easy gdb access
 
   std::string signature();
+  ///@return a Type on which signature() returns sig.
   static Type* fromSignature(const Signature& sig);
 
   GenericValue deserialize(IDataStream& in);
   void serialize(ODataStream& out, void* storage);
 
-  // Dispatch based on type kind. Must implement TypeDispatcher.
+  /** Invoke one of the visitor functions in dispatcher based on kind().
+   * Dispatcher must implement TypeDispatcher.
+   * Passing 0 in storage is possible, in which case visitor functions will
+   * get a dummy value but correct Type informations.
+   */
   template<typename Dispatcher> Dispatcher& dispatch(const Dispatcher& disptacher, void** storage);
 };
 
@@ -126,210 +131,22 @@ public:
   virtual void visitDynamic(Type* type, GenericValue pointee);
 };
 
-
-namespace detail {
-  //template<int I> struct Nothing{};
-  template<typename T> struct TypeManagerDefault
-  {
-    static void* create() { return new T();}
-    static void createInPlace(void* ptr) { new(ptr)T();}
-    static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
-    static void destroy(void* ptr) { delete (T*)ptr;}
-  };
-  template<typename T> struct TypeManagerDefault<const T>: public TypeManagerDefault<T>{};
-  template<typename T>
-  struct TypeManagerNonDefaultConstructible
-  {
-    static void* create() { return 0;}
-    static void createInPlace(void* ptr) {}
-    static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
-    static void destroy(void* ptr) { delete (T*)ptr;}
-  };
-  struct TypeManagerNull
-  {
-    static void* create() { return 0;}
-    static void createInPlace(void* ptr) {}
-    template<typename T1, typename T2>
-    static void copy(const T1& d, const T2&s) {}
-    template<typename T>
-    static void destroy(const T& ptr) {}
-  };
-
-  template<typename T> struct TypeManager
-  : public boost::mpl::if_c<boost::is_function<T>::value,
-  TypeManagerNull, TypeManagerDefault<T> >::type
-  {};
-};
+/// Declare that a type has no accessible default constructor.
 #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
 namespace qi { namespace detail { \
 template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
-/** Meta-type specialization.
- *  Use the aspect pattern, make a class per feature group
- *  (Clone, GenericValue, Serialize)
- *
- */
-
-/// Access API that stores a T* in storage
-template<typename T> class TypeByPointer
-{
-public:
-  typedef T type;
-  static void* ptrFromStorage(void** storage)
-  {
-    return *storage;
-  }
-  static void* initializeStorage(void* ptr=0)
-  {
-    if (ptr)
-      return ptr;
-    void* res = detail::TypeManager<T>::create();
-    if (!res)
-      qiLogError("qi.meta") << "initializeStorage error on " << typeid(T).name();
-    return res;
-  }
-  static void* clone(void* src)
-  {
-    const T* ptr = (const T*)ptrFromStorage(&src);
-    void* res = initializeStorage();
-    T* tres = (T*)ptrFromStorage(&res);
-    detail::TypeManager<type>::copy(tres, ptr);
-    return res;
-  }
-  static void destroy(void* src)
-  {
-    T* ptr = (T*)ptrFromStorage(&src);
-    detail::TypeManager<type>::destroy(ptr);
-  }
-};
-
-template<typename T> class TypeByPointer<const T>: public TypeByPointer<T>{};
-
-/// Access api that stores T in storage
-template<typename T> class TypeByValue
-{
-public:
-  typedef T type;
-  static void* ptrFromStorage(void** storage)
-  {
-    return storage;
-  }
-  static void* initializeStorage(void* ptr=0)
-  {
-    void* result = 0;
-    T* tresult=(T*)(void*)&result;
-    if (ptr)
-    {
-      detail::TypeManager<T>::copy(tresult, (T*)ptr);
-      return result;
-    }
-    else
-    {
-      detail::TypeManager<T>::createInPlace(tresult);
-      return result;
-    }
-  }
-  static void* clone(void* src)
-  {
-    return src;
-  }
-
-  static void destroy(void* storage)
-  {
-    T* ptr = (T*)ptrFromStorage(&storage);
-    ptr->~T();
-  }
-};
-
-// const ward
-template<typename T> class TypeByValue<const T>: public TypeByValue<T> {};
-
-
-/* implementation of Type methods that bounces to the various aspect
- * subclasses.
- *
- * It does not inherit from Type on purpose, to avoid diamond inheritance
- * when specializing the type interface
- * That way we can split the various aspects in different classes
- * for better reuse, without the cost of a second virtual call.
- */
-template<typename T, typename _Access    = TypeByPointer<T>
-         > class DefaultTypeImplMethods
-{
-public:
-  typedef _Access Access;
-
-  static void* initializeStorage(void* ptr=0)
-  {
-    return Access::initializeStorage(ptr);
-  }
-
-  static void* ptrFromStorage(void** storage)
-  {
-    return Access::ptrFromStorage(storage);
-  }
-
-  static const std::type_info& info()
-  {
-    return typeid(T);
-  }
-
-  static void* clone(void* src)
-  {
-    return Access::clone(src);
-  }
-
-  static void destroy(void* ptr)
-  {
-    Access::destroy(ptr);
-  }
-};
-
-#define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
-virtual TypeInfo info() { return Bounce::info();}                           \
-virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
-virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
-
-
-#define _QI_BOUNCE_TYPE_METHODS(Bounce)  \
-_QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce) \
-virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
-virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
-
-#define _QI_BOUNCE_TYPE_METHODS_NOINFO(Bounce) \
-virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);} \
-virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}             \
-virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
-virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
-
-
-template<typename T, typename _Access    = TypeByPointer<T> >
-class DefaultTypeImpl
-: public Type
-{
-public:
-  typedef DefaultTypeImplMethods<T, _Access> MethodsImpl;
-  _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
-};
-
-/* Type "factory". Specialize this class to provide a custom
- * Type for a given type.
- */
-template<typename T> class TypeImpl: public DefaultTypeImpl<T>
-{
-};
-
 
 /// Declare that a type has no metatype and cannot be used in a Value
 #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
-/// Declare that a type with default TypeImpl is not clonable
+/// Declare that a type has no accessible copy constructor
 #define QI_TYPE_NOT_CLONABLE(T) \
 namespace qi { namespace detail { \
 template<> struct TypeManager<T>: public TypeManagerNull {};}}
 
-/// Type factory getter. All other type access mechanism bounce here
+/// Runtime Type factory getter. Used by typeOf<T>()
 QIMESSAGING_API Type*  getType(const std::type_info& type);
-/// Type factory setter
+/// Runtime Type factory setter.
 QIMESSAGING_API bool registerType(const std::type_info& typeId, Type* type);
 
 /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
@@ -350,7 +167,7 @@ template<typename T> Type* typeOf(const T& v)
 }
 
 }
-
+#include <qimessaging/details/typeimpl.hxx>
 #include <qimessaging/details/type.hxx>
 
 #endif  // _QIMESSAGING_TYPE_HPP_

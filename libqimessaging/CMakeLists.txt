@@ -55,6 +55,7 @@ set(PUBLIC_HEADERS
                    qimessaging/details/objecttypebuilder.hxx
                    qimessaging/details/signal.hxx
                    qimessaging/details/type.hxx
+                   qimessaging/details/typeimpl.hxx
                    qimessaging/details/typelist.hxx
                    qimessaging/details/typemap.hxx
                    qimessaging/details/typepointer.hxx

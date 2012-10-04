@@ -13,6 +13,7 @@
 
 namespace qi {
 
+  /// Signature information for both callable types FunctionType and MethodType
   class QIMESSAGING_API CallableType
   {
   public:
@@ -56,11 +57,14 @@ namespace qi {
   /// @return a GenericFunction that takes arguments as a list of unconverted GenericValue.
   QIMESSAGING_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
 
+  /// @return a GenericFunction obtained by binding a class instance to a member function
   template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
 
   /** Store function parameters as a list of GenericValue.
   * Storage can be on the stack or allocated
-  *
+  * Memory management is the responsibility of the user.
+  * If GenericFunctionParameters is obtained throug copy(), convert() or
+  * fromBuffer(), it must be cleared by destroy()
   */
   class QIMESSAGING_API GenericFunctionParameters: public std::vector<GenericValue>
   {
