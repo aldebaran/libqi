@@ -67,6 +67,7 @@ namespace qi {
       }
       if (conv.second)
         conv.first.destroy();
+      val.destroy();
     }
 
     template <>
