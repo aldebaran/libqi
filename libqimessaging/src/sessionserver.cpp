@@ -187,7 +187,7 @@ namespace qi {
           {
             unsigned int objectId;
             ds >> objectId;
-            std::cout << "Metaobject for: " << service << "-" << objectId << std::endl;
+            qiLogDebug("qi.server") <<  "Metaobject for: " << service << "-" << objectId << std::endl;
             it = _services.find(service);
             if (it == _services.end()) {
               qiLogError("qi.server") << "No object FOund. implementation failure";
