@@ -394,8 +394,13 @@ namespace qi {
     {
       std::string sig;
       in >> sig;
-      result.type = Type::fromSignature(sig);
-      result = result.type->deserialize(in);
+      GenericValue val;
+      val.type = Type::fromSignature(sig);
+      val = val.type->deserialize(in);
+      result.type = type;
+      result.value = result.type->initializeStorage();
+      static_cast<TypeDynamic*>(type)->set(&result.value, val);
+      val.destroy();
     }
     GenericValue result;
     IDataStream& in;

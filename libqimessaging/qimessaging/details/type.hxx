@@ -22,7 +22,6 @@
 #include <boost/function_types/is_member_pointer.hpp>
 
 #include <qimessaging/typespecialized.hpp>
-
 /* This file contains the default-provided Type specialisations
  *
  */
@@ -220,76 +219,6 @@ namespace qi  {
     };
   }
 
-  template<typename TypeDispatcher> TypeDispatcher& Type::dispatch(const TypeDispatcher & vv, void**storage)
-  {
-    TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
-    switch(kind())
-    {
-    case Void:
-      v.visitVoid(this);
-      break;
-    case Unknown:
-      v.visitUnknown(this, storage);
-      break;
-    case Int:
-      {
-        TypeInt* tint = static_cast<TypeInt*>(this);
-        /* Here we assume that '0' is represented by storage=0 in the byValue case.
-        */
-        v.visitInt(tint, (storage&&*storage)?tint->get(*storage):0, tint->isSigned(), tint->size());
-        break;
-      }
-    case Float:
-      {
-        TypeFloat* tfloat = static_cast<TypeFloat*>(this);
-        v.visitFloat(tfloat, (storage&&*storage)?tfloat->get(*storage):0, tfloat->size());
-        break;
-      }
-    case String:
-      {
-        TypeString* tstring = static_cast<TypeString*>(this);
-        v.visitString(tstring, *storage);
-        break;
-      }
-    case List:
-      {
-        TypeList* tlist = static_cast<TypeList*>(this);
-        v.visitList(GenericList(tlist, *storage));
-        break;
-      }
-    case Map:
-      {
-        TypeMap * tlist = static_cast<TypeMap *>(this);
-        v.visitMap(GenericMap(tlist, *storage));
-        break;
-      }
-    case Object:
-      {
-        v.visitObject(GenericObject(static_cast<ObjectType*>(this), *storage));
-        break;
-      }
-    case Pointer:
-      {
-        TypePointer* tpointer = static_cast<TypePointer*>(this);
-        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValue());
-        break;
-      }
-    case Tuple:
-      {
-      TypeTuple* ttuple = static_cast<TypeTuple*>(this);
-      v.visitTuple(ttuple, *storage);
-      break;
-      }
-    case Dynamic:
-      {
-      GenericValue gv;
-      if (storage && *storage)
-        gv = *(GenericValue*)ptrFromStorage(storage);
-      v.visitDynamic(this, gv);
-      }
-    }
-    return v;
-  }
 }
 
 #include <qimessaging/details/typestring.hxx>

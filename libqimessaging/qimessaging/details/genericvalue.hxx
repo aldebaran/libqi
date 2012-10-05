@@ -275,7 +275,78 @@ namespace detail
   }
 }
 
-
+template<typename TypeDispatcher> TypeDispatcher& Type::dispatch(const TypeDispatcher & vv, void**storage)
+  {
+    TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
+    switch(kind())
+    {
+    case Void:
+      v.visitVoid(this);
+      break;
+    case Unknown:
+      v.visitUnknown(this, storage);
+      break;
+    case Int:
+      {
+        TypeInt* tint = static_cast<TypeInt*>(this);
+        /* Here we assume that '0' is represented by storage=0 in the byValue case.
+        */
+        v.visitInt(tint, (storage&&*storage)?tint->get(*storage):0, tint->isSigned(), tint->size());
+        break;
+      }
+    case Float:
+      {
+        TypeFloat* tfloat = static_cast<TypeFloat*>(this);
+        v.visitFloat(tfloat, (storage&&*storage)?tfloat->get(*storage):0, tfloat->size());
+        break;
+      }
+    case String:
+      {
+        TypeString* tstring = static_cast<TypeString*>(this);
+        v.visitString(tstring, *storage);
+        break;
+      }
+    case List:
+      {
+        TypeList* tlist = static_cast<TypeList*>(this);
+        v.visitList(GenericList(tlist, *storage));
+        break;
+      }
+    case Map:
+      {
+        TypeMap * tlist = static_cast<TypeMap *>(this);
+        v.visitMap(GenericMap(tlist, *storage));
+        break;
+      }
+    case Object:
+      {
+        v.visitObject(GenericObject(static_cast<ObjectType*>(this), *storage));
+        break;
+      }
+    case Pointer:
+      {
+        TypePointer* tpointer = static_cast<TypePointer*>(this);
+        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValue());
+        break;
+      }
+    case Tuple:
+      {
+      TypeTuple* ttuple = static_cast<TypeTuple*>(this);
+      v.visitTuple(ttuple, *storage);
+      break;
+      }
+    case Dynamic:
+      {
+        std::pair<GenericValue, bool> gv(GenericValue(), false);
+        if (storage && *storage)
+          gv = static_cast<TypeDynamic*>(this)->get(*storage);
+        v.visitDynamic(this, gv.first);
+        if (gv.second)
+          gv.first.destroy();
+      }
+    }
+    return v;
+  }
 }
 
 #endif  // _QIMESSAGING_DETAILS_GENERICVALUE_HXX_
