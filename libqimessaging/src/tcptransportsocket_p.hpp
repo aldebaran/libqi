@@ -48,6 +48,9 @@ namespace qi
     friend void readcb(struct bufferevent *bev, void *context);
     friend void eventcb(struct bufferevent *bev, short error, void *context);
 
+    bool send_(const qi::Message &msg);
+    void connect_(const qi::Url &url);
+
   private:
     struct bufferevent    *_bev;
 

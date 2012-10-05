@@ -206,10 +206,20 @@ namespace qi
 
   qi::FutureSync<bool> TcpTransportSocketPrivate::connect(const qi::Url &url)
   {
+    if (_eventLoop->isInEventLoopThread())
+      connect_(url);
+    else
+      _eventLoop->asyncCall(0,
+        boost::bind(&TcpTransportSocketPrivate::connect_, this, url));
+    return _connectPromise.future();
+  }
+
+  void TcpTransportSocketPrivate::connect_(const qi::Url &url)
+  {
     if (_connected) {
       qiLogError("qimessaging.TransportSocketLibevent") << "socket is already connected.";
       _connectPromise.setValue(false);
-      return _connectPromise.future();
+      return;
     }
     _url = url;
     _connectPromise.reset();
@@ -223,7 +233,7 @@ namespace qi
     if (_url.port() == 0) {
       qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << _url.str();
       _connectPromise.setError("Bad address " + _url.str());
-      return _connectPromise.future();
+      return;
     }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << _url.host() << ":" << _url.port();
 
@@ -242,7 +252,7 @@ namespace qi
     {
       qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
       _connectPromise.setValue(false);
-      return _connectPromise.future();
+      return;
     }
 
     _connecting = true;
@@ -253,7 +263,6 @@ namespace qi
       _connectPromise.setValue(false);
       _connecting = false;
     }
-    return _connectPromise.future();
   }
 
   qi::FutureSync<void> TcpTransportSocketPrivate::disconnect()
@@ -287,6 +296,16 @@ namespace qi
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
+  {
+    if (_eventLoop->isInEventLoopThread())
+      return send_(msg);
+    else
+      _eventLoop->asyncCall(0,
+        boost::bind(&TcpTransportSocketPrivate::send_, this, msg));
+    return true;
+  }
+
+  bool TcpTransportSocketPrivate::send_(const qi::Message &msg)
   {
     if (!_connected)
     {
