@@ -62,6 +62,7 @@ namespace qi {
     _clients.insert(socket);
     socket->disconnected.connect(boost::bind<void>(&Session_Server::onSocketDisconnected, this, socket, _1));
     socket->messageReady.connect(boost::bind<void>(&Session_Server::onMessageReady, this, _1, socket));
+    socket->startReading();
   }
 
   void Session_Server::onSocketDisconnected(TransportSocketPtr client, int error)

@@ -113,7 +113,7 @@ void GatewayPrivate::onTransportServerNewConnection(TransportSocketPtr socket)
 {
   if (!socket)
     return;
-
+  // FIXME: set callbacks on socket then call startReading()
   _clients.push_back(socket);
 }
 

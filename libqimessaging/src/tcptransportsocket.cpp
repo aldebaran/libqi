@@ -34,4 +34,7 @@ namespace qi {
     return static_cast<TcpTransportSocketPrivate*>(_p)->send(msg);
   }
 
+  void TcpTransportSocket::startReading() {
+    return static_cast<TcpTransportSocketPrivate*>(_p)->startReading();
+  }
 }

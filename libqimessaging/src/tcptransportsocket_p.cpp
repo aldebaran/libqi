@@ -69,13 +69,26 @@ namespace qi
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
+    , _fd(fd)
   {
+    _connected = true;
+  }
+
+  void TcpTransportSocketPrivate::startReading()
+  {
+    if (_bev)
+      return;
+    if (!_eventLoop->isInEventLoopThread())
+    {
+      _eventLoop->asyncCall(0,
+        boost::bind(&TcpTransportSocketPrivate::startReading, this));
+      return;
+    }
     struct event_base *base = static_cast<event_base *>(_eventLoop->_p->getEventBase());
-    _bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
+    _bev = bufferevent_socket_new(base, _fd, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(_bev, ::qi::readcb, 0, ::qi::eventcb, this);
     bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(_bev, EV_READ|EV_WRITE);
-    _connected = true;
   }
 
   TcpTransportSocketPrivate::~TcpTransportSocketPrivate()

@@ -28,11 +28,12 @@ namespace qi
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
     virtual ~TransportSocket();
 
-    virtual qi::FutureSync<bool> connect(const qi::Url &url)         = 0;
-    virtual qi::FutureSync<void> disconnect()                        = 0;
+    virtual qi::FutureSync<bool> connect(const qi::Url &url) = 0;
+    virtual qi::FutureSync<void> disconnect()                = 0;
 
-    virtual bool send(const qi::Message &msg)                        = 0;
-
+    virtual bool send(const qi::Message &msg)                = 0;
+    /// Must be called once if the socket is obtained through TransportServer::newConnection()
+    virtual void  startReading() = 0;
     bool    isConnected() const;
     int     status() const;
     qi::Url url() const;

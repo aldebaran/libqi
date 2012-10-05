@@ -42,6 +42,9 @@ namespace qi {
     std::vector<qi::Url> endpoints() const;
 
   public:
+    /** Emited each time a new connection happens. startReading must be
+     * called on the socket
+     */
     qi::Signal<void (TransportSocketPtr)> newConnection;
     qi::Signal<void (int error)>          acceptError;
 

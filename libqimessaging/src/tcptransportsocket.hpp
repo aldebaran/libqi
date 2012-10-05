@@ -26,6 +26,7 @@ namespace qi
     virtual qi::FutureSync<bool> connect(const qi::Url &url);
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
+    virtual void startReading();
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

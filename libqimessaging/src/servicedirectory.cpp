@@ -85,6 +85,7 @@ namespace qi
       return;
     socket->disconnected.connect(boost::bind<void>(&ServiceDirectoryPrivate::onSocketDisconnected, this, _1, socket));
     socket->messageReady.connect(boost::bind<void>(&ServiceDirectoryPrivate::onMessageReady, this, _1, socket));
+    socket->startReading();
     _clients.insert(socket);
   }
 

@@ -33,6 +33,7 @@ namespace qi
     virtual qi::FutureSync<bool> connect(const qi::Url &url);
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
+    void startReading();
 
   private:
     //LibEvent callbacks
@@ -57,6 +58,7 @@ namespace qi
     bool                   _readHdr;
     qi::Message           *_msg;
     bool                   _connecting;
+    int                    _fd;
   };
 
 }

@@ -47,6 +47,7 @@ public:
   void onTransportServerNewConnection(qi::TransportSocketPtr socket)
   {
     socket->messageReady.connect(boost::bind<void>(&ServerEventPrivate::onMessageReady, this, _1, socket));
+    socket->startReading();
   }
 
   void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr client)
