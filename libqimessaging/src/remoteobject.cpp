@@ -163,7 +163,7 @@ namespace qi {
     }
 
     //error will come back as a error message
-    if (!_socket || !_socket->send(msg)) {
+    if (!_socket || !_socket->isConnected() || !_socket->send(msg)) {
       qiLogError("remoteobject") << "error while sending answer";
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
