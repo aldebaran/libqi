@@ -6,18 +6,19 @@
 #include <qimessaging/objecttypebuilder.hpp>
 #include "src/servicedirectory_p.hpp"
 #include "src/tcptransportsocket.hpp"
+#include "metaobject_p.hpp"
 
 namespace qi {
 
   static qi::MetaObject serviceDirectoryMetaObject() {
-    qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
+    qi::ObjectTypeBuilder<ServiceDirectoryBoundObject> ob;
     ObjectTypeBuilderBase::SignalMemberGetter dummy;
 
-    ob.advertiseMethod("service",           &ServiceDirectoryPrivate::service);
-    ob.advertiseMethod("services",          &ServiceDirectoryPrivate::services);
-    ob.advertiseMethod("registerService",   &ServiceDirectoryPrivate::registerService);
-    ob.advertiseMethod("unregisterService", &ServiceDirectoryPrivate::unregisterService);
-    ob.advertiseMethod("serviceReady",      &ServiceDirectoryPrivate::serviceReady);
+    ob.advertiseMethod("service",           &ServiceDirectoryBoundObject::service,           qi::Message::ServiceDirectoryFunction_Service);
+    ob.advertiseMethod("services",          &ServiceDirectoryBoundObject::services,          qi::Message::ServiceDirectoryFunction_Services);
+    ob.advertiseMethod("registerService",   &ServiceDirectoryBoundObject::registerService,   qi::Message::ServiceDirectoryFunction_RegisterService);
+    ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService, qi::Message::ServiceDirectoryFunction_UnregisterService);
+    ob.advertiseMethod("serviceReady",      &ServiceDirectoryBoundObject::serviceReady,      qi::Message::ServiceDirectoryFunction_ServiceReady);
     ob.advertiseEvent<void (std::string)>("serviceAdded", dummy);
     ob.advertiseEvent<void (std::string)>("serviceRemoved", dummy);
 
