@@ -72,12 +72,13 @@ namespace qi
         //  >::type
         >::type type;
       };
-      template<typename T>
+      template<typename T> inline
       T& operator() (T* const &ptr) const
       {
+        static Type* type = typeOf<T>();
         // Careful here, a wrong cast will create a variable on the stack, but
         // we need to pass &ptr
-        void* res  = typeOf<T>()->ptrFromStorage((void**)&ptr);
+        void* res  = type->ptrFromStorage((void**)&ptr);
         return *(T*)res;
       }
     };
@@ -96,11 +97,12 @@ namespace qi
 
       template<typename T> void operator()(T*) const
       {
-        target->push_back(typeOf<
+        Type* result = typeOf<
           typename remove_constptr<
             typename boost::remove_const<
                typename boost::remove_reference<T>::type
-            >::type>::type>());
+            >::type>::type>();
+        target->push_back(result);
       }
       std::vector<Type*>* target;
     };
@@ -108,7 +110,7 @@ namespace qi
     struct Transformer
     {
     public:
-      inline Transformer(const std::vector<void*>* args)
+      inline Transformer(void** args)
       : args(args)
       , pos(0)
       {}
@@ -121,20 +123,20 @@ namespace qi
         typedef T type;
       };
       template<typename T>
-      void
+      inline void
       operator() (T* &v) const
       {
-        v = (T*)(*args)[pos++];
+        v = (T*)args[pos++];
       }
-      const std::vector<void*> *args;
+      void** args;
       mutable unsigned int pos;
     };
 
     template<typename SEQ, typename F> void* apply(SEQ sequence,
-      F& function, const std::vector<void*> args)
+      F& function, void** args, unsigned int argc)
     {
       GenericValueCopy res;
-      boost::fusion::for_each(sequence, Transformer(&args));
+      boost::fusion::for_each(sequence, Transformer(args));
       res(), boost::fusion::invoke_function_object(function,
         boost::fusion::transform(sequence,
           PtrToConstRef()));
@@ -177,7 +179,7 @@ namespace qi
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&_argumentsType));
     }
-    virtual void* call(void* func, const std::vector<void*>& args)
+    virtual void* call(void* func, void** args, unsigned int argc)
     {
       boost::function<T>* f = (boost::function<T>*)func;
       typedef typename boost::function_types::parameter_types<T>::type ArgsType;
@@ -186,7 +188,7 @@ namespace qi
       boost::remove_reference<boost::mpl::_1> > >::type BareArgsType;
       typedef typename boost::mpl::transform_view<BareArgsType,
       boost::add_pointer<boost::mpl::_1> >::type PtrArgsType;
-      return detail::apply(boost::fusion::as_vector(PtrArgsType()), *f, args);
+      return detail::apply(boost::fusion::as_vector(PtrArgsType()), *f, args, argc);
     }
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };

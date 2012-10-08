@@ -10,16 +10,23 @@ namespace qi
   GenericValue FunctionType::call(void* func,
     const std::vector<GenericValue>& args)
   {
-    const std::vector<Type*> target = argumentsType();
+    const std::vector<Type*>& target = argumentsType();
+
+    void* stackArgs[8];
+    void** convertedArgs = stackArgs;
+    if (args.size() > 8)
+    {
+      convertedArgs = new void*[args.size()];
+    }
+
     std::vector<GenericValue> toDestroy;
-    std::vector<void*> convertedArgs;
     for (unsigned i=0; i<target.size(); ++i)
     {
       //qiLogDebug("meta") << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
-      if (args[i].type->info() == target[i]->info())
-        convertedArgs.push_back(args[i].value);
+      if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
+        convertedArgs[i] = args[i].value;
       else
       {
         //qiLogDebug("meta") << "needs conversion "
@@ -28,15 +35,17 @@ namespace qi
         std::pair<GenericValue,bool> v = args[i].convert(target[i]);
         if (v.second)
           toDestroy.push_back(v.first);
-        convertedArgs.push_back(v.first.value);
+        convertedArgs[i] = v.first.value;
       }
     }
-    void* res = call(func, convertedArgs);
+    void* res = call(func, convertedArgs, args.size());
     GenericValue result;
     result.type = resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroy.size(); ++i)
       toDestroy[i].destroy();
+    if (args.size() > 8)
+      delete[] convertedArgs;
     return result;
   }
 
@@ -143,7 +152,7 @@ namespace qi
   class DynamicFunctionType: public FunctionType
   {
   public:
-    virtual void* call(void* func, const std::vector<void*>& args)
+    virtual void* call(void* func, void** args, unsigned int argc)
     {
       qiLogError("qi.meta") << "Dynamic function called without type information";
       return 0;

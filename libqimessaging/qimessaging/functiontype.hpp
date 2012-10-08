@@ -32,7 +32,7 @@ namespace qi {
     /** Call the function func with argument args that must be of the correct type.
     * @return the return value of type resultType(). This value is allocated and must be destroyed.
     */
-    virtual void* call(void* func, const std::vector<void*>& args) = 0;
+    virtual void* call(void* func, void** args, unsigned int argc) = 0;
     /// Default implementation convert arguments to argumentsType()
     /// and bounce to the other call()
     virtual GenericValue call(void* func, const std::vector<GenericValue>& args);

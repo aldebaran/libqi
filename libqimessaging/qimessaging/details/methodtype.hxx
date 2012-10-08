@@ -59,13 +59,12 @@ namespace qi
       *(CallableType*)this = FunctionTypeImpl<T>();
     }
     void* call(void* method, void* object,
-      const std::vector<void*>& args)
+     void** args, unsigned int argc)
     {
-      std::vector<void*> nargs;
-      nargs.reserve(args.size()+1);
-      nargs.push_back(object);
-      nargs.insert(nargs.end(), args.begin(), args.end());
-      return FunctionTypeImpl<T>().call(method, nargs);
+      void* nargs[argc+1];
+      nargs[0] = object;
+      memcpy(nargs + 1, args, argc);
+      return FunctionTypeImpl<T>().call(method, nargs, argc+1);
     }
     GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args)

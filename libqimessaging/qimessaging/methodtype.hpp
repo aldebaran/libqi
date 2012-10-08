@@ -17,7 +17,7 @@ namespace qi
   public:
     /// Call with all values of the correct type
     virtual void* call(void* method, void* object,
-      const std::vector<void*>& args) = 0;
+      void** args, unsigned int nargs) = 0;
     /// Convert and call
     virtual GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args) = 0;
