@@ -7,11 +7,15 @@
 #ifndef _QIMESSAGING_TYPE_IMPL_HXX_
 #define _QIMESSAGING_TYPE_IMPL_HXX_
 
+#include <set>
+
 /* This file contains class to help implementing the Type interface.
 */
 namespace qi
 {
   namespace detail {
+  /// Report a type operation failure
+  void QIMESSAGING_API typeFail(const char* typeName, const char* operation);
   /** Methods to construct, destroy, and copy values of a given type.
   */
   template<typename T> struct TypeManagerDefault
@@ -25,26 +29,27 @@ namespace qi
   template<typename T>
   struct TypeManagerNonDefaultConstructible
   {
-    static void* create() { return 0;}
-    static void createInPlace(void* ptr) {}
+    static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
+    static void createInPlace(void* ptr) {typeFail(typeid( T).name(), "default constructor");}
     static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
     static void destroy(void* ptr) { delete (T*)ptr;}
   };
+  template<typename T>
   struct TypeManagerNull
   {
-    static void* create() { return 0;}
-    static void createInPlace(void* ptr) {}
+    static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
+    static void createInPlace(void* ptr) {typeFail(typeid(T).name(), "default constructor"); }
     template<typename T1, typename T2>
-    static void copy(const T1& d, const T2&s) {}
-    template<typename T>
-    static void destroy(const T& ptr) {}
+    static void copy(const T1& d, const T2&s) {typeFail(typeid(T).name(), "copy operator");}
+    template<typename U>
+    static void destroy(const U& ptr) {typeFail(typeid(T).name(), "destructor");}
   };
 
   // TypeManager is accessed by this interface. By default, everything is
   // constructible and copyable except functions
   template<typename T> struct TypeManager
   : public boost::mpl::if_c<boost::is_function<T>::value,
-  TypeManagerNull, TypeManagerDefault<T> >::type
+  TypeManagerNull<T>, TypeManagerDefault<T> >::type
   {};
 
   

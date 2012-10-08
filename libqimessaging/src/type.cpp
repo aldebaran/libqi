@@ -803,10 +803,25 @@ namespace qi {
     {
       return _name;
     }
+    virtual void* clone(void* storage)
+    {
+      // We fill the vector on demand, nothing to do
+      return Methods::clone(storage);
+    }
+    virtual void destroy(void* storage)
+    { // destroy elements that have been set
+      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
+      for (unsigned i=0; i<ptr.size(); ++i)
+      {
+        types[i]->destroy(ptr[i]);
+      }
+    }
+    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
+    virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
+
     std::vector<Type*> types;
     std::string _name;
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(Methods);
   };
 
   struct InfosKey: public std::vector<Type*>
@@ -829,7 +844,7 @@ namespace qi {
   Type* defaultTupleType(std::vector<Type*> types)
   {
     typedef std::map<InfosKey, TypeTuple*> Map;
-    Map* map = 0;
+    static Map* map = 0;
     if (!map)
       map = new Map;
     InfosKey key(types);
@@ -845,6 +860,24 @@ namespace qi {
       TypeTuple* res = it->second;
       assert(res->memberTypes(0).size() == types.size());
       return res;
+    }
+  }
+
+  namespace detail
+  {
+    void typeFail(const char* typeName, const char* operation)
+    {
+      /* Use an internal map and be untemplated to avoid generating zillions
+      * of symbols
+      */
+      static std::set<std::string>* once = 0;
+      if (!once)
+        once = new std::set<std::string>();
+      if (once->find(typeName)!=once->end())
+        return;
+      once->insert(typeName);
+      qiLogError("qi.type") << "The following operation failed on data type "
+      << typeName << " :" << operation;
     }
   }
 }

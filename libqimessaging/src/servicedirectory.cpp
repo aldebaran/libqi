@@ -110,10 +110,10 @@ namespace qi
     qiLogDebug("ServiceDirectory") << "Processing message " << msg.id() << ' ' << msg.function() << ' ' << msg.buffer().size();
     std::string sig = signatureSplit(_object->metaObject().method(msg.function())->signature())[2];
     sig = sig.substr(1, sig.length()-2);
-    qi::Future<GenericValue> res = _object->metaCall(msg.function(),
-      GenericFunctionParameters::fromBuffer(sig, msg.buffer()), MetaCallType_Direct);
+    GenericFunctionParameters args = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
+    qi::Future<GenericValue> res = _object->metaCall(msg.function(), args, MetaCallType_Direct);
+    args.destroy();
     res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.address()));
-
     currentSocket.reset();
   }
 

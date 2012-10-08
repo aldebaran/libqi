@@ -142,7 +142,7 @@ template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {
 /// Declare that a type has no accessible copy constructor
 #define QI_TYPE_NOT_CLONABLE(T) \
 namespace qi { namespace detail { \
-template<> struct TypeManager<T>: public TypeManagerNull {};}}
+template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
 
 /// Runtime Type factory getter. Used by typeOf<T>()
 QIMESSAGING_API Type*  getType(const std::type_info& type);

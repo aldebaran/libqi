@@ -199,8 +199,7 @@ namespace qi {
            << "we want: " << retsig << " " << signature << std::endl
            << "we had:" << mm->sigreturn() << " " << mm->signature();
         qiLogWarning("object") << ss;
-        //out.setError(ss.str());
-        //return out.future();
+        // Let it pass, conversion system will do it's job
       }
     }
     //TODO: check for metacall to return false when not able to send the answer
