@@ -4,7 +4,7 @@
 */
 #include "sessionservices.hpp"
 #include "servicedirectoryclient.hpp"
-#include "sessionserver.hpp"
+#include "objectregistrar.hpp"
 
 namespace qi {
 

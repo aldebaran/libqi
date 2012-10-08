@@ -20,7 +20,7 @@
 #include "src/serverresult.hpp"
 #include "src/servicewatcher.hpp"
 #include "src/servicedirectoryclient.hpp"
-#include "src/sessionserver.hpp"
+#include "src/objectregistrar.hpp"
 #include "src/sessionservice.hpp"
 #include "src/sessionservices.hpp"
 #include "src/transportsocketcache.hpp"
@@ -49,7 +49,7 @@ namespace qi {
     unsigned int           _sdSocketDisconnectedLink;
 
     ServiceDirectoryClient _sdClient;
-    Session_Server         _server;
+    ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
     ServiceWatcher         _watcher;

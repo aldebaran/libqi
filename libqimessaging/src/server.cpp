@@ -90,6 +90,7 @@ namespace qi {
     _sockets.insert(socket);
     socket->disconnected.connect(boost::bind<void>(&Server::onSocketDisconnected, this, socket, _1));
     socket->messageReady.connect(boost::bind<void>(&Server::onMessageReady, this, _1, socket));
+    socket->startReading();
   }
 
 
@@ -112,7 +113,7 @@ namespace qi {
           qi::ODataStream   ds(error);
           std::stringstream ss;
           ss << "can't find service id: " << msg.id();
-          ds << qi::signatureFromType<std::string>::value();
+          ds << qi::typeOf<std::string>()->signature();
           ds << ss.str();
           retval.setBuffer(error);
           socket->send(retval);

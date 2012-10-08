@@ -5,37 +5,87 @@
 #include "remoteobject_p.hpp"
 #include "object_p.hpp"
 #include "metasignal_p.hpp"
-#include "serverclient.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
+#include "metaobject_p.hpp"
 
 namespace qi {
+
+
+  static qi::MetaObject &createRemoteObjectSpecialMetaObject() {
+    static qi::MetaObject *mo = 0;
+
+    if (!mo) {
+      mo = new qi::MetaObject;
+      mo->_p->addMethod("I", "registerEvent::(III)");
+      mo->_p->addMethod("v", "unregisterEvent::(III)");
+      mo->_p->addMethod("{IssI}{IsI}I", "metaObject::(I)");
+
+      assert(mo->methodId("registerEvent::(III)") == qi::Message::BoundObjectFunction_RegisterEvent);
+      assert(mo->methodId("unregisterEvent::(III)") == qi::Message::BoundObjectFunction_UnregisterEvent);
+      assert(mo->methodId("metaObject::(I)") == qi::Message::BoundObjectFunction_MetaObject);
+    }
+    return *mo;
+  }
+
+  RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
+    : _socket()
+    , _service(service)
+    , _linkMessageDispatcher(0)
+    , _self(makeDynamicObjectPtr(this))
+  {
+    //simple metaObject with only special methods. (<10)
+    setMetaObject(createRemoteObjectSpecialMetaObject());
+    setTransportSocket(socket);
+    //init should be called to makesure the metaObject is valid.
+  }
 
   RemoteObject::RemoteObject(unsigned int service, qi::MetaObject metaObject, TransportSocketPtr socket)
     : _socket(socket)
     , _service(service)
     , _linkMessageDispatcher(0)
+    , _self(makeDynamicObjectPtr(this))
   {
     setMetaObject(metaObject);
     setTransportSocket(socket);
-  }
-
-  //### RemoteObject
-
-  void RemoteObject::setTransportSocket(qi::TransportSocketPtr socket) {
-    if (_socket)
-      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
-    _socket = socket;
-    if (socket)
-      _linkMessageDispatcher = _socket->messagePendingConnect(_service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
   }
 
   RemoteObject::~RemoteObject()
   {
     //close may already have been called. (by Session_Service.close)
     close();
+  }
+
+  //### RemoteObject
+
+  void RemoteObject::setTransportSocket(qi::TransportSocketPtr socket) {
+    if (socket == _socket)
+      return;
+    if (_socket)
+      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+    _socket = socket;
+    //do not set the socket on the remote object
+    if (socket)
+      _linkMessageDispatcher = _socket->messagePendingConnect(_service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+  }
+
+  void RemoteObject::onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom) {
+    if (fut.hasError()) {
+      prom.setError(fut.error());
+      return;
+    }
+    setMetaObject(fut.value());
+    prom.setValue(0);
+  }
+
+  //retrieve the metaObject from the network
+  qi::Future<void> RemoteObject::fetchMetaObject() {
+    qi::Promise<void> prom;
+    qi::Future<qi::MetaObject> fut = _self->call<qi::MetaObject>("metaObject", 0U);
+    fut.connect(boost::bind<void>(&RemoteObject::onMetaObject, this, _1, prom));
+    return prom.future();
   }
 
   void RemoteObject::onMessagePending(const qi::Message &msg)
@@ -209,7 +259,7 @@ namespace qi {
     unsigned int uid = DynamicObject::connect(event, sub);
 
     qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
-    return _serverClient->registerEvent(_service, event, uid);
+    return _self->call<unsigned int>("registerEvent", _service, event, uid);
   }
 
   qi::Future<void> RemoteObject::disconnect(unsigned int linkId)
@@ -224,7 +274,7 @@ namespace qi {
       qiLogWarning("qi.object") << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }
-    return _serverClient->unregisterEvent(_service, event, linkId);
+    return _self->call<void>("unregisterEvent", _service, event, linkId);
   }
 
   void RemoteObject::close() {

@@ -28,8 +28,13 @@ namespace qi {
   class RemoteObject : public qi::DynamicObject {
   public:
     RemoteObject();
+    RemoteObject(unsigned int service, qi::TransportSocketPtr socket);
+    //deprecated
     RemoteObject(unsigned int service, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     ~RemoteObject();
+
+    //must be called to make the object valid.
+    qi::Future<void> fetchMetaObject();
 
     void setTransportSocket(qi::TransportSocketPtr socket);
     void close();
@@ -41,6 +46,9 @@ namespace qi {
     virtual void metaEmit(unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
 
+    //metaObject received
+    void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
+
     virtual qi::Future<unsigned int> connect(unsigned int event, const SignalSubscriber& sub);
     virtual qi::Future<void> disconnect(unsigned int linkId);
 
@@ -50,7 +58,7 @@ namespace qi {
     std::map<int, qi::Promise<GenericValue> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
-    qi::ServerClient                               *_serverClient;
+    qi::ObjectPtr                                   _self;
   };
 
 }

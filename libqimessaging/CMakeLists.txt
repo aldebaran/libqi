@@ -133,14 +133,10 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/serviceinfo.cpp
                                    src/session.cpp
                                    src/session_p.hpp
-                                   src/serverclient.hpp
-                                   src/serverclient.cpp
                                    src/sessionservice.hpp
                                    src/sessionservice.cpp
                                    src/sessionservices.hpp
                                    src/sessionservices.cpp
-                                   src/sessionserver.hpp
-                                   src/sessionserver.cpp
                                    src/server.hpp
                                    src/server.cpp
                                    src/servicewatcher.hpp
@@ -166,8 +162,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/tcptransportsocket_p.cpp
                                    src/tcptransportsocket_p.hpp
                                    src/type.cpp
-				   src/typeint.cpp
-				   src/typetuple.cpp
+                                   src/typeint.cpp
+                                   src/typetuple.cpp
                                    src/file.cpp
                                    src/url.cpp
                                    src/future.cpp

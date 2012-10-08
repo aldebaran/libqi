@@ -9,9 +9,10 @@
 #include <qimessaging/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/objectfactory.hpp>
-#include "src/remoteobject_p.hpp"
-#include "src/session_p.hpp"
-#include "src/object_p.hpp"
+#include "remoteobject_p.hpp"
+#include "session_p.hpp"
+#include "object_p.hpp"
+#include "signal_p.hpp"
 
 namespace qi {
 
@@ -19,14 +20,16 @@ namespace qi {
   SessionPrivate::SessionPrivate(qi::Session *session)
     : _self(session)
     , _sdClient()
-    , _server(&_sdClient)
-    , _serviceHandler(&_socketsCache, &_sdClient, &_server)
-    , _servicesHandler(&_sdClient, &_server)
+    , _serverObject(&_sdClient)
+    , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
+    , _servicesHandler(&_sdClient, &_serverObject)
     , _watcher(session)
   {
   }
 
   SessionPrivate::~SessionPrivate() {
+    _self->disconnected._p->reset();
+    _self->connected._p->reset();
     close();
   }
 
@@ -57,7 +60,7 @@ namespace qi {
   qi::FutureSync<void> SessionPrivate::close()
   {
     _serviceHandler.close();
-    _server.close();
+    _serverObject.close();
     if (!_sdSocket)
       return qi::Future<void>(0);
     qi::Future<void> fut = _sdSocket->disconnect();
@@ -121,31 +124,39 @@ namespace qi {
   }
 
   qi::Future< qi::ObjectPtr > Session::service(const std::string &service,
-                                               ServiceLocality locality,
-                                               const std::string &type)
+                                               ServiceLocality locality)
   {
-    return _p->_serviceHandler.service(service, locality, type);
+    return _p->_serviceHandler.service(service, locality);
   }
 
 
   bool Session::listen(const std::string &address)
   {
-    return _p->_server.listen(address);
+    return _p->_serverObject.listen(address);
   }
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
-    return _p->_server.registerService(name, obj);
+
+    //qi::Promise<unsigned int> promise;
+    //qi::Future<unsigned int>  fut =
+    return _p->_serverObject.registerService(name, obj);
+    //fut.connect(boost::bind<void>(&registerObjectToServer, _1, &_p->_server, promise, obj));
+    //return promise.future();
   }
 
   qi::FutureSync<void> Session::unregisterService(unsigned int idx)
   {
-    return _p->_server.unregisterService(idx);
+    //qi::Promise<void> promise;
+    //qi::Future<void>  fut =
+    return _p->_serverObject.unregisterService(idx);
+    //fut.connect(boost::bind<void>(&unregisterObjectToServer, _1, &_p->_server, promise, idx));
+    //return promise.future();
   }
 
   qi::Url Session::listenUrl() const
   {
-    return _p->_server.listenUrl();
+    return _p->_serverObject.listenUrl();
   }
 
   std::vector<std::string> Session::loadService(const std::string& name, int flags)

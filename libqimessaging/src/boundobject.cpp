@@ -10,17 +10,17 @@
 
 namespace qi {
 
-  static MetaFunctionResult forwardEvent(const MetaFunctionParameters& params,
-                                         unsigned int service, unsigned int event, TransportSocketPtr client)
+  static GenericValue forwardEvent(const GenericFunction& params,
+                                   unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
-    msg.setBuffer(params.getBuffer());
+    msg.setBuffer(params.toBuffer());
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
     msg.setObject(Message::GenericObject_Main);
     client->send(msg);
-    return MetaFunctionResult();
+    return GenericValue();
   }
 
 
@@ -71,7 +71,7 @@ namespace qi {
   //Bound Method
   unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId, qi::TransportSocketPtr socket) {
     //throw on error
-    MetaCallable     mc = boost::bind(&forwardEvent, _1, _serviceId, eventId, socket);
+    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, socket));
     unsigned int linkId = _object->connect(eventId, mc);
 
     _links[socket][remoteLinkId] = RemoteLink(linkId, eventId);
@@ -130,7 +130,7 @@ namespace qi {
       isSpecialCall = false;
     }
 
-    MetaFunctionParameters mfp(msg.buffer());
+    GenericFunctionParameters mfp(msg.buffer());
 
     //socket object always take the TransportSocketPtr as last parameter, inject it!
     if (isSpecialCall && (msg.type() == qi::Message::Type_Call || msg.type() == Message::Type_Event)) {

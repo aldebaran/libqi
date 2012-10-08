@@ -65,11 +65,11 @@ namespace qi {
 
     enum ServiceDirectoryFunction
     {
-      ServiceDirectoryFunction_Service           = 0,
-      ServiceDirectoryFunction_Services          = 1,
-      ServiceDirectoryFunction_RegisterService   = 2,
-      ServiceDirectoryFunction_UnregisterService = 3,
-      ServiceDirectoryFunction_ServiceReady      = 4,
+      ServiceDirectoryFunction_Service           = 10,
+      ServiceDirectoryFunction_Services          = 11,
+      ServiceDirectoryFunction_RegisterService   = 12,
+      ServiceDirectoryFunction_UnregisterService = 13,
+      ServiceDirectoryFunction_ServiceReady      = 14,
     };
 
     enum ServiceDirectoryEvent
@@ -78,11 +78,14 @@ namespace qi {
       ServiceDirectoryEvent_ServiceUnregistered = 6,
     };
 
+    enum BoundObjectFunction {
+      BoundObjectFunction_RegisterEvent     = 0,
+      BoundObjectFunction_UnregisterEvent   = 1,
+      BoundObjectFunction_MetaObject        = 2,
+    };
+
     enum ServerFunction
     {
-      ServerFunction_RegisterEvent     = 0,
-      ServerFunction_UnregisterEvent   = 1,
-      ServerFunction_MetaObject        = 2,
       ServerFunction_Connect           = 3,
     };
 

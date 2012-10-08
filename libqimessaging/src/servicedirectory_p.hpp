@@ -12,44 +12,51 @@
 #include <qimessaging/genericobject.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
+#include "objectregistrar.hpp"
+#include "boundobject.hpp"
 
 namespace qi {
 
-  class ServiceDirectoryPrivate //: public GenericObject
+  class ServiceDirectoryBoundObject : public ServiceBoundObject {
+  public:
+    ServiceDirectoryBoundObject();
+    virtual ~ServiceDirectoryBoundObject();
+
+    //TransportSocket
+    virtual void onSocketDisconnected(TransportSocketPtr socket, int error);
+
+
+  public:
+    //Public Bound API
+    std::vector<ServiceInfo> services();
+    ServiceInfo              service(const std::string &name);
+    unsigned int             registerService(const ServiceInfo &svcinfo);
+    void                     unregisterService(const unsigned int &idx);
+    void                     serviceReady(const unsigned int &idx);
+    TransportSocketPtr       socket() { return currentSocket; }
+
+  public:
+    std::map<unsigned int, ServiceInfo>                       pendingServices;
+    std::map<unsigned int, ServiceInfo>                       connectedServices;
+    std::map<std::string, unsigned int>                       nameToIdx;
+    std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
+    unsigned int                                              servicesCount;
+    TransportSocketPtr                                        currentSocket;
+  }; // !ServiceDirectoryPrivate
+
+
+  class ServiceDirectoryPrivate
   {
   public:
     ServiceDirectoryPrivate();
     ~ServiceDirectoryPrivate();
 
-    //TransportServer
-    void onTransportServerNewConnection(TransportSocketPtr socket);
-
-    //TransportSocket
-    void onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket);
-    void onSocketDisconnected(int error, TransportSocketPtr client);
-
-    std::vector<ServiceInfo> services();
-    ServiceInfo              service(const std::string &name);
-    unsigned int             registerService(const ServiceInfo &svcinfo);
-    void                     unregisterService(const unsigned int &idx);
-    TransportSocketPtr       socket() { return currentSocket; }
-    void                     serviceReady(const unsigned int &idx);
-
-  public:
-    qi::TransportServer                                    _server;
-    std::map<unsigned int, ServiceInfo>                    pendingServices;
-    std::map<unsigned int, ServiceInfo>                    connectedServices;
-    std::map<std::string, unsigned int>                    nameToIdx;
-    std::map<TransportSocketPtr, std::vector<unsigned int> > socketToIdx;
-    unsigned int                                           servicesCount;
-    TransportSocketPtr                                     currentSocket;
-    std::set<TransportSocketPtr>                           _clients;
-    boost::recursive_mutex                                 _clientsMutex;
-    qi::ObjectPtr                                          _object;
-  }; // !ServiceDirectoryPrivate
+    BoundObjectPtr               _sdbo;
+    Server                       _server;
+  };
 
 }
 
-QI_TYPE_NOT_CLONABLE(qi::ServiceDirectoryPrivate);
+QI_TYPE_NOT_CLONABLE(qi::ServiceDirectoryBoundObject);
 
 #endif  // _SRC_SERVICEDIRECTORY_P_HPP_

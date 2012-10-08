@@ -4,10 +4,9 @@
 */
 #include "sessionservice.hpp"
 #include "servicedirectoryclient.hpp"
-#include "sessionserver.hpp"
-#include "serverclient.hpp"
+#include "objectregistrar.hpp"
 #include "signal_p.hpp"
-#include "src/remoteobject_p.hpp"
+#include "remoteobject_p.hpp"
 
 namespace qi {
 
@@ -57,10 +56,8 @@ namespace qi {
         return;
       }
       if (it->second) {
-        ServerClient *sc = it->second->sclient;
-        // LEAK, but socket ownership will be refactored and the pb will go away
-        //delete sc;
-        it->second->sclient = 0;
+        delete it->second->remoteObject;
+        it->second->remoteObject = 0;
       }
       delete it->second;
       it->second = 0;
@@ -79,20 +76,20 @@ namespace qi {
       return;
     }
 
-    sr->sclient = new qi::ServerClient(value.value());
-    sr->socket = value.value();
+    sr->remoteObject = new qi::RemoteObject(sr->serviceId, value.value());
 
-    qi::Future<qi::MetaObject> fut = sr->sclient->metaObject(sr->serviceId, qi::Message::GenericObject_Main);
-    fut.connect(boost::bind<void>(&Session_Service::onMetaObjectResult, this, _1, requestId));
+    //ask the remoteObject to fetch the metaObject
+    qi::Future<void> fut = sr->remoteObject->fetchMetaObject();
+    fut.connect(boost::bind<void>(&Session_Service::onRemoteObjectComplete, this, _1, requestId));
   }
 
-  void Session_Service::onMetaObjectResult(qi::Future<qi::MetaObject> mo, long requestId) {
+  void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
 
-    if (mo.hasError()) {
-      sr->promise.setError(mo.error());
+    if (future.hasError()) {
+      sr->promise.setError(future.error());
       removeRequest(requestId);
       return;
     }
@@ -107,24 +104,12 @@ namespace qi {
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
-        RemoteObject* robj = new RemoteObject(sr->serviceId, mo, sr->socket);
-        ObjectPtr o = makeDynamicObjectPtr(robj);
-        // The remoteobject in sr->client.remoteObject is still on
-        //remove the callback of ServerClient before returning the object
-        //TODO: belong to TransportSocketCache
-        if (sr->socket->connected._p)
-          sr->socket->connected._p->reset();
-        if (sr->socket->disconnected._p)
-          sr->socket->disconnected._p->reset();
-        if (sr->socket->messageReady._p)
-          sr->socket->messageReady._p->reset();
 
-
-        //avoid deleting the socket in removeRequest (RemoteObject will do it)
-        sr->socket.reset();
+        ObjectPtr o = makeDynamicObjectPtr(sr->remoteObject);
         //register the remote object in the cache
         _remoteObjects[sr->name] = o;
         sr->promise.setValue(o);
+        sr->remoteObject = 0;
       }
     }
 
@@ -158,8 +143,7 @@ namespace qi {
   }
 
   qi::Future<qi::ObjectPtr> Session_Service::service(const std::string &service,
-                                                     Session::ServiceLocality locality,
-                                                     const std::string &type)
+                                                     Session::ServiceLocality locality)
   {
     qiLogVerbose("session.service") << "Getting service " << service;
     qi::Future<qi::ObjectPtr> result;
@@ -186,7 +170,7 @@ namespace qi {
     }
 
     qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);
-    ServiceRequest *rq = new ServiceRequest(service, type);
+    ServiceRequest *rq = new ServiceRequest(service);
     long requestId = ++_requestsIndex;
 
     {

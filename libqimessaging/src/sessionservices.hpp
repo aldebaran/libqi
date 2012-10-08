@@ -30,10 +30,10 @@ namespace qi {
   };
 
   class ServiceDirectoryClient;
-  class Session_Server;
+  class ObjectRegistrar;
   class Session_Services {
   public:
-    Session_Services(ServiceDirectoryClient *sdClient, Session_Server *server)
+    Session_Services(ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
       : _sdClient(sdClient)
       , _server(server)
     {}
@@ -56,7 +56,7 @@ namespace qi {
     qi::atomic<long>                  _requestIndex;
 
     ServiceDirectoryClient *_sdClient;
-    Session_Server         *_server;
+    ObjectRegistrar        *_server;
   };
 
 }

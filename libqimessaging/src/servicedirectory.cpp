@@ -15,114 +15,55 @@
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/objecttypebuilder.hpp>
-#include "src/transportserver_p.hpp"
-#include "src/serverresult.hpp"
-#include "src/session_p.hpp"
+#include "transportserver_p.hpp"
+#include "serverresult.hpp"
+#include "session_p.hpp"
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
-#include "src/servicedirectory_p.hpp"
-#include "src/signal_p.hpp"
+#include "servicedirectory_p.hpp"
+#include "signal_p.hpp"
+#include "server.hpp"
 
 namespace qi
 {
 
-  qi::ObjectPtr createSDP(ServiceDirectoryPrivate* self) {
-    qi::ObjectTypeBuilder<ServiceDirectoryPrivate> ob;
-
-    ob.advertiseMethod("service", &ServiceDirectoryPrivate::service);
-    ob.advertiseMethod("services", &ServiceDirectoryPrivate::services);
-    ob.advertiseMethod("registerService", &ServiceDirectoryPrivate::registerService);
-    ob.advertiseMethod("unregisterService", &ServiceDirectoryPrivate::unregisterService);
-    ob.advertiseMethod("serviceReady", &ServiceDirectoryPrivate::serviceReady);
-    return ob.object(self);
-  }
 
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : _server()
-    , servicesCount(0)
-    , currentSocket()
+    : _sdbo(boost::shared_ptr<ServiceDirectoryBoundObject>(new ServiceDirectoryBoundObject))
   {
-    _object = createSDP(this);
-    _server.newConnection.connect(boost::bind(&ServiceDirectoryPrivate::onTransportServerNewConnection, this, _1));
-
-    ServiceInfo si;
-    si.setName("serviceDirectory");
-    si.setServiceId(1);
-    si.setMachineId(qi::os::getMachineId());
-    unsigned int regid = registerService(si);
-    serviceReady(1);
-    //serviceDirectory must have id '1'
-    assert(regid == 1);
-    // Make calls synchronous on net event loop so that the 'currentSocket' hack
-    // works.
-    _object->moveToEventLoop(getDefaultNetworkEventLoop());
-    /*
-     * Order is important. See qi::Message::ServiceDirectoryFunctions.
-     */
+    _server.addObject(1, _sdbo);
   }
 
   ServiceDirectoryPrivate::~ServiceDirectoryPrivate()
   {
-    {
-      boost::recursive_mutex::scoped_lock sl(_clientsMutex);
-      for (std::set<TransportSocketPtr>::iterator i = _clients.begin();
-        i!= _clients.end(); ++i)
-      {
-        //TODO: do not call reset. (SD should be a server, server should handle that properly)
-        (*i)->disconnected._p->reset();
-        (*i)->messageReady._p->reset();
-        (*i)->disconnect();
-      }
-      _clients.clear();
-    } // Lock must not be held while deleting session, or deadlock
   }
 
-  void ServiceDirectoryPrivate::onTransportServerNewConnection(TransportSocketPtr socket)
-  {
-    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
-    if (!socket)
-      return;
-    socket->disconnected.connect(boost::bind<void>(&ServiceDirectoryPrivate::onSocketDisconnected, this, _1, socket));
-    socket->messageReady.connect(boost::bind<void>(&ServiceDirectoryPrivate::onMessageReady, this, _1, socket));
-    socket->startReading();
-    _clients.insert(socket);
+
+  qi::ObjectPtr createSDP(ServiceDirectoryBoundObject* self) {
+    qi::ObjectTypeBuilder<ServiceDirectoryBoundObject> ob;
+
+    ob.advertiseMethod("service", &ServiceDirectoryBoundObject::service);
+    ob.advertiseMethod("services", &ServiceDirectoryBoundObject::services);
+    ob.advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
+    ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
+    ob.advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
+    return ob.object(self);
   }
 
-  void ServiceDirectoryPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketPtr socket)
+  ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()
+    : ServiceBoundObject(1, createSDP(this), qi::MetaCallType_Direct)
+    , servicesCount(0)
+    , currentSocket()
   {
-    currentSocket  = socket;
-
-    if (msg.service() != 1) {
-      if (msg.type() == qi::Message::Type_Call) {
-        qi::Message ans(qi::Message::Type_Error, msg.address());
-        qi::Buffer buf;
-        qi::ODataStream od(buf);
-        std::stringstream ss;
-        od << "s";
-        ss << "unknown request at address: " << msg.address();
-        od << ss.str();
-        ans.setBuffer(buf);
-        socket->send(ans);
-      }
-      return;
-    }
-    qiLogDebug("ServiceDirectory") << "Processing message " << msg.id() << ' ' << msg.function() << ' ' << msg.buffer().size();
-    std::string sig = signatureSplit(_object->metaObject().method(msg.function())->signature())[2];
-    sig = sig.substr(1, sig.length()-2);
-    GenericFunctionParameters args = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
-    qi::Future<GenericValue> res = _object->metaCall(msg.function(), args, MetaCallType_Direct);
-    args.destroy();
-    res.connect(boost::bind<void>(serverResultAdapter, _1, socket, msg.address()));
-    currentSocket.reset();
   }
 
-  void ServiceDirectoryPrivate::onSocketDisconnected(int error, TransportSocketPtr socket)
+  ServiceDirectoryBoundObject::~ServiceDirectoryBoundObject()
   {
-    boost::recursive_mutex::scoped_lock sl(_clientsMutex);
-    _clients.erase(socket);
-    currentSocket = socket;
+  }
 
+  void ServiceDirectoryBoundObject::onSocketDisconnected(TransportSocketPtr socket, int error)
+  {
     // if services were connected behind the socket
     std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
     if ((it = socketToIdx.find(socket)) == socketToIdx.end())
@@ -144,10 +85,10 @@ namespace qi
       unregisterService(*it2);
     }
     socketToIdx.erase(it);
-    currentSocket.reset();
+    ServiceBoundObject::onSocketDisconnected(socket, error);
   }
 
-  std::vector<ServiceInfo> ServiceDirectoryPrivate::services()
+  std::vector<ServiceInfo> ServiceDirectoryBoundObject::services()
   {
     std::vector<ServiceInfo> result;
     std::map<unsigned int, ServiceInfo>::const_iterator it;
@@ -158,7 +99,7 @@ namespace qi
     return result;
   }
 
-  ServiceInfo ServiceDirectoryPrivate::service(const std::string &name)
+  ServiceInfo ServiceDirectoryBoundObject::service(const std::string &name)
   {
     std::map<unsigned int, ServiceInfo>::const_iterator servicesIt;
     std::map<std::string, unsigned int>::const_iterator it;
@@ -176,7 +117,7 @@ namespace qi
     return servicesIt->second;
   }
 
-  unsigned int ServiceDirectoryPrivate::registerService(const ServiceInfo &svcinfo)
+  unsigned int ServiceDirectoryBoundObject::registerService(const ServiceInfo &svcinfo)
   {
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(svcinfo.name());
@@ -198,17 +139,16 @@ namespace qi
     pendingServices[idx].setServiceId(idx);
 
     qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered (#" << idx << ")" << std::endl;
-    for (std::vector<std::string>::const_iterator it = svcinfo.endpoints().begin();
-         it != svcinfo.endpoints().end();
-         ++it)
+    std::vector<std::string>::const_iterator jt;
+    for (jt = svcinfo.endpoints().begin(); jt != svcinfo.endpoints().end(); ++jt)
     {
-      qiLogDebug("qimessaging.ServiceDirectory") << svcinfo.name() << " is now on " << *it << std::endl;
+      qiLogDebug("qimessaging.ServiceDirectory") << svcinfo.name() << " is now on " << *jt << std::endl;
     }
 
     return idx;
   }
 
-  void ServiceDirectoryPrivate::unregisterService(const unsigned int &idx)
+  void ServiceDirectoryBoundObject::unregisterService(const unsigned int &idx)
   {
     // search the id before accessing it
     // otherwise operator[] create a empty entry
@@ -275,7 +215,7 @@ namespace qi
 #endif
   }
 
-  void ServiceDirectoryPrivate::serviceReady(const unsigned int &idx)
+  void ServiceDirectoryBoundObject::serviceReady(const unsigned int &idx)
   {
     // search the id before accessing it
     // otherwise operator[] create a empty entry
@@ -330,59 +270,29 @@ ServiceDirectory::~ServiceDirectory()
 
 bool ServiceDirectory::listen(const qi::Url &address)
 {
-  ServiceInfo             &si = _p->connectedServices[1];
-
-  if (_p->_server.listen(address))
-  {
-    std::vector<std::string> eps;
-    std::vector<qi::Url> epu = _p->_server.endpoints();
-    for (unsigned i=0; i < epu.size(); ++i)
-      eps.push_back(epu[i].str());
-    si.setEndpoints(eps);
-    qiLogVerbose("qimessaging.ServiceDirectory") << "Started ServiceDirectory at " << _p->_server.listenUrl().str();
-
-    return true;
-  }
-  else
-  {
-    qiLogError("qimessaging.ServiceDirectory") << "Could not listen on "
-                                               << address.str() << std::endl;
+  bool b = _p->_server.listen(address);
+  if (!b)
     return false;
-  }
+
+  ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
+
+  ServiceInfo si;
+  si.setName("ServiceDirectory");
+  si.setServiceId(1);
+  si.setMachineId(qi::os::getMachineId());
+  si.setEndpoints(_p->_server.endpoints());
+  unsigned int regid = sdbo->registerService(si);
+  sdbo->serviceReady(1);
+  //serviceDirectory must have id '1'
+  assert(regid == 1);
+  return true;
 }
 
 void ServiceDirectory::close() {
   _p->_server.close();
-  {
-    std::set<TransportSocketPtr> socks;
-    {
-      boost::recursive_mutex::scoped_lock sl(_p->_clientsMutex);
-      socks = _p->_clients;
-    }
-    // Lock must not be held while disconnecting from signal
-    for (std::set<TransportSocketPtr>::iterator it = socks.begin();
-         it != socks.end(); ++it)
-    {
-      (*it)->disconnected._p->reset();
-      (*it)->messageReady._p->reset();
-      (*it)->disconnect();
-    }
-  }
-  {
-    boost::recursive_mutex::scoped_lock sl(_p->_clientsMutex);
-    _p->_clients.clear();
-  } // Lock must not be held while deleting session, or deadlock
 }
 
 qi::Url ServiceDirectory::listenUrl() const {
-  std::vector<qi::Url> eps = _p->_server.endpoints();
-  // Do not return localhost endpoint
-  for (unsigned i=0; i<eps.size(); ++i)
-    if (eps[i].protocol() != "127.0.0.1" && eps[i].protocol() != "::1")
-      return eps[i];
-  // ... unless there is no other
-  if (!eps.empty())
-    return eps[0];
   return _p->_server.listenUrl();
 }
 
