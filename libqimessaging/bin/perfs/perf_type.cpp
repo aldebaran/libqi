@@ -10,11 +10,14 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
+#include <boost/signal.hpp>
 
 #include <qi/application.hpp>
 
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericvalue.hpp>
+#include <qimessaging/genericobjectbuilder.hpp>
+#include <qimessaging/signal.hpp>
 
 unsigned int niter = 10000;
 unsigned int maxContainerSize = 1000;
@@ -184,6 +187,47 @@ static void convert_struct()
   benchConv<Bar>("Foo -> Bar", f);
 }
 
+
+static int counter = 0;
+
+void counterInc(int) { ++counter;}
+static void test_signal()
+{
+  for (unsigned nsub = 1; nsub <= maxContainerSize; nsub*=10)
+  {
+    qi::Signal<void(int)> qsig;
+    /*
+    qi::GenericObjectBuilder gob;
+    int mid = gob.advertiseMethod("counterInc", &counterInc);
+    qi::ObjectPtr obj = gob.object();
+    obj->moveToEventLoop(0);
+    for (unsigned i=0; i<nsub; ++i)
+      qsig.connect(obj, mid);
+      */
+    for (unsigned i=0; i<nsub; ++i)
+      qsig.connect(&counterInc, 0);
+    qi::uint64_t start = qi::os::ustime();
+    for (unsigned i=0; i<niter; ++i)
+      qsig(i);
+    qi::uint64_t tqi = qi::os::ustime() - start;
+    if (withNative)
+    {
+      boost::signal<void (int)> bsig;
+      for (unsigned i=0; i<nsub; ++i)
+        bsig.connect(&counterInc);
+      qi::uint64_t start = qi::os::ustime();
+      for (unsigned i=0; i<niter; ++i)
+        bsig(i);
+      qi::uint64_t tboost = qi::os::ustime() - start;
+      std::cout << "SIGNAL " << nsub << " " << tqi <<" " << tboost << std::endl;
+    }
+    else
+      std::cout << "SIGNAL " << nsub << " " << tqi << std::endl;
+
+
+  }
+}
+
 int main(int argc, char **argv)
 {
   namespace po = boost::program_options;
@@ -208,6 +252,7 @@ int main(int argc, char **argv)
   tests["vector"] = &convert_vector;
   tests["map"] = &convert_map;
   tests["struct"] = &convert_struct;
+  tests["signal"] = &test_signal;
 
   if (vm.count("help"))
   {
@@ -218,7 +263,7 @@ int main(int argc, char **argv)
     std::cout << std::endl;
     return 0;
   }
-
+  std::cerr << "configuration: " << niter << " " << maxContainerSize << std::endl;
   if (toRun.empty())
   {
     for (std::map<std::string, void(*)()>::iterator i = tests.begin(); i!= tests.end(); ++i)
@@ -226,6 +271,7 @@ int main(int argc, char **argv)
   }
   for (unsigned i=0; i< toRun.size(); ++i)
   {
+    std::cerr <<"running " << toRun[i] << std::endl;
     void(*fun)() = tests[toRun[i]];
     if (!fun)
     { // Not fun, not fun at all

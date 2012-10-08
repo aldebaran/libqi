@@ -15,5 +15,5 @@ qi_create_bin(perf_transport       SRC dataperftimer.* perf_transport.cpp       
 qi_create_bin(perf_transport_socket SRC dataperftimer.* perf_transport_socket.cpp DEPENDS QI QIMESSAGING NO_INSTALL)
 qi_create_bin(perf_transport_thd   SRC dataperftimer.* perf_transport_thd.cpp   DEPENDS QI QIMESSAGING NO_INSTALL)
 qi_create_bin(perf_transport_event SRC dataperftimer.* perf_transport_event.cpp DEPENDS QI QIMESSAGING NO_INSTALL)
-qi_create_bin(perf_type            SRC dataperftimer.* perf_type.cpp            DEPENDS QI QIMESSAGING NO_INSTALL)
+qi_create_bin(perf_type            SRC dataperftimer.* perf_type.cpp            DEPENDS QI QIMESSAGING BOOST_SIGNALS NO_INSTALL )
 
