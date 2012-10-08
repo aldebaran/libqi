@@ -29,16 +29,16 @@ namespace qi {
     delete _p;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func)
+  int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func, int id)
   {
-    unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature);
+    unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature, id);
     _p->data.methodMap[nextId] = func;
     return nextId;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter)
+  int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id)
   {
-    unsigned int nextId = _p->metaObject._p->addSignal(signature);
+    unsigned int nextId = _p->metaObject._p->addSignal(signature, id);
     _p->data.signalGetterMap[nextId] = getter;
     return nextId;
   }

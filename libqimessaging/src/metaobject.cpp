@@ -63,21 +63,31 @@ namespace qi {
     return ret;
   }
 
-  unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature) {
+  unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    unsigned int id = ++_index;
+    unsigned int id;
+    if (uid > 0)
+      id = uid;
+    else
+      id = ++_index;
     MetaMethod mm(id, sigret, signature);
     _methods[id] = mm;
     _methodsNameToIdx[signature] = id;
+    qiLogDebug("qi.MetaObject") << "Adding method("<< id << "): " << sigret << " " << signature;
     return id;
   }
 
-  unsigned int MetaObjectPrivate::addSignal(const std::string &sig) {
+  unsigned int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
-    unsigned int id = ++_index;
+    unsigned int id;
+    if (uid > 0)
+      id = uid;
+    else
+      id = ++_index;
     MetaSignal ms(id, sig);
     _events[id] = ms;
     _eventsNameToIdx[sig] = id;
+    qiLogDebug("qi.MetaObject") << "Adding signal("<< id << "): " << sig;
     return id;
   }
 
@@ -232,7 +242,6 @@ namespace qi {
 
 QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events);
 QI_TYPE_REGISTER(qi::MetaObjectPrivate);
-
 
 QI_TYPE_STRUCT_BOUNCE(qi::MetaObject, qi::MetaObjectPrivate, qi::metaObjectPrivate);
 QI_TYPE_REGISTER(qi::MetaObject);

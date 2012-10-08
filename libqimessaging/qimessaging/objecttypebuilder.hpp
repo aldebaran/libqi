@@ -41,18 +41,18 @@ namespace qi {
     /// Declare the class type for which this StaticBuilder is.
     template<typename T> void  buildFor();
     template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id = -1);
     template <typename C, typename T>
-    inline unsigned int advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor);
+    inline unsigned int advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor, int id = -1);
     template <typename T>
-    inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter);
+    inline unsigned int advertiseEvent(const std::string& name, SignalMemberGetter getter, int id = -1);
 
     template<typename P> void inherits(int offset);
 
     // input: type-erased
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func);
-    int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func, int id = -1);
+    int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id = -1);
     void xBuildFor(Type* type, boost::function<Manageable* (void*)> asManageable);
     void inherits(Type* parentType, int offset);
 
@@ -79,7 +79,7 @@ namespace qi {
     template<typename U> void inherits();
 
     template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id = -1);
 
     /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
     virtual void registerType();

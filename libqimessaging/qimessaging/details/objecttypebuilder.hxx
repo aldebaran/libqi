@@ -45,12 +45,12 @@ namespace qi {
   }
 
   template <typename FUNCTION_TYPE>
-  unsigned int ObjectTypeBuilderBase::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  unsigned int ObjectTypeBuilderBase::advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id)
   {
     // FIXME validate type
     return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
       name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeGenericMethod(function));
+      makeGenericMethod(function), id);
   }
 
   template<typename U>
@@ -88,7 +88,7 @@ namespace qi {
 
   template <typename T>
   template <typename FUNCTION_TYPE>
-  unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id)
   {
     // Intercept advertise to auto-register parent type if this is a parent method
     // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
@@ -96,7 +96,7 @@ namespace qi {
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
       typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
-    return ObjectTypeBuilderBase::advertiseMethod(name, function);
+    return ObjectTypeBuilderBase::advertiseMethod(name, function, id);
   }
 
   template<typename T>
@@ -113,16 +113,16 @@ namespace qi {
   }
 
   template <typename C, typename T>
-  unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor)
+  unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& eventName, Signal<T> C::* signalAccessor, int id)
   {
     // FIXME validate type
     SignalMemberGetter fun = boost::bind(&signalAccess<C, T>, signalAccessor, _1);
-    return xAdvertiseEvent(eventName + "::" + detail::FunctionSignature<T>::signature(), fun);
+    return xAdvertiseEvent(eventName + "::" + detail::FunctionSignature<T>::signature(), fun, id);
   }
 
-  template <typename T> unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& name, SignalMemberGetter getter)
+  template <typename T> unsigned int ObjectTypeBuilderBase::advertiseEvent(const std::string& name, SignalMemberGetter getter, int id)
   {
-    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter);
+    return xAdvertiseEvent(name + "::" + detail::FunctionSignature<T>::signature(), getter, id);
   }
 
 
