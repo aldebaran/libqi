@@ -51,7 +51,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_p->registrationsMutex);
       copy = _p->registrations;
     }
-    for (unsigned i=0; i<copy.size(); ++i)
+    for (unsigned i = 0; i < copy.size(); ++i)
     {
       copy[i].source->disconnect(copy[i].linkId);
     }
@@ -67,11 +67,11 @@ namespace qi {
   void Manageable::removeRegistration(unsigned int linkId)
   {
      boost::mutex::scoped_lock sl(_p->registrationsMutex);
-     for (unsigned i=0; i< _p->registrations.size(); ++i)
+     for (unsigned i = 0; i < _p->registrations.size(); ++i)
      {
        if (_p->registrations[i].linkId == linkId)
        {
-         _p->registrations[i] = _p->registrations[_p->registrations.size()-1];
+         _p->registrations[i] = _p->registrations[_p->registrations.size() - 1];
          _p->registrations.pop_back();
          break;
        }
@@ -153,7 +153,7 @@ namespace qi {
       // Try to find an other method with compatible signature
       std::vector<qi::MetaMethod> mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
       Signature sargs(signatureSplit(signature)[2]);
-      for (unsigned i=0; i<mml.size(); ++i)
+      for (unsigned i = 0; i < mml.size(); ++i)
       {
         Signature s(signatureSplit(mml[i].signature())[2]);
         if (sargs.isConvertibleTo(s))
