@@ -137,6 +137,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/sessionservices.cpp
                                    src/sessionserver.hpp
                                    src/sessionserver.cpp
+                                   src/server.hpp
+                                   src/server.cpp
                                    src/servicewatcher.hpp
                                    src/servicewatcher.cpp
                                    src/signal.cpp
