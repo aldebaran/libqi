@@ -7,19 +7,12 @@
 
 namespace qi
 {
-  GenericValue FunctionType::call(void* func,
+  GenericValue callManyArgs(FunctionType* type, void* func,
     const std::vector<GenericValue>& args)
   {
-    const std::vector<Type*>& target = argumentsType();
-
-    void* stackArgs[8];
-    void** convertedArgs = stackArgs;
-    if (args.size() > 8)
-    {
-      convertedArgs = new void*[args.size()];
-    }
-
-    std::vector<GenericValue> toDestroy;
+    const std::vector<Type*>& target = type->argumentsType();
+    void** convertedArgs = new void*[args.size()];
+     std::vector<GenericValue> toDestroy;
     for (unsigned i=0; i<target.size(); ++i)
     {
       //qiLogDebug("meta") << "argument " << i
@@ -38,14 +31,53 @@ namespace qi
         convertedArgs[i] = v.first.value;
       }
     }
-    void* res = call(func, convertedArgs, args.size());
+    void* res = type->call(func, convertedArgs, args.size());
     GenericValue result;
-    result.type = resultType();
+    result.type = type->resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroy.size(); ++i)
       toDestroy[i].destroy();
-    if (args.size() > 8)
-      delete[] convertedArgs;
+    delete[] convertedArgs;
+    return result;
+
+  }
+  GenericValue FunctionType::call(void* func,
+    const std::vector<GenericValue>& args)
+  {
+    unsigned argsSize = args.size();
+    if (argsSize > 8)
+      return callManyArgs(this, func, args);
+
+    const std::vector<Type*>& target = argumentsType();
+
+    void* stackArgs[8];
+    void** convertedArgs = stackArgs;
+    GenericValue toDestroy[8];
+    unsigned int toDestroyPos = 0;
+    for (unsigned i=0; i<argsSize; ++i)
+    {
+      //qiLogDebug("meta") << "argument " << i
+      //   << " " << args[i].type->infoString() << ' ' << args[i].value
+      //   << " to " << target[i]->infoString();
+      if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
+        convertedArgs[i] = args[i].value;
+      else
+      {
+        //qiLogDebug("meta") << "needs conversion "
+        //<< args[i].type->infoString() << " -> "
+        //<< target[i]->infoString();
+        std::pair<GenericValue,bool> v = args[i].convert(target[i]);
+        if (v.second)
+          toDestroy[toDestroyPos++] = v.first;
+        convertedArgs[i] = v.first.value;
+      }
+    }
+    void* res = call(func, convertedArgs, argsSize);
+    GenericValue result;
+    result.type = resultType();
+    result.value = res;
+    for (unsigned i=0; i<toDestroyPos; ++i)
+      toDestroy[i].destroy();
     return result;
   }
 
