@@ -64,7 +64,7 @@ namespace qi {
   }
 
   unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature) {
-    boost::recursive_mutex::scoped_lock sl(_eventsMutex);
+    boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id = ++_index;
     MetaMethod mm(id, sigret, signature);
     _methods[id] = mm;
@@ -80,6 +80,41 @@ namespace qi {
     _eventsNameToIdx[sig] = id;
     return id;
   }
+
+  bool MetaObjectPrivate::addMethods(unsigned int offset, const MetaObject::MethodMap &mms) {
+    boost::recursive_mutex::scoped_lock sl(_methodsMutex);
+    MetaObject::MethodMap::const_iterator it;
+    unsigned int newUid;
+
+    for (it = mms.begin(); it != mms.end(); ++it) {
+      newUid = it->second.uid() + offset;
+      MetaObject::MethodMap::iterator jt = _methods.find(newUid);
+      if (jt != _methods.end())
+        return false;
+      _methods[newUid] = qi::MetaMethod(newUid, it->second.sigreturn(), it->second.signature());
+      _methodsNameToIdx[it->second.signature()] = newUid;
+    }
+    //todo: update uid
+    return true;
+  }
+
+  bool MetaObjectPrivate::addSignals(unsigned int offset, const MetaObject::SignalMap &mms) {
+    boost::recursive_mutex::scoped_lock sl(_eventsMutex);
+    MetaObject::SignalMap::const_iterator it;
+    unsigned int newUid;
+
+    for (it = mms.begin(); it != mms.end(); ++it) {
+      newUid = it->second.uid() + offset;
+      MetaObject::SignalMap::iterator jt = _events.find(newUid);
+      if (jt != _events.end())
+        return false;
+      _events[newUid] = qi::MetaSignal(newUid, it->second.signature());
+      _eventsNameToIdx[it->second.signature()] = newUid;
+    }
+    //todo: update uid
+    return true;
+  }
+
 
   void MetaObjectPrivate::refreshCache()
   {

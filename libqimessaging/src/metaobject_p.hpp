@@ -42,6 +42,12 @@ namespace qi {
       return idFromName(_eventsNameToIdx, name);
     }
 
+    //if you want to use thoose methods thinks twice...
+    //they are only useful to merge too metaobject and I bet
+    //you really dont want to do that.
+    bool addMethods(unsigned int offset, const MetaObject::MethodMap &mms);
+    bool addSignals(unsigned int offset, const MetaObject::SignalMap &mms);
+
     std::vector<MetaMethod> findMethod(const std::string &name);
     std::vector<MetaSignal> findSignal(const std::string &name);
 
