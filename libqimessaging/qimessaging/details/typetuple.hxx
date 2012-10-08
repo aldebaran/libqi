@@ -99,7 +99,9 @@ namespace qi {
         result = typeOf<TO>();
       return static_cast<TypeTuple*>(result);
     }
+
     virtual void adaptStorage(void** storage, void** adapted) = 0;
+
     typedef DefaultTypeImplMethods<T> Methods;
     virtual std::vector<Type*> memberTypes(void* storage)
     {
@@ -108,18 +110,21 @@ namespace qi {
         adaptStorage(&storage, &astorage);
       return bounceType()->memberTypes(astorage);
     }
+
     virtual void* get(void* storage, unsigned int index)
     {
       void* astorage;
       adaptStorage(&storage, &astorage);
       return bounceType()->get(astorage, index);
     }
+
     virtual void set(void** storage, unsigned int index, void* valStorage)
     {
       void* astorage;
       adaptStorage(storage, &astorage);
       bounceType()->set(&astorage, index, valStorage);
     }
+
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 }
