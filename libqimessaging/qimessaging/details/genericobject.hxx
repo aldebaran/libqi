@@ -9,6 +9,7 @@
 
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/future.hpp>
+#include <qimessaging/typeobject.hpp>
 
 namespace qi {
 

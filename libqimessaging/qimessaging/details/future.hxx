@@ -11,6 +11,7 @@
 #include <utility> // pair
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
+#include <qimessaging/signal.hpp>
 
 namespace qi {
 

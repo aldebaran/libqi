@@ -15,6 +15,7 @@
 #include <sstream>
 #include <qimessaging/type.hpp>
 #include <qimessaging/genericobject.hpp>
+#include <qimessaging/methodtype.hpp>
 
 
 namespace qi {

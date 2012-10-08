@@ -7,7 +7,9 @@
 #ifndef _QIMESSAGING_METAMETHOD_HPP_
 #define _QIMESSAGING_METAMETHOD_HPP_
 
-#include <qimessaging/methodtype.hpp>
+#include <qimessaging/api.hpp>
+#include <string>
+#include <qimessaging/type.hpp>
 
 
 namespace qi {

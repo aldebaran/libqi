@@ -10,7 +10,7 @@
 #include <vector>
 #include <qimessaging/api.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qimessaging/signal.hpp>
+#include <qimessaging/eventloop.hpp>
 
 namespace qi {
 

@@ -10,6 +10,7 @@
 #include <qimessaging/genericvalue.hpp>
 #include <qimessaging/genericvaluespecialized.hpp>
 #include <qimessaging/genericobject.hpp>
+#include <qimessaging/typedispatcher.hpp>
 
 namespace qi {
 
@@ -99,7 +100,7 @@ namespace qi {
     return true;
   }
 
-  class TypeSignature
+  class SignatureTypeVisitor
   {
   public:
     void visitVoid(Type*)
@@ -177,10 +178,10 @@ namespace qi {
    std::string result;
   };
 
-  class TypeSerialize
+  class SerializeTypeVisitor
   {
   public:
-    TypeSerialize(ODataStream& out)
+    SerializeTypeVisitor(ODataStream& out)
     : out(out)
     {}
     void visitUnknown(Type* type, void* storage)
@@ -279,10 +280,10 @@ namespace qi {
     ODataStream& out;
   };
 
-  class TypeDeserialize
+  class DeserializeTypeVisitor
   {
   public:
-    TypeDeserialize(IDataStream& in)
+    DeserializeTypeVisitor(IDataStream& in)
     : in(in) {}
     template<typename T, typename TYPE> void get(TYPE* type)
     {
@@ -409,17 +410,23 @@ namespace qi {
   std::string Type::signature()
   {
     void* storage = 0;
-    return dispatch(TypeSignature(), &storage).result;
+    SignatureTypeVisitor ts;
+    typeDispatch(ts, this, &storage);
+    return ts.result;
   }
 
   void Type::serialize(ODataStream& out, void* storage)
   {
-    dispatch(TypeSerialize(out), &storage);
+    SerializeTypeVisitor stv(out);
+    typeDispatch(stv, this, &storage);
   }
+
   GenericValue Type::deserialize(IDataStream& in)
   {
     void* storage = 0;
-    return dispatch(TypeDeserialize(in), &storage).result;
+    DeserializeTypeVisitor dtv(in);
+    typeDispatch(dtv, this, &storage);
+    return dtv.result;
   }
 
   static Type* fromSignature(const qi::Signature::iterator & i)

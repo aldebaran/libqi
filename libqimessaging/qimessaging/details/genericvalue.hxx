@@ -15,244 +15,244 @@
 namespace qi {
 
 
-template<> class TypeImpl<GenericValue>: public TypeDynamic
-{
-  virtual void* clone(void* src)
+  template<> class TypeImpl<GenericValue>: public TypeDynamic
   {
-    return new GenericValue(((GenericValue*)src)->clone());
-  }
-  virtual void destroy(void* ptr)
-  {
-    ((GenericValue*)ptr)->destroy();
-    delete (GenericValue*)ptr;
-  }
-  virtual std::pair<GenericValue, bool> get(void* storage)
-  {
-    return std::make_pair(*(GenericValue*)ptrFromStorage(&storage), false);
-  }
-  virtual void set(void** storage, GenericValue src)
-  {
-    GenericValue* val = (GenericValue*)ptrFromStorage(storage);
-    *val = src.clone();
-  }
-  typedef DefaultTypeImplMethods<GenericValue> Methods;
-  _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
-};
-
-namespace detail
-{
-  template<typename T> struct TypeCopy
-  {
-    void operator()(T &dst, const T &src)
+    virtual void* clone(void* src)
     {
-      dst = src;
+      return new GenericValue(((GenericValue*)src)->clone());
     }
+    virtual void destroy(void* ptr)
+    {
+      ((GenericValue*)ptr)->destroy();
+      delete (GenericValue*)ptr;
+    }
+    virtual std::pair<GenericValue, bool> get(void* storage)
+    {
+      return std::make_pair(*(GenericValue*)ptrFromStorage(&storage), false);
+    }
+    virtual void set(void** storage, GenericValue src)
+    {
+      GenericValue* val = (GenericValue*)ptrFromStorage(storage);
+      *val = src.clone();
+    }
+    typedef DefaultTypeImplMethods<GenericValue> Methods;
+    _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
-  template<int I> struct TypeCopy<char[I] >
+  namespace detail
   {
-    void operator() (char* dst, const char* src)
+    template<typename T> struct TypeCopy
     {
-      memcpy(dst, src, I);
-    }
-  };
-}
+      void operator()(T &dst, const T &src)
+      {
+        dst = src;
+      }
+    };
 
-template<typename T>
-GenericValue toValue(const T& v)
-{
-  static Type* type = 0;
-  if (!type)
-    type = typeOf<typename boost::remove_const<T>::type>();
-  GenericValue res;
-  res.type = type;
-  res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
-  return res;
-}
+    template<int I> struct TypeCopy<char[I] >
+    {
+      void operator() (char* dst, const char* src)
+      {
+        memcpy(dst, src, I);
+      }
+    };
+  }
 
-inline
-GenericValue GenericValue::clone() const
-{
-  GenericValue res;
-  res.type = type;
-  res.value = type?res.type->clone(value):0;
-  return res;
-}
+  template<typename T>
+  GenericValue toValue(const T& v)
+  {
+    static Type* type = 0;
+    if (!type)
+      type = typeOf<typename boost::remove_const<T>::type>();
+    GenericValue res;
+    res.type = type;
+    res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
+    return res;
+  }
 
-inline AutoGenericValue::AutoGenericValue(const AutoGenericValue& b)
-{
-  value = b.value;
-  type = b.type;
-}
+  inline
+  GenericValue GenericValue::clone() const
+  {
+    GenericValue res;
+    res.type = type;
+    res.value = type?res.type->clone(value):0;
+    return res;
+  }
 
-template<typename T> AutoGenericValue::AutoGenericValue(const T& ptr)
-{
-  *(GenericValue*)this = toValue(ptr);
-}
+  inline AutoGenericValue::AutoGenericValue(const AutoGenericValue& b)
+  {
+    value = b.value;
+    type = b.type;
+  }
 
-inline AutoGenericValue::AutoGenericValue()
-{
-  value = type = 0;
-}
+  template<typename T> AutoGenericValue::AutoGenericValue(const T& ptr)
+  {
+    *(GenericValue*)this = toValue(ptr);
+  }
 
-inline std::string GenericValue::signature() const
-{
-  if (!type)
+  inline AutoGenericValue::AutoGenericValue()
+  {
+    value = type = 0;
+  }
+
+  inline std::string GenericValue::signature() const
+  {
+    if (!type)
       return "";
     else
       return type->signature();
-}
+  }
 
-inline void GenericValue::destroy()
-{
-  if (type && value)
-    type->destroy(value);
-}
+  inline void GenericValue::destroy()
+  {
+    if (type && value)
+      type->destroy(value);
+  }
 
-inline GenericValue::GenericValue()
-: type(0)
-, value(0)
-{
-}
+  inline GenericValue::GenericValue()
+    : type(0)
+    , value(0)
+  {
+  }
 
-inline Type::Kind GenericValue::kind() const
-{
- if (!type)
-   return Type::Void;
- else
-   return type->kind();
-}
+  inline Type::Kind GenericValue::kind() const
+  {
+    if (!type)
+      return Type::Void;
+    else
+      return type->kind();
+  }
 
 
-// Kind -> handler Type (TypeInt, TypeList...)  accessor
+  // Kind -> handler Type (TypeInt, TypeList...)  accessor
 
-class KindNotConvertible;
+  class KindNotConvertible;
 
-template<Type::Kind T> struct TypeOfKind
-{
-  typedef KindNotConvertible type;
-};
+  template<Type::Kind T> struct TypeOfKind
+  {
+    typedef KindNotConvertible type;
+  };
 
 #define TYPE_OF_KIND(k, t) template<> struct TypeOfKind<k> { typedef t type;}
 
 
-TYPE_OF_KIND(Type::Int, TypeInt);
-TYPE_OF_KIND(Type::Float,  TypeFloat);
-TYPE_OF_KIND(Type::String, TypeString);
+  TYPE_OF_KIND(Type::Int, TypeInt);
+  TYPE_OF_KIND(Type::Float,  TypeFloat);
+  TYPE_OF_KIND(Type::String, TypeString);
 
 #undef TYPE_OF_KIND
 
 
-// Type -> Kind  accessor
+  // Type -> Kind  accessor
 
-namespace detail
-{
-  struct Nothing {};
-  template<Type::Kind k> struct MakeKind
+  namespace detail
   {
-    static const Type::Kind value = k;
-  };
+    struct Nothing {};
+    template<Type::Kind k> struct MakeKind
+    {
+      static const Type::Kind value = k;
+    };
 
-  template<typename C, typename T, typename F> struct IfElse
-  {
-  };
+    template<typename C, typename T, typename F> struct IfElse
+    {
+    };
 
-  template<typename T, typename F> struct IfElse<boost::true_type, T, F>
-  {
-    typedef T type;
-  };
+    template<typename T, typename F> struct IfElse<boost::true_type, T, F>
+    {
+      typedef T type;
+    };
 
-  template<typename T, typename F> struct IfElse<boost::false_type, T, F>
-  {
-    typedef F type;
-  };
+    template<typename T, typename F> struct IfElse<boost::false_type, T, F>
+    {
+      typedef F type;
+    };
 
-}
+  }
 
 #define IF(cond, type) \
-public detail::IfElse<cond, typename detail::MakeKind<type>, detail::Nothing>::type
+  public detail::IfElse<cond, typename detail::MakeKind<type>, detail::Nothing>::type
 
-template<typename T> struct KindOfType
-: IF(typename boost::is_integral<T>::type, Type::Int)
-, IF(typename boost::is_floating_point<T>::type, Type::Float)
-{
-};
+  template<typename T> struct KindOfType
+      : IF(typename boost::is_integral<T>::type, Type::Int)
+  , IF(typename boost::is_floating_point<T>::type, Type::Float)
+  {
+  };
 
 #undef IF
 
-namespace detail {
+  namespace detail {
 
-  // Optimized GenericValue::as<T> for direct access to a subType getter
-  template<typename T, Type::Kind k>
-  inline T valueAs(const GenericValue& v)
-  {
-    if (v.kind() == k)
-      return static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value);
-    // Fallback to default which will attempt a full conversion.
-    return v.as<T>();
+    // Optimized GenericValue::as<T> for direct access to a subType getter
+    template<typename T, Type::Kind k>
+    inline T valueAs(const GenericValue& v)
+    {
+      if (v.kind() == k)
+        return static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value);
+      // Fallback to default which will attempt a full conversion.
+      return v.as<T>();
+    }
   }
-}
 
-template<typename T>
-inline T* GenericValue::ptr(bool check)
-{
-  if (check && typeOf<T>()->info() != type->info())
-    return 0;
-  else
-    return (T*)type->ptrFromStorage(&value);
-}
-
-template<typename T>
-inline T GenericValue::as(const T&) const
-{
-  return as<T>();
-}
-
-template<typename T>
-inline T GenericValue::as() const
-{
-  std::pair<GenericValue, bool> conv = convert(typeOf<T>());
-  if (!conv.first.type)
+  template<typename T>
+  inline T* GenericValue::ptr(bool check)
   {
-    qiLogWarning("qi.GenericValue") << "Conversion from " << type->infoString()
-    << " to " << typeOf<T>()->infoString() << " failed";
-    return T();
+    if (check && typeOf<T>()->info() != type->info())
+      return 0;
+    else
+      return (T*)type->ptrFromStorage(&value);
   }
-  T result = *conv.first.ptr<T>(false);
-  if (conv.second)
-    conv.first.destroy();
-  return result;
-}
 
-inline int64_t GenericValue::asInt() const
-{
-  return detail::valueAs<int64_t, Type::Int>(*this);
-}
+  template<typename T>
+  inline T GenericValue::as(const T&) const
+  {
+    return as<T>();
+  }
 
-inline float GenericValue::asFloat() const
-{
-  return detail::valueAs<float, Type::Float>(*this);
-}
+  template<typename T>
+  inline T GenericValue::as() const
+  {
+    std::pair<GenericValue, bool> conv = convert(typeOf<T>());
+    if (!conv.first.type)
+    {
+      qiLogWarning("qi.GenericValue") << "Conversion from " << type->infoString()
+                                      << " to " << typeOf<T>()->infoString() << " failed";
+      return T();
+    }
+    T result = *conv.first.ptr<T>(false);
+    if (conv.second)
+      conv.first.destroy();
+    return result;
+  }
 
-inline double GenericValue::asDouble() const
-{
-  return detail::valueAs<double, Type::Float>(*this);
-}
+  inline int64_t GenericValue::asInt() const
+  {
+    return detail::valueAs<int64_t, Type::Int>(*this);
+  }
+
+  inline float GenericValue::asFloat() const
+  {
+    return detail::valueAs<float, Type::Float>(*this);
+  }
+
+  inline double GenericValue::asDouble() const
+  {
+    return detail::valueAs<double, Type::Float>(*this);
+  }
 
 
-inline std::string GenericValue::asString() const
-{
-  return as<std::string>();
-}
+  inline std::string GenericValue::asString() const
+  {
+    return as<std::string>();
+  }
 
-inline void GenericValue::serialize(ODataStream& out) const
-{
-  type->serialize(out, value);
-}
+  inline void GenericValue::serialize(ODataStream& out) const
+  {
+    type->serialize(out, value);
+  }
 
-namespace detail
-{
-  /** This class can be used to convert the return value of an arbitrary function
+  namespace detail
+  {
+    /** This class can be used to convert the return value of an arbitrary function
   * into a GenericValue. It handles functions returning void.
   *
   *  Usage:
@@ -261,91 +261,18 @@ namespace detail
   *
   *  in val(), parenthesis are useful to avoid compiler warning "val not used" when handling void.
   */
-  class GenericValueCopy: public GenericValue
-  {
-  public:
-    template<typename T> void operator,(const T& any);
-    GenericValueCopy &operator()() { return *this; }
-  };
-
-  template<typename T> void GenericValueCopy::operator,(const T& any)
-  {
-    *(GenericValue*)this = toValue(any);
-    *(GenericValue*)this = clone();
-  }
-}
-
-template<typename TypeDispatcher> TypeDispatcher& Type::dispatch(const TypeDispatcher & vv, void**storage)
-  {
-    TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
-    switch(kind())
+    class GenericValueCopy: public GenericValue
     {
-    case Void:
-      v.visitVoid(this);
-      break;
-    case Unknown:
-      v.visitUnknown(this, storage);
-      break;
-    case Int:
-      {
-        TypeInt* tint = static_cast<TypeInt*>(this);
-        /* Here we assume that '0' is represented by storage=0 in the byValue case.
-        */
-        v.visitInt(tint, (storage&&*storage)?tint->get(*storage):0, tint->isSigned(), tint->size());
-        break;
-      }
-    case Float:
-      {
-        TypeFloat* tfloat = static_cast<TypeFloat*>(this);
-        v.visitFloat(tfloat, (storage&&*storage)?tfloat->get(*storage):0, tfloat->size());
-        break;
-      }
-    case String:
-      {
-        TypeString* tstring = static_cast<TypeString*>(this);
-        v.visitString(tstring, *storage);
-        break;
-      }
-    case List:
-      {
-        TypeList* tlist = static_cast<TypeList*>(this);
-        v.visitList(GenericList(tlist, *storage));
-        break;
-      }
-    case Map:
-      {
-        TypeMap * tlist = static_cast<TypeMap *>(this);
-        v.visitMap(GenericMap(tlist, *storage));
-        break;
-      }
-    case Object:
-      {
-        v.visitObject(GenericObject(static_cast<ObjectType*>(this), *storage));
-        break;
-      }
-    case Pointer:
-      {
-        TypePointer* tpointer = static_cast<TypePointer*>(this);
-        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValue());
-        break;
-      }
-    case Tuple:
-      {
-      TypeTuple* ttuple = static_cast<TypeTuple*>(this);
-      v.visitTuple(ttuple, *storage);
-      break;
-      }
-    case Dynamic:
-      {
-        std::pair<GenericValue, bool> gv(GenericValue(), false);
-        if (storage && *storage)
-          gv = static_cast<TypeDynamic*>(this)->get(*storage);
-        v.visitDynamic(this, gv.first);
-        if (gv.second)
-          gv.first.destroy();
-      }
+    public:
+      template<typename T> void operator,(const T& any);
+      GenericValueCopy &operator()() { return *this; }
+    };
+
+    template<typename T> void GenericValueCopy::operator,(const T& any)
+    {
+      *(GenericValue*)this = toValue(any);
+      *(GenericValue*)this = clone();
     }
-    return v;
   }
 }
 

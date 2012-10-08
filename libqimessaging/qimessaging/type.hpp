@@ -107,29 +107,9 @@ public:
   GenericValue deserialize(IDataStream& in);
   void serialize(ODataStream& out, void* storage);
 
-  /** Invoke one of the visitor functions in dispatcher based on kind().
-   * Dispatcher must implement TypeDispatcher.
-   * Passing 0 in storage is possible, in which case visitor functions will
-   * get a dummy value but correct Type informations.
-   */
-  template<typename Dispatcher> Dispatcher& dispatch(const Dispatcher& disptacher, void** storage);
+
 };
 
-class QIMESSAGING_API TypeDispatcher
-{
-public:
-  virtual void visitUnknown(Type* type, void* storage)=0;
-  virtual void visitVoid(Type*)=0;
-  virtual void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)=0;
-  virtual void visitFloat(TypeFloat* type, double value, int byteSize)=0;
-  virtual void visitString(TypeString* type, void* storage)=0;
-  virtual void visitList(GenericList value)=0;
-  virtual void visitMap(GenericMap value)=0;
-  virtual void visitObject(GenericObject value)=0;
-  virtual void visitPointer(TypePointer* type, void* storage, GenericValue pointee)=0;
-  virtual void visitTuple(TypeTuple* type, void* storage)=0;
-  virtual void visitDynamic(Type* type, GenericValue pointee);
-};
 
 /// Declare that a type has no accessible default constructor.
 #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
