@@ -206,7 +206,7 @@ namespace qi {
     *this >> sz;
     if (reader.hasSubBuffer())
     {
-      meta = reader.getSubBuffer();
+      meta = reader.subBuffer();
       if (meta.size() != sz)
         qiLogWarning("DataStream") << "Buffer size mismatch " << sz << " " << meta.size();
     }

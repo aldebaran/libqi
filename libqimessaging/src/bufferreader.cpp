@@ -76,7 +76,7 @@ namespace qi {
     return true;
   }
 
-  Buffer BufferReader::getSubBuffer()
+  Buffer BufferReader::subBuffer()
   {
     if (!hasSubBuffer())
       return Buffer();

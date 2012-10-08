@@ -23,7 +23,7 @@ namespace qi {
     void  *peek(size_t size) const;
     /// @return true if a subBuffer is available at current offset
     bool hasSubBuffer() const;
-    Buffer getSubBuffer();
+    Buffer subBuffer();
     size_t position() { return _cursor;}
   private:
     Buffer _buffer;
