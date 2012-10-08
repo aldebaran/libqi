@@ -77,6 +77,10 @@ namespace qi {
     {
       return SignalBase::connect(f, ctx);
     }
+    inline SignalBase::Link connect(qi::ObjectPtr target, unsigned int slot)
+    {
+      return SignalBase::connect(target, slot);
+    }
   };
 
 }
