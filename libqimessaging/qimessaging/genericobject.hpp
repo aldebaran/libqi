@@ -35,33 +35,6 @@ namespace qi {
     virtual void onObjectDestroyed(GenericObject *object, void *data) = 0;
   };
 
-  class ManageablePrivate;
-
- /** User classes can inherit from Manageable to benefit from additional features:
-  * - Automatic signal disconnection when the object is deleted
-  * - Event loop management
-  */
- class QIMESSAGING_API Manageable
- {
- public:
-   Manageable();
-   ~Manageable();
-   Manageable(const Manageable& b);
-   void operator = (const Manageable& b);
-
-   void addCallbacks(ObjectInterface *callbacks, void *data = 0);
-   void removeCallbacks(ObjectInterface *callbacks);
-
-   // Remember than this is the target of subscriber
-   void addRegistration(const SignalSubscriber& subscriber);
-   // Notify that a registered subscriber got disconnected
-   void removeRegistration(unsigned int linkId);
-
-   EventLoop* eventLoop() const;
-   void moveToEventLoop(EventLoop* eventLoop);
-
-   ManageablePrivate* _p;
- };
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
 
