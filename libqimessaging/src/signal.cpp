@@ -54,15 +54,35 @@ namespace qi {
       i->second.call(params);
   }
 
-  static void functor_call(GenericFunction f,
-    GenericFunctionParameters& args, SignalSubscriber* s)
+  class FunctorCall
   {
-    if (s->enabled)
-      f(args);
-    --s->active;
-    args.destroy();
-  }
-
+  public:
+    FunctorCall(GenericFunctionParameters& params,
+      SignalSubscriber* sub)
+    : sub(sub)
+    {
+      std::swap((std::vector<GenericValue>&)this->params, (std::vector<GenericValue>&)params);
+    }
+    FunctorCall(const FunctorCall& b)
+    {
+      *this = b;
+    }
+    void operator=(const FunctorCall& b)
+    {
+      std::swap((std::vector<GenericValue>&)(this->params),
+        (std::vector<GenericValue>&)b.params);
+      sub = b.sub;
+    }
+    GenericFunctionParameters params;
+    SignalSubscriber* sub;
+    void operator() ()
+    {
+      if (sub->enabled)
+        sub->handler(params);
+      --sub->active;
+      params.destroy();
+    }
+  };
   void SignalSubscriber::call(const GenericFunctionParameters& args)
   {
     if (!enabled)
@@ -74,8 +94,7 @@ namespace qi {
         ++active;
         // Event emission is always asynchronous
         GenericFunctionParameters copy = args.copy();
-        eventLoop->asyncCall(0,
-          boost::bind(&functor_call, handler, copy, this));
+        eventLoop->asyncCall(0, FunctorCall(copy, this));
       }
       else
         handler(args);

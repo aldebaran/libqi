@@ -162,18 +162,44 @@ namespace qi
     return s->disconnect(link);
   }
 
-  static void functor_call(GenericFunction func, GenericFunctionParameters params,
-    qi::Promise<GenericValue> out, bool noCloneFirst)
+  class MFunctorCall
   {
-    out.setValue(func.call(params));
-    params.destroy(noCloneFirst);
-  }
-
+  public:
+    MFunctorCall(GenericFunction& func, GenericFunctionParameters& params,
+       qi::Promise<GenericValue>* out, bool noCloneFirst)
+    : noCloneFirst(noCloneFirst)
+    {
+      this->out = out;
+      std::swap(this->func, func);
+      std::swap((std::vector<GenericValue>&) params,
+        (std::vector<GenericValue>&) this->params);
+    }
+    MFunctorCall(const MFunctorCall& b)
+    {
+      (*this) = b;
+    }
+    void operator = (const MFunctorCall& b)
+    {
+      std::swap( (std::vector<GenericValue>&) params,
+        (std::vector<GenericValue>&) b.params);
+      std::swap(func, const_cast<MFunctorCall&>(b).func);
+      this->out = b.out;
+      noCloneFirst = b.noCloneFirst;
+    }
+    void operator()()
+    {
+      out->setValue(func.call(params));
+      params.destroy(noCloneFirst);
+      delete out;
+    }
+    qi::Promise<GenericValue>* out;
+    GenericFunctionParameters params;
+    GenericFunction func;
+    bool noCloneFirst;
+  };
   qi::Future<GenericValue> metaCall(EventLoop* el,
     GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst)
   {
-
-    qi::Promise<GenericValue> out;
     bool synchronous = true;
     switch (callType)
     {
@@ -187,16 +213,23 @@ namespace qi
       break;
     }
     if (synchronous)
+    {
+      qi::Promise<GenericValue> out;
       out.setValue(func.call(params));
+      return out.future();
+    }
     else
     {
+      qi::Promise<GenericValue>* out = new qi::Promise<GenericValue>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       el->asyncCall(0,
+        MFunctorCall(func, pCopy, out, noCloneFirst));
+      return out->future();
+      /*
         boost::bind(&functor_call,
           func,
-          pCopy, out, noCloneFirst));
+          pCopy, out, noCloneFirst));*/
     }
-    return out.future();
   }
 
   //DynamicObjectType implementation: just bounces everything to metaobject
