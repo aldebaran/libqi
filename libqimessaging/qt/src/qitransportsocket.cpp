@@ -178,7 +178,7 @@ void QiTransportSocket::connectToHost(const QUrl& address)
     connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     connect(socket, SIGNAL(readyRead()), _p, SLOT(read()));
 
-    socket->setProtocol(QSsl::TlsV1SslV3);
+    socket->setProtocol(QSsl::AnyProtocol);
     socket->connectToHostEncrypted(address.host(), address.port());
     _p->_peer = address;
     _p->_device = socket;
