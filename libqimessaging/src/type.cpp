@@ -84,6 +84,10 @@ namespace qi {
 
   QIMESSAGING_API Type* getType(const std::type_info& type)
   {
+    static boost::mutex* mutex = 0;
+    if (!mutex)
+      mutex = new boost::mutex;
+    boost::mutex::scoped_lock sl(*mutex);
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
     return typeFactory()[TypeInfo(type)];
