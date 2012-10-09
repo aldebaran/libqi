@@ -13,6 +13,7 @@
 #include <qimessaging/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
+#include <testsession/testsessionpair.hpp>
 
 static qi::Promise<int> *payload;
 
@@ -36,19 +37,18 @@ public:
 protected:
   void SetUp()
   {
-    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
+    // In nightmare mode, there is a hidden service registered...
+    unsigned int nbServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
 
-    ASSERT_TRUE(session.connect(sd.listenUrl()));
-    ASSERT_TRUE(session.isConnected());
+    ASSERT_GT(p.server()->registerService("coin", oserver), 0);
+    EXPECT_EQ(nbServices, p.server()->services(qi::Session::ServiceLocality_Local).value().size());
 
-    ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session.registerService("coin", oserver), 0);
-    EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
-
-    ASSERT_TRUE(sclient.connect(sd.listenUrl()));
-    std::vector<qi::ServiceInfo> services = sclient.services();
-    EXPECT_EQ(2U, services.size());
-    oclient = sclient.service("coin");
+    std::vector<qi::ServiceInfo> services = p.client()->services();
+    if (TestMode::getTestMode() == TestMode::Mode_Direct)
+      EXPECT_EQ(3U, services.size());
+    else
+      EXPECT_EQ(2U, services.size());
+    oclient = p.client()->service("coin");
     ASSERT_TRUE(oclient != 0);
     payload = &prom;
   }
@@ -56,17 +56,12 @@ protected:
   void TearDown()
   {
     payload = 0;
-    sclient.close();
-    session.close();
-    sd.close();
   }
 
 public:
+  TestSessionPair      p;
   qi::Promise<int>     prom;
-  qi::ServiceDirectory sd;
-  qi::Session          session;
   qi::ObjectPtr        oserver;
-  qi::Session          sclient;
   qi::ObjectPtr        oclient;
 };
 
@@ -130,5 +125,6 @@ int main(int argc, char *argv[])
 #endif
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  TestMode::initTestMode(argc, argv);
   return RUN_ALL_TESTS();
 }

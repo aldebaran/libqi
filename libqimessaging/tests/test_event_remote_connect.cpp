@@ -14,6 +14,8 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 
+#include <testsession/testsessionpair.hpp>
+
 static qi::Promise<int> *payload1;
 
 void onFire1(const int& pl)
@@ -37,7 +39,7 @@ void onFire2(const int& pl)
 class TestObject: public ::testing::Test
 {
 public:
-  TestObject()
+  TestObject() : p2(p1)
   {
     qi::GenericObjectBuilder obs1, obs2;
     e1 = obs1.advertiseEvent<void (*)(const int&)>("fire1");
@@ -52,20 +54,23 @@ protected:
   void SetUp()
   {
     // Two objects with a fire event and a onFire method.
-    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
-    ASSERT_TRUE(session1.connect(sd.listenUrl()));
-    ASSERT_TRUE(session2.connect(sd.listenUrl()));
-    ASSERT_TRUE(session1.listen("tcp://0.0.0.0:0"));
-    ASSERT_TRUE(session2.listen("tcp://0.0.0.0:0"));
-    ASSERT_GT(session1.registerService("coin1", oserver1).wait(), 0);
-    ASSERT_GT(session2.registerService("coin2", oserver2).wait(), 0);
-    EXPECT_EQ(1U, session1.services(qi::Session::ServiceLocality_Local).value().size());
-    EXPECT_EQ(1U, session2.services(qi::Session::ServiceLocality_Local).value().size());
-    ASSERT_TRUE(sclient.connect(sd.listenUrl()));
-    std::vector<qi::ServiceInfo> services = sclient.services();
-    EXPECT_EQ(3U, services.size());
-    oclient1 = sclient.service("coin1");
-    oclient2 = sclient.service("coin2");
+    unsigned int nbLocalServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
+    unsigned int nbConnectedServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 5 : 3;
+    if (TestMode::getTestMode() == TestMode::Mode_Direct)
+      nbConnectedServices += 1;
+
+    ASSERT_GT(p1.server()->registerService("coin1", oserver1).wait(1000), 0);
+    ASSERT_GT(p2.server()->registerService("coin2", oserver2).wait(1000), 0);
+    EXPECT_EQ(nbLocalServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
+    EXPECT_EQ(nbLocalServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
+
+    std::vector<qi::ServiceInfo> services = p1.client()->services();
+    EXPECT_EQ(nbConnectedServices, services.size());
+    services = p2.client()->services();
+    EXPECT_EQ(nbConnectedServices, services.size());
+
+    oclient1 = p2.client()->service("coin1");
+    oclient2 = p1.client()->service("coin2");
     payload1 = &prom1;
     payload2 = &prom2;
   }
@@ -73,20 +78,15 @@ protected:
   void TearDown()
   {
     payload1 = payload2 = 0;
-    sclient.close();
-    session1.close();
-    session2.close();
-    sd.close();
   }
 
 public:
   unsigned int e1, e2;
   unsigned int m1, m2;
   qi::Promise<int>     prom1, prom2;
-  qi::ServiceDirectory sd;
-  qi::Session          session1, session2;
+  TestSessionPair      p1;
+  TestSessionPair      p2;
   qi::ObjectPtr        oserver1, oserver2;
-  qi::Session          sclient;
   qi::ObjectPtr        oclient1, oclient2;
 };
 
