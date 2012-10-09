@@ -52,8 +52,8 @@ namespace qi
     size_t read(void* buffer, size_t pos, size_t length) const;
     void   dump() const;
 
-    std::stringstream& signature();
-    const std::stringstream& signature() const;
+    std::string& signature();
+    const std::string& signature() const;
   private:
     // We need those friends for our reader-writer conflict detection system.
     friend class BufferReader;

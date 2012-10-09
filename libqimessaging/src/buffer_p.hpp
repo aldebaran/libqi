@@ -37,7 +37,7 @@ namespace qi
     qi::atomic<long> nWriters;
 
     // Used to serialize the Buffer signature
-    std::stringstream signature;
+    std::string signature;
 
     std::vector<std::pair<uint32_t, Buffer> > _subBuffers;
   };

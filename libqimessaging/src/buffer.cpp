@@ -231,12 +231,12 @@ namespace qi
     printf("\n");
   }
 
-  std::stringstream& Buffer::signature()
+  std::string& Buffer::signature()
   {
     return _p->signature;
   }
 
-  const std::stringstream& Buffer::signature() const
+  const std::string& Buffer::signature() const
   {
     return _p->signature;
   }
