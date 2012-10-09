@@ -20,6 +20,8 @@ namespace qi {
     qi::Promise<qi::TransportSocketPtr> promise;
     int                                 attempts;
     int                                 success;
+    unsigned int                        connectLink;
+    unsigned int                        disconnectLink;
   };
 
   /**
@@ -35,6 +37,11 @@ namespace qi {
    */
   class TransportSocketCache {
   public:
+    ~TransportSocketCache();
+
+    void init();
+    void close();
+
     qi::Future<qi::TransportSocketPtr> socket(const std::string &endpoint);
     qi::Future<qi::TransportSocketPtr> socket(const std::vector<std::string> &endpoints);
 
@@ -48,6 +55,7 @@ namespace qi {
     typedef std::map< std::string, TransportSocketConnection > TransportSocketConnectionMap;
     TransportSocketConnectionMap _sockets;
     boost::mutex                 _socketsMutex;
+    bool                         _dying;
   };
 
 };

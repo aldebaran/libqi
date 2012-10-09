@@ -54,6 +54,7 @@ namespace qi {
     _sdSocketConnectedLink    = _sdSocket->connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
     _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
     _sdClient.setTransportSocket(_sdSocket);
+    _socketsCache.init();
     return _sdSocket->connect(serviceDirectoryURL);
   }
 
@@ -61,6 +62,7 @@ namespace qi {
   {
     _serviceHandler.close();
     _serverObject.close();
+    _socketsCache.close();
     if (!_sdSocket)
       return qi::Future<void>(0);
     qi::Future<void> fut = _sdSocket->disconnect();

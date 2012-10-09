@@ -10,11 +10,39 @@
 
 namespace qi {
 
+  TransportSocketCache::~TransportSocketCache() {
+    close();
+  }
+
+
+  void TransportSocketCache::init() {
+    boost::mutex::scoped_lock sl(_socketsMutex);
+    _dying = false;
+  }
+
+  void TransportSocketCache::close() {
+    {
+      boost::mutex::scoped_lock sl(_socketsMutex);
+      _dying = true;
+      TransportSocketConnectionMap::iterator it;
+      for (it = _sockets.begin(); it != _sockets.end(); ++it) {
+        it->second.socket->disconnected.disconnect(it->second.disconnectLink);
+        it->second.socket->connected.disconnect(it->second.connectLink);
+        //remove callback before calling disconnect. (we dont need them)
+        it->second.socket->disconnect();
+        it->second.promise.setError("session closed");
+      }
+    }
+  }
+
   //return a connected TransportSocket for the given endpoint
   qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const std::string &endpoint)
   {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
+      if (_dying)
+        return qi::makeFutureError<qi::TransportSocketPtr>("TransportSocketCache is closed");
+
       TransportSocketConnectionMap::iterator it;
       it = _sockets.find(endpoint);
       if (it != _sockets.end()) {
@@ -32,9 +60,9 @@ namespace qi {
       qi::Url                             url(endpoint);
       qi::TransportSocketPtr              socket = makeTransportSocket(url.protocol());
       qi::Promise<qi::TransportSocketPtr> prom;
-      socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, endpoint));
-      socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, endpoint));
       TransportSocketConnection &tsc = _sockets[endpoint];
+      tsc.connectLink    = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, endpoint));
+      tsc.disconnectLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, endpoint));
       tsc.socket = socket;
       tsc.promise = prom;
       socket->connect(url).async();
