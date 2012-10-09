@@ -90,17 +90,23 @@ TEST(QiSession, testClose)
   session.listen(serviceAddr.str());
 
   // Wait for service id, otherwise register is asynchronous.
-  session.registerService("serviceTest", obj).wait();
+  qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
+  ASSERT_FALSE(idx.hasError());
   ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
   qi::ObjectPtr object = session.service("serviceTest");
   EXPECT_TRUE(object);
+
 
   session.close();
   EXPECT_FALSE(session.isConnected());
 
   std::vector<qi::ServiceInfo> services = session.services();
   EXPECT_EQ(0U, services.size());
+
+  connected = session.connect(connectionAddr);
+  ASSERT_TRUE(connected);
+  session.unregisterService(idx.value());
 }
 
 TEST(QiSession, getSimpleService)
