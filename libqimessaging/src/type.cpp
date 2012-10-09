@@ -196,14 +196,17 @@ namespace qi {
     SerializeTypeVisitor(ODataStream& out)
     : out(out)
     {}
+
     void visitUnknown(Type* type, void* storage)
     {
       qiLogError("qi.type") << "Type " << type->infoString() <<" not serializable";
     }
+
     void visitVoid(Type*)
     {
       qiLogError("qi.type") << "serialize() called on void";
     }
+
     void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
     {
       switch((isSigned?1:-1)*byteSize)
@@ -220,6 +223,7 @@ namespace qi {
           qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
       }
     }
+
     void visitFloat(TypeFloat* type, double value, int byteSize)
     {
       if (byteSize == 4)
@@ -229,6 +233,7 @@ namespace qi {
       else
         qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
     }
+
     void visitString(TypeString* type, void* storage)
     {
       Buffer* buf = type->asBuffer(storage);
@@ -237,6 +242,7 @@ namespace qi {
       else
         out << type->getString(storage);
     }
+
     void visitList(GenericList value)
     {
       out.beginList(value.size(), value.elementType()->signature());
@@ -249,6 +255,7 @@ namespace qi {
       end.destroy();
       out.endList();
     }
+
     void visitMap(GenericMap value)
     {
       out.beginMap(value.size(), value.keyType()->signature(), value.elementType()->signature());
@@ -265,14 +272,17 @@ namespace qi {
       end.destroy();
       out.endMap();
     }
+
     void visitObject(GenericObject value)
     {
       qiLogError("qi.type") << "Object serialization not implemented";
     }
+
     void visitPointer(TypePointer* type, void* storage, GenericValue pointee)
     {
        qiLogError("qi.type") << "Pointer serialization not implemented";
     }
+
     void visitTuple(TypeTuple* type, void* storage)
     {
       std::vector<GenericValue> vals = type->getValues(storage);
@@ -284,6 +294,7 @@ namespace qi {
         vals[i].serialize(out);
       out.endTuple();
     }
+
     void visitDynamic(Type* type, GenericValue pointee)
     {
       out << pointee;
@@ -296,8 +307,11 @@ namespace qi {
   {
   public:
     DeserializeTypeVisitor(IDataStream& in)
-    : in(in) {}
-    template<typename T, typename TYPE> void get(TYPE* type)
+      : in(in)
+    {}
+
+    template<typename T, typename TYPE>
+    void deserialize(TYPE* type)
     {
       T val;
       in >> val;
@@ -306,40 +320,45 @@ namespace qi {
       result.value = type->initializeStorage();
       type->set(&result.value, val);
     }
+
     void visitUnknown(Type* type, void* storage)
     {
       qiLogError("qi.type") << "Type " << type->infoString() <<" not deserializable";
     }
+
     void visitVoid(Type*)
     {
       result.type = typeOf<void>();
       result.value = 0;
     }
+
     void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
     {
       switch((isSigned?1:-1)*byteSize)
       {
-      case 1:  get<int8_t>(type);  break;
-      case -1: get<uint8_t>(type); break;
-      case 2:  get<int16_t>(type); break;
-      case -2: get<uint16_t>(type);break;
-      case 4:  get<int32_t>(type); break;
-      case -4: get<uint32_t>(type);break;
-      case 8:  get<int64_t>(type); break;
-      case -8: get<uint64_t>(type);break;
+      case 1:  deserialize<int8_t>(type);  break;
+      case -1: deserialize<uint8_t>(type); break;
+      case 2:  deserialize<int16_t>(type); break;
+      case -2: deserialize<uint16_t>(type);break;
+      case 4:  deserialize<int32_t>(type); break;
+      case -4: deserialize<uint32_t>(type);break;
+      case 8:  deserialize<int64_t>(type); break;
+      case -8: deserialize<uint64_t>(type);break;
       default:
         qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
       }
     }
+
     void visitFloat(TypeFloat* type, double value, int byteSize)
     {
       if (byteSize == 4)
-        get<float>(type);
+        deserialize<float>(type);
       else if (byteSize == 8)
-        get<double>(type);
+        deserialize<double>(type);
       else
         qiLogError("qi.type") << "Unknown float type " << byteSize;
     }
+
     void visitString(TypeString* type, const void* storage)
     {
       result.type = type;
@@ -354,6 +373,7 @@ namespace qi {
         type->set(&result.value, s);
       }
     }
+
     void visitList(GenericList value)
     {
       result.type = value.type;
@@ -362,11 +382,14 @@ namespace qi {
       Type* elementType = res.elementType();
       qi::uint32_t sz = 0;
       in >> sz;
-      for (unsigned i=0; i<sz; ++i)
+      if (in.status() != IDataStream::Status_Ok)
+        return;
+      for (unsigned i = 0; i < sz; ++i)
       {
         res.pushBack(elementType->deserialize(in));
       }
     }
+
     void visitMap(GenericMap value)
     {
       result.type = value.type;
@@ -376,21 +399,26 @@ namespace qi {
       Type* elementType = res.elementType();
       qi::uint32_t sz = 0;
       in >> sz;
-      for (unsigned i=0; i<sz; ++i)
+      if (in.status() != IDataStream::Status_Ok)
+        return;
+      for (unsigned i = 0; i < sz; ++i)
       {
         GenericValue k = keyType->deserialize(in);
         GenericValue v = elementType->deserialize(in);
         res.insert(k, v);
       }
     }
+
     void visitObject(GenericObject value)
     {
       qiLogError("qi.type") << " Object serialization not implemented";
     }
+
     void visitPointer(TypePointer* type, void* storage, GenericValue pointee)
     {
       qiLogError("qi.type") << " Pointer serialization not implemented";
     }
+
     void visitTuple(TypeTuple* type, void* storage)
     {
       std::vector<Type*> types = type->memberTypes(storage);
@@ -403,6 +431,7 @@ namespace qi {
         val.destroy();
       }
     }
+
     void visitDynamic(Type* type, GenericValue pointee)
     {
       std::string sig;
@@ -415,6 +444,7 @@ namespace qi {
       static_cast<TypeDynamic*>(type)->set(&result.value, val);
       val.destroy();
     }
+
     GenericValue result;
     IDataStream& in;
   };
