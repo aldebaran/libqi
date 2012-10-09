@@ -55,7 +55,7 @@ namespace qi
     return _p->_connected;
   }
 
-  qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun) {
+  qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
     return _p->_dispatcher.messagePendingConnect(serviceId, fun);
   }
 

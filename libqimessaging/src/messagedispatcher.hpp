@@ -31,17 +31,17 @@ namespace qi {
     MessageDispatcher();
 
     //internal: called by Socket to tell the class that we sent a message
-    void sent(qi::Message msg);
+    void sent(const qi::Message& msg);
     //internal: called by Socket to tell the class a message have been receive
-    void dispatch(qi::Message msg);
+    void dispatch(const qi::Message& msg);
     void cleanPendingMessages();
 
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun);
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun);
     bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
 
 
   public:
-    typedef std::map< unsigned int, qi::Signal<void (qi::Message)> > SignalMap;
+    typedef std::map< unsigned int, qi::Signal<void (const qi::Message&)> > SignalMap;
     typedef std::map<unsigned int, MessageAddress>                   MessageSentMap;
 
     SignalMap            _signalMap;

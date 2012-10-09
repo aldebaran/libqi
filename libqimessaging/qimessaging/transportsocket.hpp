@@ -38,13 +38,13 @@ namespace qi
     int     status() const;
     qi::Url url() const;
 
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun);
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun);
     bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
 
   public:
     qi::Signal<void ()>            connected;
     qi::Signal<void (int error)>   disconnected;
-    qi::Signal<void (qi::Message)> messageReady;
+    qi::Signal<void (const qi::Message&)> messageReady;
 
   protected:
     explicit TransportSocket(TransportSocketPrivate *p);

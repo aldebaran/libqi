@@ -33,7 +33,7 @@ namespace qi {
   {
   }
 
-  void MessageDispatcher::dispatch(qi::Message msg) {
+  void MessageDispatcher::dispatch(const qi::Message& msg) {
     //remove the address from the messageSent map
     if (msg.type() == qi::Message::Type_Reply)
     {
@@ -56,9 +56,9 @@ namespace qi {
   }
 
   qi::SignalBase::Link
-  MessageDispatcher::messagePendingConnect(unsigned int serviceId, boost::function<void (qi::Message)> fun) {
+  MessageDispatcher::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
     boost::mutex::scoped_lock sl(_signalMapMutex);
-    qi::Signal<void (qi::Message)> &sig = _signalMap[serviceId];
+    qi::Signal<void (const qi::Message&)> &sig = _signalMap[serviceId];
     return sig.connect(fun);
   }
 
@@ -102,7 +102,7 @@ namespace qi {
     }
   }
 
-  void MessageDispatcher::sent(qi::Message msg) {
+  void MessageDispatcher::sent(const qi::Message& msg) {
     //store Call id, we can use them later to notify the client
     //if the call did not succeed. (network disconnection, message lost)
     if (msg.type() == qi::Message::Type_Call)

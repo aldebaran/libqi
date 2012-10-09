@@ -298,14 +298,18 @@ namespace qi
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
   {
     if (_eventLoop->isInEventLoopThread())
-      return send_(msg);
+      return send_(msg, false);
     else
+    {
+      qi::Message* m = new qi::Message();
+      *m = msg;
       _eventLoop->asyncCall(0,
-        boost::bind(&TcpTransportSocketPrivate::send_, this, msg));
+        boost::bind(&TcpTransportSocketPrivate::send_, this, boost::ref(*m), true));
+    }
     return true;
   }
 
-  bool TcpTransportSocketPrivate::send_(const qi::Message &msg)
+  bool TcpTransportSocketPrivate::send_(const qi::Message &msg, bool allocated)
   {
     if (!_connected)
     {
@@ -313,8 +317,14 @@ namespace qi
       return false;
     }
 
-    qi::Message *m = new qi::Message;
-    *m = msg;
+    qi::Message *m;
+    if (allocated)
+      m = const_cast<qi::Message*>(&msg);
+    else
+    {
+      m = new qi::Message;
+      *m = msg;
+    }
 
     m->_p->complete();
 
