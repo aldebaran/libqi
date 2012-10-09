@@ -18,7 +18,7 @@ namespace qi {
     void cancel() { cancelled = true;}
     bool cancelled;
     event* ev;
-    boost::function0<void> callback;
+    boost::function<void()> callback;
   };
 
   class EventLoopPrivate

@@ -177,7 +177,7 @@ namespace qi {
     // Order is important.
     res._p->ev = ev;
     res._p->cancelled = false;
-    res._p->callback = cb;
+    std::swap(res._p->callback,cb);
     event_add(ev, &period);
     return res;
   }
