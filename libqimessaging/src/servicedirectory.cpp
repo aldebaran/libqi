@@ -123,9 +123,11 @@ namespace qi
     it = nameToIdx.find(svcinfo.name());
     if (it != nameToIdx.end())
     {
-      qiLogWarning("qimessaging.ServiceDirectory")  << "service " << svcinfo.name()
-                                                    << " is already registered (#" << it->second << ")" << std::endl;
-      return 0;
+      std::stringstream ss;
+      ss << "service " << svcinfo.name()
+         << " is already registered (#" << it->second << ")" << std::endl;
+      qiLogWarning("qimessaging.ServiceDirectory")  << ss.str();
+      throw std::runtime_error(ss.str());
     }
 
     unsigned int idx = ++servicesCount;
