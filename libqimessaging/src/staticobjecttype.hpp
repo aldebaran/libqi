@@ -49,7 +49,7 @@ class StaticObjectTypeBase: public ObjectType
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
-  virtual TypeInfo info();
+  virtual const TypeInfo& info();
   virtual const MetaObject& metaObject(void* instance);
   virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
   virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);

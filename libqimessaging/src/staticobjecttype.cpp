@@ -113,7 +113,7 @@ const std::vector<std::pair<Type*, int> >& StaticObjectTypeBase::parentTypes()
   return _data.parentTypes;
 }
 
-TypeInfo StaticObjectTypeBase::info()
+const TypeInfo& StaticObjectTypeBase::info()
 {
   return _data.classType->info();
 }

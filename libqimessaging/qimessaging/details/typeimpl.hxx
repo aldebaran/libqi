@@ -156,9 +156,12 @@ public:
     return Access::ptrFromStorage(storage);
   }
 
-  static const std::type_info& info()
+  static const TypeInfo&  info()
   {
-    return typeid(T);
+    static TypeInfo* result = 0;
+    if (!result)
+      result = new TypeInfo(typeid(T));
+    return *result;
   }
 
   static void* clone(void* src)
@@ -174,7 +177,7 @@ public:
 
 ///Implement all methods of Type except clone/destroy as bouncers to Bouncer
 #define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
-virtual TypeInfo info() { return Bounce::info();}                           \
+virtual const TypeInfo& info() { return Bounce::info();}                           \
 virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
 virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
 

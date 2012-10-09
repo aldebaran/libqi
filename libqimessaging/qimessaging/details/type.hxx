@@ -32,9 +32,10 @@ namespace qi {
   template<> class TypeImpl<void>: public Type
   {
   public:
-    TypeInfo info()
+   const TypeInfo& info()
     {
-      return typeid(void);
+      static TypeInfo result = TypeInfo(typeid(void));
+      return result;
     }
     void* initializeStorage(void*) { return 0;}
     void* ptrFromStorage(void** ) { return 0;}

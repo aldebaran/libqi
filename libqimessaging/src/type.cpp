@@ -29,12 +29,20 @@ namespace qi {
   {
   }
 
-  std::string TypeInfo::asString()
+  std::string TypeInfo::asString() const
   {
     if (stdInfo)
       return stdInfo->name();
     else
       return customInfo;
+  }
+
+  const char* TypeInfo::asCString() const
+  {
+    if (stdInfo)
+      return stdInfo->name();
+    else
+      return customInfo.c_str();
   }
 
   bool TypeInfo::operator==(const TypeInfo& b) const
@@ -505,6 +513,7 @@ namespace qi {
       _name = "DefaultListIteratorType<"
         + _elementType->info().asString()
         + ">(" + boost::lexical_cast<std::string>(this);
+      _info = TypeInfo(_name);
     }
     friend Type* defaultListIteratorType(Type*);
   public:
@@ -517,12 +526,13 @@ namespace qi {
       res.value = *ptr;
       return res;
     }
-    TypeInfo info()
+    const TypeInfo& info()
     {
-      return _name;
+      return _info;
     }
     Type* _elementType;
     std::string _name;
+    TypeInfo _info;
   };
 
   // We want exactly one instance per element type
@@ -555,6 +565,7 @@ namespace qi {
        _name = "DefaultListType<"
         + _elementType->info().asString()
         + ">(" + boost::lexical_cast<std::string>(this);
+        _info = TypeInfo(_name);
     }
     friend Type* defaultListType(Type* element);
   public:
@@ -583,8 +594,13 @@ namespace qi {
        *(GenericValue*)&result = result.clone();
       return result;
     }
+    const TypeInfo& info()
+    {
+      return _info;
+    }
     Type* _elementType;
     std::string _name;
+    TypeInfo _info;
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
     _QI_BOUNCE_TYPE_METHODS_NOINFO(Methods);
   };
@@ -626,6 +642,7 @@ namespace qi {
       + keyType->info().asString() + ", "
       + elementType->info().asString()
       + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _info = TypeInfo(_name);
     }
     friend Type* defaultMapIteratorType(Type* kt, Type* et);
   public:
@@ -655,14 +672,15 @@ namespace qi {
         ptrFromStorage(&s2);
       return p1 == p2;
     }
-    TypeInfo info()
+    const TypeInfo& info()
     {
-      return _name;
+      return _info;
     }
     _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
     Type* _keyType;
     Type* _elementType;
     std::string _name;
+    TypeInfo _info;
   };
 
   // We want exactly one instance per element type
@@ -700,6 +718,7 @@ namespace qi {
       + keyType->info().asString() + ", "
       + elementType->info().asString()
       + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _info = TypeInfo(_name);
     }
     friend Type* defaultMapType(Type* kt, Type* et);
   public:
@@ -743,12 +762,13 @@ namespace qi {
       DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
       return ptr.size();
     }
-    TypeInfo info()
+    const TypeInfo& info()
     {
-      return _name;
+      return _info;
     }
     Type* _keyType;
     Type* _elementType;
+    TypeInfo _info;
     std::string _name;
     _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage>);
   };
@@ -787,7 +807,9 @@ namespace qi {
       _name = "DefaultTupleType<";
       for (unsigned i=0; i<types.size(); ++i)
         _name += types[i]->info().asString() + ",";
-      _name += "(" + boost::lexical_cast<std::string>(this) + ")";
+      _name += ">(" + boost::lexical_cast<std::string>(this) + ")";
+      qiLogDebug("qi.type") << "Instanciating tuple " << _name;
+      _info = TypeInfo(_name);
     }
     friend Type* defaultTupleType(std::vector<Type*> types);
   public:
@@ -806,9 +828,9 @@ namespace qi {
         ptr.resize(index + 1, 0);
       ptr[index] = types[index]->clone(valStorage);
     }
-    TypeInfo info()
+    const TypeInfo& info()
     {
-      return _name;
+      return _info;
     }
     virtual void* clone(void* storage)
     {
@@ -828,6 +850,7 @@ namespace qi {
 
     std::vector<Type*> types;
     std::string _name;
+    TypeInfo _info;
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 

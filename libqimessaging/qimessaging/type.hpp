@@ -45,7 +45,8 @@ public:
   TypeInfo(const std::type_info& info);
   /// Contruct a TypeInfo from a custom string.
   TypeInfo(const std::string& ti);
-  std::string asString();
+  std::string asString() const;
+  const char* asCString() const;
 
   bool operator ==(const TypeInfo& b) const;
   bool operator !=(const TypeInfo& b) const;
@@ -72,7 +73,7 @@ private:
 class QIMESSAGING_API Type
 {
 public:
-  virtual TypeInfo info() =0;
+  virtual const TypeInfo& info() =0;
   // Initialize and return a new storage, from nothing or a T*
   virtual void* initializeStorage(void* ptr=0)=0;
   // Get pointer to type from pointer to storage
@@ -98,7 +99,7 @@ public:
   };
   virtual Kind kind() const;
 
-  std::string infoString() { return info().asString();} // for easy gdb access
+  const char* infoString() { return info().asCString();} // for easy gdb access
 
   std::string signature();
   ///@return a Type on which signature() returns sig.
