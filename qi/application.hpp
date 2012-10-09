@@ -47,7 +47,9 @@ static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atEnter(func);
 #define QI_AT_EXIT(func) \
 static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atExit(func);
 
-#define QI_COMMAND_LINE_OPTIONS(opts)                                 \
+//THIS IS INTERNAL
+//API is not maintained for this function
+#define _QI_COMMAND_LINE_OPTIONS(opts)                                \
 static void _qi_## __LINE__## opt_func() {                            \
   namespace po = boost::program_options;                              \
   po::variables_map vm;                                               \

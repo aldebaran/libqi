@@ -491,7 +491,7 @@ namespace qi {
         removeLogHandler("consoleloghandler");
     }
 
-    QI_COMMAND_LINE_OPTIONS(
+    _QI_COMMAND_LINE_OPTIONS(
       ("verbose,v", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
       ("debug,d", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
       ("quiet,q",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")

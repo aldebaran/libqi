@@ -134,10 +134,3 @@
   * \ingroup qi::Application
   */
 
-  /**
-  * \def QI_COMMAND_LINE_OPTIONS(opts)
-  * \brief Register command line options using boost::program_options
-  * \ingroup qi::Application
-  * Use the () operator as described in boost::program_options
-  * documentation.
-  */
