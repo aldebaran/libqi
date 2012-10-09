@@ -20,7 +20,8 @@ namespace qi {
 
 
   ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient)
-    : _dying(false)
+    : Server()
+    , _dying(false)
     , _sdClient(sdClient)
   {
   }
@@ -30,31 +31,20 @@ namespace qi {
     _dying = true;
   }
 
-//  //this function throw if the object is not found.
-//  //returning a null object would be more efficient in the normal case but...
-//  //this function is always used from bound method that will fail on error
-//  //so the metacall catch the exception and that's cool!
-//  qi::ObjectPtr ObjectRegistrar::object(unsigned int serviceId) {
-//    qi::ObjectPtr ret;
-
-//    {
-//      boost::mutex::scoped_lock sl(_servicesMutex);
-//      BoundServiceMap::iterator it;
-//      it = _services.find(serviceId);
-//      if (it != _services.end())
-//        ret = it->second.object;
-//    }
-//    if (!ret) {
-//      std::stringstream ss;
-//      ss << "Could not find service for id: " << serviceId;
-//      throw std::runtime_error(ss.str());
-//    }
-//    return ret;
-//  }
-
+  void serviceReady(qi::Future<void> fut, qi::Promise<unsigned int> result, unsigned int idx) {
+    if (fut.hasError()) {
+      result.setError(fut.error());
+      return;
+    }
+    result.setValue(idx);
+  }
 
   void ObjectRegistrar::onFutureFinished(qi::Future<unsigned int> fut, long id, qi::Promise<unsigned int> result)
   {
+    if (fut.hasError()) {
+      result.setError(fut.error());
+      return;
+    }
     qi::ServiceInfo              si;
     RegisterServiceMap::iterator it;
 
@@ -92,7 +82,9 @@ namespace qi {
 
     // ack the Service directory to tell that we are ready
     //TODO: async handle.
-    _sdClient->serviceReady(idx);
+    qi::Future<void> fut2 = _sdClient->serviceReady(idx);
+    fut2.connect(boost::bind(&serviceReady, _1, result, idx));
+
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
       _serviceNameToIndex[si.name()] = idx;
@@ -102,7 +94,6 @@ namespace qi {
       _registerServiceRequest.erase(it);
     }
 
-    result.setValue(idx);
   }
 
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::ObjectPtr obj)
@@ -142,11 +133,11 @@ namespace qi {
       BoundServiceMap::iterator it = _services.find(idx);
       if (it != _services.end()) {
         name = it->second.name;
+        _services.erase(it);
       } else {
         qiLogVerbose("qimessaging.Server") << "Can't find name associated to id:" << idx;
       }
-      _services.erase(idx);
-      _server->removeObject(idx);
+      Server::removeObject(idx);
     }
     if (!name.empty())
     {

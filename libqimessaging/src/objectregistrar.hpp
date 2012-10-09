@@ -87,8 +87,6 @@ namespace qi {
 
     bool                                _dying;
     ServiceDirectoryClient             *_sdClient;
-
-    Server                             *_server;
   };
 
 }
