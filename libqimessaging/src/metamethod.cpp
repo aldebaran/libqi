@@ -8,8 +8,8 @@
 namespace qi {
 
   MetaMethod::MetaMethod(unsigned int uid,
-    const std::string& sigret,
-    const std::string& signature)
+                         const std::string& sigret,
+                         const std::string& signature)
   : _uid(uid)
   , _signature(signature)
   , _sigreturn(sigret)

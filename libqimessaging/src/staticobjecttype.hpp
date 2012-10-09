@@ -53,7 +53,7 @@ public:
   virtual const MetaObject& metaObject(void* instance);
   virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
   virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);
-  virtual unsigned int connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
+  virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
   virtual qi::Future<void> disconnect(void* instance, unsigned int linkId);
   /// @return the manageable interface for this instance, or 0 if not available

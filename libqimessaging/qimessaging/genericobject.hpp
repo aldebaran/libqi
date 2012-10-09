@@ -74,7 +74,7 @@ namespace qi {
                    qi::AutoGenericValue p8 = qi::AutoGenericValue());
     void metaEmit(unsigned int event, const GenericFunctionParameters& params);
     bool xMetaEmit(const std::string &signature, const GenericFunctionParameters &in);
-	/** Connect an event to an arbitrary callback.
+        /** Connect an event to an arbitrary callback.
      *
      * If you are within a service, it is recommended that you connect the
      * event to one of your Slots instead of using this method.
@@ -121,7 +121,7 @@ namespace qi {
    SignalSubscriber()
      : eventLoop(0), target(), method(0), enabled(true), active(0)
    {}
-f
+
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
      : handler(func), eventLoop(ctx), target(), method(0), enabled(true), active(0)
    {}

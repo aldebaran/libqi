@@ -78,6 +78,7 @@ namespace qi {
     // Global uid for event subscribers.
     static qi::atomic<long> uid;
     friend class TypeImpl<MetaObjectPrivate>;
+    friend class TypeImpl<MetaObject>;
   };
 
 }

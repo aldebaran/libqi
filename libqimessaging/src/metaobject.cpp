@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+#include <qimessaging/type.hpp>
 #include <qimessaging/metaobject.hpp>
 #include "metaobject_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
@@ -243,5 +244,24 @@ namespace qi {
 QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events);
 QI_TYPE_REGISTER(qi::MetaObjectPrivate);
 
-QI_TYPE_STRUCT_BOUNCE(qi::MetaObject, qi::MetaObjectPrivate, qi::metaObjectPrivate);
-QI_TYPE_REGISTER(qi::MetaObject);
+namespace qi {
+  //template<>
+  class ToTo: public TypeTupleBouncer<qi::MetaObject, qi::MetaObjectPrivate>
+      //class TypeImpl<qi::MetaObject>: public TypeTupleBouncer<qi::MetaObject, qi::MetaObjectPrivate>
+  {
+  public:
+    void adaptStorage(void** storage, void** adapted)
+    {
+      qi::MetaObject* ptr = (qi::MetaObject*)ptrFromStorage(storage);
+      qi::MetaObjectPrivate* tptr = metaObjectPrivate(ptr);
+      *adapted = bounceType()->initializeStorage(tptr);
+    }
+  };
+}
+
+//QI_TYPE_STRUCT(qi::MetaObject, _p);
+//QI_TYPE_REGISTER(qi::MetaObject);
+//QI_TYPE_REGISTER(qi::MetaObject);
+
+static bool plouff1 = qi::registerType(typeid(qi::MetaObject), new qi::ToTo);
+//static bool plouff1 = qi::registerType(typeid(qi::MetaObject), new qi::TypeImpl<qi::MetaObject>);

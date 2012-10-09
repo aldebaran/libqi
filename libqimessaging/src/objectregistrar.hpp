@@ -94,7 +94,6 @@ namespace qi {
 }
 
 QI_TYPE_NOT_CONSTRUCTIBLE(qi::ObjectRegistrar);
-QI_TYPE_NOT_CLONABLE(qi::ObjectRegistrar);
 
 
 #endif  // _SRC_SESSIONSERVER_HPP_

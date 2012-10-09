@@ -19,7 +19,8 @@ namespace qi {
 
   //Server
   Server::Server()
-    : _server()
+    : _boundObjectsMutex()
+    , _server()
     , _dying(false)
   {
     _server.newConnection.connect(boost::bind<void>(&Server::onTransportServerNewConnection, this, _1));

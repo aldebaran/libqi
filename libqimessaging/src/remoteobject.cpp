@@ -21,7 +21,7 @@ namespace qi {
       mo = new qi::MetaObject;
       mo->_p->addMethod("I", "registerEvent::(III)");
       mo->_p->addMethod("v", "unregisterEvent::(III)");
-      mo->_p->addMethod("{IssI}{IsI}I", "metaObject::(I)");
+      mo->_p->addMethod("({I(ssI)}{I(sI)})", "metaObject::(I)");
 
       assert(mo->methodId("registerEvent::(III)") == qi::Message::BoundObjectFunction_RegisterEvent);
       assert(mo->methodId("unregisterEvent::(III)") == qi::Message::BoundObjectFunction_UnregisterEvent);
