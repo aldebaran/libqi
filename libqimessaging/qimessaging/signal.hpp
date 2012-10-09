@@ -51,8 +51,11 @@ namespace qi {
   {
   public:
     explicit SignalBase(const std::string& signature);
+    SignalBase();
     ~SignalBase();
-    std::string signature() const;
+    SignalBase(const SignalBase& b);
+    SignalBase& operator = (const SignalBase& b);
+    virtual std::string signature() const;
 
     typedef unsigned int Link;
 
@@ -81,7 +84,6 @@ namespace qi {
       qi::AutoGenericValue p8 = qi::AutoGenericValue());
 
     std::vector<SignalSubscriber> subscribers();
-
   public:
     boost::shared_ptr<SignalBasePrivate> _p;
   };
@@ -97,6 +99,8 @@ namespace qi {
   {
   public:
     Signal();
+    Signal(const Signal<T>& b);
+    virtual std::string signature() const;
     using boost::function<T>::operator();
     inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
     {

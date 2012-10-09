@@ -48,6 +48,8 @@ namespace qi {
 
   void SignalBase::trigger(const GenericFunctionParameters& params)
   {
+    if (!_p)
+      return;
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalSubscriberMap::iterator i;
     for (i=_p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)
@@ -115,6 +117,10 @@ namespace qi {
 
   SignalBase::Link SignalBase::connect(const SignalSubscriber& src)
   {
+    if (!_p)
+    {
+      _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+    }
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     Link res = ++linkUid;
     _p->subscriberMap[res] = src;
@@ -137,9 +143,28 @@ namespace qi {
     _p->signature = sig;
   }
 
+  SignalBase::SignalBase()
+  {
+  }
+
+  SignalBase::SignalBase(const SignalBase& b)
+  {
+    (*this) = b;
+  }
+
+  SignalBase& SignalBase::operator = (const SignalBase& b)
+  {
+    if (!b._p)
+    {
+      const_cast<SignalBase&>(b)._p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+    }
+    _p = b._p;
+    return *this;
+  }
+
   std::string SignalBase::signature() const
   {
-    return _p->signature;
+    return _p?_p->signature:"";
   }
 
   bool SignalBasePrivate::disconnect(const SignalBase::Link& l)
@@ -165,11 +190,16 @@ namespace qi {
   }
 
   bool SignalBase::disconnect(const Link &link) {
-    return _p->disconnect(link);
+    if (!_p)
+      return false;
+    else
+      return _p->disconnect(link);
   }
 
   SignalBase::~SignalBase()
   {
+    if (!_p)
+      return;
     SignalSubscriberMap::iterator i;
     std::vector<Link> links;
     for (i = _p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)
@@ -183,7 +213,10 @@ namespace qi {
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
   {
+
     std::vector<SignalSubscriber> res;
+    if (!_p)
+      return res;
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalSubscriberMap::iterator i;
     for (i = _p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)

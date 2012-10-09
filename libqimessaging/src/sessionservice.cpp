@@ -112,9 +112,12 @@ namespace qi {
         // The remoteobject in sr->client.remoteObject is still on
         //remove the callback of ServerClient before returning the object
         //TODO: belong to TransportSocketCache
-        sr->socket->connected._p->reset();
-        sr->socket->disconnected._p->reset();
-        sr->socket->messageReady._p->reset();
+        if (sr->socket->connected._p)
+          sr->socket->connected._p->reset();
+        if (sr->socket->disconnected._p)
+          sr->socket->disconnected._p->reset();
+        if (sr->socket->messageReady._p)
+          sr->socket->messageReady._p->reset();
 
 
         //avoid deleting the socket in removeRequest (RemoteObject will do it)

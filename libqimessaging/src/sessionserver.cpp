@@ -399,9 +399,12 @@ namespace qi {
 
     //TODO move that logic into TransportServer
     for (it = _clients.begin(); it != _clients.end(); ++it) {
-      (*it)->disconnected._p->reset();
-      (*it)->connected._p->reset();
-      (*it)->messageReady._p->reset();
+      if ((*it)->disconnected._p)
+        (*it)->disconnected._p->reset();
+      if ((*it)->connected._p)
+        (*it)->connected._p->reset();
+      if ((*it)->messageReady._p)
+        (*it)->messageReady._p->reset();
     }
     _server.close();
   }

@@ -53,16 +53,29 @@ namespace qi
       boost::fusion::for_each(s, Appender(&args));
       _signal.trigger(args);
     }
-    mutable Signal<T> _signal;
+    SignalBase& _signal;
   };
   } // detail
 
   template<typename T>
   Signal<T>::Signal()
-  : SignalBase(detail::functionArgumentsSignature<T>())
+  : SignalBase()
   {
     detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
     * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);
+  }
+
+  template<typename T>
+  Signal<T>::Signal(const Signal<T>& b)
+  {
+    detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
+    * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);
+  }
+
+  template<typename T>
+  std::string Signal<T>::signature() const
+  {
+    return detail::functionArgumentsSignature<T>();
   }
 } // qi
 #endif  // _QIMESSAGING_DETAILS_SIGNAL_HXX_
