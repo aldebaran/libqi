@@ -215,16 +215,18 @@ namespace qi {
 
     //error will come back as a error message
     if (!_socket || !_socket->isConnected() || !_socket->send(msg)) {
-      qiLogError("remoteobject") << "error while sending answer";
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
       if (meth) {
         ss << "Network error while sending data to method: '";
         ss << meth->signature();;
-        ss << "'";
+        ss << "'.";
       } else {
-        ss << "Network error while sending data an unknown method (id=" << method << ")";
+        ss << "Network error while sending data an unknown method (id=" << method << ").";
       }
+      if (!_socket->isConnected())
+        ss << " Socket is not connected.";
+      qiLogError("remoteobject") << ss.str();
       out.setError(ss.str());
 
       {
