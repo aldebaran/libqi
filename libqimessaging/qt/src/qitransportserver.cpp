@@ -27,7 +27,7 @@ void QTcpServerSsl::incomingConnection(int sd)
     {
       // ignore invalid certificates
       serverSocket->ignoreSslErrors();
-      serverSocket->setProtocol(QSsl::TlsV1SslV3);
+      serverSocket->setProtocol(QSsl::AnyProtocol);
       serverSocket->setLocalCertificate(QSslCertificate(_certificate.constData()));
       serverSocket->setPrivateKey(QSslKey(_key.constData(), QSsl::Rsa));
       serverSocket->startServerEncryption();
