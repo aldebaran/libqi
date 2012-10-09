@@ -222,13 +222,10 @@ namespace qi
     {
       qi::Promise<GenericValue>* out = new qi::Promise<GenericValue>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
+      qi::Future<GenericValue> result = out->future();
       el->asyncCall(0,
         MFunctorCall(func, pCopy, out, noCloneFirst));
-      return out->future();
-      /*
-        boost::bind(&functor_call,
-          func,
-          pCopy, out, noCloneFirst));*/
+      return result;
     }
   }
 
