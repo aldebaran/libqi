@@ -8,6 +8,9 @@
 include_directories(".")
 
 function(qi_create_session_test name)
+  if (DEFINED BUILD_TESTS AND NOT BUILD_TESTS)
+    return()
+  endif()
   cmake_parse_arguments(ARG "" "TIMEOUT" "ARGUMENTS;SRC;DEPENDS" ${ARGN})
   qi_create_gtest(${name} SRC ${ARG_SRC} DEPENDS ${ARG_DEPENDS} NO_ADD_TEST)
   qi_add_test(${name}_direct ${name} ARGUMENTS --mode=direct ${ARG_ARGUMENTS} TIMEOUT ${ARG_TIMEOUT})
