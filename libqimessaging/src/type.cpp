@@ -474,11 +474,11 @@ namespace qi {
         for (Signature::iterator child = c.begin(); child != c.end(); child++)
         {
           Type* t = fromSignature(child);
-          qiLogDebug("qi.type") << "FS " << child.signature() << " " << t;
+          qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
         Type* res = defaultTupleType(types);
-        qiLogDebug("qi.type") <<"->FS " << i.signature() << " " << res;
+        qiLogDebug("qi.type") <<"Resulting tuple " << i.signature() << " " << res->infoString();
         return res;
       }
     case Signature::Type_Dynamic:
@@ -494,7 +494,9 @@ namespace qi {
     if (sig.size() != 1)
       qiLogWarning("qi.type") << "fromSignature(): signature has more than one element";
     Signature::iterator i = sig.begin();
-    return ::qi::fromSignature(i);
+    Type* result = ::qi::fromSignature(i);
+    qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << result->infoString();
+    return result;
   }
 
   // Default list
