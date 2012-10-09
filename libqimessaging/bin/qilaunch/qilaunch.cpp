@@ -6,7 +6,8 @@
 static std::vector<std::string> modules;
 static std::string listenTo;
 static std::string sd;
-QI_COMMAND_LINE_OPTIONS(
+
+_QI_COMMAND_LINE_OPTIONS(
   ("module,m",value<std::vector<std::string> >(&modules) , "Load given module")
   ("listen,l", value<std::string>(&listenTo), "Address to listen to (default: localhost)")
   ("master-address,m", value<std::string>(&sd), "Address of the service directory")
