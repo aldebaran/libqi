@@ -27,7 +27,7 @@ namespace qi {
       bool hasError(int msecs = 30000) const;
       const std::string &error() const;
       void reset();
-
+      boost::mutex& mutex();
     protected:
       void reportReady();
       void reportError(const std::string &message);
@@ -64,10 +64,15 @@ namespace qi {
       }
 
       unsigned int connect(qi::Future<T> future, boost::function<void (qi::Future<T>)> fun, qi::EventLoop *evloop) {
-        unsigned int res = _onResult.connect(fun, evloop);
+        bool ready;
+        unsigned int res;
+        {
+          boost::mutex::scoped_lock lock(mutex());
+          res = _onResult.connect(fun, evloop);
+          ready = isReady();
+        }
         //result already ready, notify the callback
-        //TODO: if evLoop use it
-        if (isReady()) {
+        if (ready) {
           if (evloop)
             evloop->asyncCall(1, boost::bind<void>(fun, future));
           else

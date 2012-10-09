@@ -87,6 +87,10 @@ namespace qi {
       _p->_hasError = false;
     }
 
+    boost::mutex& FutureBase::mutex()
+    {
+      return _p->_mutex;
+    }
   }
 
 }
