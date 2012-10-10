@@ -330,14 +330,15 @@ ServiceDirectory::~ServiceDirectory()
 
 bool ServiceDirectory::listen(const qi::Url &address)
 {
-  std::vector<std::string> eps;
   ServiceInfo             &si = _p->connectedServices[1];
-
-  eps.push_back(address.str());
-  si.setEndpoints(eps);
 
   if (_p->_server.listen(address))
   {
+    std::vector<std::string> eps;
+    std::vector<qi::Url> epu = _p->_server.endpoints();
+    for (unsigned i=0; i < epu.size(); ++i)
+      eps.push_back(epu[i].str());
+    si.setEndpoints(eps);
     qiLogVerbose("qimessaging.ServiceDirectory") << "Started ServiceDirectory at " << _p->_server.listenUrl().str();
 
     return true;
@@ -374,6 +375,14 @@ void ServiceDirectory::close() {
 }
 
 qi::Url ServiceDirectory::listenUrl() const {
+  std::vector<qi::Url> eps = _p->_server.endpoints();
+  // Do not return localhost endpoint
+  for (unsigned i=0; i<eps.size(); ++i)
+    if (eps[i].protocol() != "127.0.0.1" && eps[i].protocol() != "::1")
+      return eps[i];
+  // ... unless there is no other
+  if (!eps.empty())
+    return eps[0];
   return _p->_server.listenUrl();
 }
 
