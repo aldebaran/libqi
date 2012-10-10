@@ -548,6 +548,11 @@ bool Gateway::listen(const qi::Url &address)
   return _p->listen(address);
 }
 
+qi::Url Gateway::listenUrl() const
+{
+  return _p->_transportServer->listenUrl();
+}
+
 /* RemoteGateway bindings */
 RemoteGateway::RemoteGateway()
   : _p(new GatewayPrivate())
