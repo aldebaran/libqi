@@ -100,6 +100,7 @@ namespace qi {
   public:
     Signal();
     Signal(const Signal<T>& b);
+    Signal<T>& operator = (const Signal<T>& b);
     virtual std::string signature() const;
     using boost::function<T>::operator();
     inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())

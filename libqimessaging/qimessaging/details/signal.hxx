@@ -66,6 +66,13 @@ namespace qi
   }
 
   template<typename T>
+  Signal<T>& Signal<T>::operator = (const Signal<T>& b)
+  { // Keep our boost::function as is.
+    *(SignalBase*)this = b;
+    return *this;
+  }
+
+  template<typename T>
   Signal<T>::Signal(const Signal<T>& b)
   {
     detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
