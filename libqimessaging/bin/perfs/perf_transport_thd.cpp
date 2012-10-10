@@ -14,11 +14,15 @@
 #endif
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 
 #include <qimessaging/transportsocket.hpp>
 #include <qimessaging/session.hpp>
-#include "dataperftimer.hpp"
+#include <qiperf/dataperfsuite.hpp>
 
+#include <qi/application.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/genericobject.hpp>
@@ -30,15 +34,6 @@ static bool clientDone = false;
 
 int client_calls(qi::Session *session, qi::ObjectPtr obj)
 {
-#if 0
-  cpu_set_t mask;
-  CPU_ZERO(&mask);
-  CPU_SET(0, &mask);
-  CPU_SET(1, &mask);
-  unsigned int len = sizeof(mask);
-  qiLogInfo("sched") << "::" << pthread_setaffinity_np(pthread_self(), len, &mask);
-#endif
-
   if (!obj)
   {
     obj = session->service("serviceTest");
@@ -50,14 +45,14 @@ int client_calls(qi::Session *session, qi::ObjectPtr obj)
     }
   }
 
-  qi::perf::DataPerfTimer dp ("Transport synchronous call");
+  qi::DataPerf dp;
   for (int i = 0; i < 12; ++i)
   {
     char character = 'c';
     unsigned int numBytes = (unsigned int)pow(2.0f, (int)i);
     std::string requeststr = std::string(numBytes, character);
 
-    dp.start(gLoopCount, numBytes);
+    dp.start("ohoh", gLoopCount, numBytes);
     for (int j = 0; j < gLoopCount; ++j)
     {
       static int id = 1;
@@ -72,7 +67,7 @@ int client_calls(qi::Session *session, qi::ObjectPtr obj)
       if (result != requeststr)
         qiLogInfo("perf_transport_thd") << "error content" << std::endl;
     }
-    dp.stop(1);
+    dp.stop();
   }
   return 0;
 }
@@ -184,13 +179,36 @@ int main_server()
 
 int main(int argc, char **argv)
 {
-#if 0
-  cpu_set_t mask;
-  CPU_ZERO(&mask);
-  CPU_SET(0, &mask);
-  unsigned int len = sizeof(mask);
-  qiLogInfo("sched") << "::" << sched_setaffinity(getpid(), len, &mask);
-#endif
+  qi::Application app(argc, argv);
+
+  std::string usage = "If no mode is specified, run client and server in same process\n" \
+                      "Environment used: VALGRIND, NO_GATEWAY, SYNCHRONOUS\n";
+
+  po::options_description desc(std::string("Usage:\n ")+argv[0]+"\n" + usage);
+  desc.add_options()
+    ("help,h", "Print this help.")
+    ("all", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"), "(default) Run all in the same process.")
+    ("client,c", po::value<std::string>(), "Run as a client (tcp://xxx.xxx.xxx.xxx:xxxxx).")
+    ("server,s", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"), "Run as a server.")
+    ("gateway", po::value<std::string>(), "Run as a gateway.")
+    ("local", "Run in local.")
+    ("thread", po::value<int>()->default_value(1, "1"),
+     "Number of thread to launch for clients")
+    ("backend", po::value<std::string>()->default_value("normal"),
+     "Backend to use to output data (normal | codespeed).")
+    ("output,o", po::value<std::string>()->default_value(""),
+     "File where output data (if not precise output go to stdout).");
+
+
+  po::variables_map vm;
+  po::store(po::command_line_parser(argc, argv)
+            .options(desc).allow_unregistered().run(), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << std::endl;
+    return EXIT_SUCCESS;
+  }
 
   if (argc > 1 && !strcmp(argv[1], "--client-shared"))
   {

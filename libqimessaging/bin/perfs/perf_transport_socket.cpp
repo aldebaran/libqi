@@ -1,6 +1,7 @@
 /*
 ** Author(s):
 **  - Laurent LEC <gestes@aldebaran-robotics.com>
+**  - Nicolas Cornu <ncornu@aldebaran-robotics.com>
 **
 ** Copyright (C) 2010, 2012 Aldebaran Robotics
 */
@@ -12,16 +13,21 @@
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/program_options.hpp>
 
+namespace po = boost::program_options;
+
+#include <qi/application.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/session.hpp>
-#include "dataperftimer.hpp"
 
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 
-static int gLoopCount = 10000;
+#include <qiperf/dataperfsuite.hpp>
+
+static int gLoopCount = 500;
 static const int gThreadCount = 1;
+qi::DataPerfSuite* out;
 
 void TSIOnMessageReady(const qi::Message &QI_UNUSED(msg))
 {
@@ -43,64 +49,59 @@ public:
   }
 };
 
-int thd_client(qi::TransportSocketPtr socket)
+int thd_client(qi::TransportSocketPtr socket, const std::string& addr)
 {
-  qi::Session session;
-
   if (!socket)
   {
     socket = qi::makeTransportSocket("tcp");
-    socket->connect("tcp://127.0.0.1:5555");
+
     socket->messageReady.connect(boost::bind<void>(&TSIOnMessageReady, _1));
+
+    socket->connect(addr);
   }
 
-  qi::perf::DataPerfTimer dp ("Transport synchronous call");
+  qi::DataPerf dp;
   qi::Buffer buf;
   char buf2[512];
   buf.write(buf2, 512);
-  qi::Message msg;
-  msg.setBuffer(buf);
-  msg.setType(qi::Message::Type_Call);
-  msg.setObject(qi::Message::GenericObject_Main);
-  msg.setFunction(1);
 
-  for (int i = 0; i < 12; ++i)
+  dp.start("ahah", gLoopCount, 512);
+  for (int j = 0; j < gLoopCount; ++j)
   {
-    dp.start(gLoopCount, 512);
-    for (int j = 0; j < gLoopCount; ++j)
-    {
-      socket->send(msg);
-    }
-    dp.stop(1);
+    qi::Message msg;
+    msg.setBuffer(buf);
+    msg.setType(qi::Message::Type_Call);
+    msg.setObject(qi::Message::GenericObject_Main);
+    msg.setFunction(1);
+
+    if (!(socket->send(msg)))
+      return 1;
   }
+  dp.stop();
+  *out << dp;
+
   return 0;
 }
 
-int main_client(bool shared)
+int main_client(bool shared, unsigned int threadCount, const std::string& addr)
 {
-  const int count = 4;
   qi::TransportSocketPtr socket;
-  qi::Session session;
-  boost::thread thd[count];
+
+  boost::thread thd[threadCount < 100 ? threadCount : 100];
 
   if (shared)
   {
     socket = qi::makeTransportSocket("tcp");
-    qiLogInfo("perf_transport_socket") << "Socket will be shared";
-    socket->connect("tcp://127.0.0.1:5555");
+    socket->connect(addr);
     socket->messageReady.connect(boost::bind<void>(&TSIOnMessageReady, _1));
   }
-  else
+
+  for (unsigned int i = 0; i < threadCount; ++i)
   {
-    qiLogInfo("perf_transport_socket") << "Socket won't be shared";
+    thd[i] = boost::thread(boost::bind(&thd_client, socket, addr));
   }
 
-  for (int i = 0; i < count; ++i)
-  {
-    thd[i] = boost::thread(boost::bind(&thd_client, socket));
-  }
-
-  for (int i = 0; i < count; ++i)
+  for (unsigned int i = 0; i < threadCount; ++i)
   {
     thd[i].join();
   }
@@ -108,14 +109,14 @@ int main_client(bool shared)
   return 0;
 }
 
-int main_server()
+int main_server(const std::string& addr)
 {
   TSIReply tsi;
   qi::TransportServer server;
-  qi::Session session;
-  server.listen("tcp://127.0.0.1:5555");
+
+  server.listen(addr);
   server.newConnection.connect(boost::bind(&TSIReply::onTransportServerNewConnection, tsi, _1));
-  qiLogInfo("server") << "Now listening on tcp://127.0.0.1:5555";
+  std::cout << "Now listening on " << server.listenUrl().str() << std::endl;
   while (true)
     qi::os::sleep(60);
 
@@ -124,22 +125,64 @@ int main_server()
 
 int main(int argc, char **argv)
 {
-  if (argc > 1 && !strcmp(argv[1], "--client-unshared"))
-  {
-    return main_client(false);
+  qi::Application app(argc, argv);
+
+  po::options_description desc(std::string("Usage:\n ")+argv[0]);
+  desc.add_options()
+    ("help,h", "Print this help.")
+    ("client-unshared", po::value<std::string>(),
+     "Run an unshared client (tcp://x.x.x.x:x)")
+    ("client-shared", po::value<std::string>(),
+     "Run as a shared client (tcp://x.x.x.x:x)")
+    ("server,s", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"),
+     "Run as a server")
+    ("thread,t", po::value<unsigned int>()->default_value(1, "1"),
+     "How many clients run in the same time")
+    ("backend,b", po::value<std::string>()->default_value("normal"),
+     "Backend to use to output data (normal | codespeed).")
+    ("output,o", po::value<std::string>()->default_value(""),
+     "File where output data (if not precise output go to stdout).");
+
+  po::variables_map vm;
+  po::store(po::command_line_parser(argc, argv)
+            .options(desc).allow_unregistered().run(), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << std::endl;
+    return EXIT_SUCCESS;
   }
-  else if (argc > 1 && !strcmp(argv[1], "--client-shared"))
-  {
-    return main_client(true);
+
+  qi::DataPerfSuite::OutputType type;
+  if (vm["backend"].as<std::string>() == "normal")
+    type = qi::DataPerfSuite::OutputType_Normal;
+  else if (vm["backend"].as<std::string>() == "codespeed")
+    type = qi::DataPerfSuite::OutputType_Codespeed;
+  else {
+    std::cerr << "This backend doesn't exist, fallback in [normal]!" << std::endl;
+    type = qi::DataPerfSuite::OutputType_Normal;
   }
-  else if (argc > 1 && !strcmp(argv[1], "--server"))
+
+  out = new qi::DataPerfSuite("qimessaging", "perf_transport_socket", type, vm["output"].as<std::string>());
+
+  if (vm.count("client-unshared"))
   {
-    return main_server();
+    std::cout << vm["thread"].as<unsigned int>() << std::endl;
+    return main_client(false, vm["thread"].as<unsigned int>(), vm["client-unshared"].as<std::string>());
+  }
+  else if (vm.count("client-shared"))
+  {
+    return main_client(true, vm["thread"].as<unsigned int>(), vm["client-shared"].as<std::string>());
+  }
+  else if (vm.count("server"))
+  {
+    return main_server(vm["server"].as<std::string>());
   }
   else
   {
-    std::cout << "Usage: " << argv[0]
-              << " --{client-{shared,unshared},server}" << std::endl;
+    std::cout << desc << std::endl;
+    return EXIT_FAILURE;
   }
-  return 0;
+
+  return EXIT_SUCCESS;
 }
