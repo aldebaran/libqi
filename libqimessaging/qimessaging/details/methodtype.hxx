@@ -61,10 +61,18 @@ namespace qi
     void* call(void* method, void* object,
      void** args, unsigned int argc)
     {
+#ifdef __GNUC__
       void* nargs[argc+1];
+#else
+      void** nargs = new void*[argc+1];
+#endif
       nargs[0] = object;
       memcpy(nargs + 1, args, argc);
-      return FunctionTypeImpl<T>().call(method, nargs, argc+1);
+      void* result = FunctionTypeImpl<T>().call(method, nargs, argc+1);
+#ifndef __GNUC__
+      delete[] nargs;
+#endif
+      return result;
     }
     GenericValue call(void* method, GenericValue object,
       const std::vector<GenericValue>& args)
