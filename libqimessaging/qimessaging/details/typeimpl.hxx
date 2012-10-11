@@ -213,5 +213,13 @@ template<typename T> class TypeImpl: public DefaultTypeImpl<T>
 };
 
 }
+namespace _qi_
+{
+  namespace qi
+  {
+    // Support for QI_TYPE_STRUCT_REGISTER and QI_TYPE_STRUCT_BOUNCE_REGISTER
+    template<typename T> class TypeImpl {};
+  }
+}
 
 #endif
