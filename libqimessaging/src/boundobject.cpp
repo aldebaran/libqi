@@ -10,7 +10,7 @@
 
 namespace qi {
 
-  static GenericValue forwardEvent(const GenericFunction& params,
+  static GenericValue forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
@@ -37,28 +37,6 @@ namespace qi {
   {
   }
 
-  static qi::MetaObject serviceSpecialMetaObject(qi::ObjectPtr self) {
-    qi::MetaObject mob;
-
-    unsigned int regId = mob._p->addMethod("I", "registerEvent::(III)");
-    unsigned int unrId = mob._p->addMethod("v", "unregisterEvent::(III)");
-    unsigned int metId = mob._p->addMethod("{IssI}{IsI}I", "metaObject::(I)");
-
-    //X here a transportsocket
-    unsigned int regId2 = self->metaObject().methodId("registerEvent::(IIIX)");
-    unsigned int unrId2 = self->metaObject().methodId("unregisterEvent::(IIIX)");
-    unsigned int metId2 = self->metaObject().methodId("metaObject::(IX)");
-    assert(regId == regId2);
-    assert(unrId == unrId2);
-    assert(metId == metId2);
-
-    int id = self->metaObject().methodId("metaObject::(IX)");
-    assert(self->metaObject().method(id)->sigreturn() == mob.method(id)->sigreturn());
-
-    //assert(mob.methodId())
-    return mob;
-  }
-
   qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self) {
     qi::ObjectTypeBuilder<ServiceBoundObject> ob;
 
@@ -69,19 +47,19 @@ namespace qi {
   }
 
   //Bound Method
-  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId, qi::TransportSocketPtr socket) {
+  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
     //throw on error
-    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, socket));
+    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, currentSocket()));
     unsigned int linkId = _object->connect(eventId, mc);
 
-    _links[socket][remoteLinkId] = RemoteLink(linkId, eventId);
+    _links[currentSocket()][remoteLinkId] = RemoteLink(linkId, eventId);
     return linkId;
   }
 
   //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId, qi::TransportSocketPtr socket) {
+  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
     //throw on error
-    ServiceLinks&          sl = _links[socket];
+    ServiceLinks&          sl = _links[currentSocket()];
     ServiceLinks::iterator it = sl.find(remoteLinkId);
 
     if (it == sl.end())
@@ -95,70 +73,79 @@ namespace qi {
   }
 
   static void metaObjectConcat(qi::MetaObject *dest, const qi::MetaObject &source) {
-    //assert dest->maxid < 10
-    //TODO
-    //if (*(dest->_p->uid) > 10)
-    //  qiLogError("BoundObject") << "Special metaObject too fat";
-
     if (!dest->_p->addMethods(10, source.methodMap()))
       qiLogError("BoundObject") << "cant merge metaobject (methods)";
     if (!dest->_p->addSignals(10, source.signalMap()))
       qiLogError("BoundObject") << "cant merge metaobject (signals)";
-    //concat source to dest
   }
 
   //Bound Method
-  qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId, qi::TransportSocketPtr socket) {
-    qi::MetaObject mo = serviceSpecialMetaObject(_self);
+  qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
+    qi::MetaObject mo = _self->metaObject();
     //we inject specials methods here
     metaObjectConcat(&mo, _object->metaObject());
     return mo;
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
-    qi::ObjectPtr obj;
-    unsigned int  funcId;
-    bool          isSpecialCall;
+    qi::ObjectPtr    obj;
+    unsigned int     funcId;
+    qi::MetaCallType mct;
+
+    _currentSocket = socket;
     //choose between special function (on BoundObject) or normal calls
     if (msg.function() < 10) {
       obj = _self;
-      isSpecialCall = true;
+      mct = MetaCallType_Direct;
       funcId = msg.function();
     } else {
       obj = _object;
+      mct = _callType;
       funcId = msg.function() - 10;
-      isSpecialCall = false;
     }
 
-    GenericFunctionParameters mfp(msg.buffer());
+    std::string sigparam;
+    GenericFunctionParameters mfp;
 
-    //socket object always take the TransportSocketPtr as last parameter, inject it!
-    if (isSpecialCall && (msg.type() == qi::Message::Type_Call || msg.type() == Message::Type_Event)) {
+    if (msg.type() == qi::Message::Type_Call) {
       const qi::MetaMethod *mm = obj->metaObject().method(funcId);
-      if (mm) {
-        std::vector<std::string> v = qi::signatureSplit(mm->signature());
-        Signature                s(Signature(v[2]).begin().children());
-        Signature::iterator      it = s.begin();
-        unsigned                 i;
-        std::stringstream        sig;
-        //discard the last parameter, it's the TransportSocketPtr (which we dont have atm)
-        for (i = 0; i < s.size() - 1; ++i) {
-          sig << it.signature();
-          ++it;
-        }
-        mfp.setSignature(sig.str());
-        mfp.convertToValues();
+      if (!mm) {
+        std::stringstream ss;
+        ss << "No such method " << msg.address();
+        qiLogError("qi::Server") << ss.str();
+        qi::Promise<GenericValue> prom;
+        prom.setError(ss.str());
+        serverResultAdapter(prom.future(), socket, msg.address());
+        return;
+      }
+      sigparam = mm->signature();
+    }
 
-        //Create a new value, because MFP will destroy all object on shutdown
-        //qi::TransportSocketPtr *psocket = new qi::TransportSocketPtr(socket);
-        //TODO: should pushBack clone object itself, when invalidOnDestroy is set?
-        mfp.pushBack(socket);
+    if (msg.type() == qi::Message::Type_Event) {
+      const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
+      if (ms)
+        sigparam = ms->signature();
+      else {
+        const qi::MetaMethod *mm = obj->metaObject().method(funcId);
+        if (mm)
+          sigparam = mm->signature();
+        else {
+          qiLogError("qi::Server") << "No such signal/method on event message " << msg.address();
+          return;
+        }
       }
     }
+
+
+    sigparam = signatureSplit(sigparam)[2];
+    sigparam = sigparam.substr(1, sigparam.length()-2);
+    //socket object always take the TransportSocketPtr as last parameter, inject it!
+    mfp = GenericFunctionParameters::fromBuffer(sigparam, msg.buffer());
+
     switch (msg.type())
     {
     case Message::Type_Call: {
-         qi::Future<MetaFunctionResult> fut = obj->metaCall(funcId, mfp, _callType);
+         qi::Future<GenericValue> fut = obj->metaCall(funcId, mfp, _callType);
          fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
       }
       break;
@@ -169,6 +156,9 @@ namespace qi {
     default:
         qiLogError("qi.Server") << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
     }
+    //########################
+    mfp.destroy();
+    _currentSocket.reset();
   }
 
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, int error)
@@ -179,8 +169,8 @@ namespace qi {
     {
       for (ServiceLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
         _object->disconnect(jt->second.localLinkId);
+      _links.erase(it);
     }
-    _links.erase(it);
   }
 
   qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object) {

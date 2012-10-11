@@ -51,9 +51,12 @@ namespace qi {
 
   public:
     //PUBLIC BOUND METHODS
-    unsigned int   registerEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId, qi::TransportSocketPtr socket);
-    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId, qi::TransportSocketPtr socket);
-    qi::MetaObject metaObject(unsigned int serviceId, qi::TransportSocketPtr socket);
+    unsigned int   registerEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
+    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
+    qi::MetaObject metaObject(unsigned int serviceId);
+
+  public:
+    inline qi::TransportSocketPtr currentSocket() const { return _currentSocket; }
 
   public:
     //BoundObject Interface
@@ -72,10 +75,11 @@ namespace qi {
     BySocketServiceLinks  _links;
 
   private:
-    unsigned int     _serviceId;
-    qi::ObjectPtr    _object;
-    qi::ObjectPtr    _self;
-    qi::MetaCallType _callType;
+    qi::TransportSocketPtr _currentSocket;
+    unsigned int           _serviceId;
+    qi::ObjectPtr          _object;
+    qi::ObjectPtr          _self;
+    qi::MetaCallType       _callType;
   };
 
 
