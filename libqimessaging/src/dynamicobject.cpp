@@ -147,7 +147,7 @@ namespace qi
     if (!s)
       return qi::makeFutureError<unsigned int>("Cannot find signal");
     SignalBase::Link l = s->connect(subscriber);
-     if (l > 0xFFFF)
+    if (l > 0xFFFF)
       qiLogError("object") << "Signal id too big";
     return qi::Future<unsigned int>((event << 16) + l);
   }
