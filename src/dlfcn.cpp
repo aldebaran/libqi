@@ -19,36 +19,22 @@
 # endif
 
 #include <qi/qi.hpp>
+#include <qi/path.hpp>
+
 #include "src/filesystem.hpp"
 
 namespace qi {
   namespace os {
 
-    static std::string libNameToFileName(const std::string &refLibraryName)
-    {
-     #ifdef _WIN32
-      static const char szPre[] = "";
-      static const char szExt[] = ".dll";
-     #endif
-     #ifdef __APPLE__
-      static const char szPre[] = "lib";
-      static const char szExt[] = ".dylib";
-     #endif
-     #ifdef __linux__
-      static const char szPre[] = "lib";
-      static const char szExt[] = ".so";
-     #endif
-      if (refLibraryName.find(szExt) != std::string::npos)
-        return refLibraryName;
-      return szPre + refLibraryName + szExt;
-    }
-
-
     void *dlopen(const char *filename, int flag) {
+      std::string fullName = path::findLib(filename);
+      if (fullName.empty())
+      {
+        qiLogError("qi.dlopen") << "Could not locate library " << filename;
+        return 0;
+      }
       void *handle = NULL;
-      boost::filesystem::path fname(filename, qi::unicodeFacet());
-      std::string file = libNameToFileName(fname.filename().string());
-      fname = fname.parent_path() / file;
+      boost::filesystem::path fname(fullName, qi::unicodeFacet());
       qiLogDebug("qi.dlopen") << "opening " << fname;
      #ifdef WIN32
       handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
