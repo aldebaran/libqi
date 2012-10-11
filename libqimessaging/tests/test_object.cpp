@@ -417,8 +417,19 @@ TEST(TestObject, TypeType)
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());
   ASSERT_EQ(12, val.asInt());
+  vals = convert(1.5f);
+  val = vals[0];
+  ASSERT_EQ(Type::Float, val.kind());
+  ASSERT_EQ(1.5, val.asDouble());
 
-  vals = convert(1.5);
+  /* We go through a named variable.
+   * A constant has no reason to have its address survive
+   * the convert() function call.
+   * (Problem arises under vcxx release).
+   * It works above because tested types are using byvalue Type.
+   */
+  double dv = 1.5;
+  vals = convert(dv);
   val = vals[0];
   ASSERT_EQ(Type::Float, val.kind());
   ASSERT_EQ(1.5, val.asDouble());
