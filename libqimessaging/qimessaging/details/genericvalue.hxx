@@ -115,6 +115,12 @@ namespace qi {
   {
   }
 
+  inline GenericValue::GenericValue(Type* type)
+    : type(type)
+    , value(type->initializeStorage())
+  {
+  }
+
   inline Type::Kind GenericValue::kind() const
   {
     if (!type)
