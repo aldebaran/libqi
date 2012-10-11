@@ -134,9 +134,12 @@ namespace qi {
       std::set<TransportSocketPtr>::iterator it;
       //TODO move that logic into TransportServer
       for (it = _sockets.begin(); it != _sockets.end(); ++it) {
-        (*it)->connected._p->reset();
-        (*it)->disconnected._p->reset();
-        (*it)->messageReady._p->reset();
+        if ((*it)->connected._p)
+          (*it)->connected._p->reset();
+        if ((*it)->disconnected._p)
+          (*it)->disconnected._p->reset();
+        if ((*it)->messageReady._p)
+          (*it)->messageReady._p->reset();
       }
     }
     _server.close();

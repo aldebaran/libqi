@@ -104,7 +104,7 @@ TEST(QiSession, testClose)
   std::vector<qi::ServiceInfo> services = session.services();
   EXPECT_EQ(0U, services.size());
 
-  connected = session.connect(connectionAddr);
+  connected = session.connect(ss.str());
   ASSERT_TRUE(connected);
   session.unregisterService(idx.value());
 }
