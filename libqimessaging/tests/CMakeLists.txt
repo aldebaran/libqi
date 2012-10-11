@@ -7,7 +7,7 @@
 #add_subdirectory(test_endpoint_context)
 add_subdirectory(libtestsession)
 
-qi_create_lib(testmodule  SRC testmodule.cpp DEPENDS QI QIMESSAGING)
+qi_create_lib(testmodule  SRC testmodule.cpp SHARED DEPENDS QI QIMESSAGING SUBFOLDER naoqi)
 
 qi_create_gtest(test_module               SRC test_module.cpp               DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_url                  SRC test_url.cpp                  DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)

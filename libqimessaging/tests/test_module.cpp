@@ -3,8 +3,6 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <boost/filesystem.hpp>
-
 #include <gtest/gtest.h>
 
 #include <qi/application.hpp>
@@ -17,9 +15,7 @@
 qi::Session* session;
 TEST(Module, Load)
 {
-  boost::filesystem::path p(qi::Application::program());
-  session->loadService(
-    p.parent_path().string() + "/../lib/testmodule");
+  session->loadService("naoqi/testmodule");
 
   session->waitForServiceReady("test", 3000);
 
