@@ -106,9 +106,17 @@ std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
         std::pair<GenericValue, GenericValue> kv = *i;
         std::pair<GenericValue, bool> ck, cv;
         if (!sameKey)
+        {
           ck = kv.first.convert(targetKeyType);
+          if (!ck.first.type)
+            return std::make_pair(GenericValue(), false);
+        }
         if (!sameElem)
+        {
           cv = kv.second.convert(targetElementType);
+          if (!cv.first.type)
+            return std::make_pair(GenericValue(), false);
+        }
         mresult.insert(sameKey?kv.first:ck.first, sameElem?kv.second:cv.first);
         if (!sameKey && ck.second)
           ck.first.destroy();
