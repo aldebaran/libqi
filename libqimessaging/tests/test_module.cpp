@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   qi::Session s;
   qi::ServiceDirectory sd;
   sd.listen("tcp://localhost:0");
-  s.connect(sd.listenUrl());
+  s.connect(sd.endpoints()[0]);
   s.listen("tcp://localhost:0");
   session = &s;
   return RUN_ALL_TESTS();

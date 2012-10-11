@@ -42,7 +42,7 @@ namespace qi {
     bool addObject(unsigned int idx, qi::BoundObjectPtr obj);
     bool removeObject(unsigned int idx);
 
-    std::vector<std::string> endpoints() const;
+    std::vector<qi::Url> endpoints() const;
 
   private:
     void setSocketObjectEndpoints();
@@ -67,7 +67,6 @@ namespace qi {
     std::set<TransportSocketPtr>        _sockets;
     boost::recursive_mutex              _socketsMutex;
 
-    std::vector<std::string>            _endpoints;
   public:
     TransportServer                     _server;
     bool _dying;

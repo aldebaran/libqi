@@ -57,12 +57,12 @@ protected:
   void SetUp()
   {
     ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
-    ASSERT_TRUE(session.connect(sd.listenUrl()));
+    ASSERT_TRUE(session.connect(sd.endpoints()[0]));
     ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
     ASSERT_GT(session.registerService("coin", oserver).wait(), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
-    ASSERT_TRUE(sclient.connect(sd.listenUrl()));
+    ASSERT_TRUE(sclient.connect(sd.endpoints()[0]));
     std::vector<qi::ServiceInfo> services = sclient.services();
     EXPECT_EQ(2U, services.size());
     oclient = sclient.service("coin");

@@ -22,6 +22,7 @@ namespace qi
     bool listen(const qi::Url &listenAddress);
     void close();
     qi::Url listenUrl() const;
+    std::vector<qi::Url> endpoints() const;
 
   private:
     ServiceDirectoryPrivate *_p;

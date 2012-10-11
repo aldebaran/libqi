@@ -156,12 +156,6 @@ namespace qi {
     if (!_server.listen(url))
       return false;
 
-    std::vector<qi::Url>                 epsUrl = _server.endpoints();
-    std::vector<qi::Url>::const_iterator epsUrlIt;
-    _endpoints.clear();
-    for (epsUrlIt = epsUrl.begin(); epsUrlIt != epsUrl.end(); epsUrlIt++) {
-      _endpoints.push_back((*epsUrlIt).str());
-    }
     qiLogVerbose("qimessaging.Server") << "Started Server at " << _server.listenUrl().str();
     return true;
   }
@@ -178,8 +172,8 @@ namespace qi {
     }
   }
 
-  std::vector<std::string> Server::endpoints() const {
-    return _endpoints;
+  std::vector<qi::Url> Server::endpoints() const {
+    return _server.endpoints();
   }
 
 

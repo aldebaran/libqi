@@ -26,8 +26,8 @@ TestSessionPair::TestSessionPair()
   _sd.listen(listeningAddress.str());
 
   // #3 Get client and server sessions.
-  _client = new TestSession(_sd.listenUrl().str(), false, _mode);
-  _server = new TestSession(_sd.listenUrl().str(), true, _mode);
+  _client = new TestSession(_sd.endpoints()[0].str(), false, _mode);
+  _server = new TestSession(_sd.endpoints()[0].str(), true, _mode);
 }
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode)
@@ -45,8 +45,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode)
   _sd.listen(listeningAddress.str());
 
   // #2 Get client and server sessions.
-  _client = new TestSession(_sd.listenUrl().str(), false, mode);
-  _server = new TestSession(_sd.listenUrl().str(), true, mode);
+  _client = new TestSession(_sd.endpoints()[0].str(), false, mode);
+  _server = new TestSession(_sd.endpoints()[0].str(), true, mode);
 }
 
 TestSessionPair::TestSessionPair(TestSessionPair &other)
@@ -55,8 +55,8 @@ TestSessionPair::TestSessionPair(TestSessionPair &other)
   _mode = TestMode::getTestMode();
 
   // #2 Get client and server sessions using other pair service directory.
-  _client = new TestSession(other._sd.listenUrl().str(), false, _mode);
-  _server = new TestSession(other._sd.listenUrl().str(), true, _mode);
+  _client = new TestSession(other._sd.endpoints()[0].str(), false, _mode);
+  _server = new TestSession(other._sd.endpoints()[0].str(), true, _mode);
 }
 
 TestSessionPair::~TestSessionPair()

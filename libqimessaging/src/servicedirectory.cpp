@@ -282,7 +282,13 @@ bool ServiceDirectory::listen(const qi::Url &address)
   si.setName("ServiceDirectory");
   si.setServiceId(1);
   si.setMachineId(qi::os::getMachineId());
-  si.setEndpoints(_p->_server.endpoints());
+  std::vector<qi::Url>                 epsUrl = _p->_server.endpoints();
+  std::vector<qi::Url>::const_iterator epsUrlIt;
+  std::vector<std::string> eps;
+  for (epsUrlIt = epsUrl.begin(); epsUrlIt != epsUrl.end(); epsUrlIt++) {
+    eps.push_back((*epsUrlIt).str());
+  }
+  si.setEndpoints(eps);
   unsigned int regid = sdbo->registerService(si);
   sdbo->serviceReady(1);
   //serviceDirectory must have id '1'
@@ -290,6 +296,9 @@ bool ServiceDirectory::listen(const qi::Url &address)
   return true;
 }
 
+std::vector<qi::Url> ServiceDirectory::endpoints() const {
+  return _p->_server.endpoints();
+}
 void ServiceDirectory::close() {
   _p->_server.close();
 }
