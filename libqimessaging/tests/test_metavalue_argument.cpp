@@ -93,6 +93,7 @@ TEST_F(TestObject, meta)
   qi::int64_t time = os::ustime();
   // Remote test
   ObjectPtr target = oclient;
+  ASSERT_TRUE(target);
   {
     /* WATCH OUT, qi::AutoGenericValue(12) is what call expects!
     * So call(AutoGenericValue(12)) will *not* call with the value
