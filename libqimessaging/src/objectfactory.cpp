@@ -77,7 +77,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl2(*_f_mutex_struct);
     qiLogDebug("qi.factory") << keys.size() <<" object after load";
     if (count != keys.size())
-      return std::vector<std::string>(&keys[count], &keys[keys.size()]);
+      return std::vector<std::string>(&keys[count], &keys[0] + keys.size());
     else
       return std::vector<std::string>();
   }
