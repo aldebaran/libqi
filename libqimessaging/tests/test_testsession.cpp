@@ -93,8 +93,8 @@ TEST(TestTestSession, TestTestSessionOnly)
 
   // #2 Initialize service directory and test sessions.
   sd.listen(listenUrl.str());
-  TestSession          client(listenUrl.str(), false);
-  TestSession          server(listenUrl.str(), true, TestMode::getTestMode());
+  TestSession          client(sd.listenUrl().str(), false);
+  TestSession          server(sd.listenUrl().str(), true, TestMode::getTestMode());
   server.session()->listen("tcp://0.0.0.0:0");
 
   // #3 Build a dumb service
