@@ -255,24 +255,36 @@ namespace qi {
     }
   }
 
+  static void onEventConnected(qi::Future<unsigned int> fut, qi::Promise<unsigned int> prom, unsigned int id) {
+    if (fut.hasError()) {
+      prom.setError(fut.error());
+      return;
+    }
+    prom.setValue(id);
+  }
+
   qi::Future<unsigned int> RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
+    qi::Promise<unsigned int> prom;
+
     // Bind the subscriber locally.
     unsigned int uid = DynamicObject::connect(event, sub);
 
     qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
-    return _self->call<unsigned int>("registerEvent", _service, event, uid);
+    qi::Future<unsigned int> fut = _self->call<unsigned int>("registerEvent", _service, event, uid);
+    fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
+    return prom.future();
   }
 
   qi::Future<void> RemoteObject::disconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
     //disconnect locally
-    bool ok = DynamicObject::disconnect(linkId);
-    if (!ok)
+    qi::Future<void> fut = DynamicObject::disconnect(linkId);
+    if (fut.hasError())
     {
       std::stringstream ss;
-      ss << "Disconnection failure for " << linkId;
+      ss << "Disconnection failure for " << linkId << ", error:" << fut.error();
       qiLogWarning("qi.object") << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }

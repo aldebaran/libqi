@@ -8,6 +8,8 @@
 #include "serverresult.hpp"
 #include "metaobject_p.hpp"
 
+static const int gObjectOffset = 10;
+
 namespace qi {
 
   static GenericValue forwardEvent(const GenericFunctionParameters& params,
@@ -16,7 +18,7 @@ namespace qi {
     qi::Message msg;
     msg.setBuffer(params.toBuffer());
     msg.setService(service);
-    msg.setFunction(event);
+    msg.setFunction(event + gObjectOffset);
     msg.setType(Message::Type_Event);
     msg.setObject(Message::GenericObject_Main);
     client->send(msg);
@@ -47,7 +49,8 @@ namespace qi {
   }
 
   //Bound Method
-  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
+  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int event, unsigned int remoteLinkId) {
+    unsigned int eventId = event - gObjectOffset;
     //throw on error
     GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, currentSocket()));
     unsigned int linkId = _object->connect(eventId, mc);
@@ -57,7 +60,8 @@ namespace qi {
   }
 
   //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
+  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int event, unsigned int remoteLinkId) {
+    unsigned int eventId = event - gObjectOffset;
     //throw on error
     ServiceLinks&          sl = _links[currentSocket()];
     ServiceLinks::iterator it = sl.find(remoteLinkId);
@@ -73,9 +77,9 @@ namespace qi {
   }
 
   static void metaObjectConcat(qi::MetaObject *dest, const qi::MetaObject &source) {
-    if (!dest->_p->addMethods(10, source.methodMap()))
+    if (!dest->_p->addMethods(gObjectOffset, source.methodMap()))
       qiLogError("BoundObject") << "cant merge metaobject (methods)";
-    if (!dest->_p->addSignals(10, source.signalMap()))
+    if (!dest->_p->addSignals(gObjectOffset, source.signalMap()))
       qiLogError("BoundObject") << "cant merge metaobject (signals)";
   }
 
@@ -94,14 +98,14 @@ namespace qi {
 
     _currentSocket = socket;
     //choose between special function (on BoundObject) or normal calls
-    if (msg.function() < 10) {
+    if (msg.function() < gObjectOffset) {
       obj = _self;
       mct = MetaCallType_Direct;
       funcId = msg.function();
     } else {
       obj = _object;
       mct = _callType;
-      funcId = msg.function() - 10;
+      funcId = msg.function() - gObjectOffset;
     }
 
     std::string sigparam;
