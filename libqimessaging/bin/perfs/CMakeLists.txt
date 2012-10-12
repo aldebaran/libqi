@@ -21,8 +21,6 @@ endfunction()
 
 _qimessaging_create_perf_bin(perf_transport)
 
-_qimessaging_create_perf_bin(perf_qi_signal_direct)
-
 _qimessaging_create_perf_bin(perf_qi_signal_queued)
 
 _qimessaging_create_perf_bin(perf_boost_signal)
@@ -46,3 +44,11 @@ qi_use_lib(perf_qt_signal_direct QT_QTCORE)
 #qi_create_bin(perf_type            SRC dataperftimer.* perf_type.cpp            DEPENDS QI QIMESSAGING BOOST_SIGNALS NO_INSTALL )
 #qi_create_bin(perf_pool            SRC dataperftimer.* perf_pool.cpp            DEPENDS QI QIMESSAGING NO_INSTALL)
 #qi_create_bin(perf_transport_event SRC dataperftimer.* perf_transport_event.cpp DEPENDS QI QIMESSAGING NO_INSTALL)
+
+
+# --output is added by qi_create_perf_test().
+# question: what to do with backends ?
+qi_create_perf_test(perf_qi_signal_direct perf_qi_signal_direct.cpp
+  DEPENDS
+    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS
+    ARGUMENTS "--backend=codespeed")
