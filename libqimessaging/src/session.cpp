@@ -26,10 +26,8 @@ namespace qi {
   }
 
   SessionPrivate::~SessionPrivate() {
-    if (_self->disconnected._p)
-      _self->disconnected._p->reset();
-    if (_self->connected._p)
-      _self->connected._p->reset();
+    _self->disconnected.disconnectAll();
+    _self->connected.disconnectAll();
     close();
   }
 

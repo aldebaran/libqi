@@ -29,7 +29,7 @@ namespace qi {
   {
     //we can call reset on server and socket they are only owned by us.
     //when it's close it's close
-    _server.newConnection._p->reset();
+    _server.newConnection.disconnectAll();
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     _dying = true;
     for (std::set<TransportSocketPtr>::iterator i = _sockets.begin();
@@ -37,8 +37,8 @@ namespace qi {
     {
       // We do not want onSocketDisconnected called
       //TODO: move that logic into TransportServer.
-      (*i)->disconnected._p->reset();
-      (*i)->messageReady._p->reset();
+      (*i)->disconnected.disconnectAll();
+      (*i)->messageReady.disconnectAll();
       (*i)->disconnect();
     }
   }
@@ -133,12 +133,9 @@ namespace qi {
       std::set<TransportSocketPtr>::iterator it;
       //TODO move that logic into TransportServer
       for (it = _sockets.begin(); it != _sockets.end(); ++it) {
-        if ((*it)->connected._p)
-          (*it)->connected._p->reset();
-        if ((*it)->disconnected._p)
-          (*it)->disconnected._p->reset();
-        if ((*it)->messageReady._p)
-          (*it)->messageReady._p->reset();
+        (*it)->connected.disconnectAll();
+        (*it)->disconnected.disconnectAll();
+        (*it)->messageReady.disconnectAll();
       }
     }
     _server.close();
