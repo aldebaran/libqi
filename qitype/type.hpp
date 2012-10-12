@@ -29,8 +29,6 @@ class GenericValue;
 class GenericList;
 class GenericMap;
 class GenericObject;
-class IDataStream;
-class ODataStream;
 class Signature;
 
 

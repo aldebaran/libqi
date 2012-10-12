@@ -16,7 +16,7 @@
 
 //#include "alvalue.pb.h"
 
-static const int gLoopCount   = 1000000;
+static const int gLoopCount = 1000000;
 
 namespace qi
 {

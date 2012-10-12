@@ -78,10 +78,6 @@ namespace qi {
     /// Convert the arguments to given signature. destroy() must be called on the result.
     GenericFunctionParameters convert(const Signature& sig) const;
     void destroy(bool notFirst = false);
-    /// Extract from buffer and signature. Throws on error
-    static GenericFunctionParameters fromBuffer(const Signature& sig, const qi::Buffer& buf);
-    /// Serialize to buffer
-    qi::Buffer toBuffer() const;
   };
 }
 

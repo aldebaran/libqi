@@ -59,8 +59,7 @@ namespace qi {
 
   private:
     friend class MetaObject;
-    friend qi::ODataStream &operator<<(qi::ODataStream &stream, const MetaObject &meta);
-    friend qi::IDataStream &operator>>(qi::IDataStream &stream, MetaObject &meta);
+
   private:
     /*
      * When a member is added, serialization and deserialization

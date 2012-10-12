@@ -15,7 +15,6 @@ class GenericList;
 class GenericMap;
 class GenericObject;
 class GenericList;
-class ODataStream;
 
 /** Class that holds any value, with informations to manipulate it.
  *  operator=() makes a shallow copy.
@@ -37,7 +36,6 @@ public:
   /// Helper function that converts and always clone
   GenericValue convertCopy(Type* targetType) const;
   GenericValue clone() const;
-  void serialize(ODataStream& os) const;
   std::string signature() const;
   void destroy();
   Type::Kind kind() const;
