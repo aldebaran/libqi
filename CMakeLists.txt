@@ -58,6 +58,7 @@ set(H
   qi/shared_ptr.hpp
   qi/qi.hpp
   qi/threadpool.hpp
+  qi/eventloop.hpp
   )
 
 set(C
@@ -79,6 +80,8 @@ set(C
   src/utils.cpp
   src/threadpool.cpp
   src/threadpool_p.hpp
+  src/eventloop.cpp
+  src/eventloop_p.hpp
   )
 
 if (WIN32)
@@ -121,7 +124,7 @@ if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS)
+qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS LIBEVENT)
 
 if (UNIX)
   qi_use_lib(qi PTHREAD)
