@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(libqiperf)
 find_package(qibuild)
+enable_testing()
 
 option(WITH_EXAMPLES "Examples" ON)
 
