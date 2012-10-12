@@ -15,7 +15,7 @@
 #include <boost/mpl/if.hpp>
 
 #include <qi/log.hpp>
-#include <qimessaging/api.hpp>
+#include <qitype/api.hpp>
 
 namespace qi{
 
@@ -37,7 +37,7 @@ class Signature;
 /** This class is used to uniquely identify a type.
  *
  */
-class QIMESSAGING_API TypeInfo
+class QITYPE_API TypeInfo
 {
 public:
   TypeInfo();
@@ -70,7 +70,7 @@ private:
  *  - process change: Values are serialized.
  *
  */
-class QIMESSAGING_API Type
+class QITYPE_API Type
 {
 public:
   virtual const TypeInfo& info() =0;
@@ -105,8 +105,8 @@ public:
   ///@return a Type on which signature() returns sig.
   static Type* fromSignature(const Signature& sig);
 
-  GenericValue deserialize(IDataStream& in);
-  void serialize(ODataStream& out, void* storage);
+  //GenericValue deserialize(IDataStream& in);
+  //void serialize(ODataStream& out, void* storage);
 
 
 };
@@ -126,9 +126,9 @@ namespace qi { namespace detail { \
 template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
 
 /// Runtime Type factory getter. Used by typeOf<T>()
-QIMESSAGING_API Type*  getType(const std::type_info& type);
+QITYPE_API Type*  getType(const std::type_info& type);
 /// Runtime Type factory setter.
-QIMESSAGING_API bool registerType(const std::type_info& typeId, Type* type);
+QITYPE_API bool registerType(const std::type_info& typeId, Type* type);
 
 /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
 #define QI_TYPE_REGISTER(t) \
@@ -148,7 +148,13 @@ template<typename T> Type* typeOf(const T& v)
 }
 
 }
-#include <qimessaging/details/typeimpl.hxx>
-#include <qimessaging/details/type.hxx>
+#include <qitype/details/typeimpl.hxx>
+#include <qitype/details/type.hxx>
+//#include <qitype/details/typelist.hxx>
+//#include <qitype/details/typemap.hxx>
+//#include <qitype/details/typestring.hxx>
+//#include <qitype/details/typepointer.hxx>
+//#include <qitype/details/typetuple.hxx>
+
 
 #endif  // _QIMESSAGING_TYPE_HPP_

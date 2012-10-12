@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/future.hpp>
+#include <qitype/future.hpp>
 #include <boost/thread.hpp>
 
 namespace qi {

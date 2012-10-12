@@ -8,8 +8,8 @@
 #define _SRC_METAOBJECT_P_HPP_
 
 #include <qi/atomic.hpp>
-#include <qimessaging/metasignal.hpp>
-#include <qimessaging/metamethod.hpp>
+#include <qitype/metasignal.hpp>
+#include <qitype/metamethod.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
 namespace qi {

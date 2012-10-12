@@ -7,9 +7,8 @@
 #ifndef _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
 #define _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
 
-#include <qimessaging/buffer.hpp>
-#include <qimessaging/future.hpp>
-#include <qimessaging/typeobject.hpp>
+#include <qitype/future.hpp>
+#include <qitype/typeobject.hpp>
 
 namespace qi {
 

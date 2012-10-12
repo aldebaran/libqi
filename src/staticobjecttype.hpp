@@ -7,12 +7,12 @@
 #ifndef _SRC_STATICOBJECTTYPE_HPP_
 #define _SRC_STATICOBJECTTYPE_HPP_
 
-#include <qimessaging/api.hpp>
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/type.hpp>
-#include <qimessaging/metaobject.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/methodtype.hpp>
+#include <qitype/api.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/type.hpp>
+#include <qitype/metaobject.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/methodtype.hpp>
 
 namespace qi
 {

@@ -7,15 +7,15 @@
 #ifndef _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
 #define _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
 
-#include <qimessaging/api.hpp>
+#include <qitype/api.hpp>
 #include <string>
 
 #include <boost/function.hpp>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 #include <sstream>
-#include <qimessaging/type.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/methodtype.hpp>
+#include <qitype/type.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/methodtype.hpp>
 
 
 namespace qi {
@@ -28,7 +28,7 @@ namespace qi {
   template<typename T> class Signal;
   class ObjectTypeBuilderPrivate;
 
-  class QIMESSAGING_API ObjectTypeBuilderBase
+  class QITYPE_API ObjectTypeBuilderBase
   {
   public:
     ObjectTypeBuilderBase();
@@ -67,7 +67,7 @@ namespace qi {
     ObjectTypeBuilderPrivate* _p;
   };
 
-  template<typename T> class QIMESSAGING_API ObjectTypeBuilder
+  template<typename T> class QITYPE_API ObjectTypeBuilder
   : public ObjectTypeBuilderBase
   {
   public:
@@ -87,6 +87,6 @@ namespace qi {
   };
 }
 
-#include <qimessaging/details/objecttypebuilder.hxx>
+#include <qitype/details/objecttypebuilder.hxx>
 
 #endif  // _QIMESSAGING_OBJECTTYPEBUILDER_HPP_

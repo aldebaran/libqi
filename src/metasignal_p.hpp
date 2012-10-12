@@ -6,10 +6,10 @@
 
 #include <iostream>
 #include <string>
-#include <qimessaging/api.hpp>
-#include <qimessaging/metasignal.hpp>
-#include <qimessaging/signature.hpp>
-#include <qimessaging/future.hpp>
+#include <qitype/api.hpp>
+#include <qitype/metasignal.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/future.hpp>
 
 
 #ifndef _SRC_METASIGNAL_P_HPP_

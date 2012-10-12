@@ -6,7 +6,7 @@
 #include <cstring>
 #include <qi/log.hpp>
 #include "signatureconvertor.hpp"
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 namespace qi {
 

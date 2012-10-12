@@ -2,8 +2,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/type.hpp>
-#include <qimessaging/metaobject.hpp>
+#include <qitype/type.hpp>
+#include <qitype/metaobject.hpp>
 #include "metaobject_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 

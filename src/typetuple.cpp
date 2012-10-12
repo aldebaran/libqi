@@ -2,10 +2,10 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/type.hpp>
-#include <qimessaging/typespecialized.hpp>
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/genericvaluespecialized.hpp>
+#include <qitype/type.hpp>
+#include <qitype/typespecialized.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/genericvaluespecialized.hpp>
 namespace qi
 {
   std::vector<GenericValue> TypeTuple::getValues(void* storage)

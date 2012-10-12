@@ -12,9 +12,9 @@
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 
 static int gGlobalResult = 0;
 

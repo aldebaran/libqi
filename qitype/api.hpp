@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_API_HPP_
-#define _QIMESSAGING_API_HPP_
+#ifndef _QITYPE_API_HPP_
+#define _QITYPE_API_HPP_
 
 #include <qi/macro.hpp>
 
@@ -15,4 +15,4 @@
 # define QITYPE_API QI_IMPORT_API
 #endif
 
-#endif  // _QIMESSAGING_API_HPP_
+#endif  // _QITYPE_API_HPP_

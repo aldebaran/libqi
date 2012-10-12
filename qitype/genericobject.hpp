@@ -10,15 +10,15 @@
 #include <map>
 #include <string>
 #include <qi/atomic.hpp>
-#include <qimessaging/api.hpp>
-#include <qimessaging/signature.hpp>
-#include <qimessaging/future.hpp>
-#include <qimessaging/metasignal.hpp>
-#include <qimessaging/metamethod.hpp>
-#include <qimessaging/metaobject.hpp>
-#include <qimessaging/eventloop.hpp>
-#include <qimessaging/signal.hpp>
-#include <qimessaging/typeobject.hpp>
+#include <qitype/api.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/future.hpp>
+#include <qitype/metasignal.hpp>
+#include <qitype/metamethod.hpp>
+#include <qitype/metaobject.hpp>
+#include <qi/eventloop.hpp>
+#include <qitype/signal.hpp>
+#include <qitype/typeobject.hpp>
 
 
 #include <boost/function_types/function_arity.hpp>
@@ -29,7 +29,7 @@
 namespace qi {
 
   struct SignalSubscriber;
-  class QIMESSAGING_API ObjectInterface {
+  class QITYPE_API ObjectInterface {
   public:
     virtual ~ObjectInterface() = 0;
     virtual void onObjectDestroyed(GenericObject *object, void *data) = 0;
@@ -44,7 +44,7 @@ namespace qi {
   *
   * All the methods are convenience wrappers that bounce to the ObjectType
   */
-  class QIMESSAGING_API GenericObject
+  class QITYPE_API GenericObject
   {
   public:
     GenericObject(ObjectType *type, void *value);
@@ -116,7 +116,7 @@ namespace qi {
   *
   * Only one of handler or target must be set.
   */
- struct QIMESSAGING_API SignalSubscriber
+ struct QITYPE_API SignalSubscriber
  {
    SignalSubscriber()
      : eventLoop(0), target(), method(0), enabled(true), active(0)
@@ -157,11 +157,11 @@ namespace qi {
       SignalSubscriber(makeGenericFunction(callback), ctx));
   }
 
- QIMESSAGING_API qi::Future<GenericValue> metaCall(EventLoop* el,
+ QITYPE_API qi::Future<GenericValue> metaCall(EventLoop* el,
     GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst=false);
 
 };
 
 
-#include <qimessaging/details/genericobject.hxx>
+#include <qitype/details/genericobject.hxx>
 #endif  // _QIMESSAGING_GENERICOBJECT_HPP_

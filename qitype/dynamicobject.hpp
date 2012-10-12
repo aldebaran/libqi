@@ -7,7 +7,7 @@
 #ifndef _QIMESSAGING_DYNAMICOBJECT_HPP_
 #define _QIMESSAGING_DYNAMICOBJECT_HPP_
 
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 
 namespace qi
 {
@@ -25,7 +25,7 @@ namespace qi
   * The default implementation holds a method list that the user must populate
   * with setMethod()
   */
-  class QIMESSAGING_API DynamicObject: public Manageable {
+  class QITYPE_API DynamicObject: public Manageable {
   public:
     DynamicObject();
 
@@ -53,7 +53,7 @@ namespace qi
   };
 
   //Make an GenericObject of DynamicObject kind from a DynamicObject
-  QIMESSAGING_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj);
+  QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj);
 
 }
 #endif  // _QIMESSAGING_DYNAMICOBJECT_HPP_

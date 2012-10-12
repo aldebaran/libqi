@@ -6,7 +6,7 @@
 #ifndef _QIMESSAGING_GENERICVALUESPECIALIZED_HPP_
 #define _QIMESSAGING_GENERICVALUESPECIALIZED_HPP_
 
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/genericvalue.hpp>
 
 
 namespace qi
@@ -55,12 +55,12 @@ namespace qi
     Type* elementType();
   };
 
-  QIMESSAGING_API GenericValue makeGenericTuple(std::vector<GenericValue> values);
+  QITYPE_API GenericValue makeGenericTuple(std::vector<GenericValue> values);
 
 }
 
-#include <qimessaging/details/genericvaluespecialized.hxx>
-#include <qimessaging/details/typelist.hxx>
-#include <qimessaging/details/typemap.hxx>
-#include <qimessaging/details/typepointer.hxx>
+#include <qitype/details/genericvaluespecialized.hxx>
+#include <qitype/details/typelist.hxx>
+#include <qitype/details/typemap.hxx>
+#include <qitype/details/typepointer.hxx>
 #endif

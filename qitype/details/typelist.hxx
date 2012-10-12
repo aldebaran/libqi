@@ -39,17 +39,12 @@ public:
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
 };
 
-
-}
-#include <qimessaging/genericvaluespecialized.hpp>
-namespace qi {
 template<template<typename U> class C, typename T>
 TypeListImpl<C, T>::TypeListImpl()
 {
   // register our iterator type
   registerType(typeid(typename C<T>::iterator), new TypeListIteratorImpl<C<T> >());
 }
-
 
 template<template<typename U> class C, typename T> Type*
 TypeListImpl<C, T>::elementType(void*) const

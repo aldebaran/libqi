@@ -7,15 +7,15 @@
 #ifndef _QIMESSAGING_METAMETHOD_HPP_
 #define _QIMESSAGING_METAMETHOD_HPP_
 
-#include <qimessaging/api.hpp>
+#include <qitype/api.hpp>
 #include <string>
-#include <qimessaging/type.hpp>
+#include <qitype/type.hpp>
 
 
 namespace qi {
 
   /// Representation of a method in an GenericObject.
-  class QIMESSAGING_API MetaMethod {
+  class QITYPE_API MetaMethod {
   public:
     MetaMethod() {};
     MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature);

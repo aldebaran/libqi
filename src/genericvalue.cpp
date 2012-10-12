@@ -4,9 +4,9 @@
 **  See COPYING for the license
 */
 
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericvaluespecialized.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericvaluespecialized.hpp>
 
 namespace qi
 {

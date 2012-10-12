@@ -7,14 +7,14 @@
 #ifndef _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
 #define _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
 
-#include <qimessaging/api.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/api.hpp>
+#include <qitype/genericobject.hpp>
 
 namespace qi {
 
   class DynamicObject;
   class GenericObjectBuilderPrivate;
-  class QIMESSAGING_API GenericObjectBuilder
+  class QITYPE_API GenericObjectBuilder
   {
   public:
     GenericObjectBuilder();
@@ -41,6 +41,6 @@ namespace qi {
 
 }
 
-#include <qimessaging/details/genericobjectbuilder.hxx>
+#include <qitype/details/genericobjectbuilder.hxx>
 
 #endif  // _QIMESSAGING_GENERICOBJECTBUILDER_HPP_

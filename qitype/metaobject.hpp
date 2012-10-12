@@ -7,15 +7,14 @@
 #ifndef _QIMESSAGING_METAOBJECT_HPP_
 #define _QIMESSAGING_METAOBJECT_HPP_
 
-#include <qimessaging/datastream.hpp>
-#include <qimessaging/metamethod.hpp>
-#include <qimessaging/metasignal.hpp>
+#include <qitype/metamethod.hpp>
+#include <qitype/metasignal.hpp>
 
 namespace qi {
 
   class MetaObjectPrivate;
   /// Description of the signals and methods accessible on an ObjectType
-  class QIMESSAGING_API MetaObject  {
+  class QITYPE_API MetaObject  {
   public:
     MetaObject();
     MetaObject(const MetaObject &other);

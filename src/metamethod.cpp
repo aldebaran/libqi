@@ -2,8 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/metamethod.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qitype/metamethod.hpp>
 
 namespace qi {
 

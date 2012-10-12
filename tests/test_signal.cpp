@@ -6,8 +6,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <qimessaging/signal.hpp>
-#include <qimessaging/future.hpp>
+#include <qitype/signal.hpp>
+#include <qitype/future.hpp>
 #include <qi/application.hpp>
 
 class Foo

@@ -8,11 +8,11 @@
 #define _QIMESSAGING_METHODTYPE_HPP_
 
 #include <boost/function.hpp>
-#include <qimessaging/functiontype.hpp>
+#include <qitype/functiontype.hpp>
 
 namespace qi
 {
-  class QIMESSAGING_API MethodType: public Type, public CallableType
+  class QITYPE_API MethodType: public Type, public CallableType
   {
   public:
     /// Call with all values of the correct type
@@ -26,7 +26,7 @@ namespace qi
   };
 
   /// Represents a generic member function. Has value semantic.
-  class QIMESSAGING_API GenericMethod
+  class QITYPE_API GenericMethod
   {
   public:
     GenericValue call(GenericValue object, const std::vector<GenericValue> args)
@@ -47,6 +47,6 @@ namespace qi
   GenericMethod makeGenericMethod(const M& method);
 }
 
-#include <qimessaging/details/methodtype.hxx>
+#include <qitype/details/methodtype.hxx>
 
 #endif  // _QIMESSAGING_METHODTYPE_HPP_

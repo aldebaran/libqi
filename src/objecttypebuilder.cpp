@@ -2,9 +2,9 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include <boost/thread.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include "src/staticobjecttype.hpp"
 #include "metaobject_p.hpp"
 

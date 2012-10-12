@@ -9,12 +9,12 @@
 
 #include <boost/function.hpp>
 
-#include <qimessaging/type.hpp>
+#include <qitype/type.hpp>
 
 namespace qi {
 
   /// Signature information for both callable types FunctionType and MethodType
-  class QIMESSAGING_API CallableType
+  class QITYPE_API CallableType
   {
   public:
     Type* resultType();
@@ -26,7 +26,7 @@ namespace qi {
     std::vector<Type*> _argumentsType;
   };
 
-  class QIMESSAGING_API FunctionType: public Type, public CallableType
+  class QITYPE_API FunctionType: public Type, public CallableType
   {
   public:
     /** Call the function func with argument args that must be of the correct type.
@@ -43,7 +43,7 @@ namespace qi {
   /** Represents a generic callable function.
    * This class has value semantic.
   */
-  class QIMESSAGING_API GenericFunction
+  class QITYPE_API GenericFunction
   {
   public:
     GenericFunction();
@@ -57,7 +57,7 @@ namespace qi {
 
   typedef boost::function<GenericValue(const std::vector<GenericValue>&)> DynamicFunction;
   /// @return a GenericFunction that takes arguments as a list of unconverted GenericValue.
-  QIMESSAGING_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
+  QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
 
   /// @return a GenericFunction obtained by binding a class instance to a member function
   template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
@@ -68,7 +68,7 @@ namespace qi {
   * If GenericFunctionParameters is obtained throug copy(), convert() or
   * fromBuffer(), it must be cleared by destroy()
   */
-  class QIMESSAGING_API GenericFunctionParameters: public std::vector<GenericValue>
+  class QITYPE_API GenericFunctionParameters: public std::vector<GenericValue>
   {
   public:
     GenericFunctionParameters();
@@ -85,6 +85,6 @@ namespace qi {
   };
 }
 
-#include <qimessaging/details/functiontype.hxx>
+#include <qitype/details/functiontype.hxx>
 
 #endif  // _QIMESSAGING_FUNCTIONTYPE_HPP_

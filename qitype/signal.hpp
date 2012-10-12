@@ -7,9 +7,9 @@
 #ifndef _QIMESSAGING_SIGNAL_HPP_
 #define _QIMESSAGING_SIGNAL_HPP_
 
-#include <qimessaging/eventloop.hpp>
-#include <qimessaging/signature.hpp>
-#include <qimessaging/functiontype.hpp>
+#include <qi/eventloop.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/functiontype.hpp>
 
 namespace qi {
 
@@ -20,7 +20,7 @@ namespace qi {
   * - Automatic signal disconnection when the object is deleted
   * - Event loop management
   */
- class QIMESSAGING_API Manageable
+ class QITYPE_API Manageable
  {
  public:
    Manageable();
@@ -47,7 +47,7 @@ namespace qi {
   class SignalBasePrivate;
   struct SignalSubscriber;
 
-  class QIMESSAGING_API SignalBase
+  class QITYPE_API SignalBase
   {
   public:
     explicit SignalBase(const std::string& signature);
@@ -119,7 +119,7 @@ namespace qi {
 
 }
 
-#include <qimessaging/details/signal.hxx>
+#include <qitype/details/signal.hxx>
 
 QI_NO_TYPE(qi::SignalBase)
 

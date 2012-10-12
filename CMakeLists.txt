@@ -7,6 +7,8 @@ project(libqitype)
 
 find_package(qibuild)
 
+enable_testing()
+
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 

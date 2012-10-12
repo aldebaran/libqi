@@ -7,7 +7,7 @@
 #ifndef _SRC_SIGNAL_P_HPP_
 #define _SRC_SIGNAL_P_HPP_
 
-#include <qimessaging/signal.hpp>
+#include <qitype/signal.hpp>
 namespace qi {
 
   typedef std::map<SignalBase::Link, SignalSubscriber> SignalSubscriberMap;

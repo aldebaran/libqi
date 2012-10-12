@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qimessaging/qt.hpp>
+#include <qitype/qt.hpp>
 
 #include <QVector>
 #include <QMap>

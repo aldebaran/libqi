@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include "staticobjecttype.hpp"
-#include <qimessaging/signal.hpp>
+#include <qitype/signal.hpp>
 
 namespace qi
 {

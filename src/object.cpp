@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include <iostream>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include "src/object_p.hpp"
 
 namespace qi {

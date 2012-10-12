@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 #include <qi/log.hpp>
 #include "src/signatureconvertor.hpp"
 

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#include <qimessaging/typeobject.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/typeobject.hpp>
+#include <qitype/genericobject.hpp>
 
 namespace qi {
 

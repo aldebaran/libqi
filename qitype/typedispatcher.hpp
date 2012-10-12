@@ -7,7 +7,7 @@
 #ifndef  TYPEDISPATCHER_HPP_
 # define TYPEDISPATCHER_HPP_
 
-#include <qimessaging/type.hpp>
+#include <qitype/type.hpp>
 
 namespace qi {
 
@@ -21,7 +21,7 @@ namespace qi {
 
 
 
-  // class QIMESSAGING_API TypeDispatcher
+  // class QITYPE_API TypeDispatcher
   // {
   // public:
   //   void visitUnknown(Type* type, void* storage);
@@ -39,6 +39,6 @@ namespace qi {
 
 }
 
-#include <qimessaging/details/typedispatcher.hxx>
+#include <qitype/details/typedispatcher.hxx>
 
 #endif   /* !TYPEDISPATCHER_PP_ */

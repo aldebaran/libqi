@@ -7,7 +7,8 @@
 #ifndef _QIMESSAGING_GENERICVALUE_HPP_
 #define _QIMESSAGING_GENERICVALUE_HPP_
 
-#include <qimessaging/type.hpp>
+#include <qitype/type.hpp>
+
 namespace qi {
 
 class GenericList;
@@ -20,7 +21,7 @@ class ODataStream;
  *  operator=() makes a shallow copy.
  *
  */
-class QIMESSAGING_API GenericValue
+class QITYPE_API GenericValue
 {
 public:
   GenericValue();
@@ -81,7 +82,7 @@ public:
 
 }
 
-#include <qimessaging/genericvaluespecialized.hpp>
-#include <qimessaging/details/genericvalue.hxx>
+#include <qitype/genericvaluespecialized.hpp>
+#include <qitype/details/genericvalue.hxx>
 
 #endif  // _QIMESSAGING_GENERICVALUE_HPP_

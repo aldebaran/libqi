@@ -7,8 +7,8 @@
 #ifndef _QIMESSAGING_SIGNATURE_HPP_
 #define _QIMESSAGING_SIGNATURE_HPP_
 
-#include <qimessaging/api.hpp>
-#include <qimessaging/type.hpp>
+#include <qitype/api.hpp>
+#include <qitype/type.hpp>
 #include <string>
 #include <vector>
 #include <list>
@@ -23,11 +23,11 @@
 
 namespace qi {
 
-  QIMESSAGING_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
+  QITYPE_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
 
   class SignaturePrivate;
 
-  class QIMESSAGING_API Signature {
+  class QITYPE_API Signature {
   public:
 
   public:
@@ -85,7 +85,7 @@ namespace qi {
       Type_Unknown  = 'X'
     };
 
-    class QIMESSAGING_API iterator {
+    class QITYPE_API iterator {
     public:
       iterator() : _current(0), _end(0) {}
       iterator          &operator++();

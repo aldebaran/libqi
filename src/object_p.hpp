@@ -13,13 +13,13 @@
 
 #include <qi/atomic.hpp>
 
-#include <qimessaging/api.hpp>
-#include <qimessaging/signature.hpp>
-#include <qimessaging/future.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/metasignal.hpp>
-#include <qimessaging/metamethod.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/api.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/future.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/metasignal.hpp>
+#include <qitype/metamethod.hpp>
+#include <qitype/signal.hpp>
 
 namespace qi {
 

@@ -8,9 +8,9 @@
 #define _QIMESSAGING_FUTURE_HPP_
 
 #include <vector>
-#include <qimessaging/api.hpp>
+#include <qitype/api.hpp>
 #include <boost/shared_ptr.hpp>
-#include <qimessaging/eventloop.hpp>
+#include <qi/eventloop.hpp>
 
 namespace qi {
 
@@ -35,7 +35,7 @@ namespace qi {
   }
 
   template <typename T>
-  class QIMESSAGING_API Future {
+  class QITYPE_API Future {
   public:
     typedef typename FutureType<T>::type ValueType;
     Future()
@@ -90,7 +90,7 @@ namespace qi {
     friend class FutureSync<T>;
   };
 
-  template<typename T> class QIMESSAGING_API FutureSync: public Future<T>
+  template<typename T> class QITYPE_API FutureSync: public Future<T>
   {
   public:
     // This future cannot be set, so sync starts at false
@@ -152,7 +152,7 @@ namespace qi {
 
 
   template <typename T>
-  class QIMESSAGING_API Promise {
+  class QITYPE_API Promise {
   public:
     typedef typename FutureType<T>::type ValueType;
 
@@ -180,6 +180,6 @@ namespace qi {
   qi::Future<T> makeFutureError(const T &value);
 };
 
-#include <qimessaging/details/future.hxx>
+#include <qitype/details/future.hxx>
 
 #endif  // _QIMESSAGING_FUTURE_HPP_

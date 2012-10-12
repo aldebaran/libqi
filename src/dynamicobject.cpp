@@ -6,15 +6,15 @@
 
 #include <boost/make_shared.hpp>
 
-#include <qimessaging/api.hpp>
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/type.hpp>
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/functiontype.hpp>
-#include <qimessaging/metaobject.hpp>
-#include <qimessaging/signal.hpp>
-#include <qimessaging/dynamicobject.hpp>
+#include <qitype/api.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/type.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/functiontype.hpp>
+#include <qitype/metaobject.hpp>
+#include <qitype/signal.hpp>
+#include <qitype/dynamicobject.hpp>
 
 
 namespace qi

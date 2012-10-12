@@ -8,8 +8,8 @@
 #include <boost/thread.hpp>
 
 #include <gtest/gtest.h>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 #include <qi/application.hpp>
 
 

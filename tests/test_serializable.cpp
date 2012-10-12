@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/message.hpp>
+#include <qitype/datastream.hpp>
 
 //using namespace qi::serialization;
 

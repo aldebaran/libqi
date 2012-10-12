@@ -2,8 +2,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/dynamicobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobject.hpp>
 #include "metaobject_p.hpp"
 
 namespace qi

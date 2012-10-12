@@ -7,14 +7,14 @@
 #ifndef _QIMESSAGING_TYPESPECIALIZED_HPP_
 #define _QIMESSAGING_TYPESPECIALIZED_HPP_
 
-#include <qimessaging/type.hpp>
+#include <qitype/type.hpp>
 
 namespace qi
 {
 // Interfaces for specialized types
 class GenericListIterator;
 class GenericMapIterator;
-class QIMESSAGING_API TypeInt: public Type
+class QITYPE_API TypeInt: public Type
 {
 public:
   virtual int64_t get(void* value) const = 0;
@@ -24,7 +24,7 @@ public:
   virtual Kind kind() const { return Int;}
 };
 
-class QIMESSAGING_API TypeFloat: public Type
+class QITYPE_API TypeFloat: public Type
 {
 public:
   virtual double get(void* value) const = 0;
@@ -34,7 +34,7 @@ public:
 };
 
 class Buffer;
-class QIMESSAGING_API TypeString: public Type
+class QITYPE_API TypeString: public Type
 {
 public:
   std::string getString(void* storage) const;
@@ -45,7 +45,7 @@ public:
   virtual Kind kind() const { return String;}
 };
 
-class QIMESSAGING_API TypePointer: public Type
+class QITYPE_API TypePointer: public Type
 {
 public:
   virtual Type* pointedType() const = 0;
@@ -54,7 +54,7 @@ public:
 };
 
 template<typename T>
-class QIMESSAGING_API TypeIterator: public Type
+class QITYPE_API TypeIterator: public Type
 {
 public:
   virtual T dereference(void* storage) = 0; // must not be destroyed
@@ -62,14 +62,14 @@ public:
   virtual bool equals(void* s1, void* s2) = 0;
 };
 
-class QIMESSAGING_API TypeListIterator: public TypeIterator<GenericValue>
+class QITYPE_API TypeListIterator: public TypeIterator<GenericValue>
 {};
 
-class QIMESSAGING_API TypeMapIterator: public TypeIterator<std::pair<GenericValue, GenericValue> >
+class QITYPE_API TypeMapIterator: public TypeIterator<std::pair<GenericValue, GenericValue> >
 {};
 
 
-class QIMESSAGING_API TypeList: public Type
+class QITYPE_API TypeList: public Type
 {
 public:
   virtual Type* elementType(void* storage) const = 0;
@@ -80,7 +80,7 @@ public:
   virtual Kind kind() const { return List;}
 };
 
-class QIMESSAGING_API TypeMap: public Type
+class QITYPE_API TypeMap: public Type
 {
 public:
   virtual Type* elementType(void* storage) const = 0;
@@ -94,7 +94,7 @@ public:
   // TypeMap does not provide a find()
 };
 
-class QIMESSAGING_API TypeTuple: public Type
+class QITYPE_API TypeTuple: public Type
 {
 public:
   std::vector<GenericValue> getValues(void* storage);
@@ -106,7 +106,7 @@ public:
   virtual Kind kind() const { return Tuple;}
 };
 
-class QIMESSAGING_API TypeDynamic: public Type
+class QITYPE_API TypeDynamic: public Type
 {
 public:
   // Convert storage to a GenericValue, that must be destroyed if res.second is true
@@ -116,13 +116,13 @@ public:
 };
 
 ///@return a Type of kind List that can contains elements of type elementType.
-QIMESSAGING_API Type* defaultListType(Type* elementType);
+QITYPE_API Type* defaultListType(Type* elementType);
 
 ///@return a Type of kind Map with given key and element types
-QIMESSAGING_API Type* defaultMapType(Type* keyType, Type* ElementType);
+QITYPE_API Type* defaultMapType(Type* keyType, Type* ElementType);
 
 ///@return a Type of kind Tuple with givent memberTypes
-QIMESSAGING_API Type* defaultTupleType(std::vector<Type*> memberTypes);
+QITYPE_API Type* defaultTupleType(std::vector<Type*> memberTypes);
 
 }
 

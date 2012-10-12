@@ -11,14 +11,14 @@
 #include <utility> // pair
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/signal.hpp>
 
 namespace qi {
 
   namespace detail {
 
     class FutureBasePrivate;
-    class QIMESSAGING_API FutureBase {
+    class QITYPE_API FutureBase {
     public:
       FutureBase();
       ~FutureBase();

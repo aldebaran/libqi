@@ -4,7 +4,7 @@
 */
 #include <cstring>
 
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 namespace qi {
 

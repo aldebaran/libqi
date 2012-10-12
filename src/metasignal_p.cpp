@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 #include <src/metasignal_p.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 
 namespace qi {
 

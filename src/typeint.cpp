@@ -1,8 +1,8 @@
 #include <boost/type_traits/is_signed.hpp>
 
-#include <qimessaging/type.hpp>
-#include <qimessaging/typespecialized.hpp>
-#include <qimessaging/genericvaluespecialized.hpp>
+#include <qitype/type.hpp>
+#include <qitype/typespecialized.hpp>
+#include <qitype/genericvaluespecialized.hpp>
 
 namespace qi {
 

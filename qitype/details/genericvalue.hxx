@@ -9,8 +9,7 @@
 
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
-
-#include <qimessaging/typespecialized.hpp>
+#include <qitype/typespecialized.hpp>
 
 namespace qi {
 
@@ -245,10 +244,6 @@ namespace qi {
     return as<std::string>();
   }
 
-  inline void GenericValue::serialize(ODataStream& out) const
-  {
-    type->serialize(out, value);
-  }
 
   namespace detail
   {

@@ -7,14 +7,13 @@
 #ifndef _QIMESSAGING_METASIGNAL_HPP_
 #define _QIMESSAGING_METASIGNAL_HPP_
 
-#include <qimessaging/signature.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qitype/signature.hpp>
 
 namespace qi {
 
 
   /// Representation of a Signal in an GenericObject.
-  class QIMESSAGING_API MetaSignal {
+  class QITYPE_API MetaSignal {
   public:
     MetaSignal(unsigned int uid, const std::string &sig);
     MetaSignal();

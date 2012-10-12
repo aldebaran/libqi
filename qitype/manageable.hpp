@@ -26,7 +26,7 @@
 #ifndef  MANAGEABLE_HPP_
 # define MANAGEABLE_HPP_
 
-#include <qimessaging/signal.hpp>
+#include <qitype/signal.hpp>
 
 namespace qi {
 

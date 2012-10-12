@@ -15,7 +15,7 @@ namespace qi
 {
   namespace detail {
   /// Report a type operation failure
-  void QIMESSAGING_API typeFail(const char* typeName, const char* operation);
+  void QITYPE_API typeFail(const char* typeName, const char* operation);
   /** Methods to construct, destroy, and copy values of a given type.
   */
   template<typename T> struct TypeManagerDefault

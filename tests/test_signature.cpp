@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 #define __QI_SIGNATURE_UNKNOWN_INSTEAD_OF_ASSERT
 
-#include <qimessaging/signature.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/genericvalue.hpp>
 
 #include <vector>
 #include <map>

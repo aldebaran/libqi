@@ -2,8 +2,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/datastream.hpp>
-#include <qimessaging/functiontype.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/functiontype.hpp>
 
 namespace qi
 {
@@ -152,34 +152,34 @@ namespace qi
     return dst;
   }
 
-  GenericFunctionParameters
-  GenericFunctionParameters::fromBuffer(const Signature& sig, const qi::Buffer& buffer)
-  {
-    GenericFunctionParameters result;
-    IDataStream in(buffer);
-    Signature::iterator it = sig.begin();
-    while (it != sig.end())
-    {
-      Type* compatible = qi::Type::fromSignature(*it);
-      if (!compatible)
-      {
-        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
-        throw std::runtime_error("Could not construct type for " + *it);
-      }
-      result.push_back(compatible->deserialize(in));
-      ++it;
-    }
-    return result;
-  }
+//  GenericFunctionParameters
+//  GenericFunctionParameters::fromBuffer(const Signature& sig, const qi::Buffer& buffer)
+//  {
+//    GenericFunctionParameters result;
+//    IDataStream in(buffer);
+//    Signature::iterator it = sig.begin();
+//    while (it != sig.end())
+//    {
+//      Type* compatible = qi::Type::fromSignature(*it);
+//      if (!compatible)
+//      {
+//        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
+//        throw std::runtime_error("Could not construct type for " + *it);
+//      }
+//      result.push_back(compatible->deserialize(in));
+//      ++it;
+//    }
+//    return result;
+//  }
 
-  Buffer GenericFunctionParameters::toBuffer() const
-  {
-    Buffer buf;
-    ODataStream out(buf);
-    for (unsigned i=0; i<size(); ++i)
-      (*this)[i].serialize(out);
-    return buf;
-  }
+//  Buffer GenericFunctionParameters::toBuffer() const
+//  {
+//    Buffer buf;
+//    ODataStream out(buf);
+//    for (unsigned i=0; i<size(); ++i)
+//      (*this)[i].serialize(out);
+//    return buf;
+//  }
 
   class DynamicFunctionType: public FunctionType
   {

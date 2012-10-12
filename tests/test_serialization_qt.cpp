@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
-#include <qimessaging/qt.hpp>
-#include <qimessaging/reflect.hpp>
+#include <qitype/qt.hpp>
+#include <qitype/reflect.hpp>
 
 #include <QVector>
 

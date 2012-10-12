@@ -7,8 +7,8 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 
-#include <qimessaging/signal.hpp>
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/signal.hpp>
+#include <qitype/genericvalue.hpp>
 
 #include "src/object_p.hpp"
 #include "src/signal_p.hpp"

@@ -7,9 +7,9 @@
 #ifndef  __TYPEOBJECT_HPP_
 # define __TYPEOBJECT_HPP_
 
-#include <qimessaging/metaobject.hpp>
-#include <qimessaging/future.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/metaobject.hpp>
+#include <qitype/future.hpp>
+#include <qitype/signal.hpp>
 
 namespace qi {
 
@@ -34,7 +34,7 @@ namespace qi {
    *
    */
 
-  class QIMESSAGING_API ObjectType: public Type
+  class QITYPE_API ObjectType: public Type
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;

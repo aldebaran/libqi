@@ -42,7 +42,7 @@ public:
 
 
 }
-#include <qimessaging/genericvaluespecialized.hpp>
+#include <qitype/genericvaluespecialized.hpp>
 namespace qi {
 template<typename M>
 TypeMapImpl<M>::TypeMapImpl()

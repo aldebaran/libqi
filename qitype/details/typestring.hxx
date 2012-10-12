@@ -18,7 +18,7 @@ namespace qi
   {
     set(storage, val.c_str(), val.size());
   }
-  class QIMESSAGING_API TypeStringImpl: public TypeString
+  class QITYPE_API TypeStringImpl: public TypeString
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
@@ -40,7 +40,7 @@ namespace qi
 
   template<> class TypeImpl<std::string>: public TypeStringImpl{};
 
-  class QIMESSAGING_API TypeCStringImpl: public TypeString
+  class QITYPE_API TypeCStringImpl: public TypeString
   {
   public:
     virtual std::pair<char*, size_t> get(void* storage) const

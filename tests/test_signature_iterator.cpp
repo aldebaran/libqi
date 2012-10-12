@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 #include <vector>
 #include <map>

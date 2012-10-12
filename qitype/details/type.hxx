@@ -21,7 +21,7 @@
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/is_member_pointer.hpp>
 
-#include <qimessaging/typespecialized.hpp>
+#include <qitype/typespecialized.hpp>
 /* This file contains the default-provided Type specialisations
  *
  */
@@ -222,7 +222,7 @@ namespace qi  {
 
 }
 
-#include <qimessaging/details/typestring.hxx>
-#include <qimessaging/details/typetuple.hxx>
+#include <qitype/details/typestring.hxx>
+#include <qitype/details/typetuple.hxx>
 
 #endif  // _QIMESSAGING_DETAILS_TYPE_HXX_

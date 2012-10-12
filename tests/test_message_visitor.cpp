@@ -25,10 +25,10 @@
 
 #include <iostream>
 
-#include <qimessaging/signature.hpp>
-#include <qimessaging/datastream.hpp>
-#include <qimessaging/serialization/message_visitor.hpp>
-#include <qimessaging/serialization/message_copy_visitor.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/datastream.hpp>
+#include <qitype/serialization/message_visitor.hpp>
+#include <qitype/serialization/message_copy_visitor.hpp>
 #include <gtest/gtest.h>
 
 typedef std::vector<std::string>          StringVect;
