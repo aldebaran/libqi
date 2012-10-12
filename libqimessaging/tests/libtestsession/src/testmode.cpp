@@ -49,7 +49,11 @@ TestMode::Mode TestMode::getTestMode()
 
   // #2 Check ENVVAR, if not set pick random conf.
   if (variable.compare("") == 0)
+  {
+    // Todo : Pick random test mode.
+    qiLogWarning("qimessaging.libtestsession") << "Test mode not set, picking Mode_SD.";
     return TestMode::Mode_SD;
+  }
 
   // #3 Check if ENVVAR is set to some supported option.
   if (_convert.find(variable) == _convert.end())
@@ -74,4 +78,7 @@ void TestMode::forceTestMode(TestMode::Mode mode)
 
   // #1 Set value in environment
   qi::os::setenv(ENVIRON_VARIABLE, _convert[mode].c_str());
+
+  // #2 Log it.
+  qiLogVerbose("qimessaging.libtestsession") << "Test mode forced to " << _convert[mode];
 }
