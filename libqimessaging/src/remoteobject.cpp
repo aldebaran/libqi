@@ -15,10 +15,13 @@ namespace qi {
     static qi::MetaObject *mo = 0;
 
     if (!mo) {
+
       mo = new qi::MetaObject;
-      mo->_p->addMethod("I", "registerEvent::(III)");
-      mo->_p->addMethod("v", "unregisterEvent::(III)");
-      mo->_p->addMethod("({I(ssI)}{I(Is)})", "metaObject::(I)");
+      qi::MetaObjectBuilder mob;
+      mob.addMethod("I", "registerEvent::(III)");
+      mob.addMethod("v", "unregisterEvent::(III)");
+      mob.addMethod("({I(ssI)}{I(Is)})", "metaObject::(I)");
+      *mo = mob.metaObject();
 
       assert(mo->methodId("registerEvent::(III)") == qi::Message::BoundObjectFunction_RegisterEvent);
       assert(mo->methodId("unregisterEvent::(III)") == qi::Message::BoundObjectFunction_UnregisterEvent);
