@@ -18,7 +18,7 @@ namespace qi {
   {
   public:
     bool disconnect(const SignalBase::Link& l);
-    void reset();
+    bool reset();
 
   public:
     SignalSubscriberMap        subscriberMap;

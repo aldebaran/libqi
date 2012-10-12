@@ -66,6 +66,8 @@ namespace qi {
     Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
     Link connect(const SignalSubscriber& s);
 
+    bool disconnectAll();
+
     /** Disconnect a SignalHandler. The associated callback will not be called
      * anymore as soon as this function returns, but might be called in an
      * other thread while this function runs.

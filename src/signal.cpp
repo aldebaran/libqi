@@ -137,6 +137,12 @@ namespace qi {
     return res;
   }
 
+  bool SignalBase::disconnectAll() {
+    if (_p)
+      return _p->reset();
+    return false;
+  }
+
   SignalBase::SignalBase(const std::string& sig)
     : _p(new SignalBasePrivate)
   {
@@ -152,7 +158,7 @@ namespace qi {
     (*this) = b;
   }
 
-  SignalBase& SignalBase::operator = (const SignalBase& b)
+  SignalBase& SignalBase::operator=(const SignalBase& b)
   {
     if (!b._p)
     {
@@ -224,13 +230,17 @@ namespace qi {
     return res;
   }
 
-  void SignalBasePrivate::reset() {
+  bool SignalBasePrivate::reset() {
+    bool ret = true;
     boost::recursive_mutex::scoped_lock sl(mutex);
     SignalSubscriberMap::iterator it = subscriberMap.begin();
     while (it != subscriberMap.end()) {
-      disconnect(it->first);
+      bool b = disconnect(it->first);
+      if (!b)
+        ret = false;
       it = subscriberMap.begin();
     }
+    return ret;
   }
 
 }
