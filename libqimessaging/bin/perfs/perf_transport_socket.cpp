@@ -87,7 +87,7 @@ int main_client(bool shared, unsigned int threadCount, const std::string& addr)
 {
   qi::TransportSocketPtr socket;
 
-  boost::thread thd[threadCount < 100 ? threadCount : 100];
+  boost::thread* thd = new boost::thread[threadCount < 100 ? threadCount : 100];
 
   if (shared)
   {
@@ -106,6 +106,7 @@ int main_client(bool shared, unsigned int threadCount, const std::string& addr)
     thd[i].join();
   }
 
+  delete[] thd;
   return 0;
 }
 
