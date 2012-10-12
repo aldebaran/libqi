@@ -46,6 +46,20 @@ namespace qi {
     MetaObjectPrivate   *_p;
   };
 
+  class MetaObjectBuilderPrivate;
+  class QITYPE_API MetaObjectBuilder {
+  public:
+    MetaObjectBuilder();
+
+    unsigned int addMethod(const std::string& sigret, const std::string& signature, int id = -1);
+    unsigned int addSignal(const std::string &sig, int id = -1);
+
+    qi::MetaObject metaObject();
+
+  private:
+    boost::shared_ptr<MetaObjectBuilderPrivate> _p;
+  };
+
 };
 
 #endif  // _QIMESSAGING_METAOBJECT_HPP_

@@ -235,7 +235,7 @@ namespace qi {
     return _p->findSignal(name);
   }
 
-  static qi::MetaObject merge(const qi::MetaObject &source, unsigned int offset, const qi::MetaObject &dest) {
+  qi::MetaObject MetaObject::merge(const qi::MetaObject &source, unsigned int offset, const qi::MetaObject &dest) {
     qi::MetaObject result = source;
     if (!result._p->addMethods(offset, dest.methodMap()))
       qiLogError("BoundObject") << "cant merge metaobject (methods)";
@@ -243,6 +243,30 @@ namespace qi {
       qiLogError("BoundObject") << "cant merge metaobject (signals)";
     return result;
   }
+
+  //MetaObjectBuilder
+  class MetaObjectBuilderPrivate {
+  public:
+    qi::MetaObject metaObject;
+  };
+
+  MetaObjectBuilder::MetaObjectBuilder()
+    : _p(new MetaObjectBuilderPrivate)
+  {
+  }
+
+  unsigned int MetaObjectBuilder::addMethod(const std::string& sigret, const std::string& signature, int id) {
+    return _p->metaObject._p->addMethod(sigret, signature, id);
+  }
+
+  unsigned int MetaObjectBuilder::addSignal(const std::string &sig, int id) {
+    return _p->metaObject._p->addSignal(sig, id);
+  }
+
+  qi::MetaObject MetaObjectBuilder::metaObject() {
+    return _p->metaObject;
+  }
+
 }
 
 static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {
