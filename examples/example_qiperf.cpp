@@ -8,6 +8,7 @@
  * This is a simple QiPerf example
  */
 
+#include <iostream>
 #include <qiperf/dataperfsuite.hpp>
 #include <qi/os.hpp>
 #include <boost/program_options.hpp>
