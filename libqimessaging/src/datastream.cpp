@@ -296,5 +296,21 @@ namespace qi {
   {
     --_innerSerialization;
   }
+
+  namespace details {
+    void serialize(GenericValue val, ODataStream& out)
+    {
+      SerializeTypeVisitor stv(out);
+      typeDispatch(stv, val.type, &val.value);
+    }
+
+    GenericValue deserialize(qi::Type *type, IDataStream& in) {
+      void* storage = 0;
+      DeserializeTypeVisitor dtv(in);
+      typeDispatch(dtv, type, &storage);
+      return dtv.result;
+    }
+  }
+
 }
 
