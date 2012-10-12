@@ -1,9 +1,7 @@
 /*
-**
-** Copyright (C) 2010, 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericvaluespecialized.hpp>

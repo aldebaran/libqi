@@ -1,3 +1,7 @@
+/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
 #include <boost/type_traits/is_signed.hpp>
 
 #include <qitype/type.hpp>
