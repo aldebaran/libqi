@@ -19,6 +19,9 @@ namespace qi
   class DataPerfPrivate
   {
   public:
+    //! Default constructor
+    DataPerfPrivate();
+
     //! Name of the benchmark
     std::string     benchmarkName;
     //! Used for measuring cpu time

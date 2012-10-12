@@ -9,6 +9,10 @@
 
 namespace qi
 {
+  DataPerfPrivate::DataPerfPrivate()
+    : benchmarkName(""), wallClockElapsed(0), cpuElapsed(0), fLoopCount(0), fMsgSize(0)
+  { }
+
   DataPerf::DataPerf()
     : _p(new DataPerfPrivate)
   { }
