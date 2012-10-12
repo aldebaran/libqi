@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_METAMETHOD_HPP_
-#define _QIMESSAGING_METAMETHOD_HPP_
+#ifndef _QITYPE_METAMETHOD_HPP_
+#define _QITYPE_METAMETHOD_HPP_
 
 #include <qitype/api.hpp>
 #include <string>
@@ -36,4 +36,4 @@ namespace qi {
 
 QI_TYPE_STRUCT(qi::MetaMethod, _signature, _sigreturn, _uid);
 
-#endif  // _QIMESSAGING_METAMETHOD_HPP_
+#endif  // _QITYPE_METAMETHOD_HPP_

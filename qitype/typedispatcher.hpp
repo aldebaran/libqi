@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef  TYPEDISPATCHER_HPP_
-# define TYPEDISPATCHER_HPP_
+#ifndef _QITYPE_TYPEDISPATCHER_HPP_
+#define _QITYPE_TYPEDISPATCHER_HPP_
 
 #include <qitype/type.hpp>
 
@@ -41,4 +41,4 @@ namespace qi {
 
 #include <qitype/details/typedispatcher.hxx>
 
-#endif   /* !TYPEDISPATCHER_PP_ */
+#endif  // _QITYPE_TYPEDISPATCHER_HPP_

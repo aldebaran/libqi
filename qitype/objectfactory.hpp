@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_OBJECTFACTORY_HPP_
-#define _QIMESSAGING_OBJECTFACTORY_HPP_
+#ifndef _QITYPE_OBJECTFACTORY_HPP_
+#define _QITYPE_OBJECTFACTORY_HPP_
 
 #include <qitype/api.hpp>
 #include <qitype/genericobject.hpp>
@@ -26,4 +26,4 @@ namespace qi {
 #define QI_REGISTER_OBJECT_FACTORY(name, func) \
   static bool _register_factory_ ## __LINE__ = ::qi::registerObjectFactory(name, func)
 
-#endif  // _QIMESSAGING_OBJECTFACTORY_HPP_
+#endif  // _QITYPE_OBJECTFACTORY_HPP_

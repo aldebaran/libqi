@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPESTRING_HXX_
-#define _QIMESSAGING_TYPESTRING_HXX_
+#ifndef _QITYPE_DETAILS_TYPESTRING_HXX_
+#define _QITYPE_DETAILS_TYPESTRING_HXX_
 
 namespace qi
 {
@@ -95,4 +95,4 @@ namespace qi
   };
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPESTRING_HXX_

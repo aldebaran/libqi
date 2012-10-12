@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPEPOINTER_HXX_
-#define _QIMESSAGING_TYPEPOINTER_HXX_
+#ifndef _QITYPE_DETAILS_TYPEPOINTER_HXX_
+#define _QITYPE_DETAILS_TYPEPOINTER_HXX_
 
 #include <boost/shared_ptr.hpp>
 
@@ -64,4 +64,4 @@ namespace qi
   template<typename T> class TypeImpl<boost::shared_ptr<T> >: public TypeSharedPointerImpl<boost::shared_ptr<T> >{};
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPEPOINTER_HXX_

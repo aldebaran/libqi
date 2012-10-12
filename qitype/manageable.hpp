@@ -23,8 +23,8 @@
 ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef  MANAGEABLE_HPP_
-# define MANAGEABLE_HPP_
+#ifndef _QITYPE_MANAGEABLE_HPP_
+#define _QITYPE_MANAGEABLE_HPP_
 
 #include <qitype/signal.hpp>
 
@@ -34,4 +34,4 @@ namespace qi {
 
 }
 
-#endif   /* !MANAGEABLE_PP_ */
+#endif  // _QITYPE_MANAGEABLE_HPP_

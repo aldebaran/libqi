@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
-#define _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
+#ifndef _QITYPE_OBJECTTYPEBUILDER_HPP_
+#define _QITYPE_OBJECTTYPEBUILDER_HPP_
 
 #include <qitype/api.hpp>
 #include <string>
@@ -89,4 +89,4 @@ namespace qi {
 
 #include <qitype/details/objecttypebuilder.hxx>
 
-#endif  // _QIMESSAGING_OBJECTTYPEBUILDER_HPP_
+#endif  // _QITYPE_OBJECTTYPEBUILDER_HPP_

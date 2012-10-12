@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DETAILS_METHODTYPE_HXX_
-#define _QIMESSAGING_DETAILS_METHODTYPE_HXX_
+#ifndef _QITYPE_DETAILS_METHODTYPE_HXX_
+#define _QITYPE_DETAILS_METHODTYPE_HXX_
 
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/result_type.hpp>
@@ -178,4 +178,4 @@ namespace qi
   }
 } // namespace qi
 
-#endif  // _QIMESSAGING_DETAILS_METHODTYPE_HXX_
+#endif  // _QITYPE_DETAILS_METHODTYPE_HXX_

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPE_IMPL_HXX_
-#define _QIMESSAGING_TYPE_IMPL_HXX_
+#ifndef _QITYPE_DETAILS_TYPEIMPL_HXX_
+#define _QITYPE_DETAILS_TYPEIMPL_HXX_
 
 #include <set>
 
@@ -214,4 +214,4 @@ template<typename T> class TypeImpl: public DefaultTypeImpl<T>
 
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPEIMPL_HXX_

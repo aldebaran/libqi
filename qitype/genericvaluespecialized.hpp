@@ -3,8 +3,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#ifndef _QIMESSAGING_GENERICVALUESPECIALIZED_HPP_
-#define _QIMESSAGING_GENERICVALUESPECIALIZED_HPP_
+#ifndef _QITYPE_GENERICVALUESPECIALIZED_HPP_
+#define _QITYPE_GENERICVALUESPECIALIZED_HPP_
 
 #include <qitype/genericvalue.hpp>
 
@@ -63,4 +63,4 @@ namespace qi
 #include <qitype/details/typelist.hxx>
 #include <qitype/details/typemap.hxx>
 #include <qitype/details/typepointer.hxx>
-#endif
+#endif  // _QITYPE_GENERICVALUESPECIALIZED_HPP_

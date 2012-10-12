@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_FUTURE_HPP_
-#define _QIMESSAGING_FUTURE_HPP_
+#ifndef _QITYPE_FUTURE_HPP_
+#define _QITYPE_FUTURE_HPP_
 
 #include <vector>
 #include <qitype/api.hpp>
@@ -182,4 +182,4 @@ namespace qi {
 
 #include <qitype/details/future.hxx>
 
-#endif  // _QIMESSAGING_FUTURE_HPP_
+#endif  // _QITYPE_FUTURE_HPP_

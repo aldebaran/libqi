@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_METAOBJECT_HPP_
-#define _QIMESSAGING_METAOBJECT_HPP_
+#ifndef _QITYPE_METAOBJECT_HPP_
+#define _QITYPE_METAOBJECT_HPP_
 
 #include <qitype/metamethod.hpp>
 #include <qitype/metasignal.hpp>
@@ -62,4 +62,4 @@ namespace qi {
 
 };
 
-#endif  // _QIMESSAGING_METAOBJECT_HPP_
+#endif  // _QITYPE_METAOBJECT_HPP_

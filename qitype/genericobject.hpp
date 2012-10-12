@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_GENERICOBJECT_HPP_
-#define _QIMESSAGING_GENERICOBJECT_HPP_
+#ifndef _QITYPE_GENERICOBJECT_HPP_
+#define _QITYPE_GENERICOBJECT_HPP_
 
 #include <map>
 #include <string>
@@ -164,4 +164,4 @@ namespace qi {
 
 
 #include <qitype/details/genericobject.hxx>
-#endif  // _QIMESSAGING_GENERICOBJECT_HPP_
+#endif  // _QITYPE_GENERICOBJECT_HPP_

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_SIGNATURE_HPP_
-#define _QIMESSAGING_SIGNATURE_HPP_
+#ifndef _QITYPE_SIGNATURE_HPP_
+#define _QITYPE_SIGNATURE_HPP_
 
 #include <qitype/api.hpp>
 #include <qitype/type.hpp>
@@ -125,4 +125,4 @@ namespace qi {
   };
 }
 
-#endif  // _QIMESSAGING_SIGNATURE_HPP_
+#endif  // _QITYPE_SIGNATURE_HPP_

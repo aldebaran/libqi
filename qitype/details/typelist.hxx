@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPELIST_HXX_
-#define _QIMESSAGING_TYPELIST_HXX_
+#ifndef _QITYPE_DETAILS_TYPELIST_HXX_
+#define _QITYPE_DETAILS_TYPELIST_HXX_
 
 namespace qi
 {
@@ -141,4 +141,4 @@ template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<vecto
 template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<list1, T> {};
 }
 
-#endif
+#endif  // _QITYPE_DETAILS_TYPELIST_HXX_

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DYNAMICOBJECT_HPP_
-#define _QIMESSAGING_DYNAMICOBJECT_HPP_
+#ifndef _QITYPE_DYNAMICOBJECT_HPP_
+#define _QITYPE_DYNAMICOBJECT_HPP_
 
 #include <qitype/genericobject.hpp>
 
@@ -56,4 +56,4 @@ namespace qi
   QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj);
 
 }
-#endif  // _QIMESSAGING_DYNAMICOBJECT_HPP_
+#endif  // _QITYPE_DYNAMICOBJECT_HPP_

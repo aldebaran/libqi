@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_GENERICVALUE_HPP_
-#define _QIMESSAGING_GENERICVALUE_HPP_
+#ifndef _QITYPE_GENERICVALUE_HPP_
+#define _QITYPE_GENERICVALUE_HPP_
 
 #include <qitype/type.hpp>
 
@@ -83,4 +83,4 @@ public:
 #include <qitype/genericvaluespecialized.hpp>
 #include <qitype/details/genericvalue.hxx>
 
-#endif  // _QIMESSAGING_GENERICVALUE_HPP_
+#endif  // _QITYPE_GENERICVALUE_HPP_

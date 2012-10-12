@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DETAILS_FUTURE_HXX_
-#define _QIMESSAGING_DETAILS_FUTURE_HXX_
+#ifndef _QITYPE_DETAILS_FUTURE_HXX_
+#define _QITYPE_DETAILS_FUTURE_HXX_
 
 #include <vector>
 #include <utility> // pair
@@ -103,4 +103,4 @@ namespace qi {
   }
 }
 
-#endif  // _QIMESSAGING_DETAILS_FUTURE_HXX_
+#endif  // _QITYPE_DETAILS_FUTURE_HXX_

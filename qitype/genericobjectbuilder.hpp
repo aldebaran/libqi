@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
-#define _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
+#ifndef _QITYPE_GENERICOBJECTBUILDER_HPP_
+#define _QITYPE_GENERICOBJECTBUILDER_HPP_
 
 #include <qitype/api.hpp>
 #include <qitype/genericobject.hpp>
@@ -43,4 +43,4 @@ namespace qi {
 
 #include <qitype/details/genericobjectbuilder.hxx>
 
-#endif  // _QIMESSAGING_GENERICOBJECTBUILDER_HPP_
+#endif  // _QITYPE_GENERICOBJECTBUILDER_HPP_

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_METASIGNAL_HPP_
-#define _QIMESSAGING_METASIGNAL_HPP_
+#ifndef _QITYPE_METASIGNAL_HPP_
+#define _QITYPE_METASIGNAL_HPP_
 
 #include <qitype/signature.hpp>
 
@@ -32,4 +32,4 @@ namespace qi {
 
 QI_TYPE_STRUCT(qi::MetaSignal, _uid, _signature);
 
-#endif  // _QIMESSAGING_METASIGNAL_HPP_
+#endif  // _QITYPE_METASIGNAL_HPP_

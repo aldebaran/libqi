@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPE_HPP_
-#define _QIMESSAGING_TYPE_HPP_
+#ifndef _QITYPE_TYPE_HPP_
+#define _QITYPE_TYPE_HPP_
 
 #include <typeinfo>
 #include <string>
@@ -155,4 +155,4 @@ template<typename T> Type* typeOf(const T& v)
 //#include <qitype/details/typetuple.hxx>
 
 
-#endif  // _QIMESSAGING_TYPE_HPP_
+#endif  // _QITYPE_TYPE_HPP_

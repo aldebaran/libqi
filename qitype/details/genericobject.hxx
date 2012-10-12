@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
-#define _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
+#ifndef _QITYPE_DETAILS_GENERICOBJECT_HXX_
+#define _QITYPE_DETAILS_GENERICOBJECT_HXX_
 
 #include <qitype/future.hpp>
 #include <qitype/typeobject.hpp>
@@ -126,4 +126,4 @@ namespace qi {
     return res.future();
   }
 }
-#endif  // _QIMESSAGING_DETAILS_GENERICOBJECT_HXX_
+#endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

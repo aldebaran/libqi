@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef  __TYPEOBJECT_HPP_
-# define __TYPEOBJECT_HPP_
+#ifndef _QITYPE_TYPEOBJECT_HPP_
+#define _QITYPE_TYPEOBJECT_HPP_
 
 #include <qitype/metaobject.hpp>
 #include <qitype/future.hpp>
@@ -54,4 +54,4 @@ namespace qi {
 
 }
 
-#endif   /* !TYPEOBJECT_PP_ */
+#endif  // _QITYPE_TYPEOBJECT_HPP_

@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPEMAP_HXX_
-#define _QIMESSAGING_TYPEMAP_HXX_
+#ifndef _QITYPE_DETAILS_TYPEMAP_HXX_
+#define _QITYPE_DETAILS_TYPEMAP_HXX_
 
 namespace qi
 {
@@ -140,4 +140,4 @@ template<typename K, typename V, typename C, typename A>
 struct TypeImpl<std::map<K,V, C, A> >: public TypeMapImpl<std::map<K, V,C,A> > {};
 
 }
-#endif
+#endif  // _QITYPE_DETAILS_TYPEMAP_HXX_

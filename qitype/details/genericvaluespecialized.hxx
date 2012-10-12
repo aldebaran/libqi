@@ -3,8 +3,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#ifndef _QIMESSAGING_GENERICVALUESPECIALIZED_HXX_
-#define _QIMESSAGING_GENERICVALUESPECIALIZED_HXX_
+#ifndef _QITYPE_DETAILS_GENERICVALUESPECIALIZED_HXX_
+#define _QITYPE_DETAILS_GENERICVALUESPECIALIZED_HXX_
 
 namespace qi
 {
@@ -167,4 +167,4 @@ inline GenericMap GenericValue::asMap() const
 }
 
 }
-#endif
+#endif  // _QITYPE_DETAILS_GENERICVALUESPECIALIZED_HXX_

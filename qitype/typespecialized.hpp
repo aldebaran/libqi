@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPESPECIALIZED_HPP_
-#define _QIMESSAGING_TYPESPECIALIZED_HPP_
+#ifndef _QITYPE_TYPESPECIALIZED_HPP_
+#define _QITYPE_TYPESPECIALIZED_HPP_
 
 #include <qitype/type.hpp>
 
@@ -127,4 +127,4 @@ QITYPE_API Type* defaultTupleType(std::vector<Type*> memberTypes);
 }
 
 
-#endif
+#endif  // _QITYPE_TYPESPECIALIZED_HPP_

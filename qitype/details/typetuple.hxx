@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_TYPETUPLE_HXX_
-#define _QIMESSAGING_TYPETUPLE_HXX_
+#ifndef _QITYPE_DETAILS_TYPETUPLE_HXX_
+#define _QITYPE_DETAILS_TYPETUPLE_HXX_
 
 #include <qi/preproc.hpp>
 
@@ -128,4 +128,4 @@ namespace qi {
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 }
-#endif
+#endif  // _QITYPE_DETAILS_TYPETUPLE_HXX_

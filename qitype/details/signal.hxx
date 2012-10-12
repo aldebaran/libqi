@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DETAILS_SIGNAL_HXX_
-#define _QIMESSAGING_DETAILS_SIGNAL_HXX_
+#ifndef _QITYPE_DETAILS_SIGNAL_HXX_
+#define _QITYPE_DETAILS_SIGNAL_HXX_
 
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
@@ -85,4 +85,4 @@ namespace qi
     return detail::functionArgumentsSignature<T>();
   }
 } // qi
-#endif  // _QIMESSAGING_DETAILS_SIGNAL_HXX_
+#endif  // _QITYPE_DETAILS_SIGNAL_HXX_

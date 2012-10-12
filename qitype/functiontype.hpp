@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_FUNCTIONTYPE_HPP_
-#define _QIMESSAGING_FUNCTIONTYPE_HPP_
+#ifndef _QITYPE_FUNCTIONTYPE_HPP_
+#define _QITYPE_FUNCTIONTYPE_HPP_
 
 #include <boost/function.hpp>
 
@@ -83,4 +83,4 @@ namespace qi {
 
 #include <qitype/details/functiontype.hxx>
 
-#endif  // _QIMESSAGING_FUNCTIONTYPE_HPP_
+#endif  // _QITYPE_FUNCTIONTYPE_HPP_

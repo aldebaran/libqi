@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_SIGNAL_HPP_
-#define _QIMESSAGING_SIGNAL_HPP_
+#ifndef _QITYPE_SIGNAL_HPP_
+#define _QITYPE_SIGNAL_HPP_
 
 #include <qi/eventloop.hpp>
 #include <qitype/signature.hpp>
@@ -125,4 +125,4 @@ namespace qi {
 
 QI_NO_TYPE(qi::SignalBase)
 
-#endif  // _QIMESSAGING_SIGNAL_HPP_
+#endif  // _QITYPE_SIGNAL_HPP_
