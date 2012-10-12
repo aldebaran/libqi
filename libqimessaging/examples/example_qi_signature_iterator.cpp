@@ -1,5 +1,5 @@
 #include <iostream>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 typedef std::vector<std::string>          StringVect;
 typedef std::vector<StringVect>           StringVectVect;

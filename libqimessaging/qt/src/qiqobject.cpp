@@ -6,7 +6,7 @@
 */
 
 #include "qiqobject.h"
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <QtCore/qdebug.h>
 #include <QtCore/QMetaMethod>
 

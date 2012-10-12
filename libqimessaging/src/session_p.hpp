@@ -13,10 +13,10 @@
 #include <boost/thread.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qimessaging/transportserver.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/signal.hpp>
 #include "src/serverresult.hpp"
 #include "src/servicewatcher.hpp"
 #include "src/servicedirectoryclient.hpp"

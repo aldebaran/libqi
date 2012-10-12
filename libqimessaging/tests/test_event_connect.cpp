@@ -6,8 +6,8 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 #include <qi/application.hpp>
 
 static int lastPayload = 0;

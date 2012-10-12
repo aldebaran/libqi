@@ -14,7 +14,7 @@
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/transportsocket.hpp>
-# include <qimessaging/eventloop.hpp>
+# include <qi/eventloop.hpp>
 
 # include "src/transportsocket_p.hpp"
 # include <event2/util.h>

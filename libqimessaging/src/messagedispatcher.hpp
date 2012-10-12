@@ -7,8 +7,8 @@
 #ifndef _SRC_MESSAGEDISPATCHER_HPP_
 #define _SRC_MESSAGEDISPATCHER_HPP_
 
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/message.hpp>
 

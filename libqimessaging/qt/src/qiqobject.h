@@ -8,7 +8,7 @@
 #ifndef   QIREMOTEOBJECT_P_H_
 # define  QIREMOTEOBJECT_P_H_
 
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <QtCore/qobject.h>
 
 class QiObjectPrivate;

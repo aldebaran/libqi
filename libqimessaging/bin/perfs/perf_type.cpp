@@ -14,10 +14,10 @@
 
 #include <qi/application.hpp>
 
-#include <qimessaging/type.hpp>
-#include <qimessaging/genericvalue.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/type.hpp>
+#include <qitype/genericvalue.hpp>
+#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/signal.hpp>
 
 unsigned int niter = 10000;
 unsigned int maxContainerSize = 1000;

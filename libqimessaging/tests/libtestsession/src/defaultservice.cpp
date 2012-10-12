@@ -9,7 +9,7 @@
 #include <qi/os.hpp>
 #include "defaultservice.hpp"
 
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 #include "defaultservice.hpp"
 
 std::string __test_ping()

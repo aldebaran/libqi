@@ -11,12 +11,12 @@
 #include <gtest/gtest.h>
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/type.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/type.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
-#include <qimessaging/genericvaluespecialized.hpp>
+#include <qitype/genericvaluespecialized.hpp>
 
 
 qi::GenericValue v;

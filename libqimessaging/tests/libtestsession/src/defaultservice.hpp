@@ -33,7 +33,7 @@
 #ifndef _TESTS_LIBTESTSESSION_DEFAULTSERVICE_HPP_
 #define _TESTS_LIBTESTSESSION_DEFAULTSERVICE_HPP_
 
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 
 std::string __test_ping();
 

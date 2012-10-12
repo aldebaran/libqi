@@ -15,9 +15,9 @@
 #include <qimessaging/api.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/bufferreader.hpp>
-#include <qimessaging/signature.hpp>
-#include <qimessaging/type.hpp>
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/signature.hpp>
+#include <qitype/type.hpp>
+#include <qitype/genericvalue.hpp>
 #include <qi/types.hpp>
 #include <qi/preproc.hpp>
 

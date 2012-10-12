@@ -9,7 +9,7 @@
 #ifndef     _QIMESSAGING_SIGNATURE_C_P_H_
 # define    _QIMESSAGING_SIGNATURE_C_P_H_
 
-# include <qimessaging/signature.hpp>
+# include <qitype/signature.hpp>
 
 typedef struct qi_signature_t_s
 {

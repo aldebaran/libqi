@@ -8,10 +8,10 @@
 #define _QIMESSAGING_SERVICEINFO_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/genericvalue.hpp>
 #include <string>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 namespace qi
 {

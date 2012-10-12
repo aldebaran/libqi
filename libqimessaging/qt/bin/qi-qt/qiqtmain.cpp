@@ -12,7 +12,7 @@
 #include <qi/os.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 
 #include <boost/program_options.hpp>
 

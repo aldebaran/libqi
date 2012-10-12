@@ -3,7 +3,7 @@ qi::GenericObject
 
 .. code-block:: c++
 
-  #include <qimessaging/genericobject.hpp>
+  #include <qitype/genericobject.hpp>
 
 .. cpp:namespace:: qi
 

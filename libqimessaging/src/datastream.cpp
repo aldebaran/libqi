@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/datastream.hpp>
@@ -15,7 +15,7 @@
 
 #if 0
 
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 #define __QI_DEBUG_SERIALIZATION_DATA_R(x, d) {            \
   std::string sig = qi::signature< x >::value();           \
@@ -251,7 +251,7 @@ namespace qi {
       buffer().signature() += "m";
     ++_innerSerialization;
     *this << value.signature();
-    value.serialize(*this);
+    qi::details::serialize(value, *this);
     --_innerSerialization;
     return *this;
   }

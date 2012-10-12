@@ -5,7 +5,6 @@
 #include "sessionservice.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
-#include "signal_p.hpp"
 #include "remoteobject_p.hpp"
 
 namespace qi {

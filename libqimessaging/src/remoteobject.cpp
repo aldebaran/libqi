@@ -3,13 +3,10 @@
 **  See COPYING for the license
 */
 #include "remoteobject_p.hpp"
-#include "object_p.hpp"
-#include "metasignal_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
-#include "metaobject_p.hpp"
 
 namespace qi {
 

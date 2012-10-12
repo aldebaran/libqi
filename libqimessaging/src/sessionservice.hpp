@@ -7,7 +7,7 @@
 #ifndef _SRC_SESSIONSERVICE_HPP_
 #define _SRC_SESSIONSERVICE_HPP_
 
-#include <qimessaging/future.hpp>
+#include <qitype/future.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/session.hpp>

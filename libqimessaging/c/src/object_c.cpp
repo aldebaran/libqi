@@ -5,11 +5,11 @@
 ** Copyright (C) 2010, 2011, 2012 Aldebararan Robotics
 */
 
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericvalue.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 
 #include <qimessaging/c/object_c.h>
 #include <qimessaging/c/message_c.h>

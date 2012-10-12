@@ -14,8 +14,8 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 
 std::string reply(const std::string &msg) {
   qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;

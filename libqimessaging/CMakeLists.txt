@@ -42,51 +42,18 @@ qi_add_probes(src/tp_qimessaging.in.h
 
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
+                   qimessaging/details/datastream.hxx
                    qimessaging/buffer.hpp
                    qimessaging/bufferreader.hpp
                    qimessaging/datastream.hpp
-                   qimessaging/details/functiontype.hxx
-                   qimessaging/details/future.hxx
-                   qimessaging/details/genericobjectbuilder.hxx
-                   qimessaging/details/genericobject.hxx
-                   qimessaging/details/genericvalue.hxx
-                   qimessaging/details/genericvaluespecialized.hxx
-                   qimessaging/details/methodtype.hxx
-                   qimessaging/details/objecttypebuilder.hxx
-                   qimessaging/details/signal.hxx
-                   qimessaging/details/type.hxx
-                   qimessaging/details/typeimpl.hxx
-                   qimessaging/details/typelist.hxx
-                   qimessaging/details/typemap.hxx
-                   qimessaging/details/typepointer.hxx
-                   qimessaging/details/typestring.hxx
-                   qimessaging/details/typetuple.hxx
-                   qimessaging/dynamicobject.hpp
-                   qimessaging/eventloop.hpp
                    qimessaging/file.hpp
-                   qimessaging/functiontype.hpp
-                   qimessaging/future.hpp
                    qimessaging/gateway.hpp
-                   qimessaging/genericobjectbuilder.hpp
-                   qimessaging/genericobject.hpp
-                   qimessaging/genericvalue.hpp
-                   qimessaging/genericvaluespecialized.hpp
                    qimessaging/message.hpp
-                   qimessaging/metamethod.hpp
-                   qimessaging/metaobject.hpp
-                   qimessaging/metasignal.hpp
-                   qimessaging/methodtype.hpp
-                   qimessaging/objectfactory.hpp
-                   qimessaging/objecttypebuilder.hpp
                    qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
-                   qimessaging/signal.hpp
-                   qimessaging/signature.hpp
                    qimessaging/transportserver.hpp
                    qimessaging/transportsocket.hpp
-                   qimessaging/type.hpp
-                   qimessaging/typespecialized.hpp
                    qimessaging/url.hpp
 )
 
@@ -101,27 +68,11 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/buffer_p.hpp
                                    src/bufferreader.cpp
                                    src/datastream.cpp
-                                   src/dynamicobject.cpp
-                                   src/eventloop.cpp
-                                   src/eventloop_p.hpp
-                                   src/functiontype.cpp
                                    src/gateway.cpp
-                                   src/genericobjectbuilder.cpp
-                                   src/genericvalue.cpp
                                    src/message.cpp
                                    src/message_p.hpp
                                    src/messagedispatcher.hpp
                                    src/messagedispatcher.cpp
-                                   src/metamethod.cpp
-                                   src/metasignal.cpp
-                                   src/metasignal_p.cpp
-                                   src/metasignal_p.hpp
-                                   src/metaobject.cpp
-                                   src/metaobject_p.hpp
-                                   src/object_p.hpp
-                                   src/object.cpp
-                                   src/objectfactory.cpp
-                                   src/objecttypebuilder.cpp
                                    src/objectregistrar.hpp
                                    src/objectregistrar.cpp
                                    src/remoteobject.cpp
@@ -141,12 +92,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/server.cpp
                                    src/servicewatcher.hpp
                                    src/servicewatcher.cpp
-                                   src/signal.cpp
-                                   src/signal_p.hpp
-                                   src/signatureconvertor.cpp
-                                   src/signatureconvertor.hpp
-                                   src/signatureiterator.cpp
-                                   src/staticobjecttype.cpp
                                    src/transportserver.cpp
                                    src/transportserver_p.hpp
                                    src/transportserverlibevent_p.cpp
@@ -161,21 +106,15 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/tcptransportsocket.hpp
                                    src/tcptransportsocket_p.cpp
                                    src/tcptransportsocket_p.hpp
-                                   src/type.cpp
-                                   src/typeint.cpp
-                                   src/typetuple.cpp
                                    src/file.cpp
                                    src/url.cpp
-                                   src/future.cpp
                                    src/serverresult.hpp
-                                   src/signature.cpp
                                    )
-
 
 add_subdirectory(c)
 
 qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
-                 SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT)
+                 SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT QITYPE)
 if(WIN32)
   qi_use_lib(qimessaging WSA)
 endif(WIN32)

@@ -10,8 +10,8 @@
 #include <istream>
 #include <sstream>
 
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/future.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/future.hpp>
 #include <qimessaging/session.hpp>
 
 qi::Session session;

@@ -30,7 +30,7 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
-#include <qimessaging/eventloop.hpp>
+#include <qi/eventloop.hpp>
 
 #define MAX_LINE 16384
 

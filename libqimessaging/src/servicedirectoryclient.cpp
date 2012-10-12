@@ -3,10 +3,9 @@
 **  See COPYING for the license
 */
 #include "servicedirectoryclient.hpp"
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "src/servicedirectory_p.hpp"
 #include "src/tcptransportsocket.hpp"
-#include "metaobject_p.hpp"
 
 namespace qi {
 

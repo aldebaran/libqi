@@ -3,10 +3,10 @@
 **  See COPYING for the license
 */
 #include <set>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "server.hpp"
 #include "objectregistrar.hpp"
 #include "serverresult.hpp"
@@ -14,7 +14,6 @@
 #include <qi/os.hpp>
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
-#include "signal_p.hpp"
 
 namespace qi {
 

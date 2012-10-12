@@ -9,7 +9,7 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
-#include <qimessaging/genericvalue.hpp>
+#include <qitype/genericvalue.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qi/types.hpp>

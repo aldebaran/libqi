@@ -6,13 +6,11 @@
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include <qimessaging/objectfactory.hpp>
+#include <qitype/objectfactory.hpp>
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"
-#include "object_p.hpp"
-#include "signal_p.hpp"
 
 namespace qi {
 

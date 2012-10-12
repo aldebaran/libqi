@@ -27,7 +27,7 @@
 #include <qimessaging/transportsocket.hpp>
 #include "src/tcptransportsocket.hpp"
 
-#include <qimessaging/eventloop.hpp>
+#include <qi/eventloop.hpp>
 
 #include "src/eventloop_p.hpp"
 #include "src/transportserver_p.hpp"

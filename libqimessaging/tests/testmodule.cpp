@@ -4,9 +4,9 @@
 */
 
 #include <qi/application.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
-#include <qimessaging/objectfactory.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
+#include <qitype/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 
 int testMethod(const int& v)

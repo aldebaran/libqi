@@ -10,7 +10,7 @@
 #include <QtCore/qvector.h>
 #include <qimessaging/qt/qisession.h>
 #include <qimessaging/session.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/qt/qidatastream.h>
 #include "src/qiremoteobject_p.h"

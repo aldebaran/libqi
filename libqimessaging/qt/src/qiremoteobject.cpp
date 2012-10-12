@@ -11,9 +11,9 @@
 #include "qimetatype_p.h"
 
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <QtCore/qdebug.h>
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 #include <qimessaging/transportsocket.hpp>
 
 class QiRemoteObjectPrivate {

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <qimessaging/c/future_c.h>
-#include <qimessaging/future.hpp>
+#include <qitype/future.hpp>
 #include <qimessaging/c/object_c.h>
 
 #include "future_c_p.h"

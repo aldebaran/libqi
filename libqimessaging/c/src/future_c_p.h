@@ -10,8 +10,8 @@
 # define   	_QIMESSAGING_FUTURE_C_P_H_
 
 #include <list>
-#include <qimessaging/type.hpp>
-#include <qimessaging/future.hpp>
+#include <qitype/type.hpp>
+#include <qitype/future.hpp>
 
 class CFunctorResult;
 class FutureCallbackForwarder;

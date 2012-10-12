@@ -27,8 +27,8 @@ namespace po = boost::program_options;
 
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/genericobjectbuilder.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 
 static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;

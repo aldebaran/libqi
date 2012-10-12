@@ -3,7 +3,7 @@
 #include <map>
 #include <iostream>
 
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 namespace qi
 {

@@ -3,10 +3,9 @@
 **  See COPYING for the license
 */
 
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"
-#include "metaobject_p.hpp"
 
 static const int gObjectOffset = 10;
 
@@ -16,7 +15,7 @@ namespace qi {
                                    unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
-    msg.setBuffer(params.toBuffer());
+    msg.setParameters(params);
     msg.setService(service);
     msg.setFunction(event + gObjectOffset);
     msg.setType(Message::Type_Event);
@@ -60,8 +59,8 @@ namespace qi {
   }
 
   //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int event, unsigned int remoteLinkId) {
-    unsigned int eventId = event - gObjectOffset;
+  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), unsigned int remoteLinkId) {
+    //unsigned int eventId = event - gObjectOffset;
     //throw on error
     ServiceLinks&          sl = _links[currentSocket()];
     ServiceLinks::iterator it = sl.find(remoteLinkId);
@@ -76,19 +75,11 @@ namespace qi {
     _object->disconnect(it->second.localLinkId);
   }
 
-  static void metaObjectConcat(qi::MetaObject *dest, const qi::MetaObject &source) {
-    if (!dest->_p->addMethods(gObjectOffset, source.methodMap()))
-      qiLogError("BoundObject") << "cant merge metaobject (methods)";
-    if (!dest->_p->addSignals(gObjectOffset, source.signalMap()))
-      qiLogError("BoundObject") << "cant merge metaobject (signals)";
-  }
 
   //Bound Method
   qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
-    qi::MetaObject mo = _self->metaObject();
     //we inject specials methods here
-    metaObjectConcat(&mo, _object->metaObject());
-    return mo;
+    return qi::MetaObject::merge(_self->metaObject(), gObjectOffset, _object->metaObject());
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
@@ -144,7 +135,7 @@ namespace qi {
     sigparam = signatureSplit(sigparam)[2];
     sigparam = sigparam.substr(1, sigparam.length()-2);
     //socket object always take the TransportSocketPtr as last parameter, inject it!
-    mfp = GenericFunctionParameters::fromBuffer(sigparam, msg.buffer());
+    mfp = msg.parameters(sigparam);
 
     switch (msg.type())
     {

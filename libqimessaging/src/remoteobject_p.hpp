@@ -9,12 +9,11 @@
 
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/dynamicobject.hpp>
-#include <qimessaging/signal.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/dynamicobject.hpp>
+#include <qitype/signal.hpp>
 
 #include "messagedispatcher.hpp"
-#include "object_p.hpp"
 
 #include <boost/thread/mutex.hpp>
 #include <string>

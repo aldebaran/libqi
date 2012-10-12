@@ -3,7 +3,7 @@ qi::Signature
 
 .. code-block:: c++
 
-  #include <qimessaging/signature.hpp>
+  #include <qitype/signature.hpp>
 
 .. cpp:namespace:: qi
 

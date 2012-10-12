@@ -7,14 +7,14 @@
 #include <map>
 #include <set>
 
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include <qimessaging/objecttypebuilder.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include "transportserver_p.hpp"
 #include "serverresult.hpp"
 #include "session_p.hpp"
@@ -22,7 +22,6 @@
 #include <qi/log.hpp>
 #include <qimessaging/url.hpp>
 #include "servicedirectory_p.hpp"
-#include "signal_p.hpp"
 #include "server.hpp"
 
 namespace qi

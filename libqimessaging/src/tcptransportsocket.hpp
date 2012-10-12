@@ -8,7 +8,7 @@
 #define _SRC_TCPTRANSPORTSOCKET_HPP_
 
 # include <qimessaging/transportsocket.hpp>
-# include <qimessaging/eventloop.hpp>
+# include <qi/eventloop.hpp>
 
 namespace qi
 {

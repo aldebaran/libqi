@@ -10,8 +10,8 @@
 #include <Python.h>
 
 #include "qipython.hpp"
-#include <qimessaging/genericobject.hpp>
-#include <qimessaging/metaobject.hpp>
+#include <qitype/genericobject.hpp>
+#include <qitype/metaobject.hpp>
 #include <qimessaging/c/qi_c.h>
 #include <qi/log.hpp>
 

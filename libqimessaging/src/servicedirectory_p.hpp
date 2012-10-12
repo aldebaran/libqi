@@ -9,7 +9,7 @@
 
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
 #include "objectregistrar.hpp"

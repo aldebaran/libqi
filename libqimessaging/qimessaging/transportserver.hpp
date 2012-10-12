@@ -9,8 +9,8 @@
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
-# include <qimessaging/eventloop.hpp>
-# include <qimessaging/signal.hpp>
+# include <qi/eventloop.hpp>
+# include <qitype/signal.hpp>
 # include <vector>
 # include <qimessaging/url.hpp>
 

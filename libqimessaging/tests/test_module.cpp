@@ -7,10 +7,10 @@
 
 #include <qi/application.hpp>
 
-#include <qimessaging/genericobject.hpp>
+#include <qitype/genericobject.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
-#include <qimessaging/objectfactory.hpp>
+#include <qitype/objectfactory.hpp>
 
 qi::Session* session;
 TEST(Module, Load)

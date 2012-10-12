@@ -10,7 +10,7 @@
 #include <QtCore/qbytearray.h>
 #include "qimetatype_p.h"
 #include "qmetaobjectbuilder_p.h"
-#include <qimessaging/signature.hpp>
+#include <qitype/signature.hpp>
 
 QString qi_MetatypeToNetworkType(const int metatype)
 {
