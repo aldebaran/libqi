@@ -169,20 +169,17 @@ namespace qi {
 
   };
 
+  //generic stream operator. (use qi::Type)
   template<typename T>
-  ODataStream& operator<<(ODataStream& out, const T &v) {
-    toValue(v).serialize(out);
-    return out;
-  }
+  ODataStream& operator<<(ODataStream& out, const T &v);
 
   template<typename T>
-  IDataStream& operator >> (IDataStream& in, T& v)
-  {
-    Type* type = typeOf<T>();
-    GenericValue value = type->deserialize(in);
-    T* ptr = (T*)type->ptrFromStorage(&value.value);
-    v = *ptr;
-    return in;
-  }
+  IDataStream& operator>>(IDataStream& in, T& v);
+
 }
+
+#include <qimessaging/details/datastream.hxx>
+
+
+
 #endif  // _QIMESSAGING_DATASTREAM_HPP_
