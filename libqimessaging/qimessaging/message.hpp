@@ -12,6 +12,7 @@
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/buffer.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qitype/functiontype.hpp>
 #include <qi/types.hpp>
 
 namespace qi {
@@ -134,6 +135,9 @@ namespace qi {
 
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;
+
+    void                      setParameters(const GenericFunctionParameters &parameters);
+    GenericFunctionParameters parameters(const qi::Signature &signature) const;
 
     MessageAddress address() const;
 

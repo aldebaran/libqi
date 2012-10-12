@@ -179,6 +179,31 @@ namespace qi {
     _p->buffer = buffer;
   }
 
+  void Message::setParameters(const GenericFunctionParameters &parameters)
+  {
+    ODataStream out(_p->buffer);
+    for (unsigned int i = 0; i < parameters.size(); ++i)
+      qi::details::serialize(parameters[i], out);
+  }
+
+  GenericFunctionParameters Message::parameters(const qi::Signature &sig) const {
+    GenericFunctionParameters result;
+    IDataStream in(_p->buffer);
+    Signature::iterator it = sig.begin();
+    while (it != sig.end())
+    {
+      qi::Type* compatible = qi::Type::fromSignature(*it);
+      if (!compatible)
+      {
+        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
+        throw std::runtime_error("Could not construct type for " + *it);
+      }
+      result.push_back(qi::details::deserialize(compatible, in));
+      ++it;
+    }
+    return result;
+  }
+
   const qi::Buffer &Message::buffer() const
   {
     return _p->buffer;
