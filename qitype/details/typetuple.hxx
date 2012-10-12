@@ -59,13 +59,26 @@ namespace qi {                                                                  
   }\
 }
 
+/// Allow the QI_TYPE_STRUCT macro and variants to access private members
 #define QI_TYPE_STRUCT_PRIVATE_ACCESS(name) \
 friend class qi::TypeImpl<name>;
 
+/** Declare a simple struct to the type system.
+ * First argument is the structure name. Remaining arguments are the structure
+ * fields.
+ * This macro must be called outside any namespace.
+ * This macro should be called in the header file defining the structure 'name',
+ * or in a header included by all source files using the structure.
+ * See QI_TYPE_STRUCT_REGISTER for a similar macro that can be called from a
+ * single source file.
+ */
 #define QI_TYPE_STRUCT(name, ...) \
   QI_TYPE_STRUCT_DECLARE(name) \
   __QI_TYPE_STRUCT_IMPLEMENT(name, inline, /**/, __VA_ARGS__)
 
+/** Similar to QI_TYPE_STRUCT, but evaluates 'onSet' after writting to an instance.
+ * The instance is accessible through the variable 'ptr'.
+ */
 #define QI_TYPE_STRUCT_EX(name, onSet, ...) \
   QI_TYPE_STRUCT_DECLARE(name) \
   __QI_TYPE_STRUCT_IMPLEMENT(name, inline, onSet, __VA_ARGS__)
@@ -73,9 +86,26 @@ friend class qi::TypeImpl<name>;
 #define QI_TYPE_STRUCT_IMPLEMENT(name, ...) \
   __QI_TYPE_STRUCT_IMPLEMENT(name, /**/, /**/, __VA_ARGS__)
 
+/** Similar to QI_TYPE_STRUCT, but using the runtime factory instead of the
+ * compile-time template.
+ *
+ */
+#define QI_TYPE_STRUCT_REGISTER(name, ...) \
+namespace _qi_ {                           \
+    QI_TYPE_STRUCT(name, __VA_ARGS__);     \
+}                                          \
+QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
+
+/** Declares that name is equivalent to type bounceTo, and that instances
+ * can be converted using the conversion function with signature 'bounceTo* (name*)'.
+ * This macro should be called in a header included by all code using the 'name'
+ * class.
+ * See QI_TYPE_STRUCT_BOUNCE_REGISTER for a similar macro that can be called from a
+ * single source file.
+ */
 #define QI_TYPE_STRUCT_BOUNCE(name, bounceTo, conversion)                 \
 namespace qi {                                                            \
-template<> class TypeImpl<name>: public TypeTupleBouncer<name, bounceTo>  \
+template<> class TypeImpl<name>: public ::qi::TypeTupleBouncer<name, bounceTo>  \
 {                                                                         \
 public:                                                                   \
   void adaptStorage(void** storage, void** adapted)                       \
@@ -85,6 +115,15 @@ public:                                                                   \
     *adapted = bounceType()->initializeStorage(tptr);                     \
   }                                                                       \
 };}
+
+/** Similar to QI_TYPE_STRUCT_BOUNCE, but using the runtime factory instead of the
+ * compile-time template.
+ */
+#define QI_TYPE_STRUCT_BOUNCE_REGISTER(name, bounceTo, conversion)        \
+namespace _qi_ {                                                          \
+    QI_TYPE_STRUCT_BOUNCE(name, bounceTo, conversion);                    \
+}                                                                         \
+QI_TYPE_REGISTER_CUSTOM(name, _qi_::qi::TypeImpl<name>)
 
 
 
