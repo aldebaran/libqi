@@ -129,7 +129,7 @@ namespace qi {
           return;
         }
         IDataStream in(msg.buffer());
-        promise.setValue(type->deserialize(in));
+        promise.setValue(qi::details::deserialize(type, in));
         return;
       }
       case qi::Message::Type_Error: {
@@ -156,8 +156,7 @@ namespace qi {
             std::string sig = sb->signature();
             sig = signatureSplit(sig)[2];
             sig = sig.substr(1, sig.length()-2);
-            GenericFunctionParameters args
-              = GenericFunctionParameters::fromBuffer(sig, msg.buffer());
+            GenericFunctionParameters args = msg.parameters(sig);
             sb->trigger(args);
             args.destroy();
           }
@@ -184,7 +183,7 @@ namespace qi {
   {
     qi::Promise<GenericValue> out;
     qi::Message msg;
-    msg.setBuffer(in.toBuffer());
+    msg.setParameters(in);
 #ifndef NDEBUG
     std::string sig = metaObject().method(method)->signature();
     sig = signatureSplit(sig)[2];
@@ -245,7 +244,7 @@ namespace qi {
     // But it is a bit complex, because the server will bounce the
     // event back to us.
     qi::Message msg;
-    msg.setBuffer(args.toBuffer());
+    msg.setParameters(args);
     msg.setType(Message::Type_Event);
     msg.setService(_service);
     msg.setObject(qi::Message::GenericObject_Main);
