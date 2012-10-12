@@ -23,8 +23,21 @@ class GenericList;
 class QITYPE_API GenericValue
 {
 public:
+
   GenericValue();
+
+  /** Store type and allocate storage of value.
+   * @param type use this type for initialization
+   */
+  GenericValue(Type* type);
+
+  /** Create a generic value with type and a value who should have
+   * already been allocated.
+   * @param type type of this generic value
+   * @param value an already alloc place to store value
+   */
   GenericValue(Type* type, void* value) : type(type), value(value) {}
+
   /** Return the typed pointer behind a GenericValue. T *must* be the type
    * of the value.
    * @return a pointer to the value as a T or 0 if value is not a T.
