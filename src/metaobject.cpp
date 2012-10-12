@@ -235,11 +235,20 @@ namespace qi {
     return _p->findSignal(name);
   }
 
-  MetaObjectPrivate* metaObjectPrivate(MetaObject* p)
-  {
-    return p->_p;
+  static qi::MetaObject merge(const qi::MetaObject &source, unsigned int offset, const qi::MetaObject &dest) {
+    qi::MetaObject result = source;
+    if (!result._p->addMethods(offset, dest.methodMap()))
+      qiLogError("BoundObject") << "cant merge metaobject (methods)";
+    if (!result._p->addSignals(offset, dest.signalMap()))
+      qiLogError("BoundObject") << "cant merge metaobject (signals)";
+    return result;
   }
 }
+
+static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {
+  return p->_p;
+}
+
 
 QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events);
 QI_TYPE_REGISTER(qi::MetaObjectPrivate);

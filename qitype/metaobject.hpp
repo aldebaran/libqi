@@ -40,6 +40,9 @@ namespace qi {
     std::vector<MetaMethod> findMethod(const std::string &name) const;
     std::vector<MetaSignal> findSignal(const std::string &name) const;
 
+    ///Merge two MetaObject. Dest method and signal ids will be incremented by offset.
+    static qi::MetaObject merge(const qi::MetaObject &source, unsigned int offset, const qi::MetaObject &dest);
+
     MetaObjectPrivate   *_p;
   };
 
