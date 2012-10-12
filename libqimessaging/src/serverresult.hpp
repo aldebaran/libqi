@@ -28,6 +28,7 @@ namespace qi {
       GenericValue val = future.value();
       if (val.type->kind() != Type::Void)
         val.serialize(ods);
+      val.destroy();
     }
     ret.setBuffer(result);
     if (!socket->send(ret))
