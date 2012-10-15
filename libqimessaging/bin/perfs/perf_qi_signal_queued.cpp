@@ -96,7 +96,8 @@ int main(int argc, char *argv[])
   dp.start("Signal_void", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_1();
-    while (*glob != 1) std::cout << *glob;
+    while (*glob != 1)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -110,7 +111,8 @@ int main(int argc, char *argv[])
   dp.start("Signal_int", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_2(1);
-    while (*glob != 1);
+    while (*glob != 1)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -127,7 +129,8 @@ int main(int argc, char *argv[])
   dp.start("Signal_Big_String", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_3(s);
-    while (*glob != 1);
+    while (*glob != 1)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -141,7 +144,8 @@ int main(int argc, char *argv[])
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_2(1);
 
-    while (*glob != 10);
+    while (*glob != 10)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -155,7 +159,8 @@ int main(int argc, char *argv[])
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_3(s);
 
-    while (*glob != 10);
+    while (*glob != 10)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -170,7 +175,8 @@ int main(int argc, char *argv[])
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_4(1, 1, 1, 1, 1, 1);
 
-    while (*glob != 1);
+    while (*glob != 1)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
@@ -185,7 +191,8 @@ int main(int argc, char *argv[])
   for (unsigned int i = 0; i < 10000; ++i) {
     signal_4(1, 1, 1, 1, 1, 1);
 
-    while (*glob != 10);
+    while (*glob != 10)
+      ;
     resetAtomic(glob);
   }
   dp.stop();
