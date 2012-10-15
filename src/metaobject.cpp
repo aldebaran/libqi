@@ -278,4 +278,4 @@ QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events
 QI_TYPE_REGISTER(::qi::MetaObjectPrivate);
 
 
-QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaObject, ::qi::MetaObjectPrivate, ::qi::metaObjectPrivate);
+QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::MetaObject, ::qi::MetaObjectPrivate, metaObjectPrivate);

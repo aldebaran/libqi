@@ -8,18 +8,12 @@
 #define _QITYPE_SIGNATURE_HPP_
 
 #include <qitype/api.hpp>
-#include <qitype/type.hpp>
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
 #include <sstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/type_traits/is_function.hpp>
-#include <boost/type_traits/is_member_function_pointer.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/static_assert.hpp>
 
 namespace qi {
 

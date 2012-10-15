@@ -53,7 +53,6 @@ set(PUBLIC_HEADERS
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp
                    qitype/genericvalue.hpp
-                   qitype/genericvaluespecialized.hpp
                    qitype/metamethod.hpp
                    qitype/metaobject.hpp
                    qitype/metasignal.hpp
@@ -63,7 +62,7 @@ set(PUBLIC_HEADERS
                    qitype/signal.hpp
                    qitype/signature.hpp
                    qitype/type.hpp
-                   qitype/typespecialized.hpp)
+                   qitype/typeobject.hpp)
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 

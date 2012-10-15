@@ -8,6 +8,7 @@
 #define _QITYPE_METASIGNAL_HPP_
 
 #include <qitype/signature.hpp>
+#include <qitype/type.hpp>
 
 namespace qi {
 
@@ -25,7 +26,7 @@ namespace qi {
   private:
     unsigned int _uid;
     std::string  _signature;
-    friend class TypeImpl<MetaSignal>;
+    QI_TYPE_STRUCT_PRIVATE_ACCESS(MetaSignal);
   };
 
 }; // namespace qi

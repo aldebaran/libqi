@@ -3,9 +3,8 @@
 **  See COPYING for the license
 */
 #include <qitype/type.hpp>
-#include <qitype/typespecialized.hpp>
 #include <qitype/genericvalue.hpp>
-#include <qitype/genericvaluespecialized.hpp>
+
 namespace qi
 {
   std::vector<GenericValue> TypeTuple::getValues(void* storage)

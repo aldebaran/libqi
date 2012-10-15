@@ -42,7 +42,7 @@ public:
 
 
 }
-#include <qitype/genericvaluespecialized.hpp>
+
 namespace qi {
 template<typename M>
 TypeMapImpl<M>::TypeMapImpl()

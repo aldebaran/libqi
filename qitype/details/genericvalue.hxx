@@ -9,7 +9,6 @@
 
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
-#include <qitype/typespecialized.hpp>
 
 namespace qi {
 

@@ -16,143 +16,392 @@
 
 #include <qi/log.hpp>
 #include <qitype/api.hpp>
+#include <qitype/signature.hpp>
+
+
+/* A lot of class are found in this headers... to kill circular dependencies.
+   Futhermore we need that all "default template" types are registered (included)
+   when type.hpp is used. (for typeOf to works reliably)
+*/
 
 namespace qi{
 
-class TypeInt;
-class TypeFloat;
-class TypeString;
-class TypePointer;
-class TypeTuple;
-class ObjectType;
-class GenericValue;
-class GenericList;
-class GenericMap;
-class GenericObject;
-class Signature;
 
-
-/** This class is used to uniquely identify a type.
- *
- */
-class QITYPE_API TypeInfo
-{
-public:
-  TypeInfo();
-  /// Construct a TypeInfo from a std::type_info
-  TypeInfo(const std::type_info& info);
-  /// Contruct a TypeInfo from a custom string.
-  TypeInfo(const std::string& ti);
-  std::string asString() const;
-  const char* asCString() const;
-
-  bool operator ==(const TypeInfo& b) const;
-  bool operator !=(const TypeInfo& b) const;
-  bool operator < (const TypeInfo& b) const;
-private:
-  const std::type_info* stdInfo;
-  std::string customInfo;
-};
-
-/** Interface for all the operations we need on any type:
- *
- *  - cloning/destruction in clone() and destroy()
- *  - Access to value from storage and storage creation in
- *    ptrFromStorage() and initializeStorage()
- *  - Type of specialized interface through kind()
- *
- * Our aim is to transport arbitrary values through:
- *  - synchronous calls: Nothing to do, values are just transported and
-      converted.
- *  - asynchronous call/thread change: Values are copied.
- *  - process change: Values are serialized.
- *
- */
-class QITYPE_API Type
-{
-public:
-  virtual const TypeInfo& info() =0;
-  // Initialize and return a new storage, from nothing or a T*
-  virtual void* initializeStorage(void* ptr=0)=0;
-  // Get pointer to type from pointer to storage
-  // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
-  virtual void* ptrFromStorage(void**)=0;
-
-  virtual void* clone(void*)=0;
-  virtual void destroy(void*)=0;
-
-  enum Kind
+  /** This class is used to uniquely identify a type.
+   *
+   */
+  class QITYPE_API TypeInfo
   {
-    Void,
-    Int,
-    Float,
-    String,
-    List,
-    Map,
-    Object,
-    Pointer,
-    Tuple,
-    Dynamic,
-    Unknown,
+  public:
+    TypeInfo();
+    /// Construct a TypeInfo from a std::type_info
+    TypeInfo(const std::type_info& info);
+    /// Contruct a TypeInfo from a custom string.
+    TypeInfo(const std::string& ti);
+
+    std::string asString() const;
+
+    //TODO: DIE
+    const char* asCString() const;
+
+    bool operator==(const TypeInfo& b) const;
+    bool operator!=(const TypeInfo& b) const;
+    bool operator<(const TypeInfo& b) const;
+
+  private:
+    const std::type_info* stdInfo;
+    std::string           customInfo;
   };
-  virtual Kind kind() const;
 
-  const char* infoString() { return info().asCString();} // for easy gdb access
+  /** Interface for all the operations we need on any type:
+   *
+   *  - cloning/destruction in clone() and destroy()
+   *  - Access to value from storage and storage creation in
+   *    ptrFromStorage() and initializeStorage()
+   *  - Type of specialized interface through kind()
+   *
+   * Our aim is to transport arbitrary values through:
+   *  - synchronous calls: Nothing to do, values are just transported and
+   *    converted.
+   *  - asynchronous call/thread change: Values are copied.
+   *  - process change: Values are serialized.
+   *
+   */
+  class QITYPE_API Type
+  {
+  public:
+    virtual const TypeInfo& info() =0;
 
-  std::string signature();
-  ///@return a Type on which signature() returns sig.
-  static Type* fromSignature(const Signature& sig);
+    // Initialize and return a new storage, from nothing or a T*
+    virtual void* initializeStorage(void* ptr=0)=0;
 
-  //GenericValue deserialize(IDataStream& in);
-  //void serialize(ODataStream& out, void* storage);
+    // Get pointer to type from pointer to storage
+    // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
+    virtual void* ptrFromStorage(void**)=0;
+
+    virtual void* clone(void*)=0;
+    virtual void destroy(void*)=0;
+
+    enum Kind
+    {
+      Void,
+      Int,
+      Float,
+      String,
+      List,
+      Map,
+      Object,
+      Pointer,
+      Tuple,
+      Dynamic,
+      Unknown,
+    };
+
+    virtual Kind kind() const;
+
+    //TODO: DIE
+    const char* infoString() { return info().asCString(); } // for easy gdb access
+
+    std::string signature();
+
+    ///@return a Type on which signature() returns sig.
+    static Type* fromSignature(const qi::Signature& sig);
+  };
+
+  /// Runtime Type factory getter. Used by typeOf<T>()
+  QITYPE_API Type*  getType(const std::type_info& type);
+
+  /// Runtime Type factory setter.
+  QITYPE_API bool registerType(const std::type_info& typeId, Type* type);
+
+  /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
+   */
+  template<typename T> Type* typeOf();
+
+  /// Get type from a value. No need to delete the result
+  template<typename T> Type* typeOf(const T& v)
+  {
+    return typeOf<T>();
+  }
 
 
-};
+//MACROS
 
-
-/// Declare that a type has no accessible default constructor.
+  /// Declare that a type has no accessible default constructor.
 #define QI_TYPE_NOT_CONSTRUCTIBLE(T) \
-namespace qi { namespace detail { \
-template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
+  namespace qi { namespace detail {  \
+  template<> struct TypeManager<T>: public TypeManagerNonDefaultConstructible<T> {};}}
 
-/// Declare that a type has no metatype and cannot be used in a Value
+  /// Declare that a type has no metatype and cannot be used in a Value
 #define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
 
-/// Declare that a type has no accessible copy constructor
-#define QI_TYPE_NOT_CLONABLE(T) \
-namespace qi { namespace detail { \
-template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
+  /// Declare that a type has no accessible copy constructor
+#define QI_TYPE_NOT_CLONABLE(T)     \
+  namespace qi { namespace detail { \
+  template<> struct TypeManager<T>: public TypeManagerNull<T> {};}}
 
-/// Runtime Type factory getter. Used by typeOf<T>()
-QITYPE_API Type*  getType(const std::type_info& type);
-/// Runtime Type factory setter.
-QITYPE_API bool registerType(const std::type_info& typeId, Type* type);
-
-/// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
+  /// Register TypeImpl<t> in runtime type factory for 't'. Must be called from a .cpp file
 #define QI_TYPE_REGISTER(t) \
   QI_TYPE_REGISTER_CUSTOM(t, qi::TypeImpl<t>)
-/// Register 'typeimpl' in runtime type factory for 'type'.
+
+  /// Register 'typeimpl' in runtime type factory for 'type'.
 #define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
-static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
+  static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
 
-/** Get type from a type. Will return a static TypeImpl<T> if T is not registered
- */
-template<typename T> Type* typeOf();
 
-/// Get type from a value. No need to delete the result
-template<typename T> Type* typeOf(const T& v)
-{
-  return typeOf<T>();
+
+  class GenericList;
+  class GenericMap;
+  class GenericObject;
+
+  /** Class that holds any value, with informations to manipulate it.
+   *  operator=() makes a shallow copy.
+   *
+   */
+  class QITYPE_API GenericValue
+  {
+  public:
+
+    GenericValue();
+
+    /** Store type and allocate storage of value.
+     * @param type use this type for initialization
+     */
+    GenericValue(Type* type);
+
+    /** Create a generic value with type and a value who should have
+     * already been allocated.
+     * @param type type of this generic value
+     * @param value an already alloc place to store value
+     */
+    GenericValue(Type* type, void* value) : type(type), value(value) {}
+
+    /** Return the typed pointer behind a GenericValue. T *must* be the type
+     * of the value.
+     * @return a pointer to the value as a T or 0 if value is not a T.
+     * @param check if false, does not validate type before converting
+     */
+    template<typename T> T* ptr(bool check = true);
+
+    /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
+    std::pair<GenericValue, bool> convert(Type* targetType) const;
+
+    /// Helper function that converts and always clone
+    GenericValue convertCopy(Type* targetType) const;
+    GenericValue clone() const;
+    std::string signature() const;
+    void destroy();
+    Type::Kind kind() const;
+
+    int64_t       asInt() const;
+    float         asFloat() const;
+    double        asDouble() const;
+    std::string   asString() const;
+    GenericList   asList() const;
+    GenericMap    asMap() const;
+    GenericObject asObject() const;
+
+    template<typename T> T as() const;
+    // Helper function to obtain type T from a value. Argument value is not used.
+    template<typename T> T as(const T&) const;
+
+    Type*   type;
+    void*   value;
+  };
+
+  /// Convert any value to the correct associated Value
+  template<typename T> GenericValue toValue(const T& v);
+
+  /** Generates GenericValue from everything transparently.
+   * To be used as type of meta-function call argument
+   *
+   *  Example:
+   *    void metaCall(ValueGen arg1, ValueGen arg2);
+   *  can be called with any argument type:
+   *    metaCall("foo", 12);
+   */
+  class AutoGenericValue: public GenericValue
+  {
+  public:
+    AutoGenericValue ();
+    AutoGenericValue(const AutoGenericValue & b);
+
+    template<typename T> AutoGenericValue(const T& ptr);
+  };
+
+
+
+  template<typename T>
+  class GenericIterator: public GenericValue
+  {
+  public:
+    void operator++();
+    void operator++(int);
+    T operator*();
+    bool operator==(const GenericIterator& b) const;
+    inline bool operator!=(const GenericIterator& b) const;
+  };
+
+  class GenericListIterator: public GenericIterator<GenericValue>
+  {};
+
+  class GenericMapIterator: public GenericIterator<std::pair<GenericValue, GenericValue> >
+  {};
+
+  class TypeList;
+  class GenericList: public GenericValue
+  {
+  public:
+    GenericList();
+    GenericList(GenericValue&);
+    GenericList(TypeList* type, void* value);
+
+    size_t size();
+    GenericListIterator begin();
+    GenericListIterator end();
+    void pushBack(GenericValue val);
+    Type* elementType();
+  };
+
+  class TypeMap;
+  class GenericMap: public GenericValue
+  {
+  public:
+    GenericMap();
+    GenericMap(GenericValue&);
+    GenericMap(TypeMap* type, void* value);
+
+    size_t size();
+    GenericMapIterator begin();
+    GenericMapIterator end();
+    void insert(GenericValue key, GenericValue val);
+    Type* keyType();
+    Type* elementType();
+  };
+
+  QITYPE_API GenericValue makeGenericTuple(std::vector<GenericValue> values);
+
+
+  // Interfaces for specialized types
+  class QITYPE_API TypeInt: public Type
+  {
+  public:
+    virtual int64_t get(void* value) const = 0;
+    virtual unsigned int size() const = 0; // size in bytes
+    virtual bool isSigned() const = 0; // return if type is signed
+    virtual void set(void** storage, int64_t value) = 0;
+    virtual Kind kind() const { return Int;}
+  };
+
+  class QITYPE_API TypeFloat: public Type
+  {
+  public:
+    virtual double get(void* value) const = 0;
+    virtual unsigned int size() const = 0; // size in bytes
+    virtual void set(void** storage, double value) = 0;
+    virtual Kind kind() const { return Float;}
+  };
+
+  class Buffer;
+  class QITYPE_API TypeString: public Type
+  {
+  public:
+    std::string getString(void* storage) const;
+    virtual std::pair<char*, size_t> get(void* value) const = 0;
+    void set(void** storage, const std::string& value);
+    virtual void set(void** storage, const char* ptr, size_t sz) = 0;
+    virtual Kind kind() const { return String; }
+    virtual Buffer *asBuffer(void *storage) { return 0; }
+  };
+
+  class QITYPE_API TypePointer: public Type
+  {
+  public:
+    virtual Type* pointedType() const = 0;
+    virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
+    virtual Kind kind() const { return Pointer; }
+  };
+
+  template<typename T>
+  class QITYPE_API TypeIterator: public Type
+  {
+  public:
+    virtual T dereference(void* storage) = 0; // must not be destroyed
+    virtual void  next(void** storage) = 0;
+    virtual bool equals(void* s1, void* s2) = 0;
+  };
+
+  class QITYPE_API TypeListIterator: public TypeIterator<GenericValue>
+  {};
+
+  class QITYPE_API TypeMapIterator: public TypeIterator<std::pair<GenericValue, GenericValue> >
+  {};
+
+  class QITYPE_API TypeList: public Type
+  {
+  public:
+    virtual Type* elementType(void* storage) const = 0;
+    virtual size_t size(void* storage) = 0;
+    virtual GenericListIterator begin(void* storage) = 0; // Must be destroyed
+    virtual GenericListIterator end(void* storage) = 0;  //idem
+    virtual void pushBack(void* storage, void* valueStorage) = 0;
+    virtual Kind kind() const { return List;}
+  };
+
+  class QITYPE_API TypeMap: public Type
+  {
+  public:
+    virtual Type* elementType(void* storage) const = 0;
+    virtual Type* keyType(void* storage) const = 0;
+    virtual size_t size(void* storage) = 0;
+    virtual GenericMapIterator begin(void* storage) = 0; // Must be destroyed
+    virtual GenericMapIterator end(void* storage) = 0;  //idem
+    virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
+    virtual Kind kind() const { return Map; }
+    // Since our typesystem has no erased operator < or operator ==,
+    // TypeMap does not provide a find()
+  };
+
+  class QITYPE_API TypeTuple: public Type
+  {
+  public:
+    std::vector<GenericValue> getValues(void* storage);
+    virtual std::vector<Type*> memberTypes(void*) = 0;
+    virtual std::vector<void*> get(void* storage); // must not be destroyed
+    virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
+    virtual void set(void** storage, std::vector<void*>);
+    virtual void set(void** storage, unsigned int index, void* valStorage) = 0; // will copy
+    virtual Kind kind() const { return Tuple; }
+  };
+
+  class QITYPE_API TypeDynamic: public Type
+  {
+  public:
+    // Convert storage to a GenericValue, that must be destroyed if res.second is true
+    virtual std::pair<GenericValue, bool> get(void* storage) = 0;
+    virtual void set(void** storage, GenericValue source) = 0;
+    virtual Kind kind() const { return Dynamic; }
+  };
+
+  ///@return a Type of kind List that can contains elements of type elementType.
+  QITYPE_API Type* defaultListType(Type* elementType);
+
+  ///@return a Type of kind Map with given key and element types
+  QITYPE_API Type* defaultMapType(Type* keyType, Type* ElementType);
+
+  ///@return a Type of kind Tuple with givent memberTypes
+  QITYPE_API Type* defaultTupleType(std::vector<Type*> memberTypes);
+
 }
 
-}
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/details/type.hxx>
-//#include <qitype/details/typelist.hxx>
-//#include <qitype/details/typemap.hxx>
-//#include <qitype/details/typestring.hxx>
-//#include <qitype/details/typepointer.hxx>
-//#include <qitype/details/typetuple.hxx>
-
+#include <qitype/details/genericvaluespecialized.hxx>
+#include <qitype/details/genericvalue.hxx>
+#include <qitype/details/typelist.hxx>
+#include <qitype/details/typemap.hxx>
+#include <qitype/details/typestring.hxx>
+#include <qitype/details/typepointer.hxx>
+#include <qitype/details/typetuple.hxx>
 
 #endif  // _QITYPE_TYPE_HPP_

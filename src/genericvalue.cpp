@@ -4,7 +4,6 @@
 */
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
-#include <qitype/genericvaluespecialized.hpp>
 
 namespace qi
 {

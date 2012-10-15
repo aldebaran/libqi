@@ -179,6 +179,7 @@ namespace qi
         boost::remove_const<
         boost::remove_reference<boost::mpl::_1> > > > >(detail::fill_arguments(&_argumentsType));
     }
+
     virtual void* call(void* func, void** args, unsigned int argc)
     {
       boost::function<T>* f = (boost::function<T>*)func;
@@ -190,6 +191,7 @@ namespace qi
       boost::add_pointer<boost::mpl::_1> >::type PtrArgsType;
       return detail::apply(boost::fusion::as_vector(PtrArgsType()), *f, args, argc);
     }
+
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };
 

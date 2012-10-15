@@ -5,8 +5,6 @@
 #include <boost/type_traits/is_signed.hpp>
 
 #include <qitype/type.hpp>
-#include <qitype/typespecialized.hpp>
-#include <qitype/genericvaluespecialized.hpp>
 
 namespace qi {
 
