@@ -35,6 +35,7 @@ qi_create_gtest(test_object_eventloop     SRC test_object_eventloop.cpp     DEPE
 qi_create_gtest(test_metavalue_argument   SRC test_metavalue_argument.cpp   DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_signal               SRC test_signal.cpp               DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 2)
+qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 
 #qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 #qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
