@@ -16,7 +16,6 @@
 #include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
-#include <qitype/genericvaluespecialized.hpp>
 
 
 qi::GenericValue v;

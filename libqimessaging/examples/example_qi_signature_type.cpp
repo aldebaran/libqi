@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <qitype/signature.hpp>
+#include <qitype/type.hpp>
 
 namespace qi
 {

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <qitype/signature.hpp>
+#include <qitype/type.hpp>
 
 typedef std::vector<std::string>          StringVect;
 typedef std::vector<StringVect>           StringVectVect;
