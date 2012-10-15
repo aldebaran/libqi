@@ -2,7 +2,6 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-
 #include <qitype/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"

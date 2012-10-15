@@ -4,7 +4,6 @@
 **  See COPYING for the license
 */
 
-
 #ifndef _QIMESSAGING_DATASTREAM_HPP_
 #define _QIMESSAGING_DATASTREAM_HPP_
 
