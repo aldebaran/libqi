@@ -34,6 +34,7 @@ _qimessaging_create_perf_bin(perf_transport_socket)
 
 _qimessaging_create_perf_bin(perf_transport_thd)
 
+include(qibuild/modules/qt-tools)
 qt4_wrap_cpp(_moc perf_qt_signal.hpp)
 qi_create_bin(perf_qt_signal_direct perf_qt_signal_direct.cpp ${_moc} DEPENDS QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS qt_qtcore)
 qi_use_lib(perf_qt_signal_direct QT_QTCORE)
