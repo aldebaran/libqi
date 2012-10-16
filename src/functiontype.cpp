@@ -81,14 +81,6 @@ namespace qi
     return result;
   }
 
-  GenericFunction::GenericFunction()
-  : type(0), value(0) {}
-
-  GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
-  {
-    return type->call(&value, args);
-  }
-
   std::string CallableType::signature() const
   {
     std::string res("(");
@@ -204,7 +196,7 @@ namespace qi
       type = new DynamicFunctionType();
     GenericFunction result;
     result.type = type;
-    *(DynamicFunction*) (void*)&result.value = f;
+    result.value = result.type->clone(result.type->initializeStorage(&f));
     return result;
   }
 }

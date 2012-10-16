@@ -32,7 +32,7 @@ namespace qi {
     /** Call the function func with argument args that must be of the correct type.
     * @return the return value of type resultType(). This value is allocated and must be destroyed.
     */
-    virtual void* call(void* func, void** args, unsigned int argc) = 0;
+    virtual void* call(void* storage, void** args, unsigned int argc) = 0;
     /// Default implementation convert arguments to argumentsType()
     /// and bounce to the other call()
     virtual GenericValue call(void* func, const std::vector<GenericValue>& args);
@@ -47,10 +47,13 @@ namespace qi {
   {
   public:
     GenericFunction();
+    ~GenericFunction();
+    GenericFunction(const GenericFunction& b);
+    GenericFunction& operator = (const GenericFunction& b);
     GenericValue call(const std::vector<GenericValue>& args);
     GenericValue operator()(const std::vector<GenericValue>& args);
     FunctionType* type;
-    boost::function<void ()> value;
+    void* value;
   };
 
  template<typename F> GenericFunction makeGenericFunction(F func);

@@ -100,8 +100,10 @@ namespace qi
   template<typename T>
   MethodType* methodTypeOf()
   {
-    static MethodTypeImpl<T> result;
-    return &result;
+    static MethodTypeImpl<T>* result = 0;
+    if (!result)
+      result = new MethodTypeImpl<T>();
+    return result;
   }
 
   namespace detail
@@ -137,6 +139,8 @@ namespace qi
       GenericMethod result;
       result.value = fv.value;
       result.type = methodTypeOf<Linearized>();
+      fv.type = 0;
+      fv.value = 0; // we steal his value
       return result;
     }
 
@@ -156,7 +160,7 @@ namespace qi
       boost::function<DropperType> f = boost::fusion::make_unfused(DropArg<FunctionType>(bmethod));
       GenericMethod result;
       result.type = methodTypeOf<DropperType>();
-      *(boost::function<DropperType>*)(void*)&result.value = boost::function<DropperType>(f);
+      result.value = result.type->clone(result.type->initializeStorage(&f));
       return result;
     }
   }
@@ -169,11 +173,34 @@ namespace qi
       typename boost::function_types::is_member_function_pointer<M>::type());
   }
 
+  inline GenericMethod::GenericMethod()
+  : type(0), value(0) {}
+
+  inline GenericMethod::GenericMethod(const GenericMethod& b)
+  {
+    type = b.type;
+    value = type?type->clone(b.value):0;
+  }
+
+  inline GenericMethod::~GenericMethod()
+  {
+    if (type)
+      type->destroy(value);
+  }
+
+  inline GenericMethod& GenericMethod::operator = (const GenericMethod& b)
+  {
+    this->~GenericMethod();
+    type = b.type;
+    value = type?type->clone(b.value):0;
+    return *this;
+  }
+
   inline GenericFunction GenericMethod::toGenericFunction()
   {
     GenericFunction result;
     result.type = type->toFunctionType();
-    result.value = value;
+    result.value = type->clone(value);
     return result;
   }
 } // namespace qi

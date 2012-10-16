@@ -182,7 +182,7 @@ namespace qi
 
     virtual void* call(void* func, void** args, unsigned int argc)
     {
-      boost::function<T>* f = (boost::function<T>*)func;
+      boost::function<T>* f = (boost::function<T>*)ptrFromStorage(&func);
       typedef typename boost::function_types::parameter_types<T>::type ArgsType;
       typedef typename  boost::mpl::transform_view<ArgsType,
       boost::remove_const<
@@ -226,8 +226,8 @@ namespace qi
       {
          assert(sizeof(boost::function<T>) == sizeof(boost::function<void ()>));
          GenericFunction res;
-         *(boost::function<T>*)(void*)&res.value = func;
          res.type = makeFunctionType<T>();
+         res.value = res.type->clone(res.type->initializeStorage(&func));
          return res;
       }
     };
@@ -248,6 +248,33 @@ namespace qi
     return detail::GenericFunctionMaker<T>::make(f);
   }
 
+  inline GenericFunction::GenericFunction()
+  : type(0), value(0) {}
+
+  inline GenericFunction::GenericFunction(const GenericFunction& b)
+  {
+    type = b.type;
+    value = type?type->clone(b.value):0;
+  }
+
+  inline GenericFunction& GenericFunction::operator=(const GenericFunction& b)
+  {
+    this->~GenericFunction();
+    type = b.type;
+    value = type?type->clone(b.value):0;
+    return *this;
+  }
+
+  inline GenericFunction::~GenericFunction()
+  {
+    if (type)
+      type->destroy(value);
+  }
+
+  inline GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
+  {
+    return type->call(value, args);
+  }
 
 namespace detail
 {

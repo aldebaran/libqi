@@ -29,16 +29,21 @@ namespace qi
   class QITYPE_API GenericMethod
   {
   public:
+    GenericMethod();
+    GenericMethod(const GenericMethod& b);
+    GenericMethod& operator = (const GenericMethod& b);
+    ~GenericMethod();
+
     GenericValue call(GenericValue object, const std::vector<GenericValue> args)
     {
-      return type->call(&value, object, args);
+      return type->call(value, object, args);
     }
     std::string signature() const { return type->CallableType::signature();}
     std::string sigreturn() const { return type->CallableType::sigreturn();}
 
     GenericFunction toGenericFunction();
     MethodType* type;
-    boost::function<void()> value;
+    void* value;
   };
 
   template<typename T> MethodType* methodTypeOf();

@@ -47,11 +47,16 @@ namespace qi
 
   // TypeManager is accessed by this interface. By default, everything is
   // constructible and copyable except functions
-  template<typename T> struct TypeManager
+  template<typename T>
+  struct TypeManager
   : public boost::mpl::if_c<boost::is_function<T>::value,
   TypeManagerNull<T>, TypeManagerDefault<T> >::type
   {};
 
+  // Except for boost::function which maches is_function and is copyable
+  template<typename T>
+  struct TypeManager<boost::function<T> >
+  : public TypeManagerDefault<boost::function<T> > {};
   
   }
 
