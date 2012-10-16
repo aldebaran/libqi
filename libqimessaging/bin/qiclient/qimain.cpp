@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
   qi::Application a(argc, argv);
 
   // declare the program options
-  po::options_description desc("Usage:\n  qi masterAddress [options]\nOptions");
+  po::options_description desc("Usage:\n  qi-client masterAddress [options]\nOptions");
   desc.add_options()
       ("help", "Print this help.")
       ("master-address",
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
     {
-      std::cout << desc << "\n";
+      std::cout << desc << std::endl;
       return 0;
     }
 
@@ -92,10 +92,10 @@ int main(int argc, char *argv[])
     }
     else
     {
-      std::cout << desc << "\n";
+      std::cout << desc << std::endl;
     }
   } catch (const boost::program_options::error&) {
-    std::cout << desc << "\n";
+    std::cout << desc << std::endl;
   }
 
   return 0;

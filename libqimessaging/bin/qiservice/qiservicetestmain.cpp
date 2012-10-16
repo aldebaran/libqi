@@ -18,12 +18,12 @@
 #include <qitype/genericobjectbuilder.hpp>
 
 std::string reply(const std::string &msg) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg;
   return msg + "bim";
 }
 
 std::string reply(const int &msg) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << std::endl;
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg;
   std::stringstream ss;
 
   ss << msg << "bim";
@@ -31,7 +31,7 @@ std::string reply(const int &msg) {
 }
 
 std::string reply(const std::string &msg, const double &value) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value << std::endl;
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value;
   std::stringstream ss;
 
   ss << msg << value;
@@ -39,7 +39,7 @@ std::string reply(const std::string &msg, const double &value) {
 }
 
 std::string reply(const std::string &msg, const float &value) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value << std::endl;
+  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value;
   std::stringstream ss;
 
   ss << msg << value;
@@ -50,6 +50,8 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
+  const std::string serviceName = "serviceTest";
+
   qi::Application app(argc, argv);
   // declare the program options
   po::options_description desc("Usage:\n  qi-service masterAddress [options]\nOptions");
@@ -110,8 +112,7 @@ int main(int argc, char *argv[])
       session.connect(masterAddress);
 
       session.listen("tcp://0.0.0.0:0");
-      unsigned int id = session.registerService("serviceTest", obj);
-      std::cout << "Service Registered with id: " << id << std::endl;
+      unsigned int id = session.registerService(serviceName, obj);
 
 #if 0
       // test unregistration
@@ -121,11 +122,11 @@ int main(int argc, char *argv[])
 
       if (id)
       {
-        qiLogInfo("qimessaging.ServiceTest") << "registered as service #" << id << std::endl;
+        qiLogInfo("qimessaging.ServiceTest") << "Registered \"" << serviceName << "\" as service (#" << id << ") with the master";
       }
       else
       {
-        qiLogError("qimessaging.ServiceTest") << "registration failed..." << std::endl;
+        qiLogError("qimessaging.ServiceTest") << "Registration with master failed, aborting...";
         exit(1);
       }
       app.run();

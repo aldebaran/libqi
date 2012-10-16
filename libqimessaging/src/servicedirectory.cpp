@@ -77,10 +77,9 @@ namespace qi
          it2 != ids.end();
          ++it2)
     {
-      qiLogInfo("qimessaging.ServiceDirectory") << "service "
+      qiLogInfo("qimessaging.ServiceDirectory") << "Service \""
                                                 << connectedServices[*it2].name()
-                                                << " (#" << *it2 << ") disconnected"
-                                                << std::endl;
+                                                << "\" (#" << *it2 << ") disconnected";
       unregisterService(*it2);
     }
     socketToIdx.erase(it);
@@ -123,8 +122,10 @@ namespace qi
     if (it != nameToIdx.end())
     {
       std::stringstream ss;
-      ss << "service " << svcinfo.name()
-         << " is already registered (#" << it->second << ")" << std::endl;
+      ss << "Service \"" <<
+        svcinfo.name() <<
+        "\" (#" << it->second << ") is already registered. " <<
+        "Rejecting conflicting registration attempt.";
       qiLogWarning("qimessaging.ServiceDirectory")  << ss.str();
       throw std::runtime_error(ss.str());
     }
@@ -139,11 +140,11 @@ namespace qi
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
 
-    qiLogInfo("qimessaging.ServiceDirectory")  << "service " << svcinfo.name() << " registered (#" << idx << ")" << std::endl;
+    qiLogInfo("qimessaging.ServiceDirectory")  << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";
     std::vector<std::string>::const_iterator jt;
     for (jt = svcinfo.endpoints().begin(); jt != svcinfo.endpoints().end(); ++jt)
     {
-      qiLogDebug("qimessaging.ServiceDirectory") << svcinfo.name() << " is now on " << *jt << std::endl;
+      qiLogDebug("qimessaging.ServiceDirectory") << "Service \"" << svcinfo.name() << "\" is now on " << *jt;
     }
 
     return idx;
@@ -157,7 +158,7 @@ namespace qi
     it2 = connectedServices.find(idx);
     if (it2 == connectedServices.end())
     {
-      qiLogError("qimessaging.ServiceDirectory") << "Can't find service #" << idx;
+      qiLogError("qimessaging.ServiceDirectory") << "Unregister Service: Can't find service #" << idx;
       return;
     }
 
@@ -165,14 +166,14 @@ namespace qi
     it = nameToIdx.find(connectedServices[idx].name());
     if (it == nameToIdx.end())
     {
-      qiLogError("Mapping error, service not in nameToIdx");
+      qiLogError("qimessaging.ServiceDirectory") << "Unregister Service: Mapping error, service not in nameToIdx";
       return;
     }
     std::string serviceName = it2->second.name();
-    qiLogInfo("qimessaging.ServiceDirectory") << "service "
+    qiLogInfo("qimessaging.ServiceDirectory") <<
+      "Unregistered Service  \""
       << serviceName
-      << " (#" << idx << ") unregistered"
-      << std::endl;
+      << "\" (#" << idx << ")";
     nameToIdx.erase(it);
     connectedServices.erase(it2);
 

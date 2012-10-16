@@ -10,6 +10,7 @@
 #include <map>
 
 #include <qi/os.hpp>
+#include <qi/log.hpp>
 #include <qi/application.hpp>
 
 #include <qimessaging/servicedirectory.hpp>
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
     {
-      std::cout << desc << "\n";
+      std::cout << desc << std::endl;
       return 0;
     }
 
@@ -56,21 +57,23 @@ int main(int argc, char *argv[])
       qi::ServiceDirectory sd;
       if (!sd.listen(masterAddress))
       {
+        qiLogError("qi-master") << "Failed to listen on " << masterAddress <<
+          ". Is there another service running on this address?";
         exit(1);
       }
 
-      std::cout << "ready." << std::endl;
+      qiLogInfo("qi-master") << "qi-master is listening on " << masterAddress;
 
       app.run();
     }
     else
     {
-      std::cout << desc << "\n";
+      std::cout << desc << std::endl;
     }
   }
   catch (const boost::program_options::error&)
   {
-    std::cout << desc << "\n";
+    std::cout << desc << std::endl;
   }
 
   return 0;
