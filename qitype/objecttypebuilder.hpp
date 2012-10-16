@@ -67,8 +67,8 @@ namespace qi {
     ObjectTypeBuilderPrivate* _p;
   };
 
-  template<typename T> class QITYPE_API ObjectTypeBuilder
-  : public ObjectTypeBuilderBase
+  template<typename T>
+  class QITYPE_API ObjectTypeBuilder : public ObjectTypeBuilderBase
   {
   public:
     ObjectTypeBuilder()
