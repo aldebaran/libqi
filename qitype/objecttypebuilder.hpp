@@ -82,7 +82,7 @@ namespace qi {
     inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id = -1);
 
     /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
-    virtual void registerType();
+    inline virtual void registerType();
 
   };
 }
