@@ -103,15 +103,20 @@ namespace qi
     std::map<std::string, unsigned int>::const_iterator it;
 
     it = nameToIdx.find(name);
-    if (it == nameToIdx.end())
-      return ServiceInfo();
+    if (it == nameToIdx.end()) {
+      std::stringstream ss;
+      ss << "Cannot find service '" << name << "' in index";
+      throw std::runtime_error(ss.str());
+    }
 
     unsigned int idx = it->second;
 
     servicesIt = connectedServices.find(idx);
-    if (servicesIt == connectedServices.end())
-      return ServiceInfo();
-
+    if (servicesIt == connectedServices.end()) {
+      std::stringstream ss;
+      ss << "Cannot find ServiceInfo for service '" << name << "'";
+      throw std::runtime_error(ss.str());
+    }
     return servicesIt->second;
   }
 
@@ -158,16 +163,20 @@ namespace qi
     it2 = connectedServices.find(idx);
     if (it2 == connectedServices.end())
     {
-      qiLogError("qimessaging.ServiceDirectory") << "Unregister Service: Can't find service #" << idx;
-      return;
+      std::stringstream ss;
+      ss << "Unregister Service: Can't find service #" << idx;
+      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      throw std::runtime_error(ss.str());
     }
 
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(connectedServices[idx].name());
     if (it == nameToIdx.end())
     {
-      qiLogError("qimessaging.ServiceDirectory") << "Unregister Service: Mapping error, service not in nameToIdx";
-      return;
+      std::stringstream ss;
+      ss << "Unregister Service: Mapping error, service #" << idx << " not in nameToIdx";
+      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      throw std::runtime_error(ss.str());
     }
     std::string serviceName = it2->second.name();
     qiLogInfo("qimessaging.ServiceDirectory") <<
@@ -225,8 +234,10 @@ namespace qi
     itService = pendingServices.find(idx);
     if (itService == pendingServices.end())
     {
-      qiLogError("qimessaging.ServiceDirectory") << "Can't find pending service #" << idx;
-      return;
+      std::stringstream ss;
+      ss << "Can't find pending service #" << idx;
+      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      throw std::runtime_error(ss.str());
     }
 
     std::string serviceName = itService->second.name();
