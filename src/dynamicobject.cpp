@@ -276,11 +276,19 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance);
   }
 
-  ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj)
+  static void cleanupDynamicObject(GenericObject *obj) {
+    delete reinterpret_cast<DynamicObject*>(obj->value);
+    delete obj;
+  }
+
+  ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject)
   {
     ObjectPtr op;
     static DynamicObjectType* type = new DynamicObjectType();
-    op = ObjectPtr(new GenericObject(type, obj));
+    if (destroyObject)
+      op = ObjectPtr(new GenericObject(type, obj), &cleanupDynamicObject);
+    else
+      op = ObjectPtr(new GenericObject(type, obj));
     return op;
   }
 

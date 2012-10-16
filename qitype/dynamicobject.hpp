@@ -53,7 +53,7 @@ namespace qi
   };
 
   //Make an GenericObject of DynamicObject kind from a DynamicObject
-  QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj);
+  QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject = true);
 
 }
 #endif  // _QITYPE_DYNAMICOBJECT_HPP_
