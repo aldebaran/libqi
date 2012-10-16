@@ -62,7 +62,8 @@ namespace qi {
     ObjectType* type();
 
     /// Register type to typeof. Called by type()
-    virtual void registerType() {};
+    inline virtual void registerType() {};
+
   private:
     ObjectTypeBuilderPrivate* _p;
   };
