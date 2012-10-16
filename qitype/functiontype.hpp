@@ -53,7 +53,7 @@ namespace qi {
     boost::function<void ()> value;
   };
 
- template<typename F> GenericFunction makeGenericFunction(const F& func);
+ template<typename F> GenericFunction makeGenericFunction(F func);
 
   typedef boost::function<GenericValue(const std::vector<GenericValue>&)> DynamicFunction;
   /// @return a GenericFunction that takes arguments as a list of unconverted GenericValue.

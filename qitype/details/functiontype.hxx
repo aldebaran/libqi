@@ -241,7 +241,7 @@ namespace qi
   }
 
   template<typename T>
-  GenericFunction makeGenericFunction(const T& f)
+  GenericFunction makeGenericFunction(T f)
   {
     return detail::GenericFunctionMaker<T>::make(f);
   }
