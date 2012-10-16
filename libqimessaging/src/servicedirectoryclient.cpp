@@ -34,7 +34,7 @@ namespace qi {
   ServiceDirectoryClient::ServiceDirectoryClient()
     : _remoteObject(qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
   {
-    _object = makeDynamicObjectPtr(&_remoteObject);
+    _object = makeDynamicObjectPtr(&_remoteObject, false);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
