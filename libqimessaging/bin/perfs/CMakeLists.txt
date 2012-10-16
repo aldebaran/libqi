@@ -40,10 +40,10 @@ qi_create_perf_test(perf_qi_signal_direct perf_qi_signal_direct.cpp
     QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS
     ARGUMENTS "--backend=codespeed")
 
-qi_create_perf_test(perf_qi_signal_queued perf_qi_signal_queued.cpp
-  DEPENDS
-    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS
-    ARGUMENTS "--backend=codespeed")
+# qi_create_perf_test(perf_qi_signal_queued perf_qi_signal_queued.cpp
+#   DEPENDS
+#     QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS
+#     ARGUMENTS "--backend=codespeed")
 
 qi_create_perf_test(perf_boost_signal perf_boost_signal.cpp
   DEPENDS
