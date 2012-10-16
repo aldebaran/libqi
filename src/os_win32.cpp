@@ -326,7 +326,7 @@ namespace qi {
       // Set port options which make sure that the port is not
       // alredy in use.
       int optval = 1;
-      int rc = setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+      setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
                           (char*)&optval, sizeof(optval));
       // CK August 2 2011
       // Force Brutal disconnect (not background) so that the socket is freed
@@ -335,7 +335,7 @@ namespace qi {
       struct linger linger_setting;
       linger_setting.l_onoff  = 1;
       linger_setting.l_linger = 0;
-      rc = setsockopt(sock, SOL_SOCKET, SO_LINGER,
+      setsockopt(sock, SOL_SOCKET, SO_LINGER,
                       (char*)&linger_setting, sizeof(linger_setting));
 
       // cast ushort into int to check all ports between

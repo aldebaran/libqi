@@ -27,7 +27,7 @@ namespace qi
     _manager.join();
 
     for (std::map<boost::thread::id, boost::thread*>::iterator it = _threadsMap.begin();
-          it != _threadsMap.end(); it++)
+          it != _threadsMap.end(); ++it)
     {
       (*it).second->interrupt();
       (*it).second->join();

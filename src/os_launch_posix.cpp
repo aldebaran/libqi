@@ -280,7 +280,7 @@ namespace qi
 
     int gettid()
     {
-      int ret;
+      int ret = 0;
 #ifdef __linux__
       ret = syscall(__NR_gettid);
 #endif
