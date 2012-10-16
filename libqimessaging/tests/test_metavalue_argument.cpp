@@ -36,7 +36,7 @@ void value(qi::GenericValue mv)
 
 void valueList(std::vector<qi::GenericValue> mv)
 {
-  v = qi::toValue(mv).clone();
+  v = qi::GenericValue::from(mv).clone();
   payload->setValue(0);
 }
 

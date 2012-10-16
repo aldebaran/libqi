@@ -285,7 +285,7 @@ namespace qi {
   template<typename T>
   ODataStream& operator<<(ODataStream& out, const T &v) {
     Type* type = typeOf<T>();
-    GenericValue value = toValue(v);
+    GenericValue value = GenericValue::from(v);
     details::SerializeTypeVisitor stv(out);
     typeDispatch(stv, type, &value.value);
     return out;
