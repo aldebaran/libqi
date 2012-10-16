@@ -62,7 +62,8 @@ set(PUBLIC_HEADERS
                    qitype/signal.hpp
                    qitype/signature.hpp
                    qitype/type.hpp
-                   qitype/typeobject.hpp)
+                   qitype/typeobject.hpp
+                   qitype/typedispatcher.hpp)
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 
