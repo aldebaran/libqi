@@ -112,7 +112,7 @@ namespace qi {
           qi::Buffer        error;
           qi::ODataStream   ds(error);
           std::stringstream ss;
-          ss << "can't find service id: " << msg.id();
+          ss << "can't find service, address: " << msg.address();
           ds << qi::typeOf<std::string>()->signature();
           ds << ss.str();
           retval.setBuffer(error);
