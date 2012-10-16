@@ -12,16 +12,21 @@ namespace qi
   class GenericObjectBuilderPrivate
   {
   public:
-    GenericObjectBuilderPrivate() : object(new DynamicObject())
+    GenericObjectBuilderPrivate()
+      : _object(new DynamicObject())
+      , _deleteOnDestroy(true)
     {}
 
-    GenericObjectBuilderPrivate(DynamicObject *dynobject) : object(dynobject)
+    GenericObjectBuilderPrivate(DynamicObject *dynobject, bool deleteOnDestroy)
+      : _object(dynobject)
+      , _deleteOnDestroy(deleteOnDestroy)
     {}
 
     ~GenericObjectBuilderPrivate()
     {}
 
-    DynamicObject* object;
+    DynamicObject* _object;
+    bool           _deleteOnDestroy;
   };
 
   GenericObjectBuilder::GenericObjectBuilder()
@@ -29,8 +34,8 @@ namespace qi
   {
   }
 
-  GenericObjectBuilder::GenericObjectBuilder(DynamicObject *dynobject)
-    : _p(new GenericObjectBuilderPrivate(dynobject))
+  GenericObjectBuilder::GenericObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy)
+    : _p(new GenericObjectBuilderPrivate(dynobject, deleteOnDestroy))
   {}
 
   GenericObjectBuilder::~GenericObjectBuilder()
@@ -40,19 +45,19 @@ namespace qi
 
   int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func)
   {
-    unsigned int nextId = _p->object->metaObject()._p->addMethod(retsig, signature);
-    _p->object->setMethod(nextId, func);
+    unsigned int nextId = _p->_object->metaObject()._p->addMethod(retsig, signature);
+    _p->_object->setMethod(nextId, func);
     return nextId;
   }
 
   int GenericObjectBuilder::xAdvertiseEvent(const std::string& signature)
   {
-    unsigned int nextId = _p->object->metaObject()._p->addSignal(signature);
+    unsigned int nextId = _p->_object->metaObject()._p->addSignal(signature);
     return nextId;
   }
 
   ObjectPtr GenericObjectBuilder::object()
   {
-    return makeDynamicObjectPtr(_p->object);
+    return makeDynamicObjectPtr(_p->_object, _p->_deleteOnDestroy);
   }
 }

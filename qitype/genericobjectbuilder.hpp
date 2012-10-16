@@ -18,7 +18,7 @@ namespace qi {
   {
   public:
     GenericObjectBuilder();
-    GenericObjectBuilder(DynamicObject *dynobject);
+    GenericObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy = true);
 
     ~GenericObjectBuilder();
 
