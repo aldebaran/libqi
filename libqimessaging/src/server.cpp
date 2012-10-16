@@ -74,7 +74,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       BoundObjectPtrMap::iterator it;
       it = _boundObjects.find(idx);
-      if (it != _boundObjects.end()) {
+      if (it == _boundObjects.end()) {
         return false;
       }
       _boundObjects.erase(idx);
