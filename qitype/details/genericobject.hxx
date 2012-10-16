@@ -15,7 +15,7 @@ namespace qi {
   template<typename T>
   GenericValue makeObjectValue(T* ptr)
   {
-    GenericValue res = toValue(*ptr);
+    GenericValue res = GenericValue::from(*ptr);
     qiLogDebug("meta") <<"metaobject on " << ptr <<" " << res.value;
     return res;
   }

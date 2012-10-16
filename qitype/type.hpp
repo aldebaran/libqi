@@ -204,13 +204,11 @@ namespace qi{
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.
     template<typename T> T as(const T&) const;
+    template<typename T> static GenericValue from(const T& t);
 
     Type*   type;
     void*   value;
   };
-
-  /// Convert any value to the correct associated Value
-  template<typename T> GenericValue toValue(const T& v);
 
   /** Generates GenericValue from everything transparently.
    * To be used as type of meta-function call argument

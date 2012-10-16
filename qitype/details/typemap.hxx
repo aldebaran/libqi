@@ -120,7 +120,7 @@ template<typename C> std::pair<GenericValue, GenericValue> TypeMapIteratorImpl<C
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
-  return std::make_pair(::qi::toValue(val.first), ::qi::toValue(val.second)); // Value is in the container, no need to clone
+  return std::make_pair(::qi::GenericValue::from(val.first), ::qi::GenericValue::from(val.second)); // Value is in the container, no need to clone
 }
 
 template<typename C> void TypeMapIteratorImpl<C>::next(void** storage)

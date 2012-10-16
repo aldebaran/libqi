@@ -57,7 +57,7 @@ namespace qi {
   }
 
   template<typename T>
-  GenericValue toValue(const T& v)
+  GenericValue GenericValue::from(const T& v)
   {
     static Type* type = 0;
     if (!type)
@@ -85,7 +85,7 @@ namespace qi {
 
   template<typename T> AutoGenericValue::AutoGenericValue(const T& ptr)
   {
-    *(GenericValue*)this = toValue(ptr);
+    *(GenericValue*)this = from(ptr);
   }
 
   inline AutoGenericValue::AutoGenericValue()
@@ -270,7 +270,7 @@ namespace qi {
 
     template<typename T> void GenericValueCopy::operator,(const T& any)
     {
-      *(GenericValue*)this = toValue(any);
+      *(GenericValue*)this = from(any);
       *(GenericValue*)this = clone();
     }
   }

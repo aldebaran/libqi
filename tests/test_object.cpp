@@ -236,7 +236,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::toValue(p).as<FPoint>();
+  FPoint p2 = qi::GenericValue::from(p).as<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -313,7 +313,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::toValue(comp).as<Complex2>();
+  Complex2 comp2 = qi::GenericValue::from(comp).as<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);

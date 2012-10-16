@@ -65,7 +65,7 @@ namespace qi
     static Type* dtype = 0;
     if (!dtype)
       dtype = new TypeDynamicTuple();
-    GenericValue res = toValue(values);
+    GenericValue res = GenericValue::from(values);
     res.type = dtype;
     return res;
   }
