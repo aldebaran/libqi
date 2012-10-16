@@ -43,8 +43,14 @@ namespace qi {
     }
   }
 
+  static void deleteLater(qi::RemoteObject *remote) {
+    delete remote;
+  }
+
   void Session_Service::removeRequest(long requestId)
   {
+    qi::RemoteObject *remote = 0;
+    ServiceRequest   *sr     = 0;
     {
       boost::mutex::scoped_lock                 l(_requestsMutex);
       std::map<long, ServiceRequest*>::iterator it;
@@ -55,13 +61,18 @@ namespace qi {
         return;
       }
       if (it->second) {
-        delete it->second->remoteObject;
+        remote = it->second->remoteObject;
         it->second->remoteObject = 0;
       }
-      delete it->second;
+      sr = it->second;
       it->second = 0;
       _requests.erase(it);
     }
+    //we do not call delete on RemoteObject, because remoteObject->close disconnect onMessagePending,
+    //which is the signal we are coming from.  (when called from onRemoteObjectComplete)
+    //delete later as a workaround.
+    qi::getDefaultNetworkEventLoop()->asyncCall(0, boost::bind(&deleteLater, remote));
+    delete sr;
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
