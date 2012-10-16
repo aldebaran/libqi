@@ -382,13 +382,13 @@ namespace qi{
   };
 
   ///@return a Type of kind List that can contains elements of type elementType.
-  QITYPE_API Type* defaultListType(Type* elementType);
+  QITYPE_API Type* makeListType(Type* elementType);
 
   ///@return a Type of kind Map with given key and element types
-  QITYPE_API Type* defaultMapType(Type* keyType, Type* ElementType);
+  QITYPE_API Type* makeMapType(Type* keyType, Type* ElementType);
 
   ///@return a Type of kind Tuple with givent memberTypes
-  QITYPE_API Type* defaultTupleType(std::vector<Type*> memberTypes);
+  QITYPE_API Type* makeTupleType(std::vector<Type*> memberTypes);
 
 }
 

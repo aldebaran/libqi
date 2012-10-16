@@ -224,9 +224,9 @@ namespace qi {
     case Signature::Type_String:
       return typeOf<std::string>();
     case Signature::Type_List:
-      return defaultListType(fromSignature(i.children().begin()));
+      return makeListType(fromSignature(i.children().begin()));
     case Signature::Type_Map:
-      return defaultMapType(fromSignature(i.children().begin()),
+      return makeMapType(fromSignature(i.children().begin()),
         fromSignature(++i.children().begin()));
     case Signature::Type_Tuple:
       {
@@ -238,7 +238,7 @@ namespace qi {
           qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
-        Type* res = defaultTupleType(types);
+        Type* res = makeTupleType(types);
         qiLogDebug("qi.type") <<"Resulting tuple " << i.signature() << " " << res->infoString();
         return res;
       }
@@ -261,7 +261,7 @@ namespace qi {
   }
 
   // Default list
-  static Type* defaultListIteratorType(Type* element);
+  static Type* makeListIteratorType(Type* element);
 
   class DefaultListIteratorType: public TypeListIteratorImpl<std::vector<void*> >
   {
@@ -278,7 +278,7 @@ namespace qi {
         + ">(" + boost::lexical_cast<std::string>(this);
       _info = TypeInfo(_name);
     }
-    friend Type* defaultListIteratorType(Type*);
+    friend Type* makeListIteratorType(Type*);
   public:
     GenericValue dereference(void* storage)
     {
@@ -299,7 +299,7 @@ namespace qi {
   };
 
   // We want exactly one instance per element type
-  static Type* defaultListIteratorType(Type* element)
+  static Type* makeListIteratorType(Type* element)
   {
     static std::map<TypeInfo, Type*>* map = 0;
     if (!map)
@@ -330,7 +330,7 @@ namespace qi {
         + ">(" + boost::lexical_cast<std::string>(this);
         _info = TypeInfo(_name);
     }
-    friend Type* defaultListType(Type* element);
+    friend Type* makeListType(Type* element);
   public:
 
     Type* elementType(void* storage) const
@@ -341,7 +341,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       GenericListIterator result;
-      result.type = defaultListIteratorType(_elementType);
+      result.type = makeListIteratorType(_elementType);
       std::vector<void*>::iterator it = ptr.begin();
       result.value = result.type->initializeStorage(&it);
       *(GenericValue*)&result = result.clone();
@@ -351,7 +351,7 @@ namespace qi {
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
       GenericListIterator result;
-      result.type = defaultListIteratorType(_elementType);
+      result.type = makeListIteratorType(_elementType);
       std::vector<void*>::iterator it = ptr.end();
       result.value = result.type->initializeStorage(&it);
        *(GenericValue*)&result = result.clone();
@@ -369,7 +369,7 @@ namespace qi {
   };
 
     // We want exactly one instance per element type
-  Type* defaultListType(Type* element)
+  Type* makeListType(Type* element)
   {
     static std::map<TypeInfo, Type*>* map = 0;
     if (!map)
@@ -391,7 +391,7 @@ namespace qi {
 
   typedef std::vector<std::pair<void*, void*> > DefaultMapStorage;
   // Default map, using a vector<pair<void*, void*> > as storage
-  static Type* defaultMapIteratorType(Type* kt, Type* et);
+  static Type* makeMapIteratorType(Type* kt, Type* et);
 
   class DefaultMapIteratorType: public TypeMapIterator
   {
@@ -407,7 +407,7 @@ namespace qi {
       + "(" + boost::lexical_cast<std::string>(this) + ")";
       _info = TypeInfo(_name);
     }
-    friend Type* defaultMapIteratorType(Type* kt, Type* et);
+    friend Type* makeMapIteratorType(Type* kt, Type* et);
   public:
     std::pair<GenericValue, GenericValue> dereference(void* storage)
     {
@@ -447,7 +447,7 @@ namespace qi {
   };
 
   // We want exactly one instance per element type
-  static Type* defaultMapIteratorType(Type* kt, Type* et)
+  static Type* makeMapIteratorType(Type* kt, Type* et)
   {
     typedef std::map<std::pair<TypeInfo, TypeInfo>, Type*> Map;
     static Map * map = 0;
@@ -483,7 +483,7 @@ namespace qi {
       + "(" + boost::lexical_cast<std::string>(this) + ")";
       _info = TypeInfo(_name);
     }
-    friend Type* defaultMapType(Type* kt, Type* et);
+    friend Type* makeMapType(Type* kt, Type* et);
   public:
     Type* elementType(void* storage) const
     {
@@ -497,7 +497,7 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       GenericMapIterator result;
-      result.type = defaultMapIteratorType(_keyType, _elementType);
+      result.type = makeMapIteratorType(_keyType, _elementType);
       DefaultMapStorage::iterator it = ptr.begin();
       result.value = result.type->initializeStorage(&it);
       *(GenericValue*)&result = result.clone();
@@ -507,7 +507,7 @@ namespace qi {
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
       GenericMapIterator result;
-      result.type = defaultMapIteratorType(_keyType, _elementType);
+      result.type = makeMapIteratorType(_keyType, _elementType);
       DefaultMapStorage::iterator it = ptr.end();
       result.value = result.type->initializeStorage(&it);
       *(GenericValue*)&result = result.clone();
@@ -537,7 +537,7 @@ namespace qi {
   };
 
   // We want exactly one instance per element type
-  Type* defaultMapType(Type* kt, Type* et)
+  Type* makeMapType(Type* kt, Type* et)
   {
     typedef std::map<std::pair<TypeInfo, TypeInfo>, TypeMap*> Map;
     static Map * map = 0;
@@ -574,7 +574,7 @@ namespace qi {
       qiLogDebug("qi.type") << "Instanciating tuple " << _name;
       _info = TypeInfo(_name);
     }
-    friend Type* defaultTupleType(std::vector<Type*> types);
+    friend Type* makeTupleType(std::vector<Type*> types);
   public:
     virtual std::vector<Type*> memberTypes(void*) { return types;}
     virtual void* get(void* storage, unsigned int index)
@@ -634,7 +634,7 @@ namespace qi {
       return false;
     }
   };
-  Type* defaultTupleType(std::vector<Type*> types)
+  Type* makeTupleType(std::vector<Type*> types)
   {
     typedef std::map<InfosKey, TypeTuple*> Map;
     static Map* map = 0;
