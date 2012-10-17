@@ -35,7 +35,7 @@ namespace qi {
   }
 
   template <typename T>
-  class QITYPE_API Future {
+  class Future {
   public:
     typedef typename FutureType<T>::type ValueType;
     Future()
@@ -90,7 +90,7 @@ namespace qi {
     friend class FutureSync<T>;
   };
 
-  template<typename T> class QITYPE_API FutureSync: public Future<T>
+  template<typename T> class FutureSync: public Future<T>
   {
   public:
     // This future cannot be set, so sync starts at false
@@ -152,7 +152,7 @@ namespace qi {
 
 
   template <typename T>
-  class QITYPE_API Promise {
+  class Promise {
   public:
     typedef typename FutureType<T>::type ValueType;
 

@@ -69,7 +69,7 @@ namespace qi {
   };
 
   template<typename T>
-  class QITYPE_API ObjectTypeBuilder : public ObjectTypeBuilderBase
+  class ObjectTypeBuilder : public ObjectTypeBuilderBase
   {
   public:
     ObjectTypeBuilder()

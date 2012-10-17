@@ -125,5 +125,8 @@ namespace qi {
 
     return res.future();
   }
+  // We need shared typeid on Future<GenericValue>
+  template class QITYPE_API Future<GenericValue>;
+  template class QITYPE_API Future<void>;
 }
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_
