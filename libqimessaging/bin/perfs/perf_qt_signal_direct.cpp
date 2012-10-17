@@ -24,11 +24,9 @@ int main(int argc, char *argv[])
 
   po::options_description desc(std::string("Usage:\n ")+argv[0]+"\n");
   desc.add_options()
-    ("help,h", "Print this help.")
-    ("backend", po::value<std::string>()->default_value("normal"),
-     "Backend to use to output data (normal | codespeed).")
-    ("output,o", po::value<std::string>()->default_value(""),
-     "File where output data (if not precise output go to stdout).");
+    ("help,h", "Print this help.");
+
+  desc.add(qi::details::getPerfOptions());
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv)

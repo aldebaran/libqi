@@ -217,12 +217,9 @@ int main(int argc, char **argv)
     ("gateway", po::value<std::string>(), "Run as a gateway.")
     ("local", "Run in local.")
     ("thread", po::value<int>()->default_value(1, "1"),
-     "Number of thread to launch for clients")
-    ("backend", po::value<std::string>()->default_value("normal"),
-     "Backend to use to output data (normal | codespeed).")
-    ("output,o", po::value<std::string>()->default_value(""),
-     "File where output data (if not precise output go to stdout).");
+     "Number of thread to launch for clients");
 
+  desc.add(qi::details::getPerfOptions());
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv)
