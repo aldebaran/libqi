@@ -262,12 +262,12 @@ namespace qi {
     prom.setValue(id);
   }
 
-  qi::Future<unsigned int> RemoteObject::connect(unsigned int event, const SignalSubscriber& sub)
+  qi::Future<unsigned int> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
   {
     qi::Promise<unsigned int> prom;
 
     // Bind the subscriber locally.
-    unsigned int uid = DynamicObject::connect(event, sub);
+    unsigned int uid = DynamicObject::metaConnect(event, sub);
 
     qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
     qi::Future<unsigned int> fut = _self->call<unsigned int>("registerEvent", _service, event, uid);
@@ -275,11 +275,11 @@ namespace qi {
     return prom.future();
   }
 
-  qi::Future<void> RemoteObject::disconnect(unsigned int linkId)
+  qi::Future<void> RemoteObject::metaDisconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
     //disconnect locally
-    qi::Future<void> fut = DynamicObject::disconnect(linkId);
+    qi::Future<void> fut = DynamicObject::metaDisconnect(linkId);
     if (fut.hasError())
     {
       std::stringstream ss;
