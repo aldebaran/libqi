@@ -28,6 +28,9 @@
 
 namespace qi {
 
+  // We need shared typeid on Future<GenericValue>
+  template class QITYPE_API Future<GenericValue>;
+  template class QITYPE_API Future<void>;
   struct SignalSubscriber;
   class QITYPE_API ObjectInterface {
   public:
