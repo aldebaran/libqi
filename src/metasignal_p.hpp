@@ -9,7 +9,7 @@
 #include <qitype/api.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 
 
 #ifndef _SRC_METASIGNAL_P_HPP_

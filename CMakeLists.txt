@@ -32,7 +32,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(PUBLIC_HEADERS
                    qitype/api.hpp
                    qitype/details/functiontype.hxx
-                   qitype/details/future.hxx
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
                    qitype/details/genericvalue.hxx
@@ -50,7 +49,6 @@ set(PUBLIC_HEADERS
                    qitype/details/typetuple.hxx
                    qitype/dynamicobject.hpp
                    qitype/functiontype.hpp
-                   qitype/future.hpp
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp
                    qitype/genericvalue.hpp
@@ -92,7 +90,6 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/type.cpp
             src/typeint.cpp
             src/typetuple.cpp
-            src/future.cpp
             src/signature.cpp
             )
 

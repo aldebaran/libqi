@@ -12,7 +12,7 @@
 #include <qi/atomic.hpp>
 #include <qitype/api.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
 #include <qitype/metaobject.hpp>

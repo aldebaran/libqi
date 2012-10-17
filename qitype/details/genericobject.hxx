@@ -7,7 +7,7 @@
 #ifndef _QITYPE_DETAILS_GENERICOBJECT_HXX_
 #define _QITYPE_DETAILS_GENERICOBJECT_HXX_
 
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qitype/typeobject.hpp>
 
 namespace qi {

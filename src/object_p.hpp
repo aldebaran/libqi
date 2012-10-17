@@ -15,7 +15,7 @@
 
 #include <qitype/api.hpp>
 #include <qitype/signature.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>

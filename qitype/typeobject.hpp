@@ -8,7 +8,7 @@
 #define _QITYPE_TYPEOBJECT_HPP_
 
 #include <qitype/metaobject.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qitype/signal.hpp>
 
 namespace qi {

@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <qitype/signal.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qi/application.hpp>
 
 class Foo
