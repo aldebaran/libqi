@@ -67,7 +67,7 @@ namespace qi {
   }                                                                            \
   ODataStream& ODataStream::operator<<(Type b)                                 \
   {                                                                            \
-    bool sig = _innerSerialization;                                            \
+    bool sig = _innerSerialization == 0 ? false : true;                        \
     ++_innerSerialization;                                                     \
     serialize<Type, TypeCast, Signature>(this, b, sig);                        \
     --_innerSerialization;                                                     \
