@@ -224,10 +224,27 @@ namespace qi {
     case Signature::Type_String:
       return typeOf<std::string>();
     case Signature::Type_List:
-      return makeListType(fromSignature(i.children().begin()));
+      {
+        Type* el = fromSignature(i.children().begin());
+        if (!el)
+        {
+          qiLogError("qi.type") << "Cannot get type from list of unknown type.";
+          return 0;
+        }
+      return makeListType(el);
+      }
     case Signature::Type_Map:
-      return makeMapType(fromSignature(i.children().begin()),
-        fromSignature(++i.children().begin()));
+      {
+        Type* k = fromSignature(i.children().begin());
+        Type* e = fromSignature(++i.children().begin());
+        if (!k || !e)
+        {
+          qiLogError("qi.type") <<" Cannot get type from map of unknown "
+          << (k?"element":"key") << " type";
+          return 0;
+        }
+        return makeMapType(k, e);
+      }
     case Signature::Type_Tuple:
       {
         std::vector<Type*> types;
@@ -235,6 +252,11 @@ namespace qi {
         for (Signature::iterator child = c.begin(); child != c.end(); child++)
         {
           Type* t = fromSignature(child);
+          if (!t)
+          {
+            qiLogError("qi.type") << "Cannot get type from tuple of unknown element type";
+            return 0;
+          }
           qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
@@ -256,7 +278,7 @@ namespace qi {
       qiLogWarning("qi.type") << "fromSignature(): signature has more than one element";
     Signature::iterator i = sig.begin();
     Type* result = ::qi::fromSignature(i);
-    qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << result->infoString();
+    qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
     return result;
   }
 
