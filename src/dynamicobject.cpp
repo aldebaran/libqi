@@ -141,7 +141,7 @@ namespace qi
     }
   }
 
-  qi::Future<unsigned int> DynamicObject::connect(unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<unsigned int> DynamicObject::metaConnect(unsigned int event, const SignalSubscriber& subscriber)
   {
     SignalBase * s = _p->createSignal(event);
     if (!s)
@@ -152,7 +152,7 @@ namespace qi
     return qi::Future<unsigned int>((event << 16) + l);
   }
 
-  qi::Future<void> DynamicObject::disconnect(unsigned int linkId)
+  qi::Future<void> DynamicObject::metaDisconnect(unsigned int linkId)
   {
     unsigned int event = linkId >> 16;
     unsigned int link = linkId & 0xFFFF;
@@ -256,13 +256,13 @@ namespace qi
   qi::Future<unsigned int> DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->connect(event, subscriber);
+      ->metaConnect(event, subscriber);
   }
 
   qi::Future<void> DynamicObjectType::disconnect(void* instance, unsigned int linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->disconnect(linkId);
+      ->metaDisconnect(linkId);
   }
 
   const std::vector<std::pair<Type*, int> >& DynamicObjectType::parentTypes()
