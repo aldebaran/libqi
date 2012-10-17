@@ -100,7 +100,7 @@ namespace qi{
     virtual Kind kind() const;
 
     //TODO: DIE
-    const char* infoString() { return info().asCString(); } // for easy gdb access
+    inline const char* infoString() { return info().asCString(); } // for easy gdb access
 
     std::string signature();
 
