@@ -197,8 +197,10 @@ namespace qi
 
   template<typename T> FunctionType* makeFunctionType()
   {
-    static FunctionTypeImpl<T> result;
-    return &result;
+    static FunctionTypeImpl<T>* result = 0;
+    if (!result)
+      result = new FunctionTypeImpl<T>();
+    return result;
   }
 
   namespace detail
