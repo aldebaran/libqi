@@ -2,7 +2,7 @@
  * This is a simple qiMessaging example
  */
 
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qi/os.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>

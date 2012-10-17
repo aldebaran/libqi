@@ -7,7 +7,7 @@
 #ifndef _QIMESSAGING_TRANSPORTSOCKET_HPP_
 #define _QIMESSAGING_TRANSPORTSOCKET_HPP_
 
-# include <qitype/future.hpp>
+# include <qi/future.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
 # include <qimessaging/url.hpp>

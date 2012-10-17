@@ -8,7 +8,7 @@
 #define _SRC_SERVERRESULT_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/transportsocket.hpp>

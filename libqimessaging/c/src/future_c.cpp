@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <qimessaging/c/future_c.h>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qimessaging/c/object_c.h>
 
 #include "future_c_p.h"
@@ -71,7 +71,7 @@ void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *
 
   data->callbacks.push_back(forwarder);
   forwarder->addCallback(cb);
-  data->future->connect(boost::bind<void>(&FutureCallbackForwarder::onResult, forwarder, _1, miscdata), 0);
+  data->future->connect(boost::bind<void>(&FutureCallbackForwarder::onResult, forwarder, _1, miscdata));
 }
 
 void    qi_future_wait(qi_future_t *fut)

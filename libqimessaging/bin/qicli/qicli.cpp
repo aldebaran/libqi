@@ -11,7 +11,7 @@
 #include <sstream>
 
 #include <qitype/genericobject.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qimessaging/session.hpp>
 
 qi::Session session;

@@ -11,7 +11,7 @@
 
 #include <list>
 #include <qitype/type.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 
 class CFunctorResult;
 class FutureCallbackForwarder;

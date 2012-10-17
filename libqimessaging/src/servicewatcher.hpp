@@ -10,7 +10,7 @@
 #include <boost/thread/mutex.hpp>
 #include <map>
 #include <string>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 
 namespace qi {
 

@@ -8,7 +8,7 @@
 # define TRANSPORT_CACHE_HPP_
 
 #include <qimessaging/transportsocket.hpp>
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
 #include <string>
 
