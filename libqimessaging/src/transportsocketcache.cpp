@@ -19,10 +19,17 @@ namespace qi {
 
   void TransportSocketCache::close() {
     {
-      boost::mutex::scoped_lock sl(_socketsMutex);
       _dying = true;
+      TransportSocketConnectionMap socketsCopy;
+      {
+        // Do not hold _socketsMutex while iterating or deadlock may occurr
+        // between disconnect() that waits for callback handler
+        // and callback handler that tries to acquire _socketsMutex
+        boost::mutex::scoped_lock sl(_socketsMutex);
+        socketsCopy = _sockets;
+      }
       TransportSocketConnectionMap::iterator it;
-      for (it = _sockets.begin(); it != _sockets.end(); ++it) {
+      for (it = socketsCopy.begin(); it != socketsCopy.end(); ++it) {
         it->second.socket->disconnected.disconnect(it->second.disconnectLink);
         it->second.socket->connected.disconnect(it->second.connectLink);
         //remove callback before calling disconnect. (we dont need them)
