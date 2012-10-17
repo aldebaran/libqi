@@ -166,5 +166,42 @@ namespace qi {
 
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
+
+  template<typename F, typename S>
+  class TypeImpl<std::pair<F, S> >: public TypeTuple
+  {
+  public:
+    typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;
+    typedef typename std::pair<F, S> BackendType;
+    std::vector<Type*> memberTypes(void*)
+    {
+      static std::vector<Type*>* result=0;
+      if (!result)
+      {
+        result = new std::vector<Type*>();
+        result->push_back(typeOf<F>());
+        result->push_back(typeOf<S>());
+      }
+      return *result;
+    }
+    void* get(void* storage, unsigned int index)
+    {
+      BackendType* ptr = (BackendType*)ptrFromStorage(&storage);
+      if (!index)
+        return typeOf<F>()->initializeStorage(&ptr->first);
+      else
+        return typeOf<S>()->initializeStorage(&ptr->second);
+    }
+    void set(void** storage, unsigned int index, void* valStorage)
+    {
+      BackendType* ptr = (BackendType*)ptrFromStorage(storage);
+      if (!index)
+        detail::TypeManagerDefault<F>::copy(&ptr->first, typeOf<F>()->ptrFromStorage(&valStorage));
+      else
+        detail::TypeManagerDefault<S>::copy(&ptr->second, typeOf<S>()->ptrFromStorage(&valStorage));
+    }
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+
 }
 #endif  // _QITYPE_DETAILS_TYPETUPLE_HXX_
