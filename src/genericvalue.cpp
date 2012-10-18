@@ -188,6 +188,12 @@ namespace qi
           result.value = dst;
           return std::make_pair(result, true);
         }
+        case Type::Dynamic: {
+          result.type  = targetType;
+          result.value = targetType->initializeStorage();
+          static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
+          return std::make_pair(result, true);
+        }
         default:
           break;
       } // switch
