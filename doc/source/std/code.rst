@@ -279,6 +279,8 @@ The name of the enumeration must be singular.
 
 The enumeration values must be prefixed by the name of the enumeration followed by an underscore.
 
+Precise each number and never reorder existing enumerations for ABI compatibility.
+
 .. code-block:: c++
 
   class Message {
@@ -286,9 +288,9 @@ The enumeration values must be prefixed by the name of the enumeration followed 
 
     enum Type {
       Type_Call = 0,
-      Type_Error,
-      Type_Answer,
-      Type_Event
+      Type_Error = 1,
+      Type_Answer = 2,
+      Type_Event = 3
     };
 
   };
