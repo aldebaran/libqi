@@ -36,6 +36,9 @@ namespace qi {
     QI_API std::string tmp();
     QI_API std::string gethostname();
 
+    // lib C
+    QI_API char* strdup(const char *src);
+
     // env
     QI_API std::string getenv(const char *var);
     QI_API int setenv(const char *var, const char *value);

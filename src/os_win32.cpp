@@ -279,6 +279,10 @@ namespace qi {
       return std::string();
     }
 
+    char* strdup(const char *src)
+    {
+      return _strdup(src);
+    }
 
     // Function to get real string representation from
     // GetLastError() and WSAGetLastError()
