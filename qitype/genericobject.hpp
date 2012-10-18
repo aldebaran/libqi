@@ -17,9 +17,8 @@
 #include <qitype/metamethod.hpp>
 #include <qitype/metaobject.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/signal.hpp>
 #include <qitype/typeobject.hpp>
-
+#include <qitype/signal.hpp>
 
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_type.hpp>
@@ -32,6 +31,7 @@ namespace qi {
   template class QITYPE_API Future<GenericValue>;
   template class QITYPE_API Future<void>;
   struct SignalSubscriber;
+  class SignalBase;
   class QITYPE_API ObjectInterface {
   public:
     virtual ~ObjectInterface() = 0;
@@ -40,6 +40,7 @@ namespace qi {
 
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
+  typedef boost::weak_ptr<GenericObject>   ObjectWeakPtr;
 
   /* ObjectValue
   *  static version wrapping class C: Type<C>
@@ -113,43 +114,6 @@ namespace qi {
 
   template<typename T>
   GenericValue makeObjectValue(T* ptr);
-
-
-    /** Event subscriber info.
-  *
-  * Only one of handler or target must be set.
-  */
- struct QITYPE_API SignalSubscriber
- {
-   SignalSubscriber()
-     : eventLoop(0), target(), method(0), enabled(true), active(0)
-   {}
-
-   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop())
-     : handler(func), eventLoop(ctx), target(), method(0), enabled(true), active(0)
-   {}
-
-   SignalSubscriber(qi::ObjectPtr target, unsigned int method)
-     : eventLoop(0), target(target), method(method), enabled(true), active(0)
-   {}
-
-   void call(const GenericFunctionParameters& args);
-   // Source information
-   SignalBase*        source;
-   /// Uid that can be passed to GenericObject::disconnect()
-   SignalBase::Link  linkId;
-
-   // Target information
-   //   Mode 1: Direct functor call
-   GenericFunction    handler;
-   EventLoop*         eventLoop;
-   //  Mode 2: metaCall
-   ObjectPtr          target;
-   unsigned int       method;
-   bool               enabled; // call will do nothing if false
-   qi::atomic<long>   active;  // true if a call is in progress
- };
-
 
   template <typename FUNCTION_TYPE>
   qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,

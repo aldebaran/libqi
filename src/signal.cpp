@@ -9,12 +9,41 @@
 
 #include <qitype/signal.hpp>
 #include <qitype/genericvalue.hpp>
+#include <qitype/genericobject.hpp>
 
 #include "src/object_p.hpp"
 #include "src/signal_p.hpp"
 
 namespace qi {
 
+  SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
+  : weakLock(0), eventLoop(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true), active(0)
+  {}
+
+  SignalSubscriber::~SignalSubscriber()
+  {
+    delete target;
+    delete weakLock;
+  }
+
+  SignalSubscriber::SignalSubscriber(const SignalSubscriber& b)
+  : weakLock(0), target(0)
+  {
+    *this = b;
+  }
+
+  void SignalSubscriber::operator=(const SignalSubscriber& b)
+  {
+    source = b.source;
+    linkId = b.linkId;
+    handler = b.handler;
+    weakLock = b.weakLock?b.weakLock->clone():0;
+    eventLoop = b.eventLoop;
+    target = b.target?new ObjectWeakPtr(*b.target):0;
+    method = b.method;
+    enabled = b.enabled;
+    active = 0;
+  }
 
   static qi::atomic<long> linkUid = 1;
 
@@ -50,10 +79,16 @@ namespace qi {
   {
     if (!_p)
       return;
-    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    SignalSubscriberMap copy;
+    {
+      boost::recursive_mutex::scoped_lock sl(_p->mutex);
+      copy = _p->subscriberMap;
+    }
     SignalSubscriberMap::iterator i;
-    for (i=_p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)
-      i->second.call(params);
+    for (i=copy.begin(); i!= copy.end(); ++i)
+    {
+      i->second->call(params);
+    }
   }
 
   class FunctorCall
@@ -81,8 +116,10 @@ namespace qi {
     {
       if (sub->enabled)
         sub->handler(params);
-      --sub->active;
+      long active = --sub->active;
       params.destroy();
+      if (sub->weakLock && !active)
+        sub->weakLock->unlock();
     }
   };
   void SignalSubscriber::call(const GenericFunctionParameters& args)
@@ -91,6 +128,15 @@ namespace qi {
       return;
     if (handler.type)
     {
+      if (weakLock)
+      {
+        bool locked = weakLock->tryLock();
+        if (!locked)
+        {
+          source->disconnect(linkId);
+          return;
+        }
+      }
       if (eventLoop)
       {
         ++active;
@@ -99,10 +145,20 @@ namespace qi {
         eventLoop->asyncCall(0, FunctorCall(copy, this));
       }
       else
+      {
         handler(args);
+        if (weakLock)
+          weakLock->unlock();
+      }
     }
-    if (target)
-      target->metaEmit(method, args);
+    else if (target)
+    {
+      ObjectPtr lockedTarget = target->lock();
+      if (!lockedTarget)
+        source->disconnect(linkId);
+      else
+        lockedTarget->metaEmit(method, args);
+    }
   }
 
   SignalBase::Link SignalBase::connect(GenericFunction callback, EventLoop* ctx)
@@ -123,17 +179,10 @@ namespace qi {
     }
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     Link res = ++linkUid;
-    _p->subscriberMap[res] = src;
-    SignalSubscriber& s = _p->subscriberMap[res];
+    _p->subscriberMap[res] = new SignalSubscriber(src);
+    SignalSubscriber& s = *_p->subscriberMap[res];
     s.linkId = res;
     s.source = this;
-    if (s.target)
-    {
-      ObjectPtr o = s.target;
-      Manageable* m = o->type->manageable(o->value);
-      if (m)
-        m->addRegistration(s);
-    }
     return res;
   }
 
@@ -179,19 +228,13 @@ namespace qi {
     SignalSubscriberMap::iterator it = subscriberMap.find(l);
     if (it == subscriberMap.end())
       return false;
-    SignalSubscriber& s = it->second;
+    SignalSubscriber* s = it->second;
     // Ensure no call on subscriber occurrs once this function returns
-    s.enabled = false;
-    while (*s.active)
+    s->enabled = false;
+    while (*(s->active))
       os::msleep(1); // FIXME too long
-    ObjectPtr target = s.target;
     subscriberMap.erase(it);
-    if (target)
-    {
-      Manageable* m = target->type->manageable(target->value);
-      if (m)
-        m->removeRegistration(l);
-    }
+    delete s;
     return true;
   }
 
@@ -214,19 +257,17 @@ namespace qi {
     }
     for (unsigned i=0; i<links.size(); ++i)
       disconnect(links[i]);
-
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
   {
-
     std::vector<SignalSubscriber> res;
     if (!_p)
       return res;
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     SignalSubscriberMap::iterator i;
     for (i = _p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)
-      res.push_back(i->second);
+      res.push_back(*i->second);
     return res;
   }
 

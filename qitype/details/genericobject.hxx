@@ -12,6 +12,8 @@
 
 namespace qi {
 
+
+
   template<typename T>
   GenericValue makeObjectValue(T* ptr)
   {

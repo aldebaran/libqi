@@ -12,7 +12,7 @@
 
 namespace qi {
 
-  typedef std::map<SignalBase::Link, SignalSubscriber> SignalSubscriberMap;
+  typedef std::map<SignalBase::Link, SignalSubscriber*> SignalSubscriberMap;
 
   class SignalBasePrivate
   {

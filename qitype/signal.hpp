@@ -7,6 +7,7 @@
 #ifndef _QITYPE_SIGNAL_HPP_
 #define _QITYPE_SIGNAL_HPP_
 
+#include <qi/atomic.hpp>
 #include <qi/eventloop.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/functiontype.hpp>
@@ -15,7 +16,7 @@ namespace qi {
 
   class ObjectInterface;
   class ManageablePrivate;
-  struct SignalSubscriber;
+  class SignalSubscriber;
  /** User classes can inherit from Manageable to benefit from additional features:
   * - Automatic signal disconnection when the object is deleted
   * - Event loop management
@@ -31,11 +32,6 @@ namespace qi {
    void addCallbacks(ObjectInterface *callbacks, void *data = 0);
    void removeCallbacks(ObjectInterface *callbacks);
 
-   // Remember than this is the target of subscriber
-   void addRegistration(const SignalSubscriber& subscriber);
-   // Notify that a registered subscriber got disconnected
-   void removeRegistration(unsigned int linkId);
-
    EventLoop* eventLoop() const;
    void moveToEventLoop(EventLoop* eventLoop);
 
@@ -44,8 +40,8 @@ namespace qi {
 
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
+  typedef boost::weak_ptr<GenericObject> ObjectWeakPtr;
   class SignalBasePrivate;
-  struct SignalSubscriber;
 
   class QITYPE_API SignalBase
   {
@@ -113,11 +109,70 @@ namespace qi {
     {
       return SignalBase::connect(f, ctx);
     }
+    /// Auto-disconnects on target destruction
     inline SignalBase::Link connect(qi::ObjectPtr target, unsigned int slot)
     {
       return SignalBase::connect(target, slot);
     }
+    /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
+    template<typename O, typename MF>
+    inline SignalBase::Link connect(O* target, MF method);
+    template<typename O, typename MF>
+    inline SignalBase::Link connect(boost::shared_ptr<O> target, MF method);
   };
+  namespace detail
+  {
+    /// Interface for a weak-lock mechanism: if lock fail, unregister callback
+    class WeakLock
+    {
+    public:
+      virtual ~WeakLock(){}
+      virtual bool tryLock() = 0;
+      virtual void unlock() = 0;
+      virtual WeakLock* clone() = 0;
+    };
+  }
+  /** Event subscriber info.
+  *
+  * Only one of handler or target must be set.
+  */
+ struct QITYPE_API SignalSubscriber
+ {
+   SignalSubscriber()
+     : weakLock(0), eventLoop(0), target(0), method(0), enabled(true), active(0)
+   {}
+
+   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0)
+     : handler(func), weakLock(lock), eventLoop(ctx), target(0), method(0), enabled(true), active(0)
+   {}
+
+   SignalSubscriber(qi::ObjectPtr target, unsigned int method);
+
+   template<typename O, typename MF>
+   SignalSubscriber(O* ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+   template<typename O, typename MF>
+   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+   SignalSubscriber(const SignalSubscriber& b);
+   void operator = (const SignalSubscriber& b);
+   ~SignalSubscriber();
+
+   void call(const GenericFunctionParameters& args);
+   // Source information
+   SignalBase*        source;
+   /// Uid that can be passed to GenericObject::disconnect()
+   SignalBase::Link  linkId;
+
+   // Target information, kept here to be able to introspect a Subscriber
+   //   Mode 1: Direct functor call
+   GenericFunction      handler;
+   detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if cant
+   EventLoop*           eventLoop;
+   //  Mode 2: metaCall
+   ObjectWeakPtr*       target;
+   unsigned int         method;
+   bool                 enabled; // call will do nothing if false
+   qi::atomic<long>     active;  // true if a call is in progress
+ };
 
 }
 

@@ -14,6 +14,88 @@ namespace qi
 {
   namespace detail
   {
+
+    template<typename T>
+    class BoostWeakPointerLock: public WeakLock
+    {
+    public:
+      BoostWeakPointerLock(typename boost::weak_ptr<T> ptr)
+      : weakPointer(ptr)
+      {
+      }
+
+      bool tryLock()
+      {
+        sharedPointer = weakPointer.lock();
+        return sharedPointer;
+      }
+
+      void unlock()
+      {
+        sharedPointer.reset();
+      }
+
+      WeakLock* clone()
+      {
+        return new BoostWeakPointerLock(weakPointer);
+      }
+    private:
+      boost::shared_ptr<T> sharedPointer;
+      boost::weak_ptr<T>   weakPointer;
+    };
+
+    // Subscriber from unknown pointer type and member function
+    template<typename O, typename MF>
+    class SignalSubscriberHelper
+    {
+    public:
+      static void set(SignalSubscriber& sub, O ptr, MF function)
+      {
+        sub.handler = makeGenericFunction(ptr, function);
+        sub.weakLock = 0;
+      }
+    };
+
+    // Subscriber from shared pointer and member function
+    template<typename O, typename MF>
+    class SignalSubscriberHelper<boost::shared_ptr<O>, MF>
+    {
+    public:
+      static void set(SignalSubscriber& sub, boost::shared_ptr<O> ptr, MF function)
+      {
+        // bind the pointer, not the shared ptr
+        sub.handler = makeGenericFunction(ptr.get(), function);
+        // Register a locker on the weak pointer
+        sub.weakLock = new BoostWeakPointerLock<O>(ptr);
+      }
+    };
+  }
+
+  template<typename T>
+ template<typename O, typename MF>
+ inline SignalBase::Link Signal<T>::connect(O* target, MF method)
+ {
+   return SignalBase::connect(SignalSubscriber(target, method));
+ }
+
+  template<typename O, typename MF>
+  SignalSubscriber::SignalSubscriber(O* ptr, MF function, EventLoop* ctx)
+  {
+    enabled = true;
+    active = 0;
+    eventLoop = ctx;
+    detail::SignalSubscriberHelper<O, MF>::set(*this, ptr, function);
+  }
+  template<typename O, typename MF>
+  SignalSubscriber::SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx)
+  {
+    enabled = true;
+    active = 0;
+    eventLoop = ctx;
+    detail::SignalSubscriberHelper<O, MF>::set(*this, ptr, function);
+  }
+  namespace detail
+  {
     struct Appender
   {
     inline Appender(std::vector<GenericValue>*target)

@@ -58,26 +58,6 @@ namespace qi {
     delete _p;
   }
 
-  void Manageable::addRegistration(const SignalSubscriber& sub)
-  {
-    boost::mutex::scoped_lock sl(_p->registrationsMutex);
-    _p->registrations.push_back(sub);
-  }
-
-  void Manageable::removeRegistration(unsigned int linkId)
-  {
-     boost::mutex::scoped_lock sl(_p->registrationsMutex);
-     for (unsigned i = 0; i < _p->registrations.size(); ++i)
-     {
-       if (_p->registrations[i].linkId == linkId)
-       {
-         _p->registrations[i] = _p->registrations[_p->registrations.size() - 1];
-         _p->registrations.pop_back();
-         break;
-       }
-     }
-  }
-
   void Manageable::addCallbacks(ObjectInterface *callbacks, void *data)
   {
     boost::mutex::scoped_lock sl(_p->callbacksMutex);

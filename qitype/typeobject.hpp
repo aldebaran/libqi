@@ -9,7 +9,7 @@
 
 #include <qitype/metaobject.hpp>
 #include <qi/future.hpp>
-#include <qitype/signal.hpp>
+#include <qitype/functiontype.hpp>
 
 namespace qi {
 
@@ -18,6 +18,8 @@ namespace qi {
     MetaCallType_Direct = 1,
     MetaCallType_Queued = 2,
   };
+  class SignalSubscriber;
+  class Manageable;
 
   /* We will have 3 implementations for 3 classes of C++ class:
    * - DynamicObject
