@@ -60,7 +60,10 @@ namespace qi
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
+    , _disconnecting(false)
   {
+    assert(eventLoop);
+    _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
   }
 
   TcpTransportSocketPrivate::TcpTransportSocketPrivate(TransportSocket *self, int fd, EventLoop* eventLoop)
@@ -69,8 +72,10 @@ namespace qi
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
+    , _disconnecting(false)
     , _fd(fd)
   {
+    assert(eventLoop);
     _connected = true;
   }
 
@@ -93,8 +98,9 @@ namespace qi
 
   TcpTransportSocketPrivate::~TcpTransportSocketPrivate()
   {
-    delete _msg;
     disconnect();
+    delete _msg;
+    qiLogVerbose("qi.tcpsocket") << "deleted " << this;
   }
 
   void TcpTransportSocketPrivate::onRead()
@@ -179,7 +185,7 @@ namespace qi
         _status = errno;
       if (_status)
         qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
-      disconnect();
+      disconnect_();
     }
     else if (events & BEV_EVENT_TIMEOUT)
     {
@@ -206,6 +212,14 @@ namespace qi
 
   qi::FutureSync<bool> TcpTransportSocketPrivate::connect(const qi::Url &url)
   {
+    if (_connected || _connecting)
+    {
+      qiLogError("qimessaging.TransportSocketLibevent") << "connection already in progress";
+      return makeFutureError<bool>("Operation already in progress");
+    }
+    _connectPromise.reset();
+    _disconnectPromise.reset();
+    _connecting = true;
     if (_eventLoop->isInEventLoopThread())
       connect_(url);
     else
@@ -216,9 +230,14 @@ namespace qi
 
   void TcpTransportSocketPrivate::connect_(const qi::Url &url)
   {
+    if (!_connecting)
+    {
+      qiLogError("qimessaging.TransportSocketLibevent") << "assert failed: _connecting";
+      return;
+    }
     if (_connected) {
+      _connecting = false;
       qiLogError("qimessaging.TransportSocketLibevent") << "socket is already connected.";
-      _connectPromise.setValue(false);
       return;
     }
     _url = url;
@@ -233,6 +252,8 @@ namespace qi
     if (_url.port() == 0) {
       qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << _url.str();
       _connectPromise.setError("Bad address " + _url.str());
+      _connecting = false;
+      _disconnectPromise.setValue(0);
       return;
     }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << _url.host() << ":" << _url.port();
@@ -252,6 +273,8 @@ namespace qi
     {
       qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
       _connectPromise.setValue(false);
+      _connecting = false;
+      disconnect(); // leave connecting=false above
       return;
     }
 
@@ -267,12 +290,27 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocketPrivate::disconnect()
   {
-    //do nothing if already disconnected and not connecting
+    if (_disconnecting)
+      return _disconnectPromise.future();
     if (!_connected && !_connecting) {
-      _disconnectPromise.setValue(0);
       return _disconnectPromise.future();
     }
+    _disconnecting = true;
+    if (!_eventLoop->isInEventLoopThread())
+    {
+      _eventLoop->asyncCall(0,
+        boost::bind(&TcpTransportSocketPrivate::disconnect_, this));
+    }
+    else
+      disconnect_();
+     return _disconnectPromise.future();
+  }
 
+  void TcpTransportSocketPrivate::disconnect_()
+  {
+    if (!_bev)
+      return; // fire disconnected only once
+    qiLogVerbose("qi.tcpsocket") << "disconnect_ " << this;
     /*
      * Currently (as of Libevent 2.0.5-beta), bufferevent_flush() is only
      * implemented for some bufferevent types. In particular, socket-based
@@ -282,17 +320,16 @@ namespace qi
      */
     //bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
     // Must be in network thread due to a libevent deadlock bug.
-    if (_bev) {
-      bufferevent_setcb(_bev, 0, 0, 0, 0);
-      bufferevent_free(_bev);
-      _bev = NULL;
-    }
+    bufferevent_setcb(_bev, 0, 0, 0, 0);
+    bufferevent_free(_bev);
+    _bev = NULL;
 
     _connected = false;
+    _disconnecting = false;
     _self->disconnected(_status);
     _disconnectPromise.setValue(0);
-    _connectPromise.setError(strerror(_status));
-    return _disconnectPromise.future();
+    if (_connecting)
+      _connectPromise.setError(strerror(_status));
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)

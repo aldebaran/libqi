@@ -56,6 +56,10 @@ namespace qi {
     return _sdSocket->connect(serviceDirectoryURL);
   }
 
+  static void sharedPtrHolder(TransportSocketPtr ptr)
+  {
+  }
+
   qi::FutureSync<void> SessionPrivate::close()
   {
     _serviceHandler.close();
@@ -64,6 +68,9 @@ namespace qi {
     if (!_sdSocket)
       return qi::Future<void>(0);
     qi::Future<void> fut = _sdSocket->disconnect();
+    // Hold the socket shared ptr alive until the future returns.
+    // otherwise, the destructor will block us until disconnect terminates
+    fut.connect(boost::bind(&sharedPtrHolder, _sdSocket));
     _sdSocket->connected.disconnect(_sdSocketConnectedLink);
     _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
     _sdSocket.reset();

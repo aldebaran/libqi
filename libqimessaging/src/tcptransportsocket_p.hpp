@@ -50,7 +50,7 @@ namespace qi
 
     bool send_(const qi::Message &msg, bool allocated);
     void connect_(const qi::Url &url);
-
+    void disconnect_();
   private:
     struct bufferevent    *_bev;
 
@@ -61,6 +61,7 @@ namespace qi
     bool                   _readHdr;
     qi::Message           *_msg;
     bool                   _connecting;
+    bool                   _disconnecting;
     int                    _fd;
   };
 
