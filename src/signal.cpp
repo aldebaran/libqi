@@ -188,6 +188,39 @@ namespace qi {
     {
       _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
     }
+    // Check arity. Does not require to acquire weakLock.
+    int sigArity = Signature(signature()).begin().children().size();
+    int subArity = -1;
+    if (src.handler.type)
+    {
+      if (src.handler.type == dynamicFunctionType())
+        goto proceed; // no arity checking is possible
+      subArity = src.handler.type->argumentsType().size();
+    }
+    else if (src.target)
+    {
+      ObjectPtr locked = src.target->lock();
+      if (!locked)
+      {
+        qiLogVerbose("qi.signal") << "connecting a dead slot (weak ptr out)";
+        return SignalBase::invalidLink;
+      }
+      const MetaMethod* ms = locked->metaObject().method(src.method);
+      if (!ms)
+      {
+        qiLogWarning("qi.signal") << "Method " << src.method <<" not found, proceeding anyway";
+        goto proceed;
+      }
+      else
+        subArity = Signature(qi::signatureSplit(ms->signature())[2]).size();
+    }
+    if (sigArity != subArity)
+    {
+      qiLogWarning("qi.signal") << "Subscriber has incorrect arity (expected "
+        << sigArity  << " , got " << subArity <<")";
+      return SignalBase::invalidLink;
+    }
+  proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     Link res = ++linkUid;
     _p->subscriberMap[res] = new SignalSubscriber(src);
@@ -294,5 +327,7 @@ namespace qi {
     }
     return ret;
   }
+
+  const SignalBase::Link SignalBase::invalidLink = ((unsigned int)-1);
 
 }

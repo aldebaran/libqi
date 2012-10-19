@@ -166,6 +166,16 @@ TEST(TestSignal, Manageable)
   ASSERT_EQ(3, r);
 }
 
+TEST(TestSignal, BadArity)
+{
+  qi::Signal<void()> s;
+  // caught at compile-time by signal<T>
+  ASSERT_EQ(qi::SignalBase::invalidLink, ((qi::SignalBase&)s).connect(&foo));
+  //idem
+  ASSERT_EQ(qi::SignalBase::invalidLink, ((qi::SignalBase&)s).connect(&foo2));
+  ASSERT_EQ(qi::SignalBase::invalidLink, s.connect((Foo*)0, &Foo::func1));
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

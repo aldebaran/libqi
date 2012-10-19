@@ -77,9 +77,12 @@ namespace qi {
       qi::AutoGenericValue p8 = qi::AutoGenericValue());
 
     std::vector<SignalSubscriber> subscribers();
+    static const SignalBase::Link invalidLink;
   public:
     boost::shared_ptr<SignalBasePrivate> _p;
   };
+
+
 
   template<typename FUNCTION_TYPE>
   inline SignalBase::Link SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
