@@ -2,13 +2,21 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
+#include <qitype/future.hpp>
+#include <qitype/type.hpp>
+namespace qi
+{
+  template class QITYPE_API Future<GenericValue>;
+  template class QITYPE_API Future<void>;
+}
+
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/dynamicobject.hpp>
 #include "metaobject_p.hpp"
 
 namespace qi
 {
-
   class GenericObjectBuilderPrivate
   {
   public:
