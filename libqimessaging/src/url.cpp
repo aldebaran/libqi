@@ -4,88 +4,114 @@
 */
 #include <qimessaging/url.hpp>
 #include <sstream>
+#include <src/url_p.hpp>
 
 namespace qi {
+  Url::Url()
+    : _p(new UrlPrivate())
+  {
+  }
+
+  Url::Url(const std::string &url)
+    : _p(new UrlPrivate(url))
+  {
+  }
+
+  Url::Url(const char *url)
+    : _p(new UrlPrivate(url))
+  {
+  }
+
+  Url::Url(const qi::Url& url)
+    : _p(new UrlPrivate(url._p))
+  {
+  }
+
+  bool Url::isValid() const {
+    return _p->isValid();
+  }
+
+  const std::string& Url::str() const {
+    return _p->url;
+  }
+
+  const std::string& Url::protocol() const {
+    return _p->protocol;
+  }
+
+  const std::string& Url::host() const {
+    return _p->host;
+  }
+
+  unsigned short Url::port() const {
+    return _p->port;
+  }
 
 
-static void split_me(const std::string &url, unsigned short &_port, std::string &_host, std::string &_protocol)
-{
-  std::string    protocol;
-  std::string    host;
-  unsigned short port;
+  UrlPrivate::UrlPrivate()
+    : url()
+    , protocol()
+    , host()
+    , port(0)
+  {
+  }
 
-  size_t begin = 0;
-  size_t end   = 0;
-  end = url.find(":");
-  if (end == std::string::npos)
-    return;
-  protocol = url.substr(begin, end);
+  UrlPrivate::UrlPrivate(const UrlPrivate* url_p)
+    : url(url_p->url)
+    , protocol(url_p->protocol)
+    , host(url_p->host)
+    , port(url_p->port)
+  {
+  }
 
-  if (protocol.empty())
-    return;
+  UrlPrivate::UrlPrivate(const char* url)
+    : url(url)
+    , protocol()
+    , host()
+    , port(0)
+  {
+    split_me(url);
+  }
 
-  begin = end + 3;
-  end = url.find_last_of(":");
-  if (end == std::string::npos || end < begin)
-    return;
-  host = url.substr(begin, end - begin);
-  begin = end + 1;
-  std::stringstream ss(url.substr(begin));
-  ss >> port;
+  UrlPrivate::UrlPrivate(const std::string& url)
+    : url(url)
+    , protocol()
+    , host()
+    , port(0)
+  {
+    split_me(url);
+  }
 
-  _port = port;
-  _host = host;
-  _protocol = protocol;
+  bool UrlPrivate::isValid() const {
+    return !protocol.empty();
+  }
+
+  void UrlPrivate::split_me(const std::string& url) {
+    std::string _protocol;
+    std::string _host;
+    unsigned short _port;
+
+    size_t begin = 0;
+    size_t end   = 0;
+    end = url.find(":");
+    if (end == std::string::npos)
+      return;
+    _protocol = url.substr(begin, end);
+
+    if (_protocol.empty())
+      return;
+
+    begin = end + 3;
+    end = url.find_last_of(":");
+    if (end == std::string::npos || end < begin)
+      return;
+    _host = url.substr(begin, end - begin);
+    begin = end + 1;
+    std::stringstream ss(url.substr(begin));
+    ss >> _port;
+
+    port = _port;
+    host = _host;
+    protocol = _protocol;
+  }
 }
-
-Url::Url(const std::string &url)
-  : _url(url)
-  , _port(0)
-  , _host("")
-  , _protocol()
-  , _reserved(0)
-{
-  split_me(_url, _port, _host, _protocol);
-}
-
-Url::Url()
-  : _url()
-  , _port(0)
-  , _host()
-  , _protocol()
-  , _reserved(0)
-{
-}
-
-Url::Url(const char *url)
-  : _url(url)
-  , _port(0)
-  , _host()
-  , _protocol()
-  , _reserved(0)
-{
-  split_me(_url, _port, _host, _protocol);
-}
-
-Url::Url(const qi::Url& url)
-  : _url(url._url)
-  , _port(url._port)
-  , _host(url._host)
-  , _protocol(url._protocol)
-  , _reserved(0)
-{
-}
-
-//Url &Url::operator=(const std::string& rhs)
-//{
-//  _url = rhs;
-//  split_me(_url, _port, _host, _protocol);
-//  return *this;
-//}
-
-bool Url::isValid() const {
-  return !_protocol.empty();
-}
-
-}
-

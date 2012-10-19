@@ -11,30 +11,24 @@
 #include <string>
 
 namespace qi {
-
+  class UrlPrivate;
   class QIMESSAGING_API Url
   {
   public:
-
     Url();
-    Url(const char *url);
-    Url(const std::string &url);
     Url(const qi::Url& url);
+    Url(const std::string &url);
+    Url(const char *url);
 
-    //Url &operator=(const std::string& rhs);
-
-    unsigned short     port() const     { return _port; }
-    const std::string& host() const     { return _host; }
-    const std::string& protocol() const { return _protocol; }
-    const std::string& str() const      { return _url; }
     bool isValid() const;
+    const std::string& str() const;
+
+    const std::string& protocol() const;
+    const std::string& host() const;
+    unsigned short port() const;
 
   private:
-    std::string    _url;
-    unsigned short _port;
-    std::string    _host;
-    std::string    _protocol;
-    void          *_reserved;
+    UrlPrivate* _p;
   };
 }
 
