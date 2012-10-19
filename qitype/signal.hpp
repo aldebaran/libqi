@@ -14,12 +14,10 @@
 
 namespace qi {
 
-  class ObjectInterface;
   class ManageablePrivate;
   class SignalSubscriber;
- /** User classes can inherit from Manageable to benefit from additional features:
-  * - Automatic signal disconnection when the object is deleted
-  * - Event loop management
+ /** User classes can inherit from Manageable to benefit from  Event loop
+  *  management
   */
  class QITYPE_API Manageable
  {
@@ -28,9 +26,6 @@ namespace qi {
    ~Manageable();
    Manageable(const Manageable& b);
    void operator = (const Manageable& b);
-
-   void addCallbacks(ObjectInterface *callbacks, void *data = 0);
-   void removeCallbacks(ObjectInterface *callbacks);
 
    EventLoop* eventLoop() const;
    void moveToEventLoop(EventLoop* eventLoop);
@@ -116,9 +111,9 @@ namespace qi {
     }
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
-    inline SignalBase::Link connect(O* target, MF method);
+    inline SignalBase::Link connect(O* target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
     template<typename O, typename MF>
-    inline SignalBase::Link connect(boost::shared_ptr<O> target, MF method);
+    inline SignalBase::Link connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
   };
   namespace detail
   {
@@ -139,12 +134,10 @@ namespace qi {
  struct QITYPE_API SignalSubscriber
  {
    SignalSubscriber()
-     : weakLock(0), eventLoop(0), target(0), method(0), enabled(true), active(0)
+     : weakLock(0), target(0), method(0), enabled(true), active(0)
    {}
 
-   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0)
-     : handler(func), weakLock(lock), eventLoop(ctx), target(0), method(0), enabled(true), active(0)
-   {}
+   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0);
 
    SignalSubscriber(qi::ObjectPtr target, unsigned int method);
 
@@ -166,7 +159,8 @@ namespace qi {
    //   Mode 1: Direct functor call
    GenericFunction      handler;
    detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if cant
-   EventLoop*           eventLoop;
+   boost::function<EventLoop*(void)> eventLoopGetter;
+
    //  Mode 2: metaCall
    ObjectWeakPtr*       target;
    unsigned int         method;

@@ -8,10 +8,6 @@
 
 namespace qi {
 
-  ObjectInterface::~ObjectInterface() {
-  }
-
-
   GenericObject::GenericObject(ObjectType *type, void *value)
   : type(type)
   , value(value)
@@ -56,19 +52,6 @@ namespace qi {
       copy[i].source->disconnect(copy[i].linkId);
     }
     delete _p;
-  }
-
-  void Manageable::addCallbacks(ObjectInterface *callbacks, void *data)
-  {
-    boost::mutex::scoped_lock sl(_p->callbacksMutex);
-    _p->callbacks[callbacks] = data;
-
-  }
-
-  void Manageable::removeCallbacks(ObjectInterface *callbacks)
-  {
-    boost::mutex::scoped_lock sl(_p->callbacksMutex);
-    _p->callbacks.erase(callbacks);
   }
 
   void Manageable::moveToEventLoop(EventLoop* el)
@@ -301,33 +284,6 @@ namespace qi {
       signature += params[i].signature();
     signature += ")";
     xMetaEmit(signature, GenericFunctionParameters(params));
-  }
-
-  EventLoop* GenericObject::eventLoop()
-  {
-    if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
-      return 0;
-    }
-    Manageable* m = type->manageable(value);
-    if (!m)
-      return 0;
-    return m->eventLoop();
-  }
-
-  void GenericObject::moveToEventLoop(EventLoop* ctx)
-  {
-    if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
-      return;
-    }
-    Manageable* m = type->manageable(value);
-    if (!m)
-    {
-      qiLogWarning("qi.object") << "moveToEventLoop called on non-manageable object.";
-      return;
-    }
-    m->moveToEventLoop(ctx);
   }
 
   int ObjectType::inherits(Type* other)

@@ -32,11 +32,6 @@ namespace qi {
   template class QITYPE_API Future<void>;
   struct SignalSubscriber;
   class SignalBase;
-  class QITYPE_API ObjectInterface {
-  public:
-    virtual ~ObjectInterface() = 0;
-    virtual void onObjectDestroyed(GenericObject *object, void *data) = 0;
-  };
 
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
@@ -46,9 +41,12 @@ namespace qi {
   *  static version wrapping class C: Type<C>
   *  dynamic version: Type<DynamicObject>
   *
-  * All the methods are convenience wrappers that bounce to the ObjectType
+  * All the methods are convenience wrappers that bounce to the ObjectType,
+  * except Event Loop management
+  * This class has pointer semantic. Do not use directly, use ObjectPtr,
+  * obtained through Session, DynamicObjectBuilder or ObjectTypeBuilder.
   */
-  class QITYPE_API GenericObject
+  class QITYPE_API GenericObject: public Manageable
   {
   public:
     GenericObject(ObjectType *type, void *value);
@@ -105,8 +103,6 @@ namespace qi {
     /// Disconnect an event link. Returns if disconnection was successful.
     qi::FutureSync<void> disconnect(unsigned int linkId);
 
-    void moveToEventLoop(EventLoop* ctx);
-    EventLoop* eventLoop();
     //bool isValid() { return type && value;}
     ObjectType*  type;
     void*        value;

@@ -57,7 +57,7 @@ namespace qi
   template<typename T>
   struct TypeManager<boost::function<T> >
   : public TypeManagerDefault<boost::function<T> > {};
-  
+
   }
 
 /* To avoid the diamond inheritance problem (interface inheritance between

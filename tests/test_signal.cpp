@@ -14,7 +14,11 @@ class Foo
 {
 public:
   void func(int)               { }
-  void func1(int *r, int)      { *r += 1; }
+  void func1(int *r, int)
+  {
+    // hackish sleep so that asynchronous trigger detection is safer
+    qi::os::msleep(1); *r += 1;
+  }
   void func2(int *r, int, int) { *r += 1; }
 };
 void foo(int *r, int, int)     { *r += 1; }
@@ -99,6 +103,67 @@ TEST(TestSignal, Copy)
   for (unsigned c=0; !done && c<100;++c) qi::os::msleep(10);
   ASSERT_TRUE(done);
   ASSERT_EQ(0, i); // async: was copied
+}
+
+TEST(TestSignal, AutoDisconnect)
+{
+  // Test automatic disconnection when passing shared_ptrs
+  int r = 0;
+  boost::shared_ptr<Foo> foo(new Foo());
+  qi::Signal<void (int*, int)> sig;
+  sig.connect(foo, &Foo::func1, 0);
+  sig(&r, 0);
+  ASSERT_EQ(1, r);
+  foo.reset();
+  sig(&r, 0);
+  ASSERT_EQ(1, r);
+}
+
+class ManageableFoo: public Foo, public qi::Manageable
+{};
+
+TEST(TestSignal, Manageable)
+{
+  // Test manageable detection
+  int r = 0;
+  qi::Signal<void (int*, int)> sig;
+  { // just a scope to ensure later test does not use mf
+    ManageableFoo* mf = new ManageableFoo();
+    mf->moveToEventLoop(0);
+    sig.connect(mf, &ManageableFoo::func1, 0);
+    sig(&r, 0); // synchronous
+    ASSERT_EQ(1, r);
+    mf->moveToEventLoop(qi::getDefaultObjectEventLoop());
+    sig(&r, 0); // asynchronous
+    ASSERT_EQ(1, r);
+    for(unsigned i=0; i<10 && r==1; ++i) qi::os::msleep(50)
+      ;
+    ASSERT_EQ(2, r);
+    mf->moveToEventLoop(0);
+    sig(&r, 0); // synchronous
+    ASSERT_EQ(3, r);
+    sig.disconnectAll();
+    delete mf;
+  }
+  // Check that manageable detection works on shared_ptr
+  boost::shared_ptr<ManageableFoo> shared(new ManageableFoo());
+  sig.connect(shared, &ManageableFoo::func1, 0);
+  r = 0;
+  shared->moveToEventLoop(0);
+  sig(&r, 0); // synchronous
+  ASSERT_EQ(1, r);
+  shared->moveToEventLoop(qi::getDefaultObjectEventLoop());
+  sig(&r, 0); // asynchronous
+  ASSERT_EQ(1, r);
+  for(unsigned i=0; i<10 && r==1; ++i) qi::os::msleep(50)
+    ;
+  ASSERT_EQ(2, r);
+  shared->moveToEventLoop(0);
+  sig(&r, 0); // synchronous
+  ASSERT_EQ(3, r);
+  shared.reset();
+  sig(&r, 0); // disconnected
+  ASSERT_EQ(3, r);
 }
 
 int main(int argc, char **argv) {

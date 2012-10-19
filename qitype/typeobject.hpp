@@ -21,13 +21,11 @@ namespace qi {
   class SignalSubscriber;
   class Manageable;
 
-  /* We will have 3 implementations for 3 classes of C++ class:
-   * - DynamicObject
-   * - T where T inherits from Manageable
-   * - T
-   * If the class does not inherit from Manageable, some features will be lost:
-   *   - Automatic signal disconnection on object destruction
-   *   - EventLoop support. emit will use the default policy
+  /* We will have 2 implementations for 2 classes of C++ class:
+   * - DynamicObject: Use DynamicObjectBuilder
+   * - T: Use ObjectTypeBuilder
+   *
+   * All values of this type (GenericObject) will be handled
    *
    *
    *  NOTE: no SignalBase accessor at this point, but the backend is such that it would be possible

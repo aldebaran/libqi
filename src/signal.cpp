@@ -17,8 +17,16 @@
 namespace qi {
 
   SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
-  : weakLock(0), eventLoop(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true), active(0)
+  : weakLock(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true), active(0)
   {}
+
+
+
+  SignalSubscriber::SignalSubscriber(GenericFunction func, EventLoop* ctx, detail::WeakLock* lock)
+     : handler(func), weakLock(lock), target(0), method(0), enabled(true), active(0)
+   {
+     eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
+   }
 
   SignalSubscriber::~SignalSubscriber()
   {
@@ -38,7 +46,7 @@ namespace qi {
     linkId = b.linkId;
     handler = b.handler;
     weakLock = b.weakLock?b.weakLock->clone():0;
-    eventLoop = b.eventLoop;
+    eventLoopGetter = b.eventLoopGetter;
     target = b.target?new ObjectWeakPtr(*b.target):0;
     method = b.method;
     enabled = b.enabled;
@@ -137,6 +145,9 @@ namespace qi {
           return;
         }
       }
+      EventLoop* eventLoop = 0;
+      if (eventLoopGetter)
+        eventLoop = eventLoopGetter();
       if (eventLoop)
       {
         ++active;

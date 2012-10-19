@@ -30,7 +30,6 @@ namespace qi {
     // Links that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
     boost::mutex                        registrationsMutex;
-    std::map<ObjectInterface *, void *> callbacks;
     boost::mutex                        callbacksMutex;
     bool                                dying;
     // Event loop in which calls are made

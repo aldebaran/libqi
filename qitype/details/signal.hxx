@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAILS_SIGNAL_HXX_
 #define _QITYPE_DETAILS_SIGNAL_HXX_
 
+#include <boost/bind.hpp>
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
 
@@ -44,6 +45,38 @@ namespace qi
       boost::weak_ptr<T>   weakPointer;
     };
 
+    typedef boost::function<EventLoop*(void)> EventLoopGetter;
+
+    template<typename T> EventLoopGetter makeEventLoopGetter(const T&)
+    {
+      return EventLoopGetter();
+    }
+
+    inline EventLoopGetter makeEventLoopGetter(Manageable* ptr)
+    {
+      return boost::bind(&Manageable::eventLoop, ptr);
+    }
+
+    inline EventLoopGetter makeEventLoopGetterBounce(Manageable* ptr, boost::true_type)
+    {
+      return makeEventLoopGetter(ptr);
+    }
+    inline EventLoopGetter makeEventLoopGetterBounce(void* ptr, boost::false_type)
+    {
+      return EventLoopGetter();
+    }
+    template<typename T> EventLoopGetter makeEventLoopGetter(T* ptr)
+    {
+      return makeEventLoopGetterBounce(ptr, typename boost::is_base_of<Manageable, T>::type());
+    }
+
+    // a makeEventLoopGetter(shared_ptr<Manageable>) will *not* be called
+    // from a shared_ptr<ManageableChildType>, so try to convert all shared_ptrs
+    template<typename T> EventLoopGetter makeEventLoopGetter(boost::shared_ptr<T> ptr)
+    {
+      return makeEventLoopGetter(ptr.get());
+    }
+
     // Subscriber from unknown pointer type and member function
     template<typename O, typename MF>
     class SignalSubscriberHelper
@@ -67,32 +100,52 @@ namespace qi
         sub.handler = makeGenericFunction(ptr.get(), function);
         // Register a locker on the weak pointer
         sub.weakLock = new BoostWeakPointerLock<O>(ptr);
+        sub.eventLoopGetter = detail::makeEventLoopGetter(ptr);
       }
     };
+    static EventLoop* eventLoopGet(EventLoop* arg)
+    {
+      return arg;
+    }
   }
 
   template<typename T>
- template<typename O, typename MF>
- inline SignalBase::Link Signal<T>::connect(O* target, MF method)
- {
-   return SignalBase::connect(SignalSubscriber(target, method));
- }
+  template<typename O, typename MF>
+  inline SignalBase::Link Signal<T>::connect(O* target, MF method, EventLoop* ctx)
+  {
+    return SignalBase::connect(SignalSubscriber(target, method, ctx));
+  }
+
+  template<typename T>
+  template<typename O, typename MF>
+  inline SignalBase::Link Signal<T>::connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx)
+  {
+    return SignalBase::connect(SignalSubscriber(target, method, ctx));
+  }
 
   template<typename O, typename MF>
   SignalSubscriber::SignalSubscriber(O* ptr, MF function, EventLoop* ctx)
   {
     enabled = true;
     active = 0;
-    eventLoop = ctx;
-    detail::SignalSubscriberHelper<O, MF>::set(*this, ptr, function);
+    target = 0;
+    if (ctx)
+      eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
+    else
+      eventLoopGetter = detail::makeEventLoopGetter(ptr);
+    detail::SignalSubscriberHelper<O*, MF>::set(*this, ptr, function);
   }
   template<typename O, typename MF>
   SignalSubscriber::SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx)
   {
     enabled = true;
     active = 0;
-    eventLoop = ctx;
-    detail::SignalSubscriberHelper<O, MF>::set(*this, ptr, function);
+    target = 0;
+    if (ctx)
+      eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
+    else
+      eventLoopGetter = detail::makeEventLoopGetter(ptr);
+    detail::SignalSubscriberHelper<boost::shared_ptr<O>, MF>::set(*this, ptr, function);
   }
   namespace detail
   {
