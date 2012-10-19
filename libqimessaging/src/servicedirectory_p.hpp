@@ -33,7 +33,6 @@ namespace qi {
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
     void                     serviceReady(const unsigned int &idx);
-    TransportSocketPtr       socket() { return currentSocket; }
 
   public:
     std::map<unsigned int, ServiceInfo>                       pendingServices;
@@ -41,7 +40,6 @@ namespace qi {
     std::map<std::string, unsigned int>                       nameToIdx;
     std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
     unsigned int                                              servicesCount;
-    TransportSocketPtr                                        currentSocket;
   }; // !ServiceDirectoryPrivate
 
 

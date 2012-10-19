@@ -53,7 +53,6 @@ namespace qi
   ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()
     : ServiceBoundObject(1, createSDP(this), qi::MetaCallType_Direct)
     , servicesCount(0)
-    , currentSocket()
   {
   }
 
@@ -65,8 +64,8 @@ namespace qi
   {
     // if services were connected behind the socket
     std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
-    if ((it = socketToIdx.find(socket)) == socketToIdx.end())
-    {
+    it = socketToIdx.find(socket);
+    if (it == socketToIdx.end()) {
       return;
     }
     // Copy the vector, iterators will be invalidated.
@@ -77,10 +76,12 @@ namespace qi
          it2 != ids.end();
          ++it2)
     {
-      qiLogInfo("qimessaging.ServiceDirectory") << "Service \""
-                                                << connectedServices[*it2].name()
-                                                << "\" (#" << *it2 << ") disconnected";
-      unregisterService(*it2);
+      qiLogInfo("qimessaging.ServiceDirectory") << "Service #" << *it2 << " disconnected";
+      try {
+        unregisterService(*it2);
+      } catch (std::runtime_error &) {
+        qiLogWarning("ServiceDirectory") << "Cannot unregister service #" << *it2;
+      }
     }
     socketToIdx.erase(it);
     ServiceBoundObject::onSocketDisconnected(socket, error);
@@ -140,7 +141,7 @@ namespace qi
     // Do not add serviceDirectory on the map (socket() == null)
     if (idx != qi::Message::Service_ServiceDirectory)
     {
-      socketToIdx[socket()].push_back(idx);
+      socketToIdx[currentSocket()].push_back(idx);
     }
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
@@ -187,10 +188,20 @@ namespace qi
     connectedServices.erase(it2);
 
     // Find and remove serviceId into socketToIdx map
-#if 0
-    std::map<TransportSocketPtr , std::vector<unsigned int> >::iterator socketIt;
-    for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
     {
+      std::map<TransportSocketPtr , std::vector<unsigned int> >::iterator it;
+      for (it = socketToIdx.begin(); it != socketToIdx.end(); ++it) {
+        std::vector<unsigned int>::iterator jt;
+        for (jt = it->second.begin(); jt != it->second.end(); ++jt) {
+          if (*jt == idx) {
+            it->second.erase(jt);
+            //socketToIdx is erased by onSocketDisconnected
+            break;
+          }
+        }
+      }
+    }
+#if 0
       // notify every session that the service is unregistered
       qi::Message msg;
       msg.setType(qi::Message::Type_Event);
@@ -210,20 +221,8 @@ namespace qi
           qiLogError("qimessaging.Session") << "Error while unregister service, cannot send event.";
         }
       }
-
-      std::vector<unsigned int>::iterator serviceIdxIt;
-      for (serviceIdxIt = socketIt->second.begin();
-           serviceIdxIt != socketIt->second.end();
-           ++serviceIdxIt)
-      {
-        if (*serviceIdxIt == idx)
-        {
-          socketIt->second.erase(serviceIdxIt);
-          break;
-        }
-      }
-    }
 #endif
+
   }
 
   void ServiceDirectoryBoundObject::serviceReady(const unsigned int &idx)
