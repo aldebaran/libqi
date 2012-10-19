@@ -338,7 +338,8 @@ TEST(TestObject, ObjectTypeBuilder)
   Adder a2(2);
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
-  ASSERT_TRUE(!oa1->eventLoop()); // object not manageable
+  oa1->moveToEventLoop(0);
+  ASSERT_TRUE(!oa1->eventLoop()); // test sync call
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
