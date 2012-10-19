@@ -29,4 +29,3 @@ qi_create_gtest(test_threadpool_nightly  SRC test_threadpool_nightly.cpp NIGHTLY
 qi_create_gtest(test_qilaunch    SRC test_qilaunch.cpp    DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_sync  SRC test_qilog_sync.cpp  DEPENDS QI GTEST)
 qi_create_gtest(test_qilog_async SRC test_qilog_async.cpp DEPENDS QI GTEST)
-qi_create_gtest(test_future      SRC test_future.cpp      DEPENDS QI GTEST TIMEOUT 10)
