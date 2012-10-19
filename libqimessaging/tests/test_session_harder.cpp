@@ -33,7 +33,6 @@ qi::ObjectPtr newObject() {
 }
 
 void alternateModule(qi::Session *session) {
-  unsigned int id;
   while (!boost::this_thread::interruption_requested())
   {
     boost::this_thread::interruption_point();
