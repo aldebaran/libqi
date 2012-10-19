@@ -133,7 +133,6 @@ namespace qi {
 
     sigparam = signatureSplit(sigparam)[2];
     sigparam = sigparam.substr(1, sigparam.length()-2);
-    //socket object always take the TransportSocketPtr as last parameter, inject it!
     mfp = msg.parameters(sigparam);
 
     switch (msg.type())

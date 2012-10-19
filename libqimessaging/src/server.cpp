@@ -125,7 +125,8 @@ namespace qi {
       }
       obj            = it->second;
     }
-    obj->onMessage(msg, socket);
+    qi::getDefaultObjectEventLoop()->asyncCall(0, boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
+    //obj->onMessage(msg, socket);
   }
 
   void Server::close()
