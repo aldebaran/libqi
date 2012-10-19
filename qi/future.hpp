@@ -179,7 +179,7 @@ namespace qi {
   };
 
   template <typename T>
-  qi::Future<T> makeFutureError(const T &value);
+  qi::Future<T> makeFutureError(const std::string &value);
 };
 
 #include <qi/details/future.hxx>
