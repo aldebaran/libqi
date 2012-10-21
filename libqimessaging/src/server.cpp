@@ -136,6 +136,7 @@ namespace qi {
         (*it)->connected.disconnectAll();
         (*it)->disconnected.disconnectAll();
         (*it)->messageReady.disconnectAll();
+        (*it)->disconnect();
       }
     }
     _server.close();
