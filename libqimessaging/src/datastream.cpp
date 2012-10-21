@@ -10,7 +10,7 @@
 #include <qi/types.hpp>
 #include <vector>
 #include <cstring>
-#include "src/buffer_p.hpp"
+#include "buffer_p.hpp"
 
 
 #if 0

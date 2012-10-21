@@ -6,7 +6,7 @@
 */
 
 #include <qimessaging/transport_context.hpp>
-#include "src/zmq/zmq_forwarder.hpp"
+#include "zmq/zmq_forwarder.hpp"
 
 int main(int argc, char **argv)
 {

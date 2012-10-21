@@ -9,8 +9,8 @@
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 
-#include "src/tcptransportsocket_p.hpp"
-#include "src/session_p.hpp"
+#include "tcptransportsocket_p.hpp"
+#include "session_p.hpp"
 
 namespace qi
 {

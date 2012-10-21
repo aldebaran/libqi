@@ -25,13 +25,13 @@
 
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include "src/tcptransportsocket.hpp"
+#include "tcptransportsocket.hpp"
 
 #include <qi/eventloop.hpp>
 
-#include "src/eventloop_p.hpp"
-#include "src/transportserver_p.hpp"
-#include "src/transportserverlibevent_p.hpp"
+#include "eventloop_p.hpp"
+#include "transportserver_p.hpp"
+#include "transportserverlibevent_p.hpp"
 
 namespace qi
 {

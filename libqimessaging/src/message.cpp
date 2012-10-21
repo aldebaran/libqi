@@ -14,7 +14,7 @@
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 
-#include "src/message_p.hpp"
+#include "message_p.hpp"
 
 
 namespace qi {

@@ -6,7 +6,7 @@
 */
 
 #include <gtest/gtest.h>
-#include "src/messaging/mutexednamelookup.hpp"
+#include "messaging/mutexednamelookup.hpp"
 #include <qimessaging/perf/dataperftimer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>

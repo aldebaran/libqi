@@ -3,10 +3,10 @@
 */
 
 #include <gtest/gtest.h>
-#include "src/messaging/network/machine_context.hpp"
-#include "src/messaging/network/endpoint_context.hpp"
-#include "src/messaging/network/network.hpp"
-#include "src/messaging/network/master_endpoint.hpp"
+#include "messaging/network/machine_context.hpp"
+#include "messaging/network/endpoint_context.hpp"
+#include "messaging/network/network.hpp"
+#include "messaging/network/master_endpoint.hpp"
 
 using qi::detail::getProcessID;
 using qi::detail::getHostName;

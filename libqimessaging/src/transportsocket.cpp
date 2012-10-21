@@ -13,14 +13,14 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <qimessaging/transportsocket.hpp>
-#include "src/tcptransportsocket.hpp"
-#include "src/message_p.hpp"
-#include "src/buffer_p.hpp"
+#include "tcptransportsocket.hpp"
+#include "message_p.hpp"
+#include "buffer_p.hpp"
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/buffer.hpp>
-#include "src/transportsocket_p.hpp"
+#include "transportsocket_p.hpp"
 
 namespace qi
 {

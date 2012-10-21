@@ -6,7 +6,7 @@
 */
 
 #include <qi/log.hpp>
-#include "src/qigateway_p.h"
+#include "qigateway_p.h"
 #include <qimessaging/message.hpp>
 #include <qimessaging/serviceinfo.hpp>
 

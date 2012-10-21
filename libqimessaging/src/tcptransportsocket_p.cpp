@@ -17,12 +17,12 @@
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "src/tcptransportsocket.hpp"
-#include "src/transportsocket_p.hpp"
-#include "src/tcptransportsocket_p.hpp"
-#include "src/message_p.hpp"
-#include "src/buffer_p.hpp"
-#include "src/eventloop_p.hpp"
+#include "tcptransportsocket.hpp"
+#include "transportsocket_p.hpp"
+#include "tcptransportsocket_p.hpp"
+#include "message_p.hpp"
+#include "buffer_p.hpp"
+#include "eventloop_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/types.hpp>

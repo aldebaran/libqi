@@ -8,7 +8,7 @@
 #define _SRC_TRANSPORTSOCKET_P_HPP_
 
 # include <qimessaging/url.hpp>
-# include "src/messagedispatcher.hpp"
+# include "messagedispatcher.hpp"
 
 namespace qi
 {

@@ -7,8 +7,8 @@
 
 #include <qimessaging/session.hpp>
 #include <qimessaging/url.hpp>
-#include "src/transportserver_p.hpp"
-#include "src/transportserverdummy_p.hpp"
+#include "transportserver_p.hpp"
+#include "transportserverdummy_p.hpp"
 
 namespace qi
 {

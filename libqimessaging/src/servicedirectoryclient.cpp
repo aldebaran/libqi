@@ -4,8 +4,8 @@
 */
 #include "servicedirectoryclient.hpp"
 #include <qitype/objecttypebuilder.hpp>
-#include "src/servicedirectory_p.hpp"
-#include "src/tcptransportsocket.hpp"
+#include "servicedirectory_p.hpp"
+#include "tcptransportsocket.hpp"
 
 namespace qi {
 

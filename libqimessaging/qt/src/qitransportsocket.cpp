@@ -7,7 +7,7 @@
 
 #include <qi/log.hpp>
 #include <qimessaging/qt/QiTransportSocket>
-#include "src/qitransportsocket_p.h"
+#include "qitransportsocket_p.h"
 #include <QTcpSocket>
 #include <QSslSocket>
 #include <QHostAddress>

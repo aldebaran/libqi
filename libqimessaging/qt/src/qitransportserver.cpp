@@ -5,8 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include "src/qitransportserver_p.h"
-#include "src/qitransportsocket_p.h"
+#include "qitransportserver_p.h"
+#include "qitransportsocket_p.h"
 #include <QTcpSocket>
 #include <QSslSocket>
 #include <QSslKey>

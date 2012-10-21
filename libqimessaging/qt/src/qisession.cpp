@@ -13,8 +13,8 @@
 #include <qitype/genericobject.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qimessaging/qt/qidatastream.h>
-#include "src/qiremoteobject_p.h"
-#include "src/qisession_p.h"
+#include "qiremoteobject_p.h"
+#include "qisession_p.h"
 
 QiSessionPrivate::QiSessionPrivate(QiSession *self) {
   _session = new qi::Session();

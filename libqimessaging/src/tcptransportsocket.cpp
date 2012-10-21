@@ -2,8 +2,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "src/tcptransportsocket.hpp"
-#include "src/tcptransportsocket_p.hpp"
+#include "tcptransportsocket.hpp"
+#include "tcptransportsocket_p.hpp"
 
 namespace qi {
 

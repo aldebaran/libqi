@@ -10,7 +10,7 @@
 #include <cstring>
 #include <ctype.h>
 
-#include "src/buffer_p.hpp"
+#include "buffer_p.hpp"
 
 #include <iostream>
 

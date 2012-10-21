@@ -17,13 +17,13 @@
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
 #include <qitype/signal.hpp>
-#include "src/serverresult.hpp"
-#include "src/servicewatcher.hpp"
-#include "src/servicedirectoryclient.hpp"
-#include "src/objectregistrar.hpp"
-#include "src/sessionservice.hpp"
-#include "src/sessionservices.hpp"
-#include "src/transportsocketcache.hpp"
+#include "serverresult.hpp"
+#include "servicewatcher.hpp"
+#include "servicedirectoryclient.hpp"
+#include "objectregistrar.hpp"
+#include "sessionservice.hpp"
+#include "sessionservices.hpp"
+#include "transportsocketcache.hpp"
 
 namespace qi {
 

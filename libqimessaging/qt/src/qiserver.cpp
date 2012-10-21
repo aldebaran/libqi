@@ -12,7 +12,7 @@
 #include <qimessaging/qt/qiserver.h>
 #include <qimessaging/qt/qisession.h>
 
-#include "src/qisession_p.h"
+#include "qisession_p.h"
 
 class QiServerPrivate
 {

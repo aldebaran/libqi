@@ -25,9 +25,9 @@
 
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include "src/transportserverlibevent_p.hpp"
-#include "src/transportserverdummy_p.hpp"
-#include "src/tcptransportsocket_p.hpp"
+#include "transportserverlibevent_p.hpp"
+#include "transportserverdummy_p.hpp"
+#include "tcptransportsocket_p.hpp"
 
 namespace qi
 {

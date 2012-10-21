@@ -2,7 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include "src/transportsocketcache.hpp"
+#include "transportsocketcache.hpp"
 
 
 namespace qi {

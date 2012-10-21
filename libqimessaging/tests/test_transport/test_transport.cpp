@@ -14,10 +14,10 @@
 
 
 #include <qi/transport.hpp>
-//#include "src/zmq/zmq_server_backend.hpp"
-//#include "src/zmq/zmq_server_queue_backend.hpp"
-#include "src/zmq/zmq_simple_server_backend.hpp"
-#include "src/zmq/zmq_client_backend.hpp"
+//#include "zmq/zmq_server_backend.hpp"
+//#include "zmq/zmq_server_queue_backend.hpp"
+#include "zmq/zmq_simple_server_backend.hpp"
+#include "zmq/zmq_client_backend.hpp"
 
 #include <boost/shared_ptr.hpp>
 #include <qimessaging/perf/dataperftimer.hpp>

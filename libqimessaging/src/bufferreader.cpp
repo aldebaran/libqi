@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include <qimessaging/bufferreader.hpp>
-#include "src/buffer_p.hpp"
+#include "buffer_p.hpp"
 namespace qi {
 
   BufferReader::BufferReader(const Buffer& buf)
