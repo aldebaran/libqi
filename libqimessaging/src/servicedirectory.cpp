@@ -303,6 +303,7 @@ bool ServiceDirectory::listen(const qi::Url &address)
   sdbo->serviceReady(1);
   //serviceDirectory must have id '1'
   assert(regid == 1);
+  qiLogInfo("ServiceDirectory") << "ServiceDirectory listening on: " << address.str();
   return true;
 }
 
@@ -310,6 +311,7 @@ std::vector<qi::Url> ServiceDirectory::endpoints() const {
   return _p->_server.endpoints();
 }
 void ServiceDirectory::close() {
+  qiLogInfo("ServiceDirectory") << "Closing ServiceDirectory";
   _p->_server.close();
 }
 

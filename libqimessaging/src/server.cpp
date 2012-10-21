@@ -130,6 +130,7 @@ namespace qi {
 
   void Server::close()
   {
+    qiLogInfo("Server") << "Closing server: " << listenUrl().str();
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);
       std::set<TransportSocketPtr>::iterator it;
