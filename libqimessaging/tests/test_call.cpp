@@ -27,6 +27,14 @@ int print(std::list<std::pair<std::string, int> > robots)
   return robots.size();
 }
 
+void foobar() {
+  return;
+}
+
+void fooerr() {
+  throw std::runtime_error("foobar");
+}
+
 TEST(TestCall, CallComplexType)
 {
   std::list<std::pair<std::string, int> >  robots;
@@ -46,7 +54,51 @@ TEST(TestCall, CallComplexType)
   robots.push_back(std::make_pair("Billy West", 3456789));
   robots.push_back(std::make_pair("33CL", 4567890));
 
-  ASSERT_ANY_THROW(proxy->call<int>("print", robots));
+  ASSERT_EQ(4, proxy->call<int>("print", robots));
 
+  p.server()->unregisterService(serviceID);
+}
+
+
+TEST(TestCall, CallVoid)
+{
+  std::list<std::pair<std::string, int> >  robots;
+  TestSessionPair          p;
+  qi::GenericObjectBuilder ob;
+  int serviceID;
+
+  ob.advertiseMethod("foobar", &foobar);
+  qi::ObjectPtr obj(ob.object());
+
+  serviceID = p.server()->registerService("serviceCall", obj);
+
+  qi::ObjectPtr proxy = p.client()->service("serviceCall");
+
+
+  std::cout << "Calling" << std::endl;
+  qi::Future<void> fut = proxy->call<void>("foobar");
+
+  ASSERT_FALSE(fut.hasError());
+  p.server()->unregisterService(serviceID);
+}
+
+TEST(TestCall, CallVoidErr)
+{
+  std::list<std::pair<std::string, int> >  robots;
+  TestSessionPair          p;
+  qi::GenericObjectBuilder ob;
+  int serviceID;
+
+  ob.advertiseMethod("fooerr", &fooerr);
+  qi::ObjectPtr obj(ob.object());
+
+  serviceID = p.server()->registerService("serviceCall", obj);
+
+  qi::ObjectPtr proxy = p.client()->service("serviceCall");
+
+  std::cout << "Calling" << std::endl;
+  qi::Future<void> fut = proxy->call<void>("fooerr");
+
+  ASSERT_TRUE(fut.hasError());
   p.server()->unregisterService(serviceID);
 }
