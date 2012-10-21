@@ -160,6 +160,7 @@ namespace qi
       _msg->setBuffer(buf);
 
       evbuffer_remove(input, buf.data(), buf.size());
+      qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
       _self->messageReady(*_msg);
       _dispatcher.dispatch(*_msg);
       delete _msg;
@@ -334,6 +335,7 @@ namespace qi
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
   {
+    qiLogDebug("TransportSocket") << "Sending (" << msg.type() << "):" << msg.address();
     if (_eventLoop->isInEventLoopThread())
       return send_(msg, false);
     else
