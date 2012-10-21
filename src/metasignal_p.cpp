@@ -2,8 +2,8 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <src/metasignal_p.hpp>
 #include <qitype/genericobject.hpp>
+#include "metasignal_p.hpp"
 
 namespace qi {
 
