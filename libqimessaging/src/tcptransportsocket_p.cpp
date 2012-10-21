@@ -22,7 +22,6 @@
 #include "tcptransportsocket_p.hpp"
 #include "message_p.hpp"
 #include "buffer_p.hpp"
-#include "eventloop_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/types.hpp>
@@ -89,7 +88,7 @@ namespace qi
         boost::bind(&TcpTransportSocketPrivate::startReading, this));
       return;
     }
-    struct event_base *base = static_cast<event_base *>(_eventLoop->_p->getEventBase());
+    struct event_base *base = static_cast<event_base *>(_eventLoop->nativeHandle());
     _bev = bufferevent_socket_new(base, _fd, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(_bev, ::qi::readcb, 0, ::qi::eventcb, this);
     bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
@@ -259,7 +258,7 @@ namespace qi
     }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << _url.host() << ":" << _url.port();
 
-    _bev = bufferevent_socket_new(_eventLoop->_p->getEventBase(), -1, BEV_OPT_CLOSE_ON_FREE);
+    _bev = bufferevent_socket_new(static_cast<struct event_base *>(_eventLoop->nativeHandle()), -1, BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(_bev, ::qi::readcb, 0, ::qi::eventcb, this);
     bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
     bufferevent_enable(_bev, EV_READ|EV_WRITE);

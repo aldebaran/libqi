@@ -13,7 +13,6 @@
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
-# include "src/messagedispatcher.hpp"
 # include <string>
 
 namespace qi

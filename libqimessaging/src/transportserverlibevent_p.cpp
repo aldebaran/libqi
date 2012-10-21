@@ -29,7 +29,6 @@
 
 #include <qi/eventloop.hpp>
 
-#include "eventloop_p.hpp"
 #include "transportserver_p.hpp"
 #include "transportserverlibevent_p.hpp"
 
@@ -73,7 +72,7 @@ namespace qi
 
   bool TransportServerLibEventPrivate::listen()
   {
-    struct event_base     *base = context->_p->getEventBase();
+    struct event_base     *base = static_cast<struct event_base *>(context->nativeHandle());
 
     struct evutil_addrinfo *ai = NULL;
     int                     err;
