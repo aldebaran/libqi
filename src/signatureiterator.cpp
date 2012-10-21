@@ -8,7 +8,7 @@
 #include <sstream>
 #include <qitype/signature.hpp>
 #include <qi/log.hpp>
-#include "src/signatureconvertor.hpp"
+#include "signatureconvertor.hpp"
 
 namespace qi {
 

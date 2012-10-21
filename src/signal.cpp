@@ -11,8 +11,8 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 
-#include "src/object_p.hpp"
-#include "src/signal_p.hpp"
+#include "object_p.hpp"
+#include "signal_p.hpp"
 
 namespace qi {
 

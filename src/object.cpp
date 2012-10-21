@@ -4,7 +4,7 @@
 */
 #include <iostream>
 #include <qitype/genericobject.hpp>
-#include "src/object_p.hpp"
+#include "object_p.hpp"
 
 namespace qi {
 
