@@ -4,8 +4,8 @@
  * found in the COPYING file.
  */
 
-#include "src/sdklayout.hpp"
-#include "src/filesystem.hpp"
+#include "sdklayout.hpp"
+#include "filesystem.hpp"
 
 #include <qi/application.hpp>
 #include <qi/path.hpp>

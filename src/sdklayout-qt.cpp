@@ -12,7 +12,7 @@
 #include <qi/qi.hpp>
 #include <qi/error.hpp>
 
-#include "src/sdklayout.hpp"
+#include "sdklayout.hpp"
 
 #include <QDir>
 #include <QFile>

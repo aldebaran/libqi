@@ -5,7 +5,7 @@
  */
 
 #include <qi/threadpool.hpp>
-#include "src/threadpool_p.hpp"
+#include "threadpool_p.hpp"
 
 namespace qi
 {

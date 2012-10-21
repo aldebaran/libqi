@@ -15,9 +15,9 @@
 
 #include <boost/filesystem.hpp>
 #include <locale>
-#include "src/sdklayout.hpp"
-#include "src/filesystem.hpp"
-#include "src/utils.hpp"
+#include "sdklayout.hpp"
+#include "filesystem.hpp"
+#include "utils.hpp"
 
 namespace qi {
 

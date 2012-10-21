@@ -35,7 +35,7 @@
 
 #include <qi/os.hpp>
 #include <qi/qi.hpp>
-#include "src/filesystem.hpp"
+#include "filesystem.hpp"
 
 #include <signal.h>
 

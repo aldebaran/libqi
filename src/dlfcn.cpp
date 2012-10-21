@@ -21,7 +21,7 @@
 #include <qi/qi.hpp>
 #include <qi/path.hpp>
 
-#include "src/filesystem.hpp"
+#include "filesystem.hpp"
 
 namespace qi {
   namespace os {

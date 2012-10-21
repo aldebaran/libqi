@@ -16,7 +16,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
-#include "src/filesystem.hpp"
+#include "filesystem.hpp"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

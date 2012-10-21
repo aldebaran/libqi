@@ -36,7 +36,7 @@
 #include <qi/log.hpp>
 #include <qi/error.hpp>
 #include <qi/qi.hpp>
-#include "src/filesystem.hpp"
+#include "filesystem.hpp"
 #include "utils.hpp"
 
 namespace qi {
