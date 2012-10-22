@@ -32,6 +32,11 @@ TEST(QiAtomic, qiuint8)
 {
   test_type<qi::uint8_t>();
 }
+
+TEST(QiAtomic, qiint8)
+{
+  test_type<qi::int8_t>();
+}
 #endif
 
 TEST(QiAtomic, qiuint16)
@@ -39,26 +44,14 @@ TEST(QiAtomic, qiuint16)
   test_type<qi::uint16_t>();
 }
 
-TEST(QiAtomic, qiuint32)
-{
-  test_type<qi::uint32_t>();
-}
-
-TEST(QiAtomic, qiuint64)
-{
-  test_type<qi::uint64_t>();
-}
-
-#ifndef _MSC_VER
-TEST(QiAtomic, qiint8)
-{
-  test_type<qi::int8_t>();
-}
-#endif
-
 TEST(QiAtomic, qiint16)
 {
   test_type<qi::int16_t>();
+}
+
+TEST(QiAtomic, qiuint32)
+{
+  test_type<qi::uint32_t>();
 }
 
 TEST(QiAtomic, qiint32)
@@ -66,7 +59,21 @@ TEST(QiAtomic, qiint32)
   test_type<qi::int32_t>();
 }
 
+
+/*
+ * These tests should run since cmpxchg8b instruction is available on x86 CPUs.
+ * But it might not work with:
+ * - Another CPU
+ * - An outdated compiler on a 32 bit OS
+ */
+#ifdef __LP64__
+TEST(QiAtomic, qiuint64)
+{
+  test_type<qi::uint64_t>();
+}
+
 TEST(QiAtomic, qiint64)
 {
   test_type<qi::int64_t>();
 }
+#endif
