@@ -7,6 +7,7 @@
 #include <qimessaging/transportsocket.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
+#include <qi/eventloop.hpp>
 
 namespace qi {
 
@@ -63,12 +64,31 @@ namespace qi {
   void RemoteObject::setTransportSocket(qi::TransportSocketPtr socket) {
     if (socket == _socket)
       return;
-    if (_socket)
+    if (_socket) {
       _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+      _socket->disconnected.disconnect(_linkDisconnected);
+    }
     _socket = socket;
     //do not set the socket on the remote object
-    if (socket)
+    if (socket) {
       _linkMessageDispatcher = _socket->messagePendingConnect(_service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+      _linkDisconnected      = _socket->disconnected.connect (boost::bind<void>(&RemoteObject::onSocketDisconnected, this, _1));
+    }
+  }
+
+  //should be done in the object thread
+  void RemoteObject::onSocketDisconnected(int error)
+  {
+    {
+      boost::mutex::scoped_lock lock(_mutex);
+      std::map<int, qi::Promise<GenericValue> >::iterator it = _promises.begin();
+      while (it != _promises.end()) {
+        qiLogVerbose("RemoteObject") << "Reporting error for request " << it->first << "(socket disconnected)";
+        it->second.setError("Socket disconnected");
+        _promises.erase(it);
+        it = _promises.begin();
+      }
+    }
   }
 
   void RemoteObject::onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom) {
@@ -88,6 +108,7 @@ namespace qi {
     return prom.future();
   }
 
+  //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
     qi::Promise<GenericValue> promise;
@@ -191,9 +212,9 @@ namespace qi {
     sig = sig.substr(1, sig.length()-2);
     if (sig != msg.buffer().signature())
     {
-      qiLogError("remoteobject") << "call signature mismatch "
-        << sig << ' '
-        << msg.buffer().signature();
+      qiLogWarning("remoteobject") << "call signature mismatch '"
+                                   << sig << "' vs '"
+                                   << msg.buffer().signature() << "'" << metaObject().method(method)->signature();
     }
 #endif
     msg.setType(qi::Message::Type_Call);
@@ -291,8 +312,10 @@ namespace qi {
   }
 
   void RemoteObject::close() {
-    if (_socket)
+    if (_socket) {
       _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+      _socket->disconnected.disconnect(_linkDisconnected);
+    }
   }
 
 }

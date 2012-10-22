@@ -39,8 +39,10 @@ namespace qi {
     void close();
 
   protected:
-    //MessageDispatcher callback
+    //TransportSocket.messagePending
     void onMessagePending(const qi::Message &msg);
+    //TransportSocket.disconnected
+    void onSocketDisconnected(int error);
 
     virtual void metaEmit(unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
@@ -57,6 +59,7 @@ namespace qi {
     std::map<int, qi::Promise<GenericValue> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;
+    qi::SignalBase::Link                            _linkDisconnected;
     qi::ObjectPtr                                   _self;
   };
 
