@@ -103,7 +103,7 @@ namespace qi
         sub.eventLoopGetter = detail::makeEventLoopGetter(ptr);
       }
     };
-    static EventLoop* eventLoopGet(EventLoop* arg)
+    inline EventLoop* eventLoopGet(EventLoop* arg)
     {
       return arg;
     }
