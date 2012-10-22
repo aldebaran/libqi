@@ -47,6 +47,7 @@ namespace qi {
       return;
   }
 
+
   void EventLoopPrivate::start()
   {
     if (_running || _threaded)
@@ -231,6 +232,10 @@ namespace qi {
   void EventLoop::run()
   {
     _p->run();
+  }
+
+  void *EventLoop::nativeHandle() {
+    return static_cast<void *>(_p->getEventBase());
   }
 
   EventLoop::AsyncCallHandle

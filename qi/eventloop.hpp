@@ -36,6 +36,9 @@ namespace qi
     /// Run main loop in current thread.
     void run();
 
+    // Internal function
+    void *nativeHandle();
+
     class QI_API AsyncCallHandle
     {
     public:
