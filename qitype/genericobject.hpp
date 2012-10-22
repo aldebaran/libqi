@@ -32,7 +32,7 @@ namespace qi {
   extern template class Future<GenericValue>;
   extern template class Future<void>;
 #endif
-  struct SignalSubscriber;
+  class SignalSubscriber;
   class SignalBase;
 
   class GenericObject;
