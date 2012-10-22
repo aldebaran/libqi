@@ -553,6 +553,11 @@ qi::Url Gateway::listenUrl() const
   return _p->_transportServer->listenUrl();
 }
 
+std::vector<qi::Url> Gateway::endpoints() const
+{
+  return _p->_transportServer->endpoints();
+}
+
 /* RemoteGateway bindings */
 RemoteGateway::RemoteGateway()
   : _p(new GatewayPrivate())
