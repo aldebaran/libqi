@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <qitype/future.hpp>
+#include <qi/future.hpp>
 #include <qitype/type.hpp>
 namespace qi
 {
