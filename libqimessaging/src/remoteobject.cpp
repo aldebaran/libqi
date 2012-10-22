@@ -175,7 +175,7 @@ namespace qi {
         {
           try {
             std::string sig = sb->signature();
-            sig = signatureSplit(sig)[2];
+            // Remove top-level tuple
             sig = sig.substr(1, sig.length()-2);
             GenericFunctionParameters args = msg.parameters(sig);
             sb->trigger(args);
