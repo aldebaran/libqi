@@ -44,7 +44,7 @@ namespace qi {
                                         ServiceLocality locality = ServiceLocality_All);
 
     //Server
-    bool    listen(const std::string &address);
+    bool    listen(const qi::Url &address);
     qi::Url listenUrl() const;
 
     //close both client and server side

@@ -137,7 +137,7 @@ namespace qi {
   }
 
 
-  bool Session::listen(const std::string &address)
+  bool Session::listen(const qi::Url &address)
   {
     return _p->_serverObject.listen(address);
   }
