@@ -17,10 +17,11 @@
 namespace qi {
 
   //Server
-  Server::Server()
+  Server::Server(qi::MetaCallType defaultCallType)
     : _boundObjectsMutex()
     , _server()
     , _dying(false)
+    , _defaultCallType(defaultCallType)
   {
     _server.newConnection.connect(boost::bind<void>(&Server::onTransportServerNewConnection, this, _1));
   }
@@ -47,7 +48,7 @@ namespace qi {
   {
     if (!obj)
       return false;
-    BoundObjectPtr bop = makeServiceBoundObjectPtr(id, obj);
+    BoundObjectPtr bop = makeServiceBoundObjectPtr(id, obj, _defaultCallType);
     return addObject(id, bop);
   }
 
@@ -66,6 +67,10 @@ namespace qi {
       _boundObjects[id] = obj;
       return true;
     }
+  }
+
+  void Server::setDefaultCallType(qi::MetaCallType ctype) {
+    _defaultCallType = ctype;
   }
 
   bool Server::removeObject(unsigned int idx)

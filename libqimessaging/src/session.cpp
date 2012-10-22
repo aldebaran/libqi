@@ -144,21 +144,12 @@ namespace qi {
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
-
-    //qi::Promise<unsigned int> promise;
-    //qi::Future<unsigned int>  fut =
     return _p->_serverObject.registerService(name, obj);
-    //fut.connect(boost::bind<void>(&registerObjectToServer, _1, &_p->_server, promise, obj));
-    //return promise.future();
   }
 
   qi::FutureSync<void> Session::unregisterService(unsigned int idx)
   {
-    //qi::Promise<void> promise;
-    //qi::Future<void>  fut =
     return _p->_serverObject.unregisterService(idx);
-    //fut.connect(boost::bind<void>(&unregisterObjectToServer, _1, &_p->_server, promise, idx));
-    //return promise.future();
   }
 
   qi::Url Session::listenUrl() const
@@ -173,6 +164,15 @@ namespace qi {
       registerService(names[i], createObject(names[i]));
     return names;
   }
+
+  namespace details {
+
+    // Only needed for ALModule.
+    // (metacall should be direct when called in local, and threaded when coming from a server)
+    void setSessionServerDefaultCallType(qi::Session *session, qi::MetaCallType callType) {
+      session->_p->_serverObject.setDefaultCallType(callType);
+    }
+  };
 
 }
 

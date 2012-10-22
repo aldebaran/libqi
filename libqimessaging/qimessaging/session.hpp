@@ -66,6 +66,11 @@ namespace qi {
   public:
     SessionPrivate      *_p;
   };
+
+  namespace details {
+    //This is internal, this could be removed, do not use.
+    QIMESSAGING_API void setSessionServerDefaultCallType(qi::Session *session, qi::MetaCallType callType);
+  }
 }
 
 

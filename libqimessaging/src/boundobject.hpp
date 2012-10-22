@@ -85,7 +85,7 @@ namespace qi {
 
   typedef boost::shared_ptr<BoundObject> BoundObjectPtr;
 
-  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object);
+  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct = qi::MetaCallType_Auto);
 
 }
 
