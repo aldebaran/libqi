@@ -23,6 +23,8 @@
 #include <arpa/inet.h>
 #endif
 
+#include <boost/lexical_cast.hpp>
+
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include "tcptransportsocket.hpp"
@@ -79,8 +81,7 @@ namespace qi
     struct evutil_addrinfo  hint;
     char                    portbuf[10];
 
-    bool findPort = listenUrl.port() == 0;
-    unsigned short port = findPort ? qi::os::findAvailablePort(0) : listenUrl.port();
+    unsigned short port = listenUrl.port();
 
     // Convert the port to decimal.
     evutil_snprintf(portbuf, sizeof(portbuf), "%d", (int)port);
@@ -106,25 +107,12 @@ namespace qi
       return false;
     }
 
-    do
-    {
-      reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port = htons(port);
-      _listener = evconnlistener_new_bind(base,
-                                          accept_cb,
-                                          this,
-                                          LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
-                                          -1,
-                                          ai->ai_addr,
-                                          ai->ai_addrlen);
-
-      if (!findPort || (findPort && _listener))
-      {
-        break;
-      }
-
-      port = qi::os::findAvailablePort(port + 1);
-    }
-    while (port != 0);
+    reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port = htons(port);
+    _listener = evconnlistener_new_bind(base,
+      accept_cb, this,
+      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_CLOSE_ON_EXEC | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE,
+      -1,
+      ai->ai_addr, ai->ai_addrlen);
 
     if (_listener)
     {
@@ -144,12 +132,30 @@ namespace qi
 
     if (ai)
       evutil_freeaddrinfo(ai);
+    if (port == 0)
+    {
+      // Get effective port
+      evutil_socket_t fd = evconnlistener_get_fd(_listener);
+      sockaddr_in addr;
+      socklen_t addrlen = sizeof(addr);
+      int res = getsockname(fd, (sockaddr*)&addr, &addrlen);
+      if (res)
+      {
+        qiLogError("qimessaging.transportserver") << "Failed to get address info "
+          << evutil_gai_strerror(errno);
+      }
+      port = ntohs(addr.sin_port);
+    }
 
-
+    if (listenUrl.port() == 0)
+    {
+      listenUrl = Url(listenUrl.protocol() + "://" + listenUrl.host() + ":"
+        + boost::lexical_cast<std::string>(port));
+    }
     /* Set endpoints */
     if (listenUrl.host() != "0.0.0.0")
     {
-      _endpoints.push_back(listenUrl);
+      _endpoints.push_back(listenUrl.str());
     }
     else // need available ip addresses
     {
@@ -178,7 +184,7 @@ namespace qi
           ss << protocol;
           ss << (*addressIt);
           ss << ":";
-          ss << listenUrl.port();
+          ss << port;
           qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
           _endpoints.push_back(ss.str());
          }

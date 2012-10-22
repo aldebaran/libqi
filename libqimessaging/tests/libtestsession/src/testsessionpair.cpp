@@ -13,17 +13,12 @@
 
 TestSessionPair::TestSessionPair()
 {
-  std::stringstream listeningAddress;
 
   // #1 Get active mode.
   _mode = TestMode::getTestMode();
 
-  // #2 Initialize service directory.
-  // #2.1 Find suitable listening address;
-  listeningAddress << "tcp://0.0.0.0:" << qi::os::findAvailablePort(3000);
-
-  // #2.2 Listen.
-  _sd.listen(listeningAddress.str());
+  // #2 Listen.
+  _sd.listen("tcp://0.0.0.0:0");
 
   // #3 Get client and server sessions.
   _client = new TestSession(_sd.endpoints()[0].str(), false, _mode);
@@ -32,17 +27,12 @@ TestSessionPair::TestSessionPair()
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode)
 {
-  std::stringstream listeningAddress;
 
   // #0 Set active mode.
   _mode = mode;
 
-  // #1 Initialize service directory.
-  // #1.1 Find suitable listening address;
-  listeningAddress << "tcp://0.0.0.0:" << qi::os::findAvailablePort(3000);
-
-  // #1.2 Listen.
-  _sd.listen(listeningAddress.str());
+  // #1 Listen.
+  _sd.listen("tcp://0.0.0.0:0");
 
   // #2 Get client and server sessions.
   _client = new TestSession(_sd.endpoints()[0].str(), false, mode);

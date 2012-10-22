@@ -152,13 +152,9 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   qi::ServiceDirectory sd;
 
-  unsigned int sdPort = qi::os::findAvailablePort(5555);
-  std::stringstream sdAddr;
-  sdAddr << "tcp://127.0.0.1:" << sdPort;
+  sd.listen("tcp://127.0.0.1:0");
+  connectionAddr = sd.listenUrl().str();
 
-  connectionAddr = sdAddr.str();
-
-  sd.listen(sdAddr.str());
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
   qi::GenericObjectBuilder ob;
@@ -169,26 +165,18 @@ int main(int argc, char **argv) {
   ob.advertiseMethod("replyBufBA", &replyBufBA);
   qi::ObjectPtr        obj(ob.object());
 
-  session.connect(sdAddr.str());
+  session.connect(sd.listenUrl());
 
-  unsigned int servicePort = qi::os::findAvailablePort(0);
-  std::stringstream serviceAddr;
-  serviceAddr << "tcp://127.0.0.1:" << servicePort;
-
-  session.listen(serviceAddr.str());
+  session.listen("tcp://127.0.0.1:0");
   unsigned int id = session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready:" << id << std::endl;
 
 #ifdef WITH_GATEWAY_
-  unsigned int gatewayPort = qi::os::findAvailablePort(12345);
-  std::stringstream gatewayAddr;
-  gatewayAddr << "tcp://127.0.0.1:" << gatewayPort;
-
-  connectionAddr = gatewayAddr.str();
 
   qi::Gateway gate;
-  gate.attachToServiceDirectory(sdAddr.str());
+  gate.attachToServiceDirectory(sd.listenUrl());
   gate.listen(gatewayAddr.str());
+  connectionAddr = gate.listenUrl();
 #endif
 
   int res = RUN_ALL_TESTS();

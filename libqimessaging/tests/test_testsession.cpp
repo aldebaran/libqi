@@ -85,14 +85,11 @@ TEST(TestTestSession, TestTestSessionOnly)
   qi::ServiceDirectory sd;
   std::stringstream    listenUrl;
 
-  // #0 Find suitable listening url for service directory.
-  listenUrl << "tcp://0.0.0.0:" << qi::os::findAvailablePort(3000);
-
   // #1 Force test mode to service directory.
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   // #2 Initialize service directory and test sessions.
-  sd.listen(listenUrl.str());
+  sd.listen("tcp://0.0.0.0:0");
   TestSession          client(sd.endpoints()[0].str(), false);
   TestSession          server(sd.endpoints()[0].str(), true, TestMode::getTestMode());
   server.session()->listen("tcp://0.0.0.0:0");

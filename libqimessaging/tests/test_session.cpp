@@ -70,24 +70,19 @@ TEST(QiSession, simpleConnectionToInvalidSd)
 TEST(QiSession, testClose)
 {
   qi::Session session;
-  std::stringstream ss;
+
   qi::ServiceDirectory sd;
 
-  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
-  sd.listen(ss.str());
+  sd.listen("tcp://127.0.0.1:0");
 
-  bool connected = session.connect(ss.str()).wait();
+  bool connected = session.connect(sd.listenUrl()).wait();
   ASSERT_TRUE(connected);
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
-  unsigned int servicePort = qi::os::findAvailablePort(0);
-  std::stringstream serviceAddr;
-  serviceAddr << "tcp://127.0.0.1:" << servicePort;
-
-  session.listen(serviceAddr.str());
+  session.listen("tcp://127.0.0.1:0");
 
   // Wait for service id, otherwise register is asynchronous.
   qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
@@ -104,7 +99,7 @@ TEST(QiSession, testClose)
   std::vector<qi::ServiceInfo> services = session.services();
   EXPECT_EQ(0U, services.size());
 
-  connected = session.connect(ss.str());
+  connected = session.connect(sd.listenUrl());
   ASSERT_TRUE(connected);
   session.unregisterService(idx.value());
 }
