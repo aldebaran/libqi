@@ -17,6 +17,7 @@ namespace qi {
   class QITYPE_API CallableType
   {
   public:
+    CallableType();
     Type* resultType();
     const std::vector<Type*>& argumentsType();
     std::string signature() const;
@@ -61,7 +62,8 @@ namespace qi {
   typedef boost::function<GenericValue(const std::vector<GenericValue>&)> DynamicFunction;
   /// @return a GenericFunction that takes arguments as a list of unconverted GenericValue.
   QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
-
+  /// @return the type used by dynamic functions
+  QITYPE_API FunctionType* dynamicFunctionType();
   /// @return a GenericFunction obtained by binding a class instance to a member function
   template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
 

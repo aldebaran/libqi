@@ -38,6 +38,11 @@
 
 namespace qi
 {
+  inline CallableType::CallableType()
+  : _resultType(0)
+  {
+  }
+
   inline Type* CallableType::resultType()
   {
     return _resultType;

@@ -189,13 +189,18 @@ namespace qi
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
   };
 
-  GenericFunction makeDynamicGenericFunction(DynamicFunction f)
+  FunctionType* dynamicFunctionType()
   {
     static FunctionType* type = 0;
     if (!type)
       type = new DynamicFunctionType();
+    return type;
+  }
+
+  GenericFunction makeDynamicGenericFunction(DynamicFunction f)
+  {
     GenericFunction result;
-    result.type = type;
+    result.type = dynamicFunctionType();
     result.value = result.type->clone(result.type->initializeStorage(&f));
     return result;
   }
