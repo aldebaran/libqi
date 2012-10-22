@@ -79,7 +79,7 @@ namespace qi {
     globalIoService->run();
   }
 
-  static void stop_handler(int signal_number, qi::Application *app) {
+  static void stop_handler(int signal_number) {
     static int  count_int = 0;
     static int count_term = 0;
     int sigcount = 0;
@@ -94,9 +94,9 @@ namespace qi {
     switch (sigcount) {
       case 1:
         qiLogInfo("qi.application") << "Sending the stop command...";
-        app->stop();
+        Application::stop();
         //register the signal again to call exit the next time if stop did not succeed
-        app->atSignal(boost::bind<void>(&stop_handler, _1, app), signal_number);
+        Application::atSignal(boost::bind<void>(&stop_handler, _1), signal_number);
         return;
       default:
         //even for SIGTERM this is an error, so return 1.
@@ -223,9 +223,6 @@ namespace qi {
     fl.clear();
     argc = Application::argc();
     argv = globalArgv;
-    // kill with no signal sends TERM, control-c sends INT.
-    atSignal(boost::bind(&stop_handler, _1, this), SIGTERM);
-    atSignal(boost::bind(&stop_handler, _1, this), SIGINT);
   }
 
   void* Application::loadModule(const std::string& moduleName, int flags)
@@ -256,15 +253,30 @@ namespace qi {
     globalCond.notify_all();
   }
 
+  static void initSigIntSigTermCatcher() {
+    bool signalInit = false;
+
+    if (!signalInit) {
+      qiLogVerbose("qi.Application") << "Registering SIGINT/SIGTERM handler within qi::Application";
+      // kill with no signal sends TERM, control-c sends INT.
+      Application::atSignal(boost::bind(&stop_handler, _1), SIGTERM);
+      Application::atSignal(boost::bind(&stop_handler, _1), SIGINT);
+      signalInit = true;
+    }
+  }
+
   void Application::run()
   {
+    //run is called, so we catch sigint/sigterm, the default implementation call Application::stop that
+    //will make this loop exit.
+    initSigIntSigTermCatcher();
+
     // We just need a barrier, so no need to share the mutex
     boost::mutex m;
     boost::unique_lock<boost::mutex> l(m);
     globalCond.wait(l);
     l.unlock();
   }
-
 
   void Application::stop()
   {
@@ -325,6 +337,10 @@ namespace qi {
 
   bool Application::atStop(boost::function<void()> func)
   {
+    //If the client call atStop, it mean it will handle the proper destruction
+    //of the program by itself. So here we catch SigInt/SigTerm to call Application::stop
+    //and let the developer properly stop the application as needed.
+    initSigIntSigTermCatcher();
     lazyGet(globalAtStop).push_back(func);
     return true;
   }
