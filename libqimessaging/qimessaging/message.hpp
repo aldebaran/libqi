@@ -10,7 +10,7 @@
 #include <iostream>
 #include <qimessaging/api.hpp>
 #include <qitype/genericvalue.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 #include <qimessaging/datastream.hpp>
 #include <qitype/functiontype.hpp>
 #include <qi/types.hpp>
@@ -135,6 +135,10 @@ namespace qi {
 
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;
+
+    void          setSignature(const std::string& signature);
+    ///@return signature, set by setParameters() or setSignature()
+    const std::string& signature() const;
 
     void                      setParameters(const GenericFunctionParameters &parameters);
     GenericFunctionParameters parameters(const qi::Signature &signature) const;

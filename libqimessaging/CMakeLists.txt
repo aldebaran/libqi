@@ -43,8 +43,6 @@ qi_add_probes(src/tp_qimessaging.in.h
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
                    qimessaging/details/datastream.hxx
-                   qimessaging/buffer.hpp
-                   qimessaging/bufferreader.hpp
                    qimessaging/datastream.hpp
                    qimessaging/file.hpp
                    qimessaging/gateway.hpp
@@ -64,9 +62,6 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    ${CMAKE_CURRENT_BINARY_DIR}/tp_qimessaging.h
                                    src/boundobject.cpp
                                    src/boundobject.hpp
-                                   src/buffer.cpp
-                                   src/buffer_p.hpp
-                                   src/bufferreader.cpp
                                    src/datastream.cpp
                                    src/gateway.cpp
                                    src/message.cpp

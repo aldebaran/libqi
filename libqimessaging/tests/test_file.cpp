@@ -14,7 +14,7 @@
 #include <qi/application.hpp>
 #include <qimessaging/file.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 
 class TestFile: public ::testing::Test
 {

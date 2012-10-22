@@ -184,12 +184,15 @@ namespace qi {
     ODataStream out(_p->buffer);
     for (unsigned int i = 0; i < parameters.size(); ++i)
       qi::details::serialize(parameters[i], out);
+    setSignature(out.signature());
   }
 
   GenericFunctionParameters Message::parameters(const qi::Signature &sig) const {
     GenericFunctionParameters result;
     IDataStream in(_p->buffer);
     Signature::iterator it = sig.begin();
+    if (!_p->signature.empty() && _p->signature != sig.toString())
+      qiLogWarning("qi.message") << "Signature mismatch " << sig.toString() <<" " << _p->signature;
     while (it != sig.end())
     {
       qi::Type* compatible = qi::Type::fromSignature(*it);
@@ -242,6 +245,16 @@ namespace qi {
 
   MessageAddress Message::address() const {
     return MessageAddress(_p->header.id, _p->header.service, _p->header.object, _p->header.action);
+  }
+
+  const std::string& Message::signature() const
+  {
+    return _p->signature;
+  }
+
+  void Message::setSignature(const std::string& sig)
+  {
+    _p->signature = sig;
   }
 
   std::ostream &operator<<(std::ostream &os, const qi::MessageAddress &address) {

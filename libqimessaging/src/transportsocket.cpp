@@ -15,11 +15,10 @@
 #include <qimessaging/transportsocket.hpp>
 #include "tcptransportsocket.hpp"
 #include "message_p.hpp"
-#include "buffer_p.hpp"
 
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 #include "transportsocket_p.hpp"
 
 namespace qi

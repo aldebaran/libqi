@@ -210,11 +210,11 @@ namespace qi {
     sig = signatureSplit(sig)[2];
     // Remove extra tuple layer
     sig = sig.substr(1, sig.length()-2);
-    if (sig != msg.buffer().signature())
+    if (sig != msg.signature())
     {
       qiLogWarning("remoteobject") << "call signature mismatch '"
                                    << sig << "' vs '"
-                                   << msg.buffer().signature() << "'" << metaObject().method(method)->signature();
+                                   << msg.signature() << "'" << metaObject().method(method)->signature();
     }
 #endif
     msg.setType(qi::Message::Type_Call);

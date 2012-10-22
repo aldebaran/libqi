@@ -10,8 +10,6 @@
 #include <qi/types.hpp>
 #include <vector>
 #include <cstring>
-#include "buffer_p.hpp"
-
 
 #if 0
 
@@ -52,7 +50,7 @@ namespace qi {
     int ret = ds->write((const char*)&val, sizeof(val));
     if (!inner)
     {
-      ds->buffer().signature() += S;
+      ds->signature() += S;
     }
     if (ret == -1)
       ds->setStatus(ds->Status_WriteError);
@@ -99,17 +97,14 @@ namespace qi {
   : _status(Status_Ok),
     _innerSerialization(0)
   {
-    if (!buffer._p)
-      buffer._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     _buffer = buffer;
-    ++_buffer._p->nWriters;
   }
 
 
   ODataStream::~ODataStream()
   {
-    --_buffer._p->nWriters;
   }
+
   IDataStream::~IDataStream()
   {
   }
@@ -119,7 +114,7 @@ namespace qi {
     if (len) {
       if (!_innerSerialization)
       {
-        buffer().signature() += 's';
+        signature() += 's';
       }
       if (_buffer.write(str, len) < 0)
       {
@@ -139,7 +134,7 @@ namespace qi {
     if (len) {
       if (!_innerSerialization)
       {
-        buffer().signature() += 's';
+        signature() += 's';
       }
       if (_buffer.write(str, len) != (int)len)
         setStatus(Status_WriteError);
@@ -185,7 +180,7 @@ namespace qi {
   ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {
     if (!_innerSerialization)
     {
-      buffer().signature() += "s";
+      signature() += "r";
     }
 
     ++_innerSerialization;
@@ -248,7 +243,7 @@ namespace qi {
   ODataStream &ODataStream::operator<<(const GenericValue &value)
   {
     if (!_innerSerialization)
-      buffer().signature() += "m";
+      signature() += "m";
     ++_innerSerialization;
     *this << value.signature();
     qi::details::serialize(value, *this);
@@ -259,7 +254,7 @@ namespace qi {
   void ODataStream::beginList(uint32_t size, std::string elementSignature)
   {
     if (!_innerSerialization)
-      buffer().signature() += "[" + elementSignature;
+      signature() += "[" + elementSignature;
     ++_innerSerialization;
     *this << size;
   }
@@ -268,13 +263,13 @@ namespace qi {
   {
     --_innerSerialization;
     if (!_innerSerialization)
-      buffer().signature() += "]";
+      signature() += "]";
   }
 
   void ODataStream::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
   {
     if (!_innerSerialization)
-      buffer().signature() += "{" + keySignature + valueSignature + "}";
+      signature() += "{" + keySignature + valueSignature + "}";
     ++_innerSerialization;
      *this << size;
   }
@@ -283,13 +278,13 @@ namespace qi {
   {
     --_innerSerialization;
     if (!_innerSerialization)
-      buffer().signature() += "}";
+      signature() += "}";
   }
 
   void ODataStream::beginTuple(std::string sig)
   {
     if (!_innerSerialization)
-       buffer().signature() += "(" + sig + ")";
+       signature() += "(" + sig + ")";
     ++_innerSerialization;
   }
   void ODataStream::endTuple()

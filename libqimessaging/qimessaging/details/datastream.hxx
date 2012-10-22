@@ -63,11 +63,8 @@ namespace qi {
 
       void visitString(TypeString* type, void* storage)
       {
-        Buffer* buf = type->asBuffer(storage);
-        if (buf)
-          out << *buf;
-        else
-          out << type->getString(storage);
+        std::pair<char*, size_t> data = type->get(storage);
+        out.writeString(data.first, data.second);
       }
 
       void visitList(GenericList value)
@@ -127,11 +124,18 @@ namespace qi {
         out << pointee;
       }
 
+      void visitRaw(TypeRaw* type, Buffer* buffer)
+      {
+        out << *buffer;
+      }
       ODataStream& out;
     };
 
     class DeserializeTypeVisitor
     {
+      /* Value passed to visitor functions should not be used, only type
+      * information should.
+      */
     public:
       DeserializeTypeVisitor(IDataStream& in)
         : in(in)
@@ -190,15 +194,9 @@ namespace qi {
       {
         result.type = type;
         result.value = result.type->initializeStorage();
-        Buffer* buf = type->asBuffer(result.value);
-        if (buf)
-          in >> *buf;
-        else
-        {
-          std::string s;
-          in >> s;
-          type->set(&result.value, s);
-        }
+        std::string s;
+        in >> s;
+        type->set(&result.value, s);
       }
 
       void visitList(GenericList value)
@@ -272,6 +270,15 @@ namespace qi {
         val.destroy();
       }
 
+      void visitRaw(TypeRaw* type, Buffer*)
+      {
+        Buffer b;
+        in >> b;
+        void* s = type->initializeStorage();
+        type->set(&s, b);
+        result.type = type;
+        result.value = s;
+      }
       GenericValue result;
       IDataStream& in;
     }; //class

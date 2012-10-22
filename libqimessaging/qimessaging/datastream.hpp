@@ -11,14 +11,18 @@
 #include <list>
 #include <vector>
 #include <map>
-#include <qimessaging/api.hpp>
-#include <qimessaging/buffer.hpp>
-#include <qimessaging/bufferreader.hpp>
+
+#include <qi/buffer.hpp>
+#include <qi/bufferreader.hpp>
+#include <qi/types.hpp>
+#include <qi/preproc.hpp>
+
 #include <qitype/signature.hpp>
 #include <qitype/type.hpp>
 #include <qitype/genericvalue.hpp>
-#include <qi/types.hpp>
-#include <qi/preproc.hpp>
+
+#include <qimessaging/api.hpp>
+
 
 namespace qi {
 
@@ -158,9 +162,11 @@ namespace qi {
     void setStatus(Status status) { _status = status; }
 
     Buffer& buffer() { return _buffer;}
+    std::string& signature() { return _signature;}
   private:
     Status      _status;
     Buffer _buffer;
+    std::string _signature;
     unsigned int        _innerSerialization;
 
     //No default CTOR

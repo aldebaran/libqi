@@ -8,7 +8,7 @@
 #define _SRC_MESSAGE_P_HPP_
 
 # include <boost/cstdint.hpp>
-# include <qimessaging/buffer.hpp>
+# include <qi/buffer.hpp>
 # include <qi/types.hpp>
 
 namespace qi
@@ -35,6 +35,7 @@ namespace qi
     inline void               *getHeader() { return reinterpret_cast<void *>(&header); }
 
     Buffer        buffer;
+    std::string   signature;
     MessageHeader header;
 
     static const unsigned int magic = 0x42adde42;

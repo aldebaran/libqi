@@ -12,7 +12,7 @@
 #include <QSslSocket>
 #include <QHostAddress>
 #include <qimessaging/message.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 #include "../src/message_p.hpp"
 
 QiTransportSocketPrivate::QiTransportSocketPrivate(QiTransportSocket* self)

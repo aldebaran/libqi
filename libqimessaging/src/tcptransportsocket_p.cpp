@@ -21,14 +21,13 @@
 #include "transportsocket_p.hpp"
 #include "tcptransportsocket_p.hpp"
 #include "message_p.hpp"
-#include "buffer_p.hpp"
 
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 #include <qi/eventloop.hpp>
 
 #define MAX_LINE 16384

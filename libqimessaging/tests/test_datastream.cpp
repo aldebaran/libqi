@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <qimessaging/datastream.hpp>
-#include <qimessaging/buffer.hpp>
+#include <qi/buffer.hpp>
 
 #include <limits.h>
 
