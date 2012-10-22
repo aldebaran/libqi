@@ -41,10 +41,12 @@ if(USE_BOOST_LOCK_FREE)
 endif()
 
 set(H
+  qi/details/future.hxx
   qi/application.hpp
   qi/atomic.hpp
   qi/config.hpp
   qi/error.hpp
+  qi/future.hpp
   qi/log/consoleloghandler.hpp
   qi/log/fileloghandler.hpp
   qi/log/headfileloghandler.hpp
@@ -68,6 +70,7 @@ set(C
   src/sdklayout.hpp
   src/filesystem.hpp
   src/filesystem.cpp
+  src/future.cpp
   src/log.cpp
   src/log_p.hpp
   src/consoleloghandler.cpp
