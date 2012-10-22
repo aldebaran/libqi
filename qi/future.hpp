@@ -49,7 +49,7 @@ namespace qi {
       *this = b;
     }
 
-    Future<T>& operator = (const FutureSync<T>& b)
+    inline Future<T>& operator = (const FutureSync<T>& b)
     {
       b._sync = false;
       _p = b._p;
@@ -121,7 +121,7 @@ namespace qi {
       *this = promise.future();
     }
 
-    FutureSync<T>& operator = (const FutureSync<T>& b)
+    inline FutureSync<T>& operator = (const FutureSync<T>& b)
     {
       this->_p = b._p;
       _sync = true;
@@ -129,7 +129,7 @@ namespace qi {
       return *this;
     }
 
-    FutureSync<T>& operator = (const Future<T>& b)
+    inline FutureSync<T>& operator = (const Future<T>& b)
     {
      this->_p = b._p;
       _sync = true;
