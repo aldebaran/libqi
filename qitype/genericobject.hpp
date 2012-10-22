@@ -27,8 +27,20 @@
 
 namespace qi {
 
-  // We need shared typeid on Future<GenericValue>
-#ifndef qitype_EXPORTS
+  /* We need shared typeid on Future<GenericValue>
+   * If we do not export, typeids do not compare equals under some gcc-macos
+   * Furthermore we get:
+   * - macos: compiler warning and incorrect code if the template implementation is
+   *   used before the extern declaration
+   * - macos: compiler error if the extern is seen before a non-extern forced
+   *  instanciation
+   * - linux: linker error: if the symbol is marked hidden in some .o files,
+   * and not hidden in others, hidden has precedence, and the extern prevents
+   * the usage of the inlined code version.
+   * - win32: if the whole template is exported, then no new instanciations
+   * besides the one in the defining module can be created.
+   */
+#if !defined(qitype_EXPORTS) && !defined(__linux__)
   extern template class Future<GenericValue>;
   extern template class Future<void>;
 #endif
