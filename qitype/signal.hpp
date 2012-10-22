@@ -16,22 +16,22 @@ namespace qi {
 
   class ManageablePrivate;
   class SignalSubscriber;
- /** User classes can inherit from Manageable to benefit from  Event loop
+  /** User classes can inherit from Manageable to benefit from  Event loop
   *  management
   */
- class QITYPE_API Manageable
- {
- public:
-   Manageable();
-   ~Manageable();
-   Manageable(const Manageable& b);
-   void operator = (const Manageable& b);
+  class QITYPE_API Manageable
+  {
+  public:
+    Manageable();
+    ~Manageable();
+    Manageable(const Manageable& b);
+    void operator = (const Manageable& b);
 
-   EventLoop* eventLoop() const;
-   void moveToEventLoop(EventLoop* eventLoop);
+    EventLoop* eventLoop() const;
+    void moveToEventLoop(EventLoop* eventLoop);
 
-   ManageablePrivate* _p;
- };
+    ManageablePrivate* _p;
+  };
 
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
@@ -131,8 +131,9 @@ namespace qi {
   *
   * Only one of handler or target must be set.
   */
- struct QITYPE_API SignalSubscriber
+ class QITYPE_API SignalSubscriber
  {
+ public:
    SignalSubscriber()
      : weakLock(0), target(0), method(0), enabled(true), active(0)
    {}
