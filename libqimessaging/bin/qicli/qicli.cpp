@@ -30,17 +30,6 @@ static int calcOffsetMethod(const qi::MetaObject::MethodMap &mmaps) {
   return max;
 }
 
-static int calcOffsetSignal(const qi::MetaObject::SignalMap &mmaps) {
-  qi::MetaObject::SignalMap::const_iterator it;
-  int max = 0;
-  for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-    int cur = it->second.signature().size();
-    if (cur > max)
-      max = cur;
-  }
-  return max;
-}
-
 /****************
 *    SERVICE    *
 ****************/
@@ -85,17 +74,17 @@ static void cmd_service(const command           &cmd,
     int offset = calcOffsetMethod(methods);
     qi::MetaObject::MethodMap::const_iterator it2;
     for (it2 = methods.begin(); it2 != methods.end(); ++it2) {
-      std::cout << "    " << std::right << std::setfill('0') << std::setw(2) << it2->second.uid() << std::setw(0) << " "
+      std::cout << "    " << std::right << std::setfill('0') << std::setw(3) << it2->second.uid() << std::setw(0) << " "
                 << std::left << std::setfill(' ') << std::setw(offset) << it2->second.sigreturn() << std::setw(0)
                 << " " << it2->second.signature() << std::endl;
     }
     std::cout << "  events:" << std::endl;
     qi::MetaObject::SignalMap events = mobj.signalMap();
     qi::MetaObject::SignalMap::const_iterator it3;
-    offset = calcOffsetSignal(events);
     for (it3 = events.begin(); it3 != events.end(); ++it3) {
-      std::cout << "    " << std::right << std::setfill('0') << std::setw(2) << it2->second.uid() << std::setw(0) << " "
-                << it3->second.signature() << std::endl;
+      std::cout << "    " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
+                << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
+                << " " << it3->second.signature() << std::endl;
     }
   }
 }
