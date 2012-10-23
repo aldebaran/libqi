@@ -40,7 +40,7 @@ namespace qi {
     //simple metaObject with only special methods. (<10)
     setMetaObject(createRemoteObjectSpecialMetaObject());
     setTransportSocket(socket);
-    //init should be called to makesure the metaObject is valid.
+    //fetchMetaObject should be called to make sure the metaObject is valid.
   }
 
   RemoteObject::RemoteObject(unsigned int service, qi::MetaObject metaObject, TransportSocketPtr socket)
