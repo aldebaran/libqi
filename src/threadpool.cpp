@@ -12,13 +12,25 @@ namespace qi
   ThreadPoolPrivate::ThreadPoolPrivate(unsigned int minWorkers, unsigned int maxWorkers,
                                        unsigned int minIdleWorkers, unsigned int maxIdleWorkers)
 
-    : _minWorkers (minWorkers),
-      _maxWorkers (maxWorkers),
-      _minIdleWorkers (minIdleWorkers),
-      _maxIdleWorkers (maxIdleWorkers),
+    :
+      _threadsMap(),
+      _activeWorkers(0),
+      _workers(0),
+      _minWorkers(minWorkers),
+      _maxWorkers(maxWorkers),
+      _minIdleWorkers(minIdleWorkers),
+      _maxIdleWorkers(maxIdleWorkers),
+      _tasksCondition(),
+      _managerCondition(),
+      _userCondition(),
+      _tasksMutex(),
+      _managerMutex(),
+      _terminatedThreadsMutex(),
+      _terminatedThreads(),
+      _tasks(),
+      /* _manager must be the last initialized */
       _manager (boost::thread(boost::bind(&ThreadPoolPrivate::manageThreads, this)))
   {
-
   }
 
   ThreadPoolPrivate::~ThreadPoolPrivate()

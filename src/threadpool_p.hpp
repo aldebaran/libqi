@@ -45,7 +45,6 @@ namespace qi
       void workLoop();
       void manageThreads();
 
-      boost::thread                               _manager;
       boost::condition_variable                   _tasksCondition;
       boost::condition_variable                   _managerCondition;
       boost::condition_variable                   _userCondition;
@@ -54,6 +53,7 @@ namespace qi
       boost::mutex                                _terminatedThreadsMutex;
       std::queue<boost::thread::id>               _terminatedThreads;
       std::queue<boost::function<void(void)> >    _tasks;
+      boost::thread                               _manager;
 
   };
 }
