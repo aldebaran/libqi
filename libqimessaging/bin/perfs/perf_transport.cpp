@@ -20,6 +20,7 @@
 namespace po = boost::program_options;
 
 #include <qi/application.hpp>
+#include <qimessaging/url.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qimessaging/session.hpp>
 #include <qiperf/dataperfsuite.hpp>
@@ -33,11 +34,13 @@ namespace po = boost::program_options;
 static int gLoopCount = getenv("VALGRIND")?500:10000;
 static const int gThreadCount = 1;
 static bool allInOne = false; // True if sd/server/client are in this process
-static std::string serverPort;
+static qi::Url serverUrl;
+static qi::Url gateUrl;
 static bool clientDone = false;
 static bool serverReady = false;
-int run_client(qi::ObjectPtr obj);
-qi::DataPerfSuite* out;
+static qi::DataPerfSuite* out;
+
+static int run_client(qi::ObjectPtr obj);
 
 std::string reply(const std::string &msg)
 {
@@ -61,14 +64,19 @@ int main_local()
   return 0;
 }
 
-int main_client(std::string QI_UNUSED(src), std::string addr)
+int main_client(std::string QI_UNUSED(src))
 {
   if (getenv("VALGRIND"))
     qi::os::msleep(3000);
   qi::Session session;
-  std::cerr <<"Connection to sd... " << std::endl;
-  session.connect(addr);
-  std::cerr <<"Getting service... " << std::endl;
+  std::cout <<"Connection to sd... " << std::endl;
+  qi::FutureSync<bool> isConnected = session.connect((allInOne && getenv("NO_GATEWAY") == NULL)?gateUrl:serverUrl);
+  isConnected.wait();
+  if (!isConnected) {
+    std::cerr << "Can't connect to " << session.url().str() << std::endl;
+    return -1;
+  }
+  std::cout <<"Getting service... " << std::endl;
   qi::Future<qi::ObjectPtr> futobj = session.service("serviceTest");
   futobj.wait();
   qi::ObjectPtr obj = futobj.value();
@@ -109,7 +117,7 @@ int run_client(qi::ObjectPtr obj)
       qi::Buffer result = obj->call<qi::Buffer>("replyBuf", buf);
       qi::os::gettimeofday(&tstop);
       latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
-      + (tstop.tv_usec - tstart.tv_usec);
+        + (tstop.tv_usec - tstart.tv_usec);
       if (result.size() != buf.size())
         std::cout << "error content" << std::endl;
     }
@@ -126,7 +134,7 @@ int run_client(qi::ObjectPtr obj)
   return 0;
 }
 
-void start_client(int count, std::string addr)
+void start_client(int count)
 {
   boost::thread thd[100];
 
@@ -137,7 +145,7 @@ void start_client(int count, std::string addr)
     std::stringstream ss;
     ss << "remote" << i;
     std::cout << "starting thread: " << ss.str() << std::endl;
-    thd[i] = boost::thread(boost::bind(&main_client, ss.str(), addr));
+    thd[i] = boost::thread(boost::bind(&main_client, ss.str()));
   }
 
   for (int i = 0; i < count; ++i)
@@ -147,15 +155,17 @@ void start_client(int count, std::string addr)
 
 #include <qi/os.hpp>
 
-int main_gateway(std::string addr)
+int main_gateway(const qi::Url& serverUrl)
 {
   qi::Gateway       gate;
 
-  gate.attachToServiceDirectory(addr);
+  gate.attachToServiceDirectory(serverUrl);
 
-  gate.listen("tcp://0.0.0.0:12345");
+  gateUrl = "tcp://0.0.0.0:0";
+  gate.listen(gateUrl);
+  gateUrl = gate.endpoints()[0];
 
-  std::cout << "Gateway listening on tcp://0.0.0.0:12345" << std::endl;
+  std::cout << "Gateway listening on " << gate.listenUrl().str() << std::endl;
 
   while (!clientDone)
     qi::os::sleep(60);
@@ -163,11 +173,14 @@ int main_gateway(std::string addr)
   return 0;
 }
 
-int main_server(std::string addr)
+int main_server()
 {
   qi::ServiceDirectory sd;
-  sd.listen(addr);
-  serverPort = boost::lexical_cast<std::string>(sd.listenUrl().port());
+  if (!sd.listen(serverUrl)) {
+    std::cerr << "Service directory can't listen on " << serverUrl.str() << "." << std::endl;
+    return 1;
+  }
+  serverUrl = sd.endpoints()[0];
   std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
 
   qi::Session       session;
@@ -176,9 +189,10 @@ int main_server(std::string addr)
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::ObjectPtr obj(ob.object());
 
-  session.connect("tcp://127.0.0.1:" + serverPort);
+  session.connect(sd.endpoints()[0]);
 
-  session.listen("tcp://0.0.0.0:0");
+  qi::Url sessionUrl("tcp://0.0.0.0:0");
+  session.listen(sessionUrl);
   session.registerService("serviceTest", obj);
   std::cout << "serviceTest ready." << std::endl;
   serverReady = true;
@@ -243,31 +257,31 @@ int main(int argc, char **argv)
 
   if (vm.count("client"))
   {
-    std::string addr = vm["client"].as<std::string>();
+    serverUrl = qi::Url(vm["client"].as<std::string>());
     int threadc = vm["thread"].as<int>();
-
-    start_client(threadc, addr);
+    start_client(threadc);
   } else if (vm.count("server")) {
-    std::string addr = vm["server"].as<std::string>();
-    return main_server(addr);
+    serverUrl = vm["server"].as<std::string>();
+    return main_server();
   } else if (vm.count("gateway")) {
-    std::string addr = vm["gateway"].as<std::string>();
-    return main_gateway(addr);
+    serverUrl = vm["gateway"].as<std::string>();
+    return main_gateway(serverUrl);
   } else if (vm.count("local")) {
     return main_local();
   } else {
     //start the server
-    std::string addr = vm["all"].as<std::string>();
+    int threadc = vm["thread"].as<int>();
+    serverUrl = vm["all"].as<std::string>();
     allInOne = true;
-    boost::thread threadServer1(boost::bind(&main_server, addr));
+    boost::thread threadServer1(boost::bind(&main_server));
     do {
       qi::os::msleep(500); // give it time to listen
     } while (!serverReady); // be nice for valgrind
     if (!getenv("NO_GATEWAY"))
-      boost::thread threadServer2(boost::bind(&main_gateway, "tcp://127.0.0.1:" + serverPort));
+      boost::thread threadServer2(boost::bind(&main_gateway, serverUrl));
     qi::os::sleep(1);
 
-    start_client(gThreadCount, "tcp://127.0.0.1:" + (getenv("NO_GATEWAY") ? serverPort : "12345"));
+    start_client(threadc);
   }
 
   delete out;
