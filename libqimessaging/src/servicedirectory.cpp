@@ -47,6 +47,8 @@ namespace qi
     ob.advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
     ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
     ob.advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
+    ob.advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
+    ob.advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
     return ob.object(self);
   }
 
@@ -201,28 +203,7 @@ namespace qi
         }
       }
     }
-#if 0
-      // notify every session that the service is unregistered
-      qi::Message msg;
-      msg.setType(qi::Message::Type_Event);
-      msg.setService(qi::Message::Service_Server);
-      msg.setObject(qi::Message::GenericObject_Main);
-      msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceUnregistered);
-
-      qi::Buffer     buf;
-      qi::ODataStream d(buf);
-      d << serviceName;
-
-      if (d.status() == qi::ODataStream::Status_Ok)
-      {
-        msg.setBuffer(buf);
-        if (!socketIt->first->send(msg))
-        {
-          qiLogError("qimessaging.Session") << "Error while unregister service, cannot send event.";
-        }
-      }
-#endif
-
+    serviceRemoved(idx, serviceName);
   }
 
   void ServiceDirectoryBoundObject::serviceReady(const unsigned int &idx)
@@ -243,30 +224,7 @@ namespace qi
     connectedServices[idx] = itService->second;
     pendingServices.erase(itService);
 
-#if 0
-    std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator socketIt;
-    for (socketIt = socketToIdx.begin(); socketIt != socketToIdx.end(); ++socketIt)
-    {
-      qi::Message msg;
-      msg.setType(qi::Message::Type_Event);
-      msg.setService(qi::Message::Service_Server);
-      msg.setObject(qi::Message::GenericObject_Main);
-      msg.setEvent(qi::Message::ServiceDirectoryEvent_ServiceRegistered);
-
-      qi::Buffer     buf;
-      qi::ODataStream d(buf);
-      d << serviceName;
-
-      if (d.status() == qi::ODataStream::Status_Ok)
-      {
-        msg.setBuffer(buf);
-        if (!socketIt->first->send(msg))
-        {
-          qiLogError("qimessaging.Session") << "Error while register service, cannot send event.";
-        }
-      }
-    }
-#endif
+    serviceAdded(idx, serviceName);
   }
 
 ServiceDirectory::ServiceDirectory()

@@ -8,6 +8,8 @@
 #define _SRC_SERVICEDIRECTORYCLIENT_HPP_
 
 #include <vector>
+#include <string>
+#include <qitype/signal.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>
 #include "remoteobject_p.hpp"
@@ -27,6 +29,9 @@ namespace qi {
     qi::Future< unsigned int >             registerService(const ServiceInfo &svcinfo);
     qi::Future< void >                     unregisterService(const unsigned int &idx);
     qi::Future< void >                     serviceReady(const unsigned int &idx);
+
+    qi::Signal<void (unsigned int, std::string)>         serviceAdded;
+    qi::Signal<void (unsigned int, std::string)>         serviceRemoved;
 
   private:
     qi::RemoteObject _remoteObject;

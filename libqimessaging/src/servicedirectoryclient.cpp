@@ -11,15 +11,14 @@ namespace qi {
 
   static qi::MetaObject serviceDirectoryMetaObject() {
     qi::ObjectTypeBuilder<ServiceDirectoryBoundObject> ob;
-    ObjectTypeBuilderBase::SignalMemberGetter dummy;
 
     ob.advertiseMethod("service",           &ServiceDirectoryBoundObject::service,           qi::Message::ServiceDirectoryFunction_Service);
     ob.advertiseMethod("services",          &ServiceDirectoryBoundObject::services,          qi::Message::ServiceDirectoryFunction_Services);
     ob.advertiseMethod("registerService",   &ServiceDirectoryBoundObject::registerService,   qi::Message::ServiceDirectoryFunction_RegisterService);
     ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService, qi::Message::ServiceDirectoryFunction_UnregisterService);
     ob.advertiseMethod("serviceReady",      &ServiceDirectoryBoundObject::serviceReady,      qi::Message::ServiceDirectoryFunction_ServiceReady);
-    ob.advertiseEvent<void (std::string)>("serviceAdded", dummy);
-    ob.advertiseEvent<void (std::string)>("serviceRemoved", dummy);
+    ob.advertiseEvent("serviceAdded"  , &ServiceDirectoryBoundObject::serviceAdded);
+    ob.advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
 
     qi::MetaObject m = ob.metaObject();
     //verify that we respect the WIRE protocol

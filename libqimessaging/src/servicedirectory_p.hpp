@@ -34,6 +34,9 @@ namespace qi {
     void                     unregisterService(const unsigned int &idx);
     void                     serviceReady(const unsigned int &idx);
 
+    qi::Signal<void (unsigned int, std::string)>  serviceAdded;
+    qi::Signal<void (unsigned int, std::string)>  serviceRemoved;
+
   public:
     std::map<unsigned int, ServiceInfo>                       pendingServices;
     std::map<unsigned int, ServiceInfo>                       connectedServices;
