@@ -63,27 +63,27 @@ namespace qi {
       *this = promise.future();
     }
 
-    const ValueType &value() const    { return _p->value(); }
-    ValueType &value()                { return _p->value(); }
-    operator const ValueType&() const { return _p->value(); }
-    operator ValueType&()             { return _p->value(); }
+    inline const ValueType &value() const    { return _p->value(); }
+    inline ValueType &value()                { return _p->value(); }
+    inline operator const ValueType&() const { return _p->value(); }
+    inline operator ValueType&()             { return _p->value(); }
 
-    bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
-    bool isReady() const                       { return _p->isReady(); }
-    bool hasError(int msecs=30000) const       { return _p->hasError(msecs); }
+    inline bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
+    inline bool isReady() const                       { return _p->isReady(); }
+    inline bool hasError(int msecs=30000) const       { return _p->hasError(msecs); }
 
-    const std::string &error() const           { return _p->error(); }
+    inline const std::string &error() const           { return _p->error(); }
 
 
-    FutureSync<T> sync()
+    inline FutureSync<T> sync()
     {
       return FutureSync<T>(*this);
     };
 
   public: //Signals
     typedef boost::signals2::connection Connection;
-    Connection connect(boost::function<void (qi::Future<T>)> fun) { return _p->connect(*this, fun); }
-    bool disconnect(Connection i) { return _p->disconnect(i); }
+    inline Connection connect(boost::function<void (qi::Future<T>)> fun) { return _p->connect(*this, fun); }
+    inline bool disconnect(Connection i) { return _p->disconnect(i); }
     //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
 
   protected:
