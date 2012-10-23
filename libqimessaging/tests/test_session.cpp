@@ -153,6 +153,29 @@ TEST(QiSession, getCloseService)
   EXPECT_FALSE(p.client()->isConnected());
 }
 
+TEST(QiSession, AlreadyRegistered)
+{
+  qi::Session*  session;
+  std::stringstream ss;
+  qi::ServiceDirectory sd;
+
+  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
+  sd.listen(ss.str());
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
+
+  session = new qi::Session();
+  EXPECT_TRUE(session->connect(ss.str()).wait(1000));
+  EXPECT_TRUE(session->listen("tcp://0.0.0.0:0"));
+
+  ASSERT_GT(session->registerService("service", obj), 0);
+  ASSERT_LE(session->registerService("service", obj), 0);
+
+  delete session;
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
