@@ -41,11 +41,7 @@ namespace qi {
   class Session_Service
   {
   public:
-    Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
-      : _socketCache(socketCache)
-      , _sdClient(sdClient)
-      , _server(server)
-    {}
+    Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server);
     ~Session_Service();
 
     void close();

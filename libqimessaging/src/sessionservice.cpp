@@ -9,6 +9,13 @@
 
 namespace qi {
 
+  Session_Service::Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
+    : _socketCache(socketCache)
+    , _sdClient(sdClient)
+    , _server(server)
+  {
+  }
+
   Session_Service::~Session_Service()
   {
     close();
