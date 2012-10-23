@@ -40,8 +40,52 @@ namespace qi {
   {
   }
 
-  void ServiceDirectoryClient::setTransportSocket(qi::TransportSocketPtr socket) {
-    _remoteObject.setTransportSocket(socket);
+  qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
+    if (isConnected()) {
+      qiLogInfo("qi.Session") << "Session is already connected";
+      return qi::Future<bool>(false);
+    }
+    _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
+    if (!_sdSocket)
+      return qi::Future<bool>(false);
+    _sdSocketConnectedLink    = _sdSocket->connected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketConnected, this));
+    _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
+    _remoteObject.setTransportSocket(_sdSocket);
+    return _sdSocket->connect(serviceDirectoryURL);
+  }
+
+
+  static void sharedPtrHolder(TransportSocketPtr ptr)
+  {
+  }
+
+  qi::FutureSync<void> ServiceDirectoryClient::close() {
+    if (!_sdSocket)
+      return qi::Future<void>(0);
+    qi::Future<void> fut = _sdSocket->disconnect();
+    // Hold the socket shared ptr alive until the future returns.
+    // otherwise, the destructor will block us until disconnect terminates
+    fut.connect(boost::bind(&sharedPtrHolder, _sdSocket));
+    _sdSocket->connected.disconnect(_sdSocketConnectedLink);
+    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
+    _sdSocket.reset();
+    return fut;
+  }
+
+  bool                 ServiceDirectoryClient::isConnected() const {
+    return _sdSocket == 0 ? false : _sdSocket->isConnected();
+  }
+
+  qi::Url              ServiceDirectoryClient::url() const {
+    return _sdSocket->url();
+  }
+
+  void ServiceDirectoryClient::onSocketConnected() {
+    connected();
+  }
+
+  void ServiceDirectoryClient::onSocketDisconnected(int error) {
+    disconnected(error);
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {

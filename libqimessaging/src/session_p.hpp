@@ -43,12 +43,11 @@ namespace qi {
   public:
     Session               *_self;
 
-    //session have a transportsocket not belonging to transportsocketcache
-    TransportSocketPtr     _sdSocket;
-    unsigned int           _sdSocketConnectedLink;
-    unsigned int           _sdSocketDisconnectedLink;
-
+    //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
+    unsigned int           _sdClientConnectedLink;
+    unsigned int           _sdClientDisconnectedLink;
+
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;

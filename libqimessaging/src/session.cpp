@@ -23,6 +23,8 @@ namespace qi {
     , _servicesHandler(&_sdClient, &_serverObject)
     , _watcher(session)
   {
+    _sdClientConnectedLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
+    _sdClientDisconnectedLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -46,18 +48,8 @@ namespace qi {
       qiLogInfo("qi.Session") << "Session is already connected";
       return qi::Future<bool>(false);
     }
-    _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
-    if (!_sdSocket)
-      return qi::Future<bool>(false);
-    _sdSocketConnectedLink    = _sdSocket->connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
-    _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
-    _sdClient.setTransportSocket(_sdSocket);
     _socketsCache.init();
-    return _sdSocket->connect(serviceDirectoryURL);
-  }
-
-  static void sharedPtrHolder(TransportSocketPtr ptr)
-  {
+    return _sdClient.connect(serviceDirectoryURL);
   }
 
   qi::FutureSync<void> SessionPrivate::close()
@@ -65,22 +57,11 @@ namespace qi {
     _serviceHandler.close();
     _serverObject.close();
     _socketsCache.close();
-    if (!_sdSocket)
-      return qi::Future<void>(0);
-    qi::Future<void> fut = _sdSocket->disconnect();
-    // Hold the socket shared ptr alive until the future returns.
-    // otherwise, the destructor will block us until disconnect terminates
-    fut.connect(boost::bind(&sharedPtrHolder, _sdSocket));
-    _sdSocket->connected.disconnect(_sdSocketConnectedLink);
-    _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
-    _sdSocket.reset();
-    return fut;
+    return _sdClient.close();
   }
 
   bool SessionPrivate::isConnected() const {
-    if (!_sdSocket)
-      return false;
-    return _sdSocket->isConnected();
+    return _sdClient.isConnected();
   }
 
 
@@ -112,9 +93,7 @@ namespace qi {
   }
 
   qi::Url Session::url() const {
-    if (!_p->_sdSocket)
-      return qi::Url();
-    return _p->_sdSocket->url();
+    return _p->_sdClient.url();
   }
 
   bool Session::waitForServiceReady(const std::string &service, int msecs) {
