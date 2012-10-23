@@ -78,6 +78,19 @@ namespace qi {
         v.visitDynamic(type, gv.first);
         if (gv.second)
           gv.first.destroy();
+        break;
+      }
+      case qi::Type::Raw:
+      {
+        TypeRaw* traw = static_cast<TypeRaw*>(type);
+        if (storage && *storage)
+        {
+          Buffer buf = traw->get(*storage);
+          v.visitRaw(traw, &buf);
+        }
+        else
+          v.visitRaw(traw, 0);
+        break;
       }
     }
     return v;

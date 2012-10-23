@@ -194,6 +194,13 @@ namespace qi
           static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
           return std::make_pair(result, true);
         }
+        case Type::Raw: {
+          result.type = targetType;
+          result.value = targetType->initializeStorage();
+          qi::Buffer buf = static_cast<TypeRaw*>(type)->get(value);
+          static_cast<TypeRaw*>(targetType)->set(&result.value, buf);
+          return std::make_pair(result, true);
+        }
         default:
           break;
       } // switch
@@ -214,7 +221,21 @@ namespace qi
                                                static_cast<TypeInt*>(type)->get(value));
       return std::make_pair(result, true);
     }
-
+    else if (skind == Type::String && dkind == Type::Raw)
+    {
+      qi::Buffer buf;
+      std::pair<char*, size_t> data = static_cast<TypeString*>(type)->get(value);
+      memcpy(buf.reserve(data.second), data.first, data.second);
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeRaw*>(result.type)->set(&result.value, buf);
+      return std::make_pair(result, true);
+    }
+    else if (skind == Type::Raw && dkind == Type::String)
+    {
+      qiLogWarning("qi.meta") << "Conversion attempt from raw to string";
+      return std::make_pair(GenericValue(), false);
+    }
     static Type* genericValueType = typeOf<GenericValue>();
     static Type* genericObjectType = typeOf<GenericObject>();
     if (targetType->info() == genericValueType->info())

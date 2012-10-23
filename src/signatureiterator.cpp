@@ -119,6 +119,7 @@ namespace qi {
         case qi::Signature::Type_Double:
         case qi::Signature::Type_String:
         case qi::Signature::Type_Dynamic:
+        case qi::Signature::Type_Raw:
         case qi::Signature::Type_Unknown:
           *current = *signature;
           current++;

@@ -40,6 +40,7 @@ set(PUBLIC_HEADERS
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/signal.hxx
                    qitype/details/type.hxx
+                   qitype/details/typebuffer.hxx
                    qitype/details/typedispatcher.hxx
                    qitype/details/typeimpl.hxx
                    qitype/details/typelist.hxx

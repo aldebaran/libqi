@@ -185,6 +185,10 @@ namespace qi {
    {
      result = Signature::fromType(Signature::Type_Dynamic).toString();
    }
+   void visitRaw(TypeRaw* type, Buffer* buffer)
+   {
+     result = Signature::fromType(Signature::Type_Raw).toString();
+   }
    std::string result;
   };
 
@@ -266,6 +270,8 @@ namespace qi {
       }
     case Signature::Type_Dynamic:
       return typeOf<GenericValue>();
+    case Signature::Type_Raw:
+      return typeOf<Buffer>();
     default:
       qiLogWarning("qi.type") << "Cannot get type from signature " << i.signature();
       return 0;

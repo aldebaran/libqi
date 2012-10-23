@@ -35,6 +35,7 @@ namespace qi {
   //   void visitPointer(TypePointer* type, void* storage, GenericValue pointee);
   //   void visitTuple(TypeTuple* type, void* storage);
   //   void visitDynamic(Type* type, GenericValue pointee);
+  //   void visitRaw(TypeBuffer* type, Buffer* value);
   // };
 
 }

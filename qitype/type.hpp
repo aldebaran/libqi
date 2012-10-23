@@ -94,6 +94,7 @@ namespace qi{
       Pointer,
       Tuple,
       Dynamic,
+      Raw,
       Unknown,
     };
 
@@ -309,7 +310,15 @@ namespace qi{
     void set(void** storage, const std::string& value);
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
     virtual Kind kind() const { return String; }
-    virtual Buffer *asBuffer(void *storage) { return 0; }
+
+  };
+
+  class QITYPE_API TypeRaw: public Type
+  {
+  public:
+    virtual Buffer get(void *storage) = 0;
+    virtual void set(void** storage, Buffer& value) = 0;
+    virtual Kind kind() const { return Raw; }
   };
 
   class QITYPE_API TypePointer: public Type
@@ -401,5 +410,6 @@ namespace qi{
 #include <qitype/details/typestring.hxx>
 #include <qitype/details/typepointer.hxx>
 #include <qitype/details/typetuple.hxx>
+#include <qitype/details/typebuffer.hxx>
 
 #endif  // _QITYPE_TYPE_HPP_
