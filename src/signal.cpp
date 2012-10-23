@@ -328,6 +328,6 @@ namespace qi {
     return ret;
   }
 
-  const SignalBase::Link SignalBase::invalidLink = ((unsigned int)-1);
+  QITYPE_API const SignalBase::Link SignalBase::invalidLink = ((unsigned int)-1);
 
 }
