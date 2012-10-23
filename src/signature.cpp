@@ -13,7 +13,7 @@ bool qi::Signature::isConvertibleTo(const qi::Signature& b) const
   if (size() != b.size())
     return false;
   static const char numeric[] = "bcCwWiIlLfd";
-  static const char container[] = "[{";
+  static const char container[] = "[{(";
   Signature::iterator s = begin();
   Signature::iterator d = b.begin();
   for (;s!=end() && d!= b.end(); ++s,++d)
