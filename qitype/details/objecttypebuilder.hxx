@@ -106,10 +106,10 @@ namespace qi {
   }
 
   template <typename C, typename T>
-  SignalBase signalAccess(Signal<T> C::* ptr, void* instance)
+  SignalBase* signalAccess(Signal<T> C::* ptr, void* instance)
   {
     C* c = reinterpret_cast<C*>(instance);
-    return (*c).*ptr;
+    return &((*c).*ptr);
   }
 
   template <typename C, typename T>
