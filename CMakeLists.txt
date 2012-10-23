@@ -44,6 +44,8 @@ set(H
   qi/details/future.hxx
   qi/application.hpp
   qi/atomic.hpp
+  qi/buffer.hpp
+  qi/bufferreader.hpp
   qi/config.hpp
   qi/error.hpp
   qi/future.hpp
@@ -67,6 +69,9 @@ set(C
   src/dlfcn.cpp
   src/path.cpp
   src/application.cpp
+  src/buffer.cpp
+  src/buffer_p.hpp
+  src/bufferreader.cpp
   src/sdklayout.hpp
   src/filesystem.hpp
   src/filesystem.cpp
