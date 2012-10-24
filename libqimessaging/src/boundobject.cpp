@@ -16,7 +16,7 @@ namespace qi {
     qi::Message msg;
     msg.setParameters(params);
     msg.setService(service);
-    msg.setFunction(event + gObjectOffset);
+    msg.setFunction(event);
     msg.setType(Message::Type_Event);
     msg.setObject(Message::GenericObject_Main);
     client->send(msg);
@@ -40,16 +40,14 @@ namespace qi {
   qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self) {
     qi::ObjectTypeBuilder<ServiceBoundObject> ob;
 
-    ob.advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent);
-    ob.advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent);
-    ob.advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject);
+    ob.advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, qi::Message::BoundObjectFunction_RegisterEvent);
+    ob.advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, qi::Message::BoundObjectFunction_UnregisterEvent);
+    ob.advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, qi::Message::BoundObjectFunction_MetaObject);
     return ob.object(self);
   }
 
   //Bound Method
-  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int event, unsigned int remoteLinkId) {
-    unsigned int eventId = event - gObjectOffset;
-    //throw on error
+  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
     GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, currentSocket()));
     unsigned int linkId = _object->connect(eventId, mc);
 
@@ -59,8 +57,6 @@ namespace qi {
 
   //Bound Method
   void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), unsigned int remoteLinkId) {
-    //unsigned int eventId = event - gObjectOffset;
-    //throw on error
     ServiceLinks&          sl = _links[currentSocket()];
     ServiceLinks::iterator it = sl.find(remoteLinkId);
 
@@ -78,7 +74,7 @@ namespace qi {
   //Bound Method
   qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
     //we inject specials methods here
-    return qi::MetaObject::merge(_self->metaObject(), gObjectOffset, _object->metaObject());
+    return qi::MetaObject::merge(_self->metaObject(), _object->metaObject());
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
@@ -91,12 +87,11 @@ namespace qi {
     if (msg.function() < gObjectOffset) {
       obj = _self;
       mct = MetaCallType_Direct;
-      funcId = msg.function();
     } else {
       obj = _object;
       mct = _callType;
-      funcId = msg.function() - gObjectOffset;
     }
+    funcId = msg.function();
 
     std::string sigparam;
     GenericFunctionParameters mfp;
