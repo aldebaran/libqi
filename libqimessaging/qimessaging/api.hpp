@@ -9,11 +9,8 @@
 
 #include <qi/macro.hpp>
 
-#ifdef qimessaging_EXPORTS
-# define QIMESSAGING_API QI_EXPORT_API
-#else
-# define QIMESSAGING_API QI_IMPORT_API
-#endif
+#define QIMESSAGING_API QI_LIB_API(qimessaging)
+
 
 #endif  // _QIMESSAGING_API_HPP_
 
