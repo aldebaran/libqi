@@ -6,6 +6,7 @@
 #include <qitype/metaobject.hpp>
 #include "metaobject_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
+#include <iomanip>
 
 namespace qi {
 
@@ -267,6 +268,42 @@ namespace qi {
     return _p->metaObject;
   }
 
+}
+
+namespace qi {
+  namespace details {
+    static int calcOffsetMethod(const qi::MetaObject::MethodMap &mmaps) {
+      qi::MetaObject::MethodMap::const_iterator it;
+      int max = 0;
+      for (it = mmaps.begin(); it != mmaps.end(); ++it) {
+        int cur = it->second.sigreturn().size();
+        if (cur > max)
+          max = cur;
+      }
+      return max;
+    }
+
+    void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj) {
+      qi::MetaObject::MethodMap methods = mobj.methodMap();
+      int offset = calcOffsetMethod(methods);
+      qi::MetaObject::MethodMap::const_iterator it2;
+
+      stream << "methods:" << std::endl;
+      for (it2 = methods.begin(); it2 != methods.end(); ++it2) {
+        stream << "  " << std::right << std::setfill('0') << std::setw(3) << it2->second.uid() << std::setw(0) << " "
+               << std::left << std::setfill(' ') << std::setw(offset) << it2->second.sigreturn() << std::setw(0)
+               << " " << it2->second.signature() << std::endl;
+      }
+      stream << "events:" << std::endl;
+      qi::MetaObject::SignalMap events = mobj.signalMap();
+      qi::MetaObject::SignalMap::const_iterator it3;
+      for (it3 = events.begin(); it3 != events.end(); ++it3) {
+        stream << "  " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
+               << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
+               << " " << it3->second.signature() << std::endl;
+      }
+    }
+  }
 }
 
 static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {

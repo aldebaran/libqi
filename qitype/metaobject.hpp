@@ -60,6 +60,10 @@ namespace qi {
     boost::shared_ptr<MetaObjectBuilderPrivate> _p;
   };
 
+  namespace details {
+    QITYPE_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject);
+  }
+
 };
 
 #endif  // _QITYPE_METAOBJECT_HPP_
