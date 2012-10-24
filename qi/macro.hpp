@@ -9,8 +9,10 @@
  */
 
 #pragma once
-#ifndef _LIBQI_QI_API_HPP_
-#define _LIBQI_QI_API_HPP_
+#ifndef _LIBQI_QI_MACRO_HPP_
+#define _LIBQI_QI_MACRO_HPP_
+
+#include <qi/preproc.hpp>
 
 // Deprecated
 #if defined(__GNUC__) && defined(WITH_DEPRECATED) && !defined(QI_NO_API_DEPRECATED)
@@ -22,19 +24,49 @@
 #endif
 
 // For shared library
+
+
+
+
+/** @return the proper type specification for import/export
+ * @param libname the name of your library.
+ * This macro will use two preprocessor defines:
+ * libname_EXPORTS (cmake convention) and libname_STATIC_BUILD.
+ * Those macro can be unset or set to 0 to mean false, or set to empty or 1 to
+ * mean true.
+ * The first one must be true if the current compilation unit is within the library.
+ * The second must be true if the library was built as a static archive.
+ * The proper way to use this macro is to:
+ * - Have your buildsystem set mylib_EXPORTS when building MYLIB
+ * - Have your buildsystem produce a config.h file that
+     #define mylib_STATIC_BUILD to 1 or empty if it is a static build, and
+     not define mylib_STATIC_BUILD or define it to 0 otherwise
+ * In one header, write
+ *   #include <mylib/config.h>
+ *   #define MYLIB_API QI_LIB_API(mylib)
+ */
+#define QI_LIB_API(libname) _QI_LIB_API(BOOST_PP_CAT(libname, _EXPORTS), BOOST_PP_CAT(libname, _STATIC_BUILD))
+
+#define _QI_LIB_API(IS_BUILDING_LIB, IS_LIB_STATIC_BUILD) \
+  QI_LIB_API_NORMALIZED(_QI_IS_ONE_OR_EMPTY(BOOST_PP_CAT(_ , IS_BUILDING_LIB)), _QI_IS_ONE_OR_EMPTY(BOOST_PP_CAT(_, IS_LIB_STATIC_BUILD)))
+
+// Each platform must provide a QI_LIB_API_NORMALIZED(isBuilding, isStatic)
 #if defined _WIN32 || defined __CYGWIN__
 #  define QI_EXPORT_API __declspec(dllexport)
-#  if defined _WINDLL
-#    define QI_IMPORT_API __declspec(dllimport)
-#  else
-#    define QI_IMPORT_API
-#  endif
+#  define QI_IMPORT_API __declspec(dllimport)
+#  define QI_LIB_API_NORMALIZED(exporting, isstatic) BOOST_PP_CAT(BOOST_PP_CAT(_QI_LIB_API_NORMALIZED_, exporting), isstatic)
+#  define _QI_LIB_API_NORMALIZED_00 QI_IMPORT_API
+#  define _QI_LIB_API_NORMALIZED_10 QI_EXPORT_API
+#  define _QI_LIB_API_NORMALIZED_11
+#  define _QI_LIB_API_NORMALIZED_01
 #elif __GNUC__ >= 4
 #  define QI_EXPORT_API __attribute__ ((visibility("default")))
-#  define QI_IMPORT_API __attribute__ ((visibility("default")))
+#  define QI_IMPORT_API QI_EXPORT_API
+#  define QI_LIB_API_NORMALIZED(a, b) QI_EXPORT_API
 #else
-#  define QI_EXPORT_API
 #  define QI_IMPORT_API
+#  define QI_EXPORT_API
+#  define QI_LIB_API_NORMALIZED(a, b)
 #endif
 
 

@@ -8,7 +8,7 @@
 #define LIBQI_APPLICATION_HPP_
 
 #include <vector>
-#include <qi/config.hpp>
+#include <qi/api.hpp>
 #include <boost/function.hpp>
 
 namespace qi {

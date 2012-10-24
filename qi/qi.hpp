@@ -7,7 +7,7 @@
 #ifndef   	LIBQI_QI_HPP_
 # define   	LIBQI_QI_HPP_
 
-#include <qi/config.hpp>
+#include <qi/api.hpp>
 #include <locale>
 
 namespace qi {

@@ -14,7 +14,7 @@
 
 # include <string>
 # include <vector>
-# include <qi/config.hpp>
+# include <qi/api.hpp>
 
 /**
  *  @namespace qi::path

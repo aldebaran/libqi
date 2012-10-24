@@ -9,25 +9,21 @@
  */
 
 #pragma once
-#ifndef _LIBQI_QI_CONFIG_HPP_
-#define _LIBQI_QI_CONFIG_HPP_
+#ifndef _LIBQI_QI_API_HPP_
+#define _LIBQI_QI_API_HPP_
 
 #include <qi/macro.hpp>
+#include <qi/config.hpp>
 
 // qi_EXPORTS controls which symbols are exported when libqi
 // is compiled as a SHARED lib.
-// DO NOT USE OUTSIDE LIBQI
-#ifdef qi_EXPORTS
-# define QI_API QI_EXPORT_API
-#elif defined(qi_IMPORTS)
-# define QI_API QI_IMPORT_API
-#else
-# define QI_API
-#endif
 
+// To set your own QI_API macro, adapt the following line:
+// #define MYLIB_API QI_LIB_API(mylib)
+
+#define QI_API QI_LIB_API(qi)
 
 #define QI_API_LEVEL 1
 
 
 #endif  // _LIBQI_QI_CONFIG_HPP_
-

@@ -13,7 +13,7 @@
 #define _LIBQI_QI_ERROR_HPP_
 
 # include <qi/macro.hpp>
-# include <qi/config.hpp>
+# include <qi/api.hpp>
 
 # include <stdexcept>
 # include <string>

@@ -42,11 +42,11 @@ endif()
 
 set(H
   qi/details/future.hxx
+  qi/api.hpp
   qi/application.hpp
   qi/atomic.hpp
   qi/buffer.hpp
   qi/bufferreader.hpp
-  qi/config.hpp
   qi/error.hpp
   qi/future.hpp
   qi/log/consoleloghandler.hpp
@@ -116,16 +116,34 @@ else()
   list(APPEND C src/sdklayout-boost.cpp)
 endif()
 
+#normalize BUILD_SHARED_LIBS, default ON
+if (NOT DEFINED BUILD_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS ON)
+endif()
+
+# Set qi_STATIC_BUILD  used in config.hpp.in
+set(qi_STATIC_BUILD OFF)
+if (NOT BUILD_SHARED_LIBS) #lol
+  set(qi_STATIC_BUILD ON)
+endif()
+
+# Convert ON/OFF to SHARED/STATIC for create_lib argument
+set(_libtype)
+if (BUILD_SHARED_LIBS)
+  set(_libtype SHARED)
+else()
+  set(_libtype STATIC)
+endif()
+
+qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
+list(APPEND H ${_out})
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 if(USE_BOOST_LOCK_FREE)
   include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external")
 endif()
 
-if(NOT DEFINED BUILD_SHARED_LIBS OR "${BUILD_SHARED_LIBS}")
-  qi_create_lib(qi SHARED ${H} ${C})
-else()
-  qi_create_lib(qi STATIC ${H} ${C})
-endif()
+qi_create_lib(qi ${_libtype} ${H} ${C})
 
 
 if (WITH_QT_QTCORE)

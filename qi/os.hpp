@@ -19,7 +19,7 @@
 # include <string>
 # include <map>
 # include <vector>
-# include <qi/config.hpp>
+# include <qi/api.hpp>
 # include <qi/types.hpp>
 
 struct stat;

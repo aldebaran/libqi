@@ -412,4 +412,31 @@ for i in range(0, 10):
   BOOST_PP_SEQ_FOR_EACH(Macro, Arg,                     \
                         QI_LIST(__VA_ARGS__,))
 
+#define _QI_OR_00 0
+#define _QI_OR_01 1
+#define _QI_OR_10 1
+#define _QI_OR_11 1
+#define _QI_OR_I1(a, b) BOOST_PP_CAT(BOOST_PP_CAT(_QI_OR_, a), b)
+#define _QI_OR_I2(a, b) _QI_OR_I1(a, b)
+#define _QI_OR_I3(a, b) _QI_OR_I2(a, b)
+#define _QI_OR_I4(a, b) _QI_OR_I3(a, b)
+#define QI_OR(a, b) _QI_OR_I4(a, b)
+
+#define _QI_IS_EMPTY_HELPER__ a,b
+#define _QI_IS_ONE_HELPER__1 a,b
+
+// To supress a VCXX warning, the two macro below must be called with CAT(_, arg)
+// otherwise due to evaluation ordering, code ends up calling QI_IS_ONE() which
+// triggers a warning
+
+//@return 1 if a is defined to 1, 0 otherwise. Must be called with CAT(_, a)
+#define _QI_IS_ONE(a) QI_LIST_VASIZE((BOOST_PP_CAT(_QI_IS_ONE_HELPER_, a)))
+//@return 1 if a is defined to empty, 0 otherwise. Must be called with CAT(_, a)
+#define _QI_IS_EMPTY(a) QI_LIST_VASIZE((BOOST_PP_CAT(_QI_IS_EMPTY_HELPER, BOOST_PP_CAT(_, a))))
+
+
+//@return 1 if a is defined to empty or 1. Return 0 otherwise. Must be called with CAT(_, a)
+#define _QI_IS_ONE_OR_EMPTY(a) \
+  QI_OR(_QI_IS_EMPTY(a), _QI_IS_ONE(a))
+
 #endif
