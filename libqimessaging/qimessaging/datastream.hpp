@@ -25,6 +25,8 @@
 
 
 namespace qi {
+  class IDataStreamPrivate;
+  class ODataStreamPrivate;
 
 #if 0
 #include <iostream>
@@ -64,12 +66,12 @@ namespace qi {
   class QIMESSAGING_API IDataStream {
   public:
 
-     explicit IDataStream(const qi::Buffer &buffer);
-     ~IDataStream();
+    explicit IDataStream(const qi::Buffer &buffer);
+    ~IDataStream();
 
 
-     enum Status {
-       Status_Ok                     = 0,
+    enum Status {
+      Status_Ok                     = 0,
       Status_ReadError              = 1,
       Status_ReadPastEnd            = 2,
     };
@@ -93,19 +95,20 @@ namespace qi {
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
 
-    IDataStream &operator>>(qi::GenericValue &value);
-    IDataStream &operator>>(qi::Buffer &buffer);
+    IDataStream& operator>>(qi::GenericValue &value);
+    IDataStream& operator>>(qi::Buffer &buffer);
 
-        //read raw data
+    //read raw data
     size_t read(void *data, size_t len);
     void* read(size_t len);
-    Status status() const { return _status; }
-    void setStatus(Status status) { _status = status; }
-    BufferReader& bufferReader() { return _reader;}
+    Status status() const;
+    void setStatus(Status status);
+    BufferReader& bufferReader();
+
   private:
-    Status _status;
-    BufferReader _reader;
+    IDataStreamPrivate *_p;
   };
+
   /** This class provides data deserialization, using
    * a qi::Buffer as a backend.
    *
@@ -113,9 +116,9 @@ namespace qi {
    */
   class QIMESSAGING_API ODataStream {
   public:
-        enum Status {
+    enum Status {
       Status_Ok                     = 0,
-      Status_WriteError             = 1
+      Status_WriteError             = 1,
     };
 
     /// <summary>Default constructor.</summary>
@@ -123,7 +126,7 @@ namespace qi {
     explicit ODataStream(qi::Buffer &buffer);
     ~ODataStream();
 
-       //write raw data without any formatting
+    //write raw data without any formatting
     int write(const char *str, size_t len);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
@@ -158,16 +161,13 @@ namespace qi {
     void beginTuple(std::string sig);
     void endTuple();
 
-    Status status() const { return _status; }
-    void setStatus(Status status) { _status = status; }
+    Status status() const;
+    void setStatus(Status status);
 
-    Buffer& buffer() { return _buffer;}
-    std::string& signature() { return _signature;}
+    Buffer& buffer();
+    std::string& signature();
   private:
-    Status      _status;
-    Buffer _buffer;
-    std::string _signature;
-    unsigned int        _innerSerialization;
+    ODataStreamPrivate *_p;
 
     //No default CTOR
     ODataStream() {}
