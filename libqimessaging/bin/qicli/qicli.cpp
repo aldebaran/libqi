@@ -59,7 +59,6 @@ static void cmd_service(const command           &cmd,
       std::cout << "    " << *it2 << std::endl;
     }
 
-    std::cout << "  methods:" << std::endl;
     qi::Future<qi::ObjectPtr> fut = session.service(*it);
     if (fut.hasError()) {
       std::cerr << "service: could not get object: " << fut.error() << std::endl;
@@ -69,23 +68,7 @@ static void cmd_service(const command           &cmd,
     qi::ObjectPtr obj = fut.value();
     services[*it] = obj;
 
-    const qi::MetaObject &mobj = obj->metaObject();
-    qi::MetaObject::MethodMap methods = mobj.methodMap();
-    int offset = calcOffsetMethod(methods);
-    qi::MetaObject::MethodMap::const_iterator it2;
-    for (it2 = methods.begin(); it2 != methods.end(); ++it2) {
-      std::cout << "    " << std::right << std::setfill('0') << std::setw(3) << it2->second.uid() << std::setw(0) << " "
-                << std::left << std::setfill(' ') << std::setw(offset) << it2->second.sigreturn() << std::setw(0)
-                << " " << it2->second.signature() << std::endl;
-    }
-    std::cout << "  events:" << std::endl;
-    qi::MetaObject::SignalMap events = mobj.signalMap();
-    qi::MetaObject::SignalMap::const_iterator it3;
-    for (it3 = events.begin(); it3 != events.end(); ++it3) {
-      std::cout << "    " << std::right << std::setfill('0') << std::setw(3) << it3->second.uid() << std::setw(0) << " "
-                << std::left << std::setfill(' ') << std::setw(offset) << "" << std::setw(0)
-                << " " << it3->second.signature() << std::endl;
-    }
+    qi::details::printMetaObject(std::cout, obj->metaObject());
   }
 }
 
@@ -101,8 +84,6 @@ static void cmd_services(const command           &cmd,
   std::vector<qi::ServiceInfo> servs = session.services();
   for (unsigned int i = 0; i < servs.size(); ++i)
   {
-    std::cout << "[" << servs[i].serviceId() << "] "
-              << servs[i].name() << std::endl;
     if (enum_all) {
       command ncmd;
       command::const_iterator it;
@@ -111,7 +92,11 @@ static void cmd_services(const command           &cmd,
       it = ncmd.begin();
       cmd_service(ncmd, it);
       std::cout << std::endl;
+      continue;
     }
+    std::cout << "[" << servs[i].serviceId() << "] "
+              << servs[i].name() << std::endl;
+
   }
 }
 
