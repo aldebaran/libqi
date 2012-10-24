@@ -159,8 +159,18 @@ namespace qi
 
       evbuffer_remove(input, buf.data(), buf.size());
       qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
+      static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
+      qi::int64_t start = 0;
+      if (usWarnThreshold)
+        start = os::ustime(); // call might be not that cheap
       _self->messageReady(*_msg);
       _dispatcher.dispatch(*_msg);
+      if (usWarnThreshold)
+      {
+        qi::int64_t duration = os::ustime() - start;
+        if (duration > usWarnThreshold)
+        qiLogWarning("TransportSocket") << "Dispatch to user took " << duration << "us";
+      }
       delete _msg;
       _msg = 0;
     }
