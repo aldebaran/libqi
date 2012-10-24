@@ -100,10 +100,10 @@ namespace qi {
     if (i != typeFactory().end())
     {
       if (i->second)
-        qiLogWarning("qi.meta") << "registerType: previous registration present for "
+        qiLogVerbose("qi.meta") << "registerType: previous registration present for "
           << typeId.name()<< " " << (void*)i->second << " " << i->second->kind();
       else
-        qiLogWarning("qi.meta") << "registerType: access to type factory before"
+        qiLogVerbose("qi.meta") << "registerType: access to type factory before"
           " registration detected for type " << typeId.name();
     }
     typeFactory()[TypeInfo(typeId)] = type;
