@@ -39,6 +39,8 @@ namespace qi {
 
     void onConnected();
     void onDisconnected(int error);
+    void onServiceAdded(unsigned int idx, const std::string &name);
+    void onServiceRemoved(unsigned int idx, const std::string &name);
 
   public:
     Session               *_self;
@@ -47,6 +49,8 @@ namespace qi {
     ServiceDirectoryClient _sdClient;
     unsigned int           _sdClientConnectedLink;
     unsigned int           _sdClientDisconnectedLink;
+    unsigned int           _sdClientServiceAddedLink;
+    unsigned int           _sdClientServiceRemovedLink;
 
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;

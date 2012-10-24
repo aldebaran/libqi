@@ -58,10 +58,10 @@ namespace qi {
     std::vector<std::string>      loadService(const std::string& name, int flags = -1);
 
   public:
-    qi::Signal<void (std::string)> serviceRegistered;
-    qi::Signal<void (std::string)> serviceUnregistered;
-    qi::Signal<void ()>            connected;
-    qi::Signal<void (int error)>   disconnected;
+    qi::Signal<void (unsigned int, std::string)> serviceRegistered;
+    qi::Signal<void (unsigned int, std::string)> serviceUnregistered;
+    qi::Signal<void ()>                          connected;
+    qi::Signal<void (int error)>                 disconnected;
 
   public:
     SessionPrivate      *_p;

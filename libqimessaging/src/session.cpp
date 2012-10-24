@@ -25,6 +25,8 @@ namespace qi {
   {
     _sdClientConnectedLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
     _sdClientDisconnectedLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
+    _sdClientServiceAddedLink = _sdClient.serviceAdded.connect(boost::bind<void>(&SessionPrivate::onServiceAdded, this, _1, _2));
+    _sdClientServiceAddedLink = _sdClient.serviceRemoved.connect(boost::bind<void>(&SessionPrivate::onServiceRemoved, this, _1, _2));
   }
 
   SessionPrivate::~SessionPrivate() {
@@ -40,6 +42,14 @@ namespace qi {
 
   void SessionPrivate::onDisconnected(int error) {
     _self->disconnected(error);
+  }
+
+  void SessionPrivate::onServiceAdded(unsigned int idx, const std::string &name) {
+    _self->serviceRegistered(idx, name);
+  }
+
+  void SessionPrivate::onServiceRemoved(unsigned int idx, const std::string &name) {
+    _self->serviceUnregistered(idx, name);
   }
 
   qi::FutureSync<bool> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
