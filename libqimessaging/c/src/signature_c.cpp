@@ -17,13 +17,12 @@
 #include <vector>
 #include <string>
 
-
 //return:
 // pointer to current on success
 // 0 on failure
 const char* qi_signature_current(qi_signature_t *sig)
 {
-  return sig->_it.signature().c_str();
+  return sig->_current;
 }
 
 qi_signature_type qi_signature_current_type(qi_signature_t *sig)
@@ -43,6 +42,7 @@ qi_signature_t *qi_signature_create(const char *signature)
 
   sig  = new qi_signature_t(signature);
   sig->_it = sig->_sig.begin();
+  sig->_current = ::strdup(sig->_it.signature().c_str());
 
   return sig;
 }
@@ -70,7 +70,7 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
     return 0;
   }
 
-  unsigned int end = sig.find_first_of(endType);
+  unsigned int end = sig.find_last_of(endType);
   if (end > sig.size() || end == std::string::npos)
     return 0;
 
@@ -80,6 +80,9 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
 
 void qi_signature_destroy(qi_signature_t *sig)
 {
+  if (sig->_current)
+    ::free(sig->_current);
+
   delete sig;
 }
 
@@ -102,6 +105,10 @@ int qi_signature_next(qi_signature_t *sig)
     return 2;
 
   sig->_it++;
+
+  if (sig->_current)
+    ::free(sig->_current);
+  sig->_current = ::strdup(sig->_it.signature().c_str());
 
   if (sig->_it == sig->_sig.end())
     return 1;

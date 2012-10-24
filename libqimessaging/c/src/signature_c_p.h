@@ -15,7 +15,7 @@ typedef struct qi_signature_t_s
 {
   qi_signature_t_s(const char *signature) : _sig(signature) {}
 
-  const char              *current;
+  char                    *_current;
 
   qi::Signature            _sig;
   qi::Signature::iterator  _it;
@@ -23,4 +23,3 @@ typedef struct qi_signature_t_s
 
 
 #endif // ! _QIMESSAGING_SIGNATURE_C_P_H_
-

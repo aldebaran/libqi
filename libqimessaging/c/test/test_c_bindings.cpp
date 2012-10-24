@@ -5,6 +5,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <list>
+
 #include <qimessaging/c/api_c.h>
 #include <qimessaging/c/qi_c.h>
 #include <qi/os.hpp>
@@ -12,6 +14,19 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <string>
 #include <iostream>
+
+void print(const char *signature, qi_message_t *message, qi_message_t *answer, void *data)
+{
+  std::list<std::pair<std::string, int> > robots;
+
+  // #1 Recover robots parameters from qi::Message message.
+
+  // #2 Print it.
+  for(std::list<std::pair<std::string, int> >::iterator it = robots.begin(); it != robots.end(); ++it)
+    std::cout << "Robot " << (*it).first << " has serial ID " << (*it).second << std::endl;
+
+  // #4 return robots.size();
+}
 
 void reply(const char *signature, qi_message_t *message, qi_message_t *answer, void *data)
 {
@@ -27,6 +42,84 @@ void reply(const char *signature, qi_message_t *message, qi_message_t *answer, v
 
 std::string           connectionAddr;
 
+
+TEST(TestCBindings, CallWithComplexTypes)
+{
+  // Mirror python test.
+  qi_session_t*  session;
+  std::stringstream ss;
+  qi::ServiceDirectory sd;
+
+  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
+  sd.listen(ss.str());
+
+  qi_object_builder_t* ob = qi_object_builder_create();
+  qi_object_builder_register_method(ob, "print", &print, 0);
+  qi_object_t* obj = qi_object_builder_get_object(ob);
+
+  session = qi_session_create();
+  EXPECT_TRUE(qi_session_connect(session, ss.str().c_str()));
+  EXPECT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
+
+  EXPECT_GT(qi_session_register_service(session, "service", obj), 0);
+
+  qi_object_t*  proxy = qi_session_get_service(session, "service");
+
+  qi_session_close(session);
+  qi_session_destroy(session);
+  qi_object_destroy(obj);
+  qi_object_destroy(proxy);
+  qi_object_builder_destroy(ob);
+}
+
+TEST(TestCBindings, TestDestructionOrder)
+{
+  qi_session_t*  session;
+  std::stringstream ss;
+  qi::ServiceDirectory sd;
+
+  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
+  sd.listen(ss.str());
+
+  qi_object_builder_t* ob = qi_object_builder_create();
+  qi_object_builder_register_method(ob, "reply", &reply, 0);
+  qi_object_t* obj = qi_object_builder_get_object(ob);
+
+  session = qi_session_create();
+  EXPECT_TRUE(qi_session_connect(session, ss.str().c_str()));
+  EXPECT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
+
+  EXPECT_GT(qi_session_register_service(session, "service", obj), 0);
+
+  qi_object_t*  proxy = qi_session_get_service(session, "service");
+
+  qi_session_close(session);
+  qi_session_destroy(session);
+  qi_object_destroy(obj);
+  qi_object_destroy(proxy);
+  qi_object_builder_destroy(ob);
+}
+
+TEST(TestCBindings, AlreadyRegistered)
+{
+  qi_session_t*  session;
+  std::stringstream ss;
+  qi::ServiceDirectory sd;
+
+  ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
+  sd.listen(ss.str());
+
+  qi_object_builder_t* ob = qi_object_builder_create();
+  qi_object_builder_register_method(ob, "reply", &reply, 0);
+  qi_object_t* obj = qi_object_builder_get_object(ob);
+
+  session = qi_session_create();
+  EXPECT_TRUE(qi_session_connect(session, ss.str().c_str()));
+  EXPECT_TRUE(qi_session_listen(session, "tcp://0.0.0.0:0"));
+
+  EXPECT_GT(qi_session_register_service(session, "service", obj), 0);
+  EXPECT_EQ(0, qi_session_register_service(session, "service", obj));
+}
 
 TEST(TestCBindings, Call)
 {
@@ -110,6 +203,7 @@ int main(int argc, char **argv) {
 
   int ret = RUN_ALL_TESTS();
   sd->close();
+  delete sd;
   qi_application_destroy(app);
   return ret;
 }

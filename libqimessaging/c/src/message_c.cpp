@@ -47,6 +47,7 @@ void qi_message_destroy(qi_message_t *msg)
   delete m->is;
   delete m->os;
   delete m->msg;
+  delete m->buff;
 
   free(m);
 }

@@ -62,6 +62,8 @@ void    qi_future_destroy(qi_future_t *fut)
   for (it = data->callbacks.begin(); it != data->callbacks.end(); ++it)
     delete (*it);
 
+  delete data->future;
+  delete data;
 }
 
 void    qi_future_set_callback(qi_future_t *fut, qi_future_callback_t cb, void *miscdata)
