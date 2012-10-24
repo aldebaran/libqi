@@ -3,6 +3,10 @@
 **  See COPYING for the license
 */
 #include <qi/future.hpp>
+#include <qi/log.hpp>
+#include <qi/os.hpp>
+#include <qi/eventloop.hpp>
+
 #include <boost/thread.hpp>
 
 namespace qi {
@@ -39,6 +43,9 @@ namespace qi {
     };
 
     bool FutureBase::wait(int msecs) const {
+      static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
+      if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
+        qiLogWarning("qi.future") << "Future wait in network thread.";
       boost::mutex::scoped_lock lock(_p->_mutex);
       if (_p->_isReady || _p->_hasError)
         return true;
