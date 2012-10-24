@@ -32,9 +32,8 @@ namespace qi {
   int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func, int id)
   {
     if (_p->type) {
-      qiLogError("ObjectTypeBuilder") << "ObjectTypeBuilder: Can't call xAdvertiseMethod with method '"
-                                      << retsig << " " << signature << "' because type is already created.";
-      return -1;
+      qiLogVerbose("ObjectTypeBuilder") << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
+                                        << retsig << " " << signature << "' but type is already created.";
     }
     unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature, id);
     _p->data.methodMap[nextId] = func;
@@ -44,9 +43,8 @@ namespace qi {
   int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id)
   {
     if (_p->type) {
-      qiLogError("ObjectTypeBuilder") << "ObjectTypeBuilder: Can't call xAdvertiseEvent with event '"
-                                      << signature << "' because type is already created.";
-      return -1;
+      qiLogVerbose("ObjectTypeBuilder") << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
+                                        << signature << "' but type is already created.";
     }
     unsigned int nextId = _p->metaObject._p->addSignal(signature, id);
     _p->data.signalGetterMap[nextId] = getter;

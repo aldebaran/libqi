@@ -57,8 +57,7 @@ namespace qi
   int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func)
   {
     if (_p->_objptr) {
-      qiLogError("GenericObjectBuilder") << "GenericObjectBuilder: Can't call xAdvertiseMethod with method '" << signature << "' because object is already created.";
-      return -1;
+      qiLogError("GenericObjectBuilder") << "GenericObjectBuilder: Called xAdvertiseMethod with method '" << signature << "' but object is already created.";
     }
     unsigned int nextId = _p->_object->metaObject()._p->addMethod(retsig, signature);
     _p->_object->setMethod(nextId, func);
@@ -68,8 +67,7 @@ namespace qi
   int GenericObjectBuilder::xAdvertiseEvent(const std::string& signature)
   {
     if (_p->_objptr) {
-      qiLogError("GenericObjectBuilder") << "GenericObjectBuilder: Can't call xAdvertiseEvent on event '" << signature << "' because object is already created.";
-      return -1;
+      qiLogError("GenericObjectBuilder") << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
     }
     unsigned int nextId = _p->_object->metaObject()._p->addSignal(signature);
     return nextId;
