@@ -68,7 +68,7 @@ namespace qi {
   unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id;
-    if (uid > 0)
+    if (uid >= 0)
       id = uid;
     else
       id = ++_index;
@@ -82,7 +82,7 @@ namespace qi {
   unsigned int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
-    if (uid > 0)
+    if (uid >= 0)
       id = uid;
     else
       id = ++_index;
