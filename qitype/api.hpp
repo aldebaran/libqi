@@ -8,11 +8,8 @@
 #define _QITYPE_API_HPP_
 
 #include <qi/macro.hpp>
+#include <qitype/config.hpp>
 
-#ifdef qitype_EXPORTS
-# define QITYPE_API QI_EXPORT_API
-#else
-# define QITYPE_API QI_IMPORT_API
-#endif
+#define QITYPE_API QI_LIB_API(qitype)
 
 #endif  // _QITYPE_API_HPP_
