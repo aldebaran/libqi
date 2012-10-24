@@ -93,13 +93,13 @@ namespace qi {
     return id;
   }
 
-  bool MetaObjectPrivate::addMethods(unsigned int offset, const MetaObject::MethodMap &mms) {
+  bool MetaObjectPrivate::addMethods(const MetaObject::MethodMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     MetaObject::MethodMap::const_iterator it;
     unsigned int newUid;
 
     for (it = mms.begin(); it != mms.end(); ++it) {
-      newUid = it->second.uid() + offset;
+      newUid = it->second.uid();
       MetaObject::MethodMap::iterator jt = _methods.find(newUid);
       if (jt != _methods.end())
         return false;
@@ -110,13 +110,13 @@ namespace qi {
     return true;
   }
 
-  bool MetaObjectPrivate::addSignals(unsigned int offset, const MetaObject::SignalMap &mms) {
+  bool MetaObjectPrivate::addSignals(const MetaObject::SignalMap &mms) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     MetaObject::SignalMap::const_iterator it;
     unsigned int newUid;
 
     for (it = mms.begin(); it != mms.end(); ++it) {
-      newUid = it->second.uid() + offset;
+      newUid = it->second.uid();
       MetaObject::SignalMap::iterator jt = _events.find(newUid);
       if (jt != _events.end())
         return false;
@@ -236,11 +236,11 @@ namespace qi {
     return _p->findSignal(name);
   }
 
-  qi::MetaObject MetaObject::merge(const qi::MetaObject &source, unsigned int offset, const qi::MetaObject &dest) {
+  qi::MetaObject MetaObject::merge(const qi::MetaObject &source, const qi::MetaObject &dest) {
     qi::MetaObject result = source;
-    if (!result._p->addMethods(offset, dest.methodMap()))
+    if (!result._p->addMethods(dest.methodMap()))
       qiLogError("BoundObject") << "cant merge metaobject (methods)";
-    if (!result._p->addSignals(offset, dest.signalMap()))
+    if (!result._p->addSignals(dest.signalMap()))
       qiLogError("BoundObject") << "cant merge metaobject (signals)";
     return result;
   }
