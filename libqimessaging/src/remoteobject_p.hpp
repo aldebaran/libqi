@@ -27,7 +27,7 @@ namespace qi {
   class RemoteObject : public qi::DynamicObject {
   public:
     RemoteObject();
-    RemoteObject(unsigned int service, qi::TransportSocketPtr socket);
+    RemoteObject(unsigned int service, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     //deprecated
     RemoteObject(unsigned int service, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     ~RemoteObject();
