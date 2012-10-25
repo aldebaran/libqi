@@ -119,6 +119,7 @@ TEST(TestCBindings, AlreadyRegistered)
 
   EXPECT_GT(qi_session_register_service(session, "service", obj), 0);
   EXPECT_EQ(0, qi_session_register_service(session, "service", obj));
+  qi_session_destroy(session);
 }
 
 TEST(TestCBindings, Call)
