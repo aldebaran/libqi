@@ -17,6 +17,7 @@ qi_add_optional_package(PYTHON)
 set(WITH_PYTHON ON)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
+option(WITH_QT       "Qt support"       OFF)
 
 qi_add_optional_package(QISSH)
 
@@ -125,7 +126,7 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 
 
 qi_add_optional_package(QT_QTCORE)
-if(WITH_QT_QTCORE)
+if(WITH_QT_QTCORE AND WITH_QT)
   add_subdirectory("qt")
 endif()
 add_subdirectory("bin")
