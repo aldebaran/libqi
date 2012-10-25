@@ -12,7 +12,7 @@ Allow easy asynchronous calls handling and calls synchronisation.
 .. note:: This module is unused
 """
 
-import _qi
+import _qimessagingswig
 
 class Future:
     """ Future can be used to keep track of a long asynchronous call
@@ -31,26 +31,26 @@ class Future:
     def wait(self):
         """ Wait untill future value or error is set.
         """
-        _qi.qi_future_wait(self._fut)
+        _qimessagingswig.qi_future_wait(self._fut)
 
     def is_error(self):
         """ Check whether future encountered an error.
         """
-        return _qi.qi_future_is_error(self._fut)
+        return _qimessagingswig.qi_future_is_error(self._fut)
 
     def is_ready(self):
         """ Check whether future value is set.
         """
-        return _qi.qi_future_is_ready(self._fut)
+        return _qimessagingswig.qi_future_is_ready(self._fut)
 
     def get_error(self):
         """ Getter on future error.
         """
-        return _qi.qi_future_get_error(self._fut)
+        return _qimessagingswig.qi_future_get_error(self._fut)
 
     def __del__(self):
         """ Destructor of Future class
 
         Call C instance destructor
         """
-        _qi.qi_future_destroy(self._fut)
+        _qimessagingswig.qi_future_destroy(self._fut)

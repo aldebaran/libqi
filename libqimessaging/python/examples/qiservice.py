@@ -63,7 +63,8 @@ def main():
     app.run()
 
     #6 Clean
-    session.unregister_service(idx)
+    session.close()
+    app.stop()
     #main : Done.
 
 if __name__ == "__main__":

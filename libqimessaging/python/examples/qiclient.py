@@ -28,9 +28,9 @@ def get_service(session, service_name):
 def call_reply(obj):
     """ Synchronous call to serviceTest.reply::s(s)
     """
-    value = obj.reply("plaf");
+    value = obj.reply("plaf")
 
-    print 'Reply : %s' % value
+    print 'Reply : ', value
 
 def get_servicedirectory_address(argv):
     """ Parse command line arguments
@@ -62,6 +62,9 @@ def  main():
 
     #3 Get service serviceTest
     obj = get_service(session, "serviceTest")
+    if not obj:
+        print 'Cannot get proxy on service "serviceTest".'
+        sys.exit()
 
     #4 Call foreign method reply
     call_reply(obj)

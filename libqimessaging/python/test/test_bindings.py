@@ -2,7 +2,7 @@
 ## Copyright (C) 2012 Aldebaran Robotics
 ##
 
-""" General test for QiMessaging Python bindings.
+""" Integration test for QiMessaging Python bindings.
 
 - Create a session and expose an service.
 - Get service with another session.
@@ -12,45 +12,31 @@
 import sys
 import qimessaging
 
-from qimessaging import Application
-from qimessaging import Session
-
-from qimessaging import ObjectBuilder
+from qimessaging.application import Application
+from qimessaging.session import Session
+from qimessaging.objectbuilder import ObjectBuilder
+from qimessagingswig import servicedirectory
 
 def service_reply(string):
-    """ Simple 'bim' string concatener.
+    """ Simple 'for sure !' string concatener.
     """
-    print "recv: %s" % string
     ret = "%s, for sure !" % string
     return ret
-
-def get_servicedirectory_address(argv):
-    """ Parse command line arguments
-    """
-    if len(argv) != 2:
-        return "tcp://127.0.0.1:5555"
-
-    return argv[1]
 
 def test_integration():
     """ Test both client and service side of Python QiMessaging bindings.
     """
+    sd = servicedirectory()
     application_ = Application()
 
-    #1 Check if user gave us service directory address.
-    sd_addr = get_servicedirectory_address(args)
+    #1 Get service directory listening url.
+    sd_addr = sd.listen_url()
 
-    #2 Get a first session on it (Client use).
-    try:
-        client_session = Session(sd_addr)
-    except qimessaging.ConnectionError:
-        assert False
+    #2 Connect a first session to service directory (Client use).
+    client_session = Session(sd_addr)
 
-    #3 Get a second session (Service use).
-    try:
-        service_session = Session(sd_addr)
-    except qimessaging.ConnectionError:
-        assert False
+    #3 Connect a second session (Service use).
+    service_session = Session(sd_addr)
 
     #4 Create an object builder and register method on it.
     builder = ObjectBuilder()
@@ -69,11 +55,15 @@ def test_integration():
     assert service_test is not None
 
     #8 Call reply bound method and check return value
-    ret = service_test.call("reply::(s)", "testing")
-    print ret
+    ret = service_test.reply("testing")
     assert ret == "testing, for sure !"
 
     #9 Clean up
+    application_.stop()
     client_session.close()
     service_session.unregister_service(idx)
+    service_session.close()
     # main : Done.
+
+if __name__ == "__main__":
+    test_integration()
