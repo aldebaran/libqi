@@ -17,7 +17,7 @@ namespace qi {
    * get a dummy value but correct Type informations.
    */
   template<typename Dispatcher>
-  Dispatcher& typeDispatch(const Dispatcher& dispatcher, void** storage);
+  Dispatcher& typeDispatch(const Dispatcher& dispatcher, Type* type, void** storage);
 
 
 
