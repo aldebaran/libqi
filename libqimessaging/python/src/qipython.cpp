@@ -112,7 +112,6 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
   // Check if return value is None
   if (!ret || ret == Py_None)
   {
-    Py_XDECREF(func);
     Py_XDECREF(param);
     return; // My work here is done
   }
@@ -121,7 +120,6 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
   qi_python_to_message(sigv[0].c_str(), answer, ret);
 
   // Satisfaction.
-  Py_XDECREF(func);
   Py_XDECREF(param);
   Py_XDECREF(ret);
   return;

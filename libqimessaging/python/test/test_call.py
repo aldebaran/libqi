@@ -181,9 +181,9 @@ def test_call():
     proxy.call("print", robot)
 
     # Assert complex recursive parameters works (List of tuple).
-    #print '\nTest #7 : Calling print(robot_list)'
-    #robot_list = [("Gibouna", "Nao", 23443234), ("Billy West", "Nao", 123456), ("Wall-E", "Garbage Collector", 55555505)]
-    #robot_number = proxy.call("print", robot_list)
+    print '\nTest #8 : Calling print(robot_list)'
+    robot_list = [("Gibouna", "Nao", 23443234), ("Billy West", "Nao", 123456), ("Wall-E", "Garbage Collector", 55555505)]
+    robot_number = proxy.call("print", robot_list)
 
     # Cleanup
     print "Cleanup..."
