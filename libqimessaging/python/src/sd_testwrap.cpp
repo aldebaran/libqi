@@ -30,6 +30,13 @@ char* servicedirectory::listen_url()
   return qi::os::strdup(sd->listenUrl().str().c_str());
 }
 
+void servicedirectory::close()
+{
+  qi::ServiceDirectory* sd = reinterpret_cast<qi::ServiceDirectory *>(_sd);
+
+  sd->close();
+}
+
 servicedirectory::~servicedirectory()
 {
   qi::ServiceDirectory* sd = reinterpret_cast<qi::ServiceDirectory *>(_sd);

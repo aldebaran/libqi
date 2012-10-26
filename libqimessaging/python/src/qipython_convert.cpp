@@ -81,42 +81,42 @@ static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t 
   int             retcode = 0;
   int             i       = 0;
 
-  // #1 Initialize qi::Signature subsignature.
+  // Initialize qi::Signature subsignature.
   if ((sig = qi_signature_create_subsignature(signature)) == 0)
   {
     qi_raise("SerializationError", "Signature is not valid.");
     return 0;
   }
 
-  // #2 Instanciate empty Python tuple.
+  // Instanciate empty Python tuple.
   ret = PyTuple_New(qi_signature_count(sig));
 
-  // #3 If signature is empty, add None object in tuple and return.
+  // If signature is empty, return empty tuple to Python function.
   if (!*(qi_signature_current(sig)))
   {
-    PyTuple_SetItem(ret, 0, Py_None);
     qi_signature_destroy(sig);
     return ret;
   }
 
-  // #4 For each element in signature and in message, add it in tuple.
+  // For each element in signature and in message, add it in tuple.
   while (retcode == 0)
   {
-    // #4.1 Get Python element.
+    // Get Python element.
     if ((obj = qi_value_to_python(qi_signature_current(sig), msg)) == 0)
     {
       qi_raise("SerializationError", "Cannot deserialize tuple from qi::Message.");
+      qi_signature_destroy(sig);
       return 0;
     }
 
-    // #4.2 Add it into tuple.
+    // Add it into tuple.
     PyTuple_SetItem(ret, i, obj);
 
     retcode = qi_signature_next(sig);
     ++i;
   }
 
-  // #Cleanup
+  // Cleanup
   qi_signature_destroy(sig);
   return ret;
 }
@@ -192,15 +192,16 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   // #2 If there is no item, just return.
   if (sig == 0 || items < 0)
   {
+    qiLogWarning("qimessaging.python") << "Signature is empty.";
     qi_signature_destroy(sig);
     Py_RETURN_NONE;
   }
 
-  // #3 If signature is empty, increment reference of None object and return. (void)
+  // #3 If signature is empty, just return.
   if (!*(qi_signature_current(sig)))
   {
+    qiLogWarning("qimessaging.python") << "Signature is empty.";
     qi_signature_destroy(sig);
-    Py_INCREF(Py_None);
     Py_RETURN_NONE;
   }
 
@@ -377,9 +378,13 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
 
 int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *data)
 {
-  // #1 If there is no parameter but signature represent void '()' arguments, returns 0.
+  // If there is no parameter but signature represent void '()' arguments, returns 0.
   if (Py_None == data || !data || ::strcmp(signature, "()") == 0)
-    return strlen(signature) == 2 ? 0 : 2;
+  {
+    // Remove log when it bother us.
+    qiLogWarning("qimessaging.python") << "No parameter to serialize: " << signature;
+    return ::strcmp(signature, "()") == 0 ? 0 : 2;
+  }
 
   return qi_value_to_message(signature, data, msg);
 }

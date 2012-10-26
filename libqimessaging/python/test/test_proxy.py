@@ -7,9 +7,6 @@
 - Also  test other things
 """
 
-import sys
-import qimessaging
-
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessaging.objectbuilder import ObjectBuilder

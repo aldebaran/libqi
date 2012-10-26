@@ -87,29 +87,29 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
   PyObject* func;
 
   func = reinterpret_cast<PyObject *>(data);
-  // #1 Check if there is actually a python function in data
+  // Check if there is actually a python function in data
   if (!func || !PyCallable_Check(func))
   {
-    qiLogError("qimessaging.python.__python_callback") << "Generic callback : No python function to call.";
+    qiLogError("qimessaging.python.__python_callback") << "Generic callback : No Python function to call.";
     return;
   }
 
-  // #2 Convert parameters (qi_message_t msg) in python tuple (PyObject param)
+  // Convert parameters (qi_message_t msg) in python tuple (PyObject param)
   if ((param = qi_message_to_python(sigv[2].c_str(), msg)) == Py_None || !param)
   {
     qiLogError("qimessaging.python.__python_callback") << "Generic callback : Cannot convert parameter in pyhton. [" << sigv[2] << "]";
     return;
   }
 
-  // #3 Clear Python errors
+  // Clear Python errors
   PyErr_Clear();
 
-  // #4.1 Call python function.
+  // Call python function.
   ret = PyObject_CallObject(func, param);
-  // #4.2 Force print of possible error, it won't print anything if no error occured.
+  // Force print of possible error, it won't print anything if no error occured.
   PyErr_Print();
 
-  // #4.3 Check if return value is None
+  // Check if return value is None
   if (!ret || ret == Py_None)
   {
     Py_XDECREF(func);
@@ -117,10 +117,10 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
     return; // My work here is done
   }
 
-  // #5.1 Convert return value (PyObject ret) in answer message (qi_message_t answer)
+  // Convert return value (PyObject ret) in answer message (qi_message_t answer)
   qi_python_to_message(sigv[0].c_str(), answer, ret);
 
-  // #5.2 Satisfaction.
+  // Satisfaction.
   Py_XDECREF(func);
   Py_XDECREF(param);
   Py_XDECREF(ret);

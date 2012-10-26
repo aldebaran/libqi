@@ -22,6 +22,7 @@ public:
   servicedirectory();
   ~servicedirectory();
   char *listen_url();
+  void  close();
 
 private:
   void* _sd;

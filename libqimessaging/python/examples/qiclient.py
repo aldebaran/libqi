@@ -8,8 +8,8 @@
 import sys
 import qimessaging
 
-from qimessaging import Application
-from qimessaging import Session
+from qimessaging.application import Application
+from qimessaging.session import Session
 
 def get_service(session, service_name):
     """ Get service given by service_name.

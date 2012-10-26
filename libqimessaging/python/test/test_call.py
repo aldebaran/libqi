@@ -7,10 +7,6 @@
 - Create a session and expose different type of methods
 """
 
-import sys
-import qimessaging
-import _qimessagingswig
-
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessaging.objectbuilder import ObjectBuilder
@@ -81,11 +77,11 @@ def _biggest_average(value1, value2):
     """
     pass
 
-def _print(robot):
+def _print(r):
     """ Elegant print information about a robot stored in a tuple
     Sig : print::b((ssi))
     """
-    print "Robot %s, category %s, serial number %d" % (robot[0], robot[1], robot[2])
+    print "Robot %s, category %s, serial number %d" % (r[0], r[1], r[2])
 
 def _printList(robots):
     """ Elegant print information about a list of robots stored in a tuple
@@ -108,13 +104,13 @@ def test_call():
     sd = servicedirectory()
     app_ = Application()
 
-    #1 Get service directory listening url.
+    # Get service directory listening url.
     sd_addr = sd.listen_url()
 
-    #2 Connect a session on service directory.
+    # Connect a session on service directory.
     service = Session(sd_addr)
 
-    #3 bind all methods to object builder.
+    # Bind all methods to object builder.
     builder = ObjectBuilder()
     builder.register_method("reply::s(s)", _reply)
     builder.register_method("ping::s()", _ping)
@@ -129,34 +125,33 @@ def test_call():
     builder.register_method("print::i([(ssi)])", _printList)
     builder.register_method("robots::{s(ssi)}()", _get_robots)
 
-    #4 Create instance (aka Object) of service
+    # Create instance (aka Object) of service
     obj = builder.object()
     assert obj is not None
 
-    #5 Expose service.
+    # Expose service.
     assert service.listen("tcp://0.0.0.0:0") is True
     idx = service.register_service("test_call", obj)
 
-    #6 Get proxy on service.
+    # Get proxy on service.
     proxy = service.service("test_call")
     assert proxy != None
 
-    #7 Assert call with simple parameter and return value works.
+    # Assert call with simple parameter and return value works.
     print "\nTest #1 : Calling reply('plaf')"
     ret = proxy.call("reply", "plaf")
     assert ret == "plafbim"
 
-    #8 Assert call with no parameter and return value works.
-    #print "\nTest #2 : Calling ping()"
-    #ret = proxy.call("ping")
-    #print ret
-    #assert ret == "pong"
+    # Assert call with no parameter and return value works.
+    print "\nTest #2 : Calling ping()"
+    ret = proxy.call("ping")
+    assert ret == "pong"
 
-    #9 Assert call with no parameter and no return value works.
-    #print "\nTest #3 : Calling void ping()"
-    #roxy.call("pingv")
+    # Assert call with no parameter and no return value works.
+    print "\nTest #3 : Calling void ping()"
+    proxy.call("pingv")
 
-    #10 Assert call to ambigous signature works.
+    # Assert call to ambigous signature works.
     print "\nTest #4.1 : Calling ambiguous add(a, b)"
     retAdd = proxy.call("add", 4.2, 38.22)
     assert (retAdd - 42.42) <= 0.01
@@ -164,7 +159,7 @@ def test_call():
     retAdd2 = proxy.call("add", 2, 40)
     assert retAdd2 == 42
 
-    #11 Assert call to overloaded method works.
+    # Assert call to overloaded method works.
     print "\nTest #5.1 : Calling overloaded sub(a, b) and sub(a, b, str)"
     retSub = proxy.call("sub", 3, 2)
     assert retSub == 1
@@ -172,7 +167,7 @@ def test_call():
     retSub2 = proxy.call("sub", 5, 2, "yolo")
     assert retSub2 == 3
 
-    #12 Assert complex return value works (List).
+    # Assert complex return value works (List).
     print '\nTest #6 : Calling split("riri;fifi;loulou", ";"'
     pig_list = proxy.call("split", "riri;fifi;loulou", ";")
     assert pig_list != None
@@ -180,12 +175,12 @@ def test_call():
     assert pig_list[1] == "fifi"
     assert pig_list[2] == "loulou"
 
-    #13 Assert complex parameter works (Tuple).
+    # Assert complex parameter works (Tuple).
     print '\nTest #7 : Calling print(("Gibouna", "Nao", 2345223))'
     robot = ("Gibouna", "Nao", 23443234)
     proxy.call("print", robot)
 
-    #14 Assert complex recursive parameters works (List of tuple).
+    # Assert complex recursive parameters works (List of tuple).
     #print '\nTest #7 : Calling print(robot_list)'
     #robot_list = [("Gibouna", "Nao", 23443234), ("Billy West", "Nao", 123456), ("Wall-E", "Garbage Collector", 55555505)]
     #robot_number = proxy.call("print", robot_list)
@@ -194,6 +189,7 @@ def test_call():
     print "Cleanup..."
     service.unregister_service(idx)
     service.close()
+    sd.close()
     app_.stop()
     # main : Done.
 

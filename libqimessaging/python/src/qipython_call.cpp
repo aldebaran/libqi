@@ -197,17 +197,17 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
   int nb_args;
   PyObject*       py;
 
-  // #1 Compute number of arguments.
+  // Compute number of arguments.
   nb_args = PyTuple_Size(args);
 
-  // #2 Get suitable method.
+  // Get suitable method.
   if ((mm = qi_get_method(object_c, method_name, nb_args, args)) == NULL)
     return NULL; // Exception should have been raised
 
-  // #3 Create argument qi::Message.
+  // Create argument qi::Message.
   qi_message_t* msg = qi_message_create();
 
-  // #4 Serialize Python arguments into qi::Message.
+  // Serialize Python arguments into qi::Message.
   std::vector<std::string> sigv = signatureSplit(mm->signature());
   if (qi_python_to_message(sigv[2].c_str(), msg, args) != 0)
   {
@@ -216,17 +216,22 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
     Py_RETURN_NONE;
   }
 
-  // #5 Call and wait for return value.
+  // Call and wait for return value.
   qi_future_t *fut = (qi_future_t *) qi_object_call(object_c, mm->signature().c_str(), msg);
   qi_future_wait(fut);
 
-  // #6 If return value is expected, deserialize qi::Message into Python.
+  // If return value is expected, deserialize qi::Message into Python.
   if (mm->sigreturn().compare("v") != 0)
     py = qi_message_to_python(mm->sigreturn().c_str(), (qi_message_t *) qi_future_get_value(fut));
   else
+  {
+    // Remove log when it bother us.
+    qiLogWarning("qimessaging.python") << "[" << mm->sigreturn() << "] No return value expected, returning None";
     py = Py_None;
+    Py_XINCREF(py);
+  }
 
-  // #Cleanup
+  // Cleanup
   qi_message_destroy((qi_message_t *) qi_future_get_value(fut));
   qi_message_destroy(msg);
   qi_future_destroy(fut);

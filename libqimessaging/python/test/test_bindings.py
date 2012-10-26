@@ -9,9 +9,6 @@
 - Try a call.
 """
 
-import sys
-import qimessaging
-
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessaging.objectbuilder import ObjectBuilder
