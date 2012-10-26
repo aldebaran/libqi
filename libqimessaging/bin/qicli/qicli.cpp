@@ -19,16 +19,6 @@ std::map<const std::string, qi::ObjectPtr> services;
 
 typedef std::vector<std::string> command;
 
-static int calcOffsetMethod(const qi::MetaObject::MethodMap &mmaps) {
-  qi::MetaObject::MethodMap::const_iterator it;
-  int max = 0;
-  for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-    int cur = it->second.sigreturn().size();
-    if (cur > max)
-      max = cur;
-  }
-  return max;
-}
 
 /****************
 *    SERVICE    *
