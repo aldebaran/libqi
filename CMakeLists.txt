@@ -136,7 +136,9 @@ else()
 endif()
 
 qi_create_config_h(_out qi/config.hpp.in qi/config.hpp)
-list(APPEND H ${_out})
+
+# Help IDEs see the generated config.hpp
+list(APPEND C ${_out})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 if(USE_BOOST_LOCK_FREE)
