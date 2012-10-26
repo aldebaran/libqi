@@ -14,11 +14,29 @@ namespace qi {
     , _sdClient(sdClient)
     , _server(server)
   {
+    _linkServiceRemoved = _sdClient->serviceRemoved.connect(boost::bind<void>(&Session_Service::onServiceRemoved, this, _1, _2));
   }
 
   Session_Service::~Session_Service()
   {
+    _sdClient->serviceAdded.disconnect(_linkServiceRemoved);
     close();
+  }
+
+  void Session_Service::onServiceRemoved(const unsigned int &index, const std::string &service) {
+    qiLogVerbose("Session") << "Remote Service Removed:" << service << " #" << index;
+    removeService(service);
+  }
+
+  void Session_Service::removeService(const std::string &service) {
+    {
+      boost::mutex::scoped_lock sl(_remoteObjectsMutex);
+      RemoteObjectMap::iterator it = _remoteObjects.find(service);
+      if (it != _remoteObjects.end()) {
+        qiLogVerbose("qi.Session") << "Session: Removing cached RemoteObject " << service;
+        _remoteObjects.erase(it);
+      }
+    }
   }
 
   void Session_Service::close() {
@@ -33,7 +51,6 @@ namespace qi {
       _remoteObjects.clear();
     }
   }
-
 
   ServiceRequest *Session_Service::serviceRequest(long requestId)
   {

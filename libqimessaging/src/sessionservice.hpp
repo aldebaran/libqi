@@ -49,17 +49,21 @@ namespace qi {
     qi::Future<qi::ObjectPtr> service(const std::string &service,
                                       Session::ServiceLocality locality);
 
-  protected:
+    void removeService(const std::string &service);
+
+  private:
     //FutureInterface
     void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId);
     void onRemoteObjectComplete(qi::Future<void> value, long requestId);
     void onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId);
 
-  protected:
+    //ServiceDirectoryClient
+    void onServiceRemoved(const unsigned int &index, const std::string &service);
+
     ServiceRequest *serviceRequest(long requestId);
     void            removeRequest(long requestId);
 
-  protected:
+  private:
     boost::mutex                    _requestsMutex;
     std::map<long, ServiceRequest*> _requests;
     qi::atomic<long>                _requestsIndex;
@@ -70,6 +74,7 @@ namespace qi {
     boost::mutex                    _remoteObjectsMutex;
 
   private:
+    qi::SignalBase::Link    _linkServiceRemoved;
     TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     ObjectRegistrar        *_server;    //not owned by us
