@@ -42,14 +42,25 @@ namespace qi {
     qi::Signal<void (unsigned int, std::string)>         serviceRemoved;
 
   private:
+    //ServiceDirectory Interface
+    void onServiceAdded(unsigned int idx, const std::string &name);
+    void onServiceRemoved(unsigned int idx, const std::string &name);
 
     //TransportSocket Interface
-    void onSocketConnected();
+    void onSocketConnected(qi::FutureSync<bool> future, qi::Promise<bool> prom);
     void onSocketDisconnected(int error);
+
+    //RemoteObject Interface
+    void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<bool> prom);
+
+    //wait for serviceAdded/serviceRemoved are connected
+    void onSDEventConnected(qi::Future<unsigned int> ret,
+                            qi::Future<unsigned int> fadd,
+                            qi::Future<unsigned int> frem,
+                            qi::Promise<bool> fco);
 
   private:
     qi::TransportSocketPtr _sdSocket;
-    unsigned int           _sdSocketConnectedLink;
     unsigned int           _sdSocketDisconnectedLink;
     qi::RemoteObject       _remoteObject;
     qi::ObjectPtr          _object;

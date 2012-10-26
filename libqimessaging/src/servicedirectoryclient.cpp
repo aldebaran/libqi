@@ -9,29 +9,9 @@
 
 namespace qi {
 
-  static qi::MetaObject serviceDirectoryMetaObject() {
-    qi::ObjectTypeBuilder<ServiceDirectoryBoundObject> ob;
-
-    ob.advertiseMethod("service",           &ServiceDirectoryBoundObject::service,           qi::Message::ServiceDirectoryFunction_Service);
-    ob.advertiseMethod("services",          &ServiceDirectoryBoundObject::services,          qi::Message::ServiceDirectoryFunction_Services);
-    ob.advertiseMethod("registerService",   &ServiceDirectoryBoundObject::registerService,   qi::Message::ServiceDirectoryFunction_RegisterService);
-    ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService, qi::Message::ServiceDirectoryFunction_UnregisterService);
-    ob.advertiseMethod("serviceReady",      &ServiceDirectoryBoundObject::serviceReady,      qi::Message::ServiceDirectoryFunction_ServiceReady);
-    ob.advertiseEvent("serviceAdded"  , &ServiceDirectoryBoundObject::serviceAdded);
-    ob.advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
-
-    qi::MetaObject m = ob.metaObject();
-    //verify that we respect the WIRE protocol
-    assert(m.methodId("service::(s)") == qi::Message::ServiceDirectoryFunction_Service);
-    assert(m.methodId("services::()") == qi::Message::ServiceDirectoryFunction_Services);
-    assert(m.methodId("registerService::((sIsI[s]))") == qi::Message::ServiceDirectoryFunction_RegisterService);
-    assert(m.methodId("unregisterService::(I)") == qi::Message::ServiceDirectoryFunction_UnregisterService);
-    assert(m.methodId("serviceReady::(I)") == qi::Message::ServiceDirectoryFunction_ServiceReady);
-    return m;
-  }
 
   ServiceDirectoryClient::ServiceDirectoryClient()
-    : _remoteObject(qi::Message::Service_ServiceDirectory, serviceDirectoryMetaObject())
+    : _remoteObject(qi::Message::Service_ServiceDirectory)
   {
     _object = makeDynamicObjectPtr(&_remoteObject, false);
   }
@@ -40,6 +20,59 @@ namespace qi {
   {
   }
 
+ void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
+                                                 qi::Future<unsigned int> fadd,
+                                                 qi::Future<unsigned int> frem,
+                                                 qi::Promise<bool> fco)
+  {
+    if (!fadd.isReady() || !frem.isReady())
+      return;
+    if (fadd.hasError() || frem.hasError()) {
+      std::string err;
+      err = fadd.error();
+      if (!err.empty() && frem.hasError())
+        err += ". ";
+      err += frem.error();
+      fco.setError(err);
+      return;
+    }
+    fco.setValue(true);
+    connected();
+  }
+
+  void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<bool> promise) {
+    if (future.hasError()) {
+      promise.setError(future.error());
+      return;
+    }
+    boost::function<void (unsigned int, std::string)> f;
+
+    //TODO: this should not be async
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
+    qi::Future<unsigned int> fut1 = _object->connect("serviceAdded", f);
+
+    f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
+    qi::Future<unsigned int> fut2 = _object->connect("serviceRemoved", f).async();
+
+    fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
+    fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
+  }
+
+  void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<bool> future, qi::Promise<bool> promise) {
+    if (future.hasError()) {
+      promise.setError(future.error());
+      return;
+    }
+    if (future.value() == false) {
+      promise.setValue(false);
+      return;
+    }
+    qi::Future<void> fut = _remoteObject.fetchMetaObject();
+    fut.connect(boost::bind<void>(&ServiceDirectoryClient::onMetaObjectFetched, this, _1, promise));
+  }
+
+  //we ensure in that function that connect to all events are already setup when we said we are connect.
+  //that way we cant be connected without being fully ready.
   qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
     if (isConnected()) {
       qiLogInfo("qi.Session") << "Session is already connected";
@@ -48,12 +81,14 @@ namespace qi {
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
     if (!_sdSocket)
       return qi::Future<bool>(false);
-    _sdSocketConnectedLink    = _sdSocket->connected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketConnected, this));
     _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
     _remoteObject.setTransportSocket(_sdSocket);
-    return _sdSocket->connect(serviceDirectoryURL);
-  }
 
+    qi::Promise<bool> promise;
+    qi::Future<bool> fut = _sdSocket->connect(serviceDirectoryURL);
+    fut.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketConnected, this, _1, promise));
+    return promise.future();
+  }
 
   static void sharedPtrHolder(TransportSocketPtr ptr)
   {
@@ -66,7 +101,6 @@ namespace qi {
     // Hold the socket shared ptr alive until the future returns.
     // otherwise, the destructor will block us until disconnect terminates
     fut.connect(boost::bind(&sharedPtrHolder, _sdSocket));
-    _sdSocket->connected.disconnect(_sdSocketConnectedLink);
     _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
     _sdSocket.reset();
     return fut;
@@ -80,8 +114,14 @@ namespace qi {
     return _sdSocket->url();
   }
 
-  void ServiceDirectoryClient::onSocketConnected() {
-    connected();
+  void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
+    qiLogVerbose("qi.ServiceDirectoryClient") << "ServiceDirectory: Service Removed #" << idx << ": " << name << std::endl;
+    serviceRemoved(idx, name);
+  }
+
+  void ServiceDirectoryClient::onServiceAdded(unsigned int idx, const std::string &name) {
+    qiLogVerbose("qi.ServiceDirectoryClient") << "ServiceDirectory: Service Added #" << idx << ": " << name << std::endl;
+    serviceAdded(idx, name);
   }
 
   void ServiceDirectoryClient::onSocketDisconnected(int error) {
