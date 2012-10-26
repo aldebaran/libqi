@@ -35,7 +35,7 @@ TEST(QiSession, simpleConnectionToSd)
 TEST(QiSession, simpleConnectionToNonReachableSd)
 {
   qi::Session session;
-  session.connect("tcp://127.0.1.123:1245");
+  session.connect("tcp://127.0.0.1:1234");
 
   EXPECT_FALSE(session.isConnected());
 
