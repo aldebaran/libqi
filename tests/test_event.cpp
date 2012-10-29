@@ -39,6 +39,30 @@ TEST(TestObject, Simple)
   EXPECT_EQ(51, lastPayload);
 }
 
+TEST(TestObject, ConnectBind)
+{
+  qi::GenericObjectBuilder ob;
+  ob.advertiseEvent<void (*)(int)>("fire");
+  ob.advertiseEvent<void (*)(int, int)>("fire2");
+  qi::ObjectPtr obj(ob.object());
+  int link = obj->connect("fire", boost::bind<void>(&onFire, _1), 0);
+  obj->emitEvent("fire", 42);
+  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_EQ(42, lastPayload);
+  obj->disconnect(link);
+  // The boost bind without _1 gives us a void (void) signature that does not match fire
+  link = obj->connect("fire", boost::bind<void>(&onFire, 51), 0);
+  EXPECT_EQ(0, link);
+
+  link = obj->connect("fire2", boost::bind(&onFire, _2), 0);
+  EXPECT_TRUE(link);
+  pPayload.reset();
+  obj->emitEvent("fire2", 40, 41);
+  EXPECT_TRUE(pPayload.future().wait(2000));
+  EXPECT_EQ(41, lastPayload);
+  obj->disconnect(link);
+}
+
 TEST(TestObject, EmitMethod)
 {
   lastPayload = 0;
