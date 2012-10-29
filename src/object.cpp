@@ -209,6 +209,29 @@ namespace qi {
       return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
     int eventId = metaObject().signalId(signature);
+
+  #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
+    if (eventId < 0) {
+      // Try to find an other event with compatible signature
+      std::vector<qi::MetaSignal> mml = metaObject().findSignal(qi::signatureSplit(signature)[1]);
+      Signature sargs(signatureSplit(signature)[2]);
+      for (unsigned i = 0; i < mml.size(); ++i)
+      {
+        Signature s(signatureSplit(mml[i].signature())[2]);
+        qiLogDebug("qi.object") << "Checking compatibility " << s.toString() << ' '
+         << sargs.toString();
+         // Order is reversed from method call check.
+        if (s.isConvertibleTo(sargs))
+        {
+          qiLogVerbose("qi.object")
+              << "Signature mismatch, but found compatible type "
+              << mml[i].signature() <<" for " << signature;
+          eventId = mml[i].uid();
+          break;
+        }
+      }
+    }
+#endif
     if (eventId < 0) {
       std::stringstream ss;
       ss << "Can't find event: " << signature << std::endl
