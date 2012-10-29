@@ -15,11 +15,18 @@
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
+#include <boost/mpl/find_if.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/at.hpp>
+#include <boost/mpl/placeholders.hpp>
+#include <boost/mpl/max_element.hpp>
+#include <boost/mpl/transform.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/add_pointer.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
+#include <boost/function_types/function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/fusion/container/vector/convert.hpp>
@@ -34,7 +41,11 @@
 #include <boost/fusion/functional/adapter/unfused.hpp>
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/generation/make_fused.hpp>
+#include <boost/bind.hpp>
+#include <boost/any.hpp>
+
 #include <qitype/genericvalue.hpp>
+#include <qitype/details/bindtype.hxx>
 
 namespace qi
 {
@@ -208,6 +219,7 @@ namespace qi
     return result;
   }
 
+
   namespace detail
   {
     // Use helper structures for which template partial specialisation is possible
@@ -223,6 +235,17 @@ namespace qi
       static GenericFunction make(T* func)
       {
          return GenericFunctionMaker<typename boost::function<T> >::make(boost::function<T>(func));
+      }
+    };
+    template<typename R, typename F, typename B>
+    struct GenericFunctionMaker<boost::_bi::bind_t<R, F, B> >
+    {
+      static GenericFunction make(boost::_bi::bind_t<R, F, B> v)
+      {
+        typedef typename boost::function<typename boost_bind_function_type<
+        boost::_bi::bind_t<R, F, B> >::type> CompatType;
+        CompatType f = v;
+        return makeGenericFunction(f);
       }
     };
     template<typename T> struct GenericFunctionMaker<boost::function<T> >

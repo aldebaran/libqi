@@ -219,5 +219,6 @@ namespace qi
   {
     return detail::functionArgumentsSignature<T>();
   }
+
 } // qi
 #endif  // _QITYPE_DETAILS_SIGNAL_HXX_

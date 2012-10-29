@@ -12,6 +12,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <qitype/details/bindtype.hxx>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/type_traits/remove_reference.hpp>
@@ -48,6 +49,22 @@ namespace qi {
   template<typename T> class TypeImpl<T&>
       : public TypeImpl<T> {};
 
+  //any
+  template<> class TypeImpl<boost::any>: public TypeDynamic
+  {
+  public:
+    std::pair<GenericValue, bool> get(void* storage)
+    {
+      qiLogVerbose("qi.type") << "get on boost::any not implemented";
+      return std::make_pair(GenericValue(), false);
+    };
+    void set(void** storage, GenericValue source)
+    {
+       qiLogVerbose("qi.type") << "set on boost::any not implemented";
+    }
+    typedef DefaultTypeImplMethods<boost::any> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
 }
 
 
@@ -117,6 +134,8 @@ namespace qi  {
       std::string &val;
     };
 
+
+
     template<typename T> struct RawFunctionSignature
     {
       static std::string makeSigreturn()
@@ -129,6 +148,34 @@ namespace qi  {
         std::string   signature;
         signature += '(';
         typedef typename boost::function_types::parameter_types<T>::type ArgsType;
+        boost::mpl::for_each<
+          boost::mpl::transform_view<ArgsType,
+            boost::add_pointer<
+              boost::remove_const<
+                boost::remove_reference<boost::mpl::_1>
+              >
+            >
+          >
+        >
+        (qi::detail::signature_function_arg_apply(&signature));
+        signature += ')';
+        return signature;
+      }
+    };
+
+    template<typename R, typename F, typename B>
+    struct RawFunctionSignature<boost::_bi::bind_t<R, F, B> >
+    {
+      static std::string makeSigreturn()
+      {
+        typedef typename qi::boost_bind_result_type<boost::_bi::bind_t<R, F, B> >::type     ResultType;
+        return typeOf<ResultType>()->signature();
+      }
+      static std::string makeSignature()
+      {
+        std::string   signature;
+        signature += '(';
+        typedef typename qi::boost_bind_parameter_types<boost::_bi::bind_t<R, F, B> >::type ArgsType;
         boost::mpl::for_each<
           boost::mpl::transform_view<ArgsType,
             boost::add_pointer<

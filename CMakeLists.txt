@@ -31,6 +31,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(PUBLIC_HEADERS
                    qitype/api.hpp
+                   qitype/details/bindtype.hxx
                    qitype/details/functiontype.hxx
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
