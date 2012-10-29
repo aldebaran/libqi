@@ -67,6 +67,12 @@ namespace qi
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
         std::pair<GenericValue,bool> v = args[i].convert(target[i]);
+        if (!v.first.type)
+        {
+          qiLogError("qi.meta") << "Conversion failure from " << args[i].type->infoString()
+          << " to " << target[i]->infoString() <<", aborting call";
+          return GenericValue();
+        }
         if (v.second)
           toDestroy[toDestroyPos++] = v.first;
         convertedArgs[i] = v.first.value;
