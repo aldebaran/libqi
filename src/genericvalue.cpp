@@ -236,16 +236,16 @@ namespace qi
       qiLogWarning("qi.meta") << "Conversion attempt from raw to string";
       return std::make_pair(GenericValue(), false);
     }
+    if (targetType->kind() == Type::Dynamic)
+    {
+      result.type = targetType;
+      result.value = targetType->initializeStorage();
+      static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
+      return std::make_pair(result, true);
+    }
     static Type* genericValueType = typeOf<GenericValue>();
     static Type* genericObjectType = typeOf<GenericObject>();
-    if (targetType->info() == genericValueType->info())
-    {
-      // Target is metavalue: special case
-      GenericValue res;
-      res.type = targetType;
-      res.value = new GenericValue(*this);
-      return std::make_pair(res, false);
-    }
+
     if (type->info() == genericValueType->info())
     { // Source is metavalue: special case
       GenericValue* metaval = (GenericValue*)value;
