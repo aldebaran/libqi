@@ -98,6 +98,37 @@ TEST(QiSession, RegisterUnregisterSameSession)
   worker.join();
 }
 
+TEST(QiSession, ConnectToMultipleConstellation)
+{
+  TestSessionPair constellation1;
+  TestSessionPair constellation2;
+  TestSessionPair constellation3;
+  qi::Session     traveler;
+
+  qi::ObjectPtr obj = newObject();
+  constellation1.server()->registerService("test1", obj);
+  constellation2.server()->registerService("test2", obj);
+  constellation3.server()->registerService("test3", obj);
+
+  ASSERT_TRUE(traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str()));
+  qi::ObjectPtr proxy = constellation1.server()->service("test1");
+  std::string res = proxy->call<std::string>("reply", "plaf");
+  ASSERT_TRUE(res.compare("plaf") == 0);
+  traveler.close();
+
+  ASSERT_TRUE(traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str()));
+  proxy = constellation1.server()->service("test2");
+  res = proxy->call<std::string>("reply", "plaf");
+  ASSERT_TRUE(res.compare("plaf") == 0);
+  traveler.close();
+
+  ASSERT_TRUE(traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str()));
+  proxy = constellation1.server()->service("test3");
+  res = proxy->call<std::string>("reply", "plaf");
+  ASSERT_TRUE(res.compare("plaf") == 0);
+  traveler.close();
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
