@@ -68,3 +68,8 @@ qi::Session* TestSessionPair::server() const
 {
   return _server->session();
 }
+
+std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const
+{
+  return _sd.endpoints();
+}

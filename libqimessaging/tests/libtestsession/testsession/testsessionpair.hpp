@@ -81,6 +81,7 @@ public:
 public:
   qi::Session* client() const;
   qi::Session* server() const;
+  std::vector<qi::Url> serviceDirectoryEndpoints() const;
 
 private:
   TestMode::Mode       _mode;
