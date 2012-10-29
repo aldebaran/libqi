@@ -1,4 +1,5 @@
 // -*- mode:c++; -*-
+// vim:ft=cpp
 
 /**
  * \namespace qi::os
@@ -94,6 +95,16 @@
 */
 
 
+///\name C library Functions
+/**@{
+
+  \fn int qi::os::snprintf(char *, size_t, const char *, ...)
+    \brief Implement POSIX compliant snprintf.
+
+    \see http://en.cppreference.com/w/cpp/io/c/fprintf
+
+*/
+///@}
 
 
 ///\name Environment Functions

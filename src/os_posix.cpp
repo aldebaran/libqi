@@ -9,6 +9,7 @@
 #include <locale>
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <unistd.h> //gethostname
 #include <algorithm>
 #include <fcntl.h>
@@ -180,6 +181,16 @@ namespace qi {
     char* strdup(const char *src)
     {
       return ::strdup(src);
+    }
+
+    int snprintf(char *str, size_t size, const char *format, ...)
+    {
+      va_list list;
+      va_start(list, format);
+      int ret = vsnprintf(str, size, format, list);
+      va_end(list);
+
+      return ret;
     }
 
     unsigned short findAvailablePort(unsigned short port)

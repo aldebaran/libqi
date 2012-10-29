@@ -8,6 +8,7 @@
 #include <locale>
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -282,6 +283,15 @@ namespace qi {
     char* strdup(const char *src)
     {
       return _strdup(src);
+    }
+
+    int snprintf(char *str, size_t size, const char *format, ...)
+    {
+      va_list list;
+      va_start(list, format);
+      int ret = vsnprintf_s(str, size, size, format, list);
+      va_end(list);
+      return ret;
     }
 
     // Function to get real string representation from

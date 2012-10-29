@@ -38,6 +38,7 @@ namespace qi {
 
     // lib C
     QI_API char* strdup(const char *src);
+    QI_API int snprintf(char *str, size_t size, const char *format, ...);
 
     // env
     QI_API std::string getenv(const char *var);
