@@ -86,11 +86,9 @@ else()
   set(_libtype STATIC)
 endif()
 
-qi_create_config_h(_out qitype/config.hpp.in qitype/config.hpp)
-list(APPEND PUBLIC_HEADERS ${_out})
+qi_create_config_h(_confighpp qitype/config.hpp.in qitype/config.hpp)
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
-
 
 set(SOURCES ${PUBLIC_HEADERS}
             src/dynamicobject.cpp
@@ -118,6 +116,8 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/typetuple.cpp
             src/signature.cpp
             )
+
+list(APPEND SOURCES ${_confighpp})
 
 qi_create_lib(qitype ${SOURCES} ${_libtype} DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qitype)
