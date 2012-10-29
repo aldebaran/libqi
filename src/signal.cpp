@@ -124,8 +124,8 @@ namespace qi {
     {
       if (sub->enabled)
         sub->handler(params);
-      long active = --sub->active;
       params.destroy();
+      long active = --sub->active;
       if (sub->weakLock && !active)
         sub->weakLock->unlock();
     }
