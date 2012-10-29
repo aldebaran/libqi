@@ -131,10 +131,12 @@ namespace QiMessaging
 
         ~ObjectPrivate()
         {
+            System.Console.WriteLine("Destroying object");
             if(obj != null)
                 qi_object_destroy(obj);
             if (builder != null)
                 qi_object_builder_destroy(builder);
+            System.Console.WriteLine("Done.");
         }
 
         private qi_object_builder_t *builder;

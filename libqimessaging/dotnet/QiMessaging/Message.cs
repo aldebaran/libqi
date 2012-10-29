@@ -24,6 +24,16 @@ namespace QiMessaging
             _p = message;
         }
 
+        ~Message ()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            _p.Dispose();
+        }
+
         public MessagePrivate Origin()
         {
             return _p;
@@ -157,11 +167,20 @@ namespace QiMessaging
         public MessagePrivate()
         {
             message = qi_message_create();
+            toDelete = true;
         }
 
-        public MessagePrivate(qi_message_t* mess)
+        public MessagePrivate(qi_message_t* mess, bool autoDeleteMessage = true)
         {
             message = mess;
+            toDelete = autoDeleteMessage;
+        }
+
+        public void Dispose ()
+        {
+            if (message != null && toDelete == true)
+                qi_message_destroy(message);
+            message = null;
         }
 
         public qi_message_t* Origin()
@@ -257,9 +276,10 @@ namespace QiMessaging
 
         ~MessagePrivate()
         {
-            qi_message_destroy(message);
+            Dispose();
         }
 
         private qi_message_t* message;
+        private bool toDelete;
     }
 }

@@ -13,6 +13,9 @@ namespace qi_client_dotnet
             Application _app = new Application(args);
             string connectionAddr;
 
+            // Avoid painfull warning
+            if (_app == null)
+                return;
             if (args.Length != 2)
             {
                 Console.WriteLine("Usage : /qi-client-dotnet master-address");

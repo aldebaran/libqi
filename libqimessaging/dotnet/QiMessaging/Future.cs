@@ -44,6 +44,11 @@ namespace QiMessaging
             future = fut;
         }
 
+        ~Future()
+        {
+            qi_future_destroy(future);
+        }
+
         public void Wait(int timeout = 30000)
         {
             // Useless for now
@@ -71,7 +76,7 @@ namespace QiMessaging
         public Message GetValue()
         {
             qi_message_t* mess = qi_future_get_value(future);
-            MessagePrivate p = new MessagePrivate(mess);
+            MessagePrivate p = new MessagePrivate(mess, false);
 
             return new Message(p);
         }
