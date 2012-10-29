@@ -242,11 +242,7 @@ char *qi_message_read_string(qi_message_t *msg)
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string s;
   get_is(m) >> s;
-#ifdef _WIN32
-  return _strdup(s.c_str());
-#else
-  return strdup(s.c_str());
-#endif
+  return qi::os::strdup(s.c_str());
 }
 
 void qi_message_free_string(char *str) {
@@ -261,11 +257,7 @@ char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
   get_is(m) >> s;
 
   *size = s.size();
-#ifdef _WIN32
-  return _strdup(s.c_str());
-#else
-  return strdup(s.c_str());
-#endif
+  return qi::os::strdup(s.c_str());
 }
 
 void qi_message_free_raw(char *raw) {
