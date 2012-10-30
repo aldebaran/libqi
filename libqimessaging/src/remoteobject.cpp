@@ -257,7 +257,7 @@ namespace qi {
     return out.future();
   }
 
-  void RemoteObject::metaEmit(unsigned int event, const qi::GenericFunctionParameters &args)
+  void RemoteObject::metaPost(unsigned int event, const qi::GenericFunctionParameters &args)
   {
     // Bounce the emit request to server
     // TODO: one optimisation that could be done is to trigger the local
@@ -266,7 +266,7 @@ namespace qi {
     // event back to us.
     qi::Message msg;
     msg.setParameters(args);
-    msg.setType(Message::Type_Event);
+    msg.setType(Message::Type_Post);
     msg.setService(_service);
     msg.setObject(qi::Message::GenericObject_Main);
     msg.setFunction(event);

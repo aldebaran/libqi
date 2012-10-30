@@ -44,7 +44,7 @@ namespace qi {
     //TransportSocket.disconnected
     void onSocketDisconnected(int error);
 
-    virtual void metaEmit(unsigned int event, const GenericFunctionParameters& args);
+    virtual void metaPost(unsigned int event, const GenericFunctionParameters& args);
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType = qi::MetaCallType_Auto);
 
     //metaObject received

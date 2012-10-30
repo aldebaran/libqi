@@ -110,7 +110,7 @@ namespace qi {
       sigparam = mm->signature();
     }
 
-    if (msg.type() == qi::Message::Type_Event) {
+    if (msg.type() == qi::Message::Type_Post) {
       const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
       if (ms)
         sigparam = ms->signature();
@@ -137,8 +137,8 @@ namespace qi {
          fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
       }
       break;
-    case Message::Type_Event: {
-        obj->metaEmit(funcId, mfp);
+    case Message::Type_Post: {
+        obj->metaPost(funcId, mfp);
       }
       break;
     default:
