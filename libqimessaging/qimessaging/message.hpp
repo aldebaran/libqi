@@ -64,21 +64,6 @@ namespace qi {
       GenericObject_Main = 1
     };
 
-    enum ServiceDirectoryFunction
-    {
-      ServiceDirectoryFunction_Service           = 10,
-      ServiceDirectoryFunction_Services          = 11,
-      ServiceDirectoryFunction_RegisterService   = 12,
-      ServiceDirectoryFunction_UnregisterService = 13,
-      ServiceDirectoryFunction_ServiceReady      = 14,
-    };
-
-    enum ServiceDirectoryEvent
-    {
-      ServiceDirectoryEvent_ServiceRegistered   = 5,
-      ServiceDirectoryEvent_ServiceUnregistered = 6,
-    };
-
     enum BoundObjectFunction {
       BoundObjectFunction_RegisterEvent     = 0,
       BoundObjectFunction_UnregisterEvent   = 1,
@@ -93,13 +78,16 @@ namespace qi {
     enum Type
     {
       Type_None  = 0,
-      // Method call, Client->Server
+      // Method call, Client->Server (wait for a Type_Reply or Type_Error)
       Type_Call  = 1,
-      // Method return value, Server->Client
+      // Method return value, Server->Client (only to answer to a Type_Call)
       Type_Reply = 2,
+      // Method return error, Server->Client (only to answer to a Type_Call)
+      Type_Error = 3,
+      // Method call, Client->Server (No answer needed)
+      Type_Post  = 4,
       // Event, or method call without caring about return. Server<->Client
-      Type_Event = 3,
-      Type_Error = 4,
+      Type_Event = 5,
     };
 
     ~Message();
@@ -136,7 +124,7 @@ namespace qi {
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;
 
-    void          setSignature(const std::string& signature);
+    void               setSignature(const std::string& signature);
     ///@return signature, set by setParameters() or setSignature()
     const std::string& signature() const;
 

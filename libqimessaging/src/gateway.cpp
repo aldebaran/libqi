@@ -189,7 +189,8 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
     sdMsg.setType(Message::Type_Call);
     sdMsg.setService(Message::Service_ServiceDirectory);
     sdMsg.setObject(Message::GenericObject_Main);
-    sdMsg.setFunction(Message::ServiceDirectoryFunction_Service);
+    //TODO: rewrite to use ServiceDirectoryClient
+    sdMsg.setFunction(10);
 
     _serviceToClient[_services[Message::Service_ServiceDirectory]][sdMsg.id()] = std::make_pair(0, TransportSocketPtr());
 
@@ -221,7 +222,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
   {
     //// S.1/
     if (msg->service() == Message::Service_ServiceDirectory &&
-        msg->function() == Message::ServiceDirectoryFunction_Service &&
+        msg->function() == 10 &&
         msg->type() == Message::Type_Reply)
     {
       // Get serviceId
