@@ -86,7 +86,7 @@ namespace qi {
       Type_Error = 3,
       // Method call, Client->Server (No answer needed)
       Type_Post  = 4,
-      // Event, or method call without caring about return. Server<->Client
+      // Event Server->Client
       Type_Event = 5,
     };
 
