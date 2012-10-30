@@ -15,7 +15,7 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 qi_add_optional_package(PYTHON)
 set(WITH_PYTHON ON)
-set(WITH_DOTNET ON)
+set(WITH_DOTNET OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 option(WITH_QT       "Qt support"       OFF)
