@@ -8,11 +8,12 @@
 #define _SRC_SIGNAL_P_HPP_
 
 #include <qitype/signal.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
 namespace qi {
 
-  typedef std::map<SignalBase::Link, SignalSubscriber*> SignalSubscriberMap;
+  typedef std::map<SignalBase::Link, SignalSubscriberPtr> SignalSubscriberMap;
 
   class SignalBasePrivate
   {
@@ -21,9 +22,9 @@ namespace qi {
     bool reset();
 
   public:
-    SignalSubscriberMap        subscriberMap;
-    std::string                signature;
-    boost::recursive_mutex     mutex;
+    SignalSubscriberMap            subscriberMap;
+    std::string                    signature;
+    boost::recursive_mutex         mutex;
   };
 
 }

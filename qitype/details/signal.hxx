@@ -21,19 +21,22 @@ namespace qi
     {
     public:
       BoostWeakPointerLock(typename boost::weak_ptr<T> ptr)
-      : weakPointer(ptr)
+      : lockCount(0)
+      , weakPointer(ptr)
       {
       }
 
       bool tryLock()
       {
+        ++lockCount;
         sharedPointer = weakPointer.lock();
         return sharedPointer;
       }
 
       void unlock()
       {
-        sharedPointer.reset();
+        if (!--lockCount)
+          sharedPointer.reset();
       }
 
       WeakLock* clone()
@@ -41,6 +44,7 @@ namespace qi
         return new BoostWeakPointerLock(weakPointer);
       }
     private:
+      qi::atomic<long>  lockCount;
       boost::shared_ptr<T> sharedPointer;
       boost::weak_ptr<T>   weakPointer;
     };
@@ -127,7 +131,6 @@ namespace qi
   SignalSubscriber::SignalSubscriber(O* ptr, MF function, EventLoop* ctx)
   {
     enabled = true;
-    active = 0;
     target = 0;
     if (ctx)
       eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
@@ -139,7 +142,6 @@ namespace qi
   SignalSubscriber::SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx)
   {
     enabled = true;
-    active = 0;
     target = 0;
     if (ctx)
       eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);

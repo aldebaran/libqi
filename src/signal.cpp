@@ -6,6 +6,7 @@
 #include <qi/atomic.hpp>
 
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/make_shared.hpp>
 
 #include <qitype/signal.hpp>
 #include <qitype/genericvalue.hpp>
@@ -17,13 +18,13 @@
 namespace qi {
 
   SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
-  : weakLock(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true), active(0)
+  : weakLock(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
   {}
 
 
 
   SignalSubscriber::SignalSubscriber(GenericFunction func, EventLoop* ctx, detail::WeakLock* lock)
-     : handler(func), weakLock(lock), target(0), method(0), enabled(true), active(0)
+     : handler(func), weakLock(lock), target(0), method(0), enabled(true)
    {
      eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
    }
@@ -50,7 +51,6 @@ namespace qi {
     target = b.target?new ObjectWeakPtr(*b.target):0;
     method = b.method;
     enabled = b.enabled;
-    active = 0;
   }
 
   static qi::atomic<long> linkUid = 1;
@@ -67,7 +67,7 @@ namespace qi {
   {
     qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::GenericValue> params;
-    for (unsigned i=0; i<8; ++i)
+    for (unsigned i = 0; i < 8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);
     // Signature construction
@@ -87,55 +87,69 @@ namespace qi {
   {
     if (!_p)
       return;
+
     SignalSubscriberMap copy;
     {
       boost::recursive_mutex::scoped_lock sl(_p->mutex);
       copy = _p->subscriberMap;
     }
+
     SignalSubscriberMap::iterator i;
-    for (i=copy.begin(); i!= copy.end(); ++i)
+    for (i = copy.begin(); i != copy.end(); ++i)
     {
-      i->second->call(params);
+      SignalSubscriberPtr s = i->second; // hold s alive
+      s->call(params);
     }
   }
 
   class FunctorCall
   {
   public:
-    FunctorCall(GenericFunctionParameters& params,
-      SignalSubscriber* sub)
+    FunctorCall(GenericFunctionParameters& params, SignalSubscriberPtr sub)
     : sub(sub)
     {
       std::swap((std::vector<GenericValue>&)this->params, (std::vector<GenericValue>&)params);
     }
+
     FunctorCall(const FunctorCall& b)
     {
       *this = b;
     }
+
     void operator=(const FunctorCall& b)
     {
       std::swap((std::vector<GenericValue>&)(this->params),
         (std::vector<GenericValue>&)b.params);
       sub = b.sub;
     }
-    GenericFunctionParameters params;
-    SignalSubscriber* sub;
+
     void operator() ()
     {
-      if (sub->enabled)
-        sub->handler(params);
+      {
+        boost::mutex::scoped_lock sl(sub->mutex);
+        // verify-enabled-then-register-active op must be locked
+        if (!sub->enabled)
+          return;
+        sub->addActive(false);
+      }
+      sub->handler(params);
+      sub->removeActive(true);
       params.destroy();
-      long active = --sub->active;
-      if (sub->weakLock && !active)
+      if (sub->weakLock)
         sub->weakLock->unlock();
     }
+
+  public:
+    GenericFunctionParameters params;
+    SignalSubscriberPtr         sub;
   };
+
   void SignalSubscriber::call(const GenericFunctionParameters& args)
   {
-    if (!enabled)
-      return;
+    // this is held alive by caller
     if (handler.type)
     {
+      // Try to acquire weakLock, for both the sync and async cases
       if (weakLock)
       {
         bool locked = weakLock->tryLock();
@@ -150,25 +164,89 @@ namespace qi {
         eventLoop = eventLoopGetter();
       if (eventLoop)
       {
-        ++active;
         // Event emission is always asynchronous
         GenericFunctionParameters copy = args.copy();
-        eventLoop->asyncCall(0, FunctorCall(copy, this));
+        // We will check enabled when we will be scheduled in the target
+        // thread, and we hold this SignalSubscriber alive, so no need to
+        // explicitly track the asynccall
+        eventLoop->asyncCall(0, FunctorCall(copy, shared_from_this()));
       }
       else
       {
+        // verify-enabled-then-register-active op must be locked
+        {
+          boost::mutex::scoped_lock sl(mutex);
+          if (!enabled)
+            return;
+          addActive(false);
+        }
         handler(args);
         if (weakLock)
           weakLock->unlock();
+        removeActive(true);
       }
     }
     else if (target)
     {
       ObjectPtr lockedTarget = target->lock();
       if (!lockedTarget)
+      {
         source->disconnect(linkId);
-      else
+      }
+      else // no need to keep anything locked, whatever happens this is not used
         lockedTarget->metaEmit(method, args);
+    }
+  }
+
+  //check if we are called from the same thread that triggered us.
+  //in that case, do not wait.
+  void SignalSubscriber::waitForInactive()
+  {
+    boost::thread::id tid = boost::this_thread::get_id();
+    while (true)
+    {
+      {
+        boost::mutex::scoped_lock sl(mutex);
+        if (activeThreads.empty())
+          return;
+        // There cannot be two activeThreads entry for the same tid
+        // because activeThreads is not set at the post() stage
+        if (activeThreads.size() == 1
+          && *activeThreads.begin() == boost::this_thread::get_id())
+        { // One active callback in this thread, means above us in call stack
+          // So we cannot wait for it
+          return;
+        }
+      }
+      os::msleep(1); // FIXME too long use a condition
+    }
+  }
+
+  void SignalSubscriber::addActive(bool acquireLock, boost::thread::id id)
+  {
+    if (acquireLock)
+    {
+      boost::mutex::scoped_lock sl(mutex);
+      activeThreads.push_back(id);
+    }
+    else
+      activeThreads.push_back(id);
+  }
+
+  void SignalSubscriber::removeActive(bool acquireLock, boost::thread::id id)
+  {
+
+    boost::mutex::scoped_lock sl(mutex, boost::defer_lock_t());
+    if (acquireLock)
+      sl.lock();
+
+    for (unsigned i=0; i<activeThreads.size(); ++i)
+    {
+      if (activeThreads[i] == id)
+      { // fast remove by swapping with last and then pop_back
+        activeThreads[i] = activeThreads[activeThreads.size() - 1];
+        activeThreads.pop_back();
+      }
     }
   }
 
@@ -223,10 +301,10 @@ namespace qi {
   proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
     Link res = ++linkUid;
-    _p->subscriberMap[res] = new SignalSubscriber(src);
-    SignalSubscriber& s = *_p->subscriberMap[res];
-    s.linkId = res;
-    s.source = this;
+    SignalSubscriberPtr s = boost::make_shared<SignalSubscriber>(src);
+    s->linkId = res;
+    s->source = this;
+    _p->subscriberMap[res] = s;
     return res;
   }
 
@@ -263,22 +341,39 @@ namespace qi {
 
   std::string SignalBase::signature() const
   {
-    return _p?_p->signature:"";
+    return _p ? _p->signature : "";
   }
 
   bool SignalBasePrivate::disconnect(const SignalBase::Link& l)
   {
-    boost::recursive_mutex::scoped_lock sl(mutex);
+
+    SignalSubscriberPtr s;
+    // Acquire signal mutex
+    boost::recursive_mutex::scoped_lock sigLock(mutex);
     SignalSubscriberMap::iterator it = subscriberMap.find(l);
     if (it == subscriberMap.end())
       return false;
-    SignalSubscriber* s = it->second;
+    s = it->second;
+    // Remove from map (but SignalSubscriber object still good)
+    subscriberMap.erase(it);
+    // Acquire subscriber mutex before releasing mutex
+    boost::mutex::scoped_lock subLock(s->mutex);
+    // Release signal mutex
+    sigLock.release()->unlock();
     // Ensure no call on subscriber occurrs once this function returns
     s->enabled = false;
-    while (*(s->active))
-      os::msleep(1); // FIXME too long
-    subscriberMap.erase(it);
-    delete s;
+
+    if ( s->activeThreads.empty()
+         || (s->activeThreads.size() == 1
+             && *s->activeThreads.begin() == boost::this_thread::get_id()))
+    { // One active callback in this thread, means above us in call stack
+      // So we cannot trash s right now
+      return true;
+    }
+    // More than one active callback, or one in a state that prevent us
+    // from knowing in which thread it will run
+    subLock.release()->unlock();
+    s->waitForInactive();
     return true;
   }
 

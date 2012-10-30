@@ -11,6 +11,8 @@
 #include <qi/eventloop.hpp>
 #include <qitype/signature.hpp>
 #include <qitype/functiontype.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace qi {
 
@@ -118,9 +120,10 @@ namespace qi {
     template<typename O, typename MF>
     inline SignalBase::Link connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
   };
+
   namespace detail
   {
-    /// Interface for a weak-lock mechanism: if lock fail, unregister callback
+    /// Interface for a weak-lock recursive mechanism: if lock fail, unregister callback
     class WeakLock
     {
     public:
@@ -130,15 +133,17 @@ namespace qi {
       virtual WeakLock* clone() = 0;
     };
   }
-  /** Event subscriber info.
+
+ /** Event subscriber info.
   *
   * Only one of handler or target must be set.
   */
  class QITYPE_API SignalSubscriber
+ : public boost::enable_shared_from_this<SignalSubscriber>
  {
  public:
    SignalSubscriber()
-     : weakLock(0), target(0), method(0), enabled(true), active(0)
+     : weakLock(0), target(0), method(0), enabled(true)
    {}
 
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0);
@@ -147,13 +152,24 @@ namespace qi {
 
    template<typename O, typename MF>
    SignalSubscriber(O* ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+
    template<typename O, typename MF>
    SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+
    SignalSubscriber(const SignalSubscriber& b);
-   void operator = (const SignalSubscriber& b);
+
    ~SignalSubscriber();
 
+   void operator = (const SignalSubscriber& b);
+
    void call(const GenericFunctionParameters& args);
+
+   //wait till all threads are inactive except the current thread.
+   void waitForInactive();
+
+   void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
+   void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
+ public:
    // Source information
    SignalBase*        source;
    /// Uid that can be passed to GenericObject::disconnect()
@@ -168,10 +184,18 @@ namespace qi {
    //  Mode 2: metaCall
    ObjectWeakPtr*       target;
    unsigned int         method;
-   bool                 enabled; // call will do nothing if false
-   qi::atomic<long>     active;  // true if a call is in progress
- };
 
+   boost::mutex                 mutex;
+   // Fields below are protected by lock
+
+   // If enabled is set to false while lock is acquired,
+   // No more callback will trigger (activeThreads will se no push-back)
+   bool                         enabled;
+   // Number of calls in progress.
+   // Each entry there is a subscriber call that can no longuer be aborted
+   std::vector<boost::thread::id> activeThreads; // order not preserved
+ };
+ typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }
 
 #include <qitype/details/signal.hxx>
