@@ -1,10 +1,11 @@
 .. _std-code-convention:
 
-Coding Convention
-=================
+===================
+ Coding Convention
+===================
 
 Backward Compatibility
-----------------------
+======================
 
 Qt API Design Principles
   http://wiki.qt-project.org/API_Design_Principles
@@ -19,7 +20,7 @@ Potential Errors Passing CRT Objects Across DLL Boundaries
   http://msdn.microsoft.com/en-us/library/ms235460.aspx
 
 Naming convention
------------------
+=================
 
 Headers go into <libname>/*
 
@@ -42,7 +43,7 @@ Private implementation headers should be named '<classname>_p.hpp'
 - Qt classes are prefixed with 'Qi'
 
 Example
-+++++++
+-------
 For the public *foo* class and the private *oups* class in the *bar* library we have:
 
 .. code-block:: console
@@ -84,7 +85,7 @@ QT:
   }
 
 Headers
--------
+=======
 
 Public headers must not include public headers from other libraries. This
 ensures binary compatibility.
@@ -95,7 +96,7 @@ On the other hand, private headers must be enclosed within double quotes "" when
 included.
 
 Header include statement
-------------------------
+========================
 
 * If a header is **not provided by the project**, then the include statement
   **must** be:
@@ -120,7 +121,7 @@ Header include statement
     #include "bar/foo.h"
 
 Export symbol
--------------
+=============
 
 All public functions and classes should be exported using <LIBNAME>_API macro. This macro should be unique to the library and never be used by others libraries.
 
@@ -173,7 +174,7 @@ Please remember to export nested class
   };
 
 Private Implementation
-----------------------
+======================
 
 - Use private implementation where applicable.
 - Still reserve a pointer instead if you dont use it. (for future use, see
@@ -186,7 +187,7 @@ implemented, either disabled - *ie.* defined in the private section of the class
 
 
 Example with Pimpl
-++++++++++++++++++
+------------------
 
 bar/foo.hpp:
 
@@ -199,7 +200,7 @@ bar/foo.hpp:
 
 
 Example without Pimpl
-+++++++++++++++++++++
+---------------------
 
 .. code-block:: cpp
 
@@ -214,33 +215,46 @@ Example without Pimpl
 
 
 Struct
-------
+======
 
 You can expose struct but they should only contains POD. If a struct have a member which a class (or worst) a STL class, Windows wont be happy, and you will have to link
 the exe and the dll with the same VC runtime, in the same configuration (release/debug). Prefer Pimpl in this case.
 
 Exception
----------
+=========
 
 http://stackoverflow.com/questions/4756944/c-dll-plugin-interface/4757105#4757105
 
-Exceptions are prohibited.
+Exceptions issues:
 
-- not available on all platforms: android for example
-- it's not really compatible with asynchronous design, where error reporting should be asynchronous too. So another mean of reporting should be used anyway.
+- may not be available on all platforms
+- it's not really compatible with asynchronous design, where error reporting should be asynchronous too, but the error can catched at the caller place, and rethrow at the callee place. (qi::Future can help having both)
 - exceptions increase the library size
-- it's really hard to write exception-safe code
+- it's really hard to write exception-safe code. (RAII really help here)
 - Exception catching of a user defined type in a binary other than the one which threw the exception requires a typeinfo lookup. (and rtti do not work well accross dll boundary http://gcc.gnu.org/faq.html#dso)
 - it break ABI: memory allocated in one place should be deallocated in the same place (remember that object do not have the same size in release/debug with MSVC), so if user catch a ref, this can crash.
-- Avoiding leak is really hard (all function should handle exceptions):
+- Avoiding leak is really hard (all function should handle exceptions, again RAII really help)
+
+Example:
 
 .. code-block:: c++
 
   A *a = new A();
   //this leak a A*
   functionthatthrow();
+  delete a;
 
-even more harder:
+This could be fixed with a RAII smart pointer class:
+
+.. code-block:: c++
+
+  //this could be rewriten with smart pointer to avoid error
+  boost::shared_ptr<A> a = boost::make_shared<A>();
+
+  functionthatthrow();
+  //a is cleanup here whatever happend.
+
+even more vicious:
 
 .. code-block:: c++
 
@@ -260,9 +274,14 @@ even more harder:
     functionthatdonotthrow(*eo);
   }
 
+Once you have exception you should use RAII everywhere to avoid leak.
+
+So use exception with caution and prefer a simple hierarchy over a complicated one.
+Do not hesitate to use std::runtime_error.
+Never throw an exception not defined in your lib, except the one provided by the stdexcept header.
 
 Iterators
----------
+=========
 
 When naming an iterator, simply append "It" after the name of the container.
 
@@ -273,7 +292,7 @@ When naming an iterator, simply append "It" after the name of the container.
 
 
 Enum
-----
+====
 
 The name of the enumeration must be singular.
 
@@ -307,12 +326,12 @@ Always prefer enumerations to booleans for readability.
 
 
 Members
--------
+=======
 
 - Private members names should be prefixed with underscores.
 
 Arguments
----------
+=========
 
 If the argument is IN-OUT then use pointer and avoid reference. The code that use the function is clearer to look at.
 
@@ -340,13 +359,13 @@ In all other case use const ref.
    void setValue(const MyClass &myclass);
 
 Virtual
--------
+=======
 
 All class with virtuals should have a virtual destructor to avoid leak.
 
 
 Interface
----------
+=========
 
 Always declare the destructor of an interface pure virtual.
 
@@ -366,7 +385,7 @@ An interface should not be instanciable, so forcing the destrutor to be pure is 
 
 
 Global
-------
+======
 
 - Never define a global in a library that need code to run.
 - always define global static
@@ -395,14 +414,14 @@ Rational:
 
 ** pointer should only be used as input parameter, to pass an array of pointer.
 
-.. code-block: c++
+.. code-block:: c++
 
   //BAD an object is created in the socket library, but should be released
   //in the client program
   Message *msg;
   socket.read(&msg);
 
-.. code-block: c++
+.. code-block:: c++
 
   //Good, user provide a message to fill
   Message msg;
@@ -410,13 +429,27 @@ Rational:
 
 
 Assert/Exit
------------
+===========
 
-- do not call assert
-- do not call exit
+** Basically you should only use assert for something that according to you the developper when you write the assert CANNOT POSSIBLY BE FALSE.
 
-Report error the user of the library instead. User then is free to assert/exit as he want. A library should never crash a program delibarately.
+- do not call assert when the error is not fatal.
+- never call exit in a library.
+
+Report error to the user of the library if possible instead. Users are then free to assert/exit as they want. A library should never crash a program delibarately.
 
 assert is only active during debug, you may think that it is enough to use it, but Windows users use debug build (and some developer may too), and they do not want their program to crash because of a lib that do not handle errors correctly.
 
-Assert can be used during developement, but should be removed before going to production.
+You should really be careful with assert, the goal is to catch error before a segfault, to point at the real error, instead of a random segfault. So use with caution.
+
+A borderline example:
+
+.. code-block:: c++
+
+  inotify_event& evt = reinterpret_cast<inotify_event&>(buffer[i]);
+  if (evt..mask & IN_CREATE) {...}
+  else if (evt.mask & IN_STUFF) {...}
+   <..>
+  else assert(!"inotify event type unknown");
+
+  //this one is wrong, if inotify api evolves some new message types may appear. This can happen and is not fatal to the code.
