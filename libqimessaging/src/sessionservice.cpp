@@ -9,17 +9,23 @@
 
 namespace qi {
 
+  inline void sessionServiceWaitBarrier(Session_Service* ptr) {
+    ptr->_destructionBarrier.setValue(0);
+  }
   Session_Service::Session_Service(TransportSocketCache *socketCache, ServiceDirectoryClient *sdClient, ObjectRegistrar *server)
     : _socketCache(socketCache)
     , _sdClient(sdClient)
     , _server(server)
+    , _self(this, sessionServiceWaitBarrier) // create a shared_ptr so that shared_from_this works
   {
     _linkServiceRemoved = _sdClient->serviceRemoved.connect(boost::bind<void>(&Session_Service::onServiceRemoved, this, _1, _2));
   }
 
   Session_Service::~Session_Service()
   {
-    _sdClient->serviceAdded.disconnect(_linkServiceRemoved);
+    _sdClient->serviceRemoved.disconnect(_linkServiceRemoved);
+    _self.reset(); // now existing weak_ptrs cannot from this cannot be locked
+    _destructionBarrier.future().wait();
     close();
   }
 
@@ -213,7 +219,7 @@ namespace qi {
     }
     result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
-    fut.connect(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId));
+    fut.connect(qi::Future<qi::ServiceInfo>::Slot(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId)).track(_self));
     return result;
   }
 

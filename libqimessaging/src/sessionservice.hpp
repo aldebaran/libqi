@@ -10,6 +10,8 @@
 #include <qi/future.hpp>
 #include <string>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/barrier.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <qimessaging/session.hpp>
 #include <qi/atomic.hpp>
 #include "remoteobject_p.hpp"
@@ -78,6 +80,9 @@ namespace qi {
     TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     ObjectRegistrar        *_server;    //not owned by us
+    boost::shared_ptr<Session_Service> _self;
+    Promise<void>                      _destructionBarrier;
+    friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
   };
 
 }
