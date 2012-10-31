@@ -231,7 +231,7 @@ namespace qi {
     ++_p->_innerSerialization;
 
     *this << (uint32_t)meta.size();
-    buffer().subBuffers().push_back(std::make_pair(buffer().size(), meta));
+    buffer().addSubBuffer(meta);
 
     --_p->_innerSerialization;
 

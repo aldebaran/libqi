@@ -78,7 +78,7 @@ namespace qi {
        << "  path=" << msg.object() << "," << std::endl
        << "  acti=" << msg.action() << "," << std::endl
        << "  data=" << std::endl;
-    msg._p->buffer.dump();
+    qi::details::printBuffer(std::cout, msg._p->buffer);
     os << "}";
     return os;
   }

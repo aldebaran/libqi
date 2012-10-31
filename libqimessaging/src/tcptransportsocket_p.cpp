@@ -396,7 +396,7 @@ namespace qi
       return false;
     }
     size_t sz = b->size();
-    const std::vector<std::pair<uint32_t, Buffer> >& subs = b->subBuffers();
+    const std::vector<std::pair<size_t, Buffer> >& subs = b->subBuffers();
     size_t pos = 0;
     // Handle subbuffers
     for (unsigned i=0; i< subs.size(); ++i)
