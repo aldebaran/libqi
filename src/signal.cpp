@@ -194,7 +194,7 @@ namespace qi {
         source->disconnect(linkId);
       }
       else // no need to keep anything locked, whatever happens this is not used
-        lockedTarget->metaEmit(method, args);
+        lockedTarget->metaPost(method, args);
     }
   }
 

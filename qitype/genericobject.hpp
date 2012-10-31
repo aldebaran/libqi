@@ -88,9 +88,12 @@ namespace qi {
                    qi::AutoGenericValue p6 = qi::AutoGenericValue(),
                    qi::AutoGenericValue p7 = qi::AutoGenericValue(),
                    qi::AutoGenericValue p8 = qi::AutoGenericValue());
-    void metaEmit(unsigned int event, const GenericFunctionParameters& params);
-    bool xMetaEmit(const std::string &signature, const GenericFunctionParameters &in);
-        /** Connect an event to an arbitrary callback.
+    void metaPost(unsigned int event, const GenericFunctionParameters& params);
+
+    //protected
+    bool xMetaPost(const std::string &signature, const GenericFunctionParameters &in);
+
+    /** Connect an event to an arbitrary callback.
      *
      * If you are within a service, it is recommended that you connect the
      * event to one of your Slots instead of using this method.

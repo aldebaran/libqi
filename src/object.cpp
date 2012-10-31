@@ -90,13 +90,13 @@ namespace qi {
     }
   }
 
-  void GenericObject::metaEmit(unsigned int event, const GenericFunctionParameters& args)
+  void GenericObject::metaPost(unsigned int event, const GenericFunctionParameters& args)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return;
     }
-    type->metaEmit(value, event, args);
+    type->metaPost(value, event, args);
   }
 
   qi::Future<GenericValue>
@@ -176,7 +176,7 @@ namespace qi {
       return metaCall(methodId, args);
   }
   /// Resolve signature and bounce
-  bool GenericObject::xMetaEmit(const std::string &signature, const GenericFunctionParameters &in) {
+  bool GenericObject::xMetaPost(const std::string &signature, const GenericFunctionParameters &in) {
     if (!value || !type) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return false;
@@ -197,7 +197,7 @@ namespace qi {
       qiLogError("object") << ss.str();
       return false;
     }
-    metaEmit(eventId, in);
+    metaPost(eventId, in);
     return true;
   }
 
@@ -306,7 +306,7 @@ namespace qi {
     for (unsigned i=0; i< params.size(); ++i)
       signature += params[i].signature();
     signature += ")";
-    xMetaEmit(signature, GenericFunctionParameters(params));
+    xMetaPost(signature, GenericFunctionParameters(params));
   }
 
   int ObjectType::inherits(Type* other)

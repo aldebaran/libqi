@@ -19,7 +19,7 @@ namespace qi
   *
   * Signal handling:
   * The default implementation is creating a SignalBase for each MetaSignal in
-  * the MetaObject, and bounces metaEmit(), connect() and disconnect() to it.
+  * the MetaObject, and bounces metaPost(), connect() and disconnect() to it.
   *
   * Method handling:
   * The default implementation holds a method list that the user must populate
@@ -42,7 +42,7 @@ namespace qi
     SignalBase* signalBase(unsigned int id) const;
 
     virtual qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    virtual void metaEmit(unsigned int event, const GenericFunctionParameters& params);
+    virtual void metaPost(unsigned int event, const GenericFunctionParameters& params);
     /// Calls given functor when event is fired. Takes ownership of functor.
     virtual qi::Future<unsigned int> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.

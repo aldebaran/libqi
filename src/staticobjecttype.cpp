@@ -77,7 +77,7 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   }
   return sig;
 }
-void StaticObjectTypeBase::metaEmit(void* instance, unsigned int signal,
+void StaticObjectTypeBase::metaPost(void* instance, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
   SignalBase* sb = getSignal(_data, instance, signal);

@@ -55,7 +55,7 @@ namespace qi
     DynamicObjectType() {}
     virtual const MetaObject& metaObject(void* instance);
     virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    virtual void metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params);
+    virtual void metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params);
     virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> disconnect(void* instance, unsigned int linkId);
@@ -123,7 +123,7 @@ namespace qi
     return ::qi::metaCall(eventLoop(), i->second, params, callType);
   }
 
-  void DynamicObject::metaEmit(unsigned int event, const GenericFunctionParameters& params)
+  void DynamicObject::metaPost(unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
     if (s)
@@ -247,10 +247,10 @@ namespace qi
       ->metaCall(method, params, callType);
   }
 
-  void DynamicObjectType::metaEmit(void* instance, unsigned int signal, const GenericFunctionParameters& params)
+  void DynamicObjectType::metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params)
   {
     reinterpret_cast<DynamicObject*>(instance)
-      ->metaEmit(signal, params);
+      ->metaPost(signal, params);
   }
 
   qi::Future<unsigned int> DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
