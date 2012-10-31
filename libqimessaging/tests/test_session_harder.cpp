@@ -98,6 +98,7 @@ TEST(QiSession, RegisterUnregisterSameSession)
   worker.join();
 }
 
+
 TEST(QiSession, ConnectToMultipleConstellation)
 {
   TestSessionPair constellation1;
@@ -117,17 +118,19 @@ TEST(QiSession, ConnectToMultipleConstellation)
   traveler.close();
 
   ASSERT_TRUE(traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str()));
-  proxy = constellation1.server()->service("test2");
+  proxy = constellation2.server()->service("test2");
+  ASSERT_TRUE(!!proxy);
   res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 
   ASSERT_TRUE(traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str()));
-  proxy = constellation1.server()->service("test3");
+  proxy = constellation3.server()->service("test3");
   res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 }
+
 
 int main(int argc, char **argv)
 {
