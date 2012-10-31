@@ -18,6 +18,8 @@ namespace qi {
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
+    _object->disconnect(_addLink);
+    _object->disconnect(_removeLink);
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
@@ -36,6 +38,8 @@ namespace qi {
       fco.setError(err);
       return;
     }
+    _addLink = fadd.value();
+    _removeLink = frem.value();
     fco.setValue(true);
     connected();
   }
