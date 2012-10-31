@@ -53,21 +53,13 @@ namespace qi {
 
   qi::Future< std::vector<qi::ServiceInfo> > Session_Services::services(Session::ServiceLocality locality)
   {
-    long requestId = ++_requestIndex;
-    qi::Promise<std::vector<qi::ServiceInfo> > promise;
-
     if (locality == Session::ServiceLocality_Local) {
+      qi::Promise<std::vector<qi::ServiceInfo> > promise;
       promise.setValue(_server->registeredServices());
       return promise.future();
     }
 
-    qi::Future< std::vector<qi::ServiceInfo> > fut = _sdClient->services();
-    {
-      boost::mutex::scoped_lock sl(_requestMutex);
-      _request[requestId] = new ServicesRequest(promise, locality);
-    }
-    fut.connect(boost::bind<void>(&Session_Services::onFutureFinished, this, _1, requestId));
-    return promise.future();
+    return  _sdClient->services();
   }
 
 }
