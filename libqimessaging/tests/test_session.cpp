@@ -176,6 +176,34 @@ TEST(QiSession, AlreadyRegistered)
   delete session;
 }
 
+TEST(QiSession, Services)
+{
+  TestSessionPair p;
+  qi::Session* s1 = p.client();
+  s1->listen("tcp://0.0.0.0:0"); // client does not listen by default
+  qi::Session* s2 = p.server();
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
+  s1->registerService("srv1.1", obj);
+  s1->registerService("srv1.2", obj);
+  s2->registerService("srv2.1", obj);
+  s2->registerService("srv2.2", obj);
+  std::vector<qi::ServiceInfo> srv1 = s1->services();
+  std::vector<qi::ServiceInfo> srv2 = s2->services();
+  // serviceDirectory is listed to
+  if (srv1.size() != 5)
+  {
+    for (unsigned i=0; i<srv1.size(); ++i)
+      std::cerr << srv1[i].name() << " ";
+    std::cerr << std::endl;
+  }
+
+  ASSERT_EQ(5U, s1->services().value().size());
+  ASSERT_EQ(5U, s2->services().value().size());
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
