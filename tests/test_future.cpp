@@ -286,6 +286,55 @@ TEST(TestFutureSync, InSitu)
   tag = false;
 }
 
+void do_nothing(TestFutureI*) {}
+
+TEST(TestFutureTrack, ConnectTrack1)
+{ // Check it triggers
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  int res = 0;
+  std::string err;
+  TestFutureI test(res, err);
+
+  boost::shared_ptr<TestFutureI> ptr(&test, do_nothing);
+  f.connect(qi::Future<int>::Slot(boost::bind(&TestFutureI::onFutureFinished, ptr.get(), _1)).track(ptr));
+  p.setValue(1);
+  ASSERT_EQ(1, res);
+  ptr.reset();
+}
+
+TEST(TestFutureTrack, ConnectTrack2)
+{ // Check it triggers when promise already set
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  int res = 0;
+  std::string err;
+  TestFutureI test(res, err);
+
+  boost::shared_ptr<TestFutureI> ptr(&test, do_nothing);
+  p.setValue(1);
+  f.connect(qi::Future<int>::Slot(boost::bind(&TestFutureI::onFutureFinished, ptr.get(), _1)).track(ptr));
+  ASSERT_EQ(1, res);
+  ptr.reset();
+}
+
+TEST(TestFutureTrack, ConnectTrack3)
+{ // Check it does not trigger when shared_ptr goes down
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  int res = 0;
+  std::string err;
+  TestFutureI test(res, err);
+
+  boost::shared_ptr<TestFutureI> ptr(&test, do_nothing);
+
+  f.connect(qi::Future<int>::Slot(boost::bind(&TestFutureI::onFutureFinished, ptr.get(), _1)).track(ptr));
+  ptr.reset();
+  p.setValue(1);
+  ASSERT_EQ(0, res);
+}
+
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

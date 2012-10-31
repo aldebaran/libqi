@@ -82,7 +82,8 @@ namespace qi {
 
   public: //Signals
     typedef boost::signals2::connection Connection;
-    inline Connection connect(boost::function<void (qi::Future<T>)> fun) { return _p->connect(*this, fun); }
+    typedef typename boost::signals2::signal<void (Future<T>)>::slot_type Slot;
+    inline Connection connect(const Slot& s) { return _p->connect(*this, s);}
     inline bool disconnect(Connection i) { return _p->disconnect(i); }
     //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
 

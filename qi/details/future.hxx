@@ -42,7 +42,7 @@ namespace qi {
     public:
       typedef typename FutureType<T>::type ValueType;
       typedef boost::signals2::connection Connection;
-
+      typedef typename boost::signals2::signal<void (Future<T>)>::slot_type Slot;
       FutureState()
         : _value()
       {
@@ -63,17 +63,18 @@ namespace qi {
         notifyReady();
       }
 
-      Connection connect(qi::Future<T> future, boost::function<void (qi::Future<T>)> fun) {
+      Connection connect(qi::Future<T> future, const Slot& s)
+      {
         bool ready;
         Connection res;
         {
           boost::mutex::scoped_lock lock(mutex());
-          res = _onResult.connect(fun);
+          res = _onResult.connect(s);
           ready = isReady();
         }
         //result already ready, notify the callback
         if (ready) {
-          fun(future);
+          s(future);
         }
         return res;
       }
