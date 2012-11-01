@@ -137,6 +137,12 @@ namespace qi {
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
+    if (!listenUrl().isValid()) {
+      qi::Url listeningAddress("tcp://0.0.0.0:0");
+      qiLogVerbose("Session listening on ") << listeningAddress.str() << "." << std::endl;
+      listen(listeningAddress);
+    }
+
     return _p->_serverObject.registerService(name, obj);
   }
 
