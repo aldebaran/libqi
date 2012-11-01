@@ -73,4 +73,7 @@ namespace qi
       DataPerfSuitePrivate *_p;
   };
 }
-#endif  // _QIPERF_DETAILS_DATAPERFSUITE_HPP_
+
+#include <qiperf/details/dataperfsuite.hxx>
+
+#endif  // _QI_PERF_DATAPERFSUITE_HPP_
