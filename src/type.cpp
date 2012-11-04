@@ -221,6 +221,10 @@ namespace qi {
       return typeOf<int32_t>();
     case Signature::Type_UInt32:
       return typeOf<uint32_t>();
+    case Signature::Type_Int64:
+      return typeOf<int64_t>();
+    case Signature::Type_UInt64:
+      return typeOf<uint64_t>();
     case Signature::Type_Float:
       return typeOf<float>();
     case Signature::Type_Double:
