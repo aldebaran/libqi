@@ -16,9 +16,13 @@ namespace qi {
   {
   public:
     Url();
-    Url(const qi::Url& url);
     Url(const std::string &url);
     Url(const char *url);
+
+    virtual ~Url();
+
+    Url(const qi::Url& url);
+    Url& operator= (const Url& rhs);
 
     bool isValid() const;
     const std::string& str() const;

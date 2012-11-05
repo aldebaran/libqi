@@ -22,9 +22,19 @@ namespace qi {
   {
   }
 
+  Url::~Url()
+  {
+    delete _p;
+  }
+
   Url::Url(const qi::Url& url)
     : _p(new UrlPrivate(url._p))
   {
+  }
+
+  Url& Url::operator= (const Url &rhs) {
+    *_p = *rhs._p;
+    return *this;
   }
 
   bool Url::isValid() const {
