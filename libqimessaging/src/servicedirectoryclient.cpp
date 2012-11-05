@@ -12,14 +12,15 @@ namespace qi {
 
   ServiceDirectoryClient::ServiceDirectoryClient()
     : _remoteObject(qi::Message::Service_ServiceDirectory)
+    , _addLink(0)
+    , _removeLink(0)
   {
     _object = makeDynamicObjectPtr(&_remoteObject, false);
   }
 
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
-    _object->disconnect(_addLink);
-    _object->disconnect(_removeLink);
+    close();
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
@@ -130,6 +131,8 @@ namespace qi {
 
   void ServiceDirectoryClient::onSocketDisconnected(int error) {
     disconnected(error);
+    _object->disconnect(_addLink);
+    _object->disconnect(_removeLink);
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
