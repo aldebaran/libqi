@@ -1,0 +1,48 @@
+/** \class qi::DataPerfSuite
+  * \verbatim
+  * This class is used to perform benchmarks.
+  *
+  * Use:
+  * .. highlight:: c++
+  *    :linenothreshold: 1
+  *    DataPerfSuite DPS("My_project, "My_executable", DataPerfSuite::OutputType_Normal, "data.xml");
+  *    { // ...
+  *    }
+  *    DataPerf DP;
+  *    { // ...
+  *    }
+  *    while (true) {
+  *      DP.start();
+  *      { // ...
+  *      } // What I want to measure.
+  *      DP.stop();
+  *      { // ...
+  *      }
+  *      DPS << DP;
+  *    }
+  * \endverbatim
+  */
+
+/**
+  * \enum qi::DataPerfSuite::OutputType
+  */
+
+/**
+  * \fn qi::DataPerfSuite::DataPerfSuite
+  * \param projectName the name of the project being benchmarked
+  * \param executableName the name of the executable use for benchmarking
+  * \param outputType type of output
+  * \param filename filename where store output. Put an empty string to output on stdout
+  */
+
+/**
+  * \fn qi::DataPerfSuite::~DataPerfSuite
+  */
+
+/**
+  * \fn qi::DataPerfSuite::operator<<(const DataPerf& data)
+  * \param data Data to print out.
+  * \return The actual class. Permit to chain.
+  */
+
+

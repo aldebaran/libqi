@@ -22,7 +22,7 @@ namespace qi
     delete _p;
   }
 
-  void DataPerf::start(const std::string& benchmarkName, const unsigned long loopCount, const unsigned long msgSize)
+  void DataPerf::start(const std::string& benchmarkName, unsigned long loopCount, unsigned long msgSize)
   {
     _p->benchmarkName = benchmarkName;
     _p->fLoopCount = loopCount;

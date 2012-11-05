@@ -1,0 +1,73 @@
+/** \class DataPerf
+  * \verbatim
+  * This class is used to compute and store a benchmak time.
+  * It gives too some facilities.
+  *
+  * Use:
+  * .. highlight:: c++
+  *    :linenothreshold: 1
+  *    DataPerf DP;
+  *    { // ...
+  *    }
+  *    DP.start();
+  *    { // ...
+  *    } // Things we want to benchmark
+  *    DP.stop();
+  *    { // ...
+  *    }
+  *    std::cout << "Ratio CPU/Total: " << DP.getCpu();
+  *
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::DataPerf::DataPerf()
+  */
+
+/**
+  * \fn qi::DataPerf::~DataPerf()
+  */
+
+/**
+  * \fn qi::DataPerf::start(const std::string& benchmarkName, unsigned long loopCount, unsigned long msgSize)
+  * \verbatim
+  * This function is used to start measuring time.
+  * \endverbatim
+  * \param benchmarkName Name of the benchmark (generally what this bencks measure).
+  * \param loopCount How many time benchmarked code have been loop (used for calculus).
+  * \param msgSize The size of the data transmitted (used for calculus).
+  */
+
+/**
+  * \fn qi::DataPerf::stop()
+  */
+
+/**
+  * \fn qi::DataPerf::getBenchmarkName() const
+  * \return A string with the name of the benchmark.
+  */
+
+/**
+  * \fn qi::DataPerf::getMsgSize() const
+  * \return The size.
+  */
+
+/**
+  * \fn qi::DataPerf::getPeriod() const
+  * \return The time.
+  */
+
+/**
+  * \fn qi::DataPerf::getCpu() const
+  * \return Percentage of CPU/Total.
+  */
+
+/**
+  * \fn qi::DataPerf::getMsgPerSecond() const
+  * \return the number of messages in a second.
+  */
+
+/**
+  * \fn qi::DataPerf::getMegaBytePerSecond() const
+  * \return The size in MB in a second.
+  */

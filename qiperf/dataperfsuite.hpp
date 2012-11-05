@@ -18,55 +18,24 @@ namespace qi
 {
   class DataPerfSuitePrivate;
 
-  //! A class to perform benchmarks
-  /**
-   * This class is used to perform benchmarks.
-   *
-   * Use:
-   *
-   * DataPerfSuite DPS("My_project", "My_executable", DataPerfSuite::OutputType_Normal, "data.xml");
-   * (...)
-   * DataPerf DP;
-   * (...)
-   * while (1) {
-   *   DP.start();
-   *   (...) // What I want to measure.
-   *   DP.stop();
-   *   (...)
-   *   DPS << DP;
-   * }
-   *
-   */
+  /// A class to perform benchmarks.
   class QIPERF_API DataPerfSuite
   {
     public:
 
-      /**
-       * An enum to precise the type of output.
-       */
+      /// An enum to precise the type of output.
       enum OutputType {
-        OutputType_Normal = 0, /**< The "normal" way */
-        OutputType_Codespeed   /**< A type defined to be used by Codespeed */
+        OutputType_Normal    = 0, ///< The "normal" way.
+        OutputType_Codespeed = 1, ///< A type defined to be used by Codespeed.
       };
 
-      //! Constructor
-      /**
-       * Constructor
-       * @param filename filename where store output. Put an empty string to output on stdout
-       * @param outputType type of output
-       * @param projectName the name of the project being benchmarked
-       * @param executableName the name of the executable use for benchmarking
-       */
+      /// Constructor
       DataPerfSuite(const std::string& projectName, const std::string& executableName, OutputType outputType = OutputType_Normal, const std::string& filename = "");
 
-      //! Destructor
+      /// Destructor
       ~DataPerfSuite();
 
-      //! Overloading of the stream insertion operator.
-      /**
-       * This overloading is used for printing data out.
-       * @param data data to print out
-       */
+      /// Overloading used to print data out.
       DataPerfSuite& operator<<(const DataPerf& data);
 
     private:
