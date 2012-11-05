@@ -1,0 +1,60 @@
+// -*- mode:c++; -*-
+
+/** \class qi::BufferReader
+ * This class is intendeed to read buffer.
+ * It store an internal data cursor and an internal sub-buffer index.
+ * All offset are relative to the current position.
+ */
+
+/**
+ * \fn qi::BufferReader::BufferReader(const Buffer& buf)
+ * \param buf The buffer to copy.
+ */
+
+/**
+ * \fn qi::BufferReader::~BufferReader()
+ */
+
+/**
+ * \fn qi::BufferReader::read(void* data, size_t length)
+ * \param data A pre-allocated pointer to store read data.
+ * \param length Size of the object pointed by \a data or size to read.
+ * \return size of really read and stored data.
+ */
+
+/**
+ * \fn qi::BufferReader::read(size_t offset)
+ * \param offset Number of bytes to read.
+ * \return a pointer to data at the given
+ */
+
+/**
+ * \fn qi::BufferReader::seek(size_t offset)
+ * \param offset Value for move forward the cursor.
+ * \ return Return true if succeed, false otherwise.
+ */
+
+/**
+ * \fn qi::BufferReader::peek(size_t offset) const
+ * \warning This function doesn't move the internal pointer.
+ * \param offset The relative offset.
+ * \return The pointer if it succeed. If actual position +
+ * \a offset exceed size of buffer return 0.
+ */
+
+/**
+ * \fn qi::BufferReader::hasSubBuffer() const
+ * \return true if there is sub-buffer, false otherwise.
+ */
+
+/**
+ * \fn qi::BufferReader::subBuffer()
+ * If there is no sub-buffer at actual position throw a std::runtime-error.
+ * \return Return the sub-buffer if any.
+ */
+
+/**
+ * \fn qi::BufferReader::position() const
+ * \return The current offset.
+ */
+

@@ -3,50 +3,49 @@
 **  See COPYING for the license
 */
 #include <cstring>
+#include <stdexcept>
 
 #include <qi/bufferreader.hpp>
 #include "buffer_p.hpp"
 namespace qi {
 
-  BufferReader::BufferReader(const Buffer& buf)
+  BufferReader::BufferReader(const Buffer& buffer)
   : _cursor(0)
   , _subCursor(0)
   {
-    if (!buf._p)
-      const_cast<Buffer&>(buf)._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
-    _buffer = buf;
+    _buffer = buffer;
   }
 
   BufferReader::~BufferReader()
   {
   }
 
-  size_t BufferReader::seek(long offset)
+  bool BufferReader::seek(size_t offset)
   {
-    if (_cursor + offset <= _buffer._p->used)
+    if (_cursor + offset <= _buffer.size())
     {
       _cursor += offset;
-      return _cursor;
+      return true;
     }
     else
     {
-      return -1;
+      return false;
     }
   }
 
-  void *BufferReader::peek(size_t size) const
+  void *BufferReader::peek(size_t offset) const
   {
-    if (_cursor + size <= _buffer._p->used)
-      return _cursor + _buffer._p->data();
+    if (_cursor + offset <= _buffer.size())
+      return _cursor + (unsigned char*)_buffer.data();
     else
       return 0;
   }
 
-  void *BufferReader::read(size_t size)
+  void *BufferReader::read(size_t offset)
   {
     void *p = 0;
-    if ((p = peek(size)))
-      seek(size);
+    if ((p = peek(offset)))
+      seek(offset);
     else
       return 0;
 
@@ -55,11 +54,11 @@ namespace qi {
 
   size_t BufferReader::read(void *data, size_t size)
   {
-    if (_buffer._p->used - _cursor < size)
+    if (_buffer.size() - _cursor < size)
     {
-      size = _buffer._p->used - _cursor;
+      size = _buffer.size() - _cursor;
     }
-    memcpy(data, _buffer._p->data() + _cursor, size);
+    memcpy(data, (unsigned char*)(_buffer.data()) + _cursor, size);
     _cursor += size;
 
     return size;
@@ -69,16 +68,23 @@ namespace qi {
   {
     if (_buffer.subBuffers().size() <= _subCursor)
       return false;
-    if (_buffer.subBuffers()[_subCursor].first != _cursor)
-      qiLogWarning("BufferReader") << "subBuffer offset mismatch";
-    return true;
+    if (_buffer.subBuffers()[_subCursor].first == _cursor)
+      return true;
+    return false;
   }
 
-  Buffer BufferReader::subBuffer()
+  const Buffer& BufferReader::subBuffer()
   {
     if (!hasSubBuffer())
-      return Buffer();
+      throw std::runtime_error("No sub-buffer at actual offset.");
+
+    _cursor += sizeof(uint32_t);
+
     return _buffer.subBuffers()[_subCursor++].second;
   }
 
+  size_t BufferReader::position() const
+  {
+    return _cursor;
+  }
 }
