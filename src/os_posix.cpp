@@ -179,7 +179,7 @@ namespace qi {
 
     char* strdup(const char *src)
     {
-      return strdup(src);
+      return ::strdup(src);
     }
 
     unsigned short findAvailablePort(unsigned short port)
