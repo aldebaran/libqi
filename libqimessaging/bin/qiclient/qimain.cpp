@@ -17,7 +17,7 @@
 
 namespace po = boost::program_options;
 
-void call(const std::string &addr)
+void call(int count, const std::string &addr)
 {
   qi::Session session;
   session.connect(addr);
@@ -34,8 +34,8 @@ void call(const std::string &addr)
   fut.wait();
   if (fut.hasError())
   {
-      std::cerr << "Error returned:" << fut.error() << std::endl;
-      return;
+    std::cerr << "Error returned:" << fut.error() << std::endl;
+    return;
   }
 
   qi::ObjectPtr obj = fut.value();
@@ -48,9 +48,10 @@ void call(const std::string &addr)
     ++i;
   }
 #endif
-  std::string result = obj->call<std::string>("reply", "plaf");
-  std::cout << "result:" << result << std::endl;
-
+  for (int i = 0; i < count; ++i) {
+    std::string result = obj->call<std::string>("reply", "plaf");
+    std::cout << "result" << i << ":" << result << std::endl;
+  }
   session.close();
 }
 
@@ -65,7 +66,8 @@ int main(int argc, char *argv[])
       ("help", "Print this help.")
       ("master-address",
        po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
-       "The master address");
+       "The master address")
+      ("loop", po::value<int>()->default_value(1), "loop count");
 
   // allow master address to be specified as the first arg
   po::positional_options_description pos;
@@ -88,7 +90,8 @@ int main(int argc, char *argv[])
     if (vm.count("master-address") == 1)
     {
       std::string masteraddr = vm["master-address"].as<std::string>();
-      call(masteraddr);
+
+      call(vm["loop"].as<int>(), masteraddr);
     }
     else
     {
