@@ -83,8 +83,9 @@ namespace qi
       return;
     if (!_eventLoop->isInEventLoopThread())
     {
+      //hold a shared_ptr on self to avoid callback after delete
       _eventLoop->asyncCall(0,
-        boost::bind(&TcpTransportSocketPrivate::startReading, this));
+        boost::bind(&TransportSocket::startReading, _self->shared_from_this()));
       return;
     }
     struct event_base *base = static_cast<event_base *>(_eventLoop->nativeHandle());
@@ -194,7 +195,7 @@ namespace qi
         _status = errno;
       if (_status)
         qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
-      disconnect_();
+      disconnect_(_self->shared_from_this());
     }
     else if (events & BEV_EVENT_TIMEOUT)
     {
@@ -229,15 +230,16 @@ namespace qi
     _connectPromise.reset();
     _disconnectPromise.reset();
     _connecting = true;
+    //hold a shared_ptr on self to avoid callback after delete
     if (_eventLoop->isInEventLoopThread())
-      connect_(url);
+      connect_(_self->shared_from_this(), url);
     else
       _eventLoop->asyncCall(0,
-        boost::bind(&TcpTransportSocketPrivate::connect_, this, url));
+        boost::bind(&TcpTransportSocketPrivate::connect_, this, _self->shared_from_this(), url));
     return _connectPromise.future();
   }
 
-  void TcpTransportSocketPrivate::connect_(const qi::Url &url)
+  void TcpTransportSocketPrivate::connect_(TransportSocketPtr socket, const qi::Url &url)
   {
     if (!_connecting)
     {
@@ -307,15 +309,16 @@ namespace qi
     _disconnecting = true;
     if (!_eventLoop->isInEventLoopThread())
     {
+      //hold a shared_ptr on self to avoid callback after delete
       _eventLoop->asyncCall(0,
-        boost::bind(&TcpTransportSocketPrivate::disconnect_, this));
+        boost::bind(&TcpTransportSocketPrivate::disconnect_, this, _self->shared_from_this()));
     }
     else
-      disconnect_();
+      disconnect_(_self->shared_from_this());
      return _disconnectPromise.future();
   }
 
-  void TcpTransportSocketPrivate::disconnect_()
+  void TcpTransportSocketPrivate::disconnect_(qi::TransportSocketPtr socket)
   {
     if (!_bev)
       return; // fire disconnected only once
@@ -345,18 +348,19 @@ namespace qi
   {
     qiLogDebug("TransportSocket") << "Sending (" << msg.type() << "):" << msg.address();
     if (_eventLoop->isInEventLoopThread())
-      return send_(msg, false);
+      return send_(_self->shared_from_this(), msg, false);
     else
     {
       qi::Message* m = new qi::Message();
       *m = msg;
+      //hold a shared_ptr on self to avoid callback after delete
       _eventLoop->asyncCall(0,
-        boost::bind(&TcpTransportSocketPrivate::send_, this, boost::ref(*m), true));
+        boost::bind(&TcpTransportSocketPrivate::send_, this, _self->shared_from_this(), boost::ref(*m), true));
     }
     return true;
   }
 
-  bool TcpTransportSocketPrivate::send_(const qi::Message &msg, bool allocated)
+  bool TcpTransportSocketPrivate::send_(qi::TransportSocketPtr socket, const qi::Message &msg, bool allocated)
   {
     if (!_connected)
     {

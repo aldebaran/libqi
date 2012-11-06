@@ -14,12 +14,13 @@
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
 # include <string>
+# include <boost/enable_shared_from_this.hpp>
 
 namespace qi
 {
   class Session;
   class TransportSocketPrivate;
-  class QIMESSAGING_API TransportSocket
+  class QIMESSAGING_API TransportSocket : public boost::enable_shared_from_this<TransportSocket>
   {
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
@@ -33,6 +34,7 @@ namespace qi
     virtual bool send(const qi::Message &msg)                = 0;
     /// Must be called once if the socket is obtained through TransportServer::newConnection()
     virtual void  startReading() = 0;
+
     bool    isConnected() const;
     int     status() const;
     qi::Url url() const;
@@ -41,8 +43,8 @@ namespace qi
     bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
 
   public:
-    qi::Signal<void ()>            connected;
-    qi::Signal<void (int error)>   disconnected;
+    qi::Signal<void ()>                   connected;
+    qi::Signal<void (int error)>          disconnected;
     qi::Signal<void (const qi::Message&)> messageReady;
 
   protected:
