@@ -52,12 +52,11 @@ namespace qi {
     }
     boost::function<void (unsigned int, std::string)> f;
 
-    //TODO: this should not be async
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
     qi::Future<unsigned int> fut1 = _object->connect("serviceAdded", f);
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<unsigned int> fut2 = _object->connect("serviceRemoved", f).async();
+    qi::Future<unsigned int> fut2 = _object->connect("serviceRemoved", f);
 
     fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
     fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
