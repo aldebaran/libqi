@@ -66,7 +66,7 @@ namespace qi
       case OutputType_Codespeed:
         {
           _p->getOut() << "\t<perf_result benchmark=\"" << data.getBenchmarkName()
-                       << "\" result_value=\"" << std::fixed << std::setprecision(0) << data.getPeriod() << "\" />" << std::endl;
+                       << "\" result_value=\"" << std::fixed << std::setprecision(6) << data.getPeriod() << "\" />" << std::endl;
         }
         break;
 
