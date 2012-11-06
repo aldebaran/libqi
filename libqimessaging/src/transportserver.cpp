@@ -67,6 +67,7 @@ namespace qi
 
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
+    close();
     delete _p;
     _p = newTSP(this, url, ctx);
     return listen();
