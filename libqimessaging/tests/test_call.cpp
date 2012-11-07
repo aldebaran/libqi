@@ -35,6 +35,16 @@ void fooerr() {
   throw std::runtime_error("foobar");
 }
 
+int fakeRGBf(const std::string &name, int value, float duration)
+{
+  return (0);
+}
+
+int fakeRGBd(const std::string &name, int value, double duration)
+{
+  return (0);
+}
+
 TEST(TestCall, CallComplexType)
 {
   std::list<std::pair<std::string, int> >  robots;
@@ -101,6 +111,42 @@ TEST(TestCall, CallVoidErr)
 
   ASSERT_TRUE(fut.hasError());
   p.server()->unregisterService(serviceID);
+}
+
+TEST(TestCall, TestDoubleToFloatConvertion)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  int serviceID;
+  double duration = 0.42;
+
+  ob.advertiseMethod("fakeRGB", &fakeRGBf);
+  qi::ObjectPtr obj(ob.object());
+
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
+
+  std::cout << "Calling FakeRGB" << std::endl;
+  qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
+}
+
+TEST(TestCall, TestFloatToDoubleConvertion)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  int serviceID;
+  float duration = 0.42;
+
+  ob.advertiseMethod("fakeRGB", &fakeRGBd);
+  qi::ObjectPtr obj(ob.object());
+
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
+
+  std::cout << "Calling FakeRGB" << std::endl;
+  qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
 }
 
 int main(int argc, char **argv) {
