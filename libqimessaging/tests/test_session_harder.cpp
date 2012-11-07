@@ -18,17 +18,32 @@
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
+#include <qitype/type.hpp>
 #include <boost/thread.hpp>
 #include <testsession/testsessionpair.hpp>
+
+struct MyStruct {
+  int i;
+  int j;
+  std::string titi;
+};
+
+QI_TYPE_STRUCT(MyStruct, i, j, titi);
 
 static std::string reply(const std::string &msg)
 {
   return msg;
 }
 
+static MyStruct reply2(const MyStruct &mystruct) {
+  return mystruct;
+}
+
+
 qi::ObjectPtr newObject() {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
+  ob.advertiseMethod("reply2", &reply2);
   return ob.object();
 }
 
@@ -93,6 +108,73 @@ TEST(QiSession, RegisterUnregisterSameSession)
     }
     std::string ret = fut.value()->call<std::string>("reply", "plif");
     std::cout << "ret:" << ret << std::endl;
+  }
+  worker.interrupt();
+  worker.join();
+}
+
+TEST(QiSession, RegisterUnregisterTwoSessionStruct)
+{
+  int a = 1000;
+  TestSessionPair p;
+  EXPECT_TRUE(p.client()->isConnected());
+
+  boost::thread worker(boost::bind(&alternateModule, p.server()));
+  while (a) {
+    a--;
+    qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
+    if (fut.hasError()) {
+      std::cout << "Call error:" << fut.error() << std::endl;
+      continue;
+    }
+    MyStruct ms;
+    ms.i = 32;
+    ms.j = 42;
+    ms.titi = "tutu";
+    qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+    ret.wait();
+    if (ret.hasError()) {
+      std::cout << "returned an error:" << fut.error() << std::endl;
+      continue;
+    }
+    ASSERT_EQ(ms.i, ret.value().i);
+    ASSERT_EQ(ms.j, ret.value().j);
+    ASSERT_EQ(ms.titi, ret.value().titi);
+    std::cout << "returned" << std::endl;
+  }
+  worker.interrupt();
+  worker.join();
+}
+
+
+TEST(QiSession, RegisterUnregisterSameSessionStruct)
+{
+  int a = 1000;
+  TestSessionPair p;
+  EXPECT_TRUE(p.client()->isConnected());
+
+  boost::thread worker(boost::bind(&alternateModule, p.server()));
+  while (a) {
+    a--;
+    qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
+    if (fut.hasError()) {
+      std::cout << "Call error:" << fut.error() << std::endl;
+      continue;
+    }
+    MyStruct ms;
+    ms.i = 32;
+    ms.j = 42;
+    ms.titi = "tutu";
+    qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+    ret.wait();
+    if (ret.hasError()) {
+      std::cout << "returned an error:" << fut.error() << std::endl;
+      continue;
+    }
+    ASSERT_EQ(ms.i, ret.value().i);
+    ASSERT_EQ(ms.j, ret.value().j);
+    ASSERT_EQ(ms.titi, ret.value().titi);
+    std::cout << "returned" << std::endl;
   }
   worker.interrupt();
   worker.join();
