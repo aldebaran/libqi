@@ -44,13 +44,13 @@ void alternateModule(qi::Session *session) {
       continue;
     }
     std::cout << "Service TestToto registered" << std::endl;
+    qi::os::msleep(50);
     qi::Future<void> futun = session->unregisterService(fut.value());
     if (futun.hasError()) {
       std::cout << "Error unregistering service: " << futun.error() << std::endl;
       continue;
     }
     std::cout << "Service TestToto unregistered" << std::endl;
-    qi::os::msleep(50);
   }
 }
 
@@ -66,7 +66,7 @@ TEST(QiSession, RegisterUnregisterTwoSession)
     a--;
     qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
     if (fut.hasError()) {
-      std::cout << "Call error:" << fut.error();
+      std::cout << "Call error:" << fut.error() << std::endl;
       continue;
     }
     std::string ret = fut.value()->call<std::string>("reply", "plif");
