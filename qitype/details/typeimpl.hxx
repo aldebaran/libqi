@@ -114,20 +114,18 @@ public:
   {
     void* result = 0;
     T* tresult=(T*)(void*)&result;
+    detail::TypeManager<T>::createInPlace(tresult);
+
     if (ptr)
-    {
       detail::TypeManager<T>::copy(tresult, (T*)ptr);
-      return result;
-    }
-    else
-    {
-      detail::TypeManager<T>::createInPlace(tresult);
-      return result;
-    }
+
+    return result;
   }
   static void* clone(void* src)
   {
-    return src;
+    void* s = initializeStorage();
+    detail::TypeManager<T>::copy(&s, &src);
+    return s;
   }
 
   static void destroy(void* storage)
