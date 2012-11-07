@@ -20,6 +20,16 @@ namespace qi
   SDKLayout* gInstance = NULL;
   SDKLayout* getInstance();
 
+  //only needed to make valgrind happy.
+  static void cleanupSdkLayout() {
+    if (!qi::os::getenv("VALGRIND").empty()) {
+      delete gInstance;
+      gInstance = 0;
+    }
+  }
+
+  QI_AT_EXIT(&cleanupSdkLayout);
+
   namespace path
   {
 
