@@ -166,6 +166,11 @@ namespace qi {
       textColorAttr(reset);
     }
 
+    ConsoleLogHandler::~ConsoleLogHandler()
+    {
+      delete _private;
+    }
+
     ConsoleLogHandler::ConsoleLogHandler()
       : _private(new PrivateConsoleLogHandler)
     {

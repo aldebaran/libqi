@@ -25,6 +25,7 @@ namespace qi {
     {
     public:
       ConsoleLogHandler();
+      ~ConsoleLogHandler();
 
       void log(const qi::log::LogLevel verb,
                const qi::os::timeval   date,
