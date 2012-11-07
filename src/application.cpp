@@ -11,6 +11,7 @@
 #include <qi/os.hpp>
 #include <qi/log.hpp>
 #include <qi/path.hpp>
+#include <src/sdklayout.hpp>
 #include <numeric>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
@@ -251,6 +252,10 @@ namespace qi {
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
     globalCond.notify_all();
+
+    // Delete global variable used in qi::path
+    extern qi::SDKLayout* gInstance;
+    delete gInstance;
   }
 
   static void initSigIntSigTermCatcher() {
