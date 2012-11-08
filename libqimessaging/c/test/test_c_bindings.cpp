@@ -154,7 +154,7 @@ TEST(TestCBindings, Call)
   remote = qi_session_get_service(client_session, "serviceTest");
   ASSERT_TRUE(remote != 0);
 
-  ASSERT_TRUE(qi_session_get_service(client_session, "pute") == 0);
+  ASSERT_TRUE(qi_session_get_service(client_session, "I don't exist") == 0);
 
   message = qi_message_create();
   ASSERT_TRUE(message != 0);
