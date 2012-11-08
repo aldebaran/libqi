@@ -50,6 +50,8 @@ namespace qi {
 
       void setValue(qi::Future<T> future, const ValueType &value)
       {
+        if (wait(-1))
+          throw std::runtime_error("Future value already set.");
         _value = value;
         reportReady();
         _onResult(future);
