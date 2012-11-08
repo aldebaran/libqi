@@ -19,6 +19,14 @@
  */
 
 /**
+ * \fn qi::Application::~Application()
+ * \brief Application destructor. It executes atExit() callbacks.
+ * \see qi:Application::atExit
+ * \see QI_AT_EXIT
+ * \ingroup qi::Application
+ */
+
+/**
  * \fn bool qi::Application::initialized()
  * \brief Return whether the Application instance was created.
  * \ingroup qi::Application
