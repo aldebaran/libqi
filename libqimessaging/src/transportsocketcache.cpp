@@ -40,7 +40,7 @@ namespace qi {
   }
 
   //return a connected TransportSocket for the given endpoint
-  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const std::string &endpoint)
+  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const qi::Url &endpoint)
   {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
@@ -56,26 +56,25 @@ namespace qi {
         if (tsc.promise.future().hasError()) {
           //reset the promise, we are trying again.
           tsc.promise.reset();
-          socket->connect(qi::Url(endpoint));
+          socket->connect(endpoint);
         }
         return tsc.promise.future();
       }
 
-      qi::Url                             url(endpoint);
-      qi::TransportSocketPtr              socket = makeTransportSocket(url.protocol());
+      qi::TransportSocketPtr              socket = makeTransportSocket(endpoint.protocol());
       qi::Promise<qi::TransportSocketPtr> prom;
       TransportSocketConnection &tsc = _sockets[endpoint];
       tsc.connectLink    = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, endpoint));
       tsc.disconnectLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, endpoint));
       tsc.socket = socket;
       tsc.promise = prom;
-      socket->connect(url).async();
+      socket->connect(endpoint).async();
       return prom.future();
     }
   }
 
   //will return the first connected socket among all provided endpoints
-  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const std::vector<std::string> &endpoints) {
+  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const qi::UrlVector &endpoints) {
 
     //TODO: handle multiples endpoints..
     return socket(endpoints.at(0));
@@ -95,7 +94,8 @@ namespace qi {
     //add callback to all
   }
 
-  void TransportSocketCache::onSocketDisconnected(int error, TransportSocketPtr client, const std::string &endpoint) {
+  void TransportSocketCache::onSocketDisconnected(int error, TransportSocketPtr
+  client, const qi::Url &endpoint) {
     qi::Promise<TransportSocketPtr> prom;
     int setprom = 0;
     {
@@ -109,12 +109,12 @@ namespace qi {
     }
     if (setprom) {
       std::stringstream ss;
-      ss << "Connection to " << endpoint << " failed.";
+      ss << "Connection to " << endpoint.str() << " failed.";
       prom.setError(ss.str());
     }
   }
 
-  void TransportSocketCache::onSocketConnected(TransportSocketPtr socket, const std::string &endpoint)
+  void TransportSocketCache::onSocketConnected(TransportSocketPtr socket, const qi::Url &endpoint)
   {
     qi::Promise<TransportSocketPtr> prom;
     int setprom = 0;

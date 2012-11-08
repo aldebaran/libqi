@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include <qitype/type.hpp>
+
 namespace qi {
   class UrlPrivate {
   public:

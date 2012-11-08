@@ -14,6 +14,7 @@
 #include <qitype/signature.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/datastream.hpp>
+#include <qimessaging/url.hpp>
 
 namespace qi
 {
@@ -31,14 +32,14 @@ namespace qi
     void setServiceId(unsigned int serviceId);
     void setMachineId(const std::string& machineId);
     void setProcessId(unsigned int processId);
-    void setEndpoints(const std::vector<std::string>& endpoints);
-    void addEndpoint(const std::string& endpoints);
+    void setEndpoints(const qi::UrlVector& endpoints);
+    void addEndpoint(const qi::Url& endpoint);
 
     const std::string& name() const;
     unsigned int serviceId() const;
     const std::string& machineId() const;
     unsigned int processId() const;
-    const std::vector<std::string>& endpoints() const;
+    const qi::UrlVector& endpoints() const;
 
     ServiceInfoPrivate* _p;
 

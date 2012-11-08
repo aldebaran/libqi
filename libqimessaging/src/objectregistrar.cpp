@@ -105,14 +105,7 @@ namespace qi {
     si.setName(name);
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
-
-    std::vector<qi::Url>                 epsUrl = Server::endpoints();
-    std::vector<qi::Url>::const_iterator epsUrlIt;
-    std::vector<std::string> eps;
-    for (epsUrlIt = epsUrl.begin(); epsUrlIt != epsUrl.end(); epsUrlIt++) {
-      eps.push_back((*epsUrlIt).str());
-    }
-    si.setEndpoints(eps);
+    si.setEndpoints(Server::endpoints());
 
     long id = ++_registerServiceRequestIndex;
     {

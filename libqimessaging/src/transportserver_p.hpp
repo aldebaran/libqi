@@ -42,7 +42,7 @@ namespace qi {
     boost::mutex                            mutexCallback;
     qi::EventLoop                          *context;
     qi::Url                                 listenUrl;
-    std::vector<qi::Url>                    _endpoints;
+    qi::UrlVector                           _endpoints;
 
   protected:
     TransportServerPrivate()

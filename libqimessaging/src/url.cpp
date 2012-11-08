@@ -37,6 +37,10 @@ namespace qi {
     return *this;
   }
 
+  bool Url::operator< (const Url &rhs) const {
+    return (this->str() < rhs.str());
+  }
+
   bool Url::isValid() const {
     return _p->isValid();
   }
@@ -125,3 +129,11 @@ namespace qi {
     protocol = _protocol;
   }
 }
+
+static qi::UrlPrivate* urlPrivate(qi::Url* url) {
+  return url->_p;
+}
+
+QI_TYPE_STRUCT(qi::UrlPrivate, url, protocol, host, port);
+QI_TYPE_REGISTER(::qi::UrlPrivate);
+QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::Url, ::qi::UrlPrivate, urlPrivate);

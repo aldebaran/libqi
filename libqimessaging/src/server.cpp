@@ -178,7 +178,7 @@ namespace qi {
     }
   }
 
-  std::vector<qi::Url> Server::endpoints() const {
+  qi::UrlVector Server::endpoints() const {
     return _server.endpoints();
   }
 

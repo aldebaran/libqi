@@ -8,10 +8,10 @@
 # define _QIMESSAGING_SERVICEINFO_P_HPP_
 
 # include <string>
-# include <vector>
 
 # include <qitype/type.hpp>
 # include <qimessaging/serviceinfo.hpp>
+# include <qimessaging/url.hpp>
 
 namespace qi
 {
@@ -24,7 +24,7 @@ namespace qi
     unsigned int serviceId;
     std::string machineId;
     unsigned int processId;
-    std::vector<std::string> endpoints;
+    qi::UrlVector endpoints;
   };
 }
 

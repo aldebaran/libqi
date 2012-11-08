@@ -41,17 +41,17 @@ namespace qi {
     void init();
     void close();
 
-    qi::Future<qi::TransportSocketPtr> socket(const std::string &endpoint);
-    qi::Future<qi::TransportSocketPtr> socket(const std::vector<std::string> &endpoints);
+    qi::Future<qi::TransportSocketPtr> socket(const qi::Url &endpoint);
+    qi::Future<qi::TransportSocketPtr> socket(const qi::UrlVector &endpoints);
 
   protected:
     //TransportSocket
-    void onSocketConnected(TransportSocketPtr client, const std::string &endpoint);
-    void onSocketDisconnected(int error, TransportSocketPtr client, const std::string &endpoint);
+    void onSocketConnected(TransportSocketPtr client, const qi::Url &endpoint);
+    void onSocketDisconnected(int error, TransportSocketPtr client, const qi::Url &endpoint);
 
   private:
     //maintain a cache of remote connections
-    typedef std::map< std::string, TransportSocketConnection > TransportSocketConnectionMap;
+    typedef std::map< qi::Url, TransportSocketConnection > TransportSocketConnectionMap;
     TransportSocketConnectionMap _sockets;
     boost::mutex                 _socketsMutex;
     bool                         _dying;

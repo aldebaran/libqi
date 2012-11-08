@@ -43,11 +43,11 @@ namespace qi
     _p->processId = processId;
   }
 
-  void ServiceInfo::setEndpoints(const std::vector<std::string>& endpoints) {
+  void ServiceInfo::setEndpoints(const qi::UrlVector& endpoints) {
     _p->endpoints = endpoints;
   }
 
-  void ServiceInfo::addEndpoint(const std::string& endpoint) {
+  void ServiceInfo::addEndpoint(const qi::Url& endpoint) {
     _p->endpoints.push_back(endpoint);
   }
 
@@ -67,7 +67,7 @@ namespace qi
     return _p->processId;
   }
 
-  const std::vector<std::string>& ServiceInfo::endpoints() const {
+  const qi::UrlVector& ServiceInfo::endpoints() const {
     return _p->endpoints;
   }
 

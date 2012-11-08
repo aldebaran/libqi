@@ -7,8 +7,10 @@
 #ifndef _QIMESSAGING_URL_HPP_
 #define _QIMESSAGING_URL_HPP_
 
-#include <qimessaging/api.hpp>
 #include <string>
+#include <vector>
+
+#include <qimessaging/api.hpp>
 
 namespace qi {
   class UrlPrivate;
@@ -24,6 +26,8 @@ namespace qi {
     Url(const qi::Url& url);
     Url& operator= (const Url& rhs);
 
+    bool operator< (const Url& rhs) const;
+
     bool isValid() const;
     const std::string& str() const;
 
@@ -31,9 +35,10 @@ namespace qi {
     const std::string& host() const;
     unsigned short port() const;
 
-  private:
     UrlPrivate* _p;
   };
+
+  typedef std::vector<Url> UrlVector;
 }
 
 #endif  // _QIMESSAGING_URL_HPP_

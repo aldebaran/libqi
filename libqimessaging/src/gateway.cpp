@@ -241,21 +241,11 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       }
 
       // save address of the new service
-      std::vector<std::string> endpoints = result.endpoints();
+      qi::UrlVector endpoints = result.endpoints();
       // Construct reply with serviceId
       // and gateway endpoint
-      {
-        std::vector<std::string> eps;
-        std::vector<qi::Url> tsEps = _transportServer->endpoints();
-        for (std::vector<qi::Url>::const_iterator tsEpsIt = tsEps.begin();
-             tsEpsIt != tsEps.end();
-             tsEpsIt++)
-        {
-          eps.push_back((*tsEpsIt).str());
-        }
-        result.setEndpoints(eps);
-        result.setMachineId(qi::os::getMachineId());
-      }
+      result.setEndpoints(_transportServer->endpoints());
+      result.setMachineId(qi::os::getMachineId());
 
       // create new message for the client
       Message  ans(Message::Type_Reply, msg->address());
@@ -554,7 +544,7 @@ qi::Url Gateway::listenUrl() const
   return _p->_transportServer->listenUrl();
 }
 
-std::vector<qi::Url> Gateway::endpoints() const
+qi::UrlVector Gateway::endpoints() const
 {
   return _p->_transportServer->endpoints();
 }

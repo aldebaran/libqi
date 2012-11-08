@@ -42,7 +42,7 @@ namespace qi {
     bool addObject(unsigned int idx, qi::BoundObjectPtr obj);
     bool removeObject(unsigned int idx);
 
-    std::vector<qi::Url> endpoints() const;
+    qi::UrlVector endpoints() const;
 
     void setDefaultCallType(qi::MetaCallType ctype);
 
