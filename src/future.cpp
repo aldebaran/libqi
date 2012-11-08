@@ -51,6 +51,8 @@ namespace qi {
         return true;
       if (msecs > 0)
         _p->_cond.timed_wait(lock, boost::posix_time::milliseconds(msecs));
+      else if (msecs < 0)
+        {} // Do nothing, just return state
       else
         _p->_cond.wait(lock);
       return _p->_isReady || _p->_hasError;
