@@ -46,9 +46,11 @@ TEST(QiSession, simpleConnectionToNonReachableSd)
 TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 {
   qi::Session session;
-  bool connected = session.connect("tcp://0.0.0.0:0");
+  qi::Future<bool> fConnected = session.connect("tcp://0.0.0.0:0");
 
-  EXPECT_FALSE(connected);
+  fConnected.wait();
+
+  EXPECT_TRUE(fConnected.hasError());
   EXPECT_FALSE(session.isConnected());
 
   session.close();
@@ -58,9 +60,11 @@ TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 TEST(QiSession, simpleConnectionToInvalidSd)
 {
   qi::Session session;
-  bool connected = session.connect("invalidAddress");
+  qi::Future<bool> fConnected = session.connect("invalidAddress");
 
-  EXPECT_FALSE(connected);
+  fConnected.wait();
+
+  EXPECT_FALSE(fConnected.value());
   EXPECT_FALSE(session.isConnected());
 
   session.close();
@@ -96,8 +100,7 @@ TEST(QiSession, testClose)
   session.close();
   EXPECT_FALSE(session.isConnected());
 
-  std::vector<qi::ServiceInfo> services = session.services();
-  EXPECT_EQ(0U, services.size());
+  EXPECT_ANY_THROW(session.services().value());
 
   connected = session.connect(sd.listenUrl());
   ASSERT_TRUE(connected);
@@ -124,8 +127,9 @@ TEST(QiSession, getUnregisterService)
 {
   TestSessionPair p;
 
-  qi::ObjectPtr object = p.client()->service("windowsVista(c)");
-  EXPECT_FALSE(object);
+  EXPECT_ANY_THROW({
+    qi::ObjectPtr object = p.client()->service("windowsVista(c)");
+  });
 
   p.client()->close();
   EXPECT_FALSE(p.client()->isConnected());
@@ -143,11 +147,11 @@ TEST(QiSession, getCloseService)
   p.server()->waitForServiceReady("serviceTest");
   p.server()->close();
 
-  qi::ObjectPtr object = p.client()->service("serviceTest");
-
   // Todo later, expect same behavior.
   if (TestMode::getTestMode() != TestMode::Mode_Direct)
-    EXPECT_FALSE(object);
+  {
+    EXPECT_ANY_THROW({p.client()->service("serviceTest").value();});
+  }
 
   p.client()->close();
   EXPECT_FALSE(p.client()->isConnected());
@@ -171,7 +175,7 @@ TEST(QiSession, AlreadyRegistered)
   EXPECT_TRUE(session->listen("tcp://0.0.0.0:0"));
 
   ASSERT_GT(session->registerService("service", obj), 0);
-  ASSERT_LE(session->registerService("service", obj), 0);
+  EXPECT_ANY_THROW({session->registerService("service", obj).value();});
 
   delete session;
 }
