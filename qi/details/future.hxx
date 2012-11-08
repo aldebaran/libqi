@@ -9,7 +9,7 @@
 
 #include <vector>
 #include <utility> // pair
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
 
 namespace qi {
@@ -26,7 +26,7 @@ namespace qi {
       bool hasError(int msecs = 30000) const;
       const std::string &error() const;
       void reset();
-      boost::mutex& mutex();
+      boost::recursive_mutex& mutex();
     protected:
       void reportReady();
       void reportError(const std::string &message);
@@ -52,6 +52,10 @@ namespace qi {
       {
         if (wait(-1))
           throw std::runtime_error("Future value already set.");
+        // report-ready + onResult() must be atomic to avoid
+        // missing callbacks/double calls in case connect() is invoked at
+        // the same time
+        boost::recursive_mutex::scoped_lock lock(mutex());
         _value = value;
         reportReady();
         _onResult(future);
@@ -70,7 +74,7 @@ namespace qi {
         bool ready;
         Connection res;
         {
-          boost::mutex::scoped_lock lock(mutex());
+          boost::recursive_mutex::scoped_lock lock(mutex());
           res = _onResult.connect(s);
           ready = isReady();
         }

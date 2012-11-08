@@ -16,8 +16,8 @@ namespace qi {
     class FutureBasePrivate {
     public:
       FutureBasePrivate();
-      boost::condition_variable _cond;
-      boost::mutex              _mutex;
+      boost::condition_variable_any _cond;
+      boost::recursive_mutex    _mutex;
       std::string               _error;
       bool                      _isReady;
       bool                      _hasError;
@@ -46,7 +46,7 @@ namespace qi {
       static bool detectEventLoopWait = !os::getenv("QI_DETECT_FUTURE_WAIT_FROM_NETWORK_EVENTLOOP").empty();
       if (detectEventLoopWait && getDefaultNetworkEventLoop()->isInEventLoopThread())
         qiLogWarning("qi.future") << "Future wait in network thread.";
-      boost::mutex::scoped_lock lock(_p->_mutex);
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       if (_p->_isReady || _p->_hasError)
         return true;
       if (msecs > 0)
@@ -59,7 +59,7 @@ namespace qi {
     }
 
     void FutureBase::reportReady() {
-      boost::mutex::scoped_lock lock(_p->_mutex);
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       _p->_isReady = true;
     }
 
@@ -68,7 +68,7 @@ namespace qi {
     }
 
     void FutureBase::reportError(const std::string &message) {
-      boost::mutex::scoped_lock lock(_p->_mutex);
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       _p->_hasError = true;
       _p->_isReady = true;
       _p->_error = message;
@@ -90,13 +90,13 @@ namespace qi {
 
 
     void FutureBase::reset() {
-      boost::mutex::scoped_lock lock(_p->_mutex);
+      boost::recursive_mutex::scoped_lock lock(_p->_mutex);
       _p->_isReady = false;
       _p->_error = std::string();
       _p->_hasError = false;
     }
 
-    boost::mutex& FutureBase::mutex()
+    boost::recursive_mutex& FutureBase::mutex()
     {
       return _p->_mutex;
     }
