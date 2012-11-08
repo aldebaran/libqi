@@ -79,13 +79,19 @@ TEST(QiSession, RegisterUnregisterTwoSession)
   boost::thread worker(boost::bind(&alternateModule, p.server()));
   while (a) {
     a--;
-    qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
-    if (fut.hasError()) {
-      std::cout << "Call error:" << fut.error() << std::endl;
-      continue;
+    try {
+      qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
+      if (fut.hasError()) {
+        std::cout << "Call error:" << fut.error() << std::endl;
+        continue;
+      }
+      std::string ret = fut.value()->call<std::string>("reply", "plif");
+      std::cout << "ret:" << ret << std::endl;
     }
-    std::string ret = fut.value()->call<std::string>("reply", "plif");
-    std::cout << "ret:" << ret << std::endl;
+    catch(const std::exception& e)
+    {
+      std::cout << "Call exception: " << e.what() << std::endl;
+    }
   }
   worker.interrupt();
   worker.join();
@@ -101,13 +107,20 @@ TEST(QiSession, RegisterUnregisterSameSession)
   boost::thread worker(boost::bind(&alternateModule, p.server()));
   while (a) {
     a--;
-    qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
-    if (fut.hasError()) {
-      std::cout << "Call error:" << fut.error() << std::endl;
-      continue;
+    try
+    {
+      qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
+      if (fut.hasError()) {
+        std::cout << "Call error:" << fut.error() << std::endl;
+        continue;
+      }
+      std::string ret = fut.value()->call<std::string>("reply", "plif");
+      std::cout << "ret:" << ret << std::endl;
     }
-    std::string ret = fut.value()->call<std::string>("reply", "plif");
-    std::cout << "ret:" << ret << std::endl;
+    catch(const std::exception& e)
+    {
+      std::cout << "Call exception: " << e.what() << std::endl;
+    }
   }
   worker.interrupt();
   worker.join();
@@ -122,25 +135,32 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
   boost::thread worker(boost::bind(&alternateModule, p.server()));
   while (a) {
     a--;
-    qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
-    if (fut.hasError()) {
-      std::cout << "Call error:" << fut.error() << std::endl;
+    try
+    {
+      qi::Future<qi::ObjectPtr> fut = p.client()->service("TestToto");
+      if (fut.hasError()) {
+        std::cout << "Call error:" << fut.error() << std::endl;
+        continue;
+      }
+      MyStruct ms;
+      ms.i = 32;
+      ms.j = 42;
+      ms.titi = "tutu";
+      qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+      ret.wait();
+      if (ret.hasError()) {
+        std::cout << "returned an error:" << fut.error() << std::endl;
       continue;
+      }
+      ASSERT_EQ(ms.i, ret.value().i);
+      ASSERT_EQ(ms.j, ret.value().j);
+      ASSERT_EQ(ms.titi, ret.value().titi);
+      std::cout << "returned" << std::endl;
     }
-    MyStruct ms;
-    ms.i = 32;
-    ms.j = 42;
-    ms.titi = "tutu";
-    qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
-    ret.wait();
-    if (ret.hasError()) {
-      std::cout << "returned an error:" << fut.error() << std::endl;
-      continue;
+     catch(const std::exception& e)
+    {
+      std::cout << "Call exception: " << e.what() << std::endl;
     }
-    ASSERT_EQ(ms.i, ret.value().i);
-    ASSERT_EQ(ms.j, ret.value().j);
-    ASSERT_EQ(ms.titi, ret.value().titi);
-    std::cout << "returned" << std::endl;
   }
   worker.interrupt();
   worker.join();
@@ -156,25 +176,32 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
   boost::thread worker(boost::bind(&alternateModule, p.server()));
   while (a) {
     a--;
-    qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
-    if (fut.hasError()) {
-      std::cout << "Call error:" << fut.error() << std::endl;
-      continue;
+    try
+    {
+      qi::Future<qi::ObjectPtr> fut = p.server()->service("TestToto");
+      if (fut.hasError()) {
+        std::cout << "Call error:" << fut.error() << std::endl;
+        continue;
+      }
+      MyStruct ms;
+      ms.i = 32;
+      ms.j = 42;
+      ms.titi = "tutu";
+      qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
+      ret.wait();
+      if (ret.hasError()) {
+        std::cout << "returned an error:" << fut.error() << std::endl;
+        continue;
+      }
+      ASSERT_EQ(ms.i, ret.value().i);
+      ASSERT_EQ(ms.j, ret.value().j);
+      ASSERT_EQ(ms.titi, ret.value().titi);
+      std::cout << "returned" << std::endl;
     }
-    MyStruct ms;
-    ms.i = 32;
-    ms.j = 42;
-    ms.titi = "tutu";
-    qi::Future<MyStruct> ret = fut.value()->call<MyStruct>("reply2", ms);
-    ret.wait();
-    if (ret.hasError()) {
-      std::cout << "returned an error:" << fut.error() << std::endl;
-      continue;
+    catch(const std::exception& e)
+    {
+      std::cout << "Call exception: " << e.what() << std::endl;
     }
-    ASSERT_EQ(ms.i, ret.value().i);
-    ASSERT_EQ(ms.j, ret.value().j);
-    ASSERT_EQ(ms.titi, ret.value().titi);
-    std::cout << "returned" << std::endl;
   }
   worker.interrupt();
   worker.join();
