@@ -71,6 +71,7 @@ TEST(TestMessage, SimpleRead)
   int magic = 0x42DEAD42;
   unsigned int size = 0;
   char *data = (char *) malloc(4);
+  char *str = 0;
   memcpy(data, &magic, 4);
   magic = 0;
   ASSERT_TRUE(data != 0);
@@ -95,7 +96,7 @@ TEST(TestMessage, SimpleRead)
   qi_message_write_double(m, 2.42);
   qi_message_write_string(m, "Easter Egg\t");
   qi_message_write_raw(m, data, 4);
-
+  free(data);
 
   ASSERT_TRUE((bool) qi_message_read_bool(m));
   ASSERT_EQ(97, qi_message_read_int8(m));
@@ -112,13 +113,17 @@ TEST(TestMessage, SimpleRead)
   ASSERT_TRUE(qi_message_read_uint64(m) == 4294967297);
   ASSERT_EQ(3.14957f, qi_message_read_float(m));
   ASSERT_EQ(2.42, qi_message_read_double(m));
-  ASSERT_EQ(0, strcmp(qi_message_read_string(m), "Easter Egg\t"));
+  str = qi_message_read_string(m);
+  ASSERT_NE(str, (char *) 0);
+  ASSERT_EQ(0, strcmp(str, "Easter Egg\t"));
   data = qi_message_read_raw(m, &size);
   memcpy(&magic, data, 4);
   ASSERT_EQ(0x42DEAD42, magic);
   ASSERT_EQ((unsigned int) 4, size);
 
   qi_message_destroy(m);
+  qi_message_free_raw(data);
+  qi_message_free_string(str);
 }
 
 TEST(TestMessage, TestList)
@@ -205,4 +210,5 @@ TEST(TestMessage, TestMap)
   }
 
   qi_message_destroy(m);
+  value.erase(value.begin(), value.end());
 }
