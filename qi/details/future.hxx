@@ -21,9 +21,9 @@ namespace qi {
     public:
       FutureBase();
       ~FutureBase();
-      bool wait(int msecs = 30000) const;
+      bool wait(int msecs = 0) const;
       bool isReady() const;
-      bool hasError(int msecs = 30000) const;
+      bool hasError(int msecs = 0) const;
       const std::string &error() const;
       void reset();
       boost::recursive_mutex& mutex();
