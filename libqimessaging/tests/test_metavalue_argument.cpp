@@ -19,25 +19,21 @@
 
 
 qi::GenericValue v;
-static qi::Promise<int> *payload;
 
 void onFire(const int& pl)
 {
   std::cout << "onFire:" << pl << std::endl;
   std::cout.flush();
-  payload->setValue(pl);
 }
 
 void value(qi::GenericValue mv)
 {
   v = mv.clone();
-  payload->setValue(0);
 }
 
 void valueList(std::vector<qi::GenericValue> mv)
 {
   v = qi::GenericValue::from(mv).clone();
-  payload->setValue(0);
 }
 
 class TestObject: public ::testing::Test
@@ -65,12 +61,10 @@ protected:
     std::vector<qi::ServiceInfo> services = sclient.services();
     EXPECT_EQ(2U, services.size());
     oclient = sclient.service("coin");
-    payload = &prom;
   }
 
   void TearDown()
   {
-    payload = 0;
     sclient.close();
     session.close();
     sd.close();
