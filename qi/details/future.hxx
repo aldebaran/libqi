@@ -91,8 +91,8 @@ namespace qi {
       }
 
 
-      const ValueType &value() const    { wait(); return _value; }
-      ValueType &value()                { wait(); return _value; }
+      const ValueType &value() const    { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
+      ValueType &value()                { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
 
     private:
       boost::signals2::signal<void (qi::Future<T>)>  _onResult;

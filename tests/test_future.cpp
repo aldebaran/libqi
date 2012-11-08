@@ -334,6 +334,25 @@ TEST(TestFutureTrack, ConnectTrack3)
   ASSERT_EQ(0, res);
 }
 
+TEST(TestFutureError, MultipleSetValue)
+{
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  p.setValue(0);
+  p.reset();
+  p.setError("");
+  p.reset();
+  p.setValue(1);
+  EXPECT_ANY_THROW({ p.setValue(0);});
+}
+
+TEST(TestFutureError, ValueOnError)
+{
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  p.setError("foo");
+  EXPECT_ANY_THROW({ f.value();});
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
