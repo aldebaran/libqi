@@ -35,10 +35,14 @@ namespace qi
         break;
       case OutputType_Normal:
         {
-          _p->getOut() << projectName << ": " << executableName << std::endl
-                       << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
+          // Nothing
         }
         break;
+    }
+
+    {
+      _p->getNormalOut() << projectName << ": " << executableName << std::endl
+        << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
     }
   }
 
@@ -51,7 +55,9 @@ namespace qi
         }
         break;
       case OutputType_Normal:
-        { }
+        {
+          // Nothing
+        }
         break;
     }
 
@@ -69,26 +75,29 @@ namespace qi
                        << "\" result_value=\"" << std::fixed << std::setprecision(6) << data.getPeriod() << "\" />" << std::endl;
         }
         break;
-
       case OutputType_Normal:
         {
-          _p->getOut() << data.getBenchmarkName() << ": ";
-          if (data.getMsgSize() > 0) {
-            _p->getOut()
-              << std::fixed << std::setprecision(2) << data.getMsgSize() << " b, "
-              << data.getMsgPerSecond() << " msg/s, "
-              << std::setprecision(12) << data.getMegaBytePerSecond() << " MB/s, "
-              << std::setprecision(0) << data.getPeriod() << " us, "
-              << std::setprecision(1) << data.getCpu() << " %"
-              << std::endl;
-          } else {
-            _p->getOut()
-              << std::setprecision(12) << data.getMsgPerSecond() << " msg/s, "
-              << data.getCpu() << " %"
-              << std::endl;
-          }
+          // Nothing
         }
         break;
+    }
+
+    {
+      _p->getNormalOut() << data.getBenchmarkName() << ": ";
+      if (data.getMsgSize() > 0) {
+        _p->getOut()
+          << std::fixed << std::setprecision(2) << data.getMsgSize() << " b, "
+          << data.getMsgPerSecond() << " msg/s, "
+          << std::setprecision(12) << data.getMegaBytePerSecond() << " MB/s, "
+          << std::setprecision(0) << data.getPeriod() << " us, "
+          << std::setprecision(1) << data.getCpu() << " %"
+          << std::endl;
+      } else {
+        _p->getNormalOut()
+          << std::setprecision(12) << data.getMsgPerSecond() << " msg/s, "
+          << data.getCpu() << " %"
+          << std::endl;
+      }
     }
 
     return *this;
@@ -97,6 +106,11 @@ namespace qi
   std::ostream& DataPerfSuitePrivate::getOut()
   {
     return (out.is_open() ? out : std::cout);
+  }
+
+  std::ostream& DataPerfSuitePrivate::getNormalOut()
+  {
+    return ((outputType == DataPerfSuite::OutputType_Normal) ? getOut() : std::cout);
   }
 }
 
