@@ -7,20 +7,26 @@
 #ifndef  TRANSPORT_CACHE_HPP_
 # define TRANSPORT_CACHE_HPP_
 
-#include <qimessaging/transportsocket.hpp>
-#include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
+#include <qi/future.hpp>
+#include <qimessaging/serviceinfo.hpp>
+#include <qimessaging/transportsocket.hpp>
 #include <string>
 
 namespace qi {
 
   struct TransportSocketConnection {
+    qi::Url                             url;
     qi::TransportSocketPtr              socket;
     qi::Promise<qi::TransportSocketPtr> promise;
-    int                                 attempts;
-    int                                 success;
     unsigned int                        connectLink;
     unsigned int                        disconnectLink;
+  };
+
+  struct TransportSocketConnectionAttempt {
+    qi::Promise<qi::TransportSocketPtr> promise;
+    unsigned int socket_count;
+    bool successful;
   };
 
   /**
@@ -41,22 +47,25 @@ namespace qi {
     void init();
     void close();
 
-    qi::Future<qi::TransportSocketPtr> socket(const qi::Url &endpoint);
-    qi::Future<qi::TransportSocketPtr> socket(const qi::UrlVector &endpoints);
+    qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo);
 
   protected:
     //TransportSocket
-    void onSocketConnected(TransportSocketPtr client, const qi::Url &endpoint);
-    void onSocketDisconnected(int error, TransportSocketPtr client, const qi::Url &endpoint);
+    void onSocketConnected(TransportSocketPtr client, const ServiceInfo &servInfo, const Url &url);
+    void onSocketDisconnected(int error, TransportSocketPtr client, const ServiceInfo &servInfo, const Url& url);
 
   private:
     //maintain a cache of remote connections
-    typedef std::map< qi::Url, TransportSocketConnection > TransportSocketConnectionMap;
-    TransportSocketConnectionMap _sockets;
-    boost::mutex                 _socketsMutex;
-    bool                         _dying;
-  };
+    typedef std::map< std::string, TransportSocketConnection > TransportSocketConnectionMap;
+    typedef std::map< std::string, TransportSocketConnectionMap > MachineConnectionMap;
+    typedef std::map< std::string, TransportSocketConnectionAttempt > MachineAttemptsMap;
 
-};
+    bool _dying;
+    boost::mutex _socketsMutex;
+
+    MachineAttemptsMap _attempts;
+    MachineConnectionMap _sockets;
+  };
+}
 
 #endif   /* !TRANSPORT_CACHE_PP_ */

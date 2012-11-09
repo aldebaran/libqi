@@ -178,7 +178,7 @@ namespace qi {
       return;
     }
 
-    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si.endpoints());
+    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si);
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 

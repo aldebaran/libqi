@@ -20,7 +20,7 @@ namespace qi {
   void TransportSocketCache::close() {
     {
       _dying = true;
-      TransportSocketConnectionMap socketsCopy;
+      MachineConnectionMap socketsCopy;
       {
         // Do not hold _socketsMutex while iterating or deadlock may occurr
         // between disconnect() that waits for callback handler
@@ -28,108 +28,187 @@ namespace qi {
         boost::mutex::scoped_lock sl(_socketsMutex);
         socketsCopy = _sockets;
       }
-      TransportSocketConnectionMap::iterator it;
-      for (it = socketsCopy.begin(); it != socketsCopy.end(); ++it) {
-        it->second.socket->disconnected.disconnect(it->second.disconnectLink);
-        it->second.socket->connected.disconnect(it->second.connectLink);
-        //remove callback before calling disconnect. (we dont need them)
-        it->second.socket->disconnect();
-        it->second.promise.setError("session closed");
+      MachineConnectionMap::iterator mcmIt;
+      for (mcmIt = socketsCopy.begin(); mcmIt != socketsCopy.end(); ++mcmIt) {
+        TransportSocketConnectionMap& tscm = mcmIt->second;
+        TransportSocketConnectionMap::iterator tscmIt;
+        for (tscmIt = tscm.begin(); tscmIt != tscm.end(); ++tscmIt) {
+          TransportSocketConnection& tsc = tscmIt->second;
+          tsc.socket->disconnected.disconnect(tscmIt->second.disconnectLink);
+          tsc.socket->connected.disconnect(tscmIt->second.connectLink);
+          //remove callback before calling disconnect. (we dont need them)
+          if (tscmIt->second.socket->isConnected())
+            tscmIt->second.socket->disconnect();
+          tscmIt->second.promise.setError("session closed");
+        }
       }
     }
   }
 
-  //return a connected TransportSocket for the given endpoint
-  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const qi::Url &endpoint)
-  {
+  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo) {
+    qi::UrlVector endpoints;
+    qi::UrlVector::const_iterator urlIt;
+
+    bool local = servInfo.machineId() == qi::os::getMachineId();
+
+    // RFC 3330 - http://tools.ietf.org/html/rfc3330
+    //   -> 127.0.0.0/8 is assigned to loopback address.
+    //
+    // This filters endpoints. If we are on the same machine, we just try to
+    // connect on the loopback address, else we will try on all endpoints we
+    // have that are not loopback.
+    for (urlIt = servInfo.endpoints().begin(); urlIt != servInfo.endpoints().end(); ++urlIt) {
+      qi::Url url = *urlIt;
+      if (!url.isValid())
+        continue;
+      if (url.host().substr(0, 4) == "127.") {
+        if (local) {
+          endpoints.push_back(url);
+          break;
+        }
+      } else if (!local) {
+        endpoints.push_back(url);
+      }
+    }
+
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
       if (_dying)
-        return qi::makeFutureError<qi::TransportSocketPtr>("TransportSocketCache is closed");
+        return qi::makeFutureError<qi::TransportSocketPtr>("TransportSocketCache is closed.");
 
-      TransportSocketConnectionMap::iterator it;
-      it = _sockets.find(endpoint);
-      if (it != _sockets.end()) {
-        TransportSocketConnection &tsc = it->second;
-        qi::TransportSocketPtr    &socket = tsc.socket;
-        //try to reconnect when it's not connected and not connecting.
-        if (tsc.promise.future().hasError()) {
-          //reset the promise, we are trying again.
-          tsc.promise.reset();
-          socket->connect(endpoint);
+      // From here, we will see if we have a pending/established connection to
+      // machineId on one of the endpoints (they all share the same promise
+      // anyway). If it is the case, we return its future.
+      MachineConnectionMap::iterator mcmIt;
+      if ((mcmIt = _sockets.find(servInfo.machineId())) != _sockets.end()) {
+        TransportSocketConnectionMap& tscm = mcmIt->second;
+        TransportSocketConnectionMap::iterator tscmIt;
+        for (urlIt = endpoints.begin(); urlIt != endpoints.end(); ++urlIt) {
+          if ((tscmIt = tscm.find((*urlIt).str())) != tscm.end()) {
+            TransportSocketConnection& tsc = tscmIt->second;
+            if (tsc.promise.future().hasError()) {
+              // When we have a socket with an error, we will try to connect to
+              // all endpoints in case the old one is completely down.
+              continue;
+            }
+            qiLogVerbose("tsc.socket") << "A connection is pending or already"
+                                       << " established.";
+            return tsc.promise.future();
+          }
         }
-        return tsc.promise.future();
       }
 
-      qi::TransportSocketPtr              socket = makeTransportSocket(endpoint.protocol());
+      // Launching connections to all endpoints at the same time. They all share
+      // the same promise.
       qi::Promise<qi::TransportSocketPtr> prom;
-      TransportSocketConnection &tsc = _sockets[endpoint];
-      tsc.connectLink    = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, endpoint));
-      tsc.disconnectLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, endpoint));
-      tsc.socket = socket;
-      tsc.promise = prom;
-      socket->connect(endpoint).async();
+
+      // We will need this to report error (to know if all sockets didn't
+      // connect).
+      TransportSocketConnectionAttempt& tsca = _attempts[servInfo.machineId()];
+      tsca.promise = prom;
+      tsca.socket_count = 0;
+      tsca.successful = false;
+
+      // This part launches all the socket connections on the same promise. The
+      // first socket to connect is the winner.
+      TransportSocketConnectionMap& tscm = _sockets[servInfo.machineId()];
+      for (urlIt = endpoints.begin(); urlIt != endpoints.end(); ++urlIt) {
+        qi::Url url = *urlIt;
+        qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
+        TransportSocketConnection& tsc = tscm[url.str()];
+        qiLogVerbose("tsc.socket") << "Attempting connection to " << url.str()
+                                   << " of machine id " << servInfo.machineId();
+        tsc.socket = socket;
+        tsc.promise = prom;
+        tsc.url = url;
+        tsc.connectLink = socket->connected.connect(boost::bind(&TransportSocketCache::onSocketConnected, this, socket, servInfo, url));
+        tsc.disconnectLink = socket->disconnected.connect(boost::bind(&TransportSocketCache::onSocketDisconnected, this, _1, socket, servInfo, url));
+        socket->connect(url).async();
+        tsca.socket_count++;
+      }
       return prom.future();
-    }
+    } // ! boost::mutex::scoped_lock
   }
 
-  //will return the first connected socket among all provided endpoints
-  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const qi::UrlVector &endpoints) {
-
-    //TODO: handle multiples endpoints..
-    return socket(endpoints.at(0));
-
-    //yes maybe one day we will do some crazy stuff... but tonight...
-    std::list< qi::Future<qi::TransportSocketPtr> > futs;
-
-    for (int i = 0; i == endpoints.size(); ++i) {
-      futs.push_back(socket(endpoints.at(i)));
-    }
-
-    qi::Future<qi::TransportSocketPtr> fut;
-
-    //fut.addCallbacks(this, );
-    //put a futureforwarder.
-    //
-    //add callback to all
-  }
-
-  void TransportSocketCache::onSocketDisconnected(int error, TransportSocketPtr
-  client, const qi::Url &endpoint) {
-    qi::Promise<TransportSocketPtr> prom;
-    int setprom = 0;
+  void TransportSocketCache::onSocketDisconnected(int error, TransportSocketPtr socket, const qi::ServiceInfo& servInfo, const qi::Url& url) {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
-      TransportSocketConnectionMap::iterator it;
-      it = _sockets.find(endpoint);
-      if (it != _sockets.end()) {
-        prom = it->second.promise;
-        setprom = 1;
+
+      // First, we get the attempts of the machineId. It is used to know if we
+      // have pending connections to other endpoints.
+      MachineAttemptsMap::iterator mamIt;
+      if ((mamIt = _attempts.find(servInfo.machineId())) == _attempts.end()) {
+        // Unknown error. This shouldn't happen...
+        return;
       }
-    }
-    if (setprom) {
+      TransportSocketConnectionAttempt& tsca = mamIt->second;
+
+      if (_dying) {
+        tsca.promise.setError("TransportSocketCache is closed.");
+        return;
+      }
+
+      tsca.socket_count--;
+      if (tsca.socket_count != 0) {
+        // We still have some sockets attempting to connect to the service, so
+        // we just ignore this disconnection.
+        return;
+      }
+
+      // No socket can be created, we just return an error.
       std::stringstream ss;
-      ss << "Connection to " << endpoint.str() << " failed.";
-      prom.setError(ss.str());
-    }
+      ss << "Failed to connect to service " << servInfo.name() << " on "
+         << "machine " << servInfo.machineId() << ". All endpoints are "
+         << "unavailable.";
+      tsca.promise.setError(ss.str());
+    } // ! boost::mutex::scoped_lock
   }
 
-  void TransportSocketCache::onSocketConnected(TransportSocketPtr socket, const qi::Url &endpoint)
-  {
-    qi::Promise<TransportSocketPtr> prom;
-    int setprom = 0;
+  /*
+   * Corner case to manage (TODO):
+   *
+   * You are connecting to machineId foo, you are machineId bar. foo and bar are
+   * on different sub-networks with the same netmask. They sadly got the same IP
+   * on their subnet: 192.168.1.42. When trying to connect to foo from bar, we
+   * will try to connect its endpoints, basically:
+   *   - tcp://1.2.3.4:1333 (public IP)
+   *   - tcp://192.168.1.42:1333 (subnet public IP)
+   * If bar is listening on port 1333, we may connect to it instead of foo (our
+   * real target).
+   */
+  void TransportSocketCache::onSocketConnected(TransportSocketPtr socket, const qi::ServiceInfo& servInfo, const qi::Url& url) {
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
-      TransportSocketConnectionMap::iterator it;
-      it = _sockets.find(endpoint);
-      if (it != _sockets.end()) {
-        prom = it->second.promise;
-        setprom = 1;
-      }
-    }
-    if (setprom) {
-      prom.setValue(socket);
-    }
-  }
 
+      MachineAttemptsMap::iterator mamIt;
+      if ((mamIt = _attempts.find(servInfo.machineId())) == _attempts.end()) {
+        // Unknown error. This shouldn't happen...
+        return;
+      }
+      TransportSocketConnectionAttempt& tsca = mamIt->second;
+
+      if (_dying) {
+        tsca.promise.setError("TransportSocketCache is closed.");
+        return;
+      }
+
+      if (tsca.successful) {
+        // If we are already connected to this service, disconnect this socket.
+        tsca.socket_count--;
+        socket->disconnect();
+        return;
+      }
+
+      // Else, we set promise to this socket. We have a winner.
+      MachineConnectionMap::iterator mcmIt;
+      if ((mcmIt = _sockets.find(servInfo.machineId())) != _sockets.end()) {
+        TransportSocketConnectionMap& tscm = mcmIt->second;
+        TransportSocketConnectionMap::iterator tscmIt;
+        if ((tscmIt = tscm.find(url.str())) != tscm.end()) {
+          tscmIt->second.promise.setValue(socket);
+          tsca.successful = true;
+        }
+      }
+    } // ! boost::mutex::scoped_lock
+  }
 }
