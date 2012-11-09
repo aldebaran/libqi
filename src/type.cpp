@@ -389,15 +389,40 @@ namespace qi {
        *(GenericValue*)&result = result.clone();
       return result;
     }
+    void* clone(void* storage)
+    {
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      void* result = initializeStorage();
+      std::vector<void*>& dst = *(std::vector<void*>*)ptrFromStorage(&result);
+      for (unsigned i=0; i<src.size(); ++i)
+        dst.push_back(_elementType->clone(src[i]));
+      return result;
+    }
+    void destroy(void* storage)
+    {
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      for (unsigned i=0; i<src.size(); ++i)
+        _elementType->destroy(src[i]);
+      Methods::destroy(storage);
+    }
+
+    void pushBack(void* storage, void* valueStorage)
+    {
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      src.push_back(_elementType->clone(valueStorage));
+    }
+
     const TypeInfo& info()
     {
       return _info;
     }
+    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
+    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);} \
+    void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
     Type* _elementType;
     std::string _name;
     TypeInfo _info;
-    typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(Methods);
+
   };
 
     // We want exactly one instance per element type
@@ -421,6 +446,9 @@ namespace qi {
   }
 
 
+  /* For performances, our Generic Map uses vector<pair<void*, void*> >
+   * as storage, since we do not require Generic Map to provide a map API.
+  */
   typedef std::vector<std::pair<void*, void*> > DefaultMapStorage;
   // Default map, using a vector<pair<void*, void*> > as storage
   static Type* makeMapIteratorType(Type* kt, Type* et);
@@ -557,15 +585,40 @@ namespace qi {
       DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
       return ptr.size();
     }
+    void destroy(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      for (unsigned i=0; i<ptr.size(); ++i)
+      {
+        _keyType->destroy(ptr[i].first);
+        _elementType->destroy(ptr[i].second);
+      }
+      Methods::destroy(storage);
+    }
+    void* clone(void* storage)
+    {
+      void* result = initializeStorage();
+      DefaultMapStorage& src = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      DefaultMapStorage& dst = *(DefaultMapStorage*)ptrFromStorage(&result);
+      for (unsigned i=0; i<src.size(); ++i)
+        dst.push_back(std::make_pair(
+          _keyType->clone(src[i].first),
+          _elementType->clone(src[i].second)
+          ));
+      return result;
+    }
     const TypeInfo& info()
     {
       return _info;
     }
+    typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
+    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
+    virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
+
     Type* _keyType;
     Type* _elementType;
     TypeInfo _info;
     std::string _name;
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage>);
   };
 
   // We want exactly one instance per element type
@@ -629,8 +682,11 @@ namespace qi {
     }
     virtual void* clone(void* storage)
     {
-      // We fill the vector on demand, nothing to do
-      return Methods::clone(storage);
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      void* result = initializeStorage();
+      for (unsigned i=0; i<src.size(); ++i)
+        set(&result, i, src[i]); // set will clone
+      return result;
     }
     virtual void destroy(void* storage)
     { // destroy elements that have been set
@@ -639,6 +695,7 @@ namespace qi {
       {
         types[i]->destroy(ptr[i]);
       }
+      Methods::destroy(storage);
     }
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
