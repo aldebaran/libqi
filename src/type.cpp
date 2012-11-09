@@ -350,7 +350,7 @@ namespace qi {
     return result;
   }
 
-  class DefaultListType: public TypeListImpl<vector1, void*>
+  class DefaultListType: public TypeListImpl<std::vector<void*> >
   {
   public:
   private:

@@ -10,12 +10,12 @@
 namespace qi
 {
   // List container
-template<template<typename U> class C, typename T> class TypeListImpl:
+template<typename T> class TypeListImpl:
 public TypeList
 {
 public:
-  typedef DefaultTypeImplMethods<typename C<T>::type,
-                               TypeByPointer<typename C<T>::type >
+  typedef DefaultTypeImplMethods<T,
+                               TypeByPointer<T>
                                > MethodsImpl;
   TypeListImpl();
   virtual size_t size(void* storage);
@@ -39,63 +39,63 @@ public:
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
 };
 
-template<template<typename U> class C, typename T>
-TypeListImpl<C, T>::TypeListImpl()
+template<typename T>
+TypeListImpl<T>::TypeListImpl()
 {
   // register our iterator type
-  registerType(typeid(typename C<T>::iterator), new TypeListIteratorImpl<C<T> >());
+  registerType(typeid(typename T::iterator), new TypeListIteratorImpl<T>());
 }
 
-template<template<typename U> class C, typename T> Type*
-TypeListImpl<C, T>::elementType(void*) const
+template<typename T> Type*
+TypeListImpl<T>::elementType(void*) const
 {
-  static Type* result = typeOf<T>();
+  static Type* result = typeOf<typename T::value_type>();
   return result;
 }
 
-template<template<typename U> class C, typename T> GenericListIterator
-TypeListImpl<C, T>::begin(void* storage)
+template<typename T> GenericListIterator
+TypeListImpl<T>::begin(void* storage)
 {
-  static Type* iterType = typeOf<typename C<T>::iterator>();
-  C<T>* ptr = (C<T>*)ptrFromStorage(&storage);
+  static Type* iterType = typeOf<typename T::iterator>();
+  T* ptr = (T*)ptrFromStorage(&storage);
   // ptr->begin() gives us an iterator on the stack.
   // So we need to clone it. Hopefuly sizeof iterator is small, so it fits in
   // a byvalue GenericValue
   GenericListIterator result;
   GenericValue val;
   val.type = iterType;
-  typename C<T>::iterator res = ptr->begin(); // do not inline below!
+  typename T::iterator res = ptr->begin(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
   *(GenericValue*)&result = val.clone();
   return result;
 }
 
-template<template<typename U> class C, typename T> GenericListIterator
-TypeListImpl<C, T>::end(void* storage)
+template<typename T> GenericListIterator
+TypeListImpl<T>::end(void* storage)
 {
-  static Type* iterType = typeOf<typename C<T>::iterator>();
-  C<T>* ptr = (C<T>*)ptrFromStorage(&storage);
+  static Type* iterType = typeOf<typename T::iterator>();
+  T* ptr = (T*)ptrFromStorage(&storage);
   GenericListIterator result;
   GenericValue val;
   val.type = iterType;
-  typename C<T>::iterator res = ptr->end(); // do not inline below!
+  typename T::iterator res = ptr->end(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
   *(GenericValue*)&result = val.clone();
   return result;
 }
 
-template<template<typename U> class C, typename T> void
-TypeListImpl<C, T>::pushBack(void* storage, void* valueStorage)
+template<typename T> void
+TypeListImpl<T>::pushBack(void* storage, void* valueStorage)
 {
-  static Type* elemType = typeOf<T>();
-  C<T>* ptr = (C<T>*) ptrFromStorage(&storage);
-  ptr->push_back(*(T*)elemType->ptrFromStorage(&valueStorage));
+  static Type* elemType = typeOf<typename T::value_type>();
+  T* ptr = (T*) ptrFromStorage(&storage);
+  ptr->push_back(*(typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
 }
 
-template<template<typename U> class C, typename T> size_t
-TypeListImpl<C, T>::size(void* storage)
+template<typename T> size_t
+TypeListImpl<T>::size(void* storage)
 {
-  C<T>* ptr = (C<T>*) ptrFromStorage(&storage);
+  T* ptr = (T*) ptrFromStorage(&storage);
   return ptr->size();
 }
 
@@ -119,26 +119,9 @@ template<typename C>  bool TypeListIteratorImpl<C>::equals(void* s1, void* s2)
   return *ptr1 == *ptr2;
 }
 
-
-// Because of the allocator template arg, std::vector does not match
-// "template<typename U> typename C"
-// However our TypeImpl must appear as std::vector<T> or we will have to
-// override a lot of stuffs for our custom type (signature), so set a
-// 'type' typedef and use in TypeListImpl
-template<typename T> struct vector1: public std::vector<T>
-{
-  typedef std::vector<T> type;
-};
-template<typename T> struct list1: public std::list<T>
-{
-  typedef std::list<T> type;
-};
-
-template<typename T> struct tvector1: public std::vector<T>{};
-template<typename T> struct tlist1: public std::list<T>{};
 // There is no way to register a template container type :(
-template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<vector1, T> {};
-template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<list1, T> {};
+template<typename T> struct TypeImpl<std::vector<T> >: public TypeListImpl<std::vector<T> > {};
+template<typename T> struct TypeImpl<std::list<T> >: public TypeListImpl<std::list<T> > {};
 }
 
 #endif  // _QITYPE_DETAILS_TYPELIST_HXX_
