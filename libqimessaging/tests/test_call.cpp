@@ -45,6 +45,33 @@ int fakeRGBd(const std::string &name, int value, double duration)
   return (0);
 }
 
+int fakeemptysvec(const std::vector<std::string> &svec) {
+  std::cout << "svec.size(): " << svec.size() << std::endl;
+  EXPECT_TRUE(svec.empty());
+  return 0;
+}
+
+int fakeemptygvec(const std::vector<qi::GenericValue> &sval) {
+  std::cout << "sval.size(): " << sval.size() << std::endl;
+  EXPECT_TRUE(sval.empty());
+  return 0;
+}
+
+int fakesvec(const std::vector<std::string> &svec) {
+  std::cout << "svec.size(): " << svec.size() << std::endl;
+  EXPECT_EQ("titi", svec[0]);
+  EXPECT_EQ("toto", svec[1]);
+  return 0;
+}
+
+int fakegvec(const std::vector<qi::GenericValue> &sval) {
+  std::cout << "sval.size(): " << sval.size() << std::endl;
+  EXPECT_EQ("titi", sval[0].asString());
+  EXPECT_EQ("toto", sval[1].asString());
+  return 0;
+}
+
+
 TEST(TestCall, CallComplexType)
 {
   std::list<std::pair<std::string, int> >  robots;
@@ -147,6 +174,68 @@ TEST(TestCall, TestFloatToDoubleConvertion)
 
   std::cout << "Calling FakeRGB" << std::endl;
   qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
+}
+
+TEST(TestCall, TestGenericVector) {
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+
+  std::vector<std::string>      svec;
+  std::vector<qi::GenericValue> gvec;
+
+  std::vector<std::string>      esvec;
+  std::vector<qi::GenericValue> egvec;
+
+  svec.push_back("titi");
+  svec.push_back("toto");
+
+  qi::GenericValue gv;
+  gv = qi::GenericValue::from(std::string("titi"));
+  gvec.push_back(gv);
+  gv = qi::GenericValue::from(std::string("toto"));
+  gvec.push_back(gv);
+
+  int serviceID;
+  float duration = 0.42;
+
+  ob.advertiseMethod("fakesvec", &fakesvec);
+  ob.advertiseMethod("fakegvec", &fakegvec);
+  ob.advertiseMethod("fakeemptysvec", &fakeemptysvec);
+  ob.advertiseMethod("fakeemptygvec", &fakeemptygvec);
+  qi::ObjectPtr obj(ob.object());
+
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
+
+  std::cout << "Calling FakeRGB" << std::endl;
+
+  qi::Future<int> fut;
+
+  //Check empty, same type
+  fut = proxy->call<int>("fakeemptysvec", esvec);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakeemptygvec", egvec);
+  EXPECT_FALSE(fut.hasError());
+
+  //check call, same type
+  fut = proxy->call<int>("fakesvec", svec);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvec", gvec);
+  EXPECT_FALSE(fut.hasError());
+
+  //check empty, type conv
+  fut = proxy->call<int>("fakeemptysvec", egvec);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakeemptygvec", esvec);
+  EXPECT_FALSE(fut.hasError());
+
+  //check call, type conv
+  fut = proxy->call<int>("fakesvec", gvec);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvec", svec);
+  EXPECT_FALSE(fut.hasError());
+
 }
 
 int main(int argc, char **argv) {
