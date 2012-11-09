@@ -48,7 +48,7 @@ TEST(QiService, RemoteObjectCacheServerClose)
   p.server()->close();
 
   fut = p.client()->service("serviceTest");
-  EXPECT_FALSE(fut.hasError());
+  EXPECT_TRUE(fut.hasError());
 }
 
 
@@ -70,7 +70,7 @@ TEST(QiService, RemoteObjectCacheUnregister)
   p.server()->unregisterService(idx);
 
   fut = p.client()->service("serviceTest");
-  EXPECT_FALSE(fut.hasError());
+  EXPECT_TRUE(fut.hasError());
 }
 
 
@@ -92,7 +92,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
   p.server()->unregisterService(idx);
 
   fut = p.client()->service("serviceTest");
-  EXPECT_FALSE(fut.hasError());
+  EXPECT_TRUE(fut.hasError());
 
   unsigned int idx2 = p.server()->registerService("serviceTest", obj);
   //new service should not have a previoulsy registered ID
@@ -129,7 +129,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
   p.server()->close();
 
   fut = p.client()->service("serviceTest");
-  EXPECT_FALSE(fut.hasError());
+  EXPECT_TRUE(fut.hasError());
 
   EXPECT_TRUE(ses.connect(p.client()->url().str()));
   ses.listen("tcp://0.0.0.0:0");
