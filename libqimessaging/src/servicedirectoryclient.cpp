@@ -21,6 +21,10 @@ namespace qi {
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
     close();
+    if (_addLink)
+      _object->disconnect(_addLink);
+    if (_removeLink)
+      _object->disconnect(_removeLink);
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
@@ -28,7 +32,7 @@ namespace qi {
                                                  qi::Future<unsigned int> frem,
                                                  qi::Promise<bool> fco)
   {
-    if (!fadd.isReady() || !frem.isReady())
+    if (!fadd.isReady() || !frem.isReady() || fco.future().wait(-1))
       return;
     if (fadd.hasError() || frem.hasError()) {
       std::string err;
@@ -132,6 +136,7 @@ namespace qi {
     disconnected(error);
     _object->disconnect(_addLink);
     _object->disconnect(_removeLink);
+    _addLink = _removeLink = 0;
   }
 
   qi::Future< std::vector<ServiceInfo> > ServiceDirectoryClient::services() {
