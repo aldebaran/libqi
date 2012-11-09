@@ -65,6 +65,12 @@ namespace qi {
 
     inline const ValueType &value() const    { return _p->value(); }
     inline ValueType &value()                { return _p->value(); }
+    /** Wait for future, and return a default value in case of error.
+     * @param defaultVal the value to return in case of Future error
+     * @return the future value, or \p defaultVal if hasError() is true.
+     */
+    inline const ValueType &valueWithDefault(const ValueType& defaultVal = ValueType()) const;
+    inline ValueType &valueWithDefault(ValueType defaultVal = ValueType());
     inline operator const ValueType&() const { return _p->value(); }
     inline operator ValueType&()             { return _p->value(); }
 

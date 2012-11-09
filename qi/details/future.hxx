@@ -106,6 +106,20 @@ namespace qi {
     prom.setError(error);
     return prom.future();
   }
+
+  template<typename T>
+  const typename Future<T>::ValueType& Future<T>::valueWithDefault(const ValueType& v) const
+  {
+    _p->wait();
+    return hasError()?v:_p->value();
+  }
+
+  template<typename T>
+  typename Future<T>::ValueType& Future<T>::valueWithDefault(ValueType v)
+  {
+    _p->wait();
+    return hasError()?v:_p->value();
+  }
 }
 
 #endif  // _QITYPE_DETAILS_FUTURE_HXX_
