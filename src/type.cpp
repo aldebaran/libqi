@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
 #include <boost/lexical_cast.hpp>
 
 #include <qitype/type.hpp>
@@ -9,6 +10,10 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/typedispatcher.hpp>
+
+#ifdef __GNUC__
+#include <cxxabi.h>
+#endif
 
 namespace qi {
 
@@ -25,6 +30,7 @@ namespace qi {
   TypeInfo::TypeInfo(const std::string& str)
   : stdInfo(0), customInfo(str)
   {
+
   }
 
   std::string TypeInfo::asString() const
@@ -33,6 +39,28 @@ namespace qi {
       return stdInfo->name();
     else
       return customInfo;
+  }
+
+  std::string TypeInfo::asDemangledString() const
+  {
+#ifdef __GNUC__
+    if (stdInfo) {
+      std::string tmp;
+      int status;
+      char *demangled = abi::__cxa_demangle(stdInfo->name(), NULL, NULL, &status);
+      if (status == 0) {
+        tmp = demangled;
+        free(demangled);
+        return tmp;
+      } else {
+        return stdInfo->name();
+      }
+    } else {
+      return customInfo;
+    }
+#else
+    return asString();
+#endif
   }
 
   const char* TypeInfo::asCString() const

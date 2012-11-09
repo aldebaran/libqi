@@ -44,6 +44,7 @@ namespace qi{
     TypeInfo(const std::string& ti);
 
     std::string asString() const;
+    std::string asDemangledString() const;
 
     //TODO: DIE
     const char* asCString() const;
