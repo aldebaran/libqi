@@ -1,0 +1,159 @@
+// -*- mode:c++; -*-
+
+/** \class qi::Buffer
+ * This class can store buffer and sub-buffers.
+ *
+ * Here is a representation of internal management of sub-buffers.
+ * \verbatim
+ * .. graphviz::
+ * digraph g {
+ * graph [
+ * rankdir = "LR"
+ * ];
+ * node [
+ * fontsize = "16"
+ * shape = "ellipse"
+ * ];
+ *
+ * subgraph cluster_buffer {
+ *   main_buffer;
+ *   label = "Main buffer";
+ * }
+ *
+ * subgraph cluster_subbuffer1 {
+ *   subbuffer1;
+ *   label = "Sub-buffer 1";
+ * }
+ *
+ * subgraph cluster_subbuffer2 {
+ *   subbuffer2;
+ *   label = "Sub-buffer 2";
+ * }
+ *
+ * "mainbuffer" [
+ * label = "...| ...| ...| ...| ...| ...|<f0> uint32_t subBufferSize| ...| ...|<f1> uint32_t subBufferSize| ...| ...| ..."
+ * shape = "record"
+ * ];
+ * "subbuffer1" [
+ * label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
+ * shape = "record"
+ * ];
+ * "subbuffer2" [
+ * label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
+ * shape = "record"
+ * ];
+ * "mainbuffer":f0-> "subbuffer1":f0[
+ * id = 0
+ * ];
+ * "mainbuffer":f1-> "subbuffer2":f0[
+ * id = 0
+ * ];
+ * }
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::Buffer::Buffer()
+ */
+
+/**
+ * \fn qi::Buffer::Buffer(const Buffer& buffer)
+ * As data are store as a shared pointer, the different copy
+ * of the same buffer all handle the same data.
+ * \param buffer The buffer to copy.
+ */
+
+/**
+ * \fn qi::Buffer::operator=(const Buffer& buffer)
+ * As data are store as a shared pointer, the different copy
+ * of the same buffer all handle the same data.
+ * \param buffer The buffer to copy.
+ */
+
+/**
+ * \fn qi::Buffer::write(const void *data, size_t size)
+ * \param data The data to write
+ * \param size The size of the data to write
+ * \return true if operation succeeded, false otherwise.
+ */
+
+/**
+ * \fn qi::Buffer::addSubBuffer(const Buffer& buffer)
+ * This function add a uint32_t for the size of sub-buffers in main buffer
+ * and add the buffer to the list of sub-buffers.
+ * \param buffer The buffer to have as sub-buffer.
+ * \return return te offset at which sub-buffer have been added.
+ */
+
+/**
+ * \fn qi::Buffer::hasSubBuffer(size_t offset) const
+ * \param offset The offset to look at the presence of sub-buffer.
+ * \return true if there is a sub-buffer, false otherwise.
+ */
+
+/**
+ * \fn qi::Buffer::subBuffer(size_t offset) const
+ * If there is no sub-buffer throw a std::runtime_error.
+ * \param offset The offset to look for sub-buffer.
+ * \return the sub-buffer.
+ */
+
+/**
+ * \fn qi::Buffer::size() const
+ * \return the size.
+ * \see totalSize
+ */
+
+/**
+ * \fn qi::Buffer::totalSize() const
+ * \return the size.
+ * \see size
+ */
+
+/**
+ * \fn qi::Buffer::subBuffers() const
+ * \return a vector of pairs. The first value of the pair is the offset of the
+ * sub-buffer into the master buffer. The second value is the sub-buffer itself.
+ */
+
+/**
+ * \fn qi::Buffer::reserve(size_t size)
+ * \param size number of new bytes to reserve at the end of buffer.
+ * \return a pointer to the data.
+ * \warning The return value is valid until the next non-const operation.
+ */
+
+/**
+ * \fn qi::Buffer::clear()
+ */
+
+/**
+ * \fn qi::Buffer::data()
+ * \return the pointer to the data.
+ */
+
+/**
+ * \fn qi::Buffer::data() const
+ * \return the pointer to the data.
+ */
+
+/**
+ * \fn qi::Buffer::read(size_t offset = 0, size_t length = 0) const
+ * \param offset offset at which reading begin in the buffer.
+ * \param length length of the data to read.
+ * \return 0 if the buffer is empty or if we try to read data after the end
+ * of the buffer.\n
+ * Otherwise return a pointer to the data. Only \a length bytes can be read in
+ * the returned buffer.
+ */
+
+/**
+ * \fn qi::Buffer::read(void* buffer, size_t offset, size_t length) const
+ * \warning the given buffer must be freed.
+ * \param buffer the pre-allocated buffer to store data.
+ * \param offset Offset in the current buffer to start copy.
+ * \param length Length of the data to be copied.
+ * \return -1 if there is no data in buffer or if \a offset is bigger than
+ * total data in buffer.\n
+ * Otherwise return the total length of copied data.
+ */

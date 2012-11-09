@@ -14,7 +14,7 @@
 #include <qi/buffer.hpp>
 
 
-TEST(TestReserveSpace, TestBuffer)
+TEST(TestBuffer, TestReserveSpace)
 {
   qi::Buffer      buffer;
   unsigned char   *image, *resultImage;
@@ -36,8 +36,66 @@ TEST(TestReserveSpace, TestBuffer)
   resultImage = (unsigned char*)buffer.data() + 150 + 1024;
 
   for (int i = 0; i < fiveM; i++)
-    EXPECT_EQ(image[i], resultImage[i]) << "Original image and and actual differ at index " << i;
+    EXPECT_EQ(image[i], resultImage[i]) << "Original image and actual differ at index " << i;
 
   ::memset(reservedSpace1, 0, 150);
   ::memcpy(reservedSpace1, str.c_str(), str.size());
 }
+
+TEST(TestBuffer, TestSubBuffer)
+{
+  qi::Buffer buffer, subBuffer1, subBuffer2;
+  std::string str("A dummy string");
+  size_t cstrSize = str.size()+1;
+
+  const char *data;
+
+  buffer.write(str.c_str(),     cstrSize);
+  subBuffer1.write(str.c_str(), cstrSize);
+  subBuffer2.write(str.c_str(), cstrSize);
+
+  ASSERT_EQ(buffer.size(),      cstrSize);
+  ASSERT_EQ(buffer.totalSize(), cstrSize);
+
+  buffer.addSubBuffer(subBuffer1);
+
+  ASSERT_EQ(buffer.size(),      cstrSize+sizeof(uint32_t));
+  ASSERT_EQ(buffer.totalSize(), 2*cstrSize+sizeof(uint32_t));
+
+  ASSERT_FALSE(buffer.hasSubBuffer(0));
+  ASSERT_TRUE(buffer.hasSubBuffer(cstrSize));
+
+  const qi::Buffer& subBuf1 = buffer.subBuffer(cstrSize);
+  ASSERT_EQ(subBuf1.size(), subBuffer1.size());
+  ASSERT_STREQ(str.c_str(), (const char*)subBuf1.data());
+
+  data = (const char*)subBuffer2.read((size_t)0, cstrSize);
+  ASSERT_STREQ(str.c_str(), data);
+
+  subBuffer2.addSubBuffer(buffer);
+  ASSERT_EQ(subBuffer2.size(),      cstrSize+sizeof(uint32_t));
+  ASSERT_EQ(subBuffer2.totalSize(), 3*cstrSize+2*sizeof(uint32_t));
+
+  buffer.clear();
+  ASSERT_EQ(buffer.size(), 0u);
+  ASSERT_EQ(buffer.totalSize(), 0u);
+}
+
+// Disable because those functions are private
+/**
+ * TEST(TestBuffer, TestInitialization)
+ * {
+ *   qi::Buffer buffer1, buffer2 = buffer1, buffer3, buffer4;
+ *
+ *   ASSERT_TRUE(buffer1.isInitialized());
+ *   ASSERT_TRUE(buffer2.isInitialized());
+ *   ASSERT_FALSE(buffer3.isInitialized());
+ *   ASSERT_FALSE(buffer4.isInitialized());
+ *
+ *   buffer3.initialize();
+ *   ASSERT_TRUE(buffer3.isInitialized());
+ *
+ *   buffer4.addSubBuffer(buffer3);
+ *   ASSERT_TRUE(buffer4.isInitialized());
+ * }
+ */

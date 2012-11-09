@@ -22,20 +22,19 @@ namespace qi
     BufferPrivate();
     ~BufferPrivate();
     unsigned char * data();
-    bool            resize(size_t size = 1048576);
+    bool            resize(size_t size = 0x100000);
+    int             indexOfSubBuffer(size_t offset) const;
 
   public:
     unsigned char*  _bigdata;
     unsigned char   _data[STATIC_BLOCK];
+    size_t          _cachedSubBufferTotalSize;
 
   public:
     size_t          used; // size used
     size_t          available; // total size of buffer
 
-    // Used to serialize the Buffer signature
-    std::string signature;
-
-    std::vector<std::pair<uint32_t, Buffer> > _subBuffers;
+    std::vector<std::pair<size_t, Buffer> > _subBuffers;
   };
 }
 

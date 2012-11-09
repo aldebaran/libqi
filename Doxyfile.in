@@ -1,4 +1,5 @@
-INPUT       = qi/ doc/
+INPUT       = qi/*.dox qi
 EXAMPLE_PATH           = examples
 EXAMPLE_PATTERNS       = *.cpp
 EXAMPLE_RECURSIVE      = YES
+GENERATE_XML=YES

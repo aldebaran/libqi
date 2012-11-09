@@ -8,6 +8,8 @@
 
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
+#include <iomanip>
 #include <ctype.h>
 
 #include "buffer_p.hpp"
@@ -16,9 +18,9 @@
 
 namespace qi
 {
-
   BufferPrivate::BufferPrivate()
     : _bigdata(0)
+    , _cachedSubBufferTotalSize(0)
     , used(0)
     , available(sizeof(_data))
   {
@@ -33,7 +35,19 @@ namespace qi
     }
   }
 
+  int BufferPrivate::indexOfSubBuffer(size_t offset) const
+  {
+    for(unsigned i = 0; i < _subBuffers.size(); ++i) {
+      if (_subBuffers[i].first == offset) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
   Buffer::Buffer()
+    : _p(boost::shared_ptr<BufferPrivate>(new BufferPrivate()))
   {
   }
 
@@ -44,8 +58,6 @@ namespace qi
 
   Buffer& Buffer::operator=(const Buffer& b)
   {
-    if (!b._p)
-      const_cast<Buffer&>(b)._p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     _p = b._p;
     return *this;
   }
@@ -75,46 +87,61 @@ namespace qi
     return true;
   }
 
-  int Buffer::write(const void *data, size_t size)
+  bool Buffer::write(const void *data, size_t size)
   {
-    if (!_p)
-      _p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     if (_p->used + size > _p->available)
     {
       bool ret = _p->resize(_p->used + size);
       if (!ret) {
         qiLogVerbose("qi.Buffer") << "write(" << size << ") failed, buffer size is " << _p->available;
-        return -1;
+        return false;
       }
     }
 
     memcpy(_p->data() + _p->used, data, size);
     _p->used += size;
 
-    return size;
+    return true;
+  }
+
+  size_t Buffer::addSubBuffer(const Buffer& buffer)
+  {
+    size_t subBufferSize = buffer.size();
+    size_t actualUsed = _p->used;
+
+    write((uint32_t*)&subBufferSize, sizeof(uint32_t));
+
+    _p->_subBuffers.push_back(std::make_pair(actualUsed, buffer));
+    _p->_cachedSubBufferTotalSize += buffer.totalSize();
+    return actualUsed;
+  }
+
+  bool Buffer::hasSubBuffer(size_t offset) const
+  {
+    return (_p->indexOfSubBuffer(offset) != -1);
+  }
+
+  const Buffer& Buffer::subBuffer(size_t offset) const
+  {
+    int index = _p->indexOfSubBuffer(offset);
+
+    if (index == -1)
+      throw std::runtime_error("No sub-buffer at the specified offset.");
+
+    return _p->_subBuffers[index].second;
   }
 
   size_t Buffer::size() const
   {
-    return _p?_p->used:0;
+    return _p->used;
   }
 
   size_t Buffer::totalSize() const
   {
-    if (!_p)
-      return 0;
-    size_t res = size();
-    for (unsigned i=0; i< _p->_subBuffers.size(); ++i)
-      res += _p->_subBuffers[i].second.totalSize();
-    return res;
+    return size() + _p->_cachedSubBufferTotalSize;
   }
 
-  std::vector<std::pair<uint32_t, Buffer> >& Buffer::subBuffers()
-  {
-    return _p->_subBuffers;
-  }
-
-  const std::vector<std::pair<uint32_t, Buffer> > & Buffer::subBuffers() const
+  const std::vector<std::pair<size_t, Buffer> > & Buffer::subBuffers() const
   {
     return _p->_subBuffers;
   }
@@ -126,8 +153,6 @@ namespace qi
   */
   void *Buffer::reserve(size_t size)
   {
-    if (!_p)
-      _p = boost::shared_ptr<BufferPrivate>(new BufferPrivate());
     if (_p->used + size > _p->available)
       _p->resize(_p->used + size);
 
@@ -139,12 +164,11 @@ namespace qi
 
   void Buffer::clear()
   {
-    if (_p)
-    {
-      _p->used = 0;
-      _p->_subBuffers.clear();
-    }
+    _p->used = 0;
+    _p->_subBuffers.clear();
+    _p->_cachedSubBufferTotalSize = 0;
   }
+
   void* Buffer::data()
   {
     return _p ? _p->data() : 0;
@@ -155,77 +179,69 @@ namespace qi
     return _p ? _p->data() : 0;
   }
 
-  void *Buffer::read(size_t off, size_t length) const
+  const void *Buffer::read(size_t offset, size_t length) const
   {
-    if (!_p)
+    if (offset + length > _p->used)
     {
-      qiLogDebug("qi.buffer") << "read on empty buffer";
-      return 0;
-    }
-    if (off + length > _p->used)
-    {
-      qiLogDebug("qi.buffer") << "Attempt to read " << off+length
+      qiLogDebug("qi.buffer") << "Attempt to read " << offset+length
        <<" on buffer of size " << _p->used;
       return 0;
     }
-    return (char*)_p->data() + off;
+    return (char*)_p->data() + offset;
   }
 
-  size_t Buffer::read(void* buffer, size_t off, size_t length) const
+  size_t Buffer::read(void* buffer, size_t offset, size_t length) const
   {
-    if (!_p)
+    if (offset > _p->used)
     {
-      qiLogDebug("qi.buffer") << "read on empty buffer";
-      return -1;
-    }
-    if (off > _p->used)
-    {
-      qiLogDebug("qi.buffer") << "Attempt to read " << off+length
+      qiLogDebug("qi.buffer") << "Attempt to read " << offset+length
       <<" on buffer of size " << _p->used;
       return -1;
     }
-    size_t copy = std::min(length, _p->used - off);
-    memcpy(buffer, (char*)_p->data()+off, copy);
+    size_t copy = std::min(length, _p->used - offset);
+    memcpy(buffer, (char*)_p->data()+offset, copy);
     return copy;
   }
 
-  void Buffer::dump() const
-  {
-    if (!_p)
+  namespace details {
+    void printBuffer(std::ostream& stream, const Buffer& buffer)
     {
-       qiLogDebug("qi.buffer") << "dump on empty buffer";
-      return;
-    }
-    unsigned int i = 0;
-
-    while (i < _p->used)
-    {
-      printf("%02x ", _p->data()[i]);
-      i++;
-      if (i % 8 == 0) printf(" ");
-      if (i % 16 == 0)
-      {
-        for (unsigned int j = i - 16; j < i ; j++)
-        {
-          printf("%c", isgraph(_p->data()[j]) ? _p->data()[j] : '.');
-        }
-        printf("\n");
+      if (buffer.size() == 0) {
+        qiLogDebug("qi.buffer") << "dump on empty buffer";
+        return;
       }
-    }
 
-    while (i % 16 != 0)
-    {
-      printf("   ");
-      if (i % 8 == 0) printf(" ");
-      i++;
+      std::ios_base::fmtflags flags = stream.flags();
+      unsigned int i = 0;
+      const char* data = (const char*)buffer.data();
+
+      while (i < buffer.size()) {
+        if (i % 16 == 0) stream << std::hex << std::setfill('0') << std::setw(8) << i << ": ";
+        stream << std::setw(2) << (const int)data[i];
+        i++;
+        if (i % 2 == 0) stream << ' ';
+        if (i % 16 == 0)
+        {
+          for (unsigned int j = i - 16; j < i ; j++)
+          {
+            stream << (isgraph(data[j]) ? data[j] : '.');
+          }
+          stream << '\n';
+        }
+      }
+
+      while (i % 16 != 0) {
+        stream << "  ";
+        if (i % 2 == 0) stream << ' ';
+        i++;
+      }
+      stream << ' ';
+
+      for (unsigned int j = i - 16; j < buffer.size(); j++) {
+        stream << (isgraph(data[j]) ? data[j] : '.');
+      }
+
+      stream.flags(flags);
     }
-    printf(" ");
-    for (unsigned int j = i - 16; j < _p->used; j++)
-    {
-      printf("%c", isgraph(_p->data()[j]) ? _p->data()[j] : '.');
-    }
-    printf("\n");
   }
-
 } // !qi
-

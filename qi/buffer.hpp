@@ -18,44 +18,58 @@ namespace qi
 {
   class BufferPrivate;
 
+  /// Class to store buffer.
   class QI_API Buffer
   {
   public:
+    /// Default constructor.
     Buffer();
+    ///  Copy constructor.
     Buffer(const Buffer& b);
+    /// Assignment operator.
     Buffer& operator = (const Buffer& b);
-    int    write(const void *data, size_t size);
 
-    /// @return the size of this buffer, not counting subbuffers
+    /// Write data in the buffer.
+    bool write(const void *data, size_t size);
+
+    /// Add a sub-buffer to the main buffer.
+    size_t addSubBuffer(const Buffer& buffer);
+    /// Check if there is a sub-buffer at given offset.
+    bool   hasSubBuffer(size_t offset) const;
+    /// Return the sub-buffer at given offset.
+    const  Buffer& subBuffer(size_t offset) const;
+
+    /// Return the content size of this buffer not counting sub-buffers.
     size_t size() const;
-
-    /// @return the size of this buffer and all its sub-buffers.
+    /// Return the content size of this buffer and of all its sub-buffers.
     size_t totalSize() const;
 
-    /** When a buffer is serialized into an other buffer, only the size is
-     * written, and the other buffer gets appended into subBuffers() instead of
-     * being copied. The first element of the pair is the offset at which
-     * the buffer should have been inserted.
-     *
-     */
-     std::vector<std::pair<uint32_t, Buffer> >&       subBuffers();
-     const std::vector<std::pair<uint32_t, Buffer> >& subBuffers() const;
+    /// Return a vector of sub-buffers of the current buffer.
+    const std::vector<std::pair<size_t, Buffer> >& subBuffers() const;
 
-    void   clear();
+    /// Reserve bytes at the end of current buffer.
+    void* reserve(size_t size);
+    /// Erase content of buffer and remove sub-buffers whithout clearing them.
+    void  clear();
 
-    /** Reserve "size" more bytes at the end and return a pointer to the data.
-     * returned value is valid til the next non-const operation*/
-    void*  reserve(size_t size);
-    void*  data();
+    /// Return a pointer to the raw data storage of this buffer.
+    void* data();
+    /// Return a const pointer to the raw data in this buffer.
     const void* data() const;
-    void*  read(size_t offset =0, size_t length=0) const;
-    size_t read(void* buffer, size_t pos, size_t length) const;
-    void   dump() const;
+
+    /// Read some data from the buffer.
+    const void* read(size_t offset = 0, size_t length = 0) const;
+    /// Read some data in the buffer and store it in a new pre-allocated buffer.
+    size_t read(void* buffer, size_t offset = 0, size_t length = 0) const;
+
   private:
     friend class BufferReader;
     boost::shared_ptr<BufferPrivate> _p;
   };
 
-} // !qi
+  namespace details {
+    QI_API void printBuffer(std::ostream& stream, const Buffer& buffer);
+  }
+}
 
 #endif  // _QI_BUFFER_HPP_
