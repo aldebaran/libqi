@@ -17,8 +17,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 
-
-qi::GenericValue v;
+qi::ManagedGenericValue v;
 
 void onFire(const int& pl)
 {
@@ -26,12 +25,12 @@ void onFire(const int& pl)
   std::cout.flush();
 }
 
-void value(qi::GenericValue mv)
+void value(qi::ManagedGenericValue mv)
 {
-  v = mv.clone();
+  v = mv;
 }
 
-void valueList(std::vector<qi::GenericValue> mv)
+void valueList(std::vector<qi::ManagedGenericValue> mv)
 {
   v = qi::GenericValue::from(mv).clone();
 }
@@ -124,16 +123,17 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<GenericValue> args;
+  std::vector<ManagedGenericValue> args;
   args.push_back(AutoGenericValue(12));
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.kind(), Type::List);
   GenericList l = v.asList();
+  ASSERT_EQ(3, l.size());
   GenericListIterator i = l.begin();
   // iterate
-  ASSERT_EQ(12, (*i).asDouble());
+  EXPECT_EQ(12, (*i).asDouble());
   i++;
   ASSERT_EQ("foo", (*i).asString());
   i++;
@@ -179,7 +179,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<GenericValue> args;
+  std::vector<ManagedGenericValue> args;
   args.push_back(AutoGenericValue(12));
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));
@@ -231,7 +231,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<GenericValue> args;
+  std::vector<ManagedGenericValue> args;
   args.push_back(AutoGenericValue(12));
   args.push_back(AutoGenericValue("foo"));
   args.push_back(AutoGenericValue(in));

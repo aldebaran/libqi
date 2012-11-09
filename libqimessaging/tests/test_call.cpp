@@ -19,6 +19,7 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
+
 int print(std::list<std::pair<std::string, int> > robots)
 {
   for(std::list<std::pair<std::string, int> >::iterator it = robots.begin(); it != robots.end(); ++it)
@@ -51,7 +52,7 @@ int fakeemptysvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakeemptygvec(const std::vector<qi::GenericValue> &sval) {
+int fakeemptygvec(const std::vector<qi::ManagedGenericValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_TRUE(sval.empty());
   return 0;
@@ -64,13 +65,37 @@ int fakesvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakegvec(const std::vector<qi::GenericValue> &sval) {
+int fakegvec(const std::vector<qi::ManagedGenericValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval[0].asString());
   EXPECT_EQ("toto", sval[1].asString());
   return 0;
 }
 
+
+struct GenericTuple
+{
+  qi::ManagedGenericValue e1;
+  qi::ManagedGenericValue e2;
+  qi::ManagedGenericValue e3;
+};
+QI_TYPE_STRUCT(GenericTuple, e1, e2, e3);
+
+struct SpecificTuple
+{
+  int e1;
+  double e2;
+  std::map<std::string, float> e3;
+};
+QI_TYPE_STRUCT(SpecificTuple, e1, e2, e3);
+
+double eatSpecific(const SpecificTuple& v)
+{
+  if (v.e3.find("foo") != v.e3.end())
+    return v.e1 + v.e2 + v.e3.find("foo")->second;
+  else
+    return v.e1 + v.e2;
+}
 
 TEST(TestCall, CallComplexType)
 {
@@ -176,20 +201,21 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
 }
 
-TEST(TestCall, TestGenericVector) {
+
+TEST(TestCall, TestGenericConversion) {
   TestSessionPair p;
   qi::GenericObjectBuilder ob;
 
   std::vector<std::string>      svec;
-  std::vector<qi::GenericValue> gvec;
+  std::vector<qi::ManagedGenericValue> gvec;
 
   std::vector<std::string>      esvec;
-  std::vector<qi::GenericValue> egvec;
+  std::vector<qi::ManagedGenericValue> egvec;
 
   svec.push_back("titi");
   svec.push_back("toto");
 
-  qi::GenericValue gv;
+  qi::ManagedGenericValue gv;
   gv = qi::GenericValue::from(std::string("titi"));
   gvec.push_back(gv);
   gv = qi::GenericValue::from(std::string("toto"));
@@ -201,6 +227,7 @@ TEST(TestCall, TestGenericVector) {
   ob.advertiseMethod("fakegvec", &fakegvec);
   ob.advertiseMethod("fakeemptysvec", &fakeemptysvec);
   ob.advertiseMethod("fakeemptygvec", &fakeemptygvec);
+  ob.advertiseMethod("eatSpecific", &eatSpecific);
   qi::ObjectPtr obj(ob.object());
 
   serviceID = p.server()->registerService("serviceConv", obj);
@@ -235,6 +262,30 @@ TEST(TestCall, TestGenericVector) {
   fut = proxy->call<int>("fakegvec", svec);
   EXPECT_FALSE(fut.hasError());
 
+  qi::Future<double> f;
+  SpecificTuple t;
+  t.e1 = 1;
+  t.e2 = 2;
+  t.e3["foo"] = 3;
+  f = proxy->call<double>("eatSpecific", t);
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(6, f.value());
+
+  GenericTuple gt;
+  gt.e1 = qi::GenericValue::from(1.0);
+  gt.e2 = qi::GenericValue::from(2U);
+  std::map<std::string, qi::ManagedGenericValue> map;
+  map["foo"] = qi::GenericValue::from(3);
+  gt.e3 = qi::GenericValue::from(map);
+  f = proxy->call<double>("eatSpecific", gt);
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(6, f.value());
+
+  std::map<unsigned int, std::string> ravMap;
+  gt.e3 = qi::GenericValue::from(ravMap);
+  f = proxy->call<double>("eatSpecific", gt);
+  EXPECT_FALSE(f.hasError());
+  EXPECT_EQ(3, f.value());
 }
 
 int main(int argc, char **argv) {
