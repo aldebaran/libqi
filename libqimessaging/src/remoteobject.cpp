@@ -213,8 +213,8 @@ namespace qi {
     if (sig != msg.signature())
     {
       qiLogWarning("remoteobject") << "call signature mismatch '"
-                                   << sig << "' vs '"
-                                   << msg.signature() << "'" << metaObject().method(method)->signature();
+                                   << sig << "' (internal) vs '"
+                                   << msg.signature() << "' (message) for:" << metaObject().method(method)->signature();
     }
 #endif
     msg.setType(qi::Message::Type_Call);
