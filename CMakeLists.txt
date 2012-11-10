@@ -7,6 +7,7 @@ option(WITH_EXAMPLES "Examples" ON)
 
 set(H
   qiperf/dataperfsuite.hpp
+  qiperf/details/dataperfsuite.hxx
   qiperf/dataperf.hpp
   qiperf/api.hpp
 )
