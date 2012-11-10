@@ -3,13 +3,11 @@
 /**
  * \class qi::ThreadPool
  * \includename{qi/threadpool.hpp}
- * \brief Pool of workers
  */
 
 /**
  * \fn qi::ThreadPool::ThreadPool(unsigned int, unsigned int,
  *                                unsigned int, unsigned int)
- * \brief ThreadPool constructor.
  * \param minWorkers Minimum number of workers in the pool at any time
  * \param maxWorkers Maximum number of workers allowed in the pool
  * \param minIdleWorkers Minimum number of inactive workers and ready to execute
@@ -19,105 +17,139 @@
 
 /**
  * \fn qi::ThreadPool::~ThreadPool()
- * \brief ThreadPool destructor.
  *
  * \verbatim
  * The destructor will quit all threads and return. All tasks left in the queue
- * are dropped. To be sure that all tasks are completed use
+ * are dropped. To be sure that all tasks are completed, use
  * :cpp:func:`qi::ThreadPool::waitForAll()`
  *
  * .. seealso::
- *     :cpp:func:`qi::ThreadPool::size()`, :cpp:func:`qi::ThreadPool::waitForAll()`
+ *     :cpp:func:`qi::ThreadPool::size() const`, :cpp:func:`qi::ThreadPool::waitForAll()`
  * \endverbatim
  */
 
 
 /**
- * \fn qi::ThreadPool::size()
- * \brief Returns the number of workers in the pool.
+ * \fn qi::ThreadPool::size() const
  * \return Number of workers.
  */
 
 /**
  * \fn unsigned int qi::ThreadPool::active()
- * \brief Returns the number of active workers in the pool.
  * \return Number of active workers.
  */
 
 /**
- * \fn qi::ThreadPool::setMaxWorkers(unsigned int)
- * \brief Resizes the pool.
+ * \fn qi::ThreadPool::setMaxWorkers(unsigned int n)
  * \param n New number of max workers in the pool
  *
+ * \verbatim
  * This function will set the new maximum number of workers in the pool. It is
  * impossible to set the maximum workers value to a lower value than the minimum
  * one (value is discarded).
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMinWorkers(unsigned int)`, :cpp:func:`qi::ThreadPool::getMaxWorkers() const`
+ * \endverbatim
  */
 
 /**
- * \fn qi::ThreadPool::setMinWorkers(unsigned int)
- * \brief Sets minimum number of workers in the pool.
+ * \fn qi::ThreadPool::setMinWorkers(unsigned int n)
  * \param n New number of min workers in the pool
  *
+ * \verbatim
  * This function will set the new minimum number of workers in the pool. It will
  * spwan new workers if minWorkers is increased. It is impossible to set the
  * minimum workers value to a greater value than maximum workers (value is
  * discarded).
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMaxWorkers(unsigned int)`, :cpp:func:`qi::ThreadPool::getMinWorkers() const`
+ * \endverbatim
  */
 
 /**
  * \fn qi::ThreadPool::setMaxIdleWorkers(unsigned int n)
- * \brief Sets max idle workers.
  * \param n New number of max idle workers in the pool.
  *
+ * \verbatim
  * This function will change the maximum number of workers inactive in the pool.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMinIdleWorkers(unsigned int)`, :cpp:func:`qi::ThreadPool::getMaxIdleWorkers() const`
+ * \endverbatim
  */
 
 /**
  * \fn qi::ThreadPool::setMinIdleWorkers(unsigned int n)
- * \brief Sets min idle workers.
  * \param n New number of min idle workers in the pool.
  *
+ * \verbatim
  * This function will change the minIdleWorkers number. It will spwan new
  * workers if necessary and ensure that at any time, n workers are ready to
  * handle new tasks.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMaxIdleWorkers(unsigned int)`, :cpp:func:`qi::ThreadPool::getMinIdleWorkers() const`
+ * \endverbatim
  */
 
 /**
- * \fn qi::ThreadPool::getMaxWorkers()
- * \brief Returns maximum number of workers in the pool.
+ * \fn qi::ThreadPool::getMaxWorkers() const
  * \return Maximum number of workers.
+ *
+ * \verbatim
+ * Return the maximum number of workers.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMaxWorkers(unsigned int)`
+ * \endverbatim
  */
 
 /**
- * \fn qi::ThreadPool::getMinWorkers()
- * \brief Returns minimum number of workers in the pool.
+ * \fn qi::ThreadPool::getMinWorkers() const
  * \return Minimum number of workers.
+ *
+ * \verbatim
+ * Return the minimum number of workers.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMinWorkers(unsigned int)`
+ * \endverbatim
  */
 
 /**
- * \fn qi::ThreadPool::getMaxIdleWorkers()
- * \brief Returns maximum number of inactive workers in the pool.
+ * \fn qi::ThreadPool::getMaxIdleWorkers() const
  * \return Maximum mumber of inactive workers.
+ *
+ * \verbatim
+ * Return the maximum number of inactive workers.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMaxIdleWorkers(unsigned int)`
+ * \endverbatim
  */
 
 /**
- * \fn qi::ThreadPool::getMinIdleWorkers()
- * \brief Returns minimum number of inactive workers in the pool.
+ * \fn qi::ThreadPool::getMinIdleWorkers() const
  * \return Minimum number of inactive workers.
+ *
+ * \verbatim
+ * Return the minimum number of inactive workers.
+ *
+ * .. seealso::
+ *     :cpp:func:`qi::ThreadPool::setMinIdleWorkers(unsigned int)`
+ * \endverbatim
  */
 
 /**
  * \fn qi::ThreadPool::waitForAll()
- * \brief Sleeps until all tasks are completed
- *
  * If all workers are inactive and there is no task left, returns immediatly.
  * Otherwise sleeps until all tasks in the pool are completed.
  */
 
 /**
  * \fn qi::ThreadPool::schedule(boost::function<void(void)>&)
- * \brief Adds a task to the pool.
  * \param f Boost function with type void(void) that represents the task.
  * \return True if the task has been added to the tasks queue.
  *

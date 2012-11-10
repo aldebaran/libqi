@@ -1,11 +1,15 @@
 // -*- mode:c++; -*-
 
-/** \class qi::Buffer
- * This class can store buffer and sub-buffers.
+/**
+ * \class qi::Buffer
+ * \includename{qi/buffer.hpp}
  *
- * Here is a representation of internal management of sub-buffers.
  * \verbatim
+ * This class can store buffer and sub-buffers.
+ * Here is a representation of internal management of sub-buffers.
+ *
  * .. graphviz::
+ *
  * digraph g {
  * graph [
  * rankdir = "LR"
@@ -49,6 +53,7 @@
  * id = 0
  * ];
  * }
+ *
  * \endverbatim
  */
 
