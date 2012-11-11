@@ -185,8 +185,7 @@ namespace qi {
       {
         signature() += 's';
       }
-      // FIXME: write returns a bool not an int !!!
-      if (_p->_buffer.write(str, len) < 0)
+      if (_p->_buffer.write(str, len) == false)
       {
         setStatus(Status_WriteError);
         return -1;
@@ -205,8 +204,7 @@ namespace qi {
       {
         signature() += 's';
       }
-      // FIXME: write returns a bool not an int !!!
-      if (_p->_buffer.write(str, len) != len)
+      if (_p->_buffer.write(str, len) == false)
         setStatus(Status_WriteError);
     }
   }
