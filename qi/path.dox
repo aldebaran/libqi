@@ -1,0 +1,178 @@
+// -*- mode:c++; -*-
+
+/**
+  * \namespace qi::path
+  * \verbatim
+  * .. note::
+  *     Every string MUST be encoded in UTF-8. Every returned string are encoded in UTF-8.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::sdkPrefix()
+  * \return The SDK prefix path.
+  * It's always a complete, native path.
+  */
+
+/**
+  * \fn qi::path::findBin(const std::string& name)
+  * \param name The full name of the binary, or just the name.
+  * \return The complete, native path to the file found,
+  * an empty string otherwise.
+  *
+  * \verbatim
+  * This will search in all SDK prefixes for a file named 'name'.
+  * It will then add '.exe' suffix if needed.
+  * (without '.exe') (in UTF-8).
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::findLib(std::string& name)
+  * \param name The full name of the library, or just the name.
+  * \return The complete, native path to the file found,
+  * an empty string otherwise.
+  *
+  * \verbatim
+  * This will search in all SDK prefixes for a file named 'name'.
+  * It will then add 'lib' prefix, and appropriated suffixes
+  * ('.dll' on windows, '.so' on linux, '.dylib' on mac).
+  * (without '.dll', '.so') (in UTF-8).
+  *
+  * You can specify subdirectories using "/" as directory separator
+  * (in UTF-8).
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::findConf(const std::string& applicationName, const std::string& filename)
+  * \param applicationName Name of the application.
+  * \param filename Name of the file to look for.
+  * You can specify subdirectories using "/" as directory separator.
+  * \return The complete, native path of the file if it was found,
+  * an empty string otherwise.
+  *
+  * \verbatim
+  * The file is searched in a list of possible directories,
+  * the first match is returned.
+  *
+  * The list of paths is constructed like this:
+  *
+  * - first, a standard path in the home directory (like
+  *   ~/.config/<applicationName>/<filename>)
+  * - then: <sdk_prefix>/etc/<applicationName>/<filename> for each known SDK
+  *   prefix.
+  * - then a standard path in the system. (like
+  *   /etc/<applicationName>/<filename>)
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::findData(const std::string& applicationName, const std::string& filename)
+  * \param applicationName Name of the application.
+  * \param filename Name of the file to look for.
+  * You can specify subdirectories using "/" as directory separator.
+  * \return The complete, native path of the file if it was found,
+  * an empty string otherwise.
+  *
+  * \verbatim
+  * The file is search in a list of possible directories,
+  * the first match is returned.
+  * The list of paths is constructed like this:
+  *
+  * - first, a standard path in the home directory (like
+  *   ~/.local/share/<applicationName>/<filename>)
+  * - then <sdk_prefix>/share/<applicationName>/<filename> for each known SDK
+  *   prefix.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::confPaths(const std::string& applicationName)
+  * \param applicationName Name of the application.
+  * \return List of configuration directories.
+  *
+  * \verbatim
+  * This is used by the :cpp:func:`qi::path::findConf(const std::string&, const std::string&)`.
+  *
+  * .. warning:: You should not assume those directories exist, nor
+  *    that they are writeable.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::dataPaths(const std::string& applicationName)
+  * \param applicationName Name of the application.
+  * \return A list of directories.
+  *
+  * \verbatim
+  * This is used by the :cpp:func:`qi::path::findData(const std::string&, const std::string&)`.
+  *
+  * .. warning:: You should not assume those directories exist,
+  *    nor that they are writeable.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::binPaths()
+  * \return A list of directories.
+  *
+  * \verbatim
+  * This is used by the :cpp:func:`qi::path::findBin(const std::string&)`.
+  *
+  * .. warning:: You should not assume those directories exist, nor that they are
+  *    writeable.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::libPaths()
+  * \return A list of directories.
+  *
+  * \verbatim
+  * This is used by the :cpp:func:`qi::path::findLib(const std::string&)`.
+  *
+  * .. warning:: You should not assume those directories exist, nor that they are
+  *    writeable.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::userWritableDataPath(const std::string& applicationName, const std::string& filename)
+  * \param applicationName The name of the application.
+  * \param filename The filename.
+  * \return The directory or the file.
+  *
+  * \verbatim
+  * If filename is empty, return the directory in which to write.
+  * Otherwise the path is constructed like this:
+  *
+  * Linux
+  *    <home>/.local/share/<applicationName>/<filename>
+  *
+  * Windows
+  *    %AppData%\<applicatioName>\<filename>
+  *
+  * You can specify subdirectories using "/" as directory separator.
+  * \endverbatim
+  */
+
+/**
+  * \fn qi::path::userWritableConfPath(const std::string& applicationName, const std::string& filename)
+  * \param applicationName The name of the application.
+  * \param filename The filename.
+  * \return The directory or the file.
+  *
+  * \verbatim
+  * If filename is empty, return the directory
+  * in which to write. Otherwise the path is constructed like this:
+  *
+  * Linux
+  *    <home>/.config/<applicatioName>/<filename>
+  *
+  * Windows
+  *    %AppData%\<applicatioName>\<filename>
+  *
+  * You can specify subdirectories using "/" as directory separator.
+  * \endverbatim
+  */
