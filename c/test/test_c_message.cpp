@@ -7,7 +7,6 @@
 
 #include <qimessaging/c/api_c.h>
 #include <qimessaging/c/qi_c.h>
-#include <qimessaging/datastream.hpp>
 #include <c/src/message_c_p.h>
 #include <gtest/gtest.h>
 

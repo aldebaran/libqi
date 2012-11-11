@@ -7,8 +7,9 @@
 */
 
 #include <qimessaging/c/message_c.h>
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/message.hpp>
+#include <qimessaging/idatastream.hpp>
+#include <qimessaging/odatastream.hpp>
 #include "message_c_p.h"
 #include <cstring>
 #include <cstdlib>

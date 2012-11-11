@@ -10,7 +10,7 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/future.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qimessaging/odatastream.hpp>
 #include <qimessaging/transportsocket.hpp>
 
 namespace qi {

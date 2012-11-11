@@ -17,7 +17,6 @@
 #include "message_p.hpp"
 
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qi/buffer.hpp>
 #include "transportsocket_p.hpp"
 

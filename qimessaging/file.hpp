@@ -8,7 +8,8 @@
 #define _QIMESSAGING_FILE_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qimessaging/idatastream.hpp>
+#include <qimessaging/odatastream.hpp>
 #include <string>
 
 namespace qi

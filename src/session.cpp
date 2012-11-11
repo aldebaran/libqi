@@ -4,7 +4,6 @@
 */
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qitype/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>

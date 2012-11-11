@@ -7,7 +7,6 @@
 #ifndef _SRC_REMOTEOBJECT_P_HPP_
 #define _SRC_REMOTEOBJECT_P_HPP_
 
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/dynamicobject.hpp>

@@ -5,6 +5,7 @@
 #include "remoteobject_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>
+#include <qimessaging/idatastream.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>

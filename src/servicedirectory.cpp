@@ -12,7 +12,6 @@
 #include <qimessaging/transportsocket.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include "transportserver_p.hpp"

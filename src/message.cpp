@@ -8,7 +8,8 @@
 
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qimessaging/odatastream.hpp>
+#include <qimessaging/idatastream.hpp>
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>

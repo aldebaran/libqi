@@ -16,6 +16,8 @@
 #include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
+#include <qimessaging/idatastream.hpp>
+#include <qimessaging/odatastream.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 

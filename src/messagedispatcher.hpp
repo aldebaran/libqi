@@ -11,6 +11,7 @@
 #include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qimessaging/message.hpp>
+#include <qimessaging/odatastream.hpp>
 
 namespace qi {
 

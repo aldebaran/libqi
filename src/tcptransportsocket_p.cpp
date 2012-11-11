@@ -26,7 +26,6 @@
 #include <qi/types.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qi/buffer.hpp>
 #include <qi/eventloop.hpp>
 

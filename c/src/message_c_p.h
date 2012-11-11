@@ -10,6 +10,8 @@
 # define   	_QIMESSAGING_MESSAGE_C_P_H_
 
 #include <qimessaging/message.hpp>
+#include <qimessaging/idatastream.hpp>
+#include <qimessaging/odatastream.hpp>
 
 typedef struct
 {

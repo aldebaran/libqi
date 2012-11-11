@@ -4,22 +4,11 @@
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_DATASTREAM_P_HPP_
-#define _QIMESSAGING_DATASTREAM_P_HPP_
-
+#ifndef QIMESSAGING_IDATASTREAM_P_HPP
+#define QIMESSAGING_IDATASTREAM_P_HPP
 
 namespace qi {
-  class IDataStream;
   class ODataStream;
-
-  class IDataStreamPrivate {
-    public:
-      IDataStreamPrivate(const qi::Buffer& buffer);
-      ~IDataStreamPrivate();
-
-      IDataStream::Status _status;
-      BufferReader _reader;
-  };
 
   class ODataStreamPrivate {
     public:
@@ -33,4 +22,4 @@ namespace qi {
   };
 }
 
-#endif // _QIMESSAGING_DATASTREAM_P_HPP_
+#endif // QIMESSAGING_IDATASTREAM_P_HPP

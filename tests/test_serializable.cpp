@@ -2,7 +2,8 @@
 #include <string>
 #include <qitype/genericobject.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/datastream.hpp>
+#include <qimessaging/idatastream.hpp>
+#include <qimessaging/odatastream.hpp>
 
 //using namespace qi::serialization;
 

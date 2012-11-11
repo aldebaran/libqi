@@ -13,7 +13,6 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/signature.hpp>
 #include <qimessaging/api.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qimessaging/url.hpp>
 
 namespace qi

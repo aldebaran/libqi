@@ -11,7 +11,6 @@
 #include <qimessaging/api.hpp>
 #include <qitype/genericvalue.hpp>
 #include <qi/buffer.hpp>
-#include <qimessaging/datastream.hpp>
 #include <qitype/functiontype.hpp>
 #include <qi/types.hpp>
 
