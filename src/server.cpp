@@ -117,7 +117,7 @@ namespace qi {
         if (msg.type() == qi::Message::Type_Call) {
           qi::Message       retval(Message::Type_Error, msg.address());
           qi::Buffer        error;
-          qi::ODataStream   ds(error);
+          qi::BinaryEncoder ds(error);
           std::stringstream ss;
           ss << "can't find service, address: " << msg.address();
           ds << qi::typeOf<std::string>()->signature();

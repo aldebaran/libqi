@@ -10,7 +10,7 @@
 #include <boost/shared_ptr.hpp>
 #include <qi/future.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/odatastream.hpp>
+#include <qimessaging/binaryencoder.hpp>
 #include <qimessaging/transportsocket.hpp>
 
 namespace qi {
@@ -18,7 +18,7 @@ namespace qi {
   inline void serverResultAdapter(qi::Future<GenericValuePtr> future, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
     qi::Buffer      result;
-    qi::ODataStream ods(result);
+    qi::BinaryEncoder ods(result);
 
     if (future.hasError()) {
       ret.setType(qi::Message::Type_Error);

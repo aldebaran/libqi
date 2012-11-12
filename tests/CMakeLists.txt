@@ -15,7 +15,7 @@ qi_create_gtest(test_url                  SRC test_url.cpp                  DEPE
 qi_create_gtest(test_serializable         SRC test_serializable.cpp         DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 #Not working yet
 #qi_create_gtest(test_value               SRC test_value.cpp                DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
-qi_create_gtest(test_datastream           SRC test_datastream.cpp           DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
+qi_create_gtest(test_binarycoder          SRC test_binarycoder.cpp           DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_without_gateway      SRC test_without_gateway.cpp      DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 #qi_create_gtest(test_with_gateway        SRC test_with_gateway.cpp         DEPENDS QI QIMESSAGING GTEST TIMEOUT 120)
 qi_create_gtest(test_file                 SRC test_file.cpp                 DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)

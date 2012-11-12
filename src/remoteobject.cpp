@@ -5,7 +5,7 @@
 #include "remoteobject_p.hpp"
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include <qimessaging/idatastream.hpp>
+#include <qimessaging/binarydecoder.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>
@@ -150,12 +150,12 @@ namespace qi {
           promise.setError("Unable to find a type for signature " + mm->sigreturn());
           return;
         }
-        IDataStream in(msg.buffer());
+        BinaryDecoder in(msg.buffer());
         promise.setValue(qi::details::deserialize(type, in));
         return;
       }
       case qi::Message::Type_Error: {
-        qi::IDataStream ds(msg.buffer());
+        qi::BinaryDecoder ds(msg.buffer());
         std::string    err;
         std::string    sig;
         ds >> sig;

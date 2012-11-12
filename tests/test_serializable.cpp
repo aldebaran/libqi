@@ -2,8 +2,8 @@
 #include <string>
 #include <qitype/genericobject.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/idatastream.hpp>
-#include <qimessaging/odatastream.hpp>
+#include <qimessaging/binaryencoder.hpp>
+#include <qimessaging/binarydecoder.hpp>
 
 //using namespace qi::serialization;
 
@@ -52,7 +52,7 @@ QI_TYPE_STRUCT(TimeStampedPoint2D, p, t);
 
 TEST(testSerializable, POD) {
   qi::Buffer       buf;
-  qi::ODataStream  m(buf);
+  qi::BinaryEncoder  m(buf);
 
   Point2D   p2d1(4, 2), p2d2;
   TimeStamp ts1(3, 1) , ts2;
@@ -61,7 +61,7 @@ TEST(testSerializable, POD) {
   m << ts1;
   m << tsp2d1;
 
-  qi::IDataStream  m2(buf);
+  qi::BinaryDecoder  m2(buf);
   m2 >> p2d2;
   m2 >> ts2;
   m2 >> tsp2d2;

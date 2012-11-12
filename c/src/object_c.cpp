@@ -25,7 +25,7 @@ void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<void*>
   qi_message_t* msg = qi_message_create();
   qi_message_data_t* msgData = (qi_message_data_t*)msg;
   qi::Buffer buf;
-  qi::ODataStream out(buf);
+  qi::BinaryEncoder out(buf);
   qi::details::serialize(result.value(), out);
   *msgData->buff = buf;
   promise.setValue(msg);
@@ -99,7 +99,7 @@ qi::GenericValuePtr c_call(std::string complete_sig,
    qi::GenericValuePtr res;
    std::string sigret = qi::signatureSplit(complete_sig)[0];
    res.type = qi::Type::fromSignature(sigret);
-   qi::IDataStream in(*answer_c->buff);
+   qi::BinaryDecoder in(*answer_c->buff);
    res = qi::details::deserialize(res.type, in);
    qi_message_destroy((qi_message_t *) message_c);
    qi_message_destroy((qi_message_t *) answer_c);

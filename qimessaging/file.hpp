@@ -8,8 +8,8 @@
 #define _QIMESSAGING_FILE_HPP_
 
 #include <qimessaging/api.hpp>
-#include <qimessaging/idatastream.hpp>
-#include <qimessaging/odatastream.hpp>
+#include <qimessaging/binaryencoder.hpp>
+#include <qimessaging/binarydecoder.hpp>
 #include <string>
 
 namespace qi
@@ -76,9 +76,9 @@ namespace qi
     PrivateFile *p;
   };
 
-  QIMESSAGING_API qi::ODataStream &operator<<(qi::ODataStream &stream,
+  QIMESSAGING_API qi::BinaryEncoder &operator<<(qi::BinaryEncoder &stream,
                                              const qi::File &sfile);
-  QIMESSAGING_API qi::IDataStream &operator>>(qi::IDataStream &stream,
+  QIMESSAGING_API qi::BinaryDecoder &operator>>(qi::BinaryDecoder &stream,
                                              qi::File &sfile);
 }
 

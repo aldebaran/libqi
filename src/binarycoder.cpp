@@ -5,9 +5,9 @@
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 
-#include <qimessaging/idatastream.hpp>
-#include <qimessaging/odatastream.hpp>
-#include "datastream_p.hpp"
+#include <qimessaging/binaryencoder.hpp>
+#include <qimessaging/binarydecoder.hpp>
+#include "binarycoder_p.hpp"
 #include <qi/log.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/typedispatcher.hpp>
@@ -19,7 +19,7 @@ namespace qi {
 
   // Input
   template <typename T, typename T2, char S>
-  static inline qi::IDataStream& deserialize(qi::IDataStream* ds, T &b)
+  static inline qi::BinaryDecoder& deserialize(qi::BinaryDecoder* ds, T &b)
   {
     T2 res;
     int ret = ds->read((void *)&res, sizeof(res));
@@ -30,7 +30,7 @@ namespace qi {
   }
 
   template <typename T, typename T2, char S>
-  static inline qi::ODataStream& serialize(qi::ODataStream* ds, T &b, bool inner)
+  static inline qi::BinaryEncoder& serialize(qi::BinaryEncoder* ds, T &b, bool inner)
   {
     T2 val = b;
     int ret = ds->write((const char*)&val, sizeof(val));
@@ -44,11 +44,11 @@ namespace qi {
   }
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type, TypeCast, Signature)                   \
-  IDataStream& IDataStream::operator>>(Type &b)                                \
+  BinaryDecoder& BinaryDecoder::operator>>(Type &b)                                \
   {                                                                            \
   return deserialize<Type, TypeCast, Signature>(this, b);                    \
 }                                                                            \
-  ODataStream& ODataStream::operator<<(Type b)                                 \
+  BinaryEncoder& BinaryEncoder::operator<<(Type b)                                 \
   {                                                                            \
   bool sig = (_p->_innerSerialization != 0);                                 \
   ++(_p->_innerSerialization);                                               \
@@ -74,51 +74,51 @@ namespace qi {
 
 #undef QI_SIMPLE_SERIALIZER_IMPL
 
-  IDataStream::IDataStream(const qi::Buffer& buffer)
-    : _p(new IDataStreamPrivate(buffer))
+  BinaryDecoder::BinaryDecoder(const qi::Buffer& buffer)
+    : _p(new BinaryDecoderPrivate(buffer))
   {
   }
 
-  IDataStream::~IDataStream()
+  BinaryDecoder::~BinaryDecoder()
   {
     delete _p;
   }
 
-  size_t IDataStream::read(void *data, size_t size)
+  size_t BinaryDecoder::read(void *data, size_t size)
   {
     return _p->_reader.read(data, size);
   }
 
-  void* IDataStream::read(size_t size)
+  void* BinaryDecoder::read(size_t size)
   {
     return _p->_reader.read(size);
   }
 
-  IDataStream::Status IDataStream::status() const
+  BinaryDecoder::Status BinaryDecoder::status() const
   {
     return _p->_status;
   }
 
-  void IDataStream::setStatus(Status status)
+  void BinaryDecoder::setStatus(Status status)
   {
     _p->_status = status;
   }
 
-  BufferReader& IDataStream::bufferReader()
+  BufferReader& BinaryDecoder::bufferReader()
   {
     return _p->_reader;
   }
 
-  IDataStreamPrivate::IDataStreamPrivate(const qi::Buffer& buffer)
-    : _status(IDataStream::Status_Ok), _reader(BufferReader(buffer))
+  BinaryDecoderPrivate::BinaryDecoderPrivate(const qi::Buffer& buffer)
+    : _status(BinaryDecoder::Status_Ok), _reader(BufferReader(buffer))
   {
   }
 
-  IDataStreamPrivate::~IDataStreamPrivate()
+  BinaryDecoderPrivate::~BinaryDecoderPrivate()
   {
   }
 
-  IDataStream& IDataStream::operator>>(std::string &s)
+  BinaryDecoder& BinaryDecoder::operator>>(std::string &s)
   {
     qi::uint32_t sz = 0;
     *this >> sz;
@@ -127,7 +127,7 @@ namespace qi {
     if (sz) {
       char *data = static_cast<char *>(read(sz));
       if (!data) {
-        qiLogError("datastream", "buffer empty");
+        qiLogError("qimessaging.binarycoder", "buffer empty");
         setStatus(Status_ReadPastEnd);
         return *this;
       }
@@ -137,7 +137,7 @@ namespace qi {
     return *this;
   }
 
-  IDataStream &IDataStream::operator>>(qi::Buffer &meta) {
+  BinaryDecoder &BinaryDecoder::operator>>(qi::Buffer &meta) {
     BufferReader& reader = bufferReader();
     uint32_t sz;
     *this >> sz;
@@ -145,11 +145,11 @@ namespace qi {
     {
       meta = reader.subBuffer();
       if (meta.size() != sz)
-        qiLogWarning("DataStream") << "Buffer size mismatch " << sz << " " << meta.size();
+        qiLogWarning("BinaryCoder") << "Buffer size mismatch " << sz << " " << meta.size();
     }
     else
     {
-      qiLogDebug("DataStream") << "Extracting buffer of size " << sz <<" at " << reader.position();
+      qiLogDebug("BinaryCoder") << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
       memcpy(ptr, read(sz), sz);
@@ -157,13 +157,13 @@ namespace qi {
     return *this;
   }
 
-  IDataStream &IDataStream::operator>>(GenericValuePtr &value)
+  BinaryDecoder &BinaryDecoder::operator>>(GenericValuePtr &value)
   {
     std::string signature;
     *this >> signature;
     Type* type = 0; // Type::getCompatibleTypeWithSignature(signature);
     if (!type)
-      qiLogError("qi.datastream") << "Could not find metatype for signature " << signature;
+      qiLogError("qimessaging.binarycoder") << "Could not find metatype for signature " << signature;
     else
     {
       value.type = type;
@@ -173,17 +173,17 @@ namespace qi {
   }
 
   // Output
-  ODataStream::ODataStream(qi::Buffer &buffer)
-    : _p(new ODataStreamPrivate(buffer))
+  BinaryEncoder::BinaryEncoder(qi::Buffer &buffer)
+    : _p(new BinaryEncoderPrivate(buffer))
   {
   }
 
-  ODataStream::~ODataStream()
+  BinaryEncoder::~BinaryEncoder()
   {
     delete _p;
   }
 
-  int ODataStream::write(const char *str, size_t len)
+  int BinaryEncoder::write(const char *str, size_t len)
   {
     if (len) {
       if (!_p->_innerSerialization)
@@ -199,7 +199,7 @@ namespace qi {
     return len;
   }
 
-  void ODataStream::writeString(const char *str, size_t len)
+  void BinaryEncoder::writeString(const char *str, size_t len)
   {
     ++_p->_innerSerialization;
     *this << (qi::uint32_t)len;
@@ -214,20 +214,20 @@ namespace qi {
     }
   }
 
-  ODataStream& ODataStream::operator<<(const std::string &s)
+  BinaryEncoder& BinaryEncoder::operator<<(const std::string &s)
   {
     writeString(s.c_str(), s.length());
     return *this;
   }
 
-  ODataStream& ODataStream::operator<<(const char *s)
+  BinaryEncoder& BinaryEncoder::operator<<(const char *s)
   {
     qi::uint32_t len = strlen(s);
     writeString(s, len);
     return *this;
   }
 
-  ODataStream &ODataStream::operator<<(const qi::Buffer &meta) {
+  BinaryEncoder &BinaryEncoder::operator<<(const qi::Buffer &meta) {
     if (!_p->_innerSerialization)
     {
       signature() += "r";
@@ -240,12 +240,12 @@ namespace qi {
 
     --_p->_innerSerialization;
 
-    qiLogDebug("DataStream") << "Serializing buffer " << meta.size()
+    qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
                              << " at " << buffer().size();
     return *this;
   }
 
-  ODataStream &ODataStream::operator<<(const GenericValuePtr &value)
+  BinaryEncoder &BinaryEncoder::operator<<(const GenericValuePtr &value)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
@@ -256,7 +256,7 @@ namespace qi {
     return *this;
   }
 
-  void ODataStream::beginList(uint32_t size, std::string elementSignature)
+  void BinaryEncoder::beginList(uint32_t size, std::string elementSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "[" + elementSignature;
@@ -264,14 +264,14 @@ namespace qi {
     *this << size;
   }
 
-  void ODataStream::endList()
+  void BinaryEncoder::endList()
   {
     --_p->_innerSerialization;
     if (!_p->_innerSerialization)
       signature() += "]";
   }
 
-  void ODataStream::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
+  void BinaryEncoder::beginMap(uint32_t size, std::string keySignature, std::string valueSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "{" + keySignature + valueSignature + "}";
@@ -279,52 +279,52 @@ namespace qi {
     *this << size;
   }
 
-  void ODataStream::endMap()
+  void BinaryEncoder::endMap()
   {
     --_p->_innerSerialization;
     if (!_p->_innerSerialization)
       signature() += "}";
   }
 
-  void ODataStream::beginTuple(std::string sig)
+  void BinaryEncoder::beginTuple(std::string sig)
   {
     if (!_p->_innerSerialization)
       signature() += "(" + sig + ")";
     ++_p->_innerSerialization;
   }
 
-  void ODataStream::endTuple()
+  void BinaryEncoder::endTuple()
   {
     --_p->_innerSerialization;
   }
 
-  ODataStream::Status ODataStream::status() const
+  BinaryEncoder::Status BinaryEncoder::status() const
   {
     return _p->_status;
   }
 
-  void ODataStream::setStatus(Status status)
+  void BinaryEncoder::setStatus(Status status)
   {
     _p->_status = status;
   }
 
-  Buffer& ODataStream::buffer()
+  Buffer& BinaryEncoder::buffer()
   {
     return _p->_buffer;
   }
 
-  std::string& ODataStream::signature()
+  std::string& BinaryEncoder::signature()
   {
     return _p->_signature;
   }
 
-  ODataStreamPrivate::ODataStreamPrivate(qi::Buffer &buffer)
-    : _status(ODataStream::Status_Ok), _innerSerialization(0)
+  BinaryEncoderPrivate::BinaryEncoderPrivate(qi::Buffer &buffer)
+    : _status(BinaryEncoder::Status_Ok), _innerSerialization(0)
   {
     _buffer = buffer;
   }
 
-  ODataStreamPrivate::~ODataStreamPrivate()
+  BinaryEncoderPrivate::~BinaryEncoderPrivate()
   {
   }
 
@@ -332,7 +332,7 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(ODataStream& out)
+      SerializeTypeVisitor(BinaryEncoder& out)
         : out(out)
       {}
 
@@ -440,7 +440,7 @@ namespace qi {
       {
         out << *buffer;
       }
-      ODataStream& out;
+      BinaryEncoder& out;
     };
 
     class DeserializeTypeVisitor
@@ -449,7 +449,7 @@ namespace qi {
     * information should.
     */
     public:
-      DeserializeTypeVisitor(IDataStream& in)
+      DeserializeTypeVisitor(BinaryDecoder& in)
         : in(in)
       {}
 
@@ -519,7 +519,7 @@ namespace qi {
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
         in >> sz;
-        if (in.status() != IDataStream::Status_Ok)
+        if (in.status() != BinaryDecoder::Status_Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
@@ -536,7 +536,7 @@ namespace qi {
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
         in >> sz;
-        if (in.status() != IDataStream::Status_Ok)
+        if (in.status() != BinaryDecoder::Status_Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
@@ -592,27 +592,27 @@ namespace qi {
         result.value = s;
       }
       GenericValuePtr result;
-      IDataStream& in;
+      BinaryDecoder& in;
     }; //class
 
   } // namespace details
 
   namespace details {
-    void serialize(GenericValuePtr val, ODataStream& out)
+    void serialize(GenericValuePtr val, BinaryEncoder& out)
     {
       SerializeTypeVisitor stv(out);
       qi::typeDispatch(stv, val.type, &val.value);
-      if (out.status() != ODataStream::Status_Ok) {
-        qiLogError("qi.datastream") << "OSerialization error";
+      if (out.status() != BinaryEncoder::Status_Ok) {
+        qiLogError("qimessaging.binarycoder") << "OSerialization error";
       }
     }
 
-    GenericValuePtr deserialize(qi::Type *type, IDataStream& in) {
+    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in) {
       void* storage = 0;
       DeserializeTypeVisitor dtv(in);
       qi::typeDispatch(dtv, type, &storage);
-      if (in.status() != IDataStream::Status_Ok) {
-        qiLogError("qi.datastream") << "ISerialization error";
+      if (in.status() != BinaryDecoder::Status_Ok) {
+        qiLogError("qimessaging.binarycoder") << "ISerialization error";
       }
       return dtv.result;
     }

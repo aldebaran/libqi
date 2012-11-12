@@ -16,8 +16,8 @@
 #include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
-#include <qimessaging/idatastream.hpp>
-#include <qimessaging/odatastream.hpp>
+#include <qimessaging/binaryencoder.hpp>
+#include <qimessaging/binarydecoder.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 
@@ -109,19 +109,19 @@ TEST(QiMessagingConnexion, testBuffer)
   ASSERT_TRUE(tc.init());
   qi::Buffer buf;
   std::string challenge = "foo*******************************";
-  qi::ODataStream out(buf);
+  qi::BinaryEncoder out(buf);
   out << challenge;
   qiLogDebug("test") << "call BA";
   qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
-  qi::IDataStream in(result);
+  qi::BinaryDecoder in(result);
   in >> reply;
   ASSERT_EQ(challenge, reply);
   qiLogDebug("test") << "call BA";
   result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
   {
     std::string reply;
-    qi::IDataStream in(result);
+    qi::BinaryDecoder in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }
@@ -129,21 +129,21 @@ TEST(QiMessagingConnexion, testBuffer)
   result = tc.obj->call<qi::Buffer>("replyBufA", buf, 1);
   {
     std::string reply;
-    qi::IDataStream in(result);
+    qi::BinaryDecoder in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }
   result = tc.obj->call<qi::Buffer>("replyBuf", buf);
    {
     std::string reply;
-    qi::IDataStream in(result);
+    qi::BinaryDecoder in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }
   result = tc.obj->call<qi::Buffer>("replyBufB", 1, buf);
   {
     std::string reply;
-    qi::IDataStream in(result);
+    qi::BinaryDecoder in(result);
     in >> reply;
     ASSERT_EQ(challenge, reply);
   }

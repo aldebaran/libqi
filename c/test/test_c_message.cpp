@@ -10,17 +10,17 @@
 #include <c/src/message_c_p.h>
 #include <gtest/gtest.h>
 
-qi::IDataStream &get_is(qi_message_data_t *m)
+qi::BinaryDecoder &get_is(qi_message_data_t *m)
 {
   if (!m->is)
-    m->is = new qi::IDataStream(*m->buff);
+    m->is = new qi::BinaryDecoder(*m->buff);
   return *(m->is);
 }
 
-qi::ODataStream &get_os(qi_message_data_t *m)
+qi::BinaryEncoder &get_os(qi_message_data_t *m)
 {
   if (!m->os)
-    m->os = new qi::ODataStream(*m->buff);
+    m->os = new qi::BinaryEncoder(*m->buff);
   return *(m->os);
 }
 

@@ -113,10 +113,10 @@ TEST_F(TestFile, fileStream)
   f.save(a_path.string(qi::unicodeFacet()));
 
   qi::Buffer buf;
-  qi::ODataStream d(buf);
+  qi::BinaryEncoder d(buf);
   d << f;
 
-  qi::IDataStream d2(buf);
+  qi::BinaryDecoder d2(buf);
   qi::File fres;
   d2 >> fres;
 

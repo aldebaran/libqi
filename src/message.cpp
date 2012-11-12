@@ -8,8 +8,8 @@
 
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
-#include <qimessaging/odatastream.hpp>
-#include <qimessaging/idatastream.hpp>
+#include <qimessaging/binaryencoder.hpp>
+#include <qimessaging/binarydecoder.hpp>
 
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
@@ -182,7 +182,7 @@ namespace qi {
 
   void Message::setParameters(const GenericFunctionParameters &parameters)
   {
-    ODataStream out(_p->buffer);
+    BinaryEncoder out(_p->buffer);
     for (unsigned int i = 0; i < parameters.size(); ++i)
       qi::details::serialize(parameters[i], out);
     setSignature(out.signature());
@@ -190,7 +190,7 @@ namespace qi {
 
   GenericFunctionParameters Message::parameters(const qi::Signature &sig) const {
     GenericFunctionParameters result;
-    IDataStream in(_p->buffer);
+    BinaryDecoder in(_p->buffer);
     Signature::iterator it = sig.begin();
     if (!_p->signature.empty() && _p->signature != sig.toString())
       qiLogWarning("qi.message") << "Signature mismatch " << sig.toString() <<" " << _p->signature;

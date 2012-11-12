@@ -6,7 +6,7 @@
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transportserver.hpp>
-#include <qimessaging/idatastream.hpp>
+#include <qimessaging/binarydecoder.hpp>
 #include <boost/bind.hpp>
 #include <qi/log.hpp>
 
@@ -181,7 +181,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
 
     Message sdMsg;
     Buffer buf;
-    ODataStream d(buf);
+    BinaryEncoder d(buf);
     d << msg->service();
     sdMsg.setBuffer(buf);
 
@@ -228,7 +228,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
     {
       // Get serviceId
       ServiceInfo    result;
-      qi::IDataStream ds(msg->buffer());
+      qi::BinaryDecoder ds(msg->buffer());
       ds >> result;
 
       if (result.name() == "")
@@ -252,7 +252,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       Message  ans(Message::Type_Reply, msg->address());
       Buffer   buf;
       ans.setBuffer(buf);
-      ODataStream dsAns(buf);
+      BinaryEncoder dsAns(buf);
       dsAns << result;
 
       // id should be rewritten then sent to the client
@@ -337,7 +337,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
         ans.setType(qi::Message::Type_Reply);
         ans.setFunction(qi::Message::ServerFunction_Connect);
         ans.setObject(qi::Message::GenericObject_Main);
-        qi::ODataStream d(buf);
+        qi::BinaryEncoder d(buf);
         d << "";
         socket->send(ans);
       }
@@ -349,7 +349,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
     else if (_type == Type_ReverseGateway && msg.type() == Message::Type_Reply)
     {
       std::string endpoint;
-      IDataStream d(msg.buffer());
+      BinaryDecoder d(msg.buffer());
       d >> endpoint;
       if (endpoint != "")
       {

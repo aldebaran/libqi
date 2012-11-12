@@ -94,7 +94,7 @@ namespace qi
     return true;
   }
 
-  qi::ODataStream &operator<<(qi::ODataStream &stream,
+  qi::BinaryEncoder &operator<<(qi::BinaryEncoder &stream,
                              const qi::File &sfile)
   {
     stream << sfile.flags();
@@ -118,7 +118,7 @@ namespace qi
     return stream;
   }
 
-  qi::IDataStream &operator>>(qi::IDataStream &stream,
+  qi::BinaryDecoder &operator>>(qi::BinaryDecoder &stream,
                              qi::File &sfile)
   {
     stream >> sfile.p->flags;

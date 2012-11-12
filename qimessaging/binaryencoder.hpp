@@ -4,8 +4,8 @@
 **  See COPYING for the license
 */
 
-#ifndef QIMESSAGING_ODATASTREAM_HPP
-#define QIMESSAGING_ODATASTREAM_HPP
+#ifndef QIMESSAGING_BINARYENCODER_HPP
+#define QIMESSAGING_BINARYENCODER_HPP
 
 #include <qi/buffer.hpp>
 
@@ -17,14 +17,14 @@
 
 namespace qi {
   class GenericValuePtr;
-  class ODataStreamPrivate;
+  class BinaryEncoderPrivate;
 
   /** This class provides data deserialization, using
    * a qi::Buffer as a backend.
    *
    *
    */
-  class QIMESSAGING_API ODataStream {
+  class QIMESSAGING_API BinaryEncoder {
   public:
     enum Status {
       Status_Ok                     = 0,
@@ -33,35 +33,35 @@ namespace qi {
 
     /// <summary>Default constructor.</summary>
     /// <param name="data">The data.</param>
-    explicit ODataStream(qi::Buffer &buffer);
-    ~ODataStream();
+    explicit BinaryEncoder(qi::Buffer &buffer);
+    ~BinaryEncoder();
 
     //write raw data without any formatting
     int write(const char *str, size_t len);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
-    ODataStream& operator<<(bool      b);
+    BinaryEncoder& operator<<(bool      b);
 
-    ODataStream& operator<<(char        c);
-    ODataStream& operator<<(signed char c);
-    ODataStream& operator<<(short       i);
-    ODataStream& operator<<(int         i);
-    ODataStream& operator<<(long        l);
-    ODataStream& operator<<(long long   ll);
+    BinaryEncoder& operator<<(char        c);
+    BinaryEncoder& operator<<(signed char c);
+    BinaryEncoder& operator<<(short       i);
+    BinaryEncoder& operator<<(int         i);
+    BinaryEncoder& operator<<(long        l);
+    BinaryEncoder& operator<<(long long   ll);
 
-    ODataStream& operator<<(unsigned char  uc);
-    ODataStream& operator<<(unsigned short us);
-    ODataStream& operator<<(unsigned int   ui);
-    ODataStream& operator<<(unsigned long  ul);
-    ODataStream& operator<<(unsigned long long ull);
+    BinaryEncoder& operator<<(unsigned char  uc);
+    BinaryEncoder& operator<<(unsigned short us);
+    BinaryEncoder& operator<<(unsigned int   ui);
+    BinaryEncoder& operator<<(unsigned long  ul);
+    BinaryEncoder& operator<<(unsigned long long ull);
 
-    ODataStream& operator<<(float  i);
-    ODataStream& operator<<(double i);
-    ODataStream& operator<<(const char *);
-    ODataStream& operator<<(const std::string& i);
+    BinaryEncoder& operator<<(float  i);
+    BinaryEncoder& operator<<(double i);
+    BinaryEncoder& operator<<(const char *);
+    BinaryEncoder& operator<<(const std::string& i);
 
-    ODataStream &operator<<(const GenericValuePtr &value);
-    ODataStream &operator<<(const Buffer &buffer);
+    BinaryEncoder &operator<<(const GenericValuePtr &value);
+    BinaryEncoder &operator<<(const Buffer &buffer);
 
 
     void beginList(qi::uint32_t size, std::string elementSignature);
@@ -77,27 +77,27 @@ namespace qi {
     Buffer& buffer();
     std::string& signature();
   private:
-    ODataStreamPrivate *_p;
+    BinaryEncoderPrivate *_p;
 
     //No default CTOR
-    ODataStream() {}
+    BinaryEncoder() {}
 
   };
 
   //generic stream operator. (use qi::Type)
   template<typename T>
-  ODataStream& operator<<(ODataStream& out, const T &v);
+  BinaryEncoder& operator<<(BinaryEncoder& out, const T &v);
 
   namespace details {
-    QIMESSAGING_API void serialize(GenericValuePtr val, ODataStream& out);
+    QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out);
   }
 
   template<typename T>
-  ODataStream& operator<<(ODataStream& out, const T &v) {
+  BinaryEncoder& operator<<(BinaryEncoder& out, const T &v) {
     GenericValuePtr value = GenericValuePtr::from(v);
     qi::details::serialize(value, out);
     return out;
   }
 }
 
-#endif // QIMESSAGING_ODATASTREAM_HPP
+#endif // QIMESSAGING_BINARYENCODER_HPP
