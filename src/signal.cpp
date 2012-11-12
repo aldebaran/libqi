@@ -212,7 +212,7 @@ namespace qi {
         // There cannot be two activeThreads entry for the same tid
         // because activeThreads is not set at the post() stage
         if (activeThreads.size() == 1
-          && *activeThreads.begin() == boost::this_thread::get_id())
+          && *activeThreads.begin() == tid)
         { // One active callback in this thread, means above us in call stack
           // So we cannot wait for it
           return;
