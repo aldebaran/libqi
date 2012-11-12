@@ -39,7 +39,8 @@ namespace qi {
 
     //TODO use the type than "network type"
     enum Type {
-      Type_None     = 0,
+      // Used only for empty containers when Dynamic resolution is used.
+      Type_None     = '_',
       Type_Bool     = 'b',
 
       Type_Int8     = 'c',
