@@ -8,9 +8,11 @@
 
 #include <string.h>
 #include <qimessaging/c/qi_c.h>
+#include <qimessaging/c/error_c.h>
 #include <qimessaging/c/session_c.h>
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>
+#include "error_p.h"
 
 qi_session_t *qi_session_create()
 {
@@ -23,7 +25,15 @@ bool qi_session_connect(qi_session_t *session, const char *address)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
-  return s->connect(address);
+  try
+  {
+    return s->connect(address);
+  }
+  catch (std::runtime_error &e)
+  {
+    qi_c_set_error(e.what());
+    return false;
+  }
 }
 
 void qi_session_destroy(qi_session_t *session)
@@ -66,12 +76,21 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
 
   qi_object_t *obj = qi_object_create();
   qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
-  o = s->service(name);
-  if (!o) {
-    qi_object_destroy(obj);
+
+  try
+  {
+    o = s->service(name);
+    if (!o) {
+      qi_object_destroy(obj);
+      return 0;
+    }
+    return obj;
+  }
+  catch (std::runtime_error &e)
+  {
+    qi_c_set_error(e.what());
     return 0;
   }
-  return obj;
 }
 
 const char** qi_session_get_services(qi_session_t *session)

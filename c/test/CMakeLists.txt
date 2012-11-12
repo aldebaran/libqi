@@ -3,3 +3,4 @@ qi_create_gtest(test_c_bindings SRC test_c_bindings.cpp DEPENDS QI QIMESSAGING G
 qi_create_gtest(test_c_future SRC test_c_future.cpp DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_c_message SRC test_c_message.cpp DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_c_signal SRC test_c_signal.cpp DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
+qi_create_gtest(test_c_error SRC test_c_error.cpp DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
