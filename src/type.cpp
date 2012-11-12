@@ -113,6 +113,10 @@ namespace qi {
   class SignatureTypeVisitor
   {
   public:
+    SignatureTypeVisitor(bool resolveDynamic)
+    : _resolveDynamic(resolveDynamic)
+    {
+    }
     void visitVoid(Type*)
     {
       result = Signature::fromType(Signature::Type_Void).toString();
@@ -146,14 +150,85 @@ namespace qi {
    }
    void visitList(GenericList value)
    {
-     result = std::string()
+     if (_resolveDynamic && value.elementType()->kind() == Type::Dynamic)
+     {
+       if (value.size() == 0)
+       { // Empty list, TODO have a 'whatever signature entry
+         result =  std::string()
+         + (char)Signature::Type_List
+         + (char)Signature::Type_None
+         + (char)Signature::Type_List_End;
+       }
+       else
+       {
+         GenericListIterator it = value.begin();
+         GenericListIterator iend = value.end();
+         std::string sigFirst = (*it).signature(true);
+         ++it;
+         for (;it != iend; ++it)
+         {
+           std::string sig = (*it).signature(true);
+           if (sig != sigFirst)
+           {
+             result = "[m]";
+             it.destroy();
+             iend.destroy();
+             return;
+           }
+         }
+         // All element matches
+         result =  std::string()
+         + (char)Signature::Type_List
+         + sigFirst
+         + (char)Signature::Type_List_End;
+         it.destroy();
+         iend.destroy();
+       }
+     }
+     else
+       result = std::string()
         + (char)Signature::Type_List
         + value.elementType()->signature()
         + (char)Signature::Type_List_End;
    }
    void visitMap(GenericMap value)
    {
-     result = std::string()
+     if (_resolveDynamic)
+     {
+       if (value.size() == 0)
+         result = std::string()
+           + (char)Signature::Type_Map
+           + (char)Signature::Type_None
+           + (char)Signature::Type_None
+           + (char)Signature::Type_Map_End;
+       else
+       {
+         GenericMapIterator it = value.begin();
+         GenericMapIterator iend = value.end();
+         std::pair<GenericValue, GenericValue> e = *it;
+         std::string ksig = e.first.signature(true);
+         std::string vsig = e.second.signature(true);
+         // Check that ksig/vsig is always the same, set to empty if not
+         ++it;
+         for(; it!= iend; ++it)
+         {
+           std::pair<GenericValue, GenericValue> e = *it;
+           if (!ksig.empty() && ksig != e.first.signature(true))
+             ksig.clear();
+           if (!vsig.empty() && vsig != e.second.signature(true))
+             vsig.clear();
+         }
+         it.destroy();
+         iend.destroy();
+         result = std::string()
+           + (char)Signature::Type_Map
+           + (ksig.empty()? value.keyType()->signature(): ksig)
+           + (vsig.empty()? value.elementType()->signature(): vsig)
+           + (char)Signature::Type_Map_End;
+       }
+     }
+     else
+       result = std::string()
         + (char)Signature::Type_Map
         + value.keyType()->signature()
         + value.elementType()->signature()
@@ -176,27 +251,40 @@ namespace qi {
      std::vector<Type*> types = type->memberTypes(storage);
      std::string res;
      res += (char)Signature::Type_Tuple;
-     for (unsigned i=0; i<types.size(); ++i)
-       res += types[i]->signature();
+     if (_resolveDynamic)
+     {
+       for (unsigned i=0; i<types.size(); ++i)
+       {
+         res += types[i]->signature(type->get(storage, i), true);
+       }
+     }
+     else
+       for (unsigned i=0; i<types.size(); ++i)
+         res += types[i]->signature();
      res += (char)Signature::Type_Tuple_End;
      result = res;
    }
    void visitDynamic(Type* type, GenericValue pointee)
    {
-     result = Signature::fromType(Signature::Type_Dynamic).toString();
+     if (_resolveDynamic)
+     {
+       result = pointee.signature(true);
+     }
+     else
+       result = Signature::fromType(Signature::Type_Dynamic).toString();
    }
    void visitRaw(TypeRaw* type, Buffer* buffer)
    {
      result = Signature::fromType(Signature::Type_Raw).toString();
    }
    std::string result;
+   bool _resolveDynamic;
   };
 
 
-  std::string Type::signature()
+  std::string Type::signature(void* storage, bool resolveDynamic)
   {
-    void* storage = 0;
-    SignatureTypeVisitor ts;
+    SignatureTypeVisitor ts(resolveDynamic);
     typeDispatch(ts, this, &storage);
     return ts.result;
   }

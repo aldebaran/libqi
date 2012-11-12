@@ -103,7 +103,7 @@ namespace qi{
     //TODO: DIE
     inline const char* infoString() { return info().asCString(); } // for easy gdb access
 
-    std::string signature();
+    std::string signature(void* storage=0, bool resolveDynamic = false);
 
     ///@return a Type on which signature() returns sig.
     static Type* fromSignature(const qi::Signature& sig);
@@ -190,7 +190,7 @@ namespace qi{
     /// Helper function that converts and always clone
     GenericValue convertCopy(Type* targetType) const;
     GenericValue clone() const;
-    std::string signature() const;
+    std::string signature(bool resolveDynamic = false) const;
     void destroy();
     Type::Kind kind() const;
 

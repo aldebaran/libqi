@@ -93,12 +93,12 @@ namespace qi {
     value = type = 0;
   }
 
-  inline std::string GenericValue::signature() const
+  inline std::string GenericValue::signature(bool resolveDynamic) const
   {
     if (!type)
       return "";
     else
-      return type->signature();
+      return type->signature(value, resolveDynamic);
   }
 
   inline void GenericValue::destroy()
