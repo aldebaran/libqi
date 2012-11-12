@@ -18,7 +18,7 @@
 #include "object_c_p.h"
 #include "future_c_p.h"
 
-void qiFutureCAdapter(qi::Future<qi::GenericValue> result, qi::Promise<void*> promise) {
+void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<void*> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
     return;
@@ -61,7 +61,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   sig = sig.substr(1, sig.length() - 2);
   qi::GenericFunctionParameters params;
   params = m->msg->parameters(sig);
-  qi::Future<qi::GenericValue> res = obj->xMetaCall(mm->sigreturn(), signature_c, params);
+  qi::Future<qi::GenericValuePtr> res = obj->xMetaCall(mm->sigreturn(), signature_c, params);
   qi::Promise<void*> promise;
   qi_future_data_t*  data = new qi_future_data_t;
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, promise));
@@ -84,7 +84,7 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
   delete ob;
 }
 
-qi::GenericValue c_call(std::string complete_sig,
+qi::GenericValuePtr c_call(std::string complete_sig,
                         qi_object_method_t func,
                         void* data,
                         const qi::GenericFunctionParameters& params)
@@ -97,7 +97,7 @@ qi::GenericValue c_call(std::string complete_sig,
    if (func)
      func(complete_sig.c_str(), (qi_message_t *) message_c, reinterpret_cast<qi_message_t *>(answer_c), data);
 
-   qi::GenericValue res;
+   qi::GenericValuePtr res;
    std::string sigret = qi::signatureSplit(complete_sig)[0];
    res.type = qi::Type::fromSignature(sigret);
    qi::IDataStream in(*answer_c->buff);

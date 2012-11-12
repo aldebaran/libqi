@@ -152,7 +152,7 @@ namespace qi {
     return *this;
   }
 
-  IDataStream &IDataStream::operator>>(GenericValue &value)
+  IDataStream &IDataStream::operator>>(GenericValuePtr &value)
   {
     std::string signature;
     *this >> signature;
@@ -240,7 +240,7 @@ namespace qi {
     return *this;
   }
 
-  ODataStream &ODataStream::operator<<(const GenericValue &value)
+  ODataStream &ODataStream::operator<<(const GenericValuePtr &value)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
@@ -324,13 +324,13 @@ namespace qi {
   }
 
   namespace details {
-    void serialize(GenericValue val, ODataStream& out)
+    void serialize(GenericValuePtr val, ODataStream& out)
     {
       SerializeTypeVisitor stv(out);
       typeDispatch(stv, val.type, &val.value);
     }
 
-    GenericValue deserialize(qi::Type *type, IDataStream& in) {
+    GenericValuePtr deserialize(qi::Type *type, IDataStream& in) {
       void* storage = 0;
       DeserializeTypeVisitor dtv(in);
       typeDispatch(dtv, type, &storage);

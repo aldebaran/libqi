@@ -216,9 +216,9 @@ TEST(TestCall, TestGenericConversion) {
   svec.push_back("toto");
 
   qi::ManagedGenericValue gv;
-  gv = qi::GenericValue::from(std::string("titi"));
+  gv = qi::GenericValuePtr::from(std::string("titi"));
   gvec.push_back(gv);
-  gv = qi::GenericValue::from(std::string("toto"));
+  gv = qi::GenericValuePtr::from(std::string("toto"));
   gvec.push_back(gv);
 
   int serviceID;
@@ -272,17 +272,17 @@ TEST(TestCall, TestGenericConversion) {
   EXPECT_EQ(6, f.value());
 
   GenericTuple gt;
-  gt.e1 = qi::GenericValue::from(1.0);
-  gt.e2 = qi::GenericValue::from(2U);
+  gt.e1 = qi::GenericValuePtr::from(1.0);
+  gt.e2 = qi::GenericValuePtr::from(2U);
   std::map<std::string, qi::ManagedGenericValue> map;
-  map["foo"] = qi::GenericValue::from(3);
-  gt.e3 = qi::GenericValue::from(map);
+  map["foo"] = qi::GenericValuePtr::from(3);
+  gt.e3 = qi::GenericValuePtr::from(map);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
   std::map<unsigned int, std::string> ravMap;
-  gt.e3 = qi::GenericValue::from(ravMap);
+  gt.e3 = qi::GenericValuePtr::from(ravMap);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());

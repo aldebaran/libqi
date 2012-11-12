@@ -32,7 +32,7 @@ void value(qi::ManagedGenericValue mv)
 
 void valueList(std::vector<qi::ManagedGenericValue> mv)
 {
-  v = qi::GenericValue::from(mv).clone();
+  v = qi::GenericValuePtr::from(mv).clone();
 }
 
 class TestObject: public ::testing::Test
@@ -87,8 +87,8 @@ TEST_F(TestObject, meta)
   ObjectPtr target = oclient;
   ASSERT_TRUE(target);
   {
-    /* WATCH OUT, qi::AutoGenericValue(12) is what call expects!
-    * So call(AutoGenericValue(12)) will *not* call with the value
+    /* WATCH OUT, qi::AutoGenericValuePtr(12) is what call expects!
+    * So call(AutoGenericValuePtr(12)) will *not* call with the value
     * "a metavalue containing 12", it will call with "12".
     */
   target->call<void>("value", 12).wait();
@@ -102,36 +102,36 @@ TEST_F(TestObject, meta)
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
+    qi::Future<void> fut = target->call<void>("value", GenericValuePtr(AutoGenericValuePtr(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.asDouble(), 12);
   }
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0f))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr("foo"))).wait();
   ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
   ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<ManagedGenericValue> args;
-  args.push_back(AutoGenericValue(12));
-  args.push_back(AutoGenericValue("foo"));
-  args.push_back(AutoGenericValue(in));
+  args.push_back(AutoGenericValuePtr(12));
+  args.push_back(AutoGenericValuePtr("foo"));
+  args.push_back(AutoGenericValuePtr(in));
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.kind(), Type::List);
-  GenericList l = v.asList();
+  GenericListPtr l = v.asList();
   ASSERT_EQ(3, l.size());
-  GenericListIterator i = l.begin();
+  GenericListIteratorPtr i = l.begin();
   // iterate
   EXPECT_EQ(12, (*i).asDouble());
   i++;
@@ -156,37 +156,37 @@ TEST_F(TestObject, meta)
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
+    qi::Future<void> fut = target->call<void>("value", GenericValuePtr(AutoGenericValuePtr(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.asDouble(), 12);
   }
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0f))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr("foo"))).wait();
   ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
   ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<ManagedGenericValue> args;
-  args.push_back(AutoGenericValue(12));
-  args.push_back(AutoGenericValue("foo"));
-  args.push_back(AutoGenericValue(in));
+  args.push_back(AutoGenericValuePtr(12));
+  args.push_back(AutoGenericValuePtr("foo"));
+  args.push_back(AutoGenericValuePtr(in));
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.kind(), Type::List);
-  GenericList l = v.asList();
-  GenericListIterator i = l.begin();
+  GenericListPtr l = v.asList();
+  GenericListIteratorPtr i = l.begin();
   // iterate
   ASSERT_EQ(12, (*i).asDouble());
   i++;
@@ -210,35 +210,35 @@ TEST_F(TestObject, meta)
   }
   {
     int myint = 12;
-    qi::Future<void> fut = target->call<void>("value", GenericValue(AutoGenericValue(myint)));
+    qi::Future<void> fut = target->call<void>("value", GenericValuePtr(AutoGenericValuePtr(myint)));
     myint = 5;
     fut.wait();
     ASSERT_EQ(v.asDouble(), 12);
   }
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(12.0f))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(12.0f))).wait();
   ASSERT_EQ(v.asDouble(), 12);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue("foo"))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr("foo"))).wait();
   ASSERT_EQ(v.asString(), "foo");
   target->call<void>("value", "foo").wait();
   ASSERT_EQ(v.asString(), "foo");
   std::vector<double> in;
   in.push_back(1); in.push_back(2);
-  target->call<void>("value", qi::GenericValue(qi::AutoGenericValue(in))).wait();
+  target->call<void>("value", qi::GenericValuePtr(qi::AutoGenericValuePtr(in))).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   std::vector<ManagedGenericValue> args;
-  args.push_back(AutoGenericValue(12));
-  args.push_back(AutoGenericValue("foo"));
-  args.push_back(AutoGenericValue(in));
+  args.push_back(AutoGenericValuePtr(12));
+  args.push_back(AutoGenericValuePtr("foo"));
+  args.push_back(AutoGenericValuePtr(in));
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.kind(), Type::List);
-  GenericList l = v.asList();
-  GenericListIterator i = l.begin();
+  GenericListPtr l = v.asList();
+  GenericListIteratorPtr i = l.begin();
   // iterate
   ASSERT_EQ(12, (*i).asDouble());
   i++;

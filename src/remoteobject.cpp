@@ -81,7 +81,7 @@ namespace qi {
   {
     {
       boost::mutex::scoped_lock lock(_mutex);
-      std::map<int, qi::Promise<GenericValue> >::iterator it = _promises.begin();
+      std::map<int, qi::Promise<GenericValuePtr> >::iterator it = _promises.begin();
       while (it != _promises.end()) {
         qiLogVerbose("RemoteObject") << "Reporting error for request " << it->first << "(socket disconnected)";
         it->second.setError("Socket disconnected");
@@ -111,9 +111,9 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
-    qi::Promise<GenericValue> promise;
+    qi::Promise<GenericValuePtr> promise;
     bool found = false;
-    std::map<int, qi::Promise<GenericValue> >::iterator it;
+    std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
 
     qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
     {
@@ -200,9 +200,9 @@ namespace qi {
   }
 
 
-  qi::Future<GenericValue> RemoteObject::metaCall(unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
+  qi::Future<GenericValuePtr> RemoteObject::metaCall(unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
-    qi::Promise<GenericValue> out;
+    qi::Promise<GenericValuePtr> out;
     qi::Message msg;
     msg.setParameters(in);
 #ifndef NDEBUG

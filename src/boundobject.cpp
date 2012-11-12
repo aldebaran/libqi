@@ -10,7 +10,7 @@ static const int gObjectOffset = 10;
 
 namespace qi {
 
-  static GenericValue forwardEvent(const GenericFunctionParameters& params,
+  static GenericValuePtr forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int event, TransportSocketPtr client)
   {
     qi::Message msg;
@@ -20,7 +20,7 @@ namespace qi {
     msg.setType(Message::Type_Event);
     msg.setObject(Message::GenericObject_Main);
     client->send(msg);
-    return GenericValue();
+    return GenericValuePtr();
   }
 
 
@@ -102,7 +102,7 @@ namespace qi {
         std::stringstream ss;
         ss << "No such method " << msg.address();
         qiLogError("qi::Server") << ss.str();
-        qi::Promise<GenericValue> prom;
+        qi::Promise<GenericValuePtr> prom;
         prom.setError(ss.str());
         serverResultAdapter(prom.future(), socket, msg.address());
         return;
@@ -133,7 +133,7 @@ namespace qi {
     switch (msg.type())
     {
     case Message::Type_Call: {
-         qi::Future<GenericValue> fut = obj->metaCall(funcId, mfp, _callType);
+         qi::Future<GenericValuePtr> fut = obj->metaCall(funcId, mfp, _callType);
          fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
       }
       break;

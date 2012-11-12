@@ -56,7 +56,7 @@ namespace qi {
 # define __QI_DEBUG_SERIALIZATION_CONTAINER_R(x, c)
 #endif
 
-  class GenericValue;
+  class GenericValuePtr;
 
   /** This class provides data serialization, using
    * a qi::Buffer as a backend.
@@ -95,7 +95,7 @@ namespace qi {
     IDataStream& operator>>(double   &d);
     IDataStream& operator>>(std::string& i);
 
-    IDataStream& operator>>(qi::GenericValue &value);
+    IDataStream& operator>>(qi::GenericValuePtr &value);
     IDataStream& operator>>(qi::Buffer &buffer);
 
     //read raw data
@@ -150,7 +150,7 @@ namespace qi {
     ODataStream& operator<<(const char *);
     ODataStream& operator<<(const std::string& i);
 
-    ODataStream &operator<<(const GenericValue &value);
+    ODataStream &operator<<(const GenericValuePtr &value);
     ODataStream &operator<<(const Buffer &buffer);
 
 

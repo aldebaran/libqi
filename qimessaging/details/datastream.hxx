@@ -14,8 +14,8 @@ namespace qi {
 
   namespace details {
 
-    QIMESSAGING_API void         serialize(GenericValue val, ODataStream& out);
-    QIMESSAGING_API GenericValue deserialize(qi::Type *type, IDataStream& in);
+    QIMESSAGING_API void         serialize(GenericValuePtr val, ODataStream& out);
+    QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, IDataStream& in);
 
     class SerializeTypeVisitor
     {
@@ -67,10 +67,10 @@ namespace qi {
         out.writeString(data.first, data.second);
       }
 
-      void visitList(GenericList value)
+      void visitList(GenericListPtr value)
       {
         out.beginList(value.size(), value.elementType()->signature());
-        GenericListIterator it, end;
+        GenericListIteratorPtr it, end;
         it = value.begin();
         end = value.end();
         for (; it != end; ++it)
@@ -80,15 +80,15 @@ namespace qi {
         out.endList();
       }
 
-      void visitMap(GenericMap value)
+      void visitMap(GenericMapPtr value)
       {
         out.beginMap(value.size(), value.keyType()->signature(), value.elementType()->signature());
-        GenericMapIterator it, end;
+        GenericMapIteratorPtr it, end;
         it = value.begin();
         end = value.end();
         for(; it != end; ++it)
         {
-          std::pair<GenericValue, GenericValue> v = *it;
+          std::pair<GenericValuePtr, GenericValuePtr> v = *it;
           qi::details::serialize(v.first, out);
           qi::details::serialize(v.second, out);
         }
@@ -102,14 +102,14 @@ namespace qi {
         qiLogError("qi.type") << "Object serialization not implemented";
       }
 
-      void visitPointer(TypePointer* type, void* storage, GenericValue pointee)
+      void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
       {
         qiLogError("qi.type") << "Pointer serialization not implemented";
       }
 
       void visitTuple(TypeTuple* type, void* storage)
       {
-        std::vector<GenericValue> vals = type->getValues(storage);
+        std::vector<GenericValuePtr> vals = type->getValues(storage);
         std::string tsig;
         for (unsigned i=0; i<vals.size(); ++i)
           tsig += vals[i].type->signature();
@@ -119,7 +119,7 @@ namespace qi {
         out.endTuple();
       }
 
-      void visitDynamic(Type* type, GenericValue pointee)
+      void visitDynamic(Type* type, GenericValuePtr pointee)
       {
         out << pointee;
       }
@@ -199,11 +199,11 @@ namespace qi {
         type->set(&result.value, s);
       }
 
-      void visitList(GenericList value)
+      void visitList(GenericListPtr value)
       {
         result.type = value.type;
         result.value = value.type->initializeStorage();
-        GenericList res(result);
+        GenericListPtr res(result);
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
         in >> sz;
@@ -215,11 +215,11 @@ namespace qi {
         }
       }
 
-      void visitMap(GenericMap value)
+      void visitMap(GenericMapPtr value)
       {
         result.type = value.type;
         result.value = value.type->initializeStorage();
-        GenericMap res(result);
+        GenericMapPtr res(result);
         Type* keyType = res.keyType();
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
@@ -228,8 +228,8 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          GenericValue k = qi::details::deserialize(keyType, in);
-          GenericValue v = qi::details::deserialize(elementType, in);
+          GenericValuePtr k = qi::details::deserialize(keyType, in);
+          GenericValuePtr v = qi::details::deserialize(elementType, in);
           res.insert(k, v);
         }
       }
@@ -239,7 +239,7 @@ namespace qi {
         qiLogError("qi.type") << " Object serialization not implemented";
       }
 
-      void visitPointer(TypePointer* type, void* storage, GenericValue pointee)
+      void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
       {
         qiLogError("qi.type") << " Pointer serialization not implemented";
       }
@@ -251,17 +251,17 @@ namespace qi {
         result.value = type->initializeStorage();
         for (unsigned i = 0; i<types.size(); ++i)
         {
-          GenericValue val = qi::details::deserialize(types[i], in);
+          GenericValuePtr val = qi::details::deserialize(types[i], in);
           type->set(&result.value, i, val.value);
           val.destroy();
         }
       }
 
-      void visitDynamic(Type* type, GenericValue pointee)
+      void visitDynamic(Type* type, GenericValuePtr pointee)
       {
         std::string sig;
         in >> sig;
-        GenericValue val;
+        GenericValuePtr val;
         val.type = Type::fromSignature(sig);
         val = qi::details::deserialize(val.type, in);
         result.type = type;
@@ -279,7 +279,7 @@ namespace qi {
         result.type = type;
         result.value = s;
       }
-      GenericValue result;
+      GenericValuePtr result;
       IDataStream& in;
     }; //class
 
@@ -292,7 +292,7 @@ namespace qi {
   template<typename T>
   ODataStream& operator<<(ODataStream& out, const T &v) {
     Type* type = typeOf<T>();
-    GenericValue value = GenericValue::from(v);
+    GenericValuePtr value = GenericValuePtr::from(v);
     details::SerializeTypeVisitor stv(out);
     typeDispatch(stv, type, &value.value);
     return out;
@@ -302,7 +302,7 @@ namespace qi {
   IDataStream& operator>>(IDataStream& in, T& v)
   {
     Type* type = typeOf<T>();
-    GenericValue value = qi::details::deserialize(type, in);;
+    GenericValuePtr value = qi::details::deserialize(type, in);;
     T* ptr = (T*)type->ptrFromStorage(&value.value);
     v = *ptr;
     return in;
