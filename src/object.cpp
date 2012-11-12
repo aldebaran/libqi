@@ -99,8 +99,23 @@ namespace qi {
     type->metaPost(value, event, args);
   }
 
+  static qi::Future<GenericValuePtr> generateError(qi::Promise<GenericValuePtr> *out, const std::string &type, const std::string &signature, const std::vector<qi::MetaMethod> &candidates) {
+    std::stringstream                           ss;
+    std::vector<qi::MetaMethod>::const_iterator it;
+
+    ss << "Can't find " << type << ": " << signature << std::endl
+       << "  Candidate(s):" << std::endl;
+    for (it = candidates.begin(); it != candidates.end(); ++it) {
+      const qi::MetaMethod       &mm = *it;
+      ss << "  " << mm.signature() << std::endl;
+    }
+    qiLogError("object") << ss.str();
+    out->setError(ss.str());
+    return out->future();
+  }
+
   qi::Future<GenericValuePtr>
-  GenericObject::xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& args)
+  GenericObject::metaCall(const std::string &signature, const GenericFunctionParameters& args, MetaCallType callType)
   {
     qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
@@ -115,72 +130,40 @@ namespace qi {
 
       // Try to find an other method with compatible signature
       // For this, first get a signature that resolves dynamic
-      std::string resolvedSig;
+      std::string resolvedSig = "(";
       for (unsigned i=0; i<args.size(); ++i)
         resolvedSig += args[i].signature(true);
-      resolvedSig = '(' + resolvedSig + ')';
-      qiLogDebug("qi.object") << "Using resolved signature " << resolvedSig;
-      std::vector<qi::MetaMethod> mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
-      Signature sargs(signatureSplit(signature)[2]);
-      for (unsigned i = 0; i < mml.size(); ++i)
-      {
-        Signature s(signatureSplit(mml[i].signature())[2]);
-        if (Signature(resolvedSig).isConvertibleTo(s))
-        {
-          qiLogVerbose("qi.object")
-              << "Signature mismatch, but found compatible type "
-              << mml[i].signature() <<" for " << signature;
-          methodId = mml[i].uid();
-          // Signature is wrapped in a tuple, unwrap
-          newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
-          break;
-        }
+      resolvedSig = resolvedSig + ')';
+      std::string fullSig = qi::signatureSplit(signature)[1] + "::" + resolvedSig;
+      qiLogDebug("qi.object") << "Finding method for resolved signature " << fullSig;
+      std::vector<qi::MetaMethod> mml = metaObject().findCompatibleMethod(fullSig);
+      if (mml.size() > 1) {
+        return generateError(&out, "overload", signature, mml);
+      }
+      if (mml.size() == 1) {
+        qiLogVerbose("qi.object") << "Signature mismatch, but found compatible type "
+                                  << mml[0].signature() <<" for " << signature;
+        methodId = mml[0].uid();
+        qi::Signature s(qi::signatureSplit(mml[0].signature())[2]);
+        // Signature is wrapped in a tuple, unwrap
+        newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
       }
     }
 #endif
     if (methodId < 0) {
-      std::stringstream ss;
-      ss << "Can't find method: " << signature << std::endl
-         << "  Candidate(s):" << std::endl;
-      std::vector<qi::MetaMethod>           mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
-      std::vector<qi::MetaMethod>::const_iterator it;
-
-      for (it = mml.begin(); it != mml.end(); ++it) {
-        const qi::MetaMethod       &mm = *it;
-        ss << "  " << mm.signature() << std::endl;
-      }
-      qiLogError("object") << ss.str();
-      out.setError(ss.str());
-      return out.future();
-    }
-    if (retsig != "v") {
-      const qi::MetaMethod *mm = metaObject().method(methodId);
-      if (!mm) {
-        std::stringstream ss;
-        ss << "method " << signature << "(id: " << methodId << ") disapeared mysteriously!";
-        qiLogError("object") << ss.str();
-        out.setError(ss.str());
-        return out.future();
-      }
-      if (mm->sigreturn() != retsig) {
-        std::stringstream ss;
-        ss << "signature mismatch for return value:" << std::endl
-           << "we want: " << retsig << " " << signature << std::endl
-           << "we had:" << mm->sigreturn() << " " << mm->signature();
-        qiLogWarning("object") << ss;
-        // Let it pass, conversion system will do it's job
-      }
+      return generateError(&out, "method", signature, metaObject().findMethod(qi::signatureSplit(signature)[1]));
     }
     //TODO: check for metacall to return false when not able to send the answer
     if (newArgs)
     {
-      qi::Future<GenericValuePtr> res = metaCall(methodId, *newArgs);
+      qi::Future<GenericValuePtr> res = metaCall(methodId, *newArgs, callType);
       delete newArgs;
       return res;
     }
     else
-      return metaCall(methodId, args);
+      return metaCall(methodId, args, callType);
   }
+
   /// Resolve signature and bounce
   bool GenericObject::xMetaPost(const std::string &signature, const GenericFunctionParameters &in) {
     if (!value || !type) {

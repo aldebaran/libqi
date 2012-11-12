@@ -78,7 +78,8 @@ namespace qi {
 
     qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
-    qi::Future<GenericValuePtr> xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& params);
+    qi::Future<GenericValuePtr> metaCall(const std::string &signature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+
     void emitEvent(const std::string& eventName,
                    qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
                    qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
@@ -88,6 +89,7 @@ namespace qi {
                    qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
                    qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
                    qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+
     void metaPost(unsigned int event, const GenericFunctionParameters& params);
 
     //protected

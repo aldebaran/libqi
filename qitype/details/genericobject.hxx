@@ -86,8 +86,6 @@ namespace qi {
   }
 
 
-
-
   template<typename R>
   qi::FutureSync<R> GenericObject::call(const std::string& methodName,
     qi::AutoGenericValuePtr p1,
@@ -116,14 +114,10 @@ namespace qi {
       signature += params[i].signature();
     signature += ")";
     std::string sigret;
-    // Go through MetaType::signature which can return unknown, since
-    // signatureFroType will produce a static assert
-    sigret = typeOf<R>()->signature();
+
     // Future adaptation
-    qi::Future<qi::GenericValuePtr> fmeta = xMetaCall(sigret, signature, params);
+    qi::Future<qi::GenericValuePtr> fmeta = metaCall(signature, params);
     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));
-
-
 
     return res.future();
   }
