@@ -37,10 +37,10 @@ namespace qi {
 
   bool ServiceWatcher::waitForServiceReady(const std::string &service, int msecs) {
 
-    qi::Future< std::vector<ServiceInfo> > svs;
-    std::vector<ServiceInfo>::iterator     it;
-    qi::Promise<void>                      prom;
-    qi::Future<void>                       fut;
+    qi::Future< std::vector<ServiceInfo> >   svs;
+    std::vector<ServiceInfo>::const_iterator it;
+    qi::Promise<void>                        prom;
+    qi::Future<void>                         fut;
 
     //register a watcher for the service
     {

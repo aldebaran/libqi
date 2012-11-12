@@ -166,7 +166,7 @@ namespace qi {
       removeRequest(requestId);
       return;
     }
-    qi::ServiceInfo &si = result.value();
+    const qi::ServiceInfo &si = result.value();
     sr->serviceId = si.serviceId();
     //empty serviceInfo
     if (!si.endpoints().size()) {
