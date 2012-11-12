@@ -4,6 +4,7 @@
 */
 #include <qitype/type.hpp>
 #include <qitype/metaobject.hpp>
+#include <qitype/signature.hpp>
 #include "metaobject_p.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <iomanip>
@@ -36,14 +37,46 @@ namespace qi {
   std::vector<qi::MetaMethod> MetaObjectPrivate::findMethod(const std::string &name)
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    std::vector<qi::MetaMethod>           ret;
-    MetaObject::MethodMap::iterator it;
-    std::string cname(name);
-    cname += "::";
+    std::vector<qi::MetaMethod>         ret;
+    MetaObject::MethodMap::iterator     it;
+    std::string                         cname(name);
+
+    if (cname.find("::", 0, 2) == std::string::npos)
+      cname += "::";
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
       qi::MetaMethod &mm = it->second;
       if (boost::starts_with(mm.signature(), cname))
+        ret.push_back(mm);
+    }
+    return ret;
+  }
+
+  std::vector<qi::MetaMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)
+  {
+    boost::recursive_mutex::scoped_lock sl(_methodsMutex);
+    std::vector<qi::MetaMethod>         ret;
+    MetaObject::MethodMap::iterator     it;
+    std::string cname(nameOrSignature);
+
+    //no signature specified fallback on findMethod
+    if (cname.find("::", 0, 2) == std::string::npos)
+      return findMethod(cname);
+
+    std::vector<std::string> sigsorig = qi::signatureSplit(nameOrSignature);
+    if (sigsorig[1].empty())
+      return ret;
+
+    Signature sresolved(sigsorig[2]);
+
+    for (it = _methods.begin(); it != _methods.end(); ++it) {
+      qi::MetaMethod &mm = it->second;
+      std::vector<std::string> sigs = qi::signatureSplit(mm.signature());
+
+      if (sigsorig[1] != sigs[1])
+        continue;
+
+      if (sresolved.isConvertibleTo(Signature(sigs[2])))
         ret.push_back(mm);
     }
     return ret;
@@ -68,10 +101,16 @@ namespace qi {
   unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id;
+    NameToIdx::iterator it = _methodsNameToIdx.find(signature);
+    if (it != _methodsNameToIdx.end()) {
+      qiLogVerbose("qi.MetaObject") << "Method("<< it->second << ") already defined (and reused): " << sigret << " " << signature;
+      return it->second;
+    }
     if (uid >= 0)
       id = uid;
     else
       id = ++_index;
+
     MetaMethod mm(id, sigret, signature);
     _methods[id] = mm;
     _methodsNameToIdx[signature] = id;
@@ -82,6 +121,11 @@ namespace qi {
   unsigned int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
+    NameToIdx::iterator it = _eventsNameToIdx.find(sig);
+    if (it != _eventsNameToIdx.end()) {
+      qiLogVerbose("qi.MetaObject") << "Signal("<< it->second << ") already defined (and reused): " << sig;
+      return it->second;
+    }
     if (uid >= 0)
       id = uid;
     else
@@ -229,6 +273,11 @@ namespace qi {
   std::vector<qi::MetaMethod> MetaObject::findMethod(const std::string &name) const
   {
     return _p->findMethod(name);
+  }
+
+  std::vector<qi::MetaMethod> MetaObject::findCompatibleMethod(const std::string &name) const
+  {
+    return _p->findCompatibleMethod(name);
   }
 
   std::vector<MetaSignal> MetaObject::findSignal(const std::string &name) const
