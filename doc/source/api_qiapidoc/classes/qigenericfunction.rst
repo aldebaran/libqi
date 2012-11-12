@@ -1,0 +1,1 @@
+.. cpp:autoclass:: qi::GenericFunction

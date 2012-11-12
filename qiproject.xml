@@ -1,4 +1,10 @@
 <project name="qitype">
   <depends buildtime="true" runtime="true" names="boost libqi"/>
   <depends buildtime="true" names="python gtest pthread qiprobes"/>
+
+  <!-- Documentation -->
+  <doxydoc name="libqitype-api" src="." dest="ref/libqitype" />
+  <sphinxdoc name="libqitype" src="doc">
+    <depends name="libqitype-api" />
+  </sphinxdoc>
 </project>
