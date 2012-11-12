@@ -61,7 +61,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
   sig = sig.substr(1, sig.length() - 2);
   qi::GenericFunctionParameters params;
   params = m->msg->parameters(sig);
-  qi::Future<qi::GenericValuePtr> res = obj->xMetaCall(mm->sigreturn(), signature_c, params);
+  qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, params);
   qi::Promise<void*> promise;
   qi_future_data_t*  data = new qi_future_data_t;
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, promise));
