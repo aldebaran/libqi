@@ -114,12 +114,18 @@ namespace qi {
     if (methodId < 0) {
 
       // Try to find an other method with compatible signature
+      // For this, first get a signature that resolves dynamic
+      std::string resolvedSig;
+      for (unsigned i=0; i<args.size(); ++i)
+        resolvedSig += args[i].signature(true);
+      resolvedSig = '(' + resolvedSig + ')';
+      qiLogDebug("qi.object") << "Using resolved signature " << resolvedSig;
       std::vector<qi::MetaMethod> mml = metaObject().findMethod(qi::signatureSplit(signature)[1]);
       Signature sargs(signatureSplit(signature)[2]);
       for (unsigned i = 0; i < mml.size(); ++i)
       {
         Signature s(signatureSplit(mml[i].signature())[2]);
-        if (sargs.isConvertibleTo(s))
+        if (Signature(resolvedSig).isConvertibleTo(s))
         {
           qiLogVerbose("qi.object")
               << "Signature mismatch, but found compatible type "

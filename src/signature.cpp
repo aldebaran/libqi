@@ -18,8 +18,9 @@ bool qi::Signature::isConvertibleTo(const qi::Signature& b) const
   Signature::iterator d = b.begin();
   for (;s!=end() && d!= b.end(); ++s,++d)
   {
-    if (d.type() == Type_Dynamic)
-      continue; // Dynamic can convert to whatever
+    if (d.type() == Type_Dynamic // Dynamic can convert to whatever
+      || s.type() == Type_None) // None means parent is empty container
+      continue;
     // Main switch on source sig
     if (strchr(numeric, s.type()))
     { // Numeric
