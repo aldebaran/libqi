@@ -90,9 +90,7 @@ namespace qi {
         return true;
       }
 
-
       const ValueType &value() const    { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
-      ValueType &value()                { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
 
     private:
       boost::signals2::signal<void (qi::Future<T>)>  _onResult;
@@ -111,15 +109,11 @@ namespace qi {
   const typename Future<T>::ValueType& Future<T>::valueWithDefault(const ValueType& v) const
   {
     _p->wait();
-    return hasError()?v:_p->value();
+    if (hasError())
+      return v;
+    return _p->value();
   }
 
-  template<typename T>
-  typename Future<T>::ValueType& Future<T>::valueWithDefault(ValueType v)
-  {
-    _p->wait();
-    return hasError()?v:_p->value();
-  }
 }
 
 #endif  // _QITYPE_DETAILS_FUTURE_HXX_
