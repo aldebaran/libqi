@@ -36,7 +36,7 @@ namespace qi {
     virtual void* call(void* storage, void** args, unsigned int argc) = 0;
     /// Default implementation convert arguments to argumentsType()
     /// and bounce to the other call()
-    virtual GenericValue call(void* func, const std::vector<GenericValue>& args);
+    virtual GenericValuePtr call(void* func, const std::vector<GenericValuePtr>& args);
   };
 
   template<typename T> FunctionType* makeFunctionType();
@@ -51,33 +51,33 @@ namespace qi {
     ~GenericFunction();
     GenericFunction(const GenericFunction& b);
     GenericFunction& operator = (const GenericFunction& b);
-    GenericValue call(const std::vector<GenericValue>& args);
-    GenericValue operator()(const std::vector<GenericValue>& args);
+    GenericValuePtr call(const std::vector<GenericValuePtr>& args);
+    GenericValuePtr operator()(const std::vector<GenericValuePtr>& args);
     FunctionType* type;
     void* value;
   };
 
  template<typename F> GenericFunction makeGenericFunction(F func);
 
-  typedef boost::function<GenericValue(const std::vector<GenericValue>&)> DynamicFunction;
-  /// @return a GenericFunction that takes arguments as a list of unconverted GenericValue.
+  typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
+  /// @return a GenericFunction that takes arguments as a list of unconverted GenericValuePtr.
   QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
   /// @return the type used by dynamic functions
   QITYPE_API FunctionType* dynamicFunctionType();
   /// @return a GenericFunction obtained by binding a class instance to a member function
   template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
 
-  /** Store function parameters as a list of GenericValue.
+  /** Store function parameters as a list of GenericValuePtr.
   * Storage can be on the stack or allocated
   * Memory management is the responsibility of the user.
   * If GenericFunctionParameters is obtained throug copy(), convert() or
   * fromBuffer(), it must be cleared by destroy()
   */
-  class QITYPE_API GenericFunctionParameters: public std::vector<GenericValue>
+  class QITYPE_API GenericFunctionParameters: public std::vector<GenericValuePtr>
   {
   public:
     GenericFunctionParameters();
-    GenericFunctionParameters(const std::vector<GenericValue>&);
+    GenericFunctionParameters(const std::vector<GenericValuePtr>&);
     /// Copy arguments. destroy() must be called on the result
     GenericFunctionParameters copy(bool notFirst=false) const;
     /// Convert the arguments to given signature. destroy() must be called on the result.

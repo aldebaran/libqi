@@ -7,7 +7,7 @@
 #include <qitype/type.hpp>
 namespace qi
 {
-  template class QITYPE_API Future<GenericValue>;
+  template class QITYPE_API Future<GenericValuePtr>;
   template class QITYPE_API Future<void>;
 }
 

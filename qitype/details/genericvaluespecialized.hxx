@@ -11,25 +11,25 @@ namespace qi
 {
 
 template<typename T>
-inline void GenericIterator<T>::operator ++()
+inline void GenericIteratorPtr<T>::operator ++()
 {
   static_cast<TypeIterator<T>*>(type)->next(&value);
 }
 
 template<typename T>
-inline void GenericIterator<T>::operator ++(int)
+inline void GenericIteratorPtr<T>::operator ++(int)
 {
   static_cast<TypeIterator<T>*>(type)->next(&value);
 }
 
 template<typename T>
-inline T GenericIterator<T>::operator *()
+inline T GenericIteratorPtr<T>::operator *()
 {
   return static_cast<TypeIterator<T>*>(type)->dereference(value);
 }
 
 template<typename T>
-inline bool GenericIterator<T>::operator ==(const GenericIterator& b) const
+inline bool GenericIteratorPtr<T>::operator ==(const GenericIteratorPtr& b) const
 {
   // Assume both iterators come from the same container instance
   // in which case they have the same type*
@@ -39,45 +39,45 @@ inline bool GenericIterator<T>::operator ==(const GenericIterator& b) const
 }
 
 template<typename T>
-inline bool  GenericIterator<T>::operator !=(const GenericIterator& b) const
+inline bool  GenericIteratorPtr<T>::operator !=(const GenericIteratorPtr& b) const
 {
   return ! (*this==b);
 }
 
-inline GenericList::GenericList()
-: GenericValue()
+inline GenericListPtr::GenericListPtr()
+: GenericValuePtr()
 {}
 
-inline GenericList::GenericList(GenericValue& v)
-: GenericValue(v)
+inline GenericListPtr::GenericListPtr(GenericValuePtr& v)
+: GenericValuePtr(v)
 {}
 
-inline GenericList::GenericList(TypeList* type, void* value)
-: GenericValue(type, value)
+inline GenericListPtr::GenericListPtr(TypeList* type, void* value)
+: GenericValuePtr(type, value)
 {}
 
 
-inline GenericListIterator GenericList::begin()
+inline GenericListIteratorPtr GenericListPtr::begin()
 {
   return static_cast<TypeList*>(type)->begin(value);
 }
 
-inline GenericListIterator GenericList::end()
+inline GenericListIteratorPtr GenericListPtr::end()
 {
   return static_cast<TypeList*>(type)->end(value);
 }
 
-inline Type* GenericList::elementType()
+inline Type* GenericListPtr::elementType()
 {
   return static_cast<TypeList*>(type)->elementType(value);
 }
 
-inline size_t GenericList::size()
+inline size_t GenericListPtr::size()
 {
   return static_cast<TypeList*>(type)->size(value);
 }
 
-inline void GenericList::pushBack(GenericValue val)
+inline void GenericListPtr::pushBack(GenericValuePtr val)
 {
   if (val.type == elementType())
   { // False negative is ok, will make a dummy convert
@@ -85,7 +85,7 @@ inline void GenericList::pushBack(GenericValue val)
   }
   else
   {
-    std::pair<GenericValue, bool> conv = val.convert(
+    std::pair<GenericValuePtr, bool> conv = val.convert(
       static_cast<TypeList*>(type)->elementType(value));
     static_cast<TypeList*>(type)->pushBack(value, conv.first.value);
     if (conv.second)
@@ -93,9 +93,9 @@ inline void GenericList::pushBack(GenericValue val)
   }
 }
 
-inline GenericList GenericValue::asList() const
+inline GenericListPtr GenericValuePtr::asList() const
 {
-  GenericList result;
+  GenericListPtr result;
   result.type = dynamic_cast<TypeList*>(type);
   if (result.type)
     result.value = value;
@@ -103,48 +103,48 @@ inline GenericList GenericValue::asList() const
 }
 
 
-inline GenericMap::GenericMap()
-: GenericValue()
+inline GenericMapPtr::GenericMapPtr()
+: GenericValuePtr()
 {}
 
-inline GenericMap::GenericMap(GenericValue& v)
-: GenericValue(v)
+inline GenericMapPtr::GenericMapPtr(GenericValuePtr& v)
+: GenericValuePtr(v)
 {}
 
-inline GenericMap::GenericMap(TypeMap* type, void* value)
-: GenericValue(type, value)
+inline GenericMapPtr::GenericMapPtr(TypeMap* type, void* value)
+: GenericValuePtr(type, value)
 {}
 
 
-inline GenericMapIterator GenericMap::begin()
+inline GenericMapIteratorPtr GenericMapPtr::begin()
 {
   return static_cast<TypeMap*>(type)->begin(value);
 }
 
-inline GenericMapIterator GenericMap::end()
+inline GenericMapIteratorPtr GenericMapPtr::end()
 {
   return static_cast<TypeMap*>(type)->end(value);
 }
 
-inline size_t GenericMap::size()
+inline size_t GenericMapPtr::size()
 {
   return static_cast<TypeMap*>(type)->size(value);
 }
 
-inline Type* GenericMap::keyType()
+inline Type* GenericMapPtr::keyType()
 {
   return static_cast<TypeMap*>(type)->keyType(value);
 }
 
-inline Type* GenericMap::elementType()
+inline Type* GenericMapPtr::elementType()
 {
   return static_cast<TypeMap*>(type)->elementType(value);
 }
 
-inline void GenericMap::insert(GenericValue key, GenericValue val)
+inline void GenericMapPtr::insert(GenericValuePtr key, GenericValuePtr val)
 {
-  std::pair<GenericValue, bool> ck(key, false);
-  std::pair<GenericValue, bool> cv(val, false);
+  std::pair<GenericValuePtr, bool> ck(key, false);
+  std::pair<GenericValuePtr, bool> cv(val, false);
   if (key.type != keyType())
     ck = key.convert(keyType());
   if (val.type != elementType())
@@ -158,9 +158,9 @@ inline void GenericMap::insert(GenericValue key, GenericValue val)
 }
 
 
-inline GenericMap GenericValue::asMap() const
+inline GenericMapPtr GenericValuePtr::asMap() const
 {
-  GenericMap result;
+  GenericMapPtr result;
   result.type = dynamic_cast<TypeMap*>(type);
   if (result.type)
     result.value = value;

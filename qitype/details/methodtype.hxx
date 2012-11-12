@@ -74,17 +74,17 @@ namespace qi
 #endif
       return result;
     }
-    GenericValue call(void* method, GenericValue object,
-      const std::vector<GenericValue>& args)
+    GenericValuePtr call(void* method, GenericValuePtr object,
+      const std::vector<GenericValuePtr>& args)
     {
       if (object.kind() == Type::Pointer)
       {
         // Be nice and dereference it
-        GenericValue deref;
+        GenericValuePtr deref;
         deref = static_cast<TypePointer*>(object.type)->dereference(object.value);
         object = deref;
       }
-      std::vector<GenericValue> nargs;
+      std::vector<GenericValuePtr> nargs;
       nargs.reserve(args.size()+1);
       nargs.push_back(object);
       nargs.insert(nargs.end(), args.begin(), args.end());
@@ -151,8 +151,8 @@ namespace qi
       typename boost::function_types::components<T>::type>::type FunctionType;
       typedef typename boost::function_types::parameter_types<FunctionType >::type ArgsType;
       // We will drop the first argument, but the system will still try to
-      // convert it, so use an always-compatible conversion target: GenericValue
-      typedef typename boost::mpl::push_front<ArgsType, GenericValue>::type NArgsType;
+      // convert it, so use an always-compatible conversion target: GenericValuePtr
+      typedef typename boost::mpl::push_front<ArgsType, GenericValuePtr>::type NArgsType;
       typedef typename boost::function_types::result_type<T>::type ResType;
       typedef typename boost::mpl::push_front<NArgsType, ResType>::type FullType;
       typedef typename boost::function_types::function_type<FullType>::type DropperType;

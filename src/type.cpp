@@ -148,7 +148,7 @@ namespace qi {
    {
      result = Signature::fromType(Signature::Type_String).toString();
    }
-   void visitList(GenericList value)
+   void visitList(GenericListPtr value)
    {
      if (_resolveDynamic && value.elementType()->kind() == Type::Dynamic)
      {
@@ -161,8 +161,8 @@ namespace qi {
        }
        else
        {
-         GenericListIterator it = value.begin();
-         GenericListIterator iend = value.end();
+         GenericListIteratorPtr it = value.begin();
+         GenericListIteratorPtr iend = value.end();
          std::string sigFirst = (*it).signature(true);
          ++it;
          for (;it != iend; ++it)
@@ -191,7 +191,7 @@ namespace qi {
         + value.elementType()->signature()
         + (char)Signature::Type_List_End;
    }
-   void visitMap(GenericMap value)
+   void visitMap(GenericMapPtr value)
    {
      if (_resolveDynamic)
      {
@@ -203,16 +203,16 @@ namespace qi {
            + (char)Signature::Type_Map_End;
        else
        {
-         GenericMapIterator it = value.begin();
-         GenericMapIterator iend = value.end();
-         std::pair<GenericValue, GenericValue> e = *it;
+         GenericMapIteratorPtr it = value.begin();
+         GenericMapIteratorPtr iend = value.end();
+         std::pair<GenericValuePtr, GenericValuePtr> e = *it;
          std::string ksig = e.first.signature(true);
          std::string vsig = e.second.signature(true);
          // Check that ksig/vsig is always the same, set to empty if not
          ++it;
          for(; it!= iend; ++it)
          {
-           std::pair<GenericValue, GenericValue> e = *it;
+           std::pair<GenericValuePtr, GenericValuePtr> e = *it;
            if (!ksig.empty() && ksig != e.first.signature(true))
              ksig.clear();
            if (!vsig.empty() && vsig != e.second.signature(true))
@@ -238,7 +238,7 @@ namespace qi {
    {
      result = Signature::fromType(Signature::Type_Unknown).toString();
    }
-   void visitPointer(TypePointer* type, void* , GenericValue )
+   void visitPointer(TypePointer* type, void* , GenericValuePtr )
    {
      result = Signature::fromType(Signature::Type_Unknown).toString();
    }
@@ -264,7 +264,7 @@ namespace qi {
      res += (char)Signature::Type_Tuple_End;
      result = res;
    }
-   void visitDynamic(Type* type, GenericValue pointee)
+   void visitDynamic(Type* type, GenericValuePtr pointee)
    {
      if (_resolveDynamic)
      {
@@ -361,7 +361,7 @@ namespace qi {
         return res;
       }
     case Signature::Type_Dynamic:
-      return typeOf<GenericValue>();
+      return typeOf<GenericValuePtr>();
     case Signature::Type_Raw:
       return typeOf<Buffer>();
     default:
@@ -400,11 +400,11 @@ namespace qi {
     }
     friend Type* makeListIteratorType(Type*);
   public:
-    GenericValue dereference(void* storage)
+    GenericValuePtr dereference(void* storage)
     {
       std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)
         ptrFromStorage(&storage);
-      GenericValue res;
+      GenericValuePtr res;
       res.type = _elementType;
       res.value = *ptr;
       return res;
@@ -457,24 +457,24 @@ namespace qi {
     {
       return _elementType;
     }
-    GenericListIterator begin(void* storage)
+    GenericListIteratorPtr begin(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericListIterator result;
+      GenericListIteratorPtr result;
       result.type = makeListIteratorType(_elementType);
       std::vector<void*>::iterator it = ptr.begin();
       result.value = result.type->initializeStorage(&it);
-      *(GenericValue*)&result = result.clone();
+      *(GenericValuePtr*)&result = result.clone();
       return result;
     }
-    GenericListIterator end(void* storage)
+    GenericListIteratorPtr end(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericListIterator result;
+      GenericListIteratorPtr result;
       result.type = makeListIteratorType(_elementType);
       std::vector<void*>::iterator it = ptr.end();
       result.value = result.type->initializeStorage(&it);
-       *(GenericValue*)&result = result.clone();
+       *(GenericValuePtr*)&result = result.clone();
       return result;
     }
     void* clone(void* storage)
@@ -557,14 +557,14 @@ namespace qi {
     }
     friend Type* makeMapIteratorType(Type* kt, Type* et);
   public:
-    std::pair<GenericValue, GenericValue> dereference(void* storage)
+    std::pair<GenericValuePtr, GenericValuePtr> dereference(void* storage)
     {
       DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
         ptrFromStorage(&storage);
-      GenericValue k;
+      GenericValuePtr k;
       k.type = _keyType;
       k.value = ptr->first;
-      GenericValue e;
+      GenericValuePtr e;
       e.type = _elementType;
       e.value = ptr->second;
       return std::make_pair(k, e);
@@ -641,24 +641,24 @@ namespace qi {
     {
       return _keyType;
     }
-    GenericMapIterator begin(void* storage)
+    GenericMapIteratorPtr begin(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericMapIterator result;
+      GenericMapIteratorPtr result;
       result.type = makeMapIteratorType(_keyType, _elementType);
       DefaultMapStorage::iterator it = ptr.begin();
       result.value = result.type->initializeStorage(&it);
-      *(GenericValue*)&result = result.clone();
+      *(GenericValuePtr*)&result = result.clone();
       return result;
     }
-    GenericMapIterator end(void* storage)
+    GenericMapIteratorPtr end(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericMapIterator result;
+      GenericMapIteratorPtr result;
       result.type = makeMapIteratorType(_keyType, _elementType);
       DefaultMapStorage::iterator it = ptr.end();
       result.value = result.type->initializeStorage(&it);
-      *(GenericValue*)&result = result.clone();
+      *(GenericValuePtr*)&result = result.clone();
       return result;
 
     }

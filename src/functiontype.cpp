@@ -7,12 +7,12 @@
 
 namespace qi
 {
-  GenericValue callManyArgs(FunctionType* type, void* func,
-    const std::vector<GenericValue>& args)
+  GenericValuePtr callManyArgs(FunctionType* type, void* func,
+    const std::vector<GenericValuePtr>& args)
   {
     const std::vector<Type*>& target = type->argumentsType();
     void** convertedArgs = new void*[args.size()];
-     std::vector<GenericValue> toDestroy;
+     std::vector<GenericValuePtr> toDestroy;
     for (unsigned i=0; i<target.size(); ++i)
     {
       //qiLogDebug("meta") << "argument " << i
@@ -25,14 +25,14 @@ namespace qi
         //qiLogDebug("meta") << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
-        std::pair<GenericValue,bool> v = args[i].convert(target[i]);
+        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
         if (v.second)
           toDestroy.push_back(v.first);
         convertedArgs[i] = v.first.value;
       }
     }
     void* res = type->call(func, convertedArgs, args.size());
-    GenericValue result;
+    GenericValuePtr result;
     result.type = type->resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroy.size(); ++i)
@@ -41,8 +41,8 @@ namespace qi
     return result;
 
   }
-  GenericValue FunctionType::call(void* func,
-    const std::vector<GenericValue>& args)
+  GenericValuePtr FunctionType::call(void* func,
+    const std::vector<GenericValuePtr>& args)
   {
     unsigned argsSize = args.size();
     if (argsSize > 8)
@@ -52,7 +52,7 @@ namespace qi
 
     void* stackArgs[8];
     void** convertedArgs = stackArgs;
-    GenericValue toDestroy[8];
+    GenericValuePtr toDestroy[8];
     unsigned int toDestroyPos = 0;
     for (unsigned i=0; i<argsSize; ++i)
     {
@@ -66,12 +66,12 @@ namespace qi
         //qiLogDebug("meta") << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
-        std::pair<GenericValue,bool> v = args[i].convert(target[i]);
+        std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
         if (!v.first.type)
         {
           qiLogError("qi.meta") << "Conversion failure from " << args[i].type->infoString()
           << " to " << target[i]->infoString() <<", aborting call";
-          return GenericValue();
+          return GenericValuePtr();
         }
         if (v.second)
           toDestroy[toDestroyPos++] = v.first;
@@ -79,7 +79,7 @@ namespace qi
       }
     }
     void* res = call(func, convertedArgs, argsSize);
-    GenericValue result;
+    GenericValuePtr result;
     result.type = resultType();
     result.value = res;
     for (unsigned i=0; i<toDestroyPos; ++i)
@@ -105,8 +105,8 @@ namespace qi
   {
   }
 
-  GenericFunctionParameters::GenericFunctionParameters(const std::vector<GenericValue>& args)
-  :std::vector<GenericValue>(args)
+  GenericFunctionParameters::GenericFunctionParameters(const std::vector<GenericValuePtr>& args)
+  :std::vector<GenericValuePtr>(args)
   {
   }
 
@@ -128,7 +128,7 @@ namespace qi
   GenericFunctionParameters::convert(const Signature& sig) const
   {
     GenericFunctionParameters dst;
-    const std::vector<GenericValue>& src = *this;
+    const std::vector<GenericValuePtr>& src = *this;
     if (sig.size() != src.size())
     {
       qiLogError("qi.GenericFunctionParameters") << "convert: signature/params size mismatch"
@@ -187,7 +187,7 @@ namespace qi
       qiLogError("qi.meta") << "Dynamic function called without type information";
       return 0;
     }
-    virtual GenericValue call(void* func, const std::vector<GenericValue>& args)
+    virtual GenericValuePtr call(void* func, const std::vector<GenericValuePtr>& args)
     {
       DynamicFunction* f = (DynamicFunction*)func;
       return (*f)(args);

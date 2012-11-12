@@ -19,8 +19,8 @@ namespace qi
     virtual void* call(void* method, void* object,
       void** args, unsigned int nargs) = 0;
     /// Convert and call
-    virtual GenericValue call(void* method, GenericValue object,
-      const std::vector<GenericValue>& args) = 0;
+    virtual GenericValuePtr call(void* method, GenericValuePtr object,
+      const std::vector<GenericValuePtr>& args) = 0;
     /// Return 'linearized' signature function type
     virtual FunctionType* toFunctionType() = 0;
   };
@@ -34,7 +34,7 @@ namespace qi
     GenericMethod& operator = (const GenericMethod& b);
     ~GenericMethod();
 
-    GenericValue call(GenericValue object, const std::vector<GenericValue> args)
+    GenericValuePtr call(GenericValuePtr object, const std::vector<GenericValuePtr> args)
     {
       return type->call(value, object, args);
     }

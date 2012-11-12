@@ -73,10 +73,10 @@ namespace qi {
     return type->metaObject(value);
   }
 
-  qi::Future<GenericValue>
+  qi::Future<GenericValuePtr>
   GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<GenericValue> out;
+    qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
@@ -99,10 +99,10 @@ namespace qi {
     type->metaPost(value, event, args);
   }
 
-  qi::Future<GenericValue>
+  qi::Future<GenericValuePtr>
   GenericObject::xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& args)
   {
-    qi::Promise<GenericValue> out;
+    qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
@@ -174,7 +174,7 @@ namespace qi {
     //TODO: check for metacall to return false when not able to send the answer
     if (newArgs)
     {
-      qi::Future<GenericValue> res = metaCall(methodId, *newArgs);
+      qi::Future<GenericValuePtr> res = metaCall(methodId, *newArgs);
       delete newArgs;
       return res;
     }
@@ -289,21 +289,21 @@ namespace qi {
   }*/
 
   void GenericObject::emitEvent(const std::string& eventName,
-                         qi::AutoGenericValue p1,
-                         qi::AutoGenericValue p2,
-                         qi::AutoGenericValue p3,
-                         qi::AutoGenericValue p4,
-                         qi::AutoGenericValue p5,
-                         qi::AutoGenericValue p6,
-                         qi::AutoGenericValue p7,
-                         qi::AutoGenericValue p8)
+                         qi::AutoGenericValuePtr p1,
+                         qi::AutoGenericValuePtr p2,
+                         qi::AutoGenericValuePtr p3,
+                         qi::AutoGenericValuePtr p4,
+                         qi::AutoGenericValuePtr p5,
+                         qi::AutoGenericValuePtr p6,
+                         qi::AutoGenericValuePtr p7,
+                         qi::AutoGenericValuePtr p8)
   {
     if (!type || !value) {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return;
     }
-    qi::AutoGenericValue* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::GenericValue> params;
+    qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
+    std::vector<qi::GenericValuePtr> params;
     for (unsigned i=0; i<8; ++i)
       if (vals[i]->value)
         params.push_back(*vals[i]);

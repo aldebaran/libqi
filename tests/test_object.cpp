@@ -39,13 +39,13 @@ C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
 
-std::vector<qi::GenericValue> convert(qi::AutoGenericValue v1 = qi::AutoGenericValue(),
-  qi::AutoGenericValue v2 = qi::AutoGenericValue(),
-  qi::AutoGenericValue v3 = qi::AutoGenericValue(),
-  qi::AutoGenericValue v4 = qi::AutoGenericValue(),
-  qi::AutoGenericValue v5 = qi::AutoGenericValue())
+std::vector<qi::GenericValuePtr> convert(qi::AutoGenericValuePtr v1 = qi::AutoGenericValuePtr(),
+  qi::AutoGenericValuePtr v2 = qi::AutoGenericValuePtr(),
+  qi::AutoGenericValuePtr v3 = qi::AutoGenericValuePtr(),
+  qi::AutoGenericValuePtr v4 = qi::AutoGenericValuePtr(),
+  qi::AutoGenericValuePtr v5 = qi::AutoGenericValuePtr())
 {
-  std::vector<qi::GenericValue> res;
+  std::vector<qi::GenericValuePtr> res;
   if (v1.value)
     res.push_back(v1);
   if (v2.value)
@@ -113,7 +113,7 @@ public:
   int v;
 };
 
-template<typename T> bool checkValue(qi::GenericValue v, const T& val)
+template<typename T> bool checkValue(qi::GenericValuePtr v, const T& val)
 {
   T actual = v.as<T>();
   bool ok = actual == val;
@@ -130,13 +130,13 @@ TEST(TestObject, Typing)
   qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
   qiLogDebug("test") << "Foo::fun";
   qi::GenericMethod mv = qi::makeGenericMethod(&Foo::fun);
-  std::vector<qi::GenericValue> args1 = convert(1, 2);
-  qi::GenericValue res = fv2.call(args1);
+  std::vector<qi::GenericValuePtr> args1 = convert(1, 2);
+  qi::GenericValuePtr res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
   qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
   Adder add1(1);
-  std::vector<qi::GenericValue> argsAdd = convert(41);
+  std::vector<qi::GenericValuePtr> argsAdd = convert(41);
   res = adderAdd.call(qi::makeObjectValue(&add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
@@ -236,7 +236,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::GenericValue::from(p).as<FPoint>();
+  FPoint p2 = qi::GenericValuePtr::from(p).as<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -313,7 +313,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::GenericValue::from(comp).as<Complex2>();
+  Complex2 comp2 = qi::GenericValuePtr::from(comp).as<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
@@ -412,8 +412,8 @@ TEST(TestObject, ObjectTypeBuilderManageable)
 TEST(TestObject, TypeType)
 {
   using namespace qi;
-  std::vector<GenericValue> vals = convert(12);
-  GenericValue val = vals[0];
+  std::vector<GenericValuePtr> vals = convert(12);
+  GenericValuePtr val = vals[0];
   qiLogDebug("test") << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());

@@ -20,8 +20,8 @@ public:
   TypeListImpl();
   virtual size_t size(void* storage);
   virtual Type* elementType(void* storage) const;
-  virtual GenericListIterator begin(void* storage);
-  virtual GenericListIterator end(void* storage);
+  virtual GenericListIteratorPtr begin(void* storage);
+  virtual GenericListIteratorPtr end(void* storage);
   virtual void pushBack(void* storage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
@@ -33,7 +33,7 @@ template<typename C> class TypeListIteratorImpl
 public:
   typedef typename detail::TypeImplMethodsBySize<typename C::iterator>::type
   TypeImpl;
-  virtual GenericValue dereference(void* storage);
+  virtual GenericValuePtr dereference(void* storage);
   virtual void  next(void** storage);
   virtual bool equals(void* s1, void* s2);
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
@@ -53,34 +53,34 @@ TypeListImpl<T>::elementType(void*) const
   return result;
 }
 
-template<typename T> GenericListIterator
+template<typename T> GenericListIteratorPtr
 TypeListImpl<T>::begin(void* storage)
 {
   static Type* iterType = typeOf<typename T::iterator>();
   T* ptr = (T*)ptrFromStorage(&storage);
   // ptr->begin() gives us an iterator on the stack.
   // So we need to clone it. Hopefuly sizeof iterator is small, so it fits in
-  // a byvalue GenericValue
-  GenericListIterator result;
-  GenericValue val;
+  // a byvalue GenericValuePtr
+  GenericListIteratorPtr result;
+  GenericValuePtr val;
   val.type = iterType;
   typename T::iterator res = ptr->begin(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
-  *(GenericValue*)&result = val.clone();
+  *(GenericValuePtr*)&result = val.clone();
   return result;
 }
 
-template<typename T> GenericListIterator
+template<typename T> GenericListIteratorPtr
 TypeListImpl<T>::end(void* storage)
 {
   static Type* iterType = typeOf<typename T::iterator>();
   T* ptr = (T*)ptrFromStorage(&storage);
-  GenericListIterator result;
-  GenericValue val;
+  GenericListIteratorPtr result;
+  GenericValuePtr val;
   val.type = iterType;
   typename T::iterator res = ptr->end(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
-  *(GenericValue*)&result = val.clone();
+  *(GenericValuePtr*)&result = val.clone();
   return result;
 }
 
@@ -99,11 +99,11 @@ TypeListImpl<T>::size(void* storage)
   return ptr->size();
 }
 
-template<typename C> GenericValue TypeListIteratorImpl<C>::dereference(void* storage)
+template<typename C> GenericValuePtr TypeListIteratorImpl<C>::dereference(void* storage)
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
-  return ::qi::GenericValue::from(val); // Value is in the container, no need to clone
+  return ::qi::GenericValuePtr::from(val); // Value is in the container, no need to clone
 }
 
 template<typename C> void TypeListIteratorImpl<C>::next(void** storage)

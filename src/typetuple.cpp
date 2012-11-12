@@ -7,13 +7,13 @@
 
 namespace qi
 {
-  std::vector<GenericValue> TypeTuple::getValues(void* storage)
+  std::vector<GenericValuePtr> TypeTuple::getValues(void* storage)
   {
     std::vector<Type*> types = memberTypes(storage);
     std::vector<void*> values = get(storage);
-    std::vector<GenericValue> result;
+    std::vector<GenericValuePtr> result;
     for (unsigned i=0; i<types.size(); ++i)
-      result.push_back(GenericValue(types[i], values[i]));
+      result.push_back(GenericValuePtr(types[i], values[i]));
     return result;
   }
 
@@ -38,34 +38,34 @@ namespace qi
     virtual std::vector<Type*> memberTypes(void* storage)
     {
       std::vector<Type*> result;
-      std::vector<GenericValue>& me =
-      *(std::vector<GenericValue>*)ptrFromStorage(&storage);
+      std::vector<GenericValuePtr>& me =
+      *(std::vector<GenericValuePtr>*)ptrFromStorage(&storage);
       for (unsigned i=0; i< me.size(); ++i)
         result.push_back(me[i].type);
       return result;
     }
     virtual void* get(void* storage, unsigned int index)
     {
-      std::vector<GenericValue>& me =
-      *(std::vector<GenericValue>*)ptrFromStorage(&storage);
+      std::vector<GenericValuePtr>& me =
+      *(std::vector<GenericValuePtr>*)ptrFromStorage(&storage);
       return me[index].value;
     }
     virtual void set(void** storage, unsigned int index, void* val)
     {
-      std::vector<GenericValue>& me =
-      *(std::vector<GenericValue>*)ptrFromStorage(storage);
+      std::vector<GenericValuePtr>& me =
+      *(std::vector<GenericValuePtr>*)ptrFromStorage(storage);
       me[index].value = val;
     }
-    typedef DefaultTypeImplMethods<std::vector<GenericValue> > Methods;
+    typedef DefaultTypeImplMethods<std::vector<GenericValuePtr> > Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
-  GenericValue makeGenericTuple(std::vector<GenericValue> values)
+  GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values)
   {
     static Type* dtype = 0;
     if (!dtype)
       dtype = new TypeDynamicTuple();
-    GenericValue res = GenericValue::from(values);
+    GenericValuePtr res = GenericValuePtr::from(values);
     res.type = dtype;
     return res;
   }

@@ -54,7 +54,7 @@ namespace qi
   public:
     DynamicObjectType() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<GenericValue> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual qi::Future<GenericValuePtr> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     virtual void metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params);
     virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
@@ -108,9 +108,9 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<GenericValue> DynamicObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValuePtr> DynamicObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
-    qi::Promise<GenericValue> out;
+    qi::Promise<GenericValuePtr> out;
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
     if (i == _p->methodMap.end())
     {
@@ -171,13 +171,13 @@ namespace qi
   {
   public:
     MFunctorCall(GenericFunction& func, GenericFunctionParameters& params,
-       qi::Promise<GenericValue>* out, bool noCloneFirst)
+       qi::Promise<GenericValuePtr>* out, bool noCloneFirst)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
       std::swap(this->func, func);
-      std::swap((std::vector<GenericValue>&) params,
-        (std::vector<GenericValue>&) this->params);
+      std::swap((std::vector<GenericValuePtr>&) params,
+        (std::vector<GenericValuePtr>&) this->params);
     }
     MFunctorCall(const MFunctorCall& b)
     {
@@ -185,8 +185,8 @@ namespace qi
     }
     void operator = (const MFunctorCall& b)
     {
-      std::swap( (std::vector<GenericValue>&) params,
-        (std::vector<GenericValue>&) b.params);
+      std::swap( (std::vector<GenericValuePtr>&) params,
+        (std::vector<GenericValuePtr>&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
@@ -197,12 +197,12 @@ namespace qi
       params.destroy(noCloneFirst);
       delete out;
     }
-    qi::Promise<GenericValue>* out;
+    qi::Promise<GenericValuePtr>* out;
     GenericFunctionParameters params;
     GenericFunction func;
     bool noCloneFirst;
   };
-  qi::Future<GenericValue> metaCall(EventLoop* el,
+  qi::Future<GenericValuePtr> metaCall(EventLoop* el,
     GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst)
   {
     bool synchronous = true;
@@ -219,15 +219,15 @@ namespace qi
     }
     if (synchronous)
     {
-      qi::Promise<GenericValue> out;
+      qi::Promise<GenericValuePtr> out;
       out.setValue(func.call(params));
       return out.future();
     }
     else
     {
-      qi::Promise<GenericValue>* out = new qi::Promise<GenericValue>();
+      qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
-      qi::Future<GenericValue> result = out->future();
+      qi::Future<GenericValuePtr> result = out->future();
       el->asyncCall(0,
         MFunctorCall(func, pCopy, out, noCloneFirst));
       return result;
@@ -241,7 +241,7 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<GenericValue> DynamicObjectType::metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValuePtr> DynamicObjectType::metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaCall(method, params, callType);

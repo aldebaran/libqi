@@ -44,13 +44,13 @@ namespace qi {
       case qi::Type::List:
       {
         TypeList* tlist = static_cast<TypeList*>(type);
-        v.visitList(GenericList(tlist, *storage));
+        v.visitList(GenericListPtr(tlist, *storage));
         break;
       }
       case qi::Type::Map:
       {
         TypeMap * tlist = static_cast<TypeMap *>(type);
-        v.visitMap(GenericMap(tlist, *storage));
+        v.visitMap(GenericMapPtr(tlist, *storage));
         break;
       }
       case qi::Type::Object:
@@ -61,7 +61,7 @@ namespace qi {
       case qi::Type::Pointer:
       {
         TypePointer* tpointer = static_cast<TypePointer*>(type);
-        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValue());
+        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValuePtr());
         break;
       }
       case qi::Type::Tuple:
@@ -72,7 +72,7 @@ namespace qi {
       }
       case qi::Type::Dynamic:
       {
-        std::pair<GenericValue, bool> gv(GenericValue(), false);
+        std::pair<GenericValuePtr, bool> gv(GenericValuePtr(), false);
         if (storage && *storage)
           gv = static_cast<TypeDynamic*>(type)->get(*storage);
         v.visitDynamic(type, gv.first);

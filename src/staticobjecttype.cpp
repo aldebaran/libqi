@@ -32,12 +32,12 @@ Manageable* StaticObjectTypeBase::manageable(void* instance)
     return _data.asManageable(instance);
 }
 
-qi::Future<GenericValue>
+qi::Future<GenericValuePtr>
 StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
                                const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
-  qi::Promise<GenericValue> out;
+  qi::Promise<GenericValuePtr> out;
   ObjectTypeData::MethodMap::iterator i;
   i = _data.methodMap.find(methodId);
   if (i == _data.methodMap.end())
@@ -49,7 +49,7 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
   Manageable* m = manageable(instance);
   EventLoop* el = m?m->eventLoop():0;
   GenericMethod method = i->second;
-  GenericValue self;
+  GenericValuePtr self;
   self.type = this;
   self.value = instance;
   GenericFunctionParameters p2;

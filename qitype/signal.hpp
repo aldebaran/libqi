@@ -70,14 +70,14 @@ namespace qi {
 
     void trigger(const GenericFunctionParameters& params);
     void operator()(
-      qi::AutoGenericValue p1 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p2 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p3 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p4 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p5 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p6 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p7 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p8 = qi::AutoGenericValue());
+      qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
 
     std::vector<SignalSubscriber> subscribers();
     static const SignalBase::Link invalidLink;

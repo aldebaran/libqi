@@ -64,7 +64,7 @@ namespace qi
     return _argumentsType;
   }
 
-  inline GenericValue GenericFunction::operator()(const std::vector<GenericValue>& args)
+  inline GenericValuePtr GenericFunction::operator()(const std::vector<GenericValuePtr>& args)
   {
     return call(args);
   }
@@ -151,7 +151,7 @@ namespace qi
     template<typename SEQ, typename F> void* apply(SEQ sequence,
       F& function, void** args, unsigned int argc)
     {
-      GenericValueCopy res;
+      GenericValuePtrCopy res;
       boost::fusion::for_each(sequence, Transformer(args));
       res(), boost::fusion::invoke_function_object(function,
         boost::fusion::transform(sequence,
@@ -299,7 +299,7 @@ namespace qi
       type->destroy(value);
   }
 
-  inline GenericValue GenericFunction::call(const std::vector<GenericValue>& args)
+  inline GenericValuePtr GenericFunction::call(const std::vector<GenericValuePtr>& args)
   {
     return type->call(value, args);
   }

@@ -27,7 +27,7 @@
 
 namespace qi {
 
-  /* We need shared typeid on Future<GenericValue>
+  /* We need shared typeid on Future<GenericValuePtr>
    * If we do not export, typeids do not compare equals under some gcc-macos
    * Furthermore we get:
    * - macos: compiler warning and incorrect code if the template implementation is
@@ -41,7 +41,7 @@ namespace qi {
    * besides the one in the defining module can be created.
    */
 #if !defined(qitype_EXPORTS) && !defined(__linux__)
-  extern template class Future<GenericValue>;
+  extern template class Future<GenericValuePtr>;
   extern template class Future<void>;
 #endif
   class SignalSubscriber;
@@ -67,27 +67,27 @@ namespace qi {
     ~GenericObject();
     const MetaObject &metaObject();
     template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
-      qi::AutoGenericValue p1 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p2 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p3 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p4 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p5 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p6 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p7 = qi::AutoGenericValue(),
-      qi::AutoGenericValue p8 = qi::AutoGenericValue());
+      qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
+      qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
 
-    qi::Future<GenericValue> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
-    qi::Future<GenericValue> xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& params);
+    qi::Future<GenericValuePtr> xMetaCall(const std::string &retsig, const std::string &signature, const GenericFunctionParameters& params);
     void emitEvent(const std::string& eventName,
-                   qi::AutoGenericValue p1 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p2 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p3 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p4 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p5 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p6 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p7 = qi::AutoGenericValue(),
-                   qi::AutoGenericValue p8 = qi::AutoGenericValue());
+                   qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
+                   qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
     void metaPost(unsigned int event, const GenericFunctionParameters& params);
 
     //protected
@@ -126,7 +126,7 @@ namespace qi {
   };
 
   template<typename T>
-  GenericValue makeObjectValue(T* ptr);
+  GenericValuePtr makeObjectValue(T* ptr);
 
   template <typename FUNCTION_TYPE>
   qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,
@@ -137,7 +137,7 @@ namespace qi {
       SignalSubscriber(makeGenericFunction(callback), ctx));
   }
 
- QITYPE_API qi::Future<GenericValue> metaCall(EventLoop* el,
+ QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
     GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst=false);
 
 };

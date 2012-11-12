@@ -151,36 +151,36 @@ namespace qi{
 
 
 
-  class GenericList;
-  class GenericMap;
-  class GenericObject;
+  class GenericListPtr;
+  class GenericMapPtr;
+  class GenericObjectPtr;
 
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
-   * \warning GenericValue should not be used directly as call arguments.
+   * \warning GenericValuePtr should not be used directly as call arguments.
    * Use qi::ManagedGenericValue which has value semantics instead.
    *
    */
-  class QITYPE_API GenericValue
+  class QITYPE_API GenericValuePtr
   {
   public:
 
-    GenericValue();
+    GenericValuePtr();
 
     /** Store type and allocate storage of value.
      * @param type use this type for initialization
      */
-    GenericValue(Type* type);
+    GenericValuePtr(Type* type);
 
     /** Create a generic value with type and a value who should have
      * already been allocated.
      * @param type type of this generic value
      * @param value an already alloc place to store value
      */
-    GenericValue(Type* type, void* value) : type(type), value(value) {}
+    GenericValuePtr(Type* type, void* value) : type(type), value(value) {}
 
-    /** Return the typed pointer behind a GenericValue. T *must* be the type
+    /** Return the typed pointer behind a GenericValuePtr. T *must* be the type
      * of the value.
      * @return a pointer to the value as a T or 0 if value is not a T.
      * @param check if false, does not validate type before converting
@@ -188,33 +188,33 @@ namespace qi{
     template<typename T> T* ptr(bool check = true);
 
     /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
-    std::pair<GenericValue, bool> convert(Type* targetType) const;
+    std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
 
     /// Helper function that converts and always clone
-    GenericValue convertCopy(Type* targetType) const;
-    GenericValue clone() const;
+    GenericValuePtr convertCopy(Type* targetType) const;
+    GenericValuePtr clone() const;
     std::string signature(bool resolveDynamic = false) const;
     void destroy();
     Type::Kind kind() const;
 
-    int64_t       asInt() const;
-    float         asFloat() const;
-    double        asDouble() const;
-    std::string   asString() const;
-    GenericList   asList() const;
-    GenericMap    asMap() const;
-    GenericObject asObject() const;
+    int64_t          asInt() const;
+    float            asFloat() const;
+    double           asDouble() const;
+    std::string      asString() const;
+    GenericListPtr   asList() const;
+    GenericMapPtr    asMap() const;
+    GenericObjectPtr asObject() const;
 
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.
     template<typename T> T as(const T&) const;
-    template<typename T> static GenericValue from(const T& t);
+    template<typename T> static GenericValuePtr from(const T& t);
 
     Type*   type;
     void*   value;
   };
 
-  class QITYPE_API ManagedGenericValue: public GenericValue
+  class QITYPE_API ManagedGenericValue: public GenericValuePtr
   {
   public:
     ManagedGenericValue() {}
@@ -222,19 +222,19 @@ namespace qi{
     {
       *this = b;
     }
-    ManagedGenericValue(const GenericValue& b)
+    ManagedGenericValue(const GenericValuePtr& b)
     {
-      *(GenericValue*)this = b.clone();
+      *(GenericValuePtr*)this = b.clone();
     }
-    void operator = (const GenericValue& b)
+    void operator = (const GenericValuePtr& b)
     {
       if (type) destroy();
-      *(GenericValue*)this = b.clone();
+      *(GenericValuePtr*)this = b.clone();
     }
     void operator = (const ManagedGenericValue& b)
     {
       if (type) destroy();
-      *(GenericValue*)this = b.clone();
+      *(GenericValuePtr*)this = b.clone();
     }
     ~ManagedGenericValue()
     {
@@ -243,7 +243,7 @@ namespace qi{
     }
   };
 
-  /** Generates GenericValue from everything transparently.
+  /** Generates GenericValuePtr from everything transparently.
    * To be used as type of meta-function call argument
    *
    *  Example:
@@ -251,66 +251,66 @@ namespace qi{
    *  can be called with any argument type:
    *    metaCall("foo", 12);
    */
-  class AutoGenericValue: public GenericValue
+  class AutoGenericValuePtr: public GenericValuePtr
   {
   public:
-    AutoGenericValue ();
-    AutoGenericValue(const AutoGenericValue & b);
+    AutoGenericValuePtr ();
+    AutoGenericValuePtr(const AutoGenericValuePtr & b);
 
-    template<typename T> AutoGenericValue(const T& ptr);
+    template<typename T> AutoGenericValuePtr(const T& ptr);
   };
 
 
 
   template<typename T>
-  class GenericIterator: public GenericValue
+  class GenericIteratorPtr: public GenericValuePtr
   {
   public:
     void operator++();
     void operator++(int);
     T operator*();
-    bool operator==(const GenericIterator& b) const;
-    inline bool operator!=(const GenericIterator& b) const;
+    bool operator==(const GenericIteratorPtr& b) const;
+    inline bool operator!=(const GenericIteratorPtr& b) const;
   };
 
-  class GenericListIterator: public GenericIterator<GenericValue>
+  class GenericListIteratorPtr: public GenericIteratorPtr<GenericValuePtr>
   {};
 
-  class GenericMapIterator: public GenericIterator<std::pair<GenericValue, GenericValue> >
+  class GenericMapIteratorPtr: public GenericIteratorPtr<std::pair<GenericValuePtr, GenericValuePtr> >
   {};
 
   class TypeList;
-  class GenericList: public GenericValue
+  class GenericListPtr: public GenericValuePtr
   {
   public:
-    GenericList();
-    GenericList(GenericValue&);
-    GenericList(TypeList* type, void* value);
+    GenericListPtr();
+    GenericListPtr(GenericValuePtr&);
+    GenericListPtr(TypeList* type, void* value);
 
     size_t size();
-    GenericListIterator begin();
-    GenericListIterator end();
-    void pushBack(GenericValue val);
+    GenericListIteratorPtr begin();
+    GenericListIteratorPtr end();
+    void pushBack(GenericValuePtr val);
     Type* elementType();
   };
 
   class TypeMap;
-  class GenericMap: public GenericValue
+  class GenericMapPtr: public GenericValuePtr
   {
   public:
-    GenericMap();
-    GenericMap(GenericValue&);
-    GenericMap(TypeMap* type, void* value);
+    GenericMapPtr();
+    GenericMapPtr(GenericValuePtr&);
+    GenericMapPtr(TypeMap* type, void* value);
 
     size_t size();
-    GenericMapIterator begin();
-    GenericMapIterator end();
-    void insert(GenericValue key, GenericValue val);
+    GenericMapIteratorPtr begin();
+    GenericMapIteratorPtr end();
+    void insert(GenericValuePtr key, GenericValuePtr val);
     Type* keyType();
     Type* elementType();
   };
 
-  QITYPE_API GenericValue makeGenericTuple(std::vector<GenericValue> values);
+  QITYPE_API GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values);
 
 
   // Interfaces for specialized types
@@ -357,7 +357,7 @@ namespace qi{
   {
   public:
     virtual Type* pointedType() const = 0;
-    virtual GenericValue dereference(void* storage) = 0; // must not be destroyed
+    virtual GenericValuePtr dereference(void* storage) = 0; // must not be destroyed
     virtual Kind kind() const { return Pointer; }
   };
 
@@ -370,10 +370,10 @@ namespace qi{
     virtual bool equals(void* s1, void* s2) = 0;
   };
 
-  class QITYPE_API TypeListIterator: public TypeIterator<GenericValue>
+  class QITYPE_API TypeListIterator: public TypeIterator<GenericValuePtr>
   {};
 
-  class QITYPE_API TypeMapIterator: public TypeIterator<std::pair<GenericValue, GenericValue> >
+  class QITYPE_API TypeMapIterator: public TypeIterator<std::pair<GenericValuePtr, GenericValuePtr> >
   {};
 
   class QITYPE_API TypeList: public Type
@@ -381,8 +381,8 @@ namespace qi{
   public:
     virtual Type* elementType(void* storage) const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericListIterator begin(void* storage) = 0; // Must be destroyed
-    virtual GenericListIterator end(void* storage) = 0;  //idem
+    virtual GenericListIteratorPtr begin(void* storage) = 0; // Must be destroyed
+    virtual GenericListIteratorPtr end(void* storage) = 0;  //idem
     virtual void pushBack(void* storage, void* valueStorage) = 0;
     virtual Kind kind() const { return List;}
   };
@@ -393,8 +393,8 @@ namespace qi{
     virtual Type* elementType(void* storage) const = 0;
     virtual Type* keyType(void* storage) const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericMapIterator begin(void* storage) = 0; // Must be destroyed
-    virtual GenericMapIterator end(void* storage) = 0;  //idem
+    virtual GenericMapIteratorPtr begin(void* storage) = 0; // Must be destroyed
+    virtual GenericMapIteratorPtr end(void* storage) = 0;  //idem
     virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
     virtual Kind kind() const { return Map; }
     // Since our typesystem has no erased operator < or operator ==,
@@ -404,7 +404,7 @@ namespace qi{
   class QITYPE_API TypeTuple: public Type
   {
   public:
-    std::vector<GenericValue> getValues(void* storage);
+    std::vector<GenericValuePtr> getValues(void* storage);
     virtual std::vector<Type*> memberTypes(void*) = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
@@ -416,9 +416,9 @@ namespace qi{
   class QITYPE_API TypeDynamic: public Type
   {
   public:
-    // Convert storage to a GenericValue, that must be destroyed if res.second is true
-    virtual std::pair<GenericValue, bool> get(void* storage) = 0;
-    virtual void set(void** storage, GenericValue source) = 0;
+    // Convert storage to a GenericValuePtr, that must be destroyed if res.second is true
+    virtual std::pair<GenericValuePtr, bool> get(void* storage) = 0;
+    virtual void set(void** storage, GenericValuePtr source) = 0;
     virtual Kind kind() const { return Dynamic; }
   };
 

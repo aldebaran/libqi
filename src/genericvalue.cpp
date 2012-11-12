@@ -8,7 +8,7 @@
 namespace qi
 {
 
-  std::pair<GenericValue, bool> GenericValue::convert(Type* targetType) const
+  std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
     /* Can have false-negative (same effective type, different Type instances
    * but we do not care, correct check (by comparing info() result
@@ -19,7 +19,7 @@ namespace qi
       return std::make_pair(*this, false);
     }
 
-    GenericValue result;
+    GenericValuePtr result;
     Type::Kind skind = type->kind();
     Type::Kind dkind = targetType->kind();
     if (skind == dkind)
@@ -47,25 +47,25 @@ namespace qi
         case Type::List:
         {
           result.type = targetType;
-          GenericList lsrc = asList();
+          GenericListPtr lsrc = asList();
           TypeList* targetListType = static_cast<TypeList*>(targetType);
           Type* srcElemType = lsrc.elementType();
           void* storage = targetType->initializeStorage();
           Type* dstElemType = targetListType->elementType(storage);
           bool needConvert = (srcElemType->info() != dstElemType->info());
-          GenericList lresult;
+          GenericListPtr lresult;
           lresult.type = targetListType;
           lresult.value = storage;
-          GenericListIterator i = lsrc.begin();
-          GenericListIterator iend = lsrc.end();
+          GenericListIteratorPtr i = lsrc.begin();
+          GenericListIteratorPtr iend = lsrc.end();
           for (; i!= iend; ++i)
           {
-            GenericValue val = *i;
+            GenericValuePtr val = *i;
             if (!needConvert)
               lresult.pushBack(val);
             else
             {
-              std::pair<GenericValue,bool> c = val.convert(dstElemType);
+              std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
               lresult.pushBack(c.first);
               if (c.second)
                 c.first.destroy();
@@ -77,7 +77,7 @@ namespace qi
         case Type::Map:
         {
           result.type = targetType;
-          GenericMap msrc = asMap();
+          GenericMapPtr msrc = asMap();
 
 
           TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
@@ -87,7 +87,7 @@ namespace qi
           Type* srcElementType = srcMapType->elementType(value);
 
 
-          GenericMap mresult;
+          GenericMapPtr mresult;
           mresult.type = targetType;
           mresult.value = targetMapType->initializeStorage();
           Type* targetKeyType = targetMapType->keyType(mresult.value);
@@ -96,23 +96,23 @@ namespace qi
           bool sameKey = srcKeyType->info() == targetKeyType->info();
           bool sameElem = srcElementType->info() == targetElementType->info();
 
-          GenericMapIterator i = msrc.begin();
-          GenericMapIterator iend = msrc.end();
+          GenericMapIteratorPtr i = msrc.begin();
+          GenericMapIteratorPtr iend = msrc.end();
           for (; i != iend; ++i)
           {
-            std::pair<GenericValue, GenericValue> kv = *i;
-            std::pair<GenericValue, bool> ck, cv;
+            std::pair<GenericValuePtr, GenericValuePtr> kv = *i;
+            std::pair<GenericValuePtr, bool> ck, cv;
             if (!sameKey)
             {
               ck = kv.first.convert(targetKeyType);
               if (!ck.first.type)
-                return std::make_pair(GenericValue(), false);
+                return std::make_pair(GenericValuePtr(), false);
             }
             if (!sameElem)
             {
               cv = kv.second.convert(targetElementType);
               if (!cv.first.type)
-                return std::make_pair(GenericValue(), false);
+                return std::make_pair(GenericValuePtr(), false);
             }
             mresult.insert(sameKey?kv.first:ck.first, sameElem?kv.second:cv.first);
             if (!sameKey && ck.second)
@@ -134,16 +134,16 @@ namespace qi
             if (type->info() == targetType->info())
               return std::make_pair(*this, false);
             else
-              return std::make_pair(GenericValue(), false);
+              return std::make_pair(GenericValuePtr(), false);
           }
-          GenericValue pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
-          std::pair<GenericValue, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
+          GenericValuePtr pointedSrc = static_cast<TypePointer*>(type)->dereference(value);
+          std::pair<GenericValuePtr, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
           if (!pointedDstPair.first.type)
-            return std::make_pair(GenericValue(), false);
+            return std::make_pair(GenericValuePtr(), false);
           if (pointedDstPair.second)
             qiLogError("qi.meta") << "assertion error, allocated converted reference";
           // We must re-reference
-          GenericValue pointedDst = pointedDstPair.first;
+          GenericValuePtr pointedDst = pointedDstPair.first;
           void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
           result.type = targetType;
           result.value = targetType->initializeStorage(&ptr);
@@ -160,19 +160,19 @@ namespace qi
           if (dstTypes.size() != sourceData.size())
           {
             qiLogWarning("qi.meta") << "Conversion failure: tuple size mismatch";
-            return std::make_pair(GenericValue(), false);
+            return std::make_pair(GenericValuePtr(), false);
           }
 
           std::vector<void*> targetData;
           std::vector<bool> mustDestroy;
           for (unsigned i=0; i<dstTypes.size(); ++i)
           {
-            std::pair<GenericValue, bool> conv = GenericValue(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
+            std::pair<GenericValuePtr, bool> conv = GenericValuePtr(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
             if (!conv.first.type)
             {
               qiLogWarning("qi.meta") << "Conversion failure in tuple member between "
                                       << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-              return std::make_pair(GenericValue(), false);
+              return std::make_pair(GenericValuePtr(), false);
             }
             targetData.push_back(conv.first.value);
             mustDestroy.push_back(conv.second);
@@ -234,7 +234,7 @@ namespace qi
     else if (skind == Type::Raw && dkind == Type::String)
     {
       qiLogWarning("qi.meta") << "Conversion attempt from raw to string";
-      return std::make_pair(GenericValue(), false);
+      return std::make_pair(GenericValuePtr(), false);
     }
     if (targetType->kind() == Type::Dynamic)
     {
@@ -245,8 +245,8 @@ namespace qi
     }
     if (type->kind() == Type::Dynamic)
     {
-      std::pair<GenericValue, bool> gv = ((TypeDynamic*)type)->get(value);
-      std::pair<GenericValue, bool> result = gv.first.convert(targetType);
+      std::pair<GenericValuePtr, bool> gv = ((TypeDynamic*)type)->get(value);
+      std::pair<GenericValuePtr, bool> result = gv.first.convert(targetType);
       if (gv.second && !result.second)
       { // Result is using memory from gv, but maybe only part of it
         result.first = result.first.clone();
@@ -256,18 +256,18 @@ namespace qi
         gv.first.destroy();
       return result;
     }
-    static Type* genericValueType = typeOf<GenericValue>();
+    static Type* genericValueType = typeOf<GenericValuePtr>();
     static Type* genericObjectType = typeOf<GenericObject>();
 
     if (type->info() == genericValueType->info())
     { // Source is metavalue: special case
-      GenericValue* metaval = (GenericValue*)value;
+      GenericValuePtr* metaval = (GenericValuePtr*)value;
       return metaval->convert(targetType);
     }
     if (type->info() == genericObjectType->info())
     {
       GenericObject* obj = (GenericObject*)value;
-      GenericValue v;
+      GenericValuePtr v;
       v.type = obj->type;
       v.value = obj->value;
       return v.convert(targetType);
@@ -292,12 +292,12 @@ namespace qi
       return std::make_pair(*this, false);
     }
 
-    return std::make_pair(GenericValue(), false);
+    return std::make_pair(GenericValuePtr(), false);
   }
 
-  GenericValue GenericValue::convertCopy(Type* targetType) const
+  GenericValuePtr GenericValuePtr::convertCopy(Type* targetType) const
   {
-    std::pair<GenericValue, bool> res = convert(targetType);
+    std::pair<GenericValuePtr, bool> res = convert(targetType);
     if (res.second)
       return res.first;
     else
@@ -306,4 +306,4 @@ namespace qi
 
 }
 
-QI_TYPE_REGISTER(qi::GenericValue);
+QI_TYPE_REGISTER(qi::GenericValuePtr);

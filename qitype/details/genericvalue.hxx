@@ -13,49 +13,49 @@
 namespace qi {
 
 
-  template<> class TypeImpl<GenericValue>: public TypeDynamic
+  template<> class TypeImpl<GenericValuePtr>: public TypeDynamic
   {
     virtual void* clone(void* src)
     {
-      return new GenericValue(((GenericValue*)src)->clone());
+      return new GenericValuePtr(((GenericValuePtr*)src)->clone());
     }
     virtual void destroy(void* ptr)
     {
-      ((GenericValue*)ptr)->destroy();
-      delete (GenericValue*)ptr;
+      ((GenericValuePtr*)ptr)->destroy();
+      delete (GenericValuePtr*)ptr;
     }
-    virtual std::pair<GenericValue, bool> get(void* storage)
+    virtual std::pair<GenericValuePtr, bool> get(void* storage)
     {
-      return std::make_pair(*(GenericValue*)ptrFromStorage(&storage), false);
+      return std::make_pair(*(GenericValuePtr*)ptrFromStorage(&storage), false);
     }
-    virtual void set(void** storage, GenericValue src)
+    virtual void set(void** storage, GenericValuePtr src)
     {
-      GenericValue* val = (GenericValue*)ptrFromStorage(storage);
+      GenericValuePtr* val = (GenericValuePtr*)ptrFromStorage(storage);
       *val = src.clone();
     }
-    typedef DefaultTypeImplMethods<GenericValue> Methods;
+    typedef DefaultTypeImplMethods<GenericValuePtr> Methods;
     _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
   template<> class TypeImpl<ManagedGenericValue>: public TypeDynamic
   {
   public:
-    virtual std::pair<GenericValue, bool> get(void* storage)
+    virtual std::pair<GenericValuePtr, bool> get(void* storage)
     {
-      return std::make_pair(*(GenericValue*)ptrFromStorage(&storage), false);
+      return std::make_pair(*(GenericValuePtr*)ptrFromStorage(&storage), false);
     }
-  virtual void set(void** storage, GenericValue src)
+  virtual void set(void** storage, GenericValuePtr src)
   {
     ManagedGenericValue* val = (ManagedGenericValue*)ptrFromStorage(storage);
     *val = src;
   }
   virtual void* clone(void* storage)
   {
-    return new ManagedGenericValue((*(GenericValue*)storage));
+    return new ManagedGenericValue((*(GenericValuePtr*)storage));
   }
   virtual void destroy(void* storage)
   {
-    GenericValue* val = (GenericValue*)ptrFromStorage(&storage);
+    GenericValuePtr* val = (GenericValuePtr*)ptrFromStorage(&storage);
     val->destroy();
     delete val;
   }
@@ -83,43 +83,43 @@ namespace qi {
   }
 
   template<typename T>
-  GenericValue GenericValue::from(const T& v)
+  GenericValuePtr GenericValuePtr::from(const T& v)
   {
     static Type* type = 0;
     if (!type)
       type = typeOf<typename boost::remove_const<T>::type>();
-    GenericValue res;
+    GenericValuePtr res;
     res.type = type;
     res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
     return res;
   }
 
   inline
-  GenericValue GenericValue::clone() const
+  GenericValuePtr GenericValuePtr::clone() const
   {
-    GenericValue res;
+    GenericValuePtr res;
     res.type = type;
     res.value = type?res.type->clone(value):0;
     return res;
   }
 
-  inline AutoGenericValue::AutoGenericValue(const AutoGenericValue& b)
+  inline AutoGenericValuePtr::AutoGenericValuePtr(const AutoGenericValuePtr& b)
   {
     value = b.value;
     type = b.type;
   }
 
-  template<typename T> AutoGenericValue::AutoGenericValue(const T& ptr)
+  template<typename T> AutoGenericValuePtr::AutoGenericValuePtr(const T& ptr)
   {
-    *(GenericValue*)this = from(ptr);
+    *(GenericValuePtr*)this = from(ptr);
   }
 
-  inline AutoGenericValue::AutoGenericValue()
+  inline AutoGenericValuePtr::AutoGenericValuePtr()
   {
     value = type = 0;
   }
 
-  inline std::string GenericValue::signature(bool resolveDynamic) const
+  inline std::string GenericValuePtr::signature(bool resolveDynamic) const
   {
     if (!type)
       return "";
@@ -127,25 +127,25 @@ namespace qi {
       return type->signature(value, resolveDynamic);
   }
 
-  inline void GenericValue::destroy()
+  inline void GenericValuePtr::destroy()
   {
     if (type && value)
       type->destroy(value);
   }
 
-  inline GenericValue::GenericValue()
+  inline GenericValuePtr::GenericValuePtr()
     : type(0)
     , value(0)
   {
   }
 
-  inline GenericValue::GenericValue(Type* type)
+  inline GenericValuePtr::GenericValuePtr(Type* type)
     : type(type)
     , value(type->initializeStorage())
   {
   }
 
-  inline Type::Kind GenericValue::kind() const
+  inline Type::Kind GenericValuePtr::kind() const
   {
     if (!type)
       return Type::Void;
@@ -212,9 +212,9 @@ namespace qi {
 
   namespace detail {
 
-    // Optimized GenericValue::as<T> for direct access to a subType getter
+    // Optimized GenericValuePtr::as<T> for direct access to a subType getter
     template<typename T, Type::Kind k>
-    inline T valueAs(const GenericValue& v)
+    inline T valueAs(const GenericValuePtr& v)
     {
       if (v.kind() == k)
         return static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value);
@@ -224,7 +224,7 @@ namespace qi {
   }
 
   template<typename T>
-  inline T* GenericValue::ptr(bool check)
+  inline T* GenericValuePtr::ptr(bool check)
   {
     if (check && typeOf<T>()->info() != type->info())
       return 0;
@@ -233,18 +233,18 @@ namespace qi {
   }
 
   template<typename T>
-  inline T GenericValue::as(const T&) const
+  inline T GenericValuePtr::as(const T&) const
   {
     return as<T>();
   }
 
   template<typename T>
-  inline T GenericValue::as() const
+  inline T GenericValuePtr::as() const
   {
-    std::pair<GenericValue, bool> conv = convert(typeOf<T>());
+    std::pair<GenericValuePtr, bool> conv = convert(typeOf<T>());
     if (!conv.first.type)
     {
-      qiLogWarning("qi.GenericValue") << "Conversion from " << type->infoString()
+      qiLogWarning("qi.GenericValuePtr") << "Conversion from " << type->infoString()
                                       << '(' << type->kind() << ')'
                                       << " to " << typeOf<T>()->infoString()
                                       << '(' << typeOf<T>()->kind() << ") failed";
@@ -256,23 +256,23 @@ namespace qi {
     return result;
   }
 
-  inline int64_t GenericValue::asInt() const
+  inline int64_t GenericValuePtr::asInt() const
   {
     return detail::valueAs<int64_t, Type::Int>(*this);
   }
 
-  inline float GenericValue::asFloat() const
+  inline float GenericValuePtr::asFloat() const
   {
     return detail::valueAs<float, Type::Float>(*this);
   }
 
-  inline double GenericValue::asDouble() const
+  inline double GenericValuePtr::asDouble() const
   {
     return detail::valueAs<double, Type::Float>(*this);
   }
 
 
-  inline std::string GenericValue::asString() const
+  inline std::string GenericValuePtr::asString() const
   {
     return as<std::string>();
   }
@@ -281,7 +281,7 @@ namespace qi {
   namespace detail
   {
     /** This class can be used to convert the return value of an arbitrary function
-  * into a GenericValue. It handles functions returning void.
+  * into a GenericValuePtr. It handles functions returning void.
   *
   *  Usage:
   *    ValueCopy val;
@@ -289,17 +289,17 @@ namespace qi {
   *
   *  in val(), parenthesis are useful to avoid compiler warning "val not used" when handling void.
   */
-    class GenericValueCopy: public GenericValue
+    class GenericValuePtrCopy: public GenericValuePtr
     {
     public:
       template<typename T> void operator,(const T& any);
-      GenericValueCopy &operator()() { return *this; }
+      GenericValuePtrCopy &operator()() { return *this; }
     };
 
-    template<typename T> void GenericValueCopy::operator,(const T& any)
+    template<typename T> void GenericValuePtrCopy::operator,(const T& any)
     {
-      *(GenericValue*)this = from(any);
-      *(GenericValue*)this = clone();
+      *(GenericValuePtr*)this = from(any);
+      *(GenericValuePtr*)this = clone();
     }
   }
 }

@@ -21,8 +21,8 @@ public:
   virtual Type* elementType(void* storage) const;
   virtual Type* keyType(void* storage) const;
   virtual size_t size(void* storage);
-  virtual GenericMapIterator begin(void* storage);
-  virtual GenericMapIterator end(void* storage);
+  virtual GenericMapIteratorPtr begin(void* storage);
+  virtual GenericMapIteratorPtr end(void* storage);
   virtual void insert(void* storage, void* keyStorage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
@@ -34,7 +34,7 @@ template<typename C> class TypeMapIteratorImpl
 public:
   typedef typename detail::TypeImplMethodsBySize<typename C::iterator>::type
   TypeImpl;
-  virtual std::pair<GenericValue, GenericValue> dereference(void* storage);
+  virtual std::pair<GenericValuePtr, GenericValuePtr> dereference(void* storage);
   virtual void  next(void** storage);
   virtual bool equals(void* s1, void* s2);
   _QI_BOUNCE_TYPE_METHODS(TypeImpl);
@@ -73,34 +73,34 @@ TypeMapImpl<M>::size(void* storage)
   return ptr->size();
 }
 
-template<typename M> GenericMapIterator
+template<typename M> GenericMapIteratorPtr
 TypeMapImpl<M>::begin(void* storage)
 {
   static Type* iterType = typeOf<typename M::iterator>();
   M* ptr = (M*)ptrFromStorage(&storage);
   // ptr->begin() gives us an iterator on the stack.
   // So we need to clone it. Hopefuly sizeof iterator is small, so it fits in
-  // a byvalue GenericValue
-  GenericMapIterator result;
-  GenericValue val;
+  // a byvalue GenericValuePtr
+  GenericMapIteratorPtr result;
+  GenericValuePtr val;
   val.type = iterType;
   typename M::iterator res = ptr->begin(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
-  *(GenericValue*)&result = val.clone();
+  *(GenericValuePtr*)&result = val.clone();
   return result;
 }
 
-template<typename M> GenericMapIterator
+template<typename M> GenericMapIteratorPtr
 TypeMapImpl<M>::end(void* storage)
 {
   static Type* iterType = typeOf<typename M::iterator>();
   M* ptr = (M*)ptrFromStorage(&storage);
-  GenericMapIterator result;
-  GenericValue val;
+  GenericMapIteratorPtr result;
+  GenericValuePtr val;
   val.type = iterType;
   typename M::iterator res = ptr->end(); // do not inline below!
   val.value = iterType->initializeStorage(&res);
-  *(GenericValue*)&result = val.clone();
+  *(GenericValuePtr*)&result = val.clone();
   return result;
 }
 
@@ -116,11 +116,11 @@ TypeMapImpl<M>::insert(void* storage, void* keyStorage, void* valueStorage)
 }
 
 
-template<typename C> std::pair<GenericValue, GenericValue> TypeMapIteratorImpl<C>::dereference(void* storage)
+template<typename C> std::pair<GenericValuePtr, GenericValuePtr> TypeMapIteratorImpl<C>::dereference(void* storage)
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
-  return std::make_pair(::qi::GenericValue::from(val.first), ::qi::GenericValue::from(val.second)); // Value is in the container, no need to clone
+  return std::make_pair(::qi::GenericValuePtr::from(val.first), ::qi::GenericValuePtr::from(val.second)); // Value is in the container, no need to clone
 }
 
 template<typename C> void TypeMapIteratorImpl<C>::next(void** storage)
