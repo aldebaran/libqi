@@ -52,7 +52,7 @@ int fakeemptysvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakeemptygvec(const std::vector<qi::ManagedGenericValue> &sval) {
+int fakeemptygvec(const std::vector<qi::GenericValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_TRUE(sval.empty());
   return 0;
@@ -65,7 +65,7 @@ int fakesvec(const std::vector<std::string> &svec) {
   return 0;
 }
 
-int fakegvec(const std::vector<qi::ManagedGenericValue> &sval) {
+int fakegvec(const std::vector<qi::GenericValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
   EXPECT_EQ("titi", sval[0].asString());
   EXPECT_EQ("toto", sval[1].asString());
@@ -75,9 +75,9 @@ int fakegvec(const std::vector<qi::ManagedGenericValue> &sval) {
 
 struct GenericTuple
 {
-  qi::ManagedGenericValue e1;
-  qi::ManagedGenericValue e2;
-  qi::ManagedGenericValue e3;
+  qi::GenericValue e1;
+  qi::GenericValue e2;
+  qi::GenericValue e3;
 };
 QI_TYPE_STRUCT(GenericTuple, e1, e2, e3);
 
@@ -207,15 +207,15 @@ TEST(TestCall, TestGenericConversion) {
   qi::GenericObjectBuilder ob;
 
   std::vector<std::string>      svec;
-  std::vector<qi::ManagedGenericValue> gvec;
+  std::vector<qi::GenericValue> gvec;
 
   std::vector<std::string>      esvec;
-  std::vector<qi::ManagedGenericValue> egvec;
+  std::vector<qi::GenericValue> egvec;
 
   svec.push_back("titi");
   svec.push_back("toto");
 
-  qi::ManagedGenericValue gv;
+  qi::GenericValue gv;
   gv = qi::GenericValuePtr::from(std::string("titi"));
   gvec.push_back(gv);
   gv = qi::GenericValuePtr::from(std::string("toto"));
@@ -274,7 +274,7 @@ TEST(TestCall, TestGenericConversion) {
   GenericTuple gt;
   gt.e1 = qi::GenericValuePtr::from(1.0);
   gt.e2 = qi::GenericValuePtr::from(2U);
-  std::map<std::string, qi::ManagedGenericValue> map;
+  std::map<std::string, qi::GenericValue> map;
   map["foo"] = qi::GenericValuePtr::from(3);
   gt.e3 = qi::GenericValuePtr::from(map);
   f = proxy->call<double>("eatSpecific", gt);

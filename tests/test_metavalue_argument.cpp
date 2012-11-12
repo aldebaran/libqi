@@ -17,7 +17,7 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 
-qi::ManagedGenericValue v;
+qi::GenericValue v;
 
 void onFire(const int& pl)
 {
@@ -25,12 +25,12 @@ void onFire(const int& pl)
   std::cout.flush();
 }
 
-void value(qi::ManagedGenericValue mv)
+void value(qi::GenericValue mv)
 {
   v = mv;
 }
 
-void valueList(std::vector<qi::ManagedGenericValue> mv)
+void valueList(std::vector<qi::GenericValue> mv)
 {
   v = qi::GenericValuePtr::from(mv).clone();
 }
@@ -123,7 +123,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<ManagedGenericValue> args;
+  std::vector<GenericValue> args;
   args.push_back(AutoGenericValuePtr(12));
   args.push_back(AutoGenericValuePtr("foo"));
   args.push_back(AutoGenericValuePtr(in));
@@ -179,7 +179,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<ManagedGenericValue> args;
+  std::vector<GenericValue> args;
   args.push_back(AutoGenericValuePtr(12));
   args.push_back(AutoGenericValuePtr("foo"));
   args.push_back(AutoGenericValuePtr(in));
@@ -231,7 +231,7 @@ TEST_F(TestObject, meta)
   ASSERT_EQ(v.as<std::vector<double> >(), in);
   target->call<void>("value", in).wait();
   ASSERT_EQ(v.as<std::vector<double> >(), in);
-  std::vector<ManagedGenericValue> args;
+  std::vector<GenericValue> args;
   args.push_back(AutoGenericValuePtr(12));
   args.push_back(AutoGenericValuePtr("foo"));
   args.push_back(AutoGenericValuePtr(in));
