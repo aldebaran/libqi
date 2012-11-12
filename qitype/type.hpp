@@ -158,6 +158,9 @@ namespace qi{
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
+   * \warning GenericValue should not be used directly as call arguments.
+   * Use qi::ManagedGenericValue which has value semantics instead.
+   *
    */
   class QITYPE_API GenericValue
   {
@@ -209,6 +212,35 @@ namespace qi{
 
     Type*   type;
     void*   value;
+  };
+
+  class QITYPE_API ManagedGenericValue: public GenericValue
+  {
+  public:
+    ManagedGenericValue() {}
+    ManagedGenericValue(const ManagedGenericValue& b)
+    {
+      *this = b;
+    }
+    ManagedGenericValue(const GenericValue& b)
+    {
+      *(GenericValue*)this = b.clone();
+    }
+    void operator = (const GenericValue& b)
+    {
+      if (type) destroy();
+      *(GenericValue*)this = b.clone();
+    }
+    void operator = (const ManagedGenericValue& b)
+    {
+      if (type) destroy();
+      *(GenericValue*)this = b.clone();
+    }
+    ~ManagedGenericValue()
+    {
+      if (type)
+        destroy();
+    }
   };
 
   /** Generates GenericValue from everything transparently.
