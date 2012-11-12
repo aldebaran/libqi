@@ -1,0 +1,78 @@
+// -*- C -*-
+
+  /*!
+  * \file signal_c.h
+  * \brief Signal handling.
+  * \author Julien Freche
+  * \copyright (C) Aldebaran Robotics
+  * \date 2012
+  * \since 1.18
+  */
+
+  /*!
+  * \struct qi_signal_t
+  * \ingroup Signal
+  * \brief C wrapper around qi::Signal.
+  * \see qi::Signal
+  * \since 1.18
+  */
+
+  /*!
+  * \typedef qi_signal_callback_t
+  * \brief Typedef for qi_signal_t callback signature.
+  * The function is called when signal is triggered.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_create()
+  * \brief Allocate a qi_signal_t.
+  * \note Returned qi_signal_t must be destroy with qi_signal_destroy
+  * \see qi_signal_destroy
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_destroy(qi_signal_t *signal)
+  * \brief Free qi_signal allocated with qi_signal_create.
+  * \param[in] signal: Signal to free.
+  * \see qi_signal_create
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_connect(qi_signal_t *signal, qi_signal_callback_t f)
+  * \brief Connection f to signal.
+          Callback will be called when signal is triggered.
+  * \param[in] signal: Signal to connect.
+  * \param[in] f: Callback to call.
+  * \return An integer that represents the connection.
+  * \see qi_signal_trigger
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_disconnect(qi_signal_t *signal, unsigned int link)
+  * \brief Disconnect callback with associated link.
+  * \param[in] signal: Signal to disconnect.
+  * \param[in] link: Identifier of the connection to drop.
+  * \return False on error, true otherwise.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_disconnectAll(qi_signal_t *signal)
+  * \brief Drop all connections on signal.
+  * \param[in] signal: Signal to disconnect.
+  * \return False on error, true otherwise.
+  * \since 1.18
+  */
+
+  /*!
+  * \fn qi_signal_trigger(qi_signal_t *signal, void* param)
+  * \brief Trigger signal with parameter param.
+  * \param[in] signal: Signal to trigger.
+  * \param[in] param: Parameter that will be passed to callback functions.
+  * \see qi_signal_connect
+  * \since 1.18
+  */
