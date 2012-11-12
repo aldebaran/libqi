@@ -30,9 +30,6 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
 namespace qi
 {
-  /**
-    * Warning : on Windows 1 byte atomic operations are not availables
-    */
   template <typename T>
   class atomic
   {

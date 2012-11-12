@@ -1,0 +1,40 @@
+/**
+ * \class qi::atomic
+ * \includename{qi/atomic.hpp}
+ * \brief Atomic operations on integers.
+ *
+ * \verbatim
+ * This class permits to do operations on a integer value from multiple threads,
+ * with the assurance that each operation will not be done from multiple threads
+ * at the same time.
+ *
+ * .. warning::
+ *     On Windows, 1 byte atomic operations are not available.
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::atomic::atomic()
+ * \brief Default atomic constructor, setting value to 0.
+ */
+
+/**
+ * \fn qi::atomic::atomic(T)
+ * \brief Atomic constructor setting value to its parameter.
+ * \param value The default value of the atomic.
+ */
+
+/**
+ * \fn qi::atomic::operator++()
+ * \brief Atomic increment of the value.
+ */
+
+/**
+ * \fn qi::atomic::operator--()
+ * \brief Atomic decement of the value.
+ */
+
+/**
+ * \fn qi::atomic::operator*()
+ * \brief Returns the current value of the atomic.
+ */

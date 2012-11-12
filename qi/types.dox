@@ -1,0 +1,39 @@
+/**
+ * \typedef qi::int8_t
+ * \brief Cross-platform signed integer of length 8 bits (1 byte).
+ */
+
+/**
+ * \typedef qi::int16_t
+ * \brief Cross-platform signed integer of length 16 bits (2 bytes).
+ */
+
+/**
+ * \typedef qi::int32_t
+ * \brief Cross-platform signed integer of length 32 bits (4 bytes).
+ */
+
+/**
+ * \typedef qi::int64_t
+ * \brief Cross-platform signed integer of length 64 bits (8 bytes).
+ */
+
+/**
+ * \typedef qi::uint8_t
+ * \brief Cross-platform unsigned integer of length 8 bits (1 byte).
+ */
+
+/**
+ * \typedef qi::uint16_t
+ * \brief Cross-platform unsigned integer of length 16 bits (2 bytes).
+ */
+
+/**
+ * \typedef qi::uint32_t
+ * \brief Cross-platform unsigned integer of length 32 bits (4 bytes).
+ */
+
+/**
+ * \typedef qi::uint64_t
+ * \brief Cross-platform unsigned integer of length 64 bits (8 bytes).
+ */

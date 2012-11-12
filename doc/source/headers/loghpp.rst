@@ -1,0 +1,1 @@
+.. cpp:autoheader:: log.hpp

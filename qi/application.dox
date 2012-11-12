@@ -1,21 +1,24 @@
 // -*- mode:c++; -*-
 
-/** \class qi::Application qi/application.hpp
+/**
+ * \class qi::Application
+ * \includename{qi/application.hpp}
  * \brief Class handling startup and teardown of an application.
  *
- * The qi::Application class is designed to ease
+ * \verbatim
+ * The :cpp:class:`qi::Application` class is designed to ease
  * startup and teardown of an executable.
  *
- * All executables using qi classes should create an instance of qi::Application
- * on the stack of the main() function.
- *
- * \ingroup qi::Application
+ * All executables using qi classes should create an instance of
+ * :cpp:class:`qi::Application` on the stack of the main() function.
+ * \endverbatim
  */
 
 /**
- * \fn qi::Application::Application(int argc, char** argv)
+ * \fn qi::Application::Application(int&, char**&)
  * \brief Application constructor. Must be the first thing called by main().
- * \ingroup qi::Application
+ * \param argc Argument counter of the program.
+ * \param argv Arguments of the program (given to main).
  */
 
 /**
@@ -23,51 +26,85 @@
  * \brief Application destructor. It executes atExit() callbacks.
  * \see qi:Application::atExit
  * \see QI_AT_EXIT
- * \ingroup qi::Application
  */
 
 /**
- * \fn bool qi::Application::initialized()
- * \brief Return whether the Application instance was created.
- * \ingroup qi::Application
+ * \fn qi::Application::run()
+ * \brief Wait until the end of the program.
+ *
+ * \verbatim
+ * Wait until one of those conditions becomes true:
+ * - stop() is called.
+ * - TERM or QUIT signal is received.
+ * - the Application instance is destroyed, which means main() is exiting.
+ *
+ * Run can be called by multiple threads simultaneously.
+ * \endverbatim
  */
 
 /**
- * \fn int qi::Application::argc()
- * \brief Get argc.
- * \ingroup qi::Application
- * \return argc if Application was initialized, -1 otherwise.
+ * \fn qi::Application::arguments()
+ * \brief Get arguments of the program as an std::vector of std::string.
  */
 
- /**
- * \fn const char** qi::Application::argv()
- * \brief Get argv
- * \ingroup qi::Application
- * \return argv if Application was initialized, 0 otherwise.
+/**
+ * \fn qi::Application::argc()
+ * \brief Get argument counter of the program.
+ * \return Argument counter of the program if Application was initialized,
+ *         -1 otherwise.
  */
 
- /**
- * \fn const std::vector<std::string>& qi::Application::arguments()
- * \brief Get arguments as a vector<string>
- * \ingroup qi::Application
+/**
+ * \fn qi::Application::argv()
+ * \brief Get string arguments of the program (including program name).
+ * \return Arguments of the program if Application was initialized, 0 otherwise.
  */
 
- /**
- * \fn void qi::Application::setArguments(const std::vector<std::string>&)
- * \brief Set arguments as a vector<string>
- * \ingroup qi::Application
+/**
+ * \fn qi::Application::setArguments(const std::vector<std::string>&)
+ * \brief Set arguments ot the program as an std::vector of std::string.
+ * \param arguments Sets arguments with a vector of strings.
  */
 
- /**
- * \fn void qi::Application::setArguments(int argc, char** argv)
- * \brief Set arguments as argc, argv
- * \ingroup qi::Application
+/**
+ * \fn qi::Application::setArguments(int, char**)
+ * \brief Set arguments of the program with argc as argument counter and argv as
+ *        argument values.
+ * \param argc Argument counter of the program.
+ * \param argv Arguments of the program (given to main).
  */
 
- /**
- * \fn const char *qi::Application::program()
- * \brief Return the current program.
- * \ingroup qi::Application
+/**
+ * \fn qi::Application::loadModule(const std::string&, int)
+ * \brief Load a module into the current process.
+ * \param name The module path and name. If no extension is used, the
+ *        correct extension for a library on the current platform is used.
+ * \param flags Extra flags to pass to the dlopen function.
+ * \return A handle, to be used by qi::os::dlsym() or unloadModule().
+ *
+ * \verbatim
+ * The module can execute code when loaded by using :cpp:macro:`QI_AT_ENTER`.
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::Application::unloadModule(void*)
+ * \brief Unload a module from the current process.
+ * \param handle Handle on the loaded module.
+ */
+
+/**
+ * \fn qi::Application::initialized()
+ * \brief Check whether the Application instance was initialized or not.
+ * \return True if it was initialized, false otherwise.
+ */
+
+/**
+ * \fn qi::Application::program()
+ * \brief Return the current program full path.
+ * \return full path to the current running program
+ *
+ * \verbatim
  * Computed using specific OS API:
  *
  * - Apple  : _NSGetExecutablePath
@@ -75,70 +112,52 @@
  * - Windows: GetModuleFileName
  *
  * If the former API fail it will try to guess the value from argv[0].
- * For this method to work qi::init(argc, argv) should have been called in main().
- *  \return full path to the current running program
+ * For this method to work :cpp:func:`qi::Application(int&, char**&)` should
+ * have been called in your main().
+ * \endverbatim
  */
 
- /**
- * \fn bool qi::Application::run()
- * \brief Waits until one of those conditions becomes true:
- *    - stop() is called.
- *    - TERM or QUIT signal is received.
- *    - the Application instance is destroyed, which means main() is exiting.
- *
- * Run can be called by multiple threads simultaneously.
- * \ingroup qi::Application
- */
-
- /**
- * \fn bool qi::Application::atEnter(boost::function<void()> func)
+/**
+ * \fn qi::Application::atEnter(boost::function<void()>)
  * \brief Register a function to be executed at Application creation.
- * \ingroup qi::Application
+ * \param func Callback function at Application creation.
+ * \return True if registering succeeded, false otherwise.
  */
 
- /**
- * \fn bool qi::Application::atExit(boost::function<void()> func)
+/**
+ * \fn qi::Application::atStop(boost::function<void()>)
  * \brief Register a function to be executed when stop() is called.
- * \ingroup qi::Application
+ * \param func Callback function called when stop() is called.
+ * \return True if registering succeeded, false otherwise.
  */
 
  /**
- * \fn bool qi::Application::atExit(boost::function<void()> func)
+ * \fn qi::Application::atExit(boost::function<void()>)
  * \brief Register a function to be executed at Application destruction.
- * \ingroup qi::Application
+ * \param func Callback function called at Application destruction.
+ * \return True if registering succeeded, false otherwise.
  */
 
- /**
- * \fn bool qi::Application::atSignal(boost::function<void(int)> handler, int signal)
- * \brief Register a function to be executed when a signal occurrs.
+/**
+ * \fn qi::Application::atSignal(boost::function<void(int)>, int)
+ * \brief Register a function to be executed when a signal occurs.
+ * \param func Callback function called on signal.
+ * \param signal Signal number.
+ * \return True if registering succeeded, false otherwise.
  *
  * The handler is executed in a thread, not from within the signal handler,
  * so there is no restriction on what can be done by your handler function,
  * except that it should return reasonably quickly.
- * \ingroup qi::Application
  */
 
- /**
- * \fn void* qi::Application::loadModule(const std::string& name, int flags=0)
- * \brief Load a module into the current process.
- * \param name The module path and name. If no extension is used, the
- *        correct extension for a library on the current platform is used.
- * \param flags Extra flags to pass to the dlopen function.
- * \return A handle, to be used by qi::os::dlsym() or unloadModule().
- *
- * The module can execute code when loaded by using QI_AT_ENTER().
- * \ingroup qi::Application
+/**
+ * \def QI_AT_ENTER(func)
+ * \brief calls qi::Application::atEnter(func) at static initialization time.
+ * \param func The handler that must be called at enter.
  */
 
- /**
-  * \def QI_AT_ENTER(func)
-  * \brief calls qi::Application::atEnter(func) at static initialization time.
-  * \ingroup qi::Application
-  */
-
-   /**
-  * \def QI_AT_EXIT(func)
-  * \brief calls qi::Application::atExit(func) at static initialization time.
-  * \ingroup qi::Application
-  */
-
+/**
+ * \def QI_AT_EXIT(func)
+ * \brief calls qi::Application::atExit(func) at static initialization time.
+ * \param func The handler that must be called at exit.
+ */

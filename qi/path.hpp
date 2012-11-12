@@ -98,15 +98,16 @@ namespace qi
      * \brief Look for a configuration file.
      * \ingroup qipath
      *
+     * \verbatim
      * The file is searched in a list of possible directories,
      * the first match is returned.
-     * \verbatim
+     *
      * The list of paths is constructed like this:
+     *
      * - first, a standard path in the home directory (like
-     *  ~/.config/<applicationName>/<filename>)
-     * - then:
-     *     <sdk_prefix>/etc/<applicationName>/<filename>
-     *     for each known SDK prefix
+     *   ~/.config/<applicationName>/<filename>)
+     * - then: <sdk_prefix>/etc/<applicationName>/<filename> for each known SDK
+     *   prefix.
      * - then a standard path in the system. (like
      *   /etc/<applicationName>/<filename>)
      * \endverbatim
@@ -123,15 +124,15 @@ namespace qi
      * \brief Look for a data file.
      * \ingroup qipath
      *
+     * \verbatim
      * The file is search in a list of possible directories,
      * the first match is returned.
      * The list of paths is constructed like this:
-     * \verbatim
+     *
      * - first, a standard path in the home directory (like
-     *  ~/.local/share/<applicationName>/<filename>)
-     * - then
-     *   <sdk_prefix>/share/<applicationName>/<filename>
-     *     for each known SDK prefix
+     *   ~/.local/share/<applicationName>/<filename>)
+     * - then <sdk_prefix>/share/<applicationName>/<filename> for each known SDK
+     *   prefix.
      * \endverbatim
      *
      * @param applicationName Name of the application (in UTF-8).

@@ -4,13 +4,6 @@
  * found in the COPYING file.
  */
 
-/*
- * Various cross-platform OS related functions
- *
- * \note Every path taken in parameter MUST be encoded in UTF8.
- * \note Every path returned are encoded in UTF8.
- */
-
 #pragma once
 #ifndef _LIBQI_QI_OS_HPP_
 #define _LIBQI_QI_OS_HPP_

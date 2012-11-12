@@ -1,0 +1,1 @@
+.. cpp:autonamespace:: qi::os

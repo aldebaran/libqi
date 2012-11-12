@@ -1,5 +1,8 @@
-INPUT       = qi/*.dox qi
+INPUT       = qi/ doc/*.dox
 EXAMPLE_PATH           = examples
 EXAMPLE_PATTERNS       = *.cpp
 EXAMPLE_RECURSIVE      = YES
-GENERATE_XML=YES
+# Qiapidoc specific.
+GENERATE_XML = YES
+WARN_IF_DOC_ERROR = YES
+WARN_NO_PARAMDOC = YES

@@ -1,60 +1,70 @@
-
-/**
-\defgroup qi qi general
-  Various functions.
-*/
-
 /**
  * \namespace qi
  * \brief qi general namespace
- * \ingroup qi
  */
-
 
 /**
  * \typedef qi::codecvt_type
- * \brief standard std::codecvt accept by STL and boost.
- * typedef for std::codecvt<wchar_t, char, std::mbstate_t>
- * could be used with boost::filesystem::path or std::locale.
- * \ingroup qi
- */
-
-/**
- * \fn const codecvt_type &qi::unicodeFacet()
- * \brief utf8 facet
+ * \brief Standard std::codecvt type accepted by STL and boost.
  *
- *  return a facet object that can be used by stl (iostream, locale, ..)
- *  and std::locale compliant library like boost::filesystem.
+ * Typedef for std::codecvt<wchar_t, char, std::mbstate_t> that can be used
+ * with boost::filesystem::path and std::locale.
+ */
+
+/**
+ * \fn qi::unicodeFacet()
+ * \brief UTF-8 facet object getter.
+ * \return UTF-8 implementation for std::codecvt<wchar_t, char, std::mbstate_t>
  *
- *  this class allow convertion between utf8(char) and utf16/32(wchar).
+ * Return a facet object that can be used by stl (iostream, locale, ...)
+ * and std::locale compliant library like boost::filesystem.
  *
- *  \return utf8 implementation for std::codecvt<wchar_t, char, std::mbstate_t>
- *  \ingroup qi
- */
-
-
-/**
- * \fn void qi::init(int, char *[])
- * \deprecated 1.16, use qi::Application
- * \ingroup qi
+ * This class allow conversion between UTF-8 (char) and UTF-16/UTF-32 (wchar).
  */
 
 /**
- * \fn QI_API int qi::argc()
- * \deprecated 1.16 use qi::Application::argc
- * \ingroup qi
+ * \fn qi::init(int, char*[])
+ * \brief Deprecated, see detailed description.
+ * \param argc Argument counter of the program.
+ * \param argv Arguments of the program as a NULL terminated array of strings.
+ *
+ * \verbatim
+ * .. deprecated:: 1.16
+ *     Use :cpp:class:`qi::Application`
+ * \endverbatim
  */
 
 /**
- * \fn const char** qi::argv()
- * \deprecated 1.16 use qi::Application::argv
- * \ingroup qi
+ * \fn qi::argc()
+ * \brief Deprecated, see detailed description.
+ * \return Argument counter of the program if qi::init was called previously.
+ *
+ * \verbatim
+ * .. deprecated:: 1.16
+ *     Use :cpp:class:`qi::Application::argc()`
+ * \endverbatim
  */
 
 /**
- * \fn const char *qi::program()
- * \ingroup qi
- * \deprecated 1.16, use qi::Application::program
+ * \fn qi::argv()
+ * \brief Deprecated, see detailed description.
+ * \return Arguments of the program if qi::init was called previously.
+ *
+ * \verbatim
+ * .. deprecated:: 1.16
+ *     Use :cpp:class:`qi::Application::argv()`
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::program()
+ * \brief Deprecated, see detailed description.
+ * \return Program name if qi::init was called previously.
+ *
+ * \verbatim
+ * .. deprecated:: 1.16
+ *     Use :cpp:class:`qi::Application::program()`
+ * \endverbatim
  */
 
 
