@@ -159,7 +159,7 @@ namespace qi{
    *  operator=() makes a shallow copy.
    *
    * \warning GenericValuePtr should not be used directly as call arguments.
-   * Use qi::ManagedGenericValue which has value semantics instead.
+   * Use qi::GenericValue which has value semantics instead.
    *
    */
   class QITYPE_API GenericValuePtr
@@ -214,15 +214,17 @@ namespace qi{
     void*   value;
   };
 
-  class QITYPE_API ManagedGenericValue: public GenericValuePtr
+  /** Class that holds any value, with value semantics.
+  */
+  class QITYPE_API GenericValue: public GenericValuePtr
   {
   public:
-    ManagedGenericValue() {}
-    ManagedGenericValue(const ManagedGenericValue& b)
+    GenericValue() {}
+    GenericValue(const GenericValue& b)
     {
       *this = b;
     }
-    ManagedGenericValue(const GenericValuePtr& b)
+    GenericValue(const GenericValuePtr& b)
     {
       *(GenericValuePtr*)this = b.clone();
     }
@@ -231,12 +233,12 @@ namespace qi{
       if (type) destroy();
       *(GenericValuePtr*)this = b.clone();
     }
-    void operator = (const ManagedGenericValue& b)
+    void operator = (const GenericValue& b)
     {
       if (type) destroy();
       *(GenericValuePtr*)this = b.clone();
     }
-    ~ManagedGenericValue()
+    ~GenericValue()
     {
       if (type)
         destroy();

@@ -37,7 +37,7 @@ namespace qi {
     _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
-  template<> class TypeImpl<ManagedGenericValue>: public TypeDynamic
+  template<> class TypeImpl<GenericValue>: public TypeDynamic
   {
   public:
     virtual std::pair<GenericValuePtr, bool> get(void* storage)
@@ -46,12 +46,12 @@ namespace qi {
     }
   virtual void set(void** storage, GenericValuePtr src)
   {
-    ManagedGenericValue* val = (ManagedGenericValue*)ptrFromStorage(storage);
+    GenericValue* val = (GenericValue*)ptrFromStorage(storage);
     *val = src;
   }
   virtual void* clone(void* storage)
   {
-    return new ManagedGenericValue((*(GenericValuePtr*)storage));
+    return new GenericValue((*(GenericValuePtr*)storage));
   }
   virtual void destroy(void* storage)
   {
@@ -59,7 +59,7 @@ namespace qi {
     val->destroy();
     delete val;
   }
-  typedef DefaultTypeImplMethods<ManagedGenericValue> Methods;
+  typedef DefaultTypeImplMethods<GenericValue> Methods;
   _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
