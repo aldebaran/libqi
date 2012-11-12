@@ -196,7 +196,6 @@ TEST(TestCall, TestGenericVector) {
   gvec.push_back(gv);
 
   int serviceID;
-  float duration = 0.42;
 
   ob.advertiseMethod("fakesvec", &fakesvec);
   ob.advertiseMethod("fakegvec", &fakegvec);
