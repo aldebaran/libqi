@@ -243,6 +243,19 @@ namespace qi
       static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
       return std::make_pair(result, true);
     }
+    if (type->kind() == Type::Dynamic)
+    {
+      std::pair<GenericValue, bool> gv = ((TypeDynamic*)type)->get(value);
+      std::pair<GenericValue, bool> result = gv.first.convert(targetType);
+      if (gv.second && !result.second)
+      { // Result is using memory from gv, but maybe only part of it
+        result.first = result.first.clone();
+        result.second = true;
+      }
+      if (gv.second)
+        gv.first.destroy();
+      return result;
+    }
     static Type* genericValueType = typeOf<GenericValue>();
     static Type* genericObjectType = typeOf<GenericObject>();
 

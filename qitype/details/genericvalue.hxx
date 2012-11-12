@@ -219,7 +219,9 @@ namespace qi {
     if (!conv.first.type)
     {
       qiLogWarning("qi.GenericValue") << "Conversion from " << type->infoString()
-                                      << " to " << typeOf<T>()->infoString() << " failed";
+                                      << '(' << type->kind() << ')'
+                                      << " to " << typeOf<T>()->infoString()
+                                      << '(' << typeOf<T>()->kind() << ") failed";
       return T();
     }
     T result = *conv.first.ptr<T>(false);
