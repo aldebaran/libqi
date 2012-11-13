@@ -148,7 +148,17 @@ namespace qi
     pendingServices[idx] = svcinfo;
     pendingServices[idx].setServiceId(idx);
 
-    qiLogInfo("qimessaging.ServiceDirectory")  << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";
+    std::stringstream ss;
+    ss << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";
+    if (! svcinfo.name().empty() && svcinfo.name()[0] == '_') {
+      // Hide services whose name starts with an underscore
+      qiLogDebug("qimessaging.ServiceDirectory") << ss.str();
+    }
+    else
+    {
+      qiLogInfo("qimessaging.ServiceDirectory") << ss.str();
+    }
+
     qi::UrlVector::const_iterator jt;
     for (jt = svcinfo.endpoints().begin(); jt != svcinfo.endpoints().end(); ++jt)
     {
@@ -182,10 +192,21 @@ namespace qi
       throw std::runtime_error(ss.str());
     }
     std::string serviceName = it2->second.name();
-    qiLogInfo("qimessaging.ServiceDirectory") <<
-      "Unregistered Service  \""
-      << serviceName
-      << "\" (#" << idx << ")";
+
+    std::stringstream ss;
+    ss << "Unregistered Service  \""
+          << serviceName
+          << "\" (#" << idx << ")";
+
+    if (! serviceName.empty() && serviceName[0] == '_') {
+      // Hide services whose name starts with underscore
+      qiLogDebug("qimessaging.ServiceDirectory") << ss.str();
+    }
+    else
+    {
+      qiLogInfo("qimessaging.ServiceDirectory") << ss.str();
+    }
+
     nameToIdx.erase(it);
     connectedServices.erase(it2);
 
