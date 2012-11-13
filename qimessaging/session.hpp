@@ -16,6 +16,11 @@
 #include <vector>
 #include <string>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   class SessionPrivate;
@@ -60,7 +65,9 @@ namespace qi {
   public:
     qi::Signal<void (unsigned int, std::string)> serviceRegistered;
     qi::Signal<void (unsigned int, std::string)> serviceUnregistered;
+    // C4251
     qi::Signal<void ()>                          connected;
+    // C4251
     qi::Signal<void (int error)>                 disconnected;
 
   public:
@@ -73,6 +80,8 @@ namespace qi {
   }
 }
 
-
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QIMESSAGING_SESSION_HPP_

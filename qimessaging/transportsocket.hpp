@@ -16,6 +16,11 @@
 # include <string>
 # include <boost/enable_shared_from_this.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi
 {
   class Session;
@@ -43,8 +48,11 @@ namespace qi
     bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
 
   public:
+    // C4251
     qi::Signal<void ()>                   connected;
+    // C4251
     qi::Signal<void (int error)>          disconnected;
+    // C4251
     qi::Signal<void (const qi::Message&)> messageReady;
 
   protected:
@@ -59,5 +67,9 @@ namespace qi
 
 
 QI_TYPE_NOT_CLONABLE(qi::TransportSocket);
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QIMESSAGING_TRANSPORTSOCKET_HPP_

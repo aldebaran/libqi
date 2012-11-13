@@ -14,6 +14,11 @@
 # include <vector>
 # include <qimessaging/url.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   class TransportSocket;
@@ -45,7 +50,9 @@ namespace qi {
     /** Emited each time a new connection happens. startReading must be
      * called on the socket
      */
+    // C4251
     qi::Signal<void (TransportSocketPtr)> newConnection;
+    // C4251
     qi::Signal<void (int error)>          acceptError;
 
   public:
@@ -53,5 +60,9 @@ namespace qi {
   };
 
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QIMESSAGING_TRANSPORTSERVER_HPP_
