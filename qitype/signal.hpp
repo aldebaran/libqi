@@ -46,7 +46,7 @@ namespace qi {
   public:
     explicit SignalBase(const std::string& signature);
     SignalBase();
-    ~SignalBase();
+    virtual ~SignalBase();
     SignalBase(const SignalBase& b);
     SignalBase& operator = (const SignalBase& b);
     virtual std::string signature() const;
