@@ -5,6 +5,7 @@
 #include <src/qipython.hpp>
 #include <src/sd_testwrap.hpp>
 #include <src/converter_testwrap.hpp>
+#include <src/qipython_signal.hpp>
 %}
 
 #define QIMESSAGING_API
@@ -19,3 +20,7 @@
 %include <src/qipython.hpp>
 %include <src/sd_testwrap.hpp>
 %include <src/converter_testwrap.hpp>
+
+// Avoid generating a different wrapper for every default argument
+%feature("compactdefaultargs") signal::trigger;
+%include <src/qipython_signal.hpp>

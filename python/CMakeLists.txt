@@ -20,6 +20,8 @@ qi_swig_wrap_python(qimessagingswig src/qimessagingswig.i SRC
                     src/pyobjectconverter.cpp
                     src/pythonscopedref.cpp
                     src/pythonscopedref.hpp
+                    src/qipython_signal.cpp
+                    src/qipython_signal.hpp
                     DEPENDS QI QIMESSAGING)
 
 # Add automatic testing for Python bindings

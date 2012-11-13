@@ -50,6 +50,10 @@ qi_application_t *py_application_create(PyObject *args)
   int       argc, i;
   char      **argv;
 
+  // #0 Initialize Python threads, for code in C/C++ that will call python object in a thread
+  PyEval_InitThreads();
+  PyEval_ReleaseLock();
+
   // #1 Get char** argv from PyObject *args
   iter = PyObject_GetIter(args);
   argc = PySequence_Size(args);
