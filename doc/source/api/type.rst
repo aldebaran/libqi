@@ -5,7 +5,9 @@ Type API
 
 The library provides common Interface to manipulate types:
 
-- TypeInt
+- :cpp:class:`qi::Type`
+
+- :cpp:class:`qi::TypeInt`
 - TypeFloat
 - TypeString
 - TypeList, TypeListIterator

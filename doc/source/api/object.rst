@@ -10,6 +10,8 @@ GenericObject::Metacall, allow calling a method without knowing it's type. It's 
 
 To manipulate objects you can use GenericObject.
 
+- :cpp:class:`qi::DynamicObject`
+
 Method calls
 ------------
 
