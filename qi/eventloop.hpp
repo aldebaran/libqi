@@ -13,6 +13,11 @@
 #include <qi/types.hpp>
 #include <qi/api.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi
 {
   class EventLoopPrivate;
@@ -48,6 +53,7 @@ namespace qi
       void cancel();
 
     public:
+      // CS4251
       boost::shared_ptr<AsyncCallHandlePrivate> _p;
     };
 
@@ -62,5 +68,9 @@ namespace qi
   /// Return a default context for other uses.
   QI_API EventLoop* getDefaultObjectEventLoop();
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QIMESSAGING_EVENTLOOP_HPP_

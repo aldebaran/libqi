@@ -14,6 +14,11 @@
 # include <qi/log.hpp>
 # include <cstddef>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi
 {
   class BufferPrivate;
@@ -64,6 +69,7 @@ namespace qi
 
   private:
     friend class BufferReader;
+    // CS4251
     boost::shared_ptr<BufferPrivate> _p;
   };
 
@@ -71,5 +77,9 @@ namespace qi
     QI_API void printBuffer(std::ostream& stream, const Buffer& buffer);
   }
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QI_BUFFER_HPP_
