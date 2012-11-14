@@ -45,7 +45,7 @@ namespace qi {
   }
 
   RemoteObject::RemoteObject(unsigned int service, qi::MetaObject metaObject, TransportSocketPtr socket)
-    : _socket(socket)
+    : _socket()
     , _service(service)
     , _linkMessageDispatcher(0)
     , _self(makeDynamicObjectPtr(this, false))
