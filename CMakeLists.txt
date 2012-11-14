@@ -46,7 +46,6 @@ qi_add_probes(src/tp_qimessaging.in.h
 
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
-                   qimessaging/details/datastream.hxx
                    qimessaging/datastream.hpp
                    qimessaging/file.hpp
                    qimessaging/gateway.hpp
