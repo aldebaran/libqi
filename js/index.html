@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="qimessaging.js"></script>
+</head>
+
+<body>
+<script language="JavaScript">
+qim = new QiSession("http://10.0.252.48:8080");
+
+qim.services().done(gotServices).fail(qiLogError);
+
+function gotServices(services)
+{
+  console.log("Available services are:", services);
+
+  qim.service("system").done(gotService).fail(qiLogError);
+}
+
+function gotService(service)
+{
+  var methods = [];
+  for (var m in service)
+  {
+    if (typeof service[m] == "function")
+    {
+      methods.push(m);
+    }
+  }
+  console.log("Available methods for", service._name, "are:", methods);
+
+  service.robotName().done(gotName).fail(qiLogError)
+}
+
+function gotName(name)
+{
+  console.log(name)
+}
+</script>
+</body>
+</html>
