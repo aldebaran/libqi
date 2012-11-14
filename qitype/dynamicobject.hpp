@@ -9,6 +9,11 @@
 
 #include <qitype/genericobject.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi
 {
 
@@ -48,6 +53,7 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> metaDisconnect(unsigned int linkId);
 
+    // C4251
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };
 
@@ -55,4 +61,9 @@ namespace qi
   QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject = true);
 
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
+
 #endif  // _QITYPE_DYNAMICOBJECT_HPP_

@@ -15,6 +15,11 @@
 #include <sstream>
 #include <boost/shared_ptr.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   QITYPE_API std::vector<std::string> signatureSplit(const std::string &fullSignature);
@@ -116,8 +121,13 @@ namespace qi {
 
     static Signature fromType(Type t);
   protected:
+    // C4251
     boost::shared_ptr<SignaturePrivate> _p;
   };
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_SIGNATURE_HPP_

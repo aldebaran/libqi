@@ -18,6 +18,10 @@
 #include <qitype/api.hpp>
 #include <qitype/signature.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
 
 /* A lot of class are found in this headers... to kill circular dependencies.
    Futhermore we need that all "default template" types are registered (included)
@@ -50,6 +54,7 @@ namespace qi{
 
   private:
     const std::type_info* stdInfo;
+    // C4251
     std::string           customInfo;
   };
 
@@ -445,5 +450,9 @@ namespace qi{
 #include <qitype/details/typepointer.hxx>
 #include <qitype/details/typetuple.hxx>
 #include <qitype/details/typebuffer.hxx>
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_TYPE_HPP_

@@ -19,11 +19,15 @@
 #include <qi/eventloop.hpp>
 #include <qitype/typeobject.hpp>
 #include <qitype/signal.hpp>
-
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
+
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
 
 namespace qi {
 
@@ -130,6 +134,7 @@ namespace qi {
   template<typename T>
   GenericValuePtr makeObjectValue(T* ptr);
 
+   // C4251
   template <typename FUNCTION_TYPE>
   qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,
                                                       FUNCTION_TYPE callback,
@@ -144,6 +149,10 @@ namespace qi {
 
 };
 
-
 #include <qitype/details/genericobject.hxx>
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
+
 #endif  // _QITYPE_GENERICOBJECT_HPP_

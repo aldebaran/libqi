@@ -11,6 +11,11 @@
 
 #include <qitype/type.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   /// Signature information for both callable types FunctionType and MethodType
@@ -24,6 +29,7 @@ namespace qi {
     std::string sigreturn() const;
   protected:
     Type*              _resultType;
+    // C4251
     std::vector<Type*> _argumentsType;
   };
 
@@ -87,5 +93,9 @@ namespace qi {
 }
 
 #include <qitype/details/functiontype.hxx>
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_FUNCTIONTYPE_HPP_

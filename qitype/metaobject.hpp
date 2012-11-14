@@ -10,6 +10,11 @@
 #include <qitype/metamethod.hpp>
 #include <qitype/metasignal.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   class MetaObjectPrivate;
@@ -58,6 +63,7 @@ namespace qi {
     qi::MetaObject metaObject();
 
   private:
+    // C4251
     boost::shared_ptr<MetaObjectBuilderPrivate> _p;
   };
 
@@ -65,6 +71,10 @@ namespace qi {
     QITYPE_API void printMetaObject(std::ostream &stream, const qi::MetaObject &metaObject);
   }
 
-};
+}
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_METAOBJECT_HPP_

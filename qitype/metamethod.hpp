@@ -11,6 +11,10 @@
 #include <string>
 #include <qitype/type.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
 
 namespace qi {
 
@@ -27,13 +31,19 @@ namespace qi {
 
   private:
     unsigned int      _uid;
+    // C4251
     std::string       _signature;
+    // C4251
     std::string       _sigreturn;
     friend class TypeImpl<MetaMethod>;
   };
 
-}; // namespace qi
+} // namespace qi
 
 QI_TYPE_STRUCT(qi::MetaMethod, _signature, _sigreturn, _uid);
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif  // _QITYPE_METAMETHOD_HPP_

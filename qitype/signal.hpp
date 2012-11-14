@@ -15,6 +15,11 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   class ManageablePrivate;
@@ -82,6 +87,7 @@ namespace qi {
     std::vector<SignalSubscriber> subscribers();
     static const SignalBase::Link invalidLink;
   public:
+    // C4251
     boost::shared_ptr<SignalBasePrivate> _p;
   };
 
@@ -198,6 +204,10 @@ namespace qi {
  };
  typedef boost::shared_ptr<SignalSubscriber> SignalSubscriberPtr;
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #include <qitype/details/signal.hxx>
 
