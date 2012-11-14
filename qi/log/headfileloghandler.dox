@@ -1,0 +1,39 @@
+/**
+ * \class qi::log::HeadFileLogHandler
+ * \includename{qi/log/headfileloghandler.hpp}
+ *
+ * This class writes the logs to a file, providing they are part of the first
+ * ``length`` lines.
+ */
+
+/**
+ * \fn qi::log::HeadFileLogHandler::HeadFileLogHandler(const std::string&, int)
+ * \param filePath path to the file.
+ * \param length number of messages that will be written to the file.
+ *
+ * \verbatim
+ * .. warning::
+ *
+ *      If the file could not be open, it logs a warning and every log call
+ *      will fail silently.
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::log::HeadFileLogHandler::log(const qi::log::LogLevel, const qi::os::timeval,
+ *                                      const char*, const char*, const char*,
+ *                                      const char*, const int)
+ * \param verb verbosity of the log message.
+ * \param date date at which the log message was issued.
+ * \param category will be used in future for filtering
+ * \param msg actual message to log.
+ * \param file filename from which this log message was issued.
+ * \param fct function name from which this log message was issued.
+ * \param line line number in the issuer file.
+ *
+ * If the file could not be open, this function will fail silently, otherwise
+ * it will directly write the log message to the file and flush its output.
+ *
+ * When ``length`` messages will be writen to the file, it will discard all
+ * messages.
+ */

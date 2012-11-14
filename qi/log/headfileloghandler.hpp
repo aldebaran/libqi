@@ -15,17 +15,19 @@ namespace qi {
   namespace log {
     class PrivateHeadFileLogHandler;
 
-    /** \brief Log the \a length first lines to file.
-     *  \ingroup qilog
-     *
-     */
+    /// Log the first length lines to a file.
     class QI_API HeadFileLogHandler
     {
     public:
+      /// \brief Initialize the head file handler on the file. File is opened
+      ///        directly on construction.
       HeadFileLogHandler(const std::string &filePath,
                          int length = 2000);
+      /// Closes the file.
       virtual ~HeadFileLogHandler();
 
+      /// \brief Writes a log message to the file if it is part of the first
+      ///        length lines.
       void log(const qi::log::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
