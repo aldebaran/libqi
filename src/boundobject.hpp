@@ -10,10 +10,13 @@
 #include <string>
 #include <set>
 #include <boost/thread/mutex.hpp>
+#include <boost/signals2.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transportserver.hpp>
 #include <qi/atomic.hpp>
+
+#include "objecthost.hpp"
 
 namespace qi {
 
@@ -44,9 +47,12 @@ namespace qi {
 
   //Bound Object, represent an object bound on a server
   // this is not an object..
-  class ServiceBoundObject : public BoundObject {
+  class ServiceBoundObject : public BoundObject, public ObjectHost {
   public:
-    ServiceBoundObject(unsigned int serviceId, qi::ObjectPtr obj, qi::MetaCallType mct = qi::MetaCallType_Queued);
+    ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
+                       qi::ObjectPtr obj,
+                       qi::MetaCallType mct = qi::MetaCallType_Queued,
+                       bool bindTerminate = false);
     virtual ~ServiceBoundObject();
 
   public:
@@ -54,6 +60,7 @@ namespace qi {
     unsigned int   registerEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
     void           unregisterEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
+    void           terminate(unsigned int serviceId); //bound only in special cases
 
   public:
     inline qi::TransportSocketPtr currentSocket() const {
@@ -69,8 +76,9 @@ namespace qi {
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket);
     virtual void onSocketDisconnected(qi::TransportSocketPtr socket, int error);
 
+    boost::signals2::signal<void(ServiceBoundObject*)> onDestroy;
   private:
-    qi::ObjectPtr createServiceBoundObjectType(ServiceBoundObject *self);
+    qi::ObjectPtr createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
 
   private:
     // remote link id -> local link id
@@ -83,6 +91,7 @@ namespace qi {
   private:
     qi::TransportSocketPtr _currentSocket;
     unsigned int           _serviceId;
+    unsigned int           _objectId;
     qi::ObjectPtr          _object;
     qi::ObjectPtr          _self;
     qi::MetaCallType       _callType;

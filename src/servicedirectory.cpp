@@ -60,7 +60,7 @@ namespace qi
   }
 
   ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()
-    : ServiceBoundObject(1, createSDP(this), qi::MetaCallType_Direct)
+    : ServiceBoundObject(1, Message::GenericObject_Main, createSDP(this), qi::MetaCallType_Direct)
     , servicesCount(0)
   {
   }

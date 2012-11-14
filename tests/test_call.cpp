@@ -600,6 +600,176 @@ TEST(TestCall, DeadLock)
   ASSERT_TRUE(prom.future().isReady());
   ASSERT_EQ(6, prom.future().value());
 }
+
+void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
+{
+  qiLogDebug("test") << "onEvent";
+  eventValue.setValue(v);
+  if (v == 0)
+    delete ptr;
+}
+
+
+void bindObjectEvent(qi::ObjectPtr ptr, const std::string& eventName,
+  qi::Promise<int>& eventValue)
+{
+  // Keep ptr alive
+  ptr->connect(eventName, boost::bind(&onEvent, _1, eventValue,
+    new qi::ObjectPtr(ptr)));
+}
+
+int makeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg)
+{
+  return ptr->call<int>(fname, arg).value();
+}
+
+void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
+{
+  if (s.isReady())
+    d.setValue(s.value());
+  else
+    d.setError(s.error());
+}
+
+void onMakeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg,
+  qi::Promise<int>& result)
+{
+  qiLogDebug("test") << "onMakeObjectCall";
+  qi::Future<int> fut = ptr->call<int>(fname, arg);
+  // We must keep ptr alive until the call returns
+  fut.connect(boost::bind(&bounceFuture, _1, result, ptr));
+}
+
+TEST(TestCall, TestObjectPassing)
+{
+  TestSessionPair p;
+  qi::Promise<int> eventValue;
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("makeObjectCall", &makeObjectCall);
+  ob.advertiseMethod("bindObjectEvent", boost::bind(&bindObjectEvent, _1, _2, eventValue));
+  qi::ObjectPtr obj(ob.object());
+  p.server()->registerService("s", obj);
+  qi::ObjectPtr proxy = p.client()->service("s");
+
+  qi::ObjectPtr unregisteredObj;
+  {
+    qi::GenericObjectBuilder ob;
+    ob.advertiseMethod("add", &addOne);
+    ob.advertiseEvent<void(int)>("fire");
+    unregisteredObj = ob.object();
+  }
+  // Transmit unregisteredObj through the network.
+  qi::Future<int> v = proxy->call<int>("makeObjectCall", unregisteredObj, "add", 1);
+  v.wait(2000);
+  ASSERT_TRUE(!v.hasError());
+  ASSERT_EQ(2, v.value());
+  proxy->call<void>("bindObjectEvent", unregisteredObj, "fire").wait();
+  unregisteredObj->emitEvent("fire", 42);
+  eventValue.future().wait(); //fixme wait(2s)
+  ASSERT_TRUE(eventValue.future().isReady());
+  ASSERT_EQ(42, eventValue.future().value());
+  eventValue.reset();
+
+  // Check that object is locked by remote end
+  qi::ObjectWeakPtr unregisteredWeakObj(unregisteredObj);
+  unregisteredObj.reset();
+  unregisteredObj = unregisteredWeakObj.lock();
+  ASSERT_TRUE(unregisteredObj);
+
+  // This will delete the proxy
+  unregisteredObj->emitEvent("fire", 0);
+  eventValue.future().wait();
+  ASSERT_TRUE(eventValue.future().isReady());
+  ASSERT_EQ(0, eventValue.future().value());
+  eventValue.reset();
+  unregisteredObj->emitEvent("fire", 1);
+  eventValue.future().wait(1000);
+  ASSERT_TRUE(!eventValue.future().isReady());
+
+  // Check that unregisteredObj is no longuer held
+  unregisteredObj.reset();
+  ASSERT_FALSE(unregisteredWeakObj.lock());
+}
+
+TEST(TestCall, TestObjectPassingReverse)
+{ // Test server->client object passing (through emit)
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  ob.advertiseEvent<void (qi::ObjectPtr ptr, const std::string& fname, int arg)>("makeObjectCallEvent");
+
+  qi::ObjectPtr obj(ob.object());
+
+  p.server()->registerService("s", obj);
+  qi::ObjectPtr proxy = p.client()->service("s");
+
+  qi::ObjectPtr unregisteredObj;
+  {
+    qi::GenericObjectBuilder ob;
+    ob.advertiseMethod("add", &addOne);
+    ob.advertiseEvent<void(int)>("fire");
+    unregisteredObj = ob.object();
+  }
+
+  qi::Promise<int> value;
+  // We connect a method client-side
+  proxy->connect("makeObjectCallEvent", boost::bind(&onMakeObjectCall, _1, _2, _3, value)).wait();
+  // And emit server-side, this is the reverse of a method call
+  obj->emitEvent("makeObjectCallEvent", unregisteredObj, "add", 41);
+  /* This is what happens:
+  - ob sends EVENT(makeObjectCall, unregisterObb, "add", 41) to obproxy
+  - obProxy receives EVENT(makeObjetCall, unregisteredObProxy, "add", 41)
+  - The slot onMakeObjectCall(unregisteredObProxy, "add", 41) is invoked
+  - It invokes unregisteredObProxy->call("add", 41)
+  - This sends CALL("add", 41) back on the socket
+  - UnregisteredOb reiceives the call, execute, the result is send on the socket
+  - onMetaObjectCall receives the result, put it in value.
+  - TADAAA
+  */
+  value.future().wait(100000);
+  if (value.future().hasError(1))
+    std::cerr << value.future().error() << std::endl;
+  ASSERT_TRUE(value.future().isReady());
+  ASSERT_EQ(42, value.future().value());
+}
+
+qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
+{
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("add", &addOne);
+  ob.advertiseEvent<void(int)>("fire");
+  qi::ObjectPtr res = ob.object();
+  qiLogDebug("qi.test") << "unregistered object is " << res.get();
+  weak = res;
+  return res;
+}
+
+TEST(TestCall, TestObjectPassingReturn)
+{
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  qi::ObjectWeakPtr weak;
+  ob.advertiseMethod("makeAdder", boost::function<qi::ObjectPtr()>(boost::bind(&makeAdder, boost::ref(weak))));
+  qi::ObjectPtr obj(ob.object());
+
+  p.server()->registerService("s", obj);
+  qi::ObjectPtr proxy = p.client()->service("s");
+
+  qi::ObjectPtr adder = proxy->call<qi::ObjectPtr>("makeAdder");
+  ASSERT_TRUE(weak.lock());
+  // One is client side, the other server side
+  ASSERT_FALSE(weak.lock().get() == adder.get());
+  ASSERT_TRUE(adder);
+  qi::Future<int> f = adder->call<int>("add", 41);
+  f.wait(1000);
+  ASSERT_TRUE(f.isReady());
+  ASSERT_EQ(42, f.value());
+  adder.reset();
+  qi::os::msleep(300);
+  ASSERT_FALSE(weak.lock());
+}
+
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);

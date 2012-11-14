@@ -40,8 +40,10 @@ namespace qi {
   }
 
   RemoteObject::RemoteObject(unsigned int service, qi::TransportSocketPtr socket)
-    : _socket()
+    : ObjectHost(service)
+    , _socket()
     , _service(service)
+    , _object(1)
     , _linkMessageDispatcher(0)
     , _self(makeDynamicObjectPtr(this, false))
   {
@@ -51,9 +53,11 @@ namespace qi {
     //fetchMetaObject should be called to make sure the metaObject is valid.
   }
 
-  RemoteObject::RemoteObject(unsigned int service, qi::MetaObject metaObject, TransportSocketPtr socket)
-    : _socket()
+  RemoteObject::RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, TransportSocketPtr socket)
+    : ObjectHost(service)
+    , _socket()
     , _service(service)
+    , _object(object)
     , _linkMessageDispatcher(0)
     , _self(makeDynamicObjectPtr(this, false))
   {
@@ -119,11 +123,16 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
+    qiLogDebug("RemoteObject") << this << "(" << _service << '/' << _object << " msg " << msg.address() << " " << msg.buffer().size();
+    if (msg.object() > _object)
+    {
+      ObjectHost::onMessage(msg, _socket);
+      return;
+    }
     qi::Promise<GenericValuePtr> promise;
     bool found = false;
     std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
 
-    // qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
     {
       boost::mutex::scoped_lock lock(_mutex);
       it = _promises.find(msg.id());
@@ -158,7 +167,7 @@ namespace qi {
           return;
         }
         BinaryDecoder in(msg.buffer());
-        promise.setValue(qi::details::deserialize(type, in));
+        promise.setValue(qi::details::deserialize(type, in, _socket));
         return;
       }
       case qi::Message::Type_Error: {
@@ -185,7 +194,8 @@ namespace qi {
             std::string sig = sb->signature();
             // Remove top-level tuple
             sig = sig.substr(1, sig.length()-2);
-            GenericFunctionParameters args = msg.parameters(sig);
+            GenericFunctionParameters args = msg.parameters(sig, _socket);
+            qiLogDebug("remoteobject") << "Triggering local event listeners";
             sb->trigger(args);
             args.destroy();
           }
@@ -212,7 +222,7 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
-    msg.setParameters(in);
+    msg.setParameters(in, this);
 #ifndef NDEBUG
     std::string sig = metaObject().method(method)->signature();
     sig = signatureSplit(sig)[2];
@@ -227,7 +237,7 @@ namespace qi {
 #endif
     msg.setType(qi::Message::Type_Call);
     msg.setService(_service);
-    msg.setObject(qi::Message::GenericObject_Main);
+    msg.setObject(_object);
     msg.setFunction(method);
     // qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
@@ -275,10 +285,10 @@ namespace qi {
     // But it is a bit complex, because the server will bounce the
     // event back to us.
     qi::Message msg;
-    msg.setParameters(args);
+    msg.setParameters(args, this);
     msg.setType(Message::Type_Post);
     msg.setService(_service);
-    msg.setObject(qi::Message::GenericObject_Main);
+    msg.setObject(_object);
     msg.setFunction(event);
     if (!_socket->send(msg)) {
       qiLogError("remoteobject") << "error while emiting event";

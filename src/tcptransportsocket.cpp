@@ -114,7 +114,7 @@ namespace qi
       error(erc);
       return;
     }
-      // qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
+      qiLogDebug("TransportSocket") << _self << " Recv (" << _msg->type() << "):" << _msg->address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)

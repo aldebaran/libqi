@@ -11,33 +11,41 @@ static const int gObjectOffset = 10;
 namespace qi {
 
   static GenericValuePtr forwardEvent(const GenericFunctionParameters& params,
-                                   unsigned int service, unsigned int event, TransportSocketPtr client)
+                                   unsigned int service, unsigned int object,
+                                   unsigned int event, TransportSocketPtr client,
+                                   ObjectHost* context)
   {
     qi::Message msg;
-    msg.setParameters(params);
+    msg.setParameters(params, context);
     msg.setService(service);
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
-    msg.setObject(Message::GenericObject_Main);
+    msg.setObject(object);
     client->send(msg);
     return GenericValuePtr();
   }
 
 
-  ServiceBoundObject::ServiceBoundObject(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct)
-    : _links()
+  ServiceBoundObject::ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
+                                         qi::ObjectPtr object,
+                                         qi::MetaCallType mct,
+                                         bool bindTerminate)
+    : ObjectHost(serviceId)
+    , _links()
     , _serviceId(serviceId)
+    , _objectId(objectId)
     , _object(object)
     , _callType(mct)
   {
-    _self = createServiceBoundObjectType(this);
+    _self = createServiceBoundObjectType(this, bindTerminate);
   }
 
   ServiceBoundObject::~ServiceBoundObject()
   {
+    onDestroy(this);
   }
 
-  qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self) {
+  qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
     static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = 0;
     if (!ob)
     {
@@ -46,6 +54,7 @@ namespace qi {
       ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEvent);
       ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_UnregisterEvent);
       ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
+      ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Auto, qi::Message::BoundObjectFunction_Terminate);
     }
     ObjectPtr result = ob->object(self);
     return result;
@@ -53,7 +62,7 @@ namespace qi {
 
   //Bound Method
   unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
-    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, eventId, currentSocket()));
+    GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, currentSocket(), this));
     unsigned int linkId = _object->connect(eventId, mc);
 
     _links[currentSocket()][remoteLinkId] = RemoteLink(linkId, eventId);
@@ -82,7 +91,23 @@ namespace qi {
     return qi::MetaObject::merge(_self->metaObject(), _object->metaObject());
   }
 
+  static void delete_sbo(ServiceBoundObject* ptr)
+  {
+    delete ptr;
+  }
+
+  void ServiceBoundObject::terminate(unsigned int)
+  {
+    getDefaultObjectEventLoop()->asyncCall(0,
+      boost::bind(&delete_sbo, this));
+  }
+
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
+    if (msg.object() > _objectId)
+    {
+      ObjectHost::onMessage(msg, socket);
+      return;
+    }
     qi::ObjectPtr    obj;
     unsigned int     funcId;
     //choose between special function (on BoundObject) or normal calls
@@ -104,13 +129,13 @@ namespace qi {
         qiLogError("qi::Server") << ss.str();
         qi::Promise<GenericValuePtr> prom;
         prom.setError(ss.str());
-        serverResultAdapter(prom.future(), socket, msg.address());
+        serverResultAdapter(prom.future(), this, socket, msg.address());
         return;
       }
       sigparam = mm->signature();
     }
 
-    if (msg.type() == qi::Message::Type_Post) {
+    else if (msg.type() == qi::Message::Type_Post) {
       const qi::MetaSignal *ms = obj->metaObject().signal(funcId);
       if (ms)
         sigparam = ms->signature();
@@ -124,11 +149,16 @@ namespace qi {
         }
       }
     }
+    else
+    {
+      qiLogError("qi::Server") << "Unexpected message type " << msg.type();
+      return;
+    }
 
 
     sigparam = signatureSplit(sigparam)[2];
     sigparam = sigparam.substr(1, sigparam.length()-2);
-    mfp = msg.parameters(sigparam);
+    mfp = msg.parameters(sigparam, socket);
     /* Because of 'global' _currentSocket, we cannot support parallel
     * executions at this point.
     * Both on self, and on obj which can use currentSocket() too.
@@ -136,7 +166,8 @@ namespace qi {
     * So put a lock, and rely on metaCall we invoke being asynchronous for// execution
     * This is decided by _callType, set from BoundObject ctor argument, passed by Server, which
     * uses its internal _defaultCallType, passed to its constructor, default
-    * to queued.
+    * to queued. When Server is instanciated by ObjectHost, it uses the default
+    * value.
     *
     * As a consequence, users of currentSocket() must set _callType to Direct.
     */
@@ -148,7 +179,7 @@ namespace qi {
         qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
             obj==_self ? MetaCallType_Direct: _callType);
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, (ObjectHost*)this, socket, msg.address()));
       }
       break;
     case Message::Type_Post: {
@@ -175,7 +206,7 @@ namespace qi {
   }
 
   qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct) {
-    boost::shared_ptr<ServiceBoundObject> ret(new ServiceBoundObject(serviceId, object, mct));
+    boost::shared_ptr<ServiceBoundObject> ret(new ServiceBoundObject(serviceId, Message::GenericObject_Main, object, mct));
     return ret;
   }
 

@@ -46,6 +46,11 @@ namespace qi {
     * This class represent a network message
     */
   class MessagePrivate;
+
+  class TransportSocket;
+  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
+  class ObjectHost;
+
   class QIMESSAGING_API Message {
   public:
 
@@ -67,11 +72,12 @@ namespace qi {
       BoundObjectFunction_RegisterEvent     = 0,
       BoundObjectFunction_UnregisterEvent   = 1,
       BoundObjectFunction_MetaObject        = 2,
+      BoundObjectFunction_Terminate         = 3,
     };
 
     enum ServerFunction
     {
-      ServerFunction_Connect           = 3,
+      ServerFunction_Connect           = 4,
     };
 
     enum Type
@@ -127,8 +133,10 @@ namespace qi {
     ///@return signature, set by setParameters() or setSignature()
     const std::string& signature() const;
 
-    void                      setParameters(const GenericFunctionParameters &parameters);
-    GenericFunctionParameters parameters(const qi::Signature &signature) const;
+    void                      setParameters(const GenericFunctionParameters &parameters,
+                                            ObjectHost* context = 0);
+    GenericFunctionParameters parameters(const qi::Signature &signature,
+                                         TransportSocketPtr context = TransportSocketPtr()) const;
 
     MessageAddress address() const;
 

@@ -73,8 +73,11 @@ namespace qi {
     BinaryDecoderPrivate *_p;
   };
 
+  class TransportSocket;
+  typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
+
   namespace details {
-    QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in);
+    QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context = TransportSocketPtr());
   }
 
   template<typename T>

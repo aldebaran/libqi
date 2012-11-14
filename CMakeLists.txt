@@ -77,6 +77,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/message_p.hpp
                                    src/messagedispatcher.hpp
                                    src/messagedispatcher.cpp
+                                   src/objecthost.hpp
+                                   src/objecthost.cpp
                                    src/objectregistrar.hpp
                                    src/objectregistrar.cpp
                                    src/remoteobject.cpp

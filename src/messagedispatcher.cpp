@@ -52,6 +52,8 @@ namespace qi {
       it = _signalMap.find(msg.service());
       if (it != _signalMap.end())
         it->second(msg);
+      else
+        qiLogDebug("messagedispatcher") << "No listener for service " << msg.service();
     }
   }
 

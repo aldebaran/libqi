@@ -7,6 +7,8 @@
 #ifndef QIMESSAGING_BINARYENCODER_HPP
 #define QIMESSAGING_BINARYENCODER_HPP
 
+#include <boost/function.hpp>
+
 #include <qi/buffer.hpp>
 
 #include <qitype/type.hpp>
@@ -60,7 +62,8 @@ namespace qi {
     void write(const char *);
     void write(const std::string& i);
 
-    void write(const GenericValuePtr &value);
+    void write(const GenericValuePtr &value,
+      boost::function<void()> recurse = boost::function<void()>());
     void write(const Buffer &buffer);
 
     template<typename T> void write(const T &v);
@@ -86,8 +89,10 @@ namespace qi {
 
   };
 
+  class ObjectHost;
+
   namespace details {
-    QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out);
+    QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out, ObjectHost* context = 0);
   }
 
   template<typename T> void BinaryEncoder::write(const T &v)

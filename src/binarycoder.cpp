@@ -2,12 +2,15 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 
 #include <qimessaging/binaryencoder.hpp>
 #include <qimessaging/binarydecoder.hpp>
 #include "binarycoder_p.hpp"
+#include "boundobject.hpp"
+#include "remoteobject_p.hpp"
 #include <qi/log.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/typedispatcher.hpp>
@@ -227,7 +230,8 @@ namespace qi {
     //                         << " at " << buffer().size();
   }
 
-  void BinaryEncoder::write(const GenericValuePtr &value)
+  void BinaryEncoder::write(const GenericValuePtr &value,
+    boost::function<void()> recurse)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
@@ -317,13 +321,72 @@ namespace qi {
   }
 
   namespace details {
+
+    static void delete_sbo(ServiceBoundObject* sbo)
+    {
+      qiLogDebug("qi.type") << "Socket lost, destroying unregistered boundobject " << sbo;
+      sbo->terminate(0); // be async
+    }
+
+    void serializeObject(qi::BinaryEncoder& out,
+      ObjectPtr object,
+      ObjectHost* context)
+    {
+      if (!context)
+        throw std::runtime_error("Unable to serialize object without a valid ObajectHost");
+      unsigned int sid = context->service();
+      unsigned int oid = context->nextId();
+      ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Auto, true);
+      context->addObject(sbo, oid);
+      qiLogDebug("qi.type") << "Hooking " << oid <<" on " << context;
+      qiLogDebug("qi.type") << "sbo " << sbo << "obj " << object.get();
+      // Transmit the metaObject augmented by ServiceBoundObject.
+      out.write(sbo->metaObject(oid));
+      out.write((unsigned int)sid);
+      out.write((unsigned int)oid);
+      // Disconnect from context on ServiceBoundObject destruction
+      sbo->onDestroy.connect(boost::bind(&ObjectHost::removeObject, context, oid));
+      // Delete sbo on context destruction
+      qi::SignalBase::Link dSub = context->onDestroy.connect(boost::bind(delete_sbo, sbo));
+      // unlink deletor-on-objecthost-delete on sbo deletion to prevent double-delete
+      sbo->onDestroy.connect(boost::bind(&qi::Signal<void()>::disconnect, boost::ref(context->onDestroy), dSub));
+    }
+
+    void onProxyLost(GenericObject* ptr)
+    {
+      qiLogDebug("qi.type") << "Proxy on argument object last, invoking terminate...";
+      DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
+      // dobj is a RemoteObject
+      //FIXME: use post()
+      ptr->call<void>("terminate", static_cast<RemoteObject*>(dobj)->service()).async();
+    }
+
+    GenericValuePtr deserializeObject(qi::BinaryDecoder& in,
+      TransportSocketPtr context)
+    {
+      if (!context)
+        throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
+      MetaObject mo;
+      in.read(mo);
+      int sid, oid;
+      in.read(sid);
+      in.read(oid);
+      qiLogDebug("qi.type") << "Creating unregistered object " << sid << '/' << oid << " on " << context.get();
+      RemoteObject* ro = new RemoteObject(sid, oid, mo, context);
+      ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
+      qiLogDebug("qi.type") << "New object is " << o.get() << "on ro " << ro;
+      assert(o);
+      assert(GenericValuePtr::from(o).as<ObjectPtr>());
+      return GenericValuePtr::from(o).clone();
+    }
+
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out)
+      SerializeTypeVisitor(BinaryEncoder& out, ObjectHost* context)
         : out(out)
+        , context(context)
       {}
-
       void visitUnknown(Type* type, void* storage)
       {
         qiLogError("qi.type") << "Type " << type->infoString() <<" not serializable";
@@ -400,7 +463,9 @@ namespace qi {
 
       void visitObject(GenericObject value)
       {
-        qiLogError("qi.type") << "Object serialization not implemented";
+        // No refcount, user called us with some kind of Object, not ObjectPtr
+        qiLogWarning("qi.type") << "Serializing an object without a shared pointer";
+        serializeObject(out, ObjectPtr(new GenericObject(value)), context);
       }
 
       void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
@@ -422,7 +487,16 @@ namespace qi {
 
       void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
       {
-        out.write(pointee);
+        if (source.type->info() == typeOf<ObjectPtr>()->info())
+        {
+          out.write("o");
+          ObjectPtr* obj = source.ptr<ObjectPtr>();
+          serializeObject(out, *obj, context);
+        }
+        else
+        out.write(pointee,
+          boost::bind(&typeDispatch<SerializeTypeVisitor>, boost::ref(*this),
+            pointee.type, &pointee.value));
       }
 
       void visitRaw(TypeRaw* type, Buffer* buffer)
@@ -430,6 +504,7 @@ namespace qi {
         out.write(*buffer);
       }
       BinaryEncoder& out;
+      ObjectHost* context;
     };
 
     class DeserializeTypeVisitor
@@ -438,8 +513,9 @@ namespace qi {
     * information should.
     */
     public:
-      DeserializeTypeVisitor(BinaryDecoder& in)
+      DeserializeTypeVisitor(BinaryDecoder& in, TransportSocketPtr context)
         : in(in)
+        , context(context)
       {}
 
       template<typename T, typename TYPE>
@@ -542,7 +618,7 @@ namespace qi {
 
       void visitObject(GenericObject value)
       {
-        qiLogError("qi.type") << " Object serialization not implemented";
+        result = deserializeObject(in, context);
       }
 
       void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
@@ -565,15 +641,24 @@ namespace qi {
 
       void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
       {
-        std::string sig;
-        in.read(sig);
-        GenericValuePtr val;
-        val.type = Type::fromSignature(sig);
-        val = qi::details::deserialize(val.type, in);
-        result.type = type;
-        result.value = result.type->initializeStorage();
-        static_cast<TypeDynamic*>(type)->set(&result.value, val);
-        val.destroy();
+        if (source.type->info() == typeOf<ObjectPtr>()->info())
+        { // Advertise as dynamic, but type was already parsed
+          visitObject(GenericObject(0, 0));
+        }
+        else
+        {
+          std::string sig;
+          in.read(sig);
+          GenericValuePtr val;
+          val.type = Type::fromSignature(sig);
+          DeserializeTypeVisitor dtv(*this);
+          typeDispatch<DeserializeTypeVisitor>(dtv, val.type, &val.value);
+          val = dtv.result;
+          result.type = source.type;
+          result.value = result.type->initializeStorage();
+          static_cast<TypeDynamic*>(source.type)->set(&result.value, val);
+          val.destroy();
+        }
       }
 
       void visitRaw(TypeRaw* type, Buffer*)
@@ -587,32 +672,33 @@ namespace qi {
       }
       GenericValuePtr result;
       BinaryDecoder& in;
+      TransportSocketPtr context;
     }; //class
 
   } // namespace details
 
   namespace details {
-    void serialize(GenericValuePtr val, BinaryEncoder& out)
+    void serialize(GenericValuePtr val, BinaryEncoder& out, ObjectHost* context)
     {
-      SerializeTypeVisitor stv(out);
+      SerializeTypeVisitor stv(out, context);
       qi::typeDispatch(stv, val.type, &val.value);
       if (out.status() != BinaryEncoder::Status_Ok) {
         qiLogError("qimessaging.binarycoder") << "OSerialization error " << out.status();
       }
     }
 
-    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in) {
+    GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context) {
       void* storage = 0;
-      DeserializeTypeVisitor dtv(in);
+      DeserializeTypeVisitor dtv(in, context);
       qi::typeDispatch(dtv, type, &storage);
       if (in.status() != BinaryDecoder::Status_Ok) {
         qiLogError("qimessaging.binarycoder") << "ISerialization error " << in.status();
       }
       return dtv.result;
     }
-  }
 
 
 
+  } // namespace details
 }
 

@@ -114,17 +114,15 @@ namespace qi {
       it = _boundObjects.find(msg.service());
       if (it == _boundObjects.end())
       {
-        if (msg.type() == qi::Message::Type_Call) {
-          qi::Message       retval(Message::Type_Error, msg.address());
-          qi::Buffer        error;
-          qi::BinaryEncoder ds(error);
-          std::stringstream ss;
-          ss << "can't find service, address: " << msg.address();
-          ds.write(qi::typeOf<std::string>()->signature());
-          ds.write(ss.str());
-          retval.setBuffer(error);
-          socket->send(retval);
-        }
+        qi::Message       retval(Message::Type_Error, msg.address());
+        qi::Buffer        error;
+        qi::BinaryEncoder ds(error);
+        std::stringstream ss;
+        ss << "can't find service, address: " << msg.address();
+        ds.write(qi::typeOf<std::string>()->signature());
+        ds.write(ss.str());
+        retval.setBuffer(error);
+        socket->send(retval);
         qiLogError("qi::Server") << "Can't find service: " << msg.service();
         return;
       }

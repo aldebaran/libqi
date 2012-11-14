@@ -13,6 +13,7 @@
 #include <qitype/signal.hpp>
 
 #include "messagedispatcher.hpp"
+#include "objecthost.hpp"
 
 #include <boost/thread/mutex.hpp>
 #include <string>
@@ -23,12 +24,12 @@ namespace qi {
   class ServerClient;
 
 
-  class RemoteObject : public qi::DynamicObject {
+  class RemoteObject : public qi::DynamicObject, public ObjectHost {
   public:
     RemoteObject();
     RemoteObject(unsigned int service, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     //deprecated
-    RemoteObject(unsigned int service, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
+    RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::TransportSocketPtr socket = qi::TransportSocketPtr());
     ~RemoteObject();
 
     //must be called to make the object valid.
@@ -36,6 +37,7 @@ namespace qi {
 
     void setTransportSocket(qi::TransportSocketPtr socket);
     void close();
+    unsigned int service() const { return _service;}
 
   protected:
     //TransportSocket.messagePending
@@ -55,6 +57,7 @@ namespace qi {
   protected:
     TransportSocketPtr                              _socket;
     unsigned int                                    _service;
+    unsigned int                                    _object;
     std::map<int, qi::Promise<GenericValuePtr> > _promises;
     boost::mutex    _mutex;
     qi::SignalBase::Link                            _linkMessageDispatcher;

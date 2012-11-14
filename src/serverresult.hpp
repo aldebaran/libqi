@@ -15,7 +15,8 @@
 
 namespace qi {
 
-  inline void serverResultAdapter(qi::Future<GenericValuePtr> future, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
+  inline void serverResultAdapter(qi::Future<GenericValuePtr> future,
+    ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
     qi::Buffer      result;
     qi::BinaryEncoder ods(result);
@@ -27,7 +28,7 @@ namespace qi {
     } else {
       GenericValuePtr val = future.value();
       if (val.type->kind() != Type::Void)
-        qi::details::serialize(val, ods);
+        qi::details::serialize(val, ods, host);
       val.destroy();
     }
     ret.setBuffer(result);
