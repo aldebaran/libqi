@@ -181,9 +181,31 @@ namespace qi {
   template<typename T>
   IDataStream& operator>>(IDataStream& in, T& v);
 
+  namespace details {
+    QIMESSAGING_API void         serialize(GenericValuePtr val, ODataStream& out);
+    QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, IDataStream& in);
+  }
+
+  template<typename T>
+  ODataStream& operator<<(ODataStream& out, const T &v) {
+    GenericValuePtr value = GenericValuePtr::from(v);
+    qi::details::serialize(value, out);
+    return out;
+  }
+
+  template<typename T>
+  IDataStream& operator>>(IDataStream& in, T& v)
+  {
+    Type* type = typeOf<T>();
+    GenericValuePtr value = qi::details::deserialize(type, in);;
+    T* ptr = (T*)type->ptrFromStorage(&value.value);
+    v = *ptr;
+    return in;
+  }
+
 }
 
-#include <qimessaging/details/datastream.hxx>
+
 
 
 
