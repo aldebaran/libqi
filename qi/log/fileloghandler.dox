@@ -1,0 +1,34 @@
+/**
+ * \class qi::log::FileLogHandler
+ * \includename{qi/log/fileloghandler.hpp}
+ *
+ * This class writes all logs to a file.
+ */
+
+/**
+ * \fn qi::log::FileLogHandler::FileLogHandler(const std::string&)
+ * \param filePath the path to the file where log messages will be written.
+ *
+ * \verbatim
+ * .. warning::
+ *
+ *      If the file could not be opened, it logs a warning and every log call
+ *      will silently fail.
+ * \endverbatim
+ */
+
+/**
+ * \fn qi::log::FileLogHandler::log(const qi::log::LogLevel, const qi::os::timeval,
+ *                                  const char*, const char*, const char*,
+ *                                  const char*, const int)
+ * \param verb verbosity of the log message.
+ * \param date date at which the log message was issued.
+ * \param category will be used in future for filtering
+ * \param msg actual message to log.
+ * \param file filename from which this log message was issued.
+ * \param fct function name from which this log message was issued.
+ * \param line line number in the issuer file.
+ *
+ * If the file could not be opened, this function will silently fail, otherwise
+ * it will directly write the log message to the file and flush its output.
+ */

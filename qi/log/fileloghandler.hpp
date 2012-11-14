@@ -15,15 +15,18 @@ namespace qi {
   namespace log {
     class PrivateFileLogHandler;
 
-    /** \brief log to file handler
-     *  \ingroup qilog
-     */
+    /// Log messages to a file.
     class QI_API FileLogHandler
     {
     public:
+      /// \brief Initialize the file handler on the file. File is opened
+      ///        directly on construction.
       explicit FileLogHandler(const std::string& filePath);
+
+      /// Closes the file.
       virtual ~FileLogHandler();
 
+      /// Writes a log message to the file.
       void log(const qi::log::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
