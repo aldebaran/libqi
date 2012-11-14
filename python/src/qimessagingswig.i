@@ -4,6 +4,7 @@
 #include <qimessaging/c/qi_c.h>
 #include <src/qipython.hpp>
 #include <src/sd_testwrap.hpp>
+#include <src/converter_testwrap.hpp>
 %}
 
 #define QIMESSAGING_API
@@ -17,3 +18,4 @@
 %include <qimessaging/c/application_c.h>
 %include <src/qipython.hpp>
 %include <src/sd_testwrap.hpp>
+%include <src/converter_testwrap.hpp>
