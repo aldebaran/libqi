@@ -27,6 +27,7 @@
 #ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4251 )
+#  pragma warning( disable: 4231 )
 #endif
 
 namespace qi {
@@ -45,7 +46,9 @@ namespace qi {
    * besides the one in the defining module can be created.
    */
 #if !defined(qitype_EXPORTS) && !defined(__linux__)
+  // CS4231 - 'identifier' before template explicit instantiation
   extern template class Future<GenericValuePtr>;
+  // CS4231 - 'identifier' before template explicit instantiation
   extern template class Future<void>;
 #endif
   class SignalSubscriber;
