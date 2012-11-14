@@ -7,6 +7,7 @@
 
 /**
  * \def qiLogDebug
+ * \brief Log in debug mode. This level is not shown by default.
  *
  * \verbatim
  * Log in debug mode. Not compiled on release. Use as follow:
@@ -23,7 +24,7 @@
 
 /**
  * \def qiLogVerbose
- * \brief Log in verbose mode. This mode isn't show by default but always compile.
+ * \brief Log in verbose mode. This level is not shown by default.
  */
 
 /**
