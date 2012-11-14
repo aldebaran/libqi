@@ -17,16 +17,19 @@ namespace qi {
 
     class PrivateConsoleLogHandler;
 
-    /** \brief Print colored logs to the console
-     *  \ingroup qilog
-     *  Color will be enable only when the output is a tty.
-     */
+    /// Print colored logs to the console.
     class QI_API ConsoleLogHandler
     {
     public:
+      /// Initialize everything the console log handler needs to print on the
+      /// console with colors.
       ConsoleLogHandler();
+
+      /// Unloads any data managed by ConsoleLogHandler. Destructor is not
+      /// virtual.
       ~ConsoleLogHandler();
 
+      /// Prints a log message on the console.
       void log(const qi::log::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,

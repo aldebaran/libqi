@@ -1,0 +1,19 @@
+/**
+ * \class qi::log::ConsoleLogHandler
+ * \includename{qi/log/consoleloghandler.hpp}
+ *
+ * Colors will only be enabled if the output is a tty.
+ */
+
+/**
+ * \fn qi::log::ConsoleLogHandler::log(const qi::log::LogLevel, const qi::os::timeval,
+ *                                     const char*, const char*, const char*,
+ *                                     const char*, const int)
+ * \param verb verbosity of the log message.
+ * \param date date at which the log message was issued.
+ * \param category will be used in future for filtering
+ * \param msg actual message to log.
+ * \param file filename from which this log message was issued.
+ * \param fct function name from which this log message was issued.
+ * \param line line number in the issuer file.
+ */
