@@ -85,6 +85,21 @@ namespace qi {
 
   }
 
+  inline EventLoop* GenericObject::eventLoop() const
+  {
+    // Use the Manageable in the value, or fallback to the one in GenericObject
+    Manageable* m = type->manageable(value);
+    return m?m->eventLoop():Manageable::eventLoop();
+  }
+
+  inline void GenericObject::moveToEventLoop(EventLoop* eventLoop)
+  {
+    Manageable* m = type->manageable(value);
+    if (m)
+      m->moveToEventLoop(eventLoop);
+    else
+      Manageable::moveToEventLoop(eventLoop);
+  }
 
   template<typename R>
   qi::FutureSync<R> GenericObject::call(const std::string& methodName,

@@ -31,12 +31,12 @@ namespace qi {
   {
   public:
     Manageable();
-    ~Manageable();
+    virtual ~Manageable();
     Manageable(const Manageable& b);
     void operator = (const Manageable& b);
 
-    EventLoop* eventLoop() const;
-    void moveToEventLoop(EventLoop* eventLoop);
+    virtual EventLoop* eventLoop() const;
+    virtual void moveToEventLoop(EventLoop* eventLoop);
 
     ManageablePrivate* _p;
   };
