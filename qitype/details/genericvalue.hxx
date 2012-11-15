@@ -216,8 +216,11 @@ namespace qi {
     template<typename T, Type::Kind k>
     inline T valueAs(const GenericValuePtr& v)
     {
-      if (v.kind() == k)
+      if (v.kind() == k) {
+        // C4244 - 'conversion' conversion from 'double' to 'float', possible loss of data
+        // TODO - fix the warning on this conversion
         return static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value);
+      }
       // Fallback to default which will attempt a full conversion.
       return v.as<T>();
     }
