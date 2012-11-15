@@ -29,7 +29,7 @@
  * If there is an error you can look which one with dlerror function provided in
  * this same module.
  *
- * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
+ * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
  *
  * .. versionadded:: 1.12
  * \endverbatim
@@ -67,7 +67,7 @@
  * No flag is supported on windows platform. Otherwise, see ``man 0p dlfcn.h``
  * for more information on flags available. If not given, ``RTLD_NOW`` is used.
  *
- * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
+ * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
  *
  * .. versionadded:: 1.12
  * \endverbatim
@@ -85,7 +85,7 @@
  * that were automatically loaded by :cpp:func:`qi::os::dlopen()` when that
  * library was loaded, :cpp:func:`qi::os::dlsym()` returns 0.
  *
- * .. seealso:: :cpp:func:`qi::os::dlerror()` for more details on the error.
+ * .. seealso:: :cpp:func:`qi::os::dlerror(void)` for more details on the error.
  *
  * .. versionadded:: 1.12
  * \endverbatim
