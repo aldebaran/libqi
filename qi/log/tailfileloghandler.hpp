@@ -15,16 +15,16 @@ namespace qi {
   namespace log {
     class PrivateTailFileLogHandler;
 
-    /** \brief Log the \a length first lines to file.
-     *  \ingroup qilog
-     *
-     */
+    /// Keeps at most 2 MiB of logs.
     class QI_API TailFileLogHandler
     {
     public:
+      /// Initialize the tail file log handler. File is opened on construction.
       TailFileLogHandler(const std::string &filePath);
+      /// Closes the file.
       virtual ~TailFileLogHandler();
 
+      /// Writes the log message to the file.
       void log(const qi::log::LogLevel verb,
                const qi::os::timeval   date,
                const char              *category,
