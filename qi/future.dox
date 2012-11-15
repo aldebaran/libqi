@@ -1,0 +1,5 @@
+/**
+ * \fn qi::makeFutureError<T>(const std::string&)
+ * \brief Helper function to return a future with the error set.
+ * \param error the error message.
+ */
