@@ -40,9 +40,10 @@ namespace qi
        * If someone is deleting _refcount,
        * it cannot be used below.
        */
-      if (++(*_refcount) != 1)
+      if (++(*sp._refcount) != 1)
       {
         _ptr = sp._ptr;
+        _refcount = sp._refcount;
       }
       else
       {
@@ -60,8 +61,18 @@ namespace qi
         delete _ptr;
         delete _refcount;
       }
-      _ptr = sp._ptr;
-      _refcount = sp._refcount;
+      if (++(*sp._refcount) != 1)
+      {
+        _ptr = sp._ptr;
+        _refcount = sp._refcount;
+      }
+      else
+      {
+        qiLogDebug("qi.log.shared_ptr")
+                  << "tried to copy a shared pointer targeted for deletion"
+                  << std::endl;
+      }
+      return *this;
     }
 
     T &operator*() const
