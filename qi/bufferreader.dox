@@ -1,6 +1,7 @@
 // -*- mode:c++; -*-
 
 /** \class qi::BufferReader
+ * \includename{qi/bufferreader.hpp}
  * This class is intendeed to read buffer.
  * It store an internal data cursor and an internal sub-buffer index.
  * All offset are relative to the current position.
