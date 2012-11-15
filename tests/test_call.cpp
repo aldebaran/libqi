@@ -72,6 +72,40 @@ int fakegvec(const std::vector<qi::GenericValue> &sval) {
   return 0;
 }
 
+int fakesvvec(const std::vector< std::vector<std::string> > &svec) {
+  std::cout << "svec.size(): " << svec.size() << std::endl;
+  EXPECT_EQ("titi", svec[0][0]);
+  EXPECT_EQ("toto", svec[1][0]);
+  return 0;
+}
+
+int fakegvvec(const std::vector< std::vector<qi::GenericValue> > &sval) {
+  std::cout << "sval.size(): " << sval.size() << std::endl;
+  EXPECT_EQ("titi", sval[0][0].asString());
+  EXPECT_EQ("toto", sval[1][0].asString());
+  return 0;
+}
+
+int fakegvvec2(const std::vector< qi::GenericValue > &sval) {
+  std::cout << "sval.size(): " << sval.size() << std::endl;
+  EXPECT_EQ("titi", sval[0].as< std::vector<std::string> >()[0]);
+  EXPECT_EQ("toto", sval[1].as< std::vector<std::string> >()[0]);
+  return 0;
+}
+
+int fakesmvvec(std::map<std::string, std::vector< std::vector<std::string> > > &svec) {
+  std::cout << "svec.size(): " << svec.size() << std::endl;
+  EXPECT_EQ("titi", svec["i"][0][0]);
+  EXPECT_EQ("toto", svec["j"][0][0]);
+  return 0;
+}
+
+int fakegmvvec(std::map<std::string, std::vector< std::vector<qi::GenericValue> > > &sval) {
+  std::cout << "sval.size(): " << sval.size() << std::endl;
+  EXPECT_EQ("titi", sval["i"][0][0].asString());
+  EXPECT_EQ("toto", sval["j"][0][0].asString());
+  return 0;
+}
 
 struct GenericTuple
 {
@@ -201,10 +235,31 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   qi::Future<int> fut = proxy->call<int>("fakeRGB", "Haha", 42, duration);
 }
 
+qi::ObjectPtr createObject() {
+  qi::GenericObjectBuilder ob;
+
+  ob.advertiseMethod("fakesvec", &fakesvec);
+  ob.advertiseMethod("fakegvec", &fakegvec);
+  ob.advertiseMethod("fakeemptysvec", &fakeemptysvec);
+  ob.advertiseMethod("fakeemptygvec", &fakeemptygvec);
+
+  ob.advertiseMethod("fakesvvec", &fakesvvec);
+  ob.advertiseMethod("fakegvvec", &fakegvvec);
+  ob.advertiseMethod("fakegvvec2", &fakegvvec2);
+  ob.advertiseMethod("fakemsvvec", &fakesmvvec);
+  ob.advertiseMethod("fakemgvvec", &fakegmvvec);
+
+  ob.advertiseMethod("eatSpecific", &eatSpecific);
+  return ob.object();
+}
 
 TEST(TestCall, TestGenericConversion) {
   TestSessionPair p;
-  qi::GenericObjectBuilder ob;
+  int serviceID;
+  qi::ObjectPtr obj = createObject();
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
 
   std::vector<std::string>      svec;
   std::vector<qi::GenericValue> gvec;
@@ -220,21 +275,6 @@ TEST(TestCall, TestGenericConversion) {
   gvec.push_back(gv);
   gv = qi::GenericValuePtr::from(std::string("toto"));
   gvec.push_back(gv);
-
-  int serviceID;
-
-  ob.advertiseMethod("fakesvec", &fakesvec);
-  ob.advertiseMethod("fakegvec", &fakegvec);
-  ob.advertiseMethod("fakeemptysvec", &fakeemptysvec);
-  ob.advertiseMethod("fakeemptygvec", &fakeemptygvec);
-  ob.advertiseMethod("eatSpecific", &eatSpecific);
-  qi::ObjectPtr obj(ob.object());
-
-  serviceID = p.server()->registerService("serviceConv", obj);
-  qi::ObjectPtr proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
-
-  std::cout << "Calling FakeRGB" << std::endl;
 
   qi::Future<int> fut;
 
@@ -261,6 +301,108 @@ TEST(TestCall, TestGenericConversion) {
   EXPECT_FALSE(fut.hasError());
   fut = proxy->call<int>("fakegvec", svec);
   EXPECT_FALSE(fut.hasError());
+}
+
+TEST(TestCall, TestGenericConversionComplexList) {
+  TestSessionPair p;
+  int serviceID;
+  qi::ObjectPtr obj = createObject();
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
+
+
+  std::vector<std::vector<std::string> >      sss;
+  sss.resize(2);
+  sss[0].push_back("titi");
+  sss[1].push_back("toto");
+
+  std::vector<std::vector<qi::GenericValue> > ssg;
+  ssg.resize(2);
+  ssg[0].push_back(qi::GenericValuePtr::from(std::string("titi")));
+  ssg[1].push_back(qi::GenericValuePtr::from(std::string("toto")));
+
+  std::vector<qi::GenericValue>               sg;
+  std::vector<qi::GenericValue> paf;
+  paf.push_back(qi::GenericValuePtr::from(std::string("titi")));
+  sg.push_back(qi::GenericValuePtr::from(paf));
+  paf[0] = qi::GenericValuePtr::from(std::string("toto"));
+  sg.push_back(qi::GenericValuePtr::from(paf));
+
+  qi::Future<int> fut;
+
+  //Check empty, same type
+  fut = proxy->call<int>("fakesvvec", sss);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakesvvec", ssg);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakesvvec", sg);
+  EXPECT_FALSE(fut.hasError());
+
+  fut = proxy->call<int>("fakegvvec", sss);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvvec", ssg);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvvec", sg);
+  EXPECT_FALSE(fut.hasError());
+
+
+  fut = proxy->call<int>("fakegvvec2", sss);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvvec2", ssg);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakegvvec2", sg);
+  EXPECT_FALSE(fut.hasError());
+}
+
+TEST(TestCall, TestGenericConversionComplexMap) {
+  TestSessionPair p;
+  int serviceID;
+  qi::ObjectPtr obj = createObject();
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
+
+
+  std::vector<std::vector<std::string> >      sss;
+  std::vector<std::vector<qi::GenericValue> > ssg;
+
+  std::map<std::string, std::vector<std::vector<std::string> > >      msvvs;
+  std::map<std::string, std::vector<std::vector<qi::GenericValue> > > msvvg;
+
+  sss.resize(2);
+  ssg.resize(2);
+  sss[0].push_back("titi");
+  ssg[0].push_back(qi::GenericValuePtr::from(std::string("titi")));
+  msvvs["i"] = sss;
+  msvvg["i"] = ssg;
+
+  sss[0][0] = "toto";
+  ssg[0][0] = qi::GenericValuePtr::from(std::string("toto"));
+  msvvs["j"] = sss;
+  msvvg["j"] = ssg;
+
+  qi::Future<int> fut;
+
+  fut = proxy->call<int>("fakemsvvec", msvvs);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakemsvvec", msvvg);
+  EXPECT_FALSE(fut.hasError());
+
+  fut = proxy->call<int>("fakemgvvec", msvvs);
+  EXPECT_FALSE(fut.hasError());
+  fut = proxy->call<int>("fakemgvvec", msvvg);
+  EXPECT_FALSE(fut.hasError());
+}
+
+
+TEST(TestCall, TestGenericConversionTuple) {
+  TestSessionPair p;
+  int serviceID;
+  qi::ObjectPtr obj = createObject();
+  serviceID = p.server()->registerService("serviceConv", obj);
+  qi::ObjectPtr proxy = p.client()->service("serviceConv");
+  ASSERT_TRUE(proxy != 0);
 
   qi::Future<double> f;
   SpecificTuple t;
@@ -287,6 +429,7 @@ TEST(TestCall, TestGenericConversion) {
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());
 }
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
