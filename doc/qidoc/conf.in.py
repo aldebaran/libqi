@@ -1,6 +1,6 @@
 project = u'libqi API documentation'
 
-extensions.append('qiapidoc')
+extensions.extend(['qiapidoc', 'sphinx.ext.graphviz'])
 
 import os
 

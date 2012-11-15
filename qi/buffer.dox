@@ -10,49 +10,44 @@
  *
  * .. graphviz::
  *
- * digraph g {
- * graph [
- * rankdir = "LR"
- * ];
- * node [
- * fontsize = "16"
- * shape = "ellipse"
- * ];
+ *      digraph g {
+ *          graph [ rankdir = "LR" ];
+ *          node [ fontsize = "16", shape = "ellipse" ];
  *
- * subgraph cluster_buffer {
- *   main_buffer;
- *   label = "Main buffer";
- * }
+ *          subgraph cluster_buffer {
+ *              mainbuffer;
+ *              label = "Main buffer";
+ *          }
  *
- * subgraph cluster_subbuffer1 {
- *   subbuffer1;
- *   label = "Sub-buffer 1";
- * }
+ *          subgraph cluster_subbuffer1 {
+ *              subbuffer1;
+ *              label = "Sub-buffer 1";
+ *          }
  *
- * subgraph cluster_subbuffer2 {
- *   subbuffer2;
- *   label = "Sub-buffer 2";
- * }
+ *          subgraph cluster_subbuffer2 {
+ *              subbuffer2;
+ *              label = "Sub-buffer 2";
+ *          }
  *
- * "mainbuffer" [
- * label = "...| ...| ...| ...| ...| ...|<f0> uint32_t subBufferSize| ...| ...|<f1> uint32_t subBufferSize| ...| ...| ..."
- * shape = "record"
- * ];
- * "subbuffer1" [
- * label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
- * shape = "record"
- * ];
- * "subbuffer2" [
- * label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
- * shape = "record"
- * ];
- * "mainbuffer":f0-> "subbuffer1":f0[
- * id = 0
- * ];
- * "mainbuffer":f1-> "subbuffer2":f0[
- * id = 0
- * ];
- * }
+ *          "mainbuffer" [
+ *              label = "...| ...| ...| ...| ...| ...|<f0> uint32_t subBufferSize| ...| ...|<f1> uint32_t subBufferSize| ...| ...| ..."
+ *              shape = "record"
+ *          ];
+ *          "subbuffer1" [
+ *              label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
+ *              shape = "record"
+ *          ];
+ *          "subbuffer2" [
+ *              label = "<f0> ...| ...|...| ...|  ...|  ...| ...| ...| ...| ..."
+ *              shape = "record"
+ *          ];
+ *          "mainbuffer":f0-> "subbuffer1":f0[
+ *              id = 0
+ *          ];
+ *          "mainbuffer":f1-> "subbuffer2":f0[
+ *              id = 0
+ *          ];
+ *      }
  *
  * \endverbatim
  */
