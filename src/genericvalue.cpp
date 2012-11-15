@@ -7,7 +7,6 @@
 
 namespace qi
 {
-
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
     /* Can have false-negative (same effective type, different Type instances
@@ -302,6 +301,11 @@ namespace qi
       return res.first;
     else
       return res.first.clone();
+  }
+
+  bool operator< (const qi::GenericValuePtr& a, const qi::GenericValuePtr& b)
+  {
+    return a.value < b.value;
   }
 
 }

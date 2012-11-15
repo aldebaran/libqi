@@ -219,6 +219,8 @@ namespace qi{
     void*   value;
   };
 
+  QITYPE_API bool operator< (const qi::GenericValuePtr& a, const qi::GenericValuePtr& b);
+
   /** Class that holds any value, with value semantics.
   */
   class QITYPE_API GenericValue: public GenericValuePtr
