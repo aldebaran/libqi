@@ -69,11 +69,11 @@ TEST(TestSignatureIterator, STL) {
   EXPECT_STREQ("[i]*", sig2.toString().c_str());
   EXPECT_TRUE(sig1.isValid());
   it = sig2.begin();
-  verif_iter(it, "[i]*", Type_List, true, true);
+  verif_iter(it, "[i]*", Type_List, true, 1);
 
   qi::Signature sig3("{is}*");
   it = sig3.begin();
-  verif_iter(it, "{is}*", Type_Map, true, true);
+  verif_iter(it, "{is}*", Type_Map, true, 1);
 
   qi::Signature sig4("{is}**");
   EXPECT_STREQ("{is}**", sig4.toString().c_str());
