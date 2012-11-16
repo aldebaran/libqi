@@ -32,41 +32,4 @@ namespace qi
       set(storage, i, values[i]);
   }
 
-  class TypeDynamicTuple: public TypeTuple
-  {
-  public:
-    virtual std::vector<Type*> memberTypes(void* storage)
-    {
-      std::vector<Type*> result;
-      std::vector<GenericValuePtr>& me =
-      *(std::vector<GenericValuePtr>*)ptrFromStorage(&storage);
-      for (unsigned i=0; i< me.size(); ++i)
-        result.push_back(me[i].type);
-      return result;
-    }
-    virtual void* get(void* storage, unsigned int index)
-    {
-      std::vector<GenericValuePtr>& me =
-      *(std::vector<GenericValuePtr>*)ptrFromStorage(&storage);
-      return me[index].value;
-    }
-    virtual void set(void** storage, unsigned int index, void* val)
-    {
-      std::vector<GenericValuePtr>& me =
-      *(std::vector<GenericValuePtr>*)ptrFromStorage(storage);
-      me[index].value = val;
-    }
-    typedef DefaultTypeImplMethods<std::vector<GenericValuePtr> > Methods;
-    _QI_BOUNCE_TYPE_METHODS(Methods);
-  };
-
-  GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values)
-  {
-    static Type* dtype = 0;
-    if (!dtype)
-      dtype = new TypeDynamicTuple();
-    GenericValuePtr res = GenericValuePtr::from(values);
-    res.type = dtype;
-    return res;
-  }
 }

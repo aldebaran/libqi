@@ -320,9 +320,6 @@ namespace qi{
     Type* elementType();
   };
 
-  QITYPE_API GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values);
-
-
   // Interfaces for specialized types
   class QITYPE_API TypeInt: public Type
   {
@@ -440,6 +437,9 @@ namespace qi{
 
   ///@return a Type of kind Tuple with givent memberTypes
   QITYPE_API Type* makeTupleType(std::vector<Type*> memberTypes);
+
+  ///@return a Tuple made from copies of \param values
+  QITYPE_API GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values);
 
 }
 

@@ -851,6 +851,24 @@ namespace qi {
     typedef DefaultTypeImplMethods<std::vector<void*> > Methods;
   };
 
+  GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values)
+  {
+    std::vector<Type*> types;
+    types.reserve(values.size());
+    for (unsigned i=0; i<values.size(); ++i)
+      types.push_back(values[i].type);
+
+    TypeTuple* tupleType = static_cast<TypeTuple*>(makeTupleType(types));
+    GenericValuePtr result;
+    result.type = tupleType;
+    result.value = tupleType->initializeStorage();
+    std::vector<void*> storages;
+    for (unsigned i=0; i<values.size(); ++i)
+      storages.push_back(values[i].value);
+    tupleType->set(&result.value, storages);
+    return result;
+  }
+
   struct InfosKey: public std::vector<Type*>
   {
   public:
