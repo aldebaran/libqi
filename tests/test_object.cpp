@@ -384,7 +384,7 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   MAdder a2(2);
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
-  ASSERT_TRUE(oa1->eventLoop()); // object manageable
+  ASSERT_TRUE(oa1->eventLoop() != 0); // object manageable
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));

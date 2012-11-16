@@ -56,7 +56,7 @@ TEST(TestObject, ConnectBind)
   });
 
   link = obj->connect("fire2", boost::bind(&onFire, _2), 0);
-  EXPECT_TRUE(link);
+  EXPECT_TRUE(link != 0);
   pPayload.reset();
   obj->emitEvent("fire2", 40, 41);
   EXPECT_TRUE(pPayload.future().wait(2000));
