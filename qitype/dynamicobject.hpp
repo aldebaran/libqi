@@ -60,7 +60,8 @@ namespace qi
   };
 
   //Make an GenericObject of DynamicObject kind from a DynamicObject
-  QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject = true);
+  QITYPE_API ObjectPtr     makeDynamicObjectPtr(DynamicObject *obj, bool destroyObject = true,
+    boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
 }
 
