@@ -22,6 +22,10 @@
 #ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4251 )
+   // C4503 decorated name length exceeded, name was truncated
+   // The only workaround is to make structs to hide the template complexity
+   // We don't want to have to do that
+#  pragma warning( disable: 4503 )
 #endif
 
 /* A lot of class are found in this headers... to kill circular dependencies.
@@ -489,6 +493,8 @@ namespace qi{
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
+// restore the disabling of this warning
+#  pragma warning( disable: 4503 )
 #endif
 
 #endif  // _QITYPE_TYPE_HPP_

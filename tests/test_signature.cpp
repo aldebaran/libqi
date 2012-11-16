@@ -5,6 +5,13 @@
 ** Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 */
 
+#ifdef _MSC_VER
+   // C4503 decorated name length exceeded, name was truncated
+   // The only workaround is to make structs to hide the template complexity
+   // We don't want to have to do that
+#  pragma warning( disable: 4503 )
+#endif
+
 #include <gtest/gtest.h>
 #define __QI_SIGNATURE_UNKNOWN_INSTEAD_OF_ASSERT
 
