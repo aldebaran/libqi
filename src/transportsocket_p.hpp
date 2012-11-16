@@ -22,19 +22,20 @@ namespace qi
       : _self(self)
       , _eventLoop(eventLoop)
       , _dispatcher()
-      , _connected(false)
-      , _status(0)
+      , _errno(0)
+      , _status(qi::TransportSocket::Status_Disconnected)
       , _url()
     {}
 
     virtual ~TransportSocketPrivate() {}
 
-    qi::TransportSocket*  _self;
-    qi::EventLoop*        _eventLoop;
-    qi::MessageDispatcher _dispatcher;
-    bool                  _connected;
-    int                   _status;
-    qi::Url               _url;
+    qi::TransportSocket*    _self;
+    qi::EventLoop*          _eventLoop;
+    qi::MessageDispatcher   _dispatcher;
+
+    int                     _errno;
+    TransportSocket::Status _status;
+    qi::Url                 _url;
   };
 }
 #endif  // _SRC_TRANSPORTSOCKET_P_HPP_

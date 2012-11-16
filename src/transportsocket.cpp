@@ -44,13 +44,18 @@ namespace qi
     return _p->_url;
   }
 
-  int TransportSocket::status() const {
+  TransportSocket::Status TransportSocket::status() const {
     return _p->_status;
+  }
+
+  int TransportSocket::error() const
+  {
+    return _p->_errno;
   }
 
   bool TransportSocket::isConnected() const
   {
-    return _p->_connected;
+    return _p->_status == qi::TransportSocket::Status_Connected;
   }
 
   qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {

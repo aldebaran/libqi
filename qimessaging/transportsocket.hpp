@@ -30,6 +30,14 @@ namespace qi
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
   public:
+    enum Status {
+      Status_Disconnected  = 0,
+      Status_Connecting    = 1,
+      Status_Connected     = 2,
+      Status_Disconnecting = 3,
+    };
+
+  public:
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
     virtual ~TransportSocket();
 
@@ -41,7 +49,8 @@ namespace qi
     virtual void  startReading() = 0;
 
     bool    isConnected() const;
-    int     status() const;
+    Status  status() const;
+    int     error() const;
     qi::Url url() const;
 
     qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun);

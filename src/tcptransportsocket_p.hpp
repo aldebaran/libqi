@@ -52,17 +52,17 @@ namespace qi
     void connect_(TransportSocketPtr socket, const qi::Url &url);
     void disconnect_(TransportSocketPtr socket);
   private:
-    struct bufferevent    *_bev;
+    struct bufferevent *_bev;
 
-    qi::Promise<bool>      _connectPromise;
-    qi::Promise<void>      _disconnectPromise;
+    qi::Promise<bool>   _connectPromise;
+    qi::Promise<void>   _disconnectPromise;
 
     // data to rebuild message
-    bool                   _readHdr;
-    qi::Message           *_msg;
-    bool                   _connecting;
-    bool                   _disconnecting;
-    int                    _fd;
+    bool                _readHdr;
+    qi::Message        *_msg;
+    bool                _connecting;
+    bool                _disconnecting;
+    int                 _fd;
   };
 
 }

@@ -73,7 +73,7 @@ namespace qi
     , _fd(fd)
   {
     assert(eventLoop);
-    _connected = true;
+    _status = qi::TransportSocket::Status_Connected;
   }
 
   void TcpTransportSocketPrivate::startReading()
@@ -183,7 +183,7 @@ namespace qi
 
     if (events & BEV_EVENT_CONNECTED)
     {
-      _connected = true;
+      _status = qi::TransportSocket::Status_Connected;
       _connecting = false;
       _connectPromise.setValue(true);
       _self->connected();
@@ -191,8 +191,8 @@ namespace qi
     else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
     {
       if (events & BEV_EVENT_ERROR)
-        _status = errno;
-      if (_status)
+        _errno = errno;
+      if (_errno)
         qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
       disconnect_(_self->shared_from_this());
     }
@@ -221,13 +221,14 @@ namespace qi
 
   qi::FutureSync<bool> TcpTransportSocketPrivate::connect(const qi::Url &url)
   {
-    if (_connected || _connecting)
+    if (_status == qi::TransportSocket::Status_Connected || _connecting)
     {
       qiLogError("qimessaging.TransportSocketLibevent") << "connection already in progress";
       return makeFutureError<bool>("Operation already in progress");
     }
     _connectPromise.reset();
     _disconnectPromise.reset();
+    _status = qi::TransportSocket::Status_Connecting;
     _connecting = true;
     //hold a shared_ptr on self to avoid callback after delete
     if (_eventLoop->isInEventLoopThread())
@@ -245,7 +246,7 @@ namespace qi
       qiLogError("qimessaging.TransportSocketLibevent") << "assert failed: _connecting";
       return;
     }
-    if (_connected) {
+    if (_status == qi::TransportSocket::Status_Connected) {
       _connecting = false;
       qiLogError("qimessaging.TransportSocketLibevent") << "socket is already connected.";
       return;
@@ -253,7 +254,7 @@ namespace qi
     _url = url;
     _connectPromise.reset();
     _disconnectPromise.reset();
-    _status = 0;
+    _errno = 0;
     const std::string      &address = _url.host();
     struct evutil_addrinfo *ai = NULL;
     struct evutil_addrinfo  hint;
@@ -262,6 +263,7 @@ namespace qi
     if (_url.port() == 0) {
       qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << _url.str();
       _connectPromise.setError("Bad address " + _url.str());
+      _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
       _disconnectPromise.setValue(0);
       return;
@@ -283,17 +285,20 @@ namespace qi
     {
       qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
       _connectPromise.setValue(false);
+      _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
       disconnect(); // leave connecting=false above
       return;
     }
 
+    _status = qi::TransportSocket::Status_Connecting;
     _connecting = true;
     int result = bufferevent_socket_connect(_bev, ai->ai_addr, ai->ai_addrlen);
 
     evutil_freeaddrinfo(ai);
     if (result) {
       _connectPromise.setValue(false);
+      _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
     }
   }
@@ -302,9 +307,10 @@ namespace qi
   {
     if (_disconnecting)
       return _disconnectPromise.future();
-    if (!_connected && !_connecting) {
+    if (_status != qi::TransportSocket::Status_Connected && !_connecting) {
       return _disconnectPromise.future();
     }
+    _status = qi::TransportSocket::Status_Disconnecting;
     _disconnecting = true;
     if (!_eventLoop->isInEventLoopThread())
     {
@@ -335,12 +341,12 @@ namespace qi
     bufferevent_free(_bev);
     _bev = NULL;
 
-    _connected = false;
+    _status = qi::TransportSocket::Status_Disconnected;
     _disconnecting = false;
-    _self->disconnected(_status);
+    _self->disconnected(_errno);
     _disconnectPromise.setValue(0);
     if (_connecting)
-      _connectPromise.setError(strerror(_status));
+      _connectPromise.setError(strerror(_errno));
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
@@ -361,7 +367,7 @@ namespace qi
 
   bool TcpTransportSocketPrivate::send_(qi::TransportSocketPtr socket, const qi::Message &msg, bool allocated)
   {
-    if (!_connected)
+    if (_status != qi::TransportSocket::Status_Connected)
     {
       qiLogError("qimessaging.TcpTransportSocket") << "socket is not connected.";
       return false;
