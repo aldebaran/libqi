@@ -282,8 +282,6 @@ namespace qi {
   void BinaryEncoder::endMap()
   {
     --_p->_innerSerialization;
-    if (!_p->_innerSerialization)
-      signature() += "}";
   }
 
   void BinaryEncoder::beginTuple(std::string sig)
