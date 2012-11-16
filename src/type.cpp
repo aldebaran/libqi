@@ -150,7 +150,7 @@ namespace qi {
    }
    void visitList(GenericListPtr value)
    {
-     if (_resolveDynamic && value.elementType()->kind() == Type::Dynamic)
+     if (_resolveDynamic)
      {
        if (value.size() == 0)
        { // Empty list, TODO have a 'whatever signature entry
@@ -165,21 +165,27 @@ namespace qi {
          GenericListIteratorPtr iend = value.end();
          std::string sigFirst = (*it).signature(true);
          ++it;
-         for (;it != iend; ++it)
+         for (;it != iend && !sigFirst.empty(); ++it)
          {
            std::string sig = (*it).signature(true);
            if (sig != sigFirst)
            {
-             result = "[m]";
-             it.destroy();
-             iend.destroy();
-             return;
+             if (Signature(sig).isConvertibleTo(Signature(sigFirst)))
+               {} // keep sigFirst
+             else if (Signature(sigFirst).isConvertibleTo(Signature(sig)))
+               sigFirst = sig; // keep sig
+             else
+             {
+               qiLogDebug("qi.signature") << "Heterogeneous elements "
+               << sigFirst << ' ' << sig;
+             sigFirst.clear();
+             }
            }
          }
-         // All element matches
+         qiLogDebug("qi.signature") << "List effective " << sigFirst;
          result =  std::string()
          + (char)Signature::Type_List
-         + sigFirst
+         + (sigFirst.empty()?value.elementType()->signature():sigFirst)
          + (char)Signature::Type_List_End;
          it.destroy();
          iend.destroy();
@@ -213,13 +219,36 @@ namespace qi {
          for(; it!= iend; ++it)
          {
            std::pair<GenericValuePtr, GenericValuePtr> e = *it;
-           if (!ksig.empty() && ksig != e.first.signature(true))
-             ksig.clear();
-           if (!vsig.empty() && vsig != e.second.signature(true))
-             vsig.clear();
+           std::string k = e.first.signature(true);
+           std::string v = e.second.signature(true);
+           if (!ksig.empty() && ksig != k)
+           {
+             if (Signature(k).isConvertibleTo(Signature(ksig)))
+               {}
+             else if (Signature(ksig).isConvertibleTo(Signature(k)))
+               ksig = k;
+             else
+             {
+               qiLogDebug("qi.signature") << "Heterogeneous keys " << ksig << e.first.signature(true);
+               ksig.clear();
+             }
+           }
+           if (!vsig.empty() && vsig != v)
+           {
+              if (Signature(v).isConvertibleTo(Signature(vsig)))
+               {}
+             else if (Signature(vsig).isConvertibleTo(Signature(v)))
+               vsig = v;
+             else
+             {
+               qiLogDebug("qi.signature") << "Heterogeneous value " << vsig << e.second.signature(true);
+               vsig.clear();
+             }
+           }
          }
          it.destroy();
          iend.destroy();
+         qiLogDebug("qi.signature") << "Map effective: " << ksig << " , " << vsig;
          result = std::string()
            + (char)Signature::Type_Map
            + (ksig.empty()? value.keyType()->signature(): ksig)
