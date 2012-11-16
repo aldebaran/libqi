@@ -5,7 +5,9 @@
  */
 
 #include <iostream>
+
 #include <qi/buffer.hpp>
+#include <qi/types.hpp>
 
 int main(int argc, char **argv)
 {
@@ -38,7 +40,7 @@ int main(int argc, char **argv)
   buffer.write(&tmpDouble, sizeof(double));
 
   // Read the int.
-  if (buffer.read(&tmpInt, offset+sizeof(uint32_t), sizeof(int)) != sizeof(int)) {
+  if (buffer.read(&tmpInt, offset + sizeof(qi::uint32_t), sizeof(int)) != sizeof(int)) {
     std::cerr << "Can't read an int in the buffer!" << std::endl;
     return 1;
   }
@@ -46,8 +48,8 @@ int main(int argc, char **argv)
   std::cout << "We read " << tmpInt << std::endl;
 
   // Read the double.
-  if (buffer.read(&tmpDouble, offset+sizeof(uint32_t)+sizeof(int), sizeof(double)) != sizeof(double)) {
-    std::cerr << "Can't read a doublein the buffer!" << std::endl;
+  if (buffer.read(&tmpDouble, offset + sizeof(qi::uint32_t) + sizeof(int), sizeof(double)) != sizeof(double)) {
+    std::cerr << "Can't read a double in the buffer!" << std::endl;
     return 1;
   }
 
