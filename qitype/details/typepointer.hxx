@@ -16,10 +16,8 @@ namespace qi
   public:
     Type* pointedType() const
     {
-      static Type* result = 0;
-      if (!result)
-        result = typeOf<T>();
-      return result;
+      // Caching the result here is dangerous if T uses runtime factory.
+      return typeOf<T>();
     }
 
     GenericValuePtr dereference(void* storage)
