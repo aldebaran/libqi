@@ -288,7 +288,7 @@ namespace qi {
     qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
     std::vector<qi::GenericValuePtr> params;
     for (unsigned i=0; i<8; ++i)
-      if (vals[i]->value)
+      if (vals[i]->type)
         params.push_back(*vals[i]);
     // Signature construction
     std::string signature = eventName + "::(";
