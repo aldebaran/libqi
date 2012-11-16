@@ -209,7 +209,8 @@ namespace qi
       result.type = targetType;
       result.value = targetType->initializeStorage();
       static_cast<TypeInt*>(targetType)->set(&result.value,
-                                             static_cast<TypeFloat*>(type)->get(value));
+        static_cast<qi::int64_t>(
+          static_cast<TypeFloat*>(type)->get(value)));
       return std::make_pair(result, true);
     }
     else if (skind == Type::Int && dkind == Type::Float)
@@ -217,7 +218,8 @@ namespace qi
       result.type = targetType;
       result.value = targetType->initializeStorage();
       static_cast<TypeFloat*>(targetType)->set(&result.value,
-                                               static_cast<TypeInt*>(type)->get(value));
+        static_cast<double>(
+          static_cast<TypeInt*>(type)->get(value)));
       return std::make_pair(result, true);
     }
     else if (skind == Type::String && dkind == Type::Raw)

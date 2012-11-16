@@ -85,7 +85,8 @@ public:
   }
   static void* clone(void* src)
   {
-    const T* ptr = (const T*)ptrFromStorage(&src);
+    // Using const here produces a warning when it does not apply
+    T* ptr = (T*)ptrFromStorage(&src);
     void* res = initializeStorage();
     T* tres = (T*)ptrFromStorage(&res);
     detail::TypeManager<type>::copy(tres, ptr);
