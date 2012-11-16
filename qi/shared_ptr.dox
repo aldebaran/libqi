@@ -1,0 +1,19 @@
+/**
+ * \class qi::SharedPtr
+ * \includename{qi/shared_ptr.hpp}
+ */
+
+/**
+ * \fn qi::SharedPtr::SharedPtr(T*)
+ * \param ptr pointer to the managed data.
+ */
+
+/**
+ * \fn qi::SharedPtr::SharedPtr(const qi::SharedPtr<T>&);
+ * \param sp shared pointer also holding the pointer.
+ */
+
+/**
+ * \fn qi::SharedPtr::operator=(SharedPtr<T>&)
+ * \param sp shared pointer also holding the pointer.
+ */

@@ -14,16 +14,20 @@
 
 namespace qi
 {
+  /// Lightweight implementation of shared pointers.
   template <typename T>
   class SharedPtr
   {
   public:
+    /// Initialization of the SharedPtr with the pointer it will manage.
     SharedPtr(T *ptr)
       : _ptr(ptr)
       , _refcount(new qi::Atomic<int>(1))
     {
     }
 
+    /// \brief Destruct the shared pointer and the pointer if current SharedPtr
+    ///        is the last one to hold the pointer.
     ~SharedPtr()
     {
       if (--(*_refcount) == 0)
@@ -33,6 +37,7 @@ namespace qi
       }
     }
 
+    /// Copy shared pointer.
     SharedPtr(const SharedPtr<T> &sp)
     {
       /*
@@ -53,6 +58,8 @@ namespace qi
       }
     }
 
+    /// \brief Link current SharedPtr to a new pointer. If old pointer was
+    ///        only held by the current SharedPtr, it is freed.
     SharedPtr& operator=(SharedPtr<T> &sp)
     {
       // release the current pointer
@@ -75,11 +82,13 @@ namespace qi
       return *this;
     }
 
+    /// Value accessor.
     T &operator*() const
     {
       return *_ptr;
     }
 
+    /// Pointer accessor.
     T *operator->() const
     {
       return _ptr;
