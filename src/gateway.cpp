@@ -182,7 +182,7 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
     Message sdMsg;
     Buffer buf;
     BinaryEncoder d(buf);
-    d << msg->service();
+    d.write(msg->service());
     sdMsg.setBuffer(buf);
 
     // associate the transportSoket client = 0
@@ -229,7 +229,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       // Get serviceId
       ServiceInfo    result;
       qi::BinaryDecoder ds(msg->buffer());
-      ds >> result;
+      ds.read(result);
 
       if (result.name() == "")
       {
@@ -253,7 +253,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
       Buffer   buf;
       ans.setBuffer(buf);
       BinaryEncoder dsAns(buf);
-      dsAns << result;
+      dsAns.write(result);
 
       // id should be rewritten then sent to the client
       ans.setId(itReq->second.first);
@@ -338,7 +338,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
         ans.setFunction(qi::Message::ServerFunction_Connect);
         ans.setObject(qi::Message::GenericObject_Main);
         qi::BinaryEncoder d(buf);
-        d << "";
+        d.write("");
         socket->send(ans);
       }
       else
@@ -350,7 +350,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
     {
       std::string endpoint;
       BinaryDecoder d(msg.buffer());
-      d >> endpoint;
+      d.read(endpoint);
       if (endpoint != "")
       {
         connect(endpoint);

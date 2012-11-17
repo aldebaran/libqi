@@ -96,7 +96,7 @@ namespace qi {
       msg.setFunction(ma.functionId);
       qi::Buffer buf;
       qi::BinaryEncoder ds(buf);
-      ds << "Endpoint disconnected, message dropped.";
+      ds.write("Endpoint disconnected, message dropped.");
       msg.setBuffer(buf);
       dispatch(msg);
     }

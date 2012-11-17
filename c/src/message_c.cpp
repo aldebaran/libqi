@@ -15,14 +15,14 @@
 #include <cstdlib>
 #include <cassert>
 
-qi::BinaryDecoder &get_is(qi_message_data_t *m)
+qi::BinaryDecoder &get_decoder(qi_message_data_t *m)
 {
   if (!m->is)
     m->is = new qi::BinaryDecoder (*m->buff);
   return *(m->is);
 }
 
-qi::BinaryEncoder &get_os(qi_message_data_t *m)
+qi::BinaryEncoder &get_encoder(qi_message_data_t *m)
 {
   if (!m->os)
     m->os = new qi::BinaryEncoder (*m->buff);
@@ -56,55 +56,55 @@ void qi_message_destroy(qi_message_t *msg)
 void qi_message_write_bool(qi_message_t *msg, char b)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << b;
+  get_encoder(m).write(b);
 }
 
 void qi_message_write_int8(qi_message_t *msg, char c)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << c;
+  get_encoder(m).write(c);
 }
 
 void qi_message_write_int16(qi_message_t *msg, short i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 void qi_message_write_int32(qi_message_t *msg, int i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 void qi_message_write_int64(qi_message_t *msg, long long i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 void qi_message_write_uint8(qi_message_t *msg, unsigned char c)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << c;
+  get_encoder(m).write(c);
 }
 
 void qi_message_write_uint16(qi_message_t *msg, unsigned short i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 void qi_message_write_uint32(qi_message_t *msg, unsigned int i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 void qi_message_write_uint64(qi_message_t *msg, unsigned long long i)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << i;
+  get_encoder(m).write(i);
 }
 
 
@@ -112,26 +112,26 @@ void qi_message_write_uint64(qi_message_t *msg, unsigned long long i)
 void qi_message_write_float(qi_message_t *msg, float f)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << f;
+  get_encoder(m).write(f);
 }
 
 void qi_message_write_double(qi_message_t *msg, double d)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << d;
+  get_encoder(m).write(d);
 }
 
 void qi_message_write_string(qi_message_t *msg, const char *s)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
 
-  get_os(m) << std::string(s);
+  get_encoder(m).write(std::string(s));
 }
 
 void qi_message_write_raw(qi_message_t *msg, const char *s, unsigned int size)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
-  get_os(m) << std::string(s, size);
+  get_encoder(m).write(std::string(s, size));
 }
 
 void          qi_message_write_list_begin(qi_message_t *msg, unsigned int size)
@@ -153,7 +153,7 @@ char qi_message_read_bool(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   bool b;
-  get_is(m) >> b;
+  get_decoder(m).read(b);
   return b;
 }
 
@@ -161,7 +161,7 @@ char qi_message_read_int8(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   char c;
-  get_is(m) >> c;
+  get_decoder(m).read(c);
   return c;
 }
 
@@ -169,7 +169,7 @@ short qi_message_read_int16(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   short c;
-  get_is(m) >> c;
+  get_decoder(m).read(c);
   return c;
 }
 
@@ -177,7 +177,7 @@ int qi_message_read_int32(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   int i;
-  get_is(m) >> i;
+  get_decoder(m).read(i);
   return i;
 }
 
@@ -185,7 +185,7 @@ long long qi_message_read_int64(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   long long i;
-  get_is(m) >> i;
+  get_decoder(m).read(i);
   return i;
 }
 
@@ -193,7 +193,7 @@ unsigned char qi_message_read_uint8(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   unsigned char c;
-  get_is(m) >> c;
+  get_decoder(m).read(c);
   return c;
 }
 
@@ -201,7 +201,7 @@ unsigned short qi_message_read_uint16(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   unsigned short c;
-  get_is(m) >> c;
+  get_decoder(m).read(c);
   return c;
 }
 
@@ -209,7 +209,7 @@ unsigned int qi_message_read_uint32(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   unsigned int i;
-  get_is(m) >> i;
+  get_decoder(m).read(i);
   return i;
 }
 
@@ -217,7 +217,7 @@ unsigned long long qi_message_read_uint64(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   unsigned long long i;
-  get_is(m) >> i;
+  get_decoder(m).read(i);
   return i;
 }
 
@@ -226,7 +226,7 @@ float qi_message_read_float(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   float f;
-  get_is(m) >> f;
+  get_decoder(m).read(f);
   return f;
 }
 
@@ -234,7 +234,7 @@ double qi_message_read_double(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   double d;
-  get_is(m) >> d;
+  get_decoder(m).read(d);
   return d;
 }
 
@@ -242,7 +242,7 @@ char *qi_message_read_string(qi_message_t *msg)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string s;
-  get_is(m) >> s;
+  get_decoder(m).read(s);
   return qi::os::strdup(s.c_str());
 }
 
@@ -255,7 +255,7 @@ char *qi_message_read_raw(qi_message_t *msg, unsigned int *size)
 {
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(msg);
   std::string s;
-  get_is(m) >> s;
+  get_decoder(m).read(s);
 
   *size = s.size();
   return qi::os::strdup(s.c_str());

@@ -22,8 +22,8 @@ namespace qi {
 
     if (future.hasError()) {
       ret.setType(qi::Message::Type_Error);
-      ods << typeOf<std::string>()->signature();
-      ods << future.error();
+      ods.write(typeOf<std::string>()->signature());
+      ods.write(future.error());
     } else {
       GenericValuePtr val = future.value();
       if (val.type->kind() != Type::Void)

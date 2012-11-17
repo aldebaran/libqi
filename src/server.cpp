@@ -120,8 +120,8 @@ namespace qi {
           qi::BinaryEncoder ds(error);
           std::stringstream ss;
           ss << "can't find service, address: " << msg.address();
-          ds << qi::typeOf<std::string>()->signature();
-          ds << ss.str();
+          ds.write(qi::typeOf<std::string>()->signature());
+          ds.write(ss.str());
           retval.setBuffer(error);
           socket->send(retval);
         }

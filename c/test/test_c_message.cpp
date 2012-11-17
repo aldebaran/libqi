@@ -10,14 +10,14 @@
 #include <c/src/message_c_p.h>
 #include <gtest/gtest.h>
 
-qi::BinaryDecoder &get_is(qi_message_data_t *m)
+qi::BinaryDecoder &get_decoder(qi_message_data_t *m)
 {
   if (!m->is)
     m->is = new qi::BinaryDecoder(*m->buff);
   return *(m->is);
 }
 
-qi::BinaryEncoder &get_os(qi_message_data_t *m)
+qi::BinaryEncoder &get_encoder(qi_message_data_t *m)
 {
   if (!m->os)
     m->os = new qi::BinaryEncoder(*m->buff);
@@ -138,7 +138,7 @@ TEST(TestMessage, TestList)
   value.push_back(4);
   value.push_back(5);
 
-  get_os((qi_message_data_t*) m) << value;
+  get_encoder((qi_message_data_t*) m).write(value);
   // Our buffer travel around...
 
   // Toh ! a C client :
@@ -179,7 +179,7 @@ TEST(TestMessage, TestMap)
   value["Cham"] = 2;
   value["Pion"] = 3;
 
-  get_os((qi_message_data_t *) m) << value;
+  get_encoder((qi_message_data_t *) m).write(value);
 
   // Our buffer travel around...
 

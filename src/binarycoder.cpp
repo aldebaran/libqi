@@ -16,13 +16,11 @@
 #include <cstring>
 
 namespace qi {
-
-  // Input
   template <typename T, typename T2, char S>
   static inline qi::BinaryDecoder& deserialize(qi::BinaryDecoder* ds, T &b)
   {
     T2 res;
-    int ret = ds->read((void *)&res, sizeof(res));
+    int ret = ds->readRaw((void *)&res, sizeof(res));
     if (ret != sizeof(res))
       ds->setStatus(ds->Status_ReadPastEnd);
     b = res;
@@ -44,18 +42,17 @@ namespace qi {
   }
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type, TypeCast, Signature)                   \
-  BinaryDecoder& BinaryDecoder::operator>>(Type &b)                                \
+  void BinaryDecoder::read(Type &b)                                  \
   {                                                                            \
-  return deserialize<Type, TypeCast, Signature>(this, b);                    \
-}                                                                            \
-  BinaryEncoder& BinaryEncoder::operator<<(Type b)                                 \
+    deserialize<Type, TypeCast, Signature>(this, b);                    \
+  }                                                                            \
+  void BinaryEncoder::write(Type b)                                  \
   {                                                                            \
-  bool sig = (_p->_innerSerialization != 0);                                 \
-  ++(_p->_innerSerialization);                                               \
-  serialize<Type, TypeCast, Signature>(this, b, sig);                        \
-  --(_p->_innerSerialization);                                               \
-  return *this;                                                              \
-}
+    bool sig = (_p->_innerSerialization != 0);                                 \
+    ++(_p->_innerSerialization);                                               \
+    serialize<Type, TypeCast, Signature>(this, b, sig);                        \
+    --(_p->_innerSerialization);                                               \
+  }
 
   QI_SIMPLE_SERIALIZER_IMPL(bool, bool, 'b')
   QI_SIMPLE_SERIALIZER_IMPL(char, char, 'c')
@@ -84,12 +81,12 @@ namespace qi {
     delete _p;
   }
 
-  size_t BinaryDecoder::read(void *data, size_t size)
+  size_t BinaryDecoder::readRaw(void *data, size_t size)
   {
     return _p->_reader.read(data, size);
   }
 
-  void* BinaryDecoder::read(size_t size)
+  void* BinaryDecoder::readRaw(size_t size)
   {
     return _p->_reader.read(size);
   }
@@ -118,29 +115,27 @@ namespace qi {
   {
   }
 
-  BinaryDecoder& BinaryDecoder::operator>>(std::string &s)
+  void BinaryDecoder::read(std::string &s)
   {
     qi::uint32_t sz = 0;
-    *this >> sz;
+    read(sz);
 
     s.clear();
     if (sz) {
-      char *data = static_cast<char *>(read(sz));
+      char *data = static_cast<char *>(readRaw(sz));
       if (!data) {
         qiLogError("qimessaging.binarycoder", "buffer empty");
         setStatus(Status_ReadPastEnd);
-        return *this;
+        return;
       }
       s.append(data, sz);
     }
-
-    return *this;
   }
 
-  BinaryDecoder &BinaryDecoder::operator>>(qi::Buffer &meta) {
+  void BinaryDecoder::read(qi::Buffer &meta) {
     BufferReader& reader = bufferReader();
     uint32_t sz;
-    *this >> sz;
+    read(sz);
     if (reader.hasSubBuffer())
     {
       meta = reader.subBuffer();
@@ -152,15 +147,14 @@ namespace qi {
       qiLogDebug("BinaryCoder") << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
-      memcpy(ptr, read(sz), sz);
+      memcpy(ptr, readRaw(sz), sz);
     }
-    return *this;
   }
 
-  BinaryDecoder &BinaryDecoder::operator>>(GenericValuePtr &value)
+  void BinaryDecoder::read(GenericValuePtr &value)
   {
     std::string signature;
-    *this >> signature;
+    read(signature);
     Type* type = 0; // Type::getCompatibleTypeWithSignature(signature);
     if (!type)
       qiLogError("qimessaging.binarycoder") << "Could not find metatype for signature " << signature;
@@ -169,7 +163,6 @@ namespace qi {
       value.type = type;
       value.value = 0; // value.type->deserialize(*this);
     }
-    return *this;
   }
 
   // Output
@@ -193,7 +186,6 @@ namespace qi {
       if (_p->_buffer.write(str, len) == false)
       {
         setStatus(Status_WriteError);
-        return -1;
       }
     }
     return len;
@@ -202,7 +194,7 @@ namespace qi {
   void BinaryEncoder::writeString(const char *str, size_t len)
   {
     ++_p->_innerSerialization;
-    *this << (qi::uint32_t)len;
+    write((qi::uint32_t)len);
     --_p->_innerSerialization;
     if (len) {
       if (!_p->_innerSerialization)
@@ -214,20 +206,18 @@ namespace qi {
     }
   }
 
-  BinaryEncoder& BinaryEncoder::operator<<(const std::string &s)
+  void BinaryEncoder::write(const std::string &s)
   {
     writeString(s.c_str(), s.length());
-    return *this;
   }
 
-  BinaryEncoder& BinaryEncoder::operator<<(const char *s)
+  void BinaryEncoder::write(const char *s)
   {
     qi::uint32_t len = strlen(s);
     writeString(s, len);
-    return *this;
   }
 
-  BinaryEncoder &BinaryEncoder::operator<<(const qi::Buffer &meta) {
+  void BinaryEncoder::write(const qi::Buffer &meta) {
     if (!_p->_innerSerialization)
     {
       signature() += "r";
@@ -235,25 +225,23 @@ namespace qi {
 
     ++_p->_innerSerialization;
 
-    *this << (uint32_t)meta.size();
+    write((uint32_t)meta.size());
     buffer().addSubBuffer(meta);
 
     --_p->_innerSerialization;
 
     qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
                              << " at " << buffer().size();
-    return *this;
   }
 
-  BinaryEncoder &BinaryEncoder::operator<<(const GenericValuePtr &value)
+  void BinaryEncoder::write(const GenericValuePtr &value)
   {
     if (!_p->_innerSerialization)
       signature() += "m";
     ++_p->_innerSerialization;
-    *this << value.signature();
+    write(value.signature());
     qi::details::serialize(value, *this);
     --_p->_innerSerialization;
-    return *this;
   }
 
   void BinaryEncoder::beginList(uint32_t size, std::string elementSignature)
@@ -261,7 +249,7 @@ namespace qi {
     if (!_p->_innerSerialization)
       signature() += "[" + elementSignature;
     ++_p->_innerSerialization;
-    *this << size;
+    write(size);
   }
 
   void BinaryEncoder::endList()
@@ -276,7 +264,7 @@ namespace qi {
     if (!_p->_innerSerialization)
       signature() += "{" + keySignature + valueSignature + "}";
     ++_p->_innerSerialization;
-    *this << size;
+    write(size);
   }
 
   void BinaryEncoder::endMap()
@@ -348,14 +336,14 @@ namespace qi {
       {
         switch((isSigned?1:-1)*byteSize)
         {
-          case 1:	 out <<(int8_t)value;  break;
-          case -1: out <<(uint8_t)value; break;
-          case 2:	 out <<(int16_t)value; break;
-          case -2: out <<(uint16_t)value;break;
-          case 4:	 out <<(int32_t)value; break;
-          case -4: out <<(uint32_t)value;break;
-          case 8:	 out <<(int64_t)value; break;
-          case -8: out <<(uint64_t)value;break;
+          case 1:	 out.write((int8_t)value);  break;
+          case -1: out.write((uint8_t)value); break;
+          case 2:	 out.write((int16_t)value); break;
+          case -2: out.write((uint16_t)value);break;
+          case 4:	 out.write((int32_t)value); break;
+          case -4: out.write((uint32_t)value);break;
+          case 8:	 out.write((int64_t)value); break;
+          case -8: out.write((uint64_t)value);break;
           default:
             qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
         }
@@ -364,9 +352,9 @@ namespace qi {
       void visitFloat(TypeFloat* type, double value, int byteSize)
       {
         if (byteSize == 4)
-          out << (float)value;
+          out.write((float)value);
         else if (byteSize == 8)
-          out << (double)value;
+          out.write((double)value);
         else
           qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
       }
@@ -431,12 +419,12 @@ namespace qi {
 
       void visitDynamic(Type* type, GenericValuePtr pointee)
       {
-        out << pointee;
+        out.write(pointee);
       }
 
       void visitRaw(TypeRaw* type, Buffer* buffer)
       {
-        out << *buffer;
+        out.write(*buffer);
       }
       BinaryEncoder& out;
     };
@@ -455,7 +443,7 @@ namespace qi {
       void deserialize(TYPE* type)
       {
         T val;
-        in >> val;
+        in.read(val);
         assert(typeOf<T>()->info() == type->info());
         result.type = type;
         result.value = type->initializeStorage();
@@ -505,7 +493,7 @@ namespace qi {
         result.type = type;
         result.value = result.type->initializeStorage();
         std::string s;
-        in >> s;
+        in.read(s);
         type->set(&result.value, s);
       }
 
@@ -516,7 +504,7 @@ namespace qi {
         GenericListPtr res(result);
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
-        in >> sz;
+        in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
@@ -535,7 +523,7 @@ namespace qi {
         Type* keyType = res.keyType();
         Type* elementType = res.elementType();
         qi::uint32_t sz = 0;
-        in >> sz;
+        in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
           return;
         for (unsigned i = 0; i < sz; ++i)
@@ -574,7 +562,7 @@ namespace qi {
       void visitDynamic(Type* type, GenericValuePtr pointee)
       {
         std::string sig;
-        in >> sig;
+        in.read(sig);
         GenericValuePtr val;
         val.type = Type::fromSignature(sig);
         val = qi::details::deserialize(val.type, in);
@@ -587,7 +575,7 @@ namespace qi {
       void visitRaw(TypeRaw* type, Buffer*)
       {
         Buffer b;
-        in >> b;
+        in.read(b);
         void* s = type->initializeStorage();
         type->set(&s, b);
         result.type = type;

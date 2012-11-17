@@ -17,11 +17,11 @@ TEST(TestBind, serializeInt)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << 12;
+  d.write(12);
 
   qi::BinaryDecoder  d2(buf);
   int i;
-  d2 >> i;
+  d2.read(i);
 
   EXPECT_EQ(12, i);
 }
@@ -30,17 +30,17 @@ TEST(TestBind, serializeInts)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << 12;
-  d << 13;
-  d << 14;
+  d.write(12);
+  d.write(13);
+  d.write(14);
 
   qi::BinaryDecoder  d2(buf);
   int i1;
-  d2 >> i1;
+  d2.read(i1);
   int i2;
-  d2 >> i2;
+  d2.read(i2);
   int i3;
-  d2 >> i3;
+  d2.read(i3);
 
   EXPECT_EQ(12, i1);
   EXPECT_EQ(13, i2);
@@ -51,11 +51,11 @@ TEST(TestBind, serializeBool)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << true;
+  d.write(true);
 
   qi::BinaryDecoder  d2(buf);
   bool b;
-  d2 >> b;
+  d2.read(b);
 
   EXPECT_EQ(true, b);
 }
@@ -64,17 +64,17 @@ TEST(TestBind, serializeBools)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << true;
-  d << false;
-  d << false;
+  d.write(true);
+  d.write(false);
+  d.write(false);
 
   qi::BinaryDecoder  d2(buf);
   bool b1;
-  d2 >> b1;
+  d2.read(b1);
   bool b2;
-  d2 >> b2;
+  d2.read(b2);
   bool b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_TRUE(b1);
   EXPECT_FALSE(b2);
@@ -85,11 +85,11 @@ TEST(TestBind, serializeChar)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << 'c';
+  d.write('c');
 
   qi::BinaryDecoder  d2(buf);
   char b;
-  d2 >> b;
+  d2.read(b);
 
   EXPECT_EQ('c', b);
 }
@@ -98,17 +98,17 @@ TEST(TestBind, serializeChars)
 {
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
-  d << 'c';
-  d << 'd';
-  d << 'e';
+  d.write('c');
+  d.write('d');
+  d.write('e');
 
   qi::BinaryDecoder  d2(buf);
   char b1;
-  d2 >> b1;
+  d2.read(b1);
   char b2;
-  d2 >> b2;
+  d2.read(b2);
   char b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_EQ('c', b1);
   EXPECT_EQ('d', b2);
@@ -120,11 +120,11 @@ TEST(TestBind, serializeUInt)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   unsigned int ui1 = UINT_MAX;
-  d << ui1;
+  d.write(ui1);
 
   qi::BinaryDecoder  d2(buf);
   unsigned int ui2;
-  d2 >> ui2;
+  d2.read(ui2);
 
   EXPECT_EQ(ui1, ui2);
 }
@@ -136,17 +136,17 @@ TEST(TestBind, serializeUInts)
   unsigned int ui1 = UINT_MAX;
   unsigned int ui2 = 0;
   unsigned int ui3 = 456789;
-  d << ui1;
-  d << ui2;
-  d << ui3;
+  d.write(ui1);
+  d.write(ui2);
+  d.write(ui3);
 
   qi::BinaryDecoder  d2(buf);
   unsigned int ui4;
-  d2 >> ui4;
+  d2.read(ui4);
   unsigned int ui5;
-  d2 >> ui5;
+  d2.read(ui5);
   unsigned int ui6;
-  d2 >> ui6;
+  d2.read(ui6);
 
   EXPECT_EQ(ui1, ui4);
   EXPECT_EQ(ui2, ui5);
@@ -158,11 +158,11 @@ TEST(TestBind, serializeUChar)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   unsigned char ui1 = UCHAR_MAX;
-  d << ui1;
+  d.write(ui1);
 
   qi::BinaryDecoder  d2(buf);
   unsigned char ui2;
-  d2 >> ui2;
+  d2.read(ui2);
 
   EXPECT_EQ(ui1, ui2);
 }
@@ -174,17 +174,17 @@ TEST(TestBind, serializeUChars)
   unsigned char ui1 = UCHAR_MAX;
   unsigned char ui2 = 0;
   unsigned char ui3 = 45;
-  d << ui1;
-  d << ui2;
-  d << ui3;
+  d.write(ui1);
+  d.write(ui2);
+  d.write(ui3);
 
   qi::BinaryDecoder  d2(buf);
   unsigned char ui4;
-  d2 >> ui4;
+  d2.read(ui4);
   unsigned char ui5;
-  d2 >> ui5;
+  d2.read(ui5);
   unsigned char ui6;
-  d2 >> ui6;
+  d2.read(ui6);
 
   EXPECT_EQ(ui1, ui4);
   EXPECT_EQ(ui2, ui5);
@@ -196,11 +196,11 @@ TEST(TestBind, serializeFloat)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   float f = 1.25f;
-  d << f;
+  d.write(f);
 
   qi::BinaryDecoder  d2(buf);
   float b;
-  d2 >> b;
+  d2.read(b);
 
   EXPECT_EQ(f, b);
 }
@@ -212,17 +212,17 @@ TEST(TestBind, serializeFloats)
   float f1 = 1.25f;
   float f2 = -1.25f;
   float f3 = 0.0f;
-  d << f1;
-  d << f2;
-  d << f3;
+  d.write(f1);
+  d.write(f2);
+  d.write(f3);
 
   qi::BinaryDecoder  d2(buf);
   float b1;
-  d2 >> b1;
+  d2.read(b1);
   float b2;
-  d2 >> b2;
+  d2.read(b2);
   float b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_EQ(f1, b1);
   EXPECT_EQ(f2, b2);
@@ -235,11 +235,11 @@ TEST(TestBind, serializeDouble)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   double f = 1.25;
-  d << f;
+  d.write(f);
 
   qi::BinaryDecoder  d2(buf);
   double b;
-  d2 >> b;
+  d2.read(b);
 
   EXPECT_EQ(f, b);
 }
@@ -251,17 +251,17 @@ TEST(TestBind, serializeDoubles)
   double f1 = 1.25;
   double f2 = -1.25;
   double f3 = 0.0;
-  d << f1;
-  d << f2;
-  d << f3;
+  d.write(f1);
+  d.write(f2);
+  d.write(f3);
 
   qi::BinaryDecoder  d2(buf);
   double b1;
-  d2 >> b1;
+  d2.read(b1);
   double b2;
-  d2 >> b2;
+  d2.read(b2);
   double b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_EQ(f1, b1);
   EXPECT_EQ(f2, b2);
@@ -273,11 +273,11 @@ TEST(TestBind, serializeString)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   std::string s = "1.25";
-  d << s;
+  d.write(s);
 
   qi::BinaryDecoder  d2(buf);
   std::string s2;
-  d2 >> s2;
+  d2.read(s2);
 
   EXPECT_EQ(s, s2);
 }
@@ -289,17 +289,17 @@ TEST(TestBind, serializeStrings)
   std::string f1 = "1.25";
   std::string f2 = "-1.25";
   std::string f3 = "0.0";
-  d << f1;
-  d << f2;
-  d << f3;
+  d.write(f1);
+  d.write(f2);
+  d.write(f3);
 
   qi::BinaryDecoder  d2(buf);
   std::string b1;
-  d2 >> b1;
+  d2.read(b1);
   std::string b2;
-  d2 >> b2;
+  d2.read(b2);
   std::string b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_EQ(f1, b1);
   EXPECT_EQ(f2, b2);
@@ -311,11 +311,11 @@ TEST(TestBind, serializeCChar)
   qi::Buffer      buf;
   qi::BinaryEncoder  d(buf);
   std::string s = "1.25";
-  d << s.c_str();
+  d.write(s.c_str());
 
   qi::BinaryDecoder  d2(buf);
   std::string s2;
-  d2 >> s2;
+  d2.read(s2);
 
   EXPECT_EQ(s, s2);
 }
@@ -327,17 +327,17 @@ TEST(TestBind, serializeCChars)
   std::string f1 = "1.25";
   std::string f2 = "-1.25";
   std::string f3 = "0.0";
-  d << f1.c_str();
-  d << f2.c_str();
-  d << f3.c_str();
+  d.write(f1.c_str());
+  d.write(f2.c_str());
+  d.write(f3.c_str());
 
   qi::BinaryDecoder  d2(buf);
   std::string b1;
-  d2 >> b1;
+  d2.read(b1);
   std::string b2;
-  d2 >> b2;
+  d2.read(b2);
   std::string b3;
-  d2 >> b3;
+  d2.read(b3);
 
   EXPECT_EQ(f1, b1);
   EXPECT_EQ(f2, b2);
@@ -352,11 +352,11 @@ TEST(TestBind, serializeVectorString)
   vs.push_back("toto");
   vs.push_back("tutu");
   vs.push_back("tata");
-  d << vs;
+  d.write(vs);
 
   qi::BinaryDecoder  d2(buf);
   std::vector<std::string> vs1;
-  d2 >> vs1;
+  d2.read(vs1);
 
   EXPECT_EQ(vs[0], vs1[0]);
   EXPECT_EQ(vs[1], vs1[1]);
@@ -372,14 +372,14 @@ TEST(TestBind, serializeVectorStrings)
   vs.push_back("tutu");
   vs.push_back("tata");
 
-  d << vs;
-  d << vs;
+  d.write(vs);
+  d.write(vs);
 
   qi::BinaryDecoder  d2(buf);
   std::vector<std::string> vs1;
-  d2 >> vs1;
+  d2.read(vs1);
   std::vector<std::string> vs2;
-  d2 >> vs2;
+  d2.read(vs2);
 
   EXPECT_EQ(vs[0], vs1[0]);
   EXPECT_EQ(vs[1], vs1[1]);
@@ -409,21 +409,21 @@ TEST(TestBind, serializeAllTypes)
   double d = 42.42;
   std::string s("test::string");
 
-  ds << b;
-  ds << c;
-  ds << sh;
-  ds << i;
-  ds << l;
-  //ds << ll;
-  ds << uc;
-  ds << ush;
-  ds << ui;
-  ds << ul;
-  //ds << ull;
-  ds << f;
-  ds << d;
-  ds << s;
-  ds << s.c_str();
+  ds.write(b);
+  ds.write(c);
+  ds.write(sh);
+  ds.write(i);
+  ds.write(l);
+  //ds.write(ll);
+  ds.write(uc);
+  ds.write(ush);
+  ds.write(ui);
+  ds.write(ul);
+  //ds.write(ull);
+  ds.write(f);
+  ds.write(d);
+  ds.write(s);
+  ds.write(s.c_str());
 
   qi::BinaryDecoder  d2(buf);
   bool b1;
@@ -443,21 +443,21 @@ TEST(TestBind, serializeAllTypes)
   std::string s2;
 
 
-  d2 >> b1;
-  d2 >> c1;
-  d2 >> sh1;
-  d2 >> i1;
-  d2 >> l1;
-  //d2 >> ll1;
-  d2 >> uc1;
-  d2 >> ush1;
-  d2 >> ui1;
-  d2 >> ul1;
-  //d2 >> ull1;
-  d2 >> f1;
-  d2 >> d1;
-  d2 >> s1;
-  d2 >> s2;
+  d2.read(b1);
+  d2.read(c1);
+  d2.read(sh1);
+  d2.read(i1);
+  d2.read(l1);
+  //d2.read(ll1);
+  d2.read(uc1);
+  d2.read(ush1);
+  d2.read(ui1);
+  d2.read(ul1);
+  //d2.read(ull1);
+  d2.read(f1);
+  d2.read(d1);
+  d2.read(s1);
+  d2.read(s2);
 
   EXPECT_EQ(b, b1);
   EXPECT_EQ(c, c1);
@@ -507,10 +507,10 @@ TEST(TestBind, SerializeCustomSimple)
   p.x = 12; p.y = 13;
   qi::Buffer buf;
   qi::BinaryEncoder dout(buf);
-  dout << p;
+  dout.write(p);
   qi::BinaryDecoder din(buf);
   Point pout;
-  din >> pout;
+  din.read(pout);
   ASSERT_EQ(p, pout);
 }
 Point point(int x, int y)
@@ -532,10 +532,10 @@ TEST(TestBind, SerializeCustomComplex)
   comp.stuff.push_back(v);
   qi::Buffer buf;
   qi::BinaryEncoder dout(buf);
-  dout << comp;
+  dout.write(comp);
   qi::BinaryDecoder din(buf);
   Complex compout;
-  din >> compout;
+  din.read(compout);
   ASSERT_EQ(comp, compout);
 }
 
@@ -548,14 +548,14 @@ TEST(TestBind, TestShPtr) {
   bool b1;
   bool b2;
 
-  dou << sh1;
-  dou << sh2;
+  dou.write(sh1);
+  dou.write(sh2);
   qi::BinaryDecoder din(bif);
-  din >> b1;
-  din >> b2;
+  din.read(b1);
+  din.read(b2);
 
   typedef void(*titi_t)(void);
   titi_t titi = (titi_t)1;
 
-  dou << titi;
+  dou.write(titi);
 }

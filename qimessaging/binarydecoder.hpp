@@ -38,31 +38,33 @@ namespace qi {
       Status_ReadPastEnd            = 2,
     };
 
-    BinaryDecoder& operator>>(bool      &b);
+    void read(bool      &b);
 
-    BinaryDecoder& operator>>(char        &c);
-    BinaryDecoder& operator>>(signed char &c);
-    BinaryDecoder& operator>>(short       &s);
-    BinaryDecoder& operator>>(int         &i);
-    BinaryDecoder& operator>>(long        &l);
-    BinaryDecoder& operator>>(long long   &ll);
+    void read(char        &c);
+    void read(signed char &c);
+    void read(short       &s);
+    void read(int         &i);
+    void read(long        &l);
+    void read(long long   &ll);
 
-    BinaryDecoder& operator>>(unsigned char  &uc);
-    BinaryDecoder& operator>>(unsigned short &us);
-    BinaryDecoder& operator>>(unsigned int   &ui);
-    BinaryDecoder& operator>>(unsigned long  &ul);
-    BinaryDecoder& operator>>(unsigned long long &ull);
+    void read(unsigned char  &uc);
+    void read(unsigned short &us);
+    void read(unsigned int   &ui);
+    void read(unsigned long  &ul);
+    void read(unsigned long long &ull);
 
-    BinaryDecoder& operator>>(float    &f);
-    BinaryDecoder& operator>>(double   &d);
-    BinaryDecoder& operator>>(std::string& i);
+    void read(float    &f);
+    void read(double   &d);
+    void read(std::string& i);
 
-    BinaryDecoder& operator>>(qi::GenericValuePtr &value);
-    BinaryDecoder& operator>>(qi::Buffer &buffer);
+    void read(qi::GenericValuePtr &value);
+    void read(qi::Buffer &buffer);
+
+    template<typename T> void read(T& v);
 
     //read raw data
-    size_t read(void *data, size_t len);
-    void* read(size_t len);
+    size_t readRaw(void *data, size_t len);
+    void* readRaw(size_t len);
     Status status() const;
     void setStatus(Status status);
     BufferReader& bufferReader();
@@ -71,21 +73,17 @@ namespace qi {
     BinaryDecoderPrivate *_p;
   };
 
-  template<typename T>
-  BinaryDecoder& operator>>(BinaryDecoder& in, T& v);
-
   namespace details {
     QIMESSAGING_API GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in);
   }
 
   template<typename T>
-  BinaryDecoder& operator>>(BinaryDecoder& in, T& v)
+  void BinaryDecoder::read(T& v)
   {
     Type* type = typeOf<T>();
-    GenericValuePtr value = qi::details::deserialize(type, in);;
+    GenericValuePtr value = qi::details::deserialize(type, *this);;
     T* ptr = (T*)type->ptrFromStorage(&value.value);
     v = *ptr;
-    return in;
   }
 }
 

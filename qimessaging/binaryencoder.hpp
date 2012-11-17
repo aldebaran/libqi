@@ -40,29 +40,30 @@ namespace qi {
     int write(const char *str, size_t len);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
-    BinaryEncoder& operator<<(bool      b);
+    void write(bool      b);
 
-    BinaryEncoder& operator<<(char        c);
-    BinaryEncoder& operator<<(signed char c);
-    BinaryEncoder& operator<<(short       i);
-    BinaryEncoder& operator<<(int         i);
-    BinaryEncoder& operator<<(long        l);
-    BinaryEncoder& operator<<(long long   ll);
+    void write(char        c);
+    void write(signed char c);
+    void write(short       i);
+    void write(int         i);
+    void write(long        l);
+    void write(long long   ll);
 
-    BinaryEncoder& operator<<(unsigned char  uc);
-    BinaryEncoder& operator<<(unsigned short us);
-    BinaryEncoder& operator<<(unsigned int   ui);
-    BinaryEncoder& operator<<(unsigned long  ul);
-    BinaryEncoder& operator<<(unsigned long long ull);
+    void write(unsigned char  uc);
+    void write(unsigned short us);
+    void write(unsigned int   ui);
+    void write(unsigned long  ul);
+    void write(unsigned long long ull);
 
-    BinaryEncoder& operator<<(float  i);
-    BinaryEncoder& operator<<(double i);
-    BinaryEncoder& operator<<(const char *);
-    BinaryEncoder& operator<<(const std::string& i);
+    void write(float  i);
+    void write(double i);
+    void write(const char *);
+    void write(const std::string& i);
 
-    BinaryEncoder &operator<<(const GenericValuePtr &value);
-    BinaryEncoder &operator<<(const Buffer &buffer);
+    void write(const GenericValuePtr &value);
+    void write(const Buffer &buffer);
 
+    template<typename T> void write(const T &v);
 
     void beginList(qi::uint32_t size, std::string elementSignature);
     void endList();
@@ -76,6 +77,7 @@ namespace qi {
 
     Buffer& buffer();
     std::string& signature();
+
   private:
     BinaryEncoderPrivate *_p;
 
@@ -84,19 +86,14 @@ namespace qi {
 
   };
 
-  //generic stream operator. (use qi::Type)
-  template<typename T>
-  BinaryEncoder& operator<<(BinaryEncoder& out, const T &v);
-
   namespace details {
     QIMESSAGING_API void serialize(GenericValuePtr val, BinaryEncoder& out);
   }
 
-  template<typename T>
-  BinaryEncoder& operator<<(BinaryEncoder& out, const T &v) {
+  template<typename T> void BinaryEncoder::write(const T &v)
+  {
     GenericValuePtr value = GenericValuePtr::from(v);
-    qi::details::serialize(value, out);
-    return out;
+    qi::details::serialize(value, *this);
   }
 }
 

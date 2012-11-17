@@ -158,14 +158,14 @@ namespace qi {
         qi::BinaryDecoder ds(msg.buffer());
         std::string    err;
         std::string    sig;
-        ds >> sig;
+        ds.read(sig);
         if (sig != "s") {
           qiLogError("qi.RemoteObject") << "Invalid error signature: " << sig;
           //houston we have an error about the error..
           promise.setError("unknown error");
           return;
         }
-        ds >> err;
+        ds.read(err);
         qiLogVerbose("remoteobject") << "Received error message"  << msg.address() << ":" << err;
         promise.setError(err);
         return;

@@ -57,14 +57,14 @@ TEST(testSerializable, POD) {
   Point2D   p2d1(4, 2), p2d2;
   TimeStamp ts1(3, 1) , ts2;
   TimeStampedPoint2D   tsp2d1(4, 2, 3, 1), tsp2d2;
-  m << p2d1;
-  m << ts1;
-  m << tsp2d1;
+  m.write(p2d1);
+  m.write(ts1);
+  m.write(tsp2d1);
 
   qi::BinaryDecoder  m2(buf);
-  m2 >> p2d2;
-  m2 >> ts2;
-  m2 >> tsp2d2;
+  m2.read(p2d2);
+  m2.read(ts2);
+  m2.read(tsp2d2);
 
   EXPECT_EQ(p2d1.x(), p2d2.x());
   EXPECT_EQ(p2d1.y(), p2d2.y());

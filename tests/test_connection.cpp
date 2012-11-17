@@ -110,19 +110,19 @@ TEST(QiMessagingConnexion, testBuffer)
   qi::Buffer buf;
   std::string challenge = "foo*******************************";
   qi::BinaryEncoder out(buf);
-  out << challenge;
+  out.write(challenge);
   qiLogDebug("test") << "call BA";
   qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
   qi::BinaryDecoder in(result);
-  in >> reply;
+  in.read(reply);
   ASSERT_EQ(challenge, reply);
   qiLogDebug("test") << "call BA";
   result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
   {
     std::string reply;
     qi::BinaryDecoder in(result);
-    in >> reply;
+    in.read(reply);
     ASSERT_EQ(challenge, reply);
   }
   qiLogDebug("test") << "call A";
@@ -130,21 +130,21 @@ TEST(QiMessagingConnexion, testBuffer)
   {
     std::string reply;
     qi::BinaryDecoder in(result);
-    in >> reply;
+    in.read(reply);
     ASSERT_EQ(challenge, reply);
   }
   result = tc.obj->call<qi::Buffer>("replyBuf", buf);
    {
     std::string reply;
     qi::BinaryDecoder in(result);
-    in >> reply;
+    in.read(reply);
     ASSERT_EQ(challenge, reply);
   }
   result = tc.obj->call<qi::Buffer>("replyBufB", 1, buf);
   {
     std::string reply;
     qi::BinaryDecoder in(result);
-    in >> reply;
+    in.read(reply);
     ASSERT_EQ(challenge, reply);
   }
 }
