@@ -42,11 +42,11 @@ namespace qi {
   }
 
 #define QI_SIMPLE_SERIALIZER_IMPL(Type, TypeCast, Signature)                   \
-  void BinaryDecoder::read(Type &b)                                  \
+  void BinaryDecoder::read(Type &b)                                            \
   {                                                                            \
-    deserialize<Type, TypeCast, Signature>(this, b);                    \
+    deserialize<Type, TypeCast, Signature>(this, b);                           \
   }                                                                            \
-  void BinaryEncoder::write(Type b)                                  \
+  void BinaryEncoder::write(Type b)                                            \
   {                                                                            \
     bool sig = (_p->_innerSerialization != 0);                                 \
     ++(_p->_innerSerialization);                                               \

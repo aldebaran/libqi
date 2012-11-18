@@ -389,6 +389,25 @@ TEST(TestBind, serializeVectorStrings)
   EXPECT_EQ(vs[2], vs2[2]);
 }
 
+TEST(TestBind, serializeBuffer)
+{
+  qi::Buffer buf;
+  qi::BinaryEncoder e(buf);
+  qi::Buffer buffer;
+  int a = 42;
+  buffer.write(&a, sizeof(int));
+  e.write(buffer);
+
+  qi::BinaryDecoder d(buf);
+  qi::Buffer buffer2;
+  d.read(buffer2);
+  int b;
+  buffer2.read(&b, 0, sizeof(int));
+
+  EXPECT_EQ(a, b);
+
+}
+
 TEST(TestBind, serializeAllTypes)
 {
   qi::Buffer      buf;
