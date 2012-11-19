@@ -38,12 +38,15 @@ namespace qi {
   }
 
   qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self) {
-    qi::ObjectTypeBuilder<ServiceBoundObject> ob;
-
-    ob.advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, qi::Message::BoundObjectFunction_RegisterEvent);
-    ob.advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, qi::Message::BoundObjectFunction_UnregisterEvent);
-    ob.advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, qi::Message::BoundObjectFunction_MetaObject);
-    return ob.object(self);
+    static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = 0;
+    if (!ob)
+    {
+      ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
+      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, qi::Message::BoundObjectFunction_RegisterEvent);
+      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, qi::Message::BoundObjectFunction_UnregisterEvent);
+      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, qi::Message::BoundObjectFunction_MetaObject);
+    }
+    return ob->object(self);
   }
 
   //Bound Method

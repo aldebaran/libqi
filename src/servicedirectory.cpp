@@ -39,16 +39,19 @@ namespace qi
 
 
   qi::ObjectPtr createSDP(ServiceDirectoryBoundObject* self) {
-    qi::ObjectTypeBuilder<ServiceDirectoryBoundObject> ob;
-
-    ob.advertiseMethod("service", &ServiceDirectoryBoundObject::service);
-    ob.advertiseMethod("services", &ServiceDirectoryBoundObject::services);
-    ob.advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
-    ob.advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
-    ob.advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
-    ob.advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
-    ob.advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
-    return ob.object(self);
+    static qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>* ob = 0;
+    if (!ob)
+    {
+      ob = new qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>();
+      ob->advertiseMethod("service", &ServiceDirectoryBoundObject::service);
+      ob->advertiseMethod("services", &ServiceDirectoryBoundObject::services);
+      ob->advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
+      ob->advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
+      ob->advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
+      ob->advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
+      ob->advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
+    }
+    return ob->object(self);
   }
 
   ServiceDirectoryBoundObject::ServiceDirectoryBoundObject()
