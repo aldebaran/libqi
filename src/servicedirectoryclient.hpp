@@ -55,9 +55,8 @@ namespace qi {
 
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<unsigned int> ret,
-                            qi::Future<unsigned int> fadd,
-                            qi::Future<unsigned int> frem,
-                            qi::Promise<bool> fco);
+                            qi::Promise<bool> fco,
+                            bool isAdd);
 
   private:
     qi::TransportSocketPtr _sdSocket;

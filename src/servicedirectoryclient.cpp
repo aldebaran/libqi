@@ -28,26 +28,25 @@ namespace qi {
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
-                                                 qi::Future<unsigned int> fadd,
-                                                 qi::Future<unsigned int> frem,
-                                                 qi::Promise<bool> fco)
-  {
-    if (!fadd.isReady() || !frem.isReady() || fco.future().wait(-1))
-      return;
-    if (fadd.hasError() || frem.hasError()) {
-      std::string err;
-      err = fadd.error();
-      if (!err.empty() && frem.hasError())
-        err += ". ";
-      err += frem.error();
-      fco.setError(err);
-      return;
-    }
-    _addLink = fadd.value();
-    _removeLink = frem.value();
-    fco.setValue(true);
-    connected();
-  }
+   qi::Promise<bool> fco, bool isAdd)
+ {
+   if (fco.future().wait(-1))
+     return;
+   if (ret.hasError())
+   {
+     fco.setError(ret.error());
+     return;
+   }
+   if (isAdd)
+     _addLink = ret.value();
+   else
+     _removeLink = ret.value();
+   if (_addLink && _removeLink)
+   {
+     fco.setValue(true);
+     connected();
+   }
+ }
 
   void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<bool> promise) {
     if (future.hasError()) {
@@ -62,8 +61,8 @@ namespace qi {
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
     qi::Future<unsigned int> fut2 = _object->connect("serviceRemoved", f);
 
-    fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
-    fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, fut1, fut2, promise));
+    fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true));
+    fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false));
   }
 
   void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<bool> future, qi::Promise<bool> promise) {
