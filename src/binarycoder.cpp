@@ -521,7 +521,9 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          res.pushBack(qi::details::deserialize(elementType, in));
+          GenericValuePtr v = qi::details::deserialize(elementType, in);
+          res.pushBack(v);
+          v.destroy();
         }
       }
 
@@ -541,6 +543,8 @@ namespace qi {
           GenericValuePtr k = qi::details::deserialize(keyType, in);
           GenericValuePtr v = qi::details::deserialize(elementType, in);
           res.insert(k, v);
+          k.destroy();
+          v.destroy();
         }
       }
 
