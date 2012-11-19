@@ -1,4 +1,4 @@
-INPUT       = qi/ doc/*.dox
+INPUT       = qi/ doc_dox/
 EXAMPLE_PATH           = examples
 EXAMPLE_PATTERNS       = *.cpp
 EXAMPLE_RECURSIVE      = YES
