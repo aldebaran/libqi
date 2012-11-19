@@ -191,9 +191,9 @@ namespace qi
     else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
     {
       if (events & BEV_EVENT_ERROR)
-        _errno = errno;
-      if (_errno)
-        qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << errno << "): " << strerror(errno) << std::endl;
+        _err = errno;
+      if (_err)
+        qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << _err << "): " << strerror(_err) << std::endl;
       disconnect_(_self->shared_from_this());
     }
     else if (events & BEV_EVENT_TIMEOUT)
@@ -254,7 +254,7 @@ namespace qi
     _url = url;
     _connectPromise.reset();
     _disconnectPromise.reset();
-    _errno = 0;
+    _err = 0;
     const std::string      &address = _url.host();
     struct evutil_addrinfo *ai = NULL;
     struct evutil_addrinfo  hint;
@@ -343,10 +343,10 @@ namespace qi
 
     _status = qi::TransportSocket::Status_Disconnected;
     _disconnecting = false;
-    _self->disconnected(_errno);
+    _self->disconnected(_err);
     _disconnectPromise.setValue(0);
     if (_connecting)
-      _connectPromise.setError(strerror(_errno));
+      _connectPromise.setError(strerror(_err));
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)

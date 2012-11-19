@@ -50,7 +50,7 @@ namespace qi
 
   int TransportSocket::error() const
   {
-    return _p->_errno;
+    return _p->_err;
   }
 
   bool TransportSocket::isConnected() const

@@ -22,7 +22,7 @@ namespace qi
       : _self(self)
       , _eventLoop(eventLoop)
       , _dispatcher()
-      , _errno(0)
+      , _err(0)
       , _status(qi::TransportSocket::Status_Disconnected)
       , _url()
     {}
@@ -33,7 +33,7 @@ namespace qi
     qi::EventLoop*          _eventLoop;
     qi::MessageDispatcher   _dispatcher;
 
-    int                     _errno;
+    int                     _err;
     TransportSocket::Status _status;
     qi::Url                 _url;
   };
