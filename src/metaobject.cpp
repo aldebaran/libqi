@@ -11,7 +11,7 @@
 
 namespace qi {
 
-  qi::atomic<long> MetaObjectPrivate::uid = 1;
+  qi::Atomic<long> MetaObjectPrivate::uid = 1;
 
   MetaObjectPrivate::MetaObjectPrivate(const MetaObjectPrivate &rhs)
   {

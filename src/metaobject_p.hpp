@@ -76,9 +76,9 @@ namespace qi {
     MetaObject::SignalMap               _events;
     mutable boost::recursive_mutex      _eventsMutex;
 
-    qi::atomic<unsigned int>            _index;
+    qi::Atomic<unsigned int>            _index;
     // Global uid for event subscribers.
-    static qi::atomic<long> uid;
+    static qi::Atomic<long> uid;
     friend class TypeImpl<MetaObjectPrivate>;
     friend class TypeImpl<MetaObject>;
   };

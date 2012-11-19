@@ -53,7 +53,7 @@ namespace qi {
     enabled = b.enabled;
   }
 
-  static qi::atomic<long> linkUid = 1;
+  static qi::Atomic<long> linkUid = 1;
 
   void SignalBase::operator()(
       qi::AutoGenericValuePtr p1,
