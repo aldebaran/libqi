@@ -30,7 +30,8 @@ namespace qi {
       Type* targetType = typeOf<T>();
       std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
       if (!conv.first.type)
-        promise.setError("Unable to convert call result to target type");
+        promise.setError(std::string("Unable to convert call result to target type:")
+          + val.type->infoString() + " -> " + targetType->infoString());
       else
       {
         T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
