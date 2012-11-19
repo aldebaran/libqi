@@ -84,8 +84,13 @@ namespace qi {
     }
     try {
       return type->metaCall(value, method, params, callType);
-    } catch (std::runtime_error &e) {
+    } catch (const std::exception &e) {
       out.setError(e.what());
+      return out.future();
+    }
+    catch (...)
+    {
+      out.setError("Unknown exception caught");
       return out.future();
     }
   }

@@ -193,7 +193,18 @@ namespace qi
     }
     void operator()()
     {
-      out->setValue(func.call(params));
+      try
+      {
+        out->setValue(func.call(params));
+      }
+      catch(const std::exception& e)
+      {
+        out->setError(e.what());
+      }
+      catch(...)
+      {
+        out->setError("Unknown exception caught.");
+      }
       params.destroy(noCloneFirst);
       delete out;
     }
