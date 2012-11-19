@@ -53,7 +53,7 @@ namespace qi {
 
     std::map<long, ServicesRequest*>  _request;
     boost::mutex                      _requestMutex;
-    qi::atomic<long>                  _requestIndex;
+    qi::Atomic<long>                  _requestIndex;
 
     ServiceDirectoryClient *_sdClient;
     ObjectRegistrar        *_server;

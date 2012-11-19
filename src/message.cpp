@@ -22,7 +22,7 @@ namespace qi {
 
   unsigned int newMessageId()
   {
-    static qi::atomic<long> id(0);
+    static qi::Atomic<long> id(0);
     return ++id;
   }
 

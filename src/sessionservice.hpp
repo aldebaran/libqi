@@ -68,7 +68,7 @@ namespace qi {
   private:
     boost::mutex                    _requestsMutex;
     std::map<long, ServiceRequest*> _requests;
-    qi::atomic<long>                _requestsIndex;
+    qi::Atomic<long>                _requestsIndex;
 
     //maintain a cache of remote object
     typedef std::map<std::string, ObjectPtr> RemoteObjectMap;

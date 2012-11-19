@@ -16,7 +16,7 @@ namespace po = boost::program_options;
 #include <qitype/signal.hpp>
 #include <qiperf/dataperfsuite.hpp>
 
-qi::atomic<int> glob(0);
+qi::Atomic<int> glob(0);
 
 void foo()
 {

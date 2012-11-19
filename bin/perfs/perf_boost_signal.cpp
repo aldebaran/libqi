@@ -17,10 +17,10 @@ namespace po = boost::program_options;
 #include <qitype/signal.hpp>
 #include <qiperf/dataperfsuite.hpp>
 
-qi::atomic<int> glob(0);
+qi::Atomic<int> glob(0);
 
 // It's not atomic!!
-static inline void resetAtomic(qi::atomic<int>& val)
+static inline void resetAtomic(qi::Atomic<int>& val)
 {
   int value = *val;
   for (int i = 0; i < value; ++i)

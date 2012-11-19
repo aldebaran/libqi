@@ -78,7 +78,7 @@ namespace qi {
 
     //used by registerService
     RegisterServiceMap                  _registerServiceRequest;
-    qi::atomic<long>                    _registerServiceRequestIndex;
+    qi::Atomic<long>                    _registerServiceRequestIndex;
     boost::mutex                        _registerServiceRequestMutex;
 
     //no lock needed
