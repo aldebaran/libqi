@@ -163,6 +163,25 @@ namespace qi {
     delete handle;
   }
 
+  static void fduse_call(evutil_socket_t socket,
+    short what,
+    void *context)
+  {
+    EventLoop::AsyncCallHandle* handle = (EventLoop::AsyncCallHandle*)context;
+    if (!handle->_p->cancelled) {
+      if (what & EV_READ)
+        handle->_p->fdcallback(socket, EventLoop::FileOperation_Read);
+      else if (what & EV_WRITE)
+        handle->_p->fdcallback(socket, EventLoop::FileOperation_Write);
+      /// If this event is persistant and was not cancelled, do not delete.
+      if (handle->_p->persistant)
+        return;
+    }
+    event_del(handle->_p->ev);
+    event_free(handle->_p->ev);
+    delete handle;
+  }
+
   EventLoop::AsyncCallHandle EventLoopPrivate::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
     EventLoop::AsyncCallHandle res;
@@ -180,6 +199,28 @@ namespace qi {
     res._p->cancelled = false;
     std::swap(res._p->callback,cb);
     event_add(ev, &period);
+    return res;
+  }
+
+  EventLoop::AsyncCallHandle EventLoopPrivate::notifyFd(evutil_socket_t fd, EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant)
+  {
+    EventLoop::AsyncCallHandle res;
+    if (!_base) {
+      qiLogDebug("eventloop") << "Discarding notifyChange after loop destruction.";
+      return res;
+    }
+    if (persistant)
+      evflags |= EV_PERSIST;
+    struct event *ev = event_new(_base,
+                                 fd,
+                                 evflags,
+                                 fduse_call,
+                                 new EventLoop::AsyncCallHandle(res));
+    res._p->ev = ev;
+    res._p->cancelled = false;
+    res._p->persistant = persistant;
+    std::swap(res._p->fdcallback,cb);
+    event_add(ev, NULL);
     return res;
   }
 
@@ -244,6 +285,23 @@ namespace qi {
     boost::function<void ()> callback)
   {
     return _p->asyncCall(usDelay, callback);
+  }
+
+  EventLoop::AsyncCallHandle
+  EventLoop::notifyFd(int fileDescriptor,
+                      NotifyFdCallbackFunction callback,
+                      FileOperation fdUsage)
+  {
+    switch (fdUsage)
+    {
+      case FileOperation_Read:
+        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ, true);
+      case FileOperation_Write:
+        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_WRITE, true);
+      case FileOperation_ReadOrWrite:
+        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ|EV_WRITE, true);
+    }
+    return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ|EV_WRITE, true);
   }
 
   static void eventloop_stop(EventLoop* ctx)

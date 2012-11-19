@@ -18,7 +18,14 @@ namespace qi {
     void cancel() { cancelled = true;}
     bool cancelled;
     event* ev;
+    // Feature supported only in the case of fd monitoring.
+    // If true, callback will be called again and again.
+    // If false it will be called only once.
+    bool persistant;
+    // Callback used with asyncCall.
     boost::function<void()> callback;
+    // Callback used with notifyFd.
+    EventLoop::NotifyFdCallbackFunction fdcallback;
   };
 
   class EventLoopPrivate
@@ -31,6 +38,8 @@ namespace qi {
     void stop();
     EventLoop::AsyncCallHandle asyncCall(uint64_t usDelay,
       boost::function<void ()> callback);
+    EventLoop::AsyncCallHandle notifyFd(evutil_socket_t fd,
+      EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant);
     void destroy(bool join);
     event_base* getEventBase() { return _base;}
     void run();

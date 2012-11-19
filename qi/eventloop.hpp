@@ -57,8 +57,22 @@ namespace qi
       boost::shared_ptr<AsyncCallHandlePrivate> _p;
     };
 
+    enum QI_API FileOperation
+    {
+      FileOperation_Read = 1,
+      FileOperation_Write = 2,
+      FileOperation_ReadOrWrite = FileOperation_Read | FileOperation_Write
+    };
+
+    typedef boost::function<void(int, FileOperation)> NotifyFdCallbackFunction;
+
     /// Call given function once after given delay in microseconds.
     AsyncCallHandle asyncCall(uint64_t usDelay, boost::function<void ()> callback);
+    /// Call given function every time something happen on file
+    /// descriptor fileDescriptor. You can specify that the callback
+    /// will be called for every Read, every Write or for both Read
+    /// and Write operations, using condition variable.
+    AsyncCallHandle notifyFd(int fileDescriptor, NotifyFdCallbackFunction callback, FileOperation condition);
 
     EventLoopPrivate *_p;
   };
