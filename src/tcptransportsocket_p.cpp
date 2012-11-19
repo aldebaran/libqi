@@ -370,6 +370,8 @@ namespace qi
     if (_status != qi::TransportSocket::Status_Connected)
     {
       qiLogError("qimessaging.TcpTransportSocket") << "socket is not connected.";
+      if (allocated)
+        delete &msg;
       return false;
     }
 
