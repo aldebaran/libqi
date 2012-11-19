@@ -93,10 +93,10 @@ namespace qi
     _p->_object->metaObject()._p->setDescription(desc);
   }
 
-  ObjectPtr GenericObjectBuilder::object()
+  ObjectPtr GenericObjectBuilder::object(boost::function<void (GenericObject*)> onDelete)
   {
     if (!_p->_objptr)
-      _p->_objptr = makeDynamicObjectPtr(_p->_object, _p->_deleteOnDestroy);
+      _p->_objptr = makeDynamicObjectPtr(_p->_object, _p->_deleteOnDestroy, onDelete);
     return _p->_objptr;
   }
 

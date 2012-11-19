@@ -61,8 +61,8 @@ namespace qi {
     int xAdvertiseEvent(const std::string& signature);
 
     void setDescription(const std::string& desc);
+    qi::ObjectPtr object(boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
-    qi::ObjectPtr object();
   public:
     GenericObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(GenericObjectBuilder);
