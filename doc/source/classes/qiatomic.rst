@@ -1,1 +1,1 @@
-.. cpp:autoclass:: qi::atomic
+.. cpp:autoclass:: qi::Atomic

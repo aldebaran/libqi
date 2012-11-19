@@ -23,7 +23,7 @@ void f1(void)
   qi::os::sleep(2);
 }
 
-void f2(qi::atomic<unsigned int>& number)
+void f2(qi::Atomic<unsigned int>& number)
 {
   ++number;
 }
@@ -68,7 +68,7 @@ TEST(QiThreadPool, IncreaseAndDecreaseSize)
 
 TEST(QiThreadPool, MultipleTasks)
 {
-  qi::atomic<unsigned int> number;
+  qi::Atomic<unsigned int> number;
   qi::ThreadPool* pool = new qi::ThreadPool(4, 8);
 
   qi::os::sleep(1);
@@ -85,7 +85,7 @@ TEST(QiThreadPool, MultipleTasks)
 
 TEST(QiThreadPool, MultipleTasksWithResize)
 {
-  qi::atomic<unsigned int> number;
+  qi::Atomic<unsigned int> number;
   qi::ThreadPool* pool = new qi::ThreadPool(1, 1, 1, 1);
 
   qi::os::sleep(1);

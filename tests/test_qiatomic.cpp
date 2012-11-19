@@ -16,12 +16,12 @@ void test_type()
   T max = std::numeric_limits<T>::max();
   T min = std::numeric_limits<T>::min();
 
-  qi::atomic<T> n(max);
+  qi::Atomic<T> n(max);
   EXPECT_EQ(*n, max);
   ++n;
   EXPECT_EQ(*n, min);
 
-  qi::atomic<T> m(min);
+  qi::Atomic<T> m(min);
   EXPECT_EQ(*m, min);
   --m;
   EXPECT_EQ(*m, max);

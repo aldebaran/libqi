@@ -1,5 +1,5 @@
 /**
- * \class qi::atomic
+ * \class qi::Atomic
  * \includename{qi/atomic.hpp}
  * \brief Atomic operations on integers.
  *
@@ -14,27 +14,27 @@
  */
 
 /**
- * \fn qi::atomic::atomic()
+ * \fn qi::Atomic::Atomic()
  * \brief Default atomic constructor, setting value to 0.
  */
 
 /**
- * \fn qi::atomic::atomic(T)
+ * \fn qi::Atomic::Atomic(T)
  * \brief Atomic constructor setting value to its parameter.
  * \param value The default value of the atomic.
  */
 
 /**
- * \fn qi::atomic::operator++()
+ * \fn qi::Atomic::operator++()
  * \brief Atomic increment of the value.
  */
 
 /**
- * \fn qi::atomic::operator--()
+ * \fn qi::Atomic::operator--()
  * \brief Atomic decement of the value.
  */
 
 /**
- * \fn qi::atomic::operator*()
+ * \fn qi::Atomic::operator*()
  * \brief Returns the current value of the atomic.
  */

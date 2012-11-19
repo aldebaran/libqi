@@ -20,7 +20,7 @@ namespace qi
   public:
     SharedPtr(T *ptr)
       : _ptr(ptr)
-      , _refcount(new qi::atomic<long>(1))
+      , _refcount(new qi::Atomic<long>(1))
     {
     }
 
@@ -87,7 +87,7 @@ namespace qi
 
   private:
     T                *_ptr;
-    qi::atomic<long> *_refcount;
+    qi::Atomic<long> *_refcount;
   };
 }
 

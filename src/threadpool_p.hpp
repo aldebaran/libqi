@@ -33,8 +33,8 @@ namespace qi
       void waitForAll();
 
       std::map<boost::thread::id, boost::thread*> _threadsMap;
-      qi::atomic<unsigned int>                    _activeWorkers;
-      qi::atomic<unsigned int>                    _workers;
+      qi::Atomic<unsigned int>                    _activeWorkers;
+      qi::Atomic<unsigned int>                    _workers;
       unsigned int                                _minWorkers;
       unsigned int                                _maxWorkers;
       unsigned int                                _minIdleWorkers;

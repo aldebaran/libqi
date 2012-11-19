@@ -12,14 +12,14 @@
 
 #include <boost/bind.hpp>
 
-void f2(qi::atomic<unsigned int>& number)
+void f2(qi::Atomic<unsigned int>& number)
 {
   ++number;
 }
 
 TEST(QiThreadPool, IntenseThreadCreationAndDestruction)
 {
-  qi::atomic<unsigned int> number;
+  qi::Atomic<unsigned int> number;
   qi::ThreadPool* pool = new qi::ThreadPool(0, 100, 0, 0);
   boost::function<void()> test = boost::bind(&f2, boost::ref(number));
 

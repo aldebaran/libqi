@@ -31,15 +31,15 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 namespace qi
 {
   template <typename T>
-  class atomic
+  class Atomic
   {
   public:
-    atomic()
+    Atomic()
       : _value(0)
     {
     }
 
-    atomic(T value)
+    Atomic(T value)
       : _value(value)
     {
     }
@@ -59,13 +59,13 @@ namespace qi
 
 #ifdef __GNUC__
     template <typename T>
-    T atomic<T>::operator++()
+    T Atomic<T>::operator++()
     {
       return __sync_add_and_fetch(&_value, 1);
     }
 
     template <typename T>
-    T atomic<T>::operator--()
+    T Atomic<T>::operator--()
     {
       return __sync_sub_and_fetch(&_value, 1);
     }
@@ -74,96 +74,96 @@ namespace qi
 #ifdef _MSC_VER
 
   template<>
-  inline short atomic<short>::operator++()
+  inline short Atomic<short>::operator++()
   {
     return _InterlockedIncrement16(&_value);
   }
 
   template<>
-  inline short atomic<short>::operator--()
+  inline short Atomic<short>::operator--()
   {
     return _InterlockedDecrement16(&_value);
   }
 
   template<>
-  inline unsigned short atomic<unsigned short>::operator++()
+  inline unsigned short Atomic<unsigned short>::operator++()
   {
     return _InterlockedIncrement16(reinterpret_cast<short*>(&_value));
   }
 
   template<>
-  inline unsigned short atomic<unsigned short>::operator--()
+  inline unsigned short Atomic<unsigned short>::operator--()
   {
     return _InterlockedDecrement16(reinterpret_cast<short*>(&_value));
   }
 
   template <>
-  inline long atomic<long>::operator++()
+  inline long Atomic<long>::operator++()
   {
     return _InterlockedIncrement(&_value);
   }
 
   template <>
-  inline long atomic<long>::operator--()
+  inline long Atomic<long>::operator--()
   {
     return _InterlockedDecrement(&_value);
   }
 
   template <>
-  inline unsigned long atomic<unsigned long>::operator++()
+  inline unsigned long Atomic<unsigned long>::operator++()
   {
     return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
   }
 
   template <>
-  inline unsigned long atomic<unsigned long>::operator--()
+  inline unsigned long Atomic<unsigned long>::operator--()
   {
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
   template <>
-  inline int atomic<int>::operator++()
+  inline int Atomic<int>::operator++()
   {
     return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
   }
 
   template <>
-  inline int atomic<int>::operator--()
+  inline int Atomic<int>::operator--()
   {
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
 
   template <>
-  inline unsigned int atomic<unsigned int>::operator++()
+  inline unsigned int Atomic<unsigned int>::operator++()
   {
     return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
   }
 
   template <>
-  inline unsigned int atomic<unsigned int>::operator--()
+  inline unsigned int Atomic<unsigned int>::operator--()
   {
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
 
   template <>
-  inline long long atomic<long long>::operator++()
+  inline long long Atomic<long long>::operator++()
   {
     return InterlockedIncrement64(&_value);
   }
 
   template <>
-  inline long long atomic<long long>::operator--()
+  inline long long Atomic<long long>::operator--()
   {
     return InterlockedDecrement64(&_value);
   }
 
   template <>
-  inline unsigned long long atomic<unsigned long long>::operator++()
+  inline unsigned long long Atomic<unsigned long long>::operator++()
   {
     return InterlockedIncrement64(reinterpret_cast<long long*>(&_value));
   }
 
   template <>
-  inline unsigned long long atomic<unsigned long long>::operator--()
+  inline unsigned long long Atomic<unsigned long long>::operator--()
   {
     return InterlockedDecrement64(reinterpret_cast<long long*>(&_value));
   }
