@@ -23,6 +23,7 @@ namespace qi
   class DynamicObjectPrivate
   {
   public:
+    ~DynamicObjectPrivate();
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
     bool                                dying;
@@ -32,6 +33,12 @@ namespace qi
     MethodMap           methodMap;
     MetaObject          meta;
   };
+
+  DynamicObjectPrivate::~DynamicObjectPrivate()
+  {
+    for (SignalMap::iterator it = signalMap.begin(); it!= signalMap.end(); ++it)
+      delete it->second;
+  }
 
   SignalBase* DynamicObjectPrivate::createSignal(unsigned int id)
   {
