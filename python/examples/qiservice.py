@@ -8,9 +8,9 @@
 import sys
 import qimessaging
 
-from qimessaging import Application
-from qimessaging import Session
-from qimessaging import ObjectBuilder
+from qimessaging.application import Application
+from qimessaging.session import Session
+from qimessaging.objectbuilder import ObjectBuilder
 
 def service_reply(string):
     """ Famous reply::s(s) function

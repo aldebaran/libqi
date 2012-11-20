@@ -8,20 +8,29 @@
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessagingswig import servicedirectory
+from qimessaging.binder import bind, nobind
 
 class  RandomClass:
     """ Sample class for Python autobind
     """
 
+    # Bound with a custom signature
+    @bind("s(i)")
     def foo(self, integer):
         """ Return Foo
         """
         return "Foo"
 
+    # Bind this method with default parameters
     def bar(self):
         """ Return bar!
         """
         return "bar!"
+
+    # Do not bind this method
+    @nobind
+    def myPrivateFunction(self):
+      pass
 
 def test_registerclass():
     """ Instanciate qimessaging session and bind RandomClass instance

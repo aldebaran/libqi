@@ -10,9 +10,11 @@
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessaging.objectbuilder import ObjectBuilder
+from qimessaging.binder import bind
 from qimessagingswig import servicedirectory
 
-def _reply(string):
+@bind("s(s)")
+def reply():
     """ Famous reply function
     Sig :: reply::s(s)
     """
@@ -33,7 +35,7 @@ def test_proxy():
     print "so long ?"
     #3 bind all methods to object builder.
     builder = ObjectBuilder()
-    builder.register_method("reply::s(s)", _reply)
+    builder.register_method(reply)
     print "be ready"
     #4 Create instance (aka Object) of service
     obj = builder.object()

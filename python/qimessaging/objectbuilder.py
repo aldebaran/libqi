@@ -12,6 +12,7 @@ To create an object instance : ObjectBuilder.object()
 """
 
 import _qimessagingswig
+import qimessaging.binder as binder
 from qimessaging.genericobject import GenericObject
 
 class ObjectBuilder:
@@ -34,9 +35,13 @@ class ObjectBuilder:
             return None
         return GenericObject(obj)
 
-    def register_method(self, signature, method):
+    def register_method(self, method):
         """ Register given function on object builder.
         """
+        signature = binder.getFunctionSignature(method)
+        if (signature is None):
+          print "No signature can be found for this method"
+          return
         _qimessagingswig.qi_bind_method(self._builder, signature, method)
 
     def __del__(self):

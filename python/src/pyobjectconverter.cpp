@@ -305,7 +305,7 @@ public:
   {
     qi::GenericValuePtr res = GenericValue_from_PyObject(*((PyObject**)ptrFromStorage(&storage)));
 
-    return std::make_pair(res, true);
+    return std::make_pair(res, false);
   }
 
   virtual void set(void** storage, qi::GenericValuePtr src)

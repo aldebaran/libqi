@@ -20,6 +20,7 @@ Only connected to service directory, get services from other applications.
 """
 
 import _qimessagingswig
+import qimessaging.binder as binder
 from qimessaging.genericobject import GenericObject
 
 class ConnectionError(Exception):
@@ -68,8 +69,8 @@ class Session:
     def register_object(self, name, obj):
         """ Register given Python class instance
         """
-        attr = dir(obj)
-        return _qimessagingswig.py_session_register_object(self._session, name, obj, attr)
+        functionsList = binder.buildFunctionListFromObject(obj)
+        return _qimessagingswig.py_session_register_object(self._session, name, obj, functionsList)
 
 
     def register_service(self, name, obj):

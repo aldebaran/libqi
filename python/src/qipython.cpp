@@ -173,7 +173,7 @@ PyObject* qi_object_methods_vector(qi_object_t *object)
 
 unsigned int py_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr)
 {
-  PyObject *iter, *method, *attribute;
+  PyObject *iter, *method, *attribute, *sig;
 
   // Check if object is a class
   if (PyInstance_Check(object) == false)
@@ -197,13 +197,13 @@ unsigned int py_session_register_object(qi_session_t *session, char *name, PyObj
   // For each attribute of class
   while ((attribute = PyIter_Next(iter)))
   {
-    method = PyObject_GetAttr(object, attribute);
+    method = PyTuple_GetItem(attribute, 0);
+    sig = PyTuple_GetItem(attribute, 1);
+
     // register method using code of qi_object_builder_register_method
     if (PyMethod_Check(method) == true)
     {
-      std::string signature(PyString_AsString(attribute));
-      // Fixme : Need full signature...
-      signature.append("::x()");
+      std::string signature(PyString_AsString(sig));
 
       qi_bind_method((qi_object_builder_t*) &ob, signature.c_str(), method);
     }

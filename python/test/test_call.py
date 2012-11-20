@@ -10,51 +10,59 @@
 from qimessaging.application import Application
 from qimessaging.session import Session
 from qimessaging.objectbuilder import ObjectBuilder
+from qimessaging.binder import bind
 from qimessagingswig import servicedirectory
 
-def _ping():
+@bind("s()")
+def ping():
     """ Ping method, return 'pong' string.
     Sig : ping::s()
     """
     print "_ping : PONG !"
     return "pong"
 
-def _pingv():
+@bind("v()")
+def pingv():
     """ Ping method, do nothing.
     Sig : ping::v()
     """
     print "_pingv : PONG !"
     pass
 
-def _add(a, b):
+@bind("d(dd)")
+def add(a, b):
     """ Simple addition method
     Sig : add::d(dd) / add::d(id)
     """
     print '%f + %f = %f' % (a, b, a + b)
     return float(a) + float(b)
 
-def _addi(a, b):
+@bind("i(ii)")
+def addi(a, b):
     """ Simple addition method
     Sig : add::i(ii)
     """
     print '%d + %d = %d' % (a, b, a + b)
     return a + b
 
-def _sub(a, b):
+@bind("i(ii)")
+def sub(a, b):
     """ Simple addition method
     Sig : sub::i(iis) / sub::i(ii)
     """
     print '%d - %d = %d' % (a, b, a - b)
     return a - b
 
-def _sub_message(a, b, m):
+@bind("i(iis)")
+def sub_message(a, b, m):
     """ Simple addition method
     Sig : sub::i(iis) / sub::i(ii)
     """
     print 'Message : "%s". %d - %d = %d' % (m, a, b, a - b)
     return a - b
 
-def _reply(string):
+@bind("s(s)")
+def reply(string):
     """ Famous reply function
     Sig :: reply::s(s)
     """
@@ -62,7 +70,8 @@ def _reply(string):
     ret =  "%sbim" % string
     return ret
 
-def _split(string, separator):
+@bind("[s](ss)")
+def split(string, separator):
     """ Split string with given separator
     Sig : split::[s](ss)
     """
@@ -71,28 +80,33 @@ def _split(string, separator):
     print ret
     return ret
 
-def _biggest_average(value1, value2):
+@bind("i([f][f])")
+def biggest_average(value1, value2):
     """ Compute average of 2 floating list and return 1 or 2.
     Sig : biggestAverage::i([f][f])
     """
     pass
 
-def _print(r):
+@bind("i((ssi))")
+def myprint(r):
     """ Elegant print information about a robot stored in a tuple
-    Sig : print::b((ssi))
+    Sig : print::i((ssi))
     """
     print "Robot %s, category %s, serial number %d" % (r[0], r[1], r[2])
+    return 0
 
-def _printList(robots):
+@bind("v([(ssi)])")
+def printList(robots):
     """ Elegant print information about a list of robots stored in a tuple
     Sig : print::v([(ssi)])
     """
     for robot in robots:
-        _print(robot)
+        print(robot)
 
     return len(robots)
 
-def _get_robots():
+@bind("{s(ssi)}()")
+def get_robots():
     """ Getter on a map of robots"
     Sig : robots::{s(ssi)}()
     """
@@ -112,18 +126,18 @@ def test_call():
 
     # Bind all methods to object builder.
     builder = ObjectBuilder()
-    builder.register_method("reply::s(s)", _reply)
-    builder.register_method("ping::s()", _ping)
-    builder.register_method("pingv::v()", _pingv)
-    builder.register_method("add::i(ii)", _addi)
-    builder.register_method("add::f(ff)", _add)
-    builder.register_method("sub::i(ii)", _sub)
-    builder.register_method("sub::i(iis)", _sub_message)
-    builder.register_method("split::[s](ss)", _split)
-    builder.register_method("biggestAverage::i([f][f])", _biggest_average)
-    builder.register_method("print::v((ssi))", _print)
-    builder.register_method("print::i([(ssi)])", _printList)
-    builder.register_method("robots::{s(ssi)}()", _get_robots)
+    builder.register_method(reply)
+    builder.register_method(ping)
+    builder.register_method(pingv)
+    builder.register_method(addi)
+    builder.register_method(add)
+    builder.register_method(sub)
+    builder.register_method(sub_message)
+    builder.register_method(split)
+    builder.register_method(biggest_average)
+    builder.register_method(myprint)
+    builder.register_method(printList)
+    builder.register_method(get_robots)
 
     # Create instance (aka Object) of service
     obj = builder.object()
@@ -164,7 +178,7 @@ def test_call():
     retSub = proxy.call("sub", 3, 2)
     assert retSub == 1
     print "\nTest #5.2"
-    retSub2 = proxy.call("sub", 5, 2, "yolo")
+    retSub2 = proxy.call("sub_message", 5, 2, "yolo")
     assert retSub2 == 3
 
     # Assert complex return value works (List).
@@ -178,12 +192,12 @@ def test_call():
     # Assert complex parameter works (Tuple).
     print '\nTest #7 : Calling print(("Gibouna", "Nao", 2345223))'
     robot = ("Gibouna", "Nao", 23443234)
-    proxy.call("print", robot)
+    proxy.call("myprint", robot)
 
     # Assert complex recursive parameters works (List of tuple).
     print '\nTest #8 : Calling print(robot_list)'
     robot_list = [("Gibouna", "Nao", 23443234), ("Billy West", "Nao", 123456), ("Wall-E", "Garbage Collector", 55555505)]
-    robot_number = proxy.call("print", robot_list)
+    robot_number = proxy.call("printList", robot_list)
 
     # Cleanup
     print "Cleanup..."

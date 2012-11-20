@@ -20,7 +20,7 @@ set(WITH_DOTNET OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 option(WITH_QT       "Qt support"       OFF)
-option(WITH_PYTHON   "Python bindings"  OFF)
+option(WITH_PYTHON   "Python bindings"   ON)
 
 qi_add_optional_package(QISSH)
 
