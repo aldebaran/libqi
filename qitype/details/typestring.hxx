@@ -32,7 +32,7 @@ namespace qi
     virtual void set(void** storage, const char* value, size_t sz)
     {
       std::string* ptr = (std::string*)Methods::ptrFromStorage(storage);
-      *ptr = std::string(value, sz);
+      ptr->assign(value, sz);
     }
 
     _QI_BOUNCE_TYPE_METHODS(Methods);

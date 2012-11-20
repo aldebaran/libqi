@@ -38,11 +38,16 @@ namespace qi
                                                  static_cast<TypeInt*>(type)->get(value));
           return std::make_pair(result, true);
         case Type::String:
-          result.type = targetType;
-          result.value = targetType->initializeStorage();
-          static_cast<TypeString*>(targetType)->set(&result.value,
-                                                    static_cast<TypeString*>(type)->getString(value));
-          return std::make_pair(result, true);
+          {
+            if (targetType->info() == type->info())
+              return std::make_pair(*this, false);
+            result.type = targetType;
+            result.value = targetType->initializeStorage();
+            std::pair<char*, size_t> v = static_cast<TypeString*>(type)->get(value);
+            static_cast<TypeString*>(targetType)->set(&result.value,
+                                                      v.first, v.second);
+            return std::make_pair(result, true);
+          }
         case Type::List:
         {
           result.type = targetType;
