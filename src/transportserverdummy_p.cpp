@@ -21,7 +21,7 @@ namespace qi
 
   void TransportServerDummyPrivate::close()
   {
-    qiLogWarning("TransportServer") << "close: You are currently running on dummy"
+    qiLogVerbose("TransportServer") << "close: You are currently running on dummy"
                                     << " TransportServer!";
   }
 
