@@ -8,18 +8,18 @@
 
 #include "qipython_signal.hpp"
 
-signal::signal()
+qi_signal::qi_signal()
   : _callbackMap(),
     _sig (qi::Signal<void (std::vector<PyObject*>)>())
 {
 }
 
-signal::~signal()
+qi_signal::~qi_signal()
 {
   disconnectAll();
 }
 
-unsigned int signal::connect(PyObject* python_callback)
+unsigned int qi_signal::connect(PyObject* python_callback)
 {
   if (!PyCallable_Check(python_callback))
   {
@@ -28,13 +28,13 @@ unsigned int signal::connect(PyObject* python_callback)
   }
 
   Py_XINCREF(python_callback);
-  unsigned int id = _sig.connect(boost::bind(&signal::callback, this, python_callback, _1));
+  unsigned int id = _sig.connect(boost::bind(&qi_signal::callback, this, python_callback, _1));
   _callbackMap[id] = python_callback;
 
   return id;
 }
 
-bool signal::disconnect(unsigned int link)
+bool qi_signal::disconnect(unsigned int link)
 {
   std::map<unsigned int, PyObject*>::iterator it = _callbackMap.find(link);
 
@@ -49,7 +49,7 @@ bool signal::disconnect(unsigned int link)
   return res;
 }
 
-bool signal::disconnectAll()
+bool qi_signal::disconnectAll()
 {
   bool res = _sig.disconnectAll();
 
@@ -63,7 +63,7 @@ bool signal::disconnectAll()
   return res;
 }
 
-void signal::trigger(PyObject* arg0,
+void qi_signal::trigger(PyObject* arg0,
                      PyObject* arg1,
                      PyObject* arg2,
                      PyObject* arg3,
@@ -91,7 +91,7 @@ void signal::trigger(PyObject* arg0,
 }
 
 
-void signal::callback(PyObject* callback, const std::vector<PyObject*>& args)
+void qi_signal::callback(PyObject* callback, const std::vector<PyObject*>& args)
 {
   PyObject* ret;
   PyGILState_STATE gstate;

@@ -13,11 +13,11 @@
 
 # include <qitype/signal.hpp>
 
-class signal
+class qi_signal
 {
   public:
-    signal();
-    ~signal();
+    qi_signal();
+    ~qi_signal();
 
     unsigned int connect(PyObject* callback);
     bool disconnect(unsigned int);
