@@ -22,5 +22,5 @@
 %include <src/converter_testwrap.hpp>
 
 // Avoid generating a different wrapper for every default argument
-%feature("compactdefaultargs") signal::trigger;
+%feature("compactdefaultargs") qi_signal::trigger;
 %include <src/qipython_signal.hpp>

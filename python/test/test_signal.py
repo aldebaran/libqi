@@ -34,7 +34,7 @@ def test_signal():
   app = py_application_create(sys.argv)
   sub1 = subscriber()
   sub2 = subscriber()
-  mysignal = signal()
+  mysignal = qi_signal()
 
   print "\nTest #1 : Multiple subscribers to signal"
   callback = sub1.callback
