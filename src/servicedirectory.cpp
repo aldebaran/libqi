@@ -70,6 +70,7 @@ namespace qi
     std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
     it = socketToIdx.find(socket);
     if (it == socketToIdx.end()) {
+      ServiceBoundObject::onSocketDisconnected(socket, error);
       return;
     }
     // Copy the vector, iterators will be invalidated.
