@@ -27,6 +27,7 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 #endif
 
 #include <qi/config.hpp>
+#include <qi/macro.hpp>
 
 namespace qi
 {
@@ -169,6 +170,14 @@ namespace qi
   }
 
 #endif
+
+  template<typename T>
+  QI_API_DEPRECATED class atomic : public Atomic<T>
+  {
+  public:
+    atomic() : Atomic<T>() {}
+    atomic(T value) : Atomic<T>(value) {}
+  };
 }
 
 #endif // _LIBQI_QI_ATOMIC_HPP_

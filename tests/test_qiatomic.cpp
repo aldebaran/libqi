@@ -10,21 +10,30 @@
 #include <limits>
 #include <qi/types.hpp>
 
-template <typename T>
-void test_type()
+template<template <typename> class A, typename T>
+void sub_test_type()
 {
   T max = std::numeric_limits<T>::max();
   T min = std::numeric_limits<T>::min();
 
-  qi::Atomic<T> n(max);
+  A<T> n(max);
   EXPECT_EQ(*n, max);
   ++n;
   EXPECT_EQ(*n, min);
 
-  qi::Atomic<T> m(min);
+  A<T> m(min);
   EXPECT_EQ(*m, min);
   --m;
   EXPECT_EQ(*m, max);
+}
+
+template <typename T>
+void test_type()
+{
+  // new API
+  sub_test_type<qi::Atomic, T>();
+  // legacy API
+  sub_test_type<qi::atomic, T>();
 }
 
 #ifndef _MSC_VER
