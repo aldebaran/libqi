@@ -41,8 +41,6 @@ namespace qi {
     bool isConnected() const;
     qi::Url url() const;
 
-    bool waitForServiceReady(const std::string &service, int msecs = 30000);
-
     qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
     qi::Future< qi::ObjectPtr > service(const std::string &service,

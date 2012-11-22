@@ -169,7 +169,6 @@ TEST(TestTestSession, TestSameObject)
 
   // #2 Bind object on server session;
   unsigned int id = p.server()->registerService("Incr", obj);
-  p.server()->waitForServiceReady("Incr");
   ASSERT_NE((unsigned int) 0, id);
 
   // #3 Get proxy to Incr service.
@@ -201,7 +200,6 @@ TEST(TestTestSession, TestThroughSD)
 
   // #2.2 Bind object to session.
   unsigned int id = p.server()->registerService("Incr", obj);
-  p.server()->waitForServiceReady("Incr");
   ASSERT_NE((unsigned int) 0, id);
 
   // #3.1 Get client session from TestSession.

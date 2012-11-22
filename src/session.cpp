@@ -24,7 +24,6 @@ namespace qi {
     , _serverObject(&_sdClient)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
-    , _watcher(session)
   {
     _sdClientConnectedLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
     _sdClientDisconnectedLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
@@ -111,10 +110,6 @@ namespace qi {
 
   qi::Url Session::url() const {
     return _p->_sdClient.url();
-  }
-
-  bool Session::waitForServiceReady(const std::string &service, int msecs) {
-    return _p->_watcher.waitForServiceReady(service, msecs);
   }
 
   //3 cases:

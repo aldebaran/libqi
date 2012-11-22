@@ -18,7 +18,6 @@
 #include <qimessaging/session.hpp>
 #include <qitype/signal.hpp>
 #include "serverresult.hpp"
-#include "servicewatcher.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
 #include "sessionservice.hpp"
@@ -55,7 +54,6 @@ namespace qi {
     ObjectRegistrar        _serverObject;
     Session_Service        _serviceHandler;
     Session_Services       _servicesHandler;
-    ServiceWatcher         _watcher;
     TransportSocketCache   _socketsCache;
   };
 }

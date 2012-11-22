@@ -91,7 +91,6 @@ TEST(QiSession, testClose)
   // Wait for service id, otherwise register is asynchronous.
   qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
   ASSERT_FALSE(idx.hasError());
-  ASSERT_TRUE(session.waitForServiceReady("serviceTest"));
 
   qi::ObjectPtr object = session.service("serviceTest");
   EXPECT_TRUE(object);
@@ -115,9 +114,7 @@ TEST(QiSession, getSimpleService)
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
-  // Wait for service id, otherwise register is asynchronous.
-  pair.server()->registerService("serviceTest", obj).wait();
-  ASSERT_TRUE(pair.server()->waitForServiceReady("serviceTest"));
+  pair.server()->registerService("serviceTest", obj);
 
   qi::ObjectPtr object = pair.server()->service("serviceTest");
   EXPECT_TRUE(object);
@@ -144,7 +141,6 @@ TEST(QiSession, getCloseService)
   qi::ObjectPtr obj(ob.object());
 
   p.server()->registerService("serviceTest", obj);
-  p.server()->waitForServiceReady("serviceTest");
   p.server()->close();
 
   // Todo later, expect same behavior.
