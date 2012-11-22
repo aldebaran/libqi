@@ -17,6 +17,7 @@
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/find_if.hpp>
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/pop_front.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/max_element.hpp>
@@ -26,6 +27,7 @@
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
+#include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
@@ -174,16 +176,33 @@ namespace qi
   } // namespace detail
 
 
+  template<typename T, int arity> struct SafePopFront
+  {
+    typedef typename boost::mpl::pop_front<T>::type type;
+  };
+
+  template<typename T> struct SafePopFront<T, 0>
+  {
+    typedef T type;
+  };
+
   template<typename T> class FunctionTypeImpl:
   public FunctionType
   {
   public:
-    FunctionTypeImpl()
+    FunctionTypeImpl(bool isMethod = false)
     {
       _resultType = typeOf<typename boost::function_types::result_type<T>::type >();
 
       typedef typename boost::function_types::parameter_types<T>::type ArgsType;
       // Detect and warn about non-const reference arguments
+      if (isMethod) // skip first argument. Runtime switch so cant pop_front directly
+        boost::mpl::for_each<
+         boost::mpl::transform_view<
+           typename SafePopFront<ArgsType, boost::function_types::function_arity<T>::value>::type,
+           detail::Ident<boost::mpl::_1>
+           > >(detail::checkForNonConstRef());
+      else
       boost::mpl::for_each<
          boost::mpl::transform_view<ArgsType,
            detail::Ident<boost::mpl::_1>
