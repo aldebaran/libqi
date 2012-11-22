@@ -67,8 +67,12 @@ namespace qi {
     SignalMap::iterator it;
     it = _signalMap.find(serviceId);
     if (it != _signalMap.end())
-      //TODO: cleanup empty signal in the map
-      return it->second.disconnect(linkId);
+    {
+      bool ok = it->second.disconnect(linkId);
+      if (it->second.subscribers().empty())
+        _signalMap.erase(it);
+      return ok;
+    }
     return false;
   }
 
