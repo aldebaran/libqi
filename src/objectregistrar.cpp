@@ -131,6 +131,11 @@ namespace qi {
       BoundServiceMap::iterator it = _services.find(idx);
       if (it != _services.end()) {
         name = it->second.name;
+        if (!it->second.object.unique())
+        {
+          qiLogInfo("qimessaging.Server") << "Some references to service #" << idx
+                                          << " are still held!";
+        }
         _services.erase(it);
       } else {
         qiLogVerbose("qimessaging.Server") << "Can't find name associated to id:" << idx;
