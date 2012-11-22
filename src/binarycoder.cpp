@@ -329,7 +329,7 @@ namespace qi {
 
       void visitVoid(Type*)
       {
-        qiLogError("qi.type") << "serialize() called on void";
+        // Not an error, makes sense if encapsulated in a Dynamic for instance
       }
 
       void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
