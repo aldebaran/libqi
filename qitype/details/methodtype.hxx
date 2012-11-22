@@ -55,8 +55,9 @@ namespace qi
   public:
     MethodTypeImpl()
     {
+      _functionType = new FunctionTypeImpl<T>(true);
       // Fill in callable info
-      *(CallableType*)this = FunctionTypeImpl<T>();
+      *(CallableType*)this = *_functionType;
     }
     void* call(void* method, void* object,
      void** args, unsigned int argc)
@@ -92,8 +93,9 @@ namespace qi
     }
     FunctionType* toFunctionType()
     {
-      return makeFunctionType<T>();
+      return _functionType;
     }
+    FunctionType* _functionType;
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<boost::function<T> >);
   };
 
@@ -135,12 +137,10 @@ namespace qi
       typedef typename detail::MethodToFunctionTrait<T>::type Linearized;
       boost::function<Linearized> f = method;
 
-      GenericFunction fv = makeGenericFunction(f);
       GenericMethod result;
-      result.value = fv.value;
       result.type = methodTypeOf<Linearized>();
-      fv.type = 0;
-      fv.value = 0; // we steal his value
+      result.value = result.type->clone(result.type->initializeStorage(&f));
+
       return result;
     }
 
