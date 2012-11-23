@@ -1,13 +1,9 @@
-API
----
+LibQi Documentation
+-------------------
+
+:doc:`API Reference <api/index>`
 
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
-    classes/index
-    headers/index
-    namespaces/index
-    structures/index
-
-- :doc:`/cpp-classindex`
-- :doc:`/cpp-funcindex`
+    api/index
