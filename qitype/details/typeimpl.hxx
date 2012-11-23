@@ -24,6 +24,8 @@ namespace qi
     static void createInPlace(void* ptr) { new(ptr)T();}
     static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
     static void destroy(void* ptr) { delete (T*)ptr;}
+    static void* clone(void* src) { return new T(*(T*)src);}
+    static void cloneInPlace(void* ptr, void* src) { new (ptr)T(*(T*)src);}
   };
   template<typename T> struct TypeManagerDefault<const T>: public TypeManagerDefault<T>{};
   template<typename T>
@@ -33,6 +35,8 @@ namespace qi
     static void createInPlace(void* ptr) {typeFail(typeid( T).name(), "default constructor");}
     static void copy(void* dst, const void* src) { *(T*)dst = *(const T*)src;}
     static void destroy(void* ptr) { delete (T*)ptr;}
+    static void* clone(void* src) { return new T(*(T*)src);}
+    static void cloneInPlace(void* ptr, void* src) { new (ptr)T(*(T*)src);}
   };
   template<typename T>
   struct TypeManagerNull
@@ -43,6 +47,8 @@ namespace qi
     static void copy(const T1& d, const T2&s) {typeFail(typeid(T).name(), "copy operator");}
     template<typename U>
     static void destroy(const U& ptr) {typeFail(typeid(T).name(), "destructor");}
+    static void* clone(void* src) { typeFail(typeid(T).name(), "clone"); return 0;}
+    static void cloneInPlace(void* ptr, void* src) { typeFail(typeid(T).name(), "clone");}
   };
 
   // TypeManager is accessed by this interface. By default, everything is
@@ -85,12 +91,7 @@ public:
   }
   static void* clone(void* src)
   {
-    // Using const here produces a warning when it does not apply
-    T* ptr = (T*)ptrFromStorage(&src);
-    void* res = initializeStorage();
-    T* tres = (T*)ptrFromStorage(&res);
-    detail::TypeManager<type>::copy(tres, ptr);
-    return res;
+    return detail::TypeManager<T>::clone(src);
   }
   static void destroy(void* src)
   {
@@ -124,9 +125,9 @@ public:
   }
   static void* clone(void* src)
   {
-    void* s = initializeStorage();
-    detail::TypeManager<T>::copy(&s, &src);
-    return s;
+    void* res;
+    detail::TypeManager<T>::cloneInPlace(&res, (T*)&src);
+    return res;
   }
 
   static void destroy(void* storage)
