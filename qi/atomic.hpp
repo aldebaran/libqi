@@ -47,10 +47,10 @@ namespace qi
     }
 
     /* prefix operators */
-    T operator++();
-    T operator--();
+    inline T operator++();
+    inline T operator--();
 
-    T operator*()
+    inline T operator*()
     {
       return _value;
     }
@@ -61,13 +61,13 @@ namespace qi
 
 #ifdef __GNUC__
     template <typename T>
-    T Atomic<T>::operator++()
+    inline T Atomic<T>::operator++()
     {
       return __sync_add_and_fetch(&_value, 1);
     }
 
     template <typename T>
-    T Atomic<T>::operator--()
+    inline T Atomic<T>::operator--()
     {
       return __sync_sub_and_fetch(&_value, 1);
     }

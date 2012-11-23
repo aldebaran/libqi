@@ -75,7 +75,7 @@ TEST(QiAtomic, qiint32)
  * - Another CPU
  * - An outdated compiler on a 32 bit OS
  */
-#ifdef __LP64__
+#if defined __LP64__ || WINVER > 0x502 // Windows Server 2003
 TEST(QiAtomic, qiuint64)
 {
   test_type<qi::uint64_t>();
