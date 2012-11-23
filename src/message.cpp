@@ -33,6 +33,13 @@ namespace qi {
     header.magic = qi::MessagePrivate::magic;
   }
 
+  MessagePrivate::MessagePrivate(const MessagePrivate& b)
+  : buffer(b.buffer)
+  , signature(b.signature)
+  , header(b.header)
+  {
+  }
+
   MessagePrivate::~MessagePrivate()
   {
   }
@@ -43,9 +50,8 @@ namespace qi {
 
   }
   Message::Message(const Message &msg)
-    : _p(new qi::MessagePrivate())
+    : _p(new qi::MessagePrivate(*msg._p))
   {
-    this->operator =(msg);
   }
 
   Message& Message::operator=(const Message& msg)

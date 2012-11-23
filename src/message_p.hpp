@@ -29,6 +29,7 @@ namespace qi
     } MessageHeader;
 
     MessagePrivate();
+    MessagePrivate(const MessagePrivate& b);
     ~MessagePrivate();
 
     inline void                complete() { header.size = buffer.totalSize(); }
