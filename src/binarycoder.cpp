@@ -306,8 +306,8 @@ namespace qi {
 
   BinaryEncoderPrivate::BinaryEncoderPrivate(qi::Buffer &buffer)
     : _status(BinaryEncoder::Status_Ok), _innerSerialization(0)
+    , _buffer(buffer)
   {
-    _buffer = buffer;
   }
 
   BinaryEncoderPrivate::~BinaryEncoderPrivate()
