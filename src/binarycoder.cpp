@@ -196,11 +196,11 @@ namespace qi {
     ++_p->_innerSerialization;
     write((qi::uint32_t)len);
     --_p->_innerSerialization;
+    if (!_p->_innerSerialization)
+    {
+      signature() += 's';
+    }
     if (len) {
-      if (!_p->_innerSerialization)
-      {
-        signature() += 's';
-      }
       if (_p->_buffer.write(str, len) == false)
         setStatus(Status_WriteError);
     }
