@@ -17,7 +17,7 @@ void future_callback_simple(const void* value, char success, void *data)
   int *result = (int *) value;
 
   EXPECT_EQ(42, *result);
-  EXPECT_TRUE((bool) success);
+  EXPECT_EQ(1, success);
 
   isCallbackCalled = true;
 }
@@ -32,10 +32,10 @@ TEST(TestFuture, SimpleType)
 
   ASSERT_FALSE(qi_future_is_ready(future));
   qi_promise_set_value(promise, &answer);
-  EXPECT_TRUE((bool) qi_future_is_ready(future));
+  EXPECT_EQ(1, qi_future_is_ready(future));
 
   qi_future_wait(future);
-  ASSERT_TRUE((bool) qi_future_is_ready(future));
+  ASSERT_EQ(1, qi_future_is_ready(future));
 
   int *result = (int *) qi_future_get_value(future);
   EXPECT_EQ(42, *result);
@@ -52,8 +52,8 @@ TEST(TestFuture, Error)
   qi_promise_set_error(promise, "it's friday");
   qi_future_wait(future);
 
-  ASSERT_TRUE((bool) qi_future_is_error(future));
-  ASSERT_TRUE((bool) qi_future_is_ready(future));
+  ASSERT_EQ(1, qi_future_is_error(future));
+  ASSERT_EQ(1, qi_future_is_ready(future));
 
   std::string error(qi_future_get_error(future));
   ASSERT_TRUE(error.compare("it's friday") == 0);

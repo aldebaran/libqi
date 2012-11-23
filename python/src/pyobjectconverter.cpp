@@ -42,7 +42,7 @@ struct ToPyObject
 
   void visitInt(qi::TypeInt* type, qi::int64_t value, bool isSigned, int byteSize)
   {
-    *result = PyLong_FromLong(value);
+    *result = PyLong_FromLongLong(static_cast<long long>(value));
     checkForError();
   }
 
@@ -253,7 +253,8 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyBool_Check(val))
   {
-    res = qi::GenericValuePtr::from((bool)PyInt_AsLong(val));
+    bool b = PyInt_AsLong(val);
+    res = qi::GenericValuePtr::from(b);
   }
   else
   {

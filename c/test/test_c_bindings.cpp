@@ -168,8 +168,8 @@ TEST(TestCBindings, Call)
   qi_future_wait(fut);
   qi_message_t *msg = 0;
 
-  ASSERT_TRUE((bool) qi_future_is_error(fut) == false);
-  ASSERT_TRUE((bool) qi_future_is_ready(fut) == true);
+  ASSERT_EQ(0, qi_future_is_error(fut));
+  ASSERT_EQ(1, qi_future_is_ready(fut));
 
   msg = (qi_message_t*) qi_future_get_value(fut);
   ASSERT_TRUE(msg != 0);

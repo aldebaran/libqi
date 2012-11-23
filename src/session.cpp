@@ -2,6 +2,10 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
+// Disable "'this': used in base member initializer list"
+#pragma warning(disable: 4355)
+
 #include <qimessaging/session.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/transportsocket.hpp>

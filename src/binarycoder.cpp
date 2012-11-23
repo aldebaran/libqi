@@ -23,7 +23,7 @@ namespace qi {
     int ret = ds->readRaw((void *)&res, sizeof(res));
     if (ret != sizeof(res))
       ds->setStatus(ds->Status_ReadPastEnd);
-    b = res;
+    b = static_cast<T>(res);
     return *ds;
   }
 

@@ -222,7 +222,7 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   TestSessionPair p;
   qi::GenericObjectBuilder ob;
   int serviceID;
-  float duration = 0.42;
+  float duration = 0.42f;
 
   ob.advertiseMethod("fakeRGB", &fakeRGBd);
   qi::ObjectPtr obj(ob.object());

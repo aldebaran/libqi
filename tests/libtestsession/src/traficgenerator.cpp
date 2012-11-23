@@ -73,7 +73,7 @@ void __chaosThread(void *data)
   delete b;
 
   // #1 Init random.
-  srand(time(0));
+  srand(static_cast<unsigned int>(time(0)));
 
   // #2 Run until interrupt :
   while (mutex->try_lock())

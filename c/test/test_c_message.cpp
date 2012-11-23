@@ -97,7 +97,7 @@ TEST(TestMessage, SimpleRead)
   qi_message_write_raw(m, data, 4);
   free(data);
 
-  ASSERT_TRUE((bool) qi_message_read_bool(m));
+  ASSERT_EQ(1, qi_message_read_bool(m));
   ASSERT_EQ(97, qi_message_read_int8(m));
   ASSERT_EQ(-64, qi_message_read_int8(m));
   ASSERT_EQ(19, qi_message_read_int16(m));

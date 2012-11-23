@@ -305,11 +305,11 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
 
   switch (sig[0]) {
   case QI_BOOL:
-    qi_message_write_bool(msg, PyInt_AsLong(data));
+    qi_message_write_bool(msg, (char) !!PyInt_AsLong(data));
     return 0;
   case QI_CHAR:
     if (PyNumber_Check(data))
-      qi_message_write_int8(msg, PyInt_AsLong(data));
+      qi_message_write_int8(msg, static_cast<char>(PyInt_AsLong(data)));
     else if (PyString_Check(data)) {
       char *str = PyString_AsString(data);
       if (!str)
@@ -323,7 +323,7 @@ static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *ms
     qi_message_write_int32(msg, PyInt_AsLong(data));
     return 0;
   case QI_FLOAT:
-    qi_message_write_float(msg, PyFloat_AsDouble(data));
+    qi_message_write_float(msg, static_cast<float>(PyFloat_AsDouble(data)));
     return 0;
   case QI_DOUBLE:
     qi_message_write_double(msg, PyFloat_AsDouble(data));
