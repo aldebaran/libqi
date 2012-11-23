@@ -181,7 +181,7 @@ public:
 
 ///Implement all methods of Type except clone/destroy as bouncers to Bouncer
 #define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
-virtual const TypeInfo& info() { return Bounce::info();}                           \
+virtual const ::qi::TypeInfo& info() { return Bounce::info();}                           \
 virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
 virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
 
