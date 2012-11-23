@@ -30,12 +30,12 @@ namespace qi {
   //   void visitFloat(TypeFloat* type, double value, int byteSize);
   //   void visitString(TypeString* type, void* storage);
   //   void visitList(GenericListPtr value);
-  //   void visitMap(GenericMap value);
+  //   void visitMap(GenericMapPtr value);
   //   void visitObject(GenericObject value);
   //   void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee);
   //   void visitTuple(TypeTuple* type, void* storage);
   //   void visitDynamic(Type* type, GenericValuePtr pointee);
-  //   void visitRaw(TypeBuffer* type, Buffer* value);
+  //   void visitRaw(TypeRaw* type, Buffer* value);
   // };
 
 }
