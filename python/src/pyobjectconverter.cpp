@@ -176,7 +176,6 @@ qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
   {
     PyObject* current = PyList_GetItem(val, i);
     res.push_back(GenericValue_from_PyObject(current));
-    Py_DECREF(current);
   }
 
   return qi::GenericValuePtr::from(res);
@@ -209,7 +208,6 @@ qi::GenericValuePtr GenericValue_from_PyObject_Tuple(PyObject* val)
     PyObject* current = PyTuple_GetItem(val, i);
     qi::GenericValuePtr currentConverted = GenericValue_from_PyObject(current);
     res.push_back(currentConverted);
-    Py_DECREF(current);
   }
 
   return qi::makeGenericTuple(res);
