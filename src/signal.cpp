@@ -250,18 +250,19 @@ namespace qi {
     }
   }
 
-  SignalBase::Link SignalBase::connect(GenericFunction callback, EventLoop* ctx)
+  SignalSubscriber& SignalBase::connect(GenericFunction callback, EventLoop* ctx)
   {
     return connect(SignalSubscriber(callback, ctx));
   }
 
-  SignalBase::Link SignalBase::connect(qi::ObjectPtr o, unsigned int slot)
+  SignalSubscriber& SignalBase::connect(qi::ObjectPtr o, unsigned int slot)
   {
     return connect(SignalSubscriber(o, slot));
   }
 
-  SignalBase::Link SignalBase::connect(const SignalSubscriber& src)
+  SignalSubscriber& SignalBase::connect(const SignalSubscriber& src)
   {
+    static SignalSubscriber invalid;
     if (!_p)
     {
       _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
@@ -281,7 +282,7 @@ namespace qi {
       if (!locked)
       {
         qiLogVerbose("qi.signal") << "connecting a dead slot (weak ptr out)";
-        return SignalBase::invalidLink;
+        return invalid;
       }
       const MetaMethod* ms = locked->metaObject().method(src.method);
       if (!ms)
@@ -296,7 +297,7 @@ namespace qi {
     {
       qiLogWarning("qi.signal") << "Subscriber has incorrect arity (expected "
         << sigArity  << " , got " << subArity <<")";
-      return SignalBase::invalidLink;
+      return invalid;
     }
   proceed:
     boost::recursive_mutex::scoped_lock sl(_p->mutex);
@@ -305,7 +306,7 @@ namespace qi {
     s->linkId = res;
     s->source = this;
     _p->subscriberMap[res] = s;
-    return res;
+    return *s.get();
   }
 
   bool SignalBase::disconnectAll() {

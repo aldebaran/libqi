@@ -47,11 +47,11 @@ namespace qi {
     typedef unsigned int Link;
 
     template<typename FUNCTION_TYPE>
-    Link connect(FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
+    SignalSubscriber& connect(FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
 
-    Link connect(qi::ObjectPtr target, unsigned int slot);
-    Link connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
-    Link connect(const SignalSubscriber& s);
+    SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot);
+    SignalSubscriber& connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
+    SignalSubscriber& connect(const SignalSubscriber& s);
 
     bool disconnectAll();
 
@@ -80,7 +80,7 @@ namespace qi {
   };
 
   template<typename FUNCTION_TYPE>
-  inline SignalBase::Link SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
+  inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
   {
     return connect(makeGenericFunction(callback), ctx);
   }
@@ -95,24 +95,24 @@ namespace qi {
     virtual std::string signature() const;
     using boost::function<T>::operator();
 
-    inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
+    inline SignalSubscriber& connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
     {
       return SignalBase::connect(f, ctx);
     }
-    inline SignalBase::Link connect(GenericFunction f, EventLoop* ctx=getDefaultObjectEventLoop())
+    inline SignalSubscriber& connect(GenericFunction f, EventLoop* ctx=getDefaultObjectEventLoop())
     {
       return SignalBase::connect(f, ctx);
     }
     /// Auto-disconnects on target destruction
-    inline SignalBase::Link connect(qi::ObjectPtr target, unsigned int slot)
+    inline SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot)
     {
       return SignalBase::connect(target, slot);
     }
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
-    inline SignalBase::Link connect(O* target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
+    inline SignalSubscriber& connect(O* target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
     template<typename O, typename MF>
-    inline SignalBase::Link connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
+    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
   };
 
   namespace detail
@@ -137,7 +137,7 @@ namespace qi {
  {
  public:
    SignalSubscriber()
-     : weakLock(0), target(0), method(0), enabled(true)
+     : source(0), linkId(SignalBase::invalidLink), weakLock(0), target(0), method(0), enabled(true)
    {}
 
    SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0);
@@ -163,6 +163,10 @@ namespace qi {
 
    void addActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
    void removeActive(bool acquireLock, boost::thread::id tid = boost::this_thread::get_id());
+   operator SignalBase::Link() const
+   {
+     return linkId;
+   }
  public:
    // Source information
    SignalBase*        source;

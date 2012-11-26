@@ -118,14 +118,14 @@ namespace qi
 
   template<typename T>
   template<typename O, typename MF>
-  inline SignalBase::Link Signal<T>::connect(O* target, MF method, EventLoop* ctx)
+  inline SignalSubscriber& Signal<T>::connect(O* target, MF method, EventLoop* ctx)
   {
     return SignalBase::connect(SignalSubscriber(target, method, ctx));
   }
 
   template<typename T>
   template<typename O, typename MF>
-  inline SignalBase::Link Signal<T>::connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx)
+  inline SignalSubscriber& Signal<T>::connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx)
   {
     return SignalBase::connect(SignalSubscriber(target, method, ctx));
   }
