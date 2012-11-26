@@ -13,6 +13,11 @@
 #include <boost/signals2.hpp>
 #include <qi/eventloop.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 )
+#endif
+
 namespace qi {
 
   template<typename T> struct FutureType
@@ -97,6 +102,7 @@ namespace qi {
     //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
 
   protected:
+    // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
     boost::shared_ptr< detail::FutureState<T> > _p;
     friend class Promise<T>;
     friend class FutureSync<T>;
@@ -191,6 +197,10 @@ namespace qi {
   template <typename T>
   qi::Future<T> makeFutureError(const std::string &value);
 };
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #include <qi/details/future.hxx>
 
