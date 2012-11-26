@@ -19,10 +19,10 @@ public:
                                > MethodsImpl;
   TypeListImpl();
   virtual size_t size(void* storage);
-  virtual Type* elementType(void* storage) const;
+  virtual Type* elementType() const;
   virtual GenericListIteratorPtr begin(void* storage);
   virtual GenericListIteratorPtr end(void* storage);
-  virtual void pushBack(void* storage, void* valueStorage);
+  virtual void pushBack(void** storage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
@@ -47,7 +47,7 @@ TypeListImpl<T>::TypeListImpl()
 }
 
 template<typename T> Type*
-TypeListImpl<T>::elementType(void*) const
+TypeListImpl<T>::elementType() const
 {
   static Type* result = typeOf<typename T::value_type>();
   return result;
@@ -85,10 +85,10 @@ TypeListImpl<T>::end(void* storage)
 }
 
 template<typename T> void
-TypeListImpl<T>::pushBack(void* storage, void* valueStorage)
+TypeListImpl<T>::pushBack(void** storage, void* valueStorage)
 {
   static Type* elemType = typeOf<typename T::value_type>();
-  T* ptr = (T*) ptrFromStorage(&storage);
+  T* ptr = (T*) ptrFromStorage(storage);
   ptr->push_back(*(typename T::value_type*)elemType->ptrFromStorage(&valueStorage));
 }
 

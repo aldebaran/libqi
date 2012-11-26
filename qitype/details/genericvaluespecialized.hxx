@@ -69,7 +69,7 @@ inline GenericListIteratorPtr GenericListPtr::end()
 
 inline Type* GenericListPtr::elementType()
 {
-  return static_cast<TypeList*>(type)->elementType(value);
+  return static_cast<TypeList*>(type)->elementType();
 }
 
 inline size_t GenericListPtr::size()
@@ -81,13 +81,13 @@ inline void GenericListPtr::pushBack(GenericValuePtr val)
 {
   if (val.type == elementType())
   { // False negative is ok, will make a dummy convert
-    static_cast<TypeList*>(type)->pushBack(value, val.value);
+    static_cast<TypeList*>(type)->pushBack(&value, val.value);
   }
   else
   {
     std::pair<GenericValuePtr, bool> conv = val.convert(
-      static_cast<TypeList*>(type)->elementType(value));
-    static_cast<TypeList*>(type)->pushBack(value, conv.first.value);
+      static_cast<TypeList*>(type)->elementType());
+    static_cast<TypeList*>(type)->pushBack(&value, conv.first.value);
     if (conv.second)
       conv.first.destroy();
   }
@@ -133,12 +133,12 @@ inline size_t GenericMapPtr::size()
 
 inline Type* GenericMapPtr::keyType()
 {
-  return static_cast<TypeMap*>(type)->keyType(value);
+  return static_cast<TypeMap*>(type)->keyType();
 }
 
 inline Type* GenericMapPtr::elementType()
 {
-  return static_cast<TypeMap*>(type)->elementType(value);
+  return static_cast<TypeMap*>(type)->elementType();
 }
 
 inline void GenericMapPtr::insert(GenericValuePtr key, GenericValuePtr val)
@@ -150,7 +150,7 @@ inline void GenericMapPtr::insert(GenericValuePtr key, GenericValuePtr val)
   if (val.type != elementType())
     cv = val.convert(elementType());
 
-  static_cast<TypeMap*>(type)->insert(value, ck.first.value, cv.first.value);
+  static_cast<TypeMap*>(type)->insert(&value, ck.first.value, cv.first.value);
   if (ck.second)
     ck.first.destroy();
   if (cv.second)

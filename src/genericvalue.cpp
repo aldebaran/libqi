@@ -56,7 +56,7 @@ namespace qi
           TypeList* targetListType = static_cast<TypeList*>(targetType);
           Type* srcElemType = lsrc.elementType();
           void* storage = targetType->initializeStorage();
-          Type* dstElemType = targetListType->elementType(storage);
+          Type* dstElemType = targetListType->elementType();
           bool needConvert = (srcElemType->info() != dstElemType->info());
           GenericListPtr lresult;
           lresult.type = targetListType;
@@ -88,15 +88,15 @@ namespace qi
           TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
           TypeMap* srcMapType = static_cast<TypeMap*>(type);
 
-          Type* srcKeyType = srcMapType->keyType(value);
-          Type* srcElementType = srcMapType->elementType(value);
+          Type* srcKeyType = srcMapType->keyType();
+          Type* srcElementType = srcMapType->elementType();
 
 
           GenericMapPtr mresult;
           mresult.type = targetType;
           mresult.value = targetMapType->initializeStorage();
-          Type* targetKeyType = targetMapType->keyType(mresult.value);
-          Type* targetElementType = targetMapType->elementType(mresult.value);
+          Type* targetKeyType = targetMapType->keyType();
+          Type* targetElementType = targetMapType->elementType();
 
           bool sameKey = srcKeyType->info() == targetKeyType->info();
           bool sameElem = srcElementType->info() == targetElementType->info();
@@ -160,8 +160,8 @@ namespace qi
           TypeTuple* tsrc = static_cast<TypeTuple*>(type);
           TypeTuple* tdst = static_cast<TypeTuple*>(targetType);
           std::vector<void*> sourceData = tsrc->get(value);
-          std::vector<Type*> srcTypes = tsrc->memberTypes(value);
-          std::vector<Type*> dstTypes = tdst->memberTypes(0);
+          std::vector<Type*> srcTypes = tsrc->memberTypes();
+          std::vector<Type*> dstTypes = tdst->memberTypes();
           if (dstTypes.size() != sourceData.size())
           {
             qiLogWarning("qi.meta") << "Conversion failure: tuple size mismatch";

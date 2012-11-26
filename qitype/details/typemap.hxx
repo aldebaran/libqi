@@ -18,12 +18,12 @@ public:
                                TypeByPointer<M>
                                > MethodsImpl;
   TypeMapImpl();
-  virtual Type* elementType(void* storage) const;
-  virtual Type* keyType(void* storage) const;
+  virtual Type* elementType() const;
+  virtual Type* keyType() const;
   virtual size_t size(void* storage);
   virtual GenericMapIteratorPtr begin(void* storage);
   virtual GenericMapIteratorPtr end(void* storage);
-  virtual void insert(void* storage, void* keyStorage, void* valueStorage);
+  virtual void insert(void** storage, void* keyStorage, void* valueStorage);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
@@ -53,14 +53,14 @@ TypeMapImpl<M>::TypeMapImpl()
 
 
 template<typename M> Type*
-TypeMapImpl<M>::elementType(void*) const
+TypeMapImpl<M>::elementType() const
 {
   static Type* result = typeOf<typename M::mapped_type>();
   return result;
 }
 
 template<typename M> Type*
-TypeMapImpl<M>::keyType(void*) const
+TypeMapImpl<M>::keyType() const
 {
   static Type* result = typeOf<typename M::key_type>();
   return result;
@@ -105,11 +105,11 @@ TypeMapImpl<M>::end(void* storage)
 }
 
 template<typename M> void
-TypeMapImpl<M>::insert(void* storage, void* keyStorage, void* valueStorage)
+TypeMapImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
 {
   static Type* elemType = typeOf<typename M::mapped_type>();
   static Type* keyType = typeOf<typename M::key_type>();
-  M* ptr = (M*) ptrFromStorage(&storage);
+  M* ptr = (M*) ptrFromStorage(storage);
   ptr->insert(std::make_pair(
     *(typename M::key_type*)keyType->ptrFromStorage(&keyStorage),
     *(typename M::mapped_type*)elemType->ptrFromStorage(&valueStorage)));

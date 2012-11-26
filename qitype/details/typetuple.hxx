@@ -24,7 +24,7 @@ namespace qi {                                                            \
   template<> struct TypeImpl<name>: public TypeTuple                      \
   {                                                                       \
   public:                                                                 \
-    virtual std::vector<Type*> memberTypes(void*);                        \
+    virtual std::vector<Type*> memberTypes();                             \
     virtual void* get(void* storage, unsigned int index);                 \
     virtual void set(void** storage, unsigned int index, void* valStorage); \
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<name>);                \
@@ -36,7 +36,7 @@ namespace qi {                                                            \
 #define __QI_TUPLE_SET(_, what, field) if (i == index) detail::setFromStorage(ptr->field, valueStorage); i++;
 #define __QI_TYPE_STRUCT_IMPLEMENT(name, inl, onSet, ...)                                    \
 namespace qi {                                                                        \
-  inl std::vector<Type*> TypeImpl<name>::memberTypes(void* storage)                   \
+  inl std::vector<Type*> TypeImpl<name>::memberTypes()                                \
   {                                                                                   \
     name* ptr = 0;                                                                    \
     std::vector<Type*> res;                                                           \
@@ -142,12 +142,9 @@ namespace qi {
     virtual void adaptStorage(void** storage, void** adapted) = 0;
 
     typedef DefaultTypeImplMethods<T> Methods;
-    virtual std::vector<Type*> memberTypes(void* storage)
+    virtual std::vector<Type*> memberTypes()
     {
-      void* astorage = 0;
-      if (storage) // memberTypes should not require storage
-        adaptStorage(&storage, &astorage);
-      return bounceType()->memberTypes(astorage);
+      return bounceType()->memberTypes();
     }
 
     virtual void* get(void* storage, unsigned int index)
@@ -173,7 +170,7 @@ namespace qi {
   public:
     typedef DefaultTypeImplMethods<std::pair<F, S> > Methods;
     typedef typename std::pair<F, S> BackendType;
-    std::vector<Type*> memberTypes(void*)
+    std::vector<Type*> memberTypes()
     {
       static std::vector<Type*>* result=0;
       if (!result)

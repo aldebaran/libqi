@@ -346,7 +346,7 @@ namespace qi{
   {
   public:
     std::string getString(void* storage) const;
-    virtual std::pair<char*, size_t> get(void* value) const = 0;
+    virtual std::pair<char*, size_t> get(void* storage) const = 0;
     void set(void** storage, const std::string& value);
     virtual void set(void** storage, const char* ptr, size_t sz) = 0;
     virtual Kind kind() const { return String; }
@@ -387,23 +387,23 @@ namespace qi{
   class QITYPE_API TypeList: public Type
   {
   public:
-    virtual Type* elementType(void* storage) const = 0;
+    virtual Type* elementType() const = 0;
     virtual size_t size(void* storage) = 0;
     virtual GenericListIteratorPtr begin(void* storage) = 0; // Must be destroyed
     virtual GenericListIteratorPtr end(void* storage) = 0;  //idem
-    virtual void pushBack(void* storage, void* valueStorage) = 0;
+    virtual void pushBack(void** storage, void* valueStorage) = 0;
     virtual Kind kind() const { return List;}
   };
 
   class QITYPE_API TypeMap: public Type
   {
   public:
-    virtual Type* elementType(void* storage) const = 0;
-    virtual Type* keyType(void* storage) const = 0;
+    virtual Type* elementType() const = 0;
+    virtual Type* keyType() const = 0;
     virtual size_t size(void* storage) = 0;
     virtual GenericMapIteratorPtr begin(void* storage) = 0; // Must be destroyed
     virtual GenericMapIteratorPtr end(void* storage) = 0;  //idem
-    virtual void insert(void* storage, void* keyStorage, void* valueStorage) = 0;
+    virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
     virtual Kind kind() const { return Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // TypeMap does not provide a find()
@@ -413,7 +413,7 @@ namespace qi{
   {
   public:
     std::vector<GenericValuePtr> getValues(void* storage);
-    virtual std::vector<Type*> memberTypes(void*) = 0;
+    virtual std::vector<Type*> memberTypes() = 0;
     virtual std::vector<void*> get(void* storage); // must not be destroyed
     virtual void* get(void* storage, unsigned int index) = 0; // must not be destroyed
     virtual void set(void** storage, std::vector<void*>);

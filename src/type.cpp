@@ -306,7 +306,7 @@ namespace qi {
    }
    void visitTuple(TypeTuple* type, void* storage)
    {
-     std::vector<Type*> types = type->memberTypes(storage);
+     std::vector<Type*> types = type->memberTypes();
      std::string res;
      res += (char)Signature::Type_Tuple;
      if (_resolveDynamic)
@@ -511,7 +511,7 @@ namespace qi {
     friend Type* makeListType(Type* element);
   public:
 
-    Type* elementType(void* storage) const
+    Type* elementType() const
     {
       return _elementType;
     }
@@ -552,9 +552,9 @@ namespace qi {
       Methods::destroy(storage);
     }
 
-    void pushBack(void* storage, void* valueStorage)
+    void pushBack(void** storage, void* valueStorage)
     {
-      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(storage);
       src.push_back(_elementType->clone(valueStorage));
     }
 
@@ -691,11 +691,11 @@ namespace qi {
     }
     friend Type* makeMapType(Type* kt, Type* et);
   public:
-    Type* elementType(void* storage) const
+    Type* elementType() const
     {
       return _elementType;
     }
-    Type* keyType (void* storage) const
+    Type* keyType () const
     {
       return _keyType;
     }
@@ -720,9 +720,9 @@ namespace qi {
       return result;
 
     }
-    void insert(void* storage, void* keyStorage, void* valueStorage)
+    void insert(void** storage, void* keyStorage, void* valueStorage)
     {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(storage);
       ptr.push_back(std::make_pair(
         _keyType->clone(keyStorage), _elementType->clone(valueStorage)));
     }
@@ -807,7 +807,7 @@ namespace qi {
     }
     friend Type* makeTupleType(std::vector<Type*> types);
   public:
-    virtual std::vector<Type*> memberTypes(void*) { return types;}
+    virtual std::vector<Type*> memberTypes() { return types;}
     virtual void* get(void* storage, unsigned int index)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
@@ -904,7 +904,7 @@ namespace qi {
     else
     {
       TypeTuple* res = it->second;
-      assert(res->memberTypes(0).size() == types.size());
+      assert(res->memberTypes().size() == types.size());
       return res;
     }
   }
