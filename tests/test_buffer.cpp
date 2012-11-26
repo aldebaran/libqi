@@ -59,8 +59,8 @@ TEST(TestBuffer, TestSubBuffer)
 
   buffer.addSubBuffer(subBuffer1);
 
-  ASSERT_EQ(buffer.size(),      cstrSize+sizeof(uint32_t));
-  ASSERT_EQ(buffer.totalSize(), 2*cstrSize+sizeof(uint32_t));
+  ASSERT_EQ(buffer.size(),      cstrSize+sizeof(qi::uint32_t));
+  ASSERT_EQ(buffer.totalSize(), 2*cstrSize+sizeof(qi::uint32_t));
 
   ASSERT_FALSE(buffer.hasSubBuffer(0));
   ASSERT_TRUE(buffer.hasSubBuffer(cstrSize));
@@ -73,29 +73,10 @@ TEST(TestBuffer, TestSubBuffer)
   ASSERT_STREQ(str.c_str(), data);
 
   subBuffer2.addSubBuffer(buffer);
-  ASSERT_EQ(subBuffer2.size(),      cstrSize+sizeof(uint32_t));
-  ASSERT_EQ(subBuffer2.totalSize(), 3*cstrSize+2*sizeof(uint32_t));
+  ASSERT_EQ(subBuffer2.size(),      cstrSize+sizeof(qi::uint32_t));
+  ASSERT_EQ(subBuffer2.totalSize(), 3*cstrSize+2*sizeof(qi::uint32_t));
 
   buffer.clear();
   ASSERT_EQ(buffer.size(), 0u);
   ASSERT_EQ(buffer.totalSize(), 0u);
 }
-
-// Disable because those functions are private
-/**
- * TEST(TestBuffer, TestInitialization)
- * {
- *   qi::Buffer buffer1, buffer2 = buffer1, buffer3, buffer4;
- *
- *   ASSERT_TRUE(buffer1.isInitialized());
- *   ASSERT_TRUE(buffer2.isInitialized());
- *   ASSERT_FALSE(buffer3.isInitialized());
- *   ASSERT_FALSE(buffer4.isInitialized());
- *
- *   buffer3.initialize();
- *   ASSERT_TRUE(buffer3.isInitialized());
- *
- *   buffer4.addSubBuffer(buffer3);
- *   ASSERT_TRUE(buffer4.isInitialized());
- * }
- */
