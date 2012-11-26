@@ -151,16 +151,35 @@ namespace qi {
         qi::os::msleep(0);
   }
 
+  struct AsyncCallHandle
+  {
+    bool              cancelled;
+    event*            ev;
+    qi::Promise<void>  *result;
+    boost::function<void()> callback;
+  };
+
   static void async_call(evutil_socket_t,
     short what,
     void *context)
   {
-    EventLoop::AsyncCallHandle* handle = (EventLoop::AsyncCallHandle*)context;
-    if (!handle->_p->cancelled)
-      handle->_p->callback();
-    event_del(handle->_p->ev);
-    event_free(handle->_p->ev);
-    delete handle;
+    boost::shared_ptr<AsyncCallHandle>* handlePtr
+      = (boost::shared_ptr<AsyncCallHandle>*)context;
+    AsyncCallHandle* handle = handlePtr->get();
+    assert(handle->result);
+    event_del(handle->ev);
+    if (!handle->cancelled)
+    {
+      handle->callback();
+      handle->result->setValue(0);
+    }
+    else
+      handle->result->setError("Cancelled");
+
+    event_free(handle->ev);
+    delete handle->result;
+    handle->result = 0;
+    delete handlePtr;
   }
 
   static void fduse_call(evutil_socket_t socket,
@@ -182,24 +201,37 @@ namespace qi {
     delete handle;
   }
 
-  EventLoop::AsyncCallHandle EventLoopPrivate::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
+  void async_call_cancel(boost::shared_ptr<AsyncCallHandle> handle)
   {
-    EventLoop::AsyncCallHandle res;
+    handle->cancelled = true;
+  }
+
+  qi::Future<void> EventLoopPrivate::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
+  {
     if (!_base) {
       qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
-      return res;
+      return makeFutureError<void>("EventLoop destroyed");
     }
+    boost::shared_ptr<AsyncCallHandle> h(new AsyncCallHandle());
+    /* The future will hold the AsyncCallHandle, bound in onCancel.
+      The future is also in the AsyncCallHandle
+      The AsyncCallHandle is passed by pointer to eventfd callback.
+      Once invoked, it will reset the future in AsyncCallHandle.
+      Then the last future will delete onCancel which will clear bound data
+    */
     struct timeval period;
     period.tv_sec = static_cast<long>(usDelay / 1000000ULL);
     period.tv_usec = usDelay % 1000000ULL;
     struct event *ev = event_new(_base, -1, 0, async_call,
-      new EventLoop::AsyncCallHandle(res));
+      new boost::shared_ptr<AsyncCallHandle>(h));
     // Order is important.
-    res._p->ev = ev;
-    res._p->cancelled = false;
-    std::swap(res._p->callback,cb);
+    h->ev = ev;
+    h->cancelled = false;
+    std::swap(h->callback,cb);
+    qi::Promise<void> prom(boost::bind(&async_call_cancel, h));
+    h->result = new qi::Promise<void>(prom);
     event_add(ev, &period);
-    return res;
+    return prom.future();
   }
 
   EventLoop::AsyncCallHandle EventLoopPrivate::notifyFd(evutil_socket_t fd, EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant)
@@ -279,7 +311,7 @@ namespace qi {
     return static_cast<void *>(_p->getEventBase());
   }
 
-  EventLoop::AsyncCallHandle
+  qi::Future<void>
   EventLoop::asyncCall(
     uint64_t usDelay,
     boost::function<void ()> callback)

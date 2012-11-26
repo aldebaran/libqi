@@ -36,7 +36,7 @@ namespace qi {
     void start();
     void join();
     void stop();
-    EventLoop::AsyncCallHandle asyncCall(uint64_t usDelay,
+    qi::Future<void>           asyncCall(uint64_t usDelay,
       boost::function<void ()> callback);
     EventLoop::AsyncCallHandle notifyFd(evutil_socket_t fd,
       EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant);

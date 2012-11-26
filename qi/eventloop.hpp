@@ -12,6 +12,7 @@
 
 #include <qi/types.hpp>
 #include <qi/api.hpp>
+#include <qi/future.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -66,8 +67,10 @@ namespace qi
 
     typedef boost::function<void(int, FileOperation)> NotifyFdCallbackFunction;
 
-    /// Call given function once after given delay in microseconds.
-    AsyncCallHandle asyncCall(uint64_t usDelay, boost::function<void ()> callback);
+    /** Call given function once after given delay in microseconds.
+     * @return a cancelleable future
+     */
+    Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback);
     /// Call given function every time something happen on file
     /// descriptor fileDescriptor. You can specify that the callback
     /// will be called for every Read, every Write or for both Read

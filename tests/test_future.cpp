@@ -354,6 +354,33 @@ TEST(TestFutureError, ValueOnError)
   EXPECT_ANY_THROW({ f.value();});
 }
 
+
+TEST(TestFutureCancel, NotCanceleable)
+{
+  qi::Promise<int> p;
+  qi::Future<int> f = p.future();
+  EXPECT_ANY_THROW({f.cancel();});
+}
+
+static void setTrue(bool* b)
+{
+  *b = true;
+}
+
+TEST(TestFutureCancel, Canceleable)
+{
+  bool b = false;
+  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->asyncCall(200,
+    boost::bind(&setTrue, &b));
+  f.cancel();
+  ASSERT_FALSE(f.isReady());
+  qi::os::msleep(400);
+  ASSERT_TRUE(!b);
+  ASSERT_TRUE(f.isReady());
+  ASSERT_TRUE(f.hasError());
+}
+
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
