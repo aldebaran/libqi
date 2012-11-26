@@ -7,6 +7,11 @@
 #include <qi/threadpool.hpp>
 #include "threadpool_p.hpp"
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4355 )
+#endif
+
 namespace qi
 {
   ThreadPoolPrivate::ThreadPoolPrivate(unsigned int minWorkers, unsigned int maxWorkers,
@@ -29,6 +34,7 @@ namespace qi
       _terminatedThreads(),
       _tasks(),
       /* _manager must be the last initialized */
+      // warning C4355: 'this' : used in base member initializer list
       _manager (boost::thread(boost::bind(&ThreadPoolPrivate::manageThreads, this)))
   {
   }
@@ -297,3 +303,7 @@ namespace qi
     _p->waitForAll();
   }
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
