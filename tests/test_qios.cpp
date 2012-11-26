@@ -220,7 +220,7 @@ bool freeportbind(unsigned short port, int &sock)
   sock = ::socket(AF_INET, SOCK_STREAM, 0);
   name.sin_port = htons(port);
 
-  return ::bind(sock, (struct sockaddr *)&name, sizeof(name));
+  return (::bind(sock, (struct sockaddr *)&name, sizeof(name))) != 0;
 }
 
 TEST(QiOs, free_port)
@@ -307,7 +307,7 @@ TEST(QiOs, getMachineId)
   std::string uuid2FileName = (qi::os::tmp()).append("machine_id_test_42");
   std::ifstream uuid2file(uuid2FileName.c_str());
 
-  ASSERT_TRUE(uuid2file);
+  ASSERT_TRUE(uuid2file != NULL);
 
   uuid2file >> uuid2;
   uuid2file.close();

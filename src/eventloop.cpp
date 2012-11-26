@@ -190,7 +190,7 @@ namespace qi {
       return res;
     }
     struct timeval period;
-    period.tv_sec = usDelay / 1000000ULL;
+    period.tv_sec = static_cast<long>(usDelay / 1000000ULL);
     period.tv_usec = usDelay % 1000000ULL;
     struct event *ev = event_new(_base, -1, 0, async_call,
       new EventLoop::AsyncCallHandle(res));

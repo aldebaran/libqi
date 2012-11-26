@@ -25,10 +25,10 @@ TEST(TestBuffer, TestReserveSpace)
   // let's put a string in buffer
   reservedSpace1 = buffer.reserve(150);
   //Oh wait it's a config file !
-  ASSERT_TRUE(buffer.reserve(1024));
+  ASSERT_TRUE(buffer.reserve(1024) != NULL);
 
   image = new unsigned char [fiveM];
-  srand(time(NULL));
+  srand(static_cast<unsigned int>(time(NULL)));
   for (int i = 0; i < fiveM; i++)
     image[i] = rand() % 256;
 
