@@ -13,6 +13,9 @@
 #include <boost/bind.hpp>
 #include <qi/api.hpp>
 
+#include <qi/api.hpp>
+
+
 namespace qi {
 
   namespace detail {
@@ -49,7 +52,25 @@ namespace qi {
       {
       }
 
-      void setValue(qi::Future<T> future, const ValueType &value)
+      bool isCanceleable() const
+      {
+        return _onCancel;
+      }
+
+      void cancel()
+      {
+        if (isReady())
+          return;
+        if (!_onCancel)
+          throw std::runtime_error("Future not cancelleable");
+        _onCancel();
+      }
+
+      void setOnCancel(boost::function<void ()> onCancel)
+      {
+        _onCancel = onCancel;
+      }
+      void setValue(qi::Future<T>& future, const ValueType &value)
       {
         if (wait(-1))
           throw std::runtime_error("Future value already set.");
@@ -63,7 +84,7 @@ namespace qi {
         notifyReady();
       }
 
-      void setError(qi::Future<T> future, const std::string &message)
+      void setError(qi::Future<T>& future, const std::string &message)
       {
         reportError(message);
         _onResult(future);
@@ -96,6 +117,7 @@ namespace qi {
     private:
       boost::signals2::signal<void (qi::Future<T>)>  _onResult;
       ValueType                         _value;
+      boost::function<void ()>          _onCancel;
     };
   } // namespace detail
 

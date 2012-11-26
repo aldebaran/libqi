@@ -11,7 +11,6 @@
 #include <qi/config.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/signals2.hpp>
-#include <qi/eventloop.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -55,6 +54,10 @@ namespace qi {
       b._sync = false;
     }
 
+    Future(const Future<T>& b)
+    : _p(b._p)
+    {}
+
     inline Future<T>& operator = (const FutureSync<T>& b)
     {
       b._sync = false;
@@ -95,6 +98,21 @@ namespace qi {
       return FutureSync<T>(*this);
     };
 
+    /** cancel() the asynchronous operation if possible
+    * Exact effect is controlled by the cancel implementation, but it is
+    * expected to set a value or an error to the Future as fast as possible.
+    * Note that cancelation may be asynchronous.
+    * @throw runtime_error if isCancelleable() is false.
+    */
+    void cancel()
+    {
+      _p->cancel();
+    }
+
+    bool isCanceleable() const
+    {
+      return _p->isCanceleable();
+    }
   public: //Signals
     typedef boost::signals2::connection Connection;
     typedef typename boost::signals2::signal<void (Future<T>)>::slot_type Slot;
@@ -174,6 +192,16 @@ namespace qi {
     typedef typename FutureType<T>::type ValueType;
 
     Promise() { }
+
+    /** Create a cancelleable promise. If Future<T>::cancel is invoked,
+     * onCancel() will be called. It is expected to call setValue() or
+     * setError() as quickly as possible, but can do so in an asynchronous
+     * way.
+    */
+    Promise(boost::function<void ()> onCancel)
+    {
+       _f._p->setOnCancel(onCancel);
+    }
 
     void setValue(const ValueType &value) {
       _f._p->setValue(_f, value);
