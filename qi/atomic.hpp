@@ -11,15 +11,16 @@
 
 #ifdef _MSC_VER
 # include <windows.h>
-# pragma intrinsic(_InterlockedIncrement16)
-# pragma intrinsic(_InterlockedDecrement16)
-# pragma intrinsic(_InterlockedIncrement)
-# pragma intrinsic(_InterlockedDecrement)
 
 extern "C" short __cdecl _InterlockedIncrement16(short volatile *);
 extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
+
+# pragma intrinsic(_InterlockedIncrement16)
+# pragma intrinsic(_InterlockedDecrement16)
+# pragma intrinsic(_InterlockedIncrement)
+# pragma intrinsic(_InterlockedDecrement)
 /*
  * No extern with 64, it seems that intrinsic version of these
  * functions are not always avaiblables
