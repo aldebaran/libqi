@@ -247,6 +247,10 @@ namespace qi{
       if (type) destroy();
       *(GenericValuePtr*)this = b.clone();
     }
+    template<typename T> static GenericValue from(const T& src)
+    {
+      return GenericValue(GenericValuePtr::from(src));
+    }
     ~GenericValue()
     {
       if (type)
