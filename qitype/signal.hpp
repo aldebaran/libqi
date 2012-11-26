@@ -177,6 +177,10 @@ namespace qi {
     */
    void call(const GenericFunctionParameters& args, MetaCallType callType);
 
+   /// Auto-disconnect if \p ptr cannot be locked
+   template<typename T>
+   SignalSubscriber& track(boost::weak_ptr<T> ptr);
+
    //wait till all threads are inactive except the current thread.
    void waitForInactive();
 

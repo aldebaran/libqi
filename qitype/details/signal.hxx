@@ -183,5 +183,13 @@ namespace qi
     return detail::functionArgumentsSignature<T>();
   }
 
+  template<typename T>
+  SignalSubscriber& SignalSubscriber::track(boost::weak_ptr<T> ptr)
+  {
+    if (weakLock)
+      throw std::runtime_error("Only one weak lock supported");
+    weakLock = new detail::BoostWeakPointerLock<T>(ptr);
+    return *this;
+  }
 } // qi
 #endif  // _QITYPE_DETAILS_SIGNAL_HXX_

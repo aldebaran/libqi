@@ -120,6 +120,23 @@ TEST(TestSignal, AutoDisconnect)
   ASSERT_EQ(1, r);
 }
 
+TEST(TestSignal, AutoDisconnectTrack)
+{
+  // Test auto-disconnect using external tracker
+  int r = 0;
+  boost::shared_ptr<int> s(new int(2));
+  Foo* ptr = new Foo();
+  qi::Signal<void (int*, int)> sig;
+  sig.connect(ptr, &Foo::func1).track(boost::weak_ptr<int>(s));
+  sig(&r, 0);
+  ASSERT_EQ(1, r);
+  sig(&r, 1);
+  ASSERT_EQ(2, r);
+  s.reset();
+  sig(&r, 1);
+  ASSERT_EQ(2, r);
+}
+
 
 TEST(TestSignal, BadArity)
 {
