@@ -194,7 +194,6 @@ namespace qi {
 
       if (tsca.successful) {
         // If we are already connected to this service, disconnect this socket.
-        tsca.socket_count--;
         socket->disconnect();
         return;
       }
