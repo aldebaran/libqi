@@ -9,8 +9,10 @@
 
 #include <qi/atomic.hpp>
 #include <qi/eventloop.hpp>
-#include <qitype/signature.hpp>
+
 #include <qitype/functiontype.hpp>
+#include <qitype/functiontypefactory.hpp>
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -24,22 +26,8 @@ namespace qi {
 
   class ManageablePrivate;
   class SignalSubscriber;
-  /** User classes can inherit from Manageable to benefit from  Event loop
-  *  management
-  */
-  class QITYPE_API Manageable
-  {
-  public:
-    Manageable();
-    virtual ~Manageable();
-    Manageable(const Manageable& b);
-    void operator = (const Manageable& b);
+  class EventLoop;
 
-    virtual EventLoop* eventLoop() const;
-    virtual void moveToEventLoop(EventLoop* eventLoop);
-
-    ManageablePrivate* _p;
-  };
 
   class GenericObject;
   typedef boost::shared_ptr<GenericObject> ObjectPtr;
@@ -91,8 +79,6 @@ namespace qi {
     boost::shared_ptr<SignalBasePrivate> _p;
   };
 
-
-
   template<typename FUNCTION_TYPE>
   inline SignalBase::Link SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
   {
@@ -108,6 +94,7 @@ namespace qi {
     Signal<T>& operator = (const Signal<T>& b);
     virtual std::string signature() const;
     using boost::function<T>::operator();
+
     inline SignalBase::Link connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
     {
       return SignalBase::connect(f, ctx);

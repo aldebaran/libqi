@@ -63,15 +63,6 @@ namespace qi {
     void* value;
   };
 
- template<typename F> GenericFunction makeGenericFunction(F func);
-
-  typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
-  /// @return a GenericFunction that takes arguments as a list of unconverted GenericValuePtr.
-  QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
-  /// @return the type used by dynamic functions
-  QITYPE_API FunctionType* dynamicFunctionType();
-  /// @return a GenericFunction obtained by binding a class instance to a member function
-  template<typename O, typename F> GenericFunction makeGenericFunction(O o, F f);
 
   /** Store function parameters as a list of GenericValuePtr.
   * Storage can be on the stack or allocated
@@ -90,6 +81,12 @@ namespace qi {
     GenericFunctionParameters convert(const Signature& sig) const;
     void destroy(bool notFirst = false);
   };
+
+  typedef boost::function<GenericValuePtr(const std::vector<GenericValuePtr>&)> DynamicFunction;
+  /// @return a GenericFunction that takes arguments as a list of unconverted GenericValuePtr.
+  QITYPE_API GenericFunction makeDynamicGenericFunction(DynamicFunction f);
+  /// @return the type used by dynamic functions
+  QITYPE_API FunctionType* dynamicFunctionType();
 }
 
 #include <qitype/details/functiontype.hxx>

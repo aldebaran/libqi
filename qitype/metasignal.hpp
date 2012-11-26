@@ -7,7 +7,6 @@
 #ifndef _QITYPE_METASIGNAL_HPP_
 #define _QITYPE_METASIGNAL_HPP_
 
-#include <qitype/signature.hpp>
 #include <qitype/type.hpp>
 
 #ifdef _MSC_VER

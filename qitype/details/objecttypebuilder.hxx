@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 #define _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 
+#include <qitype/methodtypefactory.hpp>
 
 namespace qi {
 

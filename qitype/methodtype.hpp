@@ -46,10 +46,6 @@ namespace qi
     void* value;
   };
 
-  template<typename T> MethodType* methodTypeOf();
-
-  template<typename M>
-  GenericMethod makeGenericMethod(const M& method);
 }
 
 #include <qitype/details/methodtype.hxx>

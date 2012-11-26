@@ -2,6 +2,7 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
 #include <qitype/type.hpp>
 #include <qitype/metaobject.hpp>
 #include <qitype/signature.hpp>

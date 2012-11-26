@@ -3,6 +3,7 @@
 **  See COPYING for the license
 */
 #include <iostream>
+
 #include <qitype/genericobject.hpp>
 #include "object_p.hpp"
 

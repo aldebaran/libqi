@@ -9,6 +9,7 @@
 #include <qitype/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/application.hpp>
+#include <qitype/functiontypefactory.hpp>
 
 class Foo
 {

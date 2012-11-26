@@ -16,6 +16,7 @@
 
 #include <qi/log.hpp>
 #include <qitype/api.hpp>
+#include <qitype/fwd.hpp>
 #include <qitype/signature.hpp>
 
 #ifdef _MSC_VER
@@ -209,7 +210,7 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
-    GenericObjectPtr asObject() const;
+    ObjectPtr        asObject() const;
 
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.

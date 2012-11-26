@@ -4,6 +4,7 @@
 */
 #include <qitype/signature.hpp>
 #include <qitype/functiontype.hpp>
+#include <qitype/functiontypefactory.hpp>
 
 namespace qi
 {

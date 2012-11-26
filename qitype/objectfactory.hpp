@@ -7,8 +7,12 @@
 #ifndef _QITYPE_OBJECTFACTORY_HPP_
 #define _QITYPE_OBJECTFACTORY_HPP_
 
+#include <vector>
+
+#include <boost/function.hpp>
+
 #include <qitype/api.hpp>
-#include <qitype/genericobject.hpp>
+#include <qitype/fwd.hpp>
 
 namespace qi {
 

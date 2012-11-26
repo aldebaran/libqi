@@ -15,6 +15,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/objecttypebuilder.hpp>
+#include <qitype/methodtypefactory.hpp>
 
 static int gGlobalResult = 0;
 

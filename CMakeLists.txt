@@ -33,11 +33,13 @@ set(PUBLIC_HEADERS
                    qitype/api.hpp
                    qitype/details/bindtype.hxx
                    qitype/details/functiontype.hxx
+                   qitype/details/functiontypefactory.hxx
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
                    qitype/details/genericvalue.hxx
                    qitype/details/genericvaluespecialized.hxx
                    qitype/details/methodtype.hxx
+                   qitype/details/methodtypefactory.hxx
                    qitype/details/objecttypebuilder.hxx
                    qitype/details/signal.hxx
                    qitype/details/type.hxx
@@ -51,13 +53,17 @@ set(PUBLIC_HEADERS
                    qitype/details/typetuple.hxx
                    qitype/dynamicobject.hpp
                    qitype/functiontype.hpp
+                   qitype/functiontypefactory.hpp
+                   qitype/fwd.hpp
                    qitype/genericobjectbuilder.hpp
                    qitype/genericobject.hpp
                    qitype/genericvalue.hpp
+                   qitype/manageable.hpp
                    qitype/metamethod.hpp
                    qitype/metaobject.hpp
                    qitype/metasignal.hpp
                    qitype/methodtype.hpp
+                   qitype/methodtypefactory.hpp
                    qitype/objectfactory.hpp
                    qitype/objecttypebuilder.hpp
                    qitype/signal.hpp

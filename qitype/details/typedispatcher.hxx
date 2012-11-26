@@ -12,6 +12,8 @@ namespace qi {
   template<typename TypeDispatcher>
   TypeDispatcher& typeDispatch(const TypeDispatcher &vv, Type *type, void**storage)
   {
+    if (!type)
+      throw std::runtime_error("NULL type");
     TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
     switch(type->kind())
     {

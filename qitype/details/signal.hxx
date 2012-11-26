@@ -7,7 +7,10 @@
 #ifndef _QITYPE_DETAILS_SIGNAL_HXX_
 #define _QITYPE_DETAILS_SIGNAL_HXX_
 
+#include <qitype/manageable.hpp>
+
 #include <boost/bind.hpp>
+#include <boost/fusion/algorithm/iteration/for_each.hpp>
 #include <boost/fusion/functional/generation/make_unfused.hpp>
 #include <boost/fusion/functional/invocation/invoke_procedure.hpp>
 

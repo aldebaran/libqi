@@ -11,18 +11,15 @@
 #include <string>
 #include <qi/atomic.hpp>
 #include <qitype/api.hpp>
-#include <qitype/signature.hpp>
+#include <qitype/manageable.hpp>
 #include <qi/future.hpp>
 #include <qitype/metasignal.hpp>
 #include <qitype/metamethod.hpp>
 #include <qitype/metaobject.hpp>
+#include <qitype/functiontypefactory.hpp>
+#include <qitype/signal.hpp>
 #include <qi/eventloop.hpp>
 #include <qitype/typeobject.hpp>
-#include <qitype/signal.hpp>
-#include <boost/function_types/function_arity.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/function_types/parameter_types.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -137,6 +134,7 @@ namespace qi {
     void*        value;
   };
 
+
   template<typename T>
   GenericValuePtr makeObjectValue(T* ptr);
 
@@ -150,10 +148,11 @@ namespace qi {
       SignalSubscriber(makeGenericFunction(callback), ctx));
   }
 
+
  QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
     GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst=false);
 
-};
+}
 
 #include <qitype/details/genericobject.hxx>
 
