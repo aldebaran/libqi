@@ -549,7 +549,7 @@ namespace qi {
 
       void visitTuple(TypeTuple* type, void* storage)
       {
-        std::vector<Type*> types = type->memberTypes(storage);
+        std::vector<Type*> types = type->memberTypes();
         result.type = type;
         result.value = type->initializeStorage();
         for (unsigned i = 0; i<types.size(); ++i)
