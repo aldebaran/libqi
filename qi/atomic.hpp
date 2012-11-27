@@ -27,6 +27,8 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
  */
 #endif
 
+#include <boost/static_assert.hpp>
+
 #include <qi/config.hpp>
 #include <qi/macro.hpp>
 
@@ -56,6 +58,8 @@ namespace qi
     }
 
   private:
+    BOOST_STATIC_ASSERT_MSG(sizeof(T) < 8, "64 bits Atomic not supported on all platforms");
+
     T _value;
   };
 
@@ -71,6 +75,7 @@ namespace qi
     {
       return __sync_sub_and_fetch(&_value, 1);
     }
+
 #endif
 
 #ifdef _MSC_VER
@@ -146,29 +151,6 @@ namespace qi
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
 
-  template <>
-  inline long long Atomic<long long>::operator++()
-  {
-    return InterlockedIncrement64(&_value);
-  }
-
-  template <>
-  inline long long Atomic<long long>::operator--()
-  {
-    return InterlockedDecrement64(&_value);
-  }
-
-  template <>
-  inline unsigned long long Atomic<unsigned long long>::operator++()
-  {
-    return InterlockedIncrement64(reinterpret_cast<long long*>(&_value));
-  }
-
-  template <>
-  inline unsigned long long Atomic<unsigned long long>::operator--()
-  {
-    return InterlockedDecrement64(reinterpret_cast<long long*>(&_value));
-  }
 
 #endif
 

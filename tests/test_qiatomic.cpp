@@ -67,22 +67,3 @@ TEST(QiAtomic, qiint32)
 {
   test_type<qi::int32_t>();
 }
-
-
-/*
- * These tests should run since cmpxchg8b instruction is available on x86 CPUs.
- * But it might not work with:
- * - Another CPU
- * - An outdated compiler on a 32 bit OS
- */
-#if defined __LP64__ || WINVER > 0x502 // Windows Server 2003
-TEST(QiAtomic, qiuint64)
-{
-  test_type<qi::uint64_t>();
-}
-
-TEST(QiAtomic, qiint64)
-{
-  test_type<qi::int64_t>();
-}
-#endif

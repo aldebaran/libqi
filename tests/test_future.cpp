@@ -21,7 +21,7 @@ public:
   static int         gGlobalI;
   static std::string gGlobalS;
   static std::string gGlobalE;
-  static qi::Atomic<long>   gSuccess;
+  static qi::Atomic<int>   gSuccess;
 
 protected:
   static void SetUpTestCase()
@@ -36,7 +36,7 @@ protected:
 int         TestFuture::gGlobalI;
 std::string TestFuture::gGlobalS;
 std::string TestFuture::gGlobalE;
-qi::Atomic<long> TestFuture::gSuccess;
+qi::Atomic<int> TestFuture::gSuccess;
 
 class TestFutureI {
 public:
@@ -114,7 +114,7 @@ void producer(qi::Promise<int> pro) {
   pro.setValue(42);
 }
 
-void consumer(qi::Atomic<long> &gSuccess, qi::Future<int> fut) {
+void consumer(qi::Atomic<int> &gSuccess, qi::Future<int> fut) {
   //wont block thread on error
   ASSERT_TRUE(fut.wait(1000));
   EXPECT_EQ(42, fut.value());
