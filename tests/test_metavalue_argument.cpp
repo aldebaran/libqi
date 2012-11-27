@@ -130,7 +130,7 @@ TEST_F(TestObject, meta)
   target->call<void>("value", args).wait();
   ASSERT_EQ(v.kind(), Type::List);
   GenericListPtr l = v.asList();
-  ASSERT_EQ(3, l.size());
+  ASSERT_EQ(static_cast<size_t>(3), l.size());
   GenericListIteratorPtr i = l.begin();
   // iterate
   EXPECT_EQ(12, (*i).asDouble());

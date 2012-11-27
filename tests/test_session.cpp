@@ -170,7 +170,7 @@ TEST(QiSession, AlreadyRegistered)
   EXPECT_TRUE(session->connect(ss.str()).wait(1000));
   EXPECT_TRUE(session->listen("tcp://0.0.0.0:0"));
 
-  ASSERT_GT(session->registerService("service", obj), 0);
+  ASSERT_GT(session->registerService("service", obj), static_cast<unsigned int>(0));
   EXPECT_ANY_THROW({session->registerService("service", obj).value();});
 
   delete session;

@@ -210,6 +210,7 @@ TEST(TestCall, TestDoubleToFloatConvertion)
   qi::ObjectPtr obj(ob.object());
 
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
@@ -228,6 +229,7 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   qi::ObjectPtr obj(ob.object());
 
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
@@ -258,6 +260,7 @@ TEST(TestCall, TestGenericConversion) {
   int serviceID;
   qi::ObjectPtr obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
@@ -308,6 +311,7 @@ TEST(TestCall, TestGenericConversionComplexList) {
   int serviceID;
   qi::ObjectPtr obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
@@ -360,6 +364,7 @@ TEST(TestCall, TestGenericConversionComplexMap) {
   int serviceID;
   qi::ObjectPtr obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 
@@ -401,6 +406,7 @@ TEST(TestCall, TestGenericConversionTuple) {
   int serviceID;
   qi::ObjectPtr obj = createObject();
   serviceID = p.server()->registerService("serviceConv", obj);
+  ASSERT_TRUE(serviceID != 0);
   qi::ObjectPtr proxy = p.client()->service("serviceConv");
   ASSERT_TRUE(proxy != 0);
 

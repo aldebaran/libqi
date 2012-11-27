@@ -40,7 +40,7 @@ protected:
     // In nightmare mode, there is a hidden service registered...
     unsigned int nbServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
 
-    ASSERT_GT(p.server()->registerService("coin", oserver), 0);
+    ASSERT_GT(p.server()->registerService("coin", oserver), static_cast<unsigned int>(0));
     EXPECT_EQ(nbServices, p.server()->services(qi::Session::ServiceLocality_Local).value().size());
 
     std::vector<qi::ServiceInfo> services = p.client()->services();
