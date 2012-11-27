@@ -36,7 +36,7 @@ class GenericObject:
         else:
             self._obj = qi_object
 
-    def call(self, name, *args):
+    def _call(self, name, *args):
         """ Call remote method with given arguments.
 
         .. Args::

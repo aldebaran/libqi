@@ -135,6 +135,24 @@ void qi_bind_method(qi_object_builder_t *builder, const char *signature, PyObjec
   qi_object_builder_register_method(builder, signature, &__python_callback, method);
 }
 
+PyObject* qi_get_sigreturn(qi_object_t *object, const char *signature)
+{
+  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  std::string sigreturns;
+  std::vector<qi::MetaMethod> mm = obj->metaObject().findCompatibleMethod(std::string(signature));
+
+  for (std::vector<qi::MetaMethod>::iterator it = mm.begin(); it != mm.end(); ++it)
+  {
+    if (sigreturns.empty() == false)
+      sigreturns.append(",").append((*it).sigreturn());
+    else
+      sigreturns = (*it).sigreturn();
+  }
+
+  qi::GenericValue val = qi::GenericValue::from(sigreturns);
+  return val.as<PyObject*>();
+}
+
 PyObject* qi_object_methods_vector(qi_object_t *object)
 {
   qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
@@ -149,9 +167,9 @@ PyObject* qi_object_methods_vector(qi_object_t *object)
   {
     // #1.1 Split signature to get name.
     std::vector<std::string> sigv = signatureSplit((*it).second.signature());
-    // #1.2 If there is already a signature with same name, replace with name only.
+    // #1.2 If there is already a signature with same name, add signature after a coma.
     if (parsedMap.find(sigv[1]) != parsedMap.end())
-      parsedMap[sigv[1]] = sigv[1];
+      parsedMap[sigv[1]] = parsedMap[sigv[1]].append(",").append((*it).second.signature());
     else
       parsedMap[sigv[1]] = (*it).second.signature();
   }

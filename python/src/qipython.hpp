@@ -14,11 +14,12 @@
 
 extern "C" {
 
-  qi_application_t *py_application_create(PyObject *args);
+  qi_application_t* py_application_create(PyObject *args);
   PyObject*         qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *args);
   void              qi_bind_method(qi_object_builder_t *builder, const char *signature, PyObject *object);
-  PyObject         *qi_object_methods_vector(qi_object_t *object);
+  PyObject*         qi_object_methods_vector(qi_object_t *object);
   unsigned int      py_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr);
+  PyObject*         qi_get_sigreturn(qi_object_t *object, const char *signature);
 }
 
 #endif      /* !QIPYTHON_H_ */

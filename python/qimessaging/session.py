@@ -84,15 +84,17 @@ class Session:
         _qimessagingswig.qi_session_unregister_service(self._session, idx)
 
 
-    def _addfunc(self, name, signature, obj):
+    def _addfunc(self, name, signature, obj, sigreturn):
         """ Dynamicaly add function to object
         """
         def innerfunc(*args):
             """ Function called when alias is used.
             """
-            return obj.call(signature, *args)
-        innerfunc.__doc__ = "Docstring or %s" % name
+            return obj._call(signature, *args)
+        innerfunc.__doc__ = "Docstring of %s" % name
         innerfunc.__name__ = name
+        innerfunc.__signature__ = signature
+        innerfunc.__sigreturn__ = sigreturn
         setattr(obj, innerfunc.__name__, innerfunc)
 
     def service(self, name):
@@ -117,12 +119,16 @@ class Session:
         # Create Python methods
         for signature in methods:
             # Set method signature and name.
-            name = signature.rsplit("::", 2)[0]
+            if ',' in  signature:
+                signatures = signature.rsplit(",")
+                name = signatures[0].rsplit("::", 2)[0]
+            else:
+                name = signature.rsplit("::", 2)[0]
 
             # Add method in object.
             # Overloaded functions are merged, signature becomes function name.
             # Disambiguation is done at call.
-            self._addfunc(name, signature, obj)
+            self._addfunc(name, signature, obj, _qimessagingswig.qi_get_sigreturn(obj_c, name))
 
         # FIXME : Do signal here.
 
