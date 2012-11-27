@@ -83,16 +83,13 @@ namespace qi {
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     qi::ObjectPtr    obj;
     unsigned int     funcId;
-    qi::MetaCallType mct;
 
     _currentSocket = socket;
     //choose between special function (on BoundObject) or normal calls
-    if (msg.function() < gObjectOffset) {
+    if (msg.function() < static_cast<unsigned int>(gObjectOffset)) {
       obj = _self;
-      mct = MetaCallType_Direct;
     } else {
       obj = _object;
-      mct = _callType;
     }
     funcId = msg.function();
 
