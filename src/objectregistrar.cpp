@@ -133,8 +133,8 @@ namespace qi {
         name = it->second.name;
         if (!it->second.object.unique())
         {
-          qiLogInfo("qimessaging.Server") << "Some references to service #" << idx
-                                          << " are still held!";
+          qiLogVerbose("qimessaging.Server") << "Some references to service #" << idx
+                                             << " are still held!";
         }
         _services.erase(it);
       } else {
