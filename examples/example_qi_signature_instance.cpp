@@ -17,7 +17,7 @@ int main()
   typedef std::vector<int>                    IntVector;
 
   StringMap   mymap;
-  int         myint;
+//  int         myint;
   std::string mystring;
   IntVector   myvector;
 
