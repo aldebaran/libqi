@@ -63,7 +63,7 @@ namespace qi {
 
     // output
     const MetaObject& metaObject();
-    ObjectPtr object(void* ptr);
+    ObjectPtr object(void* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
     ObjectType* type();
 
     /// Register type to typeof. Called by type()
