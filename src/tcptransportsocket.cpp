@@ -4,7 +4,9 @@
 */
 
 // Disable "'this': used in base member initializer list"
-#pragma warning(disable: 4355)
+#ifdef _MSVC
+# pragma warning(disable: 4355)
+#endif
 
 #include "tcptransportsocket.hpp"
 #include "tcptransportsocket_p.hpp"
