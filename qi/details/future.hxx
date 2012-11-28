@@ -11,6 +11,7 @@
 #include <utility> // pair
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
+#include <qi/api.hpp>
 
 namespace qi {
 
