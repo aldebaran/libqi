@@ -4,7 +4,8 @@
 */
 
 // Disable "'this': used in base member initializer list"
-#ifdef _MSVC
+#ifdef _MSC_VER
+# pragma warning( push )
 # pragma warning(disable: 4355)
 #endif
 
@@ -228,6 +229,8 @@ namespace qi {
     fut.connect(qi::Future<qi::ServiceInfo>::Slot(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId)).track(_self));
     return result;
   }
-
-
 }
+
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif

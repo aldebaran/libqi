@@ -4,7 +4,8 @@
 */
 
 // Disable "'this': used in base member initializer list"
-#ifdef _MSVC
+#ifdef _MSC_VER
+# pragma warning( push )
 # pragma warning(disable: 4355)
 #endif
 
@@ -303,3 +304,7 @@ qi::Url ServiceDirectory::listenUrl() const {
 
 
 }; // !qi
+
+#ifdef _MSC_VER
+# pragma warning( pop )
+#endif
