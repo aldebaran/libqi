@@ -45,7 +45,7 @@ std::string space_i(int space) {
   for (int i = 0; i < space; ++i)
     ret += " ";
   return ret;
-};
+}
 
 void sig_print(const qi::Signature &sig, int indent = 0) {
   qi::Signature::iterator it;
@@ -60,7 +60,7 @@ void sig_print(const qi::Signature &sig, int indent = 0) {
       sig_print(subsig, indent + 1);
     }
   }
-};
+}
 
 int main()
 {

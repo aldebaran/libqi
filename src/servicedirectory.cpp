@@ -32,8 +32,6 @@
 
 namespace qi
 {
-
-
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
     : _sdbo(boost::shared_ptr<ServiceDirectoryBoundObject>(new ServiceDirectoryBoundObject))
   {
@@ -258,52 +256,52 @@ namespace qi
     serviceAdded(idx, serviceName);
   }
 
-ServiceDirectory::ServiceDirectory()
-  : _p(new ServiceDirectoryPrivate())
-{
-}
+  ServiceDirectory::ServiceDirectory()
+    : _p(new ServiceDirectoryPrivate())
+  {
+  }
 
-ServiceDirectory::~ServiceDirectory()
-{
-  close();
-  delete _p;
-}
+  ServiceDirectory::~ServiceDirectory()
+  {
+    close();
+    delete _p;
+  }
 
-bool ServiceDirectory::listen(const qi::Url &address)
-{
-  bool b = _p->_server.listen(address);
-  if (!b)
-    return false;
+  bool ServiceDirectory::listen(const qi::Url &address)
+  {
+    bool b = _p->_server.listen(address);
+    if (!b)
+      return false;
 
-  ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
+    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
 
-  ServiceInfo si;
-  si.setName("ServiceDirectory");
-  si.setServiceId(1);
-  si.setMachineId(qi::os::getMachineId());
-  si.setEndpoints(_p->_server.endpoints());
-  unsigned int regid = sdbo->registerService(si);
-  sdbo->serviceReady(1);
-  //serviceDirectory must have id '1'
-  assert(regid == 1);
-  qiLogInfo("ServiceDirectory") << "ServiceDirectory listening on: " << address.str();
-  return true;
-}
+    ServiceInfo si;
+    si.setName("ServiceDirectory");
+    si.setServiceId(1);
+    si.setMachineId(qi::os::getMachineId());
+    si.setEndpoints(_p->_server.endpoints());
+    unsigned int regid = sdbo->registerService(si);
+    sdbo->serviceReady(1);
+    //serviceDirectory must have id '1'
+    assert(regid == 1);
+    qiLogInfo("ServiceDirectory") << "ServiceDirectory listening on: " << address.str();
+    return true;
+  }
 
-qi::UrlVector ServiceDirectory::endpoints() const {
-  return _p->_server.endpoints();
-}
-void ServiceDirectory::close() {
-  qiLogInfo("ServiceDirectory") << "Closing ServiceDirectory";
-  _p->_server.close();
-}
+  qi::UrlVector ServiceDirectory::endpoints() const {
+    return _p->_server.endpoints();
+  }
 
-qi::Url ServiceDirectory::listenUrl() const {
-  return _p->_server.listenUrl();
-}
+  void ServiceDirectory::close() {
+    qiLogInfo("ServiceDirectory") << "Closing ServiceDirectory";
+    _p->_server.close();
+  }
 
+  qi::Url ServiceDirectory::listenUrl() const {
+    return _p->_server.listenUrl();
+  }
 
-}; // !qi
+} // !qi
 
 #ifdef _MSC_VER
 # pragma warning( pop )

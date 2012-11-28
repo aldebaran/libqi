@@ -27,6 +27,6 @@ namespace qi
   private:
     ServiceDirectoryPrivate *_p;
   }; // !ServiceDirectory
-}; // !qi
+} // !qi
 
 #endif  // _QIMESSAGING_SERVICEDIRECTORY_HPP_
