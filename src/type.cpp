@@ -323,7 +323,7 @@ namespace qi {
      res += (char)Signature::Type_Tuple_End;
      result = res;
    }
-   void visitDynamic(Type* type, GenericValuePtr pointee)
+   void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
    {
      if (_resolveDynamic)
      {

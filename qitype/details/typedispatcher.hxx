@@ -77,7 +77,7 @@ namespace qi {
         std::pair<GenericValuePtr, bool> gv(GenericValuePtr(), false);
         if (storage && *storage)
           gv = static_cast<TypeDynamic*>(type)->get(*storage);
-        v.visitDynamic(type, gv.first);
+        v.visitDynamic(GenericValuePtr(type, storage?*storage:0), gv.first);
         if (gv.second)
           gv.first.destroy();
         break;

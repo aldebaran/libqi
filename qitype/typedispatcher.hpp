@@ -34,7 +34,7 @@ namespace qi {
   //   void visitObject(GenericObject value);
   //   void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee);
   //   void visitTuple(TypeTuple* type, void* storage);
-  //   void visitDynamic(Type* type, GenericValuePtr pointee);
+  //   void visitDynamic(GenericValuePtr source, GenericValuePtr pointee);
   //   void visitRaw(TypeRaw* type, Buffer* value);
   // };
 
