@@ -196,7 +196,7 @@ namespace qi {
 
   template <typename T>
   qi::Future<T> makeFutureError(const std::string &value);
-};
+}
 
 #ifdef _MSC_VER
 #  pragma warning( pop )
