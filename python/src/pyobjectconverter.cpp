@@ -132,7 +132,7 @@ struct ToPyObject
     }
   }
 
-  void visitDynamic(qi::Type* type, qi::GenericValuePtr pointee)
+  void visitDynamic(qi::GenericValuePtr source, qi::GenericValuePtr pointee)
   {
     *result = PyObject_from_GenericValue(pointee);
   }

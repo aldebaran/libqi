@@ -420,7 +420,7 @@ namespace qi {
         out.endTuple();
       }
 
-      void visitDynamic(Type* type, GenericValuePtr pointee)
+      void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
       {
         out.write(pointee);
       }
@@ -563,7 +563,7 @@ namespace qi {
         }
       }
 
-      void visitDynamic(Type* type, GenericValuePtr pointee)
+      void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
       {
         std::string sig;
         in.read(sig);
