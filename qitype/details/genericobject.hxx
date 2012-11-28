@@ -130,10 +130,29 @@ namespace qi {
     virtual void set(void** storage, GenericValuePtr source)
     {
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
-      if (source.kind() != Type::Object)
-        throw std::runtime_error("Cannot assign non-object to ObjectPtr");
-      ObjectPtr op(new GenericObject(static_cast<ObjectType*>(source.type), source.value));
-      *val = op;
+      if (source.type->info() == info())
+      {
+        ObjectPtr* src = (ObjectPtr*)source.type->ptrFromStorage(&source.value);
+        if (!*src)
+          qiLogWarning("qi.type") << "NULL ObjectPtr";
+        *val = *src;
+      }
+      else if (source.kind() == Type::Dynamic)
+      {
+        std::pair<GenericValuePtr, bool> val
+          = static_cast<TypeDynamic*>(source.type)->get(source.value);
+       set(storage, val.first);
+       if (val.second)
+         val.first.destroy();
+      }
+      else if (source.kind() == Type::Object)
+      {
+        ObjectPtr op(new GenericObject(static_cast<ObjectType*>(source.type), source.value));
+        *val = op;
+      }
+      else
+        throw std::runtime_error((std::string)"Cannot assign non-object " + source.type->infoString() + " to ObjectPtr");
+
     }
     typedef DefaultTypeImplMethods<ObjectPtr> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
