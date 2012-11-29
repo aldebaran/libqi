@@ -11,10 +11,12 @@
 
 from qimessaging.application import Application
 from qimessaging.session import Session
+from qimessaging.binder import bind
 from qimessaging.objectbuilder import ObjectBuilder
 from qimessagingswig import servicedirectory
 
-def service_reply(string):
+@bind("s(s)")
+def reply(string):
     """ Simple 'for sure !' string concatener.
     """
     ret = "%s, for sure !" % string
@@ -37,7 +39,7 @@ def test_integration():
 
     # Create an object builder and register method on it.
     builder = ObjectBuilder()
-    builder.register_method("reply::s(s)", service_reply)
+    builder.register_method(reply)
 
     # Create instance (aka Object) of service
     obj = builder.object()

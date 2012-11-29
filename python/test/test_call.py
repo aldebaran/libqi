@@ -153,37 +153,37 @@ def test_call():
 
     # Assert call with simple parameter and return value works.
     print "\nTest #1 : Calling reply('plaf')"
-    ret = proxy.call("reply", "plaf")
+    ret = proxy._call("reply", "plaf")
     assert ret == "plafbim"
 
     # Assert call with no parameter and return value works.
     print "\nTest #2 : Calling ping()"
-    ret = proxy.call("ping")
+    ret = proxy._call("ping")
     assert ret == "pong"
 
     # Assert call with no parameter and no return value works.
     print "\nTest #3 : Calling void ping()"
-    proxy.call("pingv")
+    proxy._call("pingv")
 
     # Assert call to ambigous signature works.
     print "\nTest #4.1 : Calling ambiguous add(a, b)"
-    retAdd = proxy.call("add", 4.2, 38.22)
+    retAdd = proxy._call("add", 4.2, 38.22)
     assert (retAdd - 42.42) <= 0.01
     print "\nTest #4.2"
-    retAdd2 = proxy.call("add", 2, 40)
+    retAdd2 = proxy._call("add", 2, 40)
     assert retAdd2 == 42
 
     # Assert call to overloaded method works.
     print "\nTest #5.1 : Calling overloaded sub(a, b) and sub(a, b, str)"
-    retSub = proxy.call("sub", 3, 2)
+    retSub = proxy._call("sub", 3, 2)
     assert retSub == 1
     print "\nTest #5.2"
-    retSub2 = proxy.call("sub_message", 5, 2, "yolo")
+    retSub2 = proxy._call("sub_message", 5, 2, "yolo")
     assert retSub2 == 3
 
     # Assert complex return value works (List).
     print '\nTest #6 : Calling split("riri;fifi;loulou", ";"'
-    pig_list = proxy.call("split", "riri;fifi;loulou", ";")
+    pig_list = proxy._call("split", "riri;fifi;loulou", ";")
     assert pig_list != None
     assert pig_list[0] == "riri"
     assert pig_list[1] == "fifi"
@@ -192,12 +192,12 @@ def test_call():
     # Assert complex parameter works (Tuple).
     print '\nTest #7 : Calling print(("Gibouna", "Nao", 2345223))'
     robot = ("Gibouna", "Nao", 23443234)
-    proxy.call("myprint", robot)
+    proxy._call("myprint", robot)
 
     # Assert complex recursive parameters works (List of tuple).
     print '\nTest #8 : Calling print(robot_list)'
     robot_list = [("Gibouna", "Nao", 23443234), ("Billy West", "Nao", 123456), ("Wall-E", "Garbage Collector", 55555505)]
-    robot_number = proxy.call("printList", robot_list)
+    robot_number = proxy._call("printList", robot_list)
 
     # Cleanup
     print "Cleanup..."
