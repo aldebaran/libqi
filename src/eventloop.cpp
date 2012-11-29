@@ -317,7 +317,7 @@ namespace qi {
     {
       if (! qi::Application::initialized())
       {
-        qiLogError("EventLoop") << "EventLoop created before qi::Application()";
+        qiLogInfo("EventLoop") << "Creating event loop while no qi::Application() is running";
       }
       ctx = new EventLoop();
       ctx->start();
