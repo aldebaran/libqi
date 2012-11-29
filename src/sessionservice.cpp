@@ -69,7 +69,7 @@ namespace qi {
   {
     {
       boost::mutex::scoped_lock                 sl(_requestsMutex);
-      std::map<long, ServiceRequest*>::iterator it;
+      std::map<int, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
       if (it == _requests.end()) {
@@ -90,7 +90,7 @@ namespace qi {
     ServiceRequest   *sr     = 0;
     {
       boost::mutex::scoped_lock                 l(_requestsMutex);
-      std::map<long, ServiceRequest*>::iterator it;
+      std::map<int, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
       if (it == _requests.end()) {

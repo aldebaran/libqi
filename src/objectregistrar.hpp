@@ -65,7 +65,7 @@ namespace qi {
 
   private:
     typedef std::map<unsigned int, BoundService>                       BoundServiceMap;
-    typedef std::map<long, std::pair<qi::ObjectPtr, qi::ServiceInfo> > RegisterServiceMap;
+    typedef std::map<int, std::pair<qi::ObjectPtr, qi::ServiceInfo> > RegisterServiceMap;
     typedef std::map<std::string, unsigned int>                        ServiceNameToIndexMap;
 
   public:
@@ -78,7 +78,7 @@ namespace qi {
 
     //used by registerService
     RegisterServiceMap                  _registerServiceRequest;
-    qi::Atomic<long>                    _registerServiceRequestIndex;
+    qi::Atomic<int>                    _registerServiceRequestIndex;
     boost::mutex                        _registerServiceRequestMutex;
 
     //no lock needed

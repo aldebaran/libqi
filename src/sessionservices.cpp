@@ -31,7 +31,7 @@ namespace qi {
   ServicesRequest *Session_Services::request(long requestId) {
     {
       boost::mutex::scoped_lock sl(_requestMutex);
-      std::map<long, ServicesRequest*>::iterator it;
+      std::map<int, ServicesRequest*>::iterator it;
       it = _request.find(requestId);
       if (it != _request.end())
         return it->second;
@@ -42,7 +42,7 @@ namespace qi {
   void Session_Services::removeRequest(long requestId) {
     {
       boost::mutex::scoped_lock sl(_requestMutex);
-      std::map<long, ServicesRequest*>::iterator it;
+      std::map<int, ServicesRequest*>::iterator it;
       it = _request.find(requestId);
       if (it != _request.end()) {
         delete it->second;

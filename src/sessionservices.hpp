@@ -49,11 +49,11 @@ namespace qi {
     void             removeRequest(long requestId);
 
   protected:
-    typedef std::map<long, ServicesRequest*> ServicesRequestPtrMap;
+    typedef std::map<int, ServicesRequest*> ServicesRequestPtrMap;
 
-    std::map<long, ServicesRequest*>  _request;
+    std::map<int, ServicesRequest*>  _request;
     boost::mutex                      _requestMutex;
-    qi::Atomic<long>                  _requestIndex;
+    qi::Atomic<int>                  _requestIndex;
 
     ServiceDirectoryClient *_sdClient;
     ObjectRegistrar        *_server;
