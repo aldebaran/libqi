@@ -44,7 +44,7 @@ namespace qi
         return new BoostWeakPointerLock(weakPointer);
       }
     private:
-      qi::Atomic<long>  lockCount;
+      qi::Atomic<int>  lockCount;
       boost::shared_ptr<T> sharedPointer;
       boost::weak_ptr<T>   weakPointer;
     };

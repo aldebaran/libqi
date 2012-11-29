@@ -78,7 +78,7 @@ namespace qi {
 
     qi::Atomic<unsigned int>            _index;
     // Global uid for event subscribers.
-    static qi::Atomic<long> uid;
+    static qi::Atomic<int> uid;
     friend class TypeImpl<MetaObjectPrivate>;
     friend class TypeImpl<MetaObject>;
   };
