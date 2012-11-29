@@ -192,7 +192,6 @@ namespace qi {
   qi::Future<qi::ObjectPtr> Session_Service::service(const std::string &service,
                                                      Session::ServiceLocality locality)
   {
-    qiLogVerbose("session.service") << "Getting service " << service;
     qi::Future<qi::ObjectPtr> result;
     if (locality != Session::ServiceLocality_Remote) {
       //qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
