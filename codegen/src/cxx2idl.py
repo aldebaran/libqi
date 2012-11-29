@@ -33,30 +33,49 @@ def idltype_to_cxxtype(t):
     t = t.replace(e, REV_MAP[e])
   return t
 
-def cxx_type_parse(t):
-  pre = ''
-  mid = ''
-  post = ''
-  substart = t.find('<')
-  if substart != -1:
-    #find matching
-    count=1
-    p = substart + 1
-    while p < len(t) and count:
-      if t[p] == '>':
-        count = count - 1
-      if t[p] == '<':
-        count = count + 1
+def cxx_type_parse(txt):
+  components = []
+  level = 0
+  p = 0
+  while p < len(txt):
+    if txt[p] == '>':
+      level = level - 1
+    if txt[p] == '<':
+      level = level + 1
+    if txt[p] == ',' and level == 0:
+      components.append(txt[0: p])
+      txt = txt[p+1:]
+      p = 0
+    else:
       p = p+1
-    if count:
-      throw ("Parse error in " + t)
-    elem = t[substart+1:p-1]
-    subres = cxx_type_parse(elem)
-    after = t[p+1:]
-    return (t[0:substart], subres, cxx_type_parse(after))
-  return t
+  components.append(txt)
+  results = []
+  for t in components:
+    substart = t.find('<')
+    if substart != -1:
+      #find matching
+      count=1
+      p = substart + 1
+      while p < len(t) and count:
+        if t[p] == '>':
+          count = count - 1
+        if t[p] == '<':
+          count = count + 1
+        p = p+1
+      if count:
+        throw ("Parse error in " + t)
+      elem = t[substart+1:p-1]
+      subres = cxx_type_parse(elem)
+      after = t[p+1:]
+      results.append((t[0:substart], subres, after))
+    else:
+      results.append(t)
+  print(results)
+  return results
 
 def cxx_parsed_to_sig(p):
+  if (type(p) == list):
+    return ','.join(map(cxx_parsed_to_sig, p))
   if (type(p) == tuple):
     if re.search('vector$', p[0]):
       return p[0][0:-6] + "[" + cxx_parsed_to_sig(p[1]) + "]" + cxx_parsed_to_sig(p[2])
@@ -127,6 +146,12 @@ def doxyxml_to_raw(doxy_dir):
         argstype_raw = [a.find('type').text for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
       methods[method_name] = (rettype, argstype)
+    # Parse signals
+    for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
+      name = s.find("name").text
+      type = s.find("type").text
+      if type.find("Signal") != -1:
+        "implement me"
     result[cls] = (methods,) #force tuple will add signals, doc
   return result
 
