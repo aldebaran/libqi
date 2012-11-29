@@ -39,6 +39,26 @@ class qi_signal
 
     std::map<unsigned int, PyObject*>               _callbackMap;
     qi::Signal<void (std::vector<PyObject*>)>       _sig;
+
+    class EventLoopHandler
+    {
+      public:
+        EventLoopHandler()
+          : eventLoop ()
+        {
+          eventLoop.start();
+        }
+
+        ~EventLoopHandler()
+        {
+          eventLoop.stop();
+          eventLoop.join();
+        }
+
+        qi::EventLoop eventLoop;
+    };
+
+    static EventLoopHandler                         _elHandler;
 };
 
 #endif // !QI_PYTHON_SIGNAL_HPP_

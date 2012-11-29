@@ -8,6 +8,13 @@
 
 #include "qipython_signal.hpp"
 
+/*
+ * Create an EventLoop for callbacks, otherwise it could deadlock
+ * if a callback contains an asynchronous call because qimessaging
+ * will use the internal object thread to perform it.
+ */
+qi_signal::EventLoopHandler qi_signal::_elHandler = qi_signal::EventLoopHandler();
+
 qi_signal::qi_signal()
   : _callbackMap(),
     _sig (qi::Signal<void (std::vector<PyObject*>)>())
@@ -28,7 +35,7 @@ unsigned int qi_signal::connect(PyObject* python_callback)
   }
 
   Py_XINCREF(python_callback);
-  unsigned int id = _sig.connect(boost::bind(&qi_signal::callback, this, python_callback, _1));
+  unsigned int id = _sig.connect(boost::bind(&qi_signal::callback, this, python_callback, _1), &_elHandler.eventLoop);
   _callbackMap[id] = python_callback;
 
   return id;
