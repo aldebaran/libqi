@@ -61,7 +61,7 @@ static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
     options.add_options() opts;                                       \
   }                                                                   \
   options.add_options()                                               \
-    ("help", "Show command line options")                             \
+    ("help,h", "Show command line options")                           \
     ("__positional", po::value<std::vector<std::string> >(),          \
       "Positional arguments");                                        \
   po::positional_options_description pos;                             \
