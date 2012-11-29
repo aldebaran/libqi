@@ -8,9 +8,72 @@ import tempfile
 import os
 import subprocess
 import shutil
+import re
+
+TYPE_MAP = {
+  'unsigned int': 'uint',
+  'unsigned long': 'uint64',
+  'unsigned short': 'ushort',
+  'unsigned char': 'uchar',
+  'long': 'int64',
+  'char*': 'string',
+  'GenericValue': 'dynamic',
+}
+
+def cxx_type_parse(t):
+  pre = ''
+  mid = ''
+  post = ''
+  substart = t.find('<')
+  if substart != -1:
+    #find matching
+    count=1
+    p = substart + 1
+    while p < len(t) and count:
+      if t[p] == '>':
+        count = count - 1
+      if t[p] == '<':
+        count = count + 1
+      p = p+1
+    if count:
+      throw ("Parse error in " + t)
+    elem = t[substart+1:p-1]
+    subres = cxx_type_parse(elem)
+    after = t[p+1:]
+    return (t[0:substart], subres, cxx_type_parse(after))
+  return t
+
+def cxx_parsed_to_sig(p):
+  if (type(p) == tuple):
+    if re.search('vector$', p[0]):
+      return p[0][0:-6] + "[" + cxx_parsed_to_sig(p[1]) + "]" + cxx_parsed_to_sig(p[2])
+    elif re.search('map$', p[0]):
+      return p[0][0:-3] + "{" + cxx_parsed_to_sig(p[1]) + "}" + cxx_parsed_to_sig(p[2])
+    else: # unknown template
+      return p[0] + "<" + p[1] + ">" + p[2]
+  else:
+    return p
+
 
 def cxx_type_to_signature(t):
-  return t
+  # Drop const and ref.
+  # Drop namespace std (assume any class named vector is...a vector)
+  t = t.replace('const ', '').replace("&", '').replace('std::', '')
+  # Drop all spaces that do not separate identifiers
+  t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
+  t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
+  t = t.strip()
+  #Known type conversion
+  for e in TYPE_MAP:
+    t = re.sub(e, TYPE_MAP[e], t)
+  #Container handling
+  #For correct result in presence of containers of containers,
+  #we need to parse the type almost fully
+  #Huge hack, we do not realy parse 'a,b' in template
+  parsed = cxx_type_parse(t)
+  sig = cxx_parsed_to_sig(parsed)
+  print(parsed)
+  return sig
 
 def run_doxygen(files):
   tmp_dir = tempfile.mkdtemp()
