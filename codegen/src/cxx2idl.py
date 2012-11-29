@@ -33,7 +33,7 @@ def idltype_to_cxxtype(t):
     t = t.replace(e, REV_MAP[e])
   return t
 
-def cxx_type_parse(txt):
+def parse_toplevel_comma(txt):
   components = []
   level = 0
   p = 0
@@ -49,6 +49,10 @@ def cxx_type_parse(txt):
     else:
       p = p+1
   components.append(txt)
+  return components
+
+def cxx_type_parse(txt):
+  components = parse_toplevel_comma(txt)
   results = []
   for t in components:
     substart = t.find('<')
@@ -57,13 +61,13 @@ def cxx_type_parse(txt):
       count=1
       p = substart + 1
       while p < len(t) and count:
-        if t[p] == '>':
+        if t[p] in '>}]':
           count = count - 1
-        if t[p] == '<':
+        if t[p] in '<{[':
           count = count + 1
         p = p+1
       if count:
-        throw ("Parse error in " + t)
+        print ("Parse error in " + t)
       elem = t[substart+1:p-1]
       subres = cxx_type_parse(elem)
       after = t[p+1:]
@@ -146,13 +150,24 @@ def doxyxml_to_raw(doxy_dir):
         argstype_raw = [a.find('type').text for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
       methods[method_name] = (rettype, argstype)
+    signals = []
     # Parse signals
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
       name = s.find("name").text
-      type = s.find("type").text
-      if type.find("Signal") != -1:
-        "implement me"
-    result[cls] = (methods,) #force tuple will add signals, doc
+      t = s.find("type").text
+      # Normalize spacing to ease matching below
+      t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
+      t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
+      t = t.strip()
+      match = re.match(r"(qi::)?Signal<[^(]+\((.*)\)>", t)
+      if match:
+        t = match.expand(r"\2")
+        sig = cxx_type_to_signature(t)
+        sig = parse_toplevel_comma(sig)
+        signals.append((name, sig))
+        print(sig)
+
+    result[cls] = (methods, signals) #force tuple will add signals, doc
   return result
 
 def raw_to_idl(dstruct):
@@ -175,6 +190,9 @@ def raw_to_text(dstruct):
     for method_name in dstruct[cls][0]:
       method_raw = dstruct[cls][0][method_name]
       result += "    " + method_raw[0] + " " + method_name +"(" + ",".join(method_raw[1]) + ")\n"
+    result += "  signals\n"
+    for signal in dstruct[cls][1]:
+      result += "    " + signal[0] + '(' + ','.join(signal[1]) + ')\n'
   return result
 
 def idl_to_raw(root):
