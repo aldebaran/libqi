@@ -11,15 +11,15 @@
 
 #include "qipython.hpp"
 #include "qipython_convert.hpp"
+
+#include <qi/log.hpp>
+#include <qi/os.hpp>
+
 #include <qitype/genericobject.hpp>
 #include <qitype/metaobject.hpp>
-#include <qimessaging/c/qi_c.h>
-#include <qi/log.hpp>
+#include <qitype/genericobjectbuilder.hpp>
 
-// Windows trick
-#ifdef WIN32
- #define strdup _strdup
-#endif
+#include <qimessaging/c/qi_c.h>
 
 // qi::signatureSplit return an empty sigv[1] when signature is not a full signature (method::(sss))
 // For python bindings, when signature is not valid, we assume parameter was method name.
@@ -37,7 +37,7 @@ std::vector<std::string>  signatureSplit(const std::string &signature)
 
 void*     qi_raise(const char *exception_class, const char *error_message)
 {
-  char *non_const = strdup(exception_class);
+  char *non_const = qi::os::strdup(exception_class);
   PyObject *err = PyErr_NewException(non_const, 0, 0);
   PyErr_SetString(err, error_message);
   free(non_const);
@@ -129,7 +129,7 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
   return;
 }
 
-void qi_bind_method(qi_object_builder_t *builder, char *signature, PyObject *method)
+void qi_bind_method(qi_object_builder_t *builder, const char *signature, PyObject *method)
 {
   // #1 Register generic callback to object and give pointer to real python function in data parameter
   qi_object_builder_register_method(builder, signature, &__python_callback, method);
@@ -169,4 +169,47 @@ PyObject* qi_object_methods_vector(qi_object_t *object)
 
   qi_message_destroy(message);
   return ret;
+}
+
+unsigned int py_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr)
+{
+  PyObject *iter, *method, *attribute;
+
+  // Check if object is a class
+  if (PyInstance_Check(object) == false)
+  {
+    qiLogError("qimesaging.python") << "Register object : Given object is not a class instance.";
+    qi_raise("RegisterError", "Register object : Given object is not a class instance.");
+    return 0;
+  }
+
+  // Declare qimessaging object builder
+  qi::GenericObjectBuilder ob;
+
+  // Get iterator on object attributes
+  if (!(iter = PyObject_GetIter(attr)))
+  {
+    qiLogError("qimessaging.python") << "Register object : Given object attributes is not iterable.";
+    qi_raise("RegisterError", "Register object : Given object attributes is not iterable.");
+    return 0;
+  }
+
+  // For each attribute of class
+  while ((attribute = PyIter_Next(iter)))
+  {
+    method = PyObject_GetAttr(object, attribute);
+    // register method using code of qi_object_builder_register_method
+    if (PyMethod_Check(method) == true)
+    {
+      std::string signature(PyString_AsString(attribute));
+      // Fixme : Need full signature...
+      signature.append("::x()");
+
+      qi_bind_method((qi_object_builder_t*) &ob, signature.c_str(), method);
+    }
+  }
+
+  // Get object from object builder and give it to session
+  qi::ObjectPtr obj = ob.object();
+  return qi_session_register_service(session, name, (qi_object_t*) &obj);
 }

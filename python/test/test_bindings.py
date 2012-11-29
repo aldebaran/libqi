@@ -23,39 +23,39 @@ def service_reply(string):
 def test_integration():
     """ Test both client and service side of Python QiMessaging bindings.
     """
-    sd = servicedirectory()
     application_ = Application()
+    sd = servicedirectory()
 
-    #1 Get service directory listening url.
+    # Get service directory listening url.
     sd_addr = sd.listen_url()
 
-    #2 Connect a first session to service directory (Client use).
+    # Connect a first session to service directory (Client use).
     client_session = Session(sd_addr)
 
-    #3 Connect a second session (Service use).
+    # Connect a second session (Service use).
     service_session = Session(sd_addr)
 
-    #4 Create an object builder and register method on it.
+    # Create an object builder and register method on it.
     builder = ObjectBuilder()
     builder.register_method("reply::s(s)", service_reply)
 
-    #5 Create instance (aka Object) of service
+    # Create instance (aka Object) of service
     obj = builder.object()
     assert obj is not None
 
-    #6 Initialise service.
+    # Initialise service.
     assert service_session.listen("tcp://0.0.0.0:0") is True
     idx = service_session.register_service("test_python_bindings_service", obj)
 
-    #7 Get service with client session.
+    # Get service with client session.
     service_test = client_session.service("test_python_bindings_service")
     assert service_test is not None
 
-    #8 Call reply bound method and check return value
+    # Call reply bound method and check return value
     ret = service_test.reply("testing")
     assert ret == "testing, for sure !"
 
-    #9 Clean up
+    # Clean up
     application_.stop()
     client_session.close()
     service_session.unregister_service(idx)

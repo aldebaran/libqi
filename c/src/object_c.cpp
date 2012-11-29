@@ -47,9 +47,13 @@ void        qi_object_destroy(qi_object_t *object)
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_message_t *message)
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  int methodId = 0;
 
-  // Get sigreturn for functor result
-  int methodId = obj->metaObject().methodId(signature_c);
+  if ((methodId = obj->metaObject().methodId(signature_c)) <= 0)
+  {
+    qiLogError("qimessaging.c") << "Method \"" << signature_c << "\" : No such method.";
+    return 0;
+  }
   const qi::MetaMethod *mm = obj->metaObject().method(methodId);
 
   // Get buffer from message

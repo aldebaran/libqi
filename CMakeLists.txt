@@ -16,11 +16,11 @@ enable_testing()
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 
-qi_add_optional_package(PYTHON)
 set(WITH_DOTNET OFF)
 option(WITH_EXAMPLES "Examples"          ON)
 option(WITH_PERF     "Performances test" ON)
 option(WITH_QT       "Qt support"       OFF)
+option(WITH_PYTHON   "Python bindings"  OFF)
 
 qi_add_optional_package(QISSH)
 
@@ -130,9 +130,8 @@ if(WITH_QT_QTCORE AND WITH_QT)
   add_subdirectory("qt")
 endif()
 add_subdirectory("bin")
-if(WITH_PYTHON)
-  add_subdirectory("python")
-endif()
+
+qi_add_subdirectory("python" WITH_PYTHON)
 if (WITH_DOTNET)
   add_subdirectory("dotnet")
 endif()

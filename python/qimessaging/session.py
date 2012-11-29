@@ -65,6 +65,13 @@ class Session:
             return True
         return False
 
+    def register_object(self, name, obj):
+        """ Register given Python class instance
+        """
+        attr = dir(obj)
+        return _qimessagingswig.py_session_register_object(self._session, name, obj, attr)
+
+
     def register_service(self, name, obj):
         """ Register given service and expose it to the world.
         """
@@ -93,28 +100,30 @@ class Session:
         On success, dynamicaly add remote methods to Python object.
         Generated method are a wrapper around Object.call method.
         """
-        #1 Get C object.
+        # Get C object.
         obj_c = _qimessagingswig.qi_session_get_service(self._session, name)
 
-        #1.1 One failure, return None.
+        # One failure, return None.
         if not obj_c:
             return None
 
-        #2 Create Python object from C object.
+        # Create Python object from C object.
         obj = GenericObject(obj_c)
 
-        #3 Get all remote methods signature.
+        # Get all remote methods signature.
         methods = _qimessagingswig.qi_object_methods_vector(obj_c)
 
-        #4 Create Python methods
+        # Create Python methods
         for signature in methods:
-            # 4.1 Set method signature and name.
+            # Set method signature and name.
             name = signature.rsplit("::", 2)[0]
 
-            #4.2 Add method in object.
+            # Add method in object.
             # Overloaded functions are merged, signature becomes function name.
             # Disambiguation is done at call.
             self._addfunc(name, signature, obj)
+
+        # FIXME : Do signal here.
 
         return obj
 

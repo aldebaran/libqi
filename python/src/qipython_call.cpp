@@ -17,9 +17,47 @@
 #include <qi/log.hpp>
 
 void*     qi_raise(const char *exception_class, const char *error_message);
-std::vector<std::string>  signatureSplit(const std::string &signature);
+//std::vector<std::string>  signatureSplit(const std::string &signature);
 
-static std::string                qi_pyobject_signature(PyObject *object, bool loop = true)
+static PyObject* qi_generic_call_python(qi::ObjectPtr object, const std::string& strMethodName, PyObject* listParams)
+{
+  PyObject    *it, *current;
+  qi::GenericFunctionParameters params;
+  std::string signature;
+
+  it = PyObject_GetIter(listParams);
+  current = PyIter_Next(it);
+  while (current)
+  {
+    qi::GenericValue val = qi::GenericValue::from(current);
+    params.push_back(val);
+    signature += val.signature();
+    current = PyIter_Next(it);
+  }
+
+  qi::Future<qi::GenericValuePtr> fut = object->metaCall(strMethodName + "::(" + signature + ")", params);
+  qi::Promise<PyObject *> out;
+
+  if (fut.hasError())
+  {
+    out.setError(fut.error());
+    qi_raise("_qimessaging.CallError", out.future().error().c_str());
+    return 0;
+  }
+
+  return out.future().value();
+}
+
+// New qi_generic_call : Just cast and call qi_generic_call_python
+PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *args)
+{
+  qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr*>(object_c));
+
+  return qi_generic_call_python(obj, method_name, args);
+}
+
+/*
+ *static std::string                qi_pyobject_signature(PyObject *object, bool loop = true)
 {
   PyObject    *it, *obj;
   std::stringstream sig;
@@ -55,8 +93,9 @@ static std::string                qi_pyobject_signature(PyObject *object, bool l
   }
 
   return sig.str();
-}
+}*/
 
+/*
 static qi::MetaMethod*             qi_get_convertible_method(qi::ObjectPtr &object, const char *name, PyObject *args, std::vector<qi::MetaMethod> &candidates)
 {
   std::string  sig;
@@ -85,8 +124,12 @@ static qi::MetaMethod*             qi_get_convertible_method(qi::ObjectPtr &obje
 
   qi_raise("_qimessaging.CallError", "Cannot find any suitable method");
   return 0;
-}
+}*/
 
+/* qi_gess_method v1
+ * Doesn't use qi::GenericValue
+ * I'm keeping this until i get all tests ok.
+ *
 static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const char *sig, unsigned int nb_args, PyObject *args, std::vector<qi::MetaMethod> &candidates)
 {
   qi::ObjectPtr                    &obj = *(reinterpret_cast<qi::ObjectPtr *>(object_c));
@@ -127,8 +170,40 @@ static qi::MetaMethod*             qi_guess_method(qi_object_t *object_c, const 
   }
 
   return qi_get_convertible_method(obj, sig, args, candidates);
-}
+}*/
 
+/*static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *signature, unsigned int nb_args, PyObject *args)
+{
+  qi::ObjectPtr               obj = *(reinterpret_cast<qi::ObjectPtr *>(object_c));
+  std::vector<qi::MetaMethod> mms = obj->metaObject().findCompatibleMethod(signature);
+
+  // If there is no unique compatible method
+  if (mms.size() != 1)
+  {
+    // Code coming straight from AL::ALProxy
+    std::stringstream ss;
+    std::string type = mms.size() == 0 ? "method" : "overload";
+
+    ss << "Can't find " << type << ": " << signature << std::endl
+       << "  Candidate(s):" << std::endl;
+    std::vector<qi::MetaMethod>           mml = obj->metaObject().findMethod(qi::signatureSplit(signature)[1]);
+    std::vector<qi::MetaMethod>::const_iterator it;
+    for (it = mml.begin(); it != mml.end(); ++it) {
+      const qi::MetaMethod       &mm = *it;
+      ss << "  " << mm.signature() << std::endl;
+    }
+    qi_raise("qimessaging.callError", ss.str().c_str());
+    return 0;
+  }
+
+  int methodId = mms[0].uid();
+  return const_cast<qi::MetaMethod*>(obj->metaObject().method(methodId));
+}*/
+
+/* qi_get_method v1
+ * Doesn't use _object->metaObject().findCompatibleMethod(signature);
+ * I'm keeping this until i get all tests ok.
+ *
 static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *signature, unsigned int nb_args, PyObject *args)
 {
   std::vector<std::string>  sigInfo;
@@ -189,8 +264,11 @@ static qi::MetaMethod*      qi_get_method(qi_object_t *object_c, const char *sig
 
   // #4 Guess method from remaining candidates.
   return qi_guess_method(object_c, signature, nb_args, args, candidates);
-}
+}*/
 
+/* qi_generic_call v1
+ *
+ *
 PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *args)
 {
   qi::MetaMethod* mm;
@@ -236,4 +314,4 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
   qi_message_destroy(msg);
   qi_future_destroy(fut);
   return py;
-}
+}*/
