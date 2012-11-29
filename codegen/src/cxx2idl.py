@@ -27,6 +27,8 @@ REV_MAP = {
 }
 
 def idltype_to_cxxtype(t):
+  """ Return the C++ type to use for idl type t
+  """
   t = t.replace('{', 'std::map<').replace('}', ' >')
   t = t.replace('[', 'std::vector<').replace(']', ' >')
   for e in REV_MAP:
@@ -34,6 +36,8 @@ def idltype_to_cxxtype(t):
   return t
 
 def parse_toplevel_comma(txt):
+  """ Split given string on top-level commas (not within <>)
+  """
   components = []
   level = 0
   p = 0
@@ -52,6 +56,11 @@ def parse_toplevel_comma(txt):
   return components
 
 def cxx_type_parse(txt):
+  """ Split a C++ type into basic components.
+  Extracts template parameters.
+  A type is extracted as a string, or (template-name, template-args, trailing-stuff)
+  args is a list containing strings or (template-name, template-args, trailing)
+  """
   components = parse_toplevel_comma(txt)
   results = []
   for t in components:
@@ -78,6 +87,9 @@ def cxx_type_parse(txt):
   return results
 
 def cxx_parsed_to_sig(p):
+  """ Convert a C++ type parsed by cxx_type_parse into the corresponding
+      IDL signature.
+  """
   if (type(p) == list):
     return ','.join(map(cxx_parsed_to_sig, p))
   if (type(p) == tuple):
@@ -92,6 +104,9 @@ def cxx_parsed_to_sig(p):
 
 
 def cxx_type_to_signature(t):
+  """ Convert the string representation of a C++ type into the corresponding
+  IDL signature
+  """
   # Drop const and ref.
   # Drop namespace std (assume any class named vector is...a vector)
   t = t.replace('const ', '').replace("&", '').replace('std::', '')
@@ -111,6 +126,10 @@ def cxx_type_to_signature(t):
   return sig
 
 def run_doxygen(files):
+  """ Invoke doxygen on given source files or directories
+  :param files: A list of file or directory to scan
+  :result: the temporary directory where doxygen output is
+  """
   tmp_dir = tempfile.mkdtemp()
   # Create Doxyfile in there
   doxyfile_path = os.path.join(tmp_dir, "Doxyfile")
@@ -128,6 +147,8 @@ def run_doxygen(files):
   return tmp_dir
 
 def doxyxml_to_raw(doxy_dir):
+  """ Convert doxygen output to internal RAW representation
+  """
   # Parse the index to get all class names (and their functions)
   index_tree = etree.parse(os.path.join(doxy_dir, "xml", "index.xml"))
   class_index = dict()
@@ -171,6 +192,8 @@ def doxyxml_to_raw(doxy_dir):
   return result
 
 def raw_to_idl(dstruct):
+  """ Convert RAW to IDL XML format
+  """
   root = etree.Element('IDL')
   print(dstruct)
   for cls in dstruct:
@@ -184,6 +207,8 @@ def raw_to_idl(dstruct):
   return root
 
 def raw_to_text(dstruct):
+  """ Convert RAW to human-readable text
+  """
   result = ""
   for cls in dstruct:
     result += "class " + cls +"\n  methods\n"
@@ -196,6 +221,8 @@ def raw_to_text(dstruct):
   return result
 
 def idl_to_raw(root):
+  """ Convert IDL XML to internal RAW representation
+  """
   result = dict()
   for cls in root.findall("class"):
     methods = dict()
@@ -207,6 +234,8 @@ def idl_to_raw(root):
   return result
 
 def raw_to_proxy(class_name, data, return_future):
+  """ Generate C++ proxy code from RAW
+  """
   skeleton = """
 #ifndef @GARD@
 #define @GARD@
