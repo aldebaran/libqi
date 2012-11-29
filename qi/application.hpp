@@ -7,9 +7,10 @@
 #ifndef LIBQI_APPLICATION_HPP_
 #define LIBQI_APPLICATION_HPP_
 
-#include <vector>
-#include <qi/api.hpp>
 #include <boost/function.hpp>
+#include <qi/api.hpp>
+#include <qi/macro.hpp>
+#include <vector>
 
 namespace qi {
 
@@ -42,15 +43,15 @@ namespace qi {
 }
 
 #define QI_AT_ENTER(func) \
-static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atEnter(func);
+static bool QI_UNIQ_DEF(_qi_atenter) = ::qi::Application::atEnter(func);
 
 #define QI_AT_EXIT(func) \
-static bool _qi_ ## __LINE__ ## atenter = ::qi::Application::atExit(func);
+static bool QI_UNIQ_DEF(_qi_atexit) = ::qi::Application::atExit(func);
 
 //THIS IS INTERNAL
 //API is not maintained for this function
 #define _QI_COMMAND_LINE_OPTIONS(opts)                                \
-static void _qi_## __LINE__## opt_func() {                            \
+static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
   namespace po = boost::program_options;                              \
   po::variables_map vm;                                               \
   po::command_line_parser p(::qi::Application::arguments());          \
@@ -82,7 +83,7 @@ static void _qi_## __LINE__## opt_func() {                            \
   /* Set arguments to what was not used */                            \
   ::qi::Application::setArguments(args);                              \
 }                                                                     \
-QI_AT_ENTER(boost::bind(&_qi_## __LINE__## opt_func))
+QI_AT_ENTER(boost::bind(&(QI_UNIQ_DEF(_qi_opt_func))))
 
 
 #endif

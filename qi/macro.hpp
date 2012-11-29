@@ -119,5 +119,11 @@ Please consult the changelog for details. " #x)
 
 #define QI_UNUSED(x)
 
+// A macro to append the line number of the parent macro usage, to define a
+// function in or a variable and avoid name collision.
+#define _QI_UNIQ_DEF_LEVEL2(A, B) A ## __uniq__ ## B
+#define _QI_UNIQ_DEF_LEVEL1(A, B) _QI_UNIQ_DEF_LEVEL2(A, B)
+#define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
+
 #endif  // _LIBQI_QI_API_HPP_
 
