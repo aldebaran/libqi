@@ -492,6 +492,7 @@ namespace qi {
     }
 
     _QI_COMMAND_LINE_OPTIONS(
+      "Logging options",
       ("verbose,v", bool_switch()->notifier(&_setVerbose), "Set verbose verbosity.")
       ("debug,d", bool_switch()->notifier(&_setDebug), "Set debug verbosity.")
       ("quiet,q",  bool_switch()->notifier(&_quiet), "Do not show logs on console.")

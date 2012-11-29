@@ -50,12 +50,12 @@ static bool QI_UNIQ_DEF(_qi_atexit) = ::qi::Application::atExit(func);
 
 //THIS IS INTERNAL
 //API is not maintained for this function
-#define _QI_COMMAND_LINE_OPTIONS(opts)                                \
+#define _QI_COMMAND_LINE_OPTIONS(desc, opts)                          \
 static void QI_UNIQ_DEF(_qi_opt_func)() {                             \
   namespace po = boost::program_options;                              \
   po::variables_map vm;                                               \
   po::command_line_parser p(::qi::Application::arguments());          \
-  po::options_description options;                                    \
+  po::options_description options(desc);                              \
   {                                                                   \
     using namespace boost::program_options;                           \
     options.add_options() opts;                                       \
