@@ -23,7 +23,8 @@ TYPE_MAP = {
 REV_MAP = {
     'uint' : 'unsigned int',
     'uint64' : 'unsigned long',
-    'dynamic': 'qi::GenericValue'
+    'dynamic': 'qi::GenericValue',
+    'string' : 'std::string',
 }
 
 def idltype_to_cxxtype(t):
@@ -246,23 +247,43 @@ def raw_to_proxy(class_name, data, return_future):
 #include <map>
 
 #include <qitype/genericobject.hpp>
+
+void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
+  qi::SignalBase* sig, const char* sigName);
+
 class @className@Proxy
 {
 public:
   @className@Proxy(qi::ObjectPtr obj)
   : _obj(obj)
-  {}
+@constructorInitList@
+  {
+@constructor@
+  }
   qi::ObjectPtr asObject() { return _obj;}
-@methods@
+@publicDecl@
   private:
     qi::ObjectPtr _obj;
+@privateDecl@
 };
 
 typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
+
+static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
+  qi::SignalBase* sig, const char* sigName)
+{
+  std::string signature = sigName + ("::" + sig->signature());
+  if (enable)
+    *link = obj->xConnect(signature, SignalSubscriber(qi::makeDynamicGenericFunction(
+      boost::bind(&qi::SignalBase::trigger, sig, _1))));
+  else
+    obj->disconnect(*link);
+}
+
 #endif //@GARD@
 """
   #generate methods
-  methods = data[0]
+  (methods, signals) = (data[0], data[1])
   methodImpls = ""
   for method_name in methods:
     method = methods[method_name]
@@ -280,11 +301,22 @@ typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
     if (cret != "void" or return_future):
       methodImpls += "return "
     methodImpls += '_obj->call<' + cret + ' >' + '("' + method_name + '", ' + argNames + ");\n  }\n"
+  signalDecl = ""
+  signalDecl2 = ""
+  ctor = ""
+  # Make  a Signal field for each signal, bridge it to backend in ctor
+  for sig in signals:
+    signalDecl += '  qi::Signal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
+    signalDecl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
+    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, _obj.get(), &{0}, "{0}")\n'.format(sig[0])
   result = skeleton
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'className': class_name,
-      'methods': methodImpls
+      'publicDecl': methodImpls + signalDecl,
+      'privateDecl': signalDecl2,
+      'constructor': '',
+      'constructorInitList': ctor,
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
