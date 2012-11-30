@@ -133,7 +133,16 @@ int qi_session_register_service(qi_session_t *session, const char *name, qi_obje
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
   qi::ObjectPtr  *obj = reinterpret_cast<qi::ObjectPtr *>(object);
 
-  return s->registerService(name, *obj);
+  try
+  {
+    return s->registerService(name, *obj);
+  }
+  catch (std::runtime_error &e)
+  {
+    qi_c_set_error(e.what());
+  }
+
+  return 0;
 }
 
 void qi_session_unregister_service(qi_session_t *session, unsigned int idx)
