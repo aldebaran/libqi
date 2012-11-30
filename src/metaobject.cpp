@@ -52,16 +52,21 @@ namespace qi {
     return ret;
   }
 
-  std::vector<qi::MetaMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)
+  std::vector<MetaObject::CompatibleMethod> MetaObjectPrivate::findCompatibleMethod(const std::string &nameOrSignature)
   {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
-    std::vector<qi::MetaMethod>         ret;
+    std::vector<MetaObject::CompatibleMethod>         ret;
     MetaObject::MethodMap::iterator     it;
     std::string cname(nameOrSignature);
 
     //no signature specified fallback on findMethod
     if (cname.find("::", 0, 2) == std::string::npos)
-      return findMethod(cname);
+    {
+      std::vector<MetaMethod> r = findMethod(cname);
+      for (unsigned i=0; i<r.size(); ++i)
+        ret.push_back(std::make_pair(r[i], 1.0));
+      return ret;
+    }
 
     std::vector<std::string> sigsorig = qi::signatureSplit(nameOrSignature);
     if (sigsorig[1].empty())
@@ -75,9 +80,9 @@ namespace qi {
 
       if (sigsorig[1] != sigs[1])
         continue;
-
-      if (sresolved.isConvertibleTo(Signature(sigs[2])))
-        ret.push_back(mm);
+      float score = sresolved.isConvertibleTo(Signature(sigs[2]));
+      if (score)
+        ret.push_back(std::make_pair(mm, score));
     }
     return ret;
   }
@@ -275,7 +280,7 @@ namespace qi {
     return _p->findMethod(name);
   }
 
-  std::vector<qi::MetaMethod> MetaObject::findCompatibleMethod(const std::string &name) const
+  std::vector<MetaObject::CompatibleMethod> MetaObject::findCompatibleMethod(const std::string &name) const
   {
     return _p->findCompatibleMethod(name);
   }

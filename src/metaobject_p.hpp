@@ -50,7 +50,7 @@ namespace qi {
     bool addSignals(const MetaObject::SignalMap &mms);
 
     std::vector<MetaMethod> findMethod(const std::string &name);
-    std::vector<MetaMethod> findCompatibleMethod(const std::string &nameOrSignature);
+    std::vector<MetaObject::CompatibleMethod> findCompatibleMethod(const std::string &nameOrSignature);
 
     std::vector<MetaSignal> findSignal(const std::string &name);
 

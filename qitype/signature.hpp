@@ -117,7 +117,11 @@ namespace qi {
     std::string toQtSignature(bool constify = false) const;
     std::string toString() const;
 
-    bool isConvertibleTo(const Signature& b) const;
+    /** Tell if arguments with this signature can be converted to \p b.
+     * @return 0 if conversion is impossible, or a score in ]0,1] indicating
+     * the amount of type mismatch (the closer signatures are the bigger)
+     */
+    float isConvertibleTo(const Signature& b) const;
 
     static Signature fromType(Type t);
   protected:
