@@ -25,6 +25,7 @@ REV_MAP = {
     'uint64' : 'unsigned long',
     'dynamic': 'qi::GenericValue',
     'string' : 'std::string',
+    'int64'  : 'qi::int64_t',
 }
 
 def idltype_to_cxxtype(t):
@@ -84,7 +85,6 @@ def cxx_type_parse(txt):
       results.append((t[0:substart], subres, after))
     else:
       results.append(t)
-  print(results)
   return results
 
 def cxx_parsed_to_sig(p):
@@ -187,7 +187,6 @@ def doxyxml_to_raw(doxy_dir):
         sig = cxx_type_to_signature(t)
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
-        print(sig)
 
     result[cls] = (methods, signals) #force tuple will add signals, doc
   return result
@@ -196,7 +195,6 @@ def raw_to_idl(dstruct):
   """ Convert RAW to IDL XML format
   """
   root = etree.Element('IDL')
-  print(dstruct)
   for cls in dstruct:
     e = etree.SubElement(root, 'class', name=cls)
     for method_name in dstruct[cls][0]:
@@ -246,9 +244,11 @@ def raw_to_proxy(class_name, data, return_future):
 #include <string>
 #include <map>
 
+#include <qi/types.hpp>
+#include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
 
-void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
+static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName);
 
 class @className@Proxy
@@ -269,13 +269,19 @@ public:
 
 typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
 
+static qi::GenericValuePtr signal_bounce(const std::vector<qi::GenericValuePtr>& args,
+ qi::SignalBase* target)
+{
+  target->trigger(args);
+}
+
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName)
 {
   std::string signature = sigName + ("::" + sig->signature());
   if (enable)
-    *link = obj->xConnect(signature, SignalSubscriber(qi::makeDynamicGenericFunction(
-      boost::bind(&qi::SignalBase::trigger, sig, _1))));
+    *link = obj->xConnect(signature, qi::SignalSubscriber(qi::makeDynamicGenericFunction(
+      boost::bind(&signal_bounce, _1, sig))));
   else
     obj->disconnect(*link);
 }
@@ -293,14 +299,16 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
       cret = 'qi::FutureSync<' + cret + ' >'
     iargs = method[1]
     cargs = map(idltype_to_cxxtype, iargs)
-    argNames = 'p' + ", p".join(map(str, range(len(cargs))))
-    typedArgs = map(lambda x: cargs[x] + ' ' + argNames[x], range(len(cargs)))
-    typedArgs = ''.join(typedArgs)
+    argNames = ", ".join(map(lambda x: 'p' + str(x), range(len(cargs))))
+    if argNames:
+      argNames = ', ' + argNames # comma used in call
+    typedArgs = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
+    typedArgs = ','.join(typedArgs)
     #NOTE: should we return the future?
     methodImpls += '  ' + cret + " " + method_name + "(" + typedArgs + ") {\n    "
     if (cret != "void" or return_future):
       methodImpls += "return "
-    methodImpls += '_obj->call<' + cret + ' >' + '("' + method_name + '", ' + argNames + ");\n  }\n"
+    methodImpls += '_obj->call<' + cret + ' >' + '("' + method_name + '"' + argNames + ");\n  }\n"
   signalDecl = ""
   signalDecl2 = ""
   ctor = ""
@@ -308,7 +316,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   for sig in signals:
     signalDecl += '  qi::Signal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
     signalDecl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
-    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, _obj.get(), &{0}, "{0}")\n'.format(sig[0])
+    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, _obj.get(), &{0}, "{0}"))\n'.format(sig[0])
   result = skeleton
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
