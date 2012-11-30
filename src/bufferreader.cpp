@@ -10,9 +10,9 @@
 namespace qi {
 
   BufferReader::BufferReader(const Buffer& buffer)
-  : _cursor(0)
+  : _buffer(buffer)
+  , _cursor(0)
   , _subCursor(0)
-  , _buffer(buffer)
   {
   }
 
