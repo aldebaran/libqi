@@ -203,6 +203,10 @@ def raw_to_idl(dstruct):
       etree.SubElement(m, 'return', type= method_raw[0])
       for a in method_raw[1]:
         etree.SubElement(m, 'argument', type=a)
+    for signal in dstruct[cls][1]:
+      s = etree.SubElement(e, 'signal', name=signal[0])
+      for a in signal[1]:
+        etree.SubElement(s, 'argument', type=a)
   return root
 
 def raw_to_text(dstruct):
@@ -227,9 +231,14 @@ def idl_to_raw(root):
     methods = dict()
     for m in cls.findall("method"):
       r = m.find("return").get("type")
-      args = [a.get("type") for a in m.find("argument")]
-      methods[m.get(name)] = (r, args)
-    result[cls.get("name")] =  (methods,)
+      args = [a.get("type") for a in m.findall("argument")]
+      methods[m.get('name')] = (r, args)
+    signals = []
+    for s in cls.findall("signal"):
+      n = s.get('name')
+      args = [a.get("type") for a in s.findall("argument")]
+      signals.append((n, args))
+    result[cls.get("name")] =  (methods, signals)
   return result
 
 def raw_to_proxy(class_name, data, return_future):
@@ -372,9 +381,14 @@ def main(args):
   parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister"], help="output mode (stdout)")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
-  doxy_dir = run_doxygen(pargs.input)
-  raw = doxyxml_to_raw(doxy_dir)
-  shutil.rmtree(doxy_dir)
+  pargs.input = pargs.input[1:]
+  if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
+    xml = etree.ElementTree(file=pargs.input[0]).getroot()
+    raw = idl_to_raw(xml)
+  else:
+    doxy_dir = run_doxygen(pargs.input)
+    raw = doxyxml_to_raw(doxy_dir)
+    shutil.rmtree(doxy_dir)
   out = sys.stdout
   if pargs.output_file and pargs.output_file != "-" :
     out = open(pargs.output_file, "w")
