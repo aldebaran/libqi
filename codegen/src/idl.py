@@ -330,10 +330,46 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
     result = result.replace('@' + k + '@', replace[k])
   return result
 
+def raw_to_cxx_typebuild(class_name, data, registerToFactory):
+  """ Generate a c++ file that registers the class to type system.
+  """
+  template = """
+#include <qitype/objecttypebuilder.hpp>
+#include <qitype/objectfactory.hpp>
+
+qi::ObjectTypeBuilder<TYPE> builder;
+
+qi::ObjectPtr makeOne(const std::string&)
+{
+  return builder.object(new TYPE());
+}
+
+static int init()
+{
+ADVERTISE
+  builder.registerType();
+REGISTER
+  return 0;
+}
+static int _init_ = init();
+  """
+  advertise = ""
+  (methods, signals) = (data[0], data[1])
+  for method_name in methods:
+    m = methods[method_name]
+    advertise += '  builder.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, class_name)
+  for s in signals:
+    advertise += '  builder.advertiseEvent("{0}", &{1}::{0});\n'.format(s[0], class_name)
+  register = ''
+  if registerToFactory:
+    register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name)
+  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register)
+
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister"], help="output mode (stdout)")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   doxy_dir = run_doxygen(pargs.input)
@@ -350,6 +386,10 @@ def main(args):
     res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], False)
   elif pargs.output_mode == "proxyFuture":
     res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], True)
+  elif pargs.output_mode == "cxxtype":
+    res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], False)
+  elif pargs.output_mode == "cxxtyperegister":
+    res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
   out.write(res)
 
 main(sys.argv)
