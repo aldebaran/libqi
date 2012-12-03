@@ -295,7 +295,7 @@ namespace qi {
    }
    void visitObject(GenericObject )
    {
-     result = Signature::fromType(Signature::Type_Unknown).toString();
+     result = Signature::fromType(Signature::Type_Object).toString();
    }
    void visitPointer(TypePointer* type, void* , GenericValuePtr )
    {
@@ -425,6 +425,8 @@ namespace qi {
       return typeOf<GenericValue>();
     case Signature::Type_Raw:
       return typeOf<Buffer>();
+    case Signature::Type_Object:
+      return typeOf<ObjectPtr>();
     default:
       qiLogWarning("qi.type") << "Cannot get type from signature " << i.signature();
       return 0;
@@ -434,7 +436,7 @@ namespace qi {
   Type* Type::fromSignature(const qi::Signature& sig)
   {
     if (sig.size() != 1)
-      qiLogWarning("qi.type") << "fromSignature(): signature has more than one element";
+      qiLogWarning("qi.type") << "fromSignature(): signature has more than one element: " << sig.toString();
     Signature::iterator i = sig.begin();
     Type* result = ::qi::fromSignature(i);
     // qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");

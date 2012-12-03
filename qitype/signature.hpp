@@ -82,6 +82,7 @@ namespace qi {
       //This type should not be used, it's will be removed when we get ride of legacy void *.
       Type_Pointer  = '*',
 
+      Type_Object   = 'o',
       Type_Unknown  = 'X'
     };
 
