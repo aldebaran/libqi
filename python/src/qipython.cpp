@@ -139,14 +139,14 @@ PyObject* qi_get_sigreturn(qi_object_t *object, const char *signature)
 {
   qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
   std::string sigreturns;
-  std::vector<qi::MetaMethod> mm = obj->metaObject().findCompatibleMethod(std::string(signature));
+  std::vector<qi::MetaObject::CompatibleMethod> mm = obj->metaObject().findCompatibleMethod(std::string(signature));
 
-  for (std::vector<qi::MetaMethod>::iterator it = mm.begin(); it != mm.end(); ++it)
+  for (std::vector<qi::MetaObject::CompatibleMethod>::iterator it = mm.begin(); it != mm.end(); ++it)
   {
     if (sigreturns.empty() == false)
-      sigreturns.append(",").append((*it).sigreturn());
+      sigreturns.append(",").append(it->first.sigreturn());
     else
-      sigreturns = (*it).sigreturn();
+      sigreturns = it->first.sigreturn();
   }
 
   qi::GenericValue val = qi::GenericValue::from(sigreturns);
