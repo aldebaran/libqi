@@ -22,6 +22,12 @@ option(WITH_PERF     "Performances test" ON)
 option(WITH_QT       "Qt support"       OFF)
 option(WITH_PYTHON   "Python bindings"   ON)
 
+# Desactivate Python and .NET bindings for Android
+if (ANDROID)
+   set(WITH_PYTHON OFF)
+   set(WITH_DOTNET OFF)
+endif()
+
 qi_add_optional_package(QISSH)
 
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
