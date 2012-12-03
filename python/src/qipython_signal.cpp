@@ -6,6 +6,8 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <algorithm>
+
 #include "qipython_signal.hpp"
 
 /*
@@ -94,9 +96,23 @@ void qi_signal::trigger(PyObject* arg0,
   args.push_back(arg8);
   args.push_back(arg9);
 
+  int callbacksNb = _sig.subscribers().size();
+
+  /* Keep ref on objects for all callbacks */
+  for (std::vector<PyObject*>::iterator it = args.begin();
+       it != args.end(); it++)
+  {
+    for (int i = 0; i < callbacksNb; i++)
+      Py_XINCREF(*it);
+  }
+
   _sig(args);
 }
 
+void pyXDecRef(PyObject* obj)
+{
+  Py_XDECREF(obj);
+}
 
 void qi_signal::callback(PyObject* callback, const std::vector<PyObject*>& args)
 {
@@ -114,6 +130,7 @@ void qi_signal::callback(PyObject* callback, const std::vector<PyObject*>& args)
   }
 
   Py_XDECREF(ret);
+  std::for_each(args.begin(), args.end(), pyXDecRef);
 
   PyGILState_Release(gstate);
 }
