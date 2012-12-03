@@ -49,7 +49,7 @@ namespace qi
     }
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
-      *(char**)storage = strdup(ptr);
+      *(char**)storage = qi::os::strdup(ptr);
     }
     virtual void* clone(void* src)
     {
