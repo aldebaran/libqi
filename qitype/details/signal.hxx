@@ -156,8 +156,8 @@ namespace qi
   } // detail
 
   template<typename T>
-  Signal<T>::Signal()
-  : SignalBase()
+  Signal<T>::Signal(OnSubscribers onSubscribers)
+  : SignalBase(onSubscribers)
   {
     detail::FusedEmit<T> fusor = detail::FusedEmit<T>(*this);
     * (boost::function<T>*)this = boost::fusion::make_unfused(fusor);

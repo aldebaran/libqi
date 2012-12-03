@@ -317,24 +317,35 @@ namespace qi {
     SignalSubscriberPtr s = boost::make_shared<SignalSubscriber>(src);
     s->linkId = res;
     s->source = this;
+    bool first = _p->subscriberMap.empty();
     _p->subscriberMap[res] = s;
+    if (first && _p->onSubscribers)
+      _p->onSubscribers(true);
     return *s.get();
   }
 
   bool SignalBase::disconnectAll() {
     if (_p)
+    {
+      bool hasSubs = !_p->subscriberMap.empty();
       return _p->reset();
+      if (hasSubs && _p->onSubscribers)
+        _p->onSubscribers(false);
+    }
     return false;
   }
 
-  SignalBase::SignalBase(const std::string& sig)
+  SignalBase::SignalBase(const std::string& sig, OnSubscribers onSubscribers)
     : _p(new SignalBasePrivate)
   {
+    _p->onSubscribers = onSubscribers;
     _p->signature = sig;
   }
 
-  SignalBase::SignalBase()
+  SignalBase::SignalBase(OnSubscribers onSubscribers)
+  : _p(new SignalBasePrivate)
   {
+    _p->onSubscribers = onSubscribers;
   }
 
   SignalBase::SignalBase(const SignalBase& b)
@@ -375,7 +386,8 @@ namespace qi {
     sigLock.release()->unlock();
     // Ensure no call on subscriber occurrs once this function returns
     s->enabled = false;
-
+    if (subscriberMap.empty() && onSubscribers)
+      onSubscribers(false);
     if ( s->activeThreads.empty()
          || (s->activeThreads.size() == 1
              && *s->activeThreads.begin() == boost::this_thread::get_id()))

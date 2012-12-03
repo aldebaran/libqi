@@ -22,6 +22,7 @@ namespace qi {
     bool reset();
 
   public:
+    SignalBase::OnSubscribers      onSubscribers;
     SignalSubscriberMap            subscriberMap;
     std::string                    signature;
     boost::recursive_mutex         mutex;

@@ -39,8 +39,9 @@ namespace qi {
   class QITYPE_API SignalBase
   {
   public:
-    explicit SignalBase(const std::string& signature);
-    SignalBase();
+    typedef boost::function<void(bool)> OnSubscribers;
+    explicit SignalBase(const std::string& signature, OnSubscribers onSubscribers = OnSubscribers());
+    SignalBase(OnSubscribers onSubscribers=OnSubscribers());
     virtual ~SignalBase();
     SignalBase(const SignalBase& b);
     SignalBase& operator = (const SignalBase& b);
@@ -102,7 +103,11 @@ namespace qi {
   class Signal: public SignalBase, public boost::function<T>
   {
   public:
-    Signal();
+    /** Signal constructor
+     * @param onSubscribers invoked each time number of subscribers switch
+     * between 0 and 1, with argument '!subscribers.empty()'
+    */
+    Signal(OnSubscribers onSubscribers = OnSubscribers());
     Signal(const Signal<T>& b);
     Signal<T>& operator = (const Signal<T>& b);
     virtual std::string signature() const;
