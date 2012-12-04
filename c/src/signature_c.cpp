@@ -86,11 +86,6 @@ void qi_signature_destroy(qi_signature_t *sig)
   delete sig;
 }
 
-int qi_signature_is_pointer(const qi_signature_t *sig)
-{
-  return sig->_it.pointer();
-}
-
 //return
 // 0 on success
 // 1 on EOL

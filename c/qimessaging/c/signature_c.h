@@ -89,7 +89,6 @@ QIMESSAGING_API int                    qi_signature_count(qi_signature_t *sig);
 QIMESSAGING_API int                    qi_signature_next(qi_signature_t *sig);
 QIMESSAGING_API const char*            qi_signature_current(qi_signature_t *sig);
 QIMESSAGING_API enum qi_signature_type qi_signature_current_type(qi_signature_t *sig);
-QIMESSAGING_API int                    qi_signature_is_pointer(const qi_signature_t *sig);
 QIMESSAGING_API int                    qi_signature_get_name(const char *complete_sig, char *buffer, int size);
 QIMESSAGING_API int                    qi_signature_get_return(const char *complete_sig, char *buffer, int size);
 QIMESSAGING_API int                    qi_signature_get_params(const char *complete_sig, char *buffer, int size);

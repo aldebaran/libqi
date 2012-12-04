@@ -115,16 +115,6 @@
   */
 
   /*!
-  * \fn qi_signature_is_pointer(const qi_signature_t *sig)
-  * \brief return type of current element of signature
-  *
-  * \param[in] sig : Signature to use.
-  *
-  * \return 1 if the current element is a pointer, 0 on failure and error
-  * \since 1.18
-  */
-
-  /*!
   * \fn qi_signature_get_name(const char *complete_sig, char *buffer, int size)
   * \brief copy method name into buffer
   *
