@@ -88,6 +88,11 @@ namespace qi {
 
     class QITYPE_API iterator {
     public:
+      typedef std::string               value_type;
+      typedef std::forward_iterator_tag iterator_category;
+      typedef ptrdiff_t                 difference_type;
+      typedef std::string*              pointer;
+      typedef std::string&              reference;
       iterator() : _current(0), _end(0) {}
       iterator          &operator++();
       iterator          &operator++(int);
