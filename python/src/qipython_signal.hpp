@@ -9,9 +9,10 @@
 #ifndef QI_PYTHON_SIGNAL_HPP_
 # define QI_PYTHON_SIGNAL_HPP_
 
-# include <Python.h>
-
 # include <qitype/signal.hpp>
+
+// If included first doesn't compile with clang on OSX
+# include <Python.h>
 
 class qi_signal
 {
