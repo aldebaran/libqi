@@ -232,8 +232,16 @@ namespace qi {
     if (!_p->_innerSerialization)
       signature() += "m";
     ++_p->_innerSerialization;
-    write(value.signature());
-    qi::details::serialize(value, *this);
+    std::string sig = value.signature();
+    if (sig.empty())
+      sig = "v";
+    if (Signature(sig).size() != 1)
+      qiLogWarning("qi.BinaryEncoder") << "Weird GenericValuePtr signature: " << sig;
+    write(sig);
+    if (!recurse)
+      qi::details::serialize(value, *this);
+    else
+      recurse();
     --_p->_innerSerialization;
   }
 
