@@ -175,16 +175,22 @@ namespace qi {
                                   << bestMatch.signature() <<" for " << signature;
         methodId = bestMatch.uid();
         qi::Signature s(qi::signatureSplit(bestMatch.signature())[2]);
-        // Signature is wrapped in a tuple, unwrap
-        newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
+        bool hasUnknown = (s.toString().find("X") != std::string::npos);
+        // If we have an unknown signature, serialization is impossible.
+        // So no need for this extra conversion step.
+        if (!hasUnknown)
+        {
+          // Signature is wrapped in a tuple, unwrap
+          newArgs = new GenericFunctionParameters(args.convert(s.begin().children()));
 #ifndef NDEBUG
-        // Validate signature again on newArgs
-        std::string sig = "";
-        for (unsigned i=0; i< newArgs->size(); ++i)
-          sig += (*newArgs)[i].signature();
-        if (s.toString() != '(' + sig + ')')
-          qiLogError("qi.object") << "Inconsistency in signature, deserialization will fail " << s.toString() << " " << sig;
+          // Validate signature again on newArgs
+          std::string sig = "";
+          for (unsigned i=0; i< newArgs->size(); ++i)
+            sig += (*newArgs)[i].signature();
+          if (s.toString() != '(' + sig + ')')
+            qiLogError("qi.object") << "Inconsistency in signature, deserialization will fail " << s.toString() << " " << sig;
 #endif
+        }
       }
     }
 #endif

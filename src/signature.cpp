@@ -28,6 +28,15 @@ float qi::Signature::isConvertibleTo(const qi::Signature& b) const
   {
     Signature::Type s = is.type();
     Signature::Type d = id.type();
+    if (d == Type_Unknown)
+    {
+      // We cannot anwser the question for unknown types. So let it pass
+      // and the conversion code will decide.
+      // Type_Unknown is not serializable anyway.
+      if (s != Type_Unknown)
+        error += 10; // Weird but can happen with object pointers
+      continue;
+    }
     if (d == Type_Dynamic // Dynamic can convert to whatever
       || s == Type_None) // None means parent is empty container
     {
