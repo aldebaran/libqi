@@ -100,7 +100,6 @@ namespace qi {
       Type        type()const;
       std::string signature()const;
       bool        isValid()const;
-      int         pointer()const;
 
       bool        hasChildren()const;
       Signature   children()const;

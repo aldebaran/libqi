@@ -141,10 +141,6 @@ namespace qi {
         _result += "Unknown";
         break;
     }
-    //add necessary pointer
-    for (int i = 0; i < it->pointer(); ++i) {
-      _result += "*";
-    }
   }
 
   void SignatureConvertor::visitList(qi::Signature::iterator *it, bool constify) {
@@ -153,10 +149,6 @@ namespace qi {
     qi::Signature::iterator it2 = sig.begin();
     visitSingle(&it2, false);
     _result += elementTypeSTL(QI_LIST_END, constify);
-    //add necessary pointer
-    for (int i = 0; i < it->pointer(); ++i) {
-      _result += "*";
-    }
     if (constify)
       _result += "&";
   }
@@ -170,10 +162,6 @@ namespace qi {
     ++it2;
     visitSingle(&it2, false);
     _result += elementTypeSTL(QI_MAP_END, constify);
-    //add necessary pointer
-    for (int i = 0; i < it->pointer(); ++i) {
-      _result += "*";
-    }
     if (constify)
       _result += "&";
   }

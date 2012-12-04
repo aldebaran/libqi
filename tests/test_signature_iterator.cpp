@@ -17,11 +17,10 @@
 //                bool isComplex,
 //                bool isPointer)
 
-#define verif_iter(_it, _sig, _type, _hasChildren, _isPointer) \
+#define verif_iter(_it, _sig, _type, _hasChildren) \
 {\
   EXPECT_STREQ(_sig, _it.signature().c_str());\
   EXPECT_TRUE(_hasChildren == _it.hasChildren()); \
-  EXPECT_TRUE(_isPointer == _it.pointer());\
   EXPECT_EQ(qi::Signature::_type, _it.type());\
 }
 
@@ -33,7 +32,6 @@ void verif_bad(const qi::Signature::iterator it)
 
   EXPECT_STREQ("", it.signature().c_str());
   EXPECT_FALSE(it.hasChildren());
-  EXPECT_FALSE(it.pointer());
   EXPECT_EQ(qi::Signature::Type_None, it.type());
   EXPECT_TRUE(it == ite);
   EXPECT_TRUE(it == s.end());
@@ -47,10 +45,10 @@ TEST(TestSignatureIterator, Simple) {
   EXPECT_TRUE(sig.isValid());
   EXPECT_STREQ("is", sig.toString().c_str());
   it = sig.begin();
-  verif_iter(it, "i", Type_Int32, false, false);
+  verif_iter(it, "i", Type_Int32, false);
 
   ++it;
-  verif_iter(it, "s", Type_String, false, false);
+  verif_iter(it, "s", Type_String, false);
 
   ++it;
   verif_bad(it);
@@ -64,37 +62,14 @@ TEST(TestSignatureIterator, STL) {
 
   qi::Signature sig1("[iiss]");
   //TODO EXPECT_FALSE(sig1.isValid());
-
-  qi::Signature sig2("[i]*");
-  EXPECT_STREQ("[i]*", sig2.toString().c_str());
-  EXPECT_TRUE(sig1.isValid());
-  it = sig2.begin();
-  verif_iter(it, "[i]*", Type_List, true, 1);
-
-  qi::Signature sig3("{is}*");
-  it = sig3.begin();
-  verif_iter(it, "{is}*", Type_Map, true, 1);
-
-  qi::Signature sig4("{is}**");
-  EXPECT_STREQ("{is}**", sig4.toString().c_str());
-  it = sig4.begin();
-  verif_iter(it, "{is}**", Type_Map, true, 2);
-
-
-  qi::Signature subsig = it.children();
-  it = subsig.begin();
-  verif_iter(it, "i", Type_Int32, false, false);
-  //it++;
-  it++;
-  verif_iter(it, "s", Type_String, false, false);
-
+  it = sig1.begin();
 }
 
 TEST(TestSignatureIterator, Empty) {
   qi::Signature::iterator it;
   qi::Signature sig3("");
   it = sig3.begin();
-  verif_iter(it, "", Type_None, false, false);
+  verif_iter(it, "", Type_None, false);
   EXPECT_TRUE(it == sig3.end());
   EXPECT_STREQ("", sig3.toString().c_str());
 }

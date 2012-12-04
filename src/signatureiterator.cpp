@@ -262,26 +262,6 @@ namespace qi {
     };
   }
 
-  int Signature::iterator::pointer() const {
-    int count = 0;
-    if (!_current)
-      return false;
-
-    const char *prev = _current;
-    const char *next = _current;
-    while (*next) {
-      prev = next;
-      next++;
-    }
-    while (*prev == '*') {
-      count++;
-      prev--;
-      if (prev < _current)
-        break;
-    }
-    return count;
-  }
-
   Signature Signature::iterator::children() const {
     Signature sig;
     size_t    size;
