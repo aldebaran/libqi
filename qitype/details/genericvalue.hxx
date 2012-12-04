@@ -303,6 +303,75 @@ namespace qi {
       *(GenericValuePtr*)this = clone();
     }
   }
+
+  inline GenericValue::GenericValue()
+  : data(GenericValuePtr())
+  {}
+
+  inline GenericValue::GenericValue(const GenericValue& b)
+  {
+    *this = b;
+  }
+
+  inline GenericValue::GenericValue(const GenericValuePtr& b)
+  {
+    data = b.clone();
+  }
+
+  inline void GenericValue::operator=(const GenericValue& b)
+  {
+    data.destroy();
+    data = b.data.clone();
+  }
+
+  inline void GenericValue::operator=(const GenericValuePtr& b)
+  {
+    data.destroy();
+    data = b.clone();
+  }
+
+  template<typename T>
+  inline GenericValue GenericValue::from(const T& src)
+  {
+    return GenericValue(GenericValuePtr::from(src));
+  }
+
+  inline std::string GenericValue::signature(bool resolveDynamic) const
+  {
+    return data.signature(resolveDynamic);
+  }
+
+  inline GenericValue::~GenericValue()
+  {
+    data.destroy();
+  }
+
+  inline GenericValue GenericValue::take(GenericValuePtr& b)
+  {
+    GenericValue res;
+    res.data = b;
+    b.type = 0;
+    b.value = 0;
+    return res;
+  }
+
+  template<typename T> T GenericValue::as() const
+  {
+    return data.as<T>();
+  }
+
+  inline Type::Kind GenericValue::kind() const
+  {
+    return data.kind();
+  }
+
+  inline int64_t          GenericValue::asInt() const    { return data.asInt(); }
+  inline float            GenericValue::asFloat() const  { return data.asFloat(); }
+  inline double           GenericValue::asDouble() const { return data.asDouble(); }
+  inline std::string      GenericValue::asString() const { return data.asString(); }
+  inline GenericListPtr   GenericValue::asList() const   { return data.asList(); }
+  inline GenericMapPtr    GenericValue::asMap() const    { return data.asMap(); }
+  inline ObjectPtr        GenericValue::asObject() const { return data.asObject(); }
 }
 
 #endif  // _QITYPE_DETAILS_GENERICVALUE_HXX_

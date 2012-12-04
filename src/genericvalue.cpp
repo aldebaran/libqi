@@ -311,9 +311,9 @@ namespace qi
       return res.first.clone();
   }
 
-  bool operator< (const qi::GenericValuePtr& a, const qi::GenericValuePtr& b)
+  bool operator< (const qi::GenericValue& a, const qi::GenericValue& b)
   {
-    return a.value < b.value;
+    return a.data.value < b.data.value;
   }
 
 }

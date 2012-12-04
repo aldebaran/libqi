@@ -219,44 +219,47 @@ namespace qi{
 
     Type*   type;
     void*   value;
-  };
 
-  QITYPE_API bool operator< (const qi::GenericValuePtr& a, const qi::GenericValuePtr& b);
+  };
 
   /** Class that holds any value, with value semantics.
   */
-  class QITYPE_API GenericValue: public GenericValuePtr
+  class QITYPE_API GenericValue
   {
+    // We do not want cast to GenericValuePtr to be possible to avoid
+    // mistakes, so do not inherit from GenericValuePtr.
   public:
-    GenericValue() {}
-    GenericValue(const GenericValue& b)
-    {
-      *this = b;
-    }
-    GenericValue(const GenericValuePtr& b)
-    {
-      *(GenericValuePtr*)this = b.clone();
-    }
-    void operator = (const GenericValuePtr& b)
-    {
-      if (type) destroy();
-      *(GenericValuePtr*)this = b.clone();
-    }
-    void operator = (const GenericValue& b)
-    {
-      if (type) destroy();
-      *(GenericValuePtr*)this = b.clone();
-    }
-    template<typename T> static GenericValue from(const T& src)
-    {
-      return GenericValue(GenericValuePtr::from(src));
-    }
-    ~GenericValue()
-    {
-      if (type)
-        destroy();
-    }
+    GenericValue();
+    GenericValue(const GenericValue& b);
+    GenericValue(const GenericValuePtr& b);
+
+    ~GenericValue();
+
+    void operator = (const GenericValuePtr& b);
+    void operator = (const GenericValue& b);
+
+    template<typename T> static GenericValue from(const T& src);
+
+    std::string signature(bool resolveDynamic=false) const;
+
+    /// Take ownership of data in \b. Reset b.
+    static GenericValue take(GenericValuePtr& b);
+
+    template<typename T> T as() const;
+
+    Type::Kind kind() const;
+
+    int64_t          asInt() const;
+    float            asFloat() const;
+    double           asDouble() const;
+    std::string      asString() const;
+    GenericListPtr   asList() const;
+    GenericMapPtr    asMap() const;
+    ObjectPtr        asObject() const;
+    GenericValuePtr data;
   };
+
+  QITYPE_API bool operator< (const qi::GenericValue& a, const qi::GenericValue& b);
 
   /** Generates GenericValuePtr from everything transparently.
    * To be used as type of meta-function call argument
