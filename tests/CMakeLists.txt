@@ -5,14 +5,17 @@ qi_create_bin(testlaunch NO_INSTALL testlaunch.cpp)
 qi_create_bin(testlaunchloop NO_INSTALL testlaunchloop.cpp)
 qi_create_bin(check_env  NO_INSTALL check_env.cpp)
 qi_create_bin(check_machineid  NO_INSTALL check_machineid.cpp)
+qi_create_bin(test_application  NO_INSTALL test_application.cpp)
 
 qi_use_lib(testlaunchloop QI)
 qi_use_lib(check_env QI)
 qi_use_lib(check_machineid QI)
+qi_use_lib(test_application QI)
 
 set_target_properties(testlaunch PROPERTIES FOLDER tests)
 set_target_properties(testlaunchloop PROPERTIES FOLDER tests)
 set_target_properties(check_env  PROPERTIES FOLDER tests)
+set_target_properties(test_application  PROPERTIES FOLDER tests)
 
 qi_create_gtest(test_qipath      SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
 qi_create_gtest(test_qipath_from_bin SRC test_qipath.cpp ../src/utils.cpp DEPENDS QI GTEST)
