@@ -169,7 +169,7 @@ void PyObject_from_GenericValue(qi::GenericValuePtr val, PyObject** target)
 
 qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
 {
-  std::vector<GenericValuePtr>& res = *new std::vector<GenericValuePtr>();
+  std::vector<GenericValue>& res = *new std::vector<GenericValue>();
   Py_ssize_t len = PyList_Size(val);
 
   for (Py_ssize_t i = 0; i < len; i++)
@@ -183,7 +183,7 @@ qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
 
 qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
 {
-  std::map<qi::GenericValuePtr, qi::GenericValuePtr>& res = *new std::map<qi::GenericValuePtr, qi::GenericValuePtr>();
+  std::map<qi::GenericValue, qi::GenericValue>& res = *new std::map<qi::GenericValue, qi::GenericValue>();
   PyObject *key, *value;
   Py_ssize_t pos = 0;
 
