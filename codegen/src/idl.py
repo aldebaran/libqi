@@ -374,11 +374,45 @@ static int _init_ = init();
     register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name)
   return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register)
 
+def raw_to_cxx_service_skeleton(class_name, data):
+  """ Produce skeleton of C++ implementation of the service.
+  """
+  result = "#include <qitype/signal.hpp>\n\n"
+  result += "class %s\n{\npublic:\n" % class_name
+  (methods, signals) = (data[0], data[1])
+  for method_name in methods:
+    method = methods[method_name]
+    args = ','.join(map(idltype_to_cxxtype, method[1]))
+    result += '  %s %s(%s);\n' % (
+      idltype_to_cxxtype(method[0]),
+      method_name,
+      args
+    )
+  for signal in signals:
+    result += '  qi::Signal<void(%s)> %s;\n' % (
+      ','.join(map(idltype_to_cxxtype, signal[1])),
+      signal[0]
+    )
+  result += '};\n\n'
+  for method_name in methods:
+    method = methods[method_name]
+    args = method[1]
+    for i in range(len(args)):
+      args[i] = idltype_to_cxxtype(args[i]) + ' p' + str(i)
+    args = ','.join(args)
+    result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
+      idltype_to_cxxtype(method[0]),
+      class_name,
+      method_name,
+      args,
+      method_name
+    )
+  return result
 
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice"], help="output mode (stdout)")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
@@ -404,6 +438,11 @@ def main(args):
     res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], False)
   elif pargs.output_mode == "cxxtyperegister":
     res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
+  elif pargs.output_mode == "cxxskel":
+    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]])
+  elif pargs.output_mode == "cxxservice":
+    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]])
+    res += raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
   out.write(res)
 
 main(sys.argv)
