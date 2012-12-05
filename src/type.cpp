@@ -419,7 +419,7 @@ namespace qi {
         return res;
       }
     case Signature::Type_Dynamic:
-      return typeOf<GenericValuePtr>();
+      return typeOf<GenericValue>();
     case Signature::Type_Raw:
       return typeOf<Buffer>();
     default:

@@ -13,29 +13,6 @@
 namespace qi {
 
 
-  template<> class TypeImpl<GenericValuePtr>: public TypeDynamic
-  {
-    virtual void* clone(void* src)
-    {
-      return new GenericValuePtr(((GenericValuePtr*)src)->clone());
-    }
-    virtual void destroy(void* ptr)
-    {
-      ((GenericValuePtr*)ptr)->destroy();
-      delete (GenericValuePtr*)ptr;
-    }
-    virtual std::pair<GenericValuePtr, bool> get(void* storage)
-    {
-      return std::make_pair(*(GenericValuePtr*)ptrFromStorage(&storage), false);
-    }
-    virtual void set(void** storage, GenericValuePtr src)
-    {
-      GenericValuePtr* val = (GenericValuePtr*)ptrFromStorage(storage);
-      *val = src.clone();
-    }
-    typedef DefaultTypeImplMethods<GenericValuePtr> Methods;
-    _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
-  };
 
   template<> class TypeImpl<GenericValue>: public TypeDynamic
   {
@@ -44,23 +21,14 @@ namespace qi {
     {
       return std::make_pair(*(GenericValuePtr*)ptrFromStorage(&storage), false);
     }
-  virtual void set(void** storage, GenericValuePtr src)
-  {
-    GenericValue* val = (GenericValue*)ptrFromStorage(storage);
-    *val = src;
-  }
-  virtual void* clone(void* storage)
-  {
-    return new GenericValue((*(GenericValuePtr*)storage));
-  }
-  virtual void destroy(void* storage)
-  {
-    GenericValuePtr* val = (GenericValuePtr*)ptrFromStorage(&storage);
-    val->destroy();
-    delete val;
-  }
-  typedef DefaultTypeImplMethods<GenericValue> Methods;
-  _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
+    virtual void set(void** storage, GenericValuePtr src)
+    {
+      GenericValue* val = (GenericValue*)ptrFromStorage(storage);
+      *val = src;
+    }
+    // Default cloner will do just right since GenericValue is by-value.
+    typedef DefaultTypeImplMethods<GenericValue> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
   namespace detail
@@ -373,5 +341,11 @@ namespace qi {
   inline GenericMapPtr    GenericValue::asMap() const    { return data.asMap(); }
   inline ObjectPtr        GenericValue::asObject() const { return data.asObject(); }
 }
+
+/* Since GenericValuePtr does not handle its memory, it cannot be used
+* inside a GenericValuePtr. use GenericValue instead.
+*/
+QI_NO_TYPE(qi::GenericValuePtr);
+
 
 #endif  // _QITYPE_DETAILS_GENERICVALUE_HXX_

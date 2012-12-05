@@ -10,6 +10,7 @@ namespace qi
 {
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
+    qiLogDebug("qi.type") << "convert " << type->infoString() << ' ' << targetType->infoString();
     /* Can have false-negative (same effective type, different Type instances
    * but we do not care, correct check (by comparing info() result
    * is more expensive than the dummy conversion that will happen.
@@ -263,14 +264,8 @@ namespace qi
         gv.first.destroy();
       return result;
     }
-    static Type* genericValueType = typeOf<GenericValuePtr>();
     static Type* genericObjectType = typeOf<GenericObject>();
 
-    if (type->info() == genericValueType->info())
-    { // Source is metavalue: special case
-      GenericValuePtr* metaval = (GenericValuePtr*)value;
-      return metaval->convert(targetType);
-    }
     if (type->info() == genericObjectType->info())
     {
       GenericObject* obj = (GenericObject*)value;
@@ -318,4 +313,3 @@ namespace qi
 
 }
 
-QI_TYPE_REGISTER(qi::GenericValuePtr);
