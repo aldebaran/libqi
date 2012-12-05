@@ -116,9 +116,28 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    )
 
 add_subdirectory(c)
+#normalize BUILD_SHARED_LIBS, default ON
 
-qi_create_lib(qimessaging SUBMODULE qi-messaging qi-messaging-c
-                 SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT QITYPE)
+if (NOT DEFINED BUILD_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS ON)
+endif()
+
+# Convert ON/OFF to SHARED/STATIC for create_lib argument
+set(_libtype)
+if (BUILD_SHARED_LIBS)
+  set(_libtype SHARED)
+else()
+  set(_libtype STATIC)
+endif()
+
+qi_create_lib(qimessaging
+  ${_libtype}
+  SUBMODULE
+    qi-messaging qi-messaging-c
+  DEPENDS
+    QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT QITYPE
+)
+
 if(WIN32)
   qi_use_lib(qimessaging WSA)
 endif(WIN32)
