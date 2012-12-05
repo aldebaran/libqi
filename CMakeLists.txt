@@ -112,3 +112,4 @@ qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_TH
 qi_stage_lib(qitype)
 
 add_subdirectory("tests")
+add_subdirectory("codegen/tests")

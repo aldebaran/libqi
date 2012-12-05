@@ -282,6 +282,7 @@ static qi::GenericValuePtr signal_bounce(const std::vector<qi::GenericValuePtr>&
  qi::SignalBase* target)
 {
   target->trigger(args);
+  return qi::GenericValuePtr(qi::typeOf<void>(), 0);
 }
 
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
