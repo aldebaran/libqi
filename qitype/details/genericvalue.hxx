@@ -97,7 +97,7 @@ namespace qi {
 
   inline void GenericValuePtr::destroy()
   {
-    if (type && value)
+    if (type)
       type->destroy(value);
   }
 
