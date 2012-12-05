@@ -134,10 +134,6 @@ namespace qi {
     void*        value;
   };
 
-
-  template<typename T>
-  GenericValuePtr makeObjectValue(T* ptr);
-
    // C4251
   template <typename FUNCTION_TYPE>
   qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,

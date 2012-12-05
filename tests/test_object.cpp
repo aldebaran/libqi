@@ -138,7 +138,7 @@ TEST(TestObject, Typing)
   qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValuePtr> argsAdd = convert(41);
-  res = adderAdd.call(qi::makeObjectValue(&add1), argsAdd);
+  res = adderAdd.call(qi::GenericValuePtr::from(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -346,16 +346,16 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", &a2));
   //GenericObject is T not T*
-  //ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
   qiLogDebug("test") << "NEXT";
   ASSERT_EQ(3, oa1->call<int>("addAdderByRef", a2));
   qiLogDebug("test") << "NEXT";
-  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", *oa2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
-  //ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", *oa2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
 
   ASSERT_EQ(4, oa1->call<int>("increment", 3));
   ASSERT_EQ(4, oa1->call<int>("increment2", 3));
@@ -396,14 +396,14 @@ TEST(TestObject, ObjectTypeBuilderManageable)
   // ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
   // Copies a2
   ASSERT_EQ(4, oa1->call<int>("addAdderByRef", a2));
-  // Copies a2
-  ASSERT_EQ(4, oa1->call<int>("addAdderByRef", *oa2));
+  // ObjectPtr: no copy
+  ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
   //ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", oa2));
 
   ASSERT_EQ(4, oa1->call<int>("addAdderByConstRef", a2));
-  ASSERT_EQ(4, oa1->call<int>("addAdderByConstRef", *oa2));
+  ASSERT_EQ(3, oa1->call<int>("addAdderByConstRef", oa2));
 
   ASSERT_EQ(4, oa1->call<int>("increment", 3));
   ASSERT_EQ(4, oa1->call<int>("increment2", 3));

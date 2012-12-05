@@ -9,40 +9,9 @@
 
 #include <qi/future.hpp>
 #include <qitype/typeobject.hpp>
+#include <qitype/details/typeimpl.hxx>
 
 namespace qi {
-
-
-
-  template<typename T>
-  GenericValuePtr makeObjectValue(T* ptr)
-  {
-    GenericValuePtr res = GenericValuePtr::from(*ptr);
-    qiLogDebug("meta") <<"metaobject on " << ptr <<" " << res.value;
-    return res;
-  }
-
-  // We need to specialize Manager on genericobject to make a copy
-  namespace detail {
-  template<> struct TypeManager<GenericObject>: public TypeManagerDefault<GenericObject>
-  {
-    static void* create()
-    {
-      return new GenericObject(0, 0);
-    }
-    static void copy(void* dst, const void* src)
-    {
-      TypeManagerDefault<GenericObject>::copy(dst, src);
-      GenericObject* o = (GenericObject*)dst;
-      o->value = o->type->clone(o->value);
-    }
-    static void destroy(void* ptr)
-    {
-      GenericObject* go = (GenericObject*)ptr;
-      go->type->destroy(go->value);
-      delete go;
-    }
-  }; }
 
   namespace detail
   {
@@ -136,5 +105,33 @@ namespace qi {
 
     return res.future();
   }
+
+  /* An ObjectPtr is actually of a Dynamic type: The underlying Type*
+   * is not allways the same.
+  */
+  template<> class TypeImpl<ObjectPtr>: public TypeDynamic
+  {
+  public:
+    virtual std::pair<GenericValuePtr, bool> get(void* storage)
+    {
+      ObjectPtr* val = (ObjectPtr*)ptrFromStorage(&storage);
+      GenericValuePtr result;
+      result.type = (*val)->type;
+      result.value = (*val)->value;
+      return std::make_pair(result, false);
+    }
+
+    virtual void set(void** storage, GenericValuePtr source)
+    {
+      ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
+      if (source.kind() != Type::Object)
+        throw std::runtime_error("Cannot assign non-object to ObjectPtr");
+      ObjectPtr op(new GenericObject(static_cast<ObjectType*>(source.type), source.value));
+      *val = op;
+    }
+    typedef DefaultTypeImplMethods<ObjectPtr> Methods;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+
 }
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

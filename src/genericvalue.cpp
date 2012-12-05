@@ -264,15 +264,19 @@ namespace qi
         gv.first.destroy();
       return result;
     }
-    static Type* genericObjectType = typeOf<GenericObject>();
 
-    if (type->info() == genericObjectType->info())
+    if (skind == Type::Object && dkind == Type::Pointer)
     {
-      GenericObject* obj = (GenericObject*)value;
-      GenericValuePtr v;
-      v.type = obj->type;
-      v.value = obj->value;
-      return v.convert(targetType);
+      std::pair<GenericValuePtr, bool> gv = convert(
+        static_cast<TypePointer*>(targetType)->pointedType());
+      if (!gv.first.type)
+        return gv;
+      // Re-pointerise it
+      void* ptr = gv.first.type->ptrFromStorage(&gv.first.value);
+      GenericValuePtr result;
+      result.type = targetType;
+      result.value = targetType->initializeStorage(&ptr);
+      return std::make_pair(result, false);
     }
     if (skind == Type::Object)
     {
