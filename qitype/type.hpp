@@ -210,7 +210,6 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
-    ObjectPtr        asObject() const;
 
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.
@@ -255,7 +254,6 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
-    ObjectPtr        asObject() const;
     GenericValuePtr data;
   };
 

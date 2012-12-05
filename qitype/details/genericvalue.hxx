@@ -339,7 +339,6 @@ namespace qi {
   inline std::string      GenericValue::asString() const { return data.asString(); }
   inline GenericListPtr   GenericValue::asList() const   { return data.asList(); }
   inline GenericMapPtr    GenericValue::asMap() const    { return data.asMap(); }
-  inline ObjectPtr        GenericValue::asObject() const { return data.asObject(); }
 }
 
 /* Since GenericValuePtr does not handle its memory, it cannot be used
