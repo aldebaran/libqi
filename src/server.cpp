@@ -136,6 +136,11 @@ namespace qi {
 
   void Server::close()
   {
+    if (listenUrl().str() == "")
+    {
+      return;
+    }
+
     qiLogInfo("Server") << "Closing server: " << listenUrl().str();
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);

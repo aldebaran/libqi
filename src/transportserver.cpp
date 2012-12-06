@@ -96,6 +96,7 @@ namespace qi
 
   void TransportServer::close() {
     _p->close();
+    _p->listenUrl = qi::Url("");
   }
 
 }
