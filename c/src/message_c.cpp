@@ -15,14 +15,14 @@
 #include <cstdlib>
 #include <cassert>
 
-qi::BinaryDecoder &get_decoder(qi_message_data_t *m)
+static qi::BinaryDecoder &get_decoder(qi_message_data_t *m)
 {
   if (!m->is)
     m->is = new qi::BinaryDecoder (*m->buff);
   return *(m->is);
 }
 
-qi::BinaryEncoder &get_encoder(qi_message_data_t *m)
+static qi::BinaryEncoder &get_encoder(qi_message_data_t *m)
 {
   if (!m->os)
     m->os = new qi::BinaryEncoder (*m->buff);
