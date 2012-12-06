@@ -260,6 +260,23 @@ def raw_to_proxy(class_name, data, return_future):
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName);
 
+template<typename T> class ProxySignal: public qi::Signal<T>
+{
+public:
+  ProxySignal(qi::SignalBase::OnSubscribers os, qi::GenericObject* obj, const std::string& name)
+  : qi::Signal<T>(os)
+  , _obj(obj)
+  , _name(name)
+  {
+  }
+  virtual void trigger(const qi::GenericFunctionParameters& params, qi::MetaCallType)
+  {
+    _obj->xMetaPost(_name + "::" + this->signature(), params);
+  }
+  qi::GenericObject* _obj;
+  std::string _name;
+};
+
 class @className@Proxy
 {
 public:
@@ -270,9 +287,11 @@ public:
 @constructor@
   }
   qi::ObjectPtr asObject() { return _obj;}
-@publicDecl@
-  private:
+   private:
     qi::ObjectPtr _obj;
+   public:
+@publicDecl@
+
 @privateDecl@
 };
 
@@ -281,7 +300,7 @@ typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
 static qi::GenericValuePtr signal_bounce(const std::vector<qi::GenericValuePtr>& args,
  qi::SignalBase* target)
 {
-  target->trigger(args);
+  target->SignalBase::trigger(args);
   return qi::GenericValuePtr(qi::typeOf<void>(), 0);
 }
 
@@ -324,9 +343,9 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   ctor = ""
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
-    signalDecl += '  qi::Signal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
+    signalDecl += '  ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
     signalDecl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
-    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, _obj.get(), &{0}, "{0}"))\n'.format(sig[0])
+    ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, obj.get(), &{0}, "{0}"), obj.get(), "{0}")\n'.format(sig[0])
   result = skeleton
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
