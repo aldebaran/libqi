@@ -6,6 +6,7 @@
 
 #ifndef _QITYPE_DETAILS_TYPESTRING_HXX_
 #define _QITYPE_DETAILS_TYPESTRING_HXX_
+#include <qi/os.hpp>
 
 namespace qi
 {
@@ -53,7 +54,7 @@ namespace qi
     }
     virtual void* clone(void* src)
     {
-      return strdup((char*)src);
+      return qi::os::strdup((char*)src);
     }
     virtual void destroy(void* src)
     {
