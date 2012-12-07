@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-using QiMessaging;
+using qi.Messaging;
 using System.Diagnostics;
 
 namespace test_call
@@ -29,9 +29,9 @@ namespace test_call
             Debug.Assert(app != null);
 
             // Declare an object and a method
-            QiMessaging.GenericObject obj = new QiMessaging.GenericObject();
+            GenericObject obj = new GenericObject();
             QiMethod method = new QiMethod(reply);
-            QiMessaging.Buffer buff = new QiMessaging.Buffer();
+            Buffer buff = new Buffer();
 
             // Then bind method to object
             Debug.Assert(obj.RegisterMethod("reply::s(s)", method, buff));
@@ -50,13 +50,13 @@ namespace test_call
             Debug.Assert(client.Connect(ServiceDirectoryAddress));
 
             // Get proxy on service test call
-            QiMessaging.GenericObject proxy = client.Service("test call");
+            GenericObject proxy = client.Service("test call");
             Debug.Assert(proxy != null);
 
             // Call reply function
-            QiMessaging.Message msg = new Message();
+            Message msg = new Message();
             msg.WriteString("plaf");
-            QiMessaging.Future fut = proxy.Call("reply::(s)", msg);
+            Future fut = proxy.Call("reply::(s)", msg);
             Debug.Assert(fut != null);
 
             // Wait for answer
@@ -65,7 +65,7 @@ namespace test_call
             Debug.Assert(fut.IsReady());
 
             // Get answer
-            QiMessaging.Message answermessage = fut.GetValue();
+            Message answermessage = fut.GetValue();
             Debug.Assert(answermessage != null);
             string answer = answermessage.ReadString();
             Debug.Assert(answer == "plafbim");

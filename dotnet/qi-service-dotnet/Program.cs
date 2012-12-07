@@ -3,8 +3,8 @@
 **  See COPYING for the license
 */
 
-using System;
-using QiMessaging;
+//using System;
+using qi.Messaging;
 
 namespace qi_service_dotnet
 {
@@ -29,8 +29,8 @@ namespace qi_service_dotnet
 
             if (args.Length < 1)
             {
-                Console.WriteLine("Usage : ./qi-service-c master-address service-name");
-                Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
+                System.Console.WriteLine("Usage : ./qi-service-c master-address service-name");
+                System.Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
             }
             else
             {
@@ -39,9 +39,9 @@ namespace qi_service_dotnet
 
 
             // Declare an object and a method
-            QiMessaging.GenericObject obj = new QiMessaging.GenericObject();
+            GenericObject obj = new GenericObject();
             QiMethod method = new QiMethod(reply);
-            QiMessaging.Buffer buff = new QiMessaging.Buffer();
+            Buffer buff = new Buffer();
 
             // Then bind method to object
             obj.RegisterMethod("reply::s(s)", method, buff);
@@ -50,7 +50,7 @@ namespace qi_service_dotnet
             // Set up your session
             if (session.Connect(SDAddr) == false)
             {
-                Console.WriteLine("Ooops, cannot connect to service directory (" + SDAddr + ")");
+                System.Console.WriteLine("Ooops, cannot connect to service directory (" + SDAddr + ")");
                 return 1;
             }
             session.Listen("tcp://0.0.0.0:0");
@@ -60,13 +60,13 @@ namespace qi_service_dotnet
             if (id == 0)
             {
                 // Service is not register on service directory, we lose...
-                Console.WriteLine("Arf, cannot register service " + serviceName);
+                System.Console.WriteLine("Arf, cannot register service " + serviceName);
                 return 1;
             }
             else
             {
                 // Win !
-                Console.WriteLine("Registered as service #" + id);
+                System.Console.WriteLine("Registered as service #" + id);
             }
 
             // Run until the end of time

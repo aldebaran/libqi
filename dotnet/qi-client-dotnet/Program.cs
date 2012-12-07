@@ -4,7 +4,7 @@
 */
 
 using System;
-using QiMessaging;
+using qi.Messaging;
 
 namespace qi_client_dotnet
 {
@@ -34,7 +34,7 @@ namespace qi_client_dotnet
                 return;
             }
 
-            QiMessaging.GenericObject obj = session.Service("serviceTest");
+            GenericObject obj = session.Service("serviceTest");
 
             if (obj == null)
             {

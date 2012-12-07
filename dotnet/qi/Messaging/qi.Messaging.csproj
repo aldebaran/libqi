@@ -8,8 +8,8 @@
     <ProjectGuid>{81F7E9A1-FAC3-4AEA-BA9E-CE2CB19B4147}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QiMessaging</RootNamespace>
-    <AssemblyName>QiMessaging</AssemblyName>
+    <RootNamespace>qi.Messaging</RootNamespace>
+    <AssemblyName>qi.Messaging</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

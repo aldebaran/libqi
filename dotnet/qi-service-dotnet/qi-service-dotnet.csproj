@@ -82,9 +82,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QiMessaging\QiMessaging.csproj">
+    <ProjectReference Include="..\qi\Messaging\qi.Messaging.csproj">
       <Project>{81F7E9A1-FAC3-4AEA-BA9E-CE2CB19B4147}</Project>
-      <Name>QiMessaging</Name>
+      <Name>qi.Messaging</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
