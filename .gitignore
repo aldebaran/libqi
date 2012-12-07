@@ -4,3 +4,6 @@ gendoc
 *~
 *.pyc
 CMakeLists.txt.user
+*.suo
+Release
+Debug
