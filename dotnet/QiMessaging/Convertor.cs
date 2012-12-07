@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿/*
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
+*/
+
+using System;
 using System.Runtime.InteropServices;
 
 namespace QiMessaging

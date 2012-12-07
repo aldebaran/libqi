@@ -1,14 +1,8 @@
 ﻿/*
-**
-** Author(s):
-**  - Pierre Roullon <proullon@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 

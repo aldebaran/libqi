@@ -1,9 +1,6 @@
 ﻿/*
-**
-** Author(s):
-**  - Pierre Roullon <proullon@aldebaran-robotics.com>
-**
-** Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012 Aldebaran Robotics
+**  See COPYING for the license
 */
 
 using System;
