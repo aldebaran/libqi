@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-//using System;
+using System;
 using qi.Messaging;
 
 namespace qi_service_dotnet
@@ -16,7 +16,6 @@ namespace qi_service_dotnet
             Message message = new Message(new MessagePrivate(message_c));
             Message answer = new Message(new MessagePrivate(answer_c));
             string str = message.ReadString();
-
             str += "bim";
             answer.WriteString(str);
         }
@@ -29,8 +28,8 @@ namespace qi_service_dotnet
 
             if (args.Length < 1)
             {
-                System.Console.WriteLine("Usage : ./qi-service-c master-address service-name");
-                System.Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
+                Console.WriteLine("Usage : ./qi-service-c master-address service-name");
+                Console.WriteLine("Assuming master address is tcp://127.0.0.1:5555");
             }
             else
             {
@@ -41,16 +40,17 @@ namespace qi_service_dotnet
             // Declare an object and a method
             GenericObject obj = new GenericObject();
             QiMethod method = new QiMethod(reply);
-            Buffer buff = new Buffer();
+            qi.Messaging.Buffer buff = new qi.Messaging.Buffer();
 
             // Then bind method to object
             obj.RegisterMethod("reply::s(s)", method, buff);
+
             Session session = new Session();
 
             // Set up your session
             if (session.Connect(SDAddr) == false)
             {
-                System.Console.WriteLine("Ooops, cannot connect to service directory (" + SDAddr + ")");
+                Console.WriteLine("Ooops, cannot connect to service directory (" + SDAddr + ")");
                 return 1;
             }
             session.Listen("tcp://0.0.0.0:0");
@@ -60,13 +60,13 @@ namespace qi_service_dotnet
             if (id == 0)
             {
                 // Service is not register on service directory, we lose...
-                System.Console.WriteLine("Arf, cannot register service " + serviceName);
+                Console.WriteLine("Arf, cannot register service " + serviceName);
                 return 1;
             }
             else
             {
                 // Win !
-                System.Console.WriteLine("Registered as service #" + id);
+                Console.WriteLine("Registered as service #" + id);
             }
 
             // Run until the end of time

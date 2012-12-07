@@ -25,7 +25,9 @@ namespace qi_client_dotnet
                 connectionAddr = "tcp://127.0.0.1:5555";
             }
             else
+            {
                 connectionAddr = args[1];
+            }
 
             Session session = new Session();
             if (session.Connect(connectionAddr) == false)
@@ -42,8 +44,10 @@ namespace qi_client_dotnet
                 return;
             }
 
+            String textToSend = "plaf";
             Message message = new Message();
-            message.WriteString("plaf");
+            Console.WriteLine("Send: " + textToSend);
+            message.WriteString(textToSend);
             // It's gonna be...
             Future future = obj.Call("reply::(s)", message);
 
