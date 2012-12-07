@@ -14,12 +14,12 @@ namespace qi
         {
             public Message()
             {
-                _p = new MessagePrivate();
+                _messagePrivate = new MessagePrivate();
             }
 
             public Message(MessagePrivate message)
             {
-                _p = message;
+                _messagePrivate = message;
             }
 
             ~Message()
@@ -29,42 +29,42 @@ namespace qi
 
             public void Dispose()
             {
-                _p.Dispose();
+                _messagePrivate.Dispose();
             }
 
             public MessagePrivate Origin()
             {
-                return _p;
+                return _messagePrivate;
             }
 
             public bool ReadBool()
             {
-                return _p.ReadBool();
+                return _messagePrivate.ReadBool();
             }
 
             public char ReadChar()
             {
-                return _p.ReadChar();
+                return _messagePrivate.ReadChar();
             }
 
             public int ReadInt()
             {
-                return _p.ReadInt();
+                return _messagePrivate.ReadInt();
             }
 
             public float ReadFloat()
             {
-                return _p.ReadFloat();
+                return _messagePrivate.ReadFloat();
             }
 
             public double ReadDouble()
             {
-                return _p.ReadDouble();
+                return _messagePrivate.ReadDouble();
             }
 
             public String ReadString()
             {
-                return _p.ReadString();
+                return _messagePrivate.ReadString();
             }
 
             public SafeBuffer ReadRaw(ref int size)
@@ -72,7 +72,7 @@ namespace qi
                 unsafe
                 {
                     SafeBuffer buff = new qi.Messaging.Buffer();
-                    char* data = _p.ReadRaw(ref size);
+                    char* data = _messagePrivate.ReadRaw(ref size);
                     int i = 0;
 
                     while (i < size)
@@ -84,32 +84,32 @@ namespace qi
 
             public void WriteBool(bool value)
             {
-                _p.WriteBool(value);
+                _messagePrivate.WriteBool(value);
             }
 
             public void WriteChar(char value)
             {
-                _p.WriteChar(value);
+                _messagePrivate.WriteChar(value);
             }
 
             public void WriteInt(int value)
             {
-                _p.WriteInt(value);
+                _messagePrivate.WriteInt(value);
             }
 
             public void WriteFloat(float value)
             {
-                _p.WriteFloat(value);
+                _messagePrivate.WriteFloat(value);
             }
 
             public void WriteDouble(double value)
             {
-                _p.WriteDouble(value);
+                _messagePrivate.WriteDouble(value);
             }
 
             public void WriteString(String value)
             {
-                _p.WriteString(value);
+                _messagePrivate.WriteString(value);
             }
 
             public void WriteRaw(qi.Messaging.Buffer value, int size)
@@ -118,11 +118,11 @@ namespace qi
                 {
                     byte* data = null;
                     value.AcquirePointer(ref data);
-                    _p.WriteRaw((void*)data, size);
+                    _messagePrivate.WriteRaw((void*)data, size);
                 }
             }
 
-            private MessagePrivate _p;
+            private MessagePrivate _messagePrivate;
         }
 
         public unsafe class MessagePrivate
@@ -164,31 +164,31 @@ namespace qi
 
             public MessagePrivate()
             {
-                message = qi_message_create();
-                toDelete = true;
+                _message_t = qi_message_create();
+                _shouldAutoDelete = true;
             }
 
             public MessagePrivate(qi_message_t* mess, bool autoDeleteMessage = true)
             {
-                message = mess;
-                toDelete = autoDeleteMessage;
+                _message_t = mess;
+                _shouldAutoDelete = autoDeleteMessage;
             }
 
             public void Dispose()
             {
-                if (message != null && toDelete == true)
-                    qi_message_destroy(message);
-                message = null;
+                if (_message_t != null && _shouldAutoDelete == true)
+                    qi_message_destroy(_message_t);
+                _message_t = null;
             }
 
             public qi_message_t* Origin()
             {
-                return message;
+                return _message_t;
             }
 
             public bool ReadBool()
             {
-                if (qi_message_read_bool(message) == 0)
+                if (qi_message_read_bool(_message_t) == 0)
                     return false;
 
                 return true;
@@ -196,27 +196,27 @@ namespace qi
 
             public char ReadChar()
             {
-                return qi_message_read_int8(message);
+                return qi_message_read_int8(_message_t);
             }
 
             public int ReadInt()
             {
-                return qi_message_read_int32(message);
+                return qi_message_read_int32(_message_t);
             }
 
             public float ReadFloat()
             {
-                return qi_message_read_int8(message);
+                return qi_message_read_int8(_message_t);
             }
 
             public double ReadDouble()
             {
-                return qi_message_read_double(message);
+                return qi_message_read_double(_message_t);
             }
 
             public String ReadString()
             {
-                char* val = qi_message_read_string(message);
+                char* val = qi_message_read_string(_message_t);
                 // Todo : free the char* array
 
                 return Convertor.ToDotNet(val);
@@ -226,7 +226,7 @@ namespace qi
             public char* ReadRaw(ref int size)
             {
                 int tmp;
-                char* buff = qi_message_read_raw(message, &tmp);
+                char* buff = qi_message_read_raw(_message_t, &tmp);
 
                 size = tmp;
                 return buff;
@@ -238,38 +238,38 @@ namespace qi
 
                 if (value == true)
                     val = (char)1;
-                qi_message_write_bool(message, val);
+                qi_message_write_bool(_message_t, val);
             }
 
             public void WriteChar(char value)
             {
-                qi_message_write_int8(message, value);
+                qi_message_write_int8(_message_t, value);
             }
 
             public void WriteInt(int value)
             {
-                qi_message_write_int32(message, value);
+                qi_message_write_int32(_message_t, value);
             }
 
             public void WriteFloat(float value)
             {
-                qi_message_write_float(message, value);
+                qi_message_write_float(_message_t, value);
             }
 
             public void WriteDouble(double value)
             {
-                qi_message_write_double(message, value);
+                qi_message_write_double(_message_t, value);
             }
 
             public void WriteString(String value)
             {
-                qi_message_write_string(message, value);
+                qi_message_write_string(_message_t, value);
             }
 
             // Todo : do something for this
             public void WriteRaw(void* value, int size)
             {
-                qi_message_write_raw(message, (char*)value, size);
+                qi_message_write_raw(_message_t, (char*)value, size);
             }
 
             ~MessagePrivate()
@@ -277,8 +277,8 @@ namespace qi
                 Dispose();
             }
 
-            private qi_message_t* message;
-            private bool toDelete;
+            private qi_message_t* _message_t;
+            private bool _shouldAutoDelete;
         }
     }
 }

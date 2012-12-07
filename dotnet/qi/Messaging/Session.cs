@@ -14,7 +14,7 @@ namespace qi
         {
             public Session()
             {
-                _p = new SessionPrivate();
+                _sessionPrivate = new SessionPrivate();
             }
 
             ~Session()
@@ -23,35 +23,35 @@ namespace qi
 
             public bool Connect(string addr)
             {
-                return _p.Connect(addr);
+                return _sessionPrivate.Connect(addr);
             }
 
             public int RegisterService(string name, GenericObject service)
             {
-                return _p.RegisterService(name, service);
+                return _sessionPrivate.RegisterService(name, service);
             }
 
             public void UnregisterService(int idx)
             {
-                _p.UnregisterService(idx);
+                _sessionPrivate.UnregisterService(idx);
             }
 
             public GenericObject Service(string name)
             {
-                return _p.Service(name);
+                return _sessionPrivate.Service(name);
             }
 
             public void Listen(string addr)
             {
-                _p.Listen(addr);
+                _sessionPrivate.Listen(addr);
             }
 
             public void Disconnect()
             {
-                _p.Disconnect();
+                _sessionPrivate.Disconnect();
             }
 
-            private SessionPrivate _p;
+            private SessionPrivate _sessionPrivate;
         }
 
         unsafe class SessionPrivate
@@ -76,29 +76,29 @@ namespace qi
 
             public SessionPrivate()
             {
-                session = qi_session_create();
+                _session_t = qi_session_create();
             }
 
             public bool Connect(string addr)
             {
                 byte[] address = Encoding.ASCII.GetBytes(addr.ToCharArray());
 
-                return qi_session_connect(session, address);
+                return qi_session_connect(_session_t, address);
             }
 
             public int RegisterService(string name, GenericObject service)
             {
-                return qi_session_register_service(session, Convertor.ToQim(name), service.Origin().Origin());
+                return qi_session_register_service(_session_t, Convertor.ToQim(name), service.Origin().Origin());
             }
 
             public void UnregisterService(int idx)
             {
-                qi_session_unregister_service(session, idx);
+                qi_session_unregister_service(_session_t, idx);
             }
 
             public GenericObject Service(string name)
             {
-                qi_object_t* obj = qi_session_get_service(session, name);
+                qi_object_t* obj = qi_session_get_service(_session_t, name);
 
                 if (obj == null)
                     return null;
@@ -109,20 +109,20 @@ namespace qi
 
             public void Listen(string addr)
             {
-                qi_session_listen(session, Convertor.ToQim(addr));
+                qi_session_listen(_session_t, Convertor.ToQim(addr));
             }
 
             public void Disconnect()
             {
-                qi_session_close(session);
+                qi_session_close(_session_t);
             }
 
             ~SessionPrivate()
             {
-                qi_session_destroy(session);
+                qi_session_destroy(_session_t);
             }
 
-            private qi_session_t* session;
+            private qi_session_t* _session_t;
         }
     }
 }

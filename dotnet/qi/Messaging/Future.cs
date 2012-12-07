@@ -34,17 +34,17 @@ namespace qi
 
             private Future()
             {
-                future = null;
+                _future_t = null;
             }
 
             public Future(qi_future_t* fut)
             {
-                future = fut;
+                _future_t = fut;
             }
 
             ~Future()
             {
-                qi_future_destroy(future);
+                qi_future_destroy(_future_t);
             }
 
             public void Wait(int timeout = 30000)
@@ -52,12 +52,12 @@ namespace qi
                 // Useless for now
                 timeout = 0;
 
-                qi_future_wait(future);
+                qi_future_wait(_future_t);
             }
 
             public bool IsError()
             {
-                if (qi_future_is_error(future) == 0)
+                if (qi_future_is_error(_future_t) == 0)
                     return false;
 
                 return true;
@@ -65,7 +65,7 @@ namespace qi
 
             public bool IsReady()
             {
-                if (qi_future_is_ready(future) == 0)
+                if (qi_future_is_ready(_future_t) == 0)
                     return false;
 
                 return true;
@@ -73,7 +73,7 @@ namespace qi
 
             public Message GetValue()
             {
-                qi_message_t* mess = qi_future_get_value(future);
+                qi_message_t* mess = qi_future_get_value(_future_t);
                 MessagePrivate p = new MessagePrivate(mess, false);
 
                 return new Message(p);
@@ -85,7 +85,7 @@ namespace qi
             }
             */
 
-            private qi_future_t* future;
+            private qi_future_t* _future_t;
         }
     }
 }

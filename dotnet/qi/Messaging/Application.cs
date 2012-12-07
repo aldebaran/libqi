@@ -13,15 +13,15 @@ namespace qi
         {
             public Application(string[] args)
             {
-                _p = new ApplicationPrivate(args);
+                _applicationPrivate = new ApplicationPrivate(args);
             }
 
             public void Run()
             {
-                _p.Run();
+                _applicationPrivate.Run();
             }
 
-            private ApplicationPrivate _p;
+            private ApplicationPrivate _applicationPrivate;
         }
 
         unsafe class ApplicationPrivate
@@ -39,21 +39,21 @@ namespace qi
             {
                 int ac = 0;//args.Length;
                 //char** argv = Convertor.ToCharPtr(args);
-                app = qi_application_create(&ac, null);
+                _application_t = qi_application_create(&ac, null);
                 //args = QiMessaging.Convertor.ToDotNet(ac, argv);
             }
 
             public void Run()
             {
-                qi_application_run(app);
+                qi_application_run(_application_t);
             }
 
             ~ApplicationPrivate()
             {
-                qi_application_stop(app);
+                qi_application_stop(_application_t);
             }
 
-            private qi_application_t* app;
+            private qi_application_t* _application_t;
         }
     }
 }
