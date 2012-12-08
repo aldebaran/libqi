@@ -45,4 +45,7 @@
   * \return The actual class. Permit to chain.
   */
 
+/**
+  * \fn qi::DataPerfSuite::close()
+  */
 

@@ -23,20 +23,27 @@ namespace qi
   {
     public:
 
-      /// An enum to precise the type of output.
-      enum OutputType {
-        OutputType_Normal    = 0, ///< The "normal" way.
-        OutputType_Codespeed = 1, ///< A type defined to be used by Codespeed.
+      enum OutputData {
+        OutputData_None           = 0,
+        OutputData_Cpu            = 1,
+        OutputData_Period         = 2,
+        OutputData_MsgPerSecond   = 4,
+        OutputData_MsgMBPerSecond = 8,
       };
 
       /// Constructor
-      DataPerfSuite(const std::string& projectName, const std::string& executableName, OutputType outputType = OutputType_Normal, const std::string& filename = "");
+      DataPerfSuite(const std::string& projectName, const std::string& executableName, OutputData outputData = OutputData_None, const std::string& filename = "");
 
       /// Destructor
       ~DataPerfSuite();
 
       /// Overloading used to print data out.
       DataPerfSuite& operator<<(const DataPerf& data);
+
+      /// Print end of file and close it.
+      void close();
+
+      void flush();
 
     private:
       DataPerfSuitePrivate *_p;

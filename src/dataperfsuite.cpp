@@ -11,14 +11,14 @@
 
 namespace qi
 {
-  DataPerfSuite::DataPerfSuite(const std::string& projectName, const std::string& executableName, OutputType outputType, const std::string& filename)
+  DataPerfSuite::DataPerfSuite(const std::string& projectName, const std::string& executableName, OutputData outputData, const std::string& filename)
     :_p(new DataPerfSuitePrivate)
   {
     _p->projectName = projectName;
     _p->executableName = executableName;
-    _p->outputType = outputType;
+    _p->outputData = outputData;
 
-    if (!filename.empty()) {
+    if (!filename.empty() && outputData != OutputData_None) {
       _p->out.open(filename.c_str(), std::ios_base::out | std::ios_base::trunc);
       if (!(_p->out.is_open())) {
         std::cerr << "Can't open file " << filename << "." << std::endl
@@ -26,66 +26,53 @@ namespace qi
       }
     }
 
-    switch (_p->outputType) {
-      case OutputType_Codespeed:
-        {
-          _p->getOut() << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << std::endl
-                       << "<perf_results project=\"" << projectName << "\" executable=\"" << executableName << "\">" << std::endl;
-        }
-        break;
-      case OutputType_Normal:
-        {
-          // Nothing
-        }
-        break;
+    if (_p->out.is_open()) {
+      _p->out  << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << std::endl
+               << "<perf_results project=\"" << projectName << "\" executable=\""
+               << executableName << "\">" << std::endl;
     }
 
     {
-      _p->getNormalOut() << projectName << ": " << executableName << std::endl
-        << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
+      std::cout << projectName << ": " << executableName << std::endl
+                << "Name: bytes, msg/s, MB/s, period (us), cpu/total" << std::endl;
     }
   }
 
   DataPerfSuite::~DataPerfSuite()
   {
-    switch (_p->outputType) {
-      case OutputType_Codespeed:
-        {
-          _p->getOut() << "</perf_results>" << std::endl;
-        }
-        break;
-      case OutputType_Normal:
-        {
-          // Nothing
-        }
-        break;
-    }
-
-    if (_p->out.is_open())
-      _p->out.close();
+    close();
 
     delete _p;
   }
 
   DataPerfSuite& DataPerfSuite::operator<<(const DataPerf& data) {
-    switch (_p->outputType) {
-      case OutputType_Codespeed:
-        {
-          _p->getOut() << "\t<perf_result benchmark=\"" << data.getBenchmarkName()
-                       << "\" result_value=\"" << std::fixed << std::setprecision(6) << data.getPeriod() << "\" />" << std::endl;
-        }
-        break;
-      case OutputType_Normal:
-        {
-          // Nothing
-        }
-        break;
+    if (_p->out.is_open()) {
+      if (_p->outputData & OutputData_Cpu) {
+        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_Cpu"
+                << "\" result_value=\"" << std::fixed << std::setprecision(6)
+                << data.getCpu() << "\" />" << std::endl;
+      }
+      if (_p->outputData & OutputData_Period) {
+        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_Period"
+                << "\" result_value=\"" << std::fixed << std::setprecision(6)
+                << data.getPeriod() << "\" />" << std::endl;
+      }
+      if (_p->outputData & OutputData_MsgPerSecond) {
+        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_MsgPerSecond"
+                << "\" result_value=\"" << std::fixed << std::setprecision(6)
+                << data.getMsgPerSecond() << "\" />" << std::endl;
+      }
+      if (_p->outputData & OutputData_MsgMBPerSecond) {
+        _p->out << "\t<perf_result benchmark=\"" << data.getBenchmarkName() << "_MsgMBPerSecond"
+                << "\" result_value=\"" << std::fixed << std::setprecision(6)
+                << data.getMegaBytePerSecond() << "\" />" << std::endl;
+      }
     }
 
     {
-      _p->getNormalOut() << data.getBenchmarkName() << ": ";
+      std::cout << data.getBenchmarkName() << ": ";
       if (data.getMsgSize() > 0) {
-        _p->getOut()
+        std::cout
           << std::fixed << std::setprecision(2) << data.getMsgSize() << " b, "
           << data.getMsgPerSecond() << " msg/s, "
           << std::setprecision(12) << data.getMegaBytePerSecond() << " MB/s, "
@@ -93,7 +80,7 @@ namespace qi
           << std::setprecision(1) << data.getCpu() << " %"
           << std::endl;
       } else {
-        _p->getNormalOut()
+        std::cout
           << std::setprecision(12) << data.getMsgPerSecond() << " msg/s, "
           << data.getCpu() << " %"
           << std::endl;
@@ -103,14 +90,24 @@ namespace qi
     return *this;
   }
 
-  std::ostream& DataPerfSuitePrivate::getOut()
+  void DataPerfSuite::flush()
   {
-    return (out.is_open() ? out : std::cout);
+    if (_p->out.is_open())
+      _p->out.flush();
+    else
+      std::cout.flush();
   }
 
-  std::ostream& DataPerfSuitePrivate::getNormalOut()
+  void DataPerfSuite::close()
   {
-    return ((outputType == DataPerfSuite::OutputType_Normal) ? getOut() : std::cout);
+    if (_p->out.is_open()) {
+      _p->out << "</perf_results>" << std::endl;
+    }
+
+    flush();
+
+    if (_p->out.is_open())
+      _p->out.close();
   }
 }
 

@@ -20,8 +20,6 @@ namespace qi {
       po::options_description desc(std::string("Options for perf"));
 
       desc.add_options()
-        ("backend,b", po::value<std::string>()->default_value("normal"),
-         "Backend to use for output data (normal | codespeed).")
         ("output,o", po::value<std::string>()->default_value(""),
          "Output file (If not specified, set to standard output).");
 

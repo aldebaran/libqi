@@ -32,27 +32,19 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
   }
 
-  qi::DataPerfSuite::OutputType type;
-  std::string backend = vm["backend"].as<std::string>();
-  if (backend == "normal")
-    type = qi::DataPerfSuite::OutputType_Normal;
-  else if (backend == "codespeed")
-    type = qi::DataPerfSuite::OutputType_Codespeed;
-  else {
-    std::cerr << "This backend doesn't exist, fallback in [normal]." << std::endl;
-    type = qi::DataPerfSuite::OutputType_Normal;
-  }
+  qi::DataPerfSuite out("qiperf", "example_qiperf", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
-  qi::DataPerfSuite* out = new qi::DataPerfSuite("qiperf", "example_qiperf", type, vm["output"].as<std::string>());
+  const unsigned count = 10;
 
   qi::DataPerf dp;
-  for (unsigned int i = 0; i < 10; ++i) {
-    dp.start(std::string("My_Stupid_Bench"));
+  dp.start(std::string("My_Stupid_Bench"), count);
+
+  for (unsigned int i = 0; i < count; ++i) {
     qi::os::msleep(500);
-    dp.stop();
-    *out << dp;
   }
-  delete out;
+  dp.stop();
+  out << dp;
+  out.close();
 
   return EXIT_SUCCESS;
 }

@@ -7,5 +7,4 @@
 
 qi_create_perf_test(example_qiperf example_qiperf.cpp
   DEPENDS
-    QI QIPERF BOOST_PROGRAM_OPTIONS
-    ARGUMENTS "--backend=codespeed")
+    QI QIPERF BOOST_PROGRAM_OPTIONS)
