@@ -240,17 +240,7 @@ int main(int argc, char **argv)
     std::cerr << "[thread] is useless with [server] or [gateway]" << std::endl;
   }
 
-  qi::DataPerfSuite::OutputType type;
-  if (vm["backend"].as<std::string>() == "normal")
-    type = qi::DataPerfSuite::OutputType_Normal;
-  else if (vm["backend"].as<std::string>() == "codespeed")
-    type = qi::DataPerfSuite::OutputType_Codespeed;
-  else {
-    std::cerr << "This backend doesn't exist, fallback in [normal]!" << std::endl;
-    type = qi::DataPerfSuite::OutputType_Normal;
-  }
-
-  out = new qi::DataPerfSuite("qimessaging", "transport", type, vm["output"].as<std::string>());
+  out = new qi::DataPerfSuite("qimessaging", "transport", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
   if (vm.count("client"))
   {

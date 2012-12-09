@@ -71,17 +71,7 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
   }
 
-  qi::DataPerfSuite::OutputType type;
-  if (vm["backend"].as<std::string>() == "normal")
-    type = qi::DataPerfSuite::OutputType_Normal;
-  else if (vm["backend"].as<std::string>() == "codespeed")
-    type = qi::DataPerfSuite::OutputType_Codespeed;
-  else {
-    std::cerr << "This backend doesn't exist, fallback in [normal]!" << std::endl;
-    type = qi::DataPerfSuite::OutputType_Normal;
-  }
-
-  qi::DataPerfSuite out("qimessaging", "signal_queued", type, vm["output"].as<std::string>());
+  qi::DataPerfSuite out("qimessaging", "signal_queued", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
   qi::Signal<void (void)> signal_1;
 
