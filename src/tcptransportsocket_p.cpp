@@ -158,7 +158,7 @@ namespace qi
       _msg->setBuffer(buf);
 
       evbuffer_remove(input, buf.data(), buf.size());
-      qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
+      // qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
       static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
       qi::int64_t start = 0;
       if (usWarnThreshold)
@@ -327,7 +327,7 @@ namespace qi
   {
     if (!_bev)
       return; // fire disconnected only once
-    qiLogVerbose("qi.tcpsocket") << "disconnect_ " << this;
+    // qiLogVerbose("qi.tcpsocket") << "disconnect_ " << this;
     /*
      * Currently (as of Libevent 2.0.5-beta), bufferevent_flush() is only
      * implemented for some bufferevent types. In particular, socket-based
@@ -351,7 +351,7 @@ namespace qi
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
   {
-    qiLogDebug("TransportSocket") << "Sending (" << msg.type() << "):" << msg.address();
+    // qiLogDebug("TransportSocket") << "Sending (" << msg.type() << "):" << msg.address();
     if (_eventLoop->isInEventLoopThread())
       return send_(_self->shared_from_this(), msg, false);
     else

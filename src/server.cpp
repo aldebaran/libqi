@@ -105,7 +105,7 @@ namespace qi {
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
     qi::BoundObjectPtr obj;
-    qiLogDebug("Server") << "Server Recv (" << msg.type() << "):" << msg.address();
+    // qiLogDebug("Server") << "Server Recv (" << msg.type() << "):" << msg.address();
 
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);

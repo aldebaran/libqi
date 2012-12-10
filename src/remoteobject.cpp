@@ -123,7 +123,7 @@ namespace qi {
     bool found = false;
     std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
 
-    qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
+    // qiLogDebug("RemoteObject") << this << " msg " << msg.type() << " " << msg.buffer().size();
     {
       boost::mutex::scoped_lock lock(_mutex);
       it = _promises.find(msg.id());
@@ -229,8 +229,7 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(qi::Message::GenericObject_Main);
     msg.setFunction(method);
-    qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " "
-     << msg.function() <<" " << msg.id();
+    // qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
       boost::mutex::scoped_lock lock(_mutex);
       if (_promises.find(msg.id()) != _promises.end())
