@@ -10,7 +10,7 @@ namespace qi
 {
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
-    qiLogDebug("qi.type") << "convert " << type->infoString() << ' ' << targetType->infoString();
+    // qiLogDebug("qi.type") << "convert " << type->infoString() << ' ' << targetType->infoString();
     /* Can have false-negative (same effective type, different Type instances
    * but we do not care, correct check (by comparing info() result
    * is more expensive than the dummy conversion that will happen.

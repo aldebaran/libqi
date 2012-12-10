@@ -411,7 +411,7 @@ namespace qi {
             qiLogError("qi.type") << "Cannot get type from tuple of unknown element type";
             return 0;
           }
-          qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
+          // qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
         Type* res = makeTupleType(types);
@@ -434,7 +434,7 @@ namespace qi {
       qiLogWarning("qi.type") << "fromSignature(): signature has more than one element";
     Signature::iterator i = sig.begin();
     Type* result = ::qi::fromSignature(i);
-    qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
+    // qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
     return result;
   }
 

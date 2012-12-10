@@ -120,7 +120,7 @@ namespace qi {
     MetaMethod mm(id, sigret, signature);
     _methods[id] = mm;
     _methodsNameToIdx[signature] = id;
-    qiLogDebug("qi.MetaObject") << "Adding method("<< id << "): " << sigret << " " << signature;
+    // qiLogDebug("qi.MetaObject") << "Adding method("<< id << "): " << sigret << " " << signature;
     return id;
   }
 
@@ -139,7 +139,7 @@ namespace qi {
     MetaSignal ms(id, sig);
     _events[id] = ms;
     _eventsNameToIdx[sig] = id;
-    qiLogDebug("qi.MetaObject") << "Adding signal("<< id << "): " << sig;
+    // qiLogDebug("qi.MetaObject") << "Adding signal("<< id << "): " << sig;
     return id;
   }
 
