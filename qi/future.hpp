@@ -50,8 +50,9 @@ namespace qi {
     }
 
     Future(const FutureSync<T>& b)
+    : _p(b._p)
     {
-      *this = b;
+      b._sync = false;
     }
 
     inline Future<T>& operator = (const FutureSync<T>& b)
@@ -115,17 +116,15 @@ namespace qi {
     FutureSync() : _sync(false) {}
 
     FutureSync(const Future<T>& b)
-    : _sync(true)
+    : Future<T>(b)
+    , _sync(true)
     {
-      *this = b;
-      this->_p = b._p;
     }
 
     FutureSync(const FutureSync<T>& b)
-    : _sync(true)
+    : Future<T>(b)
+    , _sync(true)
     {
-      *this = b;
-      this->_p = b._p;
       b._sync = false;
     }
 
