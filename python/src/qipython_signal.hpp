@@ -47,7 +47,7 @@ class qi_signal
         EventLoopHandler()
           : eventLoop ()
         {
-          eventLoop.start();
+          eventLoop.startThreadPool();
         }
 
         ~EventLoopHandler()
