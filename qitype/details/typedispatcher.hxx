@@ -40,36 +40,36 @@ namespace qi {
       case qi::Type::String:
       {
         TypeString* tstring = static_cast<TypeString*>(type);
-        v.visitString(tstring, *storage);
+        v.visitString(tstring, storage?*storage:0);
         break;
       }
       case qi::Type::List:
       {
         TypeList* tlist = static_cast<TypeList*>(type);
-        v.visitList(GenericListPtr(tlist, *storage));
+        v.visitList(GenericListPtr(tlist, storage?*storage:0));
         break;
       }
       case qi::Type::Map:
       {
         TypeMap * tlist = static_cast<TypeMap *>(type);
-        v.visitMap(GenericMapPtr(tlist, *storage));
+        v.visitMap(GenericMapPtr(tlist, storage?*storage:0));
         break;
       }
       case qi::Type::Object:
       {
-        v.visitObject(GenericObject(static_cast<ObjectType*>(type), *storage));
+        v.visitObject(GenericObject(static_cast<ObjectType*>(type), storage?*storage:0));
         break;
       }
       case qi::Type::Pointer:
       {
         TypePointer* tpointer = static_cast<TypePointer*>(type);
-        v.visitPointer(tpointer, *storage, (storage&&*storage)?tpointer->dereference(*storage):GenericValuePtr());
+        v.visitPointer(tpointer, storage?*storage:0, (storage&&*storage)?tpointer->dereference(*storage):GenericValuePtr());
         break;
       }
       case qi::Type::Tuple:
       {
         TypeTuple* ttuple = static_cast<TypeTuple*>(type);
-        v.visitTuple(ttuple, *storage);
+        v.visitTuple(ttuple, storage?*storage:0);
         break;
       }
       case qi::Type::Dynamic:
