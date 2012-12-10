@@ -27,7 +27,7 @@ namespace qi
   {
   public:
     /** Create a new eventLoop.
-     * You must then call eiter start() or run() to start event processing.
+     * You must then call eiter start(), run() or startThreadPool() to start event processing.
     */
     EventLoop();
     ~EventLoop();
@@ -35,6 +35,8 @@ namespace qi
     bool isInEventLoopThread();
     /// Start in a thread (in case useThread=false was passed to constructor).
     void start();
+    /// Start in thread-pool mode: each asyncCall() will be run in parallel
+    void startThreadPool(int minWorkers=-1, int maxWorkers=-1, int minIdleWorkers=-1, int maxIdleWorkers=-1);
     /// Wait for run thread to terminate
     void join();
     /// Ask main loop to terminate
@@ -84,6 +86,8 @@ namespace qi
   QI_API EventLoop* getDefaultNetworkEventLoop();
   /// Return a default context for other uses.
   QI_API EventLoop* getDefaultObjectEventLoop();
+  /// Return a default thread pool context
+  QI_API EventLoop* getDefaultThreadPoolEventLoop();
 }
 
 #ifdef _MSC_VER

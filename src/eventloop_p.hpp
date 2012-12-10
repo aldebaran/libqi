@@ -31,20 +31,38 @@ namespace qi {
   class EventLoopPrivate
   {
   public:
-    EventLoopPrivate();
-    bool isInEventLoopThread();
-    void start();
-    void join();
-    void stop();
-    qi::Future<void>           asyncCall(uint64_t usDelay,
+    virtual bool isInEventLoopThread()=0;
+    virtual void start()=0;
+    virtual void join()=0;
+    virtual void stop()=0;
+    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+      boost::function<void ()> callback)=0;
+    virtual EventLoop::AsyncCallHandle notifyFd(int fd,
+      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)=0;
+    virtual void destroy(bool join)=0;
+    virtual void* nativeHandle()=0;
+    virtual void run()=0;
+  protected:
+    virtual ~EventLoopPrivate() {}
+  };
+
+  class EventLoopLibEvent: public EventLoopPrivate
+  {
+  public:
+    EventLoopLibEvent();
+    virtual bool isInEventLoopThread();
+    virtual void start();
+    virtual void run();
+    virtual void join();
+    virtual void stop();
+    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
       boost::function<void ()> callback);
-    EventLoop::AsyncCallHandle notifyFd(evutil_socket_t fd,
-      EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant);
-    void destroy(bool join);
-    event_base* getEventBase() { return _base;}
-    void run();
+    EventLoop::AsyncCallHandle notifyFd(int fd,
+      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
+    virtual void destroy(bool join);
+    virtual void* nativeHandle();
   private:
-    ~EventLoopPrivate();
+    virtual ~EventLoopLibEvent();
     struct event_base* _base;
     boost::thread      _thd;
     bool               _destroyMe;
@@ -52,6 +70,28 @@ namespace qi {
     bool               _threaded;
     boost::recursive_mutex _mutex;
     boost::thread::id  _id;
+  };
+
+  class ThreadPool;
+  class EventLoopThreadPool: public EventLoopPrivate
+  {
+  public:
+    EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers);
+    virtual bool isInEventLoopThread();
+    virtual void start();
+    virtual void run();
+    virtual void join();
+    virtual void stop();
+    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+      boost::function<void ()> callback);
+    EventLoop::AsyncCallHandle notifyFd(int fd,
+      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
+    virtual void destroy(bool join);
+    virtual void* nativeHandle();
+  private:
+    virtual ~EventLoopThreadPool();
+    ThreadPool* _pool;
+    bool _stopping;
   };
 }
 

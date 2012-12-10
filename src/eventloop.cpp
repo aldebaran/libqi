@@ -8,8 +8,10 @@
 
 #include <boost/thread.hpp>
 
+#include <qi/preproc.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
+#include <qi/threadpool.hpp>
 
 #include <qi/eventloop.hpp>
 
@@ -17,7 +19,7 @@
 
 namespace qi {
 
-  EventLoopPrivate::EventLoopPrivate()
+  EventLoopLibEvent::EventLoopLibEvent()
   : _destroyMe(false)
   , _running(false)
   , _threaded(false)
@@ -48,7 +50,7 @@ namespace qi {
   }
 
 
-  void EventLoopPrivate::start()
+  void EventLoopLibEvent::start()
   {
     if (_running || _threaded)
       return;
@@ -58,7 +60,7 @@ namespace qi {
       qi::os::msleep(0);
   }
 
-  EventLoopPrivate::~EventLoopPrivate()
+  EventLoopLibEvent::~EventLoopLibEvent()
   {
     if (_running && boost::this_thread::get_id() != _id)
       qiLogError("Destroying EventLoopPrivate from itself while running");
@@ -71,7 +73,7 @@ namespace qi {
   #endif
   }
 
-  void EventLoopPrivate::destroy(bool join)
+  void EventLoopLibEvent::destroy(bool join)
   {
     bool needJoin;
     bool needDelete;
@@ -89,7 +91,7 @@ namespace qi {
       delete this;
   }
 
-  void EventLoopPrivate::run()
+  void EventLoopLibEvent::run()
   {
     qiLogDebug("qi.EventLoop") << this << "run starting";
     _running = true;
@@ -115,12 +117,12 @@ namespace qi {
     }
   }
 
-  bool EventLoopPrivate::isInEventLoopThread()
+  bool EventLoopLibEvent::isInEventLoopThread()
   {
     return boost::this_thread::get_id() == _id;
   }
 
-  void EventLoopPrivate::stop()
+  void EventLoopLibEvent::stop()
   {
     qiLogDebug("qi.EventLoop") << this << "stopping";
     event_base* base = 0;
@@ -138,7 +140,7 @@ namespace qi {
 
   }
 
-  void EventLoopPrivate::join()
+  void EventLoopLibEvent::join()
   {
     if (_base)
       qiLogError("EventLoop") << "join() called before stop()";
@@ -206,7 +208,7 @@ namespace qi {
     handle->cancelled = true;
   }
 
-  qi::Future<void> EventLoopPrivate::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
+  qi::Future<void> EventLoopLibEvent::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
     if (!_base) {
       qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
@@ -234,15 +236,24 @@ namespace qi {
     return prom.future();
   }
 
-  EventLoop::AsyncCallHandle EventLoopPrivate::notifyFd(evutil_socket_t fd, EventLoop::NotifyFdCallbackFunction cb, short evflags, bool persistant)
+  EventLoop::AsyncCallHandle EventLoopLibEvent::notifyFd(int fd_, EventLoop::NotifyFdCallbackFunction cb,
+    EventLoop::FileOperation fdUsage)
   {
+    evutil_socket_t fd =  static_cast<evutil_socket_t>(fd_);
+    short evflags = 0;
+    switch (fdUsage)
+    {
+    case EventLoop::FileOperation_Read: evflags = EV_READ; break;
+    case EventLoop::FileOperation_Write: evflags = EV_WRITE; break;
+    case EventLoop::FileOperation_ReadOrWrite: evflags = EV_READ | EV_WRITE; break;
+    }
+
     EventLoop::AsyncCallHandle res;
     if (!_base) {
       qiLogDebug("eventloop") << "Discarding notifyChange after loop destruction.";
       return res;
     }
-    if (persistant)
-      evflags |= EV_PERSIST;
+    evflags |= EV_PERSIST;
     struct event *ev = event_new(_base,
                                  fd,
                                  evflags,
@@ -250,10 +261,104 @@ namespace qi {
                                  new EventLoop::AsyncCallHandle(res));
     res._p->ev = ev;
     res._p->cancelled = false;
-    res._p->persistant = persistant;
+    res._p->persistant = true;
     std::swap(res._p->fdcallback,cb);
     event_add(ev, NULL);
     return res;
+  }
+
+  void* EventLoopLibEvent::nativeHandle()
+  {
+    return static_cast<void*>(_base);
+  }
+
+  EventLoopThreadPool::EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
+  {
+    _stopping = false;
+    _pool = new ThreadPool(minWorkers, maxWorkers, minIdleWorkers, maxIdleWorkers);
+  }
+
+  bool EventLoopThreadPool::isInEventLoopThread()
+  {
+    // The point is to know if a call will be synchronous. It never is
+    // with thread pool
+    return false;
+  }
+
+  void EventLoopThreadPool::start()
+  {
+  }
+
+  void EventLoopThreadPool::run()
+  {
+  }
+
+  void EventLoopThreadPool::join()
+  {
+    _pool->waitForAll();
+  }
+
+  void EventLoopThreadPool::stop()
+  {
+    _stopping = true;
+  }
+
+  void* EventLoopThreadPool::nativeHandle()
+  {
+    return 0;
+  }
+
+  void EventLoopThreadPool::destroy(bool join)
+  {
+    _stopping = true;
+    if (join)
+    {
+      _pool->waitForAll();
+      delete this;
+    }
+    else
+      boost::thread(&EventLoopThreadPool::destroy, this, true);
+  }
+
+  EventLoopThreadPool::~EventLoopThreadPool()
+  {
+    delete _pool;
+  }
+
+  EventLoop::AsyncCallHandle EventLoopThreadPool::notifyFd(int fd,
+      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)
+  {
+    throw std::runtime_error("notifyFd not implemented for thread pool");
+  }
+
+  static void delay_call_notify(uint64_t usDelay, boost::function<void()> callback,
+    qi::Promise<void> promise)
+  {
+    if (usDelay)
+      qi::os::msleep(usDelay/1000);
+    try
+    {
+      callback();
+      promise.setValue(0);
+    }
+    catch(const std::exception& e)
+    {
+      promise.setError(std::string("Exception caught in async call: ")  + e.what());
+    }
+    catch(...)
+    {
+      promise.setError("Unknown exception caught in async call");
+    }
+  }
+
+  qi::Future<void>  EventLoopThreadPool::asyncCall(uint64_t usDelay,
+      boost::function<void ()> callback)
+  {
+    if (_stopping)
+      return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
+    qi::Promise<void> promise;
+    _pool->schedule(boost::bind(&delay_call_notify, usDelay, callback, promise));
+    return promise.future();
   }
 
    // Basic pimpl bouncers.
@@ -272,43 +377,71 @@ namespace qi {
   }
 
   EventLoop::EventLoop()
+  : _p(0)
   {
-    _p = new EventLoopPrivate();
   }
 
   EventLoop::~EventLoop()
   {
-    _p->destroy(false);
+    if (_p)
+      _p->destroy(false);
     _p = 0;
   }
 
+  #define CHECK_STARTED                                                            \
+  do {                                                                             \
+    if (!_p)                                                                       \
+      throw std::runtime_error("EventLoop " __HERE " : EventLoop not started");  \
+  } while(0)
+
+
   bool EventLoop::isInEventLoopThread()
   {
+    CHECK_STARTED;
     return _p->isInEventLoopThread();
   }
 
   void EventLoop::join()
   {
+    CHECK_STARTED;
     _p->join();
   }
 
   void EventLoop::start()
   {
+    if (_p)
+      return;
+    _p = new EventLoopLibEvent();
     _p->start();
   }
 
+  void EventLoop::startThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
+  {
+    #define OR(name, val) (name==-1?val:name)
+    if (_p)
+      return;
+    _p = new EventLoopThreadPool(OR(minWorkers, 2), OR(maxWorkers, 8), OR(minIdleWorkers,1), OR(maxIdleWorkers, 4));
+    #undef OR
+  }
+
+
   void EventLoop::stop()
   {
+    CHECK_STARTED;
     _p->stop();
   }
 
   void EventLoop::run()
   {
+    if (_p)
+      return;
+    _p = new EventLoopLibEvent();
     _p->run();
   }
 
   void *EventLoop::nativeHandle() {
-    return static_cast<void *>(_p->getEventBase());
+    CHECK_STARTED;
+    return _p->nativeHandle();
   }
 
   qi::Future<void>
@@ -316,6 +449,7 @@ namespace qi {
     uint64_t usDelay,
     boost::function<void ()> callback)
   {
+    CHECK_STARTED;
     return _p->asyncCall(usDelay, callback);
   }
 
@@ -324,17 +458,10 @@ namespace qi {
                       NotifyFdCallbackFunction callback,
                       FileOperation fdUsage)
   {
-    switch (fdUsage)
-    {
-      case FileOperation_Read:
-        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ, true);
-      case FileOperation_Write:
-        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_WRITE, true);
-      case FileOperation_ReadOrWrite:
-        return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ|EV_WRITE, true);
-    }
-    return _p->notifyFd(static_cast<evutil_socket_t>(fileDescriptor), callback, EV_READ|EV_WRITE, true);
+    CHECK_STARTED;
+    return _p->notifyFd(fileDescriptor, callback, fdUsage);
   }
+
 
   static void eventloop_stop(EventLoop* ctx)
   {
@@ -343,7 +470,7 @@ namespace qi {
     delete ctx;
   }
 
-  static EventLoop* _get(EventLoop* &ctx)
+  static EventLoop* _get(EventLoop* &ctx, bool isPool)
   {
     if (!ctx)
     {
@@ -352,7 +479,10 @@ namespace qi {
         qiLogInfo("EventLoop") << "Creating event loop while no qi::Application() is running";
       }
       ctx = new EventLoop();
-      ctx->start();
+      if (isPool)
+        ctx->startThreadPool();
+      else
+        ctx->start();
       Application::atExit(boost::bind(&eventloop_stop, ctx));
     }
     return ctx;
@@ -360,14 +490,21 @@ namespace qi {
 
   static EventLoop* _netEventLoop = 0;
   static EventLoop* _objEventLoop = 0;
+  static EventLoop* _poolEventLoop = 0;
+
   EventLoop* getDefaultNetworkEventLoop()
   {
-    return _get(_netEventLoop);
+    return _get(_netEventLoop, false);
   }
 
   EventLoop* getDefaultObjectEventLoop()
   {
-    return _get(_objEventLoop);
+    return _get(_objEventLoop, false);
+  }
+
+  EventLoop* getDefaultThreadPoolEventLoop()
+  {
+    return _get(_poolEventLoop, true);
   }
 
 }
