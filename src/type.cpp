@@ -343,7 +343,7 @@ namespace qi {
   std::string Type::signature(void* storage, bool resolveDynamic)
   {
     SignatureTypeVisitor ts(resolveDynamic);
-    typeDispatch(ts, this, &storage);
+    typeDispatch(ts, this, resolveDynamic?&storage:(void**)0);
     return ts.result;
   }
 
