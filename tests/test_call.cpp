@@ -487,6 +487,64 @@ TEST(TestCall, TestGenericConversionTuple) {
 }
 
 
+static int tmValue = 1;
+static void tmIncrement(int delay1, int delay2)
+{
+  qi::os::msleep(delay1);
+  ++tmValue;
+  qi::os::msleep(delay2);
+}
+
+static void tmDouble(int delay1, int delay2)
+{
+  qi::os::msleep(delay1);
+  tmValue *= 2;
+  qi::os::msleep(delay2);
+}
+
+TEST(ThreadModel, EventLoop)
+{
+  tmValue = 1;
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("tmIncrement", tmIncrement);
+  ob.advertiseMethod("tmDouble", tmDouble);
+  qi::ObjectPtr obj = ob.object();
+  p.server()->registerService("tm", obj);
+  qi::ObjectPtr proxy = p.client()->service("tm");
+  // Send the two calls in //
+  qi::Future<void> f1 = proxy->call<void>("tmIncrement", 200, 0);
+  qi::Future<void> f2 = proxy->call<void>("tmDouble", 0, 0);
+  f1.wait();
+  f2.wait();
+  ASSERT_EQ(4, tmValue);
+}
+
+TEST(ThreadModel, ThreadPool)
+{
+  tmValue = 1;
+  TestSessionPair p;
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("tmIncrement", tmIncrement);
+  ob.advertiseMethod("tmDouble", tmDouble);
+  qi::ObjectPtr obj = ob.object();
+  obj->moveToEventLoop(qi::getDefaultThreadPoolEventLoop());
+  p.server()->registerService("tm", obj);
+  qi::ObjectPtr proxy = p.client()->service("tm");
+  // Send the two calls in //
+  qi::Future<void> f1 = proxy->call<void>("tmIncrement", 200, 0);
+  qi::Future<void> f2 = proxy->call<void>("tmDouble", 0, 0);
+  f1.wait();
+  f2.wait();
+  ASSERT_EQ(3, tmValue);
+  tmValue = 1;
+  f1 = proxy->call<void>("tmIncrement", 200, 500);
+  f2 = proxy->call<void>("tmDouble", 0, 100);
+  qi::Future<void> f3 = proxy->call<void>("tmIncrement", 300, 300);
+  qi::Future<void> f4 = proxy->call<void>("tmDouble", 100, 0);
+  f1.wait(); f2.wait(); f3.wait(); f4.wait();
+  ASSERT_EQ(7, tmValue);
+}
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
