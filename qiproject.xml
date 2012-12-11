@@ -1,4 +1,4 @@
 <project name="libqiperf">
   <depends names="libqi" runtime="true" buildtime="true" />
-  <doxydoc name="qiperf" src="." dest="doc" />
+  <doxydoc name="qiperf" src="doc" dest="ref/libqiperf" />
 </project>
