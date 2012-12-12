@@ -73,24 +73,9 @@ set(PUBLIC_HEADERS
                    qitype/typedispatcher.hpp)
 
 
-#normalize BUILD_SHARED_LIBS, default ON
-if (NOT DEFINED BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS ON)
-endif()
-
-# Copy value to a specific name used in config.hpp.in
-
 set(qitype_STATIC_BUILD OFF)
 if (NOT BUILD_SHARED_LIBS)
   set(qitype_STATIC_BUILD ON)
-endif()
-
-# Convert ON/OFF to SHARED/STATIC for create_lib argument
-set(_libtype)
-if (BUILD_SHARED_LIBS)
-  set(_libtype SHARED)
-else()
-  set(_libtype STATIC)
 endif()
 
 qi_create_config_h(_confighpp qitype/config.hpp.in qitype/config.hpp)
@@ -126,7 +111,7 @@ set(SOURCES ${PUBLIC_HEADERS}
 
 list(APPEND SOURCES ${_confighpp})
 
-qi_create_lib(qitype ${SOURCES} ${_libtype} DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
+qi_create_lib(qitype ${SOURCES} SHARED DEPENDS QI BOOST BOOST_DATE_TIME BOOST_THREAD)
 qi_stage_lib(qitype)
 
 add_subdirectory("tests")
