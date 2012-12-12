@@ -211,7 +211,7 @@ namespace qi {
              }
            }
          }
-         qiLogDebug("qi.signature") << "List effective " << sigFirst;
+         // qiLogDebug("qi.signature") << "List effective " << sigFirst;
          result =  std::string()
          + (char)Signature::Type_List
          + (sigFirst.empty()?value.elementType()->signature():sigFirst)
@@ -277,7 +277,7 @@ namespace qi {
          }
          it.destroy();
          iend.destroy();
-         qiLogDebug("qi.signature") << "Map effective: " << ksig << " , " << vsig;
+         // qiLogDebug("qi.signature") << "Map effective: " << ksig << " , " << vsig;
          result = std::string()
            + (char)Signature::Type_Map
            + (ksig.empty()? value.keyType()->signature(): ksig)
