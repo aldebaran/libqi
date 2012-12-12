@@ -296,10 +296,15 @@ namespace qi
     int result = bufferevent_socket_connect(_bev, ai->ai_addr, ai->ai_addrlen);
 
     evutil_freeaddrinfo(ai);
+
     if (result) {
-      _connectPromise.setValue(false);
+      // FIXME: [1] race condition here.
+      if (!_connectPromise.future().hasError())
+      {
+        _connecting = false;
+        _connectPromise.setValue(false);
+      }
       _status = qi::TransportSocket::Status_Disconnected;
-      _connecting = false;
     }
   }
 
@@ -345,8 +350,13 @@ namespace qi
     _disconnecting = false;
     _self->disconnected(_err);
     _disconnectPromise.setValue(0);
+
+    // FIXME: [1] race condition here.
     if (_connecting)
-      _connectPromise.setError(strerror(_err));
+    {
+      _connecting = false;
+      _connectPromise.setError(std::string("Connection error: ") + strerror(_err));
+    }
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
