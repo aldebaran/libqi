@@ -38,3 +38,10 @@
  * \fn qi::Atomic::operator*()
  * \brief Returns the current value of the atomic.
  */
+
+/**
+ * \fn qi::testAndSet()
+ * \brief Cross-platform implementation of atomic Test-And-Set.
+ * \param cond pointer to the value to test and set.
+ * \return true (1) if cond is 0, false (0) otherwise.
+ */

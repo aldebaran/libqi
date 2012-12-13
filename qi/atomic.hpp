@@ -34,6 +34,16 @@ extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
 namespace qi
 {
+  inline long testAndSet(long* cond)
+  {
+#ifdef __GNUC__
+    return __sync_bool_compare_and_swap(cond, 0, 1);
+#endif
+#ifdef _MSC_VER
+    return 1 - InterlockedCompareExchange(cond, 1, 0);
+#endif
+  }
+
   template <typename T>
   class Atomic
   {

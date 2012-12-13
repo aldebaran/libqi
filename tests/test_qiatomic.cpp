@@ -36,6 +36,15 @@ void test_type()
   sub_test_type<qi::atomic, T>();
 }
 
+TEST(QiAtomic, tas)
+{
+  long lock = 0;
+  EXPECT_EQ(1, qi::testAndSet(&lock));
+  EXPECT_EQ(0, qi::testAndSet(&lock));
+  lock = 0;
+  EXPECT_EQ(1, qi::testAndSet(&lock));
+}
+
 #ifndef _MSC_VER
 TEST(QiAtomic, qiuint8)
 {
