@@ -114,6 +114,9 @@ namespace qi
       -1,
       ai->ai_addr, ai->ai_addrlen);
 
+    if (ai)
+      evutil_freeaddrinfo(ai);
+
     if (_listener)
     {
       evconnlistener_set_error_cb(_listener, accept_error_cb);
@@ -128,10 +131,9 @@ namespace qi
     {
       qiLogError("qimessaging.transportserver") << "Could not start TransportServer at "
                                                 << listenUrl.str();
+      return false;
     }
 
-    if (ai)
-      evutil_freeaddrinfo(ai);
     if (port == 0)
     {
       // Get effective port
