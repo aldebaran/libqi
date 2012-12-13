@@ -225,8 +225,8 @@ namespace qi {
 
     buffer().addSubBuffer(meta);
 
-    qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
-                             << " at " << buffer().size();
+    // qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
+    //                         << " at " << buffer().size();
   }
 
   void BinaryEncoder::write(const GenericValuePtr &value)

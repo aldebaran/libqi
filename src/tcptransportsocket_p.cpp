@@ -420,8 +420,8 @@ namespace qi
     {
       // Send parent buffer between pos and start of sub
       size_t end = subs[i].first+4;
-      qiLogDebug("qimessaging.TransportSocketLibevent")
-        << "serializing from " << pos <<" to " << end << " of " << sz;
+      // qiLogDebug("qimessaging.TransportSocketLibevent")
+      //  << "serializing from " << pos <<" to " << end << " of " << sz;
       if (end != pos)
         if (evbuffer_add_reference(mess,
                                  (const char*)b->data() + pos,
@@ -435,8 +435,8 @@ namespace qi
         }
       pos = end;
       // Send subbuffer
-      qiLogDebug("qimessaging.TransportSocketLibevent")
-        << "serializing subbuffer of size " << subs[i].second.size();
+      // qiLogDebug("qimessaging.TransportSocketLibevent")
+      //  << "serializing subbuffer of size " << subs[i].second.size();
       if (evbuffer_add_reference(mess,
                                  subs[i].second.data(),
                                  subs[i].second.size(),
