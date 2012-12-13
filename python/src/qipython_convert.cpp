@@ -47,7 +47,8 @@ static PyObject *qi_value_to_python_list(const char *signature, qi_message_t *ms
   // #1 Initlialize qi::Signature subsignature.
   if ((sig = qi_signature_create_subsignature(signature)) == 0)
   {
-    qi_raise("SerializationError", "Signature is not valid.");
+    qi_raise("qimessaging.genericobject.SerializationError",
+             "Signature is not valid.");
     return 0;
   }
 
@@ -57,7 +58,8 @@ static PyObject *qi_value_to_python_list(const char *signature, qi_message_t *ms
   // #3 Create a new empty Python list.
   if ((lst = PyList_New(size)) == 0)
   {
-    qi_raise("SerializationError", "Cannot instanciate Python list.");
+    qi_raise("qimessaging.genericobject.SerializationError",
+             "Cannot instanciate Python list.");
     return 0;
   }
 
@@ -84,7 +86,8 @@ static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t 
   // Initialize qi::Signature subsignature.
   if ((sig = qi_signature_create_subsignature(signature)) == 0)
   {
-    qi_raise("SerializationError", "Signature is not valid.");
+    qi_raise("qimessaging.genericobject.SerializationError",
+             "Signature is not valid.");
     return 0;
   }
 
@@ -104,7 +107,8 @@ static PyObject *qi_message_to_python_tuple(const char *signature, qi_message_t 
     // Get Python element.
     if ((obj = qi_value_to_python(qi_signature_current(sig), msg)) == 0)
     {
-      qi_raise("SerializationError", "Cannot deserialize tuple from qi::Message.");
+      qi_raise("qimessaging.genericobject.SerializationError",
+               "Cannot deserialize tuple from qi::Message.");
       qi_signature_destroy(sig);
       return 0;
     }

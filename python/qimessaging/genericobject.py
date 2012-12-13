@@ -21,7 +21,16 @@ class CallError(Exception):
     def __str__(self):
         """ Getter on error value, Python style.
         """
-        return repr(self._value)
+        return str(self._value)
+
+
+class SerializationError(Exception):
+    def __init__(self, value):
+        self._value = value
+
+    def __str__(self):
+        return str(self._value)
+
 
 class GenericObject:
     """ Main class of QiMessaging

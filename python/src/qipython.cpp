@@ -37,10 +37,57 @@ std::vector<std::string>  signatureSplit(const std::string &signature)
 
 void*     qi_raise(const char *exception_class, const char *error_message)
 {
-  char *non_const = qi::os::strdup(exception_class);
-  PyObject *err = PyErr_NewException(non_const, 0, 0);
-  PyErr_SetString(err, error_message);
-  free(non_const);
+  PyObject* exc = NULL;
+  char*     exc_class = qi::os::strdup(exception_class);
+
+  // We require a class name.
+  if (exception_class == NULL) {
+    exc = PyExc_TypeError;
+    PyErr_SetString(exc, "qi_raise must be called with a exception class name.");
+    return NULL;
+  }
+
+  // Parsing name, to try and import exception.
+  // mod_name, class_name = exception_name.rsplit('.', 1) ...
+  // XXX: Use std::string for more safety?
+  char* mod_name = qi::os::strdup(exception_class);
+  char* class_name = mod_name;
+
+  while (class_name && *class_name)
+    class_name++;
+  while (class_name && class_name != mod_name && *class_name != '.')
+    class_name--;
+
+  if (class_name == mod_name) {
+    exc = PyExc_ValueError;
+    PyErr_SetString(exc, mod_name);
+    free(exc_class);
+    free(mod_name);
+    return NULL;
+  } else
+    *(class_name++) = '\0';
+
+  // Importing module and trying to fetch the class.
+  PyObject* modname = PyString_FromString(mod_name);
+  PyObject* module = PyImport_Import(modname);
+
+  if (module != NULL) {
+    PyObject* mdict = PyModule_GetDict(module);
+    PyObject* klass = PyDict_GetItemString(mdict, class_name);
+    if (klass == NULL) // FIXME: || !PyClass_IsSubclass(klass, PyExc_Exception))
+      exc = PyErr_NewException(exc_class, NULL, NULL);
+    else
+      exc = klass;
+  } else {
+    // Unknown exception: we create it but it won't be catchable.
+    exc = PyErr_NewException(exc_class, NULL, NULL);
+  }
+  PyErr_SetString(exc, error_message);
+
+  free(mod_name);
+  free(exc_class);
+  Py_DECREF(modname);
+  Py_XDECREF(module);
   return NULL;
 }
 
@@ -197,7 +244,8 @@ unsigned int py_session_register_object(qi_session_t *session, char *name, PyObj
   if (PyInstance_Check(object) == false)
   {
     qiLogError("qimesaging.python") << "Register object : Given object is not a class instance.";
-    qi_raise("RegisterError", "Register object : Given object is not a class instance.");
+    qi_raise("qimessaging.session.RegisterError",
+             "Register object : Given object is not a class instance.");
     return 0;
   }
 
@@ -208,7 +256,8 @@ unsigned int py_session_register_object(qi_session_t *session, char *name, PyObj
   if (!(iter = PyObject_GetIter(attr)))
   {
     qiLogError("qimessaging.python") << "Register object : Given object attributes is not iterable.";
-    qi_raise("RegisterError", "Register object : Given object attributes is not iterable.");
+    qi_raise("qimessaging.session.RegisterError",
+             "Register object : Given object attributes is not iterable.");
     return 0;
   }
 

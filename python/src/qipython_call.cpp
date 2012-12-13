@@ -43,7 +43,7 @@ static PyObject* qi_generic_call_python(qi::ObjectPtr object, const std::string&
   if (fut.hasError())
   {
     out.setError(fut.error());
-    qi_raise("_qimessaging.CallError", out.future().error().c_str());
+    qi_raise("qimessaging.genericobject.CallError", out.future().error().c_str());
     return 0;
   }
 

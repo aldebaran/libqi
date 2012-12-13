@@ -33,10 +33,21 @@ class ConnectionError(Exception):
         """
         self._value = value
 
-    def __init__str__(self):
+    def __str__(self):
         """ Error message getter, Python style.
         """
-        return repr(self._value)
+        return str(self._value)
+
+
+class RegisterError(Exception):
+    """Raised by Session when it can't register a service."""
+
+    def __init__(self, value):
+        self._value = value
+
+    def __str__(self):
+        return str(self._value)
+
 
 class Session:
     """ Package all function needed to create and connect to QiMessage services.
