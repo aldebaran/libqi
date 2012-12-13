@@ -131,6 +131,56 @@ double eatSpecific(const SpecificTuple& v)
     return v.e1 + v.e2;
 }
 
+qi::GenericValue pingCopy(qi::GenericValue arg, qi::GenericValue& target)
+{
+  target = arg;
+  return arg;
+}
+
+TEST(TestCall, CallBufferInList)
+{
+  TestSessionPair          p;
+  qi::GenericObjectBuilder ob;
+  qi::GenericValue val;
+  ob.advertiseMethod("pingcopy",
+    boost::function<qi::GenericValue(qi::GenericValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
+  qi::ObjectPtr obj(ob.object());
+  p.server()->registerService("test", obj);
+  qi::ObjectPtr proxy = p.client()->service("test");
+  std::vector<qi::GenericValue> args;
+  args.push_back(qi::GenericValue::from(12));
+  qi::Buffer buf;
+  buf.write("canard", strlen("canard")+1);
+  args.push_back(qi::GenericValue::from(buf));
+  args.push_back(qi::GenericValue::from("foo"));
+  qi::GenericValue result = proxy->call<qi::GenericValue>("pingcopy", args);
+  {
+    qi::GenericListPtr l = val.asList();
+    ASSERT_TRUE(l.type);
+    ASSERT_EQ(3, l.size());
+    qi::GenericListIteratorPtr it = l.begin();
+    ASSERT_EQ(12, (*it).asInt());
+    ++it;
+    qi::Buffer bufRes = (*it).as<qi::Buffer>();
+    ASSERT_EQ(strlen("canard")+1, bufRes.size());
+    ++it;
+    ASSERT_EQ("foo", (*it).asString());
+    it.destroy();
+  }
+  {
+    std::vector<qi::GenericValue> l = result.as<std::vector<qi::GenericValue> >();
+    ASSERT_EQ(3, l.size());
+    std::vector<qi::GenericValue>::iterator it = l.begin();
+    ASSERT_EQ(12, (*it).asInt());
+    ++it;
+    qi::Buffer bufRes = (*it).as<qi::Buffer>();
+    ASSERT_EQ(strlen("canard")+1, bufRes.size());
+    ++it;
+    ASSERT_EQ("foo", (*it).asString());
+  }
+
+}
+
 TEST(TestCall, CallComplexType)
 {
   std::list<std::pair<std::string, int> >  robots;

@@ -223,12 +223,7 @@ namespace qi {
       signature() += "r";
     }
 
-    ++_p->_innerSerialization;
-
-    write((uint32_t)meta.size());
     buffer().addSubBuffer(meta);
-
-    --_p->_innerSerialization;
 
     qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
                              << " at " << buffer().size();
@@ -594,7 +589,7 @@ namespace qi {
       SerializeTypeVisitor stv(out);
       qi::typeDispatch(stv, val.type, &val.value);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError("qimessaging.binarycoder") << "OSerialization error";
+        qiLogError("qimessaging.binarycoder") << "OSerialization error " << out.status();
       }
     }
 
@@ -603,7 +598,7 @@ namespace qi {
       DeserializeTypeVisitor dtv(in);
       qi::typeDispatch(dtv, type, &storage);
       if (in.status() != BinaryDecoder::Status_Ok) {
-        qiLogError("qimessaging.binarycoder") << "ISerialization error";
+        qiLogError("qimessaging.binarycoder") << "ISerialization error " << in.status();
       }
       return dtv.result;
     }
