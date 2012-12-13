@@ -25,6 +25,9 @@ void sub_test_type()
   EXPECT_EQ(*m, min);
   --m;
   EXPECT_EQ(*m, max);
+
+  m = 42;
+  EXPECT_EQ(42, *m);
 }
 
 template <typename T>

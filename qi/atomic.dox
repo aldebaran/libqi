@@ -40,6 +40,13 @@
  */
 
 /**
+ * \fn qi::Atomic::operator=()
+ * \brief Assign value to the object.
+ * \param value new value
+ */
+
+
+/**
  * \fn qi::testAndSet()
  * \brief Cross-platform implementation of atomic Test-And-Set.
  * \param cond pointer to the value to test and set.

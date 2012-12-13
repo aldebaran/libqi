@@ -14,11 +14,13 @@
 
 extern "C" short __cdecl _InterlockedIncrement16(short volatile *);
 extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
+extern "C" short __cdecl _InterlockedExchange16(short volatile *, short);
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
 # pragma intrinsic(_InterlockedIncrement16)
 # pragma intrinsic(_InterlockedDecrement16)
+# pragma intrinsic(_InterlockedExchange16)
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
 /*
@@ -61,6 +63,7 @@ namespace qi
     /* prefix operators */
     inline T operator++();
     inline T operator--();
+    inline Atomic<T>& operator=(T value);
 
     inline T operator*()
     {
@@ -86,6 +89,12 @@ namespace qi
       return __sync_sub_and_fetch(&_value, 1);
     }
 
+    template <typename T>
+    inline Atomic<T>& Atomic<T>::operator=(T value)
+    {
+      __sync_lock_test_and_set(&_value, value);
+      return *this;
+    }
 #endif
 
 #ifdef _MSC_VER
@@ -103,6 +112,13 @@ namespace qi
   }
 
   template<>
+  inline Atomic<short>& Atomic<short>::operator=(short value)
+  {
+    _InterlockedExchange16(&_value, value);
+    return *this;
+  }
+
+  template<>
   inline unsigned short Atomic<unsigned short>::operator++()
   {
     return _InterlockedIncrement16(reinterpret_cast<short*>(&_value));
@@ -112,6 +128,13 @@ namespace qi
   inline unsigned short Atomic<unsigned short>::operator--()
   {
     return _InterlockedDecrement16(reinterpret_cast<short*>(&_value));
+  }
+
+  template<>
+  inline Atomic<unsigned short>& Atomic<unsigned short>::operator=(unsigned short value)
+  {
+    _InterlockedExchange16(reinterpret_cast<short*>(&_value), value);
+    return *this;
   }
 
   template <>
@@ -126,6 +149,13 @@ namespace qi
     return _InterlockedDecrement(&_value);
   }
 
+  template<>
+  inline Atomic<long>& Atomic<long>::operator=(long value)
+  {
+    InterlockedExchange(&_value, value);
+    return *this;
+  }
+
   template <>
   inline unsigned long Atomic<unsigned long>::operator++()
   {
@@ -137,6 +167,14 @@ namespace qi
   {
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
+
+  template<>
+  inline Atomic<unsigned long>& Atomic<unsigned long>::operator=(unsigned long value)
+  {
+    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    return *this;
+  }
+
   template <>
   inline int Atomic<int>::operator++()
   {
@@ -147,6 +185,13 @@ namespace qi
   inline int Atomic<int>::operator--()
   {
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
+  }
+
+  template<>
+  inline Atomic<int>& Atomic<int>::operator=(int value)
+  {
+    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    return *this;
   }
 
   template <>
@@ -161,6 +206,12 @@ namespace qi
     return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
   }
 
+  template<>
+  inline Atomic<unsigned int>& Atomic<unsigned int>::operator=(unsigned int value)
+  {
+    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+    return *this;
+  }
 
 #endif
 
