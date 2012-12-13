@@ -81,7 +81,7 @@ namespace qi  {
         static Type* defaultResult = 0;
         // Is this realy a problem?
         if (!defaultResult)
-        qiLogVerbose("qi.meta") << "typeOf request for unregistered type "
+        qiLogDebug("qi.meta") << "typeOf request for unregistered type "
           << typeid(T).name();
         if (!defaultResult)
           defaultResult = new TypeImpl<T>();

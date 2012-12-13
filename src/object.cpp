@@ -161,7 +161,7 @@ namespace qi {
           return makeFutureError<GenericValuePtr>(generateErrorString("overload", signature, mml));
         qiLogDebug("qi.object") << generateErrorString("overload OK", signature, mml, false);
         MetaMethod bestMatch = mml[sz - 1].first;
-        qiLogVerbose("qi.object") << "Signature mismatch, but found compatible type "
+        qiLogDebug("qi.object") << "Signature mismatch, but found compatible type "
                                   << bestMatch.signature() <<" for " << signature;
         methodId = bestMatch.uid();
         qi::Signature s(qi::signatureSplit(bestMatch.signature())[2]);
