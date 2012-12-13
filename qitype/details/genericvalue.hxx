@@ -261,14 +261,13 @@ namespace qi {
     class GenericValuePtrCopy: public GenericValuePtr
     {
     public:
-      template<typename T> void operator,(const T& any);
       GenericValuePtrCopy &operator()() { return *this; }
     };
 
-    template<typename T> void GenericValuePtrCopy::operator,(const T& any)
+    template<typename T> void operator,(GenericValuePtrCopy& g, const T& any)
     {
-      *(GenericValuePtr*)this = from(any);
-      *(GenericValuePtr*)this = clone();
+      *(GenericValuePtr*)&g = GenericValuePtr::from(any);
+      *(GenericValuePtr*)&g = g.clone();
     }
   }
 
