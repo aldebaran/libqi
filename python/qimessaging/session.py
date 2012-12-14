@@ -122,28 +122,7 @@ class Session:
             return None
 
         # Create Python object from C object.
-        obj = GenericObject(obj_c)
-
-        # Get all remote methods signature.
-        methods = _qimessagingswig.qi_object_methods_vector(obj_c)
-
-        # Create Python methods
-        for signature in methods:
-            # Set method signature and name.
-            if ',' in  signature:
-                signatures = signature.rsplit(",")
-                name = signatures[0].rsplit("::", 2)[0]
-            else:
-                name = signature.rsplit("::", 2)[0]
-
-            # Add method in object.
-            # Overloaded functions are merged, signature becomes function name.
-            # Disambiguation is done at call.
-            self._addfunc(name, signature, obj, _qimessagingswig.qi_get_sigreturn(obj_c, name))
-
-        # FIXME : Do signal here.
-
-        return obj
+        return GenericObject(obj_c)
 
     def close(self):
         """ Disconnect from service directory.
