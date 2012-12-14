@@ -64,6 +64,7 @@ namespace qi
     inline T operator++();
     inline T operator--();
     inline Atomic<T>& operator=(T value);
+    inline T swap(T value);
 
     inline T operator*()
     {
@@ -95,6 +96,12 @@ namespace qi
       __sync_lock_test_and_set(&_value, value);
       return *this;
     }
+
+    template <typename T>
+    inline T Atomic<T>::swap(T value)
+    {
+      return __sync_lock_test_and_set(&_value, value);
+    }
 #endif
 
 #ifdef _MSC_VER
@@ -119,6 +126,12 @@ namespace qi
   }
 
   template<>
+  inline short Atomic<short>::swap(short value)
+  {
+    return _InterlockedExchange16(&_value, value);
+  }
+
+  template<>
   inline unsigned short Atomic<unsigned short>::operator++()
   {
     return _InterlockedIncrement16(reinterpret_cast<short*>(&_value));
@@ -135,6 +148,12 @@ namespace qi
   {
     _InterlockedExchange16(reinterpret_cast<short*>(&_value), value);
     return *this;
+  }
+
+  template<>
+  inline unsigned short Atomic<unsigned short>::swap(unsigned short value)
+  {
+    return _InterlockedExchange16(reinterpret_cast<short*>(&_value), value);
   }
 
   template <>
@@ -156,6 +175,12 @@ namespace qi
     return *this;
   }
 
+  template<>
+  inline long Atomic<long>::swap(long value)
+  {
+    return InterlockedExchange(&_value, value);
+  }
+
   template <>
   inline unsigned long Atomic<unsigned long>::operator++()
   {
@@ -173,6 +198,12 @@ namespace qi
   {
     InterlockedExchange(reinterpret_cast<long*>(&_value), value);
     return *this;
+  }
+
+  template<>
+  inline unsigned long Atomic<unsigned long>::swap(unsigned long value)
+  {
+    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
   }
 
   template <>
@@ -194,6 +225,12 @@ namespace qi
     return *this;
   }
 
+  template<>
+  inline int Atomic<int>::swap(int value)
+  {
+    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
+  }
+
   template <>
   inline unsigned int Atomic<unsigned int>::operator++()
   {
@@ -211,6 +248,12 @@ namespace qi
   {
     InterlockedExchange(reinterpret_cast<long*>(&_value), value);
     return *this;
+  }
+
+  template<>
+  inline unsigned int Atomic<unsigned int>::swap(unsigned int value)
+  {
+    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
   }
 
 #endif

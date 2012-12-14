@@ -45,6 +45,12 @@
  * \param value new value
  */
 
+/**
+ * \fn qi::Atomic::swap()
+ * \brief Change current value and return previous one.
+ * \param value new value
+ */
+
 
 /**
  * \fn qi::testAndSet()

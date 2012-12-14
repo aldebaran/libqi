@@ -28,6 +28,10 @@ void sub_test_type()
 
   m = 42;
   EXPECT_EQ(42, *m);
+
+  T old = *m;
+  EXPECT_EQ(old, m.swap(51));
+  EXPECT_EQ(51, *m);
 }
 
 template <typename T>
