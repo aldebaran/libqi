@@ -52,34 +52,13 @@ TEST(QiAtomic, tas)
   EXPECT_EQ(1, qi::testAndSet(&lock));
 }
 
-#ifndef _MSC_VER
-TEST(QiAtomic, qiuint8)
+
+TEST(QiAtomic, int)
 {
-  test_type<qi::uint8_t>();
+  test_type<int>();
 }
 
-TEST(QiAtomic, qiint8)
+TEST(QiAtomic, unsignedInt)
 {
-  test_type<qi::int8_t>();
-}
-#endif
-
-TEST(QiAtomic, qiuint16)
-{
-  test_type<qi::uint16_t>();
-}
-
-TEST(QiAtomic, qiint16)
-{
-  test_type<qi::int16_t>();
-}
-
-TEST(QiAtomic, qiuint32)
-{
-  test_type<qi::uint32_t>();
-}
-
-TEST(QiAtomic, qiint32)
-{
-  test_type<qi::int32_t>();
+  test_type<unsigned int>();
 }

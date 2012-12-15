@@ -12,21 +12,12 @@
 #ifdef _MSC_VER
 # include <windows.h>
 
-extern "C" short __cdecl _InterlockedIncrement16(short volatile *);
-extern "C" short __cdecl _InterlockedDecrement16(short volatile *);
-extern "C" short __cdecl _InterlockedExchange16(short volatile *, short);
 extern "C" long __cdecl _InterlockedIncrement(long volatile *);
 extern "C" long __cdecl _InterlockedDecrement(long volatile *);
 
-# pragma intrinsic(_InterlockedIncrement16)
-# pragma intrinsic(_InterlockedDecrement16)
-# pragma intrinsic(_InterlockedExchange16)
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
-/*
- * No extern with 64, it seems that intrinsic version of these
- * functions are not always avaiblables
- */
+
 #endif
 
 #include <boost/static_assert.hpp>
@@ -72,7 +63,7 @@ namespace qi
     }
 
   private:
-    BOOST_STATIC_ASSERT_MSG(sizeof(T) < 8, "64 bits Atomic not supported on all platforms");
+    BOOST_STATIC_ASSERT_MSG(sizeof(T) == sizeof(int), "qi::Atomic is only supprted for int-like types");
 
     T _value;
   };
@@ -105,106 +96,6 @@ namespace qi
 #endif
 
 #ifdef _MSC_VER
-
-  template<>
-  inline short Atomic<short>::operator++()
-  {
-    return _InterlockedIncrement16(&_value);
-  }
-
-  template<>
-  inline short Atomic<short>::operator--()
-  {
-    return _InterlockedDecrement16(&_value);
-  }
-
-  template<>
-  inline Atomic<short>& Atomic<short>::operator=(short value)
-  {
-    _InterlockedExchange16(&_value, value);
-    return *this;
-  }
-
-  template<>
-  inline short Atomic<short>::swap(short value)
-  {
-    return _InterlockedExchange16(&_value, value);
-  }
-
-  template<>
-  inline unsigned short Atomic<unsigned short>::operator++()
-  {
-    return _InterlockedIncrement16(reinterpret_cast<short*>(&_value));
-  }
-
-  template<>
-  inline unsigned short Atomic<unsigned short>::operator--()
-  {
-    return _InterlockedDecrement16(reinterpret_cast<short*>(&_value));
-  }
-
-  template<>
-  inline Atomic<unsigned short>& Atomic<unsigned short>::operator=(unsigned short value)
-  {
-    _InterlockedExchange16(reinterpret_cast<short*>(&_value), value);
-    return *this;
-  }
-
-  template<>
-  inline unsigned short Atomic<unsigned short>::swap(unsigned short value)
-  {
-    return _InterlockedExchange16(reinterpret_cast<short*>(&_value), value);
-  }
-
-  template <>
-  inline long Atomic<long>::operator++()
-  {
-    return _InterlockedIncrement(&_value);
-  }
-
-  template <>
-  inline long Atomic<long>::operator--()
-  {
-    return _InterlockedDecrement(&_value);
-  }
-
-  template<>
-  inline Atomic<long>& Atomic<long>::operator=(long value)
-  {
-    InterlockedExchange(&_value, value);
-    return *this;
-  }
-
-  template<>
-  inline long Atomic<long>::swap(long value)
-  {
-    return InterlockedExchange(&_value, value);
-  }
-
-  template <>
-  inline unsigned long Atomic<unsigned long>::operator++()
-  {
-    return _InterlockedIncrement(reinterpret_cast<long*>(&_value));
-  }
-
-  template <>
-  inline unsigned long Atomic<unsigned long>::operator--()
-  {
-    return _InterlockedDecrement(reinterpret_cast<long*>(&_value));
-  }
-
-  template<>
-  inline Atomic<unsigned long>& Atomic<unsigned long>::operator=(unsigned long value)
-  {
-    InterlockedExchange(reinterpret_cast<long*>(&_value), value);
-    return *this;
-  }
-
-  template<>
-  inline unsigned long Atomic<unsigned long>::swap(unsigned long value)
-  {
-    return InterlockedExchange(reinterpret_cast<long*>(&_value), value);
-  }
 
   template <>
   inline int Atomic<int>::operator++()

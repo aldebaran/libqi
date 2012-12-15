@@ -9,7 +9,8 @@
  * at the same time.
  *
  * .. warning::
- *     On Windows, 1 byte atomic operations are not available.
+ *     To make sure the code is cross platform, only types
+ *     which have the same size as ``int`` are supported
  * \endverbatim
  */
 
