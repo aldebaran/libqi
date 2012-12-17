@@ -297,12 +297,14 @@ def raw_to_interface(class_name, data):
 
 #include <qitype/signal.hpp>
 
-class @NAME@
+class I@NAME@
 {
   public:
-    virtual ~@NAME@() {}
+    virtual ~I@NAME@() {}
 @DECLS@
 };
+
+typedef boost::shared_ptr<I@NAME@> I@NAME@Ptr;
 
 #endif
 """
@@ -320,7 +322,13 @@ class @NAME@
     signalsDecl += '    qi::Signal<void(%s)> & %s;\n' % (signature, sig[0])
     ctorDecl.append('qi::Signal<void(%s)> & %s' % (signature, sig[0]))
     ctorInit.append('%s(%s)' % (sig[0], sig[0]))
-  ctor = '    %s(%s)\n      : %s\n    {}\n' % (class_name, ','.join(ctorDecl), '\n      ,'.join(ctorInit))
+  if len(ctorDecl):
+    ctorDecl = ','.join(ctorDecl)
+    ctorInit =  ':' + '\n      ,'.join(ctorInit)
+  else:
+    ctorDecl = ''
+    ctorInit = ''
+  ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctorDecl, ctorInit)
   return skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signalsDecl)
 
 def raw_to_proxy(class_name, data, return_future, implement_interface, include):
@@ -342,11 +350,13 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include):
 #include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
 
-#include <@include@>
+@include@
 
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName);
 
+#ifndef QI_GENERATED_PROXY_SIGNAL
+#define QI_GENERATED_PROXY_SIGNAL
 template<typename T> class ProxySignal: public qi::Signal<T>
 {
 public:
@@ -364,6 +374,7 @@ public:
   std::string _name;
 };
 
+#endif
 class @className@Proxy @inherit@
 {
 public:
@@ -384,6 +395,8 @@ public:
 
 typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
 
+#ifndef QI_GENERATED_PROXY_CODE
+#define QI_GENERATED_PROXY_CODE
 static qi::GenericValuePtr signal_bounce(const std::vector<qi::GenericValuePtr>& args,
  qi::SignalBase* target)
 {
@@ -401,6 +414,8 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   else
     obj->disconnect(*link);
 }
+
+#endif
 
 #endif //@GARD@
 """
@@ -434,7 +449,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   result = skeleton
   inherits = ''
   if implement_interface:
-    inherits = ': public ' + class_name
+    inherits = ': public I' + class_name
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'className': class_name,
@@ -443,7 +458,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
       'constructor': '',
       'constructorInitList': ctor,
       'inherit': inherits,
-      'include': include,
+      'include': ''.join(['#include <' + x + '>\n' for x in include]),
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
@@ -456,11 +471,12 @@ def raw_to_cxx_typebuild(class_name, data, registerToFactory):
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>
 
-qi::ObjectTypeBuilder<TYPE> builder;
+namespace _qi_TYPE {
+qi::ObjectTypeBuilder<TYPEService> builder;
 
 qi::ObjectPtr makeOne(const std::string&)
 {
-  return builder.object(new TYPE());
+  return builder.object(new TYPEService());
 }
 
 static int init()
@@ -471,6 +487,7 @@ REGISTER
   return 0;
 }
 static int _init_ = init();
+}
 """
   advertise = ""
   (methods, signals) = (data[0], data[1])
@@ -490,7 +507,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   result = "#include <qitype/signal.hpp>\n#include <%s>\n\n" % include
   inherits = ''
   if implement_interface:
-    inherits = ' : public ' + class_name
+    inherits = ' : public I' + class_name
   result += "class %sService %s \n{\npublic:\n" % (class_name, inherits)
   (methods, signals) = (data[0], data[1])
   for method in methods:
@@ -538,13 +555,13 @@ def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
 
-#include <@include@>
+@include@
 
-class @name@Service: public @name@
+class @name@Service: public I@name@
 {
   public:
     @name@Service()
-    : @name@(@signalInit@)
+    : I@name@(@signalInit@)
     {}
 @code@
   private:
@@ -560,6 +577,7 @@ class @name@Service: public @name@
     (ret, typedArgs, args) = method_to_cxx(method)
     method_name = method[0]
     methodBounce += '   %s %s(%s) { return _impl.%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
+  include = ''.join(['#include <' + x + '>\n' for x in include])
   return skeleton.replace(
     '@name@', class_name).replace(
     '@impl@', impl_name.replace('@', class_name)).replace(
@@ -568,6 +586,7 @@ class @name@Service: public @name@
     '@signalInit@', ','.join(signalInit))
 
 def main(args):
+  res = ''
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
@@ -585,6 +604,10 @@ def main(args):
     doxy_dir = run_doxygen(pargs.input)
     raw = doxyxml_to_raw(doxy_dir)
     shutil.rmtree(doxy_dir)
+  pargs.include = pargs.include.split(',')
+  # Augment type mapping with what we will handle
+  for c in raw:
+    REV_MAP[c + 'Ptr'] = 'I' + c + 'Ptr'
   # Set output stream to file or stdout
   out = sys.stdout
   if pargs.output_file and pargs.output_file != "-" :
@@ -608,6 +631,7 @@ def main(args):
     args = []
     if pargs.output_mode == "interface":
       functions = [raw_to_interface]
+      args = [[]]
     elif pargs.output_mode == "proxy":
       functions = [raw_to_proxy]
       args = [[False, pargs.interface, pargs.include]]
@@ -625,7 +649,7 @@ def main(args):
       args = [[pargs.interface, pargs.include]]
     elif pargs.output_mode == "cxxservice":
       functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-      args = [[pargs.interface, pargs.include], True]
+      args = [[pargs.interface, pargs.include], [True]]
     elif pargs.output_mode == "cxxservicebouncer":
       functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
       args = [['@Impl', pargs.include], [True]]
