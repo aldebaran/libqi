@@ -1,5 +1,25 @@
 #! /usr/bin/env python
 
+## Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+
+""" Code parsing and generator tool.
+
+    Representations used:
+    - IDL: XML file describing the interface
+    - RAW: Internal representation of the IDL
+
+    Code parser:
+    - Invoke Doxygen and parse its XML output to produce an IDL file.
+
+    Code generators from RAW to C++:
+    - interface: An interface that both proxy and service can implement.
+    - proxy: Specialized proxy, with or without using the interface
+    - service skeleton
+    - service bouncer: Implementation of the interface that bounces to an
+      existing class
+    - service and type registration: Code that fills an ObjectTypeBuilder and
+      registers it.
+"""
 
 from xml.etree import ElementTree as etree
 import sys
@@ -188,7 +208,7 @@ def doxyxml_to_raw(doxy_dir):
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
 
-    result[cls] = (methods, signals) #force tuple will add signals, doc
+    result[cls] = (methods, signals)
   return result
 
 def raw_to_idl(dstruct):
@@ -494,11 +514,48 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface):
     )
   return result
 
+def raw_to_cxx_service_bouncer(class_name, data, impl_name):
+  """ Produce implementation of \p class_name interface bouncing to class
+      \p impl_name.
+  """
+  skeleton = """
+#include <vector>
+#include <string>
+#include <map>
+
+#include <qi/types.hpp>
+#include <qitype/signal.hpp>
+
+class @name@Service: public @name@
+{
+  public:
+    @name@Service()
+    : @name@(@signalInit@)
+    {}
+@code@
+  private:
+  @impl@ _impl;
+};
+"""
+  (methods, signals) = data
+  signalInit = []
+  for s in signals:
+    signalInit.append('_impl.' + s[0])
+  methodBounce = ''
+  for method_name in methods:
+    (ret, typedArgs, args) = method_to_cxx(methods[method_name])
+    methodBounce += '   %s %s(%s) { return _impl.%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
+  return skeleton.replace(
+    '@name@', class_name).replace(
+    '@impl@', impl_name).replace(
+    '@code@', methodBounce).replace(
+    '@signalInit@', ','.join(signalInit))
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "interface"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxservicebouncer", "interface"], help="output mode (stdout)")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
@@ -531,6 +588,9 @@ def main(args):
   elif pargs.output_mode == "cxxservice":
     res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface)
     res += raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
+  elif pargs.output_mode == "cxxservicebouncer":
+    res = raw_to_cxx_service_bouncer(raw.keys()[0], raw[raw.keys()[0]], raw.keys()[0] + 'Impl')
+    res += raw_to_cxx_typebuild(raw.keys()[0] + "Service", raw[raw.keys()[0]], True)
   out.write(res)
 
 main(sys.argv)
