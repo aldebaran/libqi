@@ -471,7 +471,7 @@ REGISTER
   return 0;
 }
 static int _init_ = init();
-  """
+"""
   advertise = ""
   (methods, signals) = (data[0], data[1])
   for method in methods:
@@ -562,7 +562,7 @@ class @name@Service: public @name@
     methodBounce += '   %s %s(%s) { return _impl.%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
   return skeleton.replace(
     '@name@', class_name).replace(
-    '@impl@', impl_name).replace(
+    '@impl@', impl_name.replace('@', class_name)).replace(
     '@code@', methodBounce).replace(
     '@include@', include).replace(
     '@signalInit@', ','.join(signalInit))
@@ -573,9 +573,11 @@ def main(args):
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxservicebouncer", "interface"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
+  parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
+  # Step one: get raw from either IDL, or source files
   if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
     raw = idl_to_raw(xml)
@@ -583,31 +585,55 @@ def main(args):
     doxy_dir = run_doxygen(pargs.input)
     raw = doxyxml_to_raw(doxy_dir)
     shutil.rmtree(doxy_dir)
+  # Set output stream to file or stdout
   out = sys.stdout
   if pargs.output_file and pargs.output_file != "-" :
     out = open(pargs.output_file, "w")
+  # Filter out classes present in raw
+  if pargs.classes != '*':
+    classes = pargs.classes.split(',')
+    newraw = dict()
+    for c in classes:
+      if not c in raw:
+        raise Exception("Requested class %s not found" % c)
+      newraw[c] = raw[c]
+    raw = newraw
+  # Main switch on output mode
   if pargs.output_mode == "txt":
     res = raw_to_text(raw)
   elif pargs.output_mode == "idl":
     res = etree.tostring(raw_to_idl(raw))
-  elif pargs.output_mode == "interface":
-    res = raw_to_interface(raw.keys()[0], raw[raw.keys()[0]])
-  elif pargs.output_mode == "proxy":
-    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], False, pargs.interface, pargs.include)
-  elif pargs.output_mode == "proxyFuture":
-    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], True, pargs.interface, pargs.include)
-  elif pargs.output_mode == "cxxtype":
-    res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], False)
-  elif pargs.output_mode == "cxxtyperegister":
-    res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
-  elif pargs.output_mode == "cxxskel":
-    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface, pargs.include)
-  elif pargs.output_mode == "cxxservice":
-    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface, pargs.include)
-    res += raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
-  elif pargs.output_mode == "cxxservicebouncer":
-    res = raw_to_cxx_service_bouncer(raw.keys()[0], raw[raw.keys()[0]], raw.keys()[0] + 'Impl', pargs.include)
-    res += raw_to_cxx_typebuild(raw.keys()[0] + "Service", raw[raw.keys()[0]], True)
+  else: # Need to apply per-class function
+    functions = []
+    args = []
+    if pargs.output_mode == "interface":
+      functions = [raw_to_interface]
+    elif pargs.output_mode == "proxy":
+      functions = [raw_to_proxy]
+      args = [[False, pargs.interface, pargs.include]]
+    elif pargs.output_mode == "proxyFuture":
+      functions = [raw_to_proxy]
+      args = [[True, pargs.interface, pargs.include]]
+    elif pargs.output_mode == "cxxtype":
+      functions = [raw_to_cxx_typebuild]
+      args = [[False]]
+    elif pargs.output_mode == "cxxtyperegister":
+      functions = [raw_to_cxx_typebuild]
+      args = [[True]]
+    elif pargs.output_mode == "cxxskel":
+      functions = [raw_to_cxx_service_skeleton]
+      args = [[pargs.interface, pargs.include]]
+    elif pargs.output_mode == "cxxservice":
+      functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
+      args = [[pargs.interface, pargs.include], True]
+    elif pargs.output_mode == "cxxservicebouncer":
+      functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
+      args = [['@Impl', pargs.include], [True]]
+    #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
+    for c in raw:
+      for i in range(len(functions)):
+        cargs = [c, raw[c]] + args[i]
+        res += functions[i](*cargs)
   out.write(res)
 
 main(sys.argv)
