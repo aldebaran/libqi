@@ -1,5 +1,16 @@
 %module qimessagingswig
 
+%typemap(out) char** {
+    char** it = $1;
+    $result = PyList_New(0);
+
+    while (*it)  {
+        PyObject* o = PyString_FromString(*it);
+        PyList_Append($result, o);
+        it++;
+    }
+}
+
 %{
 #include <qimessaging/c/qi_c.h>
 #include <src/qipython.hpp>
