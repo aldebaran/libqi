@@ -306,6 +306,7 @@ class I@NAME@
 
 typedef boost::shared_ptr<I@NAME@> I@NAME@Ptr;
 
+QI_TYPE_NOT_CLONABLE(I@NAME@);
 #endif
 """
   (methods, signals) = (data[0], data[1])
@@ -350,13 +351,16 @@ def raw_to_proxy(class_name, data, return_future, implement_interface, include):
 #include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
 
-@include@
+
 
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName);
 
 #ifndef QI_GENERATED_PROXY_SIGNAL
 #define QI_GENERATED_PROXY_SIGNAL
+
+@include@
+
 template<typename T> class ProxySignal: public qi::Signal<T>
 {
 public:
@@ -474,10 +478,7 @@ def raw_to_cxx_typebuild(class_name, data, registerToFactory):
 namespace _qi_TYPE {
 qi::ObjectTypeBuilder<TYPEService> builder;
 
-qi::ObjectPtr makeOne(const std::string&)
-{
-  return builder.object(new TYPEService());
-}
+MAKEONE
 
 static int init()
 {
@@ -489,17 +490,30 @@ REGISTER
 static int _init_ = init();
 }
 """
+  makeOne = """
+qi::ObjectPtr makeOne(const std::string&)
+{
+  return builder.object(new TYPEService());
+}
+"""
+  if not registerToFactory:
+    makeOne = ''
   advertise = ""
   (methods, signals) = (data[0], data[1])
+  cns = class_name + 'Service'
   for method in methods:
     method_name = method[0]
-    advertise += '  builder.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, class_name)
+    advertise += '  builder.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, class_name + 'Service')
   for s in signals:
-    advertise += '  builder.advertiseEvent("{0}", &{1}::{0});\n'.format(s[0], class_name)
+    makeOne += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
+     cns, s[0], cns, s[0])
+    #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
+    advertise += '  builder.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
+      s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])))
   register = ''
   if registerToFactory:
-    register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name)
-  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register)
+    register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name + 'Service')
+  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('MAKEONE', makeOne)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -555,28 +569,33 @@ def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
 
+#ifndef QI_GEN_SERVICE_BOUNCER_INCLUDE_
+#define QI_GEN_SERVICE_BOUNCER_INCLUDE_
 @include@
+#endif
 
 class @name@Service: public I@name@
 {
   public:
-    @name@Service()
+    @name@Service(@impl@ impl)
     : I@name@(@signalInit@)
+    , _impl(impl)
     {}
 @code@
   private:
   @impl@ _impl;
 };
+QI_TYPE_NOT_CLONABLE(@name@Service);
 """
   (methods, signals) = data
   signalInit = []
   for s in signals:
-    signalInit.append('_impl.' + s[0])
+    signalInit.append('impl->' + s[0])
   methodBounce = ''
   for method in methods:
     (ret, typedArgs, args) = method_to_cxx(method)
     method_name = method[0]
-    methodBounce += '   %s %s(%s) { return _impl.%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
+    methodBounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
   include = ''.join(['#include <' + x + '>\n' for x in include])
   return skeleton.replace(
     '@name@', class_name).replace(
@@ -652,7 +671,7 @@ def main(args):
       args = [[pargs.interface, pargs.include], [True]]
     elif pargs.output_mode == "cxxservicebouncer":
       functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-      args = [['@Impl', pargs.include], [True]]
+      args = [['@Ptr', pargs.include], [False]]
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
     for c in raw:
       for i in range(len(functions)):
