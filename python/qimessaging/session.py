@@ -28,18 +28,17 @@ import qimessaging.binder as binder
 from qimessaging.genericobject import GenericObject
 
 class ConnectionError(Exception):
-    """ Raised by Session constructor and Session.connect
-    """
+    """Raised by Session constructor and Session.connect."""
+
     def __init__(self, value):
         """ ConnectionError constructor
-        Args:
-        value : Error message.
+
+        :param value: Error message.
         """
         self._value = value
 
     def __str__(self):
-        """ Error message getter, Python style.
-        """
+        """Error message getter, Python style."""
         return str(self._value)
 
 
@@ -54,12 +53,14 @@ class RegisterError(Exception):
 
 
 class Session(UserDict.DictMixin):
-    """ Package all function needed to create and connect to QiMessage services.
+    """Package all function needed to create and connect to qimessage services.
+
+    It can be used as a dictionnary of services, with keys representing the names
+    of the services available and the values said services.
     """
 
-    def __init__(self, address = None):
-        """ Session constructor, if address is set, try to connect.
-        """
+    def __init__(self, address=None):
+        """Session constructor, if address is set, try to connect."""
         self._session = _qim.qi_session_create()
         if address:
             self.connect(address)
@@ -71,54 +72,74 @@ class Session(UserDict.DictMixin):
     def connect(self, address):
         """ Connect to service directory.
 
-        .. Raises::
-            ConnectionError exception.
+        :raises: ConnectionError
         """
         if not _qim.qi_session_connect(self._session, address):
             raise ConnectionError('Cannot connect to ' + address)
 
     def listen(self, address):
-        """ Listen on given address.
+        """Listen on given address.
 
-        Uppon connection, return service asked.
+        :param address: A valid IPv4 address we can bind to.
         """
         if _qim.qi_session_listen(self._session, address):
             return True
         return False
 
     def register_object(self, name, obj):
-        """ Register given Python class instance
+        """Register given Python class instance.
+
+        :param name: Name of the object.
+        :param obj: Instance of this object.
         """
         functionsList = binder.buildFunctionListFromObject(obj)
         return _qim.py_session_register_object(self._session, name, obj, functionsList)
 
 
     def register_service(self, name, obj):
-        """ Register given service and expose it to the world.
+        """Register given service and expose it to the world.
+
+        :param name: Name of the service to register.
+        :param obj: The actual service to bind.
+        :returns: The id of the service.
         """
         return _qim.qi_session_register_service(self._session, name, obj._obj)
 
     def unregister_service(self, idx):
-        """ Unregister service, it is not visible anymore.
+        """Unregister service, it is not visible anymore.
+
+        :param idx: id of the service given on register.
         """
         _qim.qi_session_unregister_service(self._session, idx)
 
     def service(self, name, default=None):
+        """Fetches a new instance of GenericObject binding to a service. If the
+        service is unknown, returns *default*.
+
+        :param name: Name of the service.
+        :param default: Default value if service is unknown.
+        """
         try:
             return self.__getitem__(name)
         except KeyError:
             return default
 
     def services(self):
+        """Retrieves the list of the names of all the services available on the
+        service directory."""
         return _qim.qi_session_get_services(self._session)
 
     def close(self):
-        """Disconnect from service directory."""
+        """Closes connection with the service directory."""
         _qim.qi_session_close(self._session)
 
     # Iteration over services functions.
     def __getitem__(self, name):
-        """Ask to service directory for a service."""
+        """Ask to service directory for a service.
+
+        :param name: The name of the service.
+        :raises: TypeError, KeyError
+        """
         if not isinstance(name, str):
             raise TypeError('keys must be strings.')
 
@@ -133,4 +154,5 @@ class Session(UserDict.DictMixin):
         return GenericObject(obj_c)
 
     def keys(self):
+        """Alias for :func:`services`."""
         return self.services()
