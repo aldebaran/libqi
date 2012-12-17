@@ -185,18 +185,20 @@ def doxyxml_to_raw(doxy_dir):
     class_id = class_index[cls][0]
     ctree = etree.parse(os.path.join(doxy_dir, "xml", class_id + ".xml"))
     class_root = ctree.find(".//compounddef[@id='" + class_id + "']")
-    methods = dict()
+    methods = []
     # Parse methods
     for m in class_root.findall("sectiondef[@kind='public-func']/memberdef[@kind='function']"):
       method_name = m.find("name").text
       rettype_raw = m.find("type").text
+      if not rettype_raw:
+        continue # constructor
       rettype = cxx_type_to_signature(rettype_raw)
       arg_nodes = m.findall("param")
       argstype_raw = []
       if arg_nodes is not None:
         argstype_raw = [a.find('type').text for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
-      methods.append((method_name, rettype, argstype))
+      methods.append((method_name, argstype, rettype))
     signals = []
     # Parse signals
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
@@ -222,7 +224,7 @@ def raw_to_idl(dstruct):
   root = etree.Element('IDL')
   for cls in dstruct:
     e = etree.SubElement(root, 'class', name=cls)
-    (methods, signals) = destruct[cls]
+    (methods, signals) = dstruct[cls]
     for method in methods:
       (method_name, args, ret) = method
       m = etree.SubElement(e, 'method', name=method_name)
@@ -321,7 +323,7 @@ class @NAME@
   ctor = '    %s(%s)\n      : %s\n    {}\n' % (class_name, ','.join(ctorDecl), '\n      ,'.join(ctorInit))
   return skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signalsDecl)
 
-def raw_to_proxy(class_name, data, return_future, implement_interface):
+def raw_to_proxy(class_name, data, return_future, implement_interface, include):
   """ Generate C++ proxy code from RAW
   @param return_future have the declared functions return a Future
   @param implement_interface make the proxy inherit from an interface, that
@@ -339,6 +341,8 @@ def raw_to_proxy(class_name, data, return_future, implement_interface):
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
 #include <qitype/genericobject.hpp>
+
+#include <@include@>
 
 static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericObject* obj,
   qi::SignalBase* sig, const char* sigName);
@@ -439,6 +443,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
       'constructor': '',
       'constructorInitList': ctor,
       'inherit': inherits,
+      'include': include,
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
@@ -479,10 +484,10 @@ static int _init_ = init();
     register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name)
   return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register)
 
-def raw_to_cxx_service_skeleton(class_name, data, implement_interface):
+def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
   """
-  result = "#include <qitype/signal.hpp>\n\n"
+  result = "#include <qitype/signal.hpp>\n#include <%s>\n\n" % include
   inherits = ''
   if implement_interface:
     inherits = ' : public ' + class_name
@@ -521,7 +526,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface):
     )
   return result
 
-def raw_to_cxx_service_bouncer(class_name, data, impl_name):
+def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
   """ Produce implementation of \p class_name interface bouncing to class
       \p impl_name.
   """
@@ -532,6 +537,8 @@ def raw_to_cxx_service_bouncer(class_name, data, impl_name):
 
 #include <qi/types.hpp>
 #include <qitype/signal.hpp>
+
+#include <@include@>
 
 class @name@Service: public @name@
 {
@@ -557,6 +564,7 @@ class @name@Service: public @name@
     '@name@', class_name).replace(
     '@impl@', impl_name).replace(
     '@code@', methodBounce).replace(
+    '@include@', include).replace(
     '@signalInit@', ','.join(signalInit))
 
 def main(args):
@@ -564,6 +572,7 @@ def main(args):
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxservicebouncer", "interface"], help="output mode (stdout)")
+  parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
@@ -584,20 +593,20 @@ def main(args):
   elif pargs.output_mode == "interface":
     res = raw_to_interface(raw.keys()[0], raw[raw.keys()[0]])
   elif pargs.output_mode == "proxy":
-    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], False, pargs.interface)
+    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], False, pargs.interface, pargs.include)
   elif pargs.output_mode == "proxyFuture":
-    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], True, pargs.interface)
+    res = raw_to_proxy(raw.keys()[0], raw[raw.keys()[0]], True, pargs.interface, pargs.include)
   elif pargs.output_mode == "cxxtype":
     res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], False)
   elif pargs.output_mode == "cxxtyperegister":
     res = raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
   elif pargs.output_mode == "cxxskel":
-    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface)
+    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface, pargs.include)
   elif pargs.output_mode == "cxxservice":
-    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface)
+    res = raw_to_cxx_service_skeleton(raw.keys()[0], raw[raw.keys()[0]], pargs.interface, pargs.include)
     res += raw_to_cxx_typebuild(raw.keys()[0], raw[raw.keys()[0]], True)
   elif pargs.output_mode == "cxxservicebouncer":
-    res = raw_to_cxx_service_bouncer(raw.keys()[0], raw[raw.keys()[0]], raw.keys()[0] + 'Impl')
+    res = raw_to_cxx_service_bouncer(raw.keys()[0], raw[raw.keys()[0]], raw.keys()[0] + 'Impl', pargs.include)
     res += raw_to_cxx_typebuild(raw.keys()[0] + "Service", raw[raw.keys()[0]], True)
   out.write(res)
 
