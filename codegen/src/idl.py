@@ -396,8 +396,10 @@ public:
 
 @privateDecl@
 };
-
+static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();
 typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
+
+QI_TYPE_NOT_CLONABLE(@className@Proxy);
 
 #ifndef QI_GENERATED_PROXY_CODE
 #define QI_GENERATED_PROXY_CODE
