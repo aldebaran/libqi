@@ -299,7 +299,12 @@ namespace qi {
    }
    void visitPointer(TypePointer* type, void* , GenericValuePtr )
    {
-     result = Signature::fromType(Signature::Type_Unknown).toString();
+     // Shared-ptr of Object can be serialized as type dynamic
+     if (type->pointerKind() == TypePointer::Shared
+       && type->pointedType()->kind() == Type::Object)
+       result = Signature::fromType(Signature::Type_Dynamic).toString();
+     else
+       result = Signature::fromType(Signature::Type_Unknown).toString();
    }
    void visitUnknown(Type* type, void*)
    {
