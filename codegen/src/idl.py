@@ -475,25 +475,24 @@ def raw_to_cxx_typebuild(class_name, data, registerToFactory):
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/objectfactory.hpp>
 
-namespace _qi_TYPE {
-qi::ObjectTypeBuilder<TYPEService> builder;
+qi::ObjectTypeBuilder<ITYPE> ITYPEbuilder;
 
 MAKEONE
 BOUNCERS
-static int init()
+static int TYPEinit()
 {
 ADVERTISE
-  builder.registerType();
+  ITYPEbuilder.registerType();
 REGISTER
   return 0;
 }
-static int _init_ = init();
-}
+static int _init_ITYPE = TYPEinit();
+
 """
   makeOne = """
-qi::ObjectPtr makeOne(const std::string&)
+qi::ObjectPtr TYPEmakeOne(const std::string&)
 {
-  return builder.object(new TYPEService());
+  return ITYPEbuilder.object(new TYPEService());
 }
 """
   if not registerToFactory:
@@ -503,18 +502,20 @@ qi::ObjectPtr makeOne(const std::string&)
   bouncers = ''
   (methods, signals) = (data[0], data[1])
   cns = class_name + 'Service'
+  icn = 'I' + class_name
+  builder = icn + 'builder'
   for method in methods:
     method_name = method[0]
-    advertise += '  builder.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, class_name + 'Service')
+    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, 'I' + class_name, builder)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
     #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
-    advertise += '  builder.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
-      s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])))
+    advertise += '  {3}.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
+      s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])), builder)
   register = ''
   if registerToFactory:
-    register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name + 'Service')
+    register = '  qi::registerObjectFactory("{}", &{}makeOne);'.format(class_name + 'Service', class_name)
   return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
