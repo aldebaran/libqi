@@ -479,7 +479,7 @@ namespace _qi_TYPE {
 qi::ObjectTypeBuilder<TYPEService> builder;
 
 MAKEONE
-
+BOUNCERS
 static int init()
 {
 ADVERTISE
@@ -498,14 +498,16 @@ qi::ObjectPtr makeOne(const std::string&)
 """
   if not registerToFactory:
     makeOne = ''
-  advertise = ""
+  template = template.replace('MAKEONE', makeOne)
+  advertise = ''
+  bouncers = ''
   (methods, signals) = (data[0], data[1])
   cns = class_name + 'Service'
   for method in methods:
     method_name = method[0]
     advertise += '  builder.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, class_name + 'Service')
   for s in signals:
-    makeOne += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
+    bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
     #advertise += '  builder.advertiseEvent("{0}", {1}::{0});\n'.format(s[0], class_name + 'Service')
     advertise += '  builder.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
@@ -513,7 +515,7 @@ qi::ObjectPtr makeOne(const std::string&)
   register = ''
   if registerToFactory:
     register = '  qi::registerObjectFactory("{}", &makeOne);'.format(class_name + 'Service')
-  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('MAKEONE', makeOne)
+  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -574,10 +576,11 @@ def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
 @include@
 #endif
 
+@impl@ make_@impl@();
 class @name@Service: public I@name@
 {
   public:
-    @name@Service(@impl@ impl)
+    @name@Service(@impl@ impl = make_@impl@())
     : I@name@(@signalInit@)
     , _impl(impl)
     {}
@@ -592,11 +595,32 @@ QI_TYPE_NOT_CLONABLE(@name@Service);
   for s in signals:
     signalInit.append('impl->' + s[0])
   methodBounce = ''
+  emitInterface = dict()
   for method in methods:
     (ret, typedArgs, args) = method_to_cxx(method)
     method_name = method[0]
-    methodBounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
+    # UGLY HACK to detect if the method returns an other class for which we
+    # have a bouncer.
+    if ret == 'I' + method[2]: # FIXME make a more clever test
+      emitInterface[method[2]] = 1
+      methodBounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typedArgs, ret, method_name, args)
+    elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
+      # Ugly vector detector case, not forgetting the inserted space
+      methodBounce += '   %s %s(%s) { return qi_to_interface_v(_impl->%s(%s));}\n' % (ret, method_name, typedArgs, method_name, args)
+    else:
+      methodBounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
   include = ''.join(['#include <' + x + '>\n' for x in include])
+  for name in emitInterface:
+    methodBounce = """
+    static std::vector<I%s> qi_to_interface_v(std::vector<%s> ptr) {
+      std::vector<I%s> res;
+      res.resize(ptr.size());
+      std::transform(ptr.begin(), ptr.end(), res.begin(), qi_to_interface_I%s);
+      return res;
+   }
+""" % (name, name, name, name) + methodBounce
+    methodBounce = '   static I%s qi_to_interface_I%s(%s ptr) {return I%sPtr(new %sService(ptr));}\n' % (
+      name, name, name, name[0:-3], name[0:-3]) + methodBounce
   return skeleton.replace(
     '@name@', class_name).replace(
     '@impl@', impl_name.replace('@', class_name)).replace(
@@ -609,9 +633,9 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="idl", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxservicebouncer", "interface"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
-  parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select")
+  parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("input", nargs='+', help="input file(s)")
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
@@ -631,14 +655,19 @@ def main(args):
   out = sys.stdout
   if pargs.output_file and pargs.output_file != "-" :
     out = open(pargs.output_file, "w")
-  # Filter out classes present in raw
+
+  # Filter out classes present in raw, fill class_operation
+  class_operation = dict()
   if pargs.classes != '*':
     classes = pargs.classes.split(',')
     newraw = dict()
     for c in classes:
-      if not c in raw:
+      cc = c.split(':')
+      if not cc[0] in raw:
         raise Exception("Requested class %s not found" % c)
-      newraw[c] = raw[c]
+      newraw[cc[0]] = raw[cc[0]]
+      if len(cc) > 1:
+        class_operation[cc[0]] = cc[1]
     raw = newraw
   # Main switch on output mode
   if pargs.output_mode == "txt":
@@ -646,34 +675,43 @@ def main(args):
   elif pargs.output_mode == "idl":
     res = etree.tostring(raw_to_idl(raw))
   else: # Need to apply per-class function
-    functions = []
-    args = []
-    if pargs.output_mode == "interface":
-      functions = [raw_to_interface]
-      args = [[]]
-    elif pargs.output_mode == "proxy":
-      functions = [raw_to_proxy]
-      args = [[False, pargs.interface, pargs.include]]
-    elif pargs.output_mode == "proxyFuture":
-      functions = [raw_to_proxy]
-      args = [[True, pargs.interface, pargs.include]]
-    elif pargs.output_mode == "cxxtype":
-      functions = [raw_to_cxx_typebuild]
-      args = [[False]]
-    elif pargs.output_mode == "cxxtyperegister":
-      functions = [raw_to_cxx_typebuild]
-      args = [[True]]
-    elif pargs.output_mode == "cxxskel":
-      functions = [raw_to_cxx_service_skeleton]
-      args = [[pargs.interface, pargs.include]]
-    elif pargs.output_mode == "cxxservice":
-      functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-      args = [[pargs.interface, pargs.include], [True]]
-    elif pargs.output_mode == "cxxservicebouncer":
-      functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-      args = [['@Ptr', pargs.include], [False]]
-    #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
     for c in raw:
+      op = pargs.output_mode
+      if c in class_operation:
+        op = class_operation[c]
+      functions = []
+      args = []
+      if op == "interface":
+        functions = [raw_to_interface]
+        args = [[]]
+      elif op == "proxy":
+        functions = [raw_to_proxy]
+        args = [[False, pargs.interface, pargs.include]]
+      elif op == "proxyFuture":
+        functions = [raw_to_proxy]
+        args = [[True, pargs.interface, pargs.include]]
+      elif op == "cxxtype":
+        functions = [raw_to_cxx_typebuild]
+        args = [[False]]
+      elif op == "cxxtyperegister":
+        functions = [raw_to_cxx_typebuild]
+        args = [[True]]
+      elif op == "cxxskel":
+        functions = [raw_to_cxx_service_skeleton]
+        args = [[pargs.interface, pargs.include]]
+      elif op == "cxxserviceregister":
+        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
+        args = [[pargs.interface, pargs.include], [True]]
+      elif op == "cxxservice":
+        functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
+        args = [[pargs.interface, pargs.include], [False]]
+      elif op == "cxxservicebouncer":
+        functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
+        args = [['@Ptr', pargs.include], [False]]
+      elif op == "cxxservicebouncerregister":
+        functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
+        args = [['@Ptr', pargs.include], [True]]
+    #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
       for i in range(len(functions)):
         cargs = [c, raw[c]] + args[i]
         res += functions[i](*cargs)
