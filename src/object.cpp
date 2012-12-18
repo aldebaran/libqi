@@ -374,5 +374,16 @@ namespace qi {
     }
     return -1;
   }
+
+  namespace detail
+  {
+    ProxyGeneratorMap& proxyGeneratorMap()
+    {
+      static ProxyGeneratorMap* map = 0;
+      if (!map)
+        map = new ProxyGeneratorMap();
+      return *map;
+    }
+  }
 }
 

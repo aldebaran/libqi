@@ -158,5 +158,24 @@ namespace qi {
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };
 
+  namespace detail
+  {
+    typedef std::map<TypeInfo, boost::function<GenericValuePtr(ObjectPtr)> > ProxyGeneratorMap;
+    QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
+
+    template<typename Proxy>
+    GenericValuePtr makeProxy(ObjectPtr ptr)
+    {
+      boost::shared_ptr<Proxy> sp(new Proxy(ptr));
+      return GenericValuePtr::from(sp).clone();
+    }
+  }
+  template<typename Interface, typename Proxy>
+  bool registerProxy()
+  {
+    detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+    return true;
+  }
 }
 #endif  // _QITYPE_DETAILS_GENERICOBJECT_HXX_

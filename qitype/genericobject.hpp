@@ -179,13 +179,20 @@ namespace qi {
    * When the call is finally made, if ObjectThreadingModel
    * is SingleThread, acquire the object lock.
   */
- QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
+  QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
     ObjectThreadingModel objectThreadingModel,
     MetaCallType methodThreadingModel,
     MetaCallType callType,
     Manageable::TimedMutexPtr objectLock,
     GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
+  /** Register \p Proxy as a proxy class for \p Interface
+   * Proxy must be constructible with an ObjectPtr as
+   * argument, and must implement Interface
+   * @return unused value, present to ease registration at static initialisation
+   */
+  template<typename Interface, typename Proxy>
+  bool registerProxy();
 }
 
 #include <qitype/details/genericobject.hxx>

@@ -253,6 +253,19 @@ namespace qi
       static_cast<TypeDynamic*>(targetType)->set(&result.value, *this);
       return std::make_pair(result, true);
     }
+    if (type->info() == typeOf<ObjectPtr>()->info()
+      && targetType->kind() == Type::Pointer
+    && static_cast<TypePointer*>(targetType)->pointedType()->kind() == Type::Object)
+    { // Attempt specialized proxy conversion
+      detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
+      detail::ProxyGeneratorMap::iterator it = map.find(
+        static_cast<TypePointer*>(targetType)->pointedType()->info());
+      if (it != map.end())
+      {
+        GenericValuePtr res = (it->second)(*(ObjectPtr*)value);
+        return std::make_pair(res, true);
+      }
+    }
     if (type->kind() == Type::Dynamic)
     {
       std::pair<GenericValuePtr, bool> gv = ((TypeDynamic*)type)->get(value);
