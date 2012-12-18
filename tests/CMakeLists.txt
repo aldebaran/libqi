@@ -34,3 +34,50 @@ qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI
 
 #qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 #qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
+
+
+# Codegen test, locate python
+find_program(_python_executable
+    NAMES python2 python python.exe
+    NO_CMAKE_FIND_ROOT_PATH)
+  if (NOT _python_executable)
+    qi_error("needs python executable in PATH")
+  endif()
+
+MESSAGE("Found python:  ${_python_executable}")
+
+set(idl ${CMAKE_CURRENT_SOURCE_DIR}/../../libqitype/codegen/src/idl.py)
+# Generate proxy
+qi_generate_src(
+  ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp
+  SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
+  COMMAND  ${_python_executable} ${idl} ${CMAKE_CURRENT_SOURCE_DIR}/task.idl -m proxy -o ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp -I ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
+
+# Generate service binder
+qi_generate_src(
+  ${CMAKE_CURRENT_BINARY_DIR}/task_service_bind.cpp
+  SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
+  COMMAND  ${_python_executable} ${idl}
+  ${CMAKE_CURRENT_SOURCE_DIR}/task.idl
+  -m cxxservicebouncer
+  -c 'Task:cxxservicebouncer,TaskGenerator:cxxservicebouncerregister'
+  -o ${CMAKE_CURRENT_BINARY_DIR}/task_service_bind.cpp
+  -I ${CMAKE_CURRENT_SOURCE_DIR}/task_service.cpp,${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp
+)
+
+# Generate interface
+qi_generate_src(
+  ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp
+  SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
+  COMMAND  ${_python_executable} ${idl} ${CMAKE_CURRENT_SOURCE_DIR}/task.idl -m interface -o ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
+
+
+qi_create_lib(taskservice
+  SRC
+   ${CMAKE_CURRENT_BINARY_DIR}/task_service_bind.cpp
+   ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp
+  DEPENDS QITYPE QIMESSAGING
+  SHARED
+  )
+
+qi_create_gtest(test_task SRC test_task.cpp  ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp DEPENDS QI QITYPE TESTSESSION GTEST TIMEOUT 10)
