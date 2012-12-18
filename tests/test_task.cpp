@@ -41,7 +41,7 @@ protected:
     ASSERT_TRUE(taskGenClient);
     taskGenProxy = new TaskGeneratorProxy(taskGenClient);
   }
-  
+
   void TearDown()
   {
     taskGenClient.reset();
@@ -57,12 +57,28 @@ public:
 
 TEST_F(TestTask, Basic)
 {
-  ASSERT_EQ(0, taskGenProxy->taskCount());
+  ASSERT_EQ(0U, taskGenProxy->taskCount());
 }
+
 TEST_F(TestTask, Task)
 {
   ITaskPtr task = taskGenProxy->newTask("coin");
   ASSERT_TRUE(task);
+  std::string n = task->getName();
+
+  ASSERT_EQ(n, "coin");
+
+  unsigned count = taskGenProxy->taskCount();
+  ASSERT_EQ(1U, count);
+
+  task->setParam("foo");
+  task->step(42);
+  std::string lr = task->getLastResult();
+  ASSERT_EQ("coin foo 42 1", lr);
+  task.reset();
+  qi::os::msleep(400);
+  count = taskGenProxy->taskCount();
+  ASSERT_EQ(0U, count);
 }
 
 int main(int argc, char **argv) {

@@ -98,7 +98,11 @@ TaskPtr TaskGenerator::newTask(const std::string& name)
 }
 unsigned long TaskGenerator::taskCount()
 {
-  return _tasks.size();
+  unsigned res = 0;
+  for (unsigned i=0; i<_tasks.size(); ++i)
+    if (_tasks[i].lock())
+    ++res;
+  return res;
 }
 
 void TaskGenerator::step(unsigned int arg)

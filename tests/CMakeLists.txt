@@ -51,7 +51,11 @@ set(idl ${CMAKE_CURRENT_SOURCE_DIR}/../../libqitype/codegen/src/idl.py)
 qi_generate_src(
   ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp
   SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
-  COMMAND  ${_python_executable} ${idl} ${CMAKE_CURRENT_SOURCE_DIR}/task.idl -m proxy -o ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp -I ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
+  COMMAND  ${_python_executable} ${idl}
+  ${CMAKE_CURRENT_SOURCE_DIR}/task.idl
+  -m proxy --interface
+  -o ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp
+  -I ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
 
 # Generate service binder
 qi_generate_src(
@@ -59,7 +63,7 @@ qi_generate_src(
   SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
   COMMAND  ${_python_executable} ${idl}
   ${CMAKE_CURRENT_SOURCE_DIR}/task.idl
-  -m cxxservicebouncer
+  -m cxxservicebouncer --interface
   -c 'Task:cxxservicebouncer,TaskGenerator:cxxservicebouncerregister'
   -o ${CMAKE_CURRENT_BINARY_DIR}/task_service_bind.cpp
   -I ${CMAKE_CURRENT_SOURCE_DIR}/task_service.cpp,${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp
@@ -69,7 +73,10 @@ qi_generate_src(
 qi_generate_src(
   ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp
   SRC ${CMAKE_CURRENT_SOURCE_DIR}/task.idl ${idl}
-  COMMAND  ${_python_executable} ${idl} ${CMAKE_CURRENT_SOURCE_DIR}/task.idl -m interface -o ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
+  COMMAND  ${_python_executable} ${idl}
+  ${CMAKE_CURRENT_SOURCE_DIR}/task.idl
+  -m interface --interface
+  -o ${CMAKE_CURRENT_BINARY_DIR}/task_interface.hpp)
 
 
 qi_create_lib(taskservice
