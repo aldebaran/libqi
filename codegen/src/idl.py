@@ -451,7 +451,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
     ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, obj.get(), &{0}, "{0}"), obj.get(), "{0}")\n'.format(sig[0])
     ifaceCtor.append('%s' % (sig[0]))
   if implement_interface:
-    ctor += '  , %s(%s)\n' % (class_name, ','.join(ifaceCtor))
+    ctor += '  , %s(%s)\n' % ('I' + class_name, ','.join(ifaceCtor))
   result = skeleton
   inherits = ''
   if implement_interface:
