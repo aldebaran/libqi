@@ -470,7 +470,18 @@ namespace qi {
 
       void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
       {
-        qiLogError("qi.type") << "Pointer serialization not implemented";
+        if (type->pointerKind() == TypePointer::Shared
+          && pointee.kind() == Type::Object)
+        {
+          out.write("o");
+          GenericValuePtr shared_ptr = GenericValuePtr(type, storage).clone();
+          serializeObject(out,
+            ObjectPtr(new GenericObject(static_cast<ObjectType*>(pointee.type), pointee.value),
+              boost::bind(&GenericValuePtr::destroy, shared_ptr)),
+            context);
+        }
+        else
+          qiLogError("qi.type") << "Pointer serialization not implemented";
       }
 
       void visitTuple(TypeTuple* type, void* storage)
