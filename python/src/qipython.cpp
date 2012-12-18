@@ -148,7 +148,7 @@ static void __python_callback(const char *signature, qi_message_t *msg, qi_messa
   // Convert parameters (qi_message_t msg) in python tuple (PyObject param)
   if ((param = qi_message_to_python(sigv[2].c_str(), msg)) == Py_None || !param)
   {
-    qiLogError("qimessaging.python.__python_callback") << "Generic callback : Cannot convert parameter in pyhton. [" << sigv[2] << "]";
+    qiLogError("qimessaging.python.__python_callback") << "Generic callback : Cannot convert parameters to python. [" << sigv[2] << "]";
     return;
   }
 
