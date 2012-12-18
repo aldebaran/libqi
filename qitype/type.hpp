@@ -400,6 +400,12 @@ namespace qi{
   class QITYPE_API TypePointer: public Type
   {
   public:
+    enum PointerKind
+    {
+      Raw,
+      Shared,
+    };
+    virtual PointerKind pointerKind() const = 0;
     virtual Type* pointedType() const = 0;
     virtual GenericValuePtr dereference(void* storage) = 0; // must not be destroyed
     virtual Kind kind() const { return Pointer; }

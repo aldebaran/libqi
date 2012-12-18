@@ -19,7 +19,7 @@ namespace qi
       // Caching the result here is dangerous if T uses runtime factory.
       return typeOf<T>();
     }
-
+    PointerKind pointerKind() const { return Raw;}
     GenericValuePtr dereference(void* storage)
     {
       GenericValuePtr result;
@@ -47,7 +47,7 @@ namespace qi
         result = typeOf<typename T::element_type>();
       return result;
     }
-
+    PointerKind pointerKind() const { return Shared;}
     GenericValuePtr dereference(void* storage)
     {
       T* ptr = (T*)ptrFromStorage(&storage);
