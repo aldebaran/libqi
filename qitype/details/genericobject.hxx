@@ -163,10 +163,10 @@ namespace qi {
     typedef std::map<TypeInfo, boost::function<GenericValuePtr(ObjectPtr)> > ProxyGeneratorMap;
     QITYPE_API ProxyGeneratorMap& proxyGeneratorMap();
 
-    template<typename Proxy>
+    template<typename Interface, typename Proxy>
     GenericValuePtr makeProxy(ObjectPtr ptr)
     {
-      boost::shared_ptr<Proxy> sp(new Proxy(ptr));
+      boost::shared_ptr<Interface> sp((Interface*)new Proxy(ptr));
       return GenericValuePtr::from(sp).clone();
     }
   }
@@ -174,7 +174,7 @@ namespace qi {
   bool registerProxy()
   {
     detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
-    map[typeOf<Interface>()->info()] = &detail::makeProxy<Proxy>;
+    map[typeOf<Interface>()->info()] = &detail::makeProxy<Interface, Proxy>;
     return true;
   }
 }
