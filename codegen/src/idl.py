@@ -396,7 +396,8 @@ public:
 
 @privateDecl@
 };
-static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();
+@registerProxy@
+
 typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
 
 QI_TYPE_NOT_CLONABLE(@className@Proxy);
@@ -428,6 +429,10 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   #generate methods
   (methods, signals) = (data[0], data[1])
   methodImpls = ""
+  registerProxy = ''
+  if implement_interface:
+    registerProxy = "static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();"
+  skeleton = skeleton.replace('@registerProxy@', registerProxy)
   for method in methods:
     (cret, typedArgs, argNames) = method_to_cxx(method)
     method_name = method[0]
@@ -470,7 +475,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
     result = result.replace('@' + k + '@', replace[k])
   return result
 
-def raw_to_cxx_typebuild(class_name, data, registerToFactory):
+def raw_to_cxx_typebuild(class_name, data, use_interface, registerToFactory):
   """ Generate a c++ file that registers the class to type system.
   """
   template = """
@@ -505,10 +510,13 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
   (methods, signals) = (data[0], data[1])
   cns = class_name + 'Service'
   icn = 'I' + class_name
-  builder = icn + 'builder'
+  declType = 'I' + class_name
+  if not use_interface:
+    declType = class_name + 'Service'
+  builder = declType + 'builder'
   for method in methods:
     method_name = method[0]
-    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, 'I' + class_name, builder)
+    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, declType, builder)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
@@ -518,12 +526,15 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
   register = ''
   if registerToFactory:
     register = '  qi::registerObjectFactory("{}", &{}makeOne);'.format(class_name + 'Service', class_name)
-  return template.replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
+  
+  return template.replace('ITYPE', declType).replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
   """
-  result = "#include <qitype/signal.hpp>\n#include <%s>\n\n" % include
+  result = "#include <qitype/signal.hpp>\n"
+  result += ''.join(['#include <' + x + '>\n' for x in include])
+  result += '\n'
   inherits = ''
   if implement_interface:
     inherits = ' : public I' + class_name
@@ -553,7 +564,7 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
     for i in range(len(args)):
       args[i] = idltype_to_cxxtype(args[i]) + ' p' + str(i)
     args = ','.join(args)
-    result += '%s %s::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
+    result += '%s %sService::%s(%s)\n{\n  // Implementation of %s\n}\n' % (
       idltype_to_cxxtype(method[2]),
       class_name,
       method_name,
@@ -650,7 +661,10 @@ def main(args):
     doxy_dir = run_doxygen(pargs.input)
     raw = doxyxml_to_raw(doxy_dir)
     shutil.rmtree(doxy_dir)
-  pargs.include = pargs.include.split(',')
+  if not len(pargs.include):
+    pargs.include = []
+  else:
+    pargs.include = pargs.include.split(',')
   # Augment type mapping with what we will handle
   for c in raw:
     REV_MAP[c + 'Ptr'] = 'I' + c + 'Ptr'
@@ -704,16 +718,16 @@ def main(args):
         args = [[pargs.interface, pargs.include]]
       elif op == "cxxserviceregister":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [True]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, True]]
       elif op == "cxxservice":
         functions = [raw_to_cxx_service_skeleton, raw_to_cxx_typebuild]
-        args = [[pargs.interface, pargs.include], [False]]
+        args = [[pargs.interface, pargs.include], [pargs.interface, False]]
       elif op == "cxxservicebouncer":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [False]]
+        args = [['@Ptr', pargs.include], [pargs.interface, False]]
       elif op == "cxxservicebouncerregister":
         functions = [raw_to_cxx_service_bouncer, raw_to_cxx_typebuild]
-        args = [['@Ptr', pargs.include], [True]]
+        args = [['@Ptr', pargs.include], [pargs.interface, True]]
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
       for i in range(len(functions)):
         cargs = [c, raw[c]] + args[i]
