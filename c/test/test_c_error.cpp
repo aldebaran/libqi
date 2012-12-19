@@ -26,7 +26,7 @@ TEST(TestCError, TestNoSD)
 
   const char*   error = qi_c_error();
   ASSERT_NE(error, (char *) 0);
-  ASSERT_EQ(::strcmp(error, "Connection refused"), 0);
+  ASSERT_EQ(::strcmp(error, "Connection error: Connection refused"), 0);
 }
 
 TEST(TestCError, TestNoService)
