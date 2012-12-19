@@ -25,9 +25,10 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
   ObjectMap::iterator it = _objectMap.find(msg.object());
   if (it == _objectMap.end())
   {
-    qiLogWarning("qi.ObjectHost") << "Object id not found " << msg.object();
+    qiLogDebug("qi.ObjectHost") << "Object id not found " << msg.object();
     return;
   }
+  qiLogDebug("qi.ObjectHost") << "ObjectHost forwarding " << msg.address();
   it->second->onMessage(msg, socket);
 }
 
