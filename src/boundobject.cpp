@@ -98,8 +98,7 @@ namespace qi {
 
   void ServiceBoundObject::terminate(unsigned int)
   {
-    getDefaultObjectEventLoop()->asyncCall(0,
-      boost::bind(&delete_sbo, this));
+    getDefaultObjectEventLoop()->post(boost::bind(&delete_sbo, this));
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
