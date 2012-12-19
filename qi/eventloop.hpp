@@ -73,6 +73,9 @@ namespace qi
      * @return a cancelleable future
      */
     Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback);
+    /// Similar to asyncCall() but without cancellation or notification
+    void post(uint64_t usDelay, boost::function<void ()> callback);
+
     /// Call given function every time something happen on file
     /// descriptor fileDescriptor. You can specify that the callback
     /// will be called for every Read, every Write or for both Read

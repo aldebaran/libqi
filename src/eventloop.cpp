@@ -161,6 +161,15 @@ namespace qi {
     boost::function<void()> callback;
   };
 
+  static void post(evutil_socket_t,
+    short what,
+    void *context)
+  {
+    boost::function<void()>* cb = (boost::function<void()>*)context;
+    (*cb)();
+    delete cb;
+  }
+
   static void async_call(evutil_socket_t,
     short what,
     void *context)
@@ -206,6 +215,20 @@ namespace qi {
   void async_call_cancel(boost::shared_ptr<AsyncCallHandle> handle)
   {
     handle->cancelled = true;
+  }
+
+  void EventLoopLibEvent::post(uint64_t usDelay, boost::function<void ()> cb)
+  {
+    if (!_base) {
+      qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
+      return;
+    }
+    struct timeval period;
+    period.tv_sec = static_cast<long>(usDelay / 1000000ULL);
+    period.tv_usec = usDelay % 1000000ULL;
+    struct event *ev = event_new(_base, -1, 0, &::qi::post,
+      new boost::function<void()>(cb));
+    event_add(ev, &period);
   }
 
   qi::Future<void> EventLoopLibEvent::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
@@ -331,6 +354,24 @@ namespace qi {
     throw std::runtime_error("notifyFd not implemented for thread pool");
   }
 
+  static void delay_call(uint64_t usDelay, boost::function<void()> callback)
+  {
+    if (usDelay)
+      qi::os::msleep(usDelay/1000);
+    try
+    {
+      callback();
+    }
+    catch(const std::exception& e)
+    {
+      qiLogError("qi.EventLoop") << "Exception caught in async call: " << e.what();
+    }
+    catch(...)
+    {
+      qiLogError("qi.EventLoop") << "Unknown exception caught in async call";
+    }
+  }
+
   static void delay_call_notify(uint64_t usDelay, boost::function<void()> callback,
     qi::Promise<void> promise)
   {
@@ -349,6 +390,12 @@ namespace qi {
     {
       promise.setError("Unknown exception caught in async call");
     }
+  }
+
+  void EventLoopThreadPool::post(uint64_t usDelay,
+      boost::function<void ()> callback)
+  {
+    _pool->schedule(boost::bind(&delay_call, usDelay, callback));
   }
 
   qi::Future<void>  EventLoopThreadPool::asyncCall(uint64_t usDelay,
@@ -442,6 +489,12 @@ namespace qi {
   void *EventLoop::nativeHandle() {
     CHECK_STARTED;
     return _p->nativeHandle();
+  }
+
+  void EventLoop::post(uint64_t usDelay, boost::function<void ()> callback)
+  {
+    CHECK_STARTED;
+    _p->post(usDelay, callback);
   }
 
   qi::Future<void>

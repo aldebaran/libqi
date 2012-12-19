@@ -37,6 +37,8 @@ namespace qi {
     virtual void stop()=0;
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
       boost::function<void ()> callback)=0;
+    virtual void post(uint64_t usDelay,
+      boost::function<void ()> callback)=0;
     virtual EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)=0;
     virtual void destroy(bool join)=0;
@@ -56,6 +58,8 @@ namespace qi {
     virtual void join();
     virtual void stop();
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+      boost::function<void ()> callback);
+    virtual void post(uint64_t usDelay,
       boost::function<void ()> callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
@@ -83,6 +87,8 @@ namespace qi {
     virtual void join();
     virtual void stop();
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
+      boost::function<void ()> callback);
+    virtual void post(uint64_t usDelay,
       boost::function<void ()> callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
