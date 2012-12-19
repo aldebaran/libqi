@@ -20,6 +20,18 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
+TEST(TestMessage, COW)
+{
+  qi::Message m1;
+  const void* ptr = &m1.signature();
+  m1.setSignature("s");
+  ASSERT_EQ(ptr, &m1.signature());
+  qi::Message m2(m1);
+  ASSERT_EQ(ptr, &m1.signature());
+  ASSERT_EQ(ptr, &m2.signature());
+  m2.setService(1);
+  ASSERT_TRUE(&m1.signature() != &m2.signature());
+}
 
 int addOne(int v)
 {

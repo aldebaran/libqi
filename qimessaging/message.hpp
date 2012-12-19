@@ -135,7 +135,8 @@ namespace qi {
     bool         isValid();
 
   public:
-    MessagePrivate *_p;
+    boost::shared_ptr<MessagePrivate> _p;
+    void         cow();
   };
 
   QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);

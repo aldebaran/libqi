@@ -50,8 +50,14 @@ namespace qi {
 
   }
   Message::Message(const Message &msg)
-    : _p(new qi::MessagePrivate(*msg._p))
+    : _p(msg._p)
   {
+  }
+
+  void Message::cow()
+  {
+    if (_p.use_count() > 1)
+      _p = boost::shared_ptr<MessagePrivate>(new MessagePrivate(*_p.get()));
   }
 
   Message& Message::operator=(const Message& msg)
@@ -71,7 +77,6 @@ namespace qi {
 
   Message::~Message()
   {
-    delete _p;
   }
 
 
@@ -92,6 +97,7 @@ namespace qi {
 
   void Message::setId(qi::uint32_t id)
   {
+    cow();
     _p->header.id = id;
   }
 
@@ -102,6 +108,7 @@ namespace qi {
 
   void Message::setVersion(qi::uint16_t version)
   {
+    cow();
     _p->header.version = version;
   }
 
@@ -112,6 +119,7 @@ namespace qi {
 
   void Message::setType(Message::Type type)
   {
+    cow();
     _p->header.type = type;
   }
 
@@ -122,6 +130,7 @@ namespace qi {
 
   void Message::setService(qi::uint32_t service)
   {
+    cow();
     _p->header.service = service;
   }
 
@@ -132,6 +141,7 @@ namespace qi {
 
   void Message::setObject(qi::uint32_t object)
   {
+    cow();
     _p->header.object = object;
   }
 
@@ -142,6 +152,7 @@ namespace qi {
 
   void Message::setFunction(qi::uint32_t function)
   {
+    cow();
     if (type() == Type_Event)
     {
       qiLogDebug("Message") << "called setFunction() on Type_Event message";
@@ -160,6 +171,7 @@ namespace qi {
 
   void Message::setEvent(qi::uint32_t event)
   {
+    cow();
     if (type() != Type_Event)
     {
       qiLogDebug("Message") << "called setEvent() on non Type_Event message";
@@ -183,11 +195,13 @@ namespace qi {
 
   void Message::setBuffer(const Buffer &buffer)
   {
+    cow();
     _p->buffer = buffer;
   }
 
   void Message::setParameters(const GenericFunctionParameters &parameters)
   {
+    // Bounces to setSignature(), no need for cow()
     BinaryEncoder out(_p->buffer);
     for (unsigned int i = 0; i < parameters.size(); ++i)
       qi::details::serialize(parameters[i], out);
@@ -244,6 +258,7 @@ namespace qi {
   }
 
   void Message::setAddress(const MessageAddress &address) {
+    cow();
     _p->header.id = address.messageId;
     _p->header.service = address.serviceId;
     _p->header.object = address.objectId;
@@ -261,6 +276,7 @@ namespace qi {
 
   void Message::setSignature(const std::string& sig)
   {
+    cow();
     _p->signature = sig;
   }
 
