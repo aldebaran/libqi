@@ -438,7 +438,7 @@ namespace qi {
         it = value.begin();
         end = value.end();
         for (; it != end; ++it)
-          qi::details::serialize(*it, out);
+          qi::details::serialize(*it, out, context);
         it.destroy();
         end.destroy();
         out.endList();
@@ -453,8 +453,8 @@ namespace qi {
         for(; it != end; ++it)
         {
           std::pair<GenericValuePtr, GenericValuePtr> v = *it;
-          qi::details::serialize(v.first, out);
-          qi::details::serialize(v.second, out);
+          qi::details::serialize(v.first, out, context);
+          qi::details::serialize(v.second, out, context);
         }
         it.destroy();
         end.destroy();
@@ -492,7 +492,7 @@ namespace qi {
           tsig += vals[i].type->signature();
         out.beginTuple(tsig);
         for (unsigned i=0; i<vals.size(); ++i)
-          qi::details::serialize(vals[i], out);
+          qi::details::serialize(vals[i], out, context);
         out.endTuple();
       }
 
@@ -600,7 +600,7 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          GenericValuePtr v = qi::details::deserialize(elementType, in);
+          GenericValuePtr v = qi::details::deserialize(elementType, in, context);
           res.pushBack(v);
           v.destroy();
         }
@@ -619,8 +619,8 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          GenericValuePtr k = qi::details::deserialize(keyType, in);
-          GenericValuePtr v = qi::details::deserialize(elementType, in);
+          GenericValuePtr k = qi::details::deserialize(keyType, in, context);
+          GenericValuePtr v = qi::details::deserialize(elementType, in, context);
           res.insert(k, v);
           k.destroy();
           v.destroy();
@@ -644,7 +644,7 @@ namespace qi {
         result.value = type->initializeStorage();
         for (unsigned i = 0; i<types.size(); ++i)
         {
-          GenericValuePtr val = qi::details::deserialize(types[i], in);
+          GenericValuePtr val = qi::details::deserialize(types[i], in, context);
           type->set(&result.value, i, val.value);
           val.destroy();
         }
