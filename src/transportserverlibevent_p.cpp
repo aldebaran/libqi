@@ -204,7 +204,7 @@ namespace qi
   void TransportServerLibEventPrivate::destroy()
   {
     close();
-    context->asyncCall(200000, boost::bind(&server_deletor, this));
+    context->post(boost::bind(&server_deletor, this), 200000);
   }
 
   TransportServerLibEventPrivate::TransportServerLibEventPrivate(TransportServer* self,

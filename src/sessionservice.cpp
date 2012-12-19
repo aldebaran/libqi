@@ -108,7 +108,7 @@ namespace qi {
     //we do not call delete on RemoteObject, because remoteObject->close disconnect onMessagePending,
     //which is the signal we are coming from.  (when called from onRemoteObjectComplete)
     //delete later as a workaround.
-    qi::getDefaultNetworkEventLoop()->asyncCall(0, boost::bind(&deleteLater, remote));
+    qi::getDefaultNetworkEventLoop()->post(boost::bind(&deleteLater, remote));
     delete sr;
   }
 

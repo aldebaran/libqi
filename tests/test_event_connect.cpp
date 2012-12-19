@@ -65,7 +65,7 @@ TEST(TestObject, Destruction)
 {
   // Run test from object thread as they are synchronous
   for (int i=0; i<4; ++i)
-    qi::getDefaultObjectEventLoop()->asyncCall(0,
+    qi::getDefaultObjectEventLoop()->post(
       boost::bind(&testDelete, !!((int)i/2), !!((int)i%2)));
   while (completed < 4)
     qi::os::msleep(100);

@@ -83,7 +83,7 @@ namespace qi
     if (!_eventLoop->isInEventLoopThread())
     {
       //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->asyncCall(0,
+      _eventLoop->post(
         boost::bind(&TransportSocket::startReading, _self->shared_from_this()));
       return;
     }
@@ -234,7 +234,7 @@ namespace qi
     if (_eventLoop->isInEventLoopThread())
       connect_(_self->shared_from_this(), url);
     else
-      _eventLoop->asyncCall(0,
+      _eventLoop->post(
         boost::bind(&TcpTransportSocketPrivate::connect_, this, _self->shared_from_this(), url));
     return _connectPromise.future();
   }
@@ -320,7 +320,7 @@ namespace qi
     if (!_eventLoop->isInEventLoopThread())
     {
       //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->asyncCall(0,
+      _eventLoop->post(
         boost::bind(&TcpTransportSocketPrivate::disconnect_, this, _self->shared_from_this()));
     }
     else
@@ -369,7 +369,7 @@ namespace qi
       qi::Message* m = new qi::Message();
       *m = msg;
       //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->asyncCall(0,
+      _eventLoop->post(
         boost::bind(&TcpTransportSocketPrivate::send_, this, _self->shared_from_this(), boost::ref(*m), true));
     }
     return true;
