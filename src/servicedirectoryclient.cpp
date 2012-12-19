@@ -21,10 +21,6 @@ namespace qi {
   ServiceDirectoryClient::~ServiceDirectoryClient()
   {
     close();
-    if (_addLink)
-      _object->disconnect(_addLink);
-    if (_removeLink)
-      _object->disconnect(_removeLink);
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
