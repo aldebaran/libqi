@@ -169,7 +169,7 @@ namespace qi {
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
-        eventLoop->asyncCall(0, FunctorCall(copy, shared_from_this()));
+        eventLoop->post(FunctorCall(copy, shared_from_this()));
       }
       else
       {

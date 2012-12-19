@@ -46,8 +46,7 @@ qi::Future<bool> callSameThreadIn(qi::ObjectPtr obj,
   qi::EventLoop* el, void* tid)
 {
   qi::Promise<bool> p;
-  el->asyncCall(0,
-    boost::bind(call_samethread, obj, p, tid));
+  el->post(boost::bind(call_samethread, obj, p, tid));
   return p.future();
 }
 
@@ -61,7 +60,7 @@ void fire_samethread(qi::ObjectPtr obj, void* tid)
 // Fire sameThread in given event loop
 void fireSameThreadIn(qi::ObjectPtr obj, qi::EventLoop* el, void* tid)
 {
-  el->asyncCall(0, boost::bind(fire_samethread, obj, tid));
+  el->post(boost::bind(fire_samethread, obj, tid));
 }
 
 qi::ObjectPtr makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())

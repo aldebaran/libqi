@@ -246,8 +246,7 @@ namespace qi
       qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<GenericValuePtr> result = out->future();
-      el->asyncCall(0,
-        MFunctorCall(func, pCopy, out, noCloneFirst));
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst));
       return result;
     }
   }
