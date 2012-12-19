@@ -491,16 +491,16 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::post(uint64_t usDelay, boost::function<void ()> callback)
+  void EventLoop::post(boost::function<void ()> callback,uint64_t usDelay)
   {
     CHECK_STARTED;
     _p->post(usDelay, callback);
   }
 
   qi::Future<void>
-  EventLoop::asyncCall(
-    uint64_t usDelay,
-    boost::function<void ()> callback)
+  EventLoop::async(
+    boost::function<void ()> callback,
+    uint64_t usDelay)
   {
     CHECK_STARTED;
     return _p->asyncCall(usDelay, callback);

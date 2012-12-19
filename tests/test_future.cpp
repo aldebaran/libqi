@@ -181,7 +181,7 @@ TEST(TestFutureSync, Basic)
     qi::FutureSync<int> fs;
     qi::Promise<int> p;
     fs = p.future();
-    eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+    eventLoop->async(boost::bind(unlock, p, &tag), 50000);
   }
   ASSERT_TRUE(tag); // fs should block at end of scope, so we reach here after unlock
 
@@ -193,7 +193,7 @@ TEST(TestFutureSync, Basic)
       qi::FutureSync<int> fs;
       fs = p.future();
       fs.async();
-      eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+      eventLoop->async(boost::bind(unlock, p, &tag), 50000);
     }
     ASSERT_FALSE(tag); // fs is async: we exit immediately
   }
@@ -207,7 +207,7 @@ TEST(TestFutureSync, Basic)
       qi::FutureSync<int> fs;
       fs = p.future();
       qi::Future<int> fa = fs;
-      eventLoop->asyncCall(50000, boost::bind(unlock, p, &tag));
+      eventLoop->async(boost::bind(unlock, p, &tag), 50000);
     }
     ASSERT_FALSE(tag); // fs was copied: blocking disabled
   }
@@ -220,7 +220,7 @@ qi::FutureSync<int> getSync(bool* tag)
 {
   qi::EventLoop* el = qi::getDefaultObjectEventLoop();
   qi::Promise<int> promise;
-  el->asyncCall(50000, boost::bind(unlock, promise, tag));
+  el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future();
 }
 
@@ -228,7 +228,7 @@ qi::FutureSync<int> getSync2(bool* tag)
 {
   qi::EventLoop* el = qi::getDefaultObjectEventLoop();
   qi::Promise<int> promise;
-  el->asyncCall(50000, boost::bind(unlock, promise, tag));
+  el->async(boost::bind(unlock, promise, tag), 50000);
   return promise.future().sync();
 }
 
@@ -370,8 +370,8 @@ static void setTrue(bool* b)
 TEST(TestFutureCancel, Canceleable)
 {
   bool b = false;
-  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->asyncCall(200,
-    boost::bind(&setTrue, &b));
+  qi::Future<void> f = qi::getDefaultNetworkEventLoop()->async(
+    boost::bind(&setTrue, &b), 200);
   f.cancel();
   ASSERT_FALSE(f.isReady());
   qi::os::msleep(400);

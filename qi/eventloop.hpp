@@ -72,9 +72,9 @@ namespace qi
     /** Call given function once after given delay in microseconds.
      * @return a cancelleable future
      */
-    Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback);
+    Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
     /// Similar to asyncCall() but without cancellation or notification
-    void post(uint64_t usDelay, boost::function<void ()> callback);
+    void post(boost::function<void ()> callback, uint64_t usDelay=0);
 
     /// Call given function every time something happen on file
     /// descriptor fileDescriptor. You can specify that the callback
