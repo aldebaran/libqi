@@ -25,6 +25,23 @@ static std::string reply(const std::string &msg)
   return msg;
 }
 
+/* For asynchronous things where no synchronisation mechanism
+ * is possible, loop the check and wait a small delay,
+ * instead of one big sleep that will slow us down
+ *
+ */
+#define PERSIST_ASSERT(code, cond, msdelay)  \
+do                                           \
+{                                            \
+  code;                                      \
+  for(unsigned i=0; i<50 && !(cond); ++i)    \
+  {                                          \
+    qi::os::msleep(1 + msdelay / 50);        \
+    code;                                    \
+  }                                          \
+  ASSERT_TRUE(cond);                         \
+} while(0)
+
 //check for server closed
 //check for socket disconnected
 //check for service unregistered
@@ -47,8 +64,7 @@ TEST(QiService, RemoteObjectCacheServerClose)
 
   p.server()->close();
 
-  fut = p.client()->service("serviceTest");
-  EXPECT_TRUE(fut.hasError());
+  PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
 }
 
 
@@ -69,8 +85,8 @@ TEST(QiService, RemoteObjectCacheUnregister)
 
   p.server()->unregisterService(idx);
 
-  fut = p.client()->service("serviceTest");
-  EXPECT_TRUE(fut.hasError());
+  PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
+
 }
 
 
@@ -91,8 +107,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
 
   p.server()->unregisterService(idx);
 
-  fut = p.client()->service("serviceTest");
-  EXPECT_TRUE(fut.hasError());
+  PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
 
   unsigned int idx2 = p.server()->registerService("serviceTest", obj);
   //new service should not have a previoulsy registered ID
@@ -128,8 +143,7 @@ TEST(QiService, RemoteObjectCacheABANewServer)
 
   p.server()->close();
 
-  fut = p.client()->service("serviceTest");
-  EXPECT_TRUE(fut.hasError());
+  PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
 
   EXPECT_TRUE(ses.connect(p.client()->url().str()));
   ses.listen("tcp://0.0.0.0:0");
