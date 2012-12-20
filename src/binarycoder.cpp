@@ -134,16 +134,14 @@ namespace qi {
 
   void BinaryDecoder::read(qi::Buffer &meta) {
     BufferReader& reader = bufferReader();
-    uint32_t sz;
-    read(sz);
     if (reader.hasSubBuffer())
     {
       meta = reader.subBuffer();
-      if (meta.size() != sz)
-        qiLogWarning("BinaryCoder") << "Buffer size mismatch " << sz << " " << meta.size();
     }
     else
     {
+      uint32_t sz;
+      read(sz);
       qiLogDebug("BinaryCoder") << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
