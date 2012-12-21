@@ -12,9 +12,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
 #include <qi/api.hpp>
-
-#include <qi/api.hpp>
-
+#include <qi/future.hpp>
 
 namespace qi {
 
@@ -119,6 +117,24 @@ namespace qi {
       ValueType                         _value;
       boost::function<void ()>          _onCancel;
     };
+
+    template <typename T>
+    void waitForFirstHelper(qi::Promise<bool>& bprom,
+                            qi::Promise< qi::Future<T> >& prom,
+                            qi::Future<T>& fut) {
+      if (prom.future().isReady())
+        return;
+      if (!fut.hasError())
+        prom.setValue(fut);
+      bprom.setValue(true);
+    }
+
+    template <typename T>
+    void waitForFirstHelperFailure(qi::Promise< qi::Future<T> >& prom) {
+      if (prom.future().isReady())
+        return;
+      prom.setValue(makeFutureError<T>("No future returned successfully."));
+    }
   } // namespace detail
 
   template <typename T>
@@ -137,6 +153,35 @@ namespace qi {
     return _p->value();
   }
 
+  template <typename T>
+  void waitForAll(std::vector<Future<T> >& vect) {
+    typename std::vector< Future<T> >::iterator it;
+    qi::FutureBarrier<T> barrier;
+
+    for (it = vect.begin(); it != vect.end(); ++it) {
+      barrier.addFuture(*it);
+    }
+    barrier.future().wait();
+  }
+
+  template <typename T>
+  qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect) {
+    typename std::vector< Future<T> >::iterator it;
+    qi::Promise< qi::Future<T> > prom;
+    qi::FutureBarrier<bool> barrier;
+
+    for (it = vect.begin(); it != vect.end(); ++it) {
+      qi::Promise<bool> rprom;
+
+      it->connect(boost::bind<void>(&detail::waitForFirstHelper<T>, rprom, prom, *it));
+      barrier.addFuture(rprom.future());
+    }
+
+    // On failure, we set the promise to an error.
+    barrier.future().connect(boost::bind<void>(&detail::waitForFirstHelperFailure<T>, prom));
+
+    return prom.future();
+  }
 }
 
 #endif  // _QITYPE_DETAILS_FUTURE_HXX_

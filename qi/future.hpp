@@ -8,6 +8,7 @@
 #define _QITYPE_FUTURE_HPP_
 
 #include <vector>
+#include <qi/atomic.hpp>
 #include <qi/config.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/signals2.hpp>
@@ -221,8 +222,66 @@ namespace qi {
     Future<T> _f;
   };
 
+  template<typename T>
+  class FutureBarrier {
+  public:
+    /// FutureBarrier constructor taking no argument.
+    FutureBarrier()
+      : _closed(false)
+      , _count(0)
+      , _futures()
+      , _promise()
+    {}
+
+    /// Adds the future to the barrier.
+    bool addFuture(qi::Future<T> fut) {
+      // Can't add future from closed qi::FutureBarrier.
+      if (this->_closed)
+        return false;
+
+      ++(this->_count);
+      fut.connect(boost::bind<void>(&FutureBarrier::onFutureDone, this));
+      this->_futures.push_back(fut);
+      return true;
+    }
+
+    /// Gets the future result for the barrier.
+    Future< std::vector< Future<T> > > future() {
+      this->close();
+      return this->_promise.future();
+    }
+
+  protected:
+    bool _closed;
+    Atomic<int> _count;
+    std::vector< Future<T> > _futures;
+    Promise< std::vector< Future<T> > > _promise;
+
+  private:
+    void onFutureDone() {
+      if (--(this->_count) == 0 && this->_closed) {
+        this->_promise.setValue(this->_futures);
+      }
+    }
+
+    void close() {
+      this->_closed = true;
+      if (*(this->_count) == 0) {
+        this->_promise.setValue(this->_futures);
+      }
+    }
+  };
+
   template <typename T>
   qi::Future<T> makeFutureError(const std::string &value);
+
+  /// Helper function to wait on a vector of futures.
+  template <typename T>
+  void waitForAll(std::vector< Future<T> >& vect);
+
+  /// Helper function to wait for the first valid future.
+  template <typename T>
+  qi::FutureSync< qi::Future<T> > waitForFirst(std::vector< Future<T> >& vect);
 }
 
 #ifdef _MSC_VER

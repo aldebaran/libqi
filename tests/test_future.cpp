@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include <qi/os.hpp>
+#include <qi/log.hpp>
 #include <qi/atomic.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
@@ -380,6 +381,132 @@ TEST(TestFutureCancel, Canceleable)
   ASSERT_TRUE(f.hasError());
 }
 
+// ===== FutureBarrier =========================================================
+#define BARRIER_N 10
+
+static void addMe(qi::Atomic<int>* a) {
+  ++(*a);
+}
+
+static void mult42(qi::Promise<int> prom, int number) {
+  prom.setValue(42 * number);
+}
+
+static void checkBarrier(qi::Promise<void> prom,
+                         std::vector< qi::Future<int> > results)
+{
+  for (int it = 0; it < BARRIER_N; ++it) {
+    qi::Future<int> fut = results[it];
+
+    ASSERT_FALSE(fut.hasError());
+    ASSERT_EQ(it * 42, fut.value());
+  }
+  prom.setValue(0);
+}
+
+TEST(TestPromiseBarrier, SimpleBarrier)
+{
+  int it;
+  qi::Atomic<int> a;
+  qi::FutureBarrier<void> barrier;
+  qi::Promise<void> call;
+
+  // Loading the barrier.
+  for (it = 0; it < BARRIER_N; ++it) {
+    // function call in reality here.
+    call.future().connect(boost::bind<void>(&addMe, &a));
+    barrier.addFuture(call.future());
+  }
+
+  // Launch all addMe (just think of it like function calls returned)
+  call.setValue(0);
+
+  // We wait for all futures of the for loop.
+  barrier.future().wait();
+  ASSERT_EQ(it, *a);
+}
+
+TEST(TestPromiseBarrier, ClosedBarrier)
+{
+  qi::FutureBarrier<void> barrier;
+
+  // Can add a future to the barrier because is not yet closed.
+  qi::Promise<void> prom;
+  ASSERT_TRUE(barrier.addFuture(prom.future()));
+  prom.setValue(0);
+
+  barrier.future().wait();
+
+  // Invalid promise, because FutureBarrier is closed.
+  qi::Promise<void> prom2;
+  ASSERT_FALSE(barrier.addFuture(prom2.future()));
+}
+
+TEST(TestPromiseBarrier, CompleteExample)
+{
+  qi::Promise<void> call;
+  qi::FutureBarrier<int> barrier;
+
+  // Load data in the barrier.
+  for (int it = 0; it < BARRIER_N; ++it) {
+    qi::Promise<int> prom;
+    call.future().connect(boost::bind<void>(&mult42, prom, it));
+    barrier.addFuture(prom.future());
+  }
+  call.setValue(0);
+
+  // Bind something to do after everything is computed.
+  qi::Promise<void> end;
+  barrier.future().connect(boost::bind(&checkBarrier, end, _1));
+
+  // Wait for the end of the check.
+  end.future().wait();
+}
+
+qi::Future<int> emulateSet(int it, bool error = false) {
+  qi::Promise<int> prom;
+
+  if (error) {
+    prom.setError("ERROR");
+  } else {
+    prom.setValue(it);
+  }
+  return prom.future();
+}
+
+TEST(TestWaitForAll, SimpleTest) {
+  std::vector< qi::Future<int> > vect;
+
+  for (int it = 0; it < BARRIER_N; ++it) {
+    vect.push_back(emulateSet(it));
+  }
+  qi::waitForAll<int>(vect);
+  for (int it = 0; it < BARRIER_N; ++it) {
+    ASSERT_FALSE(vect.at(it).hasError());
+    ASSERT_EQ(vect.at(it).value(), it);
+  }
+}
+
+TEST(TestWaitForFirst, SuccessfulTest) {
+  std::vector< qi::Future<int> > vect;
+
+  for (int it = 0; it < BARRIER_N; ++it) {
+    vect.push_back(emulateSet(it, it != 3));
+  }
+  qi::Future<int> a = qi::waitForFirst<int>(vect);
+  ASSERT_FALSE(a.hasError());
+  ASSERT_EQ(a.value(), 3);
+}
+
+TEST(TestWaitForFirst, FailingTest) {
+  std::vector< qi::Future<int> > vect;
+
+  for (int it = 0; it < BARRIER_N; ++it) {
+    vect.push_back(emulateSet(it, true));
+  }
+  qi::Future<int> a = qi::waitForFirst<int>(vect);
+  ASSERT_TRUE(a.hasError());
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

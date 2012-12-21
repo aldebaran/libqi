@@ -12,7 +12,6 @@
 namespace qi {
 
   namespace detail {
-
     class FutureBasePrivate {
     public:
       FutureBasePrivate();
