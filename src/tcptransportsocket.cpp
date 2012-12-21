@@ -20,7 +20,7 @@ namespace qi {
   {
   }
 
-  TcpTransportSocket::TcpTransportSocket(int fileDesc, EventLoop* eventLoop)
+  TcpTransportSocket::TcpTransportSocket(void* fileDesc, EventLoop* eventLoop)
     : TransportSocket(new TcpTransportSocketPrivate(this, fileDesc, eventLoop))
   {
   }

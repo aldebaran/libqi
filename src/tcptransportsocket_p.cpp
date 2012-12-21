@@ -10,10 +10,6 @@
 #include <linux/in.h> // for  IPPROTO_TCP
 #endif
 
-#include <event2/util.h>
-#include <event2/event.h>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -34,190 +30,111 @@
 namespace qi
 {
 
-  // Forward libevent C callback to C++
-  void readcb(struct bufferevent *bev, void *context)
-  {
-    TcpTransportSocketPrivate *tc = static_cast<TcpTransportSocketPrivate*>(context);
-    tc->onRead();
-  }
-
-  void eventcb(struct bufferevent *bev, short error, void *context)
-  {
-    TcpTransportSocketPrivate *tc = static_cast<TcpTransportSocketPrivate*>(context);
-    tc->onEvent(error);
-  }
-
-
   //#### TransportSocketLibEvent
 
 
   TcpTransportSocketPrivate::TcpTransportSocketPrivate(TransportSocket *self, EventLoop* eventLoop)
     : TransportSocketPrivate(self, eventLoop)
-    , _bev(NULL)
+    , _socket(*new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle()))
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
-    , _disconnecting(false)
+    , _sending(false)
   {
     assert(eventLoop);
     _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
   }
 
-  TcpTransportSocketPrivate::TcpTransportSocketPrivate(TransportSocket *self, int fd, EventLoop* eventLoop)
+  TcpTransportSocketPrivate::TcpTransportSocketPrivate(TransportSocket *self,
+    void* s, EventLoop* eventLoop)
     : TransportSocketPrivate(self, eventLoop)
-    , _bev(NULL)
+    , _socket(*(boost::asio::ip::tcp::socket*)s)
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
-    , _disconnecting(false)
-    , _fd(fd)
+    , _sending(false)
   {
     assert(eventLoop);
     _status = qi::TransportSocket::Status_Connected;
   }
 
-  void TcpTransportSocketPrivate::startReading()
-  {
-    if (_bev)
-      return;
-    if (!_eventLoop->isInEventLoopThread())
-    {
-      //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->post(
-        boost::bind(&TransportSocket::startReading, _self->shared_from_this()));
-      return;
-    }
-    struct event_base *base = static_cast<event_base *>(_eventLoop->nativeHandle());
-    _bev = bufferevent_socket_new(base, _fd, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(_bev, ::qi::readcb, 0, ::qi::eventcb, this);
-    bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
-    bufferevent_enable(_bev, EV_READ|EV_WRITE);
-  }
+
 
   TcpTransportSocketPrivate::~TcpTransportSocketPrivate()
   {
     disconnect();
     delete _msg;
+    delete &_socket;
     qiLogVerbose("qi.tcpsocket") << "deleted " << this;
   }
 
-  void TcpTransportSocketPrivate::onRead()
+  void TcpTransportSocketPrivate::startReading()
   {
-    if (!_bev)
-      return;
+    _msg = new qi::Message();
+    boost::asio::async_read(_socket,
+      boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
+      boost::bind(&TcpTransportSocketPrivate::onReadHeader, this, _1, _2));
+  }
 
-    struct evbuffer *input = bufferevent_get_input(_bev);
-    unsigned int     magicValue = qi::MessagePrivate::magic;
-
-    while (true)
+  void TcpTransportSocketPrivate::onReadHeader(const boost::system::error_code& erc,
+    std::size_t len)
+  {
+    if (erc)
     {
-      if (_msg == NULL)
-      {
-        _msg = new qi::Message();
-        _readHdr = true;
-      }
+      error(erc);
+      return;
+    }
+    size_t payload = _msg->_p->header.size;
+    if (payload)
+    {
+      void* ptr = _msg->_p->buffer.reserve(payload);
+      boost::asio::async_read(_socket,
+        boost::asio::buffer(ptr, payload),
+        boost::bind(&TcpTransportSocketPrivate::onReadData, this, _1, _2));
+    }
+    else
+      onReadData(boost::system::error_code(), 0);
+  }
 
-      if (_readHdr)
-      {
-        if (evbuffer_get_length(input) < sizeof(MessagePrivate::MessageHeader))
-          return;
-
-        struct evbuffer_ptr p;
-        evbuffer_ptr_set(input, &p, 0, EVBUFFER_PTR_SET);
-        // search a messageMagic number
-        p = evbuffer_search(input, (const char *)&magicValue, sizeof(qi::uint32_t), &p);
-        if (p.pos < 0) {
-          qiLogWarning("qimessaging.TransportSocketLibevent") << "No magic found in the message. Waiting for more data.";
-          return;
-        }
-        // Drain to the magic
-        evbuffer_drain(input, p.pos);
-        // Get the message header
-        // there is a copy here.
-        evbuffer_copyout(input, _msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader));
-        // check if the msg is valid
-        if (!_msg->isValid())
-        {
-          qiLogError("qimessaging.TransportSocketLibevent") << "Message received is invalid! Try to find a new one.";
-          // only drop the magic and restart scanning
-          evbuffer_drain(input, sizeof(qi::uint32_t));
-          return;
-        }
-        // header is valid, next step get all the buffer
-        // remove the header from the evbuffer
-        evbuffer_drain(input, sizeof(MessagePrivate::MessageHeader));
-        _readHdr = false;
-      }
-
-      if (evbuffer_get_length(input) < static_cast<MessagePrivate::MessageHeader*>(_msg->_p->getHeader())->size)
-        return;
-
-      /* we have to let the Buffer know we are going to push some data inside */
-      qi::Buffer buf;
-      buf.reserve(static_cast<MessagePrivate::MessageHeader*>(_msg->_p->getHeader())->size);
-      _msg->setBuffer(buf);
-
-      evbuffer_remove(input, buf.data(), buf.size());
+  void TcpTransportSocketPrivate::onReadData(const boost::system::error_code& erc,
+    std::size_t len)
+  {
+    if (erc)
+    {
+      error(erc);
+      return;
+    }
       // qiLogDebug("TransportSocket") << "Recv (" << _msg->type() << "):" << _msg->address();
-      static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
-      qi::int64_t start = 0;
-      if (usWarnThreshold)
-        start = os::ustime(); // call might be not that cheap
-      _self->messageReady(*_msg);
-      _dispatcher.dispatch(*_msg);
-      if (usWarnThreshold)
-      {
-        qi::int64_t duration = os::ustime() - start;
-        if (duration > usWarnThreshold)
+    static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
+    qi::int64_t start = 0;
+    if (usWarnThreshold)
+      start = os::ustime(); // call might be not that cheap
+    _self->messageReady(*_msg);
+    _dispatcher.dispatch(*_msg);
+    if (usWarnThreshold)
+    {
+      qi::int64_t duration = os::ustime() - start;
+      if (duration > usWarnThreshold)
         qiLogWarning("TransportSocket") << "Dispatch to user took " << duration << "us";
-      }
-      delete _msg;
-      _msg = 0;
     }
+    delete _msg;
+    startReading();
   }
 
-  void TcpTransportSocketPrivate::onEvent(short events)
+  void TcpTransportSocketPrivate::error(const boost::system::error_code& erc)
   {
-    if (!_bev)
-      return;
+    _status = qi::TransportSocket::Status_Disconnected;
+    _self->disconnected(erc.value());
+    _disconnectPromise.setValue(0);
 
-    if (events & BEV_EVENT_CONNECTED)
+    if (_connecting)
     {
-      _status = qi::TransportSocket::Status_Connected;
       _connecting = false;
-      _connectPromise.setValue(true);
-      _self->connected();
+      _connectPromise.setError(std::string("Connection error: ") + strerror(_err));
     }
-    else if ((events & BEV_EVENT_EOF) || (events & BEV_EVENT_ERROR))
-    {
-      if (events & BEV_EVENT_ERROR)
-        _err = errno;
-      if (_err)
-        qiLogVerbose("qimessaging.TransportSocketLibevent")  << "socket terminate (" << _err << "): " << strerror(_err) << std::endl;
-      disconnect_(_self->shared_from_this());
-    }
-    else if (events & BEV_EVENT_TIMEOUT)
-    {
-      // must be a timeout event handle, handle it
-      qiLogError("qimessaging.TransportSocketLibevent")  << "must be a timeout event handle, handle it" << std::endl;
-    }
+    
   }
 
-  void TcpTransportSocketPrivate::onBufferSent(const void *QI_UNUSED(data),
-                                        size_t QI_UNUSED(datalen),
-                                        void *buffer)
-  {
-    Buffer *b = static_cast<Buffer *>(buffer);
-    delete b;
-  }
-
-  void TcpTransportSocketPrivate::onMessageSent(const void *QI_UNUSED(data),
-                                         size_t QI_UNUSED(datalen),
-                                         void *msg)
-  {
-    Message *m = static_cast<Message *>(msg);
-    delete m;
-  }
 
   qi::FutureSync<bool> TcpTransportSocketPrivate::connect(const qi::Url &url)
   {
@@ -226,254 +143,123 @@ namespace qi
       qiLogError("qimessaging.TransportSocketLibevent") << "connection already in progress";
       return makeFutureError<bool>("Operation already in progress");
     }
+    _url = url;
     _connectPromise.reset();
     _disconnectPromise.reset();
     _status = qi::TransportSocket::Status_Connecting;
     _connecting = true;
-    //hold a shared_ptr on self to avoid callback after delete
-    if (_eventLoop->isInEventLoopThread())
-      connect_(_self->shared_from_this(), url);
-    else
-      _eventLoop->post(
-        boost::bind(&TcpTransportSocketPrivate::connect_, this, _self->shared_from_this(), url));
-    return _connectPromise.future();
-  }
-
-  void TcpTransportSocketPrivate::connect_(TransportSocketPtr socket, const qi::Url &url)
-  {
-    if (!_connecting)
-    {
-      qiLogError("qimessaging.TransportSocketLibevent") << "assert failed: _connecting";
-      return;
-    }
-    if (_status == qi::TransportSocket::Status_Connected) {
-      _connecting = false;
-      qiLogError("qimessaging.TransportSocketLibevent") << "socket is already connected.";
-      return;
-    }
-    _url = url;
-    _connectPromise.reset();
-    _disconnectPromise.reset();
     _err = 0;
-    const std::string      &address = _url.host();
-    struct evutil_addrinfo *ai = NULL;
-    struct evutil_addrinfo  hint;
-    char                    portbuf[10];
-
     if (_url.port() == 0) {
       qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << _url.str();
       _connectPromise.setError("Bad address " + _url.str());
       _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
       _disconnectPromise.setValue(0);
-      return;
+      return _connectPromise.future();
     }
     qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << _url.host() << ":" << _url.port();
+    using namespace boost::asio;
+    // Resolve url
+    ip::tcp::resolver r(_socket.get_io_service());
+    ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port()));
+    // Synchronous resolution
+    ip::tcp::resolver::iterator it = r.resolve(q);
+    // asynchronous connect
+    _socket.async_connect(*it,
+      boost::bind(&TcpTransportSocketPrivate::connected, this, _1));
+    return _connectPromise.future();
+  }
 
-    _bev = bufferevent_socket_new(static_cast<struct event_base *>(_eventLoop->nativeHandle()), -1, BEV_OPT_CLOSE_ON_FREE);
-    bufferevent_setcb(_bev, ::qi::readcb, 0, ::qi::eventcb, this);
-    bufferevent_setwatermark(_bev, EV_WRITE, 0, MAX_LINE);
-    bufferevent_enable(_bev, EV_READ|EV_WRITE);
-
-    evutil_snprintf(portbuf, sizeof(portbuf), "%d", _url.port());
-    memset(&hint, 0, sizeof(hint));
-    hint.ai_family   = AF_UNSPEC;
-    hint.ai_protocol = IPPROTO_TCP;
-    hint.ai_socktype = SOCK_STREAM;
-    int err = evutil_getaddrinfo(address.c_str(), portbuf, &hint, &ai);
-    if (err != 0)
+  void TcpTransportSocketPrivate::connected(const boost::system::error_code& erc)
+  {
+    _connecting = false;
+    if (erc)
     {
-      qiLogError("qimessaging.TransportSocketLibEvent") << "Cannot resolve dns (" << address << ")";
+      qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
+      _status = qi::TransportSocket::Status_Disconnected;
       _connectPromise.setValue(false);
-      _status = qi::TransportSocket::Status_Disconnected;
-      _connecting = false;
-      disconnect(); // leave connecting=false above
-      return;
+      _disconnectPromise.setValue(0);
+      //FIXME: ?? _connectPromise.setError(erc.message());
     }
-
-    _status = qi::TransportSocket::Status_Connecting;
-    _connecting = true;
-    int result = bufferevent_socket_connect(_bev, ai->ai_addr, ai->ai_addrlen);
-
-    evutil_freeaddrinfo(ai);
-
-    if (result) {
-      // FIXME: [1] race condition here.
-      if (!_connectPromise.future().hasError())
-      {
-        _connecting = false;
-        _connectPromise.setValue(false);
-      }
-      _status = qi::TransportSocket::Status_Disconnected;
+    else
+    {
+      _status = qi::TransportSocket::Status_Connected;
+      _connectPromise.setValue(true);
+      _self->connected();
+      startReading();
     }
   }
 
   qi::FutureSync<void> TcpTransportSocketPrivate::disconnect()
   {
-    if (_disconnecting)
-      return _disconnectPromise.future();
-    if (_status != qi::TransportSocket::Status_Connected && !_connecting) {
-      return _disconnectPromise.future();
-    }
-    _status = qi::TransportSocket::Status_Disconnecting;
-    _disconnecting = true;
-    if (!_eventLoop->isInEventLoopThread())
+    if (_socket.is_open())
     {
-      //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->post(
-        boost::bind(&TcpTransportSocketPrivate::disconnect_, this, _self->shared_from_this()));
+      _socket.close(); // will invoke read callback with error set
     }
     else
-      disconnect_(_self->shared_from_this());
-     return _disconnectPromise.future();
-  }
-
-  void TcpTransportSocketPrivate::disconnect_(qi::TransportSocketPtr socket)
-  {
-    if (!_bev)
-      return; // fire disconnected only once
-    // qiLogVerbose("qi.tcpsocket") << "disconnect_ " << this;
-    /*
-     * Currently (as of Libevent 2.0.5-beta), bufferevent_flush() is only
-     * implemented for some bufferevent types. In particular, socket-based
-     * bufferevents dont have it.
-     * (http://www.wangafu.net/~nickm/libevent-book/Ref6_bufferevent.html)
-     * :'(
-     */
-    //bufferevent_flush(bev, EV_WRITE, BEV_NORMAL);
-    // Must be in network thread due to a libevent deadlock bug.
-    bufferevent_setcb(_bev, 0, 0, 0, 0);
-    bufferevent_free(_bev);
-    _bev = NULL;
-
-    _status = qi::TransportSocket::Status_Disconnected;
-    _disconnecting = false;
-    _self->disconnected(_err);
-    _disconnectPromise.setValue(0);
-
-    // FIXME: [1] race condition here.
-    if (_connecting)
     {
-      _connecting = false;
-      _connectPromise.setError(std::string("Connection error: ") + strerror(_err));
+      _disconnectPromise.reset();
+      _disconnectPromise.setValue(0);
     }
+    return _disconnectPromise.future();
   }
 
   bool TcpTransportSocketPrivate::send(const qi::Message &msg)
   {
-    // qiLogDebug("TransportSocket") << "Sending (" << msg.type() << "):" << msg.address();
-    if (_eventLoop->isInEventLoopThread())
-      return send_(_self->shared_from_this(), msg, false);
-    else
+    boost::mutex::scoped_lock lock(_sendQueueMutex);
+    if (!_sending)
     {
-      qi::Message* m = new qi::Message();
-      *m = msg;
-      //hold a shared_ptr on self to avoid callback after delete
-      _eventLoop->post(
-        boost::bind(&TcpTransportSocketPrivate::send_, this, _self->shared_from_this(), boost::ref(*m), true));
+      _sending = true;
+      send_(new Message(msg));
     }
+    else
+      _sendQueue.push_back(msg);
     return true;
   }
 
-  bool TcpTransportSocketPrivate::send_(qi::TransportSocketPtr socket, const qi::Message &msg, bool allocated)
+  void TcpTransportSocketPrivate::send_(qi::Message* msg)
   {
-    if (_status != qi::TransportSocket::Status_Connected)
-    {
-      qiLogVerbose("qimessaging.TcpTransportSocket") << "socket is not connected. (" << socket.get() << ")";
-      if (allocated)
-        delete &msg;
-      return false;
-    }
-
-    qi::Message *m;
-    if (allocated)
-      m = const_cast<qi::Message*>(&msg);
-    else
-    {
-      m = new qi::Message;
-      *m = msg;
-    }
-
-    m->_p->complete();
-
-    struct evbuffer *mess = evbuffer_new();
-    // m might be deleted.
-    qi::Buffer *b = new qi::Buffer(m->buffer());
+    using boost::asio::buffer;
+    std::vector<boost::asio::const_buffer> b;
+    msg->_p->complete();
     // Send header
-    if (evbuffer_add_reference(mess,
-                               m->_p->getHeader(),
-                               sizeof(qi::MessagePrivate::MessageHeader),
-                               qi::TcpTransportSocketPrivate::onMessageSent,
-                               static_cast<void *>(m)) != 0)
-    {
-      qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail in header";
-      evbuffer_free(mess);
-      delete m;
-      delete b;
-      return false;
-    }
-    size_t sz = b->size();
-    const std::vector<std::pair<size_t, Buffer> >& subs = b->subBuffers();
+    b.push_back(buffer(msg->_p->getHeader(), sizeof(qi::MessagePrivate::MessageHeader)));
+    const qi::Buffer& buf = msg->buffer();
+    size_t sz = buf.size();
+    const std::vector<std::pair<size_t, Buffer> >& subs = buf.subBuffers();
     size_t pos = 0;
     // Handle subbuffers
     for (unsigned i=0; i< subs.size(); ++i)
     {
       // Send parent buffer between pos and start of sub
       size_t end = subs[i].first+4;
-      // qiLogDebug("qimessaging.TransportSocketLibevent")
-      //  << "serializing from " << pos <<" to " << end << " of " << sz;
       if (end != pos)
-        if (evbuffer_add_reference(mess,
-                                 (const char*)b->data() + pos,
-                                 end - pos,
-                                 0, 0) != 0)
-        {
-          qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
-          evbuffer_free(mess);
-          delete b;
-          return false;
-        }
+        b.push_back(buffer((const char*)buf.data() + pos, end-pos));
       pos = end;
       // Send subbuffer
-      // qiLogDebug("qimessaging.TransportSocketLibevent")
-      //  << "serializing subbuffer of size " << subs[i].second.size();
-      if (evbuffer_add_reference(mess,
-                                 subs[i].second.data(),
-                                 subs[i].second.size(),
-                                 0, 0) != 0)
-      {
-        qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
-        evbuffer_free(mess);
-        delete b;
-        return false;
-      }
+      b.push_back(buffer(subs[i].second.data(), subs[i].second.size()));
     }
-    qiLogDebug("qimessaging.TransportSocketLibevent")
-        << "serializing last main buffer part from " << pos << " of size " << (b->size() - pos);
-    // Send last chunk of parent buffer between pos and end
-    if (evbuffer_add_reference(mess,
-                               (const char*)b->data() + pos,
-                               b->size() - pos,
-                               qi::TcpTransportSocketPrivate::onBufferSent,
-                               static_cast<void *>(b)) != 0)
-    {
-      qiLogError("qimessaging.TransportSocketLibevent") << "Add reference fail for block of size " << sz;
-      evbuffer_free(mess);
-      delete b;
-      return false;
-    }
+    b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
+    _dispatcher.sent(*msg);
+    boost::asio::async_write(_socket, b,
+      boost::bind(&TcpTransportSocketPrivate::sendCont, this, _1, msg));
+  }
 
-    _dispatcher.sent(msg);
-
-    if (bufferevent_write_buffer(_bev, mess) != 0)
+  void TcpTransportSocketPrivate::sendCont(const boost::system::error_code& erc,
+    Message* msg)
+  {
+    delete msg;
+    if (erc)
+      return; // read-callback will also get the error, avoid dup and ignore it
+    boost::mutex::scoped_lock lock(_sendQueueMutex);
+    if (_sendQueue.empty())
+      _sending = false;
+    else
     {
-      qiLogError("qimessaging.TransportSocketLibevent") << "Can't add buffer to the send queue";
-      evbuffer_free(mess);
-      //TODO: remove from dispatcher here
-      return false;
+      msg = new Message(_sendQueue.front());
+      _sendQueue.pop_front();
+      send_(msg);
     }
-    evbuffer_free(mess);
-    return true;
   }
 
 }

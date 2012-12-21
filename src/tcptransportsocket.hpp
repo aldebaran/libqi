@@ -20,13 +20,15 @@ namespace qi
 
   public:
     explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop());
-    explicit TcpTransportSocket(int fileDesc, EventLoop* eventloop = getDefaultNetworkEventLoop());
     virtual ~TcpTransportSocket();
 
     virtual qi::FutureSync<bool> connect(const qi::Url &url);
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
+
+    // For internal use
+    explicit TcpTransportSocket(void* socket_impl, EventLoop* eventloop = getDefaultNetworkEventLoop());
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

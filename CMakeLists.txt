@@ -98,8 +98,8 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/server.cpp
                                    src/transportserver.cpp
                                    src/transportserver_p.hpp
-                                   src/transportserverlibevent_p.cpp
-                                   src/transportserverlibevent_p.hpp
+                                   src/transportserverasio_p.cpp
+                                   src/transportserverasio_p.hpp
                                    src/transportserverdummy_p.cpp
                                    src/transportserverdummy_p.hpp
                                    src/transportsocket.cpp
@@ -135,7 +135,7 @@ qi_create_lib(qimessaging
   SUBMODULE
     qi-messaging qi-messaging-c
   DEPENDS
-    QI BOOST BOOST_DATE_TIME BOOST_THREAD LIBEVENT QITYPE
+    QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE
 )
 
 if(WIN32)

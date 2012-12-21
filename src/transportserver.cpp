@@ -17,12 +17,6 @@
 #include <qi/log.hpp>
 #include <cerrno>
 
-#include <event2/util.h>
-#include <event2/event.h>
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <event2/listener.h>
-
 #ifdef _WIN32
 #include <winsock2.h> // for socket
 #include <WS2tcpip.h> // for socklen_t
@@ -32,7 +26,7 @@
 
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
-#include "transportserverlibevent_p.hpp"
+#include "transportserverasio_p.hpp"
 #include "transportserverdummy_p.hpp"
 #include "tcptransportsocket_p.hpp"
 
@@ -44,7 +38,7 @@ namespace qi
     const qi::Url &url,
     qi::EventLoop* ctx) {
     if (url.protocol() == "tcp") {
-      return new TransportServerLibEventPrivate(self, url, ctx);
+      return new TransportServerAsioPrivate(self, url, ctx);
     }
 
     qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."

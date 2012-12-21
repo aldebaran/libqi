@@ -8,7 +8,9 @@
 #define _SRC_TCPTRANSPORTSOCKET_P_HPP_
 
 # include <string>
+# include <queue>
 # include <boost/thread/recursive_mutex.hpp>
+# include <boost/asio.hpp>
 # include <qi/atomic.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
@@ -17,7 +19,6 @@
 # include <qi/eventloop.hpp>
 
 # include "transportsocket_p.hpp"
-# include <event2/util.h>
 
 
 namespace qi
@@ -27,7 +28,7 @@ namespace qi
   {
   public:
     TcpTransportSocketPrivate(TransportSocket *self, EventLoop* eventloop = getDefaultNetworkEventLoop());
-    TcpTransportSocketPrivate(TransportSocket *self, int fileDesc, EventLoop* eventloop = getDefaultNetworkEventLoop());
+    TcpTransportSocketPrivate(TransportSocket *self, void* s, EventLoop* eventloop = getDefaultNetworkEventLoop());
     virtual ~TcpTransportSocketPrivate();
 
     virtual qi::FutureSync<bool> connect(const qi::Url &url);
@@ -36,23 +37,18 @@ namespace qi
     void startReading();
 
   private:
-    //LibEvent callbacks
+    void error(const boost::system::error_code& erc);
+    void connected(const boost::system::error_code& erc);
     void onRead();
-    void onEvent(short events);
+    void onReadHeader(const boost::system::error_code& erc, std::size_t);
+    void onReadData(const boost::system::error_code& erc, std::size_t);
 
-    //cleanup function
-    static void onBufferSent(const void *QI_UNUSED(data), size_t QI_UNUSED(datalen), void *buffer);
-    static void onMessageSent(const void *QI_UNUSED(data), size_t QI_UNUSED(datalen), void *msg);
-
-    //give access to C callback
-    friend void readcb(struct bufferevent *bev, void *context);
-    friend void eventcb(struct bufferevent *bev, short error, void *context);
-
-    bool send_(qi::TransportSocketPtr socket, const qi::Message &msg, bool allocated);
+    void send_(qi::Message* msg);
+    void sendCont(const boost::system::error_code& erc, Message* msg);
     void connect_(TransportSocketPtr socket, const qi::Url &url);
     void disconnect_(TransportSocketPtr socket);
   private:
-    struct bufferevent *_bev;
+    boost::asio::ip::tcp::socket& _socket;
 
     qi::Promise<bool>   _connectPromise;
     qi::Promise<void>   _disconnectPromise;
@@ -61,8 +57,10 @@ namespace qi
     bool                _readHdr;
     qi::Message        *_msg;
     bool                _connecting;
-    bool                _disconnecting;
-    int                 _fd;
+
+    boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending
+    std::deque<Message> _sendQueue;
+    bool                _sending;
   };
 
 }
