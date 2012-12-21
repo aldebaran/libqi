@@ -74,7 +74,7 @@ namespace qi
      */
     Future<void> async(boost::function<void ()> callback, uint64_t usDelay=0);
     /// Similar to asyncCall() but without cancellation or notification
-    void post(boost::function<void ()> callback, uint64_t usDelay=0);
+    void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
 
     /// Call given function every time something happen on file
     /// descriptor fileDescriptor. You can specify that the callback

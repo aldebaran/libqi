@@ -2,9 +2,6 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
-#include <event2/event.h>
-#include <event2/bufferevent.h>
-#include <event2/thread.h>
 
 #include <boost/thread.hpp>
 
@@ -19,38 +16,15 @@
 
 namespace qi {
 
-  EventLoopLibEvent::EventLoopLibEvent()
+  EventLoopAsio::EventLoopAsio()
   : _destroyMe(false)
   , _running(false)
   , _threaded(false)
   {
-    static bool libevent_init = false;
-
-
-  #ifdef _WIN32
-      // libevent does not call WSAStartup
-      WSADATA WSAData;
-      // TODO: handle return code
-      ::WSAStartup(MAKEWORD(1, 0), &WSAData);
-  #endif
-
-    if (!libevent_init)
-    {
-  #ifdef EVTHREAD_USE_WINDOWS_THREADS_IMPLEMENTED
-      evthread_use_windows_threads();
-  #endif
-  #ifdef EVTHREAD_USE_PTHREADS_IMPLEMENTED
-      evthread_use_pthreads();
-  #endif
-      libevent_init = !libevent_init;
-    }
-
-    if (!(_base = event_base_new()))
-      return;
   }
 
 
-  void EventLoopLibEvent::start()
+  void EventLoopAsio::start()
   {
     if (_running || _threaded)
       return;
@@ -60,20 +34,15 @@ namespace qi {
       qi::os::msleep(0);
   }
 
-  EventLoopLibEvent::~EventLoopLibEvent()
+  EventLoopAsio::~EventLoopAsio()
   {
     if (_running && boost::this_thread::get_id() != _id)
       qiLogError("Destroying EventLoopPrivate from itself while running");
     stop();
     join();
-
-  #ifdef _WIN32
-    // TODO handle return code
-    ::WSACleanup();
-  #endif
   }
 
-  void EventLoopLibEvent::destroy(bool join)
+  void EventLoopAsio::destroy(bool join)
   {
     bool needJoin;
     bool needDelete;
@@ -91,24 +60,13 @@ namespace qi {
       delete this;
   }
 
-  void EventLoopLibEvent::run()
+  void EventLoopAsio::run()
   {
     qiLogDebug("qi.EventLoop") << this << "run starting";
     _running = true;
     _id = boost::this_thread::get_id();
-    // stop will set _base to 0 to delect usage attempts after stop
-    // so use a local copy.
-    event_base* base = _base;
-    // libevent needs a dummy op to perform otherwise dispatch exits immediately
-    struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
-    //bufferevent_setcb(bev, NULL, NULL, ::qi::errorcb, this);
-    bufferevent_enable(bev, EV_READ|EV_WRITE);
-
-    event_base_dispatch(base);
-    qiLogDebug("qi.EventLoop") << this << "run ending";
-    bufferevent_free(bev);
-    event_base_free(base);
-    _base = 0;
+    boost::asio::io_service::work worker(_io);
+    _io.run();
     {
       boost::recursive_mutex::scoped_lock sl(_mutex);
       _running = false;
@@ -117,33 +75,20 @@ namespace qi {
     }
   }
 
-  bool EventLoopLibEvent::isInEventLoopThread()
+  bool EventLoopAsio::isInEventLoopThread()
   {
     return boost::this_thread::get_id() == _id;
   }
 
-  void EventLoopLibEvent::stop()
+  void EventLoopAsio::stop()
   {
     qiLogDebug("qi.EventLoop") << this << "stopping";
-    event_base* base = 0;
-    { // Ensure no multipe calls are made.
-      boost::recursive_mutex::scoped_lock sl(_mutex);
-      if (_base && _running)
-      {
-        base = _base;
-        _base = 0;
-      }
-    }
-    if (base)
-      if (event_base_loopexit(base, NULL) != 0)
-        qiLogError("networkThread") << "Can't stop the EventLoopPrivate";
-
+    _io.stop();
   }
 
-  void EventLoopLibEvent::join()
+  void EventLoopAsio::join()
   {
-    if (_base)
-      qiLogError("EventLoop") << "join() called before stop()";
+    _io.stop();
     if (boost::this_thread::get_id() == _id)
       return;
     if (_threaded)
@@ -153,146 +98,93 @@ namespace qi {
         qi::os::msleep(0);
   }
 
-  struct AsyncCallHandle
+  void EventLoopAsio::post(uint64_t usDelay, const boost::function<void ()>& cb)
   {
-    bool              cancelled;
-    event*            ev;
-    qi::Promise<void>  *result;
-    boost::function<void()> callback;
-  };
-
-  static void post(evutil_socket_t,
-    short what,
-    void *context)
-  {
-    boost::function<void()>* cb = (boost::function<void()>*)context;
-    (*cb)();
-    delete cb;
+    if (!usDelay)
+      _io.post(cb);
+    else
+      asyncCall(usDelay, cb);
   }
 
-  static void async_call(evutil_socket_t,
-    short what,
-    void *context)
+  static void invoke_maybe(boost::function<void()> f, qi::Promise<void> p, const boost::system::error_code& erc)
   {
-    boost::shared_ptr<AsyncCallHandle>* handlePtr
-      = (boost::shared_ptr<AsyncCallHandle>*)context;
-    AsyncCallHandle* handle = handlePtr->get();
-    assert(handle->result);
-    event_del(handle->ev);
-    if (!handle->cancelled)
+    if (!erc)
     {
-      handle->callback();
-      handle->result->setValue(0);
+      f();
+      p.setValue(0);
     }
     else
-      handle->result->setError("Cancelled");
-
-    event_free(handle->ev);
-    delete handle->result;
-    handle->result = 0;
-    delete handlePtr;
+      p.setError("Operation cancelled");
   }
 
-  static void fduse_call(evutil_socket_t socket,
-    short what,
-    void *context)
+  qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
-    EventLoop::AsyncCallHandle* handle = (EventLoop::AsyncCallHandle*)context;
-    if (!handle->_p->cancelled) {
-      if (what & EV_READ)
-        handle->_p->fdcallback(socket, EventLoop::FileOperation_Read);
-      else if (what & EV_WRITE)
-        handle->_p->fdcallback(socket, EventLoop::FileOperation_Write);
-      /// If this event is persistant and was not cancelled, do not delete.
-      if (handle->_p->persistant)
-        return;
-    }
-    event_del(handle->_p->ev);
-    event_free(handle->_p->ev);
-    delete handle;
-  }
-
-  void async_call_cancel(boost::shared_ptr<AsyncCallHandle> handle)
-  {
-    handle->cancelled = true;
-  }
-
-  void EventLoopLibEvent::post(uint64_t usDelay, boost::function<void ()> cb)
-  {
-    if (!_base) {
-      qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
-      return;
-    }
-    struct timeval period;
-    period.tv_sec = static_cast<long>(usDelay / 1000000ULL);
-    period.tv_usec = usDelay % 1000000ULL;
-    struct event *ev = event_new(_base, -1, 0, &::qi::post,
-      new boost::function<void()>(cb));
-    event_add(ev, &period);
-  }
-
-  qi::Future<void> EventLoopLibEvent::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
-  {
-    if (!_base) {
-      qiLogDebug("eventloop") << "Discarding asyncCall after loop destruction.";
-      return makeFutureError<void>("EventLoop destroyed");
-    }
-    boost::shared_ptr<AsyncCallHandle> h(new AsyncCallHandle());
-    /* The future will hold the AsyncCallHandle, bound in onCancel.
-      The future is also in the AsyncCallHandle
-      The AsyncCallHandle is passed by pointer to eventfd callback.
-      Once invoked, it will reset the future in AsyncCallHandle.
-      Then the last future will delete onCancel which will clear bound data
-    */
-    struct timeval period;
-    period.tv_sec = static_cast<long>(usDelay / 1000000ULL);
-    period.tv_usec = usDelay % 1000000ULL;
-    struct event *ev = event_new(_base, -1, 0, async_call,
-      new boost::shared_ptr<AsyncCallHandle>(h));
-    // Order is important.
-    h->ev = ev;
-    h->cancelled = false;
-    std::swap(h->callback,cb);
-    qi::Promise<void> prom(boost::bind(&async_call_cancel, h));
-    h->result = new qi::Promise<void>(prom);
-    event_add(ev, &period);
+    boost::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(_io));
+    timer->expires_from_now(boost::posix_time::microseconds(usDelay));
+    qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
+    timer->async_wait(boost::bind(&invoke_maybe, cb, prom, _1));
     return prom.future();
   }
 
-  EventLoop::AsyncCallHandle EventLoopLibEvent::notifyFd(int fd_, EventLoop::NotifyFdCallbackFunction cb,
+  void notify_fd_bounce(
+    const boost::system::error_code& erc,
+    EventLoop::FileOperation op, EventLoop::AsyncCallHandle h
+    )
+  {
+    if (!h._p->sd)
+      return; // Other callback destroyed the socket
+    if (h._p->cancelled && erc)
+    {
+      delete h._p->sd;
+      h._p->sd = 0;
+      return;
+    }
+    h._p->fdcallback(h._p->sd->native_handle(), op);
+    if (op == EventLoop::FileOperation_Read)
+    {
+      h._p->sd->async_read_some(
+          boost::asio::null_buffers(),
+          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Read, h)
+          );
+    }
+    else if (op == EventLoop::FileOperation_Write)
+    {
+       h._p->sd->async_write_some(
+          boost::asio::null_buffers(),
+          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Write, h)
+          );
+    }
+  }
+  EventLoop::AsyncCallHandle EventLoopAsio::notifyFd(int fd_, EventLoop::NotifyFdCallbackFunction cb,
     EventLoop::FileOperation fdUsage)
   {
-    evutil_socket_t fd =  static_cast<evutil_socket_t>(fd_);
-    short evflags = 0;
-    switch (fdUsage)
-    {
-    case EventLoop::FileOperation_Read: evflags = EV_READ; break;
-    case EventLoop::FileOperation_Write: evflags = EV_WRITE; break;
-    case EventLoop::FileOperation_ReadOrWrite: evflags = EV_READ | EV_WRITE; break;
-    }
-
+    // A posix fd should be able to handle everything but regular files,
+    // for which fd notification does not make sense anyway.
     EventLoop::AsyncCallHandle res;
-    if (!_base) {
-      qiLogDebug("eventloop") << "Discarding notifyChange after loop destruction.";
-      return res;
+    boost::asio::posix::stream_descriptor* sd = new boost::asio::posix::stream_descriptor(_io);
+    res._p->sd = sd;
+    res._p->fdcallback = cb;
+    sd->assign(fd_);
+    if (fdUsage & EventLoop::FileOperation_Read)
+    {
+      sd->async_read_some(
+          boost::asio::null_buffers(),
+          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Read, res)
+          );
     }
-    evflags |= EV_PERSIST;
-    struct event *ev = event_new(_base,
-                                 fd,
-                                 evflags,
-                                 fduse_call,
-                                 new EventLoop::AsyncCallHandle(res));
-    res._p->ev = ev;
-    res._p->cancelled = false;
-    res._p->persistant = true;
-    std::swap(res._p->fdcallback,cb);
-    event_add(ev, NULL);
+    if (fdUsage & EventLoop::FileOperation_Write)
+    {
+       sd->async_write_some(
+          boost::asio::null_buffers(),
+          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Write, res)
+          );
+    }
     return res;
   }
 
-  void* EventLoopLibEvent::nativeHandle()
+  void* EventLoopAsio::nativeHandle()
   {
-    return static_cast<void*>(_base);
+    return static_cast<void*>(&_io);
   }
 
   EventLoopThreadPool::EventLoopThreadPool(int minWorkers, int maxWorkers, int minIdleWorkers, int maxIdleWorkers)
@@ -393,7 +285,7 @@ namespace qi {
   }
 
   void EventLoopThreadPool::post(uint64_t usDelay,
-      boost::function<void ()> callback)
+      const boost::function<void ()>& callback)
   {
     _pool->schedule(boost::bind(&delay_call, usDelay, callback));
   }
@@ -458,7 +350,7 @@ namespace qi {
   {
     if (_p)
       return;
-    _p = new EventLoopLibEvent();
+    _p = new EventLoopAsio();
     _p->start();
   }
 
@@ -482,7 +374,7 @@ namespace qi {
   {
     if (_p)
       return;
-    _p = new EventLoopLibEvent();
+    _p = new EventLoopAsio();
     _p->run();
   }
 
@@ -491,7 +383,7 @@ namespace qi {
     return _p->nativeHandle();
   }
 
-  void EventLoop::post(boost::function<void ()> callback,uint64_t usDelay)
+  void EventLoop::post(const boost::function<void ()>& callback,uint64_t usDelay)
   {
     CHECK_STARTED;
     _p->post(usDelay, callback);

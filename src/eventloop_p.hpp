@@ -9,6 +9,8 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+
+#include <boost/asio.hpp>
 #include <qi/eventloop.hpp>
 
 namespace qi {
@@ -17,15 +19,9 @@ namespace qi {
   public:
     void cancel() { cancelled = true;}
     bool cancelled;
-    event* ev;
-    // Feature supported only in the case of fd monitoring.
-    // If true, callback will be called again and again.
-    // If false it will be called only once.
-    bool persistant;
-    // Callback used with asyncCall.
-    boost::function<void()> callback;
     // Callback used with notifyFd.
     EventLoop::NotifyFdCallbackFunction fdcallback;
+    boost::asio::posix::stream_descriptor* sd;
   };
 
   class EventLoopPrivate
@@ -38,7 +34,7 @@ namespace qi {
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
       boost::function<void ()> callback)=0;
     virtual void post(uint64_t usDelay,
-      boost::function<void ()> callback)=0;
+      const boost::function<void ()>& callback)=0;
     virtual EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)=0;
     virtual void destroy(bool join)=0;
@@ -48,10 +44,10 @@ namespace qi {
     virtual ~EventLoopPrivate() {}
   };
 
-  class EventLoopLibEvent: public EventLoopPrivate
+  class EventLoopAsio: public EventLoopPrivate
   {
   public:
-    EventLoopLibEvent();
+    EventLoopAsio();
     virtual bool isInEventLoopThread();
     virtual void start();
     virtual void run();
@@ -60,14 +56,14 @@ namespace qi {
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
       boost::function<void ()> callback);
     virtual void post(uint64_t usDelay,
-      boost::function<void ()> callback);
+      const boost::function<void ()>& callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
     virtual void destroy(bool join);
     virtual void* nativeHandle();
   private:
-    virtual ~EventLoopLibEvent();
-    struct event_base* _base;
+    virtual ~EventLoopAsio();
+    boost::asio::io_service _io;
     boost::thread      _thd;
     bool               _destroyMe;
     bool               _running;
@@ -89,7 +85,7 @@ namespace qi {
     virtual qi::Future<void>   asyncCall(uint64_t usDelay,
       boost::function<void ()> callback);
     virtual void post(uint64_t usDelay,
-      boost::function<void ()> callback);
+      const boost::function<void ()>& callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
     virtual void destroy(bool join);
