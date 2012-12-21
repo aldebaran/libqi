@@ -113,9 +113,9 @@ namespace qi
 
   GenericFunctionParameters GenericFunctionParameters::copy(bool notFirst) const
   {
-    GenericFunctionParameters result;
-    for (unsigned i = 0; i < size(); ++i)
-      result.push_back( (!i&&notFirst)? (*this)[i]:(*this)[i].clone());
+    GenericFunctionParameters result(*this);
+    for (unsigned i=notFirst?1:0; i<size(); ++i)
+      result[i] = result[i].clone();
     return result;
   }
 
