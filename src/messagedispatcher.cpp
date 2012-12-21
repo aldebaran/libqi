@@ -29,6 +29,8 @@ namespace qi {
   }
 #endif
 
+  const unsigned int MessageDispatcher::ALL_OBJECTS = -1;
+
   MessageDispatcher::MessageDispatcher()
   {
   }
@@ -49,27 +51,37 @@ namespace qi {
     {
       boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
       SignalMap::iterator it;
-      it = _signalMap.find(msg.service());
+      bool hit = false;
+      it = _signalMap.find(Target(msg.service(), msg.object()));
       if (it != _signalMap.end())
+      {
+        hit = true;
         it->second(msg);
-      else
+      }
+      it = _signalMap.find(Target(msg.service(), ALL_OBJECTS));
+      if (it != _signalMap.end())
+      {
+        hit = true;
+        it->second(msg);
+      }
+      if (!hit) // FIXME: that should probably never happen, raise log level
         qiLogDebug("messagedispatcher") << "No listener for service " << msg.service();
     }
   }
 
   qi::SignalBase::Link
-  MessageDispatcher::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
+  MessageDispatcher::messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
     boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-    qi::Signal<void (const qi::Message&)> &sig = _signalMap[serviceId];
+    qi::Signal<void (const qi::Message&)> &sig = _signalMap[Target(serviceId, objectId)];
     // Ensure calls will be asynchronous
     sig.setCallType(MetaCallType_Queued);
     return sig.connect(fun);
   }
 
-  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId) {
+  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
     boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
     SignalMap::iterator it;
-    it = _signalMap.find(serviceId);
+    it = _signalMap.find(Target(serviceId, objectId));
     if (it != _signalMap.end())
     {
       bool ok = it->second.disconnect(linkId);

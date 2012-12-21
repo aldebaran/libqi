@@ -53,8 +53,9 @@ namespace qi
     int     error() const;
     qi::Url url() const;
 
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun);
-    bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
+    static const unsigned int ALL_OBJECTS = (unsigned int)-1;
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
+    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId);
 
   public:
     // C4251

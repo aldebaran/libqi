@@ -77,13 +77,17 @@ namespace qi {
     if (socket == _socket)
       return;
     if (_socket) {
-      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+      _socket->messagePendingDisconnect(_service,
+        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
+        _linkMessageDispatcher);
       _socket->disconnected.disconnect(_linkDisconnected);
     }
     _socket = socket;
     //do not set the socket on the remote object
     if (socket) {
-      _linkMessageDispatcher = _socket->messagePendingConnect(_service, boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
+      _linkMessageDispatcher = _socket->messagePendingConnect(_service, 
+        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
+        boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (boost::bind<void>(&RemoteObject::onSocketDisconnected, this, _1));
     }
   }
@@ -335,7 +339,9 @@ namespace qi {
 
   void RemoteObject::close() {
     if (_socket) {
-      _socket->messagePendingDisconnect(_service, _linkMessageDispatcher);
+      _socket->messagePendingDisconnect(_service,
+        _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
+        _linkMessageDispatcher);
       _socket->disconnected.disconnect(_linkDisconnected);
     }
   }

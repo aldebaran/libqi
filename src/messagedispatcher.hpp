@@ -37,12 +37,13 @@ namespace qi {
     void dispatch(const qi::Message& msg);
     void cleanPendingMessages();
 
-    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun);
-    bool                 messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId);
-
+    static const unsigned int ALL_OBJECTS;
+    qi::SignalBase::Link messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
+    bool                 messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId);
 
   public:
-    typedef std::map< unsigned int, qi::Signal<void (const qi::Message&)> > SignalMap;
+    typedef std::pair<unsigned int, unsigned int> Target;
+    typedef std::map<Target, qi::Signal<void (const qi::Message&)> > SignalMap;
     typedef std::map<unsigned int, MessageAddress>                   MessageSentMap;
 
     SignalMap              _signalMap;

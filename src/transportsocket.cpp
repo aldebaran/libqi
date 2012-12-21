@@ -69,12 +69,12 @@ namespace qi
     return _p->_status == qi::TransportSocket::Status_Connected;
   }
 
-  qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
-    return _p->_dispatcher.messagePendingConnect(serviceId, fun);
+  qi::SignalBase::Link TransportSocket::messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
+    return _p->_dispatcher.messagePendingConnect(serviceId, objectId, fun);
   }
 
-  bool                 TransportSocket::messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId) {
-    return _p->_dispatcher.messagePendingDisconnect(serviceId, linkId);
+  bool                 TransportSocket::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalBase::Link linkId) {
+    return _p->_dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
   }
 
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {
