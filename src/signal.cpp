@@ -114,10 +114,10 @@ namespace qi {
   class FunctorCall
   {
   public:
-    FunctorCall(GenericFunctionParameters& params, SignalSubscriberPtr sub)
-    : sub(sub)
+    FunctorCall(GenericFunctionParameters* params, SignalSubscriberPtr* sub)
+    : params(params)
+    , sub(sub)
     {
-      std::swap((std::vector<GenericValuePtr>&)this->params, (std::vector<GenericValuePtr>&)params);
     }
 
     FunctorCall(const FunctorCall& b)
@@ -127,30 +127,38 @@ namespace qi {
 
     void operator=(const FunctorCall& b)
     {
-      std::swap((std::vector<GenericValuePtr>&)(this->params),
-        (std::vector<GenericValuePtr>&)b.params);
+      params = b.params;
       sub = b.sub;
     }
 
     void operator() ()
     {
       {
-        boost::mutex::scoped_lock sl(sub->mutex);
+        SignalSubscriberPtr s;
+        boost::mutex::scoped_lock sl((*sub)->mutex);
         // verify-enabled-then-register-active op must be locked
-        if (!sub->enabled)
+        if (!(*sub)->enabled)
+        {
+          s = *sub; // delay destruction until after we leave the scoped_lock
+          delete sub;
+          params->destroy();
+          delete params;
           return;
-        sub->addActive(false);
+        }
+        (*sub)->addActive(false);
       }
-      sub->handler(params);
-      sub->removeActive(true);
-      params.destroy();
-      if (sub->weakLock)
-        sub->weakLock->unlock();
+      (*sub)->handler(*params);
+      (*sub)->removeActive(true);
+      params->destroy();
+      delete params;
+      if ((*sub)->weakLock)
+        (*sub)->weakLock->unlock();
+      delete sub;
     }
 
   public:
-    GenericFunctionParameters params;
-    SignalSubscriberPtr         sub;
+    GenericFunctionParameters* params;
+    SignalSubscriberPtr*         sub;
   };
 
   void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
@@ -177,11 +185,11 @@ namespace qi {
       qiLogDebug("qi.Signal") << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
       if (async)
       {
-        GenericFunctionParameters copy = args.copy();
+        GenericFunctionParameters* copy = new GenericFunctionParameters(args.copy());
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
-        getDefaultThreadPoolEventLoop()->post(FunctorCall(copy, shared_from_this()));
+        getDefaultThreadPoolEventLoop()->post(FunctorCall(copy, new SignalSubscriberPtr(shared_from_this())));
       }
       else
       {
