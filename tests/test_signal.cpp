@@ -25,7 +25,7 @@ public:
 void foo(int *r, int, int)     { *r += 1; }
 void foo2(int *r, char, char)  { *r += 1; }
 void foo3(int *r, Foo *)       { *r += 1; }
-void foolast(int, qi::Promise<void> prom) { prom.setValue(0); }
+void foolast(int, qi::Promise<void> prom, int* r) { prom.setValue(0); *r += 1;}
 
 
 TEST(TestSignal, TestCompilation)
@@ -44,17 +44,17 @@ TEST(TestSignal, TestCompilation)
   s.connect(boost::bind<void>(&Foo::func1, f, &res, _1));
   s.connect(boost::bind<void>(&Foo::func2, f, &res, 5, _1));
   s.connect(boost::bind(&foo3, &res, f));
-  s.connect(boost::bind(&foolast, _1, prom));
+  s.connect(boost::bind(&foolast, _1, prom, &res));
 
   s(42);
   int timeout = 1000;
   while (timeout > 0) {
     qi::os::msleep(1);
-    if (res == 5)
+    if (res == 6)
       break;
     timeout -= 1;
   }
-  ASSERT_EQ(5, res);
+  ASSERT_EQ(6, res);
   ASSERT_TRUE(prom.future().isReady());
   ASSERT_FALSE(prom.future().hasError());
 }
