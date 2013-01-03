@@ -676,7 +676,8 @@ TEST(TestCall, TestObjectPassing)
   unregisteredObj.reset();
   unregisteredObj = unregisteredWeakObj.lock();
   ASSERT_TRUE(unregisteredObj);
-
+  if (p.client() == p.server())
+    return; // test makes no sense in direct mode
   // This will delete the proxy
   unregisteredObj->emitEvent("fire", 0);
   eventValue.future().wait();
@@ -758,7 +759,8 @@ TEST(TestCall, TestObjectPassingReturn)
   qi::ObjectPtr adder = proxy->call<qi::ObjectPtr>("makeAdder");
   ASSERT_TRUE(weak.lock());
   // One is client side, the other server side
-  ASSERT_FALSE(weak.lock().get() == adder.get());
+  if (p.client() != p.server())
+    ASSERT_FALSE(weak.lock().get() == adder.get());
   ASSERT_TRUE(adder);
   qi::Future<int> f = adder->call<int>("add", 41);
   f.wait(1000);
