@@ -58,7 +58,7 @@ class GenericObject:
             innerfunc.__name__ = name
             innerfunc.__doc__ = "Docstring of %s" % name
             innerfunc.__signatures__ = signatures
-            innerfunc.__sigreturn__ = _qim.qi_get_sigreturn(self._obj, name)
+            innerfunc.__sigreturns__ = _qim.qi_get_sigreturn(self._obj, name).split(',')
             return innerfunc
 
         if qi_object is None:
