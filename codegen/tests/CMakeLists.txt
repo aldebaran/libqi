@@ -23,7 +23,7 @@ set(skel ${CMAKE_CURRENT_BINARY_DIR}/simpleservice/simpleservice-service.skel)
 execute_process(COMMAND
   ${_python_executable} ${CMAKE_CURRENT_SOURCE_DIR}/../src/idl.py
   ${CMAKE_CURRENT_SOURCE_DIR}/simpleservice/simpleservice.idl
-  -m cxxservice
+  -m cxxserviceregister
   -o ${skel}
 )
 
