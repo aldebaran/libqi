@@ -139,7 +139,7 @@ namespace qi {
       h._p->sd = 0;
       return;
     }
-    h._p->fdcallback(h._p->sd->native_handle(), op);
+    h._p->fdcallback((int)h._p->sd->native_handle(), op);
     if (op == EventLoop::FileOperation_Read)
     {
       h._p->sd->async_read_some(
