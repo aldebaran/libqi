@@ -439,4 +439,47 @@ for i in range(0, 10):
 #define _QI_IS_ONE_OR_EMPTY(a) \
   QI_OR(_QI_IS_EMPTY(a), _QI_IS_ONE(a))
 
+
+#define _QI_GEN_ARGTYPE(z,n,_) BOOST_PP_COMMA_IF(n) P ## n
+#define _QI_GEN_ARGDECL(z,n,_) BOOST_PP_COMMA_IF(n) P ## n p##n
+#define _QI_GEN_ARGDECLSAMETYPE(z,n,t) BOOST_PP_COMMA_IF(n) t p##n
+#define _QI_GEN_ARGUSE(z,n,_) BOOST_PP_COMMA_IF(n) p##n
+#define _QI_GEN_ARGTYPEDECL(z, n, _) BOOST_PP_COMMA_IF(n) typename P##n
+
+#define _QI_GEN_PREPOST(z, n, prepost) BOOST_PP_CAT(BOOST_PP_SEQ_ELEM(0, prepost), n) BOOST_PP_SEQ_ELEM(1, prepost)
+#define _QI_GEN_PREPOST2(z, n, prepost) BOOST_PP_CAT(BOOST_PP_SEQ_ELEM(0, prepost), n) BOOST_PP_CAT(BOOST_PP_SEQ_ELEM(1, prepost), n) BOOST_PP_SEQ_ELEM(2, prepost)
+
+// pre 0 post pre 1 post pre 2 post...
+#define QI_GEN_PREPOST(n, pre, post)  BOOST_PP_REPEAT(n, _QI_GEN_PREPOST, (pre)(post))
+// pre 0 mid 0 post pre 1 mid 1 post ...
+#define QI_GEN_PREPOST2(n, pre, mid, post)  BOOST_PP_REPEAT(n, _QI_GEN_PREPOST2, (pre)(mid)(post))
+// P0, P1, ...
+#define QI_GEN_ARGSTYPE(n) BOOST_PP_REPEAT(n, _QI_GEN_ARGTYPE, _)
+// P0 p0, P1 p1, ...
+#define QI_GEN_ARGSDECL(n) BOOST_PP_REPEAT(n, _QI_GEN_ARGDECL, _)
+// p0, p1, p2 ...
+#define QI_GEN_ARGSUSE(n) BOOST_PP_REPEAT(n, _QI_GEN_ARGUSE, _)
+// typename P0, typename P1...
+#define QI_GEN_ARGSTYPEDECL(n) BOOST_PP_REPEAT(n, _QI_GEN_ARGTYPEDECL, _)
+// t p0, t p1...
+#define QI_GEN_ARGSDECLSAMETYPE(n, t) BOOST_PP_REPEAT(n, _QI_GEN_ARGDECLSAMETYPE, t)
+
+
+#define _QI_GEN(z, n, f) f(n, QI_GEN_ARGSTYPEDECL(n), QI_GEN_ARGSTYPE(n), QI_GEN_ARGSDECL(n), QI_GEN_ARGSUSE(n), BOOST_PP_COMMA_IF(n))
+
+// invoke f(n, argtypedecl, argstype, argsdecl, argsuses, comma_or_empty) for n in [0, 10]
+#define QI_GEN(f) BOOST_PP_REPEAT(10, _QI_GEN, f)
+
+// Return i+1 as a symbol
+#define QI_GEN_SYMINC(i) BOOST_PP_CAT(_QI_GEN_SYMINC_, i)
+#define _QI_GEN_SYMINC_9 10
+#define _QI_GEN_SYMINC_8 9
+#define _QI_GEN_SYMINC_7 8
+#define _QI_GEN_SYMINC_6 7
+#define _QI_GEN_SYMINC_5 6
+#define _QI_GEN_SYMINC_4 5
+#define _QI_GEN_SYMINC_3 4
+#define _QI_GEN_SYMINC_2 3
+#define _QI_GEN_SYMINC_1 2
+#define _QI_GEN_SYMINC_0 1
 #endif
