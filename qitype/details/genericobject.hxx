@@ -70,41 +70,37 @@ namespace qi {
       Manageable::moveToEventLoop(eventLoop);
   }
 
-  template<typename R>
-  qi::FutureSync<R> GenericObject::call(const std::string& methodName,
-    qi::AutoGenericValuePtr p1,
-      qi::AutoGenericValuePtr p2,
-      qi::AutoGenericValuePtr p3,
-      qi::AutoGenericValuePtr p4,
-      qi::AutoGenericValuePtr p5,
-      qi::AutoGenericValuePtr p6,
-      qi::AutoGenericValuePtr p7,
-      qi::AutoGenericValuePtr p8)
-  {
-    qi::Promise<R> res;
-    if (!value || !type) {
-      res.setError("Invalid GenericObject");
-      return res.future();
-    }
-    qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
-    std::vector<qi::GenericValuePtr> params;
-    for (unsigned i=0; i<8; ++i)
-      if (vals[i]->type) // 0 is a perfectly legal value
-        params.push_back(*vals[i]);
-
-    // Signature construction
-    std::string signature = methodName + "::(";
-    for (unsigned i=0; i< params.size(); ++i)
-      signature += params[i].signature();
-    signature += ")";
-    std::string sigret;
-
-    // Future adaptation
-    qi::Future<qi::GenericValuePtr> fmeta = metaCall(signature, params);
-    fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));
-
-    return res.future();
+  /* Generate qi::FutureSync<R> GenericObject::call(methodname, args...)
+   * for all argument counts
+   * The function packs arguments in a vector<GenericValuePtr>, computes the
+   * signature and bounce those to metaCall.
+   */
+  #define pushi(z, n,_) params.push_back(p ## n);
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+  template<typename R> qi::FutureSync<R> GenericObject::call(             \
+      const std::string& methodName       comma                           \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr))             \
+  {                                                                        \
+     if (!value || !type) {                                                \
+      return makeFutureError<R>("Invalid GenericObject");                  \
+     }                                                                     \
+     std::vector<qi::GenericValuePtr> params;                              \
+     params.reserve(n);                                                    \
+     BOOST_PP_REPEAT(n, pushi, _)                                          \
+     std::string signature = methodName + "::(";                           \
+     for (unsigned i=0; i< params.size(); ++i)                             \
+       signature += params[i].signature();                                 \
+     signature += ")";                                                     \
+     std::string sigret;                                                   \
+     qi::Promise<R> res;                                                   \
+     qi::Future<GenericValuePtr> fmeta = metaCall(signature, params);      \
+     fmeta.connect(boost::bind<void>(&detail::futureAdapter<R>, _1, res));  \
+     return res.future();                                                  \
   }
+
+  QI_GEN(genCall)
+  #undef genCall
+  #undef pushi
 
   /* An ObjectPtr is actually of a Dynamic type: The underlying Type*
    * is not allways the same.

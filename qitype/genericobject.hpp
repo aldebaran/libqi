@@ -70,15 +70,29 @@ namespace qi {
     GenericObject(ObjectType *type, void *value);
     ~GenericObject();
     const MetaObject &metaObject();
-    template <typename RETURN_TYPE> qi::FutureSync<RETURN_TYPE> call(const std::string& methodName,
-      qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
-      qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+
+#ifdef DOXYGEN
+  // Help doxygen and the header reader a bit.
+  template<typename R>
+  qi::FutureSync<R> call(
+                         const std::string& eventName,
+                         qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p3 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p4 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p5 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p6 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p7 = qi::AutoGenericValuePtr(),
+                         qi::AutoGenericValuePtr p8 = qi::AutoGenericValuePtr());
+#else
+    // Declare genCall, using overloads for all argument count instead of default values.
+    #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma) \
+    template<typename R> qi::FutureSync<R> call(  \
+      const std::string& methodName comma              \
+      QI_GEN_ARGSDECLSAMETYPE(n, qi::AutoGenericValuePtr));
+    QI_GEN(genCall)
+    #undef genCall
+#endif // DOXYGEN
 
     qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     /// Resolve the method Id and bounces to metaCall
