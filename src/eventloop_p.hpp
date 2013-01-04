@@ -21,7 +21,9 @@ namespace qi {
     bool cancelled;
     // Callback used with notifyFd.
 #ifdef _WIN32
-    typedef boost::asio::windows::stream_handle Stream;
+    // Assume it is a socket under WIN32, no way to poll
+    // a generic descriptor.
+    typedef boost::asio::ip::tcp::socket Stream;
 #else
     typedef boost::asio::posix::stream_descriptor Stream;
 #endif
