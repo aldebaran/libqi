@@ -164,7 +164,11 @@ namespace qi {
     AsyncCallHandlePrivate::Stream* sd = new AsyncCallHandlePrivate::Stream(_io);
     res._p->sd = sd;
     res._p->fdcallback = cb;
-    sd->assign((AsyncCallHandlePrivate::Stream::native_handle_type) fd_);
+    sd->assign(
+#ifdef _WIN32
+      boost::asio::ip::tcp::v4(),
+#endif
+      (AsyncCallHandlePrivate::Stream::native_handle_type) fd_);
     if (fdUsage & EventLoop::FileOperation_Read)
     {
       sd->async_read_some(
