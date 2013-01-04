@@ -161,10 +161,10 @@ namespace qi {
     // A posix fd should be able to handle everything but regular files,
     // for which fd notification does not make sense anyway.
     EventLoop::AsyncCallHandle res;
-    boost::asio::posix::stream_descriptor* sd = new boost::asio::posix::stream_descriptor(_io);
+    AsyncCallHandlePrivate::Stream* sd = new AsyncCallHandlePrivate::Stream(_io);
     res._p->sd = sd;
     res._p->fdcallback = cb;
-    sd->assign(fd_);
+    sd->assign((AsyncCallHandlePrivate::Stream::native_handle_type) fd_);
     if (fdUsage & EventLoop::FileOperation_Read)
     {
       sd->async_read_some(

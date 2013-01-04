@@ -20,8 +20,13 @@ namespace qi {
     void cancel() { cancelled = true;}
     bool cancelled;
     // Callback used with notifyFd.
+#ifdef _WIN32
+    typedef boost::asio::windows::stream_handle Stream;
+#else
+    typedef boost::asio::posix::stream_descriptor Stream;
+#endif
     EventLoop::NotifyFdCallbackFunction fdcallback;
-    boost::asio::posix::stream_descriptor* sd;
+    Stream* sd;
   };
 
   class EventLoopPrivate
