@@ -12,6 +12,7 @@
 
 #include <qi/qi.hpp>
 #include <qi/application.hpp>
+#include <qi/eventloop.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
@@ -487,6 +488,29 @@ TEST(TestCall, TestGenericConversionTuple) {
 }
 
 
+void set_true(bool* b)
+{
+  *b = true;
+}
+
+TEST(TestEventLoop, MonitorEventLoop)
+{
+  TestSessionPair p;
+  bool loopStuck = false;
+  qi::Future<void> f = qi::getDefaultObjectEventLoop()->monitorEventLoop(qi::getDefaultNetworkEventLoop(), 100000);
+  f.connect(boost::bind(&set_true, &loopStuck));
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("delay", &qi::os::msleep);
+  qi::ObjectPtr obj(ob.object());
+  p.server()->registerService("delayer", obj);
+  qi::ObjectPtr proxy = p.client()->service("delayer");
+  ASSERT_TRUE(!loopStuck);
+  proxy->call<void>("delay", 1000).wait();
+  ASSERT_TRUE(loopStuck);
+  qiLogDebug("qi.test") << "Cancelling monitorEventLoop";
+  f.cancel(); // or eventloops will get stuck
+  qiLogDebug("qi.test") << "Cancelling monitorEventLoop done";
+}
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);
