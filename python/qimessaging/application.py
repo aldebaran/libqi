@@ -50,3 +50,19 @@ class Application:
         """ Do nothing.
         Application must be released after everything else anyway.
         """
+
+    @staticmethod
+    def initialized():
+        return _qimessagingswig.qi_application_initialized()
+
+
+class MissingApplicationError(Exception):
+    def __init__(self, feature=None):
+        self._feature = feature
+
+    def __str__(self):
+        msg = []
+        if self._feature is not None:
+            msg.append('%s feature needs an Application to work.' % self._feature)
+        msg.append('You must create an Application.')
+        return ' '.join(msg)

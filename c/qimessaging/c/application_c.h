@@ -23,6 +23,7 @@ extern "C"
   QIMESSAGING_API void              qi_application_destroy(qi_application_t *app);
   QIMESSAGING_API void              qi_application_run(qi_application_t *app);
   QIMESSAGING_API void              qi_application_stop(qi_application_t *app);
+  QIMESSAGING_API bool              qi_application_initialized();
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,9 @@
 
 import time
 import sys
-from qimessagingswig import *
+
+import qimessaging.application as qima
+import qimessaging.signal as qims
 
 class subscriber:
   def __init__(self):
@@ -31,10 +33,10 @@ class subscriber:
 
 def test_signal():
   print "\nInit..."
-  app = py_application_create(sys.argv)
+  app = qima.Application()
   sub1 = subscriber()
   sub2 = subscriber()
-  mysignal = qi_signal()
+  mysignal = qims.Signal()
 
   print "\nTest #1 : Multiple subscribers to signal"
   callback = sub1.callback
@@ -82,9 +84,6 @@ def test_signal():
   sub2.done = False
   mysignal.trigger(42, "hey", "a", 0.42, (0,1))
   sub1.wait()
-
-  print "\nCleanup..."
-  qi_application_destroy(app)
 
 if __name__ == "__main__":
   test_signal()

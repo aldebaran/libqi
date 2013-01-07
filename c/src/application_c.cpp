@@ -36,3 +36,8 @@ void              qi_application_stop(qi_application_t *application)
 
   app->stop();
 }
+
+bool qi_application_initialized()
+{
+    return qi::Application::initialized();
+}
