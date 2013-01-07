@@ -13,9 +13,15 @@
 
 namespace qi {
 
+  /** Specifies how a call should be made.
+   *  Can be used at both call-site, and callback-registration site.
+   */
   enum MetaCallType {
+    /// Honor the default behavior
     MetaCallType_Auto   = 0,
+    /// Force a synchronous call
     MetaCallType_Direct = 1,
+    /// Force an asynchronous call in an other thread
     MetaCallType_Queued = 2,
   };
   class SignalSubscriber;

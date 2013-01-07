@@ -120,7 +120,7 @@ namespace qi {
      */
     template <typename FUNCTOR_TYPE>
     qi::FutureSync<unsigned int> connect(const std::string& eventName, FUNCTOR_TYPE callback,
-                         EventLoop* ctx = getDefaultObjectEventLoop());
+                         MetaCallType threadingModel = MetaCallType_Direct);
 
 
     qi::FutureSync<unsigned int> xConnect(const std::string &signature, const SignalSubscriber& functor);
@@ -149,15 +149,30 @@ namespace qi {
   template <typename FUNCTION_TYPE>
   qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,
                                                       FUNCTION_TYPE callback,
-                                                      EventLoop* ctx)
+                                                      MetaCallType model)
   {
     return xConnect(eventName + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      SignalSubscriber(makeGenericFunction(callback), ctx));
+      SignalSubscriber(makeGenericFunction(callback), model));
   }
 
 
+  /** Make a call honoring ThreadingModel requirements
+   *
+   * Check the following rules in order:
+   * - If \p el is set, force call in it overriding all rules.
+   * - If method type is not auto, honor it, overriding callType
+   * - If callType is set (not auto), honor it.
+   * - Be synchronous.
+   *
+   * When the call is finally made, if ObjectThreadingModel
+   * is SingleThread, acquire the object lock.
+  */
  QITYPE_API qi::Future<GenericValuePtr> metaCall(EventLoop* el,
-    GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst=false);
+    ObjectThreadingModel objectThreadingModel,
+    MetaCallType methodThreadingModel,
+    MetaCallType callType,
+    Manageable::TimedMutexPtr objectLock,
+    GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
 }
 

@@ -12,6 +12,8 @@
 
 #include <qitype/functiontype.hpp>
 #include <qitype/functiontypefactory.hpp>
+#include <qitype/typeobject.hpp>
+#include <qitype/manageable.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -47,10 +49,10 @@ namespace qi {
     typedef unsigned int Link;
 
     template<typename FUNCTION_TYPE>
-    SignalSubscriber& connect(FUNCTION_TYPE f, EventLoop* ctx = getDefaultObjectEventLoop());
+    SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Direct);
 
     SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot);
-    SignalSubscriber& connect(GenericFunction callback, EventLoop* ctx = getDefaultObjectEventLoop());
+    SignalSubscriber& connect(GenericFunction callback, MetaCallType model=MetaCallType_Direct);
     SignalSubscriber& connect(const SignalSubscriber& s);
 
     bool disconnectAll();
@@ -61,7 +63,18 @@ namespace qi {
      */
     bool disconnect(const Link& link);
 
-    void trigger(const GenericFunctionParameters& params);
+    /** Trigger the signal with given type-erased parameters.
+    * @param params the signal arguments
+    * @param callType specify how to invoke subscribers.
+    *        Used in combination with each subscriber's MetaCallType to
+    *        chose between synchronous and asynchronous call.
+    *        The combination rule is to honor subscriber's override, then \p callType,
+    *        and default to asynchronous
+    */
+    void trigger(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    /// Set the MetaCallType used by operator()().
+    void setCallType(MetaCallType callType);
+    /// Trigger the signal with given arguments, and call type set by setCallType()
     void operator()(
       qi::AutoGenericValuePtr p1 = qi::AutoGenericValuePtr(),
       qi::AutoGenericValuePtr p2 = qi::AutoGenericValuePtr(),
@@ -80,9 +93,9 @@ namespace qi {
   };
 
   template<typename FUNCTION_TYPE>
-  inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, EventLoop* ctx)
+  inline SignalSubscriber& SignalBase::connect(FUNCTION_TYPE  callback, MetaCallType model)
   {
-    return connect(makeGenericFunction(callback), ctx);
+    return connect(makeGenericFunction(callback), model);
   }
 
   template<typename T>
@@ -95,13 +108,13 @@ namespace qi {
     virtual std::string signature() const;
     using boost::function<T>::operator();
 
-    inline SignalSubscriber& connect(boost::function<T> f, EventLoop* ctx=getDefaultObjectEventLoop())
+    inline SignalSubscriber& connect(boost::function<T> f, MetaCallType model=MetaCallType_Direct)
     {
-      return SignalBase::connect(f, ctx);
+      return SignalBase::connect(f, model);
     }
-    inline SignalSubscriber& connect(GenericFunction f, EventLoop* ctx=getDefaultObjectEventLoop())
+    inline SignalSubscriber& connect(GenericFunction f, MetaCallType model=MetaCallType_Direct)
     {
-      return SignalBase::connect(f, ctx);
+      return SignalBase::connect(f, model);
     }
     /// Auto-disconnects on target destruction
     inline SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot)
@@ -110,9 +123,9 @@ namespace qi {
     }
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
-    inline SignalSubscriber& connect(O* target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
+    inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Direct);
     template<typename O, typename MF>
-    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, EventLoop* ctx=getDefaultObjectEventLoop());
+    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, MetaCallType model=MetaCallType_Direct);
   };
 
   namespace detail
@@ -140,15 +153,15 @@ namespace qi {
      : source(0), linkId(SignalBase::invalidLink), weakLock(0), target(0), method(0), enabled(true)
    {}
 
-   SignalSubscriber(GenericFunction func, EventLoop* ctx = getDefaultObjectEventLoop(), detail::WeakLock* lock = 0);
+   SignalSubscriber(GenericFunction func, MetaCallType model=MetaCallType_Direct, detail::WeakLock* lock = 0);
 
    SignalSubscriber(qi::ObjectPtr target, unsigned int method);
 
    template<typename O, typename MF>
-   SignalSubscriber(O* ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+   SignalSubscriber(O* ptr, MF function, MetaCallType model=MetaCallType_Direct);
 
    template<typename O, typename MF>
-   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, EventLoop* ctx = getDefaultObjectEventLoop());
+   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, MetaCallType model=MetaCallType_Direct);
 
    SignalSubscriber(const SignalSubscriber& b);
 
@@ -156,7 +169,13 @@ namespace qi {
 
    void operator = (const SignalSubscriber& b);
 
-   void call(const GenericFunctionParameters& args);
+   /* Perform the call.
+    * Threading rules in order:
+    * - Honor threadingModel if set (not auto)
+    * - Honor callTypoe if set (not auto)
+    * - Be asynchronous
+    */
+   void call(const GenericFunctionParameters& args, MetaCallType callType);
 
    //wait till all threads are inactive except the current thread.
    void waitForInactive();
@@ -177,7 +196,7 @@ namespace qi {
    //   Mode 1: Direct functor call
    GenericFunction      handler;
    detail::WeakLock*    weakLock; // try to acquire weakLocker, disconnect if cant
-   boost::function<EventLoop*(void)> eventLoopGetter;
+   MetaCallType threadingModel;
 
    //  Mode 2: metaCall
    ObjectWeakPtr*       target;

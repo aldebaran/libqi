@@ -339,8 +339,7 @@ TEST(TestObject, ObjectTypeBuilder)
   Adder a2(2);
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
-  oa1->moveToEventLoop(0);
-  ASSERT_TRUE(!oa1->eventLoop()); // test sync call
+  ASSERT_TRUE(!oa1->eventLoop()); // no eventloop override
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));
@@ -368,24 +367,23 @@ public:
   MAdder(int i ) : Adder(i) {}
 };
 
-TEST(TestObject, ObjectTypeBuilderManageable)
+TEST(TestObject, ObjectTypeBuilderAsync)
 {
   // We test both async calls, and calling methods with inherited argument type
   qi::ObjectTypeBuilder<MAdder> builder;
   builder.inherits<Adder>();
-  builder.advertiseMethod("add", &Adder::add);
-  builder.advertiseMethod("addTwo", &Adder::addTwo);
-  builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef);
-  builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef);
-  builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr);
-  builder.advertiseMethod("addAdderByConstPtr", &Adder::addAdderByConstPtr);
-  builder.advertiseMethod("increment", &Adder::increment);
-  builder.advertiseMethod("increment2", &Incrementer::increment);
+  builder.advertiseMethod("add", &Adder::add, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addTwo", &Adder::addTwo, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addAdderByRef", &Adder::addAdderByRef, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addAdderByConstRef", &Adder::addAdderByConstRef, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addAdderByPtr", &Adder::addAdderByPtr, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addAdderByConstPtr", &Adder::addAdderByConstPtr, qi::MetaCallType_Queued);
+  builder.advertiseMethod("increment", &Adder::increment, qi::MetaCallType_Queued);
+  builder.advertiseMethod("increment2", &Incrementer::increment, qi::MetaCallType_Queued);
   MAdder a1(1);
   MAdder a2(2);
   qi::ObjectPtr oa1 = builder.object(&a1);
   qi::ObjectPtr oa2 = builder.object(&a2);
-  ASSERT_TRUE(oa1->eventLoop() != 0); // object manageable
   ASSERT_EQ(2, oa1->call<int>("add", 1));
   ASSERT_EQ(3, oa2->call<int>("add", 1));
   ASSERT_EQ(5, oa1->call<int>("addTwo", 3, 2));

@@ -37,7 +37,9 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   }
 
   EventLoop* el = context->eventLoop();
-  GenericMethod method = i->second;
+  MetaCallType methodThreadingModel = i->second.second;
+
+  GenericMethod method = i->second.first;
   GenericValuePtr self;
   self.type = this;
   self.value = instance;
@@ -46,7 +48,7 @@ StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int
   p2.push_back(self);
   p2.insert(p2.end(), params.begin(), params.end());
 
-  return ::qi::metaCall(el, method.toGenericFunction(), p2, callType, true);
+  return ::qi::metaCall(el, _data.threadingModel, methodThreadingModel, callType, context->mutex(), method.toGenericFunction(), p2, true);
 }
 
 static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)

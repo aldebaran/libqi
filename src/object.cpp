@@ -18,10 +18,15 @@ namespace qi {
   GenericObject::~GenericObject() {
   }
 
+  ManageablePrivate::ManageablePrivate()
+  : objectMutex(new boost::timed_mutex)
+  {
+  }
+
   Manageable::Manageable()
   {
     _p = new ManageablePrivate();
-    _p->eventLoop = getDefaultObjectEventLoop();
+    _p->eventLoop = 0;
     _p->dying = false;
   }
 
@@ -55,7 +60,7 @@ namespace qi {
     delete _p;
   }
 
-  void Manageable::moveToEventLoop(EventLoop* el)
+  void Manageable::forceEventLoop(EventLoop* el)
   {
     _p->eventLoop = el;
   }
@@ -63,6 +68,11 @@ namespace qi {
   EventLoop* Manageable::eventLoop() const
   {
     return _p->eventLoop;
+  }
+
+  Manageable::TimedMutexPtr Manageable::mutex()
+  {
+    return _p->objectMutex;
   }
 
   const MetaObject &GenericObject::metaObject() {

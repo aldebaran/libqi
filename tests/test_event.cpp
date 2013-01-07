@@ -24,7 +24,7 @@ TEST(TestObject, Simple)
   ob.advertiseEvent<void (*)(int)>("fire");
   qi::ObjectPtr obj(ob.object());
   EXPECT_EQ(1U, obj->metaObject().signalMap().size());
-  int linkId = obj->connect("fire", &onFire, 0);
+  int linkId = obj->connect("fire", &onFire);
   obj->emitEvent("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000));
   EXPECT_EQ(42, lastPayload);
@@ -45,7 +45,7 @@ TEST(TestObject, ConnectBind)
   ob.advertiseEvent<void (*)(int)>("fire");
   ob.advertiseEvent<void (*)(int, int)>("fire2");
   qi::ObjectPtr obj(ob.object());
-  int link = obj->connect("fire", boost::bind<void>(&onFire, _1), 0);
+  int link = obj->connect("fire", boost::bind<void>(&onFire, _1));
   obj->emitEvent("fire", 42);
   EXPECT_TRUE(pPayload.future().wait(2000));
   EXPECT_EQ(42, lastPayload);
@@ -55,7 +55,7 @@ TEST(TestObject, ConnectBind)
       obj->connect("fire", boost::bind<void>(&onFire, 51)).value();
   });
 
-  link = obj->connect("fire2", boost::bind(&onFire, _2), 0);
+  link = obj->connect("fire2", boost::bind(&onFire, _2));
   EXPECT_TRUE(link != 0);
   pPayload.reset();
   obj->emitEvent("fire2", 40, 41);

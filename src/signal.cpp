@@ -18,15 +18,15 @@
 namespace qi {
 
   SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
-  : weakLock(0), target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
-  {}
+  : weakLock(0), threadingModel(MetaCallType_Direct),  target(new qi::ObjectWeakPtr(target)), method(method), enabled(true)
+  { // The slot has its own threading model: be synchronous
+  }
 
 
 
-  SignalSubscriber::SignalSubscriber(GenericFunction func, EventLoop* ctx, detail::WeakLock* lock)
-     : handler(func), weakLock(lock), target(0), method(0), enabled(true)
+  SignalSubscriber::SignalSubscriber(GenericFunction func, MetaCallType model, detail::WeakLock* lock)
+     : handler(func), weakLock(lock), threadingModel(model), target(0), method(0), enabled(true)
    {
-     eventLoopGetter = boost::bind(detail::eventLoopGet, ctx);
    }
 
   SignalSubscriber::~SignalSubscriber()
@@ -47,13 +47,18 @@ namespace qi {
     linkId = b.linkId;
     handler = b.handler;
     weakLock = b.weakLock?b.weakLock->clone():0;
-    eventLoopGetter = b.eventLoopGetter;
+    threadingModel = b.threadingModel;
     target = b.target?new ObjectWeakPtr(*b.target):0;
     method = b.method;
     enabled = b.enabled;
   }
 
   static qi::Atomic<int> linkUid = 1;
+
+  void SignalBase::setCallType(MetaCallType callType)
+  {
+    _p->defaultCallType = callType;
+  }
 
   void SignalBase::operator()(
       qi::AutoGenericValuePtr p1,
@@ -80,10 +85,10 @@ namespace qi {
       qiLogError("qi.signal") << "Dropping emit: signature mismatch: " << signature <<" " << _p->signature;
       return;
     }
-    trigger(params);
+    trigger(params, _p->defaultCallType);
   }
 
-  void SignalBase::trigger(const GenericFunctionParameters& params)
+  void SignalBase::trigger(const GenericFunctionParameters& params, MetaCallType callType)
   {
     if (!_p)
       return;
@@ -98,7 +103,7 @@ namespace qi {
     for (i = copy.begin(); i != copy.end(); ++i)
     {
       SignalSubscriberPtr s = i->second; // hold s alive
-      s->call(params);
+      s->call(params, callType);
     }
   }
 
@@ -144,7 +149,7 @@ namespace qi {
     SignalSubscriberPtr         sub;
   };
 
-  void SignalSubscriber::call(const GenericFunctionParameters& args)
+  void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
   {
     // this is held alive by caller
     if (handler.type)
@@ -159,17 +164,21 @@ namespace qi {
           return;
         }
       }
-      EventLoop* eventLoop = 0;
-      if (eventLoopGetter)
-        eventLoop = eventLoopGetter();
-      if (eventLoop)
+      bool async = true;
+      if (threadingModel != MetaCallType_Auto)
+        async = (threadingModel == MetaCallType_Queued);
+      else if (callType != MetaCallType_Auto)
+        async = (callType == MetaCallType_Queued);
+
+      (callType == MetaCallType_Queued || threadingModel == MetaCallType_Queued);
+      qiLogDebug("qi.Signal") << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
+      if (async)
       {
-        // Event emission is always asynchronous
         GenericFunctionParameters copy = args.copy();
         // We will check enabled when we will be scheduled in the target
         // thread, and we hold this SignalSubscriber alive, so no need to
         // explicitly track the asynccall
-        eventLoop->post(FunctorCall(copy, shared_from_this()));
+        getDefaultThreadPoolEventLoop()->post(FunctorCall(copy, shared_from_this()));
       }
       else
       {
@@ -250,9 +259,9 @@ namespace qi {
     }
   }
 
-  SignalSubscriber& SignalBase::connect(GenericFunction callback, EventLoop* ctx)
+  SignalSubscriber& SignalBase::connect(GenericFunction callback, MetaCallType model)
   {
-    return connect(SignalSubscriber(callback, ctx));
+    return connect(SignalSubscriber(callback, model));
   }
 
   SignalSubscriber& SignalBase::connect(qi::ObjectPtr o, unsigned int slot)
@@ -389,14 +398,16 @@ namespace qi {
   {
     if (!_p)
       return;
+    boost::shared_ptr<SignalBasePrivate> p(_p);
+    _p.reset();
     SignalSubscriberMap::iterator i;
     std::vector<Link> links;
-    for (i = _p->subscriberMap.begin(); i!= _p->subscriberMap.end(); ++i)
+    for (i = p->subscriberMap.begin(); i!= p->subscriberMap.end(); ++i)
     {
       links.push_back(i->first);
     }
     for (unsigned i=0; i<links.size(); ++i)
-      disconnect(links[i]);
+      p->disconnect(links[i]);
   }
 
   std::vector<SignalSubscriber> SignalBase::subscribers()

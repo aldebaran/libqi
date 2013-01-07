@@ -10,20 +10,20 @@
 namespace qi {
 
 template <typename FUNCTION_TYPE>
-  unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function)
+  unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel)
   {
     // FIXME validate type
     return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
       name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeGenericFunction(function));
+      makeGenericFunction(function), threadingModel);
   }
 
   template <typename OBJECT_TYPE, typename METHOD_TYPE>
-  inline unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method)
+  inline unsigned int GenericObjectBuilder::advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method, MetaCallType threadingModel)
   {
     return xAdvertiseMethod(detail::FunctionSignature<METHOD_TYPE >::sigreturn(),
       name + "::" + detail::FunctionSignature<METHOD_TYPE >::signature(),
-      makeGenericFunction(object, method));
+      makeGenericFunction(object, method), threadingModel);
   }
 
   template <typename T> unsigned int GenericObjectBuilder::advertiseEvent(const std::string& name)

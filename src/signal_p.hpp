@@ -25,6 +25,7 @@ namespace qi {
     SignalSubscriberMap            subscriberMap;
     std::string                    signature;
     boost::recursive_mutex         mutex;
+    MetaCallType                   defaultCallType;
   };
 
 }

@@ -21,6 +21,11 @@ namespace qi
 //type-erased methods and signals accessors for a given type
 struct ObjectTypeData
 {
+  ObjectTypeData()
+  : classType(0)
+  , threadingModel(ObjectThreadingModel_SingleThread)
+  {}
+
   /* One might want this in the ObjectType virtuals, but that would
    * bypass ObjectType::metaCall which would have to be removed.
    * -> RemoteObject, ALBridge needs to be rewriten.
@@ -29,11 +34,16 @@ struct ObjectTypeData
   typedef std::map<unsigned int, SignalGetter> SignalGetterMap;
   SignalGetterMap signalGetterMap;
 
-  typedef std::map<unsigned int, GenericMethod> MethodMap;
+  typedef std::map<
+    unsigned int,
+    std::pair<GenericMethod, MetaCallType>
+  > MethodMap;
+
   MethodMap methodMap;
 
   Type* classType;
   std::vector<std::pair<Type*, int> > parentTypes;
+  ObjectThreadingModel threadingModel;
 };
 
 

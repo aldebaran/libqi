@@ -13,10 +13,11 @@ namespace qi {
   class ObjectTypeBuilderPrivate
   {
   public:
-    ObjectTypeBuilderPrivate() : type(0)  {}
+    ObjectTypeBuilderPrivate() : type(0), threadingModel(ObjectThreadingModel_SingleThread)  {}
     ObjectTypeData data;
     ObjectType*    type;
     MetaObject     metaObject;
+    ObjectThreadingModel threadingModel;
   };
 
   ObjectTypeBuilderBase::ObjectTypeBuilderBase()
@@ -29,14 +30,18 @@ namespace qi {
     delete _p;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func, int id)
+  int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig,
+                                              const std::string& signature,
+                                              GenericMethod func,
+                                              MetaCallType threadingModel,
+                                              int id)
   {
     if (_p->type) {
       qiLogVerbose("ObjectTypeBuilder") << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
                                         << retsig << " " << signature << "' but type is already created.";
     }
     unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature, id);
-    _p->data.methodMap[nextId] = func;
+    _p->data.methodMap[nextId] = std::make_pair(func, threadingModel);
     return nextId;
   }
 
@@ -56,6 +61,10 @@ namespace qi {
     _p->data.classType = type;
   }
 
+  void ObjectTypeBuilderBase::setThreadingModel(ObjectThreadingModel model)
+  {
+    _p->threadingModel = model;
+  }
 
   const MetaObject& ObjectTypeBuilderBase::metaObject()
   {

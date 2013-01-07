@@ -63,47 +63,105 @@ void fireSameThreadIn(qi::ObjectPtr obj, qi::EventLoop* el, void* tid)
   el->post(boost::bind(fire_samethread, obj, tid));
 }
 
-qi::ObjectPtr makeObj(qi::EventLoop* el  = qi::getDefaultObjectEventLoop())
+qi::ObjectPtr makeObj()
 {
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("sameThread", &sameThread);
   ob.advertiseEvent<void (unsigned long)>("fire");
   qi::ObjectPtr res = ob.object();
-  res->moveToEventLoop(el);
   return res;
 }
+
+qi::ObjectPtr makeObjWithThreadModel(qi::ObjectThreadingModel model)
+{
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("sameThread", &sameThread);
+  ob.advertiseMethod("delayms", &qi::os::msleep);
+  ob.advertiseMethod("delaymsThreadSafe", &qi::os::msleep, qi::MetaCallType_Queued);
+  ob.advertiseMethod("delaymsFast", &qi::os::msleep, qi::MetaCallType_Direct);
+  ob.advertiseEvent<void (unsigned long)>("fire");
+  ob.setThreadingModel(model);
+  qi::ObjectPtr res = ob.object();
+  return res;
+}
+
 
 TEST(TestEventLoop, Basic)
 {
   void* mainId = new TID(boost::this_thread::get_id());
   qi::ObjectPtr o1 = makeObj();
-  ASSERT_FALSE(o1->call<bool>("sameThread", (unsigned long)mainId));
-  ASSERT_FALSE(callSameThreadIn(o1, qi::getDefaultNetworkEventLoop(),
-    mainId));
-  ASSERT_FALSE(callSameThreadIn(o1, qi::getDefaultNetworkEventLoop(),
-    0));
-  ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
-    0));
+  // Call is synchronous, no reason not to
+  ASSERT_TRUE(o1->call<bool>("sameThread", (unsigned long)mainId));
+  // FIXME more!
 }
 
 TEST(TestEventLoop, Event)
 {
   unsigned long mainId = (unsigned long)(void*)new TID(boost::this_thread::get_id());
   qi::ObjectPtr o1 = makeObj();
-  o1->connect("fire", &vSameThread);
+  unsigned link = o1->connect("fire", &vSameThread);
   o1->emitEvent("fire", mainId);
   ASSERT_TRUE(result.future().wait(3000));
-  ASSERT_FALSE(result.future().value());
+  ASSERT_TRUE(result.future().value());
   result.reset();
   fireSameThreadIn(o1, qi::getDefaultObjectEventLoop(), 0);
   ASSERT_TRUE(result.future().wait(3000));
   ASSERT_TRUE(result.future().value());
   result.reset();
-  fireSameThreadIn(o1, qi::getDefaultNetworkEventLoop(), 0);
+  o1->disconnect(link);
+  link = o1->connect("fire", &vSameThread, qi::MetaCallType_Queued);
+  fireSameThreadIn(o1, qi::getDefaultObjectEventLoop(), 0);
   ASSERT_TRUE(result.future().wait(3000));
   ASSERT_FALSE(result.future().value());
   result.reset();
 }
+
+TEST(TestThreadModel, notThreadSafe)
+{
+  void* mainId = new TID(boost::this_thread::get_id());
+  qi::ObjectPtr o1 = makeObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
+  ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
+    0));
+  qi::int64_t start = qi::os::ustime();
+  qi::Future<void> f1 = o1->call<void>("delayms", 150);
+  o1->call<void>("delayms", 150).wait();
+  f1.wait();
+  ASSERT_GT(qi::os::ustime() - start, 300000);
+}
+
+TEST(TestThreadModel, ThreadSafe)
+{
+  void* mainId = new TID(boost::this_thread::get_id());
+  qi::ObjectPtr o1 = makeObjWithThreadModel(qi::ObjectThreadingModel_MultiThread);
+  ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
+    0));
+  qi::int64_t start = qi::os::ustime();
+  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
+  o1->call<void>("delaymsThreadSafe", 150).wait();
+  f1.wait();
+  ASSERT_LT(qi::os::ustime() - start, 300000);
+}
+
+TEST(TestThreadModel, MethodModel)
+{
+  qi::ObjectPtr o1 = makeObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
+  qi::int64_t start = qi::os::ustime();
+  qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
+  ASSERT_LT(qi::os::ustime() - start, 100000);
+  f1.wait();
+  start = qi::os::ustime();
+  // fast method->synchronous call
+  f1 = o1->call<void>("delaymsFast", 150);
+  ASSERT_GT(qi::os::ustime() - start, 100000);
+  ASSERT_TRUE(f1.isReady());
+  // Thread-safe method: parallel call
+  start = qi::os::ustime();
+  f1 = o1->call<void>("delaymsThreadSafe", 150);
+  o1->call<void>("delaymsThreadSafe", 150).wait();
+  f1.wait();
+  ASSERT_LT(qi::os::ustime() - start, 300000);
+}
+
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

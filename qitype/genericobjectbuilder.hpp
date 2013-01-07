@@ -23,14 +23,14 @@ namespace qi {
     ~GenericObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method);
+    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method, MetaCallType threadingModel = MetaCallType_Auto);
     template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function);
+    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto);
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
+    void setThreadingModel(ObjectThreadingModel model);
 
-
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func);
+    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto);
     int xAdvertiseEvent(const std::string& signature);
 
     qi::ObjectPtr object();

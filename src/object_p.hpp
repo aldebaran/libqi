@@ -27,12 +27,13 @@ namespace qi {
   class ManageablePrivate
   {
   public:
+    ManageablePrivate();
     // Links that target us. Needed to be able to disconnect upon destruction
     std::vector<SignalSubscriber>       registrations;
     boost::mutex                        registrationsMutex;
-    boost::mutex                        callbacksMutex;
+    Manageable::TimedMutexPtr           objectMutex; //returned by mutex()
     bool                                dying;
-    // Event loop in which calls are made
+    // Event loop in which calls are made if set
     EventLoop                          *eventLoop;
   };
 

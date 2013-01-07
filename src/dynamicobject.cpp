@@ -23,15 +23,21 @@ namespace qi
   class DynamicObjectPrivate
   {
   public:
+    DynamicObjectPrivate()
+    : threadingModel(ObjectThreadingModel_SingleThread)
+    {}
     ~DynamicObjectPrivate();
     // get or create signal, or 0 if id is not an event
     SignalBase* createSignal(unsigned int id);
     bool                                dying;
     typedef std::map<unsigned int, SignalBase*> SignalMap;
-    typedef std::map<unsigned int, GenericFunction> MethodMap;
+    typedef std::map<unsigned int,
+      std::pair<GenericFunction, MetaCallType>
+    > MethodMap;
     SignalMap           signalMap;
     MethodMap           methodMap;
     MetaObject          meta;
+    ObjectThreadingModel threadingModel;
   };
 
   DynamicObjectPrivate::~DynamicObjectPrivate()
@@ -91,9 +97,19 @@ namespace qi
     return _p->meta;
   }
 
-  void DynamicObject::setMethod(unsigned int id, GenericFunction callable)
+  void DynamicObject::setThreadingModel(ObjectThreadingModel model)
   {
-    _p->methodMap[id] = callable;
+    _p->threadingModel = model;
+  }
+
+  ObjectThreadingModel DynamicObject::threadingModel() const
+  {
+    return _p->threadingModel;
+  }
+
+  void DynamicObject::setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel)
+  {
+    _p->methodMap[id] = std::make_pair(callable, threadingModel);
   }
 
   GenericFunction DynamicObject::method(unsigned int id)
@@ -102,7 +118,7 @@ namespace qi
     if (i == _p->methodMap.end())
       return GenericFunction();
     else
-      return i->second;
+      return i->second.first;
   }
 
   SignalBase* DynamicObject::signalBase(unsigned int id) const
@@ -125,8 +141,8 @@ namespace qi
       out.setError(ss.str());
       return out.future();
     }
-
-    return ::qi::metaCall(context->eventLoop(), i->second, params, callType);
+    return ::qi::metaCall(context->eventLoop(), _p->threadingModel,
+      i->second.second, callType, context->mutex(), i->second.first, params);
   }
 
   void DynamicObject::metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params)
@@ -173,14 +189,43 @@ namespace qi
     return qi::Future<void>(0);
   }
 
+  static GenericValuePtr locked_call(GenericFunction& function,
+                                     const GenericFunctionParameters& params,
+                                     Manageable::TimedMutexPtr& lock)
+  {
+    static long msWait = -1;
+    if (msWait == -1)
+    { // thread-safeness: worst case we set it twice
+      std::string s = os::getenv("QI_DEADLOCK_TIMEOUT");
+      if (s.empty())
+        msWait = 30000; // default wait of 30 seconds
+      else
+        msWait = strtol(s.c_str(), 0, 0);
+    }
+    if (!msWait)
+    {
+       boost::timed_mutex::scoped_lock l(*lock);
+       return function.call(params);
+    }
+    else
+    {
+      boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(msWait);
+      boost::timed_mutex::scoped_lock l(*lock, timeout);
+      if (!l.owns_lock())
+        throw std::runtime_error("Time-out acquiring lock. Deadlock?");
+      return function.call(params);
+    }
+  }
+
   class MFunctorCall
   {
   public:
     MFunctorCall(GenericFunction& func, GenericFunctionParameters& params,
-       qi::Promise<GenericValuePtr>* out, bool noCloneFirst)
+       qi::Promise<GenericValuePtr>* out, bool noCloneFirst, Manageable::TimedMutexPtr lock)
     : noCloneFirst(noCloneFirst)
     {
       this->out = out;
+      std::swap(this->lock, lock);
       std::swap(this->func, func);
       std::swap((std::vector<GenericValuePtr>&) params,
         (std::vector<GenericValuePtr>&) this->params);
@@ -191,9 +236,11 @@ namespace qi
     }
     void operator = (const MFunctorCall& b)
     {
+      // Implement move semantic on =
       std::swap( (std::vector<GenericValuePtr>&) params,
         (std::vector<GenericValuePtr>&) b.params);
       std::swap(func, const_cast<MFunctorCall&>(b).func);
+      std::swap(this->lock, const_cast<MFunctorCall&>(b).lock);
       this->out = b.out;
       noCloneFirst = b.noCloneFirst;
     }
@@ -201,7 +248,10 @@ namespace qi
     {
       try
       {
-        out->setValue(func.call(params));
+        if (lock)
+          out->setValue(locked_call(func, params, lock));
+        else
+          out->setValue(func.call(params));
       }
       catch(const std::exception& e)
       {
@@ -218,26 +268,36 @@ namespace qi
     GenericFunctionParameters params;
     GenericFunction func;
     bool noCloneFirst;
+    Manageable::TimedMutexPtr lock;
   };
+
   qi::Future<GenericValuePtr> metaCall(EventLoop* el,
-    GenericFunction func, const GenericFunctionParameters& params, MetaCallType callType, bool noCloneFirst)
+    ObjectThreadingModel objectThreadingModel,
+    MetaCallType methodThreadingModel,
+    MetaCallType callType,
+    Manageable::TimedMutexPtr objectLock,
+    GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst)
   {
-    bool synchronous = true;
-    switch (callType)
-    {
-    case qi::MetaCallType_Direct:
-      break;
-    case qi::MetaCallType_Auto:
-      synchronous = !el ||  el->isInEventLoopThread();
-      break;
-    case qi::MetaCallType_Queued:
-      synchronous = !el;
-      break;
-    }
-    if (synchronous)
+    // Implement rules described in header
+    bool sync = true;
+    if (el)
+      sync = el->isInEventLoopThread();
+    else if (methodThreadingModel != MetaCallType_Auto)
+      sync = (methodThreadingModel == MetaCallType_Direct);
+    else // callType default is synchronous
+      sync = (callType != MetaCallType_Queued);
+
+    if (!sync && !el)
+      el = getDefaultThreadPoolEventLoop();
+    qiLogDebug("qi.Object") << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
+    if (sync)
     {
       qi::Promise<GenericValuePtr> out;
-      out.setValue(func.call(params));
+      if (objectThreadingModel == ObjectThreadingModel_SingleThread
+        && methodThreadingModel == MetaCallType_Auto)
+        out.setValue(locked_call(func, params, objectLock));
+      else
+        out.setValue(func.call(params));
       return out.future();
     }
     else
@@ -245,7 +305,10 @@ namespace qi
       qi::Promise<GenericValuePtr>* out = new qi::Promise<GenericValuePtr>();
       GenericFunctionParameters pCopy = params.copy(noCloneFirst);
       qi::Future<GenericValuePtr> result = out->future();
-      el->post(MFunctorCall(func, pCopy, out, noCloneFirst));
+      if (!(objectThreadingModel == ObjectThreadingModel_SingleThread
+        && methodThreadingModel == MetaCallType_Auto))
+        objectLock.reset();
+      el->post(MFunctorCall(func, pCopy, out, noCloneFirst, objectLock));
       return result;
     }
   }

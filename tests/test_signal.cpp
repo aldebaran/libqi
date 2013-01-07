@@ -69,7 +69,7 @@ TEST(TestSignal, SharedPtr)
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
   qi::Signal<void (boost::shared_ptr<int>)> sig;
-  sig.connect(qi::makeGenericFunction(&write42), qi::getDefaultObjectEventLoop());
+  sig.connect(qi::makeGenericFunction(&write42), qi::MetaCallType_Queued);
   {
     boost::shared_ptr<int> ptr(new int(12));
     sig(ptr);
@@ -88,7 +88,7 @@ TEST(TestSignal, Copy)
   // Check that reference argument type are copied when an async call is made
   qi::Signal<void (int&, bool*)> sig;
   qiLogDebug("test") << "sync";
-  sig.connect(qi::makeGenericFunction(byRef), 0);
+  sig.connect(qi::makeGenericFunction(byRef));
   bool done = false;
   int i = 0;
   qiLogDebug("test") << "iref is " << &i;
@@ -97,7 +97,7 @@ TEST(TestSignal, Copy)
   ASSERT_EQ(0, i); // byref, but still copies for small types
   qiLogDebug("test") << "async";
   sig =  qi::Signal<void (int&, bool*)>();
-  sig.connect(qi::makeGenericFunction(byRef), qi::getDefaultObjectEventLoop());
+  sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Queued);
   i = 0;
   done = false;
   sig(i, &done);
@@ -112,7 +112,7 @@ TEST(TestSignal, AutoDisconnect)
   int r = 0;
   boost::shared_ptr<Foo> foo(new Foo());
   qi::Signal<void (int*, int)> sig;
-  sig.connect(foo, &Foo::func1, 0);
+  sig.connect(foo, &Foo::func1);
   sig(&r, 0);
   ASSERT_EQ(1, r);
   foo.reset();
@@ -120,52 +120,6 @@ TEST(TestSignal, AutoDisconnect)
   ASSERT_EQ(1, r);
 }
 
-class ManageableFoo: public Foo, public qi::Manageable
-{};
-
-TEST(TestSignal, Manageable)
-{
-  // Test manageable detection
-  int r = 0;
-  qi::Signal<void (int*, int)> sig;
-  { // just a scope to ensure later test does not use mf
-    ManageableFoo* mf = new ManageableFoo();
-    mf->moveToEventLoop(0);
-    sig.connect(mf, &ManageableFoo::func1, 0);
-    sig(&r, 0); // synchronous
-    ASSERT_EQ(1, r);
-    mf->moveToEventLoop(qi::getDefaultObjectEventLoop());
-    sig(&r, 0); // asynchronous
-    ASSERT_EQ(1, r);
-    for(unsigned i=0; i<10 && r==1; ++i) qi::os::msleep(50)
-      ;
-    ASSERT_EQ(2, r);
-    mf->moveToEventLoop(0);
-    sig(&r, 0); // synchronous
-    ASSERT_EQ(3, r);
-    sig.disconnectAll();
-    delete mf;
-  }
-  // Check that manageable detection works on shared_ptr
-  boost::shared_ptr<ManageableFoo> shared(new ManageableFoo());
-  sig.connect(shared, &ManageableFoo::func1, 0);
-  r = 0;
-  shared->moveToEventLoop(0);
-  sig(&r, 0); // synchronous
-  ASSERT_EQ(1, r);
-  shared->moveToEventLoop(qi::getDefaultObjectEventLoop());
-  sig(&r, 0); // asynchronous
-  ASSERT_EQ(1, r);
-  for(unsigned i=0; i<10 && r==1; ++i) qi::os::msleep(50)
-    ;
-  ASSERT_EQ(2, r);
-  shared->moveToEventLoop(0);
-  sig(&r, 0); // synchronous
-  ASSERT_EQ(3, r);
-  shared.reset();
-  sig(&r, 0); // disconnected
-  ASSERT_EQ(3, r);
-}
 
 TEST(TestSignal, BadArity)
 {

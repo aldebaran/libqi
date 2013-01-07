@@ -42,7 +42,7 @@ namespace qi
 
     MetaObject &metaObject();
 
-    void setMethod(unsigned int id, GenericFunction callable);
+    void setMethod(unsigned int id, GenericFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
     GenericFunction method(unsigned int id);
     SignalBase* signalBase(unsigned int id) const;
 
@@ -53,6 +53,8 @@ namespace qi
     /// Disconnect an event link. Returns if disconnection was successful.
     virtual qi::Future<void> metaDisconnect(unsigned int linkId);
 
+    void setThreadingModel(ObjectThreadingModel model);
+    ObjectThreadingModel threadingModel() const;
     // C4251
     boost::shared_ptr<DynamicObjectPrivate> _p;
   };

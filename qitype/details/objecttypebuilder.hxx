@@ -24,12 +24,15 @@ namespace qi {
   }
 
   template <typename FUNCTION_TYPE>
-  unsigned int ObjectTypeBuilderBase::advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id)
+  unsigned int ObjectTypeBuilderBase::advertiseMethod(const std::string& name,
+                                                      FUNCTION_TYPE function,
+                                                      MetaCallType threadingModel,
+                                                      int id)
   {
     // FIXME validate type
     return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
       name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeGenericMethod(function), id);
+      makeGenericMethod(function), threadingModel, id);
   }
 
   template<typename U>
@@ -67,7 +70,7 @@ namespace qi {
 
   template <typename T>
   template <typename FUNCTION_TYPE>
-  unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function, int id)
+  unsigned int ObjectTypeBuilder<T>::advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel, int id)
   {
     // Intercept advertise to auto-register parent type if this is a parent method
     // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
@@ -75,7 +78,7 @@ namespace qi {
     detail::checkRegisterParent<FUNCTION_TYPE>(
       *this,
       typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
-    return ObjectTypeBuilderBase::advertiseMethod(name, function, id);
+    return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
   }
 
   template<typename T>
