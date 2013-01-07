@@ -59,6 +59,8 @@ namespace qi {
   MessageDispatcher::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
     boost::mutex::scoped_lock sl(_signalMapMutex);
     qi::Signal<void (const qi::Message&)> &sig = _signalMap[serviceId];
+    // Ensure calls will be asynchronous
+    sig.setCallType(MetaCallType_Queued);
     return sig.connect(fun);
   }
 

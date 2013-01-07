@@ -46,7 +46,7 @@ namespace qi {
   // this is not an object..
   class ServiceBoundObject : public BoundObject {
   public:
-    ServiceBoundObject(unsigned int serviceId, qi::ObjectPtr obj, qi::MetaCallType mct = qi::MetaCallType_Auto);
+    ServiceBoundObject(unsigned int serviceId, qi::ObjectPtr obj, qi::MetaCallType mct = qi::MetaCallType_Queued);
     virtual ~ServiceBoundObject();
 
   public:
@@ -56,7 +56,13 @@ namespace qi {
     qi::MetaObject metaObject(unsigned int serviceId);
 
   public:
-    inline qi::TransportSocketPtr currentSocket() const { return _currentSocket; }
+    inline qi::TransportSocketPtr currentSocket() const {
+#ifndef NDEBUG
+      if (_callType != MetaCallType_Direct)
+        qiLogWarning("qi.boundobject") << " currentSocket() used but callType is not direct";
+#endif
+      return _currentSocket;
+    }
 
   public:
     //BoundObject Interface
@@ -80,6 +86,7 @@ namespace qi {
     qi::ObjectPtr          _object;
     qi::ObjectPtr          _self;
     qi::MetaCallType       _callType;
+    boost::mutex           _mutex; // prevent parallel onMessage on self execution
   };
 
 

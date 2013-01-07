@@ -33,11 +33,15 @@ namespace qi
   TransportSocket::TransportSocket(qi::EventLoop *eventLoop)
     : _p(new TransportSocketPrivate(this, eventLoop))
   {
+    // Set messageReady signal to async mode to protect our network thread
+    messageReady.setCallType(MetaCallType_Queued);
   }
 
   TransportSocket::TransportSocket(TransportSocketPrivate *p)
     : _p(p)
   {
+    // Set messageReady signal to async mode to protect our network thread
+    messageReady.setCallType(MetaCallType_Queued);
   }
 
   TransportSocket::~TransportSocket()

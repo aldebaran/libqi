@@ -29,7 +29,7 @@ namespace qi {
   class Server {
   public:
     QI_DISALLOW_COPY_AND_ASSIGN(Server);
-    Server(qi::MetaCallType defaultCallType = qi::MetaCallType_Auto);
+    Server(qi::MetaCallType defaultCallType = qi::MetaCallType_Queued);
     ~Server();
 
     //make the server listening

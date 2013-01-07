@@ -42,13 +42,12 @@ namespace qi {
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
-      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, qi::Message::BoundObjectFunction_RegisterEvent);
-      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, qi::Message::BoundObjectFunction_UnregisterEvent);
-      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, qi::Message::BoundObjectFunction_MetaObject);
+      //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
+      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEvent);
+      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_UnregisterEvent);
+      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
     }
     ObjectPtr result = ob->object(self);
-    // Force all calls to be synchronous, as functions make use of _currentSocket
-    result->moveToEventLoop(0);
     return result;
   }
 
@@ -86,8 +85,6 @@ namespace qi {
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     qi::ObjectPtr    obj;
     unsigned int     funcId;
-
-    _currentSocket = socket;
     //choose between special function (on BoundObject) or normal calls
     if (msg.function() < static_cast<unsigned int>(gObjectOffset)) {
       obj = _self;
@@ -132,12 +129,27 @@ namespace qi {
     sigparam = signatureSplit(sigparam)[2];
     sigparam = sigparam.substr(1, sigparam.length()-2);
     mfp = msg.parameters(sigparam);
-
+    /* Because of 'global' _currentSocket, we cannot support parallel
+    * executions at this point.
+    * Both on self, and on obj which can use currentSocket() too.
+    *
+    * So put a lock, and rely on metaCall we invoke being asynchronous for// execution
+    * This is decided by _callType, set from BoundObject ctor argument, passed by Server, which
+    * uses its internal _defaultCallType, passed to its constructor, default
+    * to queued. When Server is instanciated by ObjectHost, it uses the default
+    * value.
+    *
+    * As a consequence, users of currentSocket() must set _callType to Direct.
+    */
     switch (msg.type())
     {
     case Message::Type_Call: {
-         qi::Future<GenericValuePtr> fut = obj->metaCall(funcId, mfp, _callType);
-         fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
+        boost::mutex::scoped_lock lock(_mutex);
+        _currentSocket = socket;
+        qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
+            obj==_self ? MetaCallType_Direct: _callType);
+        _currentSocket.reset();
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, (ObjectHost*)this, socket, msg.address()));
       }
       break;
     case Message::Type_Post: {
@@ -149,7 +161,6 @@ namespace qi {
     }
     //########################
     mfp.destroy();
-    _currentSocket.reset();
   }
 
   void ServiceBoundObject::onSocketDisconnected(TransportSocketPtr client, int error)

@@ -130,7 +130,7 @@ namespace qi {
       }
       obj            = it->second;
     }
-    qi::getDefaultObjectEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
+    qi::getDefaultThreadPoolEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));
     //obj->onMessage(msg, socket);
   }
 

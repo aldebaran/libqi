@@ -21,6 +21,12 @@
 #include <testsession/testsessionpair.hpp>
 
 
+int addOne(int v)
+{
+  qiLogDebug("test") << "addOne";
+  return v+1;
+}
+
 int print(std::list<std::pair<std::string, int> > robots)
 {
   for(std::list<std::pair<std::string, int> >::iterator it = robots.begin(); it != robots.end(); ++it)
@@ -502,6 +508,7 @@ TEST(TestEventLoop, MonitorEventLoop)
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("delay", &qi::os::msleep);
   qi::ObjectPtr obj(ob.object());
+  obj->forceEventLoop(qi::getDefaultObjectEventLoop());
   p.server()->registerService("delayer", obj);
   qi::ObjectPtr proxy = p.client()->service("delayer");
   ASSERT_TRUE(!loopStuck);
@@ -510,6 +517,76 @@ TEST(TestEventLoop, MonitorEventLoop)
   qiLogDebug("qi.test") << "Cancelling monitorEventLoop";
   f.cancel(); // or eventloops will get stuck
   qiLogDebug("qi.test") << "Cancelling monitorEventLoop done";
+}
+int service_call(qi::Session* s, const std::string& obj,
+  const std::string& method, int arg)
+{
+  qiLogDebug("qi.test") << "TEST: servicecall";
+  qi::ObjectPtr o = s->service(obj);
+  return o->call<int>(method, arg);
+}
+
+void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
+{
+  qiLogDebug("qi.test") << "TEST: call servicecall";
+  qi::ObjectPtr obj2Proxy = s->service("caller");
+  qiLogDebug("qi.test") << "TEST: got service";
+  qi::Future<int> v = obj2Proxy->call<int>("serviceCall", "adder", "addOne", 5);
+  v.wait(500);
+  if (!v.isReady())
+    prom.setError("timeout");
+  else if (v.hasError())
+    prom.setError(v.error());
+  else
+    prom.setValue(v.value());
+}
+
+TEST(TestCall, PairClientListen)
+{
+  TestSessionPair p;
+  p.client()->listen("tcp://127.0.0.1:0");
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("addOne", &addOne);
+  qi::ObjectPtr obj(ob.object());
+  p.client()->registerService("adder", obj);
+  qi::ObjectPtr o = p.server()->service("adder");
+  ASSERT_TRUE(o);
+}
+
+TEST(TestCall, DeadLock)
+{
+  // This test deeadlocks if all objects are in the same monothreaded event loop
+  qi::EventLoop* ev = new qi::EventLoop();
+  ev->start();
+  // One object calls another, both in singleThread mode
+  TestSessionPair p;
+  p.client()->listen("tcp://127.0.0.1:0");
+
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("addOne", &addOne);
+  qi::ObjectPtr obj(ob.object());
+  p.server()->registerService("adder", obj);
+
+  qi::GenericObjectBuilder ob2;
+  ob2.advertiseMethod("serviceCall",
+    (boost::function<int(std::string, std::string, int)>)
+    boost::bind(&service_call, p.client(), _1, _2, _3));
+  qi::ObjectPtr obj2(ob2.object());
+  p.client()->registerService("caller", obj2);
+
+  qi::Promise<int> prom;
+
+  // From the object event loop of process 'server', call a method from
+  // object in client, which will call back a method in server
+  qiLogDebug("qi.test") << "TEST: go async servicecall_addone";
+  qi::getDefaultObjectEventLoop()->async(
+    boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
+
+  for (unsigned i=0; i<20 && !prom.future().isReady(); ++i)
+    qi::os::msleep(50);
+  ASSERT_TRUE(prom.future().isReady());
+  ASSERT_EQ(6, prom.future().value());
 }
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);

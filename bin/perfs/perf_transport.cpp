@@ -58,8 +58,6 @@ int main_local()
   ob.advertiseMethod("reply", &reply);
   ob.advertiseMethod("replyBuf", &replyBuf);
   qi::ObjectPtr obj(ob.object());
-  if (getenv("SYNCHRONOUS"))
-    obj->moveToEventLoop(0);
   run_client(obj);
   return 0;
 }

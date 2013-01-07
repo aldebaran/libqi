@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
   qi::Signal<void (void)> signal_1;
 
-  signal_1.connect(boost::bind(&foo), 0);
+  signal_1.connect(boost::bind(&foo));
 
   qi::DataPerf dp;
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
   qi::Signal<void (int)> signal_2;
 
-  signal_2.connect(boost::bind(&fooInt, _1), 0);
+  signal_2.connect(boost::bind(&fooInt, _1));
 
   // Test signals with an int
   dp.start("Signal_int", 10000);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
   // Test signals with a string of 32768 bytes
   qi::Signal<void (std::string)> signal_3;
 
-  signal_3.connect(boost::bind(&fooStr, _1), 0);
+  signal_3.connect(boost::bind(&fooStr, _1));
 
   std::string s;
   for (unsigned int i = 0; i < 65535; ++i)
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
   // Test signal with one int and 10 clients
   for (unsigned int i = 1; i < 10; ++i) {
-    signal_2.connect(boost::bind(&fooInt, _1), 0);
+    signal_2.connect(boost::bind(&fooInt, _1));
   }
   dp.start("Signal_Int_10clients", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 
   // Test signal with one string and 10 clients
   for (unsigned int i = 1; i < 10; ++i) {
-    signal_3.connect(boost::bind(&fooStr, _1), 0);
+    signal_3.connect(boost::bind(&fooStr, _1));
   }
   dp.start("Signal_Big_String_10clients", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
   // Test signal with 10 args
   qi::Signal<void (int, int, int, int, int, int)> signal_4;
 
-  signal_4.connect(boost::bind(&fooSevenArgs, _1, _2, _3, _4, _5, _6), 0);
+  signal_4.connect(boost::bind(&fooSevenArgs, _1, _2, _3, _4, _5, _6));
 
   dp.start("Signal_7_int", 10000);
   for (unsigned int i = 0; i < 10000; ++i) {
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 
   // Test signal with 10 args and 10 clients
   for (unsigned int i = 1; i < 10; ++i) {
-    signal_4.connect(boost::bind(&fooSevenArgs, _1, _2, _3, _4, _5, _6), 0);
+    signal_4.connect(boost::bind(&fooSevenArgs, _1, _2, _3, _4, _5, _6));
   }
 
   dp.start("Signal_7_int_10_clients", 10000);
