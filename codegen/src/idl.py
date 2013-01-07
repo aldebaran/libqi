@@ -7,11 +7,11 @@
     Representations used:
     - IDL: XML file describing the interface
     - RAW: Internal representation of the IDL
-    raw: (methods, signals)
+    raw: (methods, signals, annotations)
     methods: [method]
     signals: [signal]
-    method: (name, [argtype], rettype)
-    signal: (name, [argtype])
+    method: (name, [argtype], rettype, annotations)
+    signal: (name, [argtype], annotations)
 
     Code parser:
     - Invoke Doxygen and parse its XML output to produce an IDL file.
@@ -151,6 +151,7 @@ def cxx_type_to_signature(t):
   sig = cxx_parsed_to_sig(parsed)
   return sig
 
+ANNOTATIONS = ['fast', 'threadSafe']
 def run_doxygen(files):
   """ Invoke doxygen on given source files or directories
   :param files: A list of file or directory to scan
@@ -166,7 +167,10 @@ def run_doxygen(files):
     + "QUIET=YES\n"
     + "WARN_IF_UNDOCUMENTED   = NO\n"
     + "INPUT= " + " ".join(files) + "\n"
-    + "OUTPUT_DIRECTORY= " + tmp_dir + "\n")
+    + "OUTPUT_DIRECTORY= " + tmp_dir + "\n"
+    )
+  for a in ANNOTATIONS:
+    doxy.write('ALIASES += %s=___%s___\n' % (a, a))
   doxy.close()
   # Invoke doxygen
   subprocess.call(["doxygen", doxyfile_path])
@@ -186,6 +190,13 @@ def doxyxml_to_raw(doxy_dir):
     ctree = etree.parse(os.path.join(doxy_dir, "xml", class_id + ".xml"))
     class_root = ctree.find(".//compounddef[@id='" + class_id + "']")
     methods = []
+    # parse annotations
+    rawAn = etree.tostring(class_root.find("briefdescription"), 'us-ascii', 'text')
+    rawAn += etree.tostring(class_root.find("detaileddescription"), 'us-ascii', 'text')
+    classAnnotations = []
+    for a in ANNOTATIONS:
+      if '___' + a + '___' in rawAn:
+        classAnnotations.append(a)
     # Parse methods
     for m in class_root.findall("sectiondef[@kind='public-func']/memberdef[@kind='function']"):
       method_name = m.find("name").text
@@ -198,7 +209,14 @@ def doxyxml_to_raw(doxy_dir):
       if arg_nodes is not None:
         argstype_raw = [a.find('type').text for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
-      methods.append((method_name, argstype, rettype))
+      # Look for annotation
+      rawAn = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
+      rawAn += etree.tostring(m.find("detaileddescription"), 'us-ascii', 'text')
+      an = []
+      for a in ANNOTATIONS:
+        if '___' + a + '___' in rawAn:
+          an.append(a)
+      methods.append((method_name, argstype, rettype, an))
     signals = []
     # Parse signals
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
@@ -215,7 +233,7 @@ def doxyxml_to_raw(doxy_dir):
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
 
-    result[cls] = (methods, signals)
+    result[cls] = (methods, signals, classAnnotations)
   return result
 
 def raw_to_idl(dstruct):
@@ -223,11 +241,12 @@ def raw_to_idl(dstruct):
   """
   root = etree.Element('IDL')
   for cls in dstruct:
-    e = etree.SubElement(root, 'class', name=cls)
-    (methods, signals) = dstruct[cls]
+    
+    (methods, signals, an) = dstruct[cls]
+    e = etree.SubElement(root, 'class', name=cls, annotations=','.join(an))
     for method in methods:
-      (method_name, args, ret) = method
-      m = etree.SubElement(e, 'method', name=method_name)
+      (method_name, args, ret, an) = method
+      m = etree.SubElement(e, 'method', name=method_name, annotations=','.join(an))
       etree.SubElement(m, 'return', type=ret)
       for a in args:
         etree.SubElement(m, 'argument', type=a)
@@ -242,10 +261,10 @@ def raw_to_text(dstruct):
   """
   result = ""
   for cls in dstruct:
-    result += "class " + cls +"\n  methods\n"
+    result += "class " + cls +"// " + ' '.join(dstruct[cls][2]) + "\n  methods\n"
     for method in dstruct[cls][0]:
-      (method_name, args, ret) = method
-      result += "    " + ret[0] + " " + method_name +"(" + ",".join(args) + ")\n"
+      (method_name, args, ret, an) = method
+      result += "    " + ret + " " + method_name +"(" + ",".join(args) + ") // " + ' '.join(an) +"\n"
     result += "  signals\n"
     for signal in dstruct[cls][1]:
       result += "    " + signal[0] + '(' + ','.join(signal[1]) + ')\n'
@@ -275,13 +294,13 @@ def idl_to_raw(root):
     for m in cls.findall("method"):
       r = m.find("return").get("type")
       args = [a.get("type") for a in m.findall("argument")]
-      methods.append((m.get('name'), args, r))
+      methods.append((m.get('name'), args, r, (m.get('annotations') or '').split(',')))
     signals = []
     for s in cls.findall("signal"):
       n = s.get('name')
       args = [a.get("type") for a in s.findall("argument")]
       signals.append((n, args))
-    result[cls.get("name")] =  (methods, signals)
+    result[cls.get("name")] =  (methods, signals, (cls.get("annotations") or '').split(','))
   return result
 
 def raw_to_interface(class_name, data):
@@ -507,7 +526,9 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
   template = template.replace('MAKEONE', makeOne)
   advertise = ''
   bouncers = ''
-  (methods, signals) = (data[0], data[1])
+  (methods, signals, annotations) = (data[0], data[1], data[2])
+  if 'threadSafe' in annotations:
+    advertise += '  %sServiceBuilder.setThreadingModel(qi::THREAD_SAFE);\n' % class_name
   cns = class_name + 'Service'
   icn = 'I' + class_name
   declType = 'I' + class_name
@@ -516,7 +537,13 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
   builder = declType + 'builder'
   for method in methods:
     method_name = method[0]
-    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0});\n'.format(method_name, declType, builder)
+    annotations = method[3]
+    threadMode = 'qi::MethodThreadingModel_Default'
+    if 'fast' in annotations:
+      threadMode = 'qi::MethodThreadingModel_Fast'
+    if 'threadSafe' in annotations:
+      threadMode = 'qi::MethodThreadingModel_ThreadSafe'
+    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0}, {3});\n'.format(method_name, declType, builder, threadMode)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
@@ -604,7 +631,7 @@ class @name@Service: public I@name@
 };
 QI_TYPE_NOT_CLONABLE(@name@Service);
 """
-  (methods, signals) = data
+  (methods, signals) = (data[0], data[1])
   signalInit = []
   for s in signals:
     signalInit.append('impl->' + s[0])
@@ -709,10 +736,10 @@ def main(args):
         args = [[True, pargs.interface, pargs.include]]
       elif op == "cxxtype":
         functions = [raw_to_cxx_typebuild]
-        args = [[False]]
+        args = [[pargs.interface, False]]
       elif op == "cxxtyperegister":
         functions = [raw_to_cxx_typebuild]
-        args = [[True]]
+        args = [[pargs.interface, True]]
       elif op == "cxxskel":
         functions = [raw_to_cxx_service_skeleton]
         args = [[pargs.interface, pargs.include]]
