@@ -4,6 +4,7 @@
 */
 
 #include <boost/thread.hpp>
+#include <boost/program_options.hpp>
 
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
@@ -411,6 +412,85 @@ namespace qi {
     return _p->notifyFd(fileDescriptor, callback, fdUsage);
   }
 
+  struct MonitorContext
+  {
+    EventLoop* target;
+    EventLoop* helper;
+    Future<void> mon;
+    bool isFired;  // true: pinging, false: waiting for next ping.
+    bool ending;
+    uint64_t maxDelay;
+    Promise<void> promise;
+    int64_t startTime;
+  };
+
+  static void monitor_pingtimeout(boost::shared_ptr<MonitorContext> ctx)
+  {
+    //qiLogDebug("qi.EventLoop") << os::ustime() << " MON timeout " << ctx->isFired
+    // << ' ' << (os::ustime() - ctx->startTime);
+    if (!ctx->isFired)
+      return; // Got the pong in the meantime, abort
+    ctx->promise.setError("Event loop monitor timeout");
+  }
+
+  static void monitor_cancel(boost::shared_ptr<MonitorContext> ctx)
+  {
+    //qiLogDebug("qi.EventLoop") << os::ustime() << " MON cancel " << ctx->isFired;
+    ctx->ending = true;
+    try {
+      ctx->mon.cancel();
+    }
+    catch (...)
+    {}
+  }
+
+  static void monitor_ping(boost::shared_ptr<MonitorContext> ctx)
+  {
+    if (ctx->ending)
+      return;
+    //qiLogDebug("qi.EventLoop") << os::ustime() << " MON ping " << ctx->isFired;
+    if (ctx->isFired)
+    { // This is a pong
+      ctx->isFired = false;
+      // Cancel monitoring async call
+      try {
+        ctx->mon.cancel();
+      }
+      catch (const std::exception& e) {
+        //qiLogDebug("qi.EventLoop") << "MON " << e.what();
+      }
+      int64_t pingDelay = os::ustime() - ctx->startTime;
+      if (pingDelay > ctx->maxDelay / 2)
+        qiLogDebug("qi.EventLoop") << "Long ping " << pingDelay;
+      // Wait a bit before pinging againg
+      //qiLogDebug("qi.EventLoop") << os::ustime() << " MON delay " << ctx->maxDelay;
+      ctx->helper->async(boost::bind(&monitor_ping, ctx), ctx->maxDelay*5);
+    }
+    else
+    { // Delay between pings reached, ping again
+      ctx->startTime = os::ustime();
+      ctx->isFired = true;
+      // Start monitor async first, or the ping async can trigger before the
+      // monitor async is setup
+      ctx->mon = ctx->helper->async(boost::bind(&monitor_pingtimeout, ctx), ctx->maxDelay);
+      ctx->target->post(boost::bind(&monitor_ping, ctx));
+      assert(ctx->mon.isCanceleable());
+    }
+  }
+
+  qi::Future<void> EventLoop::monitorEventLoop(EventLoop* helper, uint64_t maxDelay)
+  {
+    // Context data is a Future*[2]
+    boost::shared_ptr<MonitorContext> ctx(new MonitorContext);
+    ctx->target = this;
+    ctx->helper = helper;
+    ctx->maxDelay = maxDelay;
+    ctx->promise = Promise<void>(boost::bind(&monitor_cancel, ctx));
+    ctx->isFired = false;
+    ctx->ending = false;
+    monitor_ping(ctx);
+    return ctx->promise.future();
+  }
 
   static void eventloop_stop(EventLoop* ctx)
   {
@@ -419,6 +499,15 @@ namespace qi {
     delete ctx;
   }
 
+  static EventLoop* _netEventLoop = 0;
+  static EventLoop* _objEventLoop = 0;
+  static EventLoop* _poolEventLoop = 0;
+  static double _monitorInterval = 0;
+
+  static void monitor_notify(const char* which)
+  {
+    qiLogError("qi.EventLoop") << which << " event loop stuck?";
+  }
   static EventLoop* _get(EventLoop* &ctx, bool isPool)
   {
     if (!ctx)
@@ -433,13 +522,19 @@ namespace qi {
       else
         ctx->start();
       Application::atExit(boost::bind(&eventloop_stop, ctx));
+      if (!isPool && _netEventLoop && _objEventLoop && _monitorInterval)
+      {
+        int64_t d = _monitorInterval * 1e6;
+        _netEventLoop->monitorEventLoop(_objEventLoop, d)
+          .connect(boost::bind(&monitor_notify, "network"));
+        _objEventLoop->monitorEventLoop(_netEventLoop, d)
+          .connect(boost::bind(&monitor_notify, "object"));
+      }
     }
     return ctx;
   }
 
-  static EventLoop* _netEventLoop = 0;
-  static EventLoop* _objEventLoop = 0;
-  static EventLoop* _poolEventLoop = 0;
+
 
   EventLoop* getDefaultNetworkEventLoop()
   {
@@ -455,5 +550,14 @@ namespace qi {
   {
     return _get(_poolEventLoop, true);
   }
-
+  static void setMonitorInterval(double v)
+  {
+    _monitorInterval = v;
+  }
+  namespace {
+  _QI_COMMAND_LINE_OPTIONS(
+    "EventLoop monitoring",
+    ("loop-monitor-latency", value<double>()->notifier(&setMonitorInterval), "Warn if event loop is stuck more than given duration in seconds")
+    )
+  }
 }

@@ -76,6 +76,14 @@ namespace qi
     /// Similar to asyncCall() but without cancellation or notification
     void post(const boost::function<void ()>& callback, uint64_t usDelay=0);
 
+    /** Monitor event loop to detect deadlocks.
+     @param helper an other event loop used for monitoring
+     @param maxUsDelay maximum expected delay between an async() and its execution
+     @return a cancelleable future. Invoke cancel() to terminate monitoring.
+            In case an async() call does not execute in time, the
+            future's error will be set.
+    */
+    Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
     /// Call given function every time something happen on file
     /// descriptor fileDescriptor. You can specify that the callback
     /// will be called for every Read, every Write or for both Read
