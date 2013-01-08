@@ -26,6 +26,10 @@
 #endif
 #include <boost/function.hpp>
 
+#ifdef ANDROID
+# include <android/log.h>
+#endif
+
 #define RTLOG_BUFFERS (128)
 
 #define CAT_SIZE 64
@@ -331,6 +335,21 @@ namespace qi {
              const char           *fct,
              const int             line)
     {
+      #ifdef ANDROID
+        std::map<LogLevel, android_LogPriority> _conv;
+
+        _conv[silent]  = ANDROID_LOG_SILENT;
+        _conv[fatal]   = ANDROID_LOG_FATAL;
+        _conv[error]   = ANDROID_LOG_ERROR;
+        _conv[warning] = ANDROID_LOG_WARN;
+        _conv[info]    = ANDROID_LOG_INFO;
+        _conv[verbose] = ANDROID_LOG_VERBOSE;
+        _conv[debug]   = ANDROID_LOG_DEBUG;
+
+        __android_log_print(_conv[verb], category, msg);
+        return;
+      #endif
+
       if (!LogInstance)
         return;
       if (!LogInstance->LogInit)
