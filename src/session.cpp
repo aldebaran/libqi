@@ -51,6 +51,11 @@ namespace qi {
 
   void SessionPrivate::onDisconnected(int error) {
     _self->disconnected(error);
+
+    /*
+     * Remove all proxies to services if the SD is fallen.
+     */
+    _serviceHandler.close();
   }
 
   void SessionPrivate::onServiceAdded(unsigned int idx, const std::string &name) {
