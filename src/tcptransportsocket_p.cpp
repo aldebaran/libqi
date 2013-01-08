@@ -163,11 +163,21 @@ namespace qi
     ip::tcp::resolver r(_socket.get_io_service());
     ip::tcp::resolver::query q(_url.host(), boost::lexical_cast<std::string>(_url.port()));
     // Synchronous resolution
-    ip::tcp::resolver::iterator it = r.resolve(q);
-    // asynchronous connect
-    _socket.async_connect(*it,
-      boost::bind(&TcpTransportSocketPrivate::connected, this, _1));
-    return _connectPromise.future();
+
+    try
+    {
+      ip::tcp::resolver::iterator it = r.resolve(q);
+      // asynchronous connect
+      _socket.async_connect(*it,
+        boost::bind(&TcpTransportSocketPrivate::connected, this, _1));
+      return _connectPromise.future();
+    }
+    catch (const std::exception& e)
+    {
+      qiLogError("qimessaging.transportsocket.connect") << e.what();
+      _connectPromise.setValue(false);
+      return _connectPromise.future();
+    }
   }
 
   void TcpTransportSocketPrivate::connected(const boost::system::error_code& erc)
