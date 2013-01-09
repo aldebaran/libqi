@@ -114,14 +114,14 @@ namespace qi
   GenericFunctionParameters GenericFunctionParameters::copy(bool notFirst) const
   {
     GenericFunctionParameters result;
-    for (unsigned i=0; i<size(); ++i)
+    for (unsigned i = 0; i < size(); ++i)
       result.push_back( (!i&&notFirst)? (*this)[i]:(*this)[i].clone());
     return result;
   }
 
   void GenericFunctionParameters::destroy(bool notFirst)
   {
-    for (unsigned i=notFirst?1:0; i<size(); ++i)
+    for (unsigned i = notFirst ? 1 : 0; i < size(); ++i)
       (*this)[i].destroy();
   }
 
