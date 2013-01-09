@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <ctype.h>
 
+#include <boost/pool/singleton_pool.hpp>
+
 #include "buffer_p.hpp"
 
 #include <iostream>
@@ -33,6 +35,20 @@ namespace qi
       free(_bigdata);
       _bigdata = NULL;
     }
+  }
+
+  struct MyPoolTag { };
+  typedef boost::singleton_pool<MyPoolTag, sizeof(BufferPrivate)> buffer_pool;
+
+  void* BufferPrivate::operator new(size_t sz)
+  {
+    assert(sz <= sizeof(BufferPrivate));
+    return buffer_pool::malloc();
+  }
+
+  void BufferPrivate::operator delete(void* ptr)
+  {
+    buffer_pool::free(ptr);
   }
 
   int BufferPrivate::indexOfSubBuffer(size_t offset) const

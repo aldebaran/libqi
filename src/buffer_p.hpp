@@ -21,6 +21,8 @@ namespace qi
   public:
     BufferPrivate();
     ~BufferPrivate();
+    void* operator new(size_t);
+    void operator delete(void*);
     unsigned char * data();
     bool            resize(size_t size = 0x100000);
     int             indexOfSubBuffer(size_t offset) const;
