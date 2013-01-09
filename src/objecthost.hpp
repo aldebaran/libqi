@@ -36,10 +36,10 @@ namespace qi
     qi::Signal<void()> onDestroy;
   private:
     typedef std::map<unsigned int, BoundObjectPtr > ObjectMap;
-    boost::mutex  _mutex;
-    unsigned int _service;
-    ObjectMap _objectMap;
-    qi::Atomic<long> _nextId;
+    boost::mutex    _mutex;
+    unsigned int    _service;
+    ObjectMap       _objectMap;
+    qi::Atomic<int> _nextId;
   };
 }
 
