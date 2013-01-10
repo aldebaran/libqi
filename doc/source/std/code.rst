@@ -142,12 +142,7 @@ For each library you will have to define <library>/api.hpp
 
   #include <qi/macro.hpp>
 
-  //bar_EXPORTS is defined by the build system, only when building the library
-  #ifdef bar_EXPORTS
-  # define BAR_API QI_EXPORT_API
-  #else
-  # define BAR_API QI_IMPORT_API
-  #endif
+  #define BAR_API QI_LIB_API(bar)
 
   #endif  // _BAR_API_HPP_
 
