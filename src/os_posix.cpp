@@ -92,7 +92,7 @@ namespace qi {
       // $HOME environment variable not defined:
       char *lgn;
       struct passwd *pw;
-      if ((lgn = getlogin()) == NULL || (pw = getpwnam(lgn)) == NULL)
+      if ((lgn = getlogin()) != NULL && (pw = getpwnam(lgn)) != NULL)
       {
         return boost::filesystem::path(pw->pw_dir, qi::unicodeFacet()).make_preferred().string(qi::unicodeFacet());
       }

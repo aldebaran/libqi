@@ -52,6 +52,9 @@ namespace qi
       }
       else
       {
+
+        _ptr = 0;
+        _refcount = 0;
         qiLogDebug("qi.log.shared_ptr")
                   << "tried to copy a shared pointer targeted for deletion"
                   << std::endl;

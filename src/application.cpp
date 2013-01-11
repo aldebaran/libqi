@@ -438,13 +438,19 @@ namespace qi {
   {
     return Application::argc();
   }
+
   const char** argv()
   {
     return Application::argv();
   }
+
+  //this is not threadsafe
   void init(int argc, char* argv[])
   {
+    static qi::Application *app = 0;
+
     qiLogError("qi") << "qi::init() is deprecated, use qi::Application";
-    new qi::Application(argc, argv);
+    if (!app)
+      app = new qi::Application(argc, argv);
   }
 }

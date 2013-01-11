@@ -67,6 +67,7 @@ namespace qi {
     {
       if (_private->_file != NULL)
         fclose(_private->_file);
+      delete _private;
     }
 
     void HeadFileLogHandler::log(const qi::log::LogLevel verb,
