@@ -21,7 +21,10 @@ namespace qi {
   /// Representation of a method in an GenericObject.
   class QITYPE_API MetaMethod {
   public:
-    MetaMethod() {};
+    MetaMethod()
+      : _uid(0)
+    {}
+
     MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature);
 
     std::string signature() const;
