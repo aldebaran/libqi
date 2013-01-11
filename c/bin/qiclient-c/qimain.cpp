@@ -52,7 +52,8 @@ int make_call(char *addr)
   if (msg)
     result = qi_message_read_string(msg);
 
-  qiLogInfo("qimessaging.qi-client-c") << "Reply : " << result;
+  if (result)
+    qiLogInfo("qimessaging.qi-client-c") << "Reply : " << result;
   qi_future_destroy(fut);
   qi_message_destroy(message);
   qi_object_destroy(object);

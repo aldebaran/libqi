@@ -13,7 +13,11 @@
 
 typedef struct qi_signature_t_s
 {
-  qi_signature_t_s(const char *signature) : _sig(signature) {}
+  qi_signature_t_s(const char *signature)
+    : _current(0),
+      _sig(signature),
+      _it()
+  {}
 
   char                    *_current;
 

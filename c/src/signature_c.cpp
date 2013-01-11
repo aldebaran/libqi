@@ -49,11 +49,11 @@ qi_signature_t *qi_signature_create(const char *signature)
 
 qi_signature_t *qi_signature_create_subsignature(const char *signature)
 {
-  std::string sig(signature);
-  qi_signature_type  endType;
-
   if (!signature)
     return 0;
+
+  std::string sig(signature);
+  qi_signature_type  endType;
 
   switch (*signature)
   {
@@ -70,7 +70,7 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
     return 0;
   }
 
-  unsigned int end = sig.find_last_of(endType);
+  int end = sig.find_last_of(endType);
   if (end > sig.size() || end == std::string::npos)
     return 0;
 

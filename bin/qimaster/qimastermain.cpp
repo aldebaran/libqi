@@ -52,7 +52,12 @@ int main(int argc, char *argv[])
 
     if (vm.count("master-address") == 1)
     {
-      std::string masterAddress = vm["master-address"].as<std::string>();
+      std::string masterAddress;
+      try {
+        masterAddress = vm["master-address"].as<std::string>();
+      } catch (const std::exception &) {
+        return 1;
+      }
 
       qi::ServiceDirectory sd;
       if (!sd.listen(masterAddress))
