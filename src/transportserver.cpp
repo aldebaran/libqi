@@ -68,8 +68,7 @@ namespace qi
 
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    if (!dynamic_cast<TransportServerDummyPrivate*>(_p))
-      close();
+    close();
     delete _p;
     _p = newTSP(this, url, ctx);
     return listen();
@@ -90,7 +89,8 @@ namespace qi
   }
 
   void TransportServer::close() {
-    _p->close();
+    if (!dynamic_cast<TransportServerDummyPrivate*>(_p))
+      _p->close();
     _p->listenUrl = qi::Url("");
   }
 
