@@ -138,7 +138,7 @@ namespace qi {
       out.setError("Invalid object");
       return out.future();
     }
-    const GenericFunctionParameters* newArgs = 0;
+    GenericFunctionParameters* newArgs = 0;
     int methodId = metaObject().methodId(signature);
 #ifndef QI_REQUIRE_SIGNATURE_EXACT_MATCH
     if (methodId < 0) {
@@ -185,6 +185,7 @@ namespace qi {
     if (newArgs)
     {
       qi::Future<GenericValuePtr> res = metaCall(methodId, *newArgs, callType);
+      newArgs->destroy();
       delete newArgs;
       return res;
     }
