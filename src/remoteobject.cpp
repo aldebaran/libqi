@@ -251,9 +251,12 @@ namespace qi {
       } else {
         ss << "Network error while sending data an unknown method (id=" << method << ").";
       }
-      if (!_socket->isConnected())
+      if (!_socket->isConnected()) {
         ss << " Socket is not connected.";
-      qiLogError("remoteobject") << ss.str();
+        qiLogVerbose("remoteobject") << ss.str();
+      } else {
+        qiLogError("remoteobject") << ss.str();
+      }
       out.setError(ss.str());
 
       {
