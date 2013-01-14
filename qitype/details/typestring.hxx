@@ -23,7 +23,7 @@ namespace qi
   {
   public:
     typedef DefaultTypeImplMethods<std::string,
-      detail::TypeImplMethodsBySize<std::string>::type
+    TypeByPointer<std::string>
     > Methods;
     virtual std::pair<char*, size_t> get(void* storage) const
     {
