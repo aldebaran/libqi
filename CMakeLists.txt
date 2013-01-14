@@ -129,7 +129,7 @@ endif()
 
 # Convert ON/OFF to SHARED/STATIC for create_lib argument
 set(_libtype)
-if (BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS OR ANDROID)
   set(_libtype SHARED)
 else()
   set(_libtype STATIC)
