@@ -86,9 +86,9 @@ namespace qi {
      @param msecs: Maximum time to wait in milliseconds, 0 means forever and -1 means return immediately.
      @return true if future contains a value or an error, false if timeout was reached
      */
-    inline bool wait(int msecs = 30000) const         { return _p->wait(msecs); }
+    inline bool wait(int msecs = 0) const             { return _p->wait(msecs); }
     inline bool isReady() const                       { return _p->isReady(); }
-    inline bool hasError(int msecs=30000) const       { return _p->hasError(msecs); }
+    inline bool hasError(int msecs = 0) const         { return _p->hasError(msecs); }
 
     inline const std::string &error() const           { return _p->error(); }
 
