@@ -318,7 +318,9 @@ namespace qi {
       qiLogWarning("qi.object") << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }
-    return _self->call<void>("unregisterEvent", _service, event, linkId);
+    if (_socket->isConnected())
+      return _self->call<void>("unregisterEvent", _service, event, linkId);
+    return qi::makeFutureError<void>("No remote unregister: socket disconnected");
   }
 
   void RemoteObject::close() {
