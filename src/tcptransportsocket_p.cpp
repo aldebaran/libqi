@@ -130,9 +130,10 @@ namespace qi
     if (_connecting)
     {
       _connecting = false;
-      _connectPromise.setError(std::string("Connection error: ") + strerror(_err));
+      _connectPromise.setError(std::string("Connection error: ") + erc.message());
     }
-    
+
+    _self->disconnect();
   }
 
 
@@ -204,7 +205,13 @@ namespace qi
   {
     if (_socket.is_open())
     {
-      _socket.close(); // will invoke read callback with error set
+      try
+      {
+        _socket.close(); // will invoke read callback with error set
+      }
+      catch (...)
+      {
+      }
     }
     else
     {
