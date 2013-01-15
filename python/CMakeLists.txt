@@ -24,5 +24,12 @@ qi_swig_wrap_python(qimessagingswig src/qimessagingswig.i SRC
                     src/qipython_signal.hpp
                     DEPENDS QI QIMESSAGING)
 
+# fixme: compute the correct destination instead
+install(DIRECTORY
+  ${CMAKE_CURRENT_SOURCE_DIR}/qimessaging
+  COMPONENT python
+  DESTINATION /lib
+)
+
 # Add automatic testing for Python bindings
 add_subdirectory(test)
