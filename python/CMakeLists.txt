@@ -28,7 +28,7 @@ qi_swig_wrap_python(qimessagingswig src/qimessagingswig.i SRC
 install(DIRECTORY
   ${CMAKE_CURRENT_SOURCE_DIR}/qimessaging
   COMPONENT python
-  DESTINATION /lib
+  DESTINATION lib
 )
 
 # Add automatic testing for Python bindings
