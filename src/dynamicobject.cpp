@@ -61,12 +61,11 @@ namespace qi
   public:
     DynamicObjectType() {}
     virtual const MetaObject& metaObject(void* instance);
-    virtual qi::Future<GenericValuePtr> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    virtual void metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params);
-    virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
+    virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
+    virtual qi::Future<unsigned int> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.
-    virtual qi::Future<void> disconnect(void* instance, unsigned int linkId);
-    virtual Manageable* manageable(void* intance);
+    virtual qi::Future<void> disconnect(void* instance, Manageable* context, unsigned int linkId);
     virtual const std::vector<std::pair<Type*, int> >& parentTypes();
 
     _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicObject>);
@@ -115,7 +114,7 @@ namespace qi
       return i->second;
   }
 
-  qi::Future<GenericValuePtr> DynamicObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValuePtr> DynamicObject::metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     qi::Promise<GenericValuePtr> out;
     DynamicObjectPrivate::MethodMap::iterator i = _p->methodMap.find(method);
@@ -127,10 +126,10 @@ namespace qi
       return out.future();
     }
 
-    return ::qi::metaCall(eventLoop(), i->second, params, callType);
+    return ::qi::metaCall(context->eventLoop(), i->second, params, callType);
   }
 
-  void DynamicObject::metaPost(unsigned int event, const GenericFunctionParameters& params)
+  void DynamicObject::metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params)
   {
     SignalBase * s = _p->createSignal(event);
     if (s)
@@ -142,7 +141,7 @@ namespace qi
       // Allow emit on a method
       // FIXME: call errors are lost
       if (metaObject().method(event))
-        metaCall(event, params, MetaCallType_Auto);
+        metaCall(context, event, params, MetaCallType_Auto);
       else
         qiLogError("object") << "No such event " << event;
     }
@@ -258,25 +257,25 @@ namespace qi
     return reinterpret_cast<DynamicObject*>(instance)->metaObject();
   }
 
-  qi::Future<GenericValuePtr> DynamicObjectType::metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
+  qi::Future<GenericValuePtr> DynamicObjectType::metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType)
   {
     return reinterpret_cast<DynamicObject*>(instance)
-      ->metaCall(method, params, callType);
+      ->metaCall(context, method, params, callType);
   }
 
-  void DynamicObjectType::metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params)
+  void DynamicObjectType::metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
   {
     reinterpret_cast<DynamicObject*>(instance)
-      ->metaPost(signal, params);
+      ->metaPost(context, signal, params);
   }
 
-  qi::Future<unsigned int> DynamicObjectType::connect(void* instance, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<unsigned int> DynamicObjectType::connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaConnect(event, subscriber);
   }
 
-  qi::Future<void> DynamicObjectType::disconnect(void* instance, unsigned int linkId)
+  qi::Future<void> DynamicObjectType::disconnect(void* instance, Manageable* context, unsigned int linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)
       ->metaDisconnect(linkId);
@@ -286,11 +285,6 @@ namespace qi
   {
     static std::vector<std::pair<Type*, int> > empty;
     return empty;
-  }
-
-  Manageable* DynamicObjectType::manageable(void* instance)
-  {
-    return reinterpret_cast<DynamicObject*>(instance);
   }
 
   static void cleanupDynamicObject(GenericObject *obj) {

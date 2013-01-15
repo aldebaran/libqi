@@ -53,7 +53,7 @@ namespace qi {
 
     int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericMethod func, int id = -1);
     int xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id = -1);
-    void xBuildFor(Type* type, boost::function<Manageable* (void*)> asManageable);
+    void xBuildFor(Type* type);
     void inherits(Type* parentType, int offset);
 
     // output

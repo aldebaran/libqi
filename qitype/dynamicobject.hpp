@@ -30,7 +30,7 @@ namespace qi
   * The default implementation holds a method list that the user must populate
   * with setMethod()
   */
-  class QITYPE_API DynamicObject: public Manageable {
+  class QITYPE_API DynamicObject {
   public:
     DynamicObject();
 
@@ -46,8 +46,8 @@ namespace qi
     GenericFunction method(unsigned int id);
     SignalBase* signalBase(unsigned int id) const;
 
-    virtual qi::Future<GenericValuePtr> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-    virtual void metaPost(unsigned int event, const GenericFunctionParameters& params);
+    virtual qi::Future<GenericValuePtr> metaCall(Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    virtual void metaPost(Manageable* context, unsigned int event, const GenericFunctionParameters& params);
     /// Calls given functor when event is fired. Takes ownership of functor.
     virtual qi::Future<unsigned int> metaConnect(unsigned int event, const SignalSubscriber& subscriber);
     /// Disconnect an event link. Returns if disconnection was successful.

@@ -51,9 +51,8 @@ namespace qi {
     return nextId;
   }
 
-  void ObjectTypeBuilderBase::xBuildFor(Type* type, boost::function<Manageable* (void*)> asManageable)
+  void ObjectTypeBuilderBase::xBuildFor(Type* type)
   {
-    _p->data.asManageable = asManageable;
     _p->data.classType = type;
   }
 

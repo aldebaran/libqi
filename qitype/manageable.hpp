@@ -14,8 +14,7 @@ namespace qi {
   class ManageablePrivate;
   class EventLoop;
 
-/** User classes can inherit from Manageable to benefit from  Event loop
-  *  management
+/** Per-object instance context.
   */
   class QITYPE_API Manageable
   {
@@ -25,8 +24,8 @@ namespace qi {
     Manageable(const Manageable& b);
     void operator = (const Manageable& b);
 
-    virtual EventLoop* eventLoop() const;
-    virtual void moveToEventLoop(EventLoop* eventLoop);
+    EventLoop* eventLoop() const;
+    void moveToEventLoop(EventLoop* eventLoop);
 
     ManageablePrivate* _p;
   };

@@ -84,7 +84,7 @@ namespace qi {
       return out.future();
     }
     try {
-      return type->metaCall(value, method, params, callType);
+      return type->metaCall(value, this, method, params, callType);
     } catch (const std::exception &e) {
       out.setError(e.what());
       return out.future();
@@ -102,7 +102,7 @@ namespace qi {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return;
     }
-    type->metaPost(value, event, args);
+    type->metaPost(value, this, event, args);
   }
 
   static std::string generateErrorString(const std::string &type, const std::string &signature,
@@ -272,7 +272,7 @@ namespace qi {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
-    return type->connect(value, event, sub);
+    return type->connect(value, this, event, sub);
   }
 
   qi::FutureSync<void> GenericObject::disconnect(unsigned int linkId)
@@ -281,7 +281,7 @@ namespace qi {
       qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
       return qi::makeFutureError<void>("Operating on invalid GenericObject");
     }
-    return type->disconnect(value, linkId);
+    return type->disconnect(value, this, linkId);
   }
 
   qi::FutureSync<unsigned int> GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)

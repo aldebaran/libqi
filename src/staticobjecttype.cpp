@@ -21,19 +21,9 @@ StaticObjectTypeBase::metaObject(void* )
   return _metaObject;
 }
 
-Manageable* StaticObjectTypeBase::manageable(void* instance)
-{
-  if (!_data.asManageable)
-  {
-    qiLogDebug("qi.staticobject") << "GenericObject not manageable";
-    return 0;
-  }
-  else
-    return _data.asManageable(instance);
-}
 
 qi::Future<GenericValuePtr>
-StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
+StaticObjectTypeBase::metaCall(void* instance, Manageable* context, unsigned int methodId,
                                const GenericFunctionParameters& params,
                                MetaCallType callType)
 {
@@ -46,8 +36,7 @@ StaticObjectTypeBase::metaCall(void* instance, unsigned int methodId,
     return out.future();
   }
 
-  Manageable* m = manageable(instance);
-  EventLoop* el = m?m->eventLoop():0;
+  EventLoop* el = context->eventLoop();
   GenericMethod method = i->second;
   GenericValuePtr self;
   self.type = this;
@@ -77,7 +66,7 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   }
   return sig;
 }
-void StaticObjectTypeBase::metaPost(void* instance, unsigned int signal,
+void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
   SignalBase* sb = getSignal(_data, instance, signal);
@@ -86,7 +75,7 @@ void StaticObjectTypeBase::metaPost(void* instance, unsigned int signal,
   sb->trigger(params);
 }
 
-qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, unsigned int event,
+qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
                                                        const SignalSubscriber& subscriber)
 {
   SignalBase* sb = getSignal(_data, instance, event);
@@ -99,7 +88,7 @@ qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, unsigned 
   return qi::Future<unsigned int>((event << 16) + id);
 }
 
-qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, unsigned int linkId)
+qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, unsigned int linkId)
 {
   unsigned int event = linkId >> 16;
   unsigned int link = linkId & 0xFFFF;

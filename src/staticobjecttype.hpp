@@ -32,7 +32,6 @@ struct ObjectTypeData
   typedef std::map<unsigned int, GenericMethod> MethodMap;
   MethodMap methodMap;
 
-  boost::function<Manageable* (void*)> asManageable;
   Type* classType;
   std::vector<std::pair<Type*, int> > parentTypes;
 };
@@ -51,13 +50,11 @@ public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
   virtual const TypeInfo& info();
   virtual const MetaObject& metaObject(void* instance);
-  virtual qi::Future<GenericValuePtr> metaCall(void* instance, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
-  virtual void metaPost(void* instance, unsigned int signal, const GenericFunctionParameters& params);
-  virtual qi::Future<unsigned int> connect(void* instance, unsigned int event, const SignalSubscriber& subscriber);
+  virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+  virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
+  virtual qi::Future<unsigned int> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
-  virtual qi::Future<void> disconnect(void* instance, unsigned int linkId);
-  /// @return the manageable interface for this instance, or 0 if not available
-  virtual Manageable* manageable(void* instance);
+  virtual qi::Future<void> disconnect(void* instance, Manageable* context, unsigned int linkId);
   virtual const std::vector<std::pair<Type*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
   virtual void* ptrFromStorage(void**);

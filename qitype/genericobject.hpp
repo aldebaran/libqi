@@ -140,9 +140,6 @@ namespace qi {
     /// Disconnect an event link. Returns if disconnection was successful.
     qi::FutureSync<void> disconnect(unsigned int linkId);
 
-    virtual EventLoop* eventLoop() const;
-    virtual void moveToEventLoop(EventLoop* eventLoop);
-
     //bool isValid() { return type && value;}
     ObjectType*  type;
     void*        value;
