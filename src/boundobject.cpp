@@ -46,7 +46,10 @@ namespace qi {
       ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, qi::Message::BoundObjectFunction_UnregisterEvent);
       ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, qi::Message::BoundObjectFunction_MetaObject);
     }
-    return ob->object(self);
+    ObjectPtr result = ob->object(self);
+    // Force all calls to be synchronous, as functions make use of _currentSocket
+    result->moveToEventLoop(0);
+    return result;
   }
 
   //Bound Method

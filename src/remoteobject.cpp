@@ -208,7 +208,7 @@ namespace qi {
   }
 
 
-  qi::Future<GenericValuePtr> RemoteObject::metaCall(unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
+  qi::Future<GenericValuePtr> RemoteObject::metaCall(Manageable*, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType)
   {
     qi::Promise<GenericValuePtr> out;
     qi::Message msg;
@@ -267,7 +267,7 @@ namespace qi {
     return out.future();
   }
 
-  void RemoteObject::metaPost(unsigned int event, const qi::GenericFunctionParameters &args)
+  void RemoteObject::metaPost(Manageable*, unsigned int event, const qi::GenericFunctionParameters &args)
   {
     // Bounce the emit request to server
     // TODO: one optimisation that could be done is to trigger the local
