@@ -35,5 +35,5 @@ def load_libqimessaging():
 if sys.platform.startswith("linux"):
     try:
         load_libqimessaging()
-    except Exception, e:
-        print e
+    except Exception:
+        pass
