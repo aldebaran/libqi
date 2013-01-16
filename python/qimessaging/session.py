@@ -42,6 +42,11 @@ class ConnectionError(Exception):
         return str(self._value)
 
 
+class SessionNotConnectedError(Exception):
+    def __str__(self):
+        return 'Session is not connected: can\'t fetch services list.'
+
+
 class RegisterError(Exception):
     """Raised by Session when it can't register a service."""
 
@@ -62,7 +67,7 @@ class Session(UserDict.DictMixin):
     def __init__(self, address=None):
         """Session constructor, if address is set, try to connect."""
         self._session = _qim.qi_session_create()
-        if address:
+        if address is not None:
             self.connect(address)
 
     def __del__(self):
@@ -127,7 +132,10 @@ class Session(UserDict.DictMixin):
     def services(self):
         """Retrieves the list of the names of all the services available on the
         service directory."""
-        return _qim.qi_session_get_services(self._session)
+        services = _qim.qi_session_get_services(self._session)
+        if services is None:
+            raise SessionNotConnectedError()
+        return services
 
     def close(self):
         """Closes connection with the service directory."""

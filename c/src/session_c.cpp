@@ -96,8 +96,16 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
 const char** qi_session_get_services(qi_session_t *session)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
-  std::vector<qi::ServiceInfo> services = s->services();
-  size_t length = services.size();
+  std::vector<qi::ServiceInfo> services;
+  size_t length = 0;
+
+  try {
+    services = s->services();
+    length = services.size();
+  } catch (std::runtime_error& e) {
+    return 0;
+  }
+
   const char **result = static_cast<const char**>(malloc((length + 1) * sizeof(char *)));
   unsigned int i = 0;
 

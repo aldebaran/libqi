@@ -2,12 +2,16 @@
 
 %typemap(out) char** {
     char** it = $1;
-    $result = PyList_New(0);
 
-    while (*it)  {
-        PyObject* o = PyString_FromString(*it);
-        PyList_Append($result, o);
-        it++;
+    if (!it) {
+        $result = Py_None;
+    } else {
+        $result = PyList_New(0);
+        while (*it)  {
+            PyObject* o = PyString_FromString(*it);
+            PyList_Append($result, o);
+            it++;
+        }
     }
 }
 
