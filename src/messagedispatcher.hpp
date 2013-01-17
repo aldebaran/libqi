@@ -45,11 +45,11 @@ namespace qi {
     typedef std::map< unsigned int, qi::Signal<void (const qi::Message&)> > SignalMap;
     typedef std::map<unsigned int, MessageAddress>                   MessageSentMap;
 
-    SignalMap            _signalMap;
-    boost::mutex         _signalMapMutex;
+    SignalMap              _signalMap;
+    boost::recursive_mutex _signalMapMutex;
 
-    MessageSentMap       _messageSent;
-    boost::mutex         _messageSentMutex;
+    MessageSentMap         _messageSent;
+    boost::mutex           _messageSentMutex;
   };
 
 }

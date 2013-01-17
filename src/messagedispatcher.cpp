@@ -47,7 +47,7 @@ namespace qi {
     }
 
     {
-      boost::mutex::scoped_lock sl(_signalMapMutex);
+      boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
       SignalMap::iterator it;
       it = _signalMap.find(msg.service());
       if (it != _signalMap.end())
@@ -57,7 +57,7 @@ namespace qi {
 
   qi::SignalBase::Link
   MessageDispatcher::messagePendingConnect(unsigned int serviceId, boost::function<void (const qi::Message&)> fun) {
-    boost::mutex::scoped_lock sl(_signalMapMutex);
+    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
     qi::Signal<void (const qi::Message&)> &sig = _signalMap[serviceId];
     // Ensure calls will be asynchronous
     sig.setCallType(MetaCallType_Queued);
@@ -65,7 +65,7 @@ namespace qi {
   }
 
   bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, qi::SignalBase::Link linkId) {
-    boost::mutex::scoped_lock sl(_signalMapMutex);
+    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
     SignalMap::iterator it;
     it = _signalMap.find(serviceId);
     if (it != _signalMap.end())
