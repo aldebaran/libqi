@@ -89,7 +89,7 @@
 
 
 // Use this macro to generate compiler warnings.
-#if !defined(WITH_DEPRECATED) || defined(QI_NO_COMPILER_WARNING)
+#if defined(QI_NO_COMPILER_WARNING)
 # define QI_COMPILER_WARNING(x)
 #else
 # define QI_COMPILER_WARNING(x) QI_MSG_PRAGMA("Warning: " #x)
@@ -126,4 +126,3 @@ Please consult the changelog for details. " #x)
 #define QI_UNIQ_DEF(A) _QI_UNIQ_DEF_LEVEL1(A, __LINE__)
 
 #endif  // _LIBQI_QI_API_HPP_
-
