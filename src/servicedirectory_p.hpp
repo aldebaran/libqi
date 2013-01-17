@@ -43,6 +43,10 @@ namespace qi {
     std::map<std::string, unsigned int>                       nameToIdx;
     std::map<TransportSocketPtr, std::vector<unsigned int> >  socketToIdx;
     unsigned int                                              servicesCount;
+    /* Our methods can be invoked from remote, and from socket callbacks,
+    * so thread-safeness is required.
+    */
+    boost::recursive_mutex                                    mutex;
   }; // !ServiceDirectoryPrivate
 
 

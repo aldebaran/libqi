@@ -71,6 +71,7 @@ namespace qi
 
   void ServiceDirectoryBoundObject::onSocketDisconnected(TransportSocketPtr socket, int error)
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     // if services were connected behind the socket
     std::map<TransportSocketPtr, std::vector<unsigned int> >::iterator it;
     it = socketToIdx.find(socket);
@@ -99,6 +100,7 @@ namespace qi
 
   std::vector<ServiceInfo> ServiceDirectoryBoundObject::services()
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     std::vector<ServiceInfo> result;
     std::map<unsigned int, ServiceInfo>::const_iterator it;
 
@@ -110,6 +112,7 @@ namespace qi
 
   ServiceInfo ServiceDirectoryBoundObject::service(const std::string &name)
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<unsigned int, ServiceInfo>::const_iterator servicesIt;
     std::map<std::string, unsigned int>::const_iterator it;
 
@@ -133,6 +136,7 @@ namespace qi
 
   unsigned int ServiceDirectoryBoundObject::registerService(const ServiceInfo &svcinfo)
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(svcinfo.name());
     if (it != nameToIdx.end())
@@ -178,6 +182,7 @@ namespace qi
 
   void ServiceDirectoryBoundObject::unregisterService(const unsigned int &idx)
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     // search the id before accessing it
     // otherwise operator[] create a empty entry
     std::map<unsigned int, ServiceInfo>::iterator it2;
@@ -237,6 +242,7 @@ namespace qi
 
   void ServiceDirectoryBoundObject::serviceReady(const unsigned int &idx)
   {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     // search the id before accessing it
     // otherwise operator[] create a empty entry
     std::map<unsigned int, ServiceInfo>::iterator itService;
