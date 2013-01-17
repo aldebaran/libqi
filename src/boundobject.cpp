@@ -29,13 +29,15 @@ namespace qi {
   ServiceBoundObject::ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
                                          qi::ObjectPtr object,
                                          qi::MetaCallType mct,
-                                         bool bindTerminate)
+                                         bool bindTerminate,
+                                         ObjectHost* owner)
     : ObjectHost(serviceId)
     , _links()
     , _serviceId(serviceId)
     , _objectId(objectId)
     , _object(object)
     , _callType(mct)
+    , _owner(owner)
   {
     _self = createServiceBoundObjectType(this, bindTerminate);
   }
@@ -43,6 +45,8 @@ namespace qi {
   ServiceBoundObject::~ServiceBoundObject()
   {
     onDestroy(this);
+    if (_owner)
+      _owner->removeObject(_objectId);
   }
 
   qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
@@ -91,22 +95,24 @@ namespace qi {
     return qi::MetaObject::merge(_self->metaObject(), _object->metaObject());
   }
 
-  static void delete_sbo(ServiceBoundObject* ptr)
-  {
-    delete ptr;
-  }
-
   void ServiceBoundObject::terminate(unsigned int)
   {
-    getDefaultObjectEventLoop()->post(boost::bind(&delete_sbo, this));
+    qiLogDebug("qi.Object") << "terminate() received";
+    if (_owner)
+      _owner->removeObject(_objectId);
+    else
+      qiLogWarning("qi.Object") << "terminate() received on object without owner";
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     if (msg.object() > _objectId)
     {
+      qiLogDebug("qi::Server") << "onChildMessage " << msg.address();
       ObjectHost::onMessage(msg, socket);
       return;
     }
+
+    qiLogDebug("qi::Server") << "onMessage " << msg.address();
     qi::ObjectPtr    obj;
     unsigned int     funcId;
     //choose between special function (on BoundObject) or normal calls

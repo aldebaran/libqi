@@ -29,10 +29,12 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
     return;
   }
   qiLogDebug("qi.ObjectHost") << "ObjectHost forwarding " << msg.address();
-  it->second->onMessage(msg, socket);
+  // Keep ptr alive while message is being processed, even if removeObject is called
+  BoundObjectPtr obj = it->second;
+  obj->onMessage(msg, socket);
 }
 
-unsigned int ObjectHost::addObject(ServiceBoundObject* obj, unsigned int id)
+unsigned int ObjectHost::addObject(BoundObjectPtr obj, unsigned int id)
 {
   if (!id)
     id = ++_nextId;

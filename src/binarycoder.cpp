@@ -322,12 +322,6 @@ namespace qi {
 
   namespace details {
 
-    static void delete_sbo(ServiceBoundObject* sbo)
-    {
-      qiLogDebug("qi.type") << "Socket lost, destroying unregistered boundobject " << sbo;
-      sbo->terminate(0); // be async
-    }
-
     void serializeObject(qi::BinaryEncoder& out,
       ObjectPtr object,
       ObjectHost* context)
@@ -336,25 +330,20 @@ namespace qi {
         throw std::runtime_error("Unable to serialize object without a valid ObajectHost");
       unsigned int sid = context->service();
       unsigned int oid = context->nextId();
-      ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Auto, true);
-      context->addObject(sbo, oid);
+      ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
+      boost::shared_ptr<BoundObject> bo(sbo);
+      context->addObject(bo, oid);
       qiLogDebug("qi.type") << "Hooking " << oid <<" on " << context;
       qiLogDebug("qi.type") << "sbo " << sbo << "obj " << object.get();
       // Transmit the metaObject augmented by ServiceBoundObject.
       out.write(sbo->metaObject(oid));
       out.write((unsigned int)sid);
       out.write((unsigned int)oid);
-      // Disconnect from context on ServiceBoundObject destruction
-      sbo->onDestroy.connect(boost::bind(&ObjectHost::removeObject, context, oid));
-      // Delete sbo on context destruction
-      qi::SignalBase::Link dSub = context->onDestroy.connect(boost::bind(delete_sbo, sbo));
-      // unlink deletor-on-objecthost-delete on sbo deletion to prevent double-delete
-      sbo->onDestroy.connect(boost::bind(&qi::Signal<void()>::disconnect, boost::ref(context->onDestroy), dSub));
     }
 
     void onProxyLost(GenericObject* ptr)
     {
-      qiLogDebug("qi.type") << "Proxy on argument object last, invoking terminate...";
+      qiLogDebug("qi.type") << "Proxy on argument object lost, invoking terminate...";
       DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
       // dobj is a RemoteObject
       //FIXME: use post()

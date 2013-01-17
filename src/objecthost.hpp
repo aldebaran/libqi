@@ -16,23 +16,26 @@
 
 #include <qimessaging/transportsocket.hpp>
 
+
 namespace qi
 {
   class Message;
-  class ServiceBoundObject;
+  class BoundObject;
+  typedef boost::shared_ptr<BoundObject> BoundObjectPtr;
+
   class ObjectHost
   {
   public:
     ObjectHost(unsigned int service);
     ~ObjectHost();
     void onMessage(const qi::Message &msg, TransportSocketPtr socket);
-    unsigned int addObject(ServiceBoundObject* obj, unsigned int objId = 0);
+    unsigned int addObject(BoundObjectPtr obj, unsigned int objId = 0);
     void removeObject(unsigned int);
     unsigned int service() { return _service;}
     unsigned int nextId() { return ++_nextId;}
     qi::Signal<void()> onDestroy;
   private:
-    typedef std::map<unsigned int, ServiceBoundObject*> ObjectMap;
+    typedef std::map<unsigned int, BoundObjectPtr > ObjectMap;
     boost::mutex  _mutex;
     unsigned int _service;
     ObjectMap _objectMap;

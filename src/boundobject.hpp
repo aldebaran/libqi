@@ -41,6 +41,7 @@ namespace qi {
   class BoundObject {
   public:
     //Server Interface
+    virtual ~BoundObject() {}
     virtual void onMessage(const qi::Message &msg, TransportSocketPtr socket) = 0;
     virtual void onSocketDisconnected(qi::TransportSocketPtr socket, int error) = 0;
   };
@@ -52,7 +53,8 @@ namespace qi {
     ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
                        qi::ObjectPtr obj,
                        qi::MetaCallType mct = qi::MetaCallType_Queued,
-                       bool bindTerminate = false);
+                       bool bindTerminate = false,
+                       ObjectHost* owner = 0);
     virtual ~ServiceBoundObject();
 
   public:
@@ -95,6 +97,7 @@ namespace qi {
     qi::ObjectPtr          _object;
     qi::ObjectPtr          _self;
     qi::MetaCallType       _callType;
+    qi::ObjectHost*        _owner;
     boost::mutex           _mutex; // prevent parallel onMessage on self execution
   };
 
