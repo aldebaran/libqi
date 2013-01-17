@@ -204,6 +204,15 @@ TEST(QiSession, Services)
   ASSERT_EQ(5U, s2->services().value().size());
 }
 
+
+TEST(QiSession, TestServiceDirectoryListenUrl)
+{
+  qi::ServiceDirectory sd;
+
+  ASSERT_TRUE(sd.listen("tcp://0.0.0.0:0"));
+  ASSERT_NE(sd.listenUrl().host(), "0.0.0.0");
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
