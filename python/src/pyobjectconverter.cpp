@@ -221,7 +221,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 
   if (PyString_CheckExact(val))
   {
-    res = qi::GenericValuePtr::from(std::string(PyString_AsString(val)));
+    res = qi::GenericValuePtr::from(*new std::string(PyString_AsString(val)));
   }
   else if (val == Py_None)
   {
