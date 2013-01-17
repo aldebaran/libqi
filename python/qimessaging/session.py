@@ -159,7 +159,7 @@ class Session(UserDict.DictMixin):
             raise KeyError("unknow service '%s'" % name)
 
         # Create Python object from C object.
-        return GenericObject(obj_c)
+        return GenericObject(qi_object=obj_c, qi_name=name)
 
     def keys(self):
         """Alias for :func:`services`."""

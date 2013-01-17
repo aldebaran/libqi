@@ -44,8 +44,8 @@ public:
     ob.advertiseEvent<void (*)(const int&)>("fire");
     ob.advertiseMethod("value", &value);
     ob.advertiseMethod("value", &valueList);
-    ob.advertiseMethod("valueAsync", &value, qi::MetaCallType_Queued);
-    ob.advertiseMethod("valueAsync", &valueList, qi::MetaCallType_Queued);
+    ob.advertiseMethod("valueAsync", &value, "", qi::MetaCallType_Queued);
+    ob.advertiseMethod("valueAsync", &valueList, "", qi::MetaCallType_Queued);
     oserver = ob.object();
   }
 

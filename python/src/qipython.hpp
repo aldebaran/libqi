@@ -20,6 +20,10 @@ extern "C" {
   PyObject*         qi_object_methods_vector(qi_object_t *object);
   unsigned int      py_session_register_object(qi_session_t *session, char *name, PyObject *object, PyObject *attr);
   PyObject*         qi_get_sigreturn(qi_object_t *object, const char *signature);
+  PyObject*         qi_get_method_description(qi_object_t *object, const char *signature);
+  PyObject*         qi_get_sigreturn_description(qi_object_t *object, const char *sig);
+  PyObject*         qi_get_parameters_descriptions(qi_object_t *object, const char *sig);
+  PyObject*         qi_get_object_description(qi_object_t *object);
 }
 
 #endif      /* !QIPYTHON_H_ */

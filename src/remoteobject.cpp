@@ -29,7 +29,7 @@ namespace qi {
       qi::MetaObjectBuilder mob;
       mob.addMethod("I", "registerEvent::(III)", qi::Message::BoundObjectFunction_RegisterEvent);
       mob.addMethod("v", "unregisterEvent::(III)", qi::Message::BoundObjectFunction_UnregisterEvent);
-      mob.addMethod("({I(ssI)}{I(Is)})", "metaObject::(I)", qi::Message::BoundObjectFunction_MetaObject);
+      mob.addMethod("({I(Isss[(ss)]s)}{I(Is)}s)", "metaObject::(I)", qi::Message::BoundObjectFunction_MetaObject);
       *mo = mob.metaObject();
 
       assert(mo->methodId("registerEvent::(III)") == qi::Message::BoundObjectFunction_RegisterEvent);

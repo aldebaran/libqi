@@ -199,6 +199,59 @@ PyObject* qi_get_sigreturn(qi_object_t *object, const char *signature)
   return val.as<PyObject*>();
 }
 
+PyObject* qi_get_object_description(qi_object_t *object)
+{
+  qi::ObjectPtr& obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+
+  qi::GenericValue val = qi::GenericValue::from(obj->metaObject().description());
+  return val.as<PyObject*>();
+}
+
+PyObject* qi_get_method_description(qi_object_t *object, const char *signature)
+{
+  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(signature));
+  std::string description;
+
+  if (mm.begin() != mm.end()) {
+    description = mm.front().description();
+  }
+
+  qi::GenericValue val = qi::GenericValue::from(description);
+  return val.as<PyObject*>();
+}
+
+PyObject* qi_get_sigreturn_description(qi_object_t *object, const char *sig) {
+  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(sig));
+  std::string description;
+
+  if (mm.begin() != mm.end()) {
+    description = mm.front().returnDescription();
+  }
+
+  qi::GenericValue val = qi::GenericValue::from(description);
+  return val.as<PyObject*>();
+}
+
+PyObject* qi_get_parameters_descriptions(qi_object_t *object, const char *sig) {
+  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  std::vector<qi::MetaMethod> mm = obj->metaObject().findMethod(std::string(sig));
+  std::vector<std::string> res;
+
+  if (mm.begin() != mm.end()) {
+    qi::MetaMethod m = mm.front();
+    qi::MetaMethodParameterVector v = m.parameters();
+    qi::MetaMethodParameterVector::iterator it;
+    for (it = v.begin(); it != v.end(); ++it) {
+      res.push_back(it->name() + ": " + it->description());
+    }
+  }
+
+  qi::GenericValue val = qi::GenericValue::from(res);
+  return val.as<PyObject*>();
+}
+
 PyObject* qi_object_methods_vector(qi_object_t *object)
 {
   qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
