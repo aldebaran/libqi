@@ -44,12 +44,12 @@ namespace qi
     void onReadData(const boost::system::error_code& erc, std::size_t);
 
     void send_(qi::Message* msg);
-    void sendCont(const boost::system::error_code& erc, Message* msg);
+    void sendCont(const boost::system::error_code& erc, Message* msg, boost::shared_ptr<bool> abort);
     void connect_(TransportSocketPtr socket, const qi::Url &url);
     void disconnect_(TransportSocketPtr socket);
   private:
     boost::asio::ip::tcp::socket& _socket;
-
+    boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
     qi::Promise<bool>   _connectPromise;
     qi::Promise<void>   _disconnectPromise;
 

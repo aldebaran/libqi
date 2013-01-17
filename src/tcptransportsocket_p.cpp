@@ -43,6 +43,7 @@ namespace qi
   {
     assert(eventLoop);
     _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
+    _abort = boost::shared_ptr<bool>(new bool(false));
   }
 
   TcpTransportSocketPrivate::TcpTransportSocketPrivate(TransportSocket *self,
@@ -56,6 +57,7 @@ namespace qi
   {
     assert(eventLoop);
     _status = qi::TransportSocket::Status_Connected;
+    _abort = boost::shared_ptr<bool>(new bool(false));
   }
 
 
@@ -209,6 +211,7 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocketPrivate::disconnect()
   {
+    *_abort = true; // Notify send callback sendCont that it must silently terminate
     {
       boost::mutex::scoped_lock l(_sendQueueMutex);
       if (_socket.is_open())
@@ -261,14 +264,16 @@ namespace qi
     b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
     _dispatcher.sent(*msg);
     boost::asio::async_write(_socket, b,
-      boost::bind(&TcpTransportSocketPrivate::sendCont, this, _1, msg));
+      boost::bind(&TcpTransportSocketPrivate::sendCont, this, _1, msg, _abort));
   }
 
   void TcpTransportSocketPrivate::sendCont(const boost::system::error_code& erc,
-    Message* msg)
+    Message* msg, boost::shared_ptr<bool> abort)
   {
     delete msg;
-    if (erc)
+    // The class does not wait for us to terminate, but it will set abort to true.
+    // So do not use this before checking abort.
+    if (erc || *abort)
       return; // read-callback will also get the error, avoid dup and ignore it
     boost::mutex::scoped_lock lock(_sendQueueMutex);
     if (_sendQueue.empty())
