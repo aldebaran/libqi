@@ -25,33 +25,36 @@ TEST(TestTestSession, TestTestMode)
 {
   // Setenv different conf and check getTestMode answer
   qi::os::setenv(ENVIRON_VARIABLE, "direct");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_Direct, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "sd");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_SD, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "gateway");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_Gateway, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "remotegateway");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_RemoteGateway, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "reversegateway");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_ReverseGateway, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "nightmare");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_Nightmare, TestMode::getTestMode());
 
   qi::os::setenv(ENVIRON_VARIABLE, "file");
+  TestMode::initTestMode(0, 0);
   ASSERT_EQ(TestMode::Mode_NetworkMap, TestMode::getTestMode());
-
-  // Setenv nothin
-  qi::os::setenv(ENVIRON_VARIABLE, "");
-  ASSERT_NE(0, TestMode::getTestMode());
 
   // Setenv bullshit
   qi::os::setenv(ENVIRON_VARIABLE, "plafbim");
-  ASSERT_ANY_THROW(TestMode::getTestMode());
+  ASSERT_ANY_THROW(TestMode::initTestMode(0, 0));
 }
 
 TEST(TestTestSession, TestForceMode)

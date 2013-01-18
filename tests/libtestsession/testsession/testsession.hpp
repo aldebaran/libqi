@@ -98,7 +98,8 @@ public:
     Mode_RemoteGateway,
     Mode_Random,
     Mode_Nightmare,
-    Mode_NetworkMap
+    Mode_NetworkMap,
+    Mode_Default
   };
 
 public:
@@ -123,4 +124,5 @@ private:
   TestSessionPrivate *_p;
 };
 
+extern TestMode::Mode testMode;
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSION_HPP_

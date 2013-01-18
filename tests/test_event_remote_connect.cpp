@@ -64,8 +64,6 @@ protected:
     // Two objects with a fire event and a onFire method.
     unsigned int nbLocalServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
     unsigned int nbConnectedServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 5 : 3;
-    if (TestMode::getTestMode() == TestMode::Mode_Direct)
-      nbConnectedServices += 1;
 
     ASSERT_GT(p1.server()->registerService("coin1", oserver1).wait(1000), 0);
     ASSERT_GT(p2.server()->registerService("coin2", oserver2).wait(1000), 0);
@@ -271,5 +269,6 @@ int main(int argc, char *argv[])
 #endif
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  TestMode::initTestMode(argc, argv);
   return RUN_ALL_TESTS();
 }
