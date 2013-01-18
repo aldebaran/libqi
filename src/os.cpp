@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -34,6 +34,70 @@ namespace qi {
         initialized = true;
       }
       return tv.tv_sec*1000000LL + tv.tv_usec - base;
+    }
+
+
+    static inline void update_tv(qi::os::timeval *t)
+    {
+      const long usecPerSec = 1000 * 1000;
+      while (t->tv_usec >= usecPerSec)
+      {
+        t->tv_sec++;
+        t->tv_usec -= usecPerSec;
+      }
+      while (t->tv_usec < 0)
+      {
+        t->tv_sec--;
+        t->tv_usec += usecPerSec;
+      }
+    }
+
+    qi::os::timeval operator+(const qi::os::timeval &lhs,
+                              const qi::os::timeval &rhs)
+    {
+      qi::os::timeval res;
+      res.tv_sec = lhs.tv_sec + rhs.tv_sec;
+      res.tv_usec = lhs.tv_usec + rhs.tv_usec;
+      update_tv(&res);
+
+      return res;
+    }
+
+    qi::os::timeval operator+(const qi::os::timeval &lhs,
+                              long                   us)
+    {
+      const long usecPerSec = 1000 * 1000;
+
+      qi::os::timeval res;
+      res.tv_sec = lhs.tv_sec + (us / usecPerSec);
+      res.tv_usec = lhs.tv_usec + (us % usecPerSec);
+      update_tv(&res);
+
+      return res;
+    }
+
+    qi::os::timeval operator-(const qi::os::timeval &lhs,
+                              const qi::os::timeval &rhs)
+    {
+      qi::os::timeval res;
+      res.tv_sec = lhs.tv_sec - rhs.tv_sec;
+      res.tv_usec = lhs.tv_usec - rhs.tv_usec;
+      update_tv(&res);
+
+      return res;
+    }
+
+    qi::os::timeval operator-(const qi::os::timeval &lhs,
+                              long                   us)
+    {
+      const long usecPerSec = 1000 * 1000;
+
+      qi::os::timeval res;
+      res.tv_sec = lhs.tv_sec - (us / usecPerSec);
+      res.tv_usec = lhs.tv_usec - (us % usecPerSec);
+      update_tv(&res);
+
+      return res;
     }
 
     /* getMachineId will return an uuid as a string.

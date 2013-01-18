@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -46,6 +46,14 @@ namespace qi {
     };
     QI_API int gettimeofday(qi::os::timeval *tp);
     QI_API qi::int64_t ustime();
+    QI_API qi::os::timeval operator+(const qi::os::timeval &lhs,
+                                     const qi::os::timeval &rhs);
+    QI_API qi::os::timeval operator+(const qi::os::timeval &lhs,
+                                     long                   us);
+    QI_API qi::os::timeval operator-(const qi::os::timeval &lhs,
+                                     const qi::os::timeval &rhs);
+    QI_API qi::os::timeval operator-(const qi::os::timeval &lhs,
+                                     long                   us);
 
     // shared library
     QI_API void *dlopen(const char *filename, int flag = -1);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -82,6 +82,62 @@ TEST(QiOs, sleep)
 TEST(QiOs, msleep)
 {
   qi::os::msleep(1000);
+}
+
+TEST(QiOs, timeValOperatorEasy)
+{
+  qi::os::timeval t1;
+  t1.tv_sec = 2000;
+  t1.tv_usec = 2000;
+  qi::os::timeval t2;
+  t2.tv_sec = 10;
+  t2.tv_usec = 10;
+
+  qi::os::timeval res;
+
+  res = t1 + t2;
+  ASSERT_EQ(2010, res.tv_sec);
+  ASSERT_EQ(2010, res.tv_usec);
+
+  res = res - t1;
+  ASSERT_EQ(t2.tv_sec, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+
+  res = t2 + 10L;
+  ASSERT_EQ(t2.tv_sec, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec + 10, res.tv_usec);
+
+  res = t2 - 10L;
+  ASSERT_EQ(t2.tv_sec, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec - 10, res.tv_usec);
+}
+
+TEST(QiOs, timeValOperatorHard)
+{
+  qi::os::timeval t1;
+  t1.tv_sec = 2000;
+  t1.tv_usec = 999999;
+  qi::os::timeval t2;
+  t2.tv_sec = 10;
+  t2.tv_usec = 2;
+
+  qi::os::timeval res;
+
+  res = t1 + t2;
+  ASSERT_EQ(2011, res.tv_sec);
+  ASSERT_EQ(1, res.tv_usec);
+
+  res = res - t1;
+  ASSERT_EQ(t2.tv_sec, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+
+  res = t2 + 1000000L;
+  ASSERT_EQ(t2.tv_sec + 1, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec, res.tv_usec);
+
+  res = t2 - 1000000L;
+  ASSERT_EQ(t2.tv_sec - 1, res.tv_sec);
+  ASSERT_EQ(t2.tv_usec, res.tv_usec);
 }
 
 TEST(QiOs, env)
