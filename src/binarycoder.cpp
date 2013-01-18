@@ -328,16 +328,16 @@ namespace qi {
 
       void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
       {
-        switch((isSigned?1:-1)*byteSize)
+        switch((isSigned ? 1 : -1) * byteSize)
         {
-          case 0:	 out.write((bool)value);  break;
-          case 1:	 out.write((int8_t)value);  break;
+          case 0:  out.write((bool)value);    break;
+          case 1:  out.write((int8_t)value);  break;
           case -1: out.write((uint8_t)value); break;
-          case 2:	 out.write((int16_t)value); break;
+          case 2:  out.write((int16_t)value); break;
           case -2: out.write((uint16_t)value);break;
-          case 4:	 out.write((int32_t)value); break;
+          case 4:  out.write((int32_t)value); break;
           case -4: out.write((uint32_t)value);break;
-          case 8:	 out.write((int64_t)value); break;
+          case 8:  out.write((int64_t)value); break;
           case -8: out.write((uint64_t)value);break;
           default:
             qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
