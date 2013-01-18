@@ -154,6 +154,7 @@ namespace qi {
     {
       switch((isSigned?1:-1)*byteSize)
       {
+        case 0:  result = Signature::fromType(Signature::Type_Bool).toString();  break;
         case 1:  result = Signature::fromType(Signature::Type_Int8).toString();  break;
         case -1: result = Signature::fromType(Signature::Type_UInt8).toString(); break;
         case 2:  result = Signature::fromType(Signature::Type_Int16).toString(); break;
@@ -355,6 +356,8 @@ namespace qi {
     case Signature::Type_None:
     case Signature::Type_Void:
       return typeOf<void>();
+    case Signature::Type_Bool:
+      return typeOf<bool>();
     case Signature::Type_Int8:
       return typeOf<int8_t>();
     case Signature::Type_UInt8:

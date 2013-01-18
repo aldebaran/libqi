@@ -33,8 +33,31 @@ public:
   _QI_BOUNCE_TYPE_METHODS(ImplType);
 };
 
-// bool
-template<> class TypeImpl<bool>: public TypeIntImpl<char>{};
+  template<typename T> class TypeBoolImpl:
+    public TypeInt
+  {
+  public:
+    typedef typename detail::TypeImplMethodsBySize<T>::type
+     ImplType;
+    virtual int64_t get(void* value) const
+    {
+      return *(T*)ImplType::Access::ptrFromStorage(&value);
+    }
+    virtual void set(void** storage, int64_t value)
+    {
+      *(T*)ImplType::Access::ptrFromStorage(storage) = (T)value;
+    }
+    virtual unsigned int size() const
+    {
+      return 0;
+    }
+    virtual bool isSigned() const
+    {
+      return 0;
+    }
+    _QI_BOUNCE_TYPE_METHODS(ImplType);
+  };
+
 // Force 64bit long
 template<> class TypeIntImpl<long>: public TypeIntImpl<long long>{};
 template<> class TypeIntImpl<unsigned long>: public TypeIntImpl<unsigned long long>{};
@@ -60,7 +83,7 @@ INTEGRAL_TYPE(long long);
 INTEGRAL_TYPE(unsigned long long);
 }
 
-QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeIntImpl<char>);
+QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeBoolImpl<char>);
 
 
 
