@@ -538,11 +538,11 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
   for method in methods:
     method_name = method[0]
     annotations = method[3]
-    threadMode = 'qi::MethodThreadingModel_Default'
+    threadMode = 'qi::MetaCallType_Auto'
     if 'fast' in annotations:
-      threadMode = 'qi::MethodThreadingModel_Fast'
+      threadMode = 'qi::MetaCallType_Fast'
     if 'threadSafe' in annotations:
-      threadMode = 'qi::MethodThreadingModel_ThreadSafe'
+      threadMode = 'qi::MetaCallType_ThreadSafe'
     advertise += '  {2}.advertiseMethod("{0}", &{1}::{0}, {3});\n'.format(method_name, declType, builder, threadMode)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
