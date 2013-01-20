@@ -1,0 +1,127 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title></title>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+  <script src="http://localhost:8001/qimessaging.js"></script>
+  <script src="http://localhost:8001/socket.io.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+  <link rel="stylesheet" href="http://jqueryui.com/resources/demos/style.css" />
+  <style type="text/css">
+  #call { display: none }
+  </style>
+</head>
+<body>
+
+<script>
+qim = new QiSession("http://localhost:8002");
+
+n = 0;
+
+function showServices(services) {
+  n = services.length;
+  for (var i = 0; i < services.length; i++)
+  {
+    qim.service(services[i]).done(showService);
+  }
+}
+
+function createLOL(s, m, s3, s4)
+{
+  return function() {
+    showCall(s, m, s3, s4)
+  }
+}
+
+function showService(service) {
+  mobj = service.__mobj
+  tabname = $("<h3>" + mobj["name"] + "</h3>")
+  $("#accordion").append(tabname)
+
+  tab = $("<div/>")
+  list = $("<ul/>").appendTo(tab)
+  for (var m in mobj.functions)
+  {
+    f = mobj.functions[m]
+    for (i = 0; i < f.signatures.length; i++)
+    {
+      s3 = f.signatures[i][0]
+      s4 = f.signatures[i][1]
+
+      $("<li>").html(f.signatures[i][0] + '::' + f.name + '(' + f.signatures[i][1] + ")")
+               .appendTo(list)
+               .click(createLOL(service, f.name, s3, s4))
+    }
+  }
+  $("#accordion").append(tab)
+
+  if (--n == 0)
+  {
+    $("#accordion").accordion({
+      heightStyle: "content"
+    });
+  }
+}
+
+function showResult(s) {
+  $("#res").val(s)
+}
+
+function showCall(s, m, s3, s4) {
+  $("#call").empty()
+  $("#call").hide()
+
+  $("<div/>").html(s3 + ' ' + s.__mobj["name"]+ "::" + m + "(" + s4 + ")").appendTo("#call")
+  c = $("<div/>").appendTo("#call")
+  for (i = 0 ; i < s4.length; i++)
+  {
+    t = "";
+    switch (s4[i])
+    {
+      case 'I': case 'i':
+        t = "int";
+        break;
+      case 's':
+        t = "string";
+        break;
+      case 'b':
+        t = "boolean";
+        break;
+      case 'm':
+        t = 'dynamic';
+        break;
+      default:
+        t = "arg";
+    }
+    $("<input />", { id: "args" + i, type: "input", placeholder: t }).appendTo(c)
+  }
+  $("<button/>", { id: "cbutton", type: "submit" }).html("call!").appendTo(c)
+    .click(function() {
+      l = []
+      for (i = 0; i < s4.length; i++)
+      {
+        l[i] = $("#args" + i).val()
+      }
+      s[m].apply(this, l).done(showResult)
+    })
+  $("<div/>").html("<input id='res' type='input'/>").appendTo(c)
+  if (s3 == "v")
+    $("#res").hide()
+
+  $("#call").dialog();
+  $("#call").fadeIn(400)
+}
+
+$(document).ready(function() {
+  qim.services().done(showServices)
+});
+</script>
+
+<div id="accordion"></div>
+
+<div id="call"></div>
+</body>
+</html>
