@@ -429,6 +429,12 @@ namespace qi {
     if (!ctx->isFired)
       return; // Got the pong in the meantime, abort
     ctx->promise.setError("Event loop monitor timeout");
+    /* Ping system is still on, but promise is set.
+     * So future invocations of cancel() will be ignored, which makes the
+     * monitoring unstopable.
+     * So reset the value.
+    */
+    ctx->promise.reset();
   }
 
   static void monitor_cancel(boost::shared_ptr<MonitorContext> ctx)
