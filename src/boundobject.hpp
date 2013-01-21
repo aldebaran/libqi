@@ -99,6 +99,7 @@ namespace qi {
     qi::MetaCallType       _callType;
     qi::ObjectHost*        _owner;
     boost::mutex           _mutex; // prevent parallel onMessage on self execution
+    friend class ::qi::ObjectHost;
   };
 
 

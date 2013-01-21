@@ -34,9 +34,11 @@ namespace qi
     unsigned int service() { return _service;}
     unsigned int nextId() { return ++_nextId;}
     qi::Signal<void()> onDestroy;
+  protected:
+    void clear();
   private:
     typedef std::map<unsigned int, BoundObjectPtr > ObjectMap;
-    boost::mutex    _mutex;
+    boost::recursive_mutex    _mutex;
     unsigned int    _service;
     ObjectMap       _objectMap;
     qi::Atomic<int> _nextId;

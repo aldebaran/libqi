@@ -44,9 +44,10 @@ namespace qi {
 
   ServiceBoundObject::~ServiceBoundObject()
   {
-    onDestroy(this);
+    ObjectHost::clear();
     if (_owner)
       _owner->removeObject(_objectId);
+    onDestroy(this);
   }
 
   qi::ObjectPtr ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
