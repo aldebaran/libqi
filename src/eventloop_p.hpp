@@ -44,7 +44,7 @@ namespace qi {
       const boost::function<void ()>& callback)=0;
     virtual EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)=0;
-    virtual void destroy(bool join)=0;
+    virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
   protected:
@@ -66,11 +66,12 @@ namespace qi {
       const boost::function<void ()>& callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
-    virtual void destroy(bool join);
+    virtual void destroy();
     virtual void* nativeHandle();
   private:
     virtual ~EventLoopAsio();
     boost::asio::io_service _io;
+    boost::asio::io_service::work* _work; // keep io.run() alive
     boost::thread      _thd;
     bool               _destroyMe;
     bool               _running;
@@ -95,7 +96,7 @@ namespace qi {
       const boost::function<void ()>& callback);
     EventLoop::AsyncCallHandle notifyFd(int fd,
       EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
-    virtual void destroy(bool join);
+    virtual void destroy();
     virtual void* nativeHandle();
   private:
     virtual ~EventLoopThreadPool();

@@ -43,22 +43,16 @@ namespace qi {
     join();
   }
 
-  void EventLoopAsio::destroy(bool join)
+  void EventLoopAsio::destroy()
   {
-    bool needJoin;
-    bool needDelete;
+    if (isInEventLoopThread())
+      boost::thread(&EventLoopAsio::destroy, this);
+    else
     {
-      boost::recursive_mutex::scoped_lock sl(_mutex);
-      needJoin = join && _running && (boost::this_thread::get_id() != _id);
-      needDelete = needJoin || !_running;
-      _destroyMe = !needDelete;
-    }
-    stop(); // Deadlock if called within the scoped_lock
-    if (needJoin)
-      this->join();
-
-    if (needDelete)
+      stop();
+      join();
       delete this;
+    }
   }
 
   void EventLoopAsio::run()
@@ -66,14 +60,16 @@ namespace qi {
     qiLogDebug("qi.EventLoop") << this << "run starting";
     _running = true;
     _id = boost::this_thread::get_id();
-    boost::asio::io_service::work worker(_io);
+    _work = new boost::asio::io_service::work(_io);
     _io.run();
+    bool destroyMe;
     {
       boost::recursive_mutex::scoped_lock sl(_mutex);
       _running = false;
-      if (_destroyMe)
-        delete this;
+      destroyMe = _destroyMe;
     }
+    if (destroyMe)
+      delete this;
   }
 
   bool EventLoopAsio::isInEventLoopThread()
@@ -84,14 +80,21 @@ namespace qi {
   void EventLoopAsio::stop()
   {
     qiLogDebug("qi.EventLoop") << this << "stopping";
-    _io.stop();
+    boost::recursive_mutex::scoped_lock sl(_mutex);
+    if (_work)
+    {
+      delete _work;
+      _work = 0;
+    }
   }
 
   void EventLoopAsio::join()
   {
-    _io.stop();
     if (boost::this_thread::get_id() == _id)
+    {
+      qiLogError("qi.EventLoop") << "Cannot join from within event loop thread";
       return;
+    }
     if (_threaded)
       _thd.join();
     else
@@ -228,16 +231,11 @@ namespace qi {
     return 0;
   }
 
-  void EventLoopThreadPool::destroy(bool join)
+  void EventLoopThreadPool::destroy()
   {
     _stopping = true;
-    if (join)
-    {
-      _pool->waitForAll();
-      delete this;
-    }
-    else
-      boost::thread(&EventLoopThreadPool::destroy, this, true);
+    // Ensure delete is not called from one of the threads of the event loop
+    boost::thread(&EventLoopThreadPool::destroy, this);
   }
 
   EventLoopThreadPool::~EventLoopThreadPool()
@@ -328,7 +326,7 @@ namespace qi {
   EventLoop::~EventLoop()
   {
     if (_p)
-      _p->destroy(false);
+      _p->destroy();
     _p = 0;
   }
 
