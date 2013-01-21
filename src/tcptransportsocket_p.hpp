@@ -58,7 +58,7 @@ namespace qi
     qi::Message        *_msg;
     bool                _connecting;
 
-    boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending
+    boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
     std::deque<Message> _sendQueue;
     bool                _sending;
   };

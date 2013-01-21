@@ -125,7 +125,6 @@ namespace qi
   {
     _status = qi::TransportSocket::Status_Disconnected;
     _self->disconnected(erc.value());
-    _disconnectPromise.setValue(0);
 
     if (_connecting)
     {
@@ -133,7 +132,14 @@ namespace qi
       _connectPromise.setError(std::string("Connection error: ") + erc.message());
     }
 
-    _self->disconnect();
+    {
+      boost::mutex::scoped_lock l(_sendQueueMutex);
+      boost::system::error_code er;
+      if (_socket.is_open())
+        _socket.close(er);
+    }
+
+    _disconnectPromise.setValue(0);
   }
 
 
@@ -203,20 +209,16 @@ namespace qi
 
   qi::FutureSync<void> TcpTransportSocketPrivate::disconnect()
   {
-    if (_socket.is_open())
     {
-      try
+      boost::mutex::scoped_lock l(_sendQueueMutex);
+      if (_socket.is_open())
       {
-        _socket.close(); // will invoke read callback with error set
+        boost::system::error_code erc;
+        _socket.close(erc); // will invoke read callback with error set
       }
-      catch (...)
-      {
-      }
-    }
-    else
-    {
-      _disconnectPromise.reset();
-      _disconnectPromise.setValue(0);
+      // Do not set disconnectPromise here, it will/has been set
+      // by error(), called by read callback, and we must wait for it
+      // to terminate.
     }
     return _disconnectPromise.future();
   }
