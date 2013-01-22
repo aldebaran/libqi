@@ -706,6 +706,8 @@ def main(args):
     classes = pargs.classes.split(',')
     newraw = dict()
     for c in classes:
+      if not c.strip():
+        continue #be lenient on trailing ,
       cc = c.split(':')
       if not cc[0] in raw:
         raise Exception("Requested class %s not found" % c)
