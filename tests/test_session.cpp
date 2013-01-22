@@ -79,7 +79,7 @@ TEST(QiSession, testClose)
 
   sd.listen("tcp://127.0.0.1:0");
 
-  bool connected = session.connect(sd.listenUrl()).wait();
+  bool connected = session.connect(sd.endpoints()[0]).wait();
   ASSERT_TRUE(connected);
 
   qi::GenericObjectBuilder ob;
@@ -101,7 +101,7 @@ TEST(QiSession, testClose)
 
   EXPECT_ANY_THROW(session.services().value());
 
-  connected = session.connect(sd.listenUrl());
+  connected = session.connect(sd.endpoints()[0]);
   ASSERT_TRUE(connected);
   session.unregisterService(idx.value());
 }
@@ -205,12 +205,15 @@ TEST(QiSession, Services)
 }
 
 
-TEST(QiSession, TestServiceDirectoryListenUrl)
+TEST(QiSession, TestServiceDirectoryEndpoints)
 {
   qi::ServiceDirectory sd;
 
   ASSERT_TRUE(sd.listen("tcp://0.0.0.0:0"));
-  ASSERT_NE(sd.listenUrl().host(), "0.0.0.0");
+
+  // but it's possible to get joinable addresses.
+  ASSERT_NE(sd.endpoints().at(0).host(),"0.0.0.0");
+  ASSERT_NE(sd.endpoints().at(0).port(), 0);
 }
 
 int main(int argc, char **argv)

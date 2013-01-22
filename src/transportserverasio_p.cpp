@@ -88,7 +88,8 @@ namespace qi
       qiLogDebug("qimessaging.server.listen") << "Adding endpoint : " << listenUrl.str();
       _endpoints.push_back(listenUrl.str());
     }
-    else // need available ip addresses
+
+    if (listenUrl.host() == "0.0.0.0") // need available ip addresses
     {
       std::string protocol;
       std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();

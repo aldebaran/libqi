@@ -35,10 +35,10 @@ TEST(TestCError, TestNoService)
   qi::ServiceDirectory sd;
   qi_session_t*        session;
 
-  sd.listen("tcp://127.0.0.1:0");
+  sd.listen("tcp://0.0.0.0:0");
 
   session = qi_session_create();
-  ASSERT_TRUE(qi_session_connect(session, sd.listenUrl().str().c_str()));
+  ASSERT_TRUE(qi_session_connect(session, sd.endpoints().at(0).str().c_str()));
 
   qi_object_t* obj = qi_session_get_service(session, "tiptop");
   ASSERT_TRUE(obj == (qi_object_t*) 0);

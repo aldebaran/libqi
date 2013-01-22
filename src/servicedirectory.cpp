@@ -297,10 +297,6 @@ namespace qi
     _p->_server.close();
   }
 
-  qi::Url ServiceDirectory::listenUrl() const {
-    return _p->_server.listenUrl();
-  }
-
 } // !qi
 
 #ifdef _MSC_VER

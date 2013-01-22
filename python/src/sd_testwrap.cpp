@@ -27,7 +27,7 @@ char* servicedirectory::listen_url()
   if (!sd)
     return 0;
 
-  return qi::os::strdup(sd->listenUrl().str().c_str());
+  return qi::os::strdup(sd->endpoints()[0].str().c_str());
 }
 
 void servicedirectory::close()

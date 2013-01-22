@@ -181,7 +181,7 @@ int main_server()
     return 1;
   }
   serverUrl = sd.endpoints()[0];
-  std::cout << "Service Directory ready on " << sd.listenUrl().str() << std::endl;
+  std::cout << "Service Directory ready on " << serverUrl.str() << std::endl;
 
   qi::Session       session;
   qi::GenericObjectBuilder ob;

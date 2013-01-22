@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
   qi::ServiceDirectory sd;
 
   sd.listen("tcp://127.0.0.1:0");
-  connectionAddr = sd.listenUrl().str();
+  connectionAddr = sd.endpoints()[0].str();
 
   std::cout << "Service Directory ready." << std::endl;
   qi::Session       session;
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
   ob.advertiseMethod("replyBufBA", &replyBufBA);
   qi::ObjectPtr        obj(ob.object());
 
-  session.connect(sd.listenUrl());
+  session.connect(connectionAddr);
 
   session.listen("tcp://127.0.0.1:0");
   unsigned int id = session.registerService("serviceTest", obj);
