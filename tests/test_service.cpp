@@ -50,7 +50,8 @@ do                                           \
 TEST(QiService, RemoteObjectCacheServerClose)
 {
   TestSessionPair p;
-
+  if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
+    return;
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
@@ -129,7 +130,8 @@ TEST(QiService, RemoteObjectCacheABANewServer)
 {
   TestSessionPair p;
   qi::Session     ses;
-
+  if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
+    return;
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
@@ -166,7 +168,8 @@ TEST(QiService, RemoteObjectCacheABANewServer)
 TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
 {
   TestSessionPair p;
-
+  if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
+    return;
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("msleep", &qi::os::msleep);
   qi::ObjectPtr obj(ob.object());
