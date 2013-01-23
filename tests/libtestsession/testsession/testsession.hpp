@@ -106,6 +106,9 @@ public:
   static TestMode::Mode getTestMode();
   static void           initTestMode(int argc, char **argv);
   static void           forceTestMode(TestMode::Mode mode);
+
+private:
+  static void           help();
 };
 
 class TestSession

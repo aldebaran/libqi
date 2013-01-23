@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 #if defined(__APPLE__) || defined(__linux__)
   setsid();
 #endif
-  ::testing::InitGoogleTest(&argc, argv);
   TestMode::initTestMode(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

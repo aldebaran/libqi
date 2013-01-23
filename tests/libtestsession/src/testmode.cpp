@@ -6,10 +6,24 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
+#include <iomanip>
+
 #include <qi/os.hpp>
 #include <testsession/testsession.hpp>
 
 TestMode::Mode testMode = TestMode::Mode_Default;
+
+void TestMode::help()
+{
+  std::cout << "LibTestSession Options:" << std::endl;
+  std::cout << std::left << std::setw(20) << "\t--help" << "Print this usage." << std::endl;
+  std::cout << std::endl;
+
+  std::cout << std::left << std::setw(20) << "\t--mode=VALUE";
+  std::cout << "Set test mode used by test sessions. Mode can also be set using with TESTMODE environment variable" << std::endl;
+  std::cout << std::left << std::setw(20) << "\t";
+  std::cout << "Avalaible values : direct, sd." << std::endl << std::endl;
+}
 
 void TestMode::initTestMode(int argc, char **argv)
 {
@@ -18,6 +32,17 @@ void TestMode::initTestMode(int argc, char **argv)
   std::map<std::string, TestMode::Mode>  _convert;
   extern TestMode::Mode testMode;
   std::string variable;
+
+  // Print help
+  for (int it = 0; it < argc; it++)
+  {
+    std::string arg = argv[it];
+    if (arg == "--help")
+    {
+      TestMode::help();
+      break;
+    }
+  }
 
   // Initialize convertion map.
   _convert["direct"] = TestMode::Mode_Direct;
