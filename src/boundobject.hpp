@@ -9,7 +9,7 @@
 
 #include <string>
 #include <set>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/transportserver.hpp>
