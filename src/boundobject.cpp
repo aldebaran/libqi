@@ -136,8 +136,7 @@ namespace qi {
     * So put a lock, and rely on metaCall we invoke being asynchronous for// execution
     * This is decided by _callType, set from BoundObject ctor argument, passed by Server, which
     * uses its internal _defaultCallType, passed to its constructor, default
-    * to queued. When Server is instanciated by ObjectHost, it uses the default
-    * value.
+    * to queued.
     *
     * As a consequence, users of currentSocket() must set _callType to Direct.
     */
@@ -149,7 +148,7 @@ namespace qi {
         qi::Future<GenericValuePtr>  fut = obj->metaCall(funcId, mfp,
             obj==_self ? MetaCallType_Direct: _callType);
         _currentSocket.reset();
-        fut.connect(boost::bind<void>(&serverResultAdapter, _1, (ObjectHost*)this, socket, msg.address()));
+        fut.connect(boost::bind<void>(&serverResultAdapter, _1, socket, msg.address()));
       }
       break;
     case Message::Type_Post: {
