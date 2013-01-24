@@ -17,6 +17,7 @@
 #include "log_p.hpp"
 #include <qi/os.hpp>
 #include <cstdio>
+#include <boost/thread/mutex.hpp>
 
 #define FILESIZEMAX 1024 * 1024
 
@@ -75,6 +76,9 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
+      boost::mutex mutex_;
+      boost::mutex::scoped_lock scopedLock(mutex_);
+
       if (verb > qi::log::verbosity() || _private->_file == NULL)
       {
         return;
