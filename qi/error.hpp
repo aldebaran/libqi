@@ -50,7 +50,7 @@ namespace qi {
 
       /**
        * \brief Copy constructor.
-       * \param message Exception message.
+       * \param[in] e message Exception message.
        */
       QiException(const QiException &e)
         : std::runtime_error(e.what())

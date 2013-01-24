@@ -39,11 +39,11 @@
  * The proper way to use this macro is to:
  * - Have your buildsystem set mylib_EXPORTS when building MYLIB
  * - Have your buildsystem produce a config.h file that
-     #define mylib_STATIC_BUILD to 1 or empty if it is a static build, and
+     \#define mylib_STATIC_BUILD to 1 or empty if it is a static build, and
      not define mylib_STATIC_BUILD or define it to 0 otherwise
  * In one header, write
- *   #include <mylib/config.h>
- *   #define MYLIB_API QI_LIB_API(mylib)
+ *   \#include <mylib/config.h>
+ *   \#define MYLIB_API QI_LIB_API(mylib)
  */
 #define QI_LIB_API(libname) _QI_LIB_API(BOOST_PP_CAT(libname, _EXPORTS), BOOST_PP_CAT(libname, _STATIC_BUILD))
 

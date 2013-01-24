@@ -60,6 +60,8 @@ namespace qi
       boost::shared_ptr<AsyncCallHandlePrivate> _p;
     };
 
+    //! @enum FileOperation
+    //! Define operation permitted on file
     enum QI_API FileOperation
     {
       FileOperation_Read = 1,

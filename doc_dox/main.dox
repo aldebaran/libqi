@@ -12,10 +12,10 @@ Basic logging facilities are provided. You will also find convenient functions i
 
 \section API
 - \ref qi
-- \ref qimacro
+- \\ref qimacro
 - \ref qilog
 - \ref qipath
-- \ref qios
+- \\ref qios
 
 \section Developer Guide
 - \ref qilogguide

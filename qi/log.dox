@@ -216,7 +216,6 @@
  * \brief LogStream. Will log at object destruction.
  * \param level The verbosity of the message.
  * \param category Log category (for filtering in the future).
- * \param fmt Log message as a format string.
  * \param file Filename from which this function was called (ex: __FILE__).
  * \param function Function name from which this function was called (ex: __FUNCTION__).
  * \param line Line from which this function was called (ex: __LINE__).
