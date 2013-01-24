@@ -96,7 +96,6 @@ namespace qi {
 
 }
 
-QI_TYPE_NOT_CONSTRUCTIBLE(qi::ServiceBoundObject);
-
+QI_TYPE_NOT_CLONABLE(qi::ServiceBoundObject);
 
 #endif  // _SRC_SESSIONSERVER_HPP_
