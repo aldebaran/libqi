@@ -28,7 +28,7 @@
 #include <qimessaging/transportsocket.hpp>
 #include "transportserverasio_p.hpp"
 #include "transportserverdummy_p.hpp"
-#include "tcptransportsocket_p.hpp"
+#include "tcptransportsocket.hpp"
 
 namespace qi
 {
