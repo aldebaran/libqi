@@ -273,34 +273,39 @@ namespace qi {
 
   inline GenericValue::GenericValue()
   : data(GenericValuePtr())
+  , allocated(false)
   {}
 
   inline GenericValue::GenericValue(const GenericValue& b)
+  : allocated(false)
   {
     *this = b;
   }
 
-  inline GenericValue::GenericValue(const GenericValuePtr& b)
+  inline GenericValue::GenericValue(const GenericValuePtr& b, bool copy)
+  : data(copy?b.clone():b)
+  , allocated(copy)
   {
-    data = b.clone();
   }
 
   inline void GenericValue::operator=(const GenericValue& b)
   {
-    data.destroy();
-    data = b.data.clone();
+    reset();
+    allocated = b.allocated;
+    data = allocated ? b.data.clone():b.data;
   }
 
   inline void GenericValue::operator=(const GenericValuePtr& b)
   {
-    data.destroy();
+    reset();
     data = b.clone();
+    allocated = true;
   }
 
   template<typename T>
-  inline GenericValue GenericValue::from(const T& src)
+  inline GenericValue GenericValue::from(const T& src, bool copy)
   {
-    return GenericValue(GenericValuePtr::from(src));
+    return GenericValue(GenericValuePtr::from(src), copy);
   }
 
   inline std::string GenericValue::signature(bool resolveDynamic) const
@@ -308,15 +313,23 @@ namespace qi {
     return data.signature(resolveDynamic);
   }
 
+  inline void GenericValue::reset()
+  {
+    if (allocated)
+      data.destroy();
+    allocated = false;
+    data = GenericValuePtr();
+  }
+
   inline GenericValue::~GenericValue()
   {
-    data.destroy();
+    reset();
   }
 
   inline GenericValue GenericValue::take(GenericValuePtr& b)
   {
-    GenericValue res;
-    res.data = b;
+    GenericValue res(b, false);
+    res.allocated = true;
     b.type = 0;
     b.value = 0;
     return res;

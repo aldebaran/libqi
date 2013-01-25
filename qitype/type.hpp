@@ -230,14 +230,14 @@ namespace qi{
   public:
     GenericValue();
     GenericValue(const GenericValue& b);
-    GenericValue(const GenericValuePtr& b);
+    GenericValue(const GenericValuePtr& b, bool copy = true);
 
     ~GenericValue();
 
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
 
-    template<typename T> static GenericValue from(const T& src);
+    template<typename T> static GenericValue from(const T& src, bool copy=true);
 
     std::string signature(bool resolveDynamic=false) const;
 
@@ -247,6 +247,7 @@ namespace qi{
     template<typename T> T as() const;
 
     Type::Kind kind() const;
+    void reset();
 
     int64_t          asInt() const;
     float            asFloat() const;
@@ -255,6 +256,7 @@ namespace qi{
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
     GenericValuePtr data;
+    bool            allocated;
   };
 
   QITYPE_API bool operator< (const qi::GenericValue& a, const qi::GenericValue& b);
