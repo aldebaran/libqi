@@ -95,11 +95,10 @@ inline void GenericListPtr::pushBack(GenericValuePtr val)
 
 inline GenericListPtr GenericValuePtr::asList() const
 {
-  GenericListPtr result;
-  result.type = dynamic_cast<TypeList*>(type);
-  if (result.type)
-    result.value = value;
-  return result;
+  if (kind() != Type::List)
+    return GenericListPtr();
+  else
+    return GenericListPtr(static_cast<TypeList*>(type), value);
 }
 
 
@@ -160,12 +159,45 @@ inline void GenericMapPtr::insert(GenericValuePtr key, GenericValuePtr val)
 
 inline GenericMapPtr GenericValuePtr::asMap() const
 {
-  GenericMapPtr result;
-  result.type = dynamic_cast<TypeMap*>(type);
-  if (result.type)
-    result.value = value;
-  return result;
+  if (kind() != Type::Map)
+    return GenericMapPtr();
+  else
+    return GenericMapPtr(static_cast<TypeMap*>(type), value);
 }
+
+inline GenericTuplePtr GenericValuePtr::asTuple() const
+{
+  if (kind() != Type::Tuple)
+    return GenericTuplePtr();
+  else
+    return GenericTuplePtr(static_cast<TypeTuple*>(type), value);
+}
+
+inline GenericTuplePtr::GenericTuplePtr()
+{
+}
+
+inline GenericTuplePtr::GenericTuplePtr(GenericValuePtr& data)
+: GenericValuePtr(data)
+{
+}
+
+inline GenericTuplePtr::GenericTuplePtr(TypeTuple* type, void* data)
+: GenericValuePtr(type, data)
+{
+}
+
+inline std::vector<Type*> GenericTuplePtr::memberTypes()
+{
+  return static_cast<TypeTuple*>(type)->memberTypes();
+}
+
+inline std::vector<GenericValuePtr> GenericTuplePtr::get()
+{
+  return static_cast<TypeTuple*>(type)->getValues(value);
+}
+
+
 
 }
 #endif  // _QITYPE_DETAILS_GENERICVALUESPECIALIZED_HXX_

@@ -161,6 +161,7 @@ namespace qi{
   class GenericListPtr;
   class GenericMapPtr;
   class GenericObjectPtr;
+  class GenericTuplePtr;
 
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
@@ -210,6 +211,7 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
+    GenericTuplePtr  asTuple() const;
 
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.
@@ -255,6 +257,7 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
+    GenericTuplePtr  asTuple() const;
     /** @return contained GenericValue or empty GenericValue if type is not dynamic.
     * \warning returned value might become invalid if this object is destroyed.
     */
@@ -330,6 +333,19 @@ namespace qi{
     void insert(GenericValuePtr key, GenericValuePtr val);
     Type* keyType();
     Type* elementType();
+  };
+
+  class TypeTuple;
+  class GenericTuplePtr: public GenericValuePtr
+  {
+  public:
+    GenericTuplePtr();
+    GenericTuplePtr(GenericValuePtr&);
+    GenericTuplePtr(TypeTuple* type, void* value);
+
+    std::vector<GenericValuePtr> get();
+    void set(const std::vector<GenericValuePtr>& data);
+    std::vector<Type*> memberTypes();
   };
 
   // Interfaces for specialized types

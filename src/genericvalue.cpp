@@ -3,6 +3,8 @@
 **  See COPYING for the license
 */
 
+#include <boost/lexical_cast.hpp>
+
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 
@@ -315,5 +317,36 @@ namespace qi
     return a.data.value < b.data.value;
   }
 
+  void GenericTuplePtr::set(const std::vector<GenericValuePtr>& data)
+  {
+    TypeTuple* typeTuple = static_cast<TypeTuple*>(type);
+    std::vector<Type*> mTypes = memberTypes();
+    if (data.size() != mTypes.size())
+      throw std::runtime_error("Tuple size mismatch, expected "
+        + boost::lexical_cast<std::string>(mTypes.size())
+        + " got "
+        + boost::lexical_cast<std::string>(data.size())
+      );
+    // FIXME factor this with GenericFunctionParameters::copy
+    std::vector<void*> convData;
+    convData.reserve(data.size());
+    // Store indexes that where copied by converter and that needs a destroy
+    std::vector<int> allocatedIndexes;
+    for (unsigned i=0; i<data.size(); ++i)
+    {
+      std::pair<GenericValuePtr, bool> r = data[i].convert(mTypes[i]);
+      if (!r.first.type)
+        throw std::runtime_error(std::string("Conversion failure from ")
+          + data[i].type->infoString()
+          + " to "
+          + mTypes[i]->infoString());
+      convData.push_back(r.first.value);
+      if (r.second)
+        allocatedIndexes.push_back(i);
+    }
+    typeTuple->set(&value, convData);
+    for (unsigned i=0; i<allocatedIndexes.size(); ++i)
+      mTypes[allocatedIndexes[i]]->destroy(convData[allocatedIndexes[i]]);
+  }
 }
 
