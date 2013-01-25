@@ -57,16 +57,31 @@ namespace qi
     delete _p;
   }
 
-  int GenericObjectBuilder::xAdvertiseMethod(const std::string &retsig,
+  int GenericObjectBuilder::xAdvertiseMethod(const std::string& sigret,
                                              const std::string& signature,
+                                             GenericFunction func,
+                                             const std::string& desc,
+                                             MetaCallType threadingModel)
+  {
+    MetaMethodBuilder mmb;
+    mmb.setSigreturn(sigret);
+    mmb.setSignature(signature);
+    mmb.setDescription(desc);
+    return xAdvertiseMethod(mmb, func, threadingModel);
+  }
+
+  int GenericObjectBuilder::xAdvertiseMethod(MetaMethodBuilder& builder,
                                              GenericFunction func,
                                              MetaCallType threadingModel)
   {
     if (_p->_objptr) {
-      qiLogWarning("GenericObjectBuilder") << "GenericObjectBuilder: Called xAdvertiseMethod with method '" << signature << "' but object is already created.";
+      qiLogWarning("GenericObjectBuilder")
+          << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
+          << builder.metaMethod().signature()
+          << "' but object is already created.";
     }
 
-    unsigned int nextId = _p->_object->metaObject()._p->addMethod(retsig, signature);
+    unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder);
     _p->_object->setMethod(nextId, func, threadingModel);
     return nextId;
   }
@@ -78,6 +93,10 @@ namespace qi
     }
     unsigned int nextId = _p->_object->metaObject()._p->addSignal(signature);
     return nextId;
+  }
+
+  void GenericObjectBuilder::setDescription(const std::string &desc) {
+    _p->_object->metaObject()._p->setDescription(desc);
   }
 
   ObjectPtr GenericObjectBuilder::object()

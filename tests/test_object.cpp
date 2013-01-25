@@ -175,7 +175,7 @@ TEST(TestObject, Simple) {
   EXPECT_EQ(42, obj->call<int>("test", (unsigned short)21, 21));
   EXPECT_EQ(42, obj->call<int>("test", (float)21, 21));
   EXPECT_EQ(42, obj->call<int>("test", (double)21, 21));
-    EXPECT_EQ(42, obj->call<int>("test", (long)21, 21));
+  EXPECT_EQ(42, obj->call<int>("test", (long)21, 21));
 #endif
 
   gGlobalResult = 0;

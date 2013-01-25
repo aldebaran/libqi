@@ -50,6 +50,8 @@ namespace qi {
     ///Merge two MetaObject. Dest method and signal ids will be incremented by offset.
     static qi::MetaObject merge(const qi::MetaObject &source, const qi::MetaObject &dest);
 
+    std::string description() const;
+
     MetaObjectPrivate   *_p;
   };
 
@@ -58,7 +60,11 @@ namespace qi {
   public:
     MetaObjectBuilder();
 
-    unsigned int addMethod(const std::string& sigret, const std::string& signature, int id = -1);
+    void setDescription(const std::string& desc);
+    unsigned int addMethod(const std::string& sigret,
+                           const std::string& signature,
+                           int id);
+    unsigned int addMethod(MetaMethodBuilder& builder, int id = -1);
     unsigned int addSignal(const std::string &sig, int id = -1);
 
     qi::MetaObject metaObject();

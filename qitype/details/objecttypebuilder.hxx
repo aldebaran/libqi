@@ -7,7 +7,9 @@
 #ifndef _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 #define _QITYPE_DETAILS_OBJECTTYPEBUILDER_HXX_
 
+#include <qitype/objecttypebuilder.hpp>
 #include <qitype/methodtypefactory.hpp>
+#include <qitype/metamethod.hpp>
 
 namespace qi {
 
@@ -30,9 +32,10 @@ namespace qi {
                                                       int id)
   {
     // FIXME validate type
-    return xAdvertiseMethod(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn(),
-      name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature(),
-      makeGenericMethod(function), threadingModel, id);
+    MetaMethodBuilder builder;
+    builder.setSigreturn(detail::FunctionSignature<FUNCTION_TYPE>::sigreturn());
+    builder.setSignature(name + "::" + detail::FunctionSignature<FUNCTION_TYPE>::signature());
+    return xAdvertiseMethod(builder, makeGenericMethod(function), threadingModel, id);
   }
 
   template<typename U>

@@ -32,6 +32,7 @@ namespace qi {
       _events = rhs._events;
     }
     _index = rhs._index;
+    _description = rhs._description;
     return (*this);
   }
 
@@ -76,7 +77,7 @@ namespace qi {
     Signature sresolved(sigsorig[2]);
 
     for (it = _methods.begin(); it != _methods.end(); ++it) {
-      qi::MetaMethod &mm = it->second;
+      qi::MetaMethod mm = it->second;
       std::vector<std::string> sigs = qi::signatureSplit(mm.signature());
 
       if (sigsorig[1] != sigs[1])
@@ -104,22 +105,26 @@ namespace qi {
     return ret;
   }
 
-  unsigned int MetaObjectPrivate::addMethod(const std::string& sigret, const std::string& signature, int uid) {
+  unsigned int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id;
-    NameToIdx::iterator it = _methodsNameToIdx.find(signature);
+    qi::MetaMethod method = builder.metaMethod();
+    NameToIdx::iterator it = _methodsNameToIdx.find(method.signature());
     if (it != _methodsNameToIdx.end()) {
-      qiLogVerbose("qi.MetaObject") << "Method("<< it->second << ") already defined (and reused): " << sigret << " " << signature;
+      qiLogVerbose("qi.MetaObject")
+          << "Method("<< it->second << ") already defined (and reused): "
+          << method.sigreturn() << " "
+          << method.signature();
       return it->second;
     }
-    if (uid >= 0)
+    if (-1 < uid)
       id = uid;
     else
       id = ++_index;
 
-    MetaMethod mm(id, sigret, signature);
-    _methods[id] = mm;
-    _methodsNameToIdx[signature] = id;
+    builder.setUid(id);
+    _methods[id] = builder.metaMethod();
+    _methodsNameToIdx[method.signature()] = id;
     // qiLogDebug("qi.MetaObject") << "Adding method("<< id << "): " << sigret << " " << signature;
     return id;
   }
@@ -153,7 +158,7 @@ namespace qi {
       MetaObject::MethodMap::iterator jt = _methods.find(newUid);
       if (jt != _methods.end())
         return false;
-      _methods[newUid] = qi::MetaMethod(newUid, it->second.sigreturn(), it->second.signature());
+      _methods[newUid] = qi::MetaMethod(newUid, it->second);
       _methodsNameToIdx[it->second.signature()] = newUid;
     }
     //todo: update uid
@@ -202,6 +207,10 @@ namespace qi {
       }
     }
     _index = idx;
+  }
+
+  void MetaObjectPrivate::setDescription(const std::string &desc) {
+    _description = desc;
   }
 
   MetaObject::MetaObject()
@@ -297,7 +306,12 @@ namespace qi {
       qiLogError("BoundObject") << "cant merge metaobject (methods)";
     if (!result._p->addSignals(dest.signalMap()))
       qiLogError("BoundObject") << "cant merge metaobject (signals)";
+    result._p->setDescription(dest.description());
     return result;
+  }
+
+  std::string MetaObject::description() const {
+    return _p->_description;
   }
 
   //MetaObjectBuilder
@@ -311,8 +325,18 @@ namespace qi {
   {
   }
 
-  unsigned int MetaObjectBuilder::addMethod(const std::string& sigret, const std::string& signature, int id) {
-    return _p->metaObject._p->addMethod(sigret, signature, id);
+  unsigned int MetaObjectBuilder::addMethod(const std::string& sigret,
+                                            const std::string& signature,
+                                            int id)
+  {
+    MetaMethodBuilder mmb;
+    mmb.setSigreturn(sigret);
+    mmb.setSignature(signature);
+    return _p->metaObject._p->addMethod(mmb, id);
+  }
+
+  unsigned int MetaObjectBuilder::addMethod(MetaMethodBuilder& builder, int id) {
+    return _p->metaObject._p->addMethod(builder, id);
   }
 
   unsigned int MetaObjectBuilder::addSignal(const std::string &sig, int id) {
@@ -321,6 +345,10 @@ namespace qi {
 
   qi::MetaObject MetaObjectBuilder::metaObject() {
     return _p->metaObject;
+  }
+
+  void MetaObjectBuilder::setDescription(const std::string &desc) {
+    return _p->metaObject._p->setDescription(desc);
   }
 
 }
@@ -338,16 +366,43 @@ namespace qi {
       return max;
     }
 
+    static int calcOffsetMethodSig(const qi::MetaObject::MethodMap &mmaps) {
+      qi::MetaObject::MethodMap::const_iterator it;
+      int max = 0;
+      for (it = mmaps.begin(); it != mmaps.end(); ++it) {
+        int cur = it->second.signature().size();
+        if (cur > max)
+          max = cur;
+      }
+      return max;
+    }
+
     void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj) {
       qi::MetaObject::MethodMap methods = mobj.methodMap();
-      int offset = calcOffsetMethod(methods);
-      qi::MetaObject::MethodMap::const_iterator it2;
+      qi::MetaObject::MethodMap::const_iterator itMM;
+      qi::MetaMethodParameterVector::const_iterator itMMPV;
+
+      int offset = calcOffsetMethod(methods) + 1;
+      //int offset2 = calcOffsetMethodSig(methods) + 2;
 
       stream << "methods:" << std::endl;
-      for (it2 = methods.begin(); it2 != methods.end(); ++it2) {
-        stream << "  " << std::right << std::setfill('0') << std::setw(3) << it2->second.uid() << std::setw(0) << " "
-               << std::left << std::setfill(' ') << std::setw(offset) << it2->second.sigreturn() << std::setw(0)
-               << " " << it2->second.signature() << std::endl;
+      for (itMM = methods.begin(); itMM != methods.end(); ++itMM) {
+        stream << "  " << std::right << std::setfill('0') << std::setw(3)
+               << itMM->second.uid() << std::setw(0) << " " << std::left
+               << itMM->second.sigreturn() << " " << itMM->second.signature() << std::endl;
+
+        if (itMM->second.description() != "")
+          stream << "    documentation: " << itMM->second.description() << std::endl;
+
+        qi::MetaMethodParameterVector mmpVect = itMM->second.parameters();
+        if (0 < mmpVect.size())
+          stream << "    params:" << std::endl;
+        for (itMMPV = mmpVect.begin(); itMMPV != mmpVect.end(); ++itMMPV) {
+          stream << "        " << itMMPV->name() << ": " << itMMPV->description() << std::endl;
+        }
+
+        if (itMM->second.returnDescription() != "")
+          stream << "    return: " << itMM->second.returnDescription() << std::endl;
       }
       stream << "events:" << std::endl;
       qi::MetaObject::SignalMap events = mobj.signalMap();
@@ -366,7 +421,7 @@ static qi::MetaObjectPrivate* metaObjectPrivate(qi::MetaObject* p) {
 }
 
 
-QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events);
+QI_TYPE_STRUCT_EX(qi::MetaObjectPrivate, ptr->refreshCache();, _methods, _events, _description);
 QI_TYPE_REGISTER(::qi::MetaObjectPrivate);
 
 

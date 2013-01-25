@@ -23,22 +23,50 @@ namespace qi {
     ~GenericObjectBuilder();
 
     template <typename OBJECT_TYPE, typename METHOD_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, OBJECT_TYPE object, METHOD_TYPE method, MetaCallType threadingModel = MetaCallType_Auto);
+    inline unsigned int advertiseMethod(const std::string& name,
+                                        OBJECT_TYPE object,
+                                        METHOD_TYPE method,
+                                        const std::string& desc = "",
+                                        MetaCallType threadingModel = MetaCallType_Auto);
+
     template <typename FUNCTION_TYPE>
-    inline unsigned int advertiseMethod(const std::string& name, FUNCTION_TYPE function, MetaCallType threadingModel = MetaCallType_Auto);
+    inline unsigned int advertiseMethod(const std::string& name,
+                                        FUNCTION_TYPE function,
+                                        const std::string& desc = "",
+                                        MetaCallType threadingModel = MetaCallType_Auto);
+
+    template <typename OBJECT_TYPE, typename METHOD_TYPE>
+    inline unsigned int advertiseMethod(MetaMethodBuilder& builder,
+                                        OBJECT_TYPE object,
+                                        METHOD_TYPE method,
+                                        MetaCallType threadingModel = MetaCallType_Auto);
+
+    template <typename FUNCTION_TYPE>
+    inline unsigned int advertiseMethod(MetaMethodBuilder& builder,
+                                        FUNCTION_TYPE function,
+                                        MetaCallType threadingModel = MetaCallType_Auto);
+
     template<typename FUNCTION_TYPE>
     inline unsigned int advertiseEvent(const std::string& eventName);
+
     void setThreadingModel(ObjectThreadingModel model);
 
-    int xAdvertiseMethod(const std::string &retsig, const std::string& signature, GenericFunction func, MetaCallType threadingModel = MetaCallType_Auto);
+    int xAdvertiseMethod(const std::string& sigret, const std::string& signature,
+                         GenericFunction func, const std::string& desc = "",
+                         MetaCallType threadingModel = MetaCallType_Auto);
+
+    int xAdvertiseMethod(MetaMethodBuilder& builder, GenericFunction func,
+                         MetaCallType threadingModel = MetaCallType_Auto);
+
     int xAdvertiseEvent(const std::string& signature);
+
+    void setDescription(const std::string& desc);
 
     qi::ObjectPtr object();
   public:
     GenericObjectBuilderPrivate *_p;
     QI_DISALLOW_COPY_AND_ASSIGN(GenericObjectBuilder);
   };
-
 }
 
 #include <qitype/details/genericobjectbuilder.hxx>

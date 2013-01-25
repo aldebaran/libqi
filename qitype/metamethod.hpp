@@ -5,48 +5,88 @@
 */
 
 #ifndef _QITYPE_METAMETHOD_HPP_
-#define _QITYPE_METAMETHOD_HPP_
+# define _QITYPE_METAMETHOD_HPP_
 
-#include <qitype/api.hpp>
-#include <string>
-#include <qitype/type.hpp>
+# include <string>
+# include <map>
 
-#ifdef _MSC_VER
+# include <qitype/api.hpp>
+# include <qitype/type.hpp>
+
+# ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4251 )
-#endif
+# endif
 
 namespace qi {
+  class MetaMethodParameterPrivate;
+  class QITYPE_API MetaMethodParameter {
+  public:
+    MetaMethodParameter();
+    MetaMethodParameter(const MetaMethodParameter& other);
+    MetaMethodParameter(const std::string& name, const std::string& doc);
+    ~MetaMethodParameter();
 
+    MetaMethodParameter& operator= (const MetaMethodParameter& other);
+
+    std::string name() const;
+    std::string description() const;
+
+    MetaMethodParameterPrivate* _p;
+  };
+  typedef std::vector<MetaMethodParameter> MetaMethodParameterVector;
+
+  class MetaMethodPrivate;
   /// Representation of a method in an GenericObject.
   class QITYPE_API MetaMethod {
   public:
-    MetaMethod()
-      : _uid(0)
-    {}
+    MetaMethod();
+    MetaMethod(const MetaMethod& other);
+    MetaMethod(unsigned int newUid, const MetaMethod& other);
+    ~MetaMethod();
 
-    MetaMethod(unsigned int uid, const std::string& sigret, const std::string& signature);
+    MetaMethod& operator= (const MetaMethod& other);
 
+    unsigned int uid() const;
     std::string signature() const;
     std::string sigreturn() const;
+    std::string description() const;
+    MetaMethodParameterVector parameters() const;
+    std::string returnDescription() const;
 
-    unsigned int       uid() const;
+    MetaMethodPrivate* _p;
 
   private:
-    unsigned int      _uid;
-    // C4251
-    std::string       _signature;
-    // C4251
-    std::string       _sigreturn;
     friend class TypeImpl<MetaMethod>;
   };
 
+  class MetaMethodBuilderPrivate;
+  class QITYPE_API MetaMethodBuilder {
+  public:
+    MetaMethodBuilder();
+    MetaMethodBuilder(const std::string& name, const std::string& doc = "");
+    MetaMethodBuilder(const MetaMethodBuilder& other);
+    ~MetaMethodBuilder();
+
+    MetaMethodBuilder& operator= (const MetaMethodBuilder& other);
+
+    std::string name() const;
+
+    void setUid(unsigned int uid);
+    void setSignature(const std::string& sig);
+    void setSigreturn(const std::string& sig);
+    void setReturnDescription(const std::string& doc);
+    void addParameter(const std::string& name, const std::string& documentation);
+    void setDescription(const std::string& documentation);
+
+    qi::MetaMethod metaMethod();
+
+    MetaMethodBuilderPrivate* _p;
+  };
 } // namespace qi
 
-QI_TYPE_STRUCT(qi::MetaMethod, _signature, _sigreturn, _uid);
-
-#ifdef _MSC_VER
+# ifdef _MSC_VER
 #  pragma warning( pop )
-#endif
+# endif
 
 #endif  // _QITYPE_METAMETHOD_HPP_

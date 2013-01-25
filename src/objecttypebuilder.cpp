@@ -30,17 +30,19 @@ namespace qi {
     delete _p;
   }
 
-  int ObjectTypeBuilderBase::xAdvertiseMethod(const std::string &retsig,
-                                              const std::string& signature,
+  int ObjectTypeBuilderBase::xAdvertiseMethod(MetaMethodBuilder& builder,
                                               GenericMethod func,
                                               MetaCallType threadingModel,
                                               int id)
   {
     if (_p->type) {
-      qiLogVerbose("ObjectTypeBuilder") << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
-                                        << retsig << " " << signature << "' but type is already created.";
+      qiLogVerbose("ObjectTypeBuilder")
+          << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
+          << builder.metaMethod().sigreturn() << " "
+          << builder.metaMethod().signature()
+          << "' but type is already created.";
     }
-    unsigned int nextId = _p->metaObject._p->addMethod(retsig, signature, id);
+    unsigned int nextId = _p->metaObject._p->addMethod(builder, id);
     _p->data.methodMap[nextId] = std::make_pair(func, threadingModel);
     return nextId;
   }

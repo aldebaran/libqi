@@ -9,6 +9,7 @@
 
 #include <qi/atomic.hpp>
 #include <qitype/metasignal.hpp>
+#include <qitype/metaobject.hpp>
 #include <qitype/metamethod.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -54,11 +55,14 @@ namespace qi {
 
     std::vector<MetaSignal> findSignal(const std::string &name);
 
-    unsigned int addMethod(const std::string& sigret, const std::string& signature, int id = -1);
+    unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
+
     unsigned int addSignal(const std::string &sig, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
+
+    void setDescription(const std::string& desc);
 
   private:
     friend class MetaObject;
@@ -77,6 +81,9 @@ namespace qi {
     mutable boost::recursive_mutex      _eventsMutex;
 
     qi::Atomic<unsigned int>            _index;
+
+    std::string                         _description;
+
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;
     friend class TypeImpl<MetaObjectPrivate>;
