@@ -351,6 +351,17 @@ namespace qi {
   inline std::string      GenericValue::asString() const { return data.asString(); }
   inline GenericListPtr   GenericValue::asList() const   { return data.asList(); }
   inline GenericMapPtr    GenericValue::asMap() const    { return data.asMap(); }
+  inline GenericValue     GenericValue::asDynamic() const
+  {
+    if (kind() != Type::Dynamic)
+      return GenericValue();
+    TypeDynamic* d = static_cast<TypeDynamic*>(data.type);
+    std::pair<GenericValuePtr, bool> res = d->get(data.value);
+    if (res.second)
+      return GenericValue::take(res.first);
+    else
+      return GenericValue(res.first, false);
+  }
 }
 
 /* Since GenericValuePtr does not handle its memory, it cannot be used

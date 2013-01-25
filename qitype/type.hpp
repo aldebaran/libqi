@@ -255,6 +255,10 @@ namespace qi{
     std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
+    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
+    * \warning returned value might become invalid if this object is destroyed.
+    */
+    GenericValue     asDynamic() const;
     GenericValuePtr data;
     bool            allocated;
   };
