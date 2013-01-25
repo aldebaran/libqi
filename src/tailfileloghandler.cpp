@@ -102,9 +102,9 @@ namespace qi {
                                      oldFilePath,
                                      boost::filesystem::copy_option::overwrite_if_exists);
 
-        FILE* file = qi::os::fopen(filePath.make_preferred().string().c_str(), "w+");
+        FILE* pfile = qi::os::fopen(filePath.make_preferred().string().c_str(), "w+");
 
-        _private->_file = file;
+        _private->_file = pfile;
         _private->_writeSize = 0;
       }
     }
