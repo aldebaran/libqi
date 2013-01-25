@@ -24,7 +24,7 @@ public:
     static qi::ObjectPtr tgs;
     if (!init)
     {
-      std::vector<std::string> objs = qi::loadObject("taskservice");
+      std::vector<std::string> objs = qi::loadObject("task");
       if (objs.size() != 1)
         throw std::runtime_error("Expected one object in taskService");
       tgs = qi::createObject("TaskGeneratorService");

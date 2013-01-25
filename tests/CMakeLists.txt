@@ -44,6 +44,7 @@ endif()
 MESSAGE("Found python:  ${_python_executable}")
 qi_create_module(task
   SRC task_service.cpp
+  INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/task_service.hpp
   SHARED
   CLASSES Task
   SERVICES TaskGenerator
