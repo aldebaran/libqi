@@ -57,6 +57,10 @@ namespace qi {
 
   void SignalBase::setCallType(MetaCallType callType)
   {
+    if (!_p)
+    {
+      _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+    }
     _p->defaultCallType = callType;
   }
 
