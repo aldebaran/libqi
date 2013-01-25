@@ -29,6 +29,7 @@ namespace qi {
       FILE* _file;
       std::string _fileName;
       int   _writeSize;
+      boost::mutex mutex_;
     };
 
     TailFileLogHandler::TailFileLogHandler(const std::string& filePath)
@@ -76,8 +77,7 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
-      boost::mutex mutex_;
-      boost::mutex::scoped_lock scopedLock(mutex_);
+      boost::mutex::scoped_lock scopedLock(_private->mutex_);
 
       if (verb > qi::log::verbosity() || _private->_file == NULL)
       {
