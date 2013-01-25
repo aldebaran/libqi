@@ -17,6 +17,7 @@
 #include "log_p.hpp"
 #include <qi/os.hpp>
 #include <cstdio>
+#include <boost/thread/mutex.hpp>
 
 namespace qi {
   namespace log {
@@ -26,6 +27,7 @@ namespace qi {
       FILE* _file;
       int   _count;
       int   _max;
+      boost::mutex _mutex;
     };
 
     HeadFileLogHandler::HeadFileLogHandler(const std::string& filePath,
@@ -78,6 +80,8 @@ namespace qi {
                                  const char              *fct,
                                  const int               line)
     {
+      boost::mutex::scoped_lock scopedLock(_private->_mutex);
+
       if (_private->_count < _private->_max)
       {
         if (verb > qi::log::verbosity() || _private->_file == NULL)
