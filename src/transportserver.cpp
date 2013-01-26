@@ -38,8 +38,14 @@ namespace qi
   static TransportServerPrivate * newTSP(TransportServer* self,
     const qi::Url &url,
     qi::EventLoop* ctx) {
-    if (url.protocol() == "tcp") {
-      return new TransportServerAsioPrivate(self, url, ctx);
+    if (url.protocol() == "tcp")
+    {
+      return new TransportServerAsioPrivate(self, url, ctx, false);
+    }
+
+    if (url.protocol() == "tcps")
+    {
+      return new TransportServerAsioPrivate(self, url, ctx, true);
     }
 
     qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."

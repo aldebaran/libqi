@@ -12,6 +12,7 @@
 # include <queue>
 # include <boost/thread/recursive_mutex.hpp>
 # include <boost/asio.hpp>
+# include <boost/asio/ssl.hpp>
 # include <qi/atomic.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
@@ -30,8 +31,8 @@ namespace qi
   class TcpTransportSocket : public TransportSocketPrivate, public TransportSocket
   {
   public:
-    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop());
-    explicit TcpTransportSocket(void* s, EventLoop* eventloop = getDefaultNetworkEventLoop());
+    explicit TcpTransportSocket(EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false);
+    explicit TcpTransportSocket(void* s, EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false);
     virtual ~TcpTransportSocket();
 
     virtual qi::FutureSync<bool> connect(const qi::Url &url);
@@ -42,6 +43,7 @@ namespace qi
   private:
     void error(const boost::system::error_code& erc);
     void connected(const boost::system::error_code& erc);
+    void handshake(const boost::system::error_code& erc);
     void onRead();
     void onReadHeader(const boost::system::error_code& erc, std::size_t);
     void onReadData(const boost::system::error_code& erc, std::size_t);
@@ -51,7 +53,11 @@ namespace qi
     void connect_(TransportSocketPtr socket, const qi::Url &url);
     void disconnect_(TransportSocketPtr socket);
   private:
-    boost::asio::ip::tcp::socket& _socket;
+    bool _ssl;
+    bool _sslHandshake;
+    boost::asio::ssl::context _sslContext;
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _socket;
+
     boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
     qi::Promise<bool>   _connectPromise;
     qi::Promise<void>   _disconnectPromise;

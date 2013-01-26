@@ -158,10 +158,6 @@ namespace qi {
   {
     qi::Url url(address);
 
-    if (url.protocol() != "tcp") {
-      qiLogError("qi::Server") << "Protocol " << url.protocol() << " not supported.";
-      return false;
-    }
     if (!_server.listen(url))
       return false;
 

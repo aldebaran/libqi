@@ -80,11 +80,19 @@ namespace qi
   TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop) {
     TransportSocketPtr ret;
 
-    if (protocol != "tcp") {
+    if (protocol == "tcp")
+    {
+      return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop, false));
+    }
+    else if (protocol == "tcps")
+    {
+      return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop, true));
+    }
+    else
+    {
       qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket: " << protocol;
       return ret;
     }
-    return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop));
   }
 }
 

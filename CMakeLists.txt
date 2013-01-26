@@ -134,7 +134,7 @@ qi_create_lib(qimessaging
   SUBMODULE
     qi-messaging qi-messaging-c
   DEPENDS
-    QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE
+    QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE OPENSSL
 )
 
 if(WIN32)

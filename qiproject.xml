@@ -1,5 +1,5 @@
 <project name="libqimessaging">
-  <depends buildtime="true" runtime="true" names="libqi libqitype boost"       />
+  <depends buildtime="true" runtime="true" names="libqi libqitype boost openssl" />
   <depends buildtime="true" names="python gtest pthread libqiperf"             />
   <sphinxdoc name="qimessaging"        src="doc" dest="ref/libqimessaging"     />
   <doxydoc   name="libqimessaging-cpp" src=""    dest="ref/libqimessaging/cpp" />

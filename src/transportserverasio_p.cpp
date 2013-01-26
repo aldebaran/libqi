@@ -27,7 +27,7 @@ namespace qi
 {
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-    boost::asio::ip::tcp::socket* s,
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s,
     boost::shared_ptr<bool> live)
   {
     qiLogDebug("qimessaging.server.listen") << this << " onAccept";
@@ -43,10 +43,10 @@ namespace qi
       self->acceptError(erc.value());
       return;
     }
-    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(s, context));
+    qi::TransportSocketPtr socket = qi::TcpTransportSocketPtr(new TcpTransportSocket(s, context, _ssl));
     self->newConnection(socket);
-    s = new boost::asio::ip::tcp::socket(_acceptor.get_io_service());
-    _acceptor.async_accept(*s,
+    s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
+    _acceptor.async_accept(s->lowest_layer(),
       boost::bind(&TransportServerAsioPrivate::onAccept, this, _1, s, live));
   }
 
@@ -102,7 +102,7 @@ namespace qi
       ifsMap["Loopback"].push_back("127.0.0.1");
   #endif
 
-      protocol = "tcp://";
+      protocol = _ssl ? "tcps://" : "tcp://";
 
       for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
            interfaceIt != ifsMap.end();
@@ -122,8 +122,25 @@ namespace qi
          }
       }
     }
-    boost::asio::ip::tcp::socket* s = new boost::asio::ip::tcp::socket(_acceptor.get_io_service());
-    _acceptor.async_accept(*s,
+
+    if (_ssl)
+    {
+      if (_identityCertificate.empty() || _identityKey.empty())
+      {
+        qiLogError("qimessaging.server.listen") << "SSL certificates missing,"
+          << " please call Session::setIdentity first";
+        return false;
+      }
+
+      _sslContext.set_options(
+        boost::asio::ssl::context::default_workarounds
+        | boost::asio::ssl::context::no_sslv2);
+      _sslContext.use_certificate_chain_file(_identityCertificate.c_str());
+      _sslContext.use_private_key_file(_identityKey.c_str(), boost::asio::ssl::context::pem);
+    }
+
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
+    _acceptor.async_accept(s->lowest_layer(),
       boost::bind(&TransportServerAsioPrivate::onAccept, this, _1, s, _live));
     return true;
   }
@@ -139,10 +156,13 @@ namespace qi
 
   TransportServerAsioPrivate::TransportServerAsioPrivate(TransportServer* self,
                                                                  const qi::Url &url,
-                                                                 EventLoop* ctx)
+                                                                 EventLoop* ctx,
+                                                                 bool ssl)
     : TransportServerPrivate(self, url, ctx)
     , _acceptor(*(boost::asio::io_service*)ctx->nativeHandle())
     , _live(new bool(true))
+    , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
+    , _ssl(ssl)
   {
   }
 
