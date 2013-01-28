@@ -5,12 +5,6 @@
 
 #include <qi/future.hpp>
 #include <qitype/type.hpp>
-namespace qi
-{
-  template class QITYPE_API Future<GenericValuePtr>;
-  template class QITYPE_API Future<void>;
-}
-
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/dynamicobject.hpp>
 #include "metaobject_p.hpp"

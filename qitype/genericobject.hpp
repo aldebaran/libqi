@@ -42,12 +42,7 @@ namespace qi {
    * - win32: if the whole template is exported, then no new instanciations
    * besides the one in the defining module can be created.
    */
-#if !defined(qitype_EXPORTS) && !defined(__linux__)
-  // CS4231 - 'identifier' before template explicit instantiation
-  extern template class Future<GenericValuePtr>;
-  // CS4231 - 'identifier' before template explicit instantiation
-  extern template class Future<void>;
-#endif
+
   class SignalSubscriber;
   class SignalBase;
 
