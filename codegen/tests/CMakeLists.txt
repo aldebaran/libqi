@@ -1,5 +1,9 @@
 
-# Follow the user use case.
+# Follow the user use case:
+# The user writes an idl file: we provide it
+# The user generates a service skeleton by invoking idl.py: we do exactly that
+# The user fills in the skeleton: we do that with string replace
+# The user builds a library with the filled skeleton: we do that
 
 #find python
 find_program(_python_executable
