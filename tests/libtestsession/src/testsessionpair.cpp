@@ -18,7 +18,15 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
   _mode = mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode;
 
   // #2 Listen.
-  _sd.listen(sdUrl);
+  if (_mode == TestMode::Mode_SSL)
+  {
+    _sd.setIdentity("../tests/server.key", "../tests/server.crt");
+    _sd.listen("tcps://0.0.0.0:0");
+  }
+  else
+  {
+    _sd.listen(sdUrl);
+  }
 
   // #3 Get client and server sessions.
   _client = new TestSession(_sd.endpoints()[0].str(), false, _mode);

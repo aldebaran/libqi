@@ -55,6 +55,10 @@ TEST(Test, Recurse)
 #else
   int niter = 10000;
 #endif
+  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  {
+    niter /= 100;
+  }
   if (getenv("VALGRIND"))
   {
     std::cerr << "Valgrind detected, reducing iteration count" << std::endl;

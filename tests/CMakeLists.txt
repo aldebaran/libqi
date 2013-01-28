@@ -21,11 +21,11 @@ qi_create_gtest(test_without_gateway      SRC test_without_gateway.cpp      DEPE
 # `qibuild test` on mac never returns with those tests.
 qi_create_session_test(test_event_remote         SRC test_event_remote.cpp         DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qi_create_gtest(test_event_connect        SRC test_event_connect.cpp        DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
-qi_create_session_test(test_event_remote_connect SRC test_event_remote_connect.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
+qi_create_session_test(test_event_remote_connect SRC test_event_remote_connect.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 25)
 qi_create_session_test(test_call_many            SRC test_call_many.cpp            DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 qi_create_session_test(test_session              SRC test_session.cpp              DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 30)
 qi_create_session_test(test_session_harder       SRC test_session_harder.cpp       DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
-qi_create_session_test(test_call                 SRC test_call.cpp                 DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
+qi_create_session_test(test_call                 SRC test_call.cpp                 DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 20)
 qi_create_gtest(test_metavalue_argument   SRC test_metavalue_argument.cpp   DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)
 qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 2)
 #qi_create_gtest(test_gateway              SRC test_gateway.cpp              DEPENDS QI QIMESSAGING GTEST TIMEOUT 10)

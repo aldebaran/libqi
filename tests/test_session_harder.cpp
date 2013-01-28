@@ -73,6 +73,10 @@ void alternateModule(qi::Session *session) {
 TEST(QiSession, RegisterUnregisterTwoSession)
 {
   int a = 1000;
+  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  {
+    a /= 100;
+  }
   TestSessionPair p;
   EXPECT_TRUE(p.client()->isConnected());
 
@@ -129,6 +133,10 @@ TEST(QiSession, RegisterUnregisterSameSession)
 TEST(QiSession, RegisterUnregisterTwoSessionStruct)
 {
   int a = 1000;
+  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  {
+    a /= 100;
+  }
   TestSessionPair p;
   EXPECT_TRUE(p.client()->isConnected());
 
@@ -170,6 +178,10 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
 TEST(QiSession, RegisterUnregisterSameSessionStruct)
 {
   int a = 1000;
+  if (TestMode::getTestMode() == TestMode::Mode_SSL)
+  {
+    a /= 100;
+  }
   TestSessionPair p;
   EXPECT_TRUE(p.client()->isConnected());
 

@@ -47,6 +47,7 @@ void TestMode::initTestMode(int argc, char **argv)
   // Initialize convertion map.
   _convert["direct"] = TestMode::Mode_Direct;
   _convert["sd"] = TestMode::Mode_SD;
+  _convert["ssl"] = TestMode::Mode_SSL;
   _convert["gateway"] = TestMode::Mode_Gateway;
   _convert["reversegateway"] = TestMode::Mode_ReverseGateway;
   _convert["remotegateway"] = TestMode::Mode_RemoteGateway;

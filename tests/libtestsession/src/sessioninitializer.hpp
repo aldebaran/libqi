@@ -35,6 +35,7 @@ public:
 
 private:
   bool setUpSD(qi::Session *session, const std::string &serviceDirectoryUrl);
+  bool setUpSSL(qi::Session *session, const std::string &serviceDirectoryUrl);
   bool setUpNightmare(qi::Session *session, const std::string &serviceDirectoryUrl);
   bool tearDownSD(qi::Session *session);
   bool tearDownNightmare(qi::Session *session);

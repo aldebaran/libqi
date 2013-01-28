@@ -15,10 +15,12 @@ SessionInitializer::SessionInitializer() :
   _traficGenerator(0)
 {
   _setUps[TestMode::Mode_SD] = &SessionInitializer::setUpSD;
+  _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;
   _setUps[TestMode::Mode_Direct] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_Nightmare] = &SessionInitializer::setUpNightmare;
 
   _tearDowns[TestMode::Mode_SD] = &SessionInitializer::tearDownSD;
+  _tearDowns[TestMode::Mode_SSL] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_Direct] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_Nightmare] = &SessionInitializer::tearDownNightmare;
 }
@@ -30,7 +32,7 @@ SessionInitializer::~SessionInitializer()
 bool SessionInitializer::setUp(qi::Session *session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
 {
   if (_setUps.find(mode) == _setUps.end())
-    throw TestSessionError("[Internal] Mode not handled.");
+    throw TestSessionError("[Internal] setUp mode not handled.");
 
   _listen = listen;
   return (this->*_setUps[mode])(session, serviceDirectoryUrl);
@@ -39,7 +41,7 @@ bool SessionInitializer::setUp(qi::Session *session, const std::string &serviceD
 bool SessionInitializer::tearDown(qi::Session *session, TestMode::Mode mode)
 {
   if (_tearDowns.find(mode) == _tearDowns.end())
-    throw TestSessionError("[Internal] Mode not handled.");
+    throw TestSessionError("[Internal] tearDown mode not handled.");
 
   return (this->*_tearDowns[mode])(session);
 }
@@ -51,6 +53,20 @@ bool SessionInitializer::setUpSD(qi::Session *session, const std::string &servic
 
   if (_listen == true)
     session->listen("tcp://0.0.0.0:0");
+
+  return true;
+}
+
+bool SessionInitializer::setUpSSL(qi::Session *session, const std::string &serviceDirectoryUrl)
+{
+  if(session->connect(serviceDirectoryUrl).wait(1000) == false)
+    return false;
+
+  if (_listen == true)
+  {
+    session->setIdentity("../tests/server.key", "../tests/server.crt");
+    session->listen("tcps://0.0.0.0:0");
+  }
 
   return true;
 }
