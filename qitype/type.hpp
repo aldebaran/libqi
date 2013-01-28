@@ -179,7 +179,7 @@ namespace qi{
     /** Store type and allocate storage of value.
      * @param type use this type for initialization
      */
-    GenericValuePtr(Type* type);
+    explicit GenericValuePtr(Type* type);
 
     /** Create a generic value with type and a value who should have
      * already been allocated.
@@ -231,6 +231,11 @@ namespace qi{
     // mistakes, so do not inherit from GenericValuePtr.
   public:
     GenericValue();
+
+    /** Store type and allocate storage of value.
+     * @param type use this type for initialization
+     */
+    explicit GenericValue(Type* type);
     GenericValue(const GenericValue& b);
     GenericValue(const GenericValuePtr& b, bool copy = true);
 

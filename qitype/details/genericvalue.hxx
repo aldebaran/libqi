@@ -276,6 +276,12 @@ namespace qi {
   , allocated(false)
   {}
 
+  inline GenericValue::GenericValue(Type* type)
+    : data(type)
+    , allocated(false)
+  {
+  }
+
   inline GenericValue::GenericValue(const GenericValue& b)
   : allocated(false)
   {
