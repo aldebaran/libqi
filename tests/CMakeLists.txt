@@ -35,11 +35,7 @@ qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI
 #qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 #qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 
-qi_add_optional_package(idl)
-if (NOT ${WITH_idl})
-  qi_error("IDL not found")
-endif()
-
+find_package(idl REQUIRED)
 
 MESSAGE("Found python:  ${_python_executable}")
 qi_create_module(task
