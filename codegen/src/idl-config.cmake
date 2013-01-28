@@ -1,6 +1,6 @@
 
 qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
-message("woot ${qi_create_module_file}")
+
 #! Create a naoqi module
 # \group:CLASSES list of class names to be exposed to naoqi as objects
 # \group:SERVICES list of class names to be exposed to naoqi as services
