@@ -36,6 +36,7 @@ namespace qi {
     bool listen(const qi::Url &address);
     void close();
     qi::Url listenUrl() const;
+    bool setIdentity(const std::string& key, const std::string& crt);
 
     //Create a BoundObject
     bool addObject(unsigned int idx, qi::ObjectPtr obj);

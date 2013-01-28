@@ -171,6 +171,11 @@ namespace qi {
     return true;
   }
 
+  bool Server::setIdentity(const std::string& key, const std::string& crt)
+  {
+    return _server.setIdentity(key, crt);
+  }
+
   void Server::onSocketDisconnected(TransportSocketPtr socket, int error)
   {
     BoundObjectPtrMap::iterator it;

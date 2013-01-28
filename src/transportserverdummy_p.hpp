@@ -25,6 +25,7 @@ namespace qi
                                 EventLoop* ctx);
     virtual ~TransportServerDummyPrivate();
     virtual bool listen();
+    virtual bool setIdentity(const std::string& key, const std::string& crt);
     virtual void close();
     virtual void destroy();
   private:

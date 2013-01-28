@@ -19,6 +19,15 @@ namespace qi
     return true;
   }
 
+  bool TransportServerDummyPrivate::setIdentity(const std::string& key,
+                                                const std::string& crt)
+  {
+    qiLogWarning("TransportServer") << "setIdentity: You are currently running on dummy"
+                                    << " TransportServer!";
+
+    return true;
+  }
+
   void TransportServerDummyPrivate::close()
   {
     qiLogVerbose("TransportServer") << "close: You are currently running on dummy"

@@ -294,6 +294,12 @@ namespace qi
     return true;
   }
 
+  bool ServiceDirectory::setIdentity(const std::string& key,
+                                     const std::string& crt)
+  {
+    return _p->_server.setIdentity(key, crt);
+  }
+
   qi::UrlVector ServiceDirectory::endpoints() const {
     return _p->_server.endpoints();
   }

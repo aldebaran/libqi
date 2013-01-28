@@ -141,6 +141,11 @@ namespace qi {
     return _p->_serverObject.listen(address);
   }
 
+  bool Session::setIdentity(const std::string& key, const std::string& crt)
+  {
+    return _p->_serverObject.setIdentity(key, crt);
+  }
+
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
     if (!listenUrl().isValid()) {

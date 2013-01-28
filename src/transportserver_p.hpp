@@ -43,6 +43,8 @@ namespace qi {
     qi::EventLoop                          *context;
     qi::Url                                 listenUrl;
     qi::UrlVector                           _endpoints;
+    std::string                             _identityKey;
+    std::string                             _identityCertificate;
 
   protected:
     TransportServerPrivate()

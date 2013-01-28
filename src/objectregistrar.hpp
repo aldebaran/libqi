@@ -51,6 +51,7 @@ namespace qi {
     using Server::setDefaultCallType;
     using Server::close;
     using Server::listen;
+    using Server::setIdentity;
     using Server::listenUrl;
 
   private:

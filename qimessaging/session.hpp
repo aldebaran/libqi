@@ -49,6 +49,7 @@ namespace qi {
     //Server
     bool    listen(const qi::Url &address);
     qi::Url listenUrl() const;
+    bool    setIdentity(const std::string& key, const std::string& crt);
 
     //close both client and server side
     qi::FutureSync<void>    close();

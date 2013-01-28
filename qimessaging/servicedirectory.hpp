@@ -20,6 +20,7 @@ namespace qi
     ~ServiceDirectory();
 
     bool listen(const qi::Url &listenAddress);
+    bool setIdentity(const std::string& key, const std::string& crt);
     void close();
     std::vector<qi::Url> endpoints() const;
 

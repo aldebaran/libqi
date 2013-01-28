@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <queue>
 #include <qi/log.hpp>
+#include <qi/os.hpp>
 #include <cerrno>
 
 #ifdef _WIN32
@@ -69,14 +70,41 @@ namespace qi
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
     close();
+    std::string cert = _p->_identityCertificate;
+    std::string key = _p->_identityKey;
     delete _p;
     _p = newTSP(this, url, ctx);
+    _p->_identityCertificate = cert;
+    _p->_identityKey = key;
     return listen();
   }
 
   bool TransportServer::listen()
   {
     return _p->listen();
+  }
+
+  bool TransportServer::setIdentity(const std::string& key, const std::string& crt)
+  {
+    struct ::stat status;
+    if (qi::os::stat(key.c_str(), &status) != 0)
+    {
+      qiLogError("TransportServer::setIdentity") << "stat:" << key << ": "
+                                                 << strerror(errno);
+      return false;
+    }
+
+    if (qi::os::stat(crt.c_str(), &status) != 0)
+    {
+      qiLogError("TransportServer::setIdentity") << "stat:" << crt << ": "
+                                                 << strerror(errno);
+      return false;
+    }
+
+    _p->_identityCertificate = crt;
+    _p->_identityKey = key;
+
+    return true;
   }
 
   qi::Url TransportServer::listenUrl() const {
