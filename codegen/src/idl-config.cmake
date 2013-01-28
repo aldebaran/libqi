@@ -33,19 +33,19 @@ function(qi_create_module name)
   #ARGN are sources too
   set(ARG_SRC ${ARG_UNPARSED_ARGUMENTS} ${ARG_SRC})
   #Reformat arguments to be able to bounce them
-  if (${ARG_NO_INSTALL})
+  if (ARG_NO_INSTALL)
     set(ARGOPT_NO_INSTALL NO_INSTALL)
   endif()
-  if (${ARG_NO_FPIC})
+  if (ARG_NO_FPIC)
     set(ARGOPT_NO_FPIC NO_FPIC)
   endif()
-  if (${ARG_SHARED})
+  if (ARG_SHARED)
     set(ARGOPT_SHARED SHARED)
   endif()
-  if (${ARG_STATIC})
+  if (ARG_STATIC)
     set(ARGOPT_STATIC STATIC)
   endif()
-  if (${ARG_INTERNAL})
+  if (ARG_INTERNAL)
     set(ARGOPT_INTERNAL INTERNAL)
   endif()
   if ("${ARG_HEADERS}" STREQUAL "")
@@ -70,7 +70,7 @@ function(qi_create_module name)
   message("input classes: ${ARG_SERVICES} ${ARG_CLASSES}")
   message("classes: '${classes}'")
   # Generate proxy if asked to
-  if (${ARG_PROXY})
+  if (ARG_PROXY)
     qi_generate_src(
       ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
       SRC ${ARG_SRC}
