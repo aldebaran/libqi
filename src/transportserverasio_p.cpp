@@ -128,16 +128,13 @@ namespace qi
     return true;
   }
 
-  void server_deletor(TransportServerAsioPrivate* ptr)
-  {
-    delete ptr;
-  }
-
   void TransportServerAsioPrivate::destroy()
   {
     *_live = false;
     close();
-    context->post(boost::bind(&server_deletor, this), 200000);
+    // We no longuer hold the eventLoop, so we cannot use post.
+    // But synchronous deletion of this is safe, since async callback uses _live
+    delete this;
   }
 
   TransportServerAsioPrivate::TransportServerAsioPrivate(TransportServer* self,
