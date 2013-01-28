@@ -31,7 +31,8 @@ namespace po = boost::program_options;
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 
-static int gLoopCount = getenv("VALGRIND")?500:10000;
+static int gLoopCount = 10000;
+static bool valgrind = false;
 static const int gThreadCount = 1;
 static bool allInOne = false; // True if sd/server/client are in this process
 static qi::Url serverUrl;
@@ -39,6 +40,9 @@ static qi::Url gateUrl;
 static bool clientDone = false;
 static bool serverReady = false;
 static qi::DataPerfSuite* out;
+static bool noGateway = false;
+static int rstart = 0;
+static int rend = 20;
 
 static int run_client(qi::ObjectPtr obj);
 
@@ -64,11 +68,11 @@ int main_local()
 
 int main_client(std::string QI_UNUSED(src))
 {
-  if (getenv("VALGRIND"))
+  if (valgrind)
     qi::os::msleep(3000);
   qi::Session session;
   std::cout <<"Connection to sd... " << std::endl;
-  qi::FutureSync<bool> isConnected = session.connect((allInOne && getenv("NO_GATEWAY") == NULL)?gateUrl:serverUrl);
+  qi::FutureSync<bool> isConnected = session.connect((allInOne && !noGateway)?gateUrl:serverUrl);
   isConnected.wait();
   if (!isConnected) {
     std::cerr << "Can't connect to " << session.url().str() << std::endl;
@@ -91,10 +95,6 @@ int main_client(std::string QI_UNUSED(src))
 int run_client(qi::ObjectPtr obj)
 {
   qi::DataPerf dp;
-  int rstart = 0;
-  if (getenv("rstart")) rstart = strtol(getenv("rstart"), 0, 0);
-  int rend = 20;
-  if (getenv("rend")) rend = strtol(getenv("rend"), 0, 0);
 
   unsigned int numBytes = 1;
   for (int i = rstart; i < rend; i+=2)
@@ -203,19 +203,22 @@ int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
 
-  std::string usage = "If no mode is specified, run client and server in same process\n" \
-                      "Environment used: VALGRIND, NO_GATEWAY, SYNCHRONOUS\n";
+  std::string usage = "If no mode is specified, run client and server in same process\n";
 
   po::options_description desc(std::string("Usage:\n ")+argv[0]+"\n" + usage);
   desc.add_options()
     ("help,h", "Print this help.")
-    ("all", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"), "(default) Run all in the same process.")
+    ("all", po::value<std::string>()->default_value("tcp://0.0.0.0:0"), "(default) Run all in the same process.")
     ("client,c", po::value<std::string>(), "Run as a client (tcp://xxx.xxx.xxx.xxx:xxxxx).")
     ("server,s", po::value<std::string>()->implicit_value("tcp://0.0.0.0:0"), "Run as a server.")
     ("gateway", po::value<std::string>(), "Run as a gateway.")
     ("local", "Run in local.")
     ("thread", po::value<int>()->default_value(1, "1"),
-     "Number of thread to launch for clients");
+     "Number of thread to launch for clients")
+    ("valgrind", "Set low loopcount and wait for valgrind.")
+    ("no-gateway", "Run without gateway.")
+    ("rstart", po::value<int>()->default_value(0, "0"), "rstart")
+    ("rend", po::value<int>()->default_value(20, "20"), "rend");
 
   desc.add(qi::details::getPerfOptions());
 
@@ -229,7 +232,16 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
   }
 
-  if (vm.count("client") + vm.count("server") + vm.count("all") + vm.count("gateway") + vm.count("local") > 1) {
+  if (vm.count("no-gateway"))
+    noGateway = true;
+
+  if (vm.count("valgrind")) {
+    gLoopCount = 500;
+    valgrind = true;
+  }
+
+
+  if (vm.count("client") + vm.count("server") + !vm["all"].defaulted() + vm.count("gateway") + vm.count("local") > 1) {
     std::cerr << desc << std::endl << "You must put at most one option between [all|client|server|gateway|local]" << std::endl;
     return EXIT_FAILURE;
   }
@@ -237,6 +249,9 @@ int main(int argc, char **argv)
   if (!vm["thread"].defaulted() && (vm.count("server") != 0 || vm.count("gateway") != 0)) {
     std::cerr << "[thread] is useless with [server] or [gateway]" << std::endl;
   }
+
+  rstart = vm["rstart"].as<int>();
+  rend   = vm["rend"].as<int>();
 
   out = new qi::DataPerfSuite("qimessaging", "transport", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
@@ -262,7 +277,7 @@ int main(int argc, char **argv)
     do {
       qi::os::msleep(500); // give it time to listen
     } while (!serverReady); // be nice for valgrind
-    if (!getenv("NO_GATEWAY"))
+    if (!noGateway)
       boost::thread threadServer2(boost::bind(&main_gateway, serverUrl));
     qi::os::sleep(1);
 
