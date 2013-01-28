@@ -846,7 +846,16 @@ namespace qi {
       }
       Methods::destroy(storage);
     }
-    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
+
+    void* initializeStorage(void* ptr=0) {
+      std::vector<void*> *ret = (std::vector<void*>*)Methods::initializeStorage(ptr);
+      ret->resize(types.size());
+      for (unsigned i=0; i < ret->size(); ++i) {
+        (*ret)[i] = types[i]->initializeStorage();
+      }
+      return ret;
+    }
+
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
 
     std::vector<Type*> types;
