@@ -161,13 +161,15 @@ def run_doxygen(files):
   # Create Doxyfile in there
   doxyfile_path = os.path.join(tmp_dir, "Doxyfile")
   doxy = open(doxyfile_path, "w")
-  doxy.write("GENERATE_XML=YES\n"
-    + "GENERATE_HTML=NO\n"
-    + "GENERATE_LATEX=NO\n"
-    + "QUIET=YES\n"
-    + "WARN_IF_UNDOCUMENTED   = NO\n"
-    + "INPUT= " + " ".join(files) + "\n"
-    + "OUTPUT_DIRECTORY= " + tmp_dir + "\n"
+  doxy.write("""
+GENERATE_XML=YES
+GENERATE_HTML=NO
+GENERATE_LATEX=NO
+QUIET=YES
+WARN_IF_UNDOCUMENTED   = NO
+""" +
+    "INPUT= " + " ".join(files) + "\n" +
+    "OUTPUT_DIRECTORY= " + tmp_dir + "\n"
     )
   for a in ANNOTATIONS:
     doxy.write('ALIASES += %s=___%s___\n' % (a, a))
@@ -193,10 +195,10 @@ def doxyxml_to_raw(doxy_dir):
     # parse annotations
     rawAn = etree.tostring(class_root.find("briefdescription"), 'us-ascii', 'text')
     rawAn += etree.tostring(class_root.find("detaileddescription"), 'us-ascii', 'text')
-    classAnnotations = []
+    class_annotations = []
     for a in ANNOTATIONS:
       if '___' + a + '___' in rawAn:
-        classAnnotations.append(a)
+        class_annotations.append(a)
     # Parse methods
     for m in class_root.findall("sectiondef[@kind='public-func']/memberdef[@kind='function']"):
       method_name = m.find("name").text
@@ -210,11 +212,11 @@ def doxyxml_to_raw(doxy_dir):
         argstype_raw = [a.find('type').text for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
       # Look for annotation
-      rawAn = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
-      rawAn += etree.tostring(m.find("detaileddescription"), 'us-ascii', 'text')
+      raw_an = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
+      raw_an += etree.tostring(m.find("detaileddescription"), 'us-ascii', 'text')
       an = []
       for a in ANNOTATIONS:
-        if '___' + a + '___' in rawAn:
+        if '___' + a + '___' in raw_an:
           an.append(a)
       methods.append((method_name, argstype, rettype, an))
     signals = []
@@ -233,7 +235,7 @@ def doxyxml_to_raw(doxy_dir):
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
 
-    result[cls] = (methods, signals, classAnnotations)
+    result[cls] = (methods, signals, class_annotations)
   return result
 
 def raw_to_idl(dstruct):
@@ -241,7 +243,7 @@ def raw_to_idl(dstruct):
   """
   root = etree.Element('IDL')
   for cls in dstruct:
-    
+
     (methods, signals, an) = dstruct[cls]
     e = etree.SubElement(root, 'class', name=cls, annotations=','.join(an))
     for method in methods:
@@ -279,11 +281,11 @@ def method_to_cxx(method):
   cret = idltype_to_cxxtype(iret)
   iargs = method[1]
   cargs = map(idltype_to_cxxtype, iargs)
-  typedArgs = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
-  typedArgs = ','.join(typedArgs)
-  argNames = map(lambda x: 'p' + str(x), range(len(cargs)))
-  argNames = ','.join(argNames)
-  return (cret, typedArgs, argNames)
+  typed_args = map(lambda x: cargs[x] + ' p' + str(x), range(len(cargs)))
+  typed_args = ','.join(typed_args)
+  arg_names = map(lambda x: 'p' + str(x), range(len(cargs)))
+  arg_names = ','.join(arg_names)
+  return (cret, typed_args, arg_names)
 
 def idl_to_raw(root):
   """ Convert IDL XML to internal RAW representation
@@ -331,25 +333,25 @@ QI_TYPE_NOT_CLONABLE(I@NAME@);
   (methods, signals) = (data[0], data[1])
   methodsDecl = ''
   for method in methods:
-    (cret, typedArgs, argNames) = method_to_cxx(method)
+    (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
-    methodsDecl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typedArgs)
-  signalsDecl = ''
-  ctorDecl = []
-  ctorInit = []
+    methodsDecl += '    virtual %s %s (%s) = 0;\n' % (cret, method_name, typed_args)
+  signals_decl = ''
+  ctor_decl = []
+  ctor_init = []
   for sig in signals:
     signature = ','.join(map(idltype_to_cxxtype, sig[1]))
-    signalsDecl += '    qi::Signal<void(%s)> & %s;\n' % (signature, sig[0])
-    ctorDecl.append('qi::Signal<void(%s)> & %s' % (signature, sig[0]))
-    ctorInit.append('%s(%s)' % (sig[0], sig[0]))
-  if len(ctorDecl):
-    ctorDecl = ','.join(ctorDecl)
-    ctorInit =  ':' + '\n      ,'.join(ctorInit)
+    signals_decl += '    qi::Signal<void(%s)> & %s;\n' % (signature, sig[0])
+    ctor_decl.append('qi::Signal<void(%s)> & %s' % (signature, sig[0]))
+    ctor_init.append('%s(%s)' % (sig[0], sig[0]))
+  if len(ctor_decl):
+    ctor_decl = ','.join(ctor_decl)
+    ctor_init =  ':' + '\n      ,'.join(ctor_init)
   else:
-    ctorDecl = ''
-    ctorInit = ''
-  ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctorDecl, ctorInit)
-  return skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signalsDecl)
+    ctor_decl = ''
+    ctor_init = ''
+  ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctor_decl, ctor_init)
+  return skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
 
 def raw_to_proxy(class_name, data, return_future, implement_interface, include):
   """ Generate C++ proxy code from RAW
@@ -403,7 +405,7 @@ class @className@Proxy @inherit@
 public:
   @className@Proxy(qi::ObjectPtr obj)
   : _obj(obj)
-@constructorInitList@
+@constructor_initList@
   {
 @constructor@
   }
@@ -447,35 +449,35 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
 """
   #generate methods
   (methods, signals) = (data[0], data[1])
-  methodImpls = ""
-  registerProxy = ''
+  method_impls = ""
+  register_proxy = ''
   if implement_interface:
-    registerProxy = "static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();"
-  skeleton = skeleton.replace('@registerProxy@', registerProxy)
+    register_proxy = "static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();"
+  skeleton = skeleton.replace('@registerProxy@', register_proxy)
   for method in methods:
-    (cret, typedArgs, argNames) = method_to_cxx(method)
+    (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
     if (return_future):
       cret = 'qi::FutureSync<' + cret + ' >'
-    if argNames:
-      argNames = ', ' + argNames # comma used in call
+    if arg_names:
+      arg_names = ', ' + arg_names # comma used in call
     #NOTE: should we return the future?
-    methodImpls += '  ' + cret + " " + method_name + "(" + typedArgs + ") {\n    "
+    method_impls += '  ' + cret + " " + method_name + "(" + typed_args + ") {\n    "
     if (cret != "void" or return_future):
-      methodImpls += "return "
-    methodImpls += '_obj->call<' + cret + ' >' + '("' + method_name + '"' + argNames + ");\n  }\n"
-  signalDecl = ''
-  signalDecl2 = ''
+      method_impls += "return "
+    method_impls += '_obj->call<' + cret + ' >' + '("' + method_name + '"' + arg_names + ");\n  }\n"
+  signal_decl = ''
+  signal_decl2 = ''
   ctor = ''
-  ifaceCtor = []
+  iface_ctor = []
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
-    signalDecl += '  ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
-    signalDecl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
+    signal_decl += '  ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
+    signal_decl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
     ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, obj.get(), &{0}, "{0}"), obj.get(), "{0}")\n'.format(sig[0])
-    ifaceCtor.append('%s' % (sig[0]))
+    iface_ctor.append('%s' % (sig[0]))
   if implement_interface:
-    ctor += '  , %s(%s)\n' % ('I' + class_name, ','.join(ifaceCtor))
+    ctor += '  , %s(%s)\n' % ('I' + class_name, ','.join(iface_ctor))
   result = skeleton
   inherits = ''
   if implement_interface:
@@ -483,10 +485,10 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'className': class_name,
-      'publicDecl': methodImpls + signalDecl,
-      'privateDecl': signalDecl2,
+      'publicDecl': method_impls + signal_decl,
+      'privateDecl': signal_decl2,
       'constructor': '',
-      'constructorInitList': ctor,
+      'constructor_initList': ctor,
       'inherit': inherits,
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
   }
@@ -494,7 +496,7 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
     result = result.replace('@' + k + '@', replace[k])
   return result
 
-def raw_to_cxx_typebuild(class_name, data, use_interface, registerToFactory):
+def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
   """ Generate a c++ file that registers the class to type system.
   """
   template = """
@@ -515,15 +517,15 @@ REGISTER
 static int _init_ITYPE = TYPEinit();
 
 """
-  makeOne = """
-qi::ObjectPtr TYPEmakeOne(const std::string&)
+  make_one = """
+qi::ObjectPtr TYPEmake_one(const std::string&)
 {
   return ITYPEbuilder.object(new TYPEService());
 }
 """
-  if not registerToFactory:
-    makeOne = ''
-  template = template.replace('MAKEONE', makeOne)
+  if not register_to_factory:
+    make_one = ''
+  template = template.replace('MAKEONE', make_one)
   advertise = ''
   bouncers = ''
   (methods, signals, annotations) = (data[0], data[1], data[2])
@@ -531,19 +533,19 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
     advertise += '  %sServiceBuilder.setThreadingModel(qi::THREAD_SAFE);\n' % class_name
   cns = class_name + 'Service'
   icn = 'I' + class_name
-  declType = 'I' + class_name
+  decl_type = 'I' + class_name
   if not use_interface:
-    declType = class_name + 'Service'
-  builder = declType + 'builder'
+    decl_type = class_name + 'Service'
+  builder = decl_type + 'builder'
   for method in methods:
     method_name = method[0]
     annotations = method[3]
-    threadMode = 'qi::MetaCallType_Auto'
+    thread_mode = 'qi::MetaCallType_Auto'
     if 'fast' in annotations:
-      threadMode = 'qi::MetaCallType_Fast'
+      thread_mode = 'qi::MetaCallType_Fast'
     if 'threadSafe' in annotations:
-      threadMode = 'qi::MetaCallType_ThreadSafe'
-    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0}, {3});\n'.format(method_name, declType, builder, threadMode)
+      thread_mode = 'qi::MetaCallType_ThreadSafe'
+    advertise += '  {2}.advertiseMethod("{0}", &{1}::{0}, {3});\n'.format(method_name, decl_type, builder, thread_mode)
   for s in signals:
     bouncers += 'inline qi::SignalBase* signalget_%s_%s(void* inst) { return &reinterpret_cast<%s*>(inst)->%s;}\n'%(
      cns, s[0], cns, s[0])
@@ -551,10 +553,10 @@ qi::ObjectPtr TYPEmakeOne(const std::string&)
     advertise += '  {3}.advertiseEvent<void({2})>("{0}", qi::ObjectTypeBuilderBase::SignalMemberGetter(&signalget_{1}_{0}));\n'.format(
       s[0], class_name + 'Service', ','.join(map(idltype_to_cxxtype, s[1])), builder)
   register = ''
-  if registerToFactory:
-    register = '  qi::registerObjectFactory("{}", &{}makeOne);'.format(class_name + 'Service', class_name)
-  
-  return template.replace('ITYPE', declType).replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
+  if register_to_factory:
+    register = '  qi::registerObjectFactory("{}", &{}make_one);'.format(class_name + 'Service', class_name)
+
+  return template.replace('ITYPE', decl_type).replace('TYPE', class_name).replace('ADVERTISE', advertise).replace('REGISTER', register).replace('BOUNCERS', bouncers)
 
 def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
   """ Produce skeleton of C++ implementation of the service.
@@ -575,15 +577,15 @@ def raw_to_cxx_service_skeleton(class_name, data, implement_interface, include):
       method_name,
       args
     )
-  ifaceCtor = []
+  iface_ctor = []
   for signal in signals:
-    ifaceCtor.append('%s' % (signal[0]))
+    iface_ctor.append('%s' % (signal[0]))
     result += '  qi::Signal<void(%s)> %s;\n' % (
       ','.join(map(idltype_to_cxxtype, signal[1])),
       signal[0]
     )
   if implement_interface:
-    result += '  %sService() :%s(%s) {}\n' % (class_name, class_name, ','.join(ifaceCtor))
+    result += '  %sService() :%s(%s) {}\n' % (class_name, class_name, ','.join(iface_ctor))
   result += '};\n\n'
   for method in methods:
     method_name = method[0]
@@ -622,7 +624,7 @@ class @name@Service: public I@name@
 {
   public:
     @name@Service(@impl@ impl = make_@impl@())
-    : I@name@(@signalInit@)
+    : I@name@(@signal_init@)
     , _impl(impl)
     {}
 @code@
@@ -632,42 +634,42 @@ class @name@Service: public I@name@
 QI_TYPE_NOT_CLONABLE(@name@Service);
 """
   (methods, signals) = (data[0], data[1])
-  signalInit = []
+  signal_init = []
   for s in signals:
-    signalInit.append('impl->' + s[0])
-  methodBounce = ''
-  emitInterface = dict()
+    signal_init.append('impl->' + s[0])
+  method_bounce = ''
+  emit_interface = dict()
   for method in methods:
-    (ret, typedArgs, args) = method_to_cxx(method)
+    (ret, typed_args, args) = method_to_cxx(method)
     method_name = method[0]
     # UGLY HACK to detect if the method returns an other class for which we
     # have a bouncer.
     if ret == 'I' + method[2]: # FIXME make a more clever test
-      emitInterface[method[2]] = 1
-      methodBounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typedArgs, ret, method_name, args)
+      emit_interface[method[2]] = 1
+      method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, ret, method_name, args)
     elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
       # Ugly vector detector case, not forgetting the inserted space
-      methodBounce += '   %s %s(%s) { return qi_to_interface_v(_impl->%s(%s));}\n' % (ret, method_name, typedArgs, method_name, args)
+      method_bounce += '   %s %s(%s) { return qi_to_interface_v(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method_name, args)
     else:
-      methodBounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typedArgs, method_name, args)
+      method_bounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typed_args, method_name, args)
   include = ''.join(['#include <' + x + '>\n' for x in include])
-  for name in emitInterface:
-    methodBounce = """
+  for name in emit_interface:
+    method_bounce = """
     static std::vector<I%s> qi_to_interface_v(std::vector<%s> ptr) {
       std::vector<I%s> res;
       res.resize(ptr.size());
       std::transform(ptr.begin(), ptr.end(), res.begin(), qi_to_interface_I%s);
       return res;
    }
-""" % (name, name, name, name) + methodBounce
-    methodBounce = '   static I%s qi_to_interface_I%s(%s ptr) {return I%sPtr(new %sService(ptr));}\n' % (
-      name, name, name, name[0:-3], name[0:-3]) + methodBounce
+""" % (name, name, name, name) + method_bounce
+    method_bounce = '   static I%s qi_to_interface_I%s(%s ptr) {return I%sPtr(new %sService(ptr));}\n' % (
+      name, name, name, name[0:-3], name[0:-3]) + method_bounce
   return skeleton.replace(
     '@name@', class_name).replace(
     '@impl@', impl_name.replace('@', class_name)).replace(
-    '@code@', methodBounce).replace(
+    '@code@', method_bounce).replace(
     '@include@', include).replace(
-    '@signalInit@', ','.join(signalInit))
+    '@signal_init@', ','.join(signal_init))
 
 def main(args):
   res = ''
