@@ -41,7 +41,7 @@ class noSigForThis;
 typedef std::map<int,int> MapInt;
 
 TEST(TestSignature, BasicTypeSignature) {
-  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<char>::value());
   EXPECT_EQ("C",    qi::signatureFromType<unsigned char>::value());
   EXPECT_EQ("w",    qi::signatureFromType<short>::value());
@@ -80,7 +80,7 @@ TEST(TestSignature, BasicTypeSignature) {
 
 TEST(TestSignature, TypeConstRefPointerMix) {
 
-  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<char>::value());
   EXPECT_EQ("i",    qi::signatureFromType<int>::value());
   EXPECT_EQ("f",    qi::signatureFromType<float>::value());
@@ -89,7 +89,7 @@ TEST(TestSignature, TypeConstRefPointerMix) {
   EXPECT_EQ("[i]",  qi::signatureFromType< std::vector<int> >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
 
-  EXPECT_EQ("c",    qi::signatureFromType<const bool>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
   EXPECT_EQ("c",    qi::signatureFromType<const char>::value());
   EXPECT_EQ("i",    qi::signatureFromType<const int>::value());
   EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
@@ -98,7 +98,7 @@ TEST(TestSignature, TypeConstRefPointerMix) {
   EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int > >::value());
   EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt >::value());
 
-  EXPECT_EQ("c",    qi::signatureFromType<const bool&>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
   EXPECT_EQ("c",    qi::signatureFromType<const char&>::value());
   EXPECT_EQ("i",    qi::signatureFromType<const int&>::value());
   EXPECT_EQ("f",    qi::signatureFromType<const float&>::value());
@@ -109,10 +109,10 @@ TEST(TestSignature, TypeConstRefPointerMix) {
 }
 
 TEST(TestSignature, Bools) {
-  EXPECT_EQ("c",    qi::signatureFromType<bool>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<bool&>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<const bool>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<const bool&>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<bool&>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
+  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
 }
 
 TEST(TestSignature, Strings) {
