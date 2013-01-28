@@ -11,32 +11,18 @@
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
 
-TestSessionPair::TestSessionPair()
+TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
 {
 
   // #1 Get active mode.
-  _mode = TestMode::getTestMode();
+  _mode = mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode;
 
   // #2 Listen.
-  _sd.listen("tcp://0.0.0.0:0");
+  _sd.listen(sdUrl);
 
   // #3 Get client and server sessions.
   _client = new TestSession(_sd.endpoints()[0].str(), false, _mode);
   _server = new TestSession(_sd.endpoints()[0].str(), true, _mode);
-}
-
-TestSessionPair::TestSessionPair(TestMode::Mode mode)
-{
-
-  // #0 Set active mode.
-  _mode = mode;
-
-  // #1 Listen.
-  _sd.listen("tcp://0.0.0.0:0");
-
-  // #2 Get client and server sessions.
-  _client = new TestSession(_sd.endpoints()[0].str(), false, mode);
-  _server = new TestSession(_sd.endpoints()[0].str(), true, mode);
 }
 
 TestSessionPair::TestSessionPair(TestSessionPair &other)

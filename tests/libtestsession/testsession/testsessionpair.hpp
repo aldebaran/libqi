@@ -73,8 +73,8 @@
 class TestSessionPair
 {
 public:
-  TestSessionPair();
-  TestSessionPair(TestMode::Mode mode);
+  TestSessionPair(TestMode::Mode mode = TestMode::Mode_Default,
+                  const std::string url = "tcp://0.0.0.0:0");
   TestSessionPair(TestSessionPair &other);
   ~TestSessionPair();
 
