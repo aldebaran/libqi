@@ -366,17 +366,6 @@ namespace qi {
       return max;
     }
 
-    static int calcOffsetMethodSig(const qi::MetaObject::MethodMap &mmaps) {
-      qi::MetaObject::MethodMap::const_iterator it;
-      int max = 0;
-      for (it = mmaps.begin(); it != mmaps.end(); ++it) {
-        int cur = it->second.signature().size();
-        if (cur > max)
-          max = cur;
-      }
-      return max;
-    }
-
     void printMetaObject(std::ostream &stream, const qi::MetaObject &mobj) {
       qi::MetaObject::MethodMap methods = mobj.methodMap();
       qi::MetaObject::MethodMap::const_iterator itMM;
