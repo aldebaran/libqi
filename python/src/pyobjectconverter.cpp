@@ -253,7 +253,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyBool_Check(val))
   {
-    bool b = PyInt_AsLong(val);
+    bool b = (PyInt_AsLong(val) != 0);
     res = qi::GenericValuePtr::from(b);
   }
   else
