@@ -95,9 +95,11 @@ namespace qi {
     switch (sigcount) {
       case 1:
         qiLogInfo("qi.application") << "Sending the stop command...";
-        Application::stop();
         //register the signal again to call exit the next time if stop did not succeed
         Application::atSignal(boost::bind<void>(&stop_handler, _1), signal_number);
+        // Stop might immediately trigger application destruction, so it has
+        // to go after atSignal.
+        Application::stop();
         return;
       default:
         //even for SIGTERM this is an error, so return 1.
