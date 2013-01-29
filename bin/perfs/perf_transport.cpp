@@ -108,8 +108,6 @@ int run_client(qi::ObjectPtr obj)
     unsigned long long latencySum = 0;
     for (int j = 0; j < gLoopCount; ++j)
     {
-      static int id = 1;
-      id++;
       qi::os::timeval tstart, tstop;
       qi::os::gettimeofday(&tstart);
       qi::Buffer result = obj->call<qi::Buffer>("replyBuf", buf);
@@ -163,7 +161,7 @@ int main_gateway(const qi::Url& serverUrl)
   gate.listen(gateUrl);
   gateUrl = gate.endpoints()[0];
 
-  std::cout << "Gateway listening on " << gate.listenUrl().str() << std::endl;
+  std::cout << "Gateway listening on " << gateUrl.str() << std::endl;
 
   while (!clientDone)
     qi::os::sleep(60);
