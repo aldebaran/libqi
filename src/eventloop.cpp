@@ -96,7 +96,13 @@ namespace qi {
       return;
     }
     if (_threaded)
-      _thd.join();
+      try {
+        _thd.join();
+      }
+      catch(const boost::thread_resource_error& e)
+      {
+        qiLogWarning("qi.EventLoop") << "Join an already joined thread: " << e.what();
+      }
     else
       while (_running)
         qi::os::msleep(0);
