@@ -495,9 +495,9 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 
 bool GatewayPrivate::listen(const Url &address)
 {
-  _transportServer = new qi::TransportServer(address);
+  _transportServer = new qi::TransportServer();
   _transportServer->newConnection.connect(boost::bind<void>(&GatewayPrivate::onTransportServerNewConnection, this, _1));
-  return _transportServer->listen();
+  return _transportServer->listen(address);
 }
 
 bool GatewayPrivate::connect(const qi::Url &connectURL)

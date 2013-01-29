@@ -97,10 +97,10 @@ public:
     _p->_session = session;
 
     qi::Url urlo(_p->_endpoints[0]);
-    _p->_ts = new qi::TransportServer(urlo);
+    _p->_ts = new qi::TransportServer();
 
     _p->_ts->newConnection.connect(boost::bind<void>(&ServerEventPrivate::onTransportServerNewConnection, _p, _1));
-    _p->_ts->listen();
+    _p->_ts->listen(urlo);
   }
 
 

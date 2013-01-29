@@ -58,13 +58,6 @@ namespace qi
     _p->_impl = 0;
   }
 
-
-  TransportServer::TransportServer(const qi::Url &url, qi::EventLoop* ctx)
-    : _p(new TransportServerPrivate)
-  {
-    _p->_impl = newTSP(this, url, ctx);
-  }
-
   TransportServer::~TransportServer()
   {
     close();
@@ -75,18 +68,6 @@ namespace qi
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
     if ((_p->_impl = newTSP(this, url, ctx)))
-    {
-      return _p->_impl->listen();
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  bool TransportServer::listen()
-  {
-    if (_p->_impl)
     {
       return _p->_impl->listen();
     }
