@@ -79,11 +79,18 @@ SIGNATURE_MAP = {
     'v'    : 'void'
 }
 
+# signature of a tuple to known matching structure
+KNOWN_STRUCT_MAP = {
+}
+
 def idltype_to_cxxtype(t):
   """ Return the C++ type to use for idl type t
   """
+  if t in KNOWN_STRUCT_MAP:
+    return KNOWN_STRUCT_MAP[t]
   t = t.replace('{', 'std::map<').replace('}', ' >')
   t = t.replace('[', 'std::vector<').replace(']', ' >')
+  #t = t.replace('(', 'boost::mpl::vector<').replace(')', '>')
   for e in REV_MAP:
     t = t.replace(e, REV_MAP[e])
   return t
@@ -766,6 +773,9 @@ def main(args):
   
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
+
+  # Fill KNOWN_STRUCT_MAP with static stuff
+  KNOWN_STRUCT_MAP[signature_to_idl('({I(Isss[(ss)]s)}{I(Is)}s)')] = 'qi::MetaObject'
 
   # Step one: get raw from either IDL, source files, or running service
   if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
