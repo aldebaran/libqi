@@ -35,6 +35,15 @@ import subprocess
 import shutil
 import re
 
+""" IDL type system:
+    PRIMITIVES:
+      - u?(char, short, long, int)
+      - string
+      - dynamic
+    CONTAINERS:
+      - [value_type] : list
+      - {key_type, value_type}: map
+"""
 TYPE_MAP = {
   'unsigned int': 'uint',
   'unsigned long': 'uint64',
@@ -51,6 +60,23 @@ REV_MAP = {
     'dynamic': 'qi::GenericValue',
     'string' : 'std::string',
     'int64'  : 'qi::int64_t',
+}
+
+# signature to IDL type
+SIGNATURE_MAP = {
+    'c'    : 'char',
+    'C'    : 'uchar',
+    'w'    : 'short',
+    'W'    : 'ushort',
+    'i'    : 'int',
+    'I'    : 'uint',
+    'l'    : 'long',
+    'L'    : 'ulong',
+    'f'    : 'float',
+    'd'    : 'double',
+    's'    : 'string',
+    'm'    : 'dynamic',
+    'v'    : 'void'
 }
 
 def idltype_to_cxxtype(t):
@@ -263,10 +289,10 @@ def raw_to_text(dstruct):
   """
   result = ""
   for cls in dstruct:
-    result += "class " + cls +"// " + ' '.join(dstruct[cls][2]) + "\n  methods\n"
+    result += "class " + cls +"// " + dstruct[cls][2] + "\n  methods\n"
     for method in dstruct[cls][0]:
       (method_name, args, ret, an) = method
-      result += "    " + ret + " " + method_name +"(" + ",".join(args) + ") // " + ' '.join(an) +"\n"
+      result += "    " + ret + " " + method_name +"(" + ",".join(args) + ") // " + an +"\n"
     result += "  signals\n"
     for signal in dstruct[cls][1]:
       result += "    " + signal[0] + '(' + ','.join(signal[1]) + ')\n'
@@ -671,25 +697,89 @@ QI_TYPE_NOT_CLONABLE(@name@Service);
     '@include@', include).replace(
     '@signal_init@', ','.join(signal_init))
 
+def signature_to_idl(sig):
+  # Add comma separator between tuple elements
+  while True:
+      next = re.sub('([a-zA-Z\]\}\)])([a-zA-Z\(\{\[])', "\\1,\\2", sig)
+      if next == sig:
+        break
+      sig = next
+  tmp = ''
+  for c in sig:
+    if c in SIGNATURE_MAP:
+      tmp += SIGNATURE_MAP[c]
+    else:
+      tmp += c
+  return tmp
+
+def signature_split(sig):
+  ret = []
+  enter = '({['
+  leave = ')}]'
+  p = 0
+  plast = 0
+  while p < len(sig):
+    if sig[p] not in enter:
+      ret.append(sig[p])
+      p = p+1
+      continue
+    expect = leave[enter.find(sig[p])]
+    plast = p
+    while p < len(sig) and sig[p] != expect:
+      p = p+1
+    ret.append(sig[plast:p+1])
+    p = p+1
+  print("woot %s %s" % (sig, ret))
+  return ret
+
+def runtime_to_raw(class_name, sd_url):
+  from qimessaging.session import Session
+  session = Session(sd_url)
+  obj = session.service(class_name)
+  desc = obj.metaObject(0)
+  print(desc)
+  methods = []
+  for k in desc[0]:
+    m = desc[0][k]
+    print(m)
+    composite_name = m[2]
+    parts = composite_name.split('::')
+    method_name = parts[0]
+    sig = parts[1][1:-1] #remove toplevel tuple
+    sig = signature_split(sig)
+    sig = map(signature_to_idl, sig)
+    rettype = m[1]
+    rettype = signature_to_idl(rettype)
+
+    methods.append((method_name, sig, rettype, m[3]))
+  return {class_name : (methods, [], '')}
+
 def main(args):
   res = ''
   parser = argparse.ArgumentParser()
   parser.add_argument("--interface", "-i", help="Use interface mode", action='store_true')
   parser.add_argument("--output-file","-o", help="output file (stdout)")
-  parser.add_argument("--output-mode","-m", default="txt", choices=["txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface"], help="output mode (stdout)")
+  parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("input", nargs='+', help="input file(s)")
+  
   pargs = parser.parse_args(args)
   pargs.input = pargs.input[1:]
-  # Step one: get raw from either IDL, or source files
+
+  # Step one: get raw from either IDL, source files, or running service
   if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
     raw = idl_to_raw(xml)
+  elif len(pargs.input) == 1 and pargs.input[0].find('://') != -1:
+    service = pargs.input[0].split('/')[-1]
+    url = '/'.join(pargs.input[0].split('/')[0:-1])
+    raw = runtime_to_raw(service, url)
   else:
     doxy_dir = run_doxygen(pargs.input)
     raw = doxyxml_to_raw(doxy_dir)
     shutil.rmtree(doxy_dir)
+
   if not len(pargs.include):
     pargs.include = []
   else:
