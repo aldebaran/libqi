@@ -28,14 +28,13 @@
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
 #include "transportserverasio_p.hpp"
-#include "transportserverdummy_p.hpp"
 #include "tcptransportsocket.hpp"
 
 namespace qi
 {
 
 
-  static TransportServerPrivate * newTSP(TransportServer* self,
+  static TransportServerImplPrivate * newTSP(TransportServer* self,
     const qi::Url &url,
     qi::EventLoop* ctx) {
     if (url.protocol() == "tcp")
@@ -50,44 +49,51 @@ namespace qi
 
     qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
                                   << " TransportServer create with dummy implementation.";
-    return new TransportServerDummyPrivate(self, url, ctx);
+    return 0;
   }
 
   TransportServer::TransportServer()
-    : _p(new TransportServerDummyPrivate(this, "", 0))
+    : _p(new TransportServerPrivate)
   {
+    _p->_impl = 0;
   }
 
 
-  TransportServer::TransportServer(const qi::Url &url,
-    qi::EventLoop* ctx
-    )
-    : _p(newTSP(this, url, ctx))
+  TransportServer::TransportServer(const qi::Url &url, qi::EventLoop* ctx)
+    : _p(new TransportServerPrivate)
   {
+    _p->_impl = newTSP(this, url, ctx);
   }
 
   TransportServer::~TransportServer()
   {
     close();
-    _p->destroy();
+    delete _p;
     _p = 0;
   }
 
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    close();
-    std::string cert = _p->_identityCertificate;
-    std::string key = _p->_identityKey;
-    delete _p;
-    _p = newTSP(this, url, ctx);
-    _p->_identityCertificate = cert;
-    _p->_identityKey = key;
-    return listen();
+    if ((_p->_impl = newTSP(this, url, ctx)))
+    {
+      return _p->_impl->listen();
+    }
+    else
+    {
+      return false;
+    }
   }
 
   bool TransportServer::listen()
   {
-    return _p->listen();
+    if (_p->_impl)
+    {
+      return _p->_impl->listen();
+    }
+    else
+    {
+      return false;
+    }
   }
 
   bool TransportServer::setIdentity(const std::string& key, const std::string& crt)
@@ -114,18 +120,34 @@ namespace qi
   }
 
   qi::Url TransportServer::listenUrl() const {
-    return _p->listenUrl;
+    if (_p->_impl)
+    {
+      return _p->_impl->listenUrl;
+    }
+    else
+    {
+      return "";
+    }
   }
 
   std::vector<qi::Url> TransportServer::endpoints() const
   {
-    return _p->_endpoints;
+    if (_p->_impl)
+    {
+      return _p->_impl->_endpoints;
+    }
+    else
+    {
+      return std::vector<qi::Url>();
+    }
   }
 
   void TransportServer::close() {
-    if (!dynamic_cast<TransportServerDummyPrivate*>(_p))
-      _p->close();
-    _p->listenUrl = qi::Url("");
+    if (_p->_impl)
+    {
+      _p->_impl->destroy(); // this will delete _p->_impl
+      _p->_impl = 0;
+    }
   }
 
 }

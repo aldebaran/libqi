@@ -125,7 +125,7 @@ namespace qi
 
     if (_ssl)
     {
-      if (_identityCertificate.empty() || _identityKey.empty())
+      if (self->_p->_identityCertificate.empty() || self->_p->_identityKey.empty())
       {
         qiLogError("qimessaging.server.listen") << "SSL certificates missing,"
           << " please call Session::setIdentity first";
@@ -135,8 +135,8 @@ namespace qi
       _sslContext.set_options(
         boost::asio::ssl::context::default_workarounds
         | boost::asio::ssl::context::no_sslv2);
-      _sslContext.use_certificate_chain_file(_identityCertificate.c_str());
-      _sslContext.use_private_key_file(_identityKey.c_str(), boost::asio::ssl::context::pem);
+      _sslContext.use_certificate_chain_file(self->_p->_identityCertificate.c_str());
+      _sslContext.use_private_key_file(self->_p->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
@@ -158,7 +158,7 @@ namespace qi
                                                                  const qi::Url &url,
                                                                  EventLoop* ctx,
                                                                  bool ssl)
-    : TransportServerPrivate(self, url, ctx)
+    : TransportServerImplPrivate(self, url, ctx)
     , _acceptor(*(boost::asio::io_service*)ctx->nativeHandle())
     , _live(new bool(true))
     , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)

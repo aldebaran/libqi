@@ -20,16 +20,16 @@
 
 namespace qi {
 
-  class TransportServerPrivate
+  class TransportServerImplPrivate
   {
   public:
-    TransportServerPrivate(TransportServer* self, const qi::Url &url, EventLoop* ctx)
+    TransportServerImplPrivate(TransportServer* self, const qi::Url &url, EventLoop* ctx)
       : self(self)
       , context(ctx)
       , listenUrl(url)
     {}
 
-    virtual ~TransportServerPrivate()
+    virtual ~TransportServerImplPrivate()
     {
     }
 
@@ -43,14 +43,20 @@ namespace qi {
     qi::EventLoop                          *context;
     qi::Url                                 listenUrl;
     qi::UrlVector                           _endpoints;
-    std::string                             _identityKey;
-    std::string                             _identityCertificate;
 
   protected:
-    TransportServerPrivate()
+    TransportServerImplPrivate()
       : context(0)
       , listenUrl("")
     {};
+  };
+
+  class TransportServerPrivate
+  {
+  public:
+    std::string                 _identityKey;
+    std::string                 _identityCertificate;
+    TransportServerImplPrivate* _impl;
   };
 
 }

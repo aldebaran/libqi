@@ -22,7 +22,7 @@ struct evconnlistener;
 
 namespace qi
 {
-  class TransportServerAsioPrivate : public TransportServerPrivate
+  class TransportServerAsioPrivate : public TransportServerImplPrivate
   {
   public:
     TransportServerAsioPrivate(TransportServer* self,
