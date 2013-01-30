@@ -6,24 +6,17 @@
 ## Copyright (C) 2010, 2011, 2012 Aldebaran Robotics
 ##
 
-# Temporary function
-function(_qimessaging_create_perf_bin name)
-  qi_create_bin(${name}
-    ${name}.cpp
-    NO_INSTALL
-    DEPENDS
-    QI
-    QIMESSAGING
-    QIPERF
-    BOOST_PROGRAM_OPTIONS
-  )
-endfunction()
+qi_create_perf_test(perf_transport perf_transport.cpp
+  DEPENDS
+    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
-_qimessaging_create_perf_bin(perf_transport)
+qi_create_perf_test(perf_transport_socket perf_transport_socket.cpp
+  DEPENDS
+    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
-_qimessaging_create_perf_bin(perf_transport_socket)
-
-_qimessaging_create_perf_bin(perf_transport_thd)
+qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
+  DEPENDS
+    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
 #qi_create_gtest(perf_maps    SRC perf_maps.cpp    DEPENDS QI GTEST TIMEOUT 120)
 #add_subdirectory(messaging)
@@ -57,11 +50,11 @@ qi_create_perf_test(perf_function perf_function.cpp
     QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
 
 if(WITH_QT_QTCORE AND WITH_QT)
-include(qibuild/modules/qt-tools)
-qt4_wrap_cpp(_moc perf_qt_signal.hpp)
-qi_create_perf_test(perf_qt_signal_direct perf_qt_signal_direct.cpp ${_moc}
-  DEPENDS
-    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS QT_QTCORE)
-qi_use_lib(perf_qt_signal_direct QT_QTCORE)
+  include(qibuild/modules/qt-tools)
+  qt4_wrap_cpp(_moc perf_qt_signal.hpp)
+  qi_create_perf_test(perf_qt_signal_direct perf_qt_signal_direct.cpp ${_moc}
+    DEPENDS
+      QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS QT_QTCORE)
+  qi_use_lib(perf_qt_signal_direct QT_QTCORE)
 endif()
 

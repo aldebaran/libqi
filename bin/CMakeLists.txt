@@ -7,10 +7,10 @@
 ## Copyright (C) 2009, 2010, 2012 Aldebaran Robotics
 ##
 
-add_subdirectory("qicli")
-add_subdirectory("qiclient")
-add_subdirectory("qiservice")
-add_subdirectory("qimaster")
-add_subdirectory("qigateway")
-add_subdirectory("qilaunch")
-qi_add_subdirectory(perfs    WITH_PERF)
+qi_add_subdirectory("qicli")
+qi_add_subdirectory("qiclient")
+qi_add_subdirectory("qiservice")
+qi_add_subdirectory("qimaster")
+qi_add_subdirectory("qigateway")
+qi_add_subdirectory("qilaunch")
+qi_add_subdirectory("perfs")
