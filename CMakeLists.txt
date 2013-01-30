@@ -18,7 +18,6 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 set(WITH_DOTNET OFF)
 option(WITH_EXAMPLES "Examples"          ON)
-option(WITH_PERF     "Performances test" ON)
 option(WITH_QT       "Qt support"       OFF)
 option(WITH_PYTHON   "Python bindings"   ON)
 
@@ -113,7 +112,7 @@ qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    src/serverresult.hpp
                                    )
 
-add_subdirectory(c)
+qi_add_subdirectory(c)
 #normalize BUILD_SHARED_LIBS, default ON
 
 if (NOT DEFINED BUILD_SHARED_LIBS)
@@ -149,23 +148,19 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 
 
 qi_add_optional_package(QT_QTCORE)
-if(WITH_QT_QTCORE AND WITH_QT)
-  add_subdirectory("qt")
-endif()
-add_subdirectory("bin")
+
+qi_add_subdirectory("qt" WITH_QT_CORE WITH_QT)
+qi_add_subdirectory("bin")
 
 qi_add_subdirectory("python" WITH_PYTHON)
-if (WITH_DOTNET)
-  add_subdirectory("dotnet")
-endif()
-add_subdirectory("c/test")
-add_subdirectory("c/bin")
-add_subdirectory("tests")
+qi_add_subdirectory("dotnet" WITH_DOTNET)
+qi_add_subdirectory("c/test" BUILD_TESTS)
+qi_add_subdirectory("c/bin"  BUILD_TESTS)
+qi_add_subdirectory("tests"  BUILD_TESTS)
 
 message(STATUS "")
 message(STATUS "Build Options:")
 message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
-message(STATUS "WITH_PERF      : ${WITH_PERF}")
 message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
 message(STATUS "WITH_QT_QTCORE : ${WITH_QT_QTCORE}")
 message(STATUS "WITH_DOTNET    : ${WITH_DOTNET}")
