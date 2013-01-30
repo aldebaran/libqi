@@ -118,7 +118,7 @@ TEST(TestEventLoop, Event)
 
 TEST(TestThreadModel, notThreadSafe)
 {
-  void* mainId = new TID(boost::this_thread::get_id());
+  new TID(boost::this_thread::get_id());
   qi::ObjectPtr o1 = makeObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
@@ -131,7 +131,7 @@ TEST(TestThreadModel, notThreadSafe)
 
 TEST(TestThreadModel, ThreadSafe)
 {
-  void* mainId = new TID(boost::this_thread::get_id());
+  new TID(boost::this_thread::get_id());
   qi::ObjectPtr o1 = makeObjWithThreadModel(qi::ObjectThreadingModel_MultiThread);
   ASSERT_TRUE(callSameThreadIn(o1, qi::getDefaultObjectEventLoop(),
     0));
