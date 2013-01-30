@@ -32,30 +32,9 @@
 
 namespace qi
 {
-
-
-  static TransportServerImplPrivate * newTSP(TransportServer* self,
-    const qi::Url &url,
-    qi::EventLoop* ctx) {
-    if (url.protocol() == "tcp")
-    {
-      return new TransportServerAsioPrivate(self, url, ctx, false);
-    }
-
-    if (url.protocol() == "tcps")
-    {
-      return new TransportServerAsioPrivate(self, url, ctx, true);
-    }
-
-    qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
-                                  << " TransportServer create with dummy implementation.";
-    return 0;
-  }
-
   TransportServer::TransportServer()
     : _p(new TransportServerPrivate)
   {
-    _p->_impl = 0;
   }
 
   TransportServer::~TransportServer()
@@ -67,12 +46,31 @@ namespace qi
 
   bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    if ((_p->_impl = newTSP(this, url, ctx)))
+    TransportServerImplPrivate* impl = 0;
+
+    if (url.protocol() == "tcp")
     {
-      return _p->_impl->listen();
+      impl = new TransportServerAsioPrivate(this, url, ctx, false);
+    }
+    else if (url.protocol() == "tcps")
+    {
+      impl = new TransportServerAsioPrivate(this, url, ctx, false);
     }
     else
     {
+      qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
+                                    << " TransportServer create with dummy implementation.";
+      return false;
+    }
+
+    if (impl->listen())
+    {
+      _p->_impl.push_back(impl);
+      return true;
+    }
+    else
+    {
+      delete impl;
       return false;
     }
   }
@@ -101,34 +99,40 @@ namespace qi
   }
 
   qi::Url TransportServer::listenUrl() const {
-    if (_p->_impl)
+    // next commit: fix the listenUrl mess
+    if (_p->_impl.empty())
     {
-      return _p->_impl->listenUrl;
+      return "";
     }
     else
     {
-      return "";
+      return _p->_impl[0]->listenUrl;
     }
   }
 
   std::vector<qi::Url> TransportServer::endpoints() const
   {
-    if (_p->_impl)
+    std::vector<qi::Url> r;
+
+    for (std::vector<TransportServerImplPrivate*>::const_iterator it = _p->_impl.begin();
+         it != _p->_impl.end();
+         it++)
     {
-      return _p->_impl->_endpoints;
+      r.insert(r.end(), (*it)->_endpoints.begin(), (*it)->_endpoints.end());
     }
-    else
-    {
-      return std::vector<qi::Url>();
-    }
+
+    return r;
   }
 
   void TransportServer::close() {
-    if (_p->_impl)
+    for (std::vector<TransportServerImplPrivate*>::const_iterator it = _p->_impl.begin();
+         it != _p->_impl.end();
+         it++)
     {
-      _p->_impl->destroy(); // this will delete _p->_impl
-      _p->_impl = 0;
+      (*it)->destroy(); // this will delete _p->_impl
     }
+
+    _p->_impl.clear();
   }
 
 }

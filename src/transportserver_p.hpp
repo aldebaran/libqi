@@ -56,7 +56,7 @@ namespace qi {
   public:
     std::string                 _identityKey;
     std::string                 _identityCertificate;
-    TransportServerImplPrivate* _impl;
+    std::vector<TransportServerImplPrivate*> _impl;
   };
 
 }
