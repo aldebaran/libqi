@@ -136,65 +136,6 @@ namespace qi {
     return prom.future();
   }
 
-  void notify_fd_bounce(
-    const boost::system::error_code& erc,
-    EventLoop::FileOperation op, EventLoop::AsyncCallHandle h
-    )
-  {
-    if (!h._p->sd)
-      return; // Other callback destroyed the socket
-    if (h._p->cancelled && erc)
-    {
-      delete h._p->sd;
-      h._p->sd = 0;
-      return;
-    }
-    h._p->fdcallback((int)h._p->sd->native_handle(), op);
-    if (op == EventLoop::FileOperation_Read)
-    {
-      h._p->sd->async_read_some(
-          boost::asio::null_buffers(),
-          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Read, h)
-          );
-    }
-    else if (op == EventLoop::FileOperation_Write)
-    {
-       h._p->sd->async_write_some(
-          boost::asio::null_buffers(),
-          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Write, h)
-          );
-    }
-  }
-  EventLoop::AsyncCallHandle EventLoopAsio::notifyFd(int fd_, EventLoop::NotifyFdCallbackFunction cb,
-    EventLoop::FileOperation fdUsage)
-  {
-    // A posix fd should be able to handle everything but regular files,
-    // for which fd notification does not make sense anyway.
-    EventLoop::AsyncCallHandle res;
-    AsyncCallHandlePrivate::Stream* sd = new AsyncCallHandlePrivate::Stream(_io);
-    res._p->sd = sd;
-    res._p->fdcallback = cb;
-    sd->assign(
-#ifdef _WIN32
-      boost::asio::ip::tcp::v4(),
-#endif
-      (AsyncCallHandlePrivate::Stream::native_handle_type) fd_);
-    if (fdUsage & EventLoop::FileOperation_Read)
-    {
-      sd->async_read_some(
-          boost::asio::null_buffers(),
-          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Read, res)
-          );
-    }
-    if (fdUsage & EventLoop::FileOperation_Write)
-    {
-       sd->async_write_some(
-          boost::asio::null_buffers(),
-          boost::bind(&notify_fd_bounce, _1, EventLoop::FileOperation_Write, res)
-          );
-    }
-    return res;
-  }
 
   void* EventLoopAsio::nativeHandle()
   {
@@ -247,12 +188,6 @@ namespace qi {
   EventLoopThreadPool::~EventLoopThreadPool()
   {
     delete _pool;
-  }
-
-  EventLoop::AsyncCallHandle EventLoopThreadPool::notifyFd(int fd,
-      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)
-  {
-    throw std::runtime_error("notifyFd not implemented for thread pool");
   }
 
   static void delay_call(uint64_t usDelay, boost::function<void()> callback)
@@ -405,15 +340,6 @@ namespace qi {
   {
     CHECK_STARTED;
     return _p->asyncCall(usDelay, callback);
-  }
-
-  EventLoop::AsyncCallHandle
-  EventLoop::notifyFd(int fileDescriptor,
-                      NotifyFdCallbackFunction callback,
-                      FileOperation fdUsage)
-  {
-    CHECK_STARTED;
-    return _p->notifyFd(fileDescriptor, callback, fdUsage);
   }
 
   struct MonitorContext

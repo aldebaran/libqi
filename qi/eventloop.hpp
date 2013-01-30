@@ -60,17 +60,6 @@ namespace qi
       boost::shared_ptr<AsyncCallHandlePrivate> _p;
     };
 
-    //! @enum FileOperation
-    //! Define operation permitted on file
-    enum QI_API FileOperation
-    {
-      FileOperation_Read = 1,
-      FileOperation_Write = 2,
-      FileOperation_ReadOrWrite = FileOperation_Read | FileOperation_Write
-    };
-
-    typedef boost::function<void(int, FileOperation)> NotifyFdCallbackFunction;
-
     /** Call given function once after given delay in microseconds.
      * @return a cancelleable future
      */
@@ -86,11 +75,7 @@ namespace qi
             future's error will be set.
     */
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
-    /// Call given function every time something happen on file
-    /// descriptor fileDescriptor. You can specify that the callback
-    /// will be called for every Read, every Write or for both Read
-    /// and Write operations, using condition variable.
-    AsyncCallHandle notifyFd(int fileDescriptor, NotifyFdCallbackFunction callback, FileOperation condition);
+
 
     EventLoopPrivate *_p;
   };

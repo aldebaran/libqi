@@ -27,7 +27,6 @@ namespace qi {
 #else
     typedef boost::asio::posix::stream_descriptor Stream;
 #endif
-    EventLoop::NotifyFdCallbackFunction fdcallback;
     Stream* sd;
   };
 
@@ -38,12 +37,8 @@ namespace qi {
     virtual void start()=0;
     virtual void join()=0;
     virtual void stop()=0;
-    virtual qi::Future<void>   asyncCall(uint64_t usDelay,
-      boost::function<void ()> callback)=0;
-    virtual void post(uint64_t usDelay,
-      const boost::function<void ()>& callback)=0;
-    virtual EventLoop::AsyncCallHandle notifyFd(int fd,
-      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage)=0;
+    virtual qi::Future<void> asyncCall(uint64_t usDelay, boost::function<void ()> callback)=0;
+    virtual void post(uint64_t usDelay, const boost::function<void ()>& callback)=0;
     virtual void destroy()=0;
     virtual void* nativeHandle()=0;
     virtual void run()=0;
@@ -64,8 +59,6 @@ namespace qi {
       boost::function<void ()> callback);
     virtual void post(uint64_t usDelay,
       const boost::function<void ()>& callback);
-    EventLoop::AsyncCallHandle notifyFd(int fd,
-      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
     virtual void destroy();
     virtual void* nativeHandle();
   private:
@@ -94,8 +87,6 @@ namespace qi {
       boost::function<void ()> callback);
     virtual void post(uint64_t usDelay,
       const boost::function<void ()>& callback);
-    EventLoop::AsyncCallHandle notifyFd(int fd,
-      EventLoop::NotifyFdCallbackFunction cb, EventLoop::FileOperation fdUsage);
     virtual void destroy();
     virtual void* nativeHandle();
   private:
