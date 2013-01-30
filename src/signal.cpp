@@ -174,7 +174,6 @@ namespace qi {
       else if (callType != MetaCallType_Auto)
         async = (callType == MetaCallType_Queued);
 
-      (callType == MetaCallType_Queued || threadingModel == MetaCallType_Queued);
       qiLogDebug("qi.Signal") << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
       if (async)
       {
