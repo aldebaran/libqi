@@ -285,7 +285,7 @@ namespace qi{
    *  can be called with any argument type:
    *    metaCall("foo", 12);
    */
-  class AutoGenericValuePtr: public GenericValuePtr
+  class QITYPE_API AutoGenericValuePtr: public GenericValuePtr
   {
   public:
     AutoGenericValuePtr ();
@@ -307,14 +307,14 @@ namespace qi{
     inline bool operator!=(const GenericIteratorPtr& b) const;
   };
 
-  class GenericListIteratorPtr: public GenericIteratorPtr<GenericValuePtr>
+  class QITYPE_API GenericListIteratorPtr: public GenericIteratorPtr<GenericValuePtr>
   {};
 
-  class GenericMapIteratorPtr: public GenericIteratorPtr<std::pair<GenericValuePtr, GenericValuePtr> >
+  class QITYPE_API GenericMapIteratorPtr: public GenericIteratorPtr<std::pair<GenericValuePtr, GenericValuePtr> >
   {};
 
   class TypeList;
-  class GenericListPtr: public GenericValuePtr
+  class QITYPE_API GenericListPtr: public GenericValuePtr
   {
   public:
     GenericListPtr();
@@ -329,7 +329,7 @@ namespace qi{
   };
 
   class TypeMap;
-  class GenericMapPtr: public GenericValuePtr
+  class QITYPE_API GenericMapPtr: public GenericValuePtr
   {
   public:
     GenericMapPtr();
@@ -345,7 +345,7 @@ namespace qi{
   };
 
   class TypeTuple;
-  class GenericTuplePtr: public GenericValuePtr
+  class QITYPE_API GenericTuplePtr: public GenericValuePtr
   {
   public:
     GenericTuplePtr();
