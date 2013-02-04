@@ -21,6 +21,13 @@ qi_session_t *qi_session_create()
   return reinterpret_cast<qi_session_t*>(session);
 }
 
+bool qi_session_is_connected(qi_session_t *session)
+{
+  qi::Session *s = reinterpret_cast<qi::Session*>(session);
+
+  return s->isConnected();
+}
+
 bool qi_session_connect(qi_session_t *session, const char *address)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);

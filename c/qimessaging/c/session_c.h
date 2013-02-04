@@ -11,7 +11,7 @@
 #define _QIMESSAGING_SESSION_H_
 
 #include <stdlib.h>
-
+#include <qimessaging/c/api_c.h>
 #ifdef __cplusplus
 extern "C"
 {
@@ -27,6 +27,7 @@ extern "C"
 
   // P.R. FIXME: make asynchronous, return a future, make a _sync version
   QIMESSAGING_API bool          qi_session_connect(qi_session_t *session, const char   *address);
+  QIMESSAGING_API bool          qi_session_is_connected(qi_session_t *session);
   QIMESSAGING_API bool          qi_session_listen(qi_session_t *session, const char *address);
   QIMESSAGING_API int           qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object);
   QIMESSAGING_API void          qi_session_unregister_service(qi_session_t *session, unsigned int idx);
