@@ -4,6 +4,13 @@
 
 from qimessagingswig import converterTest
 
+def test_converterUTF8():
+    cv = converterTest()
+    s1 = u"CHICHE"
+    for i in range(0, 100):
+      s2 = cv.TestObjectConversion(s1)
+      assert s1 == s2
+
 def test_converter():
     cv = converterTest()
 
@@ -91,3 +98,4 @@ def test_converter():
 
 if __name__ == "__main__":
     test_converter()
+    test_converterUTF8()

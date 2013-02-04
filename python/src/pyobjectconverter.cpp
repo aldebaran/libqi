@@ -220,9 +220,15 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   // May be not needed but we keep a ref on Py_None for the comparison, better safe than sorry
   PythonScopedRef noneCounter(Py_None);
 
-  if (PyString_CheckExact(val) || PyUnicode_CheckExact(val))
+  if (PyString_CheckExact(val))
   {
     res = qi::GenericValuePtr::from(*new std::string(PyString_AsString(val)));
+  }
+  else if (PyUnicode_CheckExact(val))
+  {
+    PyObject *pstring = PyUnicode_AsUTF8String(val);
+    res = qi::GenericValuePtr::from(*new std::string(PyString_AsString(pstring)));
+    Py_DECREF(pstring);
   }
   else if (val == Py_None)
   {
