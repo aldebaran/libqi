@@ -58,10 +58,10 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
 
   // Get buffer from message
   qi_message_data_t *m = reinterpret_cast<qi_message_data_t*>(message);
-
   std::string sig = mm->signature();
   sig = qi::signatureSplit(sig)[2];
-  sig = sig.substr(1, sig.length() - 2);
+  if (sig.empty() == false)
+    sig = sig.substr(1, sig.length() - 2);
   qi::GenericFunctionParameters params;
   params = m->msg->parameters(sig);
   qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, params);
@@ -109,7 +109,6 @@ qi::GenericValuePtr c_call(std::string complete_sig,
    qi_message_destroy((qi_message_t *) answer_c);
    return res;
 }
-
 
 int          qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
 {
