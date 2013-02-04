@@ -37,6 +37,7 @@ struct ToPyObject
   void visitVoid(qi::Type*)
   {
     *result = Py_None;
+    Py_INCREF(Py_None);
     checkForError();
   }
 
