@@ -212,7 +212,10 @@ namespace qi
       boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(msWait);
       boost::timed_mutex::scoped_lock l(*lock, timeout);
       if (!l.owns_lock())
+      {
+        qiLogWarning("qi.type") << "Time-out acquiring object lock when calling method. Deadlock?";
         throw std::runtime_error("Time-out acquiring lock. Deadlock?");
+      }
       return function.call(params);
     }
   }
