@@ -35,16 +35,20 @@ qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI
 #qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 #qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
 
-find_package(idl REQUIRED)
+option(WITH_CODEGEN_TESTS       "Run codegen tests"       OFF)
 
-MESSAGE("Found python:  ${_python_executable}")
-qi_create_module(task
-  SRC task_service.cpp
-  INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/task_service.hpp
-  SHARED
-  CLASSES Task
-  SERVICES TaskGenerator
-  PROXY
-  IDL ${CMAKE_CURRENT_SOURCE_DIR}/task.idl)
+if (WITH_CODEGEN_TESTS)
+  find_package(idl REQUIRED)
 
-qi_create_gtest(test_task SRC test_task.cpp  ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp DEPENDS QI QITYPE TESTSESSION GTEST TIMEOUT 10)
+  MESSAGE("Found python:  ${_python_executable}")
+  qi_create_module(task
+    SRC task_service.cpp
+    INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/task_service.hpp
+    SHARED
+    CLASSES Task
+    SERVICES TaskGenerator
+    PROXY
+    IDL ${CMAKE_CURRENT_SOURCE_DIR}/task.idl)
+
+  qi_create_gtest(test_task SRC test_task.cpp  ${CMAKE_CURRENT_BINARY_DIR}/task_proxy.hpp DEPENDS QI QITYPE TESTSESSION GTEST TIMEOUT 10)
+endif()
