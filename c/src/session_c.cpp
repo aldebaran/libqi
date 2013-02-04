@@ -27,9 +27,21 @@ bool qi_session_connect(qi_session_t *session, const char *address)
 
   try
   {
-    return s->connect(address);
+    qi::Future<bool> fut = s->connect(address);
+    fut.wait();
+    if (fut.hasError() || fut.value() == false)
+    {
+      qi_c_set_error(fut.error().c_str());
+      return false;
+    }
+    return true;
   }
   catch (std::runtime_error &e)
+  {
+    qi_c_set_error(e.what());
+    return false;
+  }
+  catch (std::bad_alloc &e)
   {
     qi_c_set_error(e.what());
     return false;
@@ -70,7 +82,7 @@ qi_object_t *qi_session_get_service(qi_session_t *session, const char *name)
 
   if (!s)
   {
-    printf("session not valid.\n");
+    qi_c_set_error("Session is not valid.");
     return 0;
   }
 
