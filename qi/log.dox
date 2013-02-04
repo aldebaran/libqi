@@ -3,6 +3,48 @@
 /**
  * \namespace qi::log
  * \brief Log functions with different levels of verbosity.
+ *
+ * Each log has a category defined by the call to QI_LOG_CATEGORY()
+ * found in scope. So you must call QI_LOG_CATEGORY at least once, for
+ * instance at the beginning of your source file or function.
+ *
+ *
+ * Logging is performed by invoking the QI_LOG_* macro families, one
+ * per severity level: QI_LOG_ERROR, QI_LOG_WARNING, QI_LOG_INFO, QI_LOG_VERBOSE
+ * and QI_LOG_DEBUG.
+ * Those macros accept either a format syntax inside them,
+ * or a stream syntax outside.
+ *
+ * \verbatim
+ *
+ * .. code-block:: cpp
+ *
+ * {
+ *   qiLogCategory(my.category);
+ *   qiLogInfoF("1 + 1 is %s", 1+1);
+ *   qiLogInfo() << "1 + 1 is " << 1+1;
+ * }
+ *
+ * \endverbatim
+ *
+ *
+ * Listeners for all log messages can be added with addLogHandler().
+ *
+ * Logs can be filtered at multiple levels:
+ *  - A global cap on severity through setVerbosity()
+ *  - A per-category cap with setCategory().
+ *  - A per-listener per-category cap with setCategory()
+ * Globbing is supported each time a category name must be specified:
+ *
+ * \verbatim
+ *   setCategory("internal.*", silent);
+ *
+ * One can also set a filtering rule in QI_LOG_CATEGORIES environment variable.
+ * syntax is column-separated list of rules of the form (+|-)CAT or CAT=level.
+ * For example, -internal.*:file=verbose
+ *
+ * \endverbatim
+ *
  */
 
 /**

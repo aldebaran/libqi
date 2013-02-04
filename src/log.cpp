@@ -13,11 +13,13 @@
 #include <iomanip>
 
 #include <qi/application.hpp>
+#include <qi/atomic.hpp>
 #include <qi/log/consoleloghandler.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/program_options.hpp>
+#include <boost/unordered_map.hpp>
 
 #ifdef QI_USE_BOOST_LOCK_FREE
 # include <boost/lockfree/fifo.hpp>
@@ -29,6 +31,14 @@
 #ifdef ANDROID
 # include <android/log.h>
 #endif
+
+#ifndef WIN32
+#include <fnmatch.h>
+#else
+# include <Shlwapi.h>
+# pragma comment(lib, "shlwapi.lib")
+#endif
+
 
 #define RTLOG_BUFFERS (128)
 
@@ -109,10 +119,11 @@ namespace qi {
       default:
         break;
       }
-      logline << msg;
+      logline << msg << std::endl;
 
       return logline.str();
     }
+
   }
 
   namespace log {
@@ -134,9 +145,31 @@ namespace qi {
       inline Log();
       inline ~Log();
 
+      struct Handler
+      {
+        logFuncHandler func;
+        unsigned int index; // index of this handler in category levels
+        LogLevel verbosity; // max verbosity this handler accepts
+      };
+
       void run();
       void printLog();
-
+      // Invoke handlers who enabled given level/category
+      void dispatch(const qi::log::LogLevel,
+                    const qi::os::timeval,
+                    const char*,
+                    const char*,
+                    const char*,
+                    const char*,
+                    int);
+      void dispatch(const qi::log::LogLevel level,
+                    const qi::os::timeval date,
+                    detail::Category& category,
+                    const char* log,
+                    const char* file,
+                    const char* function,
+                    int line);
+      Handler* logHandler(Subscriber id);
     public:
       bool                       LogInit;
       boost::thread              LogThread;
@@ -149,8 +182,48 @@ namespace qi {
 #else
       std::queue<privateLog*>     logs;
 #endif
-      std::map<std::string, logFuncHandler > logHandlers;
+
+      typedef std::map<std::string, Handler> LogHandlerMap;
+      LogHandlerMap logHandlers;
+
+      qi::atomic<int> nextIndex;
     };
+
+    inline bool globMatch(const std::string& pattern, const std::string& string)
+    {
+#ifdef WIN32
+      return ::PathMatchSpec(string.c_str(), pattern.c_str());
+#else
+      return !fnmatch(pattern.c_str(), string.c_str(), 0);
+#endif
+    }
+
+    // If we receive a setLevel with a globbing category, we must keep it
+    // in mind, in case a new category that matches the glob is created.
+    struct GlobRule
+    {
+      GlobRule(std::string t, unsigned int i, LogLevel l)
+      : target(t) , id(i), level(l) {}
+      bool matches(const std::string& n) const
+      {
+        return globMatch(target, n);
+      }
+      std::string target; // glob target
+      unsigned int id; // listener id or -1 for all
+      LogLevel level;
+      static const unsigned int ALL = 0xFFFF; // std::numeric_limits<unsigned int>
+    };
+    std::vector<GlobRule> _glGlobRules;
+
+    // categories must be accessible at static init: cannot go in Log class
+    typedef std::map<std::string, detail::Category*> CategoryMap;
+    static CategoryMap*   _glCategories = 0;
+    inline CategoryMap& _categories()
+    {
+      if (!_glCategories)
+        _glCategories = new CategoryMap;
+      return *_glCategories;
+    }
 
     static LogLevel               _glVerbosity = qi::log::info;
     static int                    _glContext = false;
@@ -161,6 +234,108 @@ namespace qi {
     static Log                    *LogInstance;
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
+
+    namespace detail {
+      LogLevel* globalLogLevelPtr()
+      {
+        return &_glVerbosity;
+      }
+      // This pattern allows to continue logging at static destruction time
+      // even if the static FormatMap is destroyed
+      class FormatMap: public boost::unordered_map<std::string, boost::format>
+      {
+      public:
+        FormatMap(bool& ward)
+        : ward_(ward)
+        {
+          ward_ = true;
+        }
+
+        ~FormatMap()
+        {
+          ward_ = false;
+        }
+
+      private:
+        bool& ward_;
+      };
+
+      boost::format
+      getFormat(const std::string& s)
+      {
+        static bool map_ok(false);
+        static FormatMap map(map_ok);
+        if (map_ok)
+        {
+          static boost::mutex mutex;
+          boost::mutex::scoped_lock lock(mutex);
+          FormatMap::iterator i = map.find(s);
+          if (i == map.end())
+            return map[s].parse(s);
+          else
+            return i->second;
+        }
+        else
+          return boost::format(s);
+      }
+    }
+
+    // check and apply existing glob if they match given category
+    static void checkGlobs(detail::Category* cat)
+    {
+      for (unsigned i=0; i<_glGlobRules.size(); ++i)
+      {
+        GlobRule& g = _glGlobRules[i];
+        if (g.matches(cat->name))
+        {
+          if (g.id != GlobRule::ALL)
+          {
+            if (cat->levels.size() <= g.id)
+              cat->levels.resize(g.id + 1, debug);
+            cat->levels[g.id] = g.level;
+          }
+          else
+            cat->mainLevel = g.level;
+        }
+      }
+    }
+
+    // apply a globbing rule to existing categories
+    static void applyGlob(const GlobRule& g)
+    {
+      CategoryMap& c = _categories();
+      for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
+      {
+        assert(it->first == it->second->name);
+        if (g.matches(it->first))
+        {
+          detail::Category* cat = it->second;
+          if (g.id != GlobRule::ALL)
+          {
+            if (cat->levels.size() <= g.id)
+              cat->levels.resize(g.id + 1, debug);
+            cat->levels[g.id] = g.level;
+          }
+          else
+            cat->mainLevel = g.level;
+        }
+      }
+    }
+
+    // Check if globRule replaces an existiing one, then replace or append
+    static void mergeGlob(const GlobRule& p)
+    {
+      for (unsigned i=0; i<_glGlobRules.size(); ++i)
+      {
+        GlobRule& c = _glGlobRules[i];
+        if (p.target == c.target && p.id == c.id)
+        {
+          c = p;
+          return;
+        }
+      }
+      _glGlobRules.push_back(p);
+    }
 
     static class DefaultLogInit
     {
@@ -190,20 +365,45 @@ namespace qi {
       {
         logs.pop();
 #endif
-        if (!logHandlers.empty())
-        {
-          std::map<std::string, logFuncHandler >::iterator it;
-          for (it = logHandlers.begin();
+        dispatch(pl->_logLevel,
+                 pl->_date,
+                 pl->_category,
+                 pl->_log,
+                 pl->_file,
+                 pl->_function,
+                 pl->_line);
+      }
+    }
+
+    void Log::dispatch(const qi::log::LogLevel level,
+                       const qi::os::timeval date,
+                       const char*  category,
+                       const char* log,
+                       const char* file,
+                       const char* function,
+                       int line)
+    {
+      dispatch(level, date, *addCategory(category), log, file, function, line);
+    }
+
+    void Log::dispatch(const qi::log::LogLevel level,
+                       const qi::os::timeval date,
+                       detail::Category& category,
+                       const char* log,
+                       const char* file,
+                       const char* function,
+                       int line)
+    {
+      if (!logHandlers.empty())
+      {
+        LogHandlerMap::iterator it;
+        for (it = logHandlers.begin();
                it != logHandlers.end(); ++it)
-          {
-            (*it).second(pl->_logLevel,
-                         pl->_date,
-                         pl->_category,
-                         pl->_log,
-                         pl->_file,
-                         pl->_function,
-                         pl->_line);
-          }
+        {
+          Handler& h = it->second;
+          unsigned int index = h.index;
+          if (h.verbosity >= level && (category.levels.size() <= index || category.levels[index] >= level))
+            h.func(level, date, category.name.c_str(), log, file, function, line);
         }
       }
     }
@@ -242,41 +442,6 @@ namespace qi {
 
         printLog();
       }
-    }
-
-    static void my_strcpy_log(char *dst, const char *src, int len) {
-      if (!src)
-        src = "(null)";
-
-      int messSize = static_cast<int>(strlen(src));
-      // check if the last char is a \n
-      if (src[messSize - 1] == '\n')
-      {
-        // Get the size to memcpy (don't forget we need 1 space more for \0)
-        int strSize = messSize < len  ? messSize : len - 1;
-       #ifndef _WIN32
-        memcpy(dst, src, strSize);
-       #else
-        memcpy_s(dst, len,  src, strSize);
-       #endif
-        dst[strSize] = 0;
-        return;
-      }
-
-     #ifndef _WIN32
-      // Get the size to memcpy (we need 2 spaces more for \n\0)
-      int strSize = messSize < len - 1  ? messSize : len - 2;
-      memcpy(dst, src, strSize);
-      dst[strSize] = '\n';
-      dst[strSize + 1] = '\0';
-     #else
-      // Get the size to memcpy (we need 3 spaces more for \r\n\0)
-      int strSize = messSize < len - 2  ? messSize : len - 3;
-      memcpy_s(dst, len,  src, strSize);
-      dst[strSize] = '\r';
-      dst[strSize + 1] = '\n';
-      dst[strSize + 2] = '\0';
-     #endif
     }
 
     static void my_strcpy(char *dst, const char *src, int len) {
@@ -329,12 +494,38 @@ namespace qi {
     }
 
     void log(const LogLevel        verb,
+             category_type        category,
+             const std::string&   msg,
+             const char           *file,
+             const char           *fct,
+             const int             line)
+    {
+      if (msg.empty())
+        return;
+      #ifndef ANDROID
+      if (_glSyncLog)
+      {
+        if (!detail::isVisible(category, verb))
+          return;
+        qi::os::timeval tv;
+        qi::os::gettimeofday(&tv);
+        LogInstance->dispatch(verb, tv, *category, msg.c_str(), file, fct, line);
+      }
+      else
+      #endif
+      // FIXME suboptimal
+      log(verb, category->name.c_str(), msg.c_str(), file, fct, line);
+    }
+
+    void log(const LogLevel        verb,
              const char           *category,
              const char           *msg,
              const char           *file,
              const char           *fct,
              const int             line)
     {
+      if (!isVisible(category, verb))
+        return;
       #ifdef ANDROID
         std::map<LogLevel, android_LogPriority> _conv;
 
@@ -355,42 +546,28 @@ namespace qi {
       if (!LogInstance->LogInit)
         return;
 
-      int tmpRtLogPush = ++LogPush % RTLOG_BUFFERS;
-      privateLog* pl = &(LogBuffer[tmpRtLogPush]);
-
       qi::os::timeval tv;
       qi::os::gettimeofday(&tv);
-
-      pl->_logLevel = verb;
-      pl->_line = line;
-      pl->_date.tv_sec = tv.tv_sec;
-      pl->_date.tv_usec = tv.tv_usec;
-
-      my_strcpy(pl->_category, category, CAT_SIZE);
-      my_strcpy(pl->_file, file, FILE_SIZE);
-      my_strcpy(pl->_function, fct, FUNC_SIZE);
-      my_strcpy_log(pl->_log, msg, LOG_SIZE);
-
       if (_glSyncLog)
       {
-        if (!LogInstance->logHandlers.empty())
-        {
-          std::map<std::string, logFuncHandler >::iterator it;
-          for (it = LogInstance->logHandlers.begin();
-               it != LogInstance->logHandlers.end(); ++it)
-          {
-            (*it).second(pl->_logLevel,
-                         pl->_date,
-                         pl->_category,
-                         pl->_log,
-                         pl->_file,
-                         pl->_function,
-                         pl->_line);
-          }
-        }
+        LogInstance->dispatch(verb, tv, category, msg, file, fct, line);
       }
       else
       {
+        int tmpRtLogPush = ++LogPush % RTLOG_BUFFERS;
+        privateLog* pl = &(LogBuffer[tmpRtLogPush]);
+
+
+
+        pl->_logLevel = verb;
+        pl->_line = line;
+        pl->_date.tv_sec = tv.tv_sec;
+        pl->_date.tv_usec = tv.tv_usec;
+
+        my_strcpy(pl->_category, category, CAT_SIZE);
+        my_strcpy(pl->_file, file, FILE_SIZE);
+        my_strcpy(pl->_function, fct, FUNC_SIZE);
+        my_strcpy(pl->_log, msg, LOG_SIZE);
 #ifdef QI_USE_BOOST_LOCK_FREE
         LogInstance->logs.enqueue(pl);
 #else
@@ -400,12 +577,31 @@ namespace qi {
       }
     }
 
-    void addLogHandler(const std::string& name, logFuncHandler fct)
+    Log::Handler* Log::logHandler(Subscriber id)
+    {
+       boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
+       LogHandlerMap::iterator it;
+       for (it = logHandlers.begin(); it != logHandlers.end(); ++it)
+       {
+         if (it->second.index == id)
+           return &it->second;
+       }
+       return 0;
+    }
+
+    Subscriber addLogHandler(const std::string& name, logFuncHandler fct)
     {
       if (!LogInstance)
-        return;
+        return -1;
       boost::mutex::scoped_lock l(LogInstance->LogHandlerLock);
-      LogInstance->logHandlers[name] = fct;
+      unsigned int id = ++LogInstance->nextIndex;
+      --id; // no postfix ++ on atomic
+      Log::Handler h;
+      h.index = id;
+      h.func = fct;
+      h.verbosity = debug;
+      LogInstance->logHandlers[name] = h;
+      return id;
     }
 
     void removeLogHandler(const std::string& name)
@@ -452,12 +648,7 @@ namespace qi {
 
     void setVerbosity(const LogLevel lv)
     {
-      const char *verbose = std::getenv("VERBOSE");
-
-      if (verbose)
-        _glVerbosity = (LogLevel)atoi(verbose);
-      else
-        _glVerbosity = lv;
+      _glVerbosity = lv;
 
       qiLogVerbose("qi.log") << "Verbosity set to " << _glVerbosity;
     };
@@ -469,12 +660,8 @@ namespace qi {
 
     void setContext(int ctx)
     {
-      const char *context = std::getenv("CONTEXT");
 
-      if (context)
-        _glContext = (atoi(context));
-      else
-        _glContext = ctx;
+      _glContext = ctx;
 
       qiLogVerbose("qi.log") << "Context set to " << _glContext;
     };
@@ -488,6 +675,128 @@ namespace qi {
     {
       _glSyncLog = sync;
     };
+
+    category_type addCategory(const std::string& name)
+    {
+      CategoryMap& c = _categories();
+      CategoryMap::iterator i = c.find(name);
+      if (i == c.end())
+      {
+        detail::Category* res = new detail::Category;
+        res->name = name;
+        res->mainLevel = debug;
+        c[name] = res;
+        checkGlobs(res);
+        return res;
+      }
+      else
+        return i->second;
+    }
+
+    bool isVisible(const std::string& category, LogLevel level)
+    {
+      return log::isVisible(addCategory(category), level);
+    }
+
+    bool isVisible(category_type category, LogLevel level)
+    {
+      return detail::isVisible(category, level);
+    }
+
+    void enableCategory(const std::string& cat)
+    {
+      setCategory(cat, _glVerbosity);
+    }
+
+    void disableCategory(const std::string& cat)
+    {
+      setCategory(cat, silent);
+    }
+
+    void setCategory(const std::string& cat, LogLevel level)
+    {
+      if (cat.find('*') != cat.npos)
+      {
+        GlobRule rule(cat, GlobRule::ALL, level);
+        applyGlob(rule);
+        mergeGlob(rule);
+      }
+      else
+        addCategory(cat)->mainLevel = level;
+    }
+
+    void setCategory(Subscriber sub, const std::string& catName, LogLevel level)
+    {
+      if (catName.find('*') != catName.npos)
+      {
+        GlobRule rule(catName, sub, level);
+        applyGlob(rule);
+        mergeGlob(rule);
+      }
+      else
+      {
+        category_type cat = addCategory(catName);
+        if (cat->levels.size() <= sub)
+          cat->levels.resize(sub + 1, debug);
+        cat->levels[sub] = level;
+      }
+    }
+
+    std::vector<std::string> categories()
+    {
+      std::vector<std::string> res;
+      CategoryMap& c = _categories();
+      for (CategoryMap::iterator it = c.begin(); it != c.end(); ++it)
+        res.push_back(it->first);
+      return res;
+    }
+
+    void setVerbosity(Subscriber sub, LogLevel level)
+    {
+      LogInstance->logHandler(sub)->verbosity = level;
+    }
+
+    void setVerbosity(const std::string& rules)
+    {
+      // See doc in header for format
+      size_t pos = 0;
+      while (true)
+      {
+        if (pos >= rules.length())
+          break;
+        size_t next = rules.find(':', pos);
+        std::string token;
+        if (next == rules.npos)
+          token = rules.substr(pos);
+        else
+          token = rules.substr(pos, next-pos);
+        if (token.empty())
+        {
+          pos = next + 1;
+          continue;
+        }
+        if (token[0] == '+')
+          token = token.substr(1);
+        size_t sep = token.find('=');
+        if (sep != token.npos)
+        {
+          std::string sLevel = token.substr(sep+1);
+          std::string cat = token.substr(0, sep);
+          LogLevel level = stringToLogLevel(sLevel.c_str());
+          setCategory(cat, level);
+        }
+        else
+        {
+          if (token[0] == '-')
+            setCategory(token.substr(1), silent);
+          else
+            setCategory(token, debug);
+        }
+        if (next == rules.npos)
+          break;
+        pos = next+1;
+      }
+    }
 
     static void _setVerbosityInt(int v)
     {
@@ -520,6 +829,20 @@ namespace qi {
       ("log-level,L", value<int>()->notifier(&_setVerbosityInt), "Change the log minimum level: [0-6] (0: silent, 1: fatal, 2: error, 3: warning, 4: info, 5: verbose, 6: debug). Default: 4 (info)")
       )
 
+    int process_env()
+    {
+      const char* verbose = std::getenv("VERBOSE");
+      if (verbose)
+        setVerbosity((LogLevel)atoi(verbose));
+      const char *context = std::getenv("CONTEXT");
+      if (context)
+        _glContext = (atoi(context));
+      const char* rules = std::getenv("QI_LOG_CATEGORIES");
+      if (rules)
+        setVerbosity(rules);
+      return 0;
+    }
+    static int _init = process_env();
   } // namespace log
 } // namespace qi
 

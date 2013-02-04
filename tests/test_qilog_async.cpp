@@ -15,3 +15,11 @@ TEST(log, logasync)
    for (int i = 0; i < 1000; i++)
      qiLogFatal("core.log.test1", "%d\n", i);
 }
+
+
+TEST(log, cats)
+{
+  qiLogCategory("pan");
+  qiLogWarningF("canard %s", 12);
+  qi::os::msleep(100);
+}
