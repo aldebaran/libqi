@@ -76,7 +76,9 @@ SIGNATURE_MAP = {
     'd'    : 'double',
     's'    : 'string',
     'm'    : 'dynamic',
-    'v'    : 'void'
+    'v'    : 'void',
+    'b'    : 'bool',
+    'X'    : 'dynamic'
 }
 
 # signature of a tuple to known matching structure
@@ -711,6 +713,7 @@ def signature_to_idl(sig):
       if next == sig:
         break
       sig = next
+  # Then convert each known element (one char) to the corresponding idl type
   tmp = ''
   for c in sig:
     if c in SIGNATURE_MAP:
