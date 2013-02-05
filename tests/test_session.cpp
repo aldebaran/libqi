@@ -216,6 +216,36 @@ TEST(QiSession, TestServiceDirectoryEndpoints)
   ASSERT_NE(sd.endpoints().at(0).port(), 0);
 }
 
+void onConnected(qi::Session *ses, qi::Promise<void> continueBaby) {
+  ses->services().value();
+  continueBaby.setValue(0);
+}
+
+TEST(QiSession, getCallInConnect)
+{
+  TestSessionPair pair;
+
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
+
+  pair.server()->registerService("serviceTest", obj);
+  qi::ObjectPtr object = pair.server()->service("serviceTest");
+
+  EXPECT_TRUE(object);
+  qi::Session ses;
+  qi::Promise<void> finito;
+
+  ses.connected.connect(boost::bind<void>(&onConnected, &ses, finito));
+  ses.connect(pair.serviceDirectoryEndpoints()[0]);
+  qi::Future<void> ff = finito.future();
+
+  ff.wait(2000);
+  EXPECT_TRUE(ff.isReady());
+  EXPECT_TRUE(ses.isConnected());
+}
+
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
