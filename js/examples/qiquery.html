@@ -38,7 +38,7 @@ function createLOL(s, m, s3, s4)
 
 function showService(service) {
   mobj = service.__mobj
-  tabname = $("<h3>" + mobj["name"] + "</h3>")
+  tabname = $("<h3><b>" + mobj["name"] + "</b> [<i>" + mobj["doc"] + "</i>]</h3>")
   $("#accordion").append(tabname)
 
   tab = $("<div/>")
@@ -51,7 +51,9 @@ function showService(service) {
       s3 = f.signatures[i][0]
       s4 = f.signatures[i][1]
 
-      $("<li>").html(f.signatures[i][0] + '::' + f.name + '(' + f.signatures[i][1] + ")")
+      $("<li>").html(f.signatures[i][0] + '::' + f.name
+                       + '(' + f.signatures[i][1] + ') '
+                       + '[<i>' + f.signatures[i][2] + '</i>]')
                .appendTo(list)
                .click(createLOL(service, f.name, s3, s4))
     }

@@ -19,12 +19,13 @@ function QiSession(url)
       _services[service] = new Object();
 
       _services[service].__mobj = new Object();
-      _services[service].__mobj.name = service;
+      _services[service].__mobj.name = data["result"]["name"];
+      _services[service].__mobj.doc = data["result"]["doc"];
       _services[service].__mobj.functions = new Array();
 
-      for (i = 0; i < data["result"].length; i++)
+      for (i = 0; i < data["result"]["functions"].length; i++)
       {
-        m = data["result"][i];
+        m = data["result"]["functions"][i];
         _services[service][m.name] = createMetaCall(_socket, service, m.name);
         _services[service].__mobj.functions[m.name] = m;
       }

@@ -24,15 +24,17 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
             args = params["args"]
             if method == "service":
                 o = self.s.service(str(args[0]))
-                data = []
+                r = []
                 for m in dir(o):
                   try:
                     sigarg = getattr(o, m).__signatures__
                     sigres = getattr(o, m).__sigreturns__
+                    docs = getattr(o, m).__docs__
                     s = []
                     for i in range(len(sigarg)):
-                      s.append([ sigres[i], sigarg[i] ])
-                    data.append( {"name": m, "signatures": s } )
+                      s.append([ sigres[i], sigarg[i], docs[sigarg[i]] ])
+                    r.append( {"name": m, "signatures": s } )
+                    data = { "name": args[0], "doc": o.__doc__, "functions": r }
                   except:
                     pass
             else:
