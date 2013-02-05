@@ -34,9 +34,9 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                     for i in range(len(sigarg)):
                       s.append([ sigres[i], sigarg[i], docs[sigarg[i]] ])
                     r.append( {"name": m, "signatures": s } )
-                    data = { "name": args[0], "doc": o.__doc__, "functions": r }
                   except:
                     pass
+                data = { "name": args[0], "doc": o.__doc__, "functions": r }
             else:
                 o = self.s.service(str(service))
                 m = getattr(o, method)
@@ -69,7 +69,8 @@ if __name__ == "__main__":
     # Create HTTP application
     http_app = tornado.web.Application(
       [(r'/(socket.io.js)', tornado.web.StaticFileHandler, {'path': "./"}),
-       (r'/(qimessaging.js)', tornado.web.StaticFileHandler, {'path': "./"})]
+       (r'/(qimessaging.js)', tornado.web.StaticFileHandler, {'path': "./"}),
+       (r'/(jquery.min.js)', tornado.web.StaticFileHandler, {'path': "./"})]
     )
 
     # Create http server on port 8001

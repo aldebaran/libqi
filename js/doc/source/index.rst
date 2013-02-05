@@ -41,9 +41,9 @@ and its two dependencies, `socket.io <http://socket.io/>`_ and
 
 .. code-block:: html
 
-   <script src="http://qim.io/jquery.js"></script>
-   <script src="http://qim.io/qimessaging.js"></script>
+   <script src="http://qim.io/jquery.min.js"></script>
    <script src="http://qim.io/socket.io.js"></script>
+   <script src="http://qim.io/qimessaging.js"></script>
 
 The API was designed around the jQuery
 `Deferred object <http://api.jquery.com/category/deferred-object/>`_, which
