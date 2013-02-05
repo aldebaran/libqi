@@ -216,6 +216,10 @@ namespace qi{
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
     GenericTuplePtr  asTuple() const;
+    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
+    * \warning returned value is a copy and should be destroyed
+    */
+    GenericValuePtr  asDynamic() const;
 
     template<typename T> T as() const;
     // Helper function to obtain type T from a value. Argument value is not used.

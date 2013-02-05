@@ -246,6 +246,19 @@ namespace qi {
     return as<std::string>();
   }
 
+  inline GenericValuePtr GenericValuePtr::asDynamic() const
+  {
+    if (kind() != Type::Dynamic)
+      return GenericValuePtr();
+    TypeDynamic* d = static_cast<TypeDynamic*>(type);
+    std::pair<GenericValuePtr, bool> res = d->get(value);
+    //we could avoid the copy, but we dont want to return a bool to tell the user
+    //wether the returned value should be freed or not.
+    if (res.second) //true if copied
+      return res.first;
+    else
+      return res.first.clone();
+  }
 
   namespace detail
   {
