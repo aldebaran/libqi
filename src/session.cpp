@@ -28,6 +28,11 @@ namespace qi {
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject)
     , _servicesHandler(&_sdClient, &_serverObject)
   {
+    _self->connected.setCallType(qi::MetaCallType_Queued);
+    _self->disconnected.setCallType(qi::MetaCallType_Queued);
+    _self->serviceRegistered.setCallType(qi::MetaCallType_Queued);
+    _self->serviceUnregistered.setCallType(qi::MetaCallType_Queued);
+
     _sdClientConnectedLink    = _sdClient.connected.connect(boost::bind<void>(&SessionPrivate::onConnected, this));
     _sdClientDisconnectedLink = _sdClient.disconnected.connect(boost::bind<void>(&SessionPrivate::onDisconnected, this, _1));
     _sdClientServiceAddedLink = _sdClient.serviceAdded.connect(boost::bind<void>(&SessionPrivate::onServiceAdded, this, _1, _2));
