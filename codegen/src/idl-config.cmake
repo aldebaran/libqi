@@ -5,6 +5,7 @@ qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
 # \group:CLASSES list of class names to be exposed to naoqi as objects
 # \group:SERVICES list of class names to be exposed to naoqi as services
 # \group:HEADERS header files to use, will use SRC if not set
+# \group:DOXYSRC sources to pass to doxygen, but not to compile
 # \param:IDL the IDL file to use as input
 # \param:PROXY generate specialized proxy header and install them
 function(qi_create_module name)
@@ -12,7 +13,7 @@ function(qi_create_module name)
   cmake_parse_arguments(ARG
     "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY"
     "SUBFOLDER;IDL"
-    "SRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;HEADERS;INCLUDE" ${ARGN})
+    "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;HEADERS;INCLUDE" ${ARGN})
   message("parsing args: ${ARG_CLASSES}")
   #First, locate idl.py
   qi_global_get(qi_create_module_file_local qi_create_module_file)
@@ -103,6 +104,7 @@ function(qi_create_module name)
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
+       ${ARG_SRC} ${ARG_DOXYSRC}
        -m cxxservicebouncerregister --interface
        "${carg}"
        -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
@@ -113,6 +115,7 @@ function(qi_create_module name)
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
+       ${ARG_SRC} ${ARG_DOXYSRC}
        ${classes}
        -m interface --interface
        -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp

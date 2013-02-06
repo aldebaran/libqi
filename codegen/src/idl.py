@@ -159,7 +159,7 @@ def cxx_parsed_to_sig(p):
     elif re.search('map$', p[0]):
       return p[0][0:-3] + "{" + cxx_parsed_to_sig(p[1]) + "}" + cxx_parsed_to_sig(p[2])
     else: # unknown template
-      return p[0] + "<" + p[1] + ">" + p[2]
+      return p[0] + "<" + cxx_parsed_to_sig(p[1]) + ">" + p[2]
   else:
     return p
 
@@ -800,10 +800,6 @@ def main(args):
   # Augment type mapping with what we will handle
   for c in raw:
     REV_MAP[c + 'Ptr'] = 'I' + c + 'Ptr'
-  # Set output stream to file or stdout
-  out = sys.stdout
-  if pargs.output_file and pargs.output_file != "-" :
-    out = open(pargs.output_file, "w")
 
   # Filter out classes present in raw, fill class_operation
   class_operation = dict()
@@ -815,7 +811,7 @@ def main(args):
         continue #be lenient on trailing ,
       cc = c.split(':')
       if not cc[0] in raw:
-        raise Exception("Requested class %s not found" % c)
+        raise Exception("Requested class %s not found" % cc[0])
       newraw[cc[0]] = raw[cc[0]]
       if len(cc) > 1:
         class_operation[cc[0]] = cc[1]
@@ -866,6 +862,10 @@ def main(args):
       for i in range(len(functions)):
         cargs = [c, raw[c]] + args[i]
         res += functions[i](*cargs)
+ # Set output stream to file or stdout
+  out = sys.stdout
+  if pargs.output_file and pargs.output_file != "-" :
+    out = open(pargs.output_file, "w")
   out.write(res)
 
 main(sys.argv)
