@@ -94,9 +94,13 @@ namespace qi {
 
   void SignalBase::trigger(const GenericFunctionParameters& params, MetaCallType callType)
   {
+    MetaCallType mct = callType;
+
     if (!_p)
       return;
 
+    if (mct == qi::MetaCallType_Auto)
+      mct = _p->defaultCallType;
     SignalSubscriberMap copy;
     {
       boost::recursive_mutex::scoped_lock sl(_p->mutex);
@@ -107,7 +111,7 @@ namespace qi {
     for (i = copy.begin(); i != copy.end(); ++i)
     {
       SignalSubscriberPtr s = i->second; // hold s alive
-      s->call(params, callType);
+      s->call(params, mct);
     }
   }
 

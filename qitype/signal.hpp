@@ -50,10 +50,10 @@ namespace qi {
     typedef unsigned int Link;
 
     template<typename FUNCTION_TYPE>
-    SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Direct);
+    SignalSubscriber& connect(FUNCTION_TYPE f, MetaCallType model=MetaCallType_Auto);
 
     SignalSubscriber& connect(qi::ObjectPtr target, unsigned int slot);
-    SignalSubscriber& connect(GenericFunction callback, MetaCallType model=MetaCallType_Direct);
+    SignalSubscriber& connect(GenericFunction callback, MetaCallType model=MetaCallType_Auto);
     SignalSubscriber& connect(const SignalSubscriber& s);
 
     bool disconnectAll();
@@ -113,11 +113,11 @@ namespace qi {
     virtual std::string signature() const;
     using boost::function<T>::operator();
 
-    inline SignalSubscriber& connect(boost::function<T> f, MetaCallType model=MetaCallType_Direct)
+    inline SignalSubscriber& connect(boost::function<T> f, MetaCallType model=MetaCallType_Auto)
     {
       return SignalBase::connect(f, model);
     }
-    inline SignalSubscriber& connect(GenericFunction f, MetaCallType model=MetaCallType_Direct)
+    inline SignalSubscriber& connect(GenericFunction f, MetaCallType model=MetaCallType_Auto)
     {
       return SignalBase::connect(f, model);
     }
@@ -128,9 +128,9 @@ namespace qi {
     }
     /// IF O is a shared_ptr, will auto-disconnect if object is destroyed
     template<typename O, typename MF>
-    inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Direct);
+    inline SignalSubscriber& connect(O* target, MF method, MetaCallType model=MetaCallType_Auto);
     template<typename O, typename MF>
-    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, MetaCallType model=MetaCallType_Direct);
+    inline SignalSubscriber& connect(boost::shared_ptr<O> target, MF method, MetaCallType model=MetaCallType_Auto);
   };
 
   namespace detail
@@ -158,15 +158,15 @@ namespace qi {
      : source(0), linkId(SignalBase::invalidLink), weakLock(0), target(0), method(0), enabled(true)
    {}
 
-   SignalSubscriber(GenericFunction func, MetaCallType model=MetaCallType_Direct, detail::WeakLock* lock = 0);
+   SignalSubscriber(GenericFunction func, MetaCallType model=MetaCallType_Auto, detail::WeakLock* lock = 0);
 
    SignalSubscriber(qi::ObjectPtr target, unsigned int method);
 
    template<typename O, typename MF>
-   SignalSubscriber(O* ptr, MF function, MetaCallType model=MetaCallType_Direct);
+   SignalSubscriber(O* ptr, MF function, MetaCallType model=MetaCallType_Auto);
 
    template<typename O, typename MF>
-   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, MetaCallType model=MetaCallType_Direct);
+   SignalSubscriber(boost::shared_ptr<O> ptr, MF function, MetaCallType model=MetaCallType_Auto);
 
    SignalSubscriber(const SignalSubscriber& b);
 
