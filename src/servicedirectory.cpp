@@ -273,11 +273,9 @@ namespace qi
     delete _p;
   }
 
-  bool ServiceDirectory::listen(const qi::Url &address)
+  qi::Future<void> ServiceDirectory::listen(const qi::Url &address)
   {
-    bool b = _p->_server.listen(address);
-    if (!b)
-      return false;
+    qi::Future<void> f = _p->_server.listen(address);
 
     ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
 
@@ -291,7 +289,7 @@ namespace qi
     //serviceDirectory must have id '1'
     assert(regid == 1);
     qiLogInfo("ServiceDirectory") << "ServiceDirectory listening on: " << address.str();
-    return true;
+    return f;
   }
 
   bool ServiceDirectory::setIdentity(const std::string& key,

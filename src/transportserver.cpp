@@ -44,7 +44,7 @@ namespace qi
     _p = 0;
   }
 
-  bool TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
+  qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
     TransportServerImplPrivate* impl = 0;
 
@@ -58,21 +58,13 @@ namespace qi
     }
     else
     {
-      qiLogError("TransportServer") << "Unrecognized protocol to create the TransportServer."
-                                    << " TransportServer create with dummy implementation.";
-      return false;
+      const char* s = "Unrecognized protocol to create the TransportServer.";
+      qiLogError("TransportServer") << s;
+      return qi::makeFutureError<void>(s);
     }
 
-    if (impl->listen())
-    {
-      _p->_impl.push_back(impl);
-      return true;
-    }
-    else
-    {
-      delete impl;
-      return false;
-    }
+    _p->_impl.push_back(impl);
+    return impl->listen();
   }
 
   bool TransportServer::setIdentity(const std::string& key, const std::string& crt)

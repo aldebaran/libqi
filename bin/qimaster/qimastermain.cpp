@@ -60,7 +60,9 @@ int main(int argc, char *argv[])
       }
 
       qi::ServiceDirectory sd;
-      if (!sd.listen(masterAddress))
+      qi::Future<void> f = sd.listen(masterAddress);
+      f.wait(3000);
+      if (f.hasError())
       {
         qiLogError("qi-master") << "Failed to listen on " << masterAddress <<
           ". Is there another service running on this address?";

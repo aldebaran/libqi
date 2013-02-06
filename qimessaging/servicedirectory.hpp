@@ -7,7 +7,8 @@
 #ifndef _QIMESSAGING_SERVICEDIRECTORY_HPP_
 #define _QIMESSAGING_SERVICEDIRECTORY_HPP_
 
-#include <qimessaging/url.hpp>
+# include <qimessaging/url.hpp>
+# include <qi/future.hpp>
 
 namespace qi
 {
@@ -19,7 +20,7 @@ namespace qi
     ServiceDirectory();
     ~ServiceDirectory();
 
-    bool listen(const qi::Url &listenAddress);
+    qi::Future<void> listen(const qi::Url &listenAddress);
     bool setIdentity(const std::string& key, const std::string& crt);
     void close();
     std::vector<qi::Url> endpoints() const;

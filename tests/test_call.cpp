@@ -556,7 +556,6 @@ void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
 TEST(TestCall, PairClientListen)
 {
   TestSessionPair p;
-  p.client()->listen("tcp://127.0.0.1:0");
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
   qi::ObjectPtr obj(ob.object());
@@ -572,8 +571,6 @@ TEST(TestCall, DeadLock)
   ev->start();
   // One object calls another, both in singleThread mode
   TestSessionPair p;
-  p.client()->listen("tcp://127.0.0.1:0");
-
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);

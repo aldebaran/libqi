@@ -152,7 +152,10 @@ bool qi_session_listen(qi_session_t *session, const char *address)
 {
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
-  return s->listen(address);
+  // this is hackish, implement proper future in C
+  qi::Future<void> f = s->listen(address);
+  f.wait(5000);
+  return !f.hasError();
 }
 
 int qi_session_register_service(qi_session_t *session, const char *name, qi_object_t *object)

@@ -154,15 +154,9 @@ namespace qi {
     _server.close();
   }
 
-  bool Server::listen(const qi::Url &address)
+  qi::Future<void> Server::listen(const qi::Url &address)
   {
-    qi::Url url(address);
-
-    if (!_server.listen(url))
-      return false;
-
-    qiLogVerbose("qimessaging.Server") << "Started Server at " << _server.listenUrl().str();
-    return true;
+    return _server.listen(address);
   }
 
   bool Server::setIdentity(const std::string& key, const std::string& crt)

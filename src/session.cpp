@@ -141,7 +141,7 @@ namespace qi {
   }
 
 
-  bool Session::listen(const qi::Url &address)
+  qi::Future<void> Session::listen(const qi::Url &address)
   {
     return _p->_serverObject.listen(address);
   }

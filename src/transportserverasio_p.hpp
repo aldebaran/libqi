@@ -31,7 +31,7 @@ namespace qi
                                    bool ssl = false);
     virtual ~TransportServerAsioPrivate();
 
-    virtual bool listen();
+    virtual qi::Future<void> listen();
     virtual void close();
     virtual void destroy();
     boost::asio::ip::tcp::acceptor _acceptor;

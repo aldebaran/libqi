@@ -52,9 +52,13 @@ public:
 protected:
   void SetUp()
   {
-    ASSERT_TRUE(sd.listen("tcp://127.0.0.1:0"));
+    qi::Future<void> f = sd.listen("tcp://127.0.0.1:0");
+    f.wait(3000);
+    ASSERT_TRUE(!f.hasError());
     ASSERT_TRUE(session.connect(sd.endpoints()[0]));
-    ASSERT_TRUE(session.listen("tcp://0.0.0.0:0"));
+    f = session.listen("tcp://0.0.0.0:0");
+    f.wait(3000);
+    ASSERT_TRUE(!f.hasError());
     ASSERT_GT(session.registerService("coin", oserver).wait(), 0);
     EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 

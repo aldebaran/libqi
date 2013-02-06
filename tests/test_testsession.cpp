@@ -92,10 +92,11 @@ TEST(TestTestSession, TestTestSessionOnly)
   TestMode::forceTestMode(TestMode::Mode_SD);
 
   // #2 Initialize service directory and test sessions.
-  sd.listen("tcp://0.0.0.0:0");
+  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
   TestSession          client(sd.endpoints()[0].str(), false);
   TestSession          server(sd.endpoints()[0].str(), true, TestMode::getTestMode());
-  server.session()->listen("tcp://0.0.0.0:0");
 
   // #3 Build a dumb service
   qi::GenericObjectBuilder ob;

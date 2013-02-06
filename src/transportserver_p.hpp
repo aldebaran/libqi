@@ -33,7 +33,7 @@ namespace qi {
     {
     }
 
-    virtual bool listen() = 0;
+    virtual qi::Future<void> listen() = 0;
     virtual void close() = 0;
     virtual void destroy() = 0;
 
@@ -43,6 +43,7 @@ namespace qi {
     qi::EventLoop                          *context;
     qi::Url                                 listenUrl;
     qi::UrlVector                           _endpoints;
+    qi::Promise<void>                       _connectionPromise;
 
   protected:
     TransportServerImplPrivate()

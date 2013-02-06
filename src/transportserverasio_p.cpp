@@ -56,7 +56,7 @@ namespace qi
     _acceptor.close();
   }
 
-  bool TransportServerAsioPrivate::listen()
+  qi::Future<void> TransportServerAsioPrivate::listen()
   {
     using namespace boost::asio;
     // resolve endpoint
@@ -65,8 +65,9 @@ namespace qi
     ip::tcp::resolver::iterator it = r.resolve(q);
     if (it == ip::tcp::resolver::iterator())
     {
-      qiLogError("qimessaging.server.listen") << "Listen error: no endpoint.";
-      return false;
+      const char* s = "Listen error: no endpoint.";
+      qiLogError("qimessaging.server.listen") << s;
+      return qi::makeFutureError<void>(s);
     }
     ip::tcp::endpoint ep = *it;
     qiLogDebug("qimessaging.server.listen") <<"Will listen on " << ep.address().to_string() << ' ' << ep.port();
@@ -95,8 +96,9 @@ namespace qi
       std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
       if (ifsMap.empty())
       {
-        qiLogWarning("qimessaging.server.listen") << "Cannot get host addresses";
-        return false;
+        const char* s = "Cannot get host addresses";
+        qiLogWarning("qimessaging.server.listen") << s;
+        return qi::makeFutureError<void>(s);
       }
   #ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
       ifsMap["Loopback"].push_back("127.0.0.1");
@@ -127,9 +129,9 @@ namespace qi
     {
       if (self->_p->_identityCertificate.empty() || self->_p->_identityKey.empty())
       {
-        qiLogError("qimessaging.server.listen") << "SSL certificates missing,"
-          << " please call Session::setIdentity first";
-        return false;
+        const char* s = "SSL certificates missing, please call Session::setIdentity first";
+        qiLogError("qimessaging.server.listen") << s;
+        return qi::makeFutureError<void>(s);
       }
 
       _sslContext.set_options(
@@ -142,7 +144,8 @@ namespace qi
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s = new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(_acceptor.get_io_service(), _sslContext);
     _acceptor.async_accept(s->lowest_layer(),
       boost::bind(&TransportServerAsioPrivate::onAccept, this, _1, s, _live));
-    return true;
+    _connectionPromise.setValue(0);
+    return _connectionPromise.future();
   }
 
   void TransportServerAsioPrivate::destroy()

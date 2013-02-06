@@ -35,8 +35,8 @@ namespace qi {
     TransportServer();
     virtual ~TransportServer();
 
-    bool listen(const qi::Url &url,
-                qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
+    qi::Future<void> listen(const qi::Url &url,
+                            qi::EventLoop* ctx = qi::getDefaultNetworkEventLoop());
     bool setIdentity(const std::string& key, const std::string& crt);
     void close();
 

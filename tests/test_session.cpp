@@ -77,7 +77,9 @@ TEST(QiSession, testClose)
 
   qi::ServiceDirectory sd;
 
-  sd.listen("tcp://127.0.0.1:0");
+  qi::Future<void> f = sd.listen("tcp://127.0.0.1:0");
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   bool connected = session.connect(sd.endpoints()[0]).wait();
   ASSERT_TRUE(connected);
@@ -86,7 +88,9 @@ TEST(QiSession, testClose)
   ob.advertiseMethod("reply", &reply);
   qi::ObjectPtr obj(ob.object());
 
-  session.listen("tcp://127.0.0.1:0");
+  f = session.listen("tcp://127.0.0.1:0");
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   // Wait for service id, otherwise register is asynchronous.
   qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
@@ -160,7 +164,9 @@ TEST(QiSession, AlreadyRegistered)
   qi::ServiceDirectory sd;
 
   ss << "tcp://127.0.0.1:" << qi::os::findAvailablePort(3000);
-  sd.listen(ss.str());
+  qi::Future<void> f = sd.listen(ss.str());
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
@@ -168,7 +174,9 @@ TEST(QiSession, AlreadyRegistered)
 
   session = new qi::Session();
   EXPECT_TRUE(session->connect(ss.str()).wait(1000));
-  EXPECT_TRUE(session->listen("tcp://0.0.0.0:0"));
+  f = session->listen("tcp://0.0.0.0:0");
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   ASSERT_GT(session->registerService("service", obj), static_cast<unsigned int>(0));
   EXPECT_ANY_THROW({session->registerService("service", obj).value();});
@@ -180,7 +188,6 @@ TEST(QiSession, Services)
 {
   TestSessionPair p;
   qi::Session* s1 = p.client();
-  s1->listen("tcp://0.0.0.0:0"); // client does not listen by default
   qi::Session* s2 = p.server();
 
   qi::GenericObjectBuilder ob;
@@ -209,7 +216,9 @@ TEST(QiSession, TestServiceDirectoryEndpoints)
 {
   qi::ServiceDirectory sd;
 
-  ASSERT_TRUE(sd.listen("tcp://0.0.0.0:0"));
+  qi::Future<void> f = sd.listen("tcp://0.0.0.0:0");
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   // but it's possible to get joinable addresses.
   ASSERT_NE(sd.endpoints().at(0).host(),"0.0.0.0");

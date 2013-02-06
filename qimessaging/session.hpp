@@ -47,7 +47,7 @@ namespace qi {
                                         ServiceLocality locality = ServiceLocality_All);
 
     //Server
-    bool    listen(const qi::Url &address);
+    qi::Future<void> listen(const qi::Url &address);
     qi::Url listenUrl() const;
     bool    setIdentity(const std::string& key, const std::string& crt);
 

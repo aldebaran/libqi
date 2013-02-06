@@ -33,7 +33,7 @@ namespace qi {
     ~Server();
 
     //make the server listening
-    bool listen(const qi::Url &address);
+    qi::Future<void> listen(const qi::Url &address);
     void close();
     qi::Url listenUrl() const;
     bool setIdentity(const std::string& key, const std::string& crt);
