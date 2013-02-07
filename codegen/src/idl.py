@@ -386,7 +386,9 @@ QI_TYPE_NOT_CLONABLE(I@NAME@);
     ctor_decl = ''
     ctor_init = ''
   ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctor_decl, ctor_init)
-  return skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
+  skeleton =  skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
+  skeleton = "/*" + raw_to_text({class_name: data}) + "*/" + skeleton
+  return skeleton
 
 def raw_to_proxy(class_name, data, return_future, implement_interface, include):
   """ Generate C++ proxy code from RAW
