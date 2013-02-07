@@ -263,7 +263,7 @@ def doxyxml_to_raw(doxy_dir):
       for a in ANNOTATIONS:
         if '___' + a + '___' in raw_an:
           an.append(a)
-      methods.append((method_name, argstype, rettype, an))
+      methods.append((method_name, argstype, rettype, ' '.join(an)))
     signals = []
     # Parse signals
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
@@ -280,7 +280,7 @@ def doxyxml_to_raw(doxy_dir):
         sig = parse_toplevel_comma(sig)
         signals.append((name, sig))
 
-    result[cls] = (methods, signals, class_annotations)
+    result[cls] = (methods, signals, ' '.join(class_annotations))
   return result
 
 def raw_to_idl(dstruct):
