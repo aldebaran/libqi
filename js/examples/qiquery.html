@@ -68,6 +68,10 @@ function showService(service) {
   }
 }
 
+function showError(s) {
+  console.log(s);
+}
+
 function showResult(s) {
   $("#res").val(s)
 }
@@ -107,7 +111,7 @@ function showCall(s, m, s3, s4) {
       {
         l[i] = $("#args" + i).val()
       }
-      s[m].apply(this, l).done(showResult)
+      s[m].apply(this, l).done(showResult).fail(showError);
     })
   $("<div/>").html("<input id='res' type='input'/>").appendTo(c)
   if (s3 == "v")

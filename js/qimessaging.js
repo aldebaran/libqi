@@ -37,6 +37,10 @@ function QiSession(url)
     _dfd[data["idm"]].resolve(data["result"]);
   });
 
+  _socket.on('error', function(data) {
+    _dfd[data["idm"]].reject(data["result"]);
+  });
+
   function createMetaCall(socket, service, method)
   {
     function metaCall()

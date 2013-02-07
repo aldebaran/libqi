@@ -3,6 +3,7 @@
 import tornado
 import tornadio2
 from qimessaging.session import Session
+from qimessaging.genericobject import CallError
 import sys
 
 url = None
@@ -16,6 +17,7 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
     @tornadio2.event
     def call(self, idm, params):
+      try:
         service = params["service"]
         method = params["method"]
         if method == "services":
@@ -46,6 +48,8 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                   data = m(*args)
 
         self.emit('reply', { "idm": idm, "result": data })
+      except CallError as e:
+        self.emit('error', { "idm": idm, "result": str(e) })
 
     def on_close(self):
         pass
