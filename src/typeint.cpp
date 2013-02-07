@@ -83,7 +83,7 @@ INTEGRAL_TYPE(long long);
 INTEGRAL_TYPE(unsigned long long);
 }
 
-QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeBoolImpl<char>);
+QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeBoolImpl<bool>);
 
 
 
