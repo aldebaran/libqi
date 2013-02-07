@@ -34,7 +34,7 @@ function QiSession(url)
       return;
     }
 
-    _dfd[idm].resolve(data["result"]);
+    _dfd[data["idm"]].resolve(data["result"]);
   });
 
   function createMetaCall(socket, service, method)
@@ -49,7 +49,8 @@ function QiSession(url)
         args.push(arguments[j]);
       }
 
-      _socket.emit('call', { idm: getIdm(), params: { service: service, method: method, args: args } });
+      var idm = getIdm();
+      _socket.emit('call', { idm: idm, params: { service: service, method: method, args: args } });
       _dfd[idm] = dfd;
 
       return dfd;
@@ -60,7 +61,7 @@ function QiSession(url)
 
   this.services = function()
   {
-    idm = getIdm();
+    var idm = getIdm();
     _dfd[idm] = $.Deferred();
     _socket.emit('call', { idm: idm, params: { service: "serviceDirectory", method: "services" } });
 
@@ -73,7 +74,7 @@ function QiSession(url)
 
     if (_services[service] == undefined)
     {
-      idm = getIdm();
+      var idm = getIdm();
       _dfd[idm] = dfd;
       _dfdD[idm] = { service: service };
       _socket.emit('call', { idm: idm, params: { service: "serviceDirectory", method: "service", args: [ service ] } });
