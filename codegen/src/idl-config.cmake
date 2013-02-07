@@ -74,7 +74,7 @@ function(qi_create_module name)
   if (ARG_PROXY)
     qi_generate_src(
       ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
-      SRC ${ARG_SRC}
+      SRC ${ARG_SRC}${ARG_DOXYSRC}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
         "${classes}"
@@ -102,6 +102,7 @@ function(qi_create_module name)
   endforeach()
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
+     SRC ${ARG_SRC} ${ARG_DOXYSRC}
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
        ${ARG_SRC} ${ARG_DOXYSRC}
@@ -113,6 +114,7 @@ function(qi_create_module name)
   # Generate interface
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
+     SRC ${ARG_SRC} ${ARG_DOXYSRC}
      COMMAND ${_python_executable} ${IDLPY}
        ${IDL}
        ${ARG_SRC} ${ARG_DOXYSRC}
