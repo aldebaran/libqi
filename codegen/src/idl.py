@@ -880,8 +880,15 @@ def main(args):
     #print("Executing %s functions on %s classes" % (len(functions), len(raw)))
       for i in range(len(functions)):
         cargs = [c, raw[c]] + args[i]
-        res += functions[i](*cargs)
- # Set output stream to file or stdout
+        tres = functions[i](*cargs)
+        if type(tres) == type(''):
+          res[1] += tres
+        else:
+          res[0] += tres[0]
+          res[1] += tres[1]
+          res[2] += tres[2]
+    res = res[0] + res[1] + res[2]
+  # Set output stream to file or stdout
   out = sys.stdout
   if pargs.output_file and pargs.output_file != "-" :
     out = open(pargs.output_file, "w")
