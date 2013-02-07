@@ -213,6 +213,16 @@ WARN_IF_UNDOCUMENTED   = NO
   subprocess.call(["doxygen", doxyfile_path])
   return tmp_dir
 
+def xml_extract_text(node):
+  """ Return all text content from node and its children
+  """
+  result = ''
+  result = node.text
+  for i in node:
+    result += xml_extract_text(i)
+  result += node.tail
+  return result
+
 def doxyxml_to_raw(doxy_dir):
   """ Convert doxygen output to internal RAW representation
   """
@@ -237,14 +247,14 @@ def doxyxml_to_raw(doxy_dir):
     # Parse methods
     for m in class_root.findall("sectiondef[@kind='public-func']/memberdef[@kind='function']"):
       method_name = m.find("name").text
-      rettype_raw = m.find("type").text
+      rettype_raw = xml_extract_text(m.find("type"))
       if not rettype_raw:
         continue # constructor
       rettype = cxx_type_to_signature(rettype_raw)
       arg_nodes = m.findall("param")
       argstype_raw = []
       if arg_nodes is not None:
-        argstype_raw = [a.find('type').text for a in arg_nodes]
+        argstype_raw = [xml_extract_text(a.find('type')) for a in arg_nodes]
       argstype = map(cxx_type_to_signature, argstype_raw)
       # Look for annotation
       raw_an = etree.tostring(m.find("briefdescription"), 'us-ascii', 'text')
