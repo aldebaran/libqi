@@ -40,7 +40,7 @@ static qi::Url gateUrl;
 static bool clientDone = false;
 static bool serverReady = false;
 static qi::DataPerfSuite* out;
-static bool noGateway = false;
+static bool noGateway = true;
 static int rstart = 0;
 static int rend = 20;
 
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
     ("thread", po::value<int>()->default_value(1, "1"),
      "Number of thread to launch for clients")
     ("valgrind", "Set low loopcount and wait for valgrind.")
-    ("no-gateway", "Run without gateway.")
+    ("gateway", "Run without gateway.")
     ("rstart", po::value<int>()->default_value(0, "0"), "rstart")
     ("rend", po::value<int>()->default_value(20, "20"), "rend");
 
@@ -230,8 +230,8 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
   }
 
-  if (vm.count("no-gateway"))
-    noGateway = true;
+  if (vm.count("gateway"))
+    noGateway = false;
 
   if (vm.count("valgrind")) {
     gLoopCount = 500;
