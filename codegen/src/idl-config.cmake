@@ -4,7 +4,8 @@ qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
 #! Create a naoqi module
 # \group:CLASSES list of class names to be exposed to naoqi as objects
 # \group:SERVICES list of class names to be exposed to naoqi as services
-# \group:HEADERS header files to use, will use SRC if not set
+# \group:INCLUDE files to #include in generated files
+# \group:INCLUDE_SERVICE files to #include in generated files
 # \group:DOXYSRC sources to pass to doxygen, but not to compile
 # \param:IDL the IDL file to use as input
 # \param:PROXY generate specialized proxy header and install them
@@ -13,7 +14,7 @@ function(qi_create_module name)
   cmake_parse_arguments(ARG
     "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY"
     "SUBFOLDER;IDL"
-    "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;HEADERS;INCLUDE" ${ARGN})
+    "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;INCLUDE;INCLUDE_SERVICE" ${ARGN})
   message("parsing args: ${ARG_CLASSES}")
   #First, locate idl.py
   qi_global_get(qi_create_module_file_local qi_create_module_file)
@@ -85,21 +86,36 @@ function(qi_create_module name)
   endif()
   # Generate binder
   # Build command argument from classes and modules
+  # Put classes before services, most likely there is a dependency
+  # in this order
   set (carg '')
-  foreach(module ${ARG_SERVICES})
-    set(carg "${carg},${module}:cxxservicebouncerregister")
-  endforeach(module)
   foreach(class ${ARG_CLASSES})
     set(carg "${carg},${class}:cxxservicebouncer")
   endforeach()
+  foreach(module ${ARG_SERVICES})
+    set(carg "${carg},${module}:cxxservicebouncerregister")
+  endforeach(module)
   if (carg)
     set(carg "-c ${carg}")
   endif()
   message("carg: '${carg}'")
-  set(includes ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp)
+  # Generate comma separated includes for the various cases
+  #  user includes
   foreach(inc ${ARG_INCLUDE})
     set(includes "${includes},${inc}")
   endforeach()
+  #  user includes plus generated interface
+  set(includesiface "${includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp")
+  #  service includes
+  foreach(inc ${ARG_INCLUDE_SERVICE})
+    set(service_includes "${service_includes},${inc}")
+  endforeach()
+  if (NOT service_includes)
+    set(service_includes "${includes}")
+  endif()
+  set(service_includes "${service_includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp")
+
+
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
      SRC ${ARG_SRC} ${ARG_DOXYSRC}
@@ -109,7 +125,7 @@ function(qi_create_module name)
        -m cxxservicebouncerregister --interface
        "${carg}"
        -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
-       -I "${includes}"
+       -I "${service_includes}"
   )
   # Generate interface
   qi_generate_src(
@@ -121,6 +137,7 @@ function(qi_create_module name)
        ${classes}
        -m interface --interface
        -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
+       -I "${includes}"
   )
   # Add binder and interface (or it wont be generated) to sources
   set(ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp ${ARG_SRC})

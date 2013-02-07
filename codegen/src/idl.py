@@ -60,6 +60,7 @@ REV_MAP = {
     'dynamic': 'qi::GenericValue',
     'string' : 'std::string',
     'int64'  : 'qi::int64_t',
+    'pair'   : 'std::pair'
 }
 
 # signature to IDL type
@@ -88,13 +89,15 @@ KNOWN_STRUCT_MAP = {
 def idltype_to_cxxtype(t):
   """ Return the C++ type to use for idl type t
   """
+  # FIXME we are working at text level, this sucks
   if t in KNOWN_STRUCT_MAP:
     return KNOWN_STRUCT_MAP[t]
   t = t.replace('{', 'std::map<').replace('}', ' >')
   t = t.replace('[', 'std::vector<').replace(']', ' >')
   #t = t.replace('(', 'boost::mpl::vector<').replace(')', '>')
   for e in REV_MAP:
-    t = t.replace(e, REV_MAP[e])
+    # Do not replace partial symbols!
+    t = re.sub("(^|[^a-zA-Z])"+e+"([^a-zA-Z]|$)", "\\1" + REV_MAP[e] + "\\2", t)
   return t
 
 def parse_toplevel_comma(txt):
@@ -217,11 +220,13 @@ def xml_extract_text(node):
   """ Return all text content from node and its children
   """
   result = ''
-  result = node.text
+  if node.text:
+    result = node.text
   for i in node:
     result += xml_extract_text(i)
-  result += node.tail
-  return result
+  if node.tail:  # can be none
+    result += node.tail
+  return result.replace("\n", "").strip()
 
 def doxyxml_to_raw(doxy_dir):
   """ Convert doxygen output to internal RAW representation
@@ -350,7 +355,7 @@ def idl_to_raw(root):
     result[cls.get("name")] =  (methods, signals, (cls.get("annotations") or '').split(','))
   return result
 
-def raw_to_interface(class_name, data):
+def raw_to_interface(class_name, data, include):
   """ Generate service interface class from RAW representation
   """
   skeleton = """
@@ -362,7 +367,7 @@ def raw_to_interface(class_name, data):
 #include <map>
 
 #include <qitype/signal.hpp>
-
+@include@
 class I@NAME@
 {
   public:
@@ -396,7 +401,9 @@ QI_TYPE_NOT_CLONABLE(I@NAME@);
     ctor_decl = ''
     ctor_init = ''
   ctor = '    I%s(%s)\n      %s\n    {}\n' % (class_name, ctor_decl, ctor_init)
-  skeleton =  skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
+  skeleton = skeleton.replace("@NAME@", class_name).replace("@DECLS@", ctor + methodsDecl + signals_decl)
+  if len(include):
+    skeleton = skeleton.replace("@include@", ''.join(['#include <' + x + '>\n' for x in include]))
   skeleton = "/*" + raw_to_text({class_name: data}) + "*/" + skeleton
   return skeleton
 
@@ -808,7 +815,7 @@ def main(args):
   if not len(pargs.include):
     pargs.include = []
   else:
-    pargs.include = pargs.include.split(',')
+    pargs.include = filter(lambda x: len(x), pargs.include.split(','))
   # Augment type mapping with what we will handle
   for c in raw:
     REV_MAP[c + 'Ptr'] = 'I' + c + 'Ptr'
@@ -842,7 +849,7 @@ def main(args):
       args = []
       if op == "interface":
         functions = [raw_to_interface]
-        args = [[]]
+        args = [[pargs.include]]
       elif op == "proxy":
         functions = [raw_to_proxy]
         args = [[False, pargs.interface, pargs.include]]
