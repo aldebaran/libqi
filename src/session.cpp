@@ -153,7 +153,7 @@ namespace qi {
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::ObjectPtr obj)
   {
-    if (!listenUrl().isValid()) {
+    if (endpoints().empty()) {
       qi::Url listeningAddress("tcp://0.0.0.0:0");
       qiLogVerbose("Session listening on ") << listeningAddress.str() << "." << std::endl;
       listen(listeningAddress);
@@ -167,9 +167,9 @@ namespace qi {
     return _p->_serverObject.unregisterService(idx);
   }
 
-  qi::Url Session::listenUrl() const
+  std::vector<qi::Url> Session::endpoints() const
   {
-    return _p->_serverObject.listenUrl();
+    return _p->_serverObject.endpoints();
   }
 
   std::vector<std::string> Session::loadService(const std::string& name, int flags)

@@ -50,11 +50,11 @@ namespace qi
 
     if (url.protocol() == "tcp")
     {
-      impl = new TransportServerAsioPrivate(this, url, ctx, false);
+      impl = new TransportServerAsioPrivate(this, ctx);
     }
     else if (url.protocol() == "tcps")
     {
-      impl = new TransportServerAsioPrivate(this, url, ctx, false);
+      impl = new TransportServerAsioPrivate(this, ctx);
     }
     else
     {
@@ -64,7 +64,7 @@ namespace qi
     }
 
     _p->_impl.push_back(impl);
-    return impl->listen();
+    return impl->listen(url);
   }
 
   bool TransportServer::setIdentity(const std::string& key, const std::string& crt)
@@ -88,18 +88,6 @@ namespace qi
     _p->_identityKey = key;
 
     return true;
-  }
-
-  qi::Url TransportServer::listenUrl() const {
-    // next commit: fix the listenUrl mess
-    if (_p->_impl.empty())
-    {
-      return "";
-    }
-    else
-    {
-      return _p->_impl[0]->listenUrl;
-    }
   }
 
   std::vector<qi::Url> TransportServer::endpoints() const

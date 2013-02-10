@@ -35,7 +35,6 @@ namespace qi {
     //make the server listening
     qi::Future<void> listen(const qi::Url &address);
     void close();
-    qi::Url listenUrl() const;
     bool setIdentity(const std::string& key, const std::string& crt);
 
     //Create a BoundObject
@@ -43,7 +42,7 @@ namespace qi {
     bool addObject(unsigned int idx, qi::BoundObjectPtr obj);
     bool removeObject(unsigned int idx);
 
-    qi::UrlVector endpoints() const;
+    std::vector<qi::Url> endpoints() const;
 
     void setDefaultCallType(qi::MetaCallType ctype);
 

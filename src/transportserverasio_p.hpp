@@ -26,12 +26,10 @@ namespace qi
   {
   public:
     TransportServerAsioPrivate(TransportServer* self,
-                                   const qi::Url &url,
-                                   EventLoop* ctx,
-                                   bool ssl = false);
+                                   EventLoop* ctx);
     virtual ~TransportServerAsioPrivate();
 
-    virtual qi::Future<void> listen();
+    virtual qi::Future<void> listen(const qi::Url& listenUrl);
     virtual void close();
     virtual void destroy();
     boost::asio::ip::tcp::acceptor _acceptor;

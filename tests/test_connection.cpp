@@ -176,9 +176,9 @@ int main(int argc, char **argv) {
 #ifdef WITH_GATEWAY_
 
   qi::Gateway gate;
-  gate.attachToServiceDirectory(sd.listenUrl());
+  gate.attachToServiceDirectory(sd.endpoints()[0]);
   gate.listen(gatewayAddr.str());
-  connectionAddr = gate.listenUrl();
+  connectionAddr = gate.endpoints()[0];
 #endif
 
   int res = RUN_ALL_TESTS();

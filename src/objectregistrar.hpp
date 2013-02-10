@@ -52,7 +52,7 @@ namespace qi {
     using Server::close;
     using Server::listen;
     using Server::setIdentity;
-    using Server::listenUrl;
+    using Server::endpoints;
 
   private:
     //throw on error

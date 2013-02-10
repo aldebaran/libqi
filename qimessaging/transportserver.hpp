@@ -40,7 +40,6 @@ namespace qi {
     bool setIdentity(const std::string& key, const std::string& crt);
     void close();
 
-    qi::Url listenUrl() const;
     std::vector<qi::Url> endpoints() const;
 
   public:

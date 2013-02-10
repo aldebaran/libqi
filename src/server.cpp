@@ -98,11 +98,6 @@ namespace qi {
     socket->startReading();
   }
 
-
-  qi::Url Server::listenUrl() const {
-    return _server.listenUrl();
-  }
-
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
     qi::BoundObjectPtr obj;
     // qiLogDebug("Server") << "Server Recv (" << msg.type() << "):" << msg.address();
@@ -134,12 +129,12 @@ namespace qi {
 
   void Server::close()
   {
-    if (listenUrl().str() == "")
+    if (endpoints().empty())
     {
       return;
     }
 
-    qiLogInfo("Server") << "Closing server: " << listenUrl().str();
+    qiLogInfo("Server") << "Closing server...";
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);
       std::set<TransportSocketPtr>::iterator it;

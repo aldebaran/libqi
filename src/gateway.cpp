@@ -540,12 +540,7 @@ bool Gateway::listen(const qi::Url &address)
   return _p->listen(address);
 }
 
-qi::Url Gateway::listenUrl() const
-{
-  return _p->_transportServer->listenUrl();
-}
-
-qi::UrlVector Gateway::endpoints() const
+std::vector<qi::Url> Gateway::endpoints() const
 {
   return _p->_transportServer->endpoints();
 }

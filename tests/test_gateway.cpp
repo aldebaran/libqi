@@ -21,11 +21,11 @@ TEST(QiGateway, testConnection)
 
   sd.listen("tcp://127.0.0.1:0");
 
-  bool attached = gw.attachToServiceDirectory(sd.listenUrl());
+  bool attached = gw.attachToServiceDirectory(sd.endpoints()[0]);
   ASSERT_TRUE(attached);
 
   gw.listen("tcp://127.0.0.1:0");
 
-  bool connect = session.connect(gw.listenUrl());
+  bool connect = session.connect(gw.endpoints()[0]);
   ASSERT_TRUE(connect);
 }

@@ -117,7 +117,7 @@ int main_server(const std::string& addr)
 
   server.listen(addr);
   server.newConnection.connect(boost::bind(&TSIReply::onTransportServerNewConnection, tsi, _1));
-  std::cout << "Now listening on " << server.listenUrl().str() << std::endl;
+  std::cout << "Now listening..." << std::endl;
   while (true)
     qi::os::sleep(60);
 

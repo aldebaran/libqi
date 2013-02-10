@@ -23,8 +23,7 @@ namespace qi
 
     bool attachToServiceDirectory(const qi::Url &address);
     bool listen(const qi::Url &address);
-    qi::Url listenUrl() const;
-    qi::UrlVector endpoints() const;
+    std::vector<qi::Url> endpoints() const;
 
   private:
     GatewayPrivate *_p;

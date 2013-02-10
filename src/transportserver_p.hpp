@@ -23,17 +23,16 @@ namespace qi {
   class TransportServerImplPrivate
   {
   public:
-    TransportServerImplPrivate(TransportServer* self, const qi::Url &url, EventLoop* ctx)
+    TransportServerImplPrivate(TransportServer* self, EventLoop* ctx)
       : self(self)
       , context(ctx)
-      , listenUrl(url)
     {}
 
     virtual ~TransportServerImplPrivate()
     {
     }
 
-    virtual qi::Future<void> listen() = 0;
+    virtual qi::Future<void> listen(const qi::Url& listenUrl) = 0;
     virtual void close() = 0;
     virtual void destroy() = 0;
 
@@ -41,14 +40,12 @@ namespace qi {
     TransportServer                        *self;
     boost::mutex                            mutexCallback;
     qi::EventLoop                          *context;
-    qi::Url                                 listenUrl;
     qi::UrlVector                           _endpoints;
     qi::Promise<void>                       _connectionPromise;
 
   protected:
     TransportServerImplPrivate()
       : context(0)
-      , listenUrl("")
     {};
   };
 
