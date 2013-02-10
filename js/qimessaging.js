@@ -1,11 +1,9 @@
 function QiSession(url)
 {
-  var _url = url;
   var _services = [];
   var _socket = io.connect(url);
   var _dfd = new Array();
   var _dfdD = new Array();
-  var _idm = 0;
 
   var getIdm = (function() {
     var id = 0;
@@ -15,7 +13,8 @@ function QiSession(url)
   _socket.on('reply', function(data) {
     if (_dfdD[data["idm"]] != undefined)
     {
-      service = _dfdD[data["idm"]]["service"]
+      var service = _dfdD[data["idm"]]
+      _dfdD[data["idm"]] = 0;
       _services[service] = new Object();
 
       _services[service].__mobj = new Object();
@@ -23,41 +22,37 @@ function QiSession(url)
       _services[service].__mobj.doc = data["result"]["doc"];
       _services[service].__mobj.functions = new Array();
 
-      for (i = 0; i < data["result"]["functions"].length; i++)
+      for (var i = 0; i < data["result"]["functions"].length; ++i)
       {
-        m = data["result"]["functions"][i];
-        _services[service][m.name] = createMetaCall(_socket, service, m.name);
+        var m = data["result"]["functions"][i];
+        _services[service][m.name] = createMetaCall(service, m.name);
         _services[service].__mobj.functions[m.name] = m;
       }
 
       _dfd[data["idm"]].resolve(_services[service]);
-      return;
+    }
+    else
+    {
+      _dfd[data["idm"]].resolve(data["result"]);
     }
 
-    _dfd[data["idm"]].resolve(data["result"]);
+    _dfd[data["idm"]] = 0;
   });
 
   _socket.on('error', function(data) {
     _dfd[data["idm"]].reject(data["result"]);
+    _dfd[data["idm"]] = 0;
   });
 
-  function createMetaCall(socket, service, method)
+  function createMetaCall(service, method)
   {
     function metaCall()
     {
-      var dfd = $.Deferred()
-
-      var args = [];
-      for (j = 0; j < arguments.length; j++)
-      {
-        args.push(arguments[j]);
-      }
-
       var idm = getIdm();
-      _socket.emit('call', { idm: idm, params: { service: service, method: method, args: args } });
-      _dfd[idm] = dfd;
+      _dfd[idm] = $.Deferred();
+      _socket.emit('call', { idm: idm, params: { service: service, method: method, args: Array.prototype.slice.call(arguments, 0) } });
 
-      return dfd;
+      return _dfd[idm];
     }
 
     return metaCall;
@@ -74,13 +69,13 @@ function QiSession(url)
 
   this.service = function(service)
   {
-    dfd = $.Deferred();
+    var dfd = $.Deferred();
 
     if (_services[service] == undefined)
     {
       var idm = getIdm();
       _dfd[idm] = dfd;
-      _dfdD[idm] = { service: service };
+      _dfdD[idm] = service;
       _socket.emit('call', { idm: idm, params: { service: "serviceDirectory", method: "service", args: [ service ] } });
     }
     else
