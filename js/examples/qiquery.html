@@ -37,19 +37,19 @@ function createLOL(s, m, s3, s4)
 }
 
 function showService(service) {
-  mobj = service.__mobj
-  tabname = $("<h3><b>" + mobj["name"] + "</b> [<i>" + mobj["doc"] + "</i>]</h3>")
+  var mobj = service.__mobj
+  var tabname = $("<h3><b>" + mobj["name"] + "</b> [<i>" + mobj["doc"] + "</i>]</h3>")
   $("#accordion").append(tabname)
 
-  tab = $("<div/>")
-  list = $("<ul/>").appendTo(tab)
+  var tab = $("<div/>")
+  var list = $("<ul/>").appendTo(tab)
   for (var m in mobj.functions)
   {
-    f = mobj.functions[m]
+    var f = mobj.functions[m]
     for (i = 0; i < f.signatures.length; i++)
     {
-      s3 = f.signatures[i][0]
-      s4 = f.signatures[i][1]
+      var s3 = f.signatures[i][0]
+      var s4 = f.signatures[i][1]
 
       $("<li>").html(f.signatures[i][0] + '::' + f.name
                        + '(' + f.signatures[i][1] + ') '
@@ -81,32 +81,33 @@ function showCall(s, m, s3, s4) {
   $("#call").hide()
 
   $("<div/>").html(s3 + ' ' + s.__mobj["name"]+ "::" + m + "(" + s4 + ")").appendTo("#call")
-  c = $("<div/>").appendTo("#call")
-  for (i = 0 ; i < s4.length; i++)
+  var c = $("<div/>").appendTo("#call")
+  for (var i = 0 ; i < s4.length; i++)
   {
-    t = "";
+    var t = "";
     switch (s4[i])
     {
-      case 'I': case 'i':
-        t = "int";
-        break;
-      case 's':
-        t = "string";
-        break;
-      case 'b':
-        t = "boolean";
-        break;
-      case 'm':
-        t = 'dynamic';
-        break;
-      default:
-        t = "arg";
+      case 'b': t = "bool"; break;
+      case 'v': t = "void"; break;
+      case 'C': case 'c': t = "int8"; break;
+      case 'W': case 'w': t = "int16"; break;
+      case 'I': case 'i': t = "int32"; break;
+      case 'L': case 'l': t = "int64"; break;
+      case 'f': t = "float"; break;
+      case 'd': t = "double"; break;
+      case 's': t = "string"; break;
+      case 'm': t = "dynamic"; break;
+      case 'r': t = "raw"; break;
+      case '*': t = "pointer"; break;
+      case 'o': t = "object"; break;
+      case 'X': t = "unknown"; break;
+      default: t = "arg";
     }
     $("<input />", { id: "args" + i, type: "input", placeholder: t }).appendTo(c)
   }
   $("<button/>", { id: "cbutton", type: "submit" }).html("call!").appendTo(c)
     .click(function() {
-      l = []
+      var l = []
       for (i = 0; i < s4.length; i++)
       {
         l[i] = $("#args" + i).val()
