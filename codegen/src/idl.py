@@ -17,13 +17,20 @@
     - Invoke Doxygen and parse its XML output to produce an IDL file.
 
     Code generators from RAW to C++:
-    - interface: An interface that both proxy and service can implement.
-    - proxy: Specialized proxy, with or without using the interface
+    - interface: An interface that service must implement.
+    - proxy: Specialized proxy: implement a modified version of interface with callType.
     - service skeleton
     - service bouncer: Implementation of the interface that bounces to an
       existing class
     - service and type registration: Code that fills an ObjectTypeBuilder and
       registers it.
+
+     All instances are handled through a shared ptr. Typedefs are
+     generated with 'Ptr' suffix.
+     Naming: for a user service Foo not inheriting from any interface
+     - IFoo : interface
+     - FooService: implementation of IFoo bouncing to Foo
+     - FooProxy: proxy
 """
 
 from xml.etree import ElementTree as etree
@@ -273,7 +280,7 @@ def doxyxml_to_raw(doxy_dir):
     # Parse signals
     for s in class_root.findall("sectiondef[@kind='public-attrib']/memberdef[@kind='variable']"):
       name = s.find("name").text
-      t = s.find("type").text
+      t = xml_extract_text(s.find("type"))
       # Normalize spacing to ease matching below
       t = re.sub(r"\s([^a-zA-Z])", r"\1", t)
       t = re.sub(r"([^a-zA-Z])\s", r"\1", t)
@@ -454,18 +461,15 @@ public:
 };
 
 #endif
-class @className@Proxy @inherit@
+class @className@Proxy: public ::qi::Proxy
 {
 public:
   @className@Proxy(qi::ObjectPtr obj)
-  : _obj(obj)
+  : qi::Proxy(obj)
 @constructor_initList@
   {
 @constructor@
   }
-  qi::ObjectPtr asObject() { return _obj;}
-   private:
-    qi::ObjectPtr _obj;
    public:
 @publicDecl@
 
@@ -473,9 +477,8 @@ public:
 };
 @registerProxy@
 
-typedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;
 
-QI_TYPE_NOT_CLONABLE(@className@Proxy);
+QI_TYPE_PROXY(@className@Proxy);
 
 #ifndef QI_GENERATED_PROXY_CODE
 #define QI_GENERATED_PROXY_CODE
@@ -501,41 +504,42 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
 
 #endif //@GARD@
 """
+  forward_decls = "class @className@Proxy;\ntypedef boost::shared_ptr<@className@Proxy> @className@ProxyPtr;\n"
+  forward_decls = forward_decls.replace('@className@', class_name)
   #generate methods
   (methods, signals) = (data[0], data[1])
   method_impls = ""
   register_proxy = ''
   if implement_interface:
-    register_proxy = "static bool _qi_register_@className@ = qi::registerProxy<I@className@, @className@Proxy>();"
+    register_proxy = "static bool _qi_register_@className@ = qi::registerProxy<@className@Proxy>();"
   skeleton = skeleton.replace('@registerProxy@', register_proxy)
   for method in methods:
     (cret, typed_args, arg_names) = method_to_cxx(method)
     method_name = method[0]
+    out_ret = cret
     if (return_future):
-      cret = 'qi::FutureSync<' + cret + ' >'
+      out_ret = 'qi::FutureSync<' + cret + ' >'
     if arg_names:
       arg_names = ', ' + arg_names # comma used in call
+    # Add a final optional argument 'MetaCallType calltype=auto'
+    if typed_args:
+      typed_args = typed_args + ', '
+    typed_args = typed_args + '::qi::MetaCallType callType = ::qi::MetaCallType_Auto'
     #NOTE: should we return the future?
-    method_impls += '  ' + cret + " " + method_name + "(" + typed_args + ") {\n    "
+    method_impls += '  ' + out_ret + " " + method_name + "(" + typed_args + ") {\n    "
     if (cret != "void" or return_future):
       method_impls += "return "
-    method_impls += '_obj->call<' + cret + ' >' + '("' + method_name + '"' + arg_names + ");\n  }\n"
+    method_impls += '_obj->call<' + cret + ' >' + '(callType,"' + method_name + '"' + arg_names + ");\n  }\n"
   signal_decl = ''
   signal_decl2 = ''
   ctor = ''
-  iface_ctor = []
   # Make  a Signal field for each signal, bridge it to backend in ctor
   for sig in signals:
     signal_decl += '  ProxySignal<void(' + ','.join(map(idltype_to_cxxtype, sig[1])) +')> ' + sig[0] + ';\n'
     signal_decl2 += '  qi::SignalBase::Link _link_' + sig[0] + ';\n'
     ctor += '  , {0}(boost::bind(&signal_bridge, _1, &_link_{0}, obj.get(), &{0}, "{0}"), obj.get(), "{0}")\n'.format(sig[0])
-    iface_ctor.append('%s' % (sig[0]))
-  if implement_interface:
-    ctor += '  , %s(%s)\n' % ('I' + class_name, ','.join(iface_ctor))
+
   result = skeleton
-  inherits = ''
-  if implement_interface:
-    inherits = ': public I' + class_name
   replace = {
       'GARD': '_' + class_name.upper() + '_PROXY_HPP_',
       'className': class_name,
@@ -543,12 +547,11 @@ static void signal_bridge(bool enable, qi::SignalBase::Link* link, qi::GenericOb
       'privateDecl': signal_decl2,
       'constructor': '',
       'constructor_initList': ctor,
-      'inherit': inherits,
       'include': ''.join(['#include <' + x + '>\n' for x in include]),
   }
   for k in replace:
     result = result.replace('@' + k + '@', replace[k])
-  return result
+  return [forward_decls, result, '']
 
 def raw_to_cxx_typebuild(class_name, data, use_interface, register_to_factory):
   """ Generate a c++ file that registers the class to type system.
@@ -584,7 +587,7 @@ qi::ObjectPtr TYPEmake_one(const std::string&)
   bouncers = ''
   (methods, signals, annotations) = (data[0], data[1], data[2])
   if 'threadSafe' in annotations:
-    advertise += '  %sServiceBuilder.setThreadingModel(qi::THREAD_SAFE);\n' % class_name
+    advertise += '  I%sbuilder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);\n' % class_name
   cns = class_name + 'Service'
   icn = 'I' + class_name
   decl_type = 'I' + class_name
@@ -661,17 +664,6 @@ def raw_to_cxx_service_bouncer(class_name, data, impl_name, include):
       \p impl_name.
   """
   skeleton = """
-#include <vector>
-#include <string>
-#include <map>
-
-#include <qi/types.hpp>
-#include <qitype/signal.hpp>
-
-#ifndef QI_GEN_SERVICE_BOUNCER_INCLUDE_
-#define QI_GEN_SERVICE_BOUNCER_INCLUDE_
-@include@
-#endif
 
 @impl@ make_@impl@();
 class @name@Service: public I@name@
@@ -686,6 +678,42 @@ class @name@Service: public I@name@
   @impl@ _impl;
 };
 QI_TYPE_NOT_CLONABLE(@name@Service);
+
+"""
+  converter_impl = """
+I@name@Ptr interface_from_bound(@impl@ ptr)
+{
+  return I@name@Ptr((I@name@*)new @name@Service(ptr));
+}
+
+@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr)
+{
+  // Get GenericObject from pointer
+  qi::ObjectPtr obj = I@name@builder.object(ptr.get(),
+    boost::bind(&release_ptr<I@name@Ptr>, ptr));
+  return @name@ProxyPtr(new @name@Proxy(obj));
+}
+"""
+  converter_decl = """
+#include <vector>
+#include <string>
+#include <map>
+
+#include <qi/types.hpp>
+#include <qitype/signal.hpp>
+
+#ifndef QI_GEN_SERVICE_BOUNCER_INCLUDE_
+#define QI_GEN_SERVICE_BOUNCER_INCLUDE_
+@include@
+
+template<typename T>
+inline void release_ptr(T ptr)
+{
+}
+#endif
+
+I@name@Ptr interface_from_bound(@impl@ ptr);
+@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);
 """
   (methods, signals) = (data[0], data[1])
   signal_init = []
@@ -698,9 +726,18 @@ QI_TYPE_NOT_CLONABLE(@name@Service);
     method_name = method[0]
     # UGLY HACK to detect if the method returns an other class for which we
     # have a bouncer.
-    if ret == 'I' + method[2]: # FIXME make a more clever test
+    # We need a double bounce:
+    # User impl returns a FooPtr which does not implement IFoo
+    # our sinature does not return a IFooPTR, but a FooProxyPtr
+    # so:
+    # FooPtr foo;
+    # IFooPtr ifoo = interface_from_bound(foo); // generated by binder(us)
+    # FooProxyPtr foop = proxy_from_interface(ifoo); // generated by proxy
+    if ret.find("LogListen") != -1:
+      print("TCHOOO TCHOO " + ret + "  " + method[2])
+    if method[2] in REV_MAP and method[2].find("Ptr") != -1: # FIXME make a more clever test
       emit_interface[method[2]] = 1
-      method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, ret, method_name, args)
+      method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method[2], method_name, args)
     elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
       # Ugly vector detector case, not forgetting the inserted space
       method_bounce += '   %s %s(%s) { return qi_to_interface_v(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method_name, args)
@@ -708,22 +745,26 @@ QI_TYPE_NOT_CLONABLE(@name@Service);
       method_bounce += '   %s %s(%s) { return _impl->%s(%s);}\n' % (ret, method_name, typed_args, method_name, args)
   include = ''.join(['#include <' + x + '>\n' for x in include])
   for name in emit_interface:
+    proxy_name = name.replace("Ptr", "ProxyPtr")
     method_bounce = """
-    static std::vector<I%s> qi_to_interface_v(std::vector<%s> ptr) {
-      std::vector<I%s> res;
+    static std::vector<%s> qi_to_interface_v(std::vector<%s> ptr) {
+      std::vector<%s> res;
       res.resize(ptr.size());
-      std::transform(ptr.begin(), ptr.end(), res.begin(), qi_to_interface_I%s);
+      std::transform(ptr.begin(), ptr.end(), res.begin(), qi_to_interface_%s);
       return res;
    }
-""" % (name, name, name, name) + method_bounce
-    method_bounce = '   static I%s qi_to_interface_I%s(%s ptr) {return I%sPtr(new %sService(ptr));}\n' % (
-      name, name, name, name[0:-3], name[0:-3]) + method_bounce
-  return skeleton.replace(
+""" % (proxy_name, name, proxy_name, name) + method_bounce
+    method_bounce = '   static %s qi_to_interface_%s(%s ptr) {return proxy_from_interface(interface_from_bound(ptr));}\n' % (
+      proxy_name, name, name) + method_bounce
+  res = skeleton.replace(
     '@name@', class_name).replace(
     '@impl@', impl_name.replace('@', class_name)).replace(
     '@code@', method_bounce).replace(
-    '@include@', include).replace(
     '@signal_init@', ','.join(signal_init))
+  converter_decl = converter_decl.replace('@name@', class_name).replace('@impl@', impl_name.replace('@', class_name)).replace(
+    '@include@', include)
+  converter_impl = converter_impl.replace('@name@', class_name).replace('@impl@', impl_name.replace('@', class_name))
+  return [converter_decl, res, converter_impl]
 
 def signature_to_idl(sig):
   # Add comma separator between tuple elements
@@ -816,9 +857,6 @@ def main(args):
     pargs.include = []
   else:
     pargs.include = filter(lambda x: len(x), pargs.include.split(','))
-  # Augment type mapping with what we will handle
-  for c in raw:
-    REV_MAP[c + 'Ptr'] = 'I' + c + 'Ptr'
 
   # Filter out classes present in raw, fill class_operation
   class_operation = dict()
@@ -831,6 +869,7 @@ def main(args):
       cc = c.split(':')
       if not cc[0] in raw:
         raise Exception("Requested class %s not found" % cc[0])
+      REV_MAP[cc[0] + 'Ptr'] = cc[0] + 'ProxyPtr'
       newraw[cc[0]] = raw[cc[0]]
       if len(cc) > 1:
         class_operation[cc[0]] = cc[1]
@@ -841,6 +880,7 @@ def main(args):
   elif pargs.output_mode == "idl":
     res = etree.tostring(raw_to_idl(raw))
   else: # Need to apply per-class function
+    res = ['','','']
     for c in raw:
       op = pargs.output_mode
       if c in class_operation:

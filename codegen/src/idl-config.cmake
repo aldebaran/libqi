@@ -71,18 +71,38 @@ function(qi_create_module name)
   endif()
   message("input classes: ${ARG_SERVICES} ${ARG_CLASSES}")
   message("classes: '${classes}'")
+
+  # Generate comma separated includes for the various cases
+  #  user includes
+  foreach(inc ${ARG_INCLUDE})
+    set(includes "${includes},${inc}")
+  endforeach()
+  #  user includes plus generated interface
+  set(includesiface "${includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp")
+  #  service includes
+  foreach(inc ${ARG_INCLUDE_SERVICE})
+    set(service_includes "${service_includes},${inc}")
+  endforeach()
+  if (NOT service_includes)
+    set(service_includes "${includes}")
+  endif()
+  set(service_includes "${service_includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp")
+
+
   # Generate proxy if asked to
   if (ARG_PROXY)
     qi_generate_src(
       ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
-      SRC ${ARG_SRC}${ARG_DOXYSRC}
+      SRC ${ARG_SRC} ${ARG_DOXYSRC}
       COMMAND ${_python_executable} ${IDLPY}
         ${IDL}
+        ${ARG_SRC} ${ARG_DOXYSRC}
         "${classes}"
-        -m proxy --interface
-        -I ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
+        -m proxyFuture --interface
+        -I ${includes}
         -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
     )
+    list(APPEND ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp)
   endif()
   # Generate binder
   # Build command argument from classes and modules
@@ -99,22 +119,6 @@ function(qi_create_module name)
     set(carg "-c ${carg}")
   endif()
   message("carg: '${carg}'")
-  # Generate comma separated includes for the various cases
-  #  user includes
-  foreach(inc ${ARG_INCLUDE})
-    set(includes "${includes},${inc}")
-  endforeach()
-  #  user includes plus generated interface
-  set(includesiface "${includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp")
-  #  service includes
-  foreach(inc ${ARG_INCLUDE_SERVICE})
-    set(service_includes "${service_includes},${inc}")
-  endforeach()
-  if (NOT service_includes)
-    set(service_includes "${includes}")
-  endif()
-  set(service_includes "${service_includes},${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp")
-
 
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp

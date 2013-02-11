@@ -206,12 +206,69 @@ namespace qi {
     Manageable::TimedMutexPtr objectLock,
     GenericFunction func, const GenericFunctionParameters& params, bool noCloneFirst=false);
 
-  /** Register \p Proxy as a proxy class for \p Interface
+  class QITYPE_API Proxy
+  {
+  public:
+    Proxy(qi::ObjectPtr obj) : _obj(obj) {}
+    qi::ObjectPtr asObject() { return _obj;}
+  protected:
+    qi::ObjectPtr _obj;
+  };
+
+  class TypeProxy: public ObjectType
+  {
+  public:
+    virtual const MetaObject& metaObject(void* instance)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject()->metaObject();
+    }
+    virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject()->metaCall(method, params, callType);
+    }
+    virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      ptr->asObject()->metaPost(signal, params);
+    }
+    virtual qi::Future<unsigned int> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
+    {
+      Proxy* ptr = static_cast<Proxy*>(instance);
+      return ptr->asObject()->connect(event, subscriber);
+    }
+    virtual qi::Future<void> disconnect(void* instance, Manageable* context, unsigned int linkId)
+    {
+       Proxy* ptr = static_cast<Proxy*>(instance);
+       return ptr->asObject()->disconnect(linkId);
+    }
+    virtual const std::vector<std::pair<Type*, int> >& parentTypes()
+    {
+      static std::vector<std::pair<Type*, int> > empty;
+      return empty;
+    }
+  };
+#define QI_TYPE_PROXY(name)                            \
+  namespace qi {                                       \
+    template<> class TypeImpl<name>                    \
+      : public TypeProxy {                             \
+        typedef DefaultTypeImplMethods<name> Methods;  \
+        _QI_BOUNCE_TYPE_METHODS(Methods);              \
+    };                                                 \
+    namespace detail {                                 \
+    template<> struct TypeManager<name>                \
+      : public TypeManagerNonDefaultConstructible<name> {}; \
+     }                                                 \
+  }
+
+  /** Register \p Proxy as a proxy class.
+   * Required for bound methods to accept a ProxyPtr as argument
    * Proxy must be constructible with an ObjectPtr as
-   * argument, and must implement Interface
+   * argumen
    * @return unused value, present to ease registration at static initialisation
    */
-  template<typename Interface, typename Proxy>
+  template<typename Proxy>
   bool registerProxy();
 }
 
