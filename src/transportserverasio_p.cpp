@@ -72,10 +72,20 @@ namespace qi
     ip::tcp::endpoint ep = *it;
     qiLogDebug("qimessaging.server.listen") <<"Will listen on " << ep.address().to_string() << ' ' << ep.port();
     _acceptor.open(ep.protocol());
+#ifdef _WIN32
+    boost::asio::socket_base::reuse_address option(false);
+#else
     boost::asio::socket_base::reuse_address option(true);
+#endif
     _acceptor.set_option(option);
     _acceptor.bind(ep);
-    _acceptor.listen();
+    boost::system::error_code ec;
+    _acceptor.listen(socket_base::max_connections, ec);
+    if (ec)
+    {
+      qiLogError("qimessaging.server.listen") << ec.message();
+      return qi::makeFutureError<void>(ec.message());
+    }
     unsigned port = _acceptor.local_endpoint().port();// already in host byte orde
     qiLogDebug("qimessaging.server.listen") << "Effective port io_service" << port;
     if (listenUrl.port() == 0)
