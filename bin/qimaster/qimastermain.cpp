@@ -59,7 +59,14 @@ int main(int argc, char *argv[])
         return 1;
       }
 
+      qi::Url sdUrl(masterAddress);
       qi::ServiceDirectory sd;
+
+      if (sdUrl.protocol() == "tcps")
+      {
+        sd.setIdentity("tests/server.key", "tests/server.crt");
+      }
+
       qi::Future<void> f = sd.listen(masterAddress);
       f.wait(3000);
       if (f.hasError())
