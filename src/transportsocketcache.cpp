@@ -61,7 +61,7 @@ namespace qi {
       qi::Url url = *urlIt;
       if (!url.isValid())
         continue;
-      if (url.host().substr(0, 4) == "127.") {
+      if (url.host().substr(0, 4) == "127." || url.host() == "localhost") {
         if (local) {
           endpoints.push_back(url);
           break;
@@ -70,7 +70,8 @@ namespace qi {
         endpoints.push_back(url);
       }
     }
-
+    if (endpoints.empty())
+      qiLogWarning("tsc.socket") << "No more endpoints available after filtering.";
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
       if (_dying)
@@ -101,7 +102,11 @@ namespace qi {
       // Launching connections to all endpoints at the same time. They all share
       // the same promise.
       qi::Promise<qi::TransportSocketPtr> prom;
-
+      if (endpoints.empty())
+      {
+        prom.setError("No endpoint available.");
+        return prom.future();
+      }
       // We will need this to report error (to know if all sockets didn't
       // connect).
       TransportSocketConnectionAttempt& tsca = _attempts[servInfo.machineId()];
