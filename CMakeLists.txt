@@ -39,8 +39,6 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
-qi_create_config_h(CONFIG_H "qimessaging/config.hpp.in" "qimessaging/config.hpp")
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
