@@ -830,6 +830,8 @@ namespace qi {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(storage);
       if (ptr.size() < index +1)
         ptr.resize(index + 1, 0);
+      if (ptr[index])
+        types[index]->destroy(ptr[index]);
       ptr[index] = types[index]->clone(valStorage);
     }
     const TypeInfo& info()
