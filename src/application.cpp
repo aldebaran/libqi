@@ -18,6 +18,7 @@
 #include <boost/asio.hpp>
 
 #include "filesystem.hpp"
+#include "path_conf.hpp"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -47,6 +48,17 @@ namespace qi {
   static boost::thread*                       globalIoThread = 0;
   static boost::asio::io_service::work*       globalIoWork = 0;
   static std::list<boost::asio::signal_set*>* globalSignalSet = 0;
+
+
+  static void readPathConf()
+  {
+    std::string prefix = ::qi::path::sdkPrefix();
+    std::set<std::string> toAdd =  ::qi::path::detail::parseQiPathConf(prefix);
+    std::set<std::string>::const_iterator it;
+    for (it = toAdd.begin(); it != toAdd.end(); ++it) {
+      ::qi::path::detail::addOptionalSdkPrefix(it->c_str());
+    }
+  }
 
   static void stop_io_service()
   {
@@ -188,27 +200,7 @@ namespace qi {
 
   Application::Application(int& argc, char ** &argv)
   {
-    //Feed qi::path prefix from share/qi/path.conf if present
-    //(automatically created when using qiBuild)
-    std::string pathConf = ::qi::path::findData("qi", "path.conf");
-    if (!pathConf.empty())
-    {
-      std::ifstream is(pathConf.c_str());
-      while (is.good())
-      {
-        std::string path;
-        std::getline(is, path);
-        if (!path.empty() && path[0] != '#')
-        {
-          boost::filesystem::path bpath(path, qi::unicodeFacet());
-          if (boost::filesystem::exists(bpath))
-          {
-            qiLogDebug("Application") << "Adding to path " << path;
-            ::qi::path::detail::addOptionalSdkPrefix(path.c_str());
-          }
-        }
-      }
-    }
+    readPathConf();
     if (globalInitialized)
       qiLogError("Application") << "Application was already initialized";
     globalInitialized = true;

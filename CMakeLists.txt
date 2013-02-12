@@ -84,6 +84,8 @@ set(C
   src/tailfileloghandler.cpp
   src/locale-light.cpp
   src/os.cpp
+  src/path_conf.cpp
+  src/path_conf.hpp
   src/utils.hpp
   src/utils.cpp
   src/threadpool.cpp
