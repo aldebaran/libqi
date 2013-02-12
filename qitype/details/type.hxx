@@ -87,11 +87,6 @@ namespace qi  {
           defaultResult = new TypeImpl<T>();
         result = defaultResult;
       }
-      if (strcmp(typeid(T).name(), result->infoString()) && typeid(T)!= typeid(bool))
-      {
-        qiLogWarning("qi.meta") << "typeOfBackend: type mismatch " << typeid(T).name()
-           << " " << result <<" " << result->info().asDemangledString();
-      }
 
       return result;
     }
