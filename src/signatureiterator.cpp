@@ -10,6 +10,8 @@
 #include <qi/log.hpp>
 #include "signatureconvertor.hpp"
 
+qiLogCategory("qitype.signature");
+
 namespace qi {
 
   //TODO
@@ -137,7 +139,7 @@ namespace qi {
           _find_end(&current, &signature, sig_end, '(', ')');
           break;
         default:
-          qiLogError("qimessaging.Signature") << "Signature is invalid:" << signature;
+          qiLogError() << "Signature is invalid:" << signature;
           return false;
       }
 

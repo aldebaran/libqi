@@ -5,6 +5,8 @@
 #include "staticobjecttype.hpp"
 #include <qitype/signal.hpp>
 
+qiLogCategory("qitype.object");
+
 namespace qi
 {
 
@@ -57,13 +59,13 @@ static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int 
   i = data.signalGetterMap.find(signal);
   if (i == data.signalGetterMap.end())
   {
-    qiLogError("meta") << "No such signal " << signal;
+    qiLogError() << "No such signal " << signal;
     return 0;
   }
   SignalBase* sig = i->second(instance);
   if (!sig)
   {
-    qiLogError("meta") << "Signal getter returned NULL";
+    qiLogError() << "Signal getter returned NULL";
     return 0;
   }
   return sig;
@@ -86,7 +88,7 @@ qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, Manageabl
   }
   SignalBase::Link id = sb->connect(subscriber);
   if (id > 0xFFFF)
-    qiLogError("meta") << "Signal link id too big";
+    qiLogError() << "Signal link id too big";
   return qi::Future<unsigned int>((event << 16) + id);
 }
 

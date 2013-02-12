@@ -86,8 +86,9 @@ namespace qi
     }
     virtual void set(void** storage, const char* ptr, size_t sz)
     {
+      qiLogCategory("qitype.typestring");
       // haha...no
-      qiLogWarning("qi.meta") << "set on C array not implemented";
+      qiLogWarning() << "set on C array not implemented";
     }
 
     typedef  DefaultTypeImplMethods<char[I],

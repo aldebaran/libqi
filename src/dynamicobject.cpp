@@ -17,6 +17,8 @@
 #include <qitype/dynamicobject.hpp>
 
 
+qiLogCategory("qitype.dynamicobject");
+
 namespace qi
 {
 
@@ -159,7 +161,7 @@ namespace qi
       if (metaObject().method(event))
         metaCall(context, event, params, MetaCallType_Auto);
       else
-        qiLogError("object") << "No such event " << event;
+        qiLogError() << "No such event " << event;
     }
   }
 
@@ -170,7 +172,7 @@ namespace qi
       return qi::makeFutureError<unsigned int>("Cannot find signal");
     SignalBase::Link l = s->connect(subscriber);
     if (l > 0xFFFF)
-      qiLogError("object") << "Signal id too big";
+      qiLogError() << "Signal id too big";
     return qi::Future<unsigned int>((event << 16) + l);
   }
 
@@ -213,7 +215,7 @@ namespace qi
       boost::timed_mutex::scoped_lock l(*lock, timeout);
       if (!l.owns_lock())
       {
-        qiLogWarning("qi.type") << "Time-out acquiring object lock when calling method. Deadlock?";
+        qiLogWarning() << "Time-out acquiring object lock when calling method. Deadlock?";
         throw std::runtime_error("Time-out acquiring lock. Deadlock?");
       }
       return function.call(params);
@@ -292,7 +294,7 @@ namespace qi
 
     if (!sync && !el)
       el = getDefaultThreadPoolEventLoop();
-    qiLogDebug("qi.Object") << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
+    qiLogDebug() << "metacall sync=" << sync << " el= " << el <<" ct= " << callType;
     if (sync)
     {
       qi::Promise<GenericValuePtr> out;

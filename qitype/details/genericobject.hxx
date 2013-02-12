@@ -154,12 +154,13 @@ namespace qi {
 
     virtual void set(void** storage, GenericValuePtr source)
     {
+      qiLogCategory("qitype.object");
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
       if (source.type->info() == info())
       {
         ObjectPtr* src = (ObjectPtr*)source.type->ptrFromStorage(&source.value);
         if (!*src)
-          qiLogWarning("qi.type") << "NULL ObjectPtr";
+          qiLogWarning() << "NULL ObjectPtr";
         *val = *src;
       }
       else if (source.kind() == Type::Dynamic)

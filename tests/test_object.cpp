@@ -17,6 +17,8 @@
 #include <qitype/objecttypebuilder.hpp>
 #include <qitype/methodtypefactory.hpp>
 
+qiLogCategory("test");
+
 static int gGlobalResult = 0;
 
 void vfun(const int &p0,const int &p1)   { gGlobalResult = p0 + p1; }
@@ -78,26 +80,26 @@ class Adder:
 {
 public:
   Adder() {
-    qiLogDebug("Adder") << this << " constructor(default) " << this;
+    qiLogDebug() << this << " constructor(default) " << this;
   v = -1;
   }
   Adder(const Adder& b)
   {
-    qiLogDebug("Adder") << this << " constructor(copy) " << this;
+    qiLogDebug() << this << " constructor(copy) " << this;
     v = b.v+1;
   }
   Adder(int v)
   : v(v) {
-    qiLogDebug("Adder") << this << " constructor(int) " << this;
+    qiLogDebug() << this << " constructor(int) " << this;
   }
   void operator = (const Adder& b)
   {
-    qiLogDebug("Adder") << this << " = operator " << &b;
+    qiLogDebug() << this << " = operator " << &b;
     v = b.v+1;
   }
   int add(int v2)
   {
-    qiLogDebug("adder") << this <<' ' << v << ' ' << v2;
+    qiLogDebug() << this <<' ' << v << ' ' << v2;
     return v+v2;
   }
   static int addTwo(int v1, int v2)
@@ -119,17 +121,17 @@ template<typename T> bool checkValue(qi::GenericValuePtr v, const T& val)
   T actual = v.as<T>();
   bool ok = actual == val;
   if (!ok)
-    qiLogError("checkValue") << "expected: " << val <<"  actual: " << actual;
+    qiLogError() << "expected: " << val <<"  actual: " << actual;
   return ok;
 }
 
 TEST(TestObject, Typing)
 {
-  qiLogDebug("test") << "vfun";
+  qiLogDebug() << "vfun";
   qi::GenericFunction fv = qi::makeGenericFunction(&vfun);
-  qiLogDebug("test") << "fun";
+  qiLogDebug() << "fun";
   qi::GenericFunction fv2 = qi::makeGenericFunction(&fun);
-  qiLogDebug("test") << "Foo::fun";
+  qiLogDebug() << "Foo::fun";
   qi::GenericMethod mv = qi::makeGenericMethod(&Foo::fun);
   std::vector<qi::GenericValuePtr> args1 = convert(1, 2);
   qi::GenericValuePtr res = fv2.call(args1);
@@ -346,9 +348,9 @@ TEST(TestObject, ObjectTypeBuilder)
   ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", &a2));
   //GenericObject is T not T*
   ASSERT_EQ(3, oa1->call<int>("addAdderByPtr", oa2));
-  qiLogDebug("test") << "NEXT";
+  qiLogDebug() << "NEXT";
   ASSERT_EQ(3, oa1->call<int>("addAdderByRef", a2));
-  qiLogDebug("test") << "NEXT";
+  qiLogDebug() << "NEXT";
   ASSERT_EQ(3, oa1->call<int>("addAdderByRef", oa2));
   ASSERT_EQ(3, oa1->call<int>("addAdderByConstPtr", &a2));
   // GenericObject is T not T*
@@ -413,7 +415,7 @@ TEST(TestObject, TypeType)
   using namespace qi;
   std::vector<GenericValuePtr> vals = convert(12);
   GenericValuePtr val = vals[0];
-  qiLogDebug("test") << "type ptr " << val.type->infoString() << " "
+  qiLogDebug() << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());
   ASSERT_EQ(12, val.asInt());

@@ -6,6 +6,8 @@
 #include <qitype/functiontype.hpp>
 #include <qitype/functiontypefactory.hpp>
 
+qiLogCategory("qitype.functiontype");
+
 namespace qi
 {
   GenericValuePtr callManyArgs(FunctionType* type, void* func,
@@ -16,14 +18,14 @@ namespace qi
      std::vector<GenericValuePtr> toDestroy;
     for (unsigned i=0; i<target.size(); ++i)
     {
-      //qiLogDebug("meta") << "argument " << i
+      //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
       if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
         convertedArgs[i] = args[i].value;
       else
       {
-        //qiLogDebug("meta") << "needs conversion "
+        //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
         std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
@@ -57,20 +59,20 @@ namespace qi
     unsigned int toDestroyPos = 0;
     for (unsigned i=0; i<argsSize; ++i)
     {
-      //qiLogDebug("meta") << "argument " << i
+      //qiLogDebug() << "argument " << i
       //   << " " << args[i].type->infoString() << ' ' << args[i].value
       //   << " to " << target[i]->infoString();
       if (args[i].type == target[i] || args[i].type->info() == target[i]->info())
         convertedArgs[i] = args[i].value;
       else
       {
-        //qiLogDebug("meta") << "needs conversion "
+        //qiLogDebug() << "needs conversion "
         //<< args[i].type->infoString() << " -> "
         //<< target[i]->infoString();
         std::pair<GenericValuePtr,bool> v = args[i].convert(target[i]);
         if (!v.first.type)
         {
-          qiLogError("qi.meta") << "Conversion failure from " << args[i].type->infoString()
+          qiLogError() << "Conversion failure from " << args[i].type->infoString()
           << " to " << target[i]->infoString() <<", aborting call";
           return GenericValuePtr();
         }
@@ -132,7 +134,7 @@ namespace qi
     const std::vector<GenericValuePtr>& src = *this;
     if (sig.size() != src.size())
     {
-      qiLogError("qi.GenericFunctionParameters") << "convert: signature/params size mismatch"
+      qiLogError() << "convert: signature/params size mismatch"
       << sig.toString() << " " << sig.size() << " " << src.size();
       return dst;
     }
@@ -143,7 +145,7 @@ namespace qi
       Type* compatible = qi::Type::fromSignature(*it);
       if (!compatible)
       {
-        qiLogError("qi.GenericFunctionParameters") <<"convert: unknown type " << *it;
+        qiLogError() <<"convert: unknown type " << *it;
         compatible = src[idx].type;
       }
       dst.push_back(src[idx].convertCopy(compatible));
@@ -162,7 +164,7 @@ namespace qi
 //      Type* compatible = qi::Type::fromSignature(*it);
 //      if (!compatible)
 //      {
-//        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
+//        qiLogError() <<"fromBuffer: unknown type " << *it;
 //        throw std::runtime_error("Could not construct type for " + *it);
 //      }
 //      result.push_back(compatible->deserialize(in));
@@ -185,7 +187,7 @@ namespace qi
   public:
     virtual void* call(void* func, void** args, unsigned int argc)
     {
-      qiLogError("qi.meta") << "Dynamic function called without type information";
+      qiLogError() << "Dynamic function called without type information";
       return 0;
     }
     virtual GenericValuePtr call(void* func, const std::vector<GenericValuePtr>& args)

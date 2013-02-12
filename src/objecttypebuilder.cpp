@@ -8,6 +8,8 @@
 #include "staticobjecttype.hpp"
 #include "metaobject_p.hpp"
 
+qiLogCategory("qitype.objectbuilder");
+
 namespace qi {
 
   class ObjectTypeBuilderPrivate
@@ -36,7 +38,7 @@ namespace qi {
                                               int id)
   {
     if (_p->type) {
-      qiLogVerbose("ObjectTypeBuilder")
+      qiLogVerbose()
           << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
           << builder.metaMethod().sigreturn() << " "
           << builder.metaMethod().signature()
@@ -50,7 +52,7 @@ namespace qi {
   int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id)
   {
     if (_p->type) {
-      qiLogVerbose("ObjectTypeBuilder") << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
+      qiLogVerbose() << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
                                         << signature << "' but type is already created.";
     }
     unsigned int nextId = _p->metaObject._p->addSignal(signature, id);
@@ -101,7 +103,7 @@ namespace qi {
     if (type->info() != _p->data.classType->info() && std::find(p.begin(), p.end(),
       std::make_pair(type, offset)) == p.end())
     {
-      qiLogVerbose("qi.meta") << "Declaring inheritance "
+      qiLogVerbose() << "Declaring inheritance "
       << _p->data.classType->infoString() << " <- " << type->infoString();
       p.push_back(std::make_pair(type, offset));
     }

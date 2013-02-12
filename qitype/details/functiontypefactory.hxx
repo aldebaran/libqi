@@ -48,9 +48,10 @@ namespace qi
     {
       template<typename T> void operator()(Ident<T>)
       {
+        qiLogCategory("qitype.functiontypefactory");
         if (boost::is_reference<T>::value && !boost::is_const<
           typename boost::remove_reference<T>::type>::value)
-          qiLogWarning("qi.meta") << "Function argument is a non-const reference: " << typeid(T).name();
+          qiLogWarning() << "Function argument is a non-const reference: " << typeid(T).name();
       }
     };
     template<typename T> struct remove_constptr

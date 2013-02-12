@@ -7,6 +7,8 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <qi/application.hpp>
 
+qiLogCategory("qitype.objectfactory");
+
 namespace qi {
 
   // Factory system
@@ -31,12 +33,12 @@ namespace qi {
 
   bool registerObjectFactory(const std::string& name, boost::function<qi::ObjectPtr (const std::string&)> factory)
   {
-    qiLogDebug("qi.factory") << "registering " << name;
+    qiLogDebug() << "registering " << name;
     _f_init();
     boost::recursive_mutex::scoped_lock sl(*_f_mutex_struct);
     FactoryMap::iterator i = _f_map->find(name);
     if (i != _f_map->end())
-      qiLogWarning("qi.object") << "Overriding factory for " <<name;
+      qiLogWarning() << "Overriding factory for " <<name;
     else
       _f_keys->push_back(name);
     (*_f_map)[name] = factory;
@@ -73,10 +75,10 @@ namespace qi {
     std::vector<std::string>& keys = *_f_keys;
     boost::recursive_mutex::scoped_lock sl(*_f_mutex_load);
     unsigned int count = keys.size();
-    qiLogDebug("qi.factory") << count <<" object before load";
+    qiLogDebug() << count <<" object before load";
     Application::loadModule(name, flags);
     boost::recursive_mutex::scoped_lock sl2(*_f_mutex_struct);
-    qiLogDebug("qi.factory") << keys.size() <<" object after load";
+    qiLogDebug() << keys.size() <<" object after load";
     if (count != keys.size())
       return std::vector<std::string>(&keys[count], &keys[0] + keys.size());
     else

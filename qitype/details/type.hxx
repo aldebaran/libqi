@@ -55,12 +55,12 @@ namespace qi {
   public:
     std::pair<GenericValuePtr, bool> get(void* storage)
     {
-      qiLogVerbose("qi.type") << "get on boost::any not implemented";
+      qiLogVerbose("qitype.impl") << "get on boost::any not implemented";
       return std::make_pair(GenericValuePtr(), false);
     };
     void set(void** storage, GenericValuePtr source)
     {
-       qiLogVerbose("qi.type") << "set on boost::any not implemented";
+      qiLogVerbose("qitype.impl") << "set on boost::any not implemented";
     }
     typedef DefaultTypeImplMethods<boost::any> Methods;
     _QI_BOUNCE_TYPE_METHODS(Methods);
@@ -81,7 +81,7 @@ namespace qi  {
         static Type* defaultResult = 0;
         // Is this realy a problem?
         if (!defaultResult)
-        qiLogDebug("qi.meta") << "typeOf request for unregistered type "
+          qiLogDebug("qitype.typeof") << "typeOf request for unregistered type "
           << typeid(T).name();
         if (!defaultResult)
           defaultResult = new TypeImpl<T>();

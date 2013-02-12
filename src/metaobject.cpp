@@ -10,6 +10,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <iomanip>
 
+qiLogCategory("qitype.metaobject");
+
 namespace qi {
 
   qi::Atomic<int> MetaObjectPrivate::uid = 1;
@@ -111,7 +113,7 @@ namespace qi {
     qi::MetaMethod method = builder.metaMethod();
     NameToIdx::iterator it = _methodsNameToIdx.find(method.signature());
     if (it != _methodsNameToIdx.end()) {
-      qiLogVerbose("qi.MetaObject")
+      qiLogVerbose()
           << "Method("<< it->second << ") already defined (and reused): "
           << method.sigreturn() << " "
           << method.signature();
@@ -125,7 +127,7 @@ namespace qi {
     builder.setUid(id);
     _methods[id] = builder.metaMethod();
     _methodsNameToIdx[method.signature()] = id;
-    // qiLogDebug("qi.MetaObject") << "Adding method("<< id << "): " << sigret << " " << signature;
+    // qiLogDebug() << "Adding method("<< id << "): " << sigret << " " << signature;
     return id;
   }
 
@@ -134,7 +136,7 @@ namespace qi {
     unsigned int id;
     NameToIdx::iterator it = _eventsNameToIdx.find(sig);
     if (it != _eventsNameToIdx.end()) {
-      qiLogVerbose("qi.MetaObject") << "Signal("<< it->second << ") already defined (and reused): " << sig;
+      qiLogVerbose() << "Signal("<< it->second << ") already defined (and reused): " << sig;
       return it->second;
     }
     if (uid >= 0)
@@ -144,7 +146,7 @@ namespace qi {
     MetaSignal ms(id, sig);
     _events[id] = ms;
     _eventsNameToIdx[sig] = id;
-    // qiLogDebug("qi.MetaObject") << "Adding signal("<< id << "): " << sig;
+    // qiLogDebug() << "Adding signal("<< id << "): " << sig;
     return id;
   }
 
@@ -303,9 +305,9 @@ namespace qi {
   qi::MetaObject MetaObject::merge(const qi::MetaObject &source, const qi::MetaObject &dest) {
     qi::MetaObject result = source;
     if (!result._p->addMethods(dest.methodMap()))
-      qiLogError("BoundObject") << "cant merge metaobject (methods)";
+      qiLogError() << "cant merge metaobject (methods)";
     if (!result._p->addSignals(dest.signalMap()))
-      qiLogError("BoundObject") << "cant merge metaobject (signals)";
+      qiLogError() << "cant merge metaobject (signals)";
     result._p->setDescription(dest.description());
     return result;
   }

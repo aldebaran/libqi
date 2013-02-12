@@ -9,6 +9,8 @@
 #include <qitype/dynamicobject.hpp>
 #include "metaobject_p.hpp"
 
+qiLogCategory("qitype.objectbuilder");
+
 namespace qi
 {
   class GenericObjectBuilderPrivate
@@ -69,7 +71,7 @@ namespace qi
                                              MetaCallType threadingModel)
   {
     if (_p->_objptr) {
-      qiLogWarning("GenericObjectBuilder")
+      qiLogWarning()
           << "GenericObjectBuilder: Called xAdvertiseMethod with method '"
           << builder.metaMethod().signature()
           << "' but object is already created.";
@@ -83,7 +85,7 @@ namespace qi
   int GenericObjectBuilder::xAdvertiseEvent(const std::string& signature)
   {
     if (_p->_objptr) {
-      qiLogWarning("GenericObjectBuilder") << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
+      qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
     }
     unsigned int nextId = _p->_object->metaObject()._p->addSignal(signature);
     return nextId;

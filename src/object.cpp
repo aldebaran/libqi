@@ -7,6 +7,8 @@
 #include <qitype/genericobject.hpp>
 #include "object_p.hpp"
 
+qiLogCategory("qitype.object");
+
 namespace qi {
 
   GenericObject::GenericObject(ObjectType *type, void *value)
@@ -78,7 +80,7 @@ namespace qi {
   const MetaObject &GenericObject::metaObject() {
     if (!type || !value) {
       static qi::MetaObject fail;
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return fail;
     }
     return type->metaObject(value);
@@ -89,7 +91,7 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
       return out.future();
     }
@@ -109,7 +111,7 @@ namespace qi {
   void GenericObject::metaPost(unsigned int event, const GenericFunctionParameters& args)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
     type->metaPost(value, this, event, args);
@@ -128,7 +130,7 @@ namespace qi {
       ss << "  " << mm.signature() << " (" << it->second << ')' << std::endl;
     }
     if (logError)
-      qiLogError("object") << ss.str();
+      qiLogError() << ss.str();
     return ss.str();
   }
 
@@ -144,7 +146,7 @@ namespace qi {
   {
     qi::Promise<GenericValuePtr> out;
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       out.setError("Invalid object");
       return out.future();
     }
@@ -160,7 +162,7 @@ namespace qi {
         resolvedSig += args[i].signature(true);
       resolvedSig = resolvedSig + ')';
       std::string fullSig = qi::signatureSplit(signature)[1] + "::" + resolvedSig;
-      qiLogDebug("qi.object") << "Finding method for resolved signature " << fullSig;
+      qiLogDebug() << "Finding method for resolved signature " << fullSig;
       std::vector<MetaObject::CompatibleMethod> mml = metaObject().findCompatibleMethod(fullSig);
 
       if (!mml.empty())
@@ -169,9 +171,9 @@ namespace qi {
         unsigned sz = mml.size();
         if (sz > 1 && mml[sz-1].second == mml[sz-2].second) // ambiguity remains
           return makeFutureError<GenericValuePtr>(generateErrorString("overload", signature, mml));
-        qiLogDebug("qi.object") << generateErrorString("overload OK", signature, mml, false);
+        qiLogDebug() << generateErrorString("overload OK", signature, mml, false);
         MetaMethod bestMatch = mml[sz - 1].first;
-        qiLogDebug("qi.object") << "Signature mismatch, but found compatible type "
+        qiLogDebug() << "Signature mismatch, but found compatible type "
                                   << bestMatch.signature() <<" for " << signature;
         methodId = bestMatch.uid();
         qi::Signature s(qi::signatureSplit(bestMatch.signature())[2]);
@@ -188,7 +190,7 @@ namespace qi {
           for (unsigned i=0; i< newArgs->size(); ++i)
             sig += (*newArgs)[i].signature();
           if (s.toString() != '(' + sig + ')')
-            qiLogError("qi.object") << "Inconsistency in signature, deserialization will fail " << s.toString() << " " << sig;
+            qiLogError() << "Inconsistency in signature, deserialization will fail " << s.toString() << " " << sig;
 #endif
         }
       }
@@ -212,7 +214,7 @@ namespace qi {
   /// Resolve signature and bounce
   bool GenericObject::xMetaPost(const std::string &signature, const GenericFunctionParameters &in) {
     if (!value || !type) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return false;
     }
        int eventId = metaObject().signalId(signature);
@@ -228,7 +230,7 @@ namespace qi {
       for (it = mml.begin(); it != mml.end(); ++it) {
         ss << "  " << it->signature() << std::endl;
       }
-      qiLogError("object") << ss.str();
+      qiLogError() << ss.str();
       return false;
     }
     metaPost(eventId, in);
@@ -239,7 +241,7 @@ namespace qi {
   qi::FutureSync<unsigned int> GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
     int eventId = metaObject().signalId(signature);
@@ -252,12 +254,12 @@ namespace qi {
       for (unsigned i = 0; i < mml.size(); ++i)
       {
         Signature s(signatureSplit(mml[i].signature())[2]);
-        qiLogDebug("qi.object") << "Checking compatibility " << s.toString() << ' '
+        qiLogDebug() << "Checking compatibility " << s.toString() << ' '
          << sargs.toString();
          // Order is reversed from method call check.
         if (s.isConvertibleTo(sargs))
         {
-          qiLogVerbose("qi.object")
+          qiLogVerbose()
               << "Signature mismatch, but found compatible type "
               << mml[i].signature() <<" for " << signature;
           eventId = mml[i].uid();
@@ -276,7 +278,7 @@ namespace qi {
       for (it = mml.begin(); it != mml.end(); ++it) {
         ss << "  " << it->signature() << std::endl;
       }
-      qiLogError("object") << ss.str();
+      qiLogError() << ss.str();
       return qi::makeFutureError<unsigned int>(ss.str());
     }
     return connect(eventId, functor);
@@ -285,7 +287,7 @@ namespace qi {
   qi::FutureSync<unsigned int> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
     }
     return type->connect(value, this, event, sub);
@@ -294,7 +296,7 @@ namespace qi {
   qi::FutureSync<void> GenericObject::disconnect(unsigned int linkId)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return qi::makeFutureError<void>("Operating on invalid GenericObject");
     }
     return type->disconnect(value, this, linkId);
@@ -310,7 +312,7 @@ namespace qi {
   {
     std::vector<SignalSubscriber> res;
     if (!_p) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return res;
     }
     return _p->subscribers(eventId);
@@ -327,7 +329,7 @@ namespace qi {
                          qi::AutoGenericValuePtr p8)
   {
     if (!type || !value) {
-      qiLogWarning("qi.object") << "Operating on invalid GenericObject..";
+      qiLogWarning() << "Operating on invalid GenericObject..";
       return;
     }
     qi::AutoGenericValuePtr* vals[8]= {&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8};
@@ -353,7 +355,7 @@ namespace qi {
     if (this == other)
       return 0;
     const std::vector<std::pair<Type*, int> >& parents = parentTypes();
-    qiLogDebug("qi.meta") << infoString() <<" has " << parents.size() <<" parents";
+    qiLogDebug() << infoString() <<" has " << parents.size() <<" parents";
     for (unsigned i=0; i<parents.size(); ++i)
     {
       if (parents[i].first->info() == other->info())
@@ -364,12 +366,12 @@ namespace qi {
         int offset = op->inherits(other);
         if (offset != -1)
         {
-          qiLogDebug("qi.meta") << "Inheritance offsets " << parents[i].second
+          qiLogDebug() << "Inheritance offsets " << parents[i].second
            << " " << offset;
           return parents[i].second + offset;
         }
       }
-      qiLogDebug("qi.meta") << parents[i].first->infoString() << " does not match " << other->infoString()
+      qiLogDebug() << parents[i].first->infoString() << " does not match " << other->infoString()
       <<" " << ((bool)op == (bool)dynamic_cast<ObjectType*>(other));
     }
     return -1;

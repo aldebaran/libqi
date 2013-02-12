@@ -11,6 +11,8 @@
 #include <qi/application.hpp>
 #include <qitype/functiontypefactory.hpp>
 
+qiLogCategory("test");
+
 class Foo
 {
 public:
@@ -78,7 +80,7 @@ TEST(TestSignal, SharedPtr)
 
 void byRef(int& i, bool* done)
 {
-  qiLogDebug("test") <<"byRef " << &i;
+  qiLogDebug() <<"byRef " << &i << ' ' << done;
   i = 12;
   *done = true;
 }
@@ -87,19 +89,20 @@ TEST(TestSignal, Copy)
 {
   // Check that reference argument type are copied when an async call is made
   qi::Signal<void (int&, bool*)> sig;
-  qiLogDebug("test") << "sync";
+  qiLogDebug() << "sync";
   sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Direct);
   bool done = false;
   int i = 0;
-  qiLogDebug("test") << "iref is " << &i;
+  qiLogDebug() << "iref is " << &i;
   sig(i, &done);
   ASSERT_TRUE(done); //synchronous
   ASSERT_EQ(0, i); // byref, but still copies for small types
-  qiLogDebug("test") << "async";
+  qiLogDebug() << "async";
   sig =  qi::Signal<void (int&, bool*)>();
   sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Queued);
   i = 0;
   done = false;
+  qiLogDebug() << "done is " << &done;
   sig(i, &done);
   for (unsigned c=0; !done && c<100;++c) qi::os::msleep(10);
   ASSERT_TRUE(done);

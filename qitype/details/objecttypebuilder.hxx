@@ -49,11 +49,12 @@ namespace qi {
   template<typename U>
   void ObjectTypeBuilder<T>::inherits()
   {
+    qiLogCategory("qitype.objectbuilder");
     T* ptr = (T*)(void*)0x10000;
     U* pptr = ptr;
     int offset = (long)(void*)pptr - (long)(void*) ptr;
-    qiLogDebug("qi.meta") << "Offset check " << pptr <<" " << ptr << " " << offset;
-    qiLogDebug("qi.meta") << typeid(ptr).name() << " " << typeid(pptr).name();
+    qiLogDebug() << "Offset check " << pptr <<" " << ptr << " " << offset;
+    qiLogDebug() << typeid(ptr).name() << " " << typeid(pptr).name();
     return ObjectTypeBuilderBase::inherits<U>(offset);
   }
 

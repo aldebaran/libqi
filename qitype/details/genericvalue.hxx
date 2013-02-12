@@ -210,10 +210,11 @@ namespace qi {
   template<typename T>
   inline T GenericValuePtr::as() const
   {
+    qiLogCategory("qitype.genericvalue");
     std::pair<GenericValuePtr, bool> conv = convert(typeOf<T>());
     if (!conv.first.type)
     {
-      qiLogWarning("qi.GenericValuePtr") << "Conversion from " << type->infoString()
+      qiLogWarning() << "Conversion from " << type->infoString()
                                       << '(' << type->kind() << ')'
                                       << " to " << typeOf<T>()->infoString()
                                       << '(' << typeOf<T>()->kind() << ") failed";

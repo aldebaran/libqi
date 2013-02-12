@@ -86,7 +86,7 @@ public:
       return ptr;
     void* res = detail::TypeManager<T>::create();
     if (!res)
-      qiLogError("qi.meta") << "initializeStorage error on " << typeid(T).name();
+      qiLogError("qitype.bypointer") << "initializeStorage error on " << typeid(T).name();
     return res;
   }
   static void* clone(void* src)

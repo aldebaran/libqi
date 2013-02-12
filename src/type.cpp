@@ -16,6 +16,8 @@
 #include <cxxabi.h>
 #endif
 
+qiLogCategory("qitype.type");
+
 namespace qi {
 
 
@@ -123,16 +125,17 @@ namespace qi {
   /// Type factory setter
   QITYPE_API bool registerType(const std::type_info& typeId, Type* type)
   {
-    qiLogDebug("qi.meta") << "registerType "  << typeId.name() << " "
+    qiLogCategory("qitype.type"); // method can be called at static init
+    qiLogDebug() << "registerType "  << typeId.name() << " "
      << type->kind() <<" " << (void*)type;
     TypeFactory::iterator i = typeFactory().find(TypeInfo(typeId));
     if (i != typeFactory().end())
     {
       if (i->second)
-        qiLogVerbose("qi.meta") << "registerType: previous registration present for "
+        qiLogVerbose() << "registerType: previous registration present for "
           << typeId.name()<< " " << (void*)i->second << " " << i->second->kind();
       else
-        qiLogVerbose("qi.meta") << "registerType: access to type factory before"
+        qiLogVerbose() << "registerType: access to type factory before"
           " registration detected for type " << typeId.name();
     }
     typeFactory()[TypeInfo(typeId)] = type;
@@ -206,13 +209,13 @@ namespace qi {
                sigFirst = sig; // keep sig
              else
              {
-               qiLogDebug("qi.signature") << "Heterogeneous elements "
+               qiLogDebug() << "Heterogeneous elements "
                << sigFirst << ' ' << sig;
              sigFirst.clear();
              }
            }
          }
-         // qiLogDebug("qi.signature") << "List effective " << sigFirst;
+         // qiLogDebug() << "List effective " << sigFirst;
          result =  std::string()
          + (char)Signature::Type_List
          + (sigFirst.empty()?value.elementType()->signature():sigFirst)
@@ -259,7 +262,7 @@ namespace qi {
                ksig = k;
              else
              {
-               qiLogDebug("qi.signature") << "Heterogeneous keys " << ksig << e.first.signature(true);
+               qiLogDebug() << "Heterogeneous keys " << ksig << e.first.signature(true);
                ksig.clear();
              }
            }
@@ -271,14 +274,14 @@ namespace qi {
                vsig = v;
              else
              {
-               qiLogDebug("qi.signature") << "Heterogeneous value " << vsig << e.second.signature(true);
+               qiLogDebug() << "Heterogeneous value " << vsig << e.second.signature(true);
                vsig.clear();
              }
            }
          }
          it.destroy();
          iend.destroy();
-         // qiLogDebug("qi.signature") << "Map effective: " << ksig << " , " << vsig;
+         // qiLogDebug() << "Map effective: " << ksig << " , " << vsig;
          result = std::string()
            + (char)Signature::Type_Map
            + (ksig.empty()? value.keyType()->signature(): ksig)
@@ -390,7 +393,7 @@ namespace qi {
         Type* el = fromSignature(i.children().begin());
         if (!el)
         {
-          qiLogError("qi.type") << "Cannot get type from list of unknown type.";
+          qiLogError() << "Cannot get type from list of unknown type.";
           return 0;
         }
       return makeListType(el);
@@ -401,7 +404,7 @@ namespace qi {
         Type* e = fromSignature(++i.children().begin());
         if (!k || !e)
         {
-          qiLogError("qi.type") <<" Cannot get type from map of unknown "
+          qiLogError() <<" Cannot get type from map of unknown "
           << (k?"element":"key") << " type";
           return 0;
         }
@@ -416,14 +419,14 @@ namespace qi {
           Type* t = fromSignature(child);
           if (!t)
           {
-            qiLogError("qi.type") << "Cannot get type from tuple of unknown element type";
+            qiLogError() << "Cannot get type from tuple of unknown element type";
             return 0;
           }
-          // qiLogDebug("qi.type") << "tuple element " << child.signature() << " " << t->infoString();
+          // qiLogDebug() << "tuple element " << child.signature() << " " << t->infoString();
           types.push_back(t);
         }
         Type* res = makeTupleType(types);
-        qiLogDebug("qi.type") <<"Resulting tuple " << i.signature() << " " << res->infoString();
+        qiLogDebug() <<"Resulting tuple " << i.signature() << " " << res->infoString();
         return res;
       }
     case Signature::Type_Dynamic:
@@ -433,7 +436,7 @@ namespace qi {
     case Signature::Type_Object:
       return typeOf<ObjectPtr>();
     default:
-      qiLogWarning("qi.type") << "Cannot get type from signature " << i.signature();
+      qiLogWarning() << "Cannot get type from signature " << i.signature();
       return 0;
     }
   }
@@ -441,10 +444,10 @@ namespace qi {
   Type* Type::fromSignature(const qi::Signature& sig)
   {
     if (sig.size() != 1)
-      qiLogWarning("qi.type") << "fromSignature(): signature has more than one element: " << sig.toString();
+      qiLogWarning() << "fromSignature(): signature has more than one element: " << sig.toString();
     Signature::iterator i = sig.begin();
     Type* result = ::qi::fromSignature(i);
-    // qiLogDebug("qi.type") << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
+    // qiLogDebug() << "fromSignature() " << i.signature() << " -> " << (result?result->infoString():"NULL");
     return result;
   }
 
@@ -812,7 +815,7 @@ namespace qi {
       for (unsigned i=0; i<types.size(); ++i)
         _name += types[i]->info().asString() + ",";
       _name += ">(" + boost::lexical_cast<std::string>(this) + ")";
-      qiLogDebug("qi.type") << "Instanciating tuple " << _name;
+      qiLogDebug() << "Instanciating tuple " << _name;
       _info = TypeInfo(_name);
     }
     friend Type* makeTupleType(std::vector<Type*> types);
@@ -943,7 +946,7 @@ namespace qi {
       if (once->find(typeName)!=once->end())
         return;
       once->insert(typeName);
-      qiLogError("qi.type") << "The following operation failed on data type "
+      qiLogError() << "The following operation failed on data type "
       << typeName << " :" << operation;
     }
   }

@@ -15,6 +15,8 @@
 #include "object_p.hpp"
 #include "signal_p.hpp"
 
+qiLogCategory("qitype.signal");
+
 namespace qi {
 
   SignalSubscriber::SignalSubscriber(qi::ObjectPtr target, unsigned int method)
@@ -86,7 +88,7 @@ namespace qi {
     signature += ")";
     if (signature != _p->signature)
     {
-      qiLogError("qi.signal") << "Dropping emit: signature mismatch: " << signature <<" " << _p->signature;
+      qiLogError() << "Dropping emit: signature mismatch: " << signature <<" " << _p->signature;
       return;
     }
     trigger(params, _p->defaultCallType);
@@ -186,7 +188,7 @@ namespace qi {
       else if (callType != MetaCallType_Auto)
         async = (callType == MetaCallType_Queued);
 
-      qiLogDebug("qi.Signal") << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
+      qiLogDebug() << "subscriber call async=" << async <<" ct " << callType <<" tm " << threadingModel;
       if (async)
       {
         GenericFunctionParameters* copy = new GenericFunctionParameters(args.copy());
@@ -305,13 +307,13 @@ namespace qi {
       ObjectPtr locked = src.target->lock();
       if (!locked)
       {
-        qiLogVerbose("qi.signal") << "connecting a dead slot (weak ptr out)";
+        qiLogVerbose() << "connecting a dead slot (weak ptr out)";
         return invalid;
       }
       const MetaMethod* ms = locked->metaObject().method(src.method);
       if (!ms)
       {
-        qiLogWarning("qi.signal") << "Method " << src.method <<" not found, proceeding anyway";
+        qiLogWarning() << "Method " << src.method <<" not found, proceeding anyway";
         goto proceed;
       }
       else
@@ -319,7 +321,7 @@ namespace qi {
     }
     if (sigArity != subArity)
     {
-      qiLogWarning("qi.signal") << "Subscriber has incorrect arity (expected "
+      qiLogWarning() << "Subscriber has incorrect arity (expected "
         << sigArity  << " , got " << subArity <<")";
       return invalid;
     }

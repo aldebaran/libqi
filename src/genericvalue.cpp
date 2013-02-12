@@ -8,12 +8,14 @@
 #include <qitype/genericvalue.hpp>
 #include <qitype/genericobject.hpp>
 
+qiLogCategory("qitype.genericvalue");
+
 namespace qi
 {
 
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
-    // qiLogDebug("qi.type") << "convert " << type->infoString() << ' ' << targetType->infoString();
+    // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
     /* Can have false-negative (same effective type, different Type instances
    * but we do not care, correct check (by comparing info() result
    * is more expensive than the dummy conversion that will happen.
@@ -150,7 +152,7 @@ namespace qi
           if (!pointedDstPair.first.type)
             return std::make_pair(GenericValuePtr(), false);
           if (pointedDstPair.second)
-            qiLogError("qi.meta") << "assertion error, allocated converted reference";
+            qiLogError() << "assertion error, allocated converted reference";
           // We must re-reference
           GenericValuePtr pointedDst = pointedDstPair.first;
           void* ptr = pointedDst.type->ptrFromStorage(&pointedDst.value);
@@ -168,7 +170,7 @@ namespace qi
           std::vector<Type*> dstTypes = tdst->memberTypes();
           if (dstTypes.size() != sourceData.size())
           {
-            qiLogWarning("qi.meta") << "Conversion failure: tuple size mismatch";
+            qiLogWarning() << "Conversion failure: tuple size mismatch";
             return std::make_pair(GenericValuePtr(), false);
           }
 
@@ -179,7 +181,7 @@ namespace qi
             std::pair<GenericValuePtr, bool> conv = GenericValuePtr(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
             if (!conv.first.type)
             {
-              qiLogWarning("qi.meta") << "Conversion failure in tuple member between "
+              qiLogWarning() << "Conversion failure in tuple member between "
                                       << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
               return std::make_pair(GenericValuePtr(), false);
             }
@@ -244,7 +246,7 @@ namespace qi
     }
     else if (skind == Type::Raw && dkind == Type::String)
     {
-      qiLogWarning("qi.meta") << "Conversion attempt from raw to string";
+      qiLogWarning() << "Conversion attempt from raw to string";
       return std::make_pair(GenericValuePtr(), false);
     }
     if (targetType->kind() == Type::Dynamic)
@@ -298,7 +300,7 @@ namespace qi
     {
       // Try inheritance
       ObjectType* osrc = static_cast<ObjectType*>(type);
-      qiLogDebug("qi.meta") << "inheritance check "
+      qiLogDebug() << "inheritance check "
                             << osrc <<" " << (osrc?osrc->inherits(targetType):false);
       int inheritOffset = 0;
       if (osrc && (inheritOffset =  osrc->inherits(targetType)) != -1)
