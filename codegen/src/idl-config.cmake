@@ -9,10 +9,11 @@ qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
 # \group:DOXYSRC sources to pass to doxygen, but not to compile
 # \param:IDL the IDL file to use as input
 # \param:PROXY generate specialized proxy header and install them
+# \param:SPLIT_BIND generate binding code in a separate file per class
 function(qi_create_module name)
   message("qi_create_module: ${ARGN}")
   cmake_parse_arguments(ARG
-    "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY"
+    "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY;SPLIT_BIND"
     "SUBFOLDER;IDL"
     "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;INCLUDE;INCLUDE_SERVICE" ${ARGN})
   message("parsing args: ${ARG_CLASSES}")
@@ -67,6 +68,9 @@ function(qi_create_module name)
     set(classes "${classes},${c}")
   endforeach()
   if (classes)
+    set(kclasses "-k ${classes}")
+  endif()
+  if (classes)
     set(classes "-c ${classes}")
   endif()
   message("input classes: ${ARG_SERVICES} ${ARG_CLASSES}")
@@ -99,6 +103,7 @@ function(qi_create_module name)
         ${ARG_SRC} ${ARG_DOXYSRC}
         "${classes}"
         -m proxyFuture --interface
+        ${kclasses}
         -I ${includes}
         -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_proxy.hpp
     )
@@ -108,29 +113,68 @@ function(qi_create_module name)
   # Build command argument from classes and modules
   # Put classes before services, most likely there is a dependency
   # in this order
-  set (carg '')
-  foreach(class ${ARG_CLASSES})
-    set(carg "${carg},${class}:cxxservicebouncer")
-  endforeach()
-  foreach(module ${ARG_SERVICES})
-    set(carg "${carg},${module}:cxxservicebouncerregister")
-  endforeach(module)
-  if (carg)
-    set(carg "-c ${carg}")
-  endif()
-  message("carg: '${carg}'")
 
-  qi_generate_src(
-     ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
-     SRC ${ARG_SRC} ${ARG_DOXYSRC}
-     COMMAND ${_python_executable} ${IDLPY}
-       ${IDL}
-       ${ARG_SRC} ${ARG_DOXYSRC}
-       -m cxxservicebouncerregister --interface
-       "${carg}"
-       -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
-       -I "${service_includes}"
-  )
+  set(bindname ${name}_bind.cpp)
+  set(bindtarget ${bindname})
+  if (ARG_SPLIT_BIND)
+    foreach(c ${ARG_SERVICES})
+       string(TOLOWER ${c} cl)
+       qi_generate_src(
+       ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
+       SRC ${ARG_SRC} ${ARG_DOXYSRC}
+       COMMAND ${_python_executable} ${IDLPY}
+         ${IDL}
+         ${ARG_SRC} ${ARG_DOXYSRC}
+         ${kclasses}
+         -m cxxservicebouncerregister --interface
+         -c ${c}:cxxservicebouncerregister
+         -o ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
+         -I "${service_includes}"
+      )
+    endforeach(c)
+    foreach(c ${ARG_CLASSES})
+      message("Generating bind for ${c}")
+      string(TOLOWER ${c} cl)
+      qi_generate_src(
+      ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
+      SRC ${ARG_SRC} ${ARG_DOXYSRC}
+      COMMAND ${_python_executable} ${IDLPY}
+        ${IDL}
+        ${ARG_SRC} ${ARG_DOXYSRC}
+        ${kclasses}
+        -m cxxservicebouncerregister --interface
+        -c ${c}:cxxservicebouncer
+        -o ${CMAKE_CURRENT_BINARY_DIR}/${cl}_bind.cpp
+        -I "${service_includes}"
+      )
+    endforeach(c)
+  else()
+    message("Generating merged bind")
+    set (carg '')
+    foreach(class ${ARG_CLASSES})
+      set(carg "${carg},${class}:cxxservicebouncer")
+    endforeach()
+    foreach(module ${ARG_SERVICES})
+      set(carg "${carg},${module}:cxxservicebouncerregister")
+    endforeach(module)
+    if (carg)
+      set(carg "-c ${carg}")
+    endif()
+    message("carg: '${carg}'")
+    qi_generate_src(
+       ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
+       SRC ${ARG_SRC} ${ARG_DOXYSRC}
+       COMMAND ${_python_executable} ${IDLPY}
+         ${IDL}
+         ${ARG_SRC} ${ARG_DOXYSRC}
+         ${kclasses}
+         -m cxxservicebouncerregister --interface
+         "${carg}"
+         -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp
+         -I "${service_includes}"
+    )
+    set(ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp $${ARG_SRC})
+  endif()
   # Generate interface
   qi_generate_src(
      ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
@@ -139,12 +183,13 @@ function(qi_create_module name)
        ${IDL}
        ${ARG_SRC} ${ARG_DOXYSRC}
        ${classes}
+       ${kclasses}
        -m interface --interface
        -o ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp
        -I "${includes}"
   )
-  # Add binder and interface (or it wont be generated) to sources
-  set(ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_bind.cpp ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp ${ARG_SRC})
+  # Add interface (or it wont be generated) to sources
+  set(ARG_SRC ${CMAKE_CURRENT_BINARY_DIR}/${name}_interface.hpp ${ARG_SRC})
   #invoke qi_create_lib
   qi_create_lib(${name}
     "${ARGVAL_SUBFOLDER}"

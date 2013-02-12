@@ -736,6 +736,10 @@ I@name@Ptr interface_from_bound(@impl@ ptr);
     if ret.find("LogListen") != -1:
       print("TCHOOO TCHOO " + ret + "  " + method[2])
     if method[2] in REV_MAP and method[2].find("Ptr") != -1: # FIXME make a more clever test
+      #forward-declare converter functions we use
+      fwd = "I@name@Ptr interface_from_bound(@name@Ptr ptr);\n@name@ProxyPtr proxy_from_interface(I@name@Ptr ptr);\n"
+      fwd = fwd.replace('@name@', method[2].replace('Ptr', ''))
+      converter_decl += fwd 
       emit_interface[method[2]] = 1
       method_bounce += '   %s %s(%s) { return qi_to_interface_%s(_impl->%s(%s));}\n' % (ret, method_name, typed_args, method[2], method_name, args)
     elif ret[0:11] == 'std::vector' and ret[12:-2] == 'I' + method[2][1:-1]:
@@ -831,6 +835,7 @@ def main(args):
   parser.add_argument("--output-file","-o", help="output file (stdout)")
   parser.add_argument("--output-mode","-m", default="txt", choices=["parse", "txt", "idl", "proxy", "proxyFuture", "cxxtype", "cxxtyperegister", "cxxskel", "cxxservice", "cxxserviceregister", "cxxservicebouncer", "cxxservicebouncerregister", "interface"], help="output mode (stdout)")
   parser.add_argument("--include", "-I", default="", help="File to include in generated C++")
+  parser.add_argument("--known-classes", "-k", default="", help="Comma-separated list of other handled classes")
   parser.add_argument("--classes", "-c", default="*", help="Comma-separated list of classes to select, optionally with per class ':operation'")
   parser.add_argument("input", nargs='+', help="input file(s)")
   
@@ -840,6 +845,10 @@ def main(args):
   # Fill KNOWN_STRUCT_MAP with static stuff
   KNOWN_STRUCT_MAP[signature_to_idl('({I(Isss[(ss)]s)}{I(Is)}s)')] = 'qi::MetaObject'
 
+  for c in pargs.known_classes.split(','):
+    c = c.strip()
+    if len(c):
+      REV_MAP[c + 'Ptr'] = c + 'ProxyPtr'
   # Step one: get raw from either IDL, source files, or running service
   if len(pargs.input) == 1 and pargs.input[0][-3:] == 'idl':
     xml = etree.ElementTree(file=pargs.input[0]).getroot()
@@ -874,6 +883,7 @@ def main(args):
       if len(cc) > 1:
         class_operation[cc[0]] = cc[1]
     raw = newraw
+  split_output = (pargs.output_file.find("%s") != -1)
   # Main switch on output mode
   if pargs.output_mode == "txt":
     res = raw_to_text(raw)
@@ -927,11 +937,17 @@ def main(args):
           res[0] += tres[0]
           res[1] += tres[1]
           res[2] += tres[2]
+      if split_output:
+        out_name = pargs.output_file.replace("%s", c)
+        out = open(out_name, "w")
+        out.write(res[0] + res[1] + res[2])
+        res = ["","",""]
     res = res[0] + res[1] + res[2]
-  # Set output stream to file or stdout
-  out = sys.stdout
-  if pargs.output_file and pargs.output_file != "-" :
-    out = open(pargs.output_file, "w")
-  out.write(res)
+  if not split_output:
+    # Set output stream to file or stdout
+    out = sys.stdout
+    if pargs.output_file and pargs.output_file != "-" :
+      out = open(pargs.output_file, "w")
+    out.write(res)
 
 main(sys.argv)
