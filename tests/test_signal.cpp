@@ -88,7 +88,7 @@ TEST(TestSignal, Copy)
   // Check that reference argument type are copied when an async call is made
   qi::Signal<void (int&, bool*)> sig;
   qiLogDebug("test") << "sync";
-  sig.connect(qi::makeGenericFunction(byRef));
+  sig.connect(qi::makeGenericFunction(byRef), qi::MetaCallType_Direct);
   bool done = false;
   int i = 0;
   qiLogDebug("test") << "iref is " << &i;
@@ -112,7 +112,7 @@ TEST(TestSignal, AutoDisconnect)
   int r = 0;
   boost::shared_ptr<Foo> foo(new Foo());
   qi::Signal<void (int*, int)> sig;
-  sig.connect(foo, &Foo::func1);
+  sig.connect(foo, &Foo::func1, qi::MetaCallType_Direct);
   sig(&r, 0);
   ASSERT_EQ(1, r);
   foo.reset();
@@ -127,7 +127,7 @@ TEST(TestSignal, AutoDisconnectTrack)
   boost::shared_ptr<int> s(new int(2));
   Foo* ptr = new Foo();
   qi::Signal<void (int*, int)> sig;
-  sig.connect(ptr, &Foo::func1).track(boost::weak_ptr<int>(s));
+  sig.connect(ptr, &Foo::func1, qi::MetaCallType_Direct).track(boost::weak_ptr<int>(s));
   sig(&r, 0);
   ASSERT_EQ(1, r);
   sig(&r, 1);
