@@ -9,6 +9,8 @@
 #include <qitype/objectfactory.hpp>
 #include <qimessaging/session.hpp>
 
+qiLogCategory("testmodule");
+
 int testMethod(const int& v)
 {
   return v+1;
@@ -16,7 +18,7 @@ int testMethod(const int& v)
 
 qi::ObjectPtr setup(const std::string&)
 {
-  qiLogDebug("testmodule") << "setup";
+  qiLogDebug() << "setup";
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("testMethod", testMethod);
   return ob.object();

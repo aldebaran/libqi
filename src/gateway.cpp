@@ -13,6 +13,8 @@
 #include "tcptransportsocket.hpp"
 #include "session_p.hpp"
 
+qiLogCategory("qimessaging.gateway");
+
 namespace qi
 {
 
@@ -161,10 +163,10 @@ void GatewayPrivate::handleMsgFromClient(TransportSocketPtr client, Message cons
 
     if (_services.find(Message::Service_ServiceDirectory) == _services.end())
     {
-      qiLogError("gateway") << "Not connected to Service Directory";
+      qiLogError() << "Not connected to Service Directory";
       if (_attachAddress.isValid())
       {
-        qiLogInfo("gateway") << "Retry to connect to Service Directory on "
+        qiLogInfo() << "Retry to connect to Service Directory on "
                              << _attachAddress.str();
         TransportSocketPtr sdSocket = qi::makeTransportSocket(_attachAddress.protocol());
         _services[qi::Message::Service_ServiceDirectory] = sdSocket;
@@ -212,7 +214,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
   // Must not fail
   if (it == _serviceToClient.end())
   {
-    qiLogError("Gateway", "Cannot find Client request for Service reply.\n");
+    qiLogError();
     return;
   }
 
@@ -233,7 +235,7 @@ void GatewayPrivate::handleMsgFromService(TransportSocketPtr service, const Mess
 
       if (result.name() == "")
       {
-        qiLogError("gateway") << "Could not find requested service";
+        qiLogError() << "Could not find requested service";
         Message ans(Message::Type_Error, msg->address());
         ans.setId(itReq->second.first);
         if (itReq->second.second)
@@ -327,7 +329,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
 
       if (_services.find(Message::Service_ServiceDirectory) == _services.end())
       {
-        qiLogInfo("gateway") << "Attached to ReverseGateway";
+        qiLogInfo() << "Attached to ReverseGateway";
 
         _services[Message::Service_ServiceDirectory] = socket;
         qi::Buffer buf;
@@ -343,7 +345,7 @@ void GatewayPrivate::onMessageReady(const qi::Message &msg, qi::TransportSocketP
       }
       else
       {
-        qiLogError("gateway") << "Already connected to Service Directory";
+        qiLogError() << "Already connected to Service Directory";
       }
     }
     else if (_type == Type_ReverseGateway && msg.type() == Message::Type_Reply)
@@ -389,7 +391,7 @@ void GatewayPrivate::onSocketConnected(TransportSocketPtr service)
     if (it->second == service)
     {
       unsigned int serviceId = it->first;
-      qiLogInfo("gateway") << "Connected to service #" << serviceId;
+      qiLogInfo() << "Connected to service #" << serviceId;
       std::vector< std::pair<const qi::Message*, TransportSocketPtr> >  &pmv = _pendingMessage[serviceId];
       std::vector< std::pair<const qi::Message*, TransportSocketPtr> > ::iterator itPending;
 
@@ -424,7 +426,7 @@ void GatewayPrivate::onSocketConnected(TransportSocketPtr service)
 
   if (_type != Type_ReverseGateway)
   {
-    qiLogError("gateway") << "Unknown service TransportSocket " << service;
+    qiLogError() << "Unknown service TransportSocket " << service;
   }
 }
 
@@ -440,11 +442,11 @@ void GatewayPrivate::onSocketDisconnected(TransportSocketPtr socket)
       unsigned int sid = it->first;
       if (sid == Message::Service_ServiceDirectory)
       {
-        qiLogError("gateway") << "Connection to the Service Directory was lost!";
+        qiLogError() << "Connection to the Service Directory was lost!";
       }
       else
       {
-        qiLogInfo("gateway") << "Connection to service #" << it->first
+        qiLogInfo() << "Connection to service #" << it->first
                              << " was lost!";
       }
       // Remove the service from the _services map
@@ -485,7 +487,7 @@ bool GatewayPrivate::attachToServiceDirectory(const Url &address)
 
   if (!sdSocket->isConnected())
   {
-    qiLogError("gateway") << "Could not attach to Service Directory "
+    qiLogError() << "Could not attach to Service Directory "
                           << address.str();
     return false;
   }
@@ -502,7 +504,7 @@ bool GatewayPrivate::listen(const Url &address)
 
 bool GatewayPrivate::connect(const qi::Url &connectURL)
 {
-  qiLogInfo("gateway") << "Connecting to remote gateway: " << connectURL.str();
+  qiLogInfo() << "Connecting to remote gateway: " << connectURL.str();
 
   qi::TransportSocketPtr socket = qi::makeTransportSocket(connectURL.protocol());
 //  for (std::list<TransportSocketInterface*>::iterator it = _transportSocketCallbacks.begin();

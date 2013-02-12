@@ -16,6 +16,7 @@
 
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test");
 
 /*
  * Bound object do not have the same event id as "raw" object.
@@ -86,15 +87,15 @@ protected:
 
     oe1 = oclient1->metaObject().signalId("fire1::(i)");
     oe2 = oclient2->metaObject().signalId("fire2::(i)");
-    qiLogDebug("test") << "Object E1:" << oe1 << " - Server E1:" << se1;
-    qiLogDebug("test") << "Object E2:" << oe2 << " - Server E2:" << se2;
+    qiLogDebug() << "Object E1:" << oe1 << " - Server E1:" << se1;
+    qiLogDebug() << "Object E2:" << oe2 << " - Server E2:" << se2;
     ASSERT_TRUE(oe1 >= 10 && oe1 < 1000);
     ASSERT_TRUE(oe2 >= 10 && oe2 < 1000);
 
     om1 = oclient1->metaObject().methodId("onFire1::(i)");
     om2 = oclient2->metaObject().methodId("onFire2::(i)");
-    qiLogDebug("test") << "Object M1:" << om1 << " - Server M1:" << sm1;
-    qiLogDebug("test") << "Object M2:" << om2 << " - Server M2:" << sm2;
+    qiLogDebug() << "Object M1:" << om1 << " - Server M1:" << sm1;
+    qiLogDebug() << "Object M2:" << om2 << " - Server M2:" << sm2;
     ASSERT_TRUE(om1 >= 10 && om1 < 1000);
     ASSERT_TRUE(om2 >= 10 && om2 < 1000);
 

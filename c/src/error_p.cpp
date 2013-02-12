@@ -11,6 +11,8 @@
 #include "error_p.h"
 #include <qimessaging/c/error_c.h>
 
+qiLogCategory("qimessaging.error");
+
 // Internal qimessaging-c bindings error buffer.
 static char* _qi_c_error = 0;
 // Size of internal error buffer
@@ -23,7 +25,7 @@ static char* _qi_c_get_error_buffer()
   if (!_qi_c_error)
   {
     if (!(_qi_c_error = (char*) malloc(_QI_C_ERROR_SIZE)))
-      qiLogError("qimessaging.c.error") << "Cannot allocate error buffer, you're gonna have a bad time.";
+      qiLogError() << "Cannot allocate error buffer, you're gonna have a bad time.";
   }
 
   return _qi_c_error;

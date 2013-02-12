@@ -30,6 +30,8 @@
 #include "servicedirectory_p.hpp"
 #include "server.hpp"
 
+qiLogCategory("qimessaging.servicedirectory");
+
 namespace qi
 {
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
@@ -87,11 +89,11 @@ namespace qi
          it2 != ids.end();
          ++it2)
     {
-      qiLogInfo("qimessaging.ServiceDirectory") << "Service #" << *it2 << " disconnected";
+      qiLogInfo() << "Service #" << *it2 << " disconnected";
       try {
         unregisterService(*it2);
       } catch (std::runtime_error &) {
-        qiLogWarning("ServiceDirectory") << "Cannot unregister service #" << *it2;
+        qiLogWarning() << "Cannot unregister service #" << *it2;
       }
     }
     socketToIdx.erase(it);
@@ -146,7 +148,7 @@ namespace qi
         svcinfo.name() <<
         "\" (#" << it->second << ") is already registered. " <<
         "Rejecting conflicting registration attempt.";
-      qiLogWarning("qimessaging.ServiceDirectory")  << ss.str();
+      qiLogWarning()  << ss.str();
       throw std::runtime_error(ss.str());
     }
 
@@ -164,17 +166,17 @@ namespace qi
     ss << "Registered Service \"" << svcinfo.name() << "\" (#" << idx << ")";
     if (! svcinfo.name().empty() && svcinfo.name()[0] == '_') {
       // Hide services whose name starts with an underscore
-      qiLogDebug("qimessaging.ServiceDirectory") << ss.str();
+      qiLogDebug() << ss.str();
     }
     else
     {
-      qiLogInfo("qimessaging.ServiceDirectory") << ss.str();
+      qiLogInfo() << ss.str();
     }
 
     qi::UrlVector::const_iterator jt;
     for (jt = svcinfo.endpoints().begin(); jt != svcinfo.endpoints().end(); ++jt)
     {
-      qiLogDebug("qimessaging.ServiceDirectory") << "Service \"" << svcinfo.name() << "\" is now on " << jt->str();
+      qiLogDebug() << "Service \"" << svcinfo.name() << "\" is now on " << jt->str();
     }
 
     return idx;
@@ -191,7 +193,7 @@ namespace qi
     {
       std::stringstream ss;
       ss << "Unregister Service: Can't find service #" << idx;
-      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
 
@@ -201,7 +203,7 @@ namespace qi
     {
       std::stringstream ss;
       ss << "Unregister Service: Mapping error, service #" << idx << " not in nameToIdx";
-      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
     std::string serviceName = it2->second.name();
@@ -213,11 +215,11 @@ namespace qi
 
     if (! serviceName.empty() && serviceName[0] == '_') {
       // Hide services whose name starts with underscore
-      qiLogDebug("qimessaging.ServiceDirectory") << ss.str();
+      qiLogDebug() << ss.str();
     }
     else
     {
-      qiLogInfo("qimessaging.ServiceDirectory") << ss.str();
+      qiLogInfo() << ss.str();
     }
 
     nameToIdx.erase(it);
@@ -251,7 +253,7 @@ namespace qi
     {
       std::stringstream ss;
       ss << "Can't find pending service #" << idx;
-      qiLogError("qimessaging.ServiceDirectory") << ss.str();
+      qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
 
@@ -288,7 +290,7 @@ namespace qi
     sdbo->serviceReady(1);
     //serviceDirectory must have id '1'
     assert(regid == 1);
-    qiLogInfo("ServiceDirectory") << "ServiceDirectory listening on: " << address.str();
+    qiLogInfo() << "ServiceDirectory listening on: " << address.str();
     return f;
   }
 
@@ -303,7 +305,7 @@ namespace qi
   }
 
   void ServiceDirectory::close() {
-    qiLogInfo("ServiceDirectory") << "Closing ServiceDirectory";
+    qiLogInfo() << "Closing ServiceDirectory";
     _p->_server.close();
   }
 

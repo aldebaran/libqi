@@ -33,7 +33,7 @@ namespace qi {
     }
     ret.setBuffer(result);
     if (!socket->send(ret))
-      qiLogError("qi.Server") << "Can't generate an answer for address:" << replyaddr;
+      qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
 }
 

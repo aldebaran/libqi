@@ -11,6 +11,8 @@
 #include "qipython_signal.hpp"
 
 
+qiLogCategory("qimessaging.python");
+
 qi_signal::qi_signal()
   : _callbackMap(),
     _sig (qi::Signal<void (std::vector<PyObject*>)>())
@@ -26,7 +28,7 @@ unsigned int qi_signal::connect(PyObject* python_callback)
 {
   if (!PyCallable_Check(python_callback))
   {
-    qiLogError("qipython.signal") << "Object is not callable";
+    qiLogError() << "Object is not callable";
     return 0;
   }
 
@@ -118,7 +120,7 @@ void qi_signal::callback(PyObject* callback, const std::vector<PyObject*>& args)
                                                args[5], args[6], args[7], args[8], args[9], NULL);
   if (!ret)
   {
-    qiLogError("qipython.signal") << "Unable to call python callback";
+    qiLogError() << "Unable to call python callback";
     PyErr_Print();
     PyErr_Clear();
   }

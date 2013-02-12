@@ -7,6 +7,8 @@
 
 #include "boundobject.hpp"
 
+qiLogCategory("qimessaging.objecthost");
+
 namespace qi
 {
 
@@ -28,10 +30,10 @@ void ObjectHost::onMessage(const qi::Message &msg, TransportSocketPtr socket)
     ObjectMap::iterator it = _objectMap.find(msg.object());
     if (it == _objectMap.end())
     {
-      qiLogDebug("qi.ObjectHost") << "Object id not found " << msg.object();
+      qiLogDebug() << "Object id not found " << msg.object();
       return;
     }
-    qiLogDebug("qi.ObjectHost") << "ObjectHost forwarding " << msg.address();
+    qiLogDebug() << "ObjectHost forwarding " << msg.address();
     // Keep ptr alive while message is being processed, even if removeObject is called
     obj = it->second;
   }

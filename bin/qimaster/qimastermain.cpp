@@ -17,6 +17,8 @@
 
 #include <boost/program_options.hpp>
 
+qiLogCategory("qimaster");
+
 namespace po = boost::program_options;
 
 
@@ -71,12 +73,12 @@ int main(int argc, char *argv[])
       f.wait(3000);
       if (f.hasError())
       {
-        qiLogError("qi-master") << "Failed to listen on " << masterAddress <<
+        qiLogError() << "Failed to listen on " << masterAddress <<
           ". Is there another service running on this address?";
         exit(1);
       }
 
-      qiLogInfo("qi-master") << "qi-master is listening on " << masterAddress;
+      qiLogInfo() << "qi-master is listening on " << masterAddress;
 
       app.run();
     }

@@ -16,6 +16,8 @@
 #include <qimessaging/c/qi_c.h>
 #include <qi/log.hpp>
 
+qiLogCategory("qimessaging.python");
+
 void*  qi_raise(const char *exception_class, const char *error_message);
 static PyObject* qi_value_to_python(const char *sig, qi_message_t *msg);
 static int qi_value_to_message(const char *sig, PyObject *data, qi_message_t *msg);
@@ -196,7 +198,7 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   // #2 If there is no item, just return.
   if (sig == 0 || items < 0)
   {
-    qiLogWarning("qimessaging.python") << "Signature is empty.";
+    qiLogWarning() << "Signature is empty.";
     qi_signature_destroy(sig);
     Py_RETURN_NONE;
   }
@@ -204,7 +206,7 @@ PyObject *qi_message_to_python(const char *signature, qi_message_t *msg)
   // #3 If signature is empty, just return.
   if (!*(qi_signature_current(sig)))
   {
-    qiLogWarning("qimessaging.python") << "Signature is empty.";
+    qiLogWarning() << "Signature is empty.";
     qi_signature_destroy(sig);
     Py_RETURN_NONE;
   }
@@ -226,14 +228,14 @@ static int qi_list_to_message(const char *sig, PyObject *data, qi_message_t *msg
   // #2 Get an iterator on Python list
   if ((iter = PyObject_GetIter(data)) == 0)
   {
-    qiLogError("qimessaging.python.qi_list_to_message") << "[QI_LIST] Element is not iterable.";
+    qiLogError() << "[QI_LIST] Element is not iterable.";
     return 2;
   }
 
   // #3 Initialize qi::Signature subsignature.
   if ((subsig = qi_signature_create_subsignature(sig)) == 0)
   {
-    qiLogError("qimessaging.python.qi_list_to_message") << "[QI_LIST] Signature " << sig << " is not valid.";
+    qiLogError() << "[QI_LIST] Signature " << sig << " is not valid.";
     return 2;
   }
 
@@ -277,7 +279,7 @@ static int qi_tuple_to_message(const char *sig, PyObject *data, qi_message_t *ms
   // #1 Get subsignature of tuple
   if ((subsig = qi_signature_create_subsignature(sig)) == 0)
   {
-    qiLogError("qimessaging.python.qi_value_to_message") << "[QI_TUPLE] Signature " << sig << " not valid.";
+    qiLogError() << "[QI_TUPLE] Signature " << sig << " not valid.";
     return 2;
   }
 
@@ -290,7 +292,7 @@ static int qi_tuple_to_message(const char *sig, PyObject *data, qi_message_t *ms
   {
     if (qi_value_to_message(qi_signature_current(subsig), currentObj, msg) != 0)
     {
-      qiLogError("qimessaging.python.qi_tuple_to_message") << "Cannot serialize data with " << qi_signature_current(subsig) << " signature.";
+      qiLogError() << "Cannot serialize data with " << qi_signature_current(subsig) << " signature.";
       qi_signature_destroy(subsig);
       return 2;
     }
@@ -386,7 +388,7 @@ int qi_python_to_message(const char *signature, qi_message_t *msg, PyObject *dat
   if (Py_None == data || !data || ::strcmp(signature, "()") == 0)
   {
     // Remove log when it bother us.
-    qiLogWarning("qimessaging.python") << "No parameter to serialize: " << signature;
+    qiLogWarning() << "No parameter to serialize: " << signature;
     return ::strcmp(signature, "()") == 0 ? 0 : 2;
   }
 

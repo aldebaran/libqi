@@ -60,7 +60,7 @@ void QiTransportSocketPrivate::read()
 
         if (!_msg->isValid())
         {
-          qiLogError("QiTransportSocket") << "incorrect message, dropped";
+          qiLogError() << "incorrect message, dropped";
           // TODO: implement error recovery...
           return;
         }
@@ -138,14 +138,14 @@ void QiTransportSocket::write(const qi::Message& message)
                                    sizeof(qi::MessagePrivate::MessageHeader));
   if (writtenSize != sizeof(qi::MessagePrivate::MessageHeader))
   {
-    qiLogError("QiTransportSocket") << "write error, (" << writtenSize << ")" << _p->_device->errorString().toUtf8().constData();
+    qiLogError() << "write error, (" << writtenSize << ")" << _p->_device->errorString().toUtf8().constData();
   }
 
   writtenSize = _p->_device->write(static_cast<char*>(message._p->buffer.data()),
                                    message._p->buffer.size());
   if (writtenSize != static_cast<qint64>(message._p->buffer.size()))
   {
-    qiLogError("QiTransportSocket") << "write error, (" << writtenSize << ")";
+    qiLogError() << "write error, (" << writtenSize << ")";
   }
 }
 
@@ -156,7 +156,7 @@ qi::Message *QiTransportSocket::read()
 
 void QiTransportSocket::connectToHost(const QUrl& address)
 {
-  qiLogDebug("QiTransportSocket") << "Connecting to " << address.toString().toUtf8().constData();
+  qiLogDebug() << "Connecting to " << address.toString().toUtf8().constData();
 
   if (address.scheme() == "tcp")
   {
@@ -185,7 +185,7 @@ void QiTransportSocket::connectToHost(const QUrl& address)
   }
   else
   {
-    qiLogError("QiTransportServer") << "Protocol `"
+    qiLogError() << "Protocol `"
                                     << address.scheme().toUtf8().constData()
                                     << "' is not supported, can't connect";
   }

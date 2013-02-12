@@ -23,6 +23,8 @@
 #include "transportserver_p.hpp"
 #include "transportserverasio_p.hpp"
 
+qiLogCategory("qimessaging.transportserver");
+
 namespace qi
 {
 
@@ -30,7 +32,7 @@ namespace qi
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s,
     boost::shared_ptr<bool> live)
   {
-    qiLogDebug("qimessaging.server.listen") << this << " onAccept";
+    qiLogDebug() << this << " onAccept";
     if (!(*live))
     {
       delete s;
@@ -38,7 +40,7 @@ namespace qi
     }
     if (erc)
     {
-      qiLogDebug("qimessaging.server.listen") << "accept error " << erc.message();
+      qiLogDebug() << "accept error " << erc.message();
       delete s;
       self->acceptError(erc.value());
       return;
@@ -51,7 +53,7 @@ namespace qi
   }
 
   void TransportServerAsioPrivate::close() {
-    qiLogDebug("qimessaging.server.listen") << this << " close";
+    qiLogDebug() << this << " close";
     *_live = false;
     _acceptor.close();
   }
@@ -68,11 +70,11 @@ namespace qi
     if (it == ip::tcp::resolver::iterator())
     {
       const char* s = "Listen error: no endpoint.";
-      qiLogError("qimessaging.server.listen") << s;
+      qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
     ip::tcp::endpoint ep = *it;
-    qiLogDebug("qimessaging.server.listen") <<"Will listen on " << ep.address().to_string() << ' ' << ep.port();
+    qiLogDebug() <<"Will listen on " << ep.address().to_string() << ' ' << ep.port();
     _acceptor.open(ep.protocol());
 #ifdef _WIN32
     boost::asio::socket_base::reuse_address option(false);
@@ -89,7 +91,7 @@ namespace qi
       return qi::makeFutureError<void>(ec.message());
     }
     unsigned port = _acceptor.local_endpoint().port();// already in host byte orde
-    qiLogDebug("qimessaging.server.listen") << "Effective port io_service" << port;
+    qiLogDebug() << "Effective port io_service" << port;
     if (listenUrl.port() == 0)
     {
       listenUrl = Url(listenUrl.protocol() + "://" + listenUrl.host() + ":"
@@ -98,7 +100,7 @@ namespace qi
     /* Set endpoints */
     if (listenUrl.host() != "0.0.0.0")
     {
-      qiLogDebug("qimessaging.server.listen") << "Adding endpoint : " << listenUrl.str();
+      qiLogDebug() << "Adding endpoint : " << listenUrl.str();
       _endpoints.push_back(listenUrl.str());
     }
 
@@ -109,7 +111,7 @@ namespace qi
       if (ifsMap.empty())
       {
         const char* s = "Cannot get host addresses";
-        qiLogWarning("qimessaging.server.listen") << s;
+        qiLogWarning() << s;
         return qi::makeFutureError<void>(s);
       }
   #ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
@@ -131,7 +133,7 @@ namespace qi
           ss << (*addressIt);
           ss << ":";
           ss << port;
-          qiLogVerbose("qimessaging.server.listen") << "Adding endpoint : " << ss.str();
+          qiLogVerbose() << "Adding endpoint : " << ss.str();
           _endpoints.push_back(ss.str());
          }
       }

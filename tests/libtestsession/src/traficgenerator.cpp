@@ -8,6 +8,8 @@
 
 #include "traficgenerator.hpp"
 
+qiLogCategory("qimessaging.testsession");
+
 TraficGenerator::TraficGenerator()
 {
 }
@@ -86,7 +88,7 @@ void __chaosThread(void *data)
 
     if (proxy.get() == 0)
     {
-      qiLogError("testsession.populator.chaos") << "[Nightmare] Cannot get proxy on " << service << ", aborting thread.";
+      qiLogError() << "[Nightmare] Cannot get proxy on " << service << ", aborting thread.";
       mutex->unlock();
       return;
     }

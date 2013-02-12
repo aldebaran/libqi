@@ -17,6 +17,8 @@
 #include "object_c_p.h"
 #include "future_c_p.h"
 
+qiLogCategory("qimessaging.object");
+
 void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<void*> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
@@ -51,7 +53,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_mes
 
   if ((methodId = obj->metaObject().methodId(signature_c)) <= 0)
   {
-    qiLogError("qimessaging.c") << "Method \"" << signature_c << "\" : No such method.";
+    qiLogError() << "Method \"" << signature_c << "\" : No such method.";
     return 0;
   }
   const qi::MetaMethod *mm = obj->metaObject().method(methodId);

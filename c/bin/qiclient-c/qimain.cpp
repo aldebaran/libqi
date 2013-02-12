@@ -12,6 +12,8 @@
 #include <qi/log.hpp>
 #include <qimessaging/c/qi_c.h>
 
+qiLogCategory("qimain");
+
 int make_call(char *addr)
 {
   qi_session_t* session = qi_session_create();
@@ -40,10 +42,10 @@ int make_call(char *addr)
   qi_message_t *msg = 0;
 
   if (qi_future_is_error(fut))
-    qiLogError("qimessaging.qi-client-c") << "Future has error : " << qi_future_get_error(fut);
+    qiLogError() << "Future has error : " << qi_future_get_error(fut);
 
   if (!qi_future_is_ready(fut))
-    qiLogError("qimessaging.qi-client-c") << "Future is not ready [:\n";
+    qiLogError() << "Future is not ready [:\n";
 
   msg = 0;
   if (!qi_future_is_error(fut) && qi_future_is_ready(fut))
@@ -53,7 +55,7 @@ int make_call(char *addr)
     result = qi_message_read_string(msg);
 
   if (result)
-    qiLogInfo("qimessaging.qi-client-c") << "Reply : " << result;
+    qiLogInfo() << "Reply : " << result;
   qi_future_destroy(fut);
   qi_message_destroy(message);
   qi_object_destroy(object);
@@ -70,8 +72,8 @@ int main(int argc, char *argv[])
   // get the program options
   if (argc != 2)
   {
-    qiLogInfo("qimessaging.qi-client-c") << "Usage : ./qi-client-c master-address";
-    qiLogInfo("qimessaging.qi-client-c") << "Assuming master address is tcp://127.0.0.1:5555";
+    qiLogInfo() << "Usage : ./qi-client-c master-address";
+    qiLogInfo() << "Assuming master address is tcp://127.0.0.1:5555";
     sd_addr = strdup("tcp://127.0.0.1:5555");
   }
   else

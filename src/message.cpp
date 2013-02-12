@@ -17,6 +17,7 @@
 
 #include "message_p.hpp"
 
+qiLogCategory("qimessaging.message");
 
 namespace qi {
 
@@ -155,7 +156,7 @@ namespace qi {
     cow();
     if (type() == Type_Event)
     {
-      qiLogDebug("Message") << "called setFunction() on Type_Event message";
+      qiLogDebug() << "called setFunction() on Type_Event message";
     }
     _p->header.action = function;
   }
@@ -164,7 +165,7 @@ namespace qi {
   {
     if (type() == Type_Event)
     {
-      qiLogDebug("Message") << "called function() on Type_Event message";
+      qiLogDebug() << "called function() on Type_Event message";
     }
     return _p->header.action;
   }
@@ -174,7 +175,7 @@ namespace qi {
     cow();
     if (type() != Type_Event)
     {
-      qiLogDebug("Message") << "called setEvent() on non Type_Event message";
+      qiLogDebug() << "called setEvent() on non Type_Event message";
     }
     _p->header.action = event;
   }
@@ -183,7 +184,7 @@ namespace qi {
   {
     if (type() != Type_Event)
     {
-      qiLogDebug("Message") << "called event() on non Type_Event message";
+      qiLogDebug() << "called event() on non Type_Event message";
     }
     return _p->header.action;
   }
@@ -215,13 +216,13 @@ namespace qi {
     BinaryDecoder in(_p->buffer);
     Signature::iterator it = sig.begin();
     if (!_p->signature.empty() && _p->signature != sig.toString())
-      qiLogWarning("qi.message") << "Signature mismatch " << sig.toString() <<" " << _p->signature;
+      qiLogWarning() << "Signature mismatch " << sig.toString() <<" " << _p->signature;
     while (it != sig.end())
     {
       qi::Type* compatible = qi::Type::fromSignature(*it);
       if (!compatible)
       {
-        qiLogError("qi.GenericFunctionParameters") <<"fromBuffer: unknown type " << *it;
+        qiLogError() <<"fromBuffer: unknown type " << *it;
         throw std::runtime_error("Could not construct type for " + *it);
       }
       result.push_back(qi::details::deserialize(compatible, in, context));
@@ -239,19 +240,19 @@ namespace qi {
   {
     if (_p->header.magic != qi::MessagePrivate::magic)
     {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (magic is incorrect)" << std::endl;
+      qiLogError()  << "Message dropped (magic is incorrect)" << std::endl;
       return false;
     }
 
     if (type() == qi::Message::Type_None)
     {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (type is None)" << std::endl;
+      qiLogError()  << "Message dropped (type is None)" << std::endl;
       return false;
     }
 
     if (object() == qi::Message::GenericObject_None)
     {
-      qiLogError("qimessaging.TransportSocket")  << "Message dropped (object is 0)" << std::endl;
+      qiLogError()  << "Message dropped (object is 0)" << std::endl;
       assert(object() != qi::Message::GenericObject_None);
       return false;
     }

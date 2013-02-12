@@ -14,6 +14,8 @@
 #include "objectregistrar.hpp"
 #include "remoteobject_p.hpp"
 
+qiLogCategory("qimessaging.sessionservice");
+
 namespace qi {
 
   inline void sessionServiceWaitBarrier(Session_Service* ptr) {
@@ -37,7 +39,7 @@ namespace qi {
   }
 
   void Session_Service::onServiceRemoved(const unsigned int &index, const std::string &service) {
-    qiLogVerbose("Session") << "Remote Service Removed:" << service << " #" << index;
+    qiLogVerbose() << "Remote Service Removed:" << service << " #" << index;
     removeService(service);
   }
 
@@ -46,7 +48,7 @@ namespace qi {
       boost::mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
       if (it != _remoteObjects.end()) {
-        qiLogVerbose("qi.Session") << "Session: Removing cached RemoteObject " << service;
+        qiLogVerbose() << "Session: Removing cached RemoteObject " << service;
         _remoteObjects.erase(it);
       }
     }
@@ -73,7 +75,7 @@ namespace qi {
 
       it = _requests.find(requestId);
       if (it == _requests.end()) {
-        qiLogVerbose("qi.session_service") << "qi.session.service(): No matching request for id(" << requestId << ").";
+        qiLogVerbose() << "qi.session.service(): No matching request for id(" << requestId << ").";
         return 0;
       }
       return it->second;
@@ -94,7 +96,7 @@ namespace qi {
 
       it = _requests.find(requestId);
       if (it == _requests.end()) {
-        qiLogVerbose("qi.session_service") << "qi.session.service(): No matching request for id(" << requestId << ").";
+        qiLogVerbose() << "qi.session.service(): No matching request for id(" << requestId << ").";
         return;
       }
       if (it->second) {
@@ -113,6 +115,7 @@ namespace qi {
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
+    qiLogDebug() << "Got transport socket for service";
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -131,6 +134,7 @@ namespace qi {
   }
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
+    qiLogDebug() << "Got metaobject";
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -147,7 +151,7 @@ namespace qi {
       if (it != _remoteObjects.end()) {
         //another object have been registered before us, return it
         //the new socket will be closed when the request is deleted
-        qiLogVerbose("session_service") << "A request for the service " << sr->name << " have been discarded, "
+        qiLogVerbose() << "A request for the service " << sr->name << " have been discarded, "
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
@@ -165,6 +169,7 @@ namespace qi {
 
   // We received a ServiceInfo, and want to establish a connection
   void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId) {
+    qiLogDebug() << "Got serviceinfo message";
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -179,12 +184,12 @@ namespace qi {
     if (!si.endpoints().size()) {
       std::stringstream ss;
       ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
-      qiLogVerbose("session.service") << ss.str();
+      qiLogVerbose() << ss.str();
       sr->promise.setError(ss.str());
       removeRequest(requestId);
       return;
     }
-
+    qiLogDebug() << "Requesting socket from cache";
     qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si);
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
@@ -194,7 +199,7 @@ namespace qi {
   {
     qi::Future<qi::ObjectPtr> result;
     if (locality != Session::ServiceLocality_Remote) {
-      //qiLogError("session.service") << "service is not implemented for local service, it always return a remote service";
+      //qiLogError() << "service is not implemented for local service, it always return a remote service";
       //look for local object registered in the server
       qi::ObjectPtr go = _server->registeredServiceObject(service);
       if (go)

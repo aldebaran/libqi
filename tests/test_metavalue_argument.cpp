@@ -17,6 +17,8 @@
 #include <qimessaging/session.hpp>
 #include <qimessaging/servicedirectory.hpp>
 
+qiLogCategory("test");
+
 qi::GenericValue v;
 
 void onFire(const int& pl)
@@ -146,7 +148,7 @@ TEST_F(TestObject, meta)
   i++;
   ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
-  qiLogVerbose("test") << "remote us: " << os::ustime() - time;
+  qiLogVerbose() << "remote us: " << os::ustime() - time;
   time = os::ustime();
 
   // Plugin copy test
@@ -202,7 +204,7 @@ TEST_F(TestObject, meta)
   i++;
   ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
-  qiLogVerbose("test") << "plugin async us: " << os::ustime() - time;
+  qiLogVerbose() << "plugin async us: " << os::ustime() - time;
   time = os::ustime();
   // plugin direct test
   function = "value";
@@ -254,7 +256,7 @@ TEST_F(TestObject, meta)
   i++;
   ASSERT_EQ(in, (*i).as<std::vector<double> >());
   }
-  qiLogVerbose("test") << "plugin sync us: " << os::ustime() - time;
+  qiLogVerbose() << "plugin sync us: " << os::ustime() - time;
   time = os::ustime();
 }
 

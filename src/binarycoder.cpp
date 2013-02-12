@@ -18,6 +18,8 @@
 #include <vector>
 #include <cstring>
 
+qiLogCategory("qimessaging.binarycoder");
+
 namespace qi {
   template <typename T, typename T2, char S>
   static inline qi::BinaryDecoder& deserialize(qi::BinaryDecoder* ds, T &b)
@@ -127,7 +129,7 @@ namespace qi {
     if (sz) {
       char *data = static_cast<char *>(readRaw(sz));
       if (!data) {
-        qiLogError("qimessaging.binarycoder", "buffer empty");
+        qiLogError();
         setStatus(Status_ReadPastEnd);
         return;
       }
@@ -145,7 +147,7 @@ namespace qi {
     {
       uint32_t sz;
       read(sz);
-      qiLogDebug("BinaryCoder") << "Extracting buffer of size " << sz <<" at " << reader.position();
+      qiLogDebug() << "Extracting buffer of size " << sz <<" at " << reader.position();
       meta.clear();
       void* ptr = meta.reserve(sz);
       memcpy(ptr, readRaw(sz), sz);
@@ -158,7 +160,7 @@ namespace qi {
     read(signature);
     Type* type = 0; // Type::getCompatibleTypeWithSignature(signature);
     if (!type)
-      qiLogError("qimessaging.binarycoder") << "Could not find metatype for signature " << signature;
+      qiLogError() << "Could not find metatype for signature " << signature;
     else
     {
       value.type = type;
@@ -226,7 +228,7 @@ namespace qi {
 
     buffer().addSubBuffer(meta);
 
-    // qiLogDebug("BinaryCoder") << "Serializing buffer " << meta.size()
+    // qiLogDebug() << "Serializing buffer " << meta.size()
     //                         << " at " << buffer().size();
   }
 
@@ -240,7 +242,7 @@ namespace qi {
     if (sig.empty())
       sig = "v";
     if (Signature(sig).size() != 1)
-      qiLogWarning("qi.BinaryEncoder") << "Weird GenericValuePtr signature: " << sig;
+      qiLogWarning() << "Weird GenericValuePtr signature: " << sig;
     write(sig);
     if (!recurse)
       qi::details::serialize(value, *this);
@@ -333,8 +335,8 @@ namespace qi {
       ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
       context->addObject(bo, oid);
-      qiLogDebug("qi.type") << "Hooking " << oid <<" on " << context;
-      qiLogDebug("qi.type") << "sbo " << sbo << "obj " << object.get();
+      qiLogDebug() << "Hooking " << oid <<" on " << context;
+      qiLogDebug() << "sbo " << sbo << "obj " << object.get();
       // Transmit the metaObject augmented by ServiceBoundObject.
       out.write(sbo->metaObject(oid));
       out.write((unsigned int)sid);
@@ -343,7 +345,7 @@ namespace qi {
 
     void onProxyLost(GenericObject* ptr)
     {
-      qiLogDebug("qi.type") << "Proxy on argument object lost, invoking terminate...";
+      qiLogDebug() << "Proxy on argument object lost, invoking terminate...";
       DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
       // dobj is a RemoteObject
       //FIXME: use post()
@@ -360,10 +362,10 @@ namespace qi {
       int sid, oid;
       in.read(sid);
       in.read(oid);
-      qiLogDebug("qi.type") << "Creating unregistered object " << sid << '/' << oid << " on " << context.get();
+      qiLogDebug() << "Creating unregistered object " << sid << '/' << oid << " on " << context.get();
       RemoteObject* ro = new RemoteObject(sid, oid, mo, context);
       ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
-      qiLogDebug("qi.type") << "New object is " << o.get() << "on ro " << ro;
+      qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
       assert(GenericValuePtr::from(o).as<ObjectPtr>());
       return GenericValuePtr::from(o).clone();
@@ -378,7 +380,7 @@ namespace qi {
       {}
       void visitUnknown(Type* type, void* storage)
       {
-        qiLogError("qi.type") << "Type " << type->infoString() <<" not serializable";
+        qiLogError() << "Type " << type->infoString() <<" not serializable";
       }
 
       void visitVoid(Type*)
@@ -400,7 +402,7 @@ namespace qi {
           case 8:  out.write((int64_t)value); break;
           case -8: out.write((uint64_t)value);break;
           default:
-            qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
+            qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
         }
       }
 
@@ -411,7 +413,7 @@ namespace qi {
         else if (byteSize == 8)
           out.write((double)value);
         else
-          qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
+          qiLogError() << "serialize on unknown float type " << byteSize;
       }
 
       void visitString(TypeString* type, void* storage)
@@ -453,7 +455,7 @@ namespace qi {
       void visitObject(GenericObject value)
       {
         // No refcount, user called us with some kind of Object, not ObjectPtr
-        qiLogWarning("qi.type") << "Serializing an object without a shared pointer";
+        qiLogWarning() << "Serializing an object without a shared pointer";
         serializeObject(out, ObjectPtr(new GenericObject(value)), context);
       }
 
@@ -470,7 +472,7 @@ namespace qi {
             context);
         }
         else
-          qiLogError("qi.type") << "Pointer serialization not implemented";
+          qiLogError() << "Pointer serialization not implemented";
       }
 
       void visitTuple(TypeTuple* type, void* storage)
@@ -531,7 +533,7 @@ namespace qi {
 
       void visitUnknown(Type* type, void* storage)
       {
-        qiLogError("qi.type") << "Type " << type->infoString() <<" not deserializable";
+        qiLogError() << "Type " << type->infoString() <<" not deserializable";
       }
 
       void visitVoid(Type*)
@@ -554,7 +556,7 @@ namespace qi {
           case 8:  deserialize<int64_t>(type); break;
           case -8: deserialize<uint64_t>(type);break;
           default:
-            qiLogError("qi.type") << "Unknown integer type " << isSigned << " " << byteSize;
+            qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
         }
       }
 
@@ -565,7 +567,7 @@ namespace qi {
         else if (byteSize == 8)
           deserialize<double>(type);
         else
-          qiLogError("qi.type") << "Unknown float type " << byteSize;
+          qiLogError() << "Unknown float type " << byteSize;
       }
 
       void visitString(TypeString* type, const void* storage)
@@ -623,7 +625,7 @@ namespace qi {
 
       void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
       {
-        qiLogError("qi.type") << " Pointer serialization not implemented";
+        qiLogError() << " Pointer serialization not implemented";
       }
 
       void visitTuple(TypeTuple* type, void* storage)
@@ -683,7 +685,7 @@ namespace qi {
       SerializeTypeVisitor stv(out, context);
       qi::typeDispatch(stv, val.type, &val.value);
       if (out.status() != BinaryEncoder::Status_Ok) {
-        qiLogError("qimessaging.binarycoder") << "OSerialization error " << out.status();
+        qiLogError() << "OSerialization error " << out.status();
       }
     }
 
@@ -692,7 +694,7 @@ namespace qi {
       DeserializeTypeVisitor dtv(in, context);
       qi::typeDispatch(dtv, type, &storage);
       if (in.status() != BinaryDecoder::Status_Ok) {
-        qiLogError("qimessaging.binarycoder") << "ISerialization error " << in.status();
+        qiLogError() << "ISerialization error " << in.status();
       }
       return dtv.result;
     }

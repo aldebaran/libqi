@@ -4,6 +4,7 @@
 */
 #include "transportsocketcache.hpp"
 
+qiLogCategory("qimessaging.socketcache");
 
 namespace qi {
 
@@ -50,7 +51,7 @@ namespace qi {
     qi::UrlVector::const_iterator urlIt;
 
     bool local = servInfo.machineId() == qi::os::getMachineId();
-
+    qiLogDebug() << "local check " << servInfo.machineId() << " " <<  qi::os::getMachineId() << " " << local;
     // RFC 3330 - http://tools.ietf.org/html/rfc3330
     //   -> 127.0.0.0/8 is assigned to loopback address.
     //
@@ -59,6 +60,7 @@ namespace qi {
     // have that are not loopback.
     for (urlIt = servInfo.endpoints().begin(); urlIt != servInfo.endpoints().end(); ++urlIt) {
       qi::Url url = *urlIt;
+      qiLogDebug() << "testing url " << url.str();
       if (!url.isValid())
         continue;
       if (url.host().substr(0, 4) == "127." || url.host() == "localhost") {
@@ -71,7 +73,7 @@ namespace qi {
       }
     }
     if (endpoints.empty())
-      qiLogWarning("tsc.socket") << "No more endpoints available after filtering.";
+      qiLogWarning() << "No more endpoints available after filtering.";
     {
       boost::mutex::scoped_lock sl(_socketsMutex);
       if (_dying)
@@ -92,7 +94,7 @@ namespace qi {
               // all endpoints in case the old one is completely down.
               continue;
             }
-            qiLogVerbose("tsc.socket") << "A connection is pending or already"
+            qiLogVerbose() << "A connection is pending or already"
                                        << " established.";
             return tsc.promise.future();
           }
@@ -121,7 +123,7 @@ namespace qi {
         qi::Url url = *urlIt;
         qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
         TransportSocketConnection& tsc = tscm[url.str()];
-        qiLogVerbose("tsc.socket") << "Attempting connection to " << url.str()
+        qiLogVerbose() << "Attempting connection to " << url.str()
                                    << " of machine id " << servInfo.machineId();
         tsc.socket = socket;
         tsc.promise = prom;

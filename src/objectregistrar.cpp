@@ -15,6 +15,8 @@
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
 
+qiLogCategory("qimessaging.objectregistrar");
+
 namespace qi {
 
 
@@ -70,7 +72,7 @@ namespace qi {
       BoundServiceMap::iterator it;
       it = _services.find(idx);
       if (it != _services.end()) {
-        qiLogError("qi.server") << "A service is already registered with that id:" << idx;
+        qiLogError() << "A service is already registered with that id:" << idx;
         result.setError("Service already registered.");
         return;
       }
@@ -98,7 +100,7 @@ namespace qi {
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::ObjectPtr obj)
   {
     if (Server::endpoints().empty()) {
-      qiLogError("qimessaging.Server") << "Could not register service: " << name << " because the current server has not endpoint";
+      qiLogError() << "Could not register service: " << name << " because the current server has not endpoint";
       return qi::Future<unsigned int>();
     }
     qi::ServiceInfo si;
@@ -133,12 +135,12 @@ namespace qi {
         name = it->second.name;
         if (!it->second.object.unique())
         {
-          qiLogVerbose("qimessaging.Server") << "Some references to service #" << idx
+          qiLogVerbose() << "Some references to service #" << idx
                                              << " are still held!";
         }
         _services.erase(it);
       } else {
-        qiLogVerbose("qimessaging.Server") << "Can't find name associated to id:" << idx;
+        qiLogVerbose() << "Can't find name associated to id:" << idx;
       }
       Server::removeObject(idx);
     }
@@ -149,7 +151,7 @@ namespace qi {
       if (it != _serviceNameToIndex.end())
         _serviceNameToIndex.erase(it);
       else
-        qiLogVerbose("qimessaging.Server") << "Can't find idx associated to name :" << name;
+        qiLogVerbose() << "Can't find idx associated to name :" << name;
     }
     return future;
   }

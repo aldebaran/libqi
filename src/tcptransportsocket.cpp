@@ -33,6 +33,8 @@
 
 #define MAX_LINE 16384
 
+qiLogCategory("qimessaging.transportsocket");
+
 namespace qi
 {
   TcpTransportSocket::TcpTransportSocket(EventLoop* eventLoop, bool ssl)
@@ -83,7 +85,7 @@ namespace qi
     delete _msg;
     delete _socket;
     _p = 0;
-    qiLogVerbose("qi.tcpsocket") << "deleted " << this;
+    qiLogVerbose() << "deleted " << this;
   }
 
   void TcpTransportSocket::startReading()
@@ -148,7 +150,7 @@ namespace qi
       error(erc);
       return;
     }
-      qiLogDebug("TransportSocket") << _self << " Recv (" << _msg->type() << "):" << _msg->address();
+      qiLogDebug() << _self << " Recv (" << _msg->type() << "):" << _msg->address();
     static int usWarnThreshold = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").empty()?0:strtol(os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD").c_str(),0,0);
     qi::int64_t start = 0;
     if (usWarnThreshold)
@@ -159,7 +161,7 @@ namespace qi
     {
       qi::int64_t duration = os::ustime() - start;
       if (duration > usWarnThreshold)
-        qiLogWarning("TransportSocket") << "Dispatch to user took " << duration << "us";
+        qiLogWarning() << "Dispatch to user took " << duration << "us";
     }
     delete _msg;
     startReading();
@@ -191,7 +193,7 @@ namespace qi
   {
     if (_status == qi::TransportSocket::Status_Connected || _connecting)
     {
-      qiLogError("qimessaging.TransportSocketLibevent") << "connection already in progress";
+      qiLogError() << "connection already in progress";
       return makeFutureError<bool>("Operation already in progress");
     }
     _url = url;
@@ -201,14 +203,14 @@ namespace qi
     _connecting = true;
     _err = 0;
     if (_url.port() == 0) {
-      qiLogError("qimessaging.TransportSocket") << "Error try to connect to a bad address: " << _url.str();
+      qiLogError() << "Error try to connect to a bad address: " << _url.str();
       _connectPromise.setError("Bad address " + _url.str());
       _status = qi::TransportSocket::Status_Disconnected;
       _connecting = false;
       _disconnectPromise.setValue(0);
       return _connectPromise.future();
     }
-    qiLogVerbose("qimessaging.transportsocket.connect") << "Trying to connect to " << _url.host() << ":" << _url.port();
+    qiLogVerbose() << "Trying to connect to " << _url.host() << ":" << _url.port();
     using namespace boost::asio;
     // Resolve url
     ip::tcp::resolver r(_socket->get_io_service());
@@ -225,7 +227,7 @@ namespace qi
     }
     catch (const std::exception& e)
     {
-      qiLogError("qimessaging.transportsocket.connect") << e.what();
+      qiLogError() << e.what();
       _connectPromise.setValue(false);
       return _connectPromise.future();
     }
@@ -235,7 +237,7 @@ namespace qi
   {
     if (erc)
     {
-      qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
+      qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
       _connectPromise.setValue(false);
       _disconnectPromise.setValue(0);

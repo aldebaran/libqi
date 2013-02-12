@@ -17,6 +17,8 @@
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>
 
+qiLogCategory("qimessaging.remoteobject");
+
 namespace qi {
 
 
@@ -99,7 +101,7 @@ namespace qi {
       boost::mutex::scoped_lock lock(_mutex);
       std::map<int, qi::Promise<GenericValuePtr> >::iterator it = _promises.begin();
       while (it != _promises.end()) {
-        qiLogVerbose("RemoteObject") << "Reporting error for request " << it->first << "(socket disconnected)";
+        qiLogVerbose() << "Reporting error for request " << it->first << "(socket disconnected)";
         it->second.setError("Socket disconnected");
         _promises.erase(it);
         it = _promises.begin();
@@ -127,9 +129,10 @@ namespace qi {
   //should be done in the object thread
   void RemoteObject::onMessagePending(const qi::Message &msg)
   {
-    qiLogDebug("RemoteObject") << this << "(" << _service << '/' << _object << " msg " << msg.address() << " " << msg.buffer().size();
+    qiLogDebug() << this << "(" << _service << '/' << _object << " msg " << msg.address() << " " << msg.buffer().size();
     if (msg.object() != _object)
     {
+      qiLogDebug() << "Passing message to host";
       ObjectHost::onMessage(msg, _socket);
       return;
     }
@@ -151,7 +154,7 @@ namespace qi {
       case qi::Message::Type_Reply:
       {
         if (!found) {
-          qiLogError("remoteobject") << "no promise found for req id:" << msg.id()
+          qiLogError() << "no promise found for req id:" << msg.id()
           << "  obj: " << msg.service() << "  func: " << msg.function();
           return;
         }
@@ -159,7 +162,7 @@ namespace qi {
         MetaMethod* mm =  metaObject().method(msg.function());
         if (!mm)
         {
-          qiLogError("remoteobject") << "Result for unknown function "
+          qiLogError() << "Result for unknown function "
            << msg.function();
            promise.setError("Result for unknown function");
            return;
@@ -172,6 +175,7 @@ namespace qi {
         }
         BinaryDecoder in(msg.buffer());
         promise.setValue(qi::details::deserialize(type, in, _socket));
+        qiLogDebug() << "Message passed to promise";
         return;
       }
       case qi::Message::Type_Error: {
@@ -180,13 +184,13 @@ namespace qi {
         std::string    sig;
         ds.read(sig);
         if (sig != "s") {
-          qiLogError("qi.RemoteObject") << "Invalid error signature: " << sig;
+          qiLogError() << "Invalid error signature: " << sig;
           //houston we have an error about the error..
           promise.setError("unknown error");
           return;
         }
         ds.read(err);
-        qiLogVerbose("remoteobject") << "Received error message"  << msg.address() << ":" << err;
+        qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
         promise.setError(err);
         return;
       }
@@ -199,24 +203,24 @@ namespace qi {
             // Remove top-level tuple
             sig = sig.substr(1, sig.length()-2);
             GenericFunctionParameters args = msg.parameters(sig, _socket);
-            qiLogDebug("remoteobject") << "Triggering local event listeners";
+            qiLogDebug() << "Triggering local event listeners";
             sb->trigger(args);
             args.destroy();
           }
           catch (const std::exception& e)
           {
-            qiLogWarning("remoteobject") << "Deserialize error on event: " << e.what();
+            qiLogWarning() << "Deserialize error on event: " << e.what();
           }
         }
         else
         {
-          qiLogWarning("remoteobject") << "Event message on unknown signal " << msg.event();
-          qiLogDebug("remoteobject") << metaObject().signalMap().size();
+          qiLogWarning() << "Event message on unknown signal " << msg.event();
+          qiLogDebug() << metaObject().signalMap().size();
         }
         return;
       }
       default:
-        qiLogError("remoteobject") << "Message " << msg.address() << " type not handled: " << msg.type();
+        qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
         return;
     }
   }
@@ -234,7 +238,7 @@ namespace qi {
     sig = sig.substr(1, sig.length()-2);
     if (sig != msg.signature())
     {
-      qiLogWarning("remoteobject") << "call signature mismatch '"
+      qiLogWarning() << "call signature mismatch '"
                                    << sig << "' (internal) vs '"
                                    << msg.signature() << "' (message) for:" << metaObject().method(method)->signature();
     }
@@ -243,12 +247,12 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(_object);
     msg.setFunction(method);
-    // qiLogDebug("remoteobject") << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
+    // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
     {
       boost::mutex::scoped_lock lock(_mutex);
       if (_promises.find(msg.id()) != _promises.end())
       {
-        qiLogError("remoteobject") << "There is already a pending promise with id "
+        qiLogError() << "There is already a pending promise with id "
                                    << msg.id();
       }
       _promises[msg.id()] = out;
@@ -267,9 +271,9 @@ namespace qi {
       }
       if (!_socket->isConnected()) {
         ss << " Socket is not connected.";
-        qiLogVerbose("remoteobject") << ss.str();
+        qiLogVerbose() << ss.str();
       } else {
-        qiLogError("remoteobject") << ss.str();
+        qiLogError() << ss.str();
       }
       out.setError(ss.str());
 
@@ -295,7 +299,7 @@ namespace qi {
     msg.setObject(_object);
     msg.setFunction(event);
     if (!_socket->send(msg)) {
-      qiLogError("remoteobject") << "error while emiting event";
+      qiLogError() << "error while emiting event";
     }
   }
 
@@ -314,7 +318,7 @@ namespace qi {
     // Bind the subscriber locally.
     unsigned int uid = DynamicObject::metaConnect(event, sub);
 
-    qiLogDebug("remoteobject") <<"connect() to " << event <<" gave " << uid;
+    qiLogDebug() <<"connect() to " << event <<" gave " << uid;
     qi::Future<unsigned int> fut = _self->call<unsigned int>("registerEvent", _service, event, uid);
     fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
     return prom.future();
@@ -329,7 +333,7 @@ namespace qi {
     {
       std::stringstream ss;
       ss << "Disconnection failure for " << linkId << ", error:" << fut.error();
-      qiLogWarning("qi.object") << ss.str();
+      qiLogWarning() << ss.str();
       return qi::makeFutureError<void>(ss.str());
     }
     if (_socket->isConnected())

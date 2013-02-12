@@ -28,6 +28,8 @@ namespace po = boost::program_options;
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 
+qiLogCategory("test");
+
 static int gLoopCount = 10000;
 static const int gThreadCount = 1;
 static bool clientDone = false;
@@ -65,7 +67,7 @@ int client_calls(qi::Session *session, qi::ObjectPtr obj)
 
       std::string result = obj->call<std::string>("reply", requeststr);
       if (result != requeststr)
-        qiLogInfo("perf_transport_thd") << "error content" << std::endl;
+        qiLogInfo() << "error content" << std::endl;
     }
     dp.stop();
   }
@@ -81,11 +83,11 @@ int main_client(bool shared)
   qi::ObjectPtr obj;
   boost::thread thd[nbThreads];
 
-  qiLogInfo("perf_transport_thd") << "Will spawn " << nbThreads << " threads";
+  qiLogInfo() << "Will spawn " << nbThreads << " threads";
 
   if (shared)
   {
-    qiLogInfo("perf_transport_thd") << "qi::GenericObject will be shared";
+    qiLogInfo() << "qi::GenericObject will be shared";
 
     obj = session.service("serviceTest");
 
@@ -97,7 +99,7 @@ int main_client(bool shared)
   }
   else
   {
-    qiLogInfo("perf_transport_thd") << "qi::GenericObject won't' be shared";
+    qiLogInfo() << "qi::GenericObject won't' be shared";
   }
 
   for (unsigned int i = 0; i < nbThreads; i++)

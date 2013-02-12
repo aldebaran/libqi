@@ -6,6 +6,8 @@
 #include "boundobject.hpp"
 #include "serverresult.hpp"
 
+qiLogCategory("qimessaging.boundobject");
+
 static const int gObjectOffset = 10;
 
 namespace qi {
@@ -83,7 +85,7 @@ namespace qi {
     {
       std::stringstream ss;
       ss << "Unregister request failed for " << remoteLinkId <<" " << objectId;
-      qiLogError("qi::Server") << ss.str();
+      qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
     _object->disconnect(it->second.localLinkId);
@@ -98,22 +100,22 @@ namespace qi {
 
   void ServiceBoundObject::terminate(unsigned int)
   {
-    qiLogDebug("qi.Object") << "terminate() received";
+    qiLogDebug() << "terminate() received";
     if (_owner)
       _owner->removeObject(_objectId);
     else
-      qiLogWarning("qi.Object") << "terminate() received on object without owner";
+      qiLogWarning() << "terminate() received on object without owner";
   }
 
   void ServiceBoundObject::onMessage(const qi::Message &msg, TransportSocketPtr socket) {
     if (msg.object() > _objectId)
     {
-      qiLogDebug("qi::Server") << "onChildMessage " << msg.address();
+      qiLogDebug() << "onChildMessage " << msg.address();
       ObjectHost::onMessage(msg, socket);
       return;
     }
 
-    qiLogDebug("qi::Server") << "onMessage " << msg.address();
+    qiLogDebug() << "onMessage " << msg.address();
     qi::ObjectPtr    obj;
     unsigned int     funcId;
     //choose between special function (on BoundObject) or normal calls
@@ -132,7 +134,7 @@ namespace qi {
       if (!mm) {
         std::stringstream ss;
         ss << "No such method " << msg.address();
-        qiLogError("qi::Server") << ss.str();
+        qiLogError() << ss.str();
         qi::Promise<GenericValuePtr> prom;
         prom.setError(ss.str());
         serverResultAdapter(prom.future(), this, socket, msg.address());
@@ -150,14 +152,14 @@ namespace qi {
         if (mm)
           sigparam = mm->signature();
         else {
-          qiLogError("qi::Server") << "No such signal/method on event message " << msg.address();
+          qiLogError() << "No such signal/method on event message " << msg.address();
           return;
         }
       }
     }
     else
     {
-      qiLogError("qi::Server") << "Unexpected message type " << msg.type();
+      qiLogError() << "Unexpected message type " << msg.type();
       return;
     }
 
@@ -193,7 +195,7 @@ namespace qi {
       }
       break;
     default:
-        qiLogError("qi.Server") << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
+        qiLogError() << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
     }
     //########################
     mfp.destroy();

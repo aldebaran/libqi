@@ -65,7 +65,7 @@ void QiTransportServerPrivate::acceptConnection()
     QTcpSocket* qsocket = _server.nextPendingConnection();
     if (qsocket == 0) // shouldn't happen
     {
-      qiLogError("QiGateway") << "no pending socket from backend!";
+      qiLogError() << "no pending socket from backend!";
       return;
     }
 
@@ -77,7 +77,7 @@ void QiTransportServerPrivate::acceptConnection()
   }
   else
   {
-    qiLogError("QiTransportServer") << "new incoming connection, but protocol `"
+    qiLogError() << "new incoming connection, but protocol `"
                                     << _listeningUrl.scheme().toUtf8().constData() << " is unknown";
     return;
   }
@@ -98,7 +98,7 @@ QiTransportServer::~QiTransportServer()
 
 bool QiTransportServer::listen(const QUrl &listenUrl)
 {
-  qiLogDebug("QiTransportSocket") << "Will listen on " << listenUrl.toString().toUtf8().constData();
+  qiLogDebug() << "Will listen on " << listenUrl.toString().toUtf8().constData();
 
   if (listenUrl.scheme() == "tcp" || listenUrl.scheme() == "tcps")
   {
@@ -120,7 +120,7 @@ bool QiTransportServer::listen(const QUrl &listenUrl)
     return _p->_server.listen(host, listeningUrl.port());
   }
 
-  qiLogError("QiTransportServer") << "Protocol `"
+  qiLogError() << "Protocol `"
                                   << listenUrl.scheme().toUtf8().constData()
                                   << "' is not supported, can't listen";
 

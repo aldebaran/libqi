@@ -3,6 +3,8 @@
 #include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 
+qiLogCategory("qilaunch");
+
 static std::vector<std::string> modules;
 static std::string listenTo;
 static std::string sd;
@@ -19,14 +21,14 @@ int main(int argc, char** argv)
 {
   qi::Application app(argc, argv);
   qi::Session s;
-  qiLogDebug("qi.launch") << "Connection to sd at " << sd;
+  qiLogDebug() << "Connection to sd at " << sd;
   s.connect(sd);
   if (listenTo.empty())
     listenTo = "tcp://localhost:0";
   s.listen(listenTo);
   for (unsigned i=0; i<modules.size(); ++i)
   {
-    qiLogDebug("qi.launch") << "loading " << modules[i];
+    qiLogDebug() << "loading " << modules[i];
     s.loadService(modules[i]);
   }
   app.run();

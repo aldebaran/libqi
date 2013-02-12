@@ -4,6 +4,8 @@
 */
 #include "messagedispatcher.hpp"
 
+qiLogCategory("qimessaging.messagedispatcher");
+
 namespace qi {
 
 #if 0
@@ -45,7 +47,7 @@ namespace qi {
       if (it != _messageSent.end())
         _messageSent.erase(it);
       else
-        qiLogDebug("messagedispatcher") << "Message " << msg.id() <<  " is not in the messageSent map";
+        qiLogDebug() << "Message " << msg.id() <<  " is not in the messageSent map";
     }
 
     {
@@ -65,7 +67,7 @@ namespace qi {
         it->second(msg);
       }
       if (!hit) // FIXME: that should probably never happen, raise log level
-        qiLogDebug("messagedispatcher") << "No listener for service " << msg.service();
+        qiLogDebug() << "No listener for service " << msg.service();
     }
   }
 
@@ -130,7 +132,7 @@ namespace qi {
       boost::mutex::scoped_lock l(_messageSentMutex);
       MessageSentMap::iterator it = _messageSent.find(msg.id());
       if (it != _messageSent.end()) {
-        qiLogInfo("messagedispatcher") << "Message ID conflict. A message with the same Id is already in flight" << msg.id();
+        qiLogInfo() << "Message ID conflict. A message with the same Id is already in flight" << msg.id();
         return;
       }
       _messageSent[msg.id()] = msg.address();

@@ -139,7 +139,7 @@ TEST_F(TestTask, ManyManyTasks)
     c.taskGenProxy = new TaskGeneratorProxy(taskGenClient);
     clients.push_back(c);
   }
-  qiLogInfo("test") << "Setup clients: " << (qi::os::ustime() - time) << std::endl;
+  qiLogInfo() << "Setup clients: " << (qi::os::ustime() - time) << std::endl;
   time = qi::os::ustime();
   unsigned counter = 0;
   for (unsigned i=0; i<NCLIENTS; ++i)
@@ -154,7 +154,7 @@ TEST_F(TestTask, ManyManyTasks)
     }
   }
   ASSERT_EQ(NCLIENTS*NTASKS, taskGenProxy->taskCount());
-  qiLogInfo("test") << "Setup tasks: " << (qi::os::ustime() - time) << std::endl;
+  qiLogInfo() << "Setup tasks: " << (qi::os::ustime() - time) << std::endl;
   time = qi::os::ustime();
   taskGenProxy->step(1);
   for (unsigned step=0; step<1000 && counter < TOTAL_CLIENTS; ++step)

@@ -39,7 +39,7 @@ std::string Task::setParam(const std::string& p)
 
 std::string Task::step(unsigned int arg)
 {
-  qiLogDebug("taskgen") << "Step " << this << ' ' << arg;
+  qiLogDebug() << "Step " << this << ' ' << arg;
   std::stringstream result;
   result << _name << ' ' << _param << ' ' << arg << ' ' << ++_step;
   std::string v = result.str();

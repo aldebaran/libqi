@@ -27,6 +27,8 @@
 #include <qi/buffer.hpp>
 #include "transportsocket_p.hpp"
 
+qiLogCategory("qimessaging.transportsocket");
+
 namespace qi
 {
 
@@ -90,7 +92,7 @@ namespace qi
     }
     else
     {
-      qiLogError("TransportSocket") << "Unrecognized protocol to create the TransportSocket: " << protocol;
+      qiLogError() << "Unrecognized protocol to create the TransportSocket: " << protocol;
       return ret;
     }
   }

@@ -21,6 +21,8 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test");
+
 TEST(TestMessage, COW)
 {
   qi::Message m1;
@@ -36,7 +38,7 @@ TEST(TestMessage, COW)
 
 int addOne(int v)
 {
-  qiLogDebug("test") << "addOne";
+  qiLogDebug() << "addOne";
   return v+1;
 }
 
@@ -527,23 +529,23 @@ TEST(TestEventLoop, MonitorEventLoop)
   ASSERT_TRUE(!loopStuck);
   proxy->call<void>("delay", 1000).wait();
   ASSERT_TRUE(loopStuck);
-  qiLogDebug("qi.test") << "Cancelling monitorEventLoop";
+  qiLogDebug() << "Cancelling monitorEventLoop";
   f.cancel(); // or eventloops will get stuck
-  qiLogDebug("qi.test") << "Cancelling monitorEventLoop done";
+  qiLogDebug() << "Cancelling monitorEventLoop done";
 }
 int service_call(qi::Session* s, const std::string& obj,
   const std::string& method, int arg)
 {
-  qiLogDebug("qi.test") << "TEST: servicecall";
+  qiLogDebug() << "TEST: servicecall";
   qi::ObjectPtr o = s->service(obj);
   return o->call<int>(method, arg);
 }
 
 void servicecall_addone(qi::Promise<int>& prom, qi::Session* s)
 {
-  qiLogDebug("qi.test") << "TEST: call servicecall";
+  qiLogDebug() << "TEST: call servicecall";
   qi::ObjectPtr obj2Proxy = s->service("caller");
-  qiLogDebug("qi.test") << "TEST: got service";
+  qiLogDebug() << "TEST: got service";
   qi::Future<int> v = obj2Proxy->call<int>("serviceCall", "adder", "addOne", 5);
   v.wait(500);
   if (!v.isReady())
@@ -589,7 +591,7 @@ TEST(TestCall, DeadLock)
 
   // From the object event loop of process 'server', call a method from
   // object in client, which will call back a method in server
-  qiLogDebug("qi.test") << "TEST: go async servicecall_addone";
+  qiLogDebug() << "TEST: go async servicecall_addone";
   qi::getDefaultObjectEventLoop()->async(
     boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
 
@@ -601,7 +603,7 @@ TEST(TestCall, DeadLock)
 
 void onEvent(int v, qi::Promise<int>& eventValue, qi::ObjectPtr* ptr)
 {
-  qiLogDebug("test") << "onEvent";
+  qiLogDebug() << "onEvent";
   eventValue.setValue(v);
   if (v == 0)
     delete ptr;
@@ -632,7 +634,7 @@ void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::ObjectPtr obj)
 void onMakeObjectCall(qi::ObjectPtr ptr, const std::string& fname, int arg,
   qi::Promise<int>& result)
 {
-  qiLogDebug("test") << "onMakeObjectCall";
+  qiLogDebug() << "onMakeObjectCall";
   qi::Future<int> fut = ptr->call<int>(fname, arg);
   // We must keep ptr alive until the call returns
   fut.connect(boost::bind(&bounceFuture, _1, result, ptr));
@@ -738,7 +740,7 @@ qi::ObjectPtr makeAdder(qi::ObjectWeakPtr& weak)
   ob.advertiseMethod("add", &addOne);
   ob.advertiseEvent<void(int)>("fire");
   qi::ObjectPtr res = ob.object();
-  qiLogDebug("qi.test") << "unregistered object is " << res.get();
+  qiLogDebug() << "unregistered object is " << res.get();
   weak = res;
   return res;
 }

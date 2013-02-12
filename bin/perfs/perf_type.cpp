@@ -275,7 +275,7 @@ int main(int argc, char **argv)
     void(*fun)() = tests[toRun[i]];
     if (!fun)
     { // Not fun, not fun at all
-      qiLogError("perf_type") << "No such test " << toRun[i];
+      qiLogError() << "No such test " << toRun[i];
     }
     else
       (*fun)();

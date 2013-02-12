@@ -18,6 +18,8 @@
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"
 
+qiLogCategory("qimessaging.session");
+
 namespace qi {
 
 
@@ -74,7 +76,7 @@ namespace qi {
   qi::FutureSync<bool> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
     if (isConnected()) {
-      qiLogInfo("qi.Session") << "Session is already connected";
+      qiLogInfo() << "Session is already connected";
       return qi::Future<bool>(false);
     }
     _socketsCache.init();
@@ -155,7 +157,7 @@ namespace qi {
   {
     if (endpoints().empty()) {
       qi::Url listeningAddress("tcp://0.0.0.0:0");
-      qiLogVerbose("Session listening on ") << listeningAddress.str() << "." << std::endl;
+      qiLogVerbose() << listeningAddress.str() << "." << std::endl;
       listen(listeningAddress);
     }
 

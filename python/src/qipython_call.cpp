@@ -17,6 +17,8 @@
 #include <qimessaging/c/qi_c.h>
 #include <qi/log.hpp>
 
+qiLogCategory("qimessaging.python");
+
 void*     qi_raise(const char *exception_class, const char *error_message);
 
 static PyObject* qi_generic_call_python(qi::ObjectPtr object, const std::string& strMethodName, PyObject* listParams)
@@ -55,6 +57,6 @@ PyObject* qi_generic_call(qi_object_t *object_c, char *method_name, PyObject *ar
 {
   qi::ObjectPtr obj = *(reinterpret_cast<qi::ObjectPtr*>(object_c));
 
-  qiLogVerbose("qipython_call") << "Calling " << method_name;
+  qiLogVerbose() << "Calling " << method_name;
   return qi_generic_call_python(obj, method_name, args);
 }

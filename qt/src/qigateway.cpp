@@ -76,14 +76,14 @@ void QiGatewayPrivate::processClientMessage(QiTransportSocket* socket,
   QMap<unsigned int, RemoteService>::iterator service = _services.find(msg->service());
   if (service == _services.end())
   {
-    qiLogError("QiGateway") << "The gateway doesn't know' service #"
+    qiLogError() << "The gateway doesn't know' service #"
                             << msg->id();
     return;
   }
 
   if (service->socket->state() == QiTransportSocket::SocketState_Unconnected)
   {
-    qiLogError("QiGateway") << "The socket to service #" << service->serviceId
+    qiLogError() << "The socket to service #" << service->serviceId
                             << " is not connected, will try to reconnect to "
                             << service->socket->peer().toString().toUtf8().constData();
     service->socket->connectToHost(service->socket->peer());
@@ -183,20 +183,20 @@ void QiGatewayPrivate::connectToService(unsigned int serviceId,
     {
       if (serviceId == qi::Message::Service_ServiceDirectory)
       {
-        qiLogInfo("QiGateway") << "The gateway is already attached to service #"
+        qiLogInfo() << "The gateway is already attached to service #"
                                << serviceId << " on "
                                << socket->peer().toString().toUtf8().constData();
       }
       return;
     }
 
-    qiLogWarning("QiGateway") << "The gateway was already attached to service #"
+    qiLogWarning() << "The gateway was already attached to service #"
                               << serviceId << " on "
                               << socket->peer().toString().toUtf8().constData();
     socket->close();
   }
 
-  qiLogInfo("QiGateway") << "The gateway is now attached to service #"
+  qiLogInfo() << "The gateway is now attached to service #"
                          << serviceId << " on "
                          << address.toString().toUtf8().constData();
 
@@ -247,7 +247,7 @@ void QiGatewayPrivate::attachToServiceDirectory(const QUrl &address)
 
 bool QiGatewayPrivate::listen(const QUrl &address)
 {
-  qiLogInfo("QiGateway") << "The gateway is listening on "
+  qiLogInfo() << "The gateway is listening on "
                          << address.toString().toUtf8().constData();
   return _server.listen(address);
 }

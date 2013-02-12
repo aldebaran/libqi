@@ -7,6 +7,8 @@
 #include "servicedirectory_p.hpp"
 #include "tcptransportsocket.hpp"
 
+qiLogCategory("qimessaging.servicedirectoryclient");
+
 namespace qi {
 
 
@@ -78,7 +80,7 @@ namespace qi {
   //that way we cant be connected without being fully ready.
   qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
     if (isConnected()) {
-      qiLogInfo("qi.Session") << "Session is already connected";
+      qiLogInfo() << "Session is already connected";
       return qi::Future<bool>(false);
     }
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
@@ -118,12 +120,12 @@ namespace qi {
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
-    qiLogVerbose("qi.ServiceDirectoryClient") << "ServiceDirectory: Service Removed #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectory: Service Removed #" << idx << ": " << name << std::endl;
     serviceRemoved(idx, name);
   }
 
   void ServiceDirectoryClient::onServiceAdded(unsigned int idx, const std::string &name) {
-    qiLogVerbose("qi.ServiceDirectoryClient") << "ServiceDirectory: Service Added #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectory: Service Added #" << idx << ": " << name << std::endl;
     serviceAdded(idx, name);
   }
 

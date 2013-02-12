@@ -21,6 +21,8 @@
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 
+qiLogCategory("test");
+
 static std::string reply(const std::string &msg)
 {
   return msg;
@@ -48,7 +50,7 @@ public:
 
     if (!obj)
     {
-      qiLogError("test.connection") << "can't get serviceTest" << std::endl;
+      qiLogError() << "can't get serviceTest" << std::endl;
       return false;
     }
 
@@ -111,13 +113,13 @@ TEST(QiMessagingConnexion, testBuffer)
   std::string challenge = "foo*******************************";
   qi::BinaryEncoder out(buf);
   out.write(challenge);
-  qiLogDebug("test") << "call BA";
+  qiLogDebug() << "call BA";
   qi::Buffer result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)1, buf, 2);
   std::string reply;
   qi::BinaryDecoder in(result);
   in.read(reply);
   ASSERT_EQ(challenge, reply);
-  qiLogDebug("test") << "call BA";
+  qiLogDebug() << "call BA";
   result = tc.obj->call<qi::Buffer>("replyBufBA", (unsigned int)2, buf, 1);
   {
     std::string reply;
@@ -125,7 +127,7 @@ TEST(QiMessagingConnexion, testBuffer)
     in.read(reply);
     ASSERT_EQ(challenge, reply);
   }
-  qiLogDebug("test") << "call A";
+  qiLogDebug() << "call A";
   result = tc.obj->call<qi::Buffer>("replyBufA", buf, 1);
   {
     std::string reply;

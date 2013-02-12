@@ -17,13 +17,15 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 
+qiLogCategory("qiservice");
+
 std::string reply(const std::string &msg) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg;
+  qiLogInfo() << "Message recv:" << msg;
   return msg + "bim";
 }
 
 std::string reply(const int &msg) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg;
+  qiLogInfo() << "Message recv:" << msg;
   std::stringstream ss;
 
   ss << msg << "bim";
@@ -31,7 +33,7 @@ std::string reply(const int &msg) {
 }
 
 std::string reply(const std::string &msg, const double &value) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value;
+  qiLogInfo() << "Message recv:" << msg << " * " << value;
   std::stringstream ss;
 
   ss << msg << value;
@@ -39,7 +41,7 @@ std::string reply(const std::string &msg, const double &value) {
 }
 
 std::string reply(const std::string &msg, const float &value) {
-  qiLogInfo("qimessaging.ServiceTest") << "Message recv:" << msg << " * " << value;
+  qiLogInfo() << "Message recv:" << msg << " * " << value;
   std::stringstream ss;
 
   ss << msg << value;
@@ -69,7 +71,7 @@ int main(int argc, char *argv[])
   std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
 
   if (ifsMap.empty())
-   qiLogInfo("qimessaging.ServiceTest", "hostIPAddrs failed");
+   qiLogInfo();
 
   if (ifsMap.empty() == false)
     for (std::map<std::string, std::vector<std::string> >::const_iterator adapter = ifsMap.begin();
@@ -80,7 +82,7 @@ int main(int argc, char *argv[])
            address != (*adapter).second.end();
            ++address)
       {
-        qiLogInfo("qimessaging.ServiceTest", "%s : %s", (*adapter).first.c_str(), (*address).c_str());
+        qiLogInfo("%s : %s", (*adapter).first.c_str(), (*address).c_str());
       }
     }
 
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
 
     if (vm.count("help"))
     {
-      qiLogInfo("qimessaging.ServiceTest") << desc;
+      qiLogInfo() << desc;
       return 0;
     }
 
@@ -124,11 +126,11 @@ int main(int argc, char *argv[])
 
       if (id)
       {
-        qiLogInfo("qimessaging.ServiceTest") << "Registered \"" << serviceName << "\" as service (#" << id << ") with the master";
+        qiLogInfo() << "Registered \"" << serviceName << "\" as service (#" << id << ") with the master";
       }
       else
       {
-        qiLogError("qimessaging.ServiceTest") << "Registration with master failed, aborting...";
+        qiLogError() << "Registration with master failed, aborting...";
         exit(1);
       }
       app.run();
@@ -138,12 +140,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-      qiLogInfo("qimessaging.ServiceTest") << desc;
+      qiLogInfo() << desc;
     }
   }
   catch (const boost::program_options::error&)
   {
-    qiLogInfo("qimessaging.ServiceTest") << desc;
+    qiLogInfo() << desc;
   }
 
   return 0;

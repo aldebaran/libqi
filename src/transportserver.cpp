@@ -30,6 +30,9 @@
 #include "transportserverasio_p.hpp"
 #include "tcptransportsocket.hpp"
 
+
+qiLogCategory("qimessaging.transportserver");
+
 namespace qi
 {
   TransportServer::TransportServer()
@@ -72,14 +75,14 @@ namespace qi
     struct ::stat status;
     if (qi::os::stat(key.c_str(), &status) != 0)
     {
-      qiLogError("TransportServer::setIdentity") << "stat:" << key << ": "
+      qiLogError() << "stat:" << key << ": "
                                                  << strerror(errno);
       return false;
     }
 
     if (qi::os::stat(crt.c_str(), &status) != 0)
     {
-      qiLogError("TransportServer::setIdentity") << "stat:" << crt << ": "
+      qiLogError() << "stat:" << crt << ": "
                                                  << strerror(errno);
       return false;
     }

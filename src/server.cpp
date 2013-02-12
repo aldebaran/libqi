@@ -14,6 +14,8 @@
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
 
+qiLogCategory("qimessaging.server");
+
 namespace qi {
 
   //Server
@@ -100,7 +102,7 @@ namespace qi {
 
   void Server::onMessageReady(const qi::Message &msg, TransportSocketPtr socket) {
     qi::BoundObjectPtr obj;
-    // qiLogDebug("Server") << "Server Recv (" << msg.type() << "):" << msg.address();
+    // qiLogDebug() << "Server Recv (" << msg.type() << "):" << msg.address();
 
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
@@ -118,7 +120,7 @@ namespace qi {
         ds.write(ss.str());
         retval.setBuffer(error);
         socket->send(retval);
-        qiLogError("qi::Server") << "Can't find service: " << msg.service();
+        qiLogError() << "Can't find service: " << msg.service();
         return;
       }
       obj            = it->second;
@@ -134,7 +136,7 @@ namespace qi {
       return;
     }
 
-    qiLogInfo("Server") << "Closing server...";
+    qiLogInfo() << "Closing server...";
     {
       boost::recursive_mutex::scoped_lock sl(_socketsMutex);
       std::set<TransportSocketPtr>::iterator it;
