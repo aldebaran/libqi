@@ -41,7 +41,7 @@ namespace qi {
   namespace detail {
     void cutCat(const char* category, char* res)
     {
-      int categorySize = strlen(category);
+      unsigned int categorySize = static_cast<unsigned int>(strlen(category));
       if (categorySize < CATSIZEMAX)
       {
         memset(res, ' ', CATSIZEMAX);
@@ -248,7 +248,7 @@ namespace qi {
       if (!src)
         src = "(null)";
 
-      int messSize = strlen(src);
+      int messSize = static_cast<int>(strlen(src));
       // check if the last char is a \n
       if (src[messSize - 1] == '\n')
       {

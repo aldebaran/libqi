@@ -158,7 +158,7 @@ namespace qi
     /* Not enough workers for all the tasks ? */
     if (*_workers == *_activeWorkers)
     {
-      unsigned int newThreads = _tasks.size();
+      unsigned int newThreads = static_cast<unsigned int>(_tasks.size());
 
       if ((*_workers + newThreads) > _maxWorkers)
         newThreads = _maxWorkers - *_workers;

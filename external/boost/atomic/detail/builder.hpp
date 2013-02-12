@@ -341,7 +341,7 @@ private:
 	{
 		intptr_t address=(intptr_t)this;
 		address&=(sizeof(larger_integral_type)-1);
-		return address;
+		return static_cast<unsigned int>(address);
 	}
 	
 	unsigned int get_shift(void) const volatile

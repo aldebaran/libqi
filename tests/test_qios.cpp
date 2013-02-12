@@ -273,7 +273,7 @@ bool freeportbind(unsigned short port, int &sock)
   struct sockaddr_in name;
   name.sin_family = AF_INET;
   name.sin_addr.s_addr = htonl(INADDR_ANY);
-  sock = ::socket(AF_INET, SOCK_STREAM, 0);
+  sock = static_cast<int>(::socket(AF_INET, SOCK_STREAM, 0));
   name.sin_port = htons(port);
 
   return (::bind(sock, (struct sockaddr *)&name, sizeof(name))) != 0;

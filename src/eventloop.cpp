@@ -193,7 +193,7 @@ namespace qi {
   static void delay_call(uint64_t usDelay, boost::function<void()> callback)
   {
     if (usDelay)
-      qi::os::msleep(usDelay/1000);
+      qi::os::msleep(static_cast<unsigned int>(usDelay/1000));
     try
     {
       callback();
@@ -212,7 +212,7 @@ namespace qi {
     qi::Promise<void> promise)
   {
     if (usDelay)
-      qi::os::msleep(usDelay/1000);
+      qi::os::msleep(static_cast<unsigned int>(usDelay/1000));
     try
     {
       callback();
@@ -392,7 +392,7 @@ namespace qi {
       try {
         ctx->mon.cancel();
       }
-      catch (const std::exception& e) {
+      catch (const std::exception& /*e*/) {
         //qiLogDebug("qi.EventLoop") << "MON " << e.what();
       }
       int64_t pingDelay = os::ustime() - ctx->startTime;
@@ -460,7 +460,7 @@ namespace qi {
       Application::atExit(boost::bind(&eventloop_stop, ctx));
       if (!isPool && _netEventLoop && _objEventLoop && _monitorInterval)
       {
-        int64_t d = _monitorInterval * 1e6;
+        int64_t d = static_cast<qi::int64_t>(_monitorInterval * 1e6);
         _netEventLoop->monitorEventLoop(_objEventLoop, d)
           .connect(boost::bind(&monitor_notify, "network"));
         _objEventLoop->monitorEventLoop(_netEventLoop, d)

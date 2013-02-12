@@ -292,7 +292,7 @@ namespace qi {
 
   void Application::setArguments(const std::vector<std::string>& args)
   {
-    globalArgc = args.size();
+    globalArgc = static_cast<int>(args.size());
     lazyGet(globalArguments) = args;
     globalArgv = new char*[args.size() + 1];
     for (unsigned i=0; i<args.size(); ++i)

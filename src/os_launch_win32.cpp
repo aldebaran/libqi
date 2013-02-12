@@ -31,7 +31,7 @@ namespace qi
 
     int spawnvp(char *const argv[])
     {
-      return _spawnvp(_P_NOWAIT, argv[0], (char* const*)argv);
+      return static_cast<int>(_spawnvp(_P_NOWAIT, argv[0], (char* const*)argv));
     }
 
     int spawnlp(const char* argv, ...)
@@ -49,7 +49,7 @@ namespace qi
       va_end(ap);
       cmd[i] = NULL;
 
-      return _spawnvp(_P_NOWAIT, cmd[0], (char* const*)cmd);
+      return static_cast<int>(_spawnvp(_P_NOWAIT, cmd[0], (char* const*)cmd));
     }
 
     int system(const char *command)

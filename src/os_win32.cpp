@@ -334,7 +334,7 @@ namespace qi {
       name.sin_family = AF_INET;
       name.sin_addr.s_addr = htonl(INADDR_ANY);
       name.sin_port = (u_short)htons(port);
-      int sock = ::socket(AF_INET, SOCK_STREAM, 0);
+      int sock = static_cast<int>(::socket(AF_INET, SOCK_STREAM, 0));
 
       // CK July 8 2010
       // Set port options which make sure that the port is not
@@ -365,7 +365,7 @@ namespace qi {
         {
           unavailable = ::closesocket(sock);
           // See: http://msdn.microsoft.com/en-us/library/ms737582(v=VS.85).aspx last comments
-          sock = INVALID_SOCKET; // do not make further use of sock.
+          sock = (int) INVALID_SOCKET; // do not make further use of sock.
           if (!unavailable)
             break;
         }
