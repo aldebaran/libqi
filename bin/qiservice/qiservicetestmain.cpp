@@ -112,6 +112,8 @@ int main(int argc, char *argv[])
       session.connect(masterAddress);
 
       session.listen("tcp://0.0.0.0:0");
+      session.setIdentity("tests/server.key", "tests/server.crt");
+      session.listen("tcps://0.0.0.0:0");
       unsigned int id = session.registerService(serviceName, obj);
 
 #if 0
