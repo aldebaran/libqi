@@ -59,6 +59,7 @@ namespace qi
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
   {
     qi::Url listenUrl = url;
+    _ssl = listenUrl.protocol() == "tcps";
     using namespace boost::asio;
     // resolve endpoint
     ip::tcp::resolver r(_acceptor.get_io_service());
@@ -115,7 +116,6 @@ namespace qi
       ifsMap["Loopback"].push_back("127.0.0.1");
   #endif
 
-      _ssl = listenUrl.protocol() == "tcps";
       protocol = _ssl ? "tcps://" : "tcp://";
 
       for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
