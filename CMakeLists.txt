@@ -42,6 +42,7 @@ endif()
 
 set(H
   qi/details/future.hxx
+  qi/details/log.hxx
   qi/api.hpp
   qi/application.hpp
   qi/atomic.hpp
