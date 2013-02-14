@@ -121,7 +121,7 @@ const char** qi_session_get_services(qi_session_t *session)
   try {
     services = s->services();
     length = services.size();
-  } catch (std::runtime_error& e) {
+  } catch (const std::runtime_error&) {
     return 0;
   }
 
