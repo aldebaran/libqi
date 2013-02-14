@@ -3,6 +3,12 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 include("qibuild/swig/python")
 
+
+file (GLOB SWIG_MODULE_qimessagingswig_EXTRA_DEPS
+  ../c/qimessaging/c/*.h
+  ./src/*.hpp
+)
+
 # Compile swig compatibility layer
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")
 qi_swig_wrap_python(qimessagingswig src/qimessagingswig.i SRC
