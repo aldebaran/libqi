@@ -75,6 +75,19 @@
  */
 
 /**
+ * \fn qi::Application::name()
+ * \brief Get application name.
+ * \return A string with the application name,
+ *         empty string if setName isn't call.
+ */
+
+/**
+ * \fn qi::Application::setName(const std::string &)
+ * \brief Set application name.
+ * \param name The application's name.
+ */
+
+/**
  * \fn qi::Application::loadModule(const std::string&, int)
  * \brief Load a module into the current process.
  * \param name The module path and name. If no extension is used, the

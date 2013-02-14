@@ -26,6 +26,8 @@ namespace qi {
     static const std::vector<std::string>& arguments();
     static int argc();
     static const char** argv();
+    static void setName(const std::string &name);
+    static std::string name();
     static void setArguments(int argc, char** argv);
     static void setArguments(const std::vector<std::string>& arguments);
 

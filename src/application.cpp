@@ -32,6 +32,7 @@ namespace qi {
   static char**      globalArgv = 0;
   static bool        globalInitialized = false;
 
+  static std::string globalName;
   static std::vector<std::string>* globalArguments;
   static std::string globalPrefix;
   static std::string globalProgram;
@@ -280,6 +281,16 @@ namespace qi {
     qiLogDebug("qi.Application") << "Executing " << fl.size() << " atStop handlers";
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
+  }
+
+  void Application::setName(const std::string &name)
+  {
+    globalName = name;
+  }
+
+  std::string Application::name()
+  {
+    return globalName;
   }
 
   void Application::setArguments(const std::vector<std::string>& args)
