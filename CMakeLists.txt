@@ -46,6 +46,7 @@ set(PUBLIC_HEADERS
                    qitype/details/typebuffer.hxx
                    qitype/details/typedispatcher.hxx
                    qitype/details/typeimpl.hxx
+                   qitype/details/typeint.hxx
                    qitype/details/typelist.hxx
                    qitype/details/typemap.hxx
                    qitype/details/typepointer.hxx
