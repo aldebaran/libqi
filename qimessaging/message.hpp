@@ -14,6 +14,11 @@
 #include <qitype/functiontype.hpp>
 #include <qi/types.hpp>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4251 ) //  needs to have dll-interface
+#endif
+
 namespace qi {
 
   class QIMESSAGING_API MessageAddress {
@@ -150,6 +155,10 @@ namespace qi {
   QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
   QIMESSAGING_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 
 #endif  // _QIMESSAGING_MESSAGE_HPP_
