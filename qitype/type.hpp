@@ -494,6 +494,7 @@ namespace qi{
 #include <qitype/details/type.hxx>
 #include <qitype/details/genericvaluespecialized.hxx>
 #include <qitype/details/genericvalue.hxx>
+#include <qitype/details/typeint.hxx>
 #include <qitype/details/typelist.hxx>
 #include <qitype/details/typemap.hxx>
 #include <qitype/details/typestring.hxx>

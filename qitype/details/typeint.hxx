@@ -91,4 +91,10 @@ public:
 };
 
 }
+
+#define QI_TYPE_ENUM_REGISTER(Enum)                                \
+  namespace qi {                                                   \
+    template<> class TypeImpl<Enum>: public TypeIntImpl<long> {};  \
+  }
+
 #endif
