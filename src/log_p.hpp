@@ -4,8 +4,8 @@
  * found in the COPYING file.
  */
 
-#ifndef   	LOG_P_HPP_
-# define   	LOG_P_HPP_
+#ifndef   LOG_P_HPP_
+# define  LOG_P_HPP_
 
 #include <string>
 #include <qi/os.hpp>

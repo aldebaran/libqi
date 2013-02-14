@@ -106,5 +106,5 @@ namespace qi
       }
       return res;
     }
-  };
-};
+  }
+}
