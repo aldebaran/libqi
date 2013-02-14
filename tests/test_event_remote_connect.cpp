@@ -67,8 +67,8 @@ protected:
 
     ASSERT_GT(p1.server()->registerService("coin1", oserver1).wait(1000), 0);
     ASSERT_GT(p2.server()->registerService("coin2", oserver2).wait(1000), 0);
-    EXPECT_EQ(nbLocalServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
-    EXPECT_EQ(nbLocalServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
+    EXPECT_EQ(nbLocalServices, p1.server()->services().value().size());
+    EXPECT_EQ(nbLocalServices, p2.server()->services().value().size());
 
     std::vector<qi::ServiceInfo> services = p1.client()->services();
     EXPECT_EQ(nbConnectedServices, services.size());
