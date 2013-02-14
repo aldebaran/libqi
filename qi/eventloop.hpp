@@ -7,6 +7,10 @@
 #ifndef _QIMESSAGING_EVENTLOOP_HPP_
 #define _QIMESSAGING_EVENTLOOP_HPP_
 
+#ifdef _MSC_VER
+#  pragma warning( disable: 4503 ) // decorated name length
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
