@@ -60,7 +60,7 @@ protected:
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
     ASSERT_GT(session.registerService("coin", oserver).wait(), 0);
-    EXPECT_EQ(1U, session.services().value().size());
+    EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
 
     ASSERT_TRUE(sclient.connect(sd.endpoints()[0]));
     std::vector<qi::ServiceInfo> services = sclient.services();

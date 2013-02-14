@@ -46,8 +46,8 @@ TEST(Test, Recurse)
   // Two objects with a fire event and a onFire method.
   ASSERT_GT(p1.server()->registerService("coin1", oserver1).wait(), 0);
   ASSERT_GT(p2.server()->registerService("coin2", oserver2).wait(), 0);
-  EXPECT_EQ(nbServices, p1.server()->services().value().size());
-  EXPECT_EQ(nbServices, p2.server()->services().value().size());
+  EXPECT_EQ(nbServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
+  EXPECT_EQ(nbServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
   oclient1 = p2.client()->service("coin1");
   oclient2 = p1.client()->service("coin2");
 #ifdef WIN32
