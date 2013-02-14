@@ -12,7 +12,6 @@
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
 # include <vector>
-# include <qimessaging/url.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
