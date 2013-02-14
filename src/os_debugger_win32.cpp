@@ -11,7 +11,7 @@ namespace qi {
   namespace os {
 
     int checkdbg() {
-	  return IsDebuggerPresent();
+      return IsDebuggerPresent();
       //TODO: this function is not implemented under windows
       return 0;
     }
