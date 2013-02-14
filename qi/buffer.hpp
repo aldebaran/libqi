@@ -7,11 +7,10 @@
 #ifndef _QI_BUFFER_HPP_
 #define _QI_BUFFER_HPP_
 
-# include <boost/shared_ptr.hpp>
-# include <qi/config.hpp>
-# include <vector>
+# include <qi/api.hpp>
 # include <qi/types.hpp>
-# include <qi/log.hpp>
+# include <boost/shared_ptr.hpp>
+# include <vector>
 # include <cstddef>
 
 #ifdef _MSC_VER

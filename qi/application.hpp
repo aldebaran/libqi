@@ -9,7 +9,6 @@
 
 #include <boost/function.hpp>
 #include <qi/api.hpp>
-#include <qi/macro.hpp>
 #include <vector>
 
 namespace qi {

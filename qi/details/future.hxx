@@ -12,7 +12,6 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/bind.hpp>
 #include <qi/api.hpp>
-#include <qi/future.hpp>
 
 namespace qi {
 

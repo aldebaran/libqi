@@ -7,7 +7,6 @@
 #ifndef   LOG_P_HPP_
 # define  LOG_P_HPP_
 
-#include <string>
 #include <qi/os.hpp>
 
 #define CATSIZEMAX 16

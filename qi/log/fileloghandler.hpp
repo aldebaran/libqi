@@ -9,7 +9,6 @@
 #define _LIBQI_QI_LOG_FILELOGHANDLER_HPP_
 
 # include <qi/log.hpp>
-# include <string>
 
 namespace qi {
   namespace log {

@@ -9,7 +9,6 @@
 #ifndef _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
 #define _LIBQI_QI_LOG_CONSOLELOGHANDLER_HPP_
 
-# include <cstdarg>
 # include <qi/log.hpp>
 
 namespace qi {

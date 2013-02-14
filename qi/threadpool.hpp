@@ -10,8 +10,7 @@
 # define _LIBQI_QI_THREADPOOL_HPP_
 
 # include <boost/function.hpp>
-
-# include <qi/qi.hpp>
+# include <qi/api.hpp>
 
 namespace qi
 {

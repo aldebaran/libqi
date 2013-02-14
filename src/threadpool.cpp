@@ -5,6 +5,7 @@
  */
 
 #include <qi/threadpool.hpp>
+#include <qi/os.hpp>
 #include "threadpool_p.hpp"
 
 #ifdef _MSC_VER

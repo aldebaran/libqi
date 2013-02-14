@@ -17,7 +17,6 @@
 # include <boost/thread/recursive_mutex.hpp>
 
 # include <qi/atomic.hpp>
-# include <qi/os.hpp>
 
 namespace qi
 {

@@ -13,7 +13,6 @@
 #ifndef _LIBQI_QI_LOG_HPP_
 #define _LIBQI_QI_LOG_HPP_
 
-# include <map>
 # include <string>
 # include <iostream>
 # include <sstream>
@@ -23,7 +22,6 @@
 #include <boost/format.hpp>
 #include <boost/function/function_fwd.hpp>
 
-#include <qi/config.hpp>
 #include <qi/os.hpp>
 
 

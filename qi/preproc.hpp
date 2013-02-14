@@ -7,7 +7,6 @@
 #ifndef QI_PREPROC_HH
 # define QI_PREPROC_HH
 
-# include <boost/preprocessor/tuple/elem.hpp>
 # include <boost/preprocessor/seq/for_each.hpp>
 # include <boost/preprocessor/seq/remove.hpp>
 # include <boost/preprocessor/seq/transform.hpp>

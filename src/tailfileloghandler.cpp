@@ -10,10 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 
-#include <sstream>
 #include <iomanip>
-#include <string>
-#include <qi/log.hpp>
 #include "log_p.hpp"
 #include <qi/os.hpp>
 #include <cstdio>

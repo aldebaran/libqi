@@ -12,7 +12,6 @@
 #ifndef _LIBQI_QI_ERROR_HPP_
 #define _LIBQI_QI_ERROR_HPP_
 
-# include <qi/macro.hpp>
 # include <qi/api.hpp>
 
 # include <stdexcept>
