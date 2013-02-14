@@ -234,9 +234,11 @@ namespace qi {
 #ifdef ANDROID
     std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
-      assert(0 && "qi::os::hostIPAddrs is not implemented for android, "
-                  "use the JAVA API instead");
+      qiLogWarning("libqi.hostIPAddrs") << "qi::os::hostIPAddrs is partially implemented on Android: Only return the loopback address.";
       std::map<std::string, std::vector<std::string> > res;
+      std::vector<std::string> addrs;
+      addrs.push_back("127.0.0.1");
+      res["lo"] = addrs;
       return res;
     }
 #else
