@@ -46,7 +46,8 @@ namespace qi {
     }
   }
 
-  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo) {
+  qi::Future<qi::TransportSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo,
+                                                                  const std::string protocol) {
     qi::UrlVector endpoints;
     qi::UrlVector::const_iterator urlIt;
 
@@ -64,7 +65,7 @@ namespace qi {
       if (!url.isValid())
         continue;
       if (url.host().substr(0, 4) == "127." || url.host() == "localhost") {
-        if (local) {
+        if (local && (protocol == "" || url.protocol() == protocol)) {
           endpoints.push_back(url);
           break;
         }
@@ -121,6 +122,11 @@ namespace qi {
       TransportSocketConnectionMap& tscm = _sockets[servInfo.machineId()];
       for (urlIt = endpoints.begin(); urlIt != endpoints.end(); ++urlIt) {
         qi::Url url = *urlIt;
+        if (protocol != "" && protocol != url.protocol())
+        {
+          continue;
+        }
+
         qi::TransportSocketPtr socket = makeTransportSocket(url.protocol());
         TransportSocketConnection& tsc = tscm[url.str()];
         qiLogVerbose() << "Attempting connection to " << url.str()

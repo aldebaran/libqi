@@ -49,13 +49,13 @@ namespace qi {
     void close();
 
     qi::Future<qi::ObjectPtr> service(const std::string &service,
-                                      Session::ServiceLocality locality);
+                                      const std::string &protocol);
 
     void removeService(const std::string &service);
 
   private:
     //FutureInterface
-    void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId);
+    void onServiceInfoResult(qi::Future<qi::ServiceInfo> value, long requestId, std::string protocol);
     void onRemoteObjectComplete(qi::Future<void> value, long requestId);
     void onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId);
 

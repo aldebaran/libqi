@@ -47,7 +47,7 @@ namespace qi {
     void init();
     void close();
 
-    qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo);
+    qi::Future<qi::TransportSocketPtr> socket(const ServiceInfo& servInfo, const std::string protocol);
 
   protected:
     //TransportSocket

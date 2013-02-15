@@ -137,9 +137,9 @@ namespace qi {
   }
 
   qi::Future< qi::ObjectPtr > Session::service(const std::string &service,
-                                               ServiceLocality locality)
+                                               const std::string &protocol)
   {
-    return _p->_serviceHandler.service(service, locality);
+    return _p->_serviceHandler.service(service, protocol);
   }
 
 

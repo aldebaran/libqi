@@ -43,7 +43,7 @@ namespace qi {
     qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
     qi::Future< qi::ObjectPtr > service(const std::string &service,
-                                        ServiceLocality locality = ServiceLocality_All);
+                                        const std::string &protocol = "");
 
     //Server
     qi::Future<void> listen(const qi::Url &address);

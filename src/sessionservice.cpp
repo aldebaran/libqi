@@ -168,7 +168,7 @@ namespace qi {
   }
 
   // We received a ServiceInfo, and want to establish a connection
-  void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId) {
+  void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId, std::string protocol) {
     qiLogDebug() << "Got serviceinfo message";
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
@@ -189,22 +189,43 @@ namespace qi {
       removeRequest(requestId);
       return;
     }
+
+    if (protocol != "")
+    {
+      std::vector<qi::Url>::const_iterator it = si.endpoints().begin();
+
+      for (;
+           it != si.endpoints().end() && it->protocol() != protocol;
+           it++)
+      {
+        continue;
+      }
+
+      if (it == si.endpoints().end())
+      {
+        std::stringstream ss;
+        ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
+        qiLogVerbose("session.service") << ss.str();
+        sr->promise.setError(ss.str());
+      }
+    }
+
     qiLogDebug() << "Requesting socket from cache";
-    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si);
+    qi::Future<qi::TransportSocketPtr> fut = _socketCache->socket(si, protocol);
     fut.connect(boost::bind<void>(&Session_Service::onTransportSocketResult, this, _1, requestId));
   }
 
   qi::Future<qi::ObjectPtr> Session_Service::service(const std::string &service,
-                                                     Session::ServiceLocality locality)
+                                                     const std::string &protocol)
   {
     qi::Future<qi::ObjectPtr> result;
-    if (locality != Session::ServiceLocality_Remote) {
+    if (protocol == "" || protocol == "local") {
       //qiLogError() << "service is not implemented for local service, it always return a remote service";
       //look for local object registered in the server
       qi::ObjectPtr go = _server->registeredServiceObject(service);
       if (go)
         return qi::Future<qi::ObjectPtr>(go);
-      if (locality == Session::ServiceLocality_Local) {
+      if (protocol == "local") {
         qi::Promise<qi::ObjectPtr> prom;
         prom.setError(std::string("No local object found for ") + service);
         return prom.future();
@@ -230,7 +251,7 @@ namespace qi {
     }
     result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
-    fut.connect(qi::Future<qi::ServiceInfo>::Slot(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId)).track(_self));
+    fut.connect(qi::Future<qi::ServiceInfo>::Slot(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId, protocol)).track(_self));
     return result;
   }
 }
