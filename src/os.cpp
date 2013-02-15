@@ -14,6 +14,13 @@
 #include <qi/error.hpp>
 #include <qi/path.hpp>
 
+#ifdef WITH_INTL
+# include <libintl.h>
+#else // compile if gettext is not installed
+# define gettext(string) string
+# define dgettext(string1, string2) string2
+#endif
+
 namespace qi {
   namespace os {
     /* Have the static variable we need inside the function so that we
@@ -144,5 +151,16 @@ namespace qi {
 
       return idString;
     }
+
+    char* gettext(const char* msgid)
+    {
+      return ::gettext(msgid);
+    }
+
+    char* dgettext(const char* domainename, const char* msgid)
+    {
+      return ::dgettext(domainename, msgid);
+    }
+
   }
 }

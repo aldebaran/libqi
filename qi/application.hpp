@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ * Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
@@ -29,6 +29,8 @@ namespace qi {
     static std::string name();
     static void setArguments(int argc, char** argv);
     static void setArguments(const std::vector<std::string>& arguments);
+    static void loadTranslationDict(const std::string &dictName);
+    static bool setTranslationLocale(const std::string &locale);
 
     static void* loadModule(const std::string& name, int flags=-1);
     static void unloadModule(void* handle);

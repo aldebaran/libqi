@@ -1,4 +1,4 @@
-## Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+## Copyright (c) 2012, 2013 Aldebaran Robotics. All rights reserved.
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 
@@ -150,6 +150,14 @@ endif()
 
 qi_create_lib(qi ${_libtype} ${H} ${C})
 
+qi_add_optional_package(INTL)
+
+if (WITH_INTL)
+  add_definitions("-DWITH_INTL")
+  qi_use_lib(qi INTL)
+else()
+  message(STATUS "Could not find libintl")
+endif()
 
 if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)

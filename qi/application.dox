@@ -163,6 +163,64 @@
  * except that it should return reasonably quickly.
  */
 
+
+/**
+ * \fn qi::Application::loadTranslationDict(const std::string &)
+ * \brief Add a new dictionary name where to find translation
+ * \param dictName Dictionary name.
+ * This function load different dictionary regardless the locale value
+ * ie: <application>/share/locale/<app_name>/<locale_value>/LC_MESSAGES/dictName.mo
+ *
+ * For exemple, with two dictionary call domain.mo and application.mo for
+ * a same locale value you must do:
+ *
+ * \verbatim
+ * {
+ *   qi::Application app(argc, argv);
+ *   app.setName("app_name")
+ *   app.loadTranslator("domain");
+ *   app.loadTranslator("application");
+ * }
+ * \endverbatim
+ *
+ * This allow to search:
+ *   <application>/share/locale/<app_name>/<locale_value>/LC_MESSAGES/domain.mo
+ *   <application>/share/locale/<app_name>/<locale_value>/LC_MESSAGES/application.mo
+ * The last call of loadTranslator will be the default value
+ */
+
+/**
+ * \fn qi::Application::setTranslationLocale(const std::string &)
+ * \brief Set the locale where to find translations dynamically.
+ * \param locale Name of the locale (ie: en_US, fr_FR, ...)
+ * \return True if the locale is set (ie: dictionary find related to the locale).
+ * \warning You must call :cpp:func:`qi::Application::loadTranslator(const std::string &)`
+ *
+ * This function will change the path where to find dictionaries
+ * By default, the highest priority environment variable is loaded
+ *   1. LANGUAGE
+ *   2. LC_ALL
+ *   3. LANG
+ * If any environment variable is set, it will load en_US.
+ * This means:
+ *   <application>/share/locale/<app_name>/en_US/LC_MESSAGES/<dictName>.mo
+ *
+ * If you want to load french ones (ie: fr_FR) you just need to:
+ *
+ * \verbatim
+ * {
+ *   qi::Application app(argc, argv);
+ *   app.setName("app_name")
+ *   app.loadTranslator("dictName");
+ *
+ *   app.setTranslator("fr_FR");
+ * }
+ * \endverbatim
+ *
+ * This will load:
+ *   <application>/share/locale/<app_name>/fr_FR/LC_MESSAGES/<dictName>.mo
+ */
+
 /**
  * \def QI_AT_ENTER(func)
  * \brief calls qi::Application::atEnter(func) at static initialization time.
