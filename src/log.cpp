@@ -119,7 +119,19 @@ namespace qi {
       default:
         break;
       }
-      logline << msg << std::endl;
+
+      size_t p = strlen(msg) - 1;
+
+      /* Emulate previous behavior that ensured a single newline was
+      * present at the end on message.
+      */
+      p -= (msg[p] == '\r')? 1:
+             (msg[p] == '\n')?
+               (p && msg[p-1] == '\r')? 2:1
+               :0;
+
+      logline.write(msg, p+1);
+      logline << std::endl;
 
       return logline.str();
     }

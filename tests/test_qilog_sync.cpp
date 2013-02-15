@@ -8,6 +8,7 @@
 #include <boost/bind.hpp>
 
 #include <qi/log.hpp>
+#include "../src/log_p.hpp"
 #include <cstring>
 
 TEST(log, logsync)
@@ -19,6 +20,23 @@ TEST(log, logsync)
      qiLogFatal("core.log.test1", "%d\n", i);
 }
 
+
+TEST(log, logline)
+{
+  ::qi::log::setContext(0);
+  qi::os::timeval tv;
+  std::stringstream snewline;
+  snewline << std::endl;
+  std::string newline = snewline.str();
+  using qi::detail::logline;
+  EXPECT_EQ(logline(tv, "", "foo", "", "", 0)     , "foo" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\r", "", "", 0)   , "foo" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\n", "", "", 0)   , "foo" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\r\n", "", "", 0) , "foo" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
+  EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
+}
 
 void copy(std::string& dest, const char* src)
 {

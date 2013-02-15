@@ -16,7 +16,8 @@ namespace qi
 {
   namespace detail
   {
-    std::string logline(const qi::os::timeval    date,
+    // export so we can test it
+    std::string QI_API logline(const qi::os::timeval    date,
                         const char              *category,
                         const char              *msg,
                         const char              *file,
