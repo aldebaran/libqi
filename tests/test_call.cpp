@@ -16,6 +16,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include <qimessaging/session.hpp>
+#include <qimessaging/message.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>

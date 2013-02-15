@@ -8,8 +8,6 @@
 #define _QIMESSAGING_GATEWAY_HPP_
 
 # include <qimessaging/url.hpp>
-# include <qimessaging/transportserver.hpp>
-# include <qimessaging/transportsocket.hpp>
 
 namespace qi
 {
