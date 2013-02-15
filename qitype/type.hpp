@@ -275,9 +275,14 @@ namespace qi{
     * \warning returned value might become invalid if this object is destroyed.
     */
     GenericValue     asDynamic() const;
+
     GenericValuePtr data;
     bool            allocated;
   };
+
+  /** @return the value encoded in JSON.
+   */
+  QITYPE_API std::string encodeJSON(const qi::GenericValue &val);
 
   QITYPE_API bool operator< (const qi::GenericValue& a, const qi::GenericValue& b);
 

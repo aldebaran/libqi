@@ -85,6 +85,7 @@ set(SOURCES ${PUBLIC_HEADERS}
             src/functiontype.cpp
             src/genericobjectbuilder.cpp
             src/genericvalue.cpp
+            src/jsonencoder.cpp
             src/metamethod.cpp
             src/metasignal.cpp
             src/metasignal_p.cpp

@@ -10,6 +10,7 @@
 
 namespace qi
 {
+
   std::pair<GenericValuePtr, bool> GenericValuePtr::convert(Type* targetType) const
   {
     // qiLogDebug("qi.type") << "convert " << type->infoString() << ' ' << targetType->infoString();
