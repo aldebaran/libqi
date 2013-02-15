@@ -395,7 +395,7 @@ namespace qi {
       catch (const std::exception& /*e*/) {
         //qiLogDebug("qi.EventLoop") << "MON " << e.what();
       }
-      int64_t pingDelay = os::ustime() - ctx->startTime;
+      uint64_t pingDelay = os::ustime() - ctx->startTime;
       if (pingDelay > ctx->maxDelay / 2)
         qiLogDebug("qi.EventLoop") << "Long ping " << pingDelay;
       // Wait a bit before pinging againg
