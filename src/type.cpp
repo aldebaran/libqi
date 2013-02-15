@@ -956,7 +956,7 @@ namespace
 {
   // trick to avoid wrapping in a function: setCategory returns void so can't
   // be used in expr.
-  static bool __unused = qi::os::getenv("QITYPE_DEBUG").empty()
+  static bool __unused_debug = qi::os::getenv("QITYPE_DEBUG").empty()
     && (::qi::log::setCategory("qitype.*", ::qi::log::info), false);
 }
 
