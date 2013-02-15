@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
            address != (*adapter).second.end();
            ++address)
       {
-        qiLogInfo("%s : %s", (*adapter).first.c_str(), (*address).c_str());
+        qiLogInfoF("%s : %s", (*adapter).first.c_str(), (*address).c_str());
       }
     }
 
