@@ -12,7 +12,9 @@
 # include <queue>
 # include <boost/thread/recursive_mutex.hpp>
 # include <boost/asio.hpp>
+# ifdef WITH_SSL
 # include <boost/asio/ssl.hpp>
+# endif
 # include <qi/atomic.hpp>
 # include <qimessaging/api.hpp>
 # include <qimessaging/message.hpp>
@@ -55,8 +57,12 @@ namespace qi
   private:
     bool _ssl;
     bool _sslHandshake;
+#ifdef WITH_SSL
     boost::asio::ssl::context _sslContext;
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* _socket;
+#else
+    boost::asio::ip::tcp::socket* _socket;
+#endif
 
     boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
     qi::Promise<bool>   _connectPromise;

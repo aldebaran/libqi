@@ -42,18 +42,24 @@ namespace qi
     , TransportSocket(this)
     , _ssl(ssl)
     , _sslHandshake(false)
+#ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
+#endif
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
     , _sending(false)
   {
+#ifdef WITH_SSL
     if (_ssl)
     {
       _sslContext.set_verify_mode(boost::asio::ssl::verify_none);
     }
 
     _socket = (new boost::asio::ssl::stream<boost::asio::ip::tcp::socket>((*(boost::asio::io_service*)eventLoop->nativeHandle()), _sslContext));
+#else
+    _socket = new boost::asio::ip::tcp::socket(*(boost::asio::io_service*)eventLoop->nativeHandle());
+#endif
 
     assert(eventLoop);
     _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
@@ -65,8 +71,12 @@ namespace qi
     , TransportSocket(this)
     , _ssl(ssl)
     , _sslHandshake(false)
+#ifdef WITH_SSL
     , _sslContext(boost::asio::ssl::context::sslv23)
     , _socket((boost::asio::ssl::stream<boost::asio::ip::tcp::socket>*) s)
+#else
+    , _socket((boost::asio::ip::tcp::socket*) s)
+#endif
     , _readHdr(true)
     , _msg(0)
     , _connecting(false)
@@ -91,6 +101,8 @@ namespace qi
   void TcpTransportSocket::startReading()
   {
     _msg = new qi::Message();
+
+#ifdef WITH_SSL
     if (_ssl)
     {
       if (!_sslHandshake)
@@ -110,6 +122,11 @@ namespace qi
         boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
         boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2));
     }
+#else
+    boost::asio::async_read(*_socket,
+      boost::asio::buffer(_msg->_p->getHeader(), sizeof(MessagePrivate::MessageHeader)),
+      boost::bind(&TcpTransportSocket::onReadHeader, this, _1, _2));
+#endif
   }
 
   void TcpTransportSocket::onReadHeader(const boost::system::error_code& erc,
@@ -125,6 +142,7 @@ namespace qi
     {
       void* ptr = _msg->_p->buffer.reserve(payload);
 
+#ifdef WITH_SSL
       if (_ssl)
       {
         boost::asio::async_read(*_socket,
@@ -137,6 +155,11 @@ namespace qi
           boost::asio::buffer(ptr, payload),
           boost::bind(&TcpTransportSocket::onReadData, this, _1, _2));
       }
+#else
+      boost::asio::async_read(*_socket,
+        boost::asio::buffer(ptr, payload),
+        boost::bind(&TcpTransportSocket::onReadData, this, _1, _2));
+#endif
     }
     else
       onReadData(boost::system::error_code(), 0);
@@ -268,8 +291,10 @@ namespace qi
     {
       if (_ssl)
       {
+#ifdef WITH_SSL
         _socket->async_handshake(boost::asio::ssl::stream_base::client,
           boost::bind(&TcpTransportSocket::handshake, this, _1));
+#endif
       }
       else
       {
@@ -335,6 +360,8 @@ namespace qi
     }
     b.push_back(buffer((const char*)buf.data() + pos, sz - pos));
     _dispatcher.sent(*msg);
+
+#ifdef WITH_SSL
     if (_ssl)
     {
       boost::asio::async_write(*_socket, b,
@@ -345,6 +372,10 @@ namespace qi
       boost::asio::async_write(_socket->next_layer(), b,
         boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort));
     }
+#else
+    boost::asio::async_write(*_socket, b,
+      boost::bind(&TcpTransportSocket::sendCont, this, _1, msg, _abort));
+#endif
   }
 
   void TcpTransportSocket::sendCont(const boost::system::error_code& erc,

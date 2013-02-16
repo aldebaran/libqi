@@ -8,7 +8,9 @@
 #define _SRC_TRANSPORTSERVERASIO_P_HPP_
 
 # include <boost/asio.hpp>
+# ifdef WITH_SSL
 # include <boost/asio/ssl.hpp>
+# endif
 
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
@@ -35,11 +37,17 @@ namespace qi
     boost::asio::ip::tcp::acceptor _acceptor;
   private:
     void onAccept(const boost::system::error_code& erc,
+#ifdef WITH_SSL
       boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s,
+#else
+      boost::asio::ip::tcp::socket* s,
+#endif
       boost::shared_ptr<bool> live);
     TransportServerAsioPrivate();
     boost::shared_ptr<bool> _live;
+#ifdef WITH_SSL
     boost::asio::ssl::context _sslContext;
+#endif
     bool _ssl;
   };
 }

@@ -55,10 +55,12 @@ namespace qi
     {
       impl = new TransportServerAsioPrivate(this, ctx);
     }
+#ifdef WITH_SSL
     else if (url.protocol() == "tcps")
     {
       impl = new TransportServerAsioPrivate(this, ctx);
     }
+#endif
     else
     {
       const char* s = "Unrecognized protocol to create the TransportServer.";

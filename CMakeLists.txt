@@ -39,6 +39,13 @@ if (UNIX)
  add_definitions(" -fno-strict-aliasing ")
 endif()
 
+if (WITH_SSL)
+ add_definitions(" -DWITH_SSL ")
+ set(_ssldeps "OPENSSL")
+else()
+ set(_ssldeps "")
+endif()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
@@ -130,7 +137,7 @@ qi_create_lib(qimessaging
   SUBMODULE
     qi-messaging qi-messaging-c
   DEPENDS
-    QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE OPENSSL
+    QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE ${_ssldeps}
 )
 
 if(WIN32)
@@ -162,3 +169,4 @@ message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
 message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
 message(STATUS "WITH_QT_QTCORE : ${WITH_QT_QTCORE}")
 message(STATUS "WITH_DOTNET    : ${WITH_DOTNET}")
+message(STATUS "WITH_SSL       : ${WITH_SSL}")

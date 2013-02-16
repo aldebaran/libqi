@@ -86,10 +86,12 @@ namespace qi
     {
       return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop, false));
     }
+#ifdef WITH_SSL
     else if (protocol == "tcps")
     {
       return TcpTransportSocketPtr(new TcpTransportSocket(eventLoop, true));
     }
+#endif
     else
     {
       qiLogError() << "Unrecognized protocol to create the TransportSocket: " << protocol;
