@@ -71,8 +71,9 @@ namespace qi {
     QI_API int kill(int pid, int sig);
 
     // trad
-    QI_API char* gettext(const char* msgid);
-    QI_API char* dgettext(const char* domainname, const char* msgid);
+    QI_API std::string gettext(const std::string &msgid);
+    QI_API std::string dgettext(const std::string &domainname,
+                                const std::string &msgid);
 
     QI_API unsigned short findAvailablePort(unsigned short port);
     QI_API std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr = false);

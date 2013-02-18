@@ -16,9 +16,6 @@
 
 #ifdef WITH_INTL
 # include <libintl.h>
-#else // compile if gettext is not installed
-# define gettext(string) string
-# define dgettext(string1, string2) string2
 #endif
 
 namespace qi {
@@ -152,14 +149,23 @@ namespace qi {
       return idString;
     }
 
-    char* gettext(const char* msgid)
+    std::string gettext(const std::string &msgid)
     {
-      return ::gettext(msgid);
+#ifdef WITH_INTL
+      return ::gettext(msgid.c_str());
+#else
+      return msgid;
+#endif
     }
 
-    char* dgettext(const char* domainename, const char* msgid)
+    std::string dgettext(const std::string &domainename,
+                         const std::string &msgid)
     {
-      return ::dgettext(domainename, msgid);
+#ifdef WITH_INTL
+      return ::dgettext(domainename.c_str(), msgid.c_str());
+#else
+      return msgid;
+#endif
     }
 
   }
