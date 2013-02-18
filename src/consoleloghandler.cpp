@@ -202,7 +202,7 @@ namespace qi {
       else
       {
         _private->header(verb);
-#ifndef WIN32
+#ifndef _WIN32
         _private->textColorAttr(_private->reset);
         _private->textColorFG(_private->gray);
 #endif

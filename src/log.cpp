@@ -32,7 +32,7 @@
 # include <android/log.h>
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <fnmatch.h>
 #else
 # include <Shlwapi.h>
@@ -203,7 +203,7 @@ namespace qi {
 
     inline bool globMatch(const std::string& pattern, const std::string& string)
     {
-#ifdef WIN32
+#ifdef _WIN32
       return ::PathMatchSpec(string.c_str(), pattern.c_str());
 #else
       return !fnmatch(pattern.c_str(), string.c_str(), 0);

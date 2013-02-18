@@ -4,7 +4,7 @@
  * found in the COPYING file.
  */
 
-#ifdef WIN32
+#ifdef _WIN32
 # include <winsock2.h>
 # include <process.h>  // for getpid
 #else
@@ -288,7 +288,7 @@ TEST(QiOs, free_port)
   if (success == -1)
     EXPECT_TRUE(false);
   else
-#ifndef WIN32
+#ifndef _WIN32
     ::close(sock);
 #else
     ::closesocket(sock);
@@ -313,7 +313,7 @@ TEST(QiOs, free_port_multiple_connection)
   if (success1 == -1)
     EXPECT_TRUE(false);
   else
-#ifndef WIN32
+#ifndef _WIN32
     ::close(sock1);
 #else
     ::closesocket(sock1);
@@ -321,7 +321,7 @@ TEST(QiOs, free_port_multiple_connection)
   if (success2 == -1)
     EXPECT_TRUE(false);
   else
-#ifndef WIN32
+#ifndef _WIN32
     ::close(sock2);
 #else
     ::closesocket(sock2);
@@ -329,7 +329,7 @@ TEST(QiOs, free_port_multiple_connection)
   if (success3 == -1)
     EXPECT_TRUE(false);
   else
-#ifndef WIN32
+#ifndef _WIN32
     ::close(sock3);
 #else
     ::closesocket(sock3);

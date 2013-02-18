@@ -36,7 +36,7 @@ namespace qi {
       void *handle = NULL;
       boost::filesystem::path fname(fullName, qi::unicodeFacet());
       qiLogDebug("qi.dlopen") << "opening " << fname;
-     #ifdef WIN32
+     #ifdef _WIN32
       handle = LoadLibraryW(fname.wstring(qi::unicodeFacet()).c_str());
      #else
       if (flag == -1)
@@ -49,7 +49,7 @@ namespace qi {
     int   dlclose(void *handle) {
       if (!handle)
         return 0;
-     #ifdef WIN32
+     #ifdef _WIN32
       return FreeLibrary((HINSTANCE) handle);
      #else
       return ::dlclose(handle);
@@ -70,7 +70,7 @@ namespace qi {
     }
 
     const char *dlerror(void) {
-     #ifdef WIN32
+     #ifdef _WIN32
       static char err[255];
       DWORD lastError = GetLastError();
       DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err, sizeof(err), 0);
