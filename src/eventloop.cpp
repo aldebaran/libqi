@@ -49,8 +49,6 @@ namespace qi {
       boost::thread(&EventLoopAsio::destroy, this);
     else
     {
-      stop();
-      join();
       delete this;
     }
   }
@@ -431,7 +429,6 @@ namespace qi {
   static void eventloop_stop(EventLoop* ctx)
   {
     ctx->stop();
-    ctx->join();
     delete ctx;
   }
 
