@@ -283,12 +283,21 @@ namespace qi {
           boost::mutex::scoped_lock lock(mutex);
           FormatMap::iterator i = map.find(s);
           if (i == map.end())
-            return map[s].parse(s);
+          {
+            boost::format& result = map[s]; // creates with default ctor
+            result.parse(s);
+            result.exceptions(boost::io::no_error_bits);
+            return result;
+          }
           else
             return i->second;
         }
         else
-          return boost::format(s);
+          {
+            boost::format result = boost::format(s);
+            result.exceptions(boost::io::no_error_bits);
+            return result;
+          }
       }
     }
 

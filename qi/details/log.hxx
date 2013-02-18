@@ -120,7 +120,7 @@ namespace boost
 #define _QI_SECOND(a, ...) __VA_ARGS__
 
 /* For fast category access, we use lookup to a fixed name symbol.
- * The user is required a QI_LOG_CATEGORY somewhere i<"n scope.
+ * The user is required to call qiLogCategory somewhere in scope.
  */
 
 #  define _QI_LOG_CATEGORY_GET() _qi_log_category

@@ -69,6 +69,12 @@ TEST(log, formatting)
   EXPECT_EQ("coin 42 42 42", lastMessage);
   qiLogError("qi.test", "coin %s", 42);
   EXPECT_EQ("coin 42", lastMessage);
+
+  // Test with invalid formats
+  qiLogErrorF("coin %s", 42, 51);
+  EXPECT_EQ("coin 42", lastMessage);
+  qiLogErrorF("coin %s%s", 42);
+  EXPECT_EQ("coin 42", lastMessage);
   qi::log::removeLogHandler("copy");
 }
 
