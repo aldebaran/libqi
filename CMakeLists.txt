@@ -32,7 +32,16 @@ qi_add_optional_package(QISSH)
 add_definitions(" -DBOOST_FILESYSTEM_VERSION=3 ")
 
 if (WIN32)
-  add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN")
+  # _SCL_SECURE_NO_WARNINGS, _CRT_SECURE_NO_WARNINGS
+  # prevents MS from being too pedantic, and allows more unix style code
+  #
+  # WIN32_LEAN_AND_MEAN
+  # prevents windows.h from including winsock.h and removes extras
+  #
+  # /wd4503
+  # Avoids 'decorated name length' warnings that come from boost variant's
+  # heavy use of templates
+  add_definitions(" -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DWIN32_LEAN_AND_MEAN /wd4503")
 endif()
 
 if (UNIX)
