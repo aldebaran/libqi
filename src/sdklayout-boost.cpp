@@ -93,7 +93,7 @@ namespace qi {
   #ifndef _WIN32
           prefix = fsconcat(qi::os::home(), prefix2);
   #else
-          prefix = qi::os::getenv("AppData", prefix2);
+          prefix = fsconcat(qi::os::getenv("AppData"), prefix2);
   #endif
         }
       }
