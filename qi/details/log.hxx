@@ -8,8 +8,6 @@
 #ifndef _LIBQI_QI_LOG_HXX_
 #define _LIBQI_QI_LOG_HXX_
 
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
 
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define _qiLogDebug(...)        if (false) qi::log::detail::NullStream().self()
@@ -71,51 +69,15 @@
 // };
 
 
-/* PREPROCESSING HELL
- * Empty vaargs is seen as one empty argument. There is no portable way
- * to detect it. So to avoid <<  format("foo") %() >> we use an other operator
- * that bounces to %, and wrap the argument through a nothing detector that
- * returns an instance of Nothing class.
- * Hopefuly that should have no impact on generated code.
- */
-namespace qi {
-  namespace log {
-    namespace detail
-    {
-      template<typename T> struct logical_not
-      : boost::integral_constant<bool, !T::value> {};
-      struct Nothing {};
-      inline Nothing isNothing() { return Nothing();}
-
-      /* If we only provide the const T& version of isNothing, we force
-      * acquiring a reference, which might cause troubles (for example with a
-      * static const declared in a class with value, but not defined).
-      * We cannot let the two overloads live together as they create an ambiguous
-      * overload.
-      */
-      template<typename T> inline typename boost::enable_if<logical_not<boost::is_fundamental<T> >, const T&>::type
-      isNothing(const T& v) { return v;}
-
-      template<typename T> inline typename boost::enable_if<boost::is_fundamental<T>, T>::type
-      isNothing(T v) { return v;}
-    }
-  }
-}
-namespace boost
-{
-  // We *must* take first argument as const ref.
-  template<typename T> boost::format& operator /(const boost::format& a, const T& elem)
-  {
-    const_cast<boost::format&>(a) % elem;
-    return const_cast<boost::format&>(a);
-  }
-  inline boost::format& operator / (const boost::format& a, ::qi::log::detail::Nothing) {return const_cast<boost::format&>(a);}
-
-};
-#  define _QI_FORMAT_ELEM(_, a, elem) / ::qi::log::detail::isNothing(elem)
+#  define _QI_FORMAT_ELEM(_, a, elem) % (elem)
 
 #  define _QI_LOG_FORMAT(Msg, ...)                   \
-  boost::str(::qi::log::detail::getFormat(Msg)  QI_VAARGS_APPLY(_QI_FORMAT_ELEM, _, __VA_ARGS__))
+  QI_CAT(_QI_LOG_FORMAT_HASARG_, _QI_LOG_ISEMPTY(__VA_ARGS__))(Msg, __VA_ARGS__)
+
+#define _QI_LOG_FORMAT_HASARG_0(Msg, ...) \
+  boost::str(::qi::log::detail::getFormat(Msg)  QI_VAARGS_APPLY(_QI_FORMAT_ELEM, _, __VA_ARGS__ /**/))
+
+#define _QI_LOG_FORMAT_HASARG_1(Msg, ...) Msg
 
 #define _QI_SECOND(a, ...) __VA_ARGS__
 
@@ -151,6 +113,7 @@ namespace boost
 
 /* Tricky, we do not want to hit category_get if a category is specified
 * Usual glitch of off-by-one list size: put argument 'TypeCased' in the vaargs
+* Basically we want variadic macro, but it does not exist, so emulate it using _QI_LOG_EMPTY.
 */
 #  define _QI_LOG_MESSAGE_STREAM(Type, TypeCased, ...)                 \
   QI_CAT(_QI_LOG_MESSAGE_STREAM_HASCAT_, _QI_LOG_ISEMPTY( __VA_ARGS__))(Type, TypeCased, __VA_ARGS__)
@@ -160,21 +123,26 @@ namespace boost
   ::qi::log::detail::isVisible(_QI_LOG_CATEGORY_GET(), ::qi::log::Type) \
   && BOOST_PP_CAT(_qiLog, TypeCased)(_QI_LOG_CATEGORY_GET())
 
+// Visual bouncer for macro evalution order glitch.
 #ifdef _WIN32
-// extra argument: at least a category, maybe a format and arguments
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_0(...) QI_DELAY(_QI_LOG_MESSAGE_STREAM_HASCAT_0) ## _BOUNCE(__VA_ARGS__)
 #else
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_0(...) _QI_LOG_MESSAGE_STREAM_HASCAT_0_BOUNCE(__VA_ARGS__)
 #endif
 
+// At leas one argument: category. Check for a format argument
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_0_BOUNCE(Type, TypeCased, cat, ...) \
  QI_CAT(_QI_LOG_MESSAGE_STREAM_HASCAT_HASFORMAT_, _QI_LOG_ISEMPTY( __VA_ARGS__))(Type, TypeCased, cat, __VA_ARGS__)
 
 
-#define _QI_LOG_MESSAGE_STREAM_HASCAT_HASFORMAT_0(Type, TypeCased, cat, format, ...) \
-  BOOST_PP_CAT(_qiLog, TypeCased)(cat, _QI_LOG_FORMAT(format, __VA_ARGS__))
+// No format argument
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_HASFORMAT_1(Type, TypeCased, cat, ...) \
   BOOST_PP_CAT(_qiLog,TypeCased)(cat)
+
+// Format argument
+#define _QI_LOG_MESSAGE_STREAM_HASCAT_HASFORMAT_0(Type, TypeCased, cat, ...) \
+   BOOST_PP_CAT(_qiLog, TypeCased)(cat, _QI_LOG_FORMAT(__VA_ARGS__))
+
 
 /* Detecting empty arg is tricky.
  * Trick 1 below does not work with gcc, because  x ## "foo" produces a preprocessor error.
@@ -184,6 +152,7 @@ namespace boost
 
 #define _WQI_IS_EMPTY_HELPER___ a,b
 #define WQI_IS_EMPTY(a,...) QI_CAT_20(QI_LIST_VASIZE,((QI_CAT_22(_WQI_IS_EMPTY_HELPER, QI_CAT_24(QI_CAT_26(_, a), _)))))
+
 #define _QI_FIRST_ARG(a, ...) a
 #define _QI_LOG_ISEMPTY(...) WQI_IS_EMPTY(QI_CAT_18(_, _QI_FIRST_ARG(__VA_ARGS__, 12)))
 
