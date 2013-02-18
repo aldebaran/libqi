@@ -93,6 +93,7 @@ set(C
   src/threadpool_p.hpp
   src/eventloop.cpp
   src/eventloop_p.hpp
+  src/sdklayout-boost.cpp
   )
 
 if (WIN32)
@@ -111,12 +112,6 @@ else()
   else()
     list(APPEND C src/os_launch_posix.cpp)
   endif()
-endif()
-
-if (WITH_QT_QTCORE)
-  list(APPEND C src/sdklayout-qt.cpp)
-else()
-  list(APPEND C src/sdklayout-boost.cpp)
 endif()
 
 #normalize BUILD_SHARED_LIBS, default ON
