@@ -114,6 +114,11 @@ namespace qi
       return getInstance()->libPaths();
     }
 
+    void setWritablePath(const std::string &path)
+    {
+      getInstance()->setWritablePath(path);
+    }
+
     std::string userWritableDataPath(const std::string &applicationName,
                                      const std::string &filename)
     {

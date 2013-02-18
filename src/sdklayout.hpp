@@ -104,6 +104,8 @@ namespace qi
     std::vector<std::string> libPaths() const;
 
 
+    /** @copydoc qi::path::setWritablePath */
+    void setWritablePath(const std::string &path);
 
     /** @copydoc qi::path::getUserWritableDataPath */
     std::string userWritableDataPath(const std::string &applicationName,

@@ -27,6 +27,7 @@ namespace qi {
   public:
     std::vector<std::string> _sdkPrefixes;
     std::string _mode;
+    std::string _writablePath;
 
     PrivateSDKLayout()
       : _sdkPrefixes(),
@@ -59,6 +60,63 @@ namespace qi {
       if (_mode == "error" || _sdkPrefixes.empty()) {
         qiLogDebug("qi::path") << "please call qi::init first before using qi::path";
       }
+    }
+
+    std::string writablePath(const std::string &applicationName,
+                             const std::string &filename,
+                             const std::string &type)
+    {
+      std::string prefix;
+      if (!_writablePath.empty())
+      {
+        prefix = fsconcat(_writablePath, type);
+      }
+      else
+      {
+        prefix = qi::os::getenv("QI_WRITABLE_PATH");
+        if (!prefix.empty())
+        {
+          prefix = fsconcat(prefix, type);
+        }
+        else
+        {
+          std::string prefix2; // for backward compatibility
+          if (type == "data")
+          {
+            prefix2 = fsconcat(".local", "share");
+          }
+          else if (type == "config")
+          {
+            prefix2 = ".config";
+          }
+
+  #ifndef _WIN32
+          prefix = fsconcat(qi::os::home(), prefix2);
+  #else
+          prefix = qi::os::getenv("AppData", prefix2);
+  #endif
+        }
+      }
+
+      boost::filesystem::path path;
+      path = boost::filesystem::path(fsconcat(prefix, applicationName, filename),
+                                     qi::unicodeFacet());
+
+      boost::filesystem::path dest = path;
+      if (!filename.empty())
+        dest = path.parent_path();
+
+      if (!boost::filesystem::exists(dest)) {
+        try {
+          boost::filesystem::create_directories(dest);
+        }
+        catch (const boost::filesystem::filesystem_error &e)
+        {
+          qiLogDebug("qi::path") << e.what();
+          return std::string();
+        }
+      }
+      return path.string(qi::unicodeFacet());
     }
   };
 
@@ -393,64 +451,21 @@ namespace qi {
     return libPaths;
   }
 
+  void SDKLayout::setWritablePath(const std::string &path)
+  {
+    boost::filesystem::path p(path, qi::unicodeFacet());
+    _private->_writablePath = p.string(qi::unicodeFacet());
+  }
 
   std::string SDKLayout::userWritableDataPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    boost::filesystem::path path;
-#ifndef _WIN32
-    path = boost::filesystem::path(fsconcat(::qi::os::home(), ".local", "share", applicationName, filename),
-                                   qi::unicodeFacet());
-#else
-    path = boost::filesystem::path(fsconcat(qi::os::getenv("AppData"), applicationName, filename),
-                                   qi::unicodeFacet());
-#endif
-
-    boost::filesystem::path dest = path;
-    if (!filename.empty())
-      dest = path.parent_path();
-
-    if (!boost::filesystem::exists(dest)) {
-      try {
-        boost::filesystem::create_directories(dest);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        qiLogDebug("qi::path") << e.what();
-        return std::string();
-      }
-    }
-    return path.string(qi::unicodeFacet());
+    return _private->writablePath(applicationName, filename, "data");
   }
-
 
   std::string SDKLayout::userWritableConfPath(const std::string &applicationName,
                                               const std::string &filename) const
   {
-    boost::filesystem::path path;
-
-#ifndef _WIN32
-    path = boost::filesystem::path(fsconcat(::qi::os::home(), ".config", applicationName, filename),
-                                   qi::unicodeFacet());
-#else
-    path = boost::filesystem::path(fsconcat(qi::os::getenv("AppData"), applicationName, filename),
-                                   qi::unicodeFacet());
-#endif
-
-    boost::filesystem::path dest = path;
-    if (!filename.empty())
-      dest = path.parent_path();
-
-    if (!boost::filesystem::exists(dest)) {
-      try {
-        boost::filesystem::create_directories(dest);
-      }
-      catch (const boost::filesystem::filesystem_error &e)
-      {
-        qiLogDebug("qi::path") << e.what();
-        return std::string();
-      }
-    }
-    return path.string(qi::unicodeFacet());
+    return _private->writablePath(applicationName, filename, "config");
   }
 }

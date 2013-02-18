@@ -323,6 +323,32 @@ TEST(qiPath, dataPaths)
   delete sdkl;
 }
 
+TEST(qiPath, customWritablePath)
+{
+  const char* args = { "build/sdk/bin/foo" };
+  qi::SDKLayout* sdkl = new qi::SDKLayout(args);
+
+  std::string p, r, e;
+
+  p = "/tmp/chiche/";
+  qi::os::setenv("QI_WRITABLE_PATH", p.c_str());
+  r = sdkl->userWritableConfPath("foo", "foo");
+  e = fsconcat(p, "config", "foo", "foo");
+  ASSERT_EQ(r, e);
+  r = sdkl->userWritableDataPath("foo", "foo");
+  e = fsconcat(p, "data", "foo", "foo");
+  ASSERT_EQ(r, e);
+  qi::os::setenv("QI_WRITABLE_PATH", "");
+
+  p = "/tmp/42/";
+  sdkl->setWritablePath(p);
+  r = sdkl->userWritableConfPath("foo", "foo");
+  e = fsconcat(p, "config", "foo", "foo");
+  ASSERT_EQ(r, e);
+  r = sdkl->userWritableDataPath("foo", "foo");
+  e = fsconcat(p, "data", "foo", "foo");
+  ASSERT_EQ(r, e);
+}
 
 TEST(qiPath, readingWritingfindConfigs)
 {

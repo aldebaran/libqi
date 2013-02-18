@@ -83,6 +83,9 @@ namespace qi
     QI_API std::vector<std::string> libPaths();
 
 
+    /// Set the writable files path for users.
+    QI_API void setWritablePath(const std::string &path);
+
     /// Get the writable data files path for users.
     QI_API std::string userWritableDataPath(const std::string& applicationName,
                                             const std::string& filename);
