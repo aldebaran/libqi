@@ -9,6 +9,8 @@
 #define _LIBQI_QI_LOG_HXX_
 
 #include <boost/type_traits.hpp>
+#include <boost/utility/enable_if.hpp>
+
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define _qiLogDebug(...)        if (false) qi::log::detail::NullStream().self()
 #elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
