@@ -141,7 +141,7 @@ namespace qi
           ss << (*addressIt);
           ss << ":";
           ss << port;
-          qiLogVerbose() << "Adding endpoint : " << ss.str();
+          qiLogInfo() << "TransportServer will listen on: " << ss.str();
           _endpoints.push_back(ss.str());
          }
       }

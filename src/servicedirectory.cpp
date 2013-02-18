@@ -277,6 +277,7 @@ namespace qi
 
   qi::Future<void> ServiceDirectory::listen(const qi::Url &address)
   {
+    qiLogInfo() << "ServiceDirectory listener created on " << address.str();
     qi::Future<void> f = _p->_server.listen(address);
 
     ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_p->_sdbo.get());
@@ -290,7 +291,6 @@ namespace qi
     sdbo->serviceReady(1);
     //serviceDirectory must have id '1'
     assert(regid == 1);
-    qiLogInfo() << "ServiceDirectory listening on: " << address.str();
     return f;
   }
 

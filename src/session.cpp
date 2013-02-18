@@ -145,6 +145,7 @@ namespace qi {
 
   qi::Future<void> Session::listen(const qi::Url &address)
   {
+    qiLogInfo() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
   }
 
