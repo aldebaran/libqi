@@ -1,0 +1,31 @@
+# French translations for PACKAGE package
+# Traductions françaises du paquet PACKAGE.
+# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-02-18 14:10+0100\n"
+"PO-Revision-Date: 2013-02-11 19:01+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: main.cpp:23 main.cpp:28
+msgid "Brian is in the kitchen."
+msgstr "Brian est dans la cuisine"
+
+#: main.cpp:21 main.cpp:26
+msgid "Hi, my name is NAO."
+msgstr "Bonjour, mon nom est NAO"
+
+#: main.cpp:22 main.cpp:27
+msgid "Where is Brian?"
+msgstr "Où est Brian ?"

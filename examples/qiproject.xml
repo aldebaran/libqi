@@ -1,0 +1,3 @@
+<project name="qi-examples" >
+  <project src="qitranslate" />
+</project>

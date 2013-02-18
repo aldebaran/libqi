@@ -6,4 +6,5 @@
   <sphinxdoc name="libqi-api" src="doc">
     <depends name="libqi" />
   </sphinxdoc>
+  <project src="examples" />
 </project>
