@@ -8,6 +8,7 @@
 #ifndef _LIBQI_QI_LOG_HXX_
 #define _LIBQI_QI_LOG_HXX_
 
+#include <boost/type_traits.hpp>
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define _qiLogDebug(...)        if (false) qi::log::detail::NullStream().self()
 #elif defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
@@ -79,9 +80,22 @@ namespace qi {
   namespace log {
     namespace detail
     {
+      template<typename T> struct logical_not
+      : boost::integral_constant<bool, !T::value> {};
       struct Nothing {};
       inline Nothing isNothing() { return Nothing();}
-      template<typename T> inline const T& isNothing(const T& v) { return v;}
+
+      /* If we only provide the const T& version of isNothing, we force
+      * acquiring a reference, which might cause troubles (for example with a
+      * static const declared in a class with value, but not defined).
+      * We cannot let the two overloads live together as they create an ambiguous
+      * overload.
+      */
+      template<typename T> inline typename boost::enable_if<logical_not<boost::is_fundamental<T> >, const T&>::type
+      isNothing(const T& v) { return v;}
+
+      template<typename T> inline typename boost::enable_if<boost::is_fundamental<T>, T>::type
+      isNothing(T v) { return v;}
     }
   }
 }
