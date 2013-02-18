@@ -7,89 +7,62 @@
 
 #include <iostream>
 #include <vector>
-#include <map>
-
-#include <qi/os.hpp>
+#include <cstring>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 
 #include <qimessaging/servicedirectory.hpp>
 
-#include <boost/program_options.hpp>
-
 qiLogCategory("qimaster");
-
-namespace po = boost::program_options;
-
 
 int main(int argc, char *argv[])
 {
   qi::Application app(argc, argv);
 
-  // declare the program options
-  po::options_description desc("Usage:\n  qi-master masterAddress [options]\nOptions");
-  desc.add_options()
-      ("help", "Print this help.")
-      ("master-address",
-       po::value<std::string>()->default_value(std::string("tcp://0.0.0.0:5555")),
-       "The master address");
-
-  // allow master address to be specified as the first arg
-  po::positional_options_description pos;
-  pos.add("master-address", 1);
-
-  // parse and store
-  po::variables_map vm;
-  try
+  if (argc == 2 &&
+      (strcmp(argv[0], "-h") == 0 || strcmp(argv[1], "--help") == 0))
   {
-    po::store(po::command_line_parser(argc, argv).
-              options(desc).positional(pos).run(), vm);
-    po::notify(vm);
+    std::cerr << "Usage: " << argv[0] << " [ENDPOINTS...]" << std::endl;
+    return 0;
+  }
 
-    if (vm.count("help"))
+  {
+    qi::ServiceDirectory sd;
+    std::vector<qi::Url> endpoints;
+    if (argc == 1)
     {
-      std::cout << desc << std::endl;
-      return 0;
-    }
-
-    if (vm.count("master-address") == 1)
-    {
-      std::string masterAddress;
-      try {
-        masterAddress = vm["master-address"].as<std::string>();
-      } catch (const std::exception &) {
-        return 1;
-      }
-
-      qi::Url sdUrl(masterAddress);
-      qi::ServiceDirectory sd;
-
-      if (sdUrl.protocol() == "tcps")
-      {
-        sd.setIdentity("tests/server.key", "tests/server.crt");
-      }
-
-      qi::Future<void> f = sd.listen(masterAddress);
-      f.wait(3000);
-      if (f.hasError())
-      {
-        qiLogError() << "Failed to listen on " << masterAddress <<
-          ". Is there another service running on this address?";
-        exit(1);
-      }
-
-      qiLogInfo() << "qi-master is listening on " << masterAddress;
-
-      app.run();
+      endpoints.push_back("tcp://127.0.0.1:9559");
     }
     else
     {
-      std::cout << desc << std::endl;
+      for (unsigned int i = 1; i < argc; i++)
+      {
+        qi::Url url(argv[i]);
+
+        if (url.protocol() == "tcps")
+        {
+          sd.setIdentity("tests/server.key", "tests/server.crt");
+        }
+
+        endpoints.push_back(url);
+      }
     }
-  }
-  catch (const boost::program_options::error&)
-  {
-    std::cout << desc << std::endl;
+
+    for (std::vector<qi::Url>::const_iterator it = endpoints.begin();
+         it != endpoints.end();
+         it++)
+    {
+      qi::Future<void> f = sd.listen(*it);
+      f.wait(3000);
+      if (f.hasError())
+      {
+        qiLogError() << "Failed to listen on " << it->str() <<
+                        ". Is there another service running on this address?";
+        exit(1);
+      }
+    }
+
+    app.run();
   }
 
   return 0;
