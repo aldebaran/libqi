@@ -124,7 +124,7 @@
   && BOOST_PP_CAT(_qiLog, TypeCased)(_QI_LOG_CATEGORY_GET())
 
 // Visual bouncer for macro evalution order glitch.
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_0(...) QI_DELAY(_QI_LOG_MESSAGE_STREAM_HASCAT_0) ## _BOUNCE(__VA_ARGS__)
 #else
 #define _QI_LOG_MESSAGE_STREAM_HASCAT_0(...) _QI_LOG_MESSAGE_STREAM_HASCAT_0_BOUNCE(__VA_ARGS__)
@@ -148,7 +148,7 @@
  * Trick 1 below does not work with gcc, because  x ## "foo" produces a preprocessor error.
  * Trick 2 rely on ##__VA_ARGS__
 */
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 #define _WQI_IS_EMPTY_HELPER___ a,b
 #define WQI_IS_EMPTY(a,...) QI_CAT_20(QI_LIST_VASIZE,((QI_CAT_22(_WQI_IS_EMPTY_HELPER, QI_CAT_24(QI_CAT_26(_, a), _)))))
