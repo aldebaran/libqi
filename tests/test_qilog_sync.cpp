@@ -88,7 +88,7 @@ TEST(log, filtering)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  unsigned int id = qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
+  qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
@@ -172,7 +172,7 @@ TEST(log, globbing)
   #define YES EXPECT_TRUE(tag); tag = false
   #define NO  EXPECT_TRUE(!tag); tag = false // yes false
   bool tag = false;
-  unsigned int id = qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
+  qi::log::addLogHandler("set", boost::bind(&set, boost::ref(tag)));
   qiLogError("qi.test") << "coin";
   YES;
   NO; // ensure reset works
