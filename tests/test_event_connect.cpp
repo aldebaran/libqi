@@ -26,12 +26,12 @@ void onFire2(const int& pl)
 void testDelete(bool afirst, bool disconnectFirst)
 {
   qi::GenericObjectBuilder oba, obb;
-  unsigned int fireId = oba.advertiseEvent<void (*)(int)>("fire");
-  unsigned int onFireId = obb.advertiseMethod("onFire", &onFire);
-  unsigned int onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
+  qi::Link fireId = oba.advertiseEvent<void (*)(int)>("fire");
+  qi::Link onFireId = obb.advertiseMethod("onFire", &onFire);
+  qi::Link onFireId2 = obb.advertiseMethod("onFire2", &onFire2);
   qi::ObjectPtr *a = new qi::ObjectPtr(oba.object());
   qi::ObjectPtr *b = new qi::ObjectPtr(obb.object());
-  unsigned int linkId = (*a)->connect(fireId, *b, onFireId);
+  qi::Link linkId = (*a)->connect(fireId, *b, onFireId);
   (*a)->connect(fireId, *b, onFireId2);
   //std::vector<qi::SignalSubscriber> subs = (*a)->subscribers(fireId);
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());

@@ -29,13 +29,13 @@ namespace qi {
 
       mo = new qi::MetaObject;
       qi::MetaObjectBuilder mob;
-      mob.addMethod("I", "registerEvent::(III)", qi::Message::BoundObjectFunction_RegisterEvent);
-      mob.addMethod("v", "unregisterEvent::(III)", qi::Message::BoundObjectFunction_UnregisterEvent);
+      mob.addMethod("L", "registerEvent::(IIL)", qi::Message::BoundObjectFunction_RegisterEvent);
+      mob.addMethod("v", "unregisterEvent::(IIL)", qi::Message::BoundObjectFunction_UnregisterEvent);
       mob.addMethod("({I(Isss[(ss)]s)}{I(Is)}s)", "metaObject::(I)", qi::Message::BoundObjectFunction_MetaObject);
       *mo = mob.metaObject();
 
-      assert(mo->methodId("registerEvent::(III)") == qi::Message::BoundObjectFunction_RegisterEvent);
-      assert(mo->methodId("unregisterEvent::(III)") == qi::Message::BoundObjectFunction_UnregisterEvent);
+      assert(mo->methodId("registerEvent::(IIL)") == qi::Message::BoundObjectFunction_RegisterEvent);
+      assert(mo->methodId("unregisterEvent::(IIL)") == qi::Message::BoundObjectFunction_UnregisterEvent);
       assert(mo->methodId("metaObject::(I)") == qi::Message::BoundObjectFunction_MetaObject);
     }
     return *mo;
@@ -303,7 +303,7 @@ namespace qi {
     }
   }
 
-  static void onEventConnected(qi::Future<unsigned int> fut, qi::Promise<unsigned int> prom, unsigned int id) {
+  static void onEventConnected(qi::Future<Link> fut, qi::Promise<Link> prom, Link id) {
     if (fut.hasError()) {
       prom.setError(fut.error());
       return;
@@ -311,20 +311,20 @@ namespace qi {
     prom.setValue(id);
   }
 
-  qi::Future<unsigned int> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
+  qi::Future<Link> RemoteObject::metaConnect(unsigned int event, const SignalSubscriber& sub)
   {
-    qi::Promise<unsigned int> prom;
+    qi::Promise<Link> prom;
 
     // Bind the subscriber locally.
-    unsigned int uid = DynamicObject::metaConnect(event, sub);
+    Link uid = DynamicObject::metaConnect(event, sub);
 
     qiLogDebug() <<"connect() to " << event <<" gave " << uid;
-    qi::Future<unsigned int> fut = _self->call<unsigned int>("registerEvent", _service, event, uid);
+    qi::Future<Link> fut = _self->call<Link>("registerEvent", _service, event, uid);
     fut.connect(boost::bind<void>(&onEventConnected, _1, prom, uid));
     return prom.future();
   }
 
-  qi::Future<void> RemoteObject::metaDisconnect(unsigned int linkId)
+  qi::Future<void> RemoteObject::metaDisconnect(Link linkId)
   {
     unsigned int event = linkId >> 16;
     //disconnect locally

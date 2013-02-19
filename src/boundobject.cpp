@@ -68,16 +68,16 @@ namespace qi {
   }
 
   //Bound Method
-  unsigned int ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, unsigned int remoteLinkId) {
+  Link ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, Link remoteLinkId) {
     GenericFunction mc = makeDynamicGenericFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, _currentSocket, this));
-    unsigned int linkId = _object->connect(eventId, mc);
-
+    Link linkId = _object->connect(eventId, mc);
+    qiLogDebug() << "SBO rl " << remoteLinkId <<" ll " << linkId;
     _links[_currentSocket][remoteLinkId] = RemoteLink(linkId, eventId);
     return linkId;
   }
 
   //Bound Method
-  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), unsigned int remoteLinkId) {
+  void ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), Link remoteLinkId) {
     ServiceLinks&          sl = _links[_currentSocket];
     ServiceLinks::iterator it = sl.find(remoteLinkId);
 

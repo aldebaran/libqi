@@ -25,7 +25,7 @@ namespace qi {
     close();
   }
 
- void ServiceDirectoryClient::onSDEventConnected(qi::Future<unsigned int> ret,
+ void ServiceDirectoryClient::onSDEventConnected(qi::Future<Link> ret,
    qi::Promise<bool> fco, bool isAdd)
  {
    if (fco.future().wait(-1))
@@ -54,10 +54,10 @@ namespace qi {
     boost::function<void (unsigned int, std::string)> f;
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceAdded, this, _1, _2);
-    qi::Future<unsigned int> fut1 = _object->connect("serviceAdded", f);
+    qi::Future<Link> fut1 = _object->connect("serviceAdded", f);
 
     f = boost::bind<void>(&ServiceDirectoryClient::onServiceRemoved, this, _1, _2);
-    qi::Future<unsigned int> fut2 = _object->connect("serviceRemoved", f);
+    qi::Future<Link> fut2 = _object->connect("serviceRemoved", f);
 
     fut1.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, true));
     fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false));

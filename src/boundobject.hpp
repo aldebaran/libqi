@@ -30,10 +30,10 @@ namespace qi {
       : localLinkId(0)
       , event(0)
     {}
-    RemoteLink(unsigned int localLinkId, unsigned int event)
+    RemoteLink(Link localLinkId, unsigned int event)
     : localLinkId(localLinkId)
     , event(event) {}
-    unsigned int localLinkId;
+    Link localLinkId;
     unsigned int event;
   };
 
@@ -59,8 +59,8 @@ namespace qi {
 
   public:
     //PUBLIC BOUND METHODS
-    unsigned int   registerEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
-    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, unsigned int linkId);
+    Link           registerEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
+    void           unregisterEvent(unsigned int serviceId, unsigned int eventId, Link linkId);
     qi::MetaObject metaObject(unsigned int serviceId);
     void           terminate(unsigned int serviceId); //bound only in special cases
 
@@ -84,7 +84,7 @@ namespace qi {
 
   private:
     // remote link id -> local link id
-    typedef std::map<unsigned int, RemoteLink>             ServiceLinks;
+    typedef std::map<Link, RemoteLink>             ServiceLinks;
     typedef std::map<qi::TransportSocketPtr, ServiceLinks> BySocketServiceLinks;
 
     //Event handling (no lock needed)

@@ -15,6 +15,7 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test");
 static qi::Promise<int> *payload;
 
 void onFire(const int& pl)
@@ -66,7 +67,7 @@ public:
 
 TEST_F(TestObject, Simple)
 {
-  int linkId = oclient->connect("fire", &onFire);
+  qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT(0, linkId);
   oserver->emitEvent("fire", 42);
   ASSERT_TRUE(payload->future().wait(2000));
@@ -76,7 +77,7 @@ TEST_F(TestObject, Simple)
 
 TEST_F(TestObject, RemoteEmit)
 {
-  int linkId = oclient->connect("fire", &onFire);
+  qi::Link linkId = oclient->connect("fire", &onFire);
   EXPECT_LT(0, linkId);
   oclient->emitEvent("fire", 43);
   ASSERT_TRUE(payload->future().wait(2000));
@@ -91,7 +92,8 @@ TEST_F(TestObject, CoDeco)
   for (unsigned i=0; i<5; ++i)
   {
     payload->reset();
-    int linkId = oclient->connect("fire", &onFire);
+    qi::Link linkId = oclient->connect("fire", &onFire);
+    qiLogDebug() << "connected with " << linkId;
     int exp;
     EXPECT_GE(linkId, 0);
     oserver->emitEvent("fire", (int)(50 + i));

@@ -54,7 +54,7 @@ namespace qi {
     void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<bool> prom);
 
     //wait for serviceAdded/serviceRemoved are connected
-    void onSDEventConnected(qi::Future<unsigned int> ret,
+    void onSDEventConnected(qi::Future<Link> ret,
                             qi::Promise<bool> fco,
                             bool isAdd);
 

@@ -51,8 +51,8 @@ namespace qi {
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
 
-    virtual qi::Future<unsigned int> metaConnect(unsigned int event, const SignalSubscriber& sub);
-    virtual qi::Future<void> metaDisconnect(unsigned int linkId);
+    virtual qi::Future<Link> metaConnect(unsigned int event, const SignalSubscriber& sub);
+    virtual qi::Future<void> metaDisconnect(Link linkId);
 
   protected:
     TransportSocketPtr                              _socket;
