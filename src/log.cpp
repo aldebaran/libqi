@@ -35,7 +35,7 @@
 #ifndef _WIN32
 #include <fnmatch.h>
 #else
-# include <Shlwapi.h>
+# include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
 #endif
 

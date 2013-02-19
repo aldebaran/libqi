@@ -5,7 +5,7 @@
  */
 
 #include <qi/os.hpp>
-#include <Windows.h>
+#include <windows.h>
 
 namespace qi {
   namespace os {
