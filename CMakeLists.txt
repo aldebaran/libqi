@@ -57,11 +57,6 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/c)
 
-find_package(qiprobes)
-qi_add_probes(src/tp_qimessaging.in.h
-              PROVIDER qi_probes_qimessaging
-              INSTRUMENTED_FILES src/session.cpp)
-
 set(PUBLIC_HEADERS
                    qimessaging/api.hpp
                    qimessaging/binarydecoder.hpp
@@ -80,7 +75,6 @@ qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
 qi_submodule_create("qi-messaging" ${CONFIG_H}
                                    ${PUBLIC_HEADERS}
 
-                                   ${CMAKE_CURRENT_BINARY_DIR}/tp_qimessaging.h
                                    src/boundobject.cpp
                                    src/boundobject.hpp
                                    src/binarycoder_p.hpp
