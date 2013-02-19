@@ -80,6 +80,7 @@ namespace qi {
         }
         else
         {
+  #ifndef _WIN32
           std::string prefix2; // for backward compatibility
           if (type == "data")
           {
@@ -90,10 +91,9 @@ namespace qi {
             prefix2 = ".config";
           }
 
-  #ifndef _WIN32
           prefix = fsconcat(qi::os::home(), prefix2);
   #else
-          prefix = fsconcat(qi::os::getenv("AppData"), prefix2);
+          prefix = qi::os::getenv("AppData");
   #endif
         }
       }
