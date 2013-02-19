@@ -238,11 +238,11 @@ namespace qi {
   }
 
   /// Resolve signature and bounce
-  qi::FutureSync<unsigned int> GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
+  qi::FutureSync<Link> GenericObject::xConnect(const std::string &signature, const SignalSubscriber& functor)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
-      return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
+      return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
     }
     int eventId = metaObject().signalId(signature);
 
@@ -279,21 +279,21 @@ namespace qi {
         ss << "  " << it->signature() << std::endl;
       }
       qiLogError() << ss.str();
-      return qi::makeFutureError<unsigned int>(ss.str());
+      return qi::makeFutureError<Link>(ss.str());
     }
     return connect(eventId, functor);
   }
 
-  qi::FutureSync<unsigned int> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
+  qi::FutureSync<Link> GenericObject::connect(unsigned int event, const SignalSubscriber& sub)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
-      return qi::makeFutureError<unsigned int>("Operating on invalid GenericObject..");
+      return qi::makeFutureError<Link>("Operating on invalid GenericObject..");
     }
     return type->connect(value, this, event, sub);
   }
 
-  qi::FutureSync<void> GenericObject::disconnect(unsigned int linkId)
+  qi::FutureSync<void> GenericObject::disconnect(Link linkId)
   {
     if (!type || !value) {
       qiLogWarning() << "Operating on invalid GenericObject..";
@@ -302,7 +302,7 @@ namespace qi {
     return type->disconnect(value, this, linkId);
   }
 
-  qi::FutureSync<unsigned int> GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
+  qi::FutureSync<Link> GenericObject::connect(unsigned int signal, ObjectPtr target, unsigned int slot)
   {
     return connect(signal, SignalSubscriber(target, slot));
   }

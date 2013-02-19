@@ -151,14 +151,14 @@ namespace qi {
      * event to one of your Slots instead of using this method.
      */
     template <typename FUNCTOR_TYPE>
-    qi::FutureSync<unsigned int> connect(const std::string& eventName, FUNCTOR_TYPE callback,
+    qi::FutureSync<Link> connect(const std::string& eventName, FUNCTOR_TYPE callback,
                          MetaCallType threadingModel = MetaCallType_Direct);
 
 
-    qi::FutureSync<unsigned int> xConnect(const std::string &signature, const SignalSubscriber& functor);
+    qi::FutureSync<Link> xConnect(const std::string &signature, const SignalSubscriber& functor);
 
     /// Calls given functor when event is fired. Takes ownership of functor.
-    qi::FutureSync<unsigned int> connect(unsigned int event, const SignalSubscriber& subscriber);
+    qi::FutureSync<Link> connect(unsigned int event, const SignalSubscriber& subscriber);
 
     /** Connect an event to a method.
      * Recommended use is when target is not a proxy.
@@ -167,10 +167,10 @@ namespace qi {
      * If target and this are proxies, the message will be routed through
      * the current process.
      */
-    qi::FutureSync<unsigned int> connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
+    qi::FutureSync<Link> connect(unsigned int signal, qi::ObjectPtr target, unsigned int slot);
 
     /// Disconnect an event link. Returns if disconnection was successful.
-    qi::FutureSync<void> disconnect(unsigned int linkId);
+    qi::FutureSync<void> disconnect(Link linkId);
 
     //bool isValid() { return type && value;}
     ObjectType*  type;
@@ -179,7 +179,7 @@ namespace qi {
 
    // C4251
   template <typename FUNCTION_TYPE>
-  qi::FutureSync<unsigned int> GenericObject::connect(const std::string& eventName,
+  qi::FutureSync<Link> GenericObject::connect(const std::string& eventName,
                                                       FUNCTION_TYPE callback,
                                                       MetaCallType model)
   {
@@ -233,12 +233,12 @@ namespace qi {
       Proxy* ptr = static_cast<Proxy*>(instance);
       ptr->asObject()->metaPost(signal, params);
     }
-    virtual qi::Future<unsigned int> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
+    virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber)
     {
       Proxy* ptr = static_cast<Proxy*>(instance);
       return ptr->asObject()->connect(event, subscriber);
     }
-    virtual qi::Future<void> disconnect(void* instance, Manageable* context, unsigned int linkId)
+    virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId)
     {
        Proxy* ptr = static_cast<Proxy*>(instance);
        return ptr->asObject()->disconnect(linkId);

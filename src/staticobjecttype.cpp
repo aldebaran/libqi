@@ -79,23 +79,26 @@ void StaticObjectTypeBase::metaPost(void* instance, Manageable* context, unsigne
   sb->trigger(params);
 }
 
-qi::Future<unsigned int> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
+qi::Future<Link> StaticObjectTypeBase::connect(void* instance, Manageable* context, unsigned int event,
                                                        const SignalSubscriber& subscriber)
 {
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb) {
-    return qi::makeFutureError<unsigned int>("Cant find signal");
+    return qi::makeFutureError<Link>("Cant find signal");
   }
   SignalBase::Link id = sb->connect(subscriber);
-  if (id > 0xFFFF)
-    qiLogError() << "Signal link id too big";
-  return qi::Future<unsigned int>((event << 16) + id);
+  Link link = ((Link)event << 32) + id;
+  assert(link >> 32 == event);
+  assert((link & 0xFFFFFFFF) == id);
+  qiLogDebug() << "Connect " << event <<' ' << id << ' ' << link;
+  return qi::Future<Link>(link);
 }
 
-qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, unsigned int linkId)
+qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, Manageable* context, Link linkId)
 {
-  unsigned int event = linkId >> 16;
-  unsigned int link = linkId & 0xFFFF;
+  qiLogDebug() << "Disconnect " << linkId;
+  unsigned int event = linkId >> 32;
+  unsigned int link = linkId & 0xFFFFFFFF;
   SignalBase* sb = getSignal(_data, instance, event);
   if (!sb)
     return qi::makeFutureError<void>("Cant find signal");

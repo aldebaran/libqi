@@ -62,9 +62,9 @@ public:
   virtual const MetaObject& metaObject(void* instance);
   virtual qi::Future<GenericValuePtr> metaCall(void* instance, Manageable* context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
   virtual void metaPost(void* instance, Manageable* context, unsigned int signal, const GenericFunctionParameters& params);
-  virtual qi::Future<unsigned int> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
+  virtual qi::Future<Link> connect(void* instance, Manageable* context, unsigned int event, const SignalSubscriber& subscriber);
   /// Disconnect an event link. Returns if disconnection was successful.
-  virtual qi::Future<void> disconnect(void* instance, Manageable* context, unsigned int linkId);
+  virtual qi::Future<void> disconnect(void* instance, Manageable* context, Link linkId);
   virtual const std::vector<std::pair<Type*, int> >& parentTypes();
   virtual void* initializeStorage(void*);
   virtual void* ptrFromStorage(void**);
