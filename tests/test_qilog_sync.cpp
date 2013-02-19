@@ -25,6 +25,8 @@ TEST(log, logline)
 {
   ::qi::log::setContext(0);
   qi::os::timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
   std::stringstream snewline;
   snewline << std::endl;
   std::string newline = snewline.str();
