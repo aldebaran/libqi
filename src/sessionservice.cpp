@@ -69,8 +69,8 @@ namespace qi {
 
   ServiceRequest *Session_Service::serviceRequest(long requestId)
   {
+    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     {
-      boost::mutex::scoped_lock                 sl(_requestsMutex);
       std::map<int, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
@@ -88,10 +88,10 @@ namespace qi {
 
   void Session_Service::removeRequest(long requestId)
   {
+    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     qi::RemoteObject *remote = 0;
     ServiceRequest   *sr     = 0;
     {
-      boost::mutex::scoped_lock                 l(_requestsMutex);
       std::map<int, ServiceRequest*>::iterator it;
 
       it = _requests.find(requestId);
@@ -116,6 +116,7 @@ namespace qi {
 
   void Session_Service::onTransportSocketResult(qi::Future<TransportSocketPtr> value, long requestId) {
     qiLogDebug() << "Got transport socket for service";
+    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -135,6 +136,7 @@ namespace qi {
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
     qiLogDebug() << "Got metaobject";
+    boost::recursive_mutex::scoped_lock l(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -170,6 +172,7 @@ namespace qi {
   // We received a ServiceInfo, and want to establish a connection
   void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId, std::string protocol) {
     qiLogDebug() << "Got serviceinfo message";
+    boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
       return;
@@ -246,7 +249,7 @@ namespace qi {
     long requestId = ++_requestsIndex;
 
     {
-      boost::mutex::scoped_lock l(_requestsMutex);
+      boost::recursive_mutex::scoped_lock l(_requestsMutex);
       _requests[requestId] = rq;
     }
     result = rq->promise.future();

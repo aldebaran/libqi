@@ -66,7 +66,7 @@ namespace qi {
     void            removeRequest(long requestId);
 
   private:
-    boost::mutex                    _requestsMutex;
+    boost::recursive_mutex         _requestsMutex;
     std::map<int, ServiceRequest*> _requests;
     qi::Atomic<int>                _requestsIndex;
 
