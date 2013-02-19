@@ -82,6 +82,8 @@ namespace qi
                 c.first.destroy();
             }
           }
+          i.destroy();
+          iend.destroy();
           return std::make_pair(lresult, true);
         }
           break;
@@ -131,6 +133,8 @@ namespace qi
             if (!sameElem && cv.second)
               cv.first.destroy();
           }
+          i.destroy();
+          iend.destroy();
           return std::make_pair(mresult, true);
         }
           break;
