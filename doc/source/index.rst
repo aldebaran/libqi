@@ -25,7 +25,6 @@ References
 ----------
 
  - `C++ reference <./cpp/index.html>`_
- - `C++ Qt reference <./qt/index.html>`_
  - `C reference <./c/index.html>`_
  - `JavaScript reference <./js/index.html>`_
 

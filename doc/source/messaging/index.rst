@@ -17,5 +17,4 @@ qiMessaging documentation
   directory
   object
   stl-api
-  qt-api
 

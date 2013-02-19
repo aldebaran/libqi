@@ -49,12 +49,3 @@ qi_create_perf_test(perf_function perf_function.cpp
   DEPENDS
     QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
 
-if(WITH_QT_QTCORE AND WITH_QT)
-  include(qibuild/modules/qt-tools)
-  qt4_wrap_cpp(_moc perf_qt_signal.hpp)
-  qi_create_perf_test(perf_qt_signal_direct perf_qt_signal_direct.cpp ${_moc}
-    DEPENDS
-      QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS QT_QTCORE)
-  qi_use_lib(perf_qt_signal_direct QT_QTCORE)
-endif()
-

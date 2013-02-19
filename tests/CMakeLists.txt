@@ -32,9 +32,6 @@ qi_create_gtest(test_testsession          SRC test_testsession.cpp          DEPE
 
 qi_create_session_test(test_service              SRC test_service.cpp DEPENDS QI QIMESSAGING GTEST TESTSESSION TIMEOUT 10)
 
-#qi_create_gtest(test_serialization_qt   SRC test_serialization_qt.cpp   DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
-#qi_create_gtest(test_signature_qt       SRC test_signature_qt.cpp       DEPENDS QI QIMESSAGING GTEST QT_QTCORE TIMEOUT 120)
-
 option(WITH_CODEGEN_TESTS       "Run codegen tests"       OFF)
 
 if (WITH_CODEGEN_TESTS)

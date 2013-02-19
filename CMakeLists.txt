@@ -18,7 +18,6 @@ qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
 set(WITH_DOTNET OFF)
 option(WITH_EXAMPLES "Examples"          ON)
-option(WITH_QT       "Qt support"       OFF)
 option(WITH_PYTHON   "Python bindings"   ON)
 
 # Desactivate Python and .NET bindings for Android
@@ -161,9 +160,6 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
 
 
-qi_add_optional_package(QT_QTCORE)
-
-qi_add_subdirectory("qt" WITH_QT_CORE WITH_QT)
 qi_add_subdirectory("bin")
 
 qi_add_subdirectory("python" WITH_PYTHON)
@@ -176,6 +172,5 @@ message(STATUS "")
 message(STATUS "Build Options:")
 message(STATUS "WITH_EXAMPLES  : ${WITH_EXAMPLES}")
 message(STATUS "WITH_PYTHON    : ${WITH_PYTHON}")
-message(STATUS "WITH_QT_QTCORE : ${WITH_QT_QTCORE}")
 message(STATUS "WITH_DOTNET    : ${WITH_DOTNET}")
 message(STATUS "WITH_SSL       : ${WITH_SSL}")
