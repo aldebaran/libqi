@@ -95,8 +95,9 @@ namespace qi {
     return promise.future();
   }
 
-  static void sharedPtrHolder(TransportSocketPtr ptr)
+  static void sharedPtrHolder(TransportSocketPtr* ptr)
   {
+    delete ptr;
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
@@ -105,7 +106,10 @@ namespace qi {
     qi::Future<void> fut = _sdSocket->disconnect();
     // Hold the socket shared ptr alive until the future returns.
     // otherwise, the destructor will block us until disconnect terminates
-    fut.connect(boost::bind(&sharedPtrHolder, _sdSocket));
+    // Nasty glitch: socket is reusing promises, so this future hook will stay
+    // So pass shared pointer by pointer: that way a single delete statement
+    // will end all copies.
+    fut.connect(boost::bind(&sharedPtrHolder, new TransportSocketPtr(_sdSocket)));
     _sdSocket->disconnected.disconnect(_sdSocketDisconnectedLink);
     _sdSocket.reset();
     return fut;
