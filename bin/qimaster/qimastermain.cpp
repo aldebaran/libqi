@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     std::vector<qi::Url> endpoints;
     if (argc == 1)
     {
-      endpoints.push_back("tcp://127.0.0.1:9559");
+      endpoints.push_back("tcp://0.0.0.0:5555");
     }
     else
     {
