@@ -1,0 +1,94 @@
+// -*- mode:c++; -*-
+
+/**
+
+\page qilinguistguide Internationalization Guide
+
+\section Overview
+
+This guide will explain how to create internationalization support (ie: dictionaries files) and to use it to translate an application.
+
+This will be done in two steps:
+    - Using qilinguist, a qibuild tool, to create and generate a dictionary file.
+    - Setting up the C++ application to find and translate strings.
+
+\section qiLinguist How to use qilinguist
+
+\subsection potfilesin Configuration of translation files
+First of all you need to create a ``po`` directory into your root application folder and POTFILES.in in it.
+
+\verbatim
+helloapp
+  |_ po
+      |_ POTFILES.in
+  |_ src
+      |_ main.cpp
+      |_ hello.cpp
+  |_ headers
+      |_ hello.h
+\endverbatim
+
+Into the POTFILES.in you MUST add the relative path of all files you want to translate. For example, if you only have translation in hello.cpp, the POTFILES.in looks like:
+
+\verbatim
+$ cat po/POTFILES.in
+src/hello.cpp
+\endverbatim
+
+\subsection qiprojectxml Add qilinguist configurations
+
+You need to add a ``translate`` node into the qiproject.xml file.
+This configuration is used by ``qilinguist`` to generate translation files
+and installation rules.
+
+The qiproject.xml will look like:
+
+\verbatim
+<project name="helloApp">
+  <translate domain="hello" linguas="fr_FR en_US" tr="gettext" />
+/project>
+\endverbatim
+
+Tag definitions:
+    - ``domain``: The name of the generated dictionary.
+    - ``linguas``: A list of all locales supported formatted as xx_XX (country and language code)
+    - ``tr``: Define if you use gettext or QT internationalization (value can be: "gettext" or "qt").
+
+\subsection qilinguistuse How to use qilinguist
+
+Everything is ready to generate and edit dictionaries.
+
+There are two commands to use:
+    - qilinguist update: finds the translatable strings in the specified source, header and generates or updates .po (or .ts) translation files.
+    - qilinguist release: produces MO files out of PO ones or QM files out of TS ones. The format of those files is a binary format that is used by the localized application.
+
+First of all you need to generate or update translatable files by using ``qilinguist update``. This will create files (into ``po`` folder) you can edit using Linguist from the Qt SDK or poedit for instance.
+
+Once you have translated those files, you need to compile them by using ``qilinguist release``.
+
+\section qiGettext How to internationalize C++ applications
+
+\subsection gettextconf Set and configure qi::os::gettext
+
+There are three steps to make qi::gettext working.
+
+First, you need to call qi::Application::setName(const std::string &name).
+
+\warning: The ``name`` here must be the same as the domain tag from qiproject.xml
+
+Second, call qi::Application::loadTranslationDict(const std::string &dictName). This function will load the dictionary you want to use.
+
+\warning: Once again dictName is the same as the domain tag from qiproject.xml
+
+Third, set the locale you want to use by calling qi::Application::setTranslationLocale(const std::string &locale). This function allows you to set and switch language at runtime.
+
+\subsection gettextuse How to translate sentences
+
+At last, you just need to call qi::os::gettext(const std::string &sentence).
+
+All sentences will be parsed when calling qilinguist update, then generate translation files (ie: po/ts files). Then, at runtime qi::os::gettext will look for translation regarding initialization done in the last paragraphe.
+
+\section exampletr Example
+\include qitranslate/main.cpp
+
+*/
