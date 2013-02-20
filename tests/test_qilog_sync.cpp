@@ -3,6 +3,9 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
+
+// Disable one to test the disabled macros
+#define NO_QI_INFO
 #include <gtest/gtest.h>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -38,6 +41,58 @@ TEST(log, logline)
   EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
   EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\r\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
   EXPECT_EQ(logline(tv, "", "foo\r\n\n\r\r\n\n\n", "", "", 0) , "foo\r\n\n\r\r\n\n" + newline);
+}
+
+TEST(log, ifCorrectness)
+{
+  qiLogCategory("test");
+  bool ok = true;
+  if (true)
+    qiLogError("qi.test") << "coin";
+  else
+    ok = false;
+  EXPECT_TRUE(ok);
+  if (true)
+    qiLogErrorF("qi.test");
+  else
+    ok = false;
+  EXPECT_TRUE(ok);
+  ok = false;
+  if (false)
+    qiLogError("qi.test") << "coin";
+  else
+    ok = true;
+  EXPECT_TRUE(ok);
+  ok = false;
+  if (false)
+    qiLogErrorF("qi.test");
+  else
+    ok = true;
+  EXPECT_TRUE(ok);
+
+  ok = true;
+  if (true)
+    qiLogInfo("qi.test") << "coin";
+  else
+    ok = false;
+  EXPECT_TRUE(ok);
+  if (true)
+    qiLogInfoF("qi.test");
+  else
+    ok = false;
+  EXPECT_TRUE(ok);
+  ok = false;
+  if (false)
+    qiLogInfo("qi.test") << "coin";
+  else
+    ok = true;
+  EXPECT_TRUE(ok);
+  ok = false;
+  if (false)
+    qiLogInfoF("qi.test");
+  else
+    ok = true;
+  EXPECT_TRUE(ok);
 }
 
 void copy(std::string& dest, const char* src)
