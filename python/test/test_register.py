@@ -32,7 +32,7 @@ class  RandomClass:
     def myPrivateFunction(self):
       pass
 
-def test_registerclass():
+def main():
     """ Instanciate qimessaging session and bind RandomClass instance
     """
     sd = servicedirectory()
@@ -53,4 +53,4 @@ def test_registerclass():
     # Cleanup
 
 if __name__ == "__main__":
-    test_registerclass()
+    main()

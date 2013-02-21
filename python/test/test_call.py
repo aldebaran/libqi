@@ -112,7 +112,7 @@ def get_robots():
     """
     pass
 
-def test_call():
+def main():
     """ Create a session and bind all previous methods
     """
     sd = servicedirectory()
@@ -208,4 +208,4 @@ def test_call():
     # main : Done.
 
 if __name__ == "__main__":
-    test_call()
+    main()

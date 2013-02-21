@@ -56,7 +56,9 @@ def test_future_cancel():
   assert(fut.is_canceled())
   assert(not fut.has_error())
 
-
-if __name__ == "__main__":
+def main():
   test_future()
   test_future_cancel()
+
+if __name__ == "__main__":
+    main()

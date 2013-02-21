@@ -96,6 +96,9 @@ def test_converter():
     ret = cv.TestObjectConversion("Hello World !")
     assert ret == "Hello World !"
 
-if __name__ == "__main__":
+def main():
     test_converter()
     test_converterUTF8()
+
+if __name__ == "__main__":
+    main()

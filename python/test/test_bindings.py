@@ -22,7 +22,7 @@ def reply(string):
     ret = "%s, for sure !" % string
     return ret
 
-def test_integration():
+def main():
     """ Test both client and service side of Python QiMessaging bindings.
     """
     application_ = Application()
@@ -65,4 +65,4 @@ def test_integration():
     # main : Done.
 
 if __name__ == "__main__":
-    test_integration()
+    main()

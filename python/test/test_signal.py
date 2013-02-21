@@ -31,7 +31,7 @@ class subscriber:
     while (self.done != True):
       time.sleep(0.1)
 
-def test_signal():
+def main():
   print "\nInit..."
   app = qima.Application()
   sub1 = subscriber()
@@ -86,4 +86,4 @@ def test_signal():
   sub1.wait()
 
 if __name__ == "__main__":
-  test_signal()
+  main()

@@ -21,7 +21,7 @@ def reply():
     ret =  "%sbim" % string
     return ret
 
-def test_proxy():
+def main():
     """ Create a session and bind all previous methods
     """
     sd = servicedirectory()
@@ -59,4 +59,4 @@ def test_proxy():
     # main : Done.
 
 if __name__ == "__main__":
-    test_proxy()
+    main()
