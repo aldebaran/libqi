@@ -140,8 +140,11 @@ struct ToPyObject
 
   void visitRaw(qi::TypeRaw *type, qi::Buffer *buf)
   {
-    /* Encapuslate the buffer in Capsule */
-    *result = PyCapsule_New(buf, "qi::Buffer", NULL);
+    /* TODO: zerocopy, sub-buffers... */
+    char* b = static_cast<char*>(malloc(buf->size()));
+    buf->read(b, 0, buf->size());
+    *result = PyByteArray_FromStringAndSize(b, buf->size());
+    free(b);
     checkForError();
   }
 
