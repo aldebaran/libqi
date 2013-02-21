@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title></title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="http://localhost:8001/socket.io.js"></script>
+<script src="http://localhost:8001/qimessaging.js"></script>
+</head>
+
+<body>
+<canvas id="myCanvas" width="578" height="400"></canvas>
+<script language="JavaScript">
+var qim = new QiSession("http://localhost:8002");
+var m = 0;
+var s = "";
+
+qim.socket().on('connect', function() { console.log('connected') })
+
+function getImageRemote(data)
+{
+  a = atob(data[6]);
+
+  var canvas = document.getElementById('myCanvas');
+  var context = canvas.getContext('2d');
+  var imageWidth = data[0];
+  var imageHeight = data[1];
+  var imageData = context.getImageData(0, 0, imageWidth, imageHeight);
+  var data = imageData.data;
+
+  for (var y = 0; y < imageHeight; y++)
+  {
+    for (var x = 0; x < imageWidth; x++)
+    {
+      var r = a[(imageWidth * y + x) * 3 + 0];
+      var g = a[(imageWidth * y + x) * 3 + 1];
+      var b = a[(imageWidth * y + x) * 3 + 2];
+
+      data[((imageWidth * y) + x) * 4 + 0] = r.charCodeAt();
+      data[((imageWidth * y) + x) * 4 + 1] = g.charCodeAt();
+      data[((imageWidth * y) + x) * 4 + 2] = b.charCodeAt();
+      data[((imageWidth * y) + x) * 4 + 3] = 255;;
+    }
+  }
+
+  context.putImageData(imageData, 0, 0);
+
+  m.getImageRemote(s).done(getImageRemote);
+}
+
+function subscribed(data)
+{
+  s = data;
+  console.log(s);
+  m.getImageRemote(s).done(getImageRemote);
+}
+
+function subscribeCamera(data)
+{
+  m = data;
+  z = Math.floor((Math.random()*10000)+1);
+  m.subscribeCamera("test_z" + z, 0, 0, 11, 30).done(subscribed);
+}
+
+qim.service("ALVideoDevice").done(subscribeCamera);
+
+</script>
+
+</body>
+</html>
