@@ -40,13 +40,13 @@ namespace qi {
     bool isConnected() const;
     qi::Url url() const;
 
-    qi::Future< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
+    qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::Future< qi::ObjectPtr > service(const std::string &service,
-                                        const std::string &protocol = "");
+    qi::FutureSync< qi::ObjectPtr > service(const std::string &service,
+                                            const std::string &protocol = "");
 
     //Server
-    qi::Future<void> listen(const qi::Url &address);
+    qi::FutureSync<void> listen(const qi::Url &address);
     std::vector<qi::Url> endpoints() const;
     bool    setIdentity(const std::string& key, const std::string& crt);
 

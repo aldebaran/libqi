@@ -131,19 +131,19 @@ namespace qi {
   //  - local service => just return the vector
   //  - remote => ask the sd return the result
   //  - all => ask the sd, append local services, return the result
-  qi::Future< std::vector<ServiceInfo> > Session::services(ServiceLocality locality)
+  qi::FutureSync< std::vector<ServiceInfo> > Session::services(ServiceLocality locality)
   {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::Future< qi::ObjectPtr > Session::service(const std::string &service,
+  qi::FutureSync< qi::ObjectPtr > Session::service(const std::string &service,
                                                const std::string &protocol)
   {
     return _p->_serviceHandler.service(service, protocol);
   }
 
 
-  qi::Future<void> Session::listen(const qi::Url &address)
+  qi::FutureSync<void> Session::listen(const qi::Url &address)
   {
     qiLogInfo() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
