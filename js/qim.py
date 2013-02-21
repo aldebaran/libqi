@@ -5,8 +5,17 @@ import tornadio2
 from qimessaging.session import Session
 from qimessaging.genericobject import CallError
 import sys
+import json
+from tornadio2 import proto
+import base64
 
 url = None
+
+class SetEncoder(json.JSONEncoder):
+  def default(self, obj):
+    if isinstance(obj, bytearray):
+      return base64.b64encode(obj)
+    return json.JSONEncoder.default(self, obj)
 
 class QiMessagingHandler(tornadio2.conn.SocketConnection):
 
@@ -47,7 +56,10 @@ class QiMessagingHandler(tornadio2.conn.SocketConnection):
                 else:
                   data = m(*args)
 
-        self.emit('reply', { "idm": idm, "result": data })
+        evt = dict(name = "reply", args = { "idm": idm, "result": data })
+        message = u'5:%s:%s:%s' % ('', self.endpoint or '', json.dumps(evt,
+          cls=SetEncoder))
+        self.session.handler.ws_connection.write_message(message, binary=False)
       except CallError as e:
         self.emit('error', { "idm": idm, "result": str(e) })
 
