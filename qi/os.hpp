@@ -41,8 +41,8 @@ namespace qi {
     QI_API void sleep(unsigned int seconds);
     QI_API void msleep(unsigned int milliseconds);
     struct QI_API timeval {
-      long tv_sec;
-      long tv_usec;
+      qi::int64_t tv_sec;
+      qi::int64_t tv_usec;
     };
     QI_API int gettimeofday(qi::os::timeval *tp);
     QI_API qi::int64_t ustime();
