@@ -1,7 +1,7 @@
 
-qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
+qi_global_set(qi_create_service_file ${CMAKE_CURRENT_LIST_FILE})
 
-#! Create a naoqi module
+#! Create a naoqi service and companion files
 # \group:CLASSES list of class names to be exposed to naoqi as objects
 # \group:SERVICES list of class names to be exposed to naoqi as services
 # \group:INCLUDE files to #include in generated files
@@ -10,16 +10,15 @@ qi_global_set(qi_create_module_file ${CMAKE_CURRENT_LIST_FILE})
 # \param:IDL the IDL file to use as input
 # \param:PROXY generate specialized proxy header and install them
 # \param:SPLIT_BIND generate binding code in a separate file per class
-function(qi_create_module name)
-  message("qi_create_module: ${ARGN}")
+function(qi_create_service name)
   cmake_parse_arguments(ARG
     "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY;SPLIT_BIND"
     "SUBFOLDER;IDL"
     "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;INCLUDE;INCLUDE_SERVICE" ${ARGN})
   message("parsing args: ${ARG_CLASSES}")
   #First, locate idl.py
-  qi_global_get(qi_create_module_file_local qi_create_module_file)
-  get_filename_component(cdir "${qi_create_module_file_local}" PATH)
+  qi_global_get(qi_create_service_file_local qi_create_service_file)
+  get_filename_component(cdir "${qi_create_service_file_local}" PATH)
   find_program(_python_executable
     NAMES python2 python python.exe
     NO_CMAKE_FIND_ROOT_PATH)
