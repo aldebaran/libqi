@@ -21,6 +21,9 @@ TEST(log, logsync)
 
    for (int i = 0; i < 1000; i++)
      qiLogFatal("core.log.test1", "%d\n", i);
+   // Just a test to check for compilation warning.
+   if (true)
+     qiLogInfo() << "canard";
 }
 
 

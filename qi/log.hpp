@@ -31,9 +31,8 @@
 
 
 
-
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
-# define qiLogDebug(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogDebug(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogDebugF(Msg, ...)
 #else
 # define qiLogDebug(...)   _QI_LOG_MESSAGE_STREAM(debug,   Debug ,  __VA_ARGS__)
@@ -41,7 +40,7 @@
 #endif
 
 #if defined(NO_QI_VERBOSE)
-# define qiLogVerbose(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogVerbose(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogVerboseF(Msg, ...)
 #else
 # define qiLogVerbose(...) _QI_LOG_MESSAGE_STREAM(verbose, Verbose, __VA_ARGS__)
@@ -49,7 +48,7 @@
 #endif
 
 #if defined(NO_QI_INFO)
-# define qiLogInfo(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogInfo(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogInfoF(Msg, ...)
 #else
 # define qiLogInfo(...)    _QI_LOG_MESSAGE_STREAM(info,    Info,    __VA_ARGS__)
@@ -57,7 +56,7 @@
 #endif
 
 #if defined(NO_QI_WARNING)
-# define qiLogWarning(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogWarning(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogWarningF(Msg, ...)
 #else
 # define qiLogWarning(...) _QI_LOG_MESSAGE_STREAM(warning, Warning, __VA_ARGS__)
@@ -65,7 +64,7 @@
 #endif
 
 #if defined(NO_QI_ERROR)
-# define qiLogError(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogError(...)   ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogErrorF(Msg, ...)
 #else
 # define qiLogError(...)   _QI_LOG_MESSAGE_STREAM(error,   Error,   __VA_ARGS__)
@@ -73,7 +72,7 @@
 #endif
 
 #if defined(NO_QI_FATAL)
-# define qiLogFatal(...) if (true) {} else  qi::log::detail::NullStream().self()
+# define qiLogFatal(...)  ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
 # define qiLogFatalF(Msg, ...)
 #else
 # define qiLogFatal(...)   _QI_LOG_MESSAGE_STREAM(fatal,   Fatal,   __VA_ARGS__)

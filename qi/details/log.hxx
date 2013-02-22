@@ -171,6 +171,8 @@ namespace qi {
   namespace log{
 
     namespace detail {
+      // Used to remove warning "statement has no effect"
+      inline bool qiFalse() {return false;}
       class NullStream {
       public:
         NullStream(...)
@@ -191,8 +193,13 @@ namespace qi {
         {
           return self();
         }
-
       };
+      // Hack required to silence spurious warning in compile-time disabled macros
+      // We need an operator with priority below << and above &&
+      inline bool operator < (bool b, const NullStream& ns)
+      {
+        return false;
+      }
 
       struct Category
       {
