@@ -141,6 +141,12 @@ struct ToPyObject
   void visitRaw(qi::TypeRaw *type, qi::Buffer *buf)
   {
     /* TODO: zerocopy, sub-buffers... */
+    if (buf->subBuffers().size() != 0)
+    {
+      qiLogError("pyobjectconverter") << "buffer has subbuffers, "
+                                      << "Python bytearray might be incomplete";
+    }
+
     char* b = static_cast<char*>(malloc(buf->size()));
     buf->read(b, 0, buf->size());
     *result = PyByteArray_FromStringAndSize(b, buf->size());
