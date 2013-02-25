@@ -105,16 +105,14 @@ namespace qi
       listenUrl = Url(listenUrl.protocol() + "://" + listenUrl.host() + ":"
         + boost::lexical_cast<std::string>(port));
     }
+
     /* Set endpoints */
     if (listenUrl.host() != "0.0.0.0")
     {
-      qiLogDebug() << "Adding endpoint : " << listenUrl.str();
       _endpoints.push_back(listenUrl.str());
     }
-
-    if (listenUrl.host() == "0.0.0.0") // need available ip addresses
+    else
     {
-      std::string protocol;
       std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
       if (ifsMap.empty())
       {
@@ -126,7 +124,7 @@ namespace qi
       ifsMap["Loopback"].push_back("127.0.0.1");
   #endif
 
-      protocol = _ssl ? "tcps://" : "tcp://";
+      std::string protocol = _ssl ? "tcps://" : "tcp://";
 
       for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
            interfaceIt != ifsMap.end();
@@ -137,14 +135,17 @@ namespace qi
              ++addressIt)
         {
           std::stringstream ss;
-          ss << protocol;
-          ss << (*addressIt);
-          ss << ":";
-          ss << port;
-          qiLogInfo() << "TransportServer will listen on: " << ss.str();
+          ss << protocol << (*addressIt) << ":" << port;
           _endpoints.push_back(ss.str());
-         }
+        }
       }
+    }
+
+    for (std::vector<qi::Url>::const_iterator it = _endpoints.begin();
+         it != _endpoints.end();
+         it++)
+    {
+      qiLogInfo() << "TransportServer will listen on: " << it->str();
     }
 
 #ifdef WITH_SSL
