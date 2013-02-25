@@ -34,9 +34,9 @@ bool qi_session_connect(qi_session_t *session, const char *address)
 
   try
   {
-    qi::Future<bool> fut = s->connect(address);
+    qi::Future<void> fut = s->connect(address);
     fut.wait();
-    if (fut.hasError() || fut.value() == false)
+    if (fut.hasError())
     {
       qi_c_set_error(fut.error().c_str());
       return false;

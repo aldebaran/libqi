@@ -26,7 +26,7 @@ namespace qi {
   }
 
  void ServiceDirectoryClient::onSDEventConnected(qi::Future<Link> ret,
-   qi::Promise<bool> fco, bool isAdd)
+   qi::Promise<void> fco, bool isAdd)
  {
    if (fco.future().wait(-1))
      return;
@@ -41,12 +41,12 @@ namespace qi {
      _removeLink = ret.value();
    if (_addLink && _removeLink)
    {
-     fco.setValue(true);
+     fco.setValue(0);
      connected();
    }
  }
 
-  void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<bool> promise) {
+  void ServiceDirectoryClient::onMetaObjectFetched(qi::Future<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
       promise.setError(future.error());
       return;
@@ -63,13 +63,9 @@ namespace qi {
     fut2.connect(boost::bind<void>(&ServiceDirectoryClient::onSDEventConnected, this, _1, promise, false));
   }
 
-  void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<bool> future, qi::Promise<bool> promise) {
+  void ServiceDirectoryClient::onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> promise) {
     if (future.hasError()) {
       promise.setError(future.error());
-      return;
-    }
-    if (future.value() == false) {
-      promise.setValue(false);
       return;
     }
     qi::Future<void> fut = _remoteObject.fetchMetaObject();
@@ -78,19 +74,20 @@ namespace qi {
 
   //we ensure in that function that connect to all events are already setup when we said we are connect.
   //that way we cant be connected without being fully ready.
-  qi::FutureSync<bool> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
+  qi::FutureSync<void> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
     if (isConnected()) {
-      qiLogInfo() << "Session is already connected";
-      return qi::Future<bool>(false);
+      const char* s = "Session is already connected";
+      qiLogInfo() << s;
+      return qi::makeFutureError<void>(s);
     }
     _sdSocket = qi::makeTransportSocket(serviceDirectoryURL.protocol());
     if (!_sdSocket)
-      return qi::Future<bool>(false);
+      return qi::makeFutureError<void>("!sdSocket");
     _sdSocketDisconnectedLink = _sdSocket->disconnected.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketDisconnected, this, _1));
     _remoteObject.setTransportSocket(_sdSocket);
 
-    qi::Promise<bool> promise;
-    qi::Future<bool> fut = _sdSocket->connect(serviceDirectoryURL);
+    qi::Promise<void> promise;
+    qi::Future<void> fut = _sdSocket->connect(serviceDirectoryURL);
     fut.connect(boost::bind<void>(&ServiceDirectoryClient::onSocketConnected, this, _1, promise));
     return promise.future();
   }

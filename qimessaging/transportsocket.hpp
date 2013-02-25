@@ -41,7 +41,7 @@ namespace qi
     explicit TransportSocket(qi::EventLoop* eventLoop = qi::getDefaultNetworkEventLoop());
     virtual ~TransportSocket();
 
-    virtual qi::FutureSync<bool> connect(const qi::Url &url) = 0;
+    virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
     virtual qi::FutureSync<void> disconnect()                = 0;
 
     virtual bool send(const qi::Message &msg)                = 0;

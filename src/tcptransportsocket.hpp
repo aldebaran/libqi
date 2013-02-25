@@ -37,7 +37,7 @@ namespace qi
     explicit TcpTransportSocket(void* s, EventLoop* eventloop = getDefaultNetworkEventLoop(), bool ssl = false);
     virtual ~TcpTransportSocket();
 
-    virtual qi::FutureSync<bool> connect(const qi::Url &url);
+    virtual qi::FutureSync<void> connect(const qi::Url &url);
     virtual qi::FutureSync<void> disconnect();
     virtual bool send(const qi::Message &msg);
     virtual void startReading();
@@ -65,7 +65,7 @@ namespace qi
 #endif
 
     boost::shared_ptr<bool> _abort; // used to notify send callback sendCont that we are dead
-    qi::Promise<bool>   _connectPromise;
+    qi::Promise<void>   _connectPromise;
     qi::Promise<void>   _disconnectPromise;
 
     // data to rebuild message

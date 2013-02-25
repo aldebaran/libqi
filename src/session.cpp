@@ -73,11 +73,12 @@ namespace qi {
     _self->serviceUnregistered(idx, name);
   }
 
-  qi::FutureSync<bool> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
+  qi::FutureSync<void> SessionPrivate::connect(const qi::Url &serviceDirectoryURL)
   {
     if (isConnected()) {
-      qiLogInfo() << "Session is already connected";
-      return qi::Future<bool>(false);
+      const char* s = "Session is already connected";
+      qiLogInfo() << s;
+      return qi::makeFutureError<void>(s);
     }
     _socketsCache.init();
     return _sdClient.connect(serviceDirectoryURL);
@@ -110,7 +111,7 @@ namespace qi {
 
 
   // ###### Client
-  qi::FutureSync<bool> Session::connect(const qi::Url &serviceDirectoryURL)
+  qi::FutureSync<void> Session::connect(const qi::Url &serviceDirectoryURL)
   {
     return _p->connect(serviceDirectoryURL);
   }

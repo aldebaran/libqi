@@ -46,7 +46,7 @@ TEST(QiSession, simpleConnectionToNonReachableSd)
 TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 {
   qi::Session session;
-  qi::Future<bool> fConnected = session.connect("tcp://0.0.0.0:0");
+  qi::Future<void> fConnected = session.connect("tcp://0.0.0.0:0");
 
   fConnected.wait();
 
@@ -60,11 +60,9 @@ TEST(QiSession, simpleConnectionToInvalidAddrToSd)
 TEST(QiSession, simpleConnectionToInvalidSd)
 {
   qi::Session session;
-  qi::Future<bool> fConnected = session.connect("invalidAddress");
-
-  fConnected.wait();
-
-  EXPECT_FALSE(fConnected.value());
+  qi::Future<void> fConnected = session.connect("invalidAddress");
+  fConnected.wait(3000);
+  EXPECT_TRUE(fConnected.hasError());
   EXPECT_FALSE(session.isConnected());
 
   session.close();
@@ -81,8 +79,9 @@ TEST(QiSession, testClose)
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
 
-  bool connected = session.connect(sd.endpoints()[0]).wait();
-  ASSERT_TRUE(connected);
+  f = session.connect(sd.endpoints()[0]);
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
 
   qi::GenericObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
@@ -105,8 +104,9 @@ TEST(QiSession, testClose)
 
   EXPECT_ANY_THROW(session.services().value());
 
-  connected = session.connect(sd.endpoints()[0]);
-  ASSERT_TRUE(connected);
+  f = session.connect(sd.endpoints()[0]);
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
   session.unregisterService(idx.value());
 }
 

@@ -212,12 +212,13 @@ namespace qi
   }
 
 
-  qi::FutureSync<bool> TcpTransportSocket::connect(const qi::Url &url)
+  qi::FutureSync<void> TcpTransportSocket::connect(const qi::Url &url)
   {
     if (_status == qi::TransportSocket::Status_Connected || _connecting)
     {
-      qiLogError() << "connection already in progress";
-      return makeFutureError<bool>("Operation already in progress");
+      const char* s = "connection already in progress";
+      qiLogError() << s;
+      return makeFutureError<void>(s);
     }
     _url = url;
     _connectPromise.reset();
@@ -250,8 +251,9 @@ namespace qi
     }
     catch (const std::exception& e)
     {
-      qiLogError() << e.what();
-      _connectPromise.setValue(false);
+      const char* s = e.what();
+      qiLogError() << s;
+      _connectPromise.setError(s);
       return _connectPromise.future();
     }
   }
@@ -262,14 +264,14 @@ namespace qi
     {
       qiLogWarning() << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      _connectPromise.setValue(false);
+      _connectPromise.setError(erc.message());
       _disconnectPromise.setValue(0);
       //FIXME: ?? _connectPromise.setError(erc.message());
     }
     else
     {
       _status = qi::TransportSocket::Status_Connected;
-      _connectPromise.setValue(true);
+      _connectPromise.setValue(0);
       _self->connected();
       _sslHandshake = true;
       startReading();
@@ -283,9 +285,8 @@ namespace qi
     {
       qiLogWarning("qimessaging.TransportSocketLibEvent") << "connect: " << erc.message();
       _status = qi::TransportSocket::Status_Disconnected;
-      _connectPromise.setValue(false);
+      _connectPromise.setError(erc.message());
       _disconnectPromise.setValue(0);
-      //FIXME: ?? _connectPromise.setError(erc.message());
     }
     else
     {
@@ -299,7 +300,7 @@ namespace qi
       else
       {
         _status = qi::TransportSocket::Status_Connected;
-        _connectPromise.setValue(true);
+        _connectPromise.setValue(0);
         _self->connected();
         startReading();
       }

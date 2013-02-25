@@ -232,20 +232,27 @@ TEST(QiSession, ConnectToMultipleConstellation)
   constellation2.server()->registerService("test2", obj);
   constellation3.server()->registerService("test3", obj);
 
-  ASSERT_TRUE(traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str()));
+  qi::Future<void> f;
+  f = traveler.connect(constellation1.serviceDirectoryEndpoints()[0].str());
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
   qi::ObjectPtr proxy = constellation1.server()->service("test1");
   std::string res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 
-  ASSERT_TRUE(traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str()));
+  f = traveler.connect(constellation2.serviceDirectoryEndpoints()[0].str());
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
   proxy = constellation2.server()->service("test2");
   ASSERT_TRUE(!!proxy);
   res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler.close();
 
-  ASSERT_TRUE(traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str()));
+  f = traveler.connect(constellation3.serviceDirectoryEndpoints()[0].str());
+  f.wait(3000);
+  ASSERT_TRUE(!f.hasError());
   proxy = constellation3.server()->service("test3");
   res = proxy->call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);

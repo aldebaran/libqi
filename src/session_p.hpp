@@ -32,7 +32,7 @@ namespace qi {
     SessionPrivate(qi::Session *session);
     virtual ~SessionPrivate();
 
-    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
     qi::FutureSync<void> close();
     bool isConnected() const;
 

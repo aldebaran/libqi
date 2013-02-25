@@ -147,7 +147,9 @@ TEST(QiService, RemoteObjectCacheABANewServer)
 
   PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
 
-  EXPECT_TRUE(ses.connect(p.client()->url().str()));
+  qi::Future<void> f = ses.connect(p.client()->url().str());
+  f.wait(8000);
+  EXPECT_FALSE(f.hasError());
   ses.listen("tcp://0.0.0.0:0");
   unsigned int idx2 = ses.registerService("serviceTest", obj);
   //new service should not have a previoulsy registered ID

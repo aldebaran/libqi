@@ -23,7 +23,7 @@ namespace qi {
     ~ServiceDirectoryClient();
 
     //Socket API
-    qi::FutureSync<bool> connect(const qi::Url &serviceDirectoryURL);
+    qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
     qi::FutureSync<void> close();
     bool                 isConnected() const;
     qi::Url              url() const;
@@ -47,15 +47,15 @@ namespace qi {
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
     //TransportSocket Interface
-    void onSocketConnected(qi::FutureSync<bool> future, qi::Promise<bool> prom);
+    void onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> prom);
     void onSocketDisconnected(int error);
 
     //RemoteObject Interface
-    void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<bool> prom);
+    void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
 
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<Link> ret,
-                            qi::Promise<bool> fco,
+                            qi::Promise<void> fco,
                             bool isAdd);
 
   private:

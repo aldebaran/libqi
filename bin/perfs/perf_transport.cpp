@@ -72,9 +72,9 @@ int main_client(std::string QI_UNUSED(src))
     qi::os::msleep(3000);
   qi::Session session;
   std::cout <<"Connection to sd... " << std::endl;
-  qi::FutureSync<bool> isConnected = session.connect((allInOne && !noGateway)?gateUrl:serverUrl);
-  isConnected.wait();
-  if (!isConnected) {
+  qi::FutureSync<void> isConnected = session.connect((allInOne && !noGateway)?gateUrl:serverUrl);
+  isConnected.wait(3000);
+  if (isConnected.hasError()) {
     std::cerr << "Can't connect to " << session.url().str() << std::endl;
     return -1;
   }
