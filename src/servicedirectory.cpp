@@ -185,28 +185,37 @@ namespace qi
   void ServiceDirectoryBoundObject::unregisterService(const unsigned int &idx)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
+    bool pending = false;
     // search the id before accessing it
     // otherwise operator[] create a empty entry
     std::map<unsigned int, ServiceInfo>::iterator it2;
     it2 = connectedServices.find(idx);
-    if (it2 == connectedServices.end())
+    if (it2 == connectedServices.end()) {
+      qiLogVerbose() << "Unregister Service: service #" << idx << " not found in the"
+                     << " connected list. Looking in the pending list.";
+      it2 = pendingServices.find(idx);
+      pending = true;
+      if (it2 == pendingServices.end())
+      {
+        std::stringstream ss;
+        ss << "Unregister Service: Can't find service #" << idx;
+        qiLogError() << ss.str();
+        throw std::runtime_error(ss.str());
+      }
+    }
+
+    std::string serviceName = it2->second.name();
+
+    std::map<std::string, unsigned int>::iterator it;
+    it = nameToIdx.find(serviceName);
+    if (it == nameToIdx.end())
     {
       std::stringstream ss;
-      ss << "Unregister Service: Can't find service #" << idx;
+      ss << "Unregister Service: Mapping error, service #" << idx << " (" << serviceName << ") not in nameToIdx";
       qiLogError() << ss.str();
       throw std::runtime_error(ss.str());
     }
 
-    std::map<std::string, unsigned int>::iterator it;
-    it = nameToIdx.find(connectedServices[idx].name());
-    if (it == nameToIdx.end())
-    {
-      std::stringstream ss;
-      ss << "Unregister Service: Mapping error, service #" << idx << " not in nameToIdx";
-      qiLogError() << ss.str();
-      throw std::runtime_error(ss.str());
-    }
-    std::string serviceName = it2->second.name();
 
     std::stringstream ss;
     ss << "Unregistered Service  \""
@@ -223,7 +232,10 @@ namespace qi
     }
 
     nameToIdx.erase(it);
-    connectedServices.erase(it2);
+    if (pending)
+      pendingServices.erase(it2);
+    else
+      connectedServices.erase(it2);
 
     // Find and remove serviceId into socketToIdx map
     {
