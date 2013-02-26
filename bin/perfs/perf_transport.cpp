@@ -71,8 +71,9 @@ int main_client(std::string QI_UNUSED(src))
   if (valgrind)
     qi::os::msleep(3000);
   qi::Session session;
-  std::cout <<"Connection to sd... " << std::endl;
-  qi::FutureSync<void> isConnected = session.connect((allInOne && !noGateway)?gateUrl:serverUrl);
+  qi::Url url = (allInOne && !noGateway)? gateUrl : serverUrl;
+  std::cout <<"Connection to sd... "<< url.str() << std::endl;
+  qi::FutureSync<void> isConnected = session.connect(url);
   isConnected.wait(3000);
   if (isConnected.hasError()) {
     std::cerr << "Can't connect to " << session.url().str() << std::endl;
@@ -172,7 +173,7 @@ int main_gateway(const qi::Url& serverUrl)
 int main_server()
 {
   qi::ServiceDirectory sd;
-  if (!sd.listen(serverUrl)) {
+  if (sd.listen(serverUrl).hasError()) {
     std::cerr << "Service directory can't listen on " << serverUrl.str() << "." << std::endl;
     return 1;
   }
