@@ -126,7 +126,9 @@ TEST(TestThreadModel, notThreadSafe)
   qi::Future<void> f1 = o1->call<void>("delayms", 150);
   o1->call<void>("delayms", 150).wait();
   f1.wait();
-  ASSERT_GT(qi::os::ustime() - start, 300000);
+  // we expect >300ms result, take 10% marging to take into acount
+  // timer granularity and sleep duration inprecision.
+  ASSERT_GT(qi::os::ustime() - start, 270000);
 }
 
 TEST(TestThreadModel, ThreadSafe)
@@ -139,7 +141,7 @@ TEST(TestThreadModel, ThreadSafe)
   qi::Future<void> f1 = o1->call<void>("delaymsThreadSafe", 150);
   o1->call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
-  ASSERT_LT(qi::os::ustime() - start, 300000);
+  ASSERT_LT(qi::os::ustime() - start, 270000);
 }
 
 TEST(TestThreadModel, MethodModel)
@@ -159,7 +161,7 @@ TEST(TestThreadModel, MethodModel)
   f1 = o1->call<void>("delaymsThreadSafe", 150);
   o1->call<void>("delaymsThreadSafe", 150).wait();
   f1.wait();
-  ASSERT_LT(qi::os::ustime() - start, 300000);
+  ASSERT_LT(qi::os::ustime() - start, 270000);
 }
 
 
