@@ -140,7 +140,7 @@ namespace qi {
   /* An ObjectPtr is actually of a Dynamic type: The underlying Type*
    * is not allways the same.
   */
-  template<> class TypeImpl<ObjectPtr>: public TypeDynamic
+  template<> class QITYPE_API TypeImpl<ObjectPtr>: public TypeDynamic
   {
   public:
     virtual std::pair<GenericValuePtr, bool> get(void* storage)
