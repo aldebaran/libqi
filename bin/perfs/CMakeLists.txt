@@ -49,3 +49,7 @@ qi_create_perf_test(perf_function perf_function.cpp
   DEPENDS
     QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
 
+
+qi_create_perf_test(perf_create_service perf_create_service.cpp
+  DEPENDS
+    QI QIPERF QITYPE QIMESSAGING BOOST_PROGRAM_OPTIONS)
