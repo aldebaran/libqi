@@ -42,8 +42,6 @@ namespace qi {
     class FutureState : public FutureBase {
     public:
       typedef typename FutureType<T>::type ValueType;
-      typedef boost::signals2::connection Connection;
-      typedef typename boost::signals2::signal<void (Future<T>)>::slot_type Slot;
       FutureState()
         : _value()
       {
@@ -77,42 +75,39 @@ namespace qi {
         boost::recursive_mutex::scoped_lock lock(mutex());
         _value = value;
         reportReady();
-        _onResult(future);
+        for(unsigned i=0; i<_onResult.size(); ++i)
+          _onResult[i](future);
         notifyReady();
       }
 
       void setError(qi::Future<T>& future, const std::string &message)
       {
+        boost::recursive_mutex::scoped_lock lock(mutex());
         reportError(message);
-        _onResult(future);
+        for(unsigned i=0; i<_onResult.size(); ++i)
+          _onResult[i](future);
         notifyReady();
       }
 
-      Connection connect(qi::Future<T> future, const Slot& s)
+      void connect(qi::Future<T> future, const boost::function<void (qi::Future<T>)> &s)
       {
         bool ready;
-        Connection res;
         {
           boost::recursive_mutex::scoped_lock lock(mutex());
-          res = _onResult.connect(s);
+          _onResult.push_back(s);
           ready = isReady();
         }
         //result already ready, notify the callback
         if (ready) {
           s(future);
         }
-        return res;
-      }
-
-      bool disconnect(Connection i) {
-        _onResult.disconnect(i);
-        return true;
       }
 
       const ValueType &value() const    { wait(); if (hasError()) throw std::runtime_error(error()); return _value; }
 
     private:
-      boost::signals2::signal<void (qi::Future<T>)>  _onResult;
+      typedef std::vector<boost::function<void (qi::Future<T>)> > Callbacks;
+      Callbacks _onResult;
       ValueType                         _value;
       boost::function<void ()>          _onCancel;
     };

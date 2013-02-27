@@ -11,7 +11,8 @@
 #include <qi/atomic.hpp>
 #include <qi/config.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/signals2.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -119,10 +120,8 @@ namespace qi {
       return _p->isCanceleable();
     }
   public: //Signals
-    typedef boost::signals2::connection Connection;
-    typedef typename boost::signals2::signal<void (Future<T>)>::slot_type Slot;
-    inline Connection connect(const Slot& s) { return _p->connect(*this, s);}
-    inline bool disconnect(Connection i) { return _p->disconnect(i); }
+    typedef boost::function<void (Future<T>) > Connection;
+    inline void connect(const Connection& s) { _p->connect(*this, s);}
     //qi::Signal<void (qi::Future<T>)> &onResult() { return _p->_onResult; }
 
   protected:
