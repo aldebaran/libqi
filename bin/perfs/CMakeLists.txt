@@ -10,10 +10,6 @@ qi_create_perf_test(perf_transport perf_transport.cpp
   DEPENDS
     QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
-qi_create_perf_test(perf_transport_socket perf_transport_socket.cpp
-  DEPENDS
-    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
-
 qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
   DEPENDS
     QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
