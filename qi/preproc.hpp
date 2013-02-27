@@ -469,6 +469,17 @@ for i in range(0, 10):
 // invoke f(n, argtypedecl, argstype, argsdecl, argsuses, comma_or_empty) for n in [0, 10]
 #define QI_GEN(f) BOOST_PP_REPEAT(10, _QI_GEN, f)
 
+// Evaluate to empty or 'template<' depending on wheter args is empty or a comma.
+#define QI_GEN_MAYBE_TEMPLATE_OPEN(...) \
+  QI_CAT(_QI_GEN_MAYBE_TEMPLATE_OPEN_, QI_LIST_VASIZE((__VA_ARGS__)))
+#define QI_GEN_MAYBE_TEMPLATE_CLOSE(...) \
+  QI_CAT(_QI_GEN_MAYBE_TEMPLATE_CLOSE_, QI_LIST_VASIZE((__VA_ARGS__)))
+
+
+#define _QI_GEN_MAYBE_TEMPLATE_OPEN_1 template<
+#define _QI_GEN_MAYBE_TEMPLATE_OPEN_0
+#define _QI_GEN_MAYBE_TEMPLATE_CLOSE_1 >
+#define _QI_GEN_MAYBE_TEMPLATE_CLOSE_0
 // Return i+1 as a symbol
 #define QI_GEN_SYMINC(i) BOOST_PP_CAT(_QI_GEN_SYMINC_, i)
 #define _QI_GEN_SYMINC_9 10
