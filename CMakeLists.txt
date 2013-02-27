@@ -9,6 +9,7 @@ set(H
   qiperf/dataperfsuite.hpp
   qiperf/details/dataperfsuite.hxx
   qiperf/dataperf.hpp
+  qiperf/measure.hpp
   qiperf/api.hpp
 )
 
@@ -20,6 +21,7 @@ set(H_P
 set(C
   src/dataperfsuite.cpp
   src/dataperf.cpp
+  src/measure.cpp
 )
 
 include_directories(".")

@@ -2,7 +2,7 @@
  *  Author(s):
  *  - Nicolas Cornu <ncornu@aldebaran-robotics.com>
  *
- *  Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
+ *  Copyright (c) 2012-2013 Aldebaran Robotics. All rights reserved.
  */
 
 #include <string>
@@ -25,4 +25,3 @@ TEST(TestMsgSize, TestDataPerf)
   ASSERT_EQ(dp.getMsgSize(), (unsigned int)0);
   dp.stop();
 }
-
