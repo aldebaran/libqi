@@ -6,8 +6,6 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-//  Disclaimer: Not a Boost library.
-
 #ifndef BOOST_LOCKFREE_TAGGED_PTR_DCAS_HPP_INCLUDED
 #define BOOST_LOCKFREE_TAGGED_PTR_DCAS_HPP_INCLUDED
 
@@ -15,10 +13,9 @@
 
 #include <cstddef>              /* for std::size_t */
 
-namespace boost
-{
-namespace lockfree
-{
+namespace boost {
+namespace lockfree {
+namespace detail {
 
 template <class T>
 class BOOST_LOCKFREE_DCAS_ALIGNMENT tagged_ptr
@@ -27,12 +24,16 @@ public:
     typedef std::size_t tag_t;
 
     /** uninitialized constructor */
-    tagged_ptr(void)//: ptr(0), tag(0)
+    tagged_ptr(void) BOOST_NOEXCEPT//: ptr(0), tag(0)
     {}
 
+#ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     tagged_ptr(tagged_ptr const & p):
         ptr(p.ptr), tag(p.tag)
     {}
+#else
+    tagged_ptr(tagged_ptr const & p) = default;
+#endif
 
     explicit tagged_ptr(T * p, tag_t t = 0):
         ptr(p), tag(t)
@@ -40,10 +41,15 @@ public:
 
     /** unsafe set operation */
     /* @{ */
-    void operator= (tagged_ptr const & p)
+#ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
+    tagged_ptr & operator= (tagged_ptr const & p)
     {
         set(p.ptr, p.tag);
+        return *this;
     }
+#else
+    tagged_ptr & operator= (tagged_ptr const & p) = default;
+#endif
 
     void set(T * p, tag_t t)
     {
@@ -114,6 +120,7 @@ protected:
     tag_t tag;
 };
 
+} /* namespace detail */
 } /* namespace lockfree */
 } /* namespace boost */
 

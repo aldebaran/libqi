@@ -6,8 +6,6 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-//  Disclaimer: Not a Boost library.
-
 #ifndef BOOST_LOCKFREE_TAGGED_PTR_PTRCOMPRESSION_HPP_INCLUDED
 #define BOOST_LOCKFREE_TAGGED_PTR_PTRCOMPRESSION_HPP_INCLUDED
 
@@ -17,17 +15,18 @@
 
 #include <boost/cstdint.hpp>
 
-namespace boost
-{
-namespace lockfree
-{
+namespace boost {
+namespace lockfree {
+namespace detail {
 
-#if defined (__x86_64__) || defined (_M_X64) || defined(__alpha__)
+#if defined (__x86_64__) || defined (_M_X64)
 
 template <class T>
 class tagged_ptr
 {
     typedef boost::uint64_t compressed_ptr_t;
+
+public:
     typedef boost::uint16_t tag_t;
 
 private:
@@ -38,7 +37,7 @@ private:
     };
 
     static const int tag_index = 3;
-    static const compressed_ptr_t ptr_mask = 0xffffffffffff; //(1L<<48L)-1;
+    static const compressed_ptr_t ptr_mask = 0xffffffffffffUL; //(1L<<48L)-1;
 
     static T* extract_ptr(volatile compressed_ptr_t const & i)
     {
@@ -62,13 +61,17 @@ private:
 
 public:
     /** uninitialized constructor */
-    tagged_ptr(void)//: ptr(0), tag(0)
+    tagged_ptr(void) BOOST_NOEXCEPT//: ptr(0), tag(0)
     {}
 
     /** copy constructor */
+#ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     tagged_ptr(tagged_ptr const & p):
         ptr(p.ptr)
     {}
+#else
+    tagged_ptr(tagged_ptr const & p) = default;
+#endif
 
     explicit tagged_ptr(T * p, tag_t t = 0):
         ptr(pack_ptr(p, t))
@@ -76,10 +79,15 @@ public:
 
     /** unsafe set operation */
     /* @{ */
-    void operator= (tagged_ptr const & p)
+#ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
+    tagged_ptr & operator= (tagged_ptr const & p)
     {
-        ptr = p.ptr;
+         ptr = p.ptr;
+         return *this;
     }
+#else
+    tagged_ptr & operator= (tagged_ptr const & p) = default;
+#endif
 
     void set(T * p, tag_t t)
     {
@@ -153,6 +161,7 @@ protected:
 #error unsupported platform
 #endif
 
+} /* namespace detail */
 } /* namespace lockfree */
 } /* namespace boost */
 

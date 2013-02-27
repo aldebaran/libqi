@@ -4,8 +4,6 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-//  Disclaimer: Not a Boost library.
-
 #ifndef BOOST_LOCKFREE_PREFIX_HPP_INCLUDED
 #define BOOST_LOCKFREE_PREFIX_HPP_INCLUDED
 
@@ -42,9 +40,17 @@
     #define BOOST_LOCKFREE_PTR_COMPRESSION 1
     #define BOOST_LOCKFREE_DCAS_ALIGNMENT __attribute__((aligned(16)))
 #elif defined(__alpha__)
-    #define BOOST_LOCKFREE_PTR_COMPRESSION 1
+    // LATER: alpha may benefit from pointer compression. but what is the maximum size of the address space?
     #define BOOST_LOCKFREE_DCAS_ALIGNMENT
 #endif
 #endif /* __GNUC__ */
+
+#ifndef BOOST_LOCKFREE_DCAS_ALIGNMENT
+#define BOOST_LOCKFREE_DCAS_ALIGNMENT /*BOOST_LOCKFREE_DCAS_ALIGNMENT*/
+#endif
+
+#ifndef BOOST_LOCKFREE_CACHELINE_ALIGNMENT
+#define BOOST_LOCKFREE_CACHELINE_ALIGNMENT /*BOOST_LOCKFREE_CACHELINE_ALIGNMENT*/
+#endif
 
 #endif /* BOOST_LOCKFREE_PREFIX_HPP_INCLUDED */
