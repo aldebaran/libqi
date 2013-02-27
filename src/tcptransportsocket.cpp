@@ -336,7 +336,9 @@ namespace qi
 
   bool TcpTransportSocket::send(const qi::Message &msg)
   {
+    qiLogDebug() << _self << " Send (" << msg.type() << "):" << msg.address();
     boost::mutex::scoped_lock lock(_sendQueueMutex);
+
     if (!_sending)
     {
       _sending = true;
