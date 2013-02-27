@@ -86,7 +86,9 @@ namespace qi
 
   void ThreadPoolPrivate::workLoop()
   {
-    qi::os::setCurrentThreadName("tp-idle");
+    std::string tpWorker("tp-worker");
+    std::string tpIdle("tp-idle");
+    qi::os::setCurrentThreadName(tpIdle);
     while (true)
     {
       boost::function<void(void)> task;
@@ -119,11 +121,11 @@ namespace qi
 
       if (task)
       {
-        qi::os::setCurrentThreadName("tp-worker");
+        qi::os::setCurrentThreadName(tpWorker);
         ++_activeWorkers;
         task();
         --_activeWorkers;
-        qi::os::setCurrentThreadName("tp-idle");
+        qi::os::setCurrentThreadName(tpIdle);
       }
     }
 
