@@ -83,6 +83,8 @@ namespace qi {
     boost::shared_ptr<Session_Service> _self;
     Promise<void>                      _destructionBarrier;
     friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
+    friend inline void onServiceInfoResultIfExists(Session_Service* s, qi::Future<qi::ServiceInfo> f,
+    long requestId, std::string protocol, boost::weak_ptr<Session_Service> self);
   };
 
 }

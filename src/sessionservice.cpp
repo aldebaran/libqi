@@ -169,6 +169,14 @@ namespace qi {
     removeRequest(requestId);
   }
 
+  inline void onServiceInfoResultIfExists(Session_Service* s, qi::Future<qi::ServiceInfo> f,
+    long requestId, std::string protocol, boost::weak_ptr<Session_Service> self)
+  {
+    boost::shared_ptr<Session_Service> sself = self.lock();
+    if (sself)
+      sself->onServiceInfoResult(f, requestId, protocol);
+  }
+
   // We received a ServiceInfo, and want to establish a connection
   void Session_Service::onServiceInfoResult(qi::Future<qi::ServiceInfo> result, long requestId, std::string protocol) {
     qiLogDebug() << "Got serviceinfo message";
@@ -254,7 +262,7 @@ namespace qi {
     }
     result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
-    fut.connect(qi::Future<qi::ServiceInfo>::Slot(boost::bind<void>(&Session_Service::onServiceInfoResult, this, _1, requestId, protocol)).track(_self));
+    fut.connect(boost::bind<void>(&onServiceInfoResultIfExists, this, _1, requestId, protocol, boost::weak_ptr<Session_Service>(_self)));
     return result;
   }
 }
