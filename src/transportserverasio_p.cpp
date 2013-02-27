@@ -73,7 +73,8 @@ namespace qi
     using namespace boost::asio;
     // resolve endpoint
     ip::tcp::resolver r(_acceptor.get_io_service());
-    ip::tcp::resolver::query q(listenUrl.host(), boost::lexical_cast<std::string>(listenUrl.port()));
+    ip::tcp::resolver::query q(listenUrl.host(), boost::lexical_cast<std::string>(listenUrl.port()),
+                               boost::asio::ip::tcp::resolver::query::all_matching);
     ip::tcp::resolver::iterator it = r.resolve(q);
     if (it == ip::tcp::resolver::iterator())
     {
