@@ -87,7 +87,7 @@ namespace qi {
     _socket = socket;
     //do not set the socket on the remote object
     if (socket) {
-      _linkMessageDispatcher = _socket->messagePendingConnect(_service, 
+      _linkMessageDispatcher = _socket->messagePendingConnect(_service,
         _object <= Message::GenericObject_Main?TransportSocket::ALL_OBJECTS:_object,
         boost::bind<void>(&RemoteObject::onMessagePending, this, _1));
       _linkDisconnected      = _socket->disconnected.connect (boost::bind<void>(&RemoteObject::onSocketDisconnected, this, _1));
@@ -118,6 +118,8 @@ namespace qi {
     prom.setValue(0);
   }
 
+
+
   //retrieve the metaObject from the network
   qi::Future<void> RemoteObject::fetchMetaObject() {
     qi::Promise<void> prom;
@@ -136,28 +138,57 @@ namespace qi {
       ObjectHost::onMessage(msg, _socket);
       return;
     }
-    qi::Promise<GenericValuePtr> promise;
-    bool found = false;
-    std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
 
+
+    if (msg.type() == qi::Message::Type_Event) {
+      SignalBase* sb = signalBase(msg.event());
+      if (sb)
+      {
+        try {
+          std::string sig = sb->signature();
+          // Remove top-level tuple
+          sig = sig.substr(1, sig.length()-2);
+          GenericFunctionParameters args = msg.parameters(sig, _socket);
+          qiLogDebug() << "Triggering local event listeners";
+          sb->trigger(args);
+          args.destroy();
+        }
+        catch (const std::exception& e)
+        {
+          qiLogWarning() << "Deserialize error on event: " << e.what();
+        }
+      }
+      else
+      {
+        qiLogWarning() << "Event message on unknown signal " << msg.event();
+        qiLogDebug() << metaObject().signalMap().size();
+      }
+      return;
+    }
+
+
+    if (msg.type() != qi::Message::Type_Reply && msg.type() != qi::Message::Type_Error) {
+      qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
+      return;
+    }
+
+    qi::Promise<GenericValuePtr> promise;
     {
       boost::mutex::scoped_lock lock(_mutex);
+      std::map<int, qi::Promise<GenericValuePtr> >::iterator it;
       it = _promises.find(msg.id());
       if (it != _promises.end()) {
         promise = _promises[msg.id()];
         _promises.erase(it);
-        found = true;
+      } else  {
+        qiLogError() << "no promise found for req id:" << msg.id()
+        << "  obj: " << msg.service() << "  func: " << msg.function();
+        return;
       }
     }
 
     switch (msg.type()) {
-      case qi::Message::Type_Reply:
-      {
-        if (!found) {
-          qiLogError() << "no promise found for req id:" << msg.id()
-          << "  obj: " << msg.service() << "  func: " << msg.function();
-          return;
-        }
+      case qi::Message::Type_Reply: {
         // Get call signature
         MetaMethod* mm =  metaObject().method(msg.function());
         if (!mm)
@@ -178,6 +209,7 @@ namespace qi {
         qiLogDebug() << "Message passed to promise";
         return;
       }
+
       case qi::Message::Type_Error: {
         qi::BinaryDecoder ds(msg.buffer());
         std::string    err;
@@ -194,33 +226,8 @@ namespace qi {
         promise.setError(err);
         return;
       }
-      case qi::Message::Type_Event: {
-        SignalBase* sb = signalBase(msg.event());
-        if (sb)
-        {
-          try {
-            std::string sig = sb->signature();
-            // Remove top-level tuple
-            sig = sig.substr(1, sig.length()-2);
-            GenericFunctionParameters args = msg.parameters(sig, _socket);
-            qiLogDebug() << "Triggering local event listeners";
-            sb->trigger(args);
-            args.destroy();
-          }
-          catch (const std::exception& e)
-          {
-            qiLogWarning() << "Deserialize error on event: " << e.what();
-          }
-        }
-        else
-        {
-          qiLogWarning() << "Event message on unknown signal " << msg.event();
-          qiLogDebug() << metaObject().signalMap().size();
-        }
-        return;
-      }
       default:
-        qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
+        //not possible
         return;
     }
   }
