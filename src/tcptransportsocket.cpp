@@ -85,6 +85,10 @@ namespace qi
     assert(eventLoop);
     _status = qi::TransportSocket::Status_Connected;
     _abort = boost::shared_ptr<bool>(new bool(false));
+
+    // Transmit each Message without delay
+    const boost::asio::ip::tcp::no_delay option( true );
+    _socket->set_option(option);
   }
 
 
@@ -274,6 +278,9 @@ namespace qi
       _connectPromise.setValue(0);
       _self->connected();
       _sslHandshake = true;
+      // Transmit each Message without delay
+      const boost::asio::ip::tcp::no_delay option( true );
+      _socket->set_option(option);
       startReading();
     }
   }
@@ -302,6 +309,9 @@ namespace qi
         _status = qi::TransportSocket::Status_Connected;
         _connectPromise.setValue(0);
         _self->connected();
+        // Transmit each Message without delay
+        const boost::asio::ip::tcp::no_delay option( true );
+        _socket->set_option(option);
         startReading();
       }
     }
