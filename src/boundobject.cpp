@@ -41,6 +41,7 @@ namespace qi {
     , _callType(mct)
     , _owner(owner)
   {
+    onDestroy.setCallType(MetaCallType_Direct);
     _self = createServiceBoundObjectType(this, bindTerminate);
   }
 
