@@ -51,7 +51,7 @@ namespace qi
       boost::mutex                                _managerMutex;
       boost::mutex                                _terminatedThreadsMutex;
       std::queue<boost::thread::id>               _terminatedThreads;
-      std::queue<boost::function<void(void)> >    _tasks;
+      std::queue<boost::function<void(void)>* >    _tasks;
       boost::thread                               _manager;
 
   };

@@ -64,7 +64,7 @@ namespace qi
     {
       boost::mutex::scoped_lock lock(_tasksMutex);
 
-      _tasks.push(f);
+      _tasks.push(new  boost::function<void(void)>(f));
     }
     _tasksCondition.notify_one();
 
@@ -91,7 +91,7 @@ namespace qi
     qi::os::setCurrentThreadName(tpIdle);
     while (true)
     {
-      boost::function<void(void)> task;
+      boost::function<void(void)>* task = 0;
 
       { /* -- Locked Section -- */
         boost::mutex::scoped_lock lock(_tasksMutex);
@@ -123,7 +123,8 @@ namespace qi
       {
         qi::os::setCurrentThreadName(tpWorker);
         ++_activeWorkers;
-        task();
+        (*task)();
+        delete task;
         --_activeWorkers;
         qi::os::setCurrentThreadName(tpIdle);
       }
