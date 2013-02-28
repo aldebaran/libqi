@@ -37,6 +37,9 @@ namespace qi {
       FutureBasePrivate *_p;
     };
 
+    QI_API void* futureStateNew(size_t);
+    QI_API void  futureStateDelete(void*);
+
     //common state shared between a Promise and multiple Futures
     template <typename T>
     class FutureState : public FutureBase {

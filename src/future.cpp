@@ -8,12 +8,15 @@
 #include <qi/eventloop.hpp>
 
 #include <boost/thread.hpp>
+#include <boost/pool/singleton_pool.hpp>
 
 namespace qi {
 
   namespace detail {
     class FutureBasePrivate {
     public:
+      void* operator new(size_t);
+      void operator delete(void*);
       FutureBasePrivate();
       boost::condition_variable_any _cond;
       boost::recursive_mutex    _mutex;
@@ -21,6 +24,19 @@ namespace qi {
       bool                      _isReady;
       bool                      _hasError;
     };
+
+    struct FutureBasePrivatePoolTag { };
+    typedef boost::singleton_pool<FutureBasePrivatePoolTag, sizeof(FutureBasePrivate)> futurebase_pool;
+
+    void* FutureBasePrivate::operator new(size_t sz)
+    {
+      return futurebase_pool::malloc();
+    }
+
+    void FutureBasePrivate::operator delete(void* ptr)
+    {
+      futurebase_pool::free(ptr);
+    }
 
     FutureBasePrivate::FutureBasePrivate()
       : _cond(),

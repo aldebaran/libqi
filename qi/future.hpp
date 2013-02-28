@@ -11,6 +11,7 @@
 #include <qi/atomic.hpp>
 #include <qi/config.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -50,7 +51,7 @@ namespace qi {
     typedef typename FutureType<T>::type ValueType;
     typedef typename FutureType<T>::typecast ValueTypeCast;
     Future()
-      : _p(new detail::FutureState<T>())
+      : _p(boost::make_shared<detail::FutureState<T> >())
     {
     }
 
