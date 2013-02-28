@@ -43,6 +43,7 @@ static qi::DataPerfSuite* out;
 static bool noGateway = true;
 static int rstart = 0;
 static int rend = 20;
+static int pipeline = 1;
 
 static int run_client(qi::ObjectPtr obj);
 
@@ -98,6 +99,8 @@ int run_client(qi::ObjectPtr obj)
   qi::DataPerf dp;
 
   unsigned int numBytes = 1;
+  std::vector<qi::Future<qi::Buffer> > ops;
+  ops.resize(pipeline);
   for (int i = rstart; i < rend; i+=2)
   {
     std::ostringstream oss(std::ostringstream::out);
@@ -111,13 +114,21 @@ int run_client(qi::ObjectPtr obj)
     {
       qi::os::timeval tstart, tstop;
       qi::os::gettimeofday(&tstart);
-      qi::Buffer result = obj->call<qi::Buffer>("replyBuf", buf);
+      if (j >= pipeline)
+      {
+        ops[j % pipeline].wait();
+        if (ops[j % pipeline].value().size() != buf.size())
+          std::cout << "error content" << std::endl;
+      }
+      qi::Future<qi::Buffer> result = obj->call<qi::Buffer>("replyBuf", buf);
+      ops[j % pipeline] = result;
       qi::os::gettimeofday(&tstop);
       latencySum += (tstop.tv_sec - tstart.tv_sec)* 1000000LL
         + (tstop.tv_usec - tstart.tv_usec);
-      if (result.size() != buf.size())
-        std::cout << "error content" << std::endl;
+
     }
+    for (int j=0; j<pipeline; ++j)
+      ops[j].wait();
 
     dp.stop();
     *out << dp;
@@ -217,7 +228,9 @@ int main(int argc, char **argv)
     ("valgrind", "Set low loopcount and wait for valgrind.")
     ("gateway", "Run without gateway.")
     ("rstart", po::value<int>()->default_value(0, "0"), "rstart")
-    ("rend", po::value<int>()->default_value(20, "20"), "rend");
+    ("rend", po::value<int>()->default_value(20, "20"), "rend")
+    ("pipeline", po::value<int>()->default_value(1, "1"), "Max number of parallel calls to run")
+    ;
 
   desc.add(qi::details::getPerfOptions());
 
@@ -251,6 +264,7 @@ int main(int argc, char **argv)
 
   rstart = vm["rstart"].as<int>();
   rend   = vm["rend"].as<int>();
+  pipeline = vm["pipeline"].as<int>();
 
   out = new qi::DataPerfSuite("qimessaging", "transport", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
