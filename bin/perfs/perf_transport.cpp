@@ -19,6 +19,7 @@
 
 namespace po = boost::program_options;
 
+#include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/url.hpp>
 #include <qimessaging/transportsocket.hpp>
@@ -30,6 +31,8 @@ namespace po = boost::program_options;
 #include <qimessaging/gateway.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
+
+qiLogCategory("perf_transport");
 
 static int gLoopCount = 10000;
 static bool valgrind = false;
@@ -44,25 +47,42 @@ static bool noGateway = true;
 static int rstart = 0;
 static int rend = 20;
 static int pipeline = 1;
+static bool threadsafe = false;
+static int msDelay = 0;
 
 static int run_client(qi::ObjectPtr obj);
 
 std::string reply(const std::string &msg)
 {
+  if (msDelay)
+    qi::os::msleep(msDelay);
   return msg;
 }
 
 qi::Buffer replyBuf(const qi::Buffer& buf)
 {
-  return qi::Buffer(buf);
+  qiLogDebug() << "enter";
+  if (msDelay)
+    qi::os::msleep(msDelay);
+  qi::Buffer res = qi::Buffer(buf);
+  qiLogDebug() << "leave";
+  return res;
+}
+
+qi::ObjectPtr make_service()
+{
+  qi::GenericObjectBuilder ob;
+  if (threadsafe)
+    ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  ob.advertiseMethod("reply", &reply);
+  ob.advertiseMethod("replyBuf", &replyBuf);
+  qi::ObjectPtr obj(ob.object());
+  return obj;
 }
 
 int main_local()
 {
-  qi::GenericObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::ObjectPtr obj(ob.object());
+  qi::ObjectPtr obj = make_service();
   run_client(obj);
   return 0;
 }
@@ -192,10 +212,7 @@ int main_server()
   std::cout << "Service Directory ready on " << serverUrl.str() << std::endl;
 
   qi::Session       session;
-  qi::GenericObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  ob.advertiseMethod("replyBuf", &replyBuf);
-  qi::ObjectPtr obj(ob.object());
+  qi::ObjectPtr obj = make_service();
 
   session.connect(sd.endpoints()[0]);
 
@@ -230,6 +247,8 @@ int main(int argc, char **argv)
     ("rstart", po::value<int>()->default_value(0, "0"), "rstart")
     ("rend", po::value<int>()->default_value(20, "20"), "rend")
     ("pipeline", po::value<int>()->default_value(1, "1"), "Max number of parallel calls to run")
+    ("threadsafe", po::bool_switch()->default_value(false), "Declare threadsafe service")
+    ("msdelay", po::value<int>()->default_value(0, "0"), "Delay in milliseconds to simulate long call")
     ;
 
   desc.add(qi::details::getPerfOptions());
@@ -265,6 +284,8 @@ int main(int argc, char **argv)
   rstart = vm["rstart"].as<int>();
   rend   = vm["rend"].as<int>();
   pipeline = vm["pipeline"].as<int>();
+  threadsafe = vm["threadsafe"].as<bool>();
+  msDelay = vm["msdelay"].as<int>();
 
   out = new qi::DataPerfSuite("qimessaging", "transport", qi::DataPerfSuite::OutputData_Period, vm["output"].as<std::string>());
 
