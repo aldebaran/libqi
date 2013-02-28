@@ -19,6 +19,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/make_shared.hpp>
 
 #include "tcptransportsocket.hpp"
 #include "transportsocket_p.hpp"
@@ -63,7 +64,7 @@ namespace qi
 
     assert(eventLoop);
     _disconnectPromise.setValue(0); // not connected, so we are finished disconnecting
-    _abort = boost::shared_ptr<bool>(new bool(false));
+    _abort = boost::make_shared<bool>(false);
   }
 
   TcpTransportSocket::TcpTransportSocket(void* s, EventLoop* eventLoop, bool ssl)
@@ -84,7 +85,7 @@ namespace qi
   {
     assert(eventLoop);
     _status = qi::TransportSocket::Status_Connected;
-    _abort = boost::shared_ptr<bool>(new bool(false));
+    _abort = boost::make_shared<bool>(false);
 
     // Transmit each Message without delay
     const boost::asio::ip::tcp::no_delay option( true );

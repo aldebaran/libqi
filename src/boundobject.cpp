@@ -2,6 +2,9 @@
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
 */
+
+#include <boost/make_shared.hpp>
+
 #include <qitype/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 #include "serverresult.hpp"
@@ -215,7 +218,7 @@ namespace qi {
   }
 
   qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId, qi::ObjectPtr object, qi::MetaCallType mct) {
-    boost::shared_ptr<ServiceBoundObject> ret(new ServiceBoundObject(serviceId, Message::GenericObject_Main, object, mct));
+    boost::shared_ptr<ServiceBoundObject> ret = boost::make_shared<ServiceBoundObject>(serviceId, Message::GenericObject_Main, object, mct);
     return ret;
   }
 

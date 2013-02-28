@@ -6,6 +6,8 @@
 #include <cassert>
 #include <cstring>
 
+#include <boost/make_shared.hpp>
+
 #include <qitype/genericvalue.hpp>
 #include <qimessaging/message.hpp>
 #include <qimessaging/binaryencoder.hpp>
@@ -46,7 +48,7 @@ namespace qi {
   }
 
   Message::Message()
-    : _p(new qi::MessagePrivate())
+    : _p(boost::make_shared<MessagePrivate>())
   {
 
   }
@@ -58,7 +60,7 @@ namespace qi {
   void Message::cow()
   {
     if (_p.use_count() > 1)
-      _p = boost::shared_ptr<MessagePrivate>(new MessagePrivate(*_p.get()));
+      _p = boost::make_shared<MessagePrivate>(*_p.get());
   }
 
   Message& Message::operator=(const Message& msg)

@@ -14,6 +14,8 @@
 #include <map>
 #include <set>
 
+#include <boost/make_shared.hpp>
+
 #include <qitype/genericobject.hpp>
 #include <qimessaging/transportserver.hpp>
 #include <qimessaging/transportsocket.hpp>
@@ -35,7 +37,7 @@ qiLogCategory("qimessaging.servicedirectory");
 namespace qi
 {
   ServiceDirectoryPrivate::ServiceDirectoryPrivate()
-    : _sdbo(boost::shared_ptr<ServiceDirectoryBoundObject>(new ServiceDirectoryBoundObject))
+    : _sdbo(boost::make_shared<ServiceDirectoryBoundObject>())
   {
     _server.addObject(1, _sdbo);
   }
