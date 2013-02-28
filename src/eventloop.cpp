@@ -190,13 +190,13 @@ namespace qi {
     delete _pool;
   }
 
-  static void delay_call(uint64_t usDelay, boost::function<void()> callback)
+  static void delay_call(uint64_t usDelay, boost::function<void()>* callback)
   {
     if (usDelay)
       qi::os::msleep(static_cast<unsigned int>(usDelay/1000));
     try
     {
-      callback();
+      (*callback)();
     }
     catch(const std::exception& e)
     {
@@ -206,6 +206,7 @@ namespace qi {
     {
       qiLogError("qi.EventLoop") << "Unknown exception caught in async call";
     }
+    delete callback;
   }
 
   static void delay_call_notify(uint64_t usDelay, boost::function<void()> callback,
@@ -231,7 +232,7 @@ namespace qi {
   void EventLoopThreadPool::post(uint64_t usDelay,
       const boost::function<void ()>& callback)
   {
-    _pool->schedule(boost::bind(&delay_call, usDelay, callback));
+    _pool->schedule(boost::bind(&delay_call, usDelay, new boost::function<void ()>(callback)));
   }
 
   qi::Future<void>  EventLoopThreadPool::asyncCall(uint64_t usDelay,
