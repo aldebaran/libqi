@@ -6,6 +6,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+
+#include <boost/make_shared.hpp>
+
 #include <qitype/signature.hpp>
 #include <qi/log.hpp>
 #include "signatureconvertor.hpp"
@@ -164,7 +167,7 @@ namespace qi {
 
 
   Signature::Signature(const char *fullSignature)
-    : _p(boost::shared_ptr<SignaturePrivate>(new SignaturePrivate()))
+    : _p(boost::make_shared<SignaturePrivate>())
   {
     if (!fullSignature)
       return;
@@ -173,7 +176,7 @@ namespace qi {
   }
 
   Signature::Signature(const std::string &subsig)
-    : _p(boost::shared_ptr<SignaturePrivate>(new SignaturePrivate()))
+    : _p(boost::make_shared<SignaturePrivate>())
   {
     _p->init(subsig.c_str(), subsig.size());
   }

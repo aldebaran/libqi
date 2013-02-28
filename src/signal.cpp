@@ -61,7 +61,7 @@ namespace qi {
   {
     if (!_p)
     {
-      _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+      _p = boost::make_shared<SignalBasePrivate>();
     }
     _p->defaultCallType = callType;
   }
@@ -291,7 +291,7 @@ namespace qi {
     static SignalSubscriber invalid;
     if (!_p)
     {
-      _p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+      _p = boost::make_shared<SignalBasePrivate>();
     }
     // Check arity. Does not require to acquire weakLock.
     int sigArity = Signature(signature()).begin().children().size();
@@ -371,7 +371,7 @@ namespace qi {
   {
     if (!b._p)
     {
-      const_cast<SignalBase&>(b)._p = boost::shared_ptr<SignalBasePrivate>(new SignalBasePrivate());
+      const_cast<SignalBase&>(b)._p = boost::make_shared<SignalBasePrivate>();
     }
     _p = b._p;
     return *this;
