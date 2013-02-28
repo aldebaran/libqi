@@ -10,9 +10,9 @@ qi_create_perf_test(perf_transport perf_transport.cpp
   DEPENDS
     QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
-qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
-  DEPENDS
-    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
+  #qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
+  #  DEPENDS
+  #    QI QIMESSAGING QIPERF BOOST_PROGRAM_OPTIONS)
 
 #qi_create_gtest(perf_maps    SRC perf_maps.cpp    DEPENDS QI GTEST TIMEOUT 120)
 #add_subdirectory(messaging)
@@ -21,9 +21,6 @@ qi_create_perf_test(perf_transport_thd perf_transport_thd.cpp
 #qi_create_bin(perf_pool            SRC dataperftimer.* perf_pool.cpp            DEPENDS QI QIMESSAGING NO_INSTALL)
 #qi_create_bin(perf_transport_event SRC dataperftimer.* perf_transport_event.cpp DEPENDS QI QIMESSAGING NO_INSTALL)
 
-
-# --output is added by qi_create_perf_test().
-# question: what to do with backends ?
 qi_create_perf_test(perf_qi_signal_direct perf_qi_signal_direct.cpp
   DEPENDS
     QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
@@ -44,7 +41,6 @@ qi_create_perf_test(perf_boost_function perf_boost_function.cpp
 qi_create_perf_test(perf_function perf_function.cpp
   DEPENDS
     QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
-
 
 qi_create_perf_test(perf_create_service perf_create_service.cpp
   DEPENDS
