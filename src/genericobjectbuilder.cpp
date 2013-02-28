@@ -20,14 +20,12 @@ namespace qi
       : _object(new DynamicObject())
       , _deleteOnDestroy(true)
       , _objptr()
-      , _threadingModel(ObjectThreadingModel_SingleThread)
     {}
 
     GenericObjectBuilderPrivate(DynamicObject *dynobject, bool deleteOnDestroy)
       : _object(dynobject)
       , _deleteOnDestroy(deleteOnDestroy)
       , _objptr()
-      , _threadingModel(ObjectThreadingModel_SingleThread)
     {}
 
     ~GenericObjectBuilderPrivate()
@@ -36,7 +34,6 @@ namespace qi
     DynamicObject* _object;
     bool           _deleteOnDestroy;
     qi::ObjectPtr  _objptr;
-    ObjectThreadingModel _threadingModel;
   };
 
   GenericObjectBuilder::GenericObjectBuilder()
@@ -108,6 +105,6 @@ namespace qi
 
   void GenericObjectBuilder::setThreadingModel(ObjectThreadingModel model)
   {
-    _p->_threadingModel = model;
+    _p->_object->setThreadingModel(model);
   }
 }
