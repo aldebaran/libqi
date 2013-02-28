@@ -14,6 +14,12 @@ namespace qi
     const std::vector<GenericValuePtr>& args)
   {
     const std::vector<Type*>& target = type->argumentsType();
+    if (target.size() != args.size())
+    {
+      qiLogErrorF("Argument count mismatch, expected %s, got %s",
+        target.size(), args.size());
+      return GenericValuePtr();
+    }
     void** convertedArgs = new void*[args.size()];
      std::vector<GenericValuePtr> toDestroy;
     for (unsigned i=0; i<target.size(); ++i)
@@ -52,6 +58,13 @@ namespace qi
       return callManyArgs(this, func, args);
 
     const std::vector<Type*>& target = argumentsType();
+
+    if (target.size() != args.size())
+    {
+      qiLogErrorF("Argument count mismatch, expected %s, got %s",
+        target.size(), args.size());
+      return GenericValuePtr();
+    }
 
     void* stackArgs[8];
     void** convertedArgs = stackArgs;
