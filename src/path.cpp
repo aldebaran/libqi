@@ -141,18 +141,18 @@ namespace qi
       std::string mode;
       const char *program = qi::Application::program();
 
-      if (!boost::filesystem::exists(program)) {
+      if (!program || !boost::filesystem::exists(program)) {
         mode = "error";
       }
-
-      boost::filesystem::path execPath(program, qi::unicodeFacet());
-      execPath = boost::filesystem::system_complete(execPath).make_preferred();
-      prefix = execPath.parent_path().parent_path().string(qi::unicodeFacet());
-      if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
-        mode = execPath.parent_path().filename().string(qi::unicodeFacet());
-      else
-        mode = "";
-
+      else {
+        boost::filesystem::path execPath(program, qi::unicodeFacet());
+        execPath = boost::filesystem::system_complete(execPath).make_preferred();
+        prefix = execPath.parent_path().parent_path().string(qi::unicodeFacet());
+        if (execPath.parent_path().filename().string(qi::unicodeFacet()) != "bin")
+          mode = execPath.parent_path().filename().string(qi::unicodeFacet());
+        else
+          mode = "";
+      }
       gInstance = new SDKLayout(prefix, mode);
     }
 
