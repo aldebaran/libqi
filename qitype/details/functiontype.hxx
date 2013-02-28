@@ -64,4 +64,14 @@ namespace qi
 
 
 } // namespace qi
+
+namespace std
+{
+  template<> inline void swap(::qi::GenericFunction& a, ::qi::GenericFunction & b)
+  {
+    swap(a.value, b.value);
+    swap(a.type, b.type);
+  }
+}
+
 #endif  // _QITYPE_DETAILS_FUNCTIONTYPE_HXX_
