@@ -5,6 +5,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/program_options.hpp>
+#include <boost/make_shared.hpp>
 
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
@@ -128,7 +129,7 @@ namespace qi {
 
   qi::Future<void> EventLoopAsio::asyncCall(uint64_t usDelay, boost::function<void ()> cb)
   {
-    boost::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(_io));
+    boost::shared_ptr<boost::asio::deadline_timer> timer = boost::make_shared<boost::asio::deadline_timer>(boost::ref(_io));
     timer->expires_from_now(boost::posix_time::microseconds(usDelay));
     qi::Promise<void> prom(boost::bind(&boost::asio::deadline_timer::cancel, timer));
     timer->async_wait(boost::bind(&invoke_maybe, cb, prom, _1));
@@ -246,7 +247,7 @@ namespace qi {
    // Basic pimpl bouncers.
   EventLoop::AsyncCallHandle::AsyncCallHandle()
   {
-    _p = boost::shared_ptr<AsyncCallHandlePrivate>(new AsyncCallHandlePrivate());
+    _p = boost::make_shared<AsyncCallHandlePrivate>();
   }
 
   EventLoop::AsyncCallHandle::~AsyncCallHandle()
@@ -416,7 +417,7 @@ namespace qi {
   qi::Future<void> EventLoop::monitorEventLoop(EventLoop* helper, uint64_t maxDelay)
   {
     // Context data is a Future*[2]
-    boost::shared_ptr<MonitorContext> ctx(new MonitorContext);
+    boost::shared_ptr<MonitorContext> ctx = boost::make_shared<MonitorContext>();
     ctx->target = this;
     ctx->helper = helper;
     ctx->maxDelay = maxDelay;
