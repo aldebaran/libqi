@@ -68,7 +68,9 @@ namespace qi {
       if(add_esc_char(c, result))
         continue;
       const wint_t unsigned_c((c >= 0) ? c : 256 + c);
-      if(iswprint(unsigned_c))
+
+      // 127 is the end of printable characters in ASCII table.
+      if(iswprint(unsigned_c) && unsigned_c < 127)
         result += c;
       else
         result += non_printable_to_string(unsigned_c);

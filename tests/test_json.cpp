@@ -50,6 +50,9 @@ TEST(TestJSON, Simple) {
 }
 
 TEST(TestJSON, String) {
-  EXPECT_EQ("\"\\\"\\u0000\\u00C3\\u00A9\\u00C3\\u00A9\"", qi::encodeJSON(qi::GenericValue::from("\"\0éé")));
-}
+  EXPECT_EQ("\" \\\" \"", qi::encodeJSON(qi::GenericValue::from(" \" ")));
+  EXPECT_EQ("\" \\u0000 \"", qi::encodeJSON(qi::GenericValue::from(" \0 ")));
+  EXPECT_EQ("\" \\u00C3\\u00A9 \"", qi::encodeJSON(qi::GenericValue::from(" é ")));
 
+  EXPECT_EQ("\" \\\" \\u0000 \\u00C3\\u00A9 \"", qi::encodeJSON(qi::GenericValue::from(" \" \0 é ")));
+}
