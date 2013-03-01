@@ -38,7 +38,7 @@ namespace qi {
                                               int id)
   {
     if (_p->type) {
-      qiLogVerbose()
+      qiLogWarning()
           << "ObjectTypeBuilder: Called xAdvertiseMethod with method '"
           << builder.metaMethod().sigreturn() << " "
           << builder.metaMethod().signature()
@@ -54,8 +54,8 @@ namespace qi {
   int ObjectTypeBuilderBase::xAdvertiseEvent(const std::string& signature, SignalMemberGetter getter, int id)
   {
     if (_p->type) {
-      qiLogVerbose() << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
-                                        << signature << "' but type is already created.";
+      qiLogWarning() << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
+                     << signature << "' but type is already created.";
     }
     int nextId = _p->metaObject._p->addSignal(signature, id);
     if (nextId < 0)

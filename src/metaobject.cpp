@@ -113,7 +113,7 @@ namespace qi {
     qi::MetaMethod method = builder.metaMethod();
     NameToIdx::iterator it = _methodsNameToIdx.find(method.signature());
     if (it != _methodsNameToIdx.end()) {
-      qiLogVerbose()
+      qiLogWarning()
           << "Method("<< it->second << ") already defined (and reused): "
           << method.sigreturn() << " "
           << method.signature();
@@ -136,7 +136,7 @@ namespace qi {
     unsigned int id;
     NameToIdx::iterator it = _eventsNameToIdx.find(sig);
     if (it != _eventsNameToIdx.end()) {
-      qiLogVerbose() << "Signal("<< it->second << ") already defined (and reused): " << sig;
+      qiLogWarning() << "Signal("<< it->second << ") already defined (and reused): " << sig;
       return 0;
     }
     if (uid >= 0)
