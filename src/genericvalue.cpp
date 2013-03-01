@@ -17,12 +17,17 @@ namespace qi
   {
     // qiLogDebug() << "convert " << type->infoString() << ' ' << targetType->infoString();
     /* Can have false-negative (same effective type, different Type instances
-   * but we do not care, correct check (by comparing info() result
-   * is more expensive than the dummy conversion that will happen.
-  */
+     * but we do not care, correct check (by comparing info() result
+     * is more expensive than the dummy conversion that will happen.
+     */
     if (type == targetType)
     {
       return std::make_pair(*this, false);
+    }
+
+    if (!targetType || !type) {
+      qiLogWarning() << "Conversion error: can't convert to/from a null type."
+      return std::make_pair(GenericValuePtr(), false);
     }
 
     GenericValuePtr result;
