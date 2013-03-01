@@ -21,9 +21,9 @@ qi_create_perf_test(perf_transport perf_transport.cpp
 #qi_create_bin(perf_pool            SRC dataperftimer.* perf_pool.cpp            DEPENDS QI QIMESSAGING NO_INSTALL)
 #qi_create_bin(perf_transport_event SRC dataperftimer.* perf_transport_event.cpp DEPENDS QI QIMESSAGING NO_INSTALL)
 
-qi_create_perf_test(perf_qi_signal_direct perf_qi_signal_direct.cpp
-  DEPENDS
-    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
+#qi_create_perf_test(perf_qi_signal_direct perf_qi_signal_direct.cpp
+#  DEPENDS
+#    QI QIPERF QITYPE BOOST_PROGRAM_OPTIONS)
 
 # qi_create_perf_test(perf_qi_signal_queued perf_qi_signal_queued.cpp
 #   DEPENDS
