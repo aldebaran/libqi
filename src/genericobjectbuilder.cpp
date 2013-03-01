@@ -77,7 +77,9 @@ namespace qi
           << "' but object is already created.";
     }
 
-    unsigned int nextId = _p->_object->metaObject()._p->addMethod(builder);
+    int nextId = _p->_object->metaObject()._p->addMethod(builder);
+    if (nextId < 0)
+      return -1;
     _p->_object->setMethod(nextId, func, threadingModel);
     return nextId;
   }
@@ -87,7 +89,9 @@ namespace qi
     if (_p->_objptr) {
       qiLogWarning() << "GenericObjectBuilder: Called xAdvertiseEvent on event '" << signature << "' but object is already created.";
     }
-    unsigned int nextId = _p->_object->metaObject()._p->addSignal(signature);
+    int nextId = _p->_object->metaObject()._p->addSignal(signature);
+    if (nextId < 0)
+      return -1;
     return nextId;
   }
 

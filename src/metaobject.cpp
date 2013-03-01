@@ -107,7 +107,7 @@ namespace qi {
     return ret;
   }
 
-  unsigned int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
+  int MetaObjectPrivate::addMethod(MetaMethodBuilder& builder, int uid) {
     boost::recursive_mutex::scoped_lock sl(_methodsMutex);
     unsigned int id;
     qi::MetaMethod method = builder.metaMethod();
@@ -117,7 +117,7 @@ namespace qi {
           << "Method("<< it->second << ") already defined (and reused): "
           << method.sigreturn() << " "
           << method.signature();
-      return it->second;
+      return 0;
     }
     if (-1 < uid)
       id = uid;
@@ -131,13 +131,13 @@ namespace qi {
     return id;
   }
 
-  unsigned int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
+  int MetaObjectPrivate::addSignal(const std::string &sig, int uid) {
     boost::recursive_mutex::scoped_lock sl(_eventsMutex);
     unsigned int id;
     NameToIdx::iterator it = _eventsNameToIdx.find(sig);
     if (it != _eventsNameToIdx.end()) {
       qiLogVerbose() << "Signal("<< it->second << ") already defined (and reused): " << sig;
-      return it->second;
+      return 0;
     }
     if (uid >= 0)
       id = uid;

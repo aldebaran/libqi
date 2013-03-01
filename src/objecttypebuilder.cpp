@@ -44,7 +44,9 @@ namespace qi {
           << builder.metaMethod().signature()
           << "' but type is already created.";
     }
-    unsigned int nextId = _p->metaObject._p->addMethod(builder, id);
+    int nextId = _p->metaObject._p->addMethod(builder, id);
+    if (nextId < 0)
+      return -1;
     _p->data.methodMap[nextId] = std::make_pair(func, threadingModel);
     return nextId;
   }
@@ -55,7 +57,9 @@ namespace qi {
       qiLogVerbose() << "ObjectTypeBuilder: Called xAdvertiseEvent with event '"
                                         << signature << "' but type is already created.";
     }
-    unsigned int nextId = _p->metaObject._p->addSignal(signature, id);
+    int nextId = _p->metaObject._p->addSignal(signature, id);
+    if (nextId < 0)
+      return -1;
     _p->data.signalGetterMap[nextId] = getter;
     return nextId;
   }

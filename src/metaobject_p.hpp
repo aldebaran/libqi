@@ -55,9 +55,9 @@ namespace qi {
 
     std::vector<MetaSignal> findSignal(const std::string &name);
 
-    unsigned int addMethod(MetaMethodBuilder& builder, int uid = -1);
+    int addMethod(MetaMethodBuilder& builder, int uid = -1);
 
-    unsigned int addSignal(const std::string &sig, int id = -1);
+    int addSignal(const std::string &sig, int id = -1);
 
     // Recompute data cached in *ToIdx
     void refreshCache();
