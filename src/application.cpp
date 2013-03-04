@@ -5,6 +5,7 @@
  */
 
 #include <fstream>
+#include <cstdlib>
 
 #include <qi/application.hpp>
 #include <qi/qi.hpp>
@@ -72,6 +73,7 @@ namespace qi {
 
   static void stop_io_service()
   {
+    qiLogInfo("qi.application") << "Unregistering all signal handlers.";
     //dont call ioservice->stop, just remove all events for the ioservice
     //deleting the object holding the run() method from quitting
     delete globalIoWork;
@@ -88,7 +90,8 @@ namespace qi {
     }
     if (globalIoThread) {
       //wait for the ioservice to terminate
-      globalIoThread->join();
+      if (boost::this_thread::get_id() != globalIoThread->get_id())
+        globalIoThread->join();
       //we are sure run has stopped so we can delete the io service
       delete globalIoService;
       delete globalIoThread;
@@ -149,7 +152,8 @@ namespace qi {
       globalIoWork = new boost::asio::io_service::work(*globalIoService);
       // Start io_service in a thread. It will call our handlers.
       globalIoThread = new boost::thread(boost::bind(&run_io_service));
-      atExit(&stop_io_service);
+      // We want signal handlers to work as late as possible.
+      ::atexit(&stop_io_service);
       globalSignalSet = new std::list<boost::asio::signal_set*>;
     }
 
