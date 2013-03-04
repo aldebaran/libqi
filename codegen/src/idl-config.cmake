@@ -1,21 +1,8 @@
 
 qi_global_set(qi_create_service_file ${CMAKE_CURRENT_LIST_FILE})
 
-#! Create a naoqi service and companion files
-# \group:CLASSES list of class names to be exposed to naoqi as objects
-# \group:SERVICES list of class names to be exposed to naoqi as services
-# \group:INCLUDE files to #include in generated files
-# \group:INCLUDE_SERVICE files to #include in generated files
-# \group:DOXYSRC sources to pass to doxygen, but not to compile
-# \param:IDL the IDL file to use as input
-# \param:PROXY generate specialized proxy header and install them
-# \param:SPLIT_BIND generate binding code in a separate file per class
-function(qi_create_service name)
-  cmake_parse_arguments(ARG
-    "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY;SPLIT_BIND"
-    "SUBFOLDER;IDL"
-    "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;INCLUDE;INCLUDE_SERVICE" ${ARGN})
-  message("parsing args: ${ARG_CLASSES}")
+#! \ Find idl.py or error
+function(_qi_find_idl where)
   #First, locate idl.py
   qi_global_get(qi_create_service_file_local qi_create_service_file)
   get_filename_component(cdir "${qi_create_service_file_local}" PATH)
@@ -32,6 +19,56 @@ function(qi_create_service name)
   if (NOT IDLPY)
     qi_error("idl.py not found")
   endif()
+  qi_persistent_set(${where} ${IDLPY})
+endfunction()
+
+#! Create an IDL file by parsing C++ header files.
+# \group:SRC C++ source/headers file to parse
+# \group:CLASSES name of the classes for which to generate idl
+# \param:PREFIX path where to generate IDL files
+# \param:files name of variable that is filled by generated file names
+function(qi_create_idl files)
+  cmake_parse_arguments(ARG
+    ""
+    "PREFIX"
+    "SRC;CLASSES"
+    ${ARGN})
+  _qi_find_idl(IDL)
+  set(names "")
+  if (NOT ARG_PREFIX)
+    set(ARG_PREFIX ".")
+  endif()
+  foreach(c ${ARG_CLASSES})
+    set(target "${ARG_PREFIX}/${c}.xml")
+    qi_generate_src(${target}
+      SRC ${ARG_SRC}
+      COMMAND  ${_python_executable} ${IDL}
+      ${ARG_SRC}
+      -c ${c}
+      -o ${target}
+      -m idl)
+    list(APPEND names "${target}")
+  endforeach(c)
+  qi_persistent_set(${files} "${names}")
+endfunction()
+
+#! Create a naoqi service and companion files
+# \group:CLASSES list of class names to be exposed to naoqi as objects
+# \group:SERVICES list of class names to be exposed to naoqi as services
+# \group:INCLUDE files to #include in generated files
+# \group:INCLUDE_SERVICE files to #include in generated files
+# \group:DOXYSRC sources to pass to doxygen, but not to compile
+# \param:IDL the IDL file to use as input
+# \param:PROXY generate specialized proxy header and install them
+# \param:SPLIT_BIND generate binding code in a separate file per class
+function(qi_create_service name)
+  cmake_parse_arguments(ARG
+    "NOBINDLL;NO_INSTALL;NO_FPIC;SHARED;STATIC;INTERNAL;PROXY;SPLIT_BIND"
+    "SUBFOLDER;IDL"
+    "SRC;DOXYSRC;SUBMODULE;DEPENDS;CLASSES;SERVICES;INCLUDE;INCLUDE_SERVICE" ${ARGN})
+  message("parsing args: ${ARG_CLASSES}")
+  #First, locate idl.py
+  _qi_find_idl(IDLPY)
   #ARGN are sources too
   set(ARG_SRC ${ARG_UNPARSED_ARGUMENTS} ${ARG_SRC})
   #Reformat arguments to be able to bounce them
