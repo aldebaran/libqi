@@ -443,6 +443,27 @@ TEST(TestObject, TypeType)
   ASSERT_EQ(std::string("foo"), val.toString());
 }
 
+void ccb() {
+};
+
+class CPPCB {
+public:
+  void cb() {
+  }
+};
+
+TEST(TestObject, CallBackRegistration)
+{
+  qi::GenericObjectBuilder gob;
+
+  unsigned int id = gob.advertiseEvent<void (void)>("testcb");
+  qi::ObjectPtr obj = gob.object();
+  CPPCB c;
+  obj->connect("testcb", boost::bind(&CPPCB::cb, &c));
+  obj->connect("testcb", &ccb);
+ // obj->connect("testcb", boost::bind<void>(&ccb));
+}
+
 int main(int argc, char **argv)
 {
   qi::Application app(argc, argv);
