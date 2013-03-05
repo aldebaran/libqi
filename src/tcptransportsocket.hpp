@@ -76,6 +76,7 @@ namespace qi
     boost::mutex        _sendQueueMutex; // protects _sendQueue, _sending and closing
     std::deque<Message> _sendQueue;
     bool                _sending;
+    boost::mutex        _closingMutex;
   };
 
   typedef boost::shared_ptr<TcpTransportSocket> TcpTransportSocketPtr;

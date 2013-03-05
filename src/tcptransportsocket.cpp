@@ -106,6 +106,15 @@ namespace qi
   {
     _msg = new qi::Message();
 
+    boost::mutex::scoped_lock(_closingMutex);
+
+    if (*_abort == true)
+    {
+      boost::system::error_code erc;
+      error(erc);
+      return;
+    }
+
 #ifdef WITH_SSL
     if (_ssl)
     {
@@ -145,6 +154,15 @@ namespace qi
     if (payload)
     {
       void* ptr = _msg->_p->buffer.reserve(payload);
+
+      boost::mutex::scoped_lock(_closingMutex);
+
+      if (*_abort == true)
+      {
+        boost::system::error_code erc;
+        error(erc);
+        return;
+      }
 
 #ifdef WITH_SSL
       if (_ssl)
@@ -325,6 +343,9 @@ namespace qi
       if (_socket->lowest_layer().is_open())
       {
         boost::system::error_code erc;
+        boost::mutex::scoped_lock(_closingMutex);
+
+        _socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, erc);
         _socket->lowest_layer().close(erc); // will invoke read callback with error set
       }
       // Do not set disconnectPromise here, it will/has been set
