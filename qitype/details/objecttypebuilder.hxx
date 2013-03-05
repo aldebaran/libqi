@@ -85,6 +85,13 @@ namespace qi {
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
   }
 
+  template <typename T>
+  ObjectPtr ObjectTypeBuilder<T>::object(T* ptr, boost::function<void (GenericObject*)> onDestroy)
+  {
+    return ObjectTypeBuilderBase::object(static_cast<void*>(ptr), onDestroy);
+  }
+
+
   template<typename T>
   void ObjectTypeBuilder<T>::registerType()
   {

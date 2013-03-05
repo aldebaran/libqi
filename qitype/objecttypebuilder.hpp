@@ -93,6 +93,8 @@ namespace qi {
     /// Register type to typeOf<T>, to avoid both TypeImpl<T> and type() being present
     inline virtual void registerType();
 
+    inline ObjectPtr object(T* ptr, boost::function<void (GenericObject*)> onDestroy = boost::function<void (GenericObject*)>());
+
   };
 }
 
