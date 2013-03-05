@@ -89,8 +89,8 @@ int fakesvec(const std::vector<std::string> &svec) {
 
 int fakegvec(const std::vector<qi::GenericValue> &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
-  EXPECT_EQ("titi", sval[0].asString());
-  EXPECT_EQ("toto", sval[1].asString());
+  EXPECT_EQ("titi", sval[0].toString());
+  EXPECT_EQ("toto", sval[1].toString());
   return 0;
 }
 
@@ -103,15 +103,15 @@ int fakesvvec(const std::vector< std::vector<std::string> > &svec) {
 
 int fakegvvec(const std::vector< std::vector<qi::GenericValue> > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
-  EXPECT_EQ("titi", sval[0][0].asString());
-  EXPECT_EQ("toto", sval[1][0].asString());
+  EXPECT_EQ("titi", sval[0][0].toString());
+  EXPECT_EQ("toto", sval[1][0].toString());
   return 0;
 }
 
 int fakegvvec2(const std::vector< qi::GenericValue > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
-  EXPECT_EQ("titi", sval[0].as< std::vector<std::string> >()[0]);
-  EXPECT_EQ("toto", sval[1].as< std::vector<std::string> >()[0]);
+  EXPECT_EQ("titi", sval[0].to< std::vector<std::string> >()[0]);
+  EXPECT_EQ("toto", sval[1].to< std::vector<std::string> >()[0]);
   return 0;
 }
 
@@ -124,8 +124,8 @@ int fakesmvvec(std::map<std::string, std::vector< std::vector<std::string> > > &
 
 int fakegmvvec(std::map<std::string, std::vector< std::vector<qi::GenericValue> > > &sval) {
   std::cout << "sval.size(): " << sval.size() << std::endl;
-  EXPECT_EQ("titi", sval["i"][0][0].asString());
-  EXPECT_EQ("toto", sval["j"][0][0].asString());
+  EXPECT_EQ("titi", sval["i"][0][0].toString());
+  EXPECT_EQ("toto", sval["j"][0][0].toString());
   return 0;
 }
 
@@ -177,28 +177,22 @@ TEST(TestCall, CallBufferInList)
   args.push_back(qi::GenericValue::from("foo"));
   qi::GenericValue result = proxy->call<qi::GenericValue>("pingcopy", args);
   {
-    qi::GenericListPtr l = val.asList();
-    ASSERT_TRUE(l.type);
-    ASSERT_EQ((unsigned) 3, l.size());
-    qi::GenericListIteratorPtr it = l.begin();
-    ASSERT_EQ((unsigned) 12, (*it).asInt());
-    ++it;
-    qi::Buffer bufRes = (*it).as<qi::Buffer>();
+    ASSERT_EQ(3u, val.size());
+    ASSERT_EQ(12, val[0].toInt());
+    qi::Buffer bufRes = val[1].to<qi::Buffer>();
     ASSERT_EQ(strlen("canard")+1, bufRes.size());
-    ++it;
-    ASSERT_EQ("foo", (*it).asString());
-    it.destroy();
+    ASSERT_EQ("foo", val[2].toString());
   }
   {
-    std::vector<qi::GenericValue> l = result.as<std::vector<qi::GenericValue> >();
-    ASSERT_EQ((unsigned) 3, l.size());
+    std::vector<qi::GenericValue> l = result.to<std::vector<qi::GenericValue> >();
+    ASSERT_EQ(3u, l.size());
     std::vector<qi::GenericValue>::iterator it = l.begin();
-    ASSERT_EQ((unsigned) 12, (*it).asInt());
+    ASSERT_EQ(12, (*it).toInt());
     ++it;
-    qi::Buffer bufRes = (*it).as<qi::Buffer>();
+    qi::Buffer bufRes = (*it).to<qi::Buffer>();
     ASSERT_EQ(strlen("canard")+1, bufRes.size());
     ++it;
-    ASSERT_EQ("foo", (*it).asString());
+    ASSERT_EQ("foo", (*it).toString());
   }
 
 }
@@ -346,9 +340,9 @@ TEST(TestCall, TestGenericConversion) {
   svec.push_back("toto");
 
   qi::GenericValue gv;
-  gv = qi::GenericValuePtr::from(std::string("titi"));
+  gv = qi::GenericValuePtr::ref(std::string("titi"));
   gvec.push_back(gv);
-  gv = qi::GenericValuePtr::from(std::string("toto"));
+  gv = qi::GenericValuePtr::ref(std::string("toto"));
   gvec.push_back(gv);
 
   qi::Future<int> fut;
@@ -395,15 +389,15 @@ TEST(TestCall, TestGenericConversionComplexList) {
 
   std::vector<std::vector<qi::GenericValue> > ssg;
   ssg.resize(2);
-  ssg[0].push_back(qi::GenericValuePtr::from(std::string("titi")));
-  ssg[1].push_back(qi::GenericValuePtr::from(std::string("toto")));
+  ssg[0].push_back(qi::GenericValue::from(std::string("titi")));
+  ssg[1].push_back(qi::GenericValue::from(std::string("toto")));
 
   std::vector<qi::GenericValue>               sg;
   std::vector<qi::GenericValue> paf;
-  paf.push_back(qi::GenericValuePtr::from(std::string("titi")));
-  sg.push_back(qi::GenericValuePtr::from(paf));
-  paf[0] = qi::GenericValuePtr::from(std::string("toto"));
-  sg.push_back(qi::GenericValuePtr::from(paf));
+  paf.push_back(qi::GenericValue::from(std::string("titi")));
+  sg.push_back(qi::GenericValue::from(paf));
+  paf[0] = qi::GenericValuePtr::ref(std::string("toto"));
+  sg.push_back(qi::GenericValue::from(paf));
 
   qi::Future<int> fut;
 
@@ -450,12 +444,12 @@ TEST(TestCall, TestGenericConversionComplexMap) {
   sss.resize(2);
   ssg.resize(2);
   sss[0].push_back("titi");
-  ssg[0].push_back(qi::GenericValuePtr::from(std::string("titi")));
+  ssg[0].push_back(qi::GenericValue::from(std::string("titi")));
   msvvs["i"] = sss;
   msvvg["i"] = ssg;
 
   sss[0][0] = "toto";
-  ssg[0][0] = qi::GenericValuePtr::from(std::string("toto"));
+  ssg[0][0] = qi::GenericValue::from(std::string("toto"));
   msvvs["j"] = sss;
   msvvg["j"] = ssg;
 
@@ -492,17 +486,17 @@ TEST(TestCall, TestGenericConversionTuple) {
   EXPECT_EQ(6, f.value());
 
   GenericTuple gt;
-  gt.e1 = qi::GenericValuePtr::from(1.0);
-  gt.e2 = qi::GenericValuePtr::from(2U);
+  gt.e1 = qi::GenericValuePtr::ref(1.0);
+  gt.e2 = qi::GenericValuePtr::ref(2U);
   std::map<std::string, qi::GenericValue> map;
-  map["foo"] = qi::GenericValuePtr::from(3);
-  gt.e3 = qi::GenericValuePtr::from(map);
+  map["foo"] = qi::GenericValuePtr::ref(3);
+  gt.e3 = qi::GenericValuePtr::ref(map);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(6, f.value());
 
   std::map<unsigned int, std::string> ravMap;
-  gt.e3 = qi::GenericValuePtr::from(ravMap);
+  gt.e3 = qi::GenericValuePtr::ref(ravMap);
   f = proxy->call<double>("eatSpecific", gt);
   EXPECT_FALSE(f.hasError());
   EXPECT_EQ(3, f.value());

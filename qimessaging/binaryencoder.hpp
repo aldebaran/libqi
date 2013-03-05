@@ -97,7 +97,7 @@ namespace qi {
 
   template<typename T> void BinaryEncoder::write(const T &v)
   {
-    GenericValuePtr value = GenericValuePtr::from(v);
+    GenericValuePtr value = GenericValuePtr(&v);
     qi::details::serialize(value, *this);
   }
 }

@@ -197,16 +197,16 @@ PyObject* qi_get_sigreturn(qi_object_t *object, const char *signature)
       sigreturns = it->first.sigreturn();
   }
 
-  qi::GenericValue val = qi::GenericValue::from(sigreturns);
-  return val.as<PyObject*>();
+  qi::GenericValuePtr val(&sigreturns);
+  return val.to<PyObject*>();
 }
 
 PyObject* qi_get_object_description(qi_object_t *object)
 {
   qi::ObjectPtr& obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
 
-  qi::GenericValue val = qi::GenericValue::from(obj->metaObject().description());
-  return val.as<PyObject*>();
+  qi::GenericValuePtr val = qi::GenericValuePtr::ref(obj->metaObject().description());
+  return val.to<PyObject*>();
 }
 
 PyObject* qi_get_method_description(qi_object_t *object, const char *signature)
@@ -219,8 +219,8 @@ PyObject* qi_get_method_description(qi_object_t *object, const char *signature)
     description = mm.front().description();
   }
 
-  qi::GenericValue val = qi::GenericValue::from(description);
-  return val.as<PyObject*>();
+  qi::GenericValuePtr val = qi::GenericValuePtr::ref(description);
+  return val.to<PyObject*>();
 }
 
 PyObject* qi_get_sigreturn_description(qi_object_t *object, const char *sig) {
@@ -232,8 +232,8 @@ PyObject* qi_get_sigreturn_description(qi_object_t *object, const char *sig) {
     description = mm.front().returnDescription();
   }
 
-  qi::GenericValue val = qi::GenericValue::from(description);
-  return val.as<PyObject*>();
+  qi::GenericValuePtr val = qi::GenericValuePtr::ref(description);
+  return val.to<PyObject*>();
 }
 
 PyObject* qi_get_parameters_descriptions(qi_object_t *object, const char *sig) {
@@ -250,8 +250,8 @@ PyObject* qi_get_parameters_descriptions(qi_object_t *object, const char *sig) {
     }
   }
 
-  qi::GenericValue val = qi::GenericValue::from(res);
-  return val.as<PyObject*>();
+  qi::GenericValuePtr val = qi::GenericValuePtr::ref(res);
+  return val.to<PyObject*>();
 }
 
 PyObject* qi_object_methods_vector(qi_object_t *object)

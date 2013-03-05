@@ -27,83 +27,70 @@ struct ToPyObject
   {
   }
 
-  void visitUnknown(qi::Type* type, void* storage)
+  void visitUnknown(GenericValuePtr value)
   {
     /* Encapuslate the value in Capsule */
-    *result = PyCapsule_New(storage, NULL, NULL);
+    *result = PyCapsule_New(value.value, NULL, NULL);
     checkForError();
   }
 
-  void visitVoid(qi::Type*)
+  void visitVoid()
   {
     *result = Py_None;
     Py_INCREF(Py_None);
     checkForError();
   }
 
-  void visitInt(qi::TypeInt* type, qi::int64_t value, bool isSigned, int byteSize)
+  void visitInt(qi::int64_t value, bool isSigned, int byteSize)
   {
     *result = PyLong_FromLongLong(static_cast<long long>(value));
     checkForError();
   }
 
-  void visitFloat(qi::TypeFloat* type, double value, int byteSize)
+  void visitFloat(double value, int byteSize)
   {
     *result = PyFloat_FromDouble(value);
     checkForError();
   }
 
-  void visitString(qi::TypeString* type, void* storage)
+  void visitString(char* data, size_t len)
   {
-    if (storage)
+    if (data)
     {
-      std::pair<const char*, size_t> strSized = type->get(storage);
-      *result = PyString_FromStringAndSize(strSized.first, strSized.second);
+      *result = PyString_FromStringAndSize(data, len);
     }
     else
       *result = PyString_FromString("");
     checkForError();
   }
 
-  void visitList(qi::GenericListPtr value)
+  void visitList(qi::GenericIterator it, qi::GenericIterator end)
   {
     *result = PyList_New(0);
     if (!result)
       throw std::runtime_error("Error in conversion: unable to alloc a python List");
 
-    qi::GenericListIteratorPtr it, end;
-
-    it = value.begin();
-    end = value.end();
-    for (; it != end; it++)
+    for (; it != end; ++it)
     {
       PyObject* current = PyObject_from_GenericValue((*it));
       if (PyList_Append(*result, current) != 0)
         throw std::runtime_error("Error in conversion: unable to append element to Python List");
     }
-    it.destroy();
-    end.destroy();
   }
 
-  void visitMap(qi::GenericMapPtr value)
+  void visitMap(qi::GenericIterator it, qi::GenericIterator end)
   {
     *result = PyDict_New();
     if (!result)
       throw std::runtime_error("Error in conversion: unable to alloc a python Dict");
 
-    qi::GenericMapIteratorPtr it, end;
-
-    it = value.begin();
-    end = value.end();
-    for (; it != end; it++)
+    for (; it != end; ++it)
     {
-      PyObject* key = PyObject_from_GenericValue((*it).first);
-      PyObject* value = PyObject_from_GenericValue((*it).second);
+      PyObject* key = PyObject_from_GenericValue((*it)[0]);
+      PyObject* value = PyObject_from_GenericValue((*it)[1]);
       if (PyDict_SetItem(*result, key, value) != 0)
         throw std::runtime_error("Error in conversion: unable to append element to Python List");
     }
-    it.destroy();
-    end.destroy();
   }
 
   void visitObject(qi::GenericObject obj)
@@ -112,14 +99,13 @@ struct ToPyObject
     throw std::runtime_error("Error in conversion: qi::GenericObject not supported yet");
   }
 
-  void visitPointer(qi::TypePointer* type, void* storage, qi::GenericValuePtr pointee)
+  void visitPointer(qi::GenericValuePtr)
   {
     throw std::runtime_error("Error in conversion: Unable to convert pointer in Python");
   }
 
-  void visitTuple(qi::TypeTuple* type, void* storage)
+  void visitTuple(const std::vector<qi::GenericValuePtr>& tuple)
   {
-    const std::vector<qi::GenericValuePtr>& tuple = type->getValues(storage);
     Py_ssize_t len = tuple.size();
     *result = PyTuple_New(len);
     if (!*result)
@@ -133,25 +119,31 @@ struct ToPyObject
     }
   }
 
-  void visitDynamic(qi::GenericValuePtr source, qi::GenericValuePtr pointee)
+  void visitDynamic(qi::GenericValuePtr pointee)
   {
     *result = PyObject_from_GenericValue(pointee);
   }
 
-  void visitRaw(qi::TypeRaw *type, qi::Buffer *buf)
+  void visitRaw(qi::GenericValuePtr value)
   {
     /* TODO: zerocopy, sub-buffers... */
-    if (buf->subBuffers().size() != 0)
+    qi::Buffer& buf = value.as<qi::Buffer>();
+    if (buf.subBuffers().size() != 0)
     {
       qiLogError("pyobjectconverter") << "buffer has subbuffers, "
                                       << "Python bytearray might be incomplete";
     }
 
-    char* b = static_cast<char*>(malloc(buf->size()));
-    buf->read(b, 0, buf->size());
-    *result = PyByteArray_FromStringAndSize(b, buf->size());
+    char* b = static_cast<char*>(malloc(buf.size()));
+    buf.read(b, 0, buf.size());
+    *result = PyByteArray_FromStringAndSize(b, buf.size());
     free(b);
     checkForError();
+  }
+
+  void visitIterator(qi::GenericValuePtr v)
+  {
+    visitUnknown(v);
   }
 
   void checkForError()
@@ -167,14 +159,14 @@ PyObject* PyObject_from_GenericValue(qi::GenericValuePtr val)
 {
   PyObject* result = NULL;
   ToPyObject tpo(&result);
-  qi::typeDispatch(tpo, val.type, &val.value);
+  qi::typeDispatch(tpo, val);
   return result;
 }
 
 void PyObject_from_GenericValue(qi::GenericValuePtr val, PyObject** target)
 {
   ToPyObject tal(target);
-  qi::typeDispatch(tal, val.type, &val.value);
+  qi::typeDispatch(tal, val);
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
@@ -185,10 +177,10 @@ qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
   for (Py_ssize_t i = 0; i < len; i++)
   {
     PyObject* current = PyList_GetItem(val, i);
-    res.push_back(GenericValue_from_PyObject(current));
+    res.push_back(GenericValue(GenericValue_from_PyObject(current)));
   }
 
-  return qi::GenericValuePtr::from(res);
+  return qi::GenericValuePtr::ref(res);
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
@@ -202,10 +194,10 @@ qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
     qi::GenericValuePtr newkey = GenericValue_from_PyObject(key);
     qi::GenericValuePtr newvalue = GenericValue_from_PyObject(value);
 
-    res[newkey] = newvalue;
+    res[GenericValue(newkey)] = newvalue;
   }
 
-  return qi::GenericValuePtr::from(res);
+  return qi::GenericValuePtr::ref(res);
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Tuple(PyObject* val)
@@ -231,12 +223,12 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 
   if (PyString_CheckExact(val))
   {
-    res = qi::GenericValuePtr::from(*new std::string(PyString_AsString(val)));
+    res = qi::GenericValuePtr::ref(*new std::string(PyString_AsString(val)));
   }
   else if (PyUnicode_CheckExact(val))
   {
     PyObject *pstring = PyUnicode_AsUTF8String(val);
-    res = qi::GenericValuePtr::from(*new std::string(PyString_AsString(pstring)));
+    res = qi::GenericValuePtr::ref(*new std::string(PyString_AsString(pstring)));
     Py_DECREF(pstring);
   }
   else if (val == Py_None)
@@ -245,15 +237,15 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyFloat_CheckExact(val))
   {
-    res = qi::GenericValuePtr::from(PyFloat_AsDouble(val));
+    res = qi::GenericValuePtr::ref(PyFloat_AsDouble(val));
   }
   else if (PyLong_CheckExact(val))
   {
-    res = qi::GenericValuePtr::from(PyLong_AsLong(val));
+    res = qi::GenericValuePtr::ref(PyLong_AsLong(val));
   }
   else if (PyInt_CheckExact(val))
   {
-    res = qi::GenericValuePtr::from(PyInt_AsLong(val));
+    res = qi::GenericValuePtr::ref(PyInt_AsLong(val));
   }
   else if (PyList_CheckExact(val))
   {
@@ -270,7 +262,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   else if (PyBool_Check(val))
   {
     bool b = (PyInt_AsLong(val) != 0);
-    res = qi::GenericValuePtr::from(b);
+    res = qi::GenericValuePtr::ref(b);
   }
   else
   {
@@ -317,11 +309,9 @@ public:
     return s;
   }
 
-  virtual std::pair<qi::GenericValuePtr, bool> get(void* storage)
+  virtual qi::GenericValuePtr get(void* storage)
   {
-    qi::GenericValuePtr res = GenericValue_from_PyObject(*((PyObject**)ptrFromStorage(&storage)));
-
-    return std::make_pair(res, false);
+    return GenericValue_from_PyObject(*((PyObject**)ptrFromStorage(&storage)));
   }
 
   virtual void set(void** storage, qi::GenericValuePtr src)
@@ -342,6 +332,16 @@ public:
   virtual void destroy(void* obj)
   {
     Py_XDECREF((PyObject*)obj);
+  }
+  virtual bool less(void* a, void* b)
+  {
+    PyObject** pa = (PyObject**)ptrFromStorage(&a);
+    PyObject** pb = (PyObject**)ptrFromStorage(&b);
+    int res = PyObject_Compare(*pa, *pb);
+    if (PyErr_Occurred())
+      return *pa < *pb;
+    else
+      return res < 0;
   }
 };
 

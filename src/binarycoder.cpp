@@ -367,28 +367,29 @@ namespace qi {
       ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
-      assert(GenericValuePtr::from(o).as<ObjectPtr>());
-      return GenericValuePtr::from(o).clone();
+      assert(GenericValuePtr::ref(o).as<ObjectPtr>());
+      return GenericValuePtr::ref(o).clone();
     }
 
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, ObjectHost* context)
+      SerializeTypeVisitor(BinaryEncoder& out, ObjectHost* context, GenericValuePtr value)
         : out(out)
         , context(context)
+        , value(value)
       {}
-      void visitUnknown(Type* type, void* storage)
+      void visitUnknown(GenericValuePtr value)
       {
-        qiLogError() << "Type " << type->infoString() <<" not serializable";
+        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
       }
 
-      void visitVoid(Type*)
+      void visitVoid()
       {
         // Not an error, makes sense if encapsulated in a Dynamic for instance
       }
 
-      void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
+      void visitInt(int64_t value, bool isSigned, int byteSize)
       {
         switch((isSigned ? 1 : -1) * byteSize)
         {
@@ -406,7 +407,7 @@ namespace qi {
         }
       }
 
-      void visitFloat(TypeFloat* type, double value, int byteSize)
+      void visitFloat(double value, int byteSize)
       {
         if (byteSize == 4)
           out.write((float)value);
@@ -416,39 +417,29 @@ namespace qi {
           qiLogError() << "serialize on unknown float type " << byteSize;
       }
 
-      void visitString(TypeString* type, void* storage)
+      void visitString(char* data, size_t len)
       {
-        std::pair<char*, size_t> data = type->get(storage);
-        out.writeString(data.first, data.second);
+        out.writeString(data, len);
       }
 
-      void visitList(GenericListPtr value)
+      void visitList(GenericIterator it, GenericIterator end)
       {
-        out.beginList(value.size(), value.elementType()->signature());
-        GenericListIteratorPtr it, end;
-        it = value.begin();
-        end = value.end();
+        out.beginList(value.size(), static_cast<TypeList*>(value.type)->elementType()->signature());
         for (; it != end; ++it)
           qi::details::serialize(*it, out, context);
-        it.destroy();
-        end.destroy();
         out.endList();
       }
 
-      void visitMap(GenericMapPtr value)
+      void visitMap(GenericIterator it, GenericIterator end)
       {
-        out.beginMap(value.size(), value.keyType()->signature(), value.elementType()->signature());
-        GenericMapIteratorPtr it, end;
-        it = value.begin();
-        end = value.end();
+        TypeMap* type = static_cast<TypeMap*>(value.type);
+        out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
         for(; it != end; ++it)
         {
-          std::pair<GenericValuePtr, GenericValuePtr> v = *it;
-          qi::details::serialize(v.first, out, context);
-          qi::details::serialize(v.second, out, context);
+          GenericValuePtr v = *it;
+          qi::details::serialize(v[0], out, context);
+          qi::details::serialize(v[1], out, context);
         }
-        it.destroy();
-        end.destroy();
         out.endMap();
       }
 
@@ -459,13 +450,14 @@ namespace qi {
         serializeObject(out, ObjectPtr(new GenericObject(value)), context);
       }
 
-      void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
+      void visitPointer(GenericValuePtr pointee)
       {
+        TypePointer* type = static_cast<TypePointer*>(value.type);
         if (type->pointerKind() == TypePointer::Shared
           && pointee.kind() == Type::Object)
         {
           out.write("o");
-          GenericValuePtr shared_ptr = GenericValuePtr(type, storage).clone();
+          GenericValuePtr shared_ptr = value.clone();
           serializeObject(out,
             ObjectPtr(new GenericObject(static_cast<ObjectType*>(pointee.type), pointee.value),
               boost::bind(&GenericValuePtr::destroy, shared_ptr)),
@@ -475,9 +467,8 @@ namespace qi {
           qiLogError() << "Pointer serialization not implemented";
       }
 
-      void visitTuple(TypeTuple* type, void* storage)
+      void visitTuple(const std::vector<GenericValuePtr>& vals)
       {
-        std::vector<GenericValuePtr> vals = type->getValues(storage);
         std::string tsig;
         for (unsigned i=0; i<vals.size(); ++i)
           tsig += vals[i].type->signature();
@@ -487,26 +478,32 @@ namespace qi {
         out.endTuple();
       }
 
-      void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
+      void visitDynamic(GenericValuePtr pointee)
       {
-        if (source.type->info() == typeOf<ObjectPtr>()->info())
+        if (value.type->info() == typeOf<ObjectPtr>()->info())
         {
           out.write("o");
-          ObjectPtr* obj = source.ptr<ObjectPtr>();
+          ObjectPtr* obj = value.ptr<ObjectPtr>();
           serializeObject(out, *obj, context);
         }
         else
         out.write(pointee,
-          boost::bind(&typeDispatch<SerializeTypeVisitor>, boost::ref(*this),
-            pointee.type, &pointee.value));
+          boost::bind(&typeDispatch<SerializeTypeVisitor>,
+            SerializeTypeVisitor(out, context, pointee),
+            pointee));
       }
 
-      void visitRaw(TypeRaw* type, Buffer* buffer)
+      void visitRaw(GenericValuePtr raw)
       {
-        out.write(*buffer);
+        out.write(raw.as<Buffer>());
+      }
+      void visitIterator(GenericValuePtr)
+      {
+        qiLogError() << "Type " << value.type->infoString() <<" not serializable";
       }
       BinaryEncoder& out;
       ObjectHost* context;
+      GenericValuePtr value;
     };
 
     class DeserializeTypeVisitor
@@ -520,71 +517,61 @@ namespace qi {
         , context(context)
       {}
 
-      template<typename T, typename TYPE>
-      void deserialize(TYPE* type)
+      template<typename T>
+      void deserialize()
       {
-        T val;
-        in.read(val);
-        assert(typeOf<T>()->info() == type->info());
-        result.type = type;
-        result.value = type->initializeStorage();
-        type->set(&result.value, val);
+        in.read(result.as<T>());
       }
 
-      void visitUnknown(Type* type, void* storage)
+      void visitUnknown(GenericValuePtr)
       {
-        qiLogError() << "Type " << type->infoString() <<" not deserializable";
+        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
       }
 
-      void visitVoid(Type*)
+      void visitVoid()
       {
         result.type = typeOf<void>();
         result.value = 0;
       }
 
-      void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
+      void visitInt(int64_t value, bool isSigned, int byteSize)
       {
         switch((isSigned?1:-1)*byteSize)
         {
-          case 0:  deserialize<bool>(type);  break;
-          case 1:  deserialize<int8_t>(type);  break;
-          case -1: deserialize<uint8_t>(type); break;
-          case 2:  deserialize<int16_t>(type); break;
-          case -2: deserialize<uint16_t>(type);break;
-          case 4:  deserialize<int32_t>(type); break;
-          case -4: deserialize<uint32_t>(type);break;
-          case 8:  deserialize<int64_t>(type); break;
-          case -8: deserialize<uint64_t>(type);break;
+          case 0:  deserialize<bool>();  break;
+          case 1:  deserialize<int8_t>();  break;
+          case -1: deserialize<uint8_t>(); break;
+          case 2:  deserialize<int16_t>(); break;
+          case -2: deserialize<uint16_t>();break;
+          case 4:  deserialize<int32_t>(); break;
+          case -4: deserialize<uint32_t>();break;
+          case 8:  deserialize<int64_t>(); break;
+          case -8: deserialize<uint64_t>();break;
           default:
             qiLogError() << "Unknown integer type " << isSigned << " " << byteSize;
         }
       }
 
-      void visitFloat(TypeFloat* type, double value, int byteSize)
+      void visitFloat(double value, int byteSize)
       {
         if (byteSize == 4)
-          deserialize<float>(type);
+          deserialize<float>();
         else if (byteSize == 8)
-          deserialize<double>(type);
+          deserialize<double>();
         else
           qiLogError() << "Unknown float type " << byteSize;
       }
 
-      void visitString(TypeString* type, const void* storage)
+      void visitString(char*, size_t)
       {
-        result.type = type;
-        result.value = result.type->initializeStorage();
         std::string s;
         in.read(s);
-        type->set(&result.value, s);
+        std::swap(s, result.as<std::string>());
       }
 
-      void visitList(GenericListPtr value)
+      void visitList(GenericIterator, GenericIterator)
       {
-        result.type = value.type;
-        result.value = value.type->initializeStorage();
-        GenericListPtr res(result);
-        Type* elementType = res.elementType();
+        Type* elementType = static_cast<TypeList*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -592,18 +579,15 @@ namespace qi {
         for (unsigned i = 0; i < sz; ++i)
         {
           GenericValuePtr v = qi::details::deserialize(elementType, in, context);
-          res.pushBack(v);
+          result._append(v);
           v.destroy();
         }
       }
 
-      void visitMap(GenericMapPtr value)
+      void visitMap(GenericIterator, GenericIterator)
       {
-        result.type = value.type;
-        result.value = value.type->initializeStorage();
-        GenericMapPtr res(result);
-        Type* keyType = res.keyType();
-        Type* elementType = res.elementType();
+        Type* keyType = static_cast<TypeMap*>(result.type)->keyType();
+        Type* elementType = static_cast<TypeMap*>(result.type)->elementType();
         qi::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status_Ok)
@@ -612,7 +596,7 @@ namespace qi {
         {
           GenericValuePtr k = qi::details::deserialize(keyType, in, context);
           GenericValuePtr v = qi::details::deserialize(elementType, in, context);
-          res.insert(k, v);
+          result._insert(k, v);
           k.destroy();
           v.destroy();
         }
@@ -623,16 +607,15 @@ namespace qi {
         result = deserializeObject(in, context);
       }
 
-      void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
+      void visitPointer(GenericValuePtr pointee)
       {
         qiLogError() << " Pointer serialization not implemented";
       }
 
-      void visitTuple(TypeTuple* type, void* storage)
+      void visitTuple(const std::vector<GenericValuePtr>&)
       {
+        TypeTuple* type = static_cast<TypeTuple*>(result.type);
         std::vector<Type*> types = type->memberTypes();
-        result.type = type;
-        result.value = type->initializeStorage();
         for (unsigned i = 0; i<types.size(); ++i)
         {
           GenericValuePtr val = qi::details::deserialize(types[i], in, context);
@@ -641,9 +624,9 @@ namespace qi {
         }
       }
 
-      void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
+      void visitDynamic(GenericValuePtr pointee)
       {
-        if (source.type->info() == typeOf<ObjectPtr>()->info())
+        if (result.type->info() == typeOf<ObjectPtr>()->info())
         { // Advertise as dynamic, but type was already parsed
           visitObject(GenericObject(0, 0));
         }
@@ -651,26 +634,23 @@ namespace qi {
         {
           std::string sig;
           in.read(sig);
-          GenericValuePtr val;
-          val.type = Type::fromSignature(sig);
           DeserializeTypeVisitor dtv(*this);
-          typeDispatch<DeserializeTypeVisitor>(dtv, val.type, &val.value);
-          val = dtv.result;
-          result.type = source.type;
-          result.value = result.type->initializeStorage();
-          static_cast<TypeDynamic*>(source.type)->set(&result.value, val);
-          val.destroy();
+          dtv.result = GenericValuePtr(Type::fromSignature(sig));;
+          typeDispatch<DeserializeTypeVisitor>(dtv, dtv.result);
+          static_cast<TypeDynamic*>(result.type)->set(&result.value, dtv.result);
+          dtv.result.destroy();
         }
       }
+      void visitIterator(GenericValuePtr)
+      {
+        qiLogError() << "Type " << result.type->infoString() <<" not deserializable";
+      }
 
-      void visitRaw(TypeRaw* type, Buffer*)
+      void visitRaw(GenericValuePtr)
       {
         Buffer b;
         in.read(b);
-        void* s = type->initializeStorage();
-        type->set(&s, b);
-        result.type = type;
-        result.value = s;
+        static_cast<TypeRaw*>(result.type)->set(&result.value, b);
       }
       GenericValuePtr result;
       BinaryDecoder& in;
@@ -682,17 +662,18 @@ namespace qi {
   namespace details {
     void serialize(GenericValuePtr val, BinaryEncoder& out, ObjectHost* context)
     {
-      SerializeTypeVisitor stv(out, context);
-      qi::typeDispatch(stv, val.type, &val.value);
+      SerializeTypeVisitor stv(out, context, val);
+      qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status_Ok) {
         qiLogError() << "OSerialization error " << out.status();
       }
     }
 
     GenericValuePtr deserialize(qi::Type *type, BinaryDecoder& in, TransportSocketPtr context) {
-      void* storage = 0;
       DeserializeTypeVisitor dtv(in, context);
-      qi::typeDispatch(dtv, type, &storage);
+      dtv.result = GenericValuePtr(type);
+
+      qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status_Ok) {
         qiLogError() << "ISerialization error " << in.status();
       }
