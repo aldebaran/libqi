@@ -23,12 +23,15 @@ namespace qi {
   template<typename T> struct FutureType
   {
     typedef T type;
+    typedef T typecast;
   };
 
+  struct FutureHasNoValue{};
   // Hold a void* for Future<void>
   template<> struct FutureType<void>
   {
     typedef void* type;
+    typedef FutureHasNoValue typecast;
   };
 
   template <typename T> class FutureInterface;
@@ -44,6 +47,7 @@ namespace qi {
   class Future {
   public:
     typedef typename FutureType<T>::type ValueType;
+    typedef typename FutureType<T>::typecast ValueTypeCast;
     Future()
       : _p(new detail::FutureState<T>())
     {
@@ -81,7 +85,7 @@ namespace qi {
      */
     inline const ValueType &valueWithDefault(const ValueType& defaultVal = ValueType()) const;
 
-    inline operator const ValueType&() const { return _p->value(); }
+    inline operator const ValueTypeCast&() const { return _p->value(); }
 
     /** Wait for future to contain a value or an error
      @param msecs: Maximum time to wait in milliseconds, 0 means forever and -1 means return immediately.
