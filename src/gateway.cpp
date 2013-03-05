@@ -499,7 +499,8 @@ bool GatewayPrivate::listen(const Url &address)
 {
   _transportServer = new qi::TransportServer();
   _transportServer->newConnection.connect(boost::bind<void>(&GatewayPrivate::onTransportServerNewConnection, this, _1));
-  return _transportServer->listen(address);
+  _transportServer->listen(address);
+  return true;
 }
 
 bool GatewayPrivate::connect(const qi::Url &connectURL)
