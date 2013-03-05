@@ -88,7 +88,7 @@ namespace qi
 
     // Transmit each Message without delay
     const boost::asio::ip::tcp::no_delay option( true );
-    _socket->set_option(option);
+    _socket->lowest_layer().set_option(option);
   }
 
 
@@ -280,7 +280,7 @@ namespace qi
       _sslHandshake = true;
       // Transmit each Message without delay
       const boost::asio::ip::tcp::no_delay option( true );
-      _socket->set_option(option);
+      _socket->lowest_layer().set_option(option);
       startReading();
     }
   }
@@ -311,7 +311,7 @@ namespace qi
         _self->connected();
         // Transmit each Message without delay
         const boost::asio::ip::tcp::no_delay option( true );
-        _socket->set_option(option);
+        _socket->lowest_layer().set_option(option);
         startReading();
       }
     }
