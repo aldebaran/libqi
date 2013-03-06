@@ -84,6 +84,10 @@ public:
   {
     if (ptr)
       return ptr;
+    //Warning:
+    // If T is not clonable (no copy constructor or operator=)
+    // add QI_TYPE_NOT_CLONABLE(T) next to the declaration of T
+    // in your code.
     void* res = detail::TypeManager<T>::create();
     if (!res)
       qiLogError("qitype.bypointer") << "initializeStorage error on " << typeid(T).name();
