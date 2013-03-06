@@ -200,6 +200,18 @@ namespace qi {
     _p->buffer = buffer;
   }
 
+  void Message::setError(const std::string &error) {
+    if (type() != Type_Error) {
+      qiLogWarning() << "called setError on a non Type_Error message";
+      return;
+    }
+    qi::Buffer        buf;
+    qi::BinaryEncoder ds(buf);
+    ds.write(qi::typeOf<std::string>()->signature());
+    ds.write(error);
+    setBuffer(buf);
+  }
+
   void Message::setParameters(const GenericFunctionParameters &parameters,
     ObjectHost* context)
   {

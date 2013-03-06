@@ -134,6 +134,8 @@ namespace qi {
     void          setBuffer(const Buffer &buffer);
     const Buffer &buffer() const;
 
+    void          setError(const std::string &error);
+
     void               setSignature(const std::string& signature);
     ///@return signature, set by setParameters() or setSignature()
     const std::string& signature() const;
