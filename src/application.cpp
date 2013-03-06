@@ -99,6 +99,7 @@ namespace qi {
 
   static void run_io_service()
   {
+    qi::os::setCurrentThreadName("appioservice");
     globalIoService->run();
   }
 
