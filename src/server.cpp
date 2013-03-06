@@ -112,13 +112,9 @@ namespace qi {
       if (it == _boundObjects.end())
       {
         qi::Message       retval(Message::Type_Error, msg.address());
-        qi::Buffer        error;
-        qi::BinaryEncoder ds(error);
         std::stringstream ss;
         ss << "can't find service, address: " << msg.address();
-        ds.write(qi::typeOf<std::string>()->signature());
-        ds.write(ss.str());
-        retval.setBuffer(error);
+        retval.setError(ss.str());
         socket->send(retval);
         qiLogError() << "Can't find service: " << msg.service();
         return;

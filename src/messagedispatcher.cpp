@@ -110,16 +110,8 @@ namespace qi {
         _messageSent.erase(it);
       }
       //generate an error message for the caller.
-      qi::Message msg;
-      msg.setId(ma.messageId);
-      msg.setType(qi::Message::Type_Error);
-      msg.setService(ma.serviceId);
-      msg.setObject(ma.objectId);
-      msg.setFunction(ma.functionId);
-      qi::Buffer buf;
-      qi::BinaryEncoder ds(buf);
-      ds.write("Endpoint disconnected, message dropped.");
-      msg.setBuffer(buf);
+      qi::Message msg(qi::Message::Type_Error, ma);
+      msg.setError("Endpoint disconnected, message dropped.");
       dispatch(msg);
     }
   }

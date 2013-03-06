@@ -18,20 +18,19 @@ namespace qi {
   inline void serverResultAdapter(qi::Future<GenericValuePtr> future,
     ObjectHost* host, TransportSocketPtr socket, const qi::MessageAddress &replyaddr) {
     qi::Message ret(Message::Type_Reply, replyaddr);
-    qi::Buffer      result;
-    qi::BinaryEncoder ods(result);
 
     if (future.hasError()) {
       ret.setType(qi::Message::Type_Error);
-      ods.write(typeOf<std::string>()->signature());
-      ods.write(future.error());
+      ret.setError(future.error());
     } else {
+      qi::Buffer        result;
+      qi::BinaryEncoder ods(result);
       GenericValuePtr val = future.value();
       if (val.type->kind() != Type::Void)
         qi::details::serialize(val, ods, host);
       val.destroy();
+      ret.setBuffer(result);
     }
-    ret.setBuffer(result);
     if (!socket->send(ret))
       qiLogError("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
   }
