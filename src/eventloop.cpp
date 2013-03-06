@@ -56,6 +56,7 @@ namespace qi {
   void EventLoopAsio::run()
   {
     qiLogDebug("qi.EventLoop") << this << "run starting";
+    qi::os::setCurrentThreadName("eventloop");
     _running = true;
     _id = boost::this_thread::get_id();
     _work = new boost::asio::io_service::work(_io);
