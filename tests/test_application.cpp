@@ -24,16 +24,17 @@ static std::string reply(const std::string &msg)
 TEST(QiApplication, destroyAppBeforeObject)
 {
   qi::ObjectPtr object;
+  qi::GenericObjectBuilder ob;
+  ob.advertiseMethod("reply", &reply);
+  qi::ObjectPtr obj(ob.object());
   {
     qi::Application a(_argc, _argv);
     TestSessionPair pair;
-    qi::GenericObjectBuilder ob;
-    ob.advertiseMethod("reply", &reply);
-    qi::ObjectPtr obj(ob.object());
 
     pair.server()->registerService("serviceTest", obj);
     object = pair.server()->service("serviceTest");
-    std::string r = object->call<std::string>("reply", "lol");
+    std::string r = object->call<std::string>("reply", "plaf");
+    ASSERT_TRUE(r == "plafbim");
   }
 
   ASSERT_TRUE(true);
