@@ -261,6 +261,7 @@ namespace qi {
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
     globalCond.notify_all();
+    globalInitialized = false;
   }
 
   static void initSigIntSigTermCatcher() {
