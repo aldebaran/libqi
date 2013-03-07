@@ -186,11 +186,6 @@ namespace qi {
 
   namespace details {
 
-    // Only needed for ALModule.
-    // (metacall should be direct when called in local, and threaded when coming from a server)
-    void setSessionServerDefaultCallType(qi::Session *session, qi::MetaCallType callType) {
-      session->_p->_serverObject.setDefaultCallType(callType);
-    }
   };
 
 }

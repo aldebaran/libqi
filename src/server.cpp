@@ -19,11 +19,11 @@ qiLogCategory("qimessaging.server");
 namespace qi {
 
   //Server
-  Server::Server(qi::MetaCallType defaultCallType)
+  Server::Server()
     : _boundObjectsMutex()
     , _server()
     , _dying(false)
-    , _defaultCallType(defaultCallType)
+    , _defaultCallType(qi::MetaCallType_Queued)
   {
     _server.newConnection.connect(boost::bind<void>(&Server::onTransportServerNewConnection, this, _1));
   }
@@ -71,9 +71,6 @@ namespace qi {
     }
   }
 
-  void Server::setDefaultCallType(qi::MetaCallType ctype) {
-    _defaultCallType = ctype;
-  }
 
   bool Server::removeObject(unsigned int idx)
   {

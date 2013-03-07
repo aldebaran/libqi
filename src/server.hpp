@@ -29,7 +29,7 @@ namespace qi {
   class Server {
   public:
     QI_DISALLOW_COPY_AND_ASSIGN(Server);
-    Server(qi::MetaCallType defaultCallType = qi::MetaCallType_Queued);
+    Server();
     ~Server();
 
     //make the server listening
@@ -44,7 +44,6 @@ namespace qi {
 
     std::vector<qi::Url> endpoints() const;
 
-    void setDefaultCallType(qi::MetaCallType ctype);
 
   private:
     void setSocketObjectEndpoints();

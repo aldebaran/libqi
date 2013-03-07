@@ -48,7 +48,6 @@ namespace qi {
     qi::ServiceInfo               registeredService(const std::string &service);
     qi::ObjectPtr                 registeredServiceObject(const std::string &service);
 
-    using Server::setDefaultCallType;
     using Server::close;
     using Server::listen;
     using Server::setIdentity;
