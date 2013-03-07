@@ -6,49 +6,41 @@
  */
 
 #include <gtest/gtest.h>
-
-#include <qimessaging/session.hpp>
+#include <qi/application.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
-#include <qi/application.hpp>
-#include <testsession/testsessionpair.hpp>
+#include <qimessaging/session.hpp>
+#include <qimessaging/servicedirectory.hpp>
 
-int _argc = 0;
-char** _argv = 0;
+int    _argc;
+char** _argv;
 
-static std::string reply(const std::string &msg)
+TEST(Test, TestApplicationDestruction)
 {
-  return msg + "bim";
-}
+  qi::ServiceDirectory     sd;
+  qi::Session              server, client;
+  qi::GenericObjectBuilder ob1;
+  qi::ObjectPtr            oclient1;
 
-TEST(QiApplication, destroyAppBeforeObject)
-{
-  qi::ObjectPtr object;
-  qi::GenericObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::ObjectPtr obj(ob.object());
   {
-    qi::Application a(_argc, _argv);
-    TestSessionPair pair;
+    qi::Application app(_argc, _argv);
 
-    pair.server()->registerService("serviceTest", obj);
-    object = pair.server()->service("serviceTest");
-    std::string r = object->call<std::string>("reply", "plaf");
-    ASSERT_TRUE(r == "plafbim");
+    sd.listen("tcp://127.0.0.1:0");
+    server.connect(sd.endpoints()[0].str());
+    server.listen("tcp://0.0.0.0:0");
+    client.connect(sd.endpoints()[0].str());
+
+    qi::ObjectPtr    oserver1(ob1.object());
+
+    server.registerService("coin1", oserver1).wait();
+
+    oclient1 = client.service("coin1");
   }
-
-  ASSERT_TRUE(true);
 }
 
-
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
   _argc = argc;
   _argv = argv;
-#if defined(__APPLE__) || defined(__linux__)
-  setsid();
-#endif
-  ::TestMode::initTestMode(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
