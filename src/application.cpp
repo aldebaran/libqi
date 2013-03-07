@@ -41,6 +41,7 @@ namespace qi {
   static int         globalArgc = -1;
   static char**      globalArgv = 0;
   static bool        globalInitialized = false;
+  static bool        globalTerminated = false;
 
   static std::string globalName;
   static std::vector<std::string>* globalArguments;
@@ -261,7 +262,7 @@ namespace qi {
     for (FunctionList::iterator i = fl.begin(); i!= fl.end(); ++i)
       (*i)();
     globalCond.notify_all();
-    globalInitialized = false;
+    globalTerminated = true;
   }
 
   static void initSigIntSigTermCatcher() {
@@ -368,6 +369,11 @@ namespace qi {
   bool Application::initialized()
   {
     return globalInitialized;
+  }
+
+  bool Application::terminated()
+  {
+    return globalTerminated;
   }
 
   int Application::argc()

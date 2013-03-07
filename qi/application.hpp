@@ -34,6 +34,7 @@ namespace qi {
 
     static void* loadModule(const std::string& name, int flags=-1);
     static void unloadModule(void* handle);
+    static bool terminated();
     static bool initialized();
 
     static const char* program();
