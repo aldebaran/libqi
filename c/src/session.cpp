@@ -7,13 +7,11 @@
 */
 
 #include <string.h>
-#include <qic/error.h>
 #include <qic/session.h>
 #include <qic/object.h>
 #include <qic/future.h>
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>
-#include "error_p.h"
 #include "future_p.h"
 
 qi_session_t *qi_session_create()
@@ -53,10 +51,7 @@ qi_future_t* qi_session_get_service(qi_session_t *session, const char *name)
   qi::Session *s = reinterpret_cast<qi::Session*>(session);
 
   if (!s)
-  {
-    qi_c_set_error("Session is not valid.");
     return 0;
-  }
   return qi_future_wrap(s->service(name));
 }
 

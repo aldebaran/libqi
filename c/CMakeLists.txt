@@ -6,7 +6,6 @@
 ##
 
 qi_create_lib("qic"  qic/api.h
-                     qic/error.h
                      qic/application.h
                      qic/session.h
                      qic/object.h
@@ -22,12 +21,9 @@ qi_create_lib("qic"  qic/api.h
                      src/session.cpp
                      src/application.cpp
                      src/signal.cpp
-                     src/error_p.cpp
-                     src/error_p.h
                      src/value_p.h
                      src/value.cpp
                      src/servicedirectory.cpp)
 
 qi_use_lib(qic qimessaging qitype qi)
 qi_stage_lib(qic)
-
