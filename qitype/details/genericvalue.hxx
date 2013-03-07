@@ -19,12 +19,14 @@ namespace qi {
   public:
     virtual std::pair<GenericValuePtr, bool> get(void* storage)
     {
-      return std::make_pair(*(GenericValuePtr*)ptrFromStorage(&storage), false);
+      GenericValue* ptr = (GenericValue*)ptrFromStorage(&storage);
+      return std::make_pair(*(GenericValuePtr*)ptr, false);
     }
     virtual void set(void** storage, GenericValuePtr src)
     {
       GenericValue* val = (GenericValue*)ptrFromStorage(storage);
-      *val = src;
+      val->reset();
+      val->set(src, true, true);
     }
     // Default cloner will do just right since GenericValue is by-value.
     typedef DefaultTypeImplMethods<GenericValue> Methods;
@@ -51,15 +53,23 @@ namespace qi {
   }
 
   template<typename T>
-  GenericValuePtr GenericValuePtr::from(const T& v)
+  GenericValuePtr GenericValuePtr::make(T* v)
   {
     static Type* type = 0;
     if (!type)
       type = typeOf<typename boost::remove_const<T>::type>();
     GenericValuePtr res;
     res.type = type;
-    res.value = res.type->initializeStorage(const_cast<void*>((const void*)&v));
+    res.value = res.type->initializeStorage(const_cast<void*>((const void*)v));
     return res;
+  }
+
+  inline
+  GenericValuePtr& GenericValuePtr::operator = (const GenericValuePtr& b)
+  {
+    type = b.type;
+    value = b.value;
+    return *this;
   }
 
   inline
@@ -79,7 +89,7 @@ namespace qi {
 
   template<typename T> AutoGenericValuePtr::AutoGenericValuePtr(const T& ptr)
   {
-    *(GenericValuePtr*)this = from(ptr);
+    *(GenericValuePtr*)this = GenericValuePtr(&ptr);
   }
 
   inline AutoGenericValuePtr::AutoGenericValuePtr()
@@ -112,6 +122,16 @@ namespace qi {
     : type(type)
     , value(type->initializeStorage())
   {
+  }
+
+  template<typename T>
+  GenericValuePtr::GenericValuePtr(T* ptr)
+  {
+    static Type* t = 0;
+    if (!t)
+      t = typeOf<typename boost::remove_const<T>::type>();
+    type = t;
+    value = type->initializeStorage(const_cast<void*>((const void*)ptr));
   }
 
   inline Type::Kind GenericValuePtr::kind() const
@@ -189,7 +209,7 @@ namespace qi {
         return static_cast<T>(
           static_cast<typename TypeOfKind<k>::type* const>(v.type)->get(v.value));
       // Fallback to default which will attempt a full conversion.
-      return v.as<T>();
+      return v.to<T>();
     }
   }
 
@@ -203,23 +223,34 @@ namespace qi {
   }
 
   template<typename T>
-  inline T GenericValuePtr::as(const T&) const
+  inline T& GenericValuePtr::as()
   {
-    return as<T>();
+    T* p = ptr<T>(true);
+    if (!p)
+      throw std::runtime_error("Type mismatch");
+    return *p;
   }
 
   template<typename T>
-  inline T GenericValuePtr::as() const
+  inline T GenericValuePtr::to(const T&) const
+  {
+    return to<T>();
+  }
+
+  template<typename T>
+  inline T GenericValuePtr::to() const
   {
     qiLogCategory("qitype.genericvalue");
     std::pair<GenericValuePtr, bool> conv = convert(typeOf<T>());
     if (!conv.first.type)
     {
-      qiLogWarning() << "Conversion from " << type->infoString()
-                                      << '(' << type->kind() << ')'
-                                      << " to " << typeOf<T>()->infoString()
-                                      << '(' << typeOf<T>()->kind() << ") failed";
-      return T();
+      std::stringstream msg;
+      msg << "Conversion from " << type->infoString()
+          << '(' << type->kind() << ')'
+          << " to " << typeOf<T>()->infoString()
+          << '(' << typeOf<T>()->kind() << ") failed";
+      qiLogWarning() << msg.str();
+      throw std::runtime_error(msg.str());
     }
     T result = *conv.first.ptr<T>(false);
     if (conv.second)
@@ -227,39 +258,39 @@ namespace qi {
     return result;
   }
 
-  inline int64_t GenericValuePtr::asInt() const
+  inline int64_t GenericValuePtr::toInt() const
   {
     return detail::valueAs<int64_t, Type::Int>(*this);
   }
 
-  inline float GenericValuePtr::asFloat() const
+  inline float GenericValuePtr::toFloat() const
   {
     return detail::valueAs<float, Type::Float>(*this);
   }
 
-  inline double GenericValuePtr::asDouble() const
+  inline double GenericValuePtr::toDouble() const
   {
     return detail::valueAs<double, Type::Float>(*this);
   }
 
 
-  inline std::string GenericValuePtr::asString() const
+  inline std::string GenericValuePtr::toString() const
   {
-    return as<std::string>();
+    return to<std::string>();
   }
 
-  inline GenericValuePtr GenericValuePtr::asDynamic() const
+  template<typename T>
+  std::vector<T>
+  GenericValuePtr::toList() const
   {
-    if (kind() != Type::Dynamic)
-      return GenericValuePtr();
-    TypeDynamic* d = static_cast<TypeDynamic*>(type);
-    std::pair<GenericValuePtr, bool> res = d->get(value);
-    //we could avoid the copy, but we dont want to return a bool to tell the user
-    //wether the returned value should be freed or not.
-    if (res.second) //true if copied
-      return res.first;
-    else
-      return res.first.clone();
+    return to<std::vector<T> >();
+  }
+
+  template<typename K, typename V>
+  std::map<K, V>
+  GenericValuePtr::toMap() const
+  {
+    return to<std::map<K, V> >();
   }
 
   namespace detail
@@ -281,65 +312,64 @@ namespace qi {
 
     template<typename T> void operator,(GenericValuePtrCopy& g, const T& any)
     {
-      *(GenericValuePtr*)&g = GenericValuePtr::from(any);
+      *(GenericValuePtr*)&g = GenericValuePtr::make(&any);
       *(GenericValuePtr*)&g = g.clone();
     }
   }
 
   inline GenericValue::GenericValue()
-  : data(GenericValuePtr())
-  , allocated(false)
+  : _allocated(false)
   {}
 
-  inline GenericValue::GenericValue(Type* type)
-    : data(type)
-    , allocated(false)
-  {
-  }
 
   inline GenericValue::GenericValue(const GenericValue& b)
-  : allocated(false)
+  : _allocated(false)
   {
     *this = b;
   }
 
-  inline GenericValue::GenericValue(const GenericValuePtr& b, bool copy)
-  : data(copy?b.clone():b)
-  , allocated(copy)
+  inline GenericValue::GenericValue(const GenericValuePtr& b, bool copy, bool free)
+  : _allocated(false)
   {
+   set(b, copy, free);
+  }
+
+  inline GenericValue::GenericValue(const GenericValuePtr& b)
+  : _allocated(false)
+  {
+   set(b);
   }
 
   inline void GenericValue::operator=(const GenericValue& b)
   {
-    reset();
-    allocated = b.allocated;
-    data = allocated ? b.data.clone():b.data;
+    set(b, true, true);
   }
 
   inline void GenericValue::operator=(const GenericValuePtr& b)
   {
+    set(b, true, true);
+  }
+
+  inline void GenericValue::set(const GenericValuePtr& b)
+  {
+    set(b, true, true);
+  }
+
+  inline void GenericValue::set(const GenericValuePtr& b, bool copy, bool free)
+  {
     reset();
-    data = b.clone();
-    allocated = true;
-  }
-
-  template<typename T>
-  inline GenericValue GenericValue::from(const T& src, bool copy)
-  {
-    return GenericValue(GenericValuePtr::from(src), copy);
-  }
-
-  inline std::string GenericValue::signature(bool resolveDynamic) const
-  {
-    return data.signature(resolveDynamic);
+    *(GenericValuePtr*)this = b;
+    _allocated = free;
+    if (copy)
+      *(GenericValuePtr*)this = clone();
   }
 
   inline void GenericValue::reset()
   {
-    if (allocated)
-      data.destroy();
-    allocated = false;
-    data = GenericValuePtr();
+    if (_allocated)
+      destroy();
+    type = 0;
+    value = 0;
   }
 
   inline GenericValue::~GenericValue()
@@ -347,42 +377,134 @@ namespace qi {
     reset();
   }
 
-  inline GenericValue GenericValue::take(GenericValuePtr& b)
+  template<typename T>
+  void GenericValuePtr::set(const T& v)
   {
-    GenericValue res(b, false);
-    res.allocated = true;
-    b.type = 0;
-    b.value = 0;
-    return res;
+    update(GenericValuePtr(&v));
+   }
+
+  inline void GenericValuePtr::setInt(int64_t val)
+  {
+    if (kind() == Type::Int)
+      static_cast<TypeInt*>(type)->set(&value, val);
+    else if (kind() == Type::Float)
+      static_cast<TypeFloat*>(type)->set(&value, static_cast<double>(val));
+    else
+      throw std::runtime_error("Value is not Int or Float");
   }
 
-  template<typename T> T GenericValue::as() const
+  inline void GenericValuePtr::setDouble(double v)
   {
-    return data.as<T>();
+    if (kind() == Type::Float)
+      static_cast<TypeFloat*>(type)->set(&value, v);
+    else if (kind() == Type::Int)
+      static_cast<TypeInt*>(type)->set(&value, static_cast<int64_t>(v));
+    else
+      throw std::runtime_error("Value is not Int or Float");
   }
 
-  inline Type::Kind GenericValue::kind() const
+  inline void GenericValuePtr::setFloat(float v)
   {
-    return data.kind();
+    setDouble(static_cast<double>(v));
   }
 
-  inline int64_t          GenericValue::asInt() const    { return data.asInt(); }
-  inline float            GenericValue::asFloat() const  { return data.asFloat(); }
-  inline double           GenericValue::asDouble() const { return data.asDouble(); }
-  inline std::string      GenericValue::asString() const { return data.asString(); }
-  inline GenericListPtr   GenericValue::asList() const   { return data.asList(); }
-  inline GenericMapPtr    GenericValue::asMap() const    { return data.asMap(); }
-  inline GenericTuplePtr  GenericValue::asTuple() const { return data.asTuple();}
-  inline GenericValue     GenericValue::asDynamic() const
+  inline void GenericValuePtr::setString(const std::string& v)
+  {
+    if (kind() != Type::String)
+      throw std::runtime_error("Value is not of kind string");
+    static_cast<TypeString*>(type)->set(&value, &v[0], v.size());
+  }
+
+  template<typename E, typename K>
+  E& GenericValuePtr::element(const K& key)
+  {
+    return (*this)[key].as<E>();
+  }
+
+  template<typename K>
+  GenericValueRef GenericValuePtr::operator[](const K& key)
+  {
+    return _element(make(&key), true);
+  }
+
+  inline size_t
+  GenericValuePtr::size() const
+  {
+    if (kind() == Type::List)
+      return static_cast<TypeList*>(type)->size(value);
+    if (kind() == Type::Map)
+      return static_cast<TypeMap*>(type)->size(value);
+    else
+      throw std::runtime_error("Expected List or Map.");
+  }
+
+  template<typename T> void GenericValuePtr::append(const T& element)
+  {
+    _append(make(&element));
+  }
+
+  template<typename K, typename V>
+  void GenericValuePtr::insert(const K& key, const V& val)
+  {
+    _insert(make(&key), make(&val));
+  }
+
+  template<typename K>
+  GenericValuePtr GenericValuePtr::find(const K& key)
+  {
+    return _element(make(&key), false);
+  }
+
+  inline GenericValue GenericValuePtr::asDynamic() const
   {
     if (kind() != Type::Dynamic)
-      return GenericValue();
-    TypeDynamic* d = static_cast<TypeDynamic*>(data.type);
-    std::pair<GenericValuePtr, bool> res = d->get(data.value);
+      return GenericValue(*this, false, false);
+    TypeDynamic* d = static_cast<TypeDynamic*>(type);
+    std::pair<GenericValuePtr, bool> res = d->get(value);
     if (res.second)
-      return GenericValue::take(res.first);
+      return GenericValue(res.first);
     else
-      return GenericValue(res.first, false);
+      return GenericValue(res.first, false, false);
+  }
+
+
+  inline void GenericValue::swap(GenericValue& b)
+  {
+    std::swap((::qi::GenericValuePtr&)*this, (::qi::GenericValuePtr&)b);
+    std::swap(_allocated, b._allocated);
+  }
+
+  inline GenericValueRef GenericValuePtr::operator*()
+  {
+    return GenericValueRef(*this);
+  }
+
+  inline GenericValueRef::GenericValueRef(const GenericValuePtr& src)
+  :GenericValuePtr(src)
+  {
+    if (!type)
+      throw std::runtime_error("Reference to empty GenericValuePtr");
+  }
+
+  template<typename T>
+  GenericValueRef::GenericValueRef(const T& v)
+  {
+    *(GenericValuePtr*)this = make(&v);
+  }
+
+  template<typename T>
+  GenericValueRef& GenericValueRef::operator=(const T& v)
+  {
+    set(v);
+    return *this;
+  }
+}
+
+namespace std
+{
+  inline void swap(::qi::GenericValue& a, ::qi::GenericValue& b)
+  {
+    a.swap(b);
   }
 }
 

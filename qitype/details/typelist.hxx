@@ -103,7 +103,7 @@ template<typename C> GenericValuePtr TypeListIteratorImpl<C>::dereference(void* 
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
-  return ::qi::GenericValuePtr::from(val); // Value is in the container, no need to clone
+  return ::qi::GenericValuePtr(&val); // Value is in the container, no need to clone
 }
 
 template<typename C> void TypeListIteratorImpl<C>::next(void** storage)

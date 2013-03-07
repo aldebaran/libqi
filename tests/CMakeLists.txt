@@ -1,5 +1,5 @@
 
-
+qi_create_gtest(test_value                SRC test_value.cpp                 DEPENDS QI QITYPE GTEST TIMEOUT 10)
 qi_create_gtest(test_event                SRC test_event.cpp                DEPENDS QI QITYPE GTEST TIMEOUT 10)
 qi_create_gtest(test_object               SRC test_object.cpp               DEPENDS QI QITYPE GTEST TIMEOUT 10)
 qi_create_gtest(test_signature            SRC test_signature.cpp            DEPENDS QI QITYPE GTEST TIMEOUT 10)

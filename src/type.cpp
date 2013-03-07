@@ -571,6 +571,11 @@ namespace qi {
       src.push_back(_elementType->clone(valueStorage));
     }
 
+    void* element(void* storage, int key)
+    {
+      std::vector<void*>& src = *(std::vector<void*>*)ptrFromStorage(&storage);
+      return src[key];
+    }
     const TypeInfo& info()
     {
       return _info;
@@ -605,10 +610,11 @@ namespace qi {
   }
 
 
-  /* For performances, our Generic Map uses vector<pair<void*, void*> >
-   * as storage, since we do not require Generic Map to provide a map API.
-  */
-  typedef std::vector<std::pair<void*, void*> > DefaultMapStorage;
+
+
+  // We need proper ordering relation
+  typedef std::map<GenericValuePtr, void*> DefaultMapStorage;
+
   // Default map, using a vector<pair<void*, void*> > as storage
   static Type* makeMapIteratorType(Type* kt, Type* et);
 
@@ -634,7 +640,7 @@ namespace qi {
         ptrFromStorage(&storage);
       GenericValuePtr k;
       k.type = _keyType;
-      k.value = ptr->first;
+      k.value = ptr->first.value;
       GenericValuePtr e;
       e.type = _elementType;
       e.value = ptr->second;
@@ -736,9 +742,30 @@ namespace qi {
     void insert(void** storage, void* keyStorage, void* valueStorage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(storage);
-      ptr.push_back(std::make_pair(
-        _keyType->clone(keyStorage), _elementType->clone(valueStorage)));
+      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      if (i != ptr.end())
+      {
+        // Replace: clear previous storage
+        _elementType->destroy(i->second);
+        i->second = _elementType->clone(valueStorage);
+      }
+      else
+        ptr[GenericValuePtr(_keyType, keyStorage).clone()] = _elementType->clone(valueStorage);
     }
+
+    GenericValuePtr element(void** pstorage, void* keyStorage, bool autoInsert)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(pstorage);
+      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      if (i != ptr.end())
+        return GenericValuePtr(_elementType, i->second);
+      if (!autoInsert)
+        return GenericValuePtr();
+      void* e = _elementType->initializeStorage();
+      ptr[GenericValuePtr(_keyType, keyStorage)] = e;
+      return GenericValuePtr(_elementType, e);
+    }
+
     size_t size(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
@@ -747,10 +774,10 @@ namespace qi {
     void destroy(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      for (unsigned i=0; i<ptr.size(); ++i)
+      for (DefaultMapStorage::iterator it = ptr.begin(); it != ptr.end(); ++it)
       {
-        _keyType->destroy(ptr[i].first);
-        _elementType->destroy(ptr[i].second);
+        const_cast<GenericValuePtr&>(it->first).destroy();
+        _elementType->destroy(it->second);
       }
       Methods::destroy(storage);
     }
@@ -759,11 +786,9 @@ namespace qi {
       void* result = initializeStorage();
       DefaultMapStorage& src = *(DefaultMapStorage*)ptrFromStorage(&storage);
       DefaultMapStorage& dst = *(DefaultMapStorage*)ptrFromStorage(&result);
-      for (unsigned i=0; i<src.size(); ++i)
-        dst.push_back(std::make_pair(
-          _keyType->clone(src[i].first),
-          _elementType->clone(src[i].second)
-          ));
+      // must clone content
+      for (DefaultMapStorage::iterator it = src.begin(); it != src.end(); ++it)
+        dst[it->first.clone()] = _elementType->clone(it->second);
       return result;
     }
     const TypeInfo& info()
@@ -773,7 +798,7 @@ namespace qi {
     typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
     void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
-
+    bool less(void* a, void* b) { return Methods::less(a, b);}
     Type* _keyType;
     Type* _elementType;
     TypeInfo _info;
@@ -870,6 +895,7 @@ namespace qi {
 
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
 
+    bool less(void* a, void* b) { return Methods::less(a, b);}
     std::vector<Type*> types;
     std::string _name;
     TypeInfo _info;
@@ -931,6 +957,23 @@ namespace qi {
       assert(res->memberTypes().size() == types.size());
       return res;
     }
+  }
+
+  void* TypeList::element(void* storage, int index)
+  {
+    // Default implementation using iteration
+    GenericListIteratorPtr it = begin(storage);
+    GenericListIteratorPtr end = this->end(storage);
+    int p = 0;
+    while (p!= index && it!= end)
+    {
+      ++p;
+      ++it;
+    }
+    void* res = (*it).value;
+    it.destroy();
+    end.destroy();
+    return res;
   }
 
   namespace detail

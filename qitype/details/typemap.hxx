@@ -24,6 +24,7 @@ public:
   virtual GenericMapIteratorPtr begin(void* storage);
   virtual GenericMapIteratorPtr end(void* storage);
   virtual void insert(void** storage, void* keyStorage, void* valueStorage);
+  virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert);
   _QI_BOUNCE_TYPE_METHODS(MethodsImpl);
 };
 
@@ -110,9 +111,32 @@ TypeMapImpl<M>::insert(void** storage, void* keyStorage, void* valueStorage)
   static Type* elemType = typeOf<typename M::mapped_type>();
   static Type* keyType = typeOf<typename M::key_type>();
   M* ptr = (M*) ptrFromStorage(storage);
-  ptr->insert(std::make_pair(
-    *(typename M::key_type*)keyType->ptrFromStorage(&keyStorage),
-    *(typename M::mapped_type*)elemType->ptrFromStorage(&valueStorage)));
+  typename M::key_type& key = *(typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
+  typename M::mapped_type& val = *(typename M::mapped_type*)elemType->ptrFromStorage(&valueStorage);
+  typename M::iterator it = ptr->find(key);
+  if (it == ptr->end())
+    ptr->insert(std::make_pair(key, val));
+  else
+    it->second = val;
+}
+
+template<typename M> GenericValuePtr
+TypeMapImpl<M>::element(void** storage, void* keyStorage, bool autoInsert)
+{
+  //static Type* elemType = typeOf<typename M::mapped_type>();
+  static Type* keyType = typeOf<typename M::key_type>();
+  M* ptr = (M*) ptrFromStorage(storage);
+  typename M::key_type* key = (typename M::key_type*)keyType->ptrFromStorage(&keyStorage);
+  typename M::iterator it = ptr->find(*key);
+  if (it == ptr->end())
+  {
+    if (!autoInsert)
+      return GenericValuePtr();
+    typename M::mapped_type& e = (*ptr)[*key];
+    return GenericValuePtr(&e);
+  }
+  else
+    return GenericValuePtr(&((typename M::mapped_type&)(it->second)));
 }
 
 
@@ -120,7 +144,7 @@ template<typename C> std::pair<GenericValuePtr, GenericValuePtr> TypeMapIterator
 {
   typename C::iterator* ptr = (typename C::iterator*)ptrFromStorage(&storage);
   typename C::value_type& val = **ptr;
-  return std::make_pair(::qi::GenericValuePtr::from(val.first), ::qi::GenericValuePtr::from(val.second)); // Value is in the container, no need to clone
+  return std::make_pair(::qi::GenericValuePtr(&val.first), ::qi::GenericValuePtr(&val.second)); // Value is in the container, no need to clone
 }
 
 template<typename C> void TypeMapIteratorImpl<C>::next(void** storage)

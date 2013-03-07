@@ -138,4 +138,9 @@ void StaticObjectTypeBase::destroy(void* inst)
   _data.classType->destroy(inst);
 }
 
+bool StaticObjectTypeBase::less(void* a, void* b)
+{
+  return a<b;
+}
+
 }

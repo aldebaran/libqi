@@ -111,6 +111,9 @@ namespace qi{
 
     virtual Kind kind() const;
 
+    // Less must always work: compare pointers if you have to.
+    virtual bool less(void* a, void* b) = 0;
+
     //TODO: DIE
     inline const char* infoString() { return info().asCString(); } // for easy gdb access
 
@@ -147,7 +150,7 @@ namespace qi{
 
   /// Declare that a type has no metatype and cannot be used in a Value
   /// \warning Be careful to put the declaration outside any namespaces.
-#define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T> {};}
+#define QI_NO_TYPE(T) namespace qi {template<> class TypeImpl<T>: public detail::ForbiddenInTypeSystem {};}
 
   /// Declare that a type has no accessible copy constructor
   /// \warning Be careful to put the declaration outside any namespaces.
@@ -185,6 +188,9 @@ namespace qi{
 
     GenericValuePtr();
 
+    ///@{
+    /// Low level Internal API
+
     /** Store type and allocate storage of value.
      * @param type use this type for initialization
      */
@@ -197,99 +203,216 @@ namespace qi{
      */
     GenericValuePtr(Type* type, void* value) : type(type), value(value) {}
 
+    /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
+    std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
+
     /** Return the typed pointer behind a GenericValuePtr. T *must* be the type
      * of the value.
      * @return a pointer to the value as a T or 0 if value is not a T.
      * @param check if false, does not validate type before converting
      */
     template<typename T> T* ptr(bool check = true);
-
-    /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
-    std::pair<GenericValuePtr, bool> convert(Type* targetType) const;
-
     /// Helper function that converts and always clone
     GenericValuePtr convertCopy(Type* targetType) const;
-    GenericValuePtr clone() const;
-    std::string signature(bool resolveDynamic = false) const;
-    void destroy();
-    Type::Kind kind() const;
 
-    int64_t          asInt() const;
-    float            asFloat() const;
-    double           asDouble() const;
-    std::string      asString() const;
     GenericListPtr   asList() const;
     GenericMapPtr    asMap() const;
     GenericTuplePtr  asTuple() const;
-    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
-    * \warning returned value is a copy and should be destroyed
-    */
-    GenericValuePtr  asDynamic() const;
 
-    template<typename T> T as() const;
-    // Helper function to obtain type T from a value. Argument value is not used.
-    template<typename T> T as(const T&) const;
-    template<typename T> static GenericValuePtr from(const T& t);
-
+    // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
+    GenericValuePtr _element(const GenericValuePtr& key, bool throwOnFailure);
+    void _append(const GenericValuePtr& element);
+    void _insert(const GenericValuePtr& key, const GenericValuePtr& val);
     Type*   type;
     void*   value;
+    ///@}
+
+    ///@{
+    /** Construction and assign.
+     */
+
+    /// Construct a GenericValue with storage pointing to ptr.
+    template<typename T> GenericValuePtr(T* ptr);
+    /// Create and return a GenericValuePtr pointing to a newly allocated T.
+    template<typename T> static GenericValuePtr make();
+    /// Create and return a GenericValuePtr pointing to ptr
+    template<typename T> static GenericValuePtr make(T* ptr);
+    template<typename T> static GenericValuePtr ref(const T& r) { return make(&r);}
+    /** Assignment operator.
+     *  Previous content is lost, and will leak if not deleted outside or
+     *  with destroy().
+     */
+    GenericValuePtr& operator = (const GenericValuePtr& b);
+    GenericValuePtr clone() const;
+    /// Deletes storage.
+    void destroy();
+    ///@}
+
+
+    ///@{
+    /** The following methods return a typed copy of the stored value,
+     * converting if necessary.
+     * They throw in case of conversion failure.
+     */
+
+     /// Convert to anything or throw trying.
+    template<typename T> T to() const;
+    /// Similar to previous method, but uses a dummy value to get the target type
+    template<typename T> T to(const T&) const;
+    int64_t      toInt()    const;
+    float        toFloat()  const;
+    double       toDouble() const;
+    std::string  toString() const;
+    template<typename T> std::vector<T> toList() const;
+    template<typename K, typename V> std::map<K, V> toMap() const;
+    ObjectPtr    toObject() const;
+
+    /** Convert the value to a tuple.
+     * If value is currently a tuple, it will be returned.
+     * If value is a list its elements will become the tuple components.
+     * @param homogeneous if true, all tuple elements will be of the type
+     * of the list element type. If false, the effective type of elements
+     * of kind dynamic will be used.
+     */
+    GenericValue toTuple(bool homogeneous) const;
+    ///@}
+
+    std::string signature(bool resolveDynamic = false) const;
+    Type::Kind kind() const;
+
+    GenericValueRef operator*();
+    ///@{
+    /** Read and update functions
+     *  The following functions access or modify the existing value.
+     *  They never change the storage location or type.
+     *  They will fail by throwing an exception if the requested operation
+     * is incompatible with the current value type.
+     *
+     * @warning a GenericValuePtr refering to a container element will
+     * become invalid as soon as the container is modified.
+     *
+    */
+
+    /// Update the value with the one in b
+    void  update(const GenericValuePtr& b);
+
+    /** @return a typed reference to the underlying value
+     *  @warning This method will only succeed if T exactly matches
+     *  the type of the value stored. No conversion will be performed.
+     *  So if you only want a value and not a reference, use to() instead.
+     */
+    template<typename T> T& as();
+    int64_t& asInt64() { return as<int64_t>();}
+    uint64_t& asUInt64() { return as<uint64_t>();}
+    int32_t& asInt32() { return as<int32_t>();}
+    uint32_t& asUInt32() { return as<uint32_t>();}
+    int16_t& asInt16() { return as<int16_t>();}
+    uint16_t& asUInt16() { return as<uint16_t>();}
+    int8_t& asInt8() { return as<int8_t>();}
+    uint8_t& asUInt8() { return as<uint8_t>();}
+    double& asDouble() { return as<double>();}
+    float& asFloat() { return as<float>();}
+    std::string& asString() { return as<std::string>();}
+
+    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
+    */
+    GenericValue asDynamic() const;
+
+    /// Update the value to val, which will be converted if required.
+    template<typename T> void set(const T& val);
+    void set(int64_t v) { setInt(v);}
+    void set(int32_t v) { setInt(v);}
+    void set(float v) { setFloat(v);}
+    void set(double v) { setDouble(v);}
+    void set(const std::string& v) { setString(v);}
+
+    void  setInt(int64_t v);
+    void  setFloat(float v);
+    void  setDouble(double v);
+    void  setString(const std::string& v);
+
+    ///@{
+    /// In-place container manipulation.
+
+    /** Return a reference to container element at index or key idx.
+     *  Use set methods on the result for inplace modification.
+     *  Behavior depends on the container kind:
+     *  - List or tuple: The key must be of integral type. Boundary checks
+     *    are performed.
+     *  - Map: The key must be of a convertible type to the container key type.
+     *    If the key is not found in the container, a new default-valued
+     *    Element will be created, inserted. and returned.
+     *  @warning the returned value is only valid until owning container
+     *  is changed.
+    */
+    template<typename K>
+    GenericValueRef     operator[](const K& key);
+    /// Call operator[](key) and convert the result to given type.
+    template<typename E, typename K> E& element(const K& key);
+    size_t size() const;
+    template<typename T> void append(const T& element);
+    template<typename K, typename V> void insert(const K& key, const V& val);
+    /** Similar to operator[](), but return an empty GenericValue
+     * If the key is not present.
+     */
+    template<typename K> GenericValuePtr find(const K& key);
+
+    ///@}
+
+    ///@}
 
   };
 
-  /** Class that holds any value, with value semantics.
+  QITYPE_API bool operator <(const GenericValuePtr& a, const GenericValuePtr& b);
+  QITYPE_API bool operator==(const GenericValuePtr& a, const GenericValuePtr& b);
+
+  /** GenericValuePtr with copy semantics
   */
-  class QITYPE_API GenericValue
+  class QITYPE_API GenericValue: public GenericValuePtr
   {
-    // We do not want cast to GenericValuePtr to be possible to avoid
-    // mistakes, so do not inherit from GenericValuePtr.
   public:
+
     GenericValue();
-
-    /** Store type and allocate storage of value.
-     * @param type use this type for initialization
-     */
-    explicit GenericValue(Type* type);
+    /// Share ownership of value with b.
     GenericValue(const GenericValue& b);
-    GenericValue(const GenericValuePtr& b, bool copy = true);
-
+    explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
+    explicit GenericValue(const GenericValuePtr& b);
     ~GenericValue();
-
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
-
-    template<typename T> static GenericValue from(const T& src, bool copy=true);
-
-    std::string signature(bool resolveDynamic=false) const;
-
-    /// Take ownership of data in \b. Reset b.
-    static GenericValue take(GenericValuePtr& b);
-
-    template<typename T> T as() const;
-
-    Type::Kind kind() const;
     void reset();
+    void set(const GenericValuePtr& src);
+    void set(const GenericValuePtr& src, bool copy, bool free);
+    void swap(GenericValue& b);
 
-    int64_t          asInt() const;
-    float            asFloat() const;
-    double           asDouble() const;
-    std::string      asString() const;
-    GenericListPtr   asList() const;
-    GenericMapPtr    asMap() const;
-    GenericTuplePtr  asTuple() const;
-    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
-    * \warning returned value might become invalid if this object is destroyed.
-    */
-    GenericValue     asDynamic() const;
+    template<typename T> static GenericValue from(const T& r) { return GenericValue(make(&r));}
 
-    GenericValuePtr data;
-    bool            allocated;
+  private:
+    bool _allocated;
+  };
+
+  /** GenericValueRef with c++ ref semantics:
+   *  - Must be constructed from a GenericValuePtr
+   *  - Cannot be assigned later on
+   *  - Behaves like a value
+  */
+  class QITYPE_API GenericValueRef: public GenericValuePtr
+  {
+  public:
+    GenericValueRef(const GenericValuePtr&);
+    template<typename T> GenericValueRef(const T& ref);
+    template<typename T> GenericValueRef& operator =(const T& v);
   };
 
   /** @return the value encoded in JSON.
    */
-  QITYPE_API std::string encodeJSON(const qi::GenericValue &val);
+  QITYPE_API std::string encodeJSON(const qi::GenericValuePtr &val);
 
-  QITYPE_API bool operator< (const qi::GenericValue& a, const qi::GenericValue& b);
+  /// Less than operator. Will compare the values within the GenericValue.
+  QITYPE_API bool operator < (const qi::GenericValue& a, const qi::GenericValue& b);
+
+  /// Value equality operator. Will compare the values within.
+  QITYPE_API bool operator==(const qi::GenericValue& a, const qi::GenericValue& b);
 
   /** Generates GenericValuePtr from everything transparently.
    * To be used as type of meta-function call argument
@@ -448,6 +571,7 @@ namespace qi{
     virtual GenericListIteratorPtr begin(void* storage) = 0; // Must be destroyed
     virtual GenericListIteratorPtr end(void* storage) = 0;  //idem
     virtual void pushBack(void** storage, void* valueStorage) = 0;
+    virtual void* element(void* storage, int index);
     virtual Kind kind() const { return List;}
   };
 
@@ -460,6 +584,7 @@ namespace qi{
     virtual GenericMapIteratorPtr begin(void* storage) = 0; // Must be destroyed
     virtual GenericMapIteratorPtr end(void* storage) = 0;  //idem
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
+    virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert) = 0;
     virtual Kind kind() const { return Map; }
     // Since our typesystem has no erased operator < or operator ==,
     // TypeMap does not provide a find()

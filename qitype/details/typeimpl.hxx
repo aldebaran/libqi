@@ -8,7 +8,7 @@
 #define _QITYPE_DETAILS_TYPEIMPL_HXX_
 
 #include <set>
-
+#include <boost/type_traits/has_less.hpp>
 /* This file contains class to help implementing the Type interface.
 */
 namespace qi
@@ -16,6 +16,62 @@ namespace qi
   namespace detail {
   /// Report a type operation failure
   void QITYPE_API typeFail(const char* typeName, const char* operation);
+
+
+  // boost::has_less gives true for a vector<F> even if has_less<F> gives false
+  template<typename T> struct HasLess
+  {
+    static const bool value = boost::has_less<T, T>::value;
+  };
+  template<typename T> struct HasLess<std::vector<T> >
+  {
+    static const bool value = boost::has_less<T, T>::value;
+  };
+  template<typename T> struct HasLess<std::list<T> >
+  {
+    static const bool value = boost::has_less<T, T>::value;
+  };
+  template<typename K, typename V> struct HasLess<std::map<K, V> >
+  {
+    static const bool value = boost::has_less<K, K>::value
+      && boost::has_less<V, V>::value;
+  };
+
+  //boost::has_less fails for member function pointer, gard
+  template<typename T, bool v> struct HasLessSwitch {};
+  template<typename T> struct HasLessSwitch<T, false>
+  {
+    static const bool value = false;
+  };
+  template<typename T> struct HasLessSwitch<T, true>
+  {
+    static const bool value = HasLess<T>::value;
+  };
+  template<typename T> struct HasLessGard
+  {
+    static const bool switchVal =
+      boost::is_member_function_pointer<T>::value
+      || boost::is_function<T>::value
+      || boost::is_function<typename boost::remove_pointer<T>::type>::value
+      || boost::is_member_pointer<T>::value;
+    static const bool value = HasLessSwitch<T, !switchVal>::value;
+
+  };
+
+
+  template<typename T, bool b> struct LessHelper
+  {
+  };
+  template<typename T> struct LessHelper<T, true>
+  {
+    bool operator()(T* a, T* b) { return *a<*b;}
+  };
+  template<typename T> struct LessHelper<T, false>
+  {
+    bool operator()(T*a, T*b) { return a<b;}
+  };
+  template<typename T> struct Less
+  : public LessHelper<T, HasLessGard<T>::value> {};
   /** Methods to construct, destroy, and copy values of a given type.
   */
   template<typename T> struct TypeManagerDefault
@@ -182,13 +238,19 @@ public:
   {
     Access::destroy(ptr);
   }
+
+  static bool less(void* a, void* b)
+  {
+    return ::qi::detail::Less<T>()((T*)ptrFromStorage(&a), (T*)ptrFromStorage(&b));
+  }
 };
 
 ///Implement all methods of Type except clone/destroy as bouncers to Bouncer
 #define _QI_BOUNCE_TYPE_METHODS_NOCLONE(Bounce)                                          \
 virtual const ::qi::TypeInfo& info() { return Bounce::info();}                           \
 virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);}   \
-virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}
+virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}               \
+virtual bool  less(void* a, void* b) { return Bounce::less(a, b);}
 
 ///Implement all methods of Type as bouncers to Bouncer
 #define _QI_BOUNCE_TYPE_METHODS(Bounce)  \
@@ -201,8 +263,8 @@ virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
 virtual void* initializeStorage(void* ptr=0) { return Bounce::initializeStorage(ptr);} \
 virtual void* ptrFromStorage(void**s) { return Bounce::ptrFromStorage(s);}             \
 virtual void* clone(void* ptr) { return Bounce::clone(ptr);}    \
-virtual void destroy(void* ptr) { Bounce::destroy(ptr);}
-
+virtual void  destroy(void* ptr) { Bounce::destroy(ptr);}       \
+virtual bool  less(void* a, void* b) { return Bounce::less(a, b);}
 
 template<typename T, typename _Access    = TypeByPointer<T> >
 class DefaultTypeImpl

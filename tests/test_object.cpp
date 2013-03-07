@@ -140,7 +140,7 @@ TEST(TestObject, Typing)
   qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValuePtr> argsAdd = convert(41);
-  res = adderAdd.call(qi::GenericValuePtr::from(add1), argsAdd);
+  res = adderAdd.call(qi::GenericValuePtr::ref(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -239,7 +239,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::GenericValuePtr::from(p).as<FPoint>();
+  FPoint p2 = qi::GenericValuePtr::ref(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -316,7 +316,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::GenericValuePtr::from(comp).as<Complex2>();
+  Complex2 comp2 = qi::GenericValuePtr::ref(comp).to<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
@@ -418,11 +418,11 @@ TEST(TestObject, TypeType)
   qiLogDebug() << "type ptr " << val.type->infoString() << " "
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());
-  ASSERT_EQ(12, val.asInt());
+  ASSERT_EQ(12, val.toInt());
   vals = convert(1.5f);
   val = vals[0];
   ASSERT_EQ(Type::Float, val.kind());
-  ASSERT_EQ(1.5, val.asDouble());
+  ASSERT_EQ(1.5, val.toDouble());
 
   /* We go through a named variable.
    * A constant has no reason to have its address survive
@@ -434,12 +434,12 @@ TEST(TestObject, TypeType)
   vals = convert(dv);
   val = vals[0];
   ASSERT_EQ(Type::Float, val.kind());
-  ASSERT_EQ(1.5, val.asDouble());
+  ASSERT_EQ(1.5, val.toDouble());
 
   vals = convert("foo");
   val = vals[0];
   ASSERT_EQ(Type::String, val.kind());
-  ASSERT_EQ(std::string("foo"), val.asString());
+  ASSERT_EQ(std::string("foo"), val.toString());
 }
 
 int main(int argc, char **argv)

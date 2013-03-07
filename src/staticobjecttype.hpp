@@ -70,6 +70,7 @@ public:
   virtual void* ptrFromStorage(void**);
   virtual void* clone(void* inst);
   virtual void destroy(void*);
+  virtual bool less(void* a, void* b);
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

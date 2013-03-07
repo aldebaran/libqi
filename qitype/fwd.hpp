@@ -23,6 +23,8 @@ namespace qi
   class TypeTuple;
   class TypeDynamic;
   class GenericValuePtr;
+  class GenericValueRef;
+  class GenericValue;
   class GenericListPtr;
   class GenericMapPtr;
   class GenericValue;

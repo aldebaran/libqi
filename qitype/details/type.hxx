@@ -42,6 +42,7 @@ namespace qi {
     void* clone(void*)                       { return 0;}
     void destroy(void* ptr)                  {}
     Kind kind() const { return Void;}
+    bool less(void* a, void* b) { return false;}
   };
 
   //reference
@@ -72,6 +73,12 @@ namespace qi {
 namespace qi  {
 
   namespace detail {
+    // Try to get a nice error message for QI_NO_TYPE
+    class ForbiddenInTypeSystem: public TypeImpl<int>
+    {
+    private:
+      ForbiddenInTypeSystem();
+    };
     template<typename T> inline Type* typeOfBackend()
     {
       Type* result = getType(typeid(T));
@@ -254,6 +261,12 @@ namespace qi  {
     class TypeImplMethodsBySize
     {
     public:
+      /* DISABLE. Inplace modification does not work with TypeByValue.
+      * TODO: be able to switch between ByVal and ByPointer on the
+      * same type.
+      */
+      typedef DefaultTypeImplMethods<T> type;
+      /*
       typedef typename boost::mpl::if_c<
         sizeof(T) <= sizeof(void*),
         DefaultTypeImplMethods<T,
@@ -263,6 +276,7 @@ namespace qi  {
                         TypeByPointer<T>
                         >
                         >::type type;
+      */
     };
   }
 
