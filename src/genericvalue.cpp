@@ -26,7 +26,7 @@ namespace qi
     }
 
     if (!targetType || !type) {
-      qiLogWarning() << "Conversion error: can't convert to/from a null type."
+      qiLogWarning() << "Conversion error: can't convert to/from a null type.";
       return std::make_pair(GenericValuePtr(), false);
     }
 
