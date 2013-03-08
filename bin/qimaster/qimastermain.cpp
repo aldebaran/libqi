@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      for (unsigned int i = 1; i < argc; i++)
+      for (int i = 1; i < argc; i++)
       {
         qi::Url url(argv[i]);
 

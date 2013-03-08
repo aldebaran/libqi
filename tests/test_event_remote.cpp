@@ -68,7 +68,7 @@ public:
 TEST_F(TestObject, Simple)
 {
   qi::Link linkId = oclient->connect("fire", &onFire);
-  EXPECT_LT(0, linkId);
+  EXPECT_LT((unsigned) 0, linkId);
   oserver->emitEvent("fire", 42);
   ASSERT_TRUE(payload->future().wait(2000));
   EXPECT_EQ(42, payload->future().value());
@@ -78,7 +78,7 @@ TEST_F(TestObject, Simple)
 TEST_F(TestObject, RemoteEmit)
 {
   qi::Link linkId = oclient->connect("fire", &onFire);
-  EXPECT_LT(0, linkId);
+  EXPECT_LT((unsigned) 0, linkId);
   oclient->emitEvent("fire", 43);
   ASSERT_TRUE(payload->future().wait(2000));
   EXPECT_EQ(43, payload->future().value());
@@ -95,7 +95,7 @@ TEST_F(TestObject, CoDeco)
     qi::Link linkId = oclient->connect("fire", &onFire);
     qiLogDebug() << "connected with " << linkId;
     int exp;
-    EXPECT_GE(linkId, 0);
+    EXPECT_GE(linkId, (unsigned) 0);
     oserver->emitEvent("fire", (int)(50 + i));
     ASSERT_TRUE(payload->future().wait(2000));
     exp = 50 + i;

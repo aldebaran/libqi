@@ -179,9 +179,9 @@ TEST(TestCall, CallBufferInList)
   {
     qi::GenericListPtr l = val.asList();
     ASSERT_TRUE(l.type);
-    ASSERT_EQ(3, l.size());
+    ASSERT_EQ((unsigned) 3, l.size());
     qi::GenericListIteratorPtr it = l.begin();
-    ASSERT_EQ(12, (*it).asInt());
+    ASSERT_EQ((unsigned) 12, (*it).asInt());
     ++it;
     qi::Buffer bufRes = (*it).as<qi::Buffer>();
     ASSERT_EQ(strlen("canard")+1, bufRes.size());
@@ -191,9 +191,9 @@ TEST(TestCall, CallBufferInList)
   }
   {
     std::vector<qi::GenericValue> l = result.as<std::vector<qi::GenericValue> >();
-    ASSERT_EQ(3, l.size());
+    ASSERT_EQ((unsigned) 3, l.size());
     std::vector<qi::GenericValue>::iterator it = l.begin();
-    ASSERT_EQ(12, (*it).asInt());
+    ASSERT_EQ((unsigned) 12, (*it).asInt());
     ++it;
     qi::Buffer bufRes = (*it).as<qi::Buffer>();
     ASSERT_EQ(strlen("canard")+1, bufRes.size());

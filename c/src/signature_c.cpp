@@ -70,7 +70,7 @@ qi_signature_t *qi_signature_create_subsignature(const char *signature)
     return 0;
   }
 
-  long end = sig.find_last_of(endType);
+  size_t end = sig.find_last_of(endType);
   if (end > sig.size() || end == std::string::npos)
     return 0;
 
