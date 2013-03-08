@@ -17,42 +17,52 @@
 
 namespace po = boost::program_options;
 
-void call(int count, const std::string &addr)
-{
-  qi::Session session;
-  session.connect(addr);
+qiLogCategory("qiclient");
 
-#if 0
-  std::vector<qi::ServiceInfo> servs = session.services();
-  std::cout << "available services:" << std::endl;
-  for (unsigned int i = 0; i < servs.size(); ++i)
-    std::cout << "* " << servs[i].name() << std::endl;
-  std::cout << std::endl;
-#endif
+qi::ObjectPtr getObj(qi::Session *ses) {
+  qi::Session &session = *ses;
 
   qi::Future<qi::ObjectPtr> fut = session.service("serviceTest");
   fut.wait();
   if (fut.hasError())
   {
     std::cerr << "Error returned:" << fut.error() << std::endl;
-    return;
+    return qi::ObjectPtr();
   }
-
   qi::ObjectPtr obj = fut.value();
-#if 0
-  int i = 0;
-  while (true) {
-    std::string result = obj->call<std::string>("reply", "plaf");
-    if (!( i % 1000))
-      std::cout << "answer(" << i << "):" << result << std::endl;
-    ++i;
-  }
-#endif
+  return obj;
+}
+
+void call(int count, const std::string &addr)
+{
+  qi::Session session;
+  session.connect(addr);
+
+  qi::ObjectPtr obj = getObj(&session);
+
   for (int i = 0; i < count; ++i) {
     std::string result = obj->call<std::string>("reply", "plaf");
     std::cout << "result" << i << ":" << result << std::endl;
   }
+
   session.close();
+}
+
+void eventCb(const std::string &event) {
+  qiLogInfo() << "Received event data: " << event;
+}
+
+void recEvent(qi::Application *app, const std::string &addr) {
+  qi::Session session;
+  session.connect(addr);
+
+  qi::ObjectPtr obj = getObj(&session);
+
+  obj->connect("testEvent", &eventCb);
+
+  app->run();
+  session.close();
+
 }
 
 
@@ -67,6 +77,7 @@ int main(int argc, char *argv[])
       ("master-address",
        po::value<std::string>()->default_value(std::string("tcp://127.0.0.1:5555")),
        "The master address")
+      ("event", "listen to event.")
       ("loop", po::value<int>()->default_value(1), "loop count");
 
   // allow master address to be specified as the first arg
@@ -87,11 +98,14 @@ int main(int argc, char *argv[])
       return 0;
     }
 
+
     if (vm.count("master-address") == 1)
     {
       std::string masteraddr = vm["master-address"].as<std::string>();
-
-      call(vm["loop"].as<int>(), masteraddr);
+      if (vm.count("event"))
+        recEvent(&a, masteraddr);
+      else
+        call(vm["loop"].as<int>(), masteraddr);
     }
     else
     {

@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
       ob.advertiseMethod<std::string (const std::string&, const double &)>("reply", &reply);
       ob.advertiseMethod<std::string (const std::string&, const float &)>("reply", &reply);
       ob.advertiseMethod<qi::GenericValue (const qi::GenericValue&)>("reply", &reply);
+      ob.advertiseEvent<void (const std::string&)>("testEvent");
       qi::ObjectPtr obj(ob.object());
 
       session.connect(masterAddress);
@@ -140,7 +141,14 @@ int main(int argc, char *argv[])
         qiLogError() << "Registration with master failed, aborting...";
         exit(1);
       }
-      app.run();
+      int i = 0;
+      while (true) {
+        std::stringstream ss;
+        ss << "miam" << i++;
+        obj->emitEvent("testEvent", ss.str());
+        ss.str(std::string());
+        qi::os::sleep(1);
+      }
 
       session.unregisterService(id);
       session.close();
