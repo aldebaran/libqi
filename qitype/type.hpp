@@ -107,6 +107,7 @@ namespace qi{
       Dynamic,
       Raw,
       Unknown,
+      Iterator,
     };
 
     virtual Kind kind() const;
@@ -117,6 +118,13 @@ namespace qi{
     //TODO: DIE
     inline const char* infoString() { return info().asCString(); } // for easy gdb access
 
+    /** @return the serialization signature corresponding to what the type
+     * would emit
+     * @param resolveDynamic: if true, resolve dynamic types as deep as possible
+     * for example a list<GenericValuePtr> that happens to only contain int32
+     * will return [i]
+     * @warning if resolveDynamic is true, a valid storage must be given
+    */
     std::string signature(void* storage=0, bool resolveDynamic = false);
 
     ///@return a Type on which signature() returns sig.
@@ -170,10 +178,8 @@ namespace qi{
 
 
 
-  class GenericListPtr;
-  class GenericMapPtr;
-  class GenericObjectPtr;
-  class GenericTuplePtr;
+  /* In case we want generic iterator to be represented in a different class*/
+  typedef GenericValue GenericIterator;
 
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
@@ -215,10 +221,6 @@ namespace qi{
     /// Helper function that converts and always clone
     GenericValuePtr convertCopy(Type* targetType) const;
 
-    GenericListPtr   asList() const;
-    GenericMapPtr    asMap() const;
-    GenericTuplePtr  asTuple() const;
-
     // get item with key/ïndex 'key'. Return empty GVP or throw in case of failure
     GenericValuePtr _element(const GenericValuePtr& key, bool throwOnFailure);
     void _append(const GenericValuePtr& element);
@@ -231,12 +233,17 @@ namespace qi{
     /** Construction and assign.
      */
 
-    /// Construct a GenericValue with storage pointing to ptr.
+    /** Construct a GenericValue with storage pointing to ptr.
+     * @warning the GenericValuePtr will become invalid if ptr
+     * is destroyed (if it gets deleted or points to the stack and goes
+     * out of scope).
+     */
     template<typename T> GenericValuePtr(T* ptr);
     /// Create and return a GenericValuePtr pointing to a newly allocated T.
     template<typename T> static GenericValuePtr make();
     /// Create and return a GenericValuePtr pointing to ptr
     template<typename T> static GenericValuePtr make(T* ptr);
+    /// Similar to make(), but take argument by reference
     template<typename T> static GenericValuePtr ref(const T& r) { return make(&r);}
     /** Assignment operator.
      *  Previous content is lost, and will leak if not deleted outside or
@@ -280,7 +287,6 @@ namespace qi{
     std::string signature(bool resolveDynamic = false) const;
     Type::Kind kind() const;
 
-    GenericValueRef operator*();
     ///@{
     /** Read and update functions
      *  The following functions access or modify the existing value.
@@ -314,9 +320,10 @@ namespace qi{
     float& asFloat() { return as<float>();}
     std::string& asString() { return as<std::string>();}
 
-    /** @return contained GenericValue or empty GenericValue if type is not dynamic.
+    /** @return contained GenericValue or throw if type is not dynamic.
+     * @note Returned GenericValuePtr might be empty.
     */
-    GenericValue asDynamic() const;
+    GenericValuePtr asDynamic() const;
 
     /// Update the value to val, which will be converted if required.
     template<typename T> void set(const T& val);
@@ -347,7 +354,7 @@ namespace qi{
     */
     template<typename K>
     GenericValueRef     operator[](const K& key);
-    /// Call operator[](key) and convert the result to given type.
+    /// Call operator[](key).as<E>, element type must match E
     template<typename E, typename K> E& element(const K& key);
     size_t size() const;
     template<typename T> void append(const T& element);
@@ -357,6 +364,14 @@ namespace qi{
      */
     template<typename K> GenericValuePtr find(const K& key);
 
+    /// Return an iterator on the beginning of the container
+    GenericIterator begin() const; //we lie on const but GV does not honor it yet
+    /// Return an iterator on the end of the container
+    GenericIterator end() const;
+    /// Iterator increment
+    void operator ++();
+    /// Dereference pointer or iterator
+    GenericValueRef operator*();
     ///@}
 
     ///@}
@@ -365,7 +380,7 @@ namespace qi{
 
   QITYPE_API bool operator <(const GenericValuePtr& a, const GenericValuePtr& b);
   QITYPE_API bool operator==(const GenericValuePtr& a, const GenericValuePtr& b);
-
+  QITYPE_API bool operator !=(const GenericValuePtr& a, const GenericValuePtr& b);
   /** GenericValuePtr with copy semantics
   */
   class QITYPE_API GenericValue: public GenericValuePtr
@@ -409,10 +424,11 @@ namespace qi{
   QITYPE_API std::string encodeJSON(const qi::GenericValuePtr &val);
 
   /// Less than operator. Will compare the values within the GenericValue.
-  QITYPE_API bool operator < (const qi::GenericValue& a, const qi::GenericValue& b);
+  QITYPE_API bool operator < (const GenericValue& a, const GenericValue& b);
 
   /// Value equality operator. Will compare the values within.
-  QITYPE_API bool operator==(const qi::GenericValue& a, const qi::GenericValue& b);
+  QITYPE_API bool operator==(const GenericValue& a, const GenericValue& b);
+  QITYPE_API bool operator!=(const GenericValue& a, const GenericValue& b);
 
   /** Generates GenericValuePtr from everything transparently.
    * To be used as type of meta-function call argument
@@ -433,66 +449,9 @@ namespace qi{
 
 
 
-  template<typename T>
-  class GenericIteratorPtr: public GenericValuePtr
-  {
-  public:
-    void operator++();
-    void operator++(int);
-    T operator*();
-    bool operator==(const GenericIteratorPtr& b) const;
-    inline bool operator!=(const GenericIteratorPtr& b) const;
-  };
-
-  class QITYPE_API GenericListIteratorPtr: public GenericIteratorPtr<GenericValuePtr>
-  {};
-
-  class QITYPE_API GenericMapIteratorPtr: public GenericIteratorPtr<std::pair<GenericValuePtr, GenericValuePtr> >
-  {};
-
   class TypeList;
-  class QITYPE_API GenericListPtr: public GenericValuePtr
-  {
-  public:
-    GenericListPtr();
-    GenericListPtr(GenericValuePtr&);
-    GenericListPtr(TypeList* type, void* value);
-
-    size_t size();
-    GenericListIteratorPtr begin();
-    GenericListIteratorPtr end();
-    void pushBack(GenericValuePtr val);
-    Type* elementType();
-  };
-
-  class TypeMap;
-  class QITYPE_API GenericMapPtr: public GenericValuePtr
-  {
-  public:
-    GenericMapPtr();
-    GenericMapPtr(GenericValuePtr&);
-    GenericMapPtr(TypeMap* type, void* value);
-
-    size_t size();
-    GenericMapIteratorPtr begin();
-    GenericMapIteratorPtr end();
-    void insert(GenericValuePtr key, GenericValuePtr val);
-    Type* keyType();
-    Type* elementType();
-  };
 
   class TypeTuple;
-  class QITYPE_API GenericTuplePtr: public GenericValuePtr
-  {
-  public:
-    GenericTuplePtr();
-    GenericTuplePtr(GenericValuePtr&);
-    GenericTuplePtr(TypeTuple* type, void* value);
-
-    std::vector<GenericValuePtr> get();
-    void set(const std::vector<GenericValuePtr>& data);
-    std::vector<Type*> memberTypes();
-  };
 
   // Interfaces for specialized types
   class QITYPE_API TypeInt: public Type
@@ -548,28 +507,23 @@ namespace qi{
     virtual Kind kind() const { return Pointer; }
   };
 
-  template<typename T>
   class QITYPE_API TypeIterator: public Type
   {
   public:
-    virtual T dereference(void* storage) = 0; // must not be destroyed
+    // Returned reference is expected to point to somewhere in the iterator, or the container
+    virtual GenericValueRef dereference(void* storage) = 0;
     virtual void  next(void** storage) = 0;
     virtual bool equals(void* s1, void* s2) = 0;
+    virtual Kind kind() const { return Iterator;}
   };
-
-  class QITYPE_API TypeListIterator: public TypeIterator<GenericValuePtr>
-  {};
-
-  class QITYPE_API TypeMapIterator: public TypeIterator<std::pair<GenericValuePtr, GenericValuePtr> >
-  {};
 
   class QITYPE_API TypeList: public Type
   {
   public:
     virtual Type* elementType() const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericListIteratorPtr begin(void* storage) = 0; // Must be destroyed
-    virtual GenericListIteratorPtr end(void* storage) = 0;  //idem
+    virtual GenericIterator begin(void* storage) = 0;
+    virtual GenericIterator end(void* storage) = 0;
     virtual void pushBack(void** storage, void* valueStorage) = 0;
     virtual void* element(void* storage, int index);
     virtual Kind kind() const { return List;}
@@ -581,8 +535,8 @@ namespace qi{
     virtual Type* elementType() const = 0;
     virtual Type* keyType() const = 0;
     virtual size_t size(void* storage) = 0;
-    virtual GenericMapIteratorPtr begin(void* storage) = 0; // Must be destroyed
-    virtual GenericMapIteratorPtr end(void* storage) = 0;  //idem
+    virtual GenericIterator begin(void* storage) = 0;
+    virtual GenericIterator end(void* storage) = 0;
     virtual void insert(void** storage, void* keyStorage, void* valueStorage) = 0;
     virtual GenericValuePtr element(void** storage, void* keyStorage, bool autoInsert) = 0;
     virtual Kind kind() const { return Map; }
@@ -605,8 +559,7 @@ namespace qi{
   class QITYPE_API TypeDynamic: public Type
   {
   public:
-    // Convert storage to a GenericValuePtr, that must be destroyed if res.second is true
-    virtual std::pair<GenericValuePtr, bool> get(void* storage) = 0;
+    virtual GenericValuePtr get(void* storage) = 0;
     virtual void set(void** storage, GenericValuePtr source) = 0;
     virtual Kind kind() const { return Dynamic; }
   };
@@ -627,7 +580,6 @@ namespace qi{
 
 #include <qitype/details/typeimpl.hxx>
 #include <qitype/details/type.hxx>
-#include <qitype/details/genericvaluespecialized.hxx>
 #include <qitype/details/genericvalue.hxx>
 #include <qitype/details/typeint.hxx>
 #include <qitype/details/typelist.hxx>

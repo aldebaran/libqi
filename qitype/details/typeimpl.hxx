@@ -36,6 +36,11 @@ namespace qi
     static const bool value = boost::has_less<K, K>::value
       && boost::has_less<V, V>::value;
   };
+  template<typename A, typename B> struct HasLess<std::pair<A, B> >
+  {
+    static const bool value = boost::has_less<A, A>::value
+      && boost::has_less<B, B>::value;
+  };
 
   //boost::has_less fails for member function pointer, gard
   template<typename T, bool v> struct HasLessSwitch {};

@@ -17,10 +17,10 @@ namespace qi {
   template<> class TypeImpl<GenericValue>: public TypeDynamic
   {
   public:
-    virtual std::pair<GenericValuePtr, bool> get(void* storage)
+    virtual GenericValuePtr get(void* storage)
     {
       GenericValue* ptr = (GenericValue*)ptrFromStorage(&storage);
-      return std::make_pair(*(GenericValuePtr*)ptr, false);
+      return *ptr;
     }
     virtual void set(void** storage, GenericValuePtr src)
     {
@@ -455,16 +455,12 @@ namespace qi {
     return _element(make(&key), false);
   }
 
-  inline GenericValue GenericValuePtr::asDynamic() const
+  inline GenericValuePtr GenericValuePtr::asDynamic() const
   {
     if (kind() != Type::Dynamic)
-      return GenericValue(*this, false, false);
+      throw std::runtime_error("Not of dynamic kind");
     TypeDynamic* d = static_cast<TypeDynamic*>(type);
-    std::pair<GenericValuePtr, bool> res = d->get(value);
-    if (res.second)
-      return GenericValue(res.first);
-    else
-      return GenericValue(res.first, false, false);
+    return d->get(value);
   }
 
 
@@ -476,7 +472,12 @@ namespace qi {
 
   inline GenericValueRef GenericValuePtr::operator*()
   {
-    return GenericValueRef(*this);
+    if (kind() == Type::Pointer)
+      return static_cast<TypePointer*>(type)->dereference(value);
+    else if (kind() == Type::Iterator)
+      return static_cast<TypeIterator*>(type)->dereference(value);
+    else
+      throw std::runtime_error("Expected pointer or iterator");
   }
 
   inline GenericValueRef::GenericValueRef(const GenericValuePtr& src)
@@ -497,6 +498,45 @@ namespace qi {
   {
     set(v);
     return *this;
+  }
+
+  inline void
+  GenericValuePtr::operator++()
+  {
+    if (kind() != Type::Iterator)
+      throw std::runtime_error("Expected an iterator");
+    static_cast<TypeIterator*>(type)->next(&value);
+  }
+
+  inline GenericIterator
+  GenericValuePtr::begin() const
+  {
+    if (kind() == Type::List)
+      return static_cast<TypeList*>(type)->begin(value);
+    else if (kind() == Type::Map)
+      return static_cast<TypeMap*>(type)->begin(value);
+    else
+      throw std::runtime_error("Expected list or map");
+  }
+
+  inline GenericIterator
+  GenericValuePtr::end() const
+  {
+    if (kind() == Type::List)
+      return static_cast<TypeList*>(type)->end(value);
+    else if (kind() == Type::Map)
+      return static_cast<TypeMap*>(type)->end(value);
+    else
+      throw std::runtime_error("Expected list or map");
+  }
+
+  inline bool operator != (const GenericValuePtr& a, const GenericValuePtr& b)
+  {
+    return !(a==b);
+  }
+  inline bool operator != (const GenericValue& a, const GenericValue& b)
+  {
+    return !(a==b);
   }
 }
 

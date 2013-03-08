@@ -145,15 +145,16 @@ namespace qi {
   class SignatureTypeVisitor
   {
   public:
-    SignatureTypeVisitor(bool resolveDynamic)
-    : _resolveDynamic(resolveDynamic)
+    SignatureTypeVisitor(GenericValuePtr value, bool resolveDynamic)
+    : _value(value)
+    , _resolveDynamic(resolveDynamic)
     {
     }
-    void visitVoid(Type*)
+    void visitVoid()
     {
       result = Signature::fromType(Signature::Type_Void).toString();
     }
-    void visitInt(TypeInt* type, int64_t, bool isSigned, int byteSize)
+    void visitInt(int64_t, bool isSigned, int byteSize)
     {
       switch((isSigned?1:-1)*byteSize)
       {
@@ -170,22 +171,23 @@ namespace qi {
           result =  Signature::fromType(Signature::Type_Unknown).toString();
       }
     }
-   void visitFloat(TypeFloat* type, double, int byteSize)
+   void visitFloat(double, int byteSize)
    {
      if (byteSize == 4)
        result = Signature::fromType(Signature::Type_Float).toString();
      else
        result = Signature::fromType(Signature::Type_Double).toString();
    }
-   void visitString(TypeString* type, void* storage)
+   void visitString(char*, size_t)
    {
      result = Signature::fromType(Signature::Type_String).toString();
    }
-   void visitList(GenericListPtr value)
+   void visitList(GenericIterator it, GenericIterator iend)
    {
+     std::string esig = static_cast<TypeList*>(_value.type)->elementType()->signature();
      if (_resolveDynamic)
      {
-       if (value.size() == 0)
+       if (it == iend)
        { // Empty list, TODO have a 'whatever signature entry
          result =  std::string()
          + (char)Signature::Type_List
@@ -194,8 +196,6 @@ namespace qi {
        }
        else
        {
-         GenericListIteratorPtr it = value.begin();
-         GenericListIteratorPtr iend = value.end();
          std::string sigFirst = (*it).signature(true);
          ++it;
          for (;it != iend && !sigFirst.empty(); ++it)
@@ -218,23 +218,22 @@ namespace qi {
          // qiLogDebug() << "List effective " << sigFirst;
          result =  std::string()
          + (char)Signature::Type_List
-         + (sigFirst.empty()?value.elementType()->signature():sigFirst)
+         + (sigFirst.empty()?esig:sigFirst)
          + (char)Signature::Type_List_End;
-         it.destroy();
-         iend.destroy();
        }
      }
      else
        result = std::string()
         + (char)Signature::Type_List
-        + value.elementType()->signature()
+        + esig
         + (char)Signature::Type_List_End;
    }
-   void visitMap(GenericMapPtr value)
+   void visitMap(GenericIterator it, GenericIterator iend)
    {
+     TypeMap* type =  static_cast<TypeMap*>(_value.type);
      if (_resolveDynamic)
      {
-       if (value.size() == 0)
+       if (it == iend)
          result = std::string()
            + (char)Signature::Type_Map
            + (char)Signature::Type_None
@@ -242,18 +241,16 @@ namespace qi {
            + (char)Signature::Type_Map_End;
        else
        {
-         GenericMapIteratorPtr it = value.begin();
-         GenericMapIteratorPtr iend = value.end();
-         std::pair<GenericValuePtr, GenericValuePtr> e = *it;
-         std::string ksig = e.first.signature(true);
-         std::string vsig = e.second.signature(true);
+         GenericValuePtr e = *it;
+         std::string ksig = e[0].signature(true);
+         std::string vsig = e[1].signature(true);
          // Check that ksig/vsig is always the same, set to empty if not
          ++it;
          for(; it!= iend; ++it)
          {
-           std::pair<GenericValuePtr, GenericValuePtr> e = *it;
-           std::string k = e.first.signature(true);
-           std::string v = e.second.signature(true);
+           GenericValuePtr e = *it;
+           std::string k = e[0].signature(true);
+           std::string v = e[1].signature(true);
            if (!ksig.empty() && ksig != k)
            {
              if (Signature(k).isConvertibleTo(Signature(ksig)))
@@ -262,7 +259,7 @@ namespace qi {
                ksig = k;
              else
              {
-               qiLogDebug() << "Heterogeneous keys " << ksig << e.first.signature(true);
+               qiLogDebug() << "Heterogeneous keys " << ksig << e[0].signature(true);
                ksig.clear();
              }
            }
@@ -274,64 +271,54 @@ namespace qi {
                vsig = v;
              else
              {
-               qiLogDebug() << "Heterogeneous value " << vsig << e.second.signature(true);
+               qiLogDebug() << "Heterogeneous value " << vsig << e[1].signature(true);
                vsig.clear();
              }
            }
          }
-         it.destroy();
-         iend.destroy();
          // qiLogDebug() << "Map effective: " << ksig << " , " << vsig;
          result = std::string()
            + (char)Signature::Type_Map
-           + (ksig.empty()? value.keyType()->signature(): ksig)
-           + (vsig.empty()? value.elementType()->signature(): vsig)
+           + (ksig.empty()? type->keyType()->signature(): ksig)
+           + (vsig.empty()? type->elementType()->signature(): vsig)
            + (char)Signature::Type_Map_End;
        }
      }
      else
        result = std::string()
         + (char)Signature::Type_Map
-        + value.keyType()->signature()
-        + value.elementType()->signature()
+        + type->keyType()->signature()
+        + type->elementType()->signature()
         + (char)Signature::Type_Map_End;
    }
    void visitObject(GenericObject )
    {
      result = Signature::fromType(Signature::Type_Object).toString();
    }
-   void visitPointer(TypePointer* type, void* , GenericValuePtr )
+   void visitPointer(GenericValuePtr)
    {
      // Shared-ptr of Object can be serialized as type dynamic
+     TypePointer* type = static_cast<TypePointer*>(_value.type);
      if (type->pointerKind() == TypePointer::Shared
        && type->pointedType()->kind() == Type::Object)
        result = Signature::fromType(Signature::Type_Dynamic).toString();
      else
        result = Signature::fromType(Signature::Type_Unknown).toString();
    }
-   void visitUnknown(Type* type, void*)
+   void visitUnknown(GenericValuePtr)
    {
      result = Signature::fromType(Signature::Type_Unknown).toString();
    }
-   void visitTuple(TypeTuple* type, void* storage)
+   void visitTuple(const std::vector<GenericValuePtr>& tuple)
    {
-     std::vector<Type*> types = type->memberTypes();
      std::string res;
      res += (char)Signature::Type_Tuple;
-     if (_resolveDynamic)
-     {
-       for (unsigned i=0; i<types.size(); ++i)
-       {
-         res += types[i]->signature(type->get(storage, i), true);
-       }
-     }
-     else
-       for (unsigned i=0; i<types.size(); ++i)
-         res += types[i]->signature();
+     for (unsigned i=0; i<tuple.size(); ++i)
+       res += tuple[i].signature(_resolveDynamic);
      res += (char)Signature::Type_Tuple_End;
      result = res;
    }
-   void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
+   void visitDynamic(GenericValuePtr pointee)
    {
      if (_resolveDynamic)
      {
@@ -340,20 +327,89 @@ namespace qi {
      else
        result = Signature::fromType(Signature::Type_Dynamic).toString();
    }
-   void visitRaw(TypeRaw* type, Buffer* buffer)
+   void visitRaw(GenericValuePtr)
    {
      result = Signature::fromType(Signature::Type_Raw).toString();
    }
+   void visitIterator(GenericValuePtr v)
+   {
+     visitUnknown(v);
+   }
    std::string result;
+   GenericValuePtr _value;
    bool _resolveDynamic;
   };
 
 
   std::string Type::signature(void* storage, bool resolveDynamic)
   {
-    SignatureTypeVisitor ts(resolveDynamic);
-    typeDispatch(ts, this, resolveDynamic?&storage:(void**)0);
-    return ts.result;
+    if (resolveDynamic)
+    {
+      GenericValuePtr value(this, storage);
+      SignatureTypeVisitor ts(value, resolveDynamic);
+      typeDispatch(ts, value);
+      return ts.result;
+    }
+    else
+    { // We might be called without a valid storage in that mode, which
+      // is not supported by typeDispatch()
+      // Still reuse methods from SignatureTypeVisitor to avoid duplication
+      GenericValuePtr value(this, storage);
+      SignatureTypeVisitor v(value, resolveDynamic);
+      switch(kind())
+      {
+      case Type::Void:
+        v.result = Signature::fromType(Signature::Type_Void).toString();
+        break;
+      case Type::Int:
+      {
+        TypeInt* tint = static_cast<TypeInt*>(value.type);
+        v.visitInt(0, tint->isSigned(), tint->size());
+        break;
+      }
+      case Type::Float:
+      {
+        TypeFloat* tfloat = static_cast<TypeFloat*>(value.type);
+        v.visitFloat(0, tfloat->size());
+        break;
+      }
+      case Type::String:
+        v.result = Signature::fromType(Signature::Type_String).toString();
+        break;
+      case Type::List:
+        v.visitList(GenericIterator(), GenericIterator());
+        break;
+      case Type::Map:
+        v.visitMap(GenericIterator(), GenericIterator());
+        break;
+      case Type::Object:
+        v.result = Signature::fromType(Signature::Type_Object).toString();
+        break;
+      case Type::Pointer:
+        v.visitPointer(GenericValuePtr());
+        break;
+      case Type::Tuple:
+        v.result += (char)Signature::Type_Tuple;
+        {
+          std::vector<Type*> memberTypes = static_cast<TypeTuple*>(this)->memberTypes();
+          for (unsigned i=0; i<memberTypes.size(); ++i)
+            v.result += memberTypes[i]->signature();
+        }
+        v.result += (char)Signature::Type_Tuple_End;
+        break;
+      case Type::Dynamic:
+        v.result = Signature::fromType(Signature::Type_Dynamic).toString();
+        break;
+      case Type::Raw:
+        v.result = Signature::fromType(Signature::Type_Raw).toString();
+        break;
+      case Type::Unknown:
+      case Type::Iterator:
+         v.result = Signature::fromType(Signature::Type_Unknown).toString();
+         break;
+      }
+      return v.result;
+    }
   }
 
 
@@ -454,7 +510,7 @@ namespace qi {
   // Default list
   static Type* makeListIteratorType(Type* element);
 
-  class DefaultListIteratorType: public TypeListIteratorImpl<std::vector<void*> >
+  class DefaultListIteratorType: public TypeIteratorImpl<std::vector<void*> >
   {
   public:
   private:
@@ -471,7 +527,7 @@ namespace qi {
     }
     friend Type* makeListIteratorType(Type*);
   public:
-    GenericValuePtr dereference(void* storage)
+    GenericValueRef dereference(void* storage)
     {
       std::vector<void*>::iterator& ptr = *(std::vector<void*>::iterator*)
         ptrFromStorage(&storage);
@@ -528,25 +584,21 @@ namespace qi {
     {
       return _elementType;
     }
-    GenericListIteratorPtr begin(void* storage)
+    GenericIterator begin(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericListIteratorPtr result;
-      result.type = makeListIteratorType(_elementType);
-      std::vector<void*>::iterator it = ptr.begin();
-      result.value = result.type->initializeStorage(&it);
-      *(GenericValuePtr*)&result = result.clone();
-      return result;
+      GenericValuePtr v = GenericValuePtr::ref(ptr.begin());
+      // Hugly type swap, works because we know backend storage matches
+      v.type = makeListIteratorType(_elementType);
+      return GenericIterator(v);
     }
-    GenericListIteratorPtr end(void* storage)
+    GenericIterator end(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericListIteratorPtr result;
-      result.type = makeListIteratorType(_elementType);
-      std::vector<void*>::iterator it = ptr.end();
-      result.value = result.type->initializeStorage(&it);
-       *(GenericValuePtr*)&result = result.clone();
-      return result;
+      GenericValuePtr v = GenericValuePtr::ref(ptr.end());
+      // Hugly type swap, works because we know backend storage matches
+      v.type = makeListIteratorType(_elementType);
+      return GenericIterator(v);
     }
     void* clone(void* storage)
     {
@@ -610,225 +662,6 @@ namespace qi {
   }
 
 
-
-
-  // We need proper ordering relation
-  typedef std::map<GenericValuePtr, void*> DefaultMapStorage;
-
-  // Default map, using a vector<pair<void*, void*> > as storage
-  static Type* makeMapIteratorType(Type* kt, Type* et);
-
-  class DefaultMapIteratorType: public TypeMapIterator
-  {
-  public:
-  private:
-    DefaultMapIteratorType(Type* keyType, Type* elementType)
-    : _keyType(keyType)
-    , _elementType(elementType)
-    {
-      _name = "DefaultMapIteratorType<"
-      + keyType->info().asString() + ", "
-      + elementType->info().asString()
-      + "(" + boost::lexical_cast<std::string>(this) + ")";
-      _info = TypeInfo(_name);
-    }
-    friend Type* makeMapIteratorType(Type* kt, Type* et);
-  public:
-    std::pair<GenericValuePtr, GenericValuePtr> dereference(void* storage)
-    {
-      DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
-        ptrFromStorage(&storage);
-      GenericValuePtr k;
-      k.type = _keyType;
-      k.value = ptr->first.value;
-      GenericValuePtr e;
-      e.type = _elementType;
-      e.value = ptr->second;
-      return std::make_pair(k, e);
-    }
-    void next(void** storage)
-    {
-      DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
-        ptrFromStorage(storage);
-      ++ptr;
-    }
-    bool equals(void* s1, void* s2)
-    {
-      DefaultMapStorage::iterator& p1 = *(DefaultMapStorage::iterator*)
-        ptrFromStorage(&s1);
-      DefaultMapStorage::iterator& p2 = *(DefaultMapStorage::iterator*)
-        ptrFromStorage(&s2);
-      return p1 == p2;
-    }
-    const TypeInfo& info()
-    {
-      return _info;
-    }
-    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
-    Type* _keyType;
-    Type* _elementType;
-    std::string _name;
-    TypeInfo _info;
-  };
-
-  // We want exactly one instance per element type
-  static Type* makeMapIteratorType(Type* kt, Type* et)
-  {
-    typedef std::map<std::pair<TypeInfo, TypeInfo>, Type*> Map;
-    static Map * map = 0;
-    if (!map)
-      map = new Map();
-    TypeInfo kk(kt->info());
-    TypeInfo ek(et->info());
-    Map::key_type key(kk, ek);
-    Map::iterator it;
-    Type* result;
-    it = map->find(key);
-    if (it == map->end())
-    {
-      result = new DefaultMapIteratorType(kt, et);
-      (*map)[key] = result;
-    }
-    else
-      result = it->second;
-    return result;
-  }
-
-  class DefaultMapType: public TypeMap
-  {
-  public:
-  private:
-    DefaultMapType(Type* keyType, Type* elementType)
-    : _keyType(keyType)
-    , _elementType(elementType)
-    {
-      _name = "DefaultMapType<"
-      + keyType->info().asString() + ", "
-      + elementType->info().asString()
-      + "(" + boost::lexical_cast<std::string>(this) + ")";
-      _info = TypeInfo(_name);
-    }
-    friend Type* makeMapType(Type* kt, Type* et);
-  public:
-    Type* elementType() const
-    {
-      return _elementType;
-    }
-    Type* keyType () const
-    {
-      return _keyType;
-    }
-    GenericMapIteratorPtr begin(void* storage)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericMapIteratorPtr result;
-      result.type = makeMapIteratorType(_keyType, _elementType);
-      DefaultMapStorage::iterator it = ptr.begin();
-      result.value = result.type->initializeStorage(&it);
-      *(GenericValuePtr*)&result = result.clone();
-      return result;
-    }
-    GenericMapIteratorPtr end(void* storage)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericMapIteratorPtr result;
-      result.type = makeMapIteratorType(_keyType, _elementType);
-      DefaultMapStorage::iterator it = ptr.end();
-      result.value = result.type->initializeStorage(&it);
-      *(GenericValuePtr*)&result = result.clone();
-      return result;
-
-    }
-    void insert(void** storage, void* keyStorage, void* valueStorage)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(storage);
-      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
-      if (i != ptr.end())
-      {
-        // Replace: clear previous storage
-        _elementType->destroy(i->second);
-        i->second = _elementType->clone(valueStorage);
-      }
-      else
-        ptr[GenericValuePtr(_keyType, keyStorage).clone()] = _elementType->clone(valueStorage);
-    }
-
-    GenericValuePtr element(void** pstorage, void* keyStorage, bool autoInsert)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(pstorage);
-      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
-      if (i != ptr.end())
-        return GenericValuePtr(_elementType, i->second);
-      if (!autoInsert)
-        return GenericValuePtr();
-      void* e = _elementType->initializeStorage();
-      ptr[GenericValuePtr(_keyType, keyStorage)] = e;
-      return GenericValuePtr(_elementType, e);
-    }
-
-    size_t size(void* storage)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
-      return ptr.size();
-    }
-    void destroy(void* storage)
-    {
-      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      for (DefaultMapStorage::iterator it = ptr.begin(); it != ptr.end(); ++it)
-      {
-        const_cast<GenericValuePtr&>(it->first).destroy();
-        _elementType->destroy(it->second);
-      }
-      Methods::destroy(storage);
-    }
-    void* clone(void* storage)
-    {
-      void* result = initializeStorage();
-      DefaultMapStorage& src = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      DefaultMapStorage& dst = *(DefaultMapStorage*)ptrFromStorage(&result);
-      // must clone content
-      for (DefaultMapStorage::iterator it = src.begin(); it != src.end(); ++it)
-        dst[it->first.clone()] = _elementType->clone(it->second);
-      return result;
-    }
-    const TypeInfo& info()
-    {
-      return _info;
-    }
-    typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
-    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
-    virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
-    bool less(void* a, void* b) { return Methods::less(a, b);}
-    Type* _keyType;
-    Type* _elementType;
-    TypeInfo _info;
-    std::string _name;
-  };
-
-  // We want exactly one instance per element type
-  Type* makeMapType(Type* kt, Type* et)
-  {
-    typedef std::map<std::pair<TypeInfo, TypeInfo>, TypeMap*> Map;
-    static Map * map = 0;
-    if (!map)
-      map = new Map();
-    TypeInfo kk(kt->info());
-    TypeInfo ek(et->info());
-    Map::key_type key(kk, ek);
-    Map::iterator it;
-    TypeMap* result;
-    it = map->find(key);
-    if (it == map->end())
-    {
-      result = new DefaultMapType(kt, et);
-      (*map)[key] = result;
-    }
-    else
-    {
-      result = it->second;
-    }
-    return result;
-  }
 
   class DefaultTupleType: public TypeTuple
   {
@@ -895,6 +728,12 @@ namespace qi {
 
     virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
 
+    std::vector<void*>& backend(void* storage)
+    {
+      std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
+      return ptr;
+    }
+
     bool less(void* a, void* b) { return Methods::less(a, b);}
     std::vector<Type*> types;
     std::string _name;
@@ -917,6 +756,257 @@ namespace qi {
     for (unsigned i=0; i<values.size(); ++i)
       storages.push_back(values[i].value);
     tupleType->set(&result.value, storages);
+    return result;
+  }
+
+
+
+
+  // element of map is of type _pairType, see below
+  typedef std::map<GenericValuePtr, void*> DefaultMapStorage;
+
+  // Default map, using a vector<pair<void*, void*> > as storage
+  static Type* makeMapIteratorType(Type* kt);
+
+  class DefaultMapIteratorType: public TypeIterator
+  {
+  public:
+  private:
+    DefaultMapIteratorType(Type* elementType)
+    : _elementType(elementType)
+    {
+      _name = "DefaultMapIteratorType<"
+      + elementType->info().asString()
+      + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _info = TypeInfo(_name);
+    }
+    friend Type* makeMapIteratorType(Type* kt);
+  public:
+    GenericValueRef dereference(void* storage)
+    {
+      /* Result is a pair<GV, void*>
+       * and we must return something we store, pretending it is of
+       * type pair<K&, V&>
+       * The *pair itself* must be somehow stored
+       *
+       *
+      */
+      DefaultMapStorage::iterator& it = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(&storage);
+      return GenericValuePtr(_elementType, it->second);
+    }
+    void next(void** storage)
+    {
+      DefaultMapStorage::iterator& ptr = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(storage);
+      ++ptr;
+    }
+    bool equals(void* s1, void* s2)
+    {
+      DefaultMapStorage::iterator& p1 = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(&s1);
+      DefaultMapStorage::iterator& p2 = *(DefaultMapStorage::iterator*)
+        ptrFromStorage(&s2);
+      return p1 == p2;
+    }
+    const TypeInfo& info()
+    {
+      return _info;
+    }
+    _QI_BOUNCE_TYPE_METHODS_NOINFO(DefaultTypeImplMethods<DefaultMapStorage::iterator>);
+    Type* _elementType;
+    std::string _name;
+    TypeInfo _info;
+  };
+
+  // We want exactly one instance per element type
+  static Type* makeMapIteratorType(Type* te)
+  {
+    typedef std::map<TypeInfo, Type*> Map;
+    static Map * map = 0;
+    if (!map)
+      map = new Map();
+    TypeInfo ti(te->info());
+    Map::key_type key(ti);
+    Map::iterator it;
+    Type* result;
+    it = map->find(key);
+    if (it == map->end())
+    {
+      result = new DefaultMapIteratorType(te);
+      (*map)[key] = result;
+    }
+    else
+      result = it->second;
+    return result;
+  }
+
+  class DefaultMapType: public TypeMap
+  {
+  public:
+  private:
+    DefaultMapType(Type* keyType, Type* elementType)
+    : _keyType(keyType)
+    , _elementType(elementType)
+    {
+      _name = "DefaultMapType<"
+      + keyType->info().asString() + ", "
+      + elementType->info().asString()
+      + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _info = TypeInfo(_name);
+      std::vector<Type*> kvtype;
+      kvtype.push_back(_keyType);
+      kvtype.push_back(_elementType);
+      _pairType = static_cast<DefaultTupleType*>(makeTupleType(kvtype));
+      assert(dynamic_cast<DefaultTupleType*>(_pairType));
+    }
+    friend Type* makeMapType(Type* kt, Type* et);
+  public:
+    Type* elementType() const
+    {
+      return _elementType;
+    }
+    Type* keyType () const
+    {
+      return _keyType;
+    }
+    GenericIterator begin(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      GenericValuePtr val = GenericValuePtr::ref(ptr.begin());
+      val.type = makeMapIteratorType(_pairType);
+      return GenericIterator(val);
+    }
+    GenericIterator end(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      GenericValuePtr val = GenericValuePtr::ref(ptr.end());
+      val.type = makeMapIteratorType(_pairType);
+      return GenericIterator(val);
+
+    }
+
+    // Unconditional insert, assumes key is not present, return value
+    GenericValuePtr _insert(DefaultMapStorage& ptr, void* keyStorage, void* valueStorage, bool copyValue)
+    {
+      // key is referenced in map key, and map value for the pair
+      GenericValuePtr key(_keyType, keyStorage);
+      key = key.clone();
+      GenericValuePtr value(_elementType, valueStorage);
+      if (copyValue)
+        value = value.clone();
+      // must cast or wrong GenericValuePtr ctor is called
+      // We know that _pairType is a DefaultTupleType, so optimize:
+      // if we construct a value from _pairType it will allocate the pair content
+      void* pairPtr = DefaultTupleType::Methods::initializeStorage();
+      std::vector<void*>&pair = *(std::vector<void*>*) pairPtr;
+      pair.resize(2);
+      pair[0] = key.value;
+      pair[1] = value.value;
+      ptr[key] = pairPtr;
+      return value;
+    }
+
+    void insert(void** storage, void* keyStorage, void* valueStorage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(storage);
+      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      if (i != ptr.end())
+      {// Replace: clear previous storage
+        // Now, normally tuple (_pairType is one) only have inplace set
+        // But this is not any tuple, we know it's a DefaultTuple
+        // So we need to hack.
+        std::vector<void*>& elem = _pairType->backend(i->second);
+        assert(elem.size() == 2);
+        _elementType->destroy(elem[1]);
+        elem[1] = GenericValuePtr(_elementType, valueStorage).clone().value;
+      }
+      else
+      {
+        _insert(ptr, keyStorage, valueStorage, true);
+      }
+    }
+
+    GenericValuePtr element(void** pstorage, void* keyStorage, bool autoInsert)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(pstorage);
+      DefaultMapStorage::iterator i = ptr.find(GenericValuePtr(_keyType, keyStorage));
+      if (i != ptr.end())
+      {
+        GenericValuePtr elem(_pairType, i->second);
+        return elem[1];
+      }
+      if (!autoInsert)
+        return GenericValuePtr();
+      return _insert(ptr, keyStorage, _elementType->initializeStorage(), false);
+    }
+
+    size_t size(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*) ptrFromStorage(&storage);
+      return ptr.size();
+    }
+    void destroy(void* storage)
+    {
+      DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      for (DefaultMapStorage::iterator it = ptr.begin(); it != ptr.end(); ++it)
+      {
+        // destroying the pair will destroy key and value
+        _pairType->destroy(it->second);
+      }
+      Methods::destroy(storage);
+    }
+    void* clone(void* storage)
+    {
+      void* result = initializeStorage();
+      DefaultMapStorage& src = *(DefaultMapStorage*)ptrFromStorage(&storage);
+      DefaultMapStorage& dst = *(DefaultMapStorage*)ptrFromStorage(&result);
+      // must clone content
+      for (DefaultMapStorage::iterator it = src.begin(); it != src.end(); ++it)
+      {
+        // do not double-clone the key, which is in the pair also
+        GenericValuePtr clonedPair(_pairType, _pairType->clone(it->second));
+        dst[clonedPair[0]] = clonedPair.value;
+      }
+      return result;
+    }
+    const TypeInfo& info()
+    {
+      return _info;
+    }
+    typedef DefaultTypeImplMethods<DefaultMapStorage> Methods;
+    void* initializeStorage(void* ptr=0) { return Methods::initializeStorage(ptr);}   \
+    virtual void* ptrFromStorage(void**s) { return Methods::ptrFromStorage(s);}
+    bool less(void* a, void* b) { return Methods::less(a, b);}
+    Type* _keyType;
+    Type* _elementType;
+    DefaultTupleType* _pairType;
+    TypeInfo _info;
+    std::string _name;
+  };
+
+  // We want exactly one instance per element type
+  Type* makeMapType(Type* kt, Type* et)
+  {
+    typedef std::map<std::pair<TypeInfo, TypeInfo>, TypeMap*> Map;
+    static Map * map = 0;
+    if (!map)
+      map = new Map();
+    TypeInfo kk(kt->info());
+    TypeInfo ek(et->info());
+    Map::key_type key(kk, ek);
+    Map::iterator it;
+    TypeMap* result;
+    it = map->find(key);
+    if (it == map->end())
+    {
+      result = new DefaultMapType(kt, et);
+      (*map)[key] = result;
+    }
+    else
+    {
+      result = it->second;
+    }
     return result;
   }
 
@@ -962,18 +1052,18 @@ namespace qi {
   void* TypeList::element(void* storage, int index)
   {
     // Default implementation using iteration
-    GenericListIteratorPtr it = begin(storage);
-    GenericListIteratorPtr end = this->end(storage);
+    GenericValuePtr self(this, storage);
+    GenericIterator it = self.begin();
+    GenericIterator iend = self.end();
     int p = 0;
-    while (p!= index && it!= end)
+    while (p!= index && it!= iend)
     {
       ++p;
       ++it;
     }
-    void* res = (*it).value;
-    it.destroy();
-    end.destroy();
-    return res;
+    if (p > index)
+      throw std::runtime_error("Index out of range");
+    return (*it).value;
   }
 
   namespace detail

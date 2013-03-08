@@ -143,13 +143,17 @@ namespace qi {
   template<> class QITYPE_API TypeImpl<ObjectPtr>: public TypeDynamic
   {
   public:
-    virtual std::pair<GenericValuePtr, bool> get(void* storage)
+    virtual GenericValuePtr get(void* storage)
     {
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(&storage);
       GenericValuePtr result;
+      if (!*val)
+      {
+        return GenericValuePtr();
+      }
       result.type = (*val)->type;
       result.value = (*val)->value;
-      return std::make_pair(result, false);
+      return result;
     }
 
     virtual void set(void** storage, GenericValuePtr source)
@@ -157,22 +161,19 @@ namespace qi {
       qiLogCategory("qitype.object");
       ObjectPtr* val = (ObjectPtr*)ptrFromStorage(storage);
       if (source.type->info() == info())
-      {
+      { // source is objectptr
         ObjectPtr* src = (ObjectPtr*)source.type->ptrFromStorage(&source.value);
         if (!*src)
           qiLogWarning() << "NULL ObjectPtr";
         *val = *src;
       }
       else if (source.kind() == Type::Dynamic)
-      {
-        std::pair<GenericValuePtr, bool> val
-          = static_cast<TypeDynamic*>(source.type)->get(source.value);
-       set(storage, val.first);
-       if (val.second)
-         val.first.destroy();
+      { // try to dereference dynamic type in case it contains an object
+        set(storage, source.asDynamic());
       }
       else if (source.kind() == Type::Object)
-      {
+      { // wrap object in objectptr: we do not keep it alive,
+        // but source type offers no tracking capability
         ObjectPtr op(new GenericObject(static_cast<ObjectType*>(source.type), source.value));
         *val = op;
       }

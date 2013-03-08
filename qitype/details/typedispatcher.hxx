@@ -10,88 +10,79 @@
 namespace qi {
 
   template<typename TypeDispatcher>
-  TypeDispatcher& typeDispatch(const TypeDispatcher &vv, Type *type, void**storage)
+  TypeDispatcher& typeDispatch(const TypeDispatcher &vv, GenericValuePtr value)
   {
-    if (!type)
+    if (!value.type)
       throw std::runtime_error("NULL type");
     TypeDispatcher& v = const_cast<TypeDispatcher&>(vv);
-    switch(type->kind())
+    switch(value.kind())
     {
-      case qi::Type::Void:
-        v.visitVoid(type);
+      case Type::Void:
+        v.visitVoid();
         break;
-      case qi::Type::Unknown:
-        v.visitUnknown(type, storage);
+      case Type::Unknown:
+        v.visitUnknown(value);
         break;
-      case qi::Type::Int:
+      case Type::Int:
       {
-        TypeInt* tint = static_cast<TypeInt*>(type);
-        /* Here we assume that '0' is represented by storage=0 in the byValue case.
-        */
-        v.visitInt(tint, (storage&&*storage)?tint->get(*storage):0, tint->isSigned(), tint->size());
+        TypeInt* tint = static_cast<TypeInt*>(value.type);
+
+        v.visitInt(value.toInt(), tint->isSigned(), tint->size());
         break;
       }
-      case qi::Type::Float:
+      case Type::Float:
       {
-        TypeFloat* tfloat = static_cast<TypeFloat*>(type);
-        v.visitFloat(tfloat, (storage&&*storage)?tfloat->get(*storage):0, tfloat->size());
+        TypeFloat* tfloat = static_cast<TypeFloat*>(value.type);
+        v.visitFloat(value.toDouble(), tfloat->size());
         break;
       }
-      case qi::Type::String:
+      case Type::String:
       {
-        TypeString* tstring = static_cast<TypeString*>(type);
-        v.visitString(tstring, storage?*storage:0);
+        TypeString* tstring = static_cast<TypeString*>(value.type);
+        std::pair<char*, size_t> content = tstring->get(value.value);
+        v.visitString(content.first, content.second);
         break;
       }
-      case qi::Type::List:
+      case Type::List:
       {
-        TypeList* tlist = static_cast<TypeList*>(type);
-        v.visitList(GenericListPtr(tlist, storage?*storage:0));
+        v.visitList(value.begin(), value.end());
         break;
       }
-      case qi::Type::Map:
+      case Type::Map:
       {
-        TypeMap * tlist = static_cast<TypeMap *>(type);
-        v.visitMap(GenericMapPtr(tlist, storage?*storage:0));
+        v.visitMap(value.begin(), value.end());
         break;
       }
-      case qi::Type::Object:
+      case Type::Object:
       {
-        v.visitObject(GenericObject(static_cast<ObjectType*>(type), storage?*storage:0));
+        v.visitObject(GenericObject(static_cast<ObjectType*>(value.type), value.value));
         break;
       }
-      case qi::Type::Pointer:
+      case Type::Pointer:
       {
-        TypePointer* tpointer = static_cast<TypePointer*>(type);
-        v.visitPointer(tpointer, storage?*storage:0, (storage&&*storage)?tpointer->dereference(*storage):GenericValuePtr());
+        v.visitPointer(*value);
         break;
       }
-      case qi::Type::Tuple:
+      case Type::Tuple:
       {
-        TypeTuple* ttuple = static_cast<TypeTuple*>(type);
-        v.visitTuple(ttuple, storage?*storage:0);
+        TypeTuple* ttuple = static_cast<TypeTuple*>(value.type);
+        std::vector<GenericValuePtr> tuple = ttuple->getValues(value.value);
+        v.visitTuple(tuple);
         break;
       }
-      case qi::Type::Dynamic:
+      case Type::Dynamic:
       {
-        std::pair<GenericValuePtr, bool> gv(GenericValuePtr(), false);
-        if (storage && *storage)
-          gv = static_cast<TypeDynamic*>(type)->get(*storage);
-        v.visitDynamic(GenericValuePtr(type, storage?*storage:0), gv.first);
-        if (gv.second)
-          gv.first.destroy();
+        v.visitDynamic(value.asDynamic());
         break;
       }
-      case qi::Type::Raw:
+      case Type::Raw:
       {
-        TypeRaw* traw = static_cast<TypeRaw*>(type);
-        if (storage && *storage)
-        {
-          Buffer buf = traw->get(*storage);
-          v.visitRaw(traw, &buf);
-        }
-        else
-          v.visitRaw(traw, 0);
+        v.visitRaw(value);
+        break;
+      }
+      case Type::Iterator:
+      {
+        v.visitIterator(value);
         break;
       }
     }

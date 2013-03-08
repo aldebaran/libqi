@@ -37,7 +37,6 @@ set(PUBLIC_HEADERS
                    qitype/details/genericobjectbuilder.hxx
                    qitype/details/genericobject.hxx
                    qitype/details/genericvalue.hxx
-                   qitype/details/genericvaluespecialized.hxx
                    qitype/details/methodtype.hxx
                    qitype/details/methodtypefactory.hxx
                    qitype/details/objecttypebuilder.hxx

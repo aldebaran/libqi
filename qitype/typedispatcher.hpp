@@ -17,25 +17,26 @@ namespace qi {
    * get a dummy value but correct Type informations.
    */
   template<typename Dispatcher>
-  Dispatcher& typeDispatch(const Dispatcher& dispatcher, Type* type, void** storage);
+  Dispatcher& typeDispatch(const Dispatcher& dispatcher, GenericValuePtr value);
 
 
 
   // class QITYPE_API TypeDispatcher
   // {
   // public:
-  //   void visitUnknown(Type* type, void* storage);
-  //   void visitVoid(Type*);
-  //   void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize);
-  //   void visitFloat(TypeFloat* type, double value, int byteSize);
-  //   void visitString(TypeString* type, void* storage);
-  //   void visitList(GenericListPtr value);
-  //   void visitMap(GenericMapPtr value);
+  //   void visitUnknown(GenericValuePtr value);
+  //   void visitVoid();
+  //   void visitInt(int64_t value, bool isSigned, int byteSize);
+  //   void visitFloat(double value, int byteSize);
+  //   void visitString(char* data, size_t size);
+  //   void visitList(GenericIterator begin, GenericIterator end);
+  //   void visitMap(GenericIterator begin, GenericIterator end);
   //   void visitObject(GenericObject value);
-  //   void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee);
-  //   void visitTuple(TypeTuple* type, void* storage);
-  //   void visitDynamic(GenericValuePtr source, GenericValuePtr pointee);
-  //   void visitRaw(TypeRaw* type, Buffer* value);
+  //   void visitPointer(GenericValuePtr pointee);
+  //   void visitTuple(const std::vector<GenericValuePtr>& tuple);
+  //   void visitDynamic(GenericValuePtr pointee);
+  //   void visitRaw(GenericValuePtr value);
+  //   void visitIterator(GenericValuePtr value);
   // };
 
 }

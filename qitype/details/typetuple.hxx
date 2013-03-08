@@ -184,18 +184,19 @@ namespace qi {
     void* get(void* storage, unsigned int index)
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(&storage);
+      // Will work if F or S are references
       if (!index)
-        return typeOf<F>()->initializeStorage(&ptr->first);
+        return typeOf<F>()->initializeStorage(const_cast<void*>((void*)&ptr->first));
       else
-        return typeOf<S>()->initializeStorage(&ptr->second);
+        return typeOf<S>()->initializeStorage(const_cast<void*>((void*)&ptr->second));
     }
     void set(void** storage, unsigned int index, void* valStorage)
     {
       BackendType* ptr = (BackendType*)ptrFromStorage(storage);
       if (!index)
-        detail::TypeManagerDefault<F>::copy(&ptr->first, typeOf<F>()->ptrFromStorage(&valStorage));
+        detail::TypeManagerDefault<F>::copy(const_cast<void*>((void*)&ptr->first), typeOf<F>()->ptrFromStorage(&valStorage));
       else
-        detail::TypeManagerDefault<S>::copy(&ptr->second, typeOf<S>()->ptrFromStorage(&valStorage));
+        detail::TypeManagerDefault<S>::copy(const_cast<void*>((void*)&ptr->second), typeOf<S>()->ptrFromStorage(&valStorage));
     }
     _QI_BOUNCE_TYPE_METHODS(Methods);
   };

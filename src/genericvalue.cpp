@@ -62,41 +62,34 @@ namespace qi
           }
         case Type::List:
         {
-          result.type = targetType;
-          GenericListPtr lsrc = asList();
           TypeList* targetListType = static_cast<TypeList*>(targetType);
-          Type* srcElemType = lsrc.elementType();
-          void* storage = targetType->initializeStorage();
+          TypeList* sourceListType = static_cast<TypeList*>(type);
+          
+          Type* srcElemType = sourceListType->elementType();
           Type* dstElemType = targetListType->elementType();
           bool needConvert = (srcElemType->info() != dstElemType->info());
-          GenericListPtr lresult;
-          lresult.type = targetListType;
-          lresult.value = storage;
-          GenericListIteratorPtr i = lsrc.begin();
-          GenericListIteratorPtr iend = lsrc.end();
-          for (; i!= iend; ++i)
+          result = GenericValuePtr((Type*)targetListType);
+          
+          GenericIterator iend = end();
+          for (GenericIterator it = begin(); it!= iend; ++it)
           {
-            GenericValuePtr val = *i;
+            GenericValuePtr val = *it;
             if (!needConvert)
-              lresult.pushBack(val);
+              result._append(val);
             else
             {
               std::pair<GenericValuePtr,bool> c = val.convert(dstElemType);
-              lresult.pushBack(c.first);
+              result._append(c.first);
               if (c.second)
                 c.first.destroy();
             }
           }
-          i.destroy();
-          iend.destroy();
-          return std::make_pair(lresult, true);
+          return std::make_pair(result, true);
         }
           break;
         case Type::Map:
         {
-          result.type = targetType;
-          GenericMapPtr msrc = asMap();
-
+          result = GenericValuePtr(targetType);
 
           TypeMap* targetMapType = static_cast<TypeMap*>(targetType);
           TypeMap* srcMapType = static_cast<TypeMap*>(type);
@@ -104,43 +97,36 @@ namespace qi
           Type* srcKeyType = srcMapType->keyType();
           Type* srcElementType = srcMapType->elementType();
 
-
-          GenericMapPtr mresult;
-          mresult.type = targetType;
-          mresult.value = targetMapType->initializeStorage();
           Type* targetKeyType = targetMapType->keyType();
           Type* targetElementType = targetMapType->elementType();
 
           bool sameKey = srcKeyType->info() == targetKeyType->info();
           bool sameElem = srcElementType->info() == targetElementType->info();
 
-          GenericMapIteratorPtr i = msrc.begin();
-          GenericMapIteratorPtr iend = msrc.end();
-          for (; i != iend; ++i)
+          GenericIterator iend = end();
+          for (GenericIterator it = begin(); it != iend; ++it)
           {
-            std::pair<GenericValuePtr, GenericValuePtr> kv = *i;
             std::pair<GenericValuePtr, bool> ck, cv;
+            GenericValuePtr kv = *it;
             if (!sameKey)
             {
-              ck = kv.first.convert(targetKeyType);
+              ck = kv[0].convert(targetKeyType);
               if (!ck.first.type)
                 return std::make_pair(GenericValuePtr(), false);
             }
             if (!sameElem)
             {
-              cv = kv.second.convert(targetElementType);
+              cv = kv[1].convert(targetElementType);
               if (!cv.first.type)
                 return std::make_pair(GenericValuePtr(), false);
             }
-            mresult.insert(sameKey?kv.first:ck.first, sameElem?kv.second:cv.first);
+            result._insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
             if (!sameKey && ck.second)
               ck.first.destroy();
             if (!sameElem && cv.second)
               cv.first.destroy();
           }
-          i.destroy();
-          iend.destroy();
-          return std::make_pair(mresult, true);
+          return std::make_pair(result, true);
         }
           break;
         case Type::Pointer:
@@ -280,15 +266,8 @@ namespace qi
     }
     if (type->kind() == Type::Dynamic)
     {
-      std::pair<GenericValuePtr, bool> gv = ((TypeDynamic*)type)->get(value);
-      std::pair<GenericValuePtr, bool> result = gv.first.convert(targetType);
-      if (gv.second && !result.second)
-      { // Result is using memory from gv, but maybe only part of it
-        result.first = result.first.clone();
-        result.second = true;
-      }
-      if (gv.second)
-        gv.first.destroy();
+      GenericValuePtr gv = asDynamic();
+      std::pair<GenericValuePtr, bool> result = gv.convert(targetType);
       return result;
     }
 
@@ -386,81 +365,29 @@ namespace qi
         return res;
       }
     case Type::List:
+    case Type::Map: // omg, same code!
       {
-        TypeList* ta = static_cast<TypeList*>(a.type);
-        TypeList* tb = static_cast<TypeList*>(b.type);
-        size_t la = ta->size(a.value);
-        size_t lb = tb->size(b.value);
+        size_t la = a.size();
+        size_t lb = b.size();
         if (la != lb)
           return la < lb;
-        GenericListIteratorPtr ita   = ta->begin(a.value);
-        GenericListIteratorPtr enda = ta->end(a.value);
-        GenericListIteratorPtr itb   = tb->begin(b.value);
-        GenericListIteratorPtr endb = tb->end(b.value);
-        bool result = false;
-        while (! (ita == enda))
+        GenericIterator ita   = a.begin();
+        GenericIterator enda = a.end();
+        GenericIterator itb   = b.begin();
+        GenericIterator endb = b.end();
+        while (ita != enda)
         {
           assert (! (itb == endb));
           GenericValuePtr ea = *ita;
           GenericValuePtr eb = *itb;
           if (ea < eb)
-          {
-            result = true;
-            goto cleanuplist;
-          }
+            return true;
           else if (eb < ea)
-          {
-            result = false;
-            goto cleanuplist;
-          }
+            return false;
           ++ita;
           ++itb;
         }
-      cleanuplist:
-        ita.destroy();
-        itb.destroy();
-        enda.destroy();
-        endb.destroy();
-        return result;
-      }
-    case Type::Map:
-      { // An astute observer will notice a lot of similarities
-        // with list code above
-        TypeMap* ta = static_cast<TypeMap*>(a.type);
-        TypeMap* tb = static_cast<TypeMap*>(b.type);
-        size_t la = ta->size(a.value);
-        size_t lb = tb->size(b.value);
-        if (la != lb)
-          return la < lb;
-        GenericMapIteratorPtr ita   = ta->begin(a.value);
-        GenericMapIteratorPtr enda = ta->end(a.value);
-        GenericMapIteratorPtr itb   = tb->begin(b.value);
-        GenericMapIteratorPtr endb = tb->end(b.value);
-        bool result = false;
-        while (! (ita == enda))
-        {
-          assert (! (itb == endb));
-          std::pair<GenericValuePtr, GenericValuePtr> ea = *ita;
-          std::pair<GenericValuePtr, GenericValuePtr> eb = *itb;
-          if (ea < eb)
-          {
-            result = true;
-            goto cleanupmap;
-          }
-          else if (eb < ea)
-          {
-            result = false;
-            goto cleanupmap;
-          }
-          ++ita;
-          ++itb;
-        }
-      cleanupmap:
-        ita.destroy();
-        itb.destroy();
-        enda.destroy();
-        endb.destroy();
-        return result;
+        return false; // list are equals
       }
     case Type::Object:
     case Type::Pointer:
@@ -468,6 +395,7 @@ namespace qi
     case Type::Dynamic:
     case Type::Raw:
     case Type::Unknown:
+    case Type::Iterator:
       return a.value < b.value;
     }
     #undef GET
@@ -480,39 +408,18 @@ namespace qi
 
   bool operator==(const GenericValuePtr& a, const GenericValuePtr& b)
   {
-    return ! (a < b) && !(b<a);
+    if (a.kind() == Type::Iterator && b.kind() == Type::Iterator
+      && a.type->info() == b.type->info())
+    {
+      return static_cast<TypeIterator*>(a.type)->equals(a.value, b.value);
+    }
+    else
+      return ! (a < b) && !(b<a);
   }
 
-  void GenericTuplePtr::set(const std::vector<GenericValuePtr>& data)
+  bool operator==(const GenericValue& a, const GenericValue& b)
   {
-    TypeTuple* typeTuple = static_cast<TypeTuple*>(type);
-    std::vector<Type*> mTypes = memberTypes();
-    if (data.size() != mTypes.size())
-      throw std::runtime_error("Tuple size mismatch, expected "
-        + boost::lexical_cast<std::string>(mTypes.size())
-        + " got "
-        + boost::lexical_cast<std::string>(data.size())
-      );
-    // FIXME factor this with GenericFunctionParameters::copy
-    std::vector<void*> convData;
-    convData.reserve(data.size());
-    // Store indexes that where copied by converter and that needs a destroy
-    std::vector<int> allocatedIndexes;
-    for (unsigned i=0; i<data.size(); ++i)
-    {
-      std::pair<GenericValuePtr, bool> r = data[i].convert(mTypes[i]);
-      if (!r.first.type)
-        throw std::runtime_error(std::string("Conversion failure from ")
-          + data[i].type->infoString()
-          + " to "
-          + mTypes[i]->infoString());
-      convData.push_back(r.first.value);
-      if (r.second)
-        allocatedIndexes.push_back(i);
-    }
-    typeTuple->set(&value, convData);
-    for (unsigned i=0; i<allocatedIndexes.size(); ++i)
-      mTypes[allocatedIndexes[i]]->destroy(convData[allocatedIndexes[i]]);
+    return (const GenericValuePtr&)a == (const GenericValuePtr&)b;
   }
 
   GenericValue GenericValuePtr::toTuple(bool homogeneous) const
@@ -531,29 +438,20 @@ namespace qi
     if (!homogeneous && !td)
       throw std::runtime_error("Element type is not dynamic");
     std::vector<GenericValuePtr> elems;
-    GenericListIteratorPtr it = t->begin(value);
-    GenericListIteratorPtr iend = t->end(value);
-    std::vector<GenericValuePtr> cleanup;
+    GenericIterator it = begin();
+    GenericIterator iend = end();
     while (it != iend)
     {
       GenericValuePtr e = *it;
       if (homogeneous)
         elems.push_back(e);
       else
-      {
-        std::pair<GenericValuePtr, bool> de = td->get(e.value);
-        elems.push_back(de.first);
-        if (de.second)
-          cleanup.push_back(de.first);
-      }
+        elems.push_back(e.asDynamic());
       ++it;
     }
-    it.destroy();
-    iend.destroy();
-    GenericValue res(makeGenericTuple(elems));
-    for (unsigned i=0; i<cleanup.size(); ++i)
-      cleanup[i].destroy();
-    return res;
+
+    //makeGenericTuple allocates, steal the result
+    return GenericValue(makeGenericTuple(elems), false, true);
   }
 
   ObjectPtr GenericValuePtr::toObject() const

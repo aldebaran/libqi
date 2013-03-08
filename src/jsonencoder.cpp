@@ -93,20 +93,20 @@ namespace qi {
       //force C local, for int and float formatting
       out.imbue(std::locale("C"));
     }
-    void visitUnknown(Type* type, void* storage)
+    void visitUnknown(GenericValuePtr v)
     {
-      qiLogError("qi.type") << "JSON Error: Type " << type->infoString() <<" not serializable";
-      out << "\"Error: no serialization for unknown type:" << type->infoString() << "\"";
+      qiLogError("qi.type") << "JSON Error: Type " << v.type->infoString() <<" not serializable";
+      out << "\"Error: no serialization for unknown type:" << v.type->infoString() << "\"";
     }
 
-    void visitVoid(Type*)
+    void visitVoid()
     {
       qiLogError("qi.type") << "JSON Warning: serialiazing void to 'null'";
       // Not an error, makes sense if encapsulated in a Dynamic for instance
       out << "\"Error: no serialization for void\"";
     }
 
-    void visitInt(TypeInt* type, int64_t value, bool isSigned, int byteSize)
+    void visitInt(int64_t value, bool isSigned, int byteSize)
     {
       switch((isSigned ? 1 : -1) * byteSize)
       {
@@ -131,7 +131,7 @@ namespace qi {
       }
     }
 
-    void visitFloat(TypeFloat* type, double value, int byteSize)
+    void visitFloat(double value, int byteSize)
     {
       if (byteSize == 4)
         out << ((float)value);
@@ -141,50 +141,42 @@ namespace qi {
         qiLogError("qi.type") << "serialize on unknown float type " << byteSize;
     }
 
-    void visitString(TypeString* type, void* storage)
+    void visitString(char* data, size_t size)
     {
-      std::pair<char*, size_t> data = type->get(storage);
-      out << "\"" << add_esc_chars(std::string(data.first, data.second)) << "\"";
+      out << "\"" << add_esc_chars(std::string(data, size)) << "\"";
     }
 
-    void visitList(GenericListPtr value)
+    void visitList(GenericIterator begin, GenericIterator end)
     {
       out << "[ ";
-      GenericListIteratorPtr it, end;
-      it = value.begin();
-      end = value.end();
-      bool clear = it != end;
-      for (; it != end; ++it) {
-        serialize(*it, out);
+      bool clear = begin != end;
+      while (begin != end)
+      {
+        serialize(*begin, out);
         out << ", ";
+        ++begin;
       }
       if (clear)
         out.seekp(-2, std::ios_base::cur);
-      it.destroy();
-      end.destroy();
       out << " ]";
     }
 
-    void visitMap(GenericMapPtr value)
+    void visitMap(GenericIterator begin, GenericIterator end)
     {
       out << "{ ";
-      GenericMapIteratorPtr it, end;
-      it = value.begin();
-      end = value.end();
-      bool clear = it != end;
-      for(; it != end; ++it)
+      bool clear = begin != end;
+      while (begin != end)
       {
-        std::pair<GenericValuePtr, GenericValuePtr> v = *it;
-        serialize(v.first, out);
+        GenericValuePtr e = *begin;
+        serialize(e[0], out);
         out << " : ";
-        serialize(v.second, out);
+        serialize(e[1], out);
         out << ", ";
+        ++begin;
       }
       if (clear)
         out.seekp(-2, std::ios_base::cur);
       out << " }";
-      it.destroy();
-      end.destroy();
     }
 
     void visitObject(GenericObject value)
@@ -194,16 +186,15 @@ namespace qi {
       out << "\"Error: no serialization for object\"";
     }
 
-    void visitPointer(TypePointer* type, void* storage, GenericValuePtr pointee)
+    void visitPointer(GenericValuePtr pointee)
     {
       qiLogError("qi.type") << "JSON Error: error a pointer!!!";
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(TypeTuple* type, void* storage)
+    void visitTuple(const std::vector<GenericValuePtr> vals)
     {
       out << "[ ";
-      std::vector<GenericValuePtr> vals = type->getValues(storage);
       std::string tsig;
       for (unsigned i=0; i<vals.size(); ++i) {
         serialize(vals[i], out);
@@ -215,16 +206,22 @@ namespace qi {
       out << " ]";
     }
 
-    void visitDynamic(GenericValuePtr source, GenericValuePtr pointee)
+    void visitDynamic(GenericValuePtr pointee)
     {
       serialize(pointee, out);
     }
 
-    void visitRaw(TypeRaw* type, Buffer* buffer)
+    void visitRaw(GenericValuePtr raw)
     {
       //TODO: implement buffer support
       qiLogError("qi.type") << "JSON Error: raw data encoder not implemented!!!";
       out << "\"Error: no serialization for Buffer\"";
+    }
+
+    void visitIterator(GenericValuePtr)
+    {
+      qiLogError("qi.type") << "JSON Error: no serialization for iterator!!!";
+      out << "\"Error: no serialization for iterator\"";
     }
 
     std::stringstream& out;
@@ -233,7 +230,7 @@ namespace qi {
   static void serialize(GenericValuePtr val, std::stringstream& out)
   {
     SerializeJSONTypeVisitor stv(out);
-    qi::typeDispatch(stv, val.type, &val.value);
+    qi::typeDispatch(stv, val);
   }
 
 };

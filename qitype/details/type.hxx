@@ -54,10 +54,10 @@ namespace qi {
   template<> class TypeImpl<boost::any>: public TypeDynamic
   {
   public:
-    std::pair<GenericValuePtr, bool> get(void* storage)
+    GenericValuePtr get(void* storage)
     {
       qiLogVerbose("qitype.impl") << "get on boost::any not implemented";
-      return std::make_pair(GenericValuePtr(), false);
+      return GenericValuePtr();
     };
     void set(void** storage, GenericValuePtr source)
     {

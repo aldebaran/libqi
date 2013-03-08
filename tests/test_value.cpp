@@ -26,7 +26,8 @@ TEST(Value, Ref)
   rd = 15;
   ASSERT_EQ(d, 15);
   GenericValuePtr p(&d);
-  *p = 16;
+  GenericValueRef vr(p);
+  vr = 16;
   ASSERT_EQ(d, 16);
 }
 
@@ -224,7 +225,7 @@ TEST(Value, Tuple)
   t.s = "foo";
   TStruct gtupleconv = gtuple.to<TStruct>();
   ASSERT_EQ(t, gtupleconv);
-  gtuple[0].asDynamic().setDouble(15);
+  gtuple[0].setDouble(15);
   ASSERT_EQ(15, gtuple.to<TStruct>().d);
 
   // create a static tuple
@@ -243,6 +244,41 @@ TEST(Value, Tuple)
   ASSERT_EQ(p, gtuple.to<Point>());
 }
 
+
+TEST(Value, DefaultMap)
+{ // this one has tricky code and deserves a test)
+  Type* dmt = Type::fromSignature("{si}");
+  GenericValue val = GenericValue(GenericValuePtr(dmt), false, true);
+  ASSERT_EQ(0u, val.size());
+  val["foo"] = 12;
+  ASSERT_EQ(1u, val.size());
+  ASSERT_EQ(12, val.find("foo").toInt());
+  ASSERT_EQ(0, val.find("bar").type);
+  val.insert(std::string("bar"), 13);
+  ASSERT_EQ(13, val.element<int>("bar"));
+  val.element<int>("foo") = 10;
+  ASSERT_EQ(10, val.find("foo").toInt());
+  GenericIterator b = val.begin();
+  GenericIterator end = val.end();
+  int sum = 0;
+  while (b != end)
+  {
+    GenericValueRef deref = *b;
+    sum += deref[1].toInt();
+    ++b;
+  }
+  ASSERT_EQ(23, sum);
+
+  GenericValuePtr valCopy = val.clone();
+  ASSERT_EQ(13, valCopy.element<int>("bar"));
+  ASSERT_EQ(2u, valCopy.size());
+  // reset val, checks valCopy still works
+  val.reset();
+  val = GenericValue::from(5);
+  ASSERT_EQ(13, valCopy.element<int>("bar"));
+  ASSERT_EQ(2u, valCopy.size());
+  valCopy.destroy();
+}
 
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
