@@ -24,7 +24,7 @@ void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void 
   printf("Message recv: %s\n", msg);
   strcat(rep, "bim");
   qi_value_set_string(answer, rep);
-  free(msg);
+  free((void*)msg);
   free(rep);
 }
 
@@ -52,7 +52,7 @@ int		main(int argc, char **argv)
 
   qi_session_listen(session, "tcp://0.0.0.0:0");
   qi_object_t *object = qi_object_builder_get_object(ob);
-  unsigned int id = qi_session_register_service(session, "serviceTest", object);
+  unsigned int id = qi_future_get_int64(qi_session_register_service(session, "serviceTest", object), 0);
 
   if (!id)
   {

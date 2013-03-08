@@ -8,6 +8,9 @@
 #include <qitype/signal.hpp>
 #include <qic/signal.h>
 
+struct qi_signal_c {
+  qi::Signal<void (qi_value_t[])> signal;
+};
 
 qi_signal_t* qi_signal_create()
 {
@@ -26,8 +29,7 @@ void qi_signal_destroy(qi_signal_t* sig)
 unsigned int qi_signal_connect(qi_signal_t* sig, qi_signal_callback_t f, void *data)
 {
   qi::Signal<void (qi::GenericValue)>* signal = reinterpret_cast<qi::Signal<void (qi::GenericValue)>* >(sig);
-  qi::SignalBase::Link l;// = signal->connect(f);
-
+  qi::SignalBase::Link l;// = signal->connect(boost::bind<void>(f, sig, data));
   return l;
 }
 

@@ -42,7 +42,7 @@ void        qi_object_destroy(qi_object_t *object)
 
 qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_value_t *params)
 {
-  qi::ObjectPtr                 obj = qi_object_cpp(object);
+  qi::ObjectPtr                &obj = qi_object_cpp(object);
   qi::GenericValuePtr           gv  = qi_value_cpp(params);
   qi::GenericFunctionParameters gfparams(gv.asTuple().get());
 
@@ -66,11 +66,12 @@ void        qi_object_builder_destroy(qi_object_builder_t *object_builder)
   delete ob;
 }
 
-qi::GenericValuePtr c_call(std::string complete_sig,
-                        qi_object_method_t func,
-                        void* data,
-                        const qi::GenericFunctionParameters& params)
+qi::GenericValuePtr c_call(const std::string &complete_sig,
+                           qi_object_method_t func,
+                           void* data,
+                           const qi::GenericFunctionParameters& params)
 {
+  //TODO: move to register
   std::vector<std::string> vs = qi::signatureSplit(std::string(complete_sig));
   qi_value_t* value = qi_value_create(vs[2].c_str());
   qi_value_t* ret = qi_value_create(vs[0].c_str());
@@ -82,8 +83,6 @@ qi::GenericValuePtr c_call(std::string complete_sig,
   if (func)
     func(complete_sig.c_str(), value, ret, data);
 
-
-
   qi::GenericValuePtr &gvpr = qi_value_cpp(ret);
   qi::GenericValuePtr re = gvpr;
   //just reset the gvp, we dont want destroy to destroy it...
@@ -92,6 +91,50 @@ qi::GenericValuePtr c_call(std::string complete_sig,
   qi_value_destroy(value);
   qi_value_destroy(ret);
   return re;
+}
+
+qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& args,
+                                      const std::string &params_sigs,
+                                      qi_object_signal_callback_t f,
+                                      void *user_data) {
+  qiLogInfo() << "Signal Callback(" << params_sigs << ")";
+
+  qi_value_t* params = qi_value_create(params_sigs.c_str());
+  qi::GenericValuePtr &gvp = qi_value_cpp(params);
+  gvp.asTuple().set(args);
+  f(params, user_data);
+  qi_value_destroy(params);
+  return qi::GenericValuePtr();
+}
+
+qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
+{
+  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
+  const qi::MetaObject &mo = obj->metaObject();
+  qi_value_t *ret = qi_value_create("");
+
+  qi_value_cpp(ret) = qi::GenericValuePtr::from(mo);
+  return ret;
+}
+
+int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
+  qi::ObjectPtr       &obj = qi_object_cpp(object);
+  qi::GenericValuePtr &val = qi_value_cpp(params);
+  return obj->xMetaPost(signature, qi::GenericFunctionParameters(val.asTuple().get()));
+}
+
+
+
+qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data) {
+  qi::ObjectPtr &obj = qi_object_cpp(object);
+  std::vector<std::string> vs = qi::signatureSplit(std::string(signature));
+  qi::DynamicFunction fn = boost::bind<qi::GenericValuePtr>(&c_signal_callback, _1, vs[2], f, user_data);
+  return qi_future_wrap(obj->xConnect(signature, qi::makeDynamicGenericFunction(fn)));
+}
+
+qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned int id) {
+  qi::ObjectPtr &obj = qi_object_cpp(object);
+  return qi_future_wrap(obj->disconnect(id));
 }
 
 int          qi_object_builder_register_method(qi_object_builder_t *object_builder, const char *complete_signature, qi_object_method_t func, void *data)
@@ -110,6 +153,12 @@ int          qi_object_builder_register_method(qi_object_builder_t *object_build
   return 0;
 }
 
+int          qi_object_builder_register_event(qi_object_builder_t *object_builder, const char *complete_signature)
+{
+  qi::GenericObjectBuilder  *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
+  return ob->xAdvertiseEvent(complete_signature);
+}
+
 qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_builder) {
   qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(object_builder);
   qi_object_t *obj = qi_object_create();
@@ -119,12 +168,3 @@ qi_object_t*         qi_object_builder_get_object(qi_object_builder_t *object_bu
   return obj;
 }
 
-qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
-{
-  qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
-  const qi::MetaObject &mo = obj->metaObject();
-  qi_value_t *ret = qi_value_create("");
-
-  qi_value_cpp(ret) = qi::GenericValuePtr::from(mo);
-  return ret;
-}
