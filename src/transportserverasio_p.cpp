@@ -89,6 +89,7 @@ namespace qi
     boost::asio::socket_base::reuse_address option(false);
 #else
     boost::asio::socket_base::reuse_address option(true);
+    fcntl(_acceptor.native(), F_SETFD, FD_CLOEXEC);
 #endif
     _acceptor.set_option(option);
     _acceptor.bind(ep);
