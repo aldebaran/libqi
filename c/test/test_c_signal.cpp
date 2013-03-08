@@ -9,7 +9,7 @@
 #include <qi/os.hpp>
 
 #include <qic/application.h>
-#include <qic/signal.h>
+#include <qic/object.h>
 #include <qic/value.h>
 
 int res0 = 0;

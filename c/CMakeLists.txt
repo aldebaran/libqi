@@ -10,7 +10,6 @@ qi_create_lib("qic"  qic/api.h
                      qic/session.h
                      qic/object.h
                      qic/future.h
-                     qic/signal.h
                      qic/servicedirectory.h
                      qic/value.h
 
@@ -20,7 +19,6 @@ qi_create_lib("qic"  qic/api.h
                      src/future.cpp
                      src/session.cpp
                      src/application.cpp
-                     src/signal.cpp
                      src/value_p.h
                      src/value.cpp
                      src/servicedirectory.cpp)
