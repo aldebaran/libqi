@@ -65,6 +65,11 @@ namespace qi {
     : _p(b._p)
     {}
 
+    bool operator==(const Future<T> &other)
+    {
+      return _p.get() == other._p.get();
+    }
+
     inline Future<T>& operator = (const FutureSync<T>& b)
     {
       b._sync = false;
