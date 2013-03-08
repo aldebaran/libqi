@@ -9,7 +9,7 @@
 #ifndef _QIMESSAGING_APPLICATION_H_
 #define _QIMESSAGING_APPLICATION_H_
 
-#include <qimessaging/c/api_c.h>
+#include <qic/api.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -19,11 +19,11 @@ extern "C"
   typedef struct qi_application_t_s {} qi_application_t;
 
   /*! \warning Must be the first thing called by main function. */
-  QIMESSAGING_API qi_application_t *qi_application_create(int *argc, char **argv);
-  QIMESSAGING_API void              qi_application_destroy(qi_application_t *app);
-  QIMESSAGING_API void              qi_application_run(qi_application_t *app);
-  QIMESSAGING_API void              qi_application_stop(qi_application_t *app);
-  QIMESSAGING_API bool              qi_application_initialized();
+  QIC_API qi_application_t *qi_application_create(int *argc, char **argv);
+  QIC_API void              qi_application_destroy(qi_application_t *app);
+  QIC_API void              qi_application_run(qi_application_t *app);
+  QIC_API void              qi_application_stop(qi_application_t *app);
+  QIC_API int               qi_application_initialized();
 
 #ifdef __cplusplus
 }

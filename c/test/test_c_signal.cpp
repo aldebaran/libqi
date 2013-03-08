@@ -8,27 +8,26 @@
 #include <gtest/gtest.h>
 #include <qi/os.hpp>
 
-#include <qimessaging/c/application_c.h>
-#include <qimessaging/c/signal_c.h>
+#include <qic/application.h>
+#include <qic/signal.h>
+#include <qic/value.h>
 
 int res0 = 0;
 int res1 = 0;
 bool pass0 = false;
 bool pass1 = false;
 
-void signal_callback_0(void* val)
+void signal_callback_0(qi_value_t* val, void *)
 {
-  int* value = (int*)val;
-
-  res0 = (*value);
+  int err = 0;
+  res0 = qi_value_get_int64(val, &err);
   pass0 = true;
 }
 
-void signal_callback_1(void* val)
+void signal_callback_1(qi_value_t* val, void *)
 {
-  int* value = (int*)val;
-
-  res1 = (*value);
+  int err = 0;
+  res1 = qi_value_get_int64(val, &err);
   pass1 = true;
 }
 
@@ -42,13 +41,16 @@ TEST(TestSignal, SimpleSignalConnect)
 {
   qi_signal_t* signal = qi_signal_create();
 
-  qi_signal_connect(signal, signal_callback_0);
+  qi_signal_connect(signal, signal_callback_0, 0);
 
   int n = 42;
+  qi_value_t *val = qi_value_create("i");
+  qi_value_set_int64(val, n);
+
   pass0 = false;
   pass1 = false;
-  qi_signal_trigger(signal, &n);
-
+  qi_signal_trigger(signal, val);
+  qi_value_destroy(val);
   int timeout = 1000;
   while (timeout > 0)
   {
@@ -66,14 +68,15 @@ TEST(TestSignal, MultipleSignalConnect)
 {
   qi_signal_t* signal = qi_signal_create();
 
-  qi_signal_connect(signal, signal_callback_0);
-  qi_signal_connect(signal, signal_callback_1);
-
+  qi_signal_connect(signal, signal_callback_0, 0);
+  qi_signal_connect(signal, signal_callback_1, 0);
+  qi_value_t* val = qi_value_create("i");
   int n = 21;
+  qi_value_set_int64(val, n);
   pass0 = false;
   pass1 = false;
-  qi_signal_trigger(signal, &n);
-
+  qi_signal_trigger(signal, val);
+  qi_value_destroy(val);
   int timeout = 1000;
   while (timeout > 0)
   {
@@ -92,14 +95,16 @@ TEST(TestSignal, SignalDisconnect)
 {
   qi_signal_t* signal = qi_signal_create();
 
-  qi_signal_connect(signal, signal_callback_0);
-  unsigned int l = qi_signal_connect(signal, signal_callback_1);
+  qi_signal_connect(signal, signal_callback_0, 0);
+  unsigned int l = qi_signal_connect(signal, signal_callback_1, 0);
   EXPECT_TRUE(qi_signal_disconnect(signal, l));
 
   int n = 11;
+  qi_value_t* val = qi_value_create("i");
+  qi_value_set_int64(val, n);
   pass0 = false;
   pass1 = false;
-  qi_signal_trigger(signal, &n);
+  qi_signal_trigger(signal, val);
 
   int timeout = 1000;
   while (timeout > 0)
@@ -112,6 +117,7 @@ TEST(TestSignal, SignalDisconnect)
 
   EXPECT_EQ(res0, n);
   EXPECT_EQ(pass1, false);
+  qi_value_destroy(val);
   qi_signal_destroy(signal);
 }
 
@@ -119,15 +125,17 @@ TEST(TestSignal, SignalDisconnectAll)
 {
   qi_signal_t* signal = qi_signal_create();
 
-  qi_signal_connect(signal, signal_callback_0);
-  qi_signal_connect(signal, signal_callback_1);
+  qi_signal_connect(signal, signal_callback_0, 0);
+  qi_signal_connect(signal, signal_callback_1, 0);
   EXPECT_TRUE(qi_signal_disconnect_all(signal));
 
   pass0 = false;
   pass1 = false;
   int n = 1337;
-  qi_signal_trigger(signal, &n);
-
+  qi_value_t* val = qi_value_create("i");
+  qi_value_set_int64(val, n);
+  qi_signal_trigger(signal, val);
+  qi_value_destroy(val);
   qi::os::msleep(5);
 
   EXPECT_EQ(pass1 && pass0, false);

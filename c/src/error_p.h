@@ -9,7 +9,7 @@
 #ifndef _QIMESSAGING_ERROR_P_H_
 # define _QIMESSAGING_ERROR_P_H_
 
-# include <qimessaging/c/api_c.h>
+# include <qic/api.h>
 
 # ifdef __cplusplus
 extern "C"

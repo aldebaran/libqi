@@ -7,7 +7,5 @@
 
 project (QiService-c)
 
-qi_create_bin(qi-service-c
-  qimain.cpp
-  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qi-service-c qimain.c DEPENDS QIC)
 

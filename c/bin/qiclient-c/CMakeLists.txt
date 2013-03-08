@@ -7,7 +7,5 @@
 
 project (QiClient-c)
 
-qi_create_bin(qi-client-c
-  qimain.cpp
-  DEPENDS QI QIMESSAGING BOOST_PROGRAM_OPTIONS)
+qi_create_bin(qi-client-c qimain.c DEPENDS QIC)
 

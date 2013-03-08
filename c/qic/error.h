@@ -9,14 +9,14 @@
 #ifndef _QIMESSAGING_ERROR_C_H_
 # define _QIMESSAGING_ERROR_C_H_
 
-# include <qimessaging/c/api_c.h>
+# include <qic/api.h>
 
 # ifdef __cplusplus
 extern "C"
 {
 # endif // !__cplusplus
 
-QIMESSAGING_API const char*  qi_c_error();
+QIC_API const char*  qi_c_error();
 
 # ifdef __cplusplus
 }

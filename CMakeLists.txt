@@ -72,54 +72,54 @@ set(PUBLIC_HEADERS
 )
 
 qi_install_header(${PUBLIC_HEADERS} KEEP_RELATIVE_PATHS)
-qi_submodule_create("qi-messaging" ${CONFIG_H}
-                                   ${PUBLIC_HEADERS}
+set(SRCS ${CONFIG_H}
+         ${PUBLIC_HEADERS}
 
-                                   src/boundobject.cpp
-                                   src/boundobject.hpp
-                                   src/binarycoder_p.hpp
-                                   src/binarycoder.cpp
-                                   src/gateway.cpp
-                                   src/message.cpp
-                                   src/message_p.hpp
-                                   src/messagedispatcher.hpp
-                                   src/messagedispatcher.cpp
-                                   src/objecthost.hpp
-                                   src/objecthost.cpp
-                                   src/objectregistrar.hpp
-                                   src/objectregistrar.cpp
-                                   src/remoteobject.cpp
-                                   src/remoteobject_p.hpp
-                                   src/servicedirectory.cpp
-                                   src/servicedirectory_p.hpp
-                                   src/servicedirectoryclient.hpp
-                                   src/servicedirectoryclient.cpp
-                                   src/serviceinfo.cpp
-                                   src/serviceinfo_p.hpp
-                                   src/session.cpp
-                                   src/session_p.hpp
-                                   src/sessionservice.hpp
-                                   src/sessionservice.cpp
-                                   src/sessionservices.hpp
-                                   src/sessionservices.cpp
-                                   src/server.hpp
-                                   src/server.cpp
-                                   src/transportserver.cpp
-                                   src/transportserver_p.hpp
-                                   src/transportserverasio_p.cpp
-                                   src/transportserverasio_p.hpp
-                                   src/transportsocket.cpp
-                                   src/transportsocket_p.hpp
-                                   src/transportsocketcache.cpp
-                                   src/transportsocketcache.hpp
-                                   src/tcptransportsocket.cpp
-                                   src/tcptransportsocket.hpp
-                                   src/url.cpp
-                                   src/url_p.hpp
-                                   src/serverresult.hpp
-                                   )
+         src/boundobject.cpp
+         src/boundobject.hpp
+         src/binarycoder_p.hpp
+         src/binarycoder.cpp
+         src/gateway.cpp
+         src/message.cpp
+         src/message_p.hpp
+         src/messagedispatcher.hpp
+         src/messagedispatcher.cpp
+         src/objecthost.hpp
+         src/objecthost.cpp
+         src/objectregistrar.hpp
+         src/objectregistrar.cpp
+         src/remoteobject.cpp
+         src/remoteobject_p.hpp
+         src/servicedirectory.cpp
+         src/servicedirectory_p.hpp
+         src/servicedirectoryclient.hpp
+         src/servicedirectoryclient.cpp
+         src/serviceinfo.cpp
+         src/serviceinfo_p.hpp
+         src/session.cpp
+         src/session_p.hpp
+         src/sessionservice.hpp
+         src/sessionservice.cpp
+         src/sessionservices.hpp
+         src/sessionservices.cpp
+         src/server.hpp
+         src/server.cpp
+         src/transportserver.cpp
+         src/transportserver_p.hpp
+         src/transportserverasio_p.cpp
+         src/transportserverasio_p.hpp
+         src/transportsocket.cpp
+         src/transportsocket_p.hpp
+         src/transportsocketcache.cpp
+         src/transportsocketcache.hpp
+         src/tcptransportsocket.cpp
+         src/tcptransportsocket.hpp
+         src/url.cpp
+         src/url_p.hpp
+         src/serverresult.hpp
+         )
 
-qi_add_subdirectory(c)
+
 #normalize BUILD_SHARED_LIBS, default ON
 
 if (NOT DEFINED BUILD_SHARED_LIBS)
@@ -136,8 +136,7 @@ endif()
 
 qi_create_lib(qimessaging
   ${_libtype}
-  SUBMODULE
-    qi-messaging qi-messaging-c
+  ${SRCS}
   DEPENDS
     QI BOOST BOOST_DATE_TIME BOOST_THREAD QITYPE ${_ssldeps}
 )
@@ -153,7 +152,7 @@ qi_add_subdirectory(examples WITH_EXAMPLES)
 
 #target_link_libraries(qimessaging "-Wl,--no-undefined")
 
-
+qi_add_subdirectory(c)
 qi_add_subdirectory("bin")
 
 qi_add_subdirectory("python" WITH_PYTHON)

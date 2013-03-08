@@ -8,18 +8,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <qimessaging/c/qi_c.h>
+#include <qic/session.h>
+#include <qic/object.h>
+#include <qic/future.h>
+#include <qic/value.h>
+#include <qic/application.h>
 
-void reply(const char *signature, qi_message_t *message, qi_message_t *answer, void *data)
+
+void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void *data)
 {
-  char* msg = qi_message_read_string(message);
+  qi_value_t *str = qi_value_tuple_get(message, 0, 0);
+  const char* msg = qi_value_get_string(str);
   char* rep = (char *) malloc(strlen(msg) + 4);
-
   memcpy(rep, msg, strlen(msg) + 1);
   printf("Message recv: %s\n", msg);
   strcat(rep, "bim");
-
-  qi_message_write_string(answer, rep);
+  qi_value_set_string(answer, rep);
+  free(msg);
+  free(rep);
 }
 
 int		main(int argc, char **argv)

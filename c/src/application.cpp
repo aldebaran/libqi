@@ -6,7 +6,7 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qimessaging/c/application_c.h>
+#include <qic/application.h>
 #include <qi/application.hpp>
 
 qi_application_t *qi_application_create(int *argc, char **argv)
@@ -37,7 +37,7 @@ void              qi_application_stop(qi_application_t *application)
   app->stop();
 }
 
-bool qi_application_initialized()
+int qi_application_initialized()
 {
     return qi::Application::initialized();
 }

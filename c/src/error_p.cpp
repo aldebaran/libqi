@@ -9,7 +9,7 @@
 #include <cstring>
 #include <qi/log.hpp>
 #include "error_p.h"
-#include <qimessaging/c/error_c.h>
+#include <qic/error.h>
 
 qiLogCategory("qimessaging.error");
 
