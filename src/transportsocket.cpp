@@ -19,11 +19,11 @@
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <qimessaging/transportsocket.hpp>
+#include "transportsocket.hpp"
 #include "tcptransportsocket.hpp"
 #include "message_p.hpp"
 
-#include <qimessaging/message.hpp>
+#include "message.hpp"
 #include <qi/buffer.hpp>
 #include "transportsocket_p.hpp"
 

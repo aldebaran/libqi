@@ -62,12 +62,9 @@ set(PUBLIC_HEADERS
                    qimessaging/binarydecoder.hpp
                    qimessaging/binaryencoder.hpp
                    qimessaging/gateway.hpp
-                   qimessaging/message.hpp
                    qimessaging/servicedirectory.hpp
                    qimessaging/serviceinfo.hpp
                    qimessaging/session.hpp
-                   qimessaging/transportserver.hpp
-                   qimessaging/transportsocket.hpp
                    qimessaging/url.hpp
 )
 
@@ -80,6 +77,7 @@ set(SRCS ${CONFIG_H}
          src/binarycoder_p.hpp
          src/binarycoder.cpp
          src/gateway.cpp
+         src/message.hpp
          src/message.cpp
          src/message_p.hpp
          src/messagedispatcher.hpp
@@ -104,10 +102,12 @@ set(SRCS ${CONFIG_H}
          src/sessionservices.cpp
          src/server.hpp
          src/server.cpp
+         src/transportserver.hpp
          src/transportserver.cpp
          src/transportserver_p.hpp
          src/transportserverasio_p.cpp
          src/transportserverasio_p.hpp
+         src/transportsocket.hpp
          src/transportsocket.cpp
          src/transportsocket_p.hpp
          src/transportsocketcache.cpp
@@ -118,7 +118,6 @@ set(SRCS ${CONFIG_H}
          src/url_p.hpp
          src/serverresult.hpp
          )
-
 
 #normalize BUILD_SHARED_LIBS, default ON
 

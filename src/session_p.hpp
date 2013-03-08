@@ -11,8 +11,8 @@
 #include <set>
 #include <vector>
 #include <boost/thread.hpp>
-#include <qimessaging/transportsocket.hpp>
-#include <qimessaging/transportserver.hpp>
+#include "transportsocket.hpp"
+#include "transportserver.hpp"
 #include <qitype/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qimessaging/session.hpp>

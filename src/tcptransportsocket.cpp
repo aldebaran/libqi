@@ -28,7 +28,7 @@
 #include <qi/log.hpp>
 #include <qi/types.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/message.hpp>
+#include "message.hpp"
 #include <qi/buffer.hpp>
 #include <qi/eventloop.hpp>
 

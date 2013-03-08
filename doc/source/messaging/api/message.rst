@@ -3,7 +3,7 @@ qi::Message
 
 .. code-block:: c++
 
-  #include <qimessaging/message.hpp>
+  #include "message.hpp"
 
 .. cpp:namespace:: qi
 

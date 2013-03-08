@@ -13,10 +13,6 @@
 # include <qitype/signal.hpp>
 # include <vector>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
 
 namespace qi {
 
@@ -26,7 +22,7 @@ namespace qi {
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
   class TransportServerPrivate;
 
-  class QIMESSAGING_API TransportServer
+  class TransportServer
   {
     QI_DISALLOW_COPY_AND_ASSIGN(TransportServer);
 
@@ -56,9 +52,5 @@ namespace qi {
   };
 
 }
-
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
 
 #endif  // _QIMESSAGING_TRANSPORTSERVER_HPP_

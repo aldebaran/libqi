@@ -25,8 +25,8 @@
 #include <arpa/inet.h>
 #endif
 
-#include <qimessaging/transportserver.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportserver.hpp"
+#include "transportsocket.hpp"
 #include "transportserverasio_p.hpp"
 #include "tcptransportsocket.hpp"
 

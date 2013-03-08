@@ -17,8 +17,8 @@
 #include <boost/make_shared.hpp>
 
 #include <qitype/genericobject.hpp>
-#include <qimessaging/transportserver.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportserver.hpp"
+#include "transportsocket.hpp"
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/serviceinfo.hpp>

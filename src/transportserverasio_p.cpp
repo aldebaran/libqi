@@ -14,8 +14,8 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <qimessaging/transportserver.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportserver.hpp"
+#include "transportsocket.hpp"
 #include "tcptransportsocket.hpp"
 
 #include <qi/eventloop.hpp>

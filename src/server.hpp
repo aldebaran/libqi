@@ -12,7 +12,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transportserver.hpp>
+#include "transportserver.hpp"
 #include <qi/atomic.hpp>
 #include "boundobject.hpp"
 

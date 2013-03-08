@@ -22,7 +22,6 @@ namespace po = boost::program_options;
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <qimessaging/url.hpp>
-#include <qimessaging/transportsocket.hpp>
 #include <qimessaging/session.hpp>
 #include <qiperf/dataperfsuite.hpp>
 #include <qiperf/dataperf.hpp>

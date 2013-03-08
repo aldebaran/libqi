@@ -14,14 +14,10 @@
 #include <qitype/functiontype.hpp>
 #include <qi/types.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 ) //  needs to have dll-interface
-#endif
 
 namespace qi {
 
-  class QIMESSAGING_API MessageAddress {
+  class MessageAddress {
   public:
     MessageAddress()
       : messageId(0)
@@ -56,7 +52,7 @@ namespace qi {
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
   class ObjectHost;
 
-  class QIMESSAGING_API Message {
+  class Message {
   public:
 
 

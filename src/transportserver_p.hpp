@@ -10,7 +10,7 @@
 # include <qimessaging/api.hpp>
 # include <qimessaging/url.hpp>
 # include <qimessaging/session.hpp>
-# include <qimessaging/transportserver.hpp>
+# include "transportserver.hpp"
 
 # include <string>
 # include <queue>

@@ -10,7 +10,7 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/signal.hpp>
 #include <boost/thread/mutex.hpp>
-#include <qimessaging/message.hpp>
+#include "message.hpp"
 #include <qimessaging/binaryencoder.hpp>
 
 namespace qi {

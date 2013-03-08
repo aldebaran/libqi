@@ -17,15 +17,15 @@
 # endif
 # include <qi/atomic.hpp>
 # include <qimessaging/api.hpp>
-# include <qimessaging/message.hpp>
+# include "message.hpp"
 # include <qimessaging/url.hpp>
-# include <qimessaging/transportsocket.hpp>
+# include "transportsocket.hpp"
 # include <qi/eventloop.hpp>
 
 # include "transportsocket_p.hpp"
 
 
-# include <qimessaging/transportsocket.hpp>
+# include "transportsocket.hpp"
 # include <qi/eventloop.hpp>
 
 namespace qi

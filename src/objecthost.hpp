@@ -14,7 +14,7 @@
 
 #include <qitype/fwd.hpp>
 
-#include <qimessaging/transportsocket.hpp>
+#include "transportsocket.hpp"
 
 
 namespace qi

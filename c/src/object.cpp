@@ -7,7 +7,6 @@
 
 #include <qitype/genericobject.hpp>
 #include <qitype/genericvalue.hpp>
-#include <qimessaging/message.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 
 #include <qic/object.h>

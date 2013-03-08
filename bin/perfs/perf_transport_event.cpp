@@ -13,8 +13,8 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include <qimessaging/transportserver.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportserver.hpp"
+#include "transportsocket.hpp"
 
 #include <qimessaging/session.hpp>
 #include "dataperftimer.hpp"
@@ -22,7 +22,7 @@
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 
-#include <qimessaging/transportserver.hpp>
+#include "transportserver.hpp"
 #include <qimessaging/url.hpp>
 #include <qitype/genericobjectbuilder.hpp>
 #include "../src/session_p.hpp"

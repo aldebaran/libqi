@@ -10,8 +10,8 @@
 #endif
 
 #include "remoteobject_p.hpp"
-#include <qimessaging/message.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "message.hpp"
+#include "transportsocket.hpp"
 #include <qimessaging/binarydecoder.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>

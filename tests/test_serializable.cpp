@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>  // gtest must be included first...!
 #include <string>
 #include <qitype/genericobject.hpp>
-#include <qimessaging/message.hpp>
 #include <qimessaging/binaryencoder.hpp>
 #include <qimessaging/binarydecoder.hpp>
 

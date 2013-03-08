@@ -9,9 +9,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <qi/future.hpp>
-#include <qimessaging/message.hpp>
+#include "message.hpp"
 #include <qimessaging/binaryencoder.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportsocket.hpp"
 
 namespace qi {
 

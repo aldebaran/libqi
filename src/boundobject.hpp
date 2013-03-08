@@ -13,7 +13,7 @@
 #include <boost/signals2.hpp>
 #include <qimessaging/api.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transportserver.hpp>
+#include "transportserver.hpp"
 #include <qi/atomic.hpp>
 
 #include "objecthost.hpp"

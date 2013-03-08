@@ -5,7 +5,7 @@
 #include <qitype/genericobject.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qimessaging/session.hpp>
-#include <qimessaging/transportserver.hpp>
+#include "transportserver.hpp"
 #include <qimessaging/binarydecoder.hpp>
 #include <boost/bind.hpp>
 #include <qi/log.hpp>

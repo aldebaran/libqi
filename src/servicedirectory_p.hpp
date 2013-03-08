@@ -7,8 +7,8 @@
 #ifndef _SRC_SERVICEDIRECTORY_P_HPP_
 #define _SRC_SERVICEDIRECTORY_P_HPP_
 
-#include <qimessaging/transportserver.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "transportserver.hpp"
+#include "transportsocket.hpp"
 #include <qitype/genericobject.hpp>
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>

@@ -4,7 +4,7 @@
 */
 #include <set>
 #include <qitype/genericobject.hpp>
-#include <qimessaging/transportserver.hpp>
+#include "transportserver.hpp"
 #include <qimessaging/serviceinfo.hpp>
 #include <qitype/objecttypebuilder.hpp>
 #include "objectregistrar.hpp"

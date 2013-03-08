@@ -9,23 +9,18 @@
 
 # include <qi/future.hpp>
 # include <qimessaging/api.hpp>
-# include <qimessaging/message.hpp>
+# include "message.hpp"
 # include <qimessaging/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qitype/signal.hpp>
 # include <string>
 # include <boost/enable_shared_from_this.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
-
 namespace qi
 {
   class Session;
   class TransportSocketPrivate;
-  class QIMESSAGING_API TransportSocket : public boost::enable_shared_from_this<TransportSocket>
+  class TransportSocket : public boost::enable_shared_from_this<TransportSocket>
   {
     QI_DISALLOW_COPY_AND_ASSIGN(TransportSocket);
 
@@ -72,14 +67,11 @@ namespace qi
 
   typedef boost::shared_ptr<TransportSocket> TransportSocketPtr;
 
-  QIMESSAGING_API TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
+  TransportSocketPtr makeTransportSocket(const std::string &protocol, qi::EventLoop *eventLoop = getDefaultNetworkEventLoop());
 }
 
 
 QI_TYPE_NOT_CLONABLE(qi::TransportSocket);
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
 
 #endif  // _QIMESSAGING_TRANSPORTSOCKET_HPP_

@@ -10,8 +10,8 @@
 #endif
 
 #include <qimessaging/session.hpp>
-#include <qimessaging/message.hpp>
-#include <qimessaging/transportsocket.hpp>
+#include "message.hpp"
+#include "transportsocket.hpp"
 #include <qitype/genericobject.hpp>
 #include <qimessaging/serviceinfo.hpp>
 #include <qitype/objectfactory.hpp>
