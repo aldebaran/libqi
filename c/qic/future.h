@@ -15,14 +15,7 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_future_t_s  {} qi_future_t;
-  typedef struct qi_promise_t_s {} qi_promise_t;
-
-  typedef void (*qi_future_callback_t)(qi_future_t* value, void *data);
-
-  /* Forward declaration of qi_message_t structure */
-  typedef struct qi_value_t_s    qi_value_t;
-  typedef struct qi_object_t_s    qi_object_t;
+  typedef void (*qi_future_callback_t)(qi_future_t* value, void *user_data);
 
   QIC_API qi_promise_t* qi_promise_create();
   QIC_API void          qi_promise_destroy(qi_promise_t *pr);
@@ -34,7 +27,7 @@ extern "C"
   QIC_API void          qi_future_destroy(qi_future_t *fut);
   QIC_API qi_future_t*  qi_future_clone(qi_future_t* fut);
 
-  QIC_API void          qi_future_add_callback(qi_future_t *fut, qi_future_callback_t cb, void *data);
+  QIC_API void          qi_future_add_callback(qi_future_t *fut, qi_future_callback_t cb, void *user_data);
   QIC_API void          qi_future_wait(qi_future_t *fut);
   QIC_API int           qi_future_has_error(qi_future_t *fut);
   QIC_API int           qi_future_is_ready(qi_future_t *fut);

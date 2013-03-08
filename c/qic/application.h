@@ -16,7 +16,7 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_application_t_s {} qi_application_t;
+
 
   /*! \warning Must be the first thing called by main function. */
   QIC_API qi_application_t *qi_application_create(int *argc, char **argv);

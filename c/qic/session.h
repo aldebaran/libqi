@@ -17,11 +17,7 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_session_t_s {} qi_session_t;
 
-  //forward declaration
-  typedef struct qi_object_t_s     qi_object_t;
-  typedef struct qi_future_t_s     qi_future_t;
 
   QIC_API qi_session_t *qi_session_create();
   QIC_API void          qi_session_destroy(qi_session_t *session);

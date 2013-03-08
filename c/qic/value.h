@@ -17,10 +17,8 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_value_t_s qi_value_t;
 
-  //forward declaration
-  typedef struct qi_object_t_s     qi_object_t;
+
 
   QIC_API qi_value_t* qi_value_create(const char *sig);
   QIC_API void        qi_value_destroy(qi_value_t *v);

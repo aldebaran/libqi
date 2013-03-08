@@ -15,9 +15,6 @@ extern "C"
 {
 #endif
 
-  typedef struct qi_servicedirectory_t_s {} qi_servicedirectory_t;
-  typedef struct qi_value_t_s qi_value_t;
-
   QIC_API qi_servicedirectory_t *qi_servicedirectory_create();
   QIC_API void                   qi_servicedirectory_destroy(qi_servicedirectory_t *app);
   QIC_API void                   qi_servicedirectory_listen(qi_servicedirectory_t *servicedirectory, const char *url);
