@@ -426,7 +426,7 @@ namespace qi {
       if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
       {
         qiLogError("core.common.network", "Error allocation memory needed to get hostIPAddrs");
-        std::map<std::string, std::vector<std::string> >();
+        return std::map<std::string, std::vector<std::string> >();
       }
 
       if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
@@ -449,6 +449,13 @@ namespace qi {
 
       if (pAdapterInfo)
         free(pAdapterInfo);
+
+      // not given by default
+      if (ifsMap.find("Loopback") == ifsMap.end())
+      {
+        ifsMap["Loopback"].push_back("127.0.0.1");
+      }
+
       return ifsMap;
     }
 
