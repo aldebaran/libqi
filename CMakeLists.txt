@@ -65,6 +65,7 @@ set(H
   qi/threadpool.hpp
   qi/eventloop.hpp
   qi/version.hpp
+  qi/translator.hpp
   )
 
 set(C
@@ -96,6 +97,7 @@ set(C
   src/eventloop_p.hpp
   src/sdklayout-boost.cpp
   src/version.cpp
+  src/translator.cpp
   )
 
 if (WIN32)
@@ -147,20 +149,11 @@ endif()
 
 qi_create_lib(qi ${_libtype} ${H} ${C})
 
-qi_add_optional_package(INTL)
-
-if (WITH_INTL)
-  add_definitions("-DWITH_INTL")
-  qi_use_lib(qi INTL)
-else()
-  message(STATUS "Could not find libintl")
-endif()
-
 if (WITH_QT_QTCORE)
   qi_use_lib(qi QT_QTCORE)
 endif()
 
-qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX)
+qi_use_lib(qi BOOST_FILESYSTEM BOOST_THREAD BOOST_PROGRAM_OPTIONS BOOST_REGEX BOOST_LOCALE)
 
 if (UNIX)
   qi_use_lib(qi PTHREAD)

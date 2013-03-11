@@ -45,14 +45,20 @@ The qiproject.xml will look like:
 
 \verbatim
 <project name="helloApp">
-  <translate domain="hello" linguas="fr_FR en_US" tr="gettext" />
+  <translate name="helloApp" domain="hello" linguas="fr_FR en_US" tr="gettext" />
 /project>
 \endverbatim
 
 Tag definitions:
+    - ``name``: The name of the application or library.
     - ``domain``: The name of the generated dictionary.
     - ``linguas``: A list of all locales supported formatted as xx_XX (country and language code)
     - ``tr``: Define if you use gettext or QT internationalization (value can be: "gettext" or "qt").
+
+Dictionaries will be install into:
+\verbatim
+<sdk_path>/share/locale/<name>/<linguas>/LC_MESSAGES/<domain>.mo
+\endverbatim
 
 \subsection qilinguistuse How to use qilinguist
 
@@ -66,27 +72,29 @@ First of all you need to generate or update translatable files by using ``qiling
 
 Once you have translated those files, you need to compile them by using ``qilinguist release``.
 
-\section qiGettext How to internationalize C++ applications
+\section qiLocale How to internationalize C++ applications
 
-\subsection gettextconf Set and configure qi::os::gettext
+\subsection localeConf Set and configure qi::Translator
 
-There are three steps to make qi::gettext working.
+You need to get a default qi::Translator, then you MUST set the default domain and current locale.
 
-First, you need to call qi::Application::setName(const std::string &name).
+Steps:
+    - Get default Translator (qi::defaultTranslator(const std::string &name)) with ``name`` the name of the application or library.
+    - Set default domain (qi::Translator::setDefaultDomain(const std::string &domain)) with ``domain`` the name of the generated dictionary.
+    - Set current locale (qi::Translator::setCurrentLocale(const std::string &locale)) with ``locale`` the name of the default loacle formatted as xx_XX (country and language code)
 
-\warning: The ``name`` here must be the same as the domain tag from qiproject.xml
+\warning: The ``name`` and ``domain`` must be the same as those define into the qiproject.xml
+\warning: The ``locale`` must be a locale supported and define into the qiproject.xml, otherwise it will fallback to the default value.
 
-Second, call qi::Application::loadTranslationDict(const std::string &dictName). This function will load the dictionary you want to use.
+You can add some domains by using qi::Translator::addDomain(const std::string &domain). This will allow qi::Translator to look it multiple dictionary.
 
-\warning: Once again dictName is the same as the domain tag from qiproject.xml
-
-Third, set the locale you want to use by calling qi::Application::setTranslationLocale(const std::string &locale). This function allows you to set and switch language at runtime.
+You can change the locale you want to use by calling qi::Translator::setCurrentLocale(const std::string &locale). This function allows you to set and switch language at runtime.
 
 \subsection gettextuse How to translate sentences
 
-At last, you just need to call qi::os::gettext(const std::string &sentence).
+At last, you just need to call qi::Translator::translate(const std::string &msg, const std::string &domain, const std::string &locale).
 
-All sentences will be parsed when calling qilinguist update, then generate translation files (ie: po/ts files). Then, at runtime qi::os::gettext will look for translation regarding initialization done in the last paragraphe.
+All sentences will be parsed when calling qilinguist update, then generate translation files (ie: po/ts files). Then, at runtime qi::Translator::translate will look for translation regarding initialization done in the last paragraphe.
 
 \section exampletr Example
 \include qitranslate/main.cpp
