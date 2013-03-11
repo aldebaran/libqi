@@ -184,10 +184,6 @@ namespace qi {
     return names;
   }
 
-  namespace details {
-
-  };
-
 }
 
 namespace
