@@ -126,6 +126,13 @@ qi_value_t*  qi_value_tuple_get(qi_value_t *msg, unsigned int idx, int *err) {
   return ret;
 }
 
+qi_value_kind_t qi_value_get_kind(qi_value_t* value) {
+  if (!value)
+    return QI_VALUE_KIND_UNKNOWN;
+  qi::GenericValuePtr &val = qi_value_cpp(value);
+  return (qi_value_kind_t)(val.kind());
+}
+
 int          qi_value_tuple_size(qi_value_t *msg)
 {
   qi::GenericValuePtr &container = qi_value_cpp(msg);
