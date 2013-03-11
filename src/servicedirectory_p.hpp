@@ -33,6 +33,7 @@ namespace qi {
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
     void                     serviceReady(const unsigned int &idx);
+    void                     updateServiceInfo(const ServiceInfo &svcinfo);
 
     qi::Signal<void (unsigned int, std::string)>  serviceAdded;
     qi::Signal<void (unsigned int, std::string)>  serviceRemoved;
@@ -55,6 +56,8 @@ namespace qi {
   public:
     ServiceDirectoryPrivate();
     ~ServiceDirectoryPrivate();
+
+    void                         updateServiceInfo();
 
     BoundObjectPtr               _sdbo;
     Server                       _server;

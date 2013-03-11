@@ -24,7 +24,7 @@ struct evconnlistener;
 
 namespace qi
 {
-  class TransportServerAsioPrivate : public TransportServerImplPrivate
+  class TransportServerAsioPrivate : public TransportServerImpl
   {
   public:
     TransportServerAsioPrivate(TransportServer* self,
@@ -33,9 +33,10 @@ namespace qi
 
     virtual qi::Future<void> listen(const qi::Url& listenUrl);
     virtual void close();
-    virtual void destroy();
-    boost::asio::ip::tcp::acceptor _acceptor;
+    void updateEndpoints();
   private:
+    TransportServer* _self;
+    boost::asio::ip::tcp::acceptor _acceptor;
     void onAccept(const boost::system::error_code& erc,
 #ifdef WITH_SSL
       boost::asio::ssl::stream<boost::asio::ip::tcp::socket>* s,
@@ -49,6 +50,8 @@ namespace qi
     boost::asio::ssl::context _sslContext;
 #endif
     bool _ssl;
+    unsigned short _port;
+    qi::Future<void> _asyncEndpoints;
   };
 }
 

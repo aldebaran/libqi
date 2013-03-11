@@ -27,6 +27,8 @@ qiLogCategory("qimessaging.transportserver");
 
 namespace qi
 {
+  const int ifsMonitoringTimeout = 5 * 1000 * 1000; // in usec
+
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
 #ifdef WITH_SSL
@@ -62,8 +64,84 @@ namespace qi
 
   void TransportServerAsioPrivate::close() {
     qiLogDebug() << this << " close";
+    try
+    {
+      _asyncEndpoints.cancel();
+    }
+    catch (const std::runtime_error& e)
+    {
+      qiLogDebug() << e.what();
+    }
+
     *_live = false;
     _acceptor.close();
+  }
+
+  /*
+   * This asynchronous call will keep a shared ptr on the object to prevent
+   * its destruction.
+   */
+  void _updateEndpoints(TransportServerImplPtr p)
+  {
+    boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
+    ts->updateEndpoints();
+  }
+
+  /*
+   * This function is used to detect and update endpoints when the transport
+   * server is listening on 0.0.0.0.
+   */
+  void TransportServerAsioPrivate::updateEndpoints()
+  {
+    if (!*_live)
+    {
+      return;
+    }
+
+    // TODO: implement OS networking notifications
+
+    qiLogDebug() << "Checking endpoints...";
+    std::vector<qi::Url> currentEndpoints;
+
+    std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
+    if (ifsMap.empty())
+    {
+      const char* s = "Cannot get host addresses";
+      qiLogWarning() << s;
+    }
+
+    std::string protocol = _ssl ? "tcps://" : "tcp://";
+
+    {
+      for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
+           interfaceIt != ifsMap.end();
+           ++interfaceIt)
+      {
+        for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
+             addressIt != (*interfaceIt).second.end();
+             ++addressIt)
+        {
+          std::stringstream ss;
+          ss << protocol << (*addressIt) << ":" << _port;
+          currentEndpoints.push_back(ss.str());
+        }
+      }
+    }
+
+    {
+      boost::mutex::scoped_lock(_endpointsMutex);
+      if (_endpoints.size() != currentEndpoints.size() ||
+          !std::equal(_endpoints.begin(), _endpoints.end(), currentEndpoints.begin()))
+      {
+        qiLogDebug() << "Updating endpoints...";
+
+        _endpoints = currentEndpoints;
+        _self->endpointsChanged();
+      }
+    }
+
+    _asyncEndpoints = context->async(boost::bind(_updateEndpoints, shared_from_this()),
+                                     ifsMonitoringTimeout);
   }
 
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
@@ -100,51 +178,33 @@ namespace qi
       qiLogError("qimessaging.server.listen") << ec.message();
       return qi::makeFutureError<void>(ec.message());
     }
-    unsigned port = _acceptor.local_endpoint().port();// already in host byte orde
-    qiLogDebug() << "Effective port io_service" << port;
+    _port = _acceptor.local_endpoint().port();// already in host byte orde
+    qiLogDebug() << "Effective port io_service" << _port;
     if (listenUrl.port() == 0)
     {
       listenUrl = Url(listenUrl.protocol() + "://" + listenUrl.host() + ":"
-        + boost::lexical_cast<std::string>(port));
+        + boost::lexical_cast<std::string>(_port));
     }
 
     /* Set endpoints */
     if (listenUrl.host() != "0.0.0.0")
     {
+      boost::mutex::scoped_lock(_endpointsMutex);
       _endpoints.push_back(listenUrl.str());
     }
     else
     {
-      std::map<std::string, std::vector<std::string> > ifsMap = qi::os::hostIPAddrs();
-      if (ifsMap.empty())
-      {
-        const char* s = "Cannot get host addresses";
-        qiLogWarning() << s;
-        return qi::makeFutureError<void>(s);
-      }
-
-      std::string protocol = _ssl ? "tcps://" : "tcp://";
-
-      for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
-           interfaceIt != ifsMap.end();
-           ++interfaceIt)
-      {
-        for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
-             addressIt != (*interfaceIt).second.end();
-             ++addressIt)
-        {
-          std::stringstream ss;
-          ss << protocol << (*addressIt) << ":" << port;
-          _endpoints.push_back(ss.str());
-        }
-      }
+      updateEndpoints();
     }
 
-    for (std::vector<qi::Url>::const_iterator it = _endpoints.begin();
-         it != _endpoints.end();
-         it++)
     {
-      qiLogInfo() << "TransportServer will listen on: " << it->str();
+      boost::mutex::scoped_lock(_endpointsMutex);
+      for (std::vector<qi::Url>::const_iterator it = _endpoints.begin();
+           it != _endpoints.end();
+           it++)
+      {
+        qiLogInfo() << "TransportServer will listen on: " << it->str();
+      }
     }
 
 #ifdef WITH_SSL
@@ -174,18 +234,10 @@ namespace qi
     return _connectionPromise.future();
   }
 
-  void TransportServerAsioPrivate::destroy()
-  {
-    *_live = false;
-    close();
-    // We no longuer hold the eventLoop, so we cannot use post.
-    // But synchronous deletion of this is safe, since async callback uses _live
-    delete this;
-  }
-
   TransportServerAsioPrivate::TransportServerAsioPrivate(TransportServer* self,
                                                                  EventLoop* ctx)
-    : TransportServerImplPrivate(self, ctx)
+    : TransportServerImpl(self, ctx)
+    , _self(self)
     , _acceptor(*(boost::asio::io_service*)ctx->nativeHandle())
     , _live(new bool(true))
 #ifdef WITH_SSL

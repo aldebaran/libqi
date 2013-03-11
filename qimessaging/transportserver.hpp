@@ -49,6 +49,7 @@ namespace qi {
     qi::Signal<void (TransportSocketPtr)> newConnection;
     // C4251
     qi::Signal<void (int error)>          acceptError;
+    qi::Signal<void (void)>               endpointsChanged;
 
   public:
     TransportServerPrivate *_p;

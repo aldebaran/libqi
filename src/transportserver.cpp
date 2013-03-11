@@ -49,7 +49,7 @@ namespace qi
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    TransportServerImplPrivate* impl = 0;
+    TransportServerImpl* impl = 0;
 
     if (url.protocol() == "tcp")
     {
@@ -68,7 +68,7 @@ namespace qi
       return qi::makeFutureError<void>(s);
     }
 
-    _p->_impl.push_back(impl);
+    _p->_impl.push_back(TransportServerImplPtr(impl));
     return impl->listen(url);
   }
 
@@ -99,10 +99,11 @@ namespace qi
   {
     std::vector<qi::Url> r;
 
-    for (std::vector<TransportServerImplPrivate*>::const_iterator it = _p->_impl.begin();
+    for (std::vector<TransportServerImplPtr>::const_iterator it = _p->_impl.begin();
          it != _p->_impl.end();
          it++)
     {
+      boost::mutex::scoped_lock((*it)->_endpointsMutex);
       r.insert(r.end(), (*it)->_endpoints.begin(), (*it)->_endpoints.end());
     }
 
@@ -110,11 +111,11 @@ namespace qi
   }
 
   void TransportServer::close() {
-    for (std::vector<TransportServerImplPrivate*>::const_iterator it = _p->_impl.begin();
+    for (std::vector<TransportServerImplPtr>::const_iterator it = _p->_impl.begin();
          it != _p->_impl.end();
          it++)
     {
-      (*it)->destroy(); // this will delete _p->_impl
+      (*it)->close(); // this will delete _p->_impl
     }
 
     _p->_impl.clear();

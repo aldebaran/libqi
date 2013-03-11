@@ -35,6 +35,7 @@ namespace qi {
     qi::Future< unsigned int >             registerService(const ServiceInfo &svcinfo);
     qi::Future< void >                     unregisterService(const unsigned int &idx);
     qi::Future< void >                     serviceReady(const unsigned int &idx);
+    qi::Future< void >                     updateServiceInfo(const ServiceInfo &svcinfo);
 
     qi::Signal<void ()>                                  connected;
     qi::Signal<void (int error)>                         disconnected;

@@ -40,6 +40,25 @@ namespace qi {
     result.setValue(idx);
   }
 
+  void ObjectRegistrar::updateServiceInfo()
+  {
+    qi::ServiceInfo si;
+    si.setProcessId(qi::os::getpid());
+    si.setMachineId(qi::os::getMachineId());
+    si.setEndpoints(Server::endpoints());
+
+    boost::mutex::scoped_lock sl(_servicesMutex);
+    for (std::map<unsigned int, BoundService>::iterator it = _services.begin();
+         it != _services.end();
+         it++)
+    {
+      BoundService& bs = it->second;
+      si.setServiceId(bs.id);
+      si.setName(bs.name);
+      _sdClient->updateServiceInfo(si);
+    }
+  }
+
   void ObjectRegistrar::onFutureFinished(qi::Future<unsigned int> fut, long id, qi::Promise<unsigned int> result)
   {
     if (fut.hasError()) {
@@ -85,6 +104,7 @@ namespace qi {
     //TODO: async handle.
     qi::Future<void> fut2 = _sdClient->serviceReady(idx);
     fut2.connect(boost::bind(&serviceReady, _1, result, idx));
+    _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
 
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);

@@ -46,6 +46,16 @@ namespace qi
   {
   }
 
+  void ServiceDirectoryPrivate::updateServiceInfo()
+  {
+    ServiceInfo si;
+    si.setName("ServiceDirectory");
+    si.setServiceId(qi::Message::Service_ServiceDirectory);
+    si.setMachineId(qi::os::getMachineId());
+    si.setEndpoints(_server.endpoints());
+    ServiceDirectoryBoundObject *sdbo = static_cast<ServiceDirectoryBoundObject*>(_sdbo.get());
+    sdbo->updateServiceInfo(si);
+  }
 
   qi::ObjectPtr createSDP(ServiceDirectoryBoundObject* self) {
     static qi::ObjectTypeBuilder<ServiceDirectoryBoundObject>* ob = 0;
@@ -57,6 +67,7 @@ namespace qi
       ob->advertiseMethod("registerService", &ServiceDirectoryBoundObject::registerService);
       ob->advertiseMethod("unregisterService", &ServiceDirectoryBoundObject::unregisterService);
       ob->advertiseMethod("serviceReady", &ServiceDirectoryBoundObject::serviceReady);
+      ob->advertiseMethod("updateServiceInfo", &ServiceDirectoryBoundObject::updateServiceInfo);
       ob->advertiseEvent("serviceAdded", &ServiceDirectoryBoundObject::serviceAdded);
       ob->advertiseEvent("serviceRemoved", &ServiceDirectoryBoundObject::serviceRemoved);
     }
@@ -256,6 +267,32 @@ namespace qi
     serviceRemoved(idx, serviceName);
   }
 
+  void ServiceDirectoryBoundObject::updateServiceInfo(const ServiceInfo &svcinfo)
+  {
+    boost::recursive_mutex::scoped_lock lock(mutex);
+    std::map<unsigned int, ServiceInfo>::iterator itService;
+
+    itService = connectedServices.find(svcinfo.serviceId());
+    if (itService != connectedServices.end())
+    {
+      connectedServices[svcinfo.serviceId()] = svcinfo;
+      return;
+    }
+
+    // maybe the service registration was pending...
+    itService = pendingServices.find(svcinfo.serviceId());
+    if (itService != pendingServices.end())
+    {
+      pendingServices[svcinfo.serviceId()] = svcinfo;
+      return;
+    }
+
+    std::stringstream ss;
+    ss << "Can't find service #" << svcinfo.serviceId();
+    qiLogError() << ss.str();
+    throw std::runtime_error(ss.str());
+  }
+
   void ServiceDirectoryBoundObject::serviceReady(const unsigned int &idx)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
@@ -298,13 +335,17 @@ namespace qi
 
     ServiceInfo si;
     si.setName("ServiceDirectory");
-    si.setServiceId(1);
+    si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(_p->_server.endpoints());
     unsigned int regid = sdbo->registerService(si);
-    sdbo->serviceReady(1);
+    sdbo->serviceReady(qi::Message::Service_ServiceDirectory);
     //serviceDirectory must have id '1'
-    assert(regid == 1);
+    assert(regid == qi::Message::Service_ServiceDirectory);
+
+    _p->_server._server.endpointsChanged.connect(
+          boost::bind(&ServiceDirectoryPrivate::updateServiceInfo, _p));
+
     return f;
   }
 

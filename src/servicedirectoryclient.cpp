@@ -157,5 +157,8 @@ namespace qi {
     return _object->call<void>("serviceReady", idx);
   }
 
+  qi::Future<void>                     ServiceDirectoryClient::updateServiceInfo(const ServiceInfo &svcinfo) {
+    return _object->call<void>("updateServiceInfo", svcinfo);
+  }
 
 }

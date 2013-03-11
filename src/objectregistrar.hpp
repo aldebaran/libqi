@@ -42,6 +42,7 @@ namespace qi {
     //register/unregister services
     qi::Future<unsigned int>     registerService(const std::string &name, qi::ObjectPtr obj);
     qi::Future<void>             unregisterService(unsigned int idx);
+    void                         updateServiceInfo();
 
     //list services
     std::vector<qi::ServiceInfo>  registeredServices();
