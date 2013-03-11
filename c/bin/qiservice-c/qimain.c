@@ -45,7 +45,7 @@ int		main(int argc, char **argv)
 
   qi_object_builder_t* ob = qi_object_builder_create();
   qi_object_builder_register_method(ob, "reply::s(s)", &reply, 0);
-
+  qi_object_builder_register_event(ob, "testEvent::(s)");
   qi_session_t* session = qi_session_create();
 
   qi_session_connect(session, sd_addr);
@@ -62,7 +62,19 @@ int		main(int argc, char **argv)
   else
     printf("Registered as service #%d\n", id);
 
-  qi_application_run(app);
+  while (1) {
+    qi_value_t* cont = qi_value_create("(s)");
+    qi_value_t* val = qi_value_create("s");
+    qi_value_set_string(val, "pifpaf");
+    qi_value_tuple_set(cont, 0, val);
+    qi_value_destroy(val);
+    int ret = qi_object_event_emit(object, "testEvent::(s)", cont);
+    printf("emit: %d\n", ret);
+    qi_value_destroy(cont);
+    sleep(1);
+    printf("tic tac\n");
+  }
+  //qi_application_run(app);
   qi_session_unregister_service(session, id);
   qi_object_builder_destroy(ob);
   qi_object_destroy(object);
