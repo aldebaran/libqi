@@ -122,9 +122,6 @@ namespace qi
         qiLogWarning() << s;
         return qi::makeFutureError<void>(s);
       }
-  #ifdef WIN32 // hostIPAddrs doesn't return loopback on windows
-      ifsMap["Loopback"].push_back("127.0.0.1");
-  #endif
 
       std::string protocol = _ssl ? "tcps://" : "tcp://";
 
