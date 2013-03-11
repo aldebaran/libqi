@@ -14,6 +14,15 @@
 #include <qic/value.h>
 #include <qic/application.h>
 
+#ifdef _WIN32
+#include <WinBase.h>
+#define sleep Sleep
+#else
+#include <unistd.h>
+#endif
+
+
+
 
 void reply(const char *signature, qi_value_t *message, qi_value_t *answer, void *data)
 {
