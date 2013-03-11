@@ -105,8 +105,7 @@ qi_value_t *qi_future_get_value(qi_future_t *fu)
 const char*         qi_future_get_error(qi_future_t *fu)
 {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(fu);
-  //TODO: should we dup?
-  return fut->error().c_str();
+  return strdup(fut->error().c_str());
 }
 
 //Syntaxic Sugar
