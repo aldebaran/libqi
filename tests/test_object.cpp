@@ -419,7 +419,8 @@ TEST(TestObject, TypeType)
   <<(void*)val.type;
   ASSERT_EQ(Type::Int, val.kind());
   ASSERT_EQ(12, val.toInt());
-  vals = convert(1.5f);
+  float onePointFive = 1.5f;
+  vals = convert(onePointFive);
   val = vals[0];
   ASSERT_EQ(Type::Float, val.kind());
   ASSERT_EQ(1.5, val.toDouble());

@@ -65,14 +65,14 @@ template<typename M> GenericIterator
 TypeMapImpl<M>::begin(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
-  return GenericValue::from(ptr->begin());
+  return GenericIterator(ptr->begin());
 }
 
 template<typename M> GenericIterator
 TypeMapImpl<M>::end(void* storage)
 {
   M* ptr = (M*)ptrFromStorage(&storage);
-  return GenericValue::from(ptr->end());
+  return GenericIterator(ptr->end());
 }
 
 template<typename M> void

@@ -64,12 +64,12 @@ namespace qi
         {
           TypeList* targetListType = static_cast<TypeList*>(targetType);
           TypeList* sourceListType = static_cast<TypeList*>(type);
-          
+
           Type* srcElemType = sourceListType->elementType();
           Type* dstElemType = targetListType->elementType();
           bool needConvert = (srcElemType->info() != dstElemType->info());
           result = GenericValuePtr((Type*)targetListType);
-          
+
           GenericIterator iend = end();
           for (GenericIterator it = begin(); it!= iend; ++it)
           {
@@ -418,6 +418,11 @@ namespace qi
   }
 
   bool operator==(const GenericValue& a, const GenericValue& b)
+  {
+    return (const GenericValuePtr&)a == (const GenericValuePtr&)b;
+  }
+
+  bool operator==(const GenericIterator& a, const GenericIterator& b)
   {
     return (const GenericValuePtr&)a == (const GenericValuePtr&)b;
   }

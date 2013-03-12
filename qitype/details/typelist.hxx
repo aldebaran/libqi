@@ -39,7 +39,7 @@ public:
     Iterator& i = *(Iterator*)ptrFromStorage(&storage);
     // Here we assume *i is a ref, ie not returned on the stack
     // It seems true for lists and maps
-    return GenericValueRef(*i);
+    return GenericValueRef(GenericValuePtr::ref(*i));
   }
   virtual void  next(void** storage)
   {
@@ -74,14 +74,14 @@ template<typename T> GenericIterator
 TypeListImpl<T>::begin(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
-  return GenericValue::from(ptr->begin());
+  return GenericIterator(ptr->begin());
 }
 
 template<typename T> GenericIterator
 TypeListImpl<T>::end(void* storage)
 {
   T* ptr = (T*)ptrFromStorage(&storage);
-  return GenericValue::from(ptr->end());
+  return GenericIterator(ptr->end());
 }
 
 template<typename T> void

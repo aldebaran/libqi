@@ -178,9 +178,6 @@ namespace qi{
 
 
 
-  /* In case we want generic iterator to be represented in a different class*/
-  typedef GenericValue GenericIterator;
-
   /** Class that holds any value, with informations to manipulate it.
    *  operator=() makes a shallow copy.
    *
@@ -368,8 +365,6 @@ namespace qi{
     GenericIterator begin() const; //we lie on const but GV does not honor it yet
     /// Return an iterator on the end of the container
     GenericIterator end() const;
-    /// Iterator increment
-    void operator ++();
     /// Dereference pointer or iterator
     GenericValueRef operator*();
     ///@}
@@ -392,6 +387,8 @@ namespace qi{
     GenericValue(const GenericValue& b);
     explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
     explicit GenericValue(const GenericValuePtr& b);
+    /// Create and return a GenericValue of type T
+    template<typename T> static GenericValue make();
     ~GenericValue();
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
@@ -400,11 +397,33 @@ namespace qi{
     void set(const GenericValuePtr& src, bool copy, bool free);
     void swap(GenericValue& b);
 
-    template<typename T> static GenericValue from(const T& r) { return GenericValue(make(&r));}
+    template<typename T> static GenericValue from(const T& r) { return GenericValue(GenericValuePtr(&r));}
 
   private:
     bool _allocated;
   };
+
+  /** GenericValue with Iterator kind, behaving as a STL-compatible iterator
+  */
+  class GenericIterator: public GenericValue
+  {
+  public:
+    typedef GenericValueRef value_type;
+    typedef GenericValueRef* pointer;
+    typedef GenericValueRef& reference;
+    typedef ptrdiff_t difference_type;
+    typedef std::forward_iterator_tag iterator_category;
+    GenericIterator();
+    GenericIterator(const GenericValuePtr& p);
+    GenericIterator(const GenericValue& v);
+    template<typename T> GenericIterator(const T& ref);
+    /// Iterator increment
+    GenericIterator operator ++();
+    /// Dereference
+    GenericValueRef operator*();
+  };
+QITYPE_API bool operator==(const GenericIterator& a, const GenericIterator & b);
+QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b);
 
   /** GenericValueRef with c++ ref semantics:
    *  - Must be constructed from a GenericValuePtr

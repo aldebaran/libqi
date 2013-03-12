@@ -25,6 +25,7 @@ namespace qi
   class GenericValuePtr;
   class GenericValueRef;
   class GenericValue;
+  class GenericIterator;
   class GenericListPtr;
   class GenericMapPtr;
   class GenericValue;

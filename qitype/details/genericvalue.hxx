@@ -340,6 +340,12 @@ namespace qi {
    set(b);
   }
 
+  template<typename T>
+  GenericValue GenericValue::make()
+  {
+    return GenericValue(GenericValuePtr::make<T>(), false, true);
+  }
+
   inline void GenericValue::operator=(const GenericValue& b)
   {
     set(b, true, true);
@@ -418,7 +424,7 @@ namespace qi {
   template<typename E, typename K>
   E& GenericValuePtr::element(const K& key)
   {
-    return (*this)[key].as<E>();
+    return (*this)[key].template as<E>();
   }
 
   template<typename K>
@@ -480,6 +486,32 @@ namespace qi {
       throw std::runtime_error("Expected pointer or iterator");
   }
 
+  inline GenericValueRef GenericIterator::operator*()
+  {
+    if (kind() == Type::Iterator)
+      return static_cast<TypeIterator*>(type)->dereference(value);
+    else
+      throw std::runtime_error("Expected iterator");
+  }
+
+  template<typename T>
+  GenericIterator::GenericIterator(const T& ref)
+  : GenericValue(GenericValuePtr::ref(ref))
+  {
+
+  }
+  inline GenericIterator::GenericIterator()
+  {
+  }
+
+  inline GenericIterator::GenericIterator(const GenericValuePtr& p)
+  :GenericValue(p)
+  {}
+
+  inline GenericIterator::GenericIterator(const GenericValue& v)
+  : GenericValue(v)
+  {}
+
   inline GenericValueRef::GenericValueRef(const GenericValuePtr& src)
   :GenericValuePtr(src)
   {
@@ -500,12 +532,13 @@ namespace qi {
     return *this;
   }
 
-  inline void
-  GenericValuePtr::operator++()
+  inline GenericIterator
+  GenericIterator::operator++()
   {
     if (kind() != Type::Iterator)
       throw std::runtime_error("Expected an iterator");
     static_cast<TypeIterator*>(type)->next(&value);
+    return *this;
   }
 
   inline GenericIterator
@@ -535,6 +568,10 @@ namespace qi {
     return !(a==b);
   }
   inline bool operator != (const GenericValue& a, const GenericValue& b)
+  {
+    return !(a==b);
+  }
+  inline bool operator != (const GenericIterator& a, const GenericIterator& b)
   {
     return !(a==b);
   }

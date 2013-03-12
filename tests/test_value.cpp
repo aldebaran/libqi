@@ -6,6 +6,8 @@
 
 #include <map>
 #include <gtest/gtest.h>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
 #include <qi/application.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
@@ -16,13 +18,13 @@ qiLogCategory("test");
 TEST(Value, Ref)
 {
   std::string s("foo");
-  GenericValueRef r(s);
+  GenericValueRef r(GenericValuePtr::ref(s));
   r = "bar";
   ASSERT_EQ("bar", s);
   ASSERT_EQ("bar", r.toString());
   ASSERT_ANY_THROW(r = 5);
   double d = 12;
-  GenericValueRef rd(d);
+  GenericValueRef rd(GenericValuePtr::ref(d));
   rd = 15;
   ASSERT_EQ(d, 15);
   GenericValuePtr p(&d);
@@ -89,13 +91,15 @@ TEST(Value, As)
 TEST(Value, Basic)
 {
   GenericValuePtr v;
-  v = GenericValuePtr::ref(12);
+  int twelve = 12;
+  v = GenericValuePtr::ref(twelve);
   ASSERT_TRUE(v.type);
   ASSERT_TRUE(v.value);
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
-  v = GenericValuePtr::ref(5.0);
+  double five = 5.0;
+  v = GenericValuePtr::ref(five);
   ASSERT_EQ(v.toInt(), 5);
   ASSERT_EQ(v.toFloat(), 5.0f);
   ASSERT_EQ(v.toDouble(), 5.0);
@@ -177,7 +181,8 @@ TEST(Value, ObjectPtr)
 
 TEST(Value, list)
 {
-  GenericValuePtr v = GenericValuePtr::ref(1);
+  int one = 1;
+  GenericValuePtr v = GenericValuePtr::ref(one);
   v.set(5);
   ASSERT_ANY_THROW(v.set("foo"));
   ASSERT_ANY_THROW(v.set(std::vector<int>()));
@@ -280,6 +285,48 @@ TEST(Value, DefaultMap)
   valCopy.destroy();
 }
 
+
+TEST(Value, STL)
+{
+  std::vector<int> v;
+  GenericValuePtr gv(&v);
+  gv.append(1);
+  gv.append(3);
+  gv.append(2);
+  std::vector<int> w;
+  // seems there are overloads for push_back, need to explicitly cast to signature
+  std::for_each(gv.begin(), gv.end(),
+    boost::lambda::bind((void (std::vector<int>::*)(const int&))&std::vector<int>::push_back,
+      boost::ref(w),
+      boost::lambda::bind(&GenericValueRef::toInt, boost::lambda::_1)));
+  ASSERT_EQ(3u, w.size());
+  ASSERT_EQ(v, w);
+  GenericIterator mine = std::min_element(gv.begin(), gv.end());
+  ASSERT_EQ(1, (*mine).toInt());
+  mine = std::find_if(gv.begin(), gv.end(),
+    boost::lambda::bind(&GenericValueRef::toInt, boost::lambda::_1) == 3);
+  ASSERT_EQ(3, (*mine).toInt());
+  (*mine).setInt(4);
+  ASSERT_EQ(4, v[1]);
+  mine = std::find_if(gv.begin(), gv.end(),
+    boost::lambda::bind(&GenericValueRef::toInt, boost::lambda::_1) == 42);
+  ASSERT_EQ(mine, gv.end());
+
+  std::vector<int> v2;
+  v2.push_back(10);
+  v2.push_back(1);
+  v2.push_back(100);
+  // v has correct size
+  std::copy(v2.begin(), v2.end(), gv.begin());
+  ASSERT_EQ(v2, v);
+  // copy other-way-round requires cast from GenericValueRef to int
+
+
+  std::vector<GenericValueRef> vg;
+  vg.insert(vg.end(), v.begin(), v.end());
+  std::sort(vg.begin(), vg.end());
+  ASSERT_EQ(321, vg[0].toInt() + vg[1].toInt()*2 + vg[2].toInt() * 3);
+}
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
