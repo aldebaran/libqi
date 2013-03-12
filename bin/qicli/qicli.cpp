@@ -12,6 +12,7 @@
 
 #include <qitype/genericobject.hpp>
 #include <qi/future.hpp>
+#include <qi/application.hpp>
 #include <qimessaging/session.hpp>
 #include <qimessaging/url.hpp>
 
@@ -214,6 +215,8 @@ int main(int argc, char *argv[])
     usage(argv[0]);
     return (0);
   }
+
+  qi::Application app(argc, argv);
 
   if (argc == 1)
   {
