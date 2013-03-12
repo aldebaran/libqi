@@ -23,7 +23,7 @@
 
 #define QI_API QI_LIB_API(qi)
 
-#define QI_API_LEVEL 1
+#define QI_API_LEVEL 2
 
 
 #endif  // _LIBQI_QI_CONFIG_HPP_
