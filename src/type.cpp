@@ -587,7 +587,8 @@ namespace qi {
     GenericIterator begin(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericValuePtr v = GenericValuePtr::ref(ptr.begin());
+      std::vector<void*>::iterator it = ptr.begin();
+      GenericValuePtr v = GenericValuePtr::ref(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return GenericIterator(v);
@@ -595,7 +596,8 @@ namespace qi {
     GenericIterator end(void* storage)
     {
       std::vector<void*>& ptr = *(std::vector<void*>*)ptrFromStorage(&storage);
-      GenericValuePtr v = GenericValuePtr::ref(ptr.end());
+      std::vector<void*>::iterator it = ptr.end();
+      GenericValuePtr v = GenericValuePtr::ref(it);
       // Hugly type swap, works because we know backend storage matches
       v.type = makeListIteratorType(_elementType);
       return GenericIterator(v);
@@ -873,14 +875,16 @@ namespace qi {
     GenericIterator begin(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericValuePtr val = GenericValuePtr::ref(ptr.begin());
+      DefaultMapStorage::iterator it = ptr.begin();
+      GenericValuePtr val = GenericValuePtr::ref(it);
       val.type = makeMapIteratorType(_pairType);
       return GenericIterator(val);
     }
     GenericIterator end(void* storage)
     {
       DefaultMapStorage& ptr = *(DefaultMapStorage*)ptrFromStorage(&storage);
-      GenericValuePtr val = GenericValuePtr::ref(ptr.end());
+      DefaultMapStorage::iterator it = ptr.end();
+      GenericValuePtr val = GenericValuePtr::ref(it);
       val.type = makeMapIteratorType(_pairType);
       return GenericIterator(val);
 
