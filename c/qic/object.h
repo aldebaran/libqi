@@ -29,7 +29,7 @@ extern "C"
 
   QIC_API int                  qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params);
   QIC_API qi_future_t*         qi_object_event_connect(qi_object_t* object, const char *signature, qi_object_signal_callback_t f, void* user_data);
-  QIC_API qi_future_t*         qi_object_event_disconnect(qi_object_t* object, unsigned int id);
+  QIC_API qi_future_t*         qi_object_event_disconnect(qi_object_t* object, unsigned long long id);
 
   //ObjectBuilder
   QIC_API qi_object_builder_t* qi_object_builder_create();

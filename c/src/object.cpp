@@ -120,6 +120,8 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
 int                 qi_object_event_emit(qi_object_t* object, const char *signature, qi_value_t* params) {
   qi::ObjectPtr       &obj = qi_object_cpp(object);
   qi::GenericValuePtr &val = qi_value_cpp(params);
+  if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
+    return -1;
   return obj->xMetaPost(signature, qi::GenericFunctionParameters(val.asTuple().get()));
 }
 
@@ -132,7 +134,7 @@ qi_future_t*        qi_object_event_connect(qi_object_t* object, const char *sig
   return qi_future_wrap(obj->xConnect(signature, qi::makeDynamicGenericFunction(fn)));
 }
 
-qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned int id) {
+qi_future_t*        qi_object_event_disconnect(qi_object_t* object, unsigned long long id) {
   qi::ObjectPtr &obj = qi_object_cpp(object);
   return qi_future_wrap(obj->disconnect(id));
 }
