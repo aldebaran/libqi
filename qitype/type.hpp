@@ -93,22 +93,24 @@ namespace qi{
     virtual void* clone(void*)=0;
     virtual void destroy(void*)=0;
 
+    //warning update the C enum when updating this one.
     enum Kind
     {
-      Void,
-      Int,
-      Float,
-      String,
-      List,
-      Map,
-      Object,
-      Pointer,
-      Tuple,
-      Dynamic,
-      Raw,
-      Unknown,
-      Iterator,
+      Void     = 0,
+      Int      = 1,
+      Float    = 2,
+      String   = 3,
+      List     = 4,
+      Map      = 5,
+      Object   = 6,
+      Pointer  = 7,
+      Tuple    = 8,
+      Dynamic  = 9,
+      Raw      = 10,
+      Unknown  = 11,
+      Iterator = 12,
     };
+
 
     virtual Kind kind() const;
 
