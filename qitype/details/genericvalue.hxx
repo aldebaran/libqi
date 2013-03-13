@@ -263,6 +263,11 @@ namespace qi {
     return detail::valueAs<int64_t, Type::Int>(*this);
   }
 
+  inline uint64_t GenericValuePtr::toUInt() const
+  {
+    return detail::valueAs<uint64_t, Type::Int>(*this);
+  }
+
   inline float GenericValuePtr::toFloat() const
   {
     return detail::valueAs<float, Type::Float>(*this);
@@ -397,6 +402,11 @@ namespace qi {
       static_cast<TypeFloat*>(type)->set(&value, static_cast<double>(val));
     else
       throw std::runtime_error("Value is not Int or Float");
+  }
+
+  inline void GenericValuePtr::setUInt(uint64_t val)
+  {
+    setInt((int64_t)val);
   }
 
   inline void GenericValuePtr::setDouble(double v)

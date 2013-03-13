@@ -264,6 +264,7 @@ namespace qi{
     /// Similar to previous method, but uses a dummy value to get the target type
     template<typename T> T to(const T&) const;
     int64_t      toInt()    const;
+    uint64_t     toUInt()   const;
     float        toFloat()  const;
     double       toDouble() const;
     std::string  toString() const;
@@ -326,11 +327,14 @@ namespace qi{
     template<typename T> void set(const T& val);
     void set(int64_t v) { setInt(v);}
     void set(int32_t v) { setInt(v);}
+    void set(uint64_t v) { setUInt(v);}
+    void set(uint32_t v) { setUInt(v);}
     void set(float v) { setFloat(v);}
     void set(double v) { setDouble(v);}
     void set(const std::string& v) { setString(v);}
 
     void  setInt(int64_t v);
+    void  setUInt(uint64_t v);
     void  setFloat(float v);
     void  setDouble(double v);
     void  setString(const std::string& v);
