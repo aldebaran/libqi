@@ -44,11 +44,20 @@ namespace qi
                                                    static_cast<TypeFloat*>(type)->get(value));
           return std::make_pair(result, true);
         case Type::Int:
-          result.type = targetType;
-          result.value = targetType->initializeStorage();
-          static_cast<TypeInt*>(targetType)->set(&result.value,
-                                                 static_cast<TypeInt*>(type)->get(value));
+          {
+          TypeInt* tsrc = static_cast<TypeInt*>(type);
+          TypeInt* tdst = static_cast<TypeInt*>(targetType);
+          int64_t v = tsrc->get(value);
+          /* Bounce to GVP to perform overflow checks
+          */
+          GenericValuePtr result((Type*)tdst);
+          if (tsrc->isSigned())
+            result.setInt(v);
+          else
+            result.setUInt((uint64_t)v);
+          tdst->set(&result.value, v);
           return std::make_pair(result, true);
+          }
         case Type::String:
           {
             if (targetType->info() == type->info())
@@ -213,20 +222,21 @@ namespace qi
     } // skind == dkind
     if (skind == Type::Float && dkind == Type::Int)
     {
-      result.type = targetType;
-      result.value = targetType->initializeStorage();
-      static_cast<TypeInt*>(targetType)->set(&result.value,
-        static_cast<qi::int64_t>(
-          static_cast<TypeFloat*>(type)->get(value)));
+      double v = static_cast<TypeFloat*>(type)->get(value);
+      TypeInt* tdst = static_cast<TypeInt*>(targetType);
+      GenericValuePtr result((Type*)tdst);
+      // bounce to setDouble for overflow check
+      result.setDouble(v);
       return std::make_pair(result, true);
     }
     else if (skind == Type::Int && dkind == Type::Float)
     {
-      result.type = targetType;
-      result.value = targetType->initializeStorage();
-      static_cast<TypeFloat*>(targetType)->set(&result.value,
-        static_cast<double>(
-          static_cast<TypeInt*>(type)->get(value)));
+      GenericValuePtr result(targetType);
+      int64_t v = static_cast<TypeInt*>(type)->get(value);
+      if (static_cast<TypeInt*>(type)->isSigned())
+        result.setInt(v);
+      else
+        result.setUInt((uint64_t)v);
       return std::make_pair(result, true);
     }
     else if (skind == Type::String && dkind == Type::Raw)

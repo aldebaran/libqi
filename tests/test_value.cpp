@@ -327,6 +327,39 @@ TEST(Value, STL)
   std::sort(vg.begin(), vg.end());
   ASSERT_EQ(321, vg[0].toInt() + vg[1].toInt()*2 + vg[2].toInt() * 3);
 }
+
+TEST(Value, Overflow)
+{
+  {
+    long long test = 0xFFFF11223344LL; // paint the stack with nonzero
+  }
+  long twelve = 12;
+  GenericValueRef(12).to<char>();
+  ASSERT_EQ(12,GenericValueRef(twelve).to<int64_t>());
+  GenericValueRef(127).to<char>();
+  ASSERT_ANY_THROW(GenericValueRef(128).to<char>());
+  GenericValueRef(-128).to<char>();
+  ASSERT_ANY_THROW(GenericValueRef(254).to<char>());
+  GenericValueRef(255).to<unsigned char>();
+  GenericValueRef(0xFF11223344).to<qi::int64_t>();
+  GenericValueRef(0xFF11223344).to<qi::uint64_t>();
+  ASSERT_ANY_THROW(GenericValueRef(256).to<unsigned char>());
+  ASSERT_ANY_THROW(GenericValueRef(-1).to<unsigned char>());
+  // check correct sign propagation
+  ASSERT_EQ(-120, GenericValueRef((char)-120).to<int>());
+  GenericValueRef(12).to<double>();
+  GenericValueRef(13).to<float>();
+  ASSERT_ANY_THROW(GenericValueRef(-5.0).to<unsigned int>());
+  ASSERT_ANY_THROW(GenericValueRef(-5.0f).to<unsigned int>());
+  ASSERT_ANY_THROW(GenericValueRef(-256.0).to<char>());
+  ASSERT_ANY_THROW(GenericValueRef(256.0).to<unsigned char>());
+  ASSERT_ANY_THROW(GenericValueRef(1.0e80).to<qi::uint64_t>());
+  ASSERT_TRUE(GenericValueRef((qi::uint32_t)0xFF223344).to<double>() > 0);
+  ASSERT_TRUE(GenericValueRef((qi::int32_t)0xFF223344).to<double>() < 0);
+  ASSERT_TRUE(GenericValueRef(0xFF22334455667788ULL).to<double>() > 0);
+  ASSERT_TRUE(GenericValueRef((qi::int64_t)0xFF22334455667788).to<double>() < 0);
+}
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

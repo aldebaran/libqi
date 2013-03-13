@@ -28,17 +28,24 @@ namespace qi {
 
       GenericValuePtr val =  metaFut.value();
       Type* targetType = typeOf<T>();
-      std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
-      if (!conv.first.type)
-        promise.setError(std::string("Unable to convert call result to target type:")
-          + val.type->infoString() + " -> " + targetType->infoString());
-      else
+      try
       {
-        T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
-        promise.setValue(*res);
+        std::pair<GenericValuePtr, bool> conv = val.convert(targetType);
+        if (!conv.first.type)
+          promise.setError(std::string("Unable to convert call result to target type:")
+            + val.type->infoString() + " -> " + targetType->infoString());
+        else
+        {
+          T* res = (T*)conv.first.type->ptrFromStorage(&conv.first.value);
+          promise.setValue(*res);
+        }
+        if (conv.second)
+          conv.first.destroy();
       }
-      if (conv.second)
-        conv.first.destroy();
+      catch(const std::exception& e)
+      {
+        promise.setError(std::string("Return argument conversion error: ") + e.what());
+      }
       val.destroy();
     }
 
