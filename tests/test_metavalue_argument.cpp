@@ -34,7 +34,7 @@ void value(qi::GenericValue mv)
 
 void valueList(std::vector<qi::GenericValue> mv)
 {
-  v = qi::GenericValuePtr::ref(mv).clone();
+  v = qi::GenericValueRef(mv).clone();
 }
 
 class TestObject: public ::testing::Test

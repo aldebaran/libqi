@@ -205,7 +205,7 @@ PyObject* qi_get_object_description(qi_object_t *object)
 {
   qi::ObjectPtr& obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
 
-  qi::GenericValuePtr val = qi::GenericValuePtr::ref(obj->metaObject().description());
+  qi::GenericValuePtr val = qi::GenericValueRef(obj->metaObject().description());
   return val.to<PyObject*>();
 }
 
@@ -219,7 +219,7 @@ PyObject* qi_get_method_description(qi_object_t *object, const char *signature)
     description = mm.front().description();
   }
 
-  qi::GenericValuePtr val = qi::GenericValuePtr::ref(description);
+  qi::GenericValuePtr val = qi::GenericValueRef(description);
   return val.to<PyObject*>();
 }
 
@@ -232,7 +232,7 @@ PyObject* qi_get_sigreturn_description(qi_object_t *object, const char *sig) {
     description = mm.front().returnDescription();
   }
 
-  qi::GenericValuePtr val = qi::GenericValuePtr::ref(description);
+  qi::GenericValuePtr val = qi::GenericValueRef(description);
   return val.to<PyObject*>();
 }
 
@@ -250,7 +250,7 @@ PyObject* qi_get_parameters_descriptions(qi_object_t *object, const char *sig) {
     }
   }
 
-  qi::GenericValuePtr val = qi::GenericValuePtr::ref(res);
+  qi::GenericValuePtr val = qi::GenericValueRef(res);
   return val.to<PyObject*>();
 }
 

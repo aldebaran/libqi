@@ -367,8 +367,8 @@ namespace qi {
       ObjectPtr o = makeDynamicObjectPtr(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.get() << "on ro " << ro;
       assert(o);
-      assert(GenericValuePtr::ref(o).as<ObjectPtr>());
-      return GenericValuePtr::ref(o).clone();
+      assert(GenericValueRef(o).as<ObjectPtr>());
+      return GenericValueRef(o).clone();
     }
 
     class SerializeTypeVisitor

@@ -33,7 +33,7 @@ static PyObject* qi_generic_call_python(qi::ObjectPtr object, const std::string&
   {
     // The line below is ok because we know current is
     // a byvalue GenericValuePtr
-    qi::GenericValuePtr val = qi::GenericValuePtr::ref(current);
+    qi::GenericValuePtr val = qi::GenericValueRef(current);
     params.push_back(val);
     signature += val.signature();
     current = PyIter_Next(it);

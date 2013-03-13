@@ -180,7 +180,7 @@ qi::GenericValuePtr GenericValue_from_PyObject_List(PyObject* val)
     res.push_back(GenericValue(GenericValue_from_PyObject(current)));
   }
 
-  return qi::GenericValuePtr::ref(res);
+  return qi::GenericValueRef(res);
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
@@ -197,7 +197,7 @@ qi::GenericValuePtr GenericValue_from_PyObject_Map(PyObject* dict)
     res[GenericValue(newkey)] = newvalue;
   }
 
-  return qi::GenericValuePtr::ref(res);
+  return qi::GenericValueRef(res);
 }
 
 qi::GenericValuePtr GenericValue_from_PyObject_Tuple(PyObject* val)
@@ -223,12 +223,12 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
 
   if (PyString_CheckExact(val))
   {
-    res = qi::GenericValuePtr::ref(*new std::string(PyString_AsString(val)));
+    res = qi::GenericValueRef(*new std::string(PyString_AsString(val)));
   }
   else if (PyUnicode_CheckExact(val))
   {
     PyObject *pstring = PyUnicode_AsUTF8String(val);
-    res = qi::GenericValuePtr::ref(*new std::string(PyString_AsString(pstring)));
+    res = qi::GenericValueRef(*new std::string(PyString_AsString(pstring)));
     Py_DECREF(pstring);
   }
   else if (val == Py_None)
@@ -237,15 +237,15 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   }
   else if (PyFloat_CheckExact(val))
   {
-    res = qi::GenericValuePtr::ref(PyFloat_AsDouble(val));
+    res = qi::GenericValueRef(PyFloat_AsDouble(val));
   }
   else if (PyLong_CheckExact(val))
   {
-    res = qi::GenericValuePtr::ref(PyLong_AsLong(val));
+    res = qi::GenericValueRef(PyLong_AsLong(val));
   }
   else if (PyInt_CheckExact(val))
   {
-    res = qi::GenericValuePtr::ref(PyInt_AsLong(val));
+    res = qi::GenericValueRef(PyInt_AsLong(val));
   }
   else if (PyList_CheckExact(val))
   {
@@ -262,7 +262,7 @@ qi::GenericValuePtr GenericValue_from_PyObject(PyObject* val)
   else if (PyBool_Check(val))
   {
     bool b = (PyInt_AsLong(val) != 0);
-    res = qi::GenericValuePtr::ref(b);
+    res = qi::GenericValueRef(b);
   }
   else
   {
