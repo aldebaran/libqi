@@ -55,8 +55,6 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("W",    qi::signatureFromType<unsigned short>::value());
   EXPECT_EQ("i",    qi::signatureFromType<int>::value());
   EXPECT_EQ("I",    qi::signatureFromType<unsigned int>::value());
-  EXPECT_EQ("l",    qi::signatureFromType<long>::value());
-  EXPECT_EQ("L",    qi::signatureFromType<unsigned long>::value());
 
   EXPECT_EQ("c",    qi::signatureFromType<qi::int8_t>::value());
   EXPECT_EQ("C",    qi::signatureFromType<qi::uint8_t>::value());
@@ -67,14 +65,7 @@ TEST(TestSignature, BasicTypeSignature) {
   EXPECT_EQ("l",    qi::signatureFromType<qi::int64_t>::value());
   EXPECT_EQ("L",    qi::signatureFromType<qi::uint64_t>::value());
 
-  EXPECT_EQ("c",    qi::signatureFromType<char>::value());
-  EXPECT_EQ("C",    qi::signatureFromType<unsigned char>::value());
-  EXPECT_EQ("w",    qi::signatureFromType<short>::value());
-  EXPECT_EQ("W",    qi::signatureFromType<unsigned short>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<int>::value());
-  EXPECT_EQ("I",    qi::signatureFromType<unsigned int>::value());
-  EXPECT_EQ("l",    qi::signatureFromType<long>::value());
-  EXPECT_EQ("L",    qi::signatureFromType<unsigned long>::value());
+  // long is platform-dependant and can't be tested.
   EXPECT_EQ("l",    qi::signatureFromType<long long>::value());
   EXPECT_EQ("L",    qi::signatureFromType<unsigned long long>::value());
 

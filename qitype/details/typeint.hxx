@@ -61,9 +61,6 @@ public:
     _QI_BOUNCE_TYPE_METHODS(ImplType);
   };
 
-// Force 64bit long
-template<> class TypeIntImpl<long>: public TypeIntImpl<long long>{};
-template<> class TypeIntImpl<unsigned long>: public TypeIntImpl<unsigned long long>{};
 }
 
 
