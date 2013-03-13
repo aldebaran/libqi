@@ -154,8 +154,8 @@ static void python_call_callback(const char *signature, qi_value_t *msg, qi_valu
     return; // My work here is done
   }
 
-  qi::GenericValuePtr &ganswer = qi_value_cpp(answer);
-  ganswer = qi::GenericValuePtr::from(ret);
+  qi::GenericValue &ganswer = qi_value_cpp(answer);
+  ganswer = qi::GenericValue::from(ret);
 
   // Satisfaction.
   Py_XDECREF(func);
@@ -175,7 +175,7 @@ PyObject* qipy_object_get_metaobject(qi_object_t *object)
 {
   qi::ObjectPtr &obj = *(reinterpret_cast<qi::ObjectPtr *>(object));
   const qi::MetaObject &mo = obj->metaObject();
-  qi::GenericValuePtr gvp = qi::GenericValuePtr::from(mo);
+  qi::GenericValuePtr gvp = qi::GenericValueRef(mo);
   return gvp.as<PyObject*>();
 }
 
@@ -238,7 +238,7 @@ PyObject* qipy_object_call(qi_object_t* objectc, const char *strMethodName, PyOb
   {
     // The line below is ok because we know current is
     // a byvalue GenericValuePtr
-    qi::GenericValuePtr val = qi::GenericValuePtr::from(current);
+    qi::GenericValuePtr val = qi::GenericValueRef(current);
     params.push_back(val);
     signature += val.signature();
     current = PyIter_Next(it);
@@ -256,7 +256,7 @@ PyObject* qipy_object_call(qi_object_t* objectc, const char *strMethodName, PyOb
     return 0;
   }
 
-  return fut.value().as<PyObject*>();
+  return fut.value().to<PyObject*>();
 }
 
 
@@ -297,12 +297,11 @@ void qipy_future_add_callback(qi_future_t* future, PyObject* pyfuture, PyObject*
 
 PyObject*         qipy_future_get_value(qi_future_t*future) {
   qi::Future<qi::GenericValue> *fut = qi_future_cpp(future);
-  return fut->value().as<PyObject*>();
+  return fut->value().to<PyObject*>();
 }
 
 void qipy_promise_set_value(qi_promise_t* promise, PyObject* value) {
   qiLogInfo() << "setvalue promise";
   qi::Promise<qi::GenericValue> *prom = qi_promise_cpp(promise);
-  qi::GenericValuePtr gvp = qi::GenericValuePtr::from(value).clone();
-  prom->setValue(qi::GenericValue::take(gvp));
+  prom->setValue(qi::GenericValue::from(value));
 }

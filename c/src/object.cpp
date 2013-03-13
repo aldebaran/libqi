@@ -18,14 +18,14 @@
 
 qiLogCategory("qimessaging.object");
 
-void qiFutureCAdapter(qi::Future<qi::GenericValue> result, qi::Promise<qi::GenericValue> promise) {
+void qiFutureCAdapter(qi::Future<qi::GenericValuePtr> result, qi::Promise<qi::GenericValue> promise) {
   if (result.hasError()) {
     promise.setError(result.error());
     return;
   }
-  //do not copy the gvp, now it's own by gv.
   qi::GenericValue gv;
-  gv.set(result.value());
+  //we take the ownership of the GVP content. we are now responsible for freeing it.
+  gv.set(result.value(), false, true);
   promise.setValue(gv);
 }
 
@@ -46,9 +46,7 @@ qi_future_t *qi_object_call(qi_object_t *object, const char *signature_c, qi_val
   qi::ObjectPtr             &obj = qi_object_cpp(object);
   qi::GenericValue           gv  = qi_value_cpp(params);
 
-  qi::GenericFunctionParameters gfparams(gv.toList<qi::GenericValuePtr>());
-
-  qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, gfparams);
+  qi::Future<qi::GenericValuePtr> res = obj->metaCall(signature_c, gv.asTupleValuePtr());
   qi::Promise<qi::GenericValue> prom;
   res.connect(boost::bind<void>(&qiFutureCAdapter, _1, prom));
   return qi_cpp_promise_get_future(prom);
@@ -79,7 +77,8 @@ qi::GenericValuePtr c_call(const std::string &complete_sig,
   qi_value_t* ret = qi_value_create(vs[0].c_str());
 
   qi::GenericValue &gvp = qi_value_cpp(value);
-  gvp.asTuple().set(params);
+  //TODO: there is a copy here
+  gvp = qi::GenericValue::makeTuple(params);
   std::cout << "Complete sig:" << complete_sig << std::endl;
 
   if (func)
@@ -102,8 +101,8 @@ qi::GenericValuePtr c_signal_callback(const std::vector<qi::GenericValuePtr>& ar
   qiLogInfo() << "Signal Callback(" << params_sigs << ")";
 
   qi_value_t* params = qi_value_create(params_sigs.c_str());
-  qi::GenericValuePtr &gvp = qi_value_cpp(params);
-  gvp.asTuple().set(args);
+  qi::GenericValue &gvp = qi_value_cpp(params);
+  gvp = qi::GenericValue::makeTuple(args);
   f(params, user_data);
   qi_value_destroy(params);
   return qi::GenericValuePtr();
@@ -115,7 +114,7 @@ qi_value_t*          qi_object_get_metaobject(qi_object_t *object)
   const qi::MetaObject &mo = obj->metaObject();
   qi_value_t *ret = qi_value_create("");
 
-  qi_value_cpp(ret) = qi::GenericValuePtr::from(mo);
+  qi_value_cpp(ret) = qi::GenericValue::from(mo);
   return ret;
 }
 
@@ -124,7 +123,7 @@ int                 qi_object_event_emit(qi_object_t* object, const char *signat
   qi::GenericValuePtr &val = qi_value_cpp(params);
   if (qi_value_get_kind(params) != QI_VALUE_KIND_TUPLE)
     return -1;
-  return obj->xMetaPost(signature, qi::GenericFunctionParameters(val.asTuple().get()));
+  return obj->xMetaPost(signature, val.asTupleValuePtr());
 }
 
 
