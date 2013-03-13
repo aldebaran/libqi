@@ -52,18 +52,6 @@ namespace qi {
     };
   }
 
-  template<typename T>
-  GenericValuePtr GenericValuePtr::make(T* v)
-  {
-    static Type* type = 0;
-    if (!type)
-      type = typeOf<typename boost::remove_const<T>::type>();
-    GenericValuePtr res;
-    res.type = type;
-    res.value = res.type->initializeStorage(const_cast<void*>((const void*)v));
-    return res;
-  }
-
   inline
   GenericValuePtr& GenericValuePtr::operator = (const GenericValuePtr& b)
   {
@@ -386,8 +374,7 @@ namespace qi {
 
     template<typename T> void operator,(GenericValuePtrCopy& g, const T& any)
     {
-      *(GenericValuePtr*)&g = GenericValuePtr::make(&any);
-      *(GenericValuePtr*)&g = g.clone();
+      *(GenericValuePtr*)&g = GenericValuePtr(&any).clone();
     }
   }
 
@@ -523,7 +510,7 @@ namespace qi {
   template<typename K>
   GenericValueRef GenericValuePtr::operator[](const K& key)
   {
-    return _element(make(&key), true);
+    return _element(GenericValuePtr(&key), true);
   }
 
   inline size_t
@@ -539,19 +526,19 @@ namespace qi {
 
   template<typename T> void GenericValuePtr::append(const T& element)
   {
-    _append(make(&element));
+    _append(GenericValuePtr(&element));
   }
 
   template<typename K, typename V>
   void GenericValuePtr::insert(const K& key, const V& val)
   {
-    _insert(make(&key), make(&val));
+    _insert(GenericValuePtr(&key), GenericValuePtr(&val));
   }
 
   template<typename K>
   GenericValuePtr GenericValuePtr::find(const K& key)
   {
-    return _element(make(&key), false);
+    return _element(GenericValuePtr(&key), false);
   }
 
   inline GenericValuePtr GenericValuePtr::asDynamic() const
@@ -589,7 +576,7 @@ namespace qi {
 
   template<typename T>
   GenericIterator::GenericIterator(const T& ref)
-  : GenericValue(GenericValuePtr::ref(ref))
+  : GenericValue(GenericValueRef(ref))
   {
 
   }
@@ -615,7 +602,7 @@ namespace qi {
   template<typename T>
   GenericValueRef::GenericValueRef(const T& v)
   {
-    *(GenericValuePtr*)this = make(&v);
+    *(GenericValuePtr*)this = GenericValuePtr(&v);
   }
 
   template<typename T>

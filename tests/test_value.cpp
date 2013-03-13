@@ -18,13 +18,13 @@ qiLogCategory("test");
 TEST(Value, Ref)
 {
   std::string s("foo");
-  GenericValueRef r(GenericValuePtr::ref(s));
+  GenericValueRef r(s);
   r = "bar";
   ASSERT_EQ("bar", s);
   ASSERT_EQ("bar", r.toString());
   ASSERT_ANY_THROW(r = 5);
   double d = 12;
-  GenericValueRef rd(GenericValuePtr::ref(d));
+  GenericValueRef rd(d);
   rd = 15;
   ASSERT_EQ(d, 15);
   GenericValuePtr p(&d);
@@ -57,18 +57,18 @@ TEST(Value, Update)
 {
   std::string s("foo");
   GenericValuePtr v(&s);
-  v.update(GenericValuePtr::ref("bar"));
+  v.update(GenericValueRef("bar"));
   ASSERT_EQ("bar", s);
-  v.update(GenericValuePtr::ref(std::string("baz")));
+  v.update(GenericValueRef(std::string("baz")));
   ASSERT_EQ("baz", s);
-  ASSERT_ANY_THROW(v.update(GenericValuePtr::ref(42)));
+  ASSERT_ANY_THROW(v.update(GenericValueRef(42)));
   double d = 5.0;
   v = GenericValuePtr(&d);
-  v.update(GenericValuePtr::ref(42));
+  v.update(GenericValueRef(42));
   ASSERT_EQ(42, d);
-  v.update(GenericValuePtr::ref(42.42));
+  v.update(GenericValueRef(42.42));
   ASSERT_DOUBLE_EQ(42.42, d);
-  ASSERT_ANY_THROW(v.update(GenericValuePtr::ref("bar")));
+  ASSERT_ANY_THROW(v.update(GenericValueRef("bar")));
 }
 
 TEST(Value, As)
@@ -92,18 +92,18 @@ TEST(Value, Basic)
 {
   GenericValuePtr v;
   int twelve = 12;
-  v = GenericValuePtr::ref(twelve);
+  v = GenericValueRef(twelve);
   ASSERT_TRUE(v.type);
   ASSERT_TRUE(v.value);
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
   double five = 5.0;
-  v = GenericValuePtr::ref(five);
+  v = GenericValueRef(five);
   ASSERT_EQ(v.toInt(), 5);
   ASSERT_EQ(v.toFloat(), 5.0f);
   ASSERT_EQ(v.toDouble(), 5.0);
-  v = GenericValuePtr::ref("foo");
+  v = GenericValueRef("foo");
   ASSERT_EQ("foo", v.toString());
 }
 
@@ -167,7 +167,7 @@ TEST(Value, ObjectPtr)
     ObjectPtr o((GenericObject*)1, &nothing);
     ASSERT_TRUE(o);
     ASSERT_TRUE(o.get());
-    GenericValuePtr v = GenericValuePtr::ref(o);
+    GenericValuePtr v = GenericValueRef(o);
     qi::ObjectPtr out = v.to<ObjectPtr>();
     ASSERT_TRUE(out);
     ASSERT_EQ(o.get(), out.get());
@@ -182,7 +182,7 @@ TEST(Value, ObjectPtr)
 TEST(Value, list)
 {
   int one = 1;
-  GenericValuePtr v = GenericValuePtr::ref(one);
+  GenericValuePtr v = GenericValueRef(one);
   v.set(5);
   ASSERT_ANY_THROW(v.set("foo"));
   ASSERT_ANY_THROW(v.set(std::vector<int>()));

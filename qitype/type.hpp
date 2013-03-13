@@ -238,12 +238,7 @@ namespace qi{
      * out of scope).
      */
     template<typename T> GenericValuePtr(T* ptr);
-    /// Create and return a GenericValuePtr pointing to a newly allocated T.
-    template<typename T> static GenericValuePtr make();
-    /// Create and return a GenericValuePtr pointing to ptr
-    template<typename T> static GenericValuePtr make(T* ptr);
-    /// Similar to make(), but take argument by reference
-    template<typename T> static GenericValuePtr ref(const T& r) { return make(&r);}
+
     /** Assignment operator.
      *  Previous content is lost, and will leak if not deleted outside or
      *  with destroy().

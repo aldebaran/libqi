@@ -39,7 +39,7 @@ public:
     Iterator& i = *(Iterator*)ptrFromStorage(&storage);
     // Here we assume *i is a ref, ie not returned on the stack
     // It seems true for lists and maps
-    return GenericValueRef(GenericValuePtr::ref(*i));
+    return GenericValueRef(*i);
   }
   virtual void  next(void** storage)
   {

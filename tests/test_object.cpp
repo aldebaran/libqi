@@ -140,7 +140,7 @@ TEST(TestObject, Typing)
   qi::GenericMethod adderAdd = qi::makeGenericMethod(&Adder::add);
   Adder add1(1);
   std::vector<qi::GenericValuePtr> argsAdd = convert(41);
-  res = adderAdd.call(qi::GenericValuePtr::ref(add1), argsAdd);
+  res = adderAdd.call(qi::GenericValueRef(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
 
@@ -239,7 +239,7 @@ TEST(TestObject, SerializeSimple)
 TEST(TestObject, ConvertSimple)
 {
   Point p; p.x = 1; p.y = 2;
-  FPoint p2 = qi::GenericValuePtr::ref(p).to<FPoint>();
+  FPoint p2 = qi::GenericValueRef(p).to<FPoint>();
   ASSERT_EQ(p2.x, p.x);
   ASSERT_EQ(p2.y, p.y);
 }
@@ -316,7 +316,7 @@ TEST(TestObject, convertComplex)
   comp.stuff.push_back(v);
   v.push_back(3);
   comp.stuff.push_back(v);
-  Complex2 comp2 = qi::GenericValuePtr::ref(comp).to<Complex2>();
+  Complex2 comp2 = qi::GenericValueRef(comp).to<Complex2>();
   ASSERT_EQ(comp2.foo, comp.foo);
   ASSERT_EQ(comp.points.size(), comp2.points.size());
   ASSERT_EQ(comp.points.front().x, comp2.points.front().x);
