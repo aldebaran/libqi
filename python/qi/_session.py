@@ -38,7 +38,7 @@ class Session:
         fut = Future(_qipy.qi_session_connect(self._session, address))
         if async:
             return fut
-        if fut.hasError():
+        if fut.has_error():
             raise ConnectionError('Cannot connect to ' + address + ': ' + fut.error())
 
     def listen(self, address, async=False):
@@ -49,7 +49,7 @@ class Session:
         fut = Future(_qipy.qi_session_listen(self._session, address))
         if async:
             return fut
-        if fut.hasError():
+        if fut.has_error():
             #todo: another error?
             raise ConnectionError('Cannot listen on ' + address + ': ' + fut.error())
 
@@ -105,21 +105,6 @@ class Session:
             # Create Python object from C object.
             return GenericObject(qi_object=obj_c, qi_name=name)
 
-        cfut = Future(fut_c)
-        prom = Promise()
-
-        def c_obj_ready(mfut):
-            if mfut.has_error():
-                prom.set_error(cfut.error())
-                return
-            #get_object destroy the future, so clone it before.
-            #todo: implement GO to PyObject*
-            obj_c = _qipy.qi_future_get_object(_qipy.qi_future_clone(mfut._fut))
-            go = GenericObject(qi_object=obj_c, qi_name=name)
-            prom.set_value(go)
-
-        cfut.add_callback(c_obj_ready)
-        return prom.future()
 
     def services(self, async=False):
         """Retrieves the list of the names of all the services available on the
