@@ -50,12 +50,12 @@ int main(int argc, char **argv) {
   std::string fname;
   if (argc > 2)
     fname = argv[2];
-  qi::DataPerfSuite out("qimessaging", "perf_functions", qi::DataPerfSuite::OutputData_Period, fname);
+  qi::DataPerfSuite out("qimessaging", "perf_create_service", qi::DataPerfSuite::OutputData_MsgPerSecond, fname);
   qi::DataPerf dp;
 
-  dp.start("create_service", 50);
+  dp.start("create_service", 5000);
 
-  for (unsigned int i = 0; i < 50; ++i) {
+  for (unsigned int i = 0; i < 5000; ++i) {
     std::stringstream ss;
     ss << "servicetest-"  << i;
     std::cout << "Trying to register " << ss.str() << std::endl;
