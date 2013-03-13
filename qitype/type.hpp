@@ -325,6 +325,19 @@ namespace qi{
     */
     GenericValuePtr asDynamic() const;
 
+    /// @{
+    /** Container partial unboxing.
+     *  The following functions unbox the container-part of the value.
+     *  The values in the contairer are exposed as GenericValuePtr.
+     *  The values can be modified using the set and as function families,
+     *  But the container itself is a copy.
+     * @warning for better performances use the begin() and end() iterator API
+    */
+    std::vector<GenericValuePtr> asTupleValuePtr();
+    std::vector<GenericValuePtr> asListValuePtr();
+    std::map<GenericValuePtr, GenericValuePtr> asMapValuePtr();
+    /// @}
+
     /// Update the value to val, which will be converted if required.
     template<typename T> void set(const T& val);
     void set(int64_t v) { setInt(v);}
@@ -396,6 +409,21 @@ namespace qi{
     explicit GenericValue(qi::Type *type);
     /// Create and return a GenericValue of type T
     template<typename T> static GenericValue make();
+
+    /// @{
+    /** The following functions construct a GenericValue from containers of
+     * GenericValuePtr.
+    */
+    static GenericValue makeTuple(const std::vector<GenericValuePtr>& values);
+    template<typename T>
+    static GenericValue makeList(const std::vector<GenericValuePtr>& values);
+    static GenericValue makeGenericList(const std::vector<GenericValuePtr>& values);
+    template<typename K, typename V>
+    static GenericValue makeMap(const std::map<GenericValuePtr, GenericValuePtr>& values);
+    static GenericValue makeGenericMap(const std::map<GenericValuePtr, GenericValuePtr>& values);
+
+    /// @}
+
     ~GenericValue();
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
@@ -602,7 +630,6 @@ QITYPE_API bool operator !=(const GenericIterator & a, const GenericIterator& b)
 
   ///@return a Tuple made from copies of \param values
   QITYPE_API GenericValuePtr makeGenericTuple(std::vector<GenericValuePtr> values);
-
 }
 
 #include <qitype/details/typeimpl.hxx>

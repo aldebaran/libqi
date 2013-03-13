@@ -298,6 +298,75 @@ namespace qi {
     return to<std::map<K, V> >();
   }
 
+  inline std::vector<GenericValuePtr>
+  GenericValuePtr::asTupleValuePtr()
+  {
+    if (kind() == Type::Tuple)
+      return static_cast<TypeTuple*>(type)->getValues(value);
+    else if (kind() == Type::List || kind() == Type::Map)
+    {
+      std::vector<GenericValuePtr> result;
+      GenericIterator iend = end();
+      GenericIterator it = begin();
+      for(; it != iend; ++it)
+        result.push_back(*it);
+      return result;
+    }
+    else
+      throw std::runtime_error("Expected tuple, list or map");
+  }
+
+  inline std::map<GenericValuePtr, GenericValuePtr>
+  GenericValuePtr::asMapValuePtr()
+  {
+    if (kind() != Type::Map)
+      throw std::runtime_error("Expected a map");
+    std::map<GenericValuePtr, GenericValuePtr> result;
+    GenericIterator iend = end();
+    GenericIterator it = begin();
+    for(; it != iend; ++it)
+    {
+      GenericValuePtr elem = *it;
+      result[elem[0]] = elem[1];
+    }
+    return result;
+  }
+
+  inline GenericValue
+  GenericValue::makeTuple(const std::vector<GenericValuePtr>& values)
+  {
+    return GenericValue(makeGenericTuple(values), false, true);
+  }
+
+  template<typename T>
+  GenericValue GenericValue::makeList(const std::vector<GenericValuePtr>& values)
+  {
+    GenericValue res = make<std::vector<T> >();
+    for (unsigned i=0; i<values.size(); ++i)
+      res.append(values[i].to<T>());
+    return res;
+  }
+  inline
+  GenericValue GenericValue::makeGenericList(const std::vector<GenericValuePtr>& values)
+  {
+    return makeList<GenericValue>(values);
+  }
+  template<typename K, typename V>
+  GenericValue GenericValue::makeMap(const std::map<GenericValuePtr, GenericValuePtr>& values)
+  {
+    GenericValue res = make<std::map<K, V> >();
+    std::map<GenericValuePtr, GenericValuePtr>::const_iterator it;
+    for(it = values.begin(); it != values.end(); ++it)
+      res.insert(it->first.to<K>(), it->second.to<V>());
+    return res;
+  }
+
+  inline
+  GenericValue GenericValue::makeGenericMap(const std::map<GenericValuePtr, GenericValuePtr>& values)
+  {
+    return makeMap<GenericValue, GenericValue>(values);
+  }
+
   namespace detail
   {
     /** This class can be used to convert the return value of an arbitrary function
@@ -354,7 +423,7 @@ namespace qi {
   template<typename T>
   GenericValue GenericValue::make()
   {
-    return GenericValue(GenericValuePtr::make<T>(), false, true);
+    return GenericValue(GenericValuePtr(typeOf<T>()), false, true);
   }
 
   inline void GenericValue::operator=(const GenericValue& b)
