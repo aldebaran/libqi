@@ -10,9 +10,7 @@
 
 #include <qi/log.hpp>
 #include <qi/api.hpp>
-
-#include <qimessaging/c/error_c.h>
-#include <qimessaging/c/session_c.h>
+#include <qimessaging/session.hpp>
 
 #include <jni.h>
 #include "jnitools.hpp"
@@ -20,17 +18,21 @@
 
 jlong Java_com_aldebaran_qimessaging_Session_qiSessionCreate()
 {
-  return (jlong) qi_session_create();
+  qi::Session *session = new qi::Session();
+  return (jlong) session;
 }
 
 void Java_com_aldebaran_qimessaging_Session_qiSessionDestroy(jlong pSession)
 {
-  qi_session_destroy(reinterpret_cast<qi_session_t *>(pSession));
+  qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
+  delete s;
 }
 
 jboolean Java_com_aldebaran_qimessaging_Session_qiSessionIsConnected(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pSession)
 {
-  return (jboolean) qi_session_is_connected(reinterpret_cast<qi_session_t *>(pSession));
+  qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
+
+  return (jboolean) s->isConnected();
 }
 
 jboolean Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jobject QI_UNUSED(obj), jlong pSession, jstring jurl)
@@ -41,12 +43,13 @@ jboolean Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jo
     return false;
   }
 
-  bool ret = qi_session_connect(reinterpret_cast<qi_session_t *>(pSession), toStdString(env, jurl).c_str());
+  qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
+  qi::FutureSync<void> fut = s->connect(toStdString(env, jurl).c_str());
+  fut.wait();
 
-  if ((bool) ret == false)
+  if (fut.hasError())
   {
-    const char* error_msg = qi_c_error() != 0 ? qi_c_error() : "Connection unexpectedly failed.";
-    throwJavaError(env, error_msg);
+    throwJavaError(env, fut.error().c_str());
     return false;
   }
 
@@ -55,10 +58,12 @@ jboolean Java_com_aldebaran_qimessaging_Session_qiSessionConnect(JNIEnv *env, jo
 
 void Java_com_aldebaran_qimessaging_Session_qiSessionClose(JNIEnv* QI_UNUSED(env), jobject QI_UNUSED(obj), jlong pSession)
 {
-  qi_session_close(reinterpret_cast<qi_session_t *>(pSession));
+  qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
+
+  s->close();
 }
 
-jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobject obj, jlong pSession, jstring jurl)
+jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobject jobj, jlong pSession, jstring jurl)
 {
   if (pSession == 0)
   {
@@ -66,19 +71,46 @@ jlong Java_com_aldebaran_qimessaging_Session_qiSessionService(JNIEnv *env, jobje
     return false;
   }
 
+  qi::Session *s = reinterpret_cast<qi::Session*>(pSession);
   std::string serviceName = toStdString(env, jurl);
-  return (jlong) qi_session_get_service(reinterpret_cast<qi_session_t *>(pSession), serviceName.c_str());;
+
+  qi::ObjectPtr *obj = new qi::ObjectPtr();
+  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
+
+  try
+  {
+    o = s->service(serviceName);
+    if (!o) {
+      delete obj;
+      throwJavaError(env, "Cannot get service");
+      return 0;
+    }
+    return (jlong) obj;
+  }
+  catch (std::runtime_error &e)
+  {
+    throwJavaError(env, e.what());
+    return 0;
+  }
 }
 
 jlong Java_com_aldebaran_qimessaging_Session_qiSessionRegisterService
 (JNIEnv *env, jobject obj, jlong pSession, jlong pObject, jstring jname)
 {
-  qi_session_t* session = reinterpret_cast<qi_session_t*>(pSession);
-  std::string   name    = toStdString(env, jname);
-  qi_object_t*  object  = reinterpret_cast<qi_object_t *>(pObject);
+  qi::Session*    session = reinterpret_cast<qi::Session*>(pSession);
+  std::string     name    = toStdString(env, jname);
+  qi::ObjectPtr*  object  = reinterpret_cast<qi::ObjectPtr*>(pObject);
+  jlong ret = 0;
 
   char *cname = qi::os::strdup(name.c_str());
-  jlong ret = qi_session_register_service(session, name.c_str(), object);
+  try {
+    ret = session->registerService(name, *object);
+  }
+  catch (std::runtime_error &e)
+  {
+    throwJavaError(env, e.what());
+  }
+
   free(cname);
   return ret;
 }

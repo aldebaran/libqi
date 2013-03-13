@@ -8,7 +8,6 @@
 
 #include <qi/log.hpp>
 #include <qitype/signature.hpp>
-#include <qimessaging/c/signature_c.h>
 #include <qimessaging/session.hpp>
 #include "jnitools.hpp"
 
@@ -66,35 +65,6 @@ jstring     toJavaString(JNIEnv *env, const std::string &inputString)
   return string;
 }
 
-
-jobject toJavaObject(JNIEnv *env, const std::string& sigreturn, qi_message_t *message)
-{
-  unsigned int i = 0;
-  while (i < sigreturn.size())
-  {
-    switch(sigreturn[i])
-    {
-    case QI_TUPLE:
-      i++;
-      continue;
-    case QI_BOOL:
-      return 0;
-    case QI_CHAR:
-      return 0;
-    case QI_FLOAT:
-      return 0;
-    case QI_INT:
-      return 0;
-    case QI_DOUBLE:
-      return 0;
-    case QI_STRING:
-      return toJavaString(env, std::string(qi_message_read_string(message)));
-    }
-    i++;
-  }
-  return 0;
-}
-
 void getJavaSignature(std::string &sig, const std::string& sigInfo)
 {
   unsigned int i = 0;
@@ -103,48 +73,48 @@ void getJavaSignature(std::string &sig, const std::string& sigInfo)
   {
     switch (sigInfo[i])
     {
-    case QI_BOOL:
+    case qi::Signature::Type_Bool:
       sig.append("Ljava/lang/Boolean;");
       break;
-    case QI_CHAR:
+    case qi::Signature::Type_Int8:
       sig.append("Ljava/lang/Character;");
       break;
-    case QI_FLOAT:
+    case qi::Signature::Type_Float:
       sig.append("Ljava/lang/Float;");
       break;
-    case QI_DOUBLE:
+    case qi::Signature::Type_Double:
       sig.append("Ljava/lang/Double;");
       break;
-    case QI_INT:
+    case qi::Signature::Type_Int32:
       sig.append("Ljava/lang/Integer;");
       break;
-    case QI_STRING:
+    case qi::Signature::Type_String:
       sig.append("Ljava/lang/String;");
       break;
-    case QI_VOID:
+    case qi::Signature::Type_Void:
       sig.append("V");
       break;
-    case QI_MESSAGE:
+    case qi::Signature::Type_Dynamic:
       sig.append("L");
       break;
-    case QI_MAP:
+    case qi::Signature::Type_Map:
     {
       sig.append("Ljava/util/Map;");
-      while (i < sigInfo.size() && sigInfo[i] != QI_MAP_END)
+      while (i < sigInfo.size() && sigInfo[i] != qi::Signature::Type_Map_End)
         i++;
       break;
     }
-    case QI_TUPLE:
+    case qi::Signature::Type_Tuple:
     {
       sig.append("Ljava/lang/Object;");
-      while (i < sigInfo.size() && sigInfo[i] != QI_TUPLE_END)
+      while (i < sigInfo.size() && sigInfo[i] != qi::Signature::Type_Tuple_End)
         i++;
       break;
     }
-    case QI_LIST:
+    case qi::Signature::Type_List:
     {
       sig.append("Ljava/util/ArrayList;");
-      while (i < sigInfo.size() && sigInfo[i] != QI_LIST_END)
+      while (i < sigInfo.size() && sigInfo[i] != qi::Signature::Type_List_End)
         i++;
       break;
     }

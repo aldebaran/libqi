@@ -13,9 +13,6 @@
 #include <qitype/genericobjectbuilder.hpp>
 #include <qitype/functiontype.hpp>
 
-#include <qimessaging/c/object_c.h>
-#include <qimessaging/c/future_c.h>
-
 #include "genericobject_jni.hpp"
 #include "jobjectconverter.hpp"
 #include "jnitools.hpp"
@@ -24,13 +21,16 @@ static MethodInfoHandler gInfoHandler;
 
 jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectCreate()
 {
-  return (jlong) qi_object_create();
+  qi::ObjectPtr *obj = new qi::ObjectPtr();
+  return (jlong) obj;
 }
 
 void    Java_com_aldebaran_qimessaging_GenericObject_qiObjectDestroy(JNIEnv *env, jobject jobj, jlong pObject)
 {
+  qi::ObjectPtr *obj = reinterpret_cast<qi::ObjectPtr *>(pObject);
   gInfoHandler.pop(jobj);
-  qi_object_destroy(reinterpret_cast<qi_object_t*>(pObject));
+
+  delete obj;
 }
 
 static qi::Future<qi::GenericValuePtr>* async_call_java

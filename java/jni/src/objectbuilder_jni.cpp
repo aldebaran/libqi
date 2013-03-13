@@ -10,21 +10,27 @@
 #include <qi/log.hpp>
 #include <qitype/metamethod.hpp>
 #include <qitype/genericobjectbuilder.hpp>
-#include <qimessaging/c/object_c.h>
 
 #include "objectbuilder_jni.hpp"
 
 jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectBuilderCreate()
 {
-  return (jlong) qi_object_builder_create();
+  qi::GenericObjectBuilder *ob = new qi::GenericObjectBuilder();
+  return (jlong) ob;
 }
 
 jlong   Java_com_aldebaran_qimessaging_GenericObject_qiObjectBuilderGetObject(JNIEnv *env, jobject jobj, jlong pObjectBuilder)
 {
-  return (jlong) qi_object_builder_get_object((qi_object_builder_t *) pObjectBuilder);
+  qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
+  qi::ObjectPtr *obj = new qi::ObjectPtr();
+  qi::ObjectPtr &o = *(reinterpret_cast<qi::ObjectPtr *>(obj));
+
+  o = ob->object();
+  return (jlong) obj;
 }
 
 void   Java_com_aldebaran_qimessaging_GenericObject_qiObjectBuilderDestroy(long pObjectBuilder)
 {
-  qi_object_builder_destroy((qi_object_builder_t *)pObjectBuilder);
+  qi::GenericObjectBuilder *ob = reinterpret_cast<qi::GenericObjectBuilder *>(pObjectBuilder);
+  delete ob;
 }

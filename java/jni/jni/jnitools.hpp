@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <qimessaging/api.hpp>
-#include <qimessaging/c/message_c.h>
 #include <jni.h>
 
 #ifdef ANDROID
@@ -30,8 +29,6 @@
 
 std::string   toStdString(JNIEnv *env, jstring inputString);
 jstring       toJavaString(JNIEnv *env, const std::string &inputString);
-qi_message_t* toQiMessage(JNIEnv *env, jobject obj, qi_message_t *m = 0);
-jobject       toJavaObject(JNIEnv *env, const std::string &sigreturn, qi_message_t *message);
 JavaVM*       JVM(JNIEnv* env = 0);
 std::string   toJavaSignature(const std::string &signature);
 jint          throwJavaError(JNIEnv *env, const char *message);

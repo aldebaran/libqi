@@ -10,7 +10,6 @@
 
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-#include <qimessaging/c/application_c.h>
 #include "application_jni.hpp"
 
 jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate()
@@ -19,7 +18,7 @@ jlong Java_com_aldebaran_qimessaging_Application_qiApplicationCreate()
   int argc = 1;
   char **argv = new char*[2];
 
-  // Fill first argument with random name. FIXME : seriously....
+  // Fill first argument with jvm name. FIXME : seriously....
   argv[0] = new char[10];
   ::strcpy(argv[0], "java");
 
