@@ -118,11 +118,13 @@ long long qi_future_get_int64(qi_future_t* fut, int *err) {
     return 0;
   }
   qi_value_t* val = qi_future_get_value(fut);
-  long long ret;
-  ret = qi_value_get_int64(val, err);
+  long long res;
+  int ret = qi_value_get_int64(val, &res);
+  if (err)
+    *err = ret;
   qi_value_destroy(val);
   qi_future_destroy(fut);
-  return ret;
+  return res;
 }
 
 unsigned long long qi_future_get_uint64(qi_future_t* fut, int *err) {
@@ -132,11 +134,13 @@ unsigned long long qi_future_get_uint64(qi_future_t* fut, int *err) {
     return 0;
   }
   qi_value_t* val = qi_future_get_value(fut);
-  unsigned long long ret;
-  ret = qi_value_get_uint64(val, err);
+  unsigned long long res;
+  int ret = qi_value_get_uint64(val, &res);
+  if (err)
+    *err = ret;
   qi_value_destroy(val);
   qi_future_destroy(fut);
-  return ret;
+  return res;
 }
 
 
