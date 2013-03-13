@@ -333,6 +333,12 @@ namespace qi {
     *this = b;
   }
 
+  inline GenericValue::GenericValue(qi::Type *type)
+    : GenericValuePtr(type)
+    , _allocated(true)
+  {
+  }
+
   inline GenericValue::GenericValue(const GenericValuePtr& b, bool copy, bool free)
   : _allocated(false)
   {
@@ -381,6 +387,14 @@ namespace qi {
       destroy();
     type = 0;
     value = 0;
+  }
+
+  inline void GenericValue::reset(qi::Type *ttype)
+  {
+    reset();
+    _allocated = true;
+    type = ttype;
+    value = type->initializeStorage();
   }
 
   inline GenericValue::~GenericValue()

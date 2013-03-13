@@ -393,12 +393,14 @@ namespace qi{
     GenericValue(const GenericValue& b);
     explicit GenericValue(const GenericValuePtr& b, bool copy, bool free);
     explicit GenericValue(const GenericValuePtr& b);
+    explicit GenericValue(qi::Type *type);
     /// Create and return a GenericValue of type T
     template<typename T> static GenericValue make();
     ~GenericValue();
     void operator = (const GenericValuePtr& b);
     void operator = (const GenericValue& b);
     void reset();
+    void reset(qi::Type *type);
     void set(const GenericValuePtr& src);
     void set(const GenericValuePtr& src, bool copy, bool free);
     void swap(GenericValue& b);
