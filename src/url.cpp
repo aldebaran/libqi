@@ -32,6 +32,11 @@ namespace qi {
   {
   }
 
+  bool Url::operator==(const Url& url)
+  {
+    return this->str() == url.str();
+  }
+
   Url& Url::operator= (const Url &rhs) {
     *_p = *rhs._p;
     return *this;

@@ -21,6 +21,8 @@ namespace qi {
     Url(const std::string &url);
     Url(const char *url);
 
+    bool operator ==(const Url& url);
+
     virtual ~Url();
 
     Url(const qi::Url& url);
