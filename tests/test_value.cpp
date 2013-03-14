@@ -335,7 +335,7 @@ TEST(Value, Overflow)
   }
   long twelve = 12;
   GenericValueRef(12).to<char>();
-  ASSERT_EQ(12,GenericValueRef(twelve).to<int64_t>());
+  ASSERT_EQ(12,GenericValueRef(twelve).to<qi::int64_t>());
   GenericValueRef(127).to<char>();
   ASSERT_ANY_THROW(GenericValueRef(128).to<char>());
   GenericValueRef(-128).to<char>();
