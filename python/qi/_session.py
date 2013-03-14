@@ -104,7 +104,7 @@ class Session:
 
             # Create Python object from C object.
             return GenericObject(qi_object=obj_c, qi_name=name)
-
+        return Future(fut_c)
 
     def services(self, async=False):
         """Retrieves the list of the names of all the services available on the
