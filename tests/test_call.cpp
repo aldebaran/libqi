@@ -766,6 +766,63 @@ TEST(TestCall, TestObjectPassingReturn)
 }
 
 
+char          pingChar(char v) { return v; }
+unsigned char pingUChar(unsigned char v) { return v;}
+int           pingInt(int v) { return v;}
+int           pingUInt(unsigned int v) { return v;}
+
+#define EXPECTTHROW(exp) do {                   \
+  try {                                         \
+    exp;                                        \
+    qiLogError() << "Did not throw: " << #exp;  \
+    EXPECT_TRUE(false);                         \
+  }                                             \
+  catch(const std::exception& e)                \
+  {                                             \
+    qiLogDebug() << "throw: " << e.what();      \
+    EXPECT_TRUE(true);                          \
+  }                                             \
+} while(0)
+
+
+TEST(TestCall, Overflow)
+{
+  using namespace qi;
+  TestSessionPair p;
+  GenericObjectBuilder ob;
+  ob.advertiseMethod("pingChar", &pingChar);
+  ob.advertiseMethod("pingUChar", &pingUChar);
+  ob.advertiseMethod("pingInt", &pingInt);
+  ob.advertiseMethod("pingUInt", &pingUInt);
+
+  ob.xAdvertiseMethod("i", "pingChar_i::(i)", makeGenericFunction(&pingChar));
+  ObjectPtr obj = ob.object();
+  p.server()->registerService("ping", obj);
+
+  ObjectPtr client = p.client()->service("ping");
+  ASSERT_EQ(1, client->call<int>("pingChar", 1));
+  try
+  {
+    // Return cast check
+    EXPECTTHROW(client->call<char>("pingInt", 256).value());
+    EXPECTTHROW(client->call<char>("pingInt", 128).value());
+    EXPECTTHROW(client->call<unsigned char>("pingInt", -1).value());
+    EXPECTTHROW(client->call<unsigned int>("pingInt", -1).value());
+    // call arg check
+    EXPECTTHROW(client->call<int>("pingUInt", -1).value());
+    EXPECTTHROW(client->call<int>("pingChar", 128).value());
+    EXPECTTHROW(client->call<int>("pingUChar", 256).value());
+    // call arg check at call backend site
+    EXPECTTHROW(client->call<int>("pingChar_i", 512).value());
+  }
+  catch(const std::exception& e)
+  {
+    qiLogError() << "Unexpected exception: " << e.what();
+    throw e;
+  }
+}
+
+
 int main(int argc, char **argv) {
   qi::Application app(argc, argv);
   TestMode::initTestMode(argc, argv);
