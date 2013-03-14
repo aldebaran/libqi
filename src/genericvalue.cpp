@@ -567,5 +567,64 @@ namespace qi
       throw std::runtime_error("Update not implemented for this type.");
     }
   }
+
+  void GenericValuePtr::setInt(int64_t v)
+  {
+    if (kind() == Type::Int)
+    {
+      TypeInt* type = static_cast<TypeInt*>(this->type);
+      if (!type->isSigned() && v < 0)
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+      // not signed gives us an extra bit, but signed can go down an extra value
+      if (type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+      type->set(&value, v);
+    }
+    else if (kind() == Type::Float)
+      static_cast<TypeFloat*>(type)->set(&value,
+        static_cast<double>(v));
+    else
+      throw std::runtime_error("Value is not Int or Float");
+  }
+
+  void GenericValuePtr::setUInt(uint64_t v)
+  {
+    if (kind() == Type::Int)
+    {
+      TypeInt* type = static_cast<TypeInt*>(this->type);
+      if (type->size() < 8 && (v >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+      if (type->size() == 8 && type->isSigned() && v >= 0x8000000000000000ULL)
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to signed int64", v));
+      type->set(&value, (int64_t)v);
+    }
+    else if (kind() == Type::Float)
+      static_cast<TypeFloat*>(type)->set(&value,
+        static_cast<double>(static_cast<uint64_t>(v)));
+    else
+      throw std::runtime_error("Value is not Int or Float");
+  }
+
+  void GenericValuePtr::setDouble(double v)
+  {
+    if (kind() == Type::Float)
+      static_cast<TypeFloat*>(type)->set(&value, v);
+    else if (kind() == Type::Int)
+    {
+      TypeInt* type = static_cast<TypeInt*>(this->type);
+       if (v < 0 && !type->isSigned())
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
+      if (type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+      if (type->size() == 8
+        && std::abs(v) > (type->isSigned()?
+          (double)std::numeric_limits<int64_t>::max()
+          :(double)std::numeric_limits<uint64_t>::max()))
+        throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
+      type->set(&value, static_cast<int64_t>(v));
+   }
+   else
+      throw std::runtime_error("Value is not Int or Float");
+  }
 }
 
