@@ -358,6 +358,9 @@ TEST(Value, Overflow)
   ASSERT_TRUE(GenericValueRef((qi::int32_t)0xFF223344).to<double>() < 0);
   ASSERT_TRUE(GenericValueRef(0xFF22334455667788ULL).to<double>() > 0);
   ASSERT_TRUE(GenericValueRef((qi::int64_t)0xFF22334455667788).to<double>() < 0);
+  // check other access path
+  ASSERT_ANY_THROW(GenericValue::make<char>().setInt(128));
+  ASSERT_ANY_THROW(GenericValue::make<char>().update(GenericValueRef(128)));
 }
 
 int main(int argc, char **argv) {
