@@ -1,5 +1,5 @@
 ##
-## Copyright (C) 2012 Aldebaran Robotics
+## Copyright (C) 2012, 2013 Aldebaran Robotics
 ##
 
 """ Python client implementation of famous QiMessaging hello world : serviceTest
@@ -57,9 +57,13 @@ def toto(session):
     print "plouf3"
 
     obj = fut.value()
+    print "obj:", obj
+    print "dir:", dir(obj)
+    print "o f:", obj.reply
+    print "dir f:", dir(obj.reply)
     #4 Call foreign method reply
-    value = obj.reply("plaf")
-    print 'Reply : ', value
+    value = obj.reply("plaf", _overload="reply::(s)", _async=False)
+    print 'Reply : ', dir(value), value
 
     f = obj.reply("plaf", async=True)
     f.add_callback(onPlaf)

@@ -13,14 +13,228 @@
 #include <qitype/genericobject.hpp>
 #include <qitype/typedispatcher.hpp>
 #include <qitype/type.hpp>
+#include <qitype/metaobject.hpp>
+#include <qitype/metamethod.hpp>
 
 #include <src/pythonscopedref.hpp>
 
 #include "pyobjectconverter.hpp"
 
+#include "qipython.hpp"
 using namespace qi;
 
 qiLogCategory("qipy.convert");
+
+//typedef struct {
+//    PyCFunctionObject _obj;
+//} PyGoFunctionObject;
+
+//PyObject* PyGoFunction_Call(PyObject* self, PyObject* params)
+//{
+//  Py_INCREF(Py_None);
+//  return Py_None;
+//}
+
+//static int
+//PyGoFunction_init(PyGoFunctionObject *self, PyObject *args, PyObject *kwds)
+//{
+//  if (PyCFunction_Type.tp_init((PyObject *)self, args, kwds) < 0)
+//    return -1;
+//  //self->state = 0;
+//  return 0;
+//}
+
+//PyTypeObject PyGOFunction_Type = {
+//    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+//    "qi_generic_function_or_method",
+//    sizeof(PyGoFunctionObject),
+//    0,
+//    0,                                          /* tp_dealloc */
+//    0,                                          /* tp_print */
+//    0,                                          /* tp_getattr */
+//    0,                                          /* tp_setattr */
+//    0,                                          /* tp_compare */
+//    0,                                          /* tp_repr */
+//    0,                                          /* tp_as_number */
+//    0,                                          /* tp_as_sequence */
+//    0,                                          /* tp_as_mapping */
+//    0,                                          /* tp_hash */
+//    PyGoFunction_Call,                          /* tp_call */
+//    0,                                          /* tp_str */
+//    PyObject_GenericGetAttr,                    /* tp_getattro */
+//    0,                                          /* tp_setattro */
+//    0,                                          /* tp_as_buffer */
+//    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,    /* tp_flags */
+//    0,                                          /* tp_doc */
+//    0,                                          /* tp_traverse */
+//    0,                                          /* tp_clear */
+//    0,                                          /* tp_richcompare */
+//    0,                                          /* tp_weaklistoffset */
+//    0,                                          /* tp_iter */
+//    0,                                          /* tp_iternext */
+//    0,                                          /* tp_methods */
+//    0,                                          /* tp_members */
+//    0,                                          /* tp_getset */
+//    0,                                          /* tp_base */
+//    0,                                          /* tp_dict */
+//    0,                                          /* tp_descr_get */
+//    0,                                          /* tp_descr_set */
+//    0,                                          /* tp_dictoffset */
+//    (initproc) PyGoFunction_init,               /* tp_init */
+//    0,                                          /* tp_alloc */
+//    0,                                          /* tp_new */
+//};
+
+
+/**
+ * @brief py_call
+ * @param pyclass
+ * @param params
+ * What do we have here... we can have keywords args:
+ *  - overload
+ *  -
+ * argsself: (self, arg0, .., argn)
+ * self = a qiMethod Instance here just to hold the following two attributes:
+ * self.__method_name  : methodName
+ * self.__c_instance   : GenericObjectPtr
+ * @return
+ */
+PyObject* py_call(PyObject* pyclass, PyObject* argsself, PyObject* kw) {
+  qiLogInfo() << "Chiche le callback";
+
+  PyObject* self         = PyTuple_GetItem(argsself, 0);
+  size_t    len          = PyTuple_Size(argsself);
+  PyObject* args         = PyTuple_GetSlice(argsself, 1, len);
+  PyObject* pyMethodName = PyObject_GetAttrString(self, "__method_name");
+  PyObject* pyCaps       = PyObject_GetAttrString(self, "__c_instance");
+
+
+  bool async = false;
+  const char* overload = 0;
+  if (kw) {
+    PyObject* pyAsync    = PyDict_GetItemString(kw, "_async");
+    PyObject* pyOverload = PyDict_GetItemString(kw, "_overload");
+    if (pyAsync && PyBool_Check(pyAsync)) {
+      async = static_cast<bool>(PyInt_AsLong(pyAsync));
+    }
+    if (pyOverload && PyString_Check(pyOverload)) {
+      overload = PyString_AsString(pyOverload);
+    }
+    Py_DECREF(pyAsync);
+    Py_DECREF(pyOverload);
+  }
+  const char*    methodName = PyString_AsString(pyMethodName);
+  GenericObject* go         = (GenericObject*)PyCapsule_GetPointer(pyCaps, 0);
+
+  if (overload)
+    methodName = overload;
+  qiLogDebug() << "PythonCall: " << methodName << " async=" << async;
+  qiLogDebug() << "Caps:" << (void*) go;
+  //TODO: do something with the GIL
+
+  qi::GenericValuePtr gvp = qi::GenericValueRef(args);
+  qiLogDebug() << "Calling method with args:" << qi::encodeJSON(gvp);
+  qi::Future<qi::GenericValuePtr> fut = go->metaCall(methodName, gvp.asDynamic().asTupleValuePtr());
+
+  //TODO: is async, return qi.Future(fut)
+
+  PyObject *ret;
+  //TODO:
+  if (fut.hasError()) {
+    qiLogDebug() << "Call error:" << fut.error();
+    PyErr_SetString(PyExc_RuntimeError, fut.error().c_str());
+    Py_INCREF(Py_None);
+    ret = Py_None;
+  }
+
+  qiLogDebug() << "Call returned:" << qi::encodeJSON(fut.value());
+  ret = fut.value().to<PyObject*>();
+  Py_DECREF(pyMethodName);
+  Py_DECREF(pyCaps);
+  Py_DECREF(self);
+  Py_DECREF(args);
+  return ret;
+}
+
+
+PyObject* makeClass(const char *name) {
+  PyObject* classDict = PyDict_New();
+  PyObject* className = PyString_FromString(name);
+  PyObject* classObj = PyClass_New(NULL, classDict, className);
+  Py_DECREF(classDict);
+  Py_DECREF(className);
+  return classObj;
+}
+
+//GenericObject to PyObject* structure:
+
+//class Meth0:
+//  def __call__(*args, _async = True, _overload = "")
+//
+//class Object0:
+//  meth0 = Meth0()  //instance
+//  meth0.__method_name = "meth0"
+//
+// object0 = Object0()     //instance
+
+PyObject* GOtoPyO(const char *name, qi::GenericObject obj)
+{
+  PyObject* pyclass = makeClass(name);
+  PyObject* pyobj;
+
+  pyobj = PyInstance_New(pyclass, 0, 0);
+
+  qi::GenericObject *go = new qi::GenericObject(obj.type, obj.value);
+  PyObject* pycaps = PyCapsule_New((void *)go, 0, 0);
+  //not mandatory
+  PyObject_SetAttrString(pyobj, "__c_instance", pycaps);
+  qiLogVerbose() << "SetCaps:" << (void*) go;
+
+
+  const qi::MetaObject &mo = obj.metaObject();
+  qi::MetaObject::MethodMap mm = mo.methodMap();
+  qi::MetaObject::MethodMap::iterator it;
+  for (it = mm.begin(); it != mm.end(); ++it) {
+    qi::MetaMethod &mem = it->second;
+    std::vector<std::string> vs = qi::signatureSplit(mem.signature());
+    qiLogInfo() << "adding method:" << mem.signature();
+
+    //TODO: this leak
+    //TODO: store in a capsule with a dtor
+    PyMethodDef *methd = new PyMethodDef;
+    methd->ml_name = vs[1].c_str();
+    methd->ml_meth = (PyCFunction)&py_call;
+    methd->ml_flags = METH_VARARGS | METH_KEYWORDS;
+    methd->ml_doc = mem.description().c_str();
+
+    PyObject* methName = PyString_FromString(mem.signature().c_str());
+    //we reuse the same parent class type: we just dont care about it.
+    PyObject* claInst = PyInstance_New(pyclass, 0, 0);
+    PyObject_SetAttrString(claInst, "__method_name", methName);
+    PyObject_SetAttrString(claInst, "__c_instance", pycaps);
+
+    //todo: check for overload and set corresponding attr later
+//    PyObject* pycfun = PyCFunction_NewEx(methd, pytype, 0);
+//    PyObject* pymeth = PyMethod_New(pycfun, 0, pytype);
+    PyObject* pycfun = PyCFunction_NewEx(methd, pyclass, 0);
+
+    //Fun, Self, Self.__class__
+    PyObject* pymeth = PyMethod_New(pycfun, claInst, pyclass);
+
+    //PyDict_SetItemString(classDict, methd->ml_name, pymeth);
+    //PyObject_SetAttrString(pyobj, methd->ml_name, pymeth);
+    PyObject_SetAttrString(claInst, "__call__", pymeth);
+    PyObject_SetAttrString(pyobj, methd->ml_name, pymeth);
+    Py_DECREF(pycfun);
+    Py_DECREF(pymeth);
+    Py_DECREF(claInst);
+  }
+  Py_DECREF(pyclass);
+  Py_DECREF(pycaps);
+  return pyobj;
+}
+
+
 
 struct ToPyObject
 {
@@ -97,8 +311,9 @@ struct ToPyObject
 
   void visitObject(qi::GenericObject obj)
   {
+    *result = GOtoPyO("plouf", obj);
     /* FIXME: Build a pyObject */
-    throw std::runtime_error("Error in conversion: qi::GenericObject not supported yet");
+    //throw std::runtime_error("Error in conversion: qi::GenericObject not supported yet");
   }
 
   void visitPointer(qi::GenericValuePtr)
@@ -123,6 +338,11 @@ struct ToPyObject
 
   void visitDynamic(qi::GenericValuePtr pointee)
   {
+//    if (source.type->info() == typeOf<ObjectPtr>()->info())
+//    { // Advertise as dynamic, but type was already parsed
+//      visitObject(GenericObject(0, 0));
+//    }
+
     *result = PyObject_from_GenericValue(pointee);
   }
 
