@@ -490,7 +490,7 @@ namespace qi {
     if (kind() == Type::Int)
     {
       TypeInt* type = static_cast<TypeInt*>(this->type);
-      if (type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+      if (type->size() < 8 && (v >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8 && type->isSigned() && v >= 0x8000000000000000ULL)
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to signed int64", v));
