@@ -479,7 +479,7 @@ namespace qi
     if (kind() == Type::List)
     {
       TypeList* t = static_cast<TypeList*>(type);
-      int ikey = key.toInt();
+      int ikey = (int)key.toInt();
       if (ikey < 0 || static_cast<size_t>(ikey) >= t->size(value))
       {
         if (throwOnFailure)
@@ -506,7 +506,7 @@ namespace qi
     else if (kind() == Type::Tuple)
     {
       TypeTuple* t = static_cast<TypeTuple*>(type);
-      int ikey = key.toInt();
+      int ikey = (int)key.toInt();
       std::vector<Type*> types = t->memberTypes();
       if (ikey < 0 || static_cast<size_t>(ikey) >= types.size())
       {
@@ -592,7 +592,7 @@ namespace qi
     if (kind() == Type::Int)
     {
       TypeInt* type = static_cast<TypeInt*>(this->type);
-      if (type->size() < 8 && (v >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+      if (type->size() < 8 && (v >= (1ULL << (8*type->size() - (type->isSigned()?1:0)))))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8 && type->isSigned() && v >= 0x8000000000000000ULL)
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to signed int64", v));
@@ -614,7 +614,7 @@ namespace qi
       TypeInt* type = static_cast<TypeInt*>(this->type);
        if (v < 0 && !type->isSigned())
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Converting negative value %s to unsigned type", v));
-      if (type->size() < 8 && (std::abs(v) >= (1LL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
+      if (type->size() < 8 && (std::abs(v) >= (1ULL << (8*type->size() - (type->isSigned()?1:0))) + ((v<0)?1:0)))
         throw std::runtime_error(_QI_LOG_FORMAT_HASARG_0("Overflow converting %s to %s bytes", v, type->size()));
       if (type->size() == 8
         && std::abs(v) > (type->isSigned()?
