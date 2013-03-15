@@ -61,11 +61,14 @@ namespace qi {
     if (!ob)
     {
       ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
-      //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
       ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_RegisterEvent);
       ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Auto, qi::Message::BoundObjectFunction_UnregisterEvent);
       ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Auto, qi::Message::BoundObjectFunction_MetaObject);
       ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Auto, qi::Message::BoundObjectFunction_Terminate);
+      ob->advertiseMethod("getProperty",       &ServiceBoundObject::getProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_GetProperty);
+      ob->advertiseMethod("setProperty",       &ServiceBoundObject::setProperty, MetaCallType_Auto, qi::Message::BoundObjectFunction_SetProperty);
+      ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Auto, qi::Message::BoundObjectFunction_Properties);
+      //global currentSocket: we are not multithread or async capable ob->setThreadingModel(ObjectThreadingModel_MultiThread);
     }
     ObjectPtr result = ob->object(self);
     return result;
@@ -220,5 +223,39 @@ namespace qi {
     return ret;
   }
 
+  GenericValue ServiceBoundObject::getProperty(const GenericValue& prop)
+  {
+    if (prop.kind() == Type::String)
+      return _object->getProperty<GenericValue>(prop.toString());
+    else if (prop.kind() == Type::Int)
+      return _object->type->getProperty(_object->value, prop.toUInt());
+    else
+      throw std::runtime_error("Expected int or string for property index");
+  }
 
+  void ServiceBoundObject::setProperty(const GenericValue& prop, GenericValue val)
+  {
+    qi::Future<void> result;
+    if (prop.kind() == Type::String)
+      result = _object->setProperty(prop.toString(), val);
+    else if (prop.kind() == Type::Int)
+      result = _object->type->setProperty(_object->value, prop.toUInt(), val);
+    else
+      throw std::runtime_error("Expected int or string for property index");
+    if (!result.isReady())
+      qiLogWarning() << "Assertion failed, setProperty() call not finished";
+    // Throw the future error
+    result.value();
+  }
+
+  std::vector<std::string> ServiceBoundObject::properties()
+  {
+    // FIXME implement
+    std::vector<std::string> res;
+    const MetaObject& mo = _object->metaObject();
+    MetaObject::PropertyMap map = mo.propertyMap();
+    for (MetaObject::PropertyMap::iterator it = map.begin(); it != map.end(); ++it)
+      res.push_back(it->second.name());
+    return res;
+  }
 }

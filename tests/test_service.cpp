@@ -14,11 +14,15 @@
 #include <qimessaging/session.hpp>
 #include <qitype/genericobject.hpp>
 #include <qitype/genericobjectbuilder.hpp>
+#include <qitype/dynamicobject.hpp>
+#include <qitype/objecttypebuilder.hpp>
 #include <qimessaging/servicedirectory.hpp>
 #include <qimessaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
+
+qiLogCategory("test");
 
 static std::string reply(const std::string &msg)
 {
@@ -30,7 +34,7 @@ static std::string reply(const std::string &msg)
  * instead of one big sleep that will slow us down
  *
  */
-#define PERSIST_ASSERT(code, cond, msdelay)  \
+#define PERSIST_CHECK(code, cond, what, msdelay)  \
 do                                           \
 {                                            \
   code;                                      \
@@ -39,9 +43,15 @@ do                                           \
     qi::os::msleep(1 + msdelay / 50);        \
     code;                                    \
   }                                          \
-  ASSERT_TRUE(cond);                         \
+  what(cond);                                \
 } while(0)
 
+#define PERSIST_ASSERT(code, cond, msdelay)  \
+ PERSIST_CHECK(code, cond, ASSERT_TRUE, msdelay)
+#define PERSIST_EXPECT(code, cond, msdelay)  \
+ PERSIST_CHECK(code, cond, EXPECT_TRUE, msdelay)
+#define PERSIST(code, cond, msdelay)  \
+ PERSIST_CHECK(code, cond, ,msdelay)
 //check for server closed
 //check for socket disconnected
 //check for service unregistered
@@ -195,6 +205,112 @@ TEST(QiService, RemoteObjectNackTransactionWhenServerClosed)
 }
 
 
+class Foo
+{
+public:
+  int ping(int i) { return i + prop.get();}
+  qi::Property<int> prop;
+};
+
+void inc (int* daInt, int unused)
+{
+  ++(*daInt);
+}
+
+TEST(QiService, ClassProperty)
+{
+  TestSessionPair p;
+
+  qi::ObjectTypeBuilder<Foo> builder;
+  builder.advertiseMethod("ping", &Foo::ping);
+  ASSERT_TRUE(builder.advertiseProperty("offset", &Foo::prop) > 0);
+
+  Foo f;
+  qi::ObjectPtr obj = builder.object(&f);
+
+  p.server()->registerService("foo", obj);
+
+  qi::ObjectPtr client = p.client()->service("foo");
+  qi::details::printMetaObject(std::cerr, obj->metaObject());
+  std::cerr <<"--" << std::endl;
+  qi::details::printMetaObject(std::cerr, client->metaObject());
+  qiLogDebug() << "setProp";
+  client->setProperty<int>("offset", 1).value();
+  qiLogDebug() << "setProp done";
+  ASSERT_EQ(1, f.prop.get());
+  ASSERT_EQ(2, client->call<int>("ping", 1));
+  f.prop.set(2);
+  ASSERT_EQ(3, client->call<int>("ping", 1));
+  ASSERT_EQ(2, client->getProperty<int>("offset"));
+
+  // test event
+  int hit = 0;
+  f.prop.connect(boost::bind(&inc, &hit, _1));
+  obj->connect("offset", boost::bind(&inc, &hit,_1));
+  client->connect("offset", boost::bind(&inc, &hit,_1));
+  f.prop.set(1);
+  PERSIST_ASSERT(, hit == 3, 500);
+  client->setProperty("offset", 2);
+  PERSIST_ASSERT(, hit == 6, 500);
+
+  // test error handling
+   EXPECT_TRUE(client->setProperty("canard", 5).hasError());
+   EXPECT_TRUE(client->setProperty("offset", "astring").hasError());
+}
+
+int prop_ping(qi::PropertyBase* &p, int v)
+{
+  return p->getValue().toInt() + v;
+}
+
+TEST(QiService, GenericProperty)
+{
+  TestSessionPair p;
+  qi::DynamicObject* dobj = new qi::DynamicObject();
+  qi::GenericObjectBuilder builder(dobj);
+  unsigned int propId = builder.advertiseProperty<int>("offset");
+  qi::PropertyBase* prop;
+  builder.advertiseMethod("ping",
+    (boost::function<int (int)>)boost::bind(&prop_ping, boost::ref(prop), _1));
+  qi::ObjectPtr obj = builder.object();
+  prop = dobj->property(propId);
+  prop->setValue(qi::GenericValue(qi::GenericValueRef(0)));
+  p.server()->registerService("foo", obj);
+
+  qi::ObjectPtr client = p.client()->service("foo");
+
+  client->setProperty("offset", 1);
+  ASSERT_EQ(1, prop->getValue().toInt());
+  ASSERT_EQ(2, client->call<int>("ping", 1));
+  prop->setValue(qi::GenericValue(qi::GenericValueRef(2)));
+  ASSERT_EQ(3, client->call<int>("ping", 1));
+  ASSERT_EQ(2, client->getProperty<int>("offset"));
+
+  // test event
+  int hit = 0;
+  qiLogVerbose() << "Connecting to signal";
+  ASSERT_NE(qi::SignalBase::invalidLink, prop->signal()->connect(boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidLink, obj->connect("offset", boost::bind(&inc, &hit, _1)));
+  ASSERT_NE(qi::SignalBase::invalidLink, client->connect("offset", boost::bind(&inc, &hit, _1)));
+  qiLogVerbose() << "Triggering prop set";
+  prop->setValue(qi::GenericValue(qi::GenericValueRef(1)));
+  PERSIST(, hit == 3, 500);
+  qi::os::msleep(500);
+  EXPECT_EQ(3, hit);
+  client->setProperty<int>("offset", 2);
+  PERSIST(, hit == 6, 500);
+  qi::os::msleep(500);
+  EXPECT_EQ(6, hit);
+  if (client != obj)
+  {
+    client->call<void>("setProperty", "offset", 3);
+    EXPECT_EQ(3, prop->getValue().toInt());
+  }
+
+  // test error handling
+  EXPECT_TRUE(client->setProperty("canard", 5).hasError());
+  EXPECT_TRUE(client->setProperty("offset", "astring").hasError());
+}
 
 int main(int argc, char **argv)
 {

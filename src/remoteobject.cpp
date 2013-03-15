@@ -30,7 +30,8 @@ namespace qi {
       qi::MetaObjectBuilder mob;
       mob.addMethod("L", "registerEvent::(IIL)", qi::Message::BoundObjectFunction_RegisterEvent);
       mob.addMethod("v", "unregisterEvent::(IIL)", qi::Message::BoundObjectFunction_UnregisterEvent);
-      mob.addMethod("({I(Isss[(ss)]s)}{I(Is)}s)", "metaObject::(I)", qi::Message::BoundObjectFunction_MetaObject);
+      mob.addMethod("({I(Isss[(ss)]s)}{I(Is)}{I(Iss)}s)", "metaObject::(I)", qi::Message::BoundObjectFunction_MetaObject);
+
       *mo = mob.metaObject();
 
       assert(mo->methodId("registerEvent::(IIL)") == qi::Message::BoundObjectFunction_RegisterEvent);
@@ -144,7 +145,13 @@ namespace qi {
       if (sb)
       {
         try {
-          std::string sig = sb->signature();
+          // Signal associated with properties have incorrect signature,
+          // Trust MetaObject.
+          //std::string sig = sb->signature();
+          const MetaSignal* ms  = _self->metaObject().signal(msg.event());
+          std::string sig = ms->signature();
+          sig = signatureSplit(sig)[2];
+
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
           GenericFunctionParameters args = msg.value(sig, _socket).asTupleValuePtr();
@@ -351,6 +358,18 @@ namespace qi {
     }
   }
 
+ qi::Future<GenericValue> RemoteObject::getProperty(unsigned int id)
+ {
+   qiLogDebug() << "bouncing getProperty";
+   // FIXME: perform some validations on this end?
+   return _self->call<GenericValue>("getProperty", id);
+ }
+
+ qi::Future<void> RemoteObject::setProperty(unsigned int id, GenericValue val)
+ {
+   qiLogDebug() << "bouncing setProperty";
+   return _self->call<void>("setProperty", id, val);
+ }
 }
 
 #ifdef _MSC_VER

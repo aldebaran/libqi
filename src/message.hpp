@@ -74,6 +74,9 @@ namespace qi {
       BoundObjectFunction_UnregisterEvent   = 1,
       BoundObjectFunction_MetaObject        = 2,
       BoundObjectFunction_Terminate         = 3,
+      BoundObjectFunction_GetProperty       = 5,
+      BoundObjectFunction_SetProperty       = 6,
+      BoundObjectFunction_Properties        = 7
     };
 
     enum ServerFunction

@@ -219,6 +219,7 @@ namespace qi {
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature;
       throw std::runtime_error("Could not construct type for " + signature);
+    qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
     qi::BufferReader br(_p->buffer);
     BinaryDecoder in(&br);
